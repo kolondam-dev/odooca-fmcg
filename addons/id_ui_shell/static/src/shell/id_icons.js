@@ -7,5 +7,7 @@ const svg = (inner) => markup(`<svg viewBox="0 0 24 24" aria-hidden="true" focus
 export const ICONS = {
     search: svg('<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>'),
     chevron: svg('<path d="m9 6 6 6-6 6"/>'),
+    chevronsLeft: svg('<path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/>'),
+    chevronsRight: svg('<path d="m6 17 5-5-5-5M13 17l5-5-5-5"/>'),
     collapse: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>'),
 };

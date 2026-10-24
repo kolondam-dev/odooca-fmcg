@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-24 07:33+0000\n"
-"PO-Revision-Date: 2026-10-24 07:33+0000\n"
+"POT-Creation-Date: 2026-10-24 17:19+0000\n"
+"PO-Revision-Date: 2026-10-24 17:19+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: id\n"
@@ -38,6 +38,18 @@ msgstr "Klasik"
 #: code:addons/id_ui_shell/static/src/shell/id_sidebar.xml:0
 msgid "Collapse / expand (Alt+B)"
 msgstr "Ciutkan / bentang (Alt+B)"
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/id_section_panel.js:0
+msgid "Collapse panel (Alt+P)"
+msgstr "Ciutkan panel (Alt+P)"
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/id_section_panel.js:0
+msgid "Expand panel (Alt+P)"
+msgstr "Bentangkan panel (Alt+P)"
 
 #. module: id_ui_shell
 #: model:ir.model.fields,field_description:id_ui_shell.field_res_users_settings__id_ui_shell
@@ -85,6 +97,12 @@ msgstr "Cari menu atau perintah (Ctrl+K)"
 #: code:addons/id_ui_shell/static/src/shell/id_menu_search.xml:0
 msgid "Search menus, sub-menus…"
 msgstr "Cari menu, sub-menu…"
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/id_section_panel.xml:0
+msgid "Sections"
+msgstr "Seksi"
 
 #. module: id_ui_shell
 #: model:ir.model.fields.selection,name:id_ui_shell.selection__res_users_settings__id_ui_shell__sidebar

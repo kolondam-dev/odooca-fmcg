@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="id_ui_shell.MenuSearch">
-        <button type="button" class="id_menu_search" t-on-click="open" title="Search menus or commands (Ctrl+K)">
+        <button type="button" class="id_menu_search" t-on-click="open" t-on-keydown="onKeydown" title="Search menus or commands (Ctrl+K)">
             <span class="id_icon"><t t-out="icons.search"/></span>
             <span class="id_menu_search__text">Search menus, sub-menus…</span>
             <kbd>Ctrl K</kbd>

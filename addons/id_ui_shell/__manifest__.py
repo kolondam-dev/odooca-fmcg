@@ -15,6 +15,8 @@
             'id_ui_shell/static/src/shell/id_shell_service.js',
             'id_ui_shell/static/src/shell/id_sidebar.js',
             'id_ui_shell/static/src/shell/id_sidebar.xml',
+            'id_ui_shell/static/src/shell/id_section_panel.js',
+            'id_ui_shell/static/src/shell/id_section_panel.xml',
             'id_ui_shell/static/src/shell/id_menu_search.js',
             'id_ui_shell/static/src/shell/id_menu_search.xml',
             'id_ui_shell/static/src/shell/navbar_patch.js',
