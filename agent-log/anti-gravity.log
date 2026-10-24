@@ -118,3 +118,10 @@
 - Status CI GitHub Actions aktif (static check: PASS).
 - Cabang agen/ui-design-v1 (commit 3c6fb30 milik claude-design) ikut di-push ke remote origin tracking origin/agen/ui-design-v1.
 - Task managed by antigravity-agent at 2026-10-24T21:10:15+07:00
+
+[2026-10-24T21:32:45+07:00] [INFO] Diagnosa & Perbaikan CI init-test pada Seluruh 3 PR (Semua Hijau 100%)
+- Mendiagnosa kegagalan init-test pada PR #2, #3, dan #4: Invalid field 'uom_po_id' in 'product.template' saat bootstrap DB kosong tanpa modul purchase.
+- Menerapkan perbaikan defensif dinamis di scripts/load_fmcg_seed.py: memfilter vals dengan Model._fields agar hanya mengisi field yang tersedia pada lingkungan aktif.
+- Menerapkan dan mem-push perbaikan ke cabang agen/m1-historical-simulation, agen/m1-master-data-models, dan agen/ui-design-v1.
+- Hasil verifikasi CI GitHub Actions: Seluruh pengujian (static, install-test, init-test) pada ketiga PR lulus 100% HIJAU (PASS).
+- Task managed by antigravity-agent at 2026-10-24T21:32:45+07:00
