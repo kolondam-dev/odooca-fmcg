@@ -26,7 +26,7 @@ jobs:
       - name: Manifest addon
         run: python scripts/check_manifests.py
       - name: Sintaks shell
-        run: bash -n deploy/init.sh deploy/addons_path.sh scripts/fetch_oca.sh scripts/oca_bump.sh
+        run: bash -n deploy/init.sh deploy/addons_path.sh scripts/fetch_oca.sh scripts/oca_bump.sh scripts/agent/*.sh scripts/sandbox/*.sh
       - name: Validitas YAML
         run: python -c "import glob,yaml; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+['docker-compose.yml']]"
 

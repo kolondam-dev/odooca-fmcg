@@ -1,0 +1,15 @@
+[2026-10-23] [INFO] (RETROAKTIF; jam tidak tercatat; sebelum protokol log berlaku) M0 kerangka repo dan verifikasi di sandbox
+- Menyerahkan patch 001 -> commit b0d7887 (tanpa tanda tangan karena sebelum aturan).
+- Memverifikasi di sandbox (Odoo 19 f4378f29, Postgres 16): id_base terinstal; 65 modul core+OCA -> 165 modul terinstal, 0 ERROR; 6 modul OCA tidak installable.
+- Menguji init.sh 5 skenario (DB kosong, restart, reset+restore, token lama, reset+build); memperbaiki 4 bug (urutan subperintah shell, DROP SCHEMA CASCADE out of shared memory, dump vs skema id_meta, urutan negara ID sebelum akuntansi).
+- oca.lock 18 -> 26 repo (dependensi lintas repo).
+
+[2026-10-24T13:56:54+07:00] [INFO] Sinkron dengan remote, verifikasi perbaikan AntiGravity, protokol multi-agen
+- Fetch remote: menemukan eebee64 (AntiGravity: --ignore-installed + init.sh mulai sebagai root lalu turun ke user odoo) dan merge PR #1 (fcd62e8, 13:51 WIB); basis kerja dipindah ke origin/main.
+- Verifikasi independen perbaikan init.sh di sandbox: Test A DB kosong (HTTP 200, Odoo berjalan sebagai user odoo, data dir odoo:odoo, 0 galat) dan Test B restart (5 detik, semua langkah dilewati, login admin OK); chown -R atas 3000 berkas = 22 ms.
+- Menambah protokol multi-agen: AGENTS.md, docs/AGENT_PROTOCOL.md, scripts/agent/whats_new.sh dan log_entry.sh (diuji pada repo nyata; 2 bug diperbaiki: argumen set -u, duplikasi entri antar cabang).
+- sandbox_up.sh: membuat user odoo, menyalin addons ke /opt/id-addons, menghapus /tmp/odoo.conf sisa root.
+- Temuan: semua skrip tercatat 100644 di repo (izin eksekusi hilang di mesin pemilik); patch menyertakan mode 100755 dan perintah git add --chmod=+x.
+- Belum diuji: job init-test dan install-test di GitHub Actions; ketersediaan gosu/runuser di image odoo:19.0; docker build di luar Railway.
+- Catatan review: --ignore-installed dapat menimpa paket Debian (diterima untuk demo); image berjalan sebagai root sampai init.sh menurunkan hak akses.
+- Task managed by claude-dev agent at 2026-10-24T13:56:54+07:00

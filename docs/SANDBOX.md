@@ -9,6 +9,9 @@ Tujuan: agen dapat **menjalankan Odoo 19 sungguhan** untuk memodifikasi, memerik
 `scripts/sandbox/sandbox_up.sh` — menghidupkan Postgres (mati di batas giliran), peran `odoo`, wrapper `odoo` (menambah addons inti ke `--addons-path`, meniru image resmi), symlink `/opt/id-addons`, dan menyalin `deploy/*.sh` ke `/opt/deploy`.
 Sandbox bisa di-restart penuh (uptime reset); berkas tetap ada, `/tmp` bisa dianggap sementara.
 
+## Penyesuaian setelah `init.sh` mulai sebagai root (AntiGravity, 2026-10-24)
+`deploy/init.sh` kini mulai sebagai root, men-`chown` `$DATA_DIR`, lalu turun ke user `odoo` (gosu/runuser/su). Agar uji sandbox meniru Railway, `sandbox_up.sh` membuat user `odoo` (seperti image resmi), **menyalin** addons ke `/opt/id-addons` (bukan symlink; user `odoo` tidak boleh bergantung pada izin `/home/claude`), dan menghapus `/tmp/odoo.conf` sisa proses root. Uji ulang A dan B dengan versi ini lulus (Odoo berjalan sebagai `odoo`, data dir `odoo:odoo`).
+
 ## Uji yang sudah terbukti
 | Uji | Perintah | Hasil 2026-10-23 |
 |---|---|---|

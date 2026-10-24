@@ -1,12 +1,15 @@
 # DEVELOPMENT
 
 ## 1. Peran per lingkungan
-| Lingkungan | Peran | Catatan |
-|---|---|---|
-| Sandbox agen | Menulis kode, **menjalankan Odoo 19 penuh** (Postgres lokal, tanpa Docker), memodifikasi, memeriksa, memverifikasi | Lihat `docs/SANDBOX.md`. Tidak ada Docker: `docker build`/CI/Railway tidak bisa diuji di sini |
-| Laptop / Claude Code | Edit, `docker compose`, uji instal | Tempat commit/PR (penulis commit = pemilik) |
-| GitHub Actions | Lint, build image, uji instal `id_*` pada DB kosong | Tanpa secret; PR fork aman |
-| Railway (Hobby) | Menjalankan hasil build | Data tidak diedit. Dinyalakan hanya saat demo/uji; pasang hard usage limit; **matikan deploy otomatis dari git** |
+| Lingkungan | Agen/pelaku | Peran | Catatan |
+|---|---|---|---|
+| Sandbox agen | `claude-dev` | Menulis kode, **menjalankan Odoo 19 penuh** (Postgres lokal, tanpa Docker), memodifikasi, memeriksa, memverifikasi; menyerahkan patch zip | `docs/SANDBOX.md`. Tanpa Docker dan tanpa kredensial git/Railway |
+| Laptop pemilik | pemilik, `antigravity` | Commit/PR/push, `railway up`, membaca log build/deploy | **Kebijakan: tidak ada Docker lokal** (hemat sumber daya laptop); build/staging/prod di Railway |
+| Desain | `claude-design` | Desain antarmuka/PWA | Log sendiri di `agent-log/` |
+| GitHub Actions | otomatis | Lint, build image, uji instal dan `init.sh` | Tanpa secret; satu-satunya tempat `docker build` otomatis |
+| Railway (Hobby) | `antigravity` | Build dan menjalankan hasil build | Data tidak diedit. Pasang hard usage limit. Terverifikasi hidup (HTTP 200) 2026-10-24 |
+
+Aturan koordinasi antar agen: `docs/AGENT_PROTOCOL.md`.
 
 ## 2. Aturan wajib
 1. Addon custom berawalan `id_`, `license: LGPL-3`, versi `19.0.x.y.z`.
@@ -28,26 +31,35 @@
 | `Dockerfile`, `docker-compose.yml` | `docker build .`, `docker compose up --build` |
 | `docs/` | Perbarui `HANDOFF.md`; ubah Playbook = catat di changelog Playbook |
 
-## 4. Alur kerja dan sinkron
-1. **Awal sesi (agen):** `git clone`/`git pull` repo publik, bandingkan dengan salinan sandbox (`git diff`), selaraskan dengan commit agen lain. Baca `docs/HANDOFF.md`.
+## 4. Alur kerja multi-agen dan sinkron
+1. **Sebelum aksi:** `bash scripts/agent/whats_new.sh <agen>` (fetch, commit sejak commit terakhir agen, entri baru `agent-log/*.log`, cabang di depan `main`). Baca `docs/HANDOFF.md`.
 2. **Kerja:** ubah di sandbox, jalankan Odoo (`docs/SANDBOX.md`), verifikasi.
-3. **Serah terima:** patch zip berisi berkas yang berubah, relatif terhadap akar repo, dengan perintah berikut (Downloads sejajar dengan folder `dev`, repo di `dev/odooca-fmcg`):
+3. **Sesudah aksi:** `bash scripts/agent/log_entry.sh <agen> INFO "<judul>" "<butir>"...` dan entri HANDOFF.
+4. **Serah terima `claude-dev` (patch zip)**; Downloads sejajar dengan folder `dev`, repo di `dev/odooca-fmcg`:
 ```bash
-cd dev/odooca-fmcg          # sesuaikan dari lokasi Anda; akar repo
+cd dev/odooca-fmcg
+git fetch origin && git checkout main && git pull --ff-only     # basis = main terbaru (atau cabang yang disebut agen)
 unzip -o ../../Downloads/<nama-patch>.zip
 git status && git diff --stat
 git add -A
-git commit -m "<pesan deskriptif>"
-git push                    # commit pertama: git branch -M main && git push -u origin main
+git add --chmod=+x deploy/*.sh scripts/*.sh scripts/*.py scripts/sandbox/*.sh scripts/agent/*.sh   # izin eksekusi hilang saat unzip
+git commit -F - <<'EOF'
+<tipe>(<lingkup>): <ringkasan>
+
+<butir perubahan, hasil verifikasi, yang belum diuji>
+
+task managed by claude-dev agent at <timestamp dari patch>
+EOF
+git push
 ```
-4. **Deploy:** Railway berjalan otomatis setelah push (keputusan pemilik). Pemilik menempelkan log build/deploy ke percakapan; agen memperbaiki lewat patch berikutnya. Catatan biaya Hobby: setiap push menyalakan layanan; pasang hard usage limit.
-5. Perubahan oleh agen lain sudah ada di repo: agen selalu mulai dari `git pull`, bukan dari salinan sandbox lama.
+5. **Deploy:** Railway membangun dari `main`; `antigravity` juga bisa `railway up` dari lokal. **Perbaikan yang belum di-merge ke `main` tidak ikut build otomatis.** Pemilik menempelkan log build/deploy bila ada masalah. Hobby: tiap push menyalakan layanan; pasang hard usage limit.
+6. Perubahan agen lain sudah ada di repo: selalu mulai dari `whats_new.sh`, bukan dari salinan sandbox lama.
 
 ## 5. Uji statis lokal
 ```bash
 pip install ruff pyyaml
 ruff check . && python scripts/check_manifests.py
-bash -n deploy/init.sh deploy/addons_path.sh scripts/*.sh scripts/sandbox/*.sh
+bash -n deploy/init.sh deploy/addons_path.sh scripts/*.sh scripts/sandbox/*.sh scripts/agent/*.sh
 ```
 Uji runtime di sandbox agen: `scripts/sandbox/sandbox_up.sh`, lalu `odoo ... -i <modul> --test-tags /<modul> --stop-after-init` dan `scripts/sandbox/test_init.sh` (lihat `docs/SANDBOX.md`).
 
