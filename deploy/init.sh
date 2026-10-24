@@ -29,7 +29,7 @@ if [ "$(id -u)" = "0" ]; then
   fi
 fi
 
-INIT_MODULES="${INIT_MODULES:-id_base,l10n_id}"
+INIT_MODULES="${INIT_MODULES:-id_base,id_ui,id_ui_shell,id_ui_form,l10n_id}"
 export PGHOST PGPORT PGUSER PGPASSWORD PGDATABASE
 case "$ODOO_DB_USER" in postgres) log "ODOO_DB_USER tidak boleh 'postgres'"; exit 1;; esac
 case "$ODOO_DB_USER$ODOO_DB_PASSWORD$PGDATABASE" in *\'*|*\"*|*\\*) log "kutip/backslash tidak diizinkan pada user, password, atau nama DB"; exit 1;; esac
@@ -124,6 +124,13 @@ else
   log "init.base sudah ada; lewati"
 fi
 
+# 4b. Sinkronisasi & pembaruan modul (idempoten: memastikan kolom model baru seperti res_partner.channel_id terbuat di DB)
+if ! has_mark upgrade_modules_v1 || [ "${FORCE_UPGRADE:-0}" = "1" ]; then
+  log "upgrade_modules_v1: mengupdate dan menginstal modul ${INIT_MODULES}..."
+  odoo_run -i "$INIT_MODULES" -u "$INIT_MODULES" --stop-after-init
+  set_mark upgrade_modules_v1
+fi
+
 # 5. Postinit (v1): URL dasar, kata sandi admin, bahasa. TODO M1: aktifkan id_ID, grup bisnis admin.
 if ! has_mark postinit_v1; then
   log "postinit_v1"
@@ -143,12 +150,12 @@ PY
 fi
 
 # 5b. Master Seed FMCG (150 SKU, 354 Outlet)
-if ! has_mark seed_master_v1; then
+if ! has_mark seed_master_v2; then
   if [ -f "/opt/scripts/load_fmcg_seed.py" ]; then
-    log "seed_master_v1: memuat master seed FMCG..."
-    odoo_run shell --no-http < /opt/scripts/load_fmcg_seed.py || log "seed_master_v1 warning: gagal atau dilewati"
+    log "seed_master_v2: memuat master seed FMCG setelah modul id_base terpasang..."
+    odoo_run shell --no-http < /opt/scripts/load_fmcg_seed.py || log "seed_master_v2 warning: gagal atau dilewati"
   fi
-  set_mark seed_master_v1
+  set_mark seed_master_v2
 fi
 
 # 6. Jalankan Odoo (hemat RAM untuk Railway Hobby; sesuaikan lewat env)
