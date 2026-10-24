@@ -21,6 +21,48 @@
         <field name="principal_id" ref="principal_mayora"/>
     </record>
 
+    <record id="brand_roma" model="id.brand">
+        <field name="code">BRD-RMA</field>
+        <field name="name">Roma</field>
+        <field name="principal_id" ref="principal_mayora"/>
+    </record>
+
+    <record id="brand_better" model="id.brand">
+        <field name="code">BRD-BTR</field>
+        <field name="name">Better</field>
+        <field name="principal_id" ref="principal_mayora"/>
+    </record>
+
+    <record id="brand_slai_olai" model="id.brand">
+        <field name="code">BRD-SLI</field>
+        <field name="name">Slai O'lai</field>
+        <field name="principal_id" ref="principal_mayora"/>
+    </record>
+
+    <record id="brand_kopiko" model="id.brand">
+        <field name="code">BRD-KPK</field>
+        <field name="name">Kopiko</field>
+        <field name="principal_id" ref="principal_mayora"/>
+    </record>
+
+    <record id="brand_energen" model="id.brand">
+        <field name="code">BRD-EGN</field>
+        <field name="name">Energen</field>
+        <field name="principal_id" ref="principal_mayora"/>
+    </record>
+
+    <record id="brand_kis" model="id.brand">
+        <field name="code">BRD-KIS</field>
+        <field name="name">Kis</field>
+        <field name="principal_id" ref="principal_mayora"/>
+    </record>
+
+    <record id="brand_tamarin" model="id.brand">
+        <field name="code">BRD-TMR</field>
+        <field name="name">Tamarin</field>
+        <field name="principal_id" ref="principal_mayora"/>
+    </record>
+
     <!-- Principal 2: Kapal Api -->
     <record id="principal_kapalapi" model="id.principal">
         <field name="code">PRIN-SANTOS</field>
@@ -39,6 +81,18 @@
     <record id="brand_abcfood" model="id.brand">
         <field name="code">BRD-ABC</field>
         <field name="name">Kopi ABC</field>
+        <field name="principal_id" ref="principal_kapalapi"/>
+    </record>
+
+    <record id="brand_kopi_ya" model="id.brand">
+        <field name="code">BRD-YA</field>
+        <field name="name">Kopi Ya!</field>
+        <field name="principal_id" ref="principal_kapalapi"/>
+    </record>
+
+    <record id="brand_kopi_kapten" model="id.brand">
+        <field name="code">BRD-KPT</field>
+        <field name="name">Kopi Kapten</field>
         <field name="principal_id" ref="principal_kapalapi"/>
     </record>
 
@@ -63,6 +117,48 @@
         <field name="principal_id" ref="principal_unilever"/>
     </record>
 
+    <record id="brand_rinso" model="id.brand">
+        <field name="code">BRD-RNS</field>
+        <field name="name">Rinso</field>
+        <field name="principal_id" ref="principal_unilever"/>
+    </record>
+
+    <record id="brand_molto" model="id.brand">
+        <field name="code">BRD-MLT</field>
+        <field name="name">Molto</field>
+        <field name="principal_id" ref="principal_unilever"/>
+    </record>
+
+    <record id="brand_pepsodent" model="id.brand">
+        <field name="code">BRD-PSD</field>
+        <field name="name">Pepsodent</field>
+        <field name="principal_id" ref="principal_unilever"/>
+    </record>
+
+    <record id="brand_clear" model="id.brand">
+        <field name="code">BRD-CLR</field>
+        <field name="name">Clear</field>
+        <field name="principal_id" ref="principal_unilever"/>
+    </record>
+
+    <record id="brand_rexona" model="id.brand">
+        <field name="code">BRD-RXN</field>
+        <field name="name">Rexona</field>
+        <field name="principal_id" ref="principal_unilever"/>
+    </record>
+
+    <record id="brand_royco" model="id.brand">
+        <field name="code">BRD-RYC</field>
+        <field name="name">Royco</field>
+        <field name="principal_id" ref="principal_unilever"/>
+    </record>
+
+    <record id="brand_bango" model="id.brand">
+        <field name="code">BRD-BNG</field>
+        <field name="name">Bango</field>
+        <field name="principal_id" ref="principal_unilever"/>
+    </record>
+
     <!-- Principal 4: Wings Food -->
     <record id="principal_wings" model="id.principal">
         <field name="code">PRIN-WINGS</field>
@@ -75,6 +171,42 @@
     <record id="brand_sedaap" model="id.brand">
         <field name="code">BRD-SDP</field>
         <field name="name">Mie Sedaap</field>
+        <field name="principal_id" ref="principal_wings"/>
+    </record>
+
+    <record id="brand_jasjus" model="id.brand">
+        <field name="code">BRD-JSJ</field>
+        <field name="name">Jasjus</field>
+        <field name="principal_id" ref="principal_wings"/>
+    </record>
+
+    <record id="brand_segar_dingin" model="id.brand">
+        <field name="code">BRD-SGD</field>
+        <field name="name">Segar Dingin</field>
+        <field name="principal_id" ref="principal_wings"/>
+    </record>
+
+    <record id="brand_top_kopi" model="id.brand">
+        <field name="code">BRD-TOP</field>
+        <field name="name">Top Kopi</field>
+        <field name="principal_id" ref="principal_wings"/>
+    </record>
+
+    <record id="brand_floridina" model="id.brand">
+        <field name="code">BRD-FLD</field>
+        <field name="name">Floridina</field>
+        <field name="principal_id" ref="principal_wings"/>
+    </record>
+
+    <record id="brand_teh_javana" model="id.brand">
+        <field name="code">BRD-JVN</field>
+        <field name="name">Teh Javana</field>
+        <field name="principal_id" ref="principal_wings"/>
+    </record>
+
+    <record id="brand_golda_coffee" model="id.brand">
+        <field name="code">BRD-GLD</field>
+        <field name="name">Golda Coffee</field>
         <field name="principal_id" ref="principal_wings"/>
     </record>
 </odoo>
