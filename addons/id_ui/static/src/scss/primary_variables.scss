@@ -1,0 +1,5 @@
+// Token tema distributor FMCG (usulan; ganti dengan warna merek distributor pilot).
+// Dimuat sebelum primary_variables bawaan web, sehingga memakai nilai !default.
+$o-brand-odoo: #001A57;      // navbar (biru tua)
+$o-brand-primary: #1B5E8C;   // tombol dan tautan utama
+$o-action: $o-brand-primary;

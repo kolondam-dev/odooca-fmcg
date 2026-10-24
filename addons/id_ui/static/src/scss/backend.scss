@@ -1,0 +1,6 @@
+// Penyesuaian backend untuk input intensitas tinggi (sales admin, admin gudang).
+// Rapatkan baris daftar tanpa mengubah ukuran font.
+.o_list_renderer .o_data_row > .o_data_cell {
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
+}

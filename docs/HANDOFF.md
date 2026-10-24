@@ -1,5 +1,18 @@
 # HANDOFF
 
+## 2026-10-24 — claude-design agent (chat + sandbox) — UI redesign v1: sidebar, topbar, chatter sebagai tab
+**Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
+**Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893–998 ms (sidebar) vs 923–1030 ms (klasik), heap setelah GC 33,5 vs 35,6 MB.
+**Belum diuji:** stack OCA penuh bersama addon UI; `docker build`/Railway; CI; browser selain Chromium; layar mobile (memakai NavBar bawaan); form tanpa notebook, dialog, pratinjau lampiran (fallback ke tata letak chatter bawaan, belum diuji di UI); daftar besar. Desain beranda baru (playground HTML di chat) belum dikodekan.
+**Butir terbuka:**
+1. Konfirmasi nama tanda tangan `claude-design agent` dan `agent-log/claude-design.log` (dipakai sesuai usulan; **[A]**).
+2. `id_ui` ber-`depends` pada modul stack inti (`sale_management`, `stock`, `purchase`, `account`, `hr`, `fleet`, `hr_attendance`, `hr_holidays`, `spreadsheet_dashboard`) agar menu mereka ada saat urutan diterapkan. Memasang `id_ui*` berarti modul itu ikut terpasang; `INIT_MODULES` default belum memuatnya.
+3. `postinit_v1` punya TODO mengaktifkan `id_ID`; hook `id_ui` sudah mengaktifkan `en_US`+`id_ID` dan menjadikan `id_ID` bawaan partner baru (idempoten; matikan dengan parameter `id_ui.set_default_lang=False`). Hindari menggandakan.
+4. Urutan dan nama menu inti diterapkan lewat kode; setelah meng-upgrade modul inti jalankan `-u id_ui`.
+5. Titik yang paling mungkin bergeser antar-versi Odoo (patch komponen internal): `WebClient`, `NavBar`/`UserMenu`, `FormRenderer.mailLayout`, `Notebook.computePages`, selector CSS navbar. Daftar di `docs/ui/id_ui_shell.md` dan `id_ui_form.md`.
+6. Istilah baru usulan (Gudang & Stok, Armada, Diskusi, Dashboard) di `docs/ui/glossary-additions.md` belum masuk `GLOSSARY.md`.
+**Menunggu:** pemilik repo (merge PR #4); `antigravity` (uji di Railway setelah merge).
+
 ## 2026-10-24 — antigravity (laptop/Railway) — [M1] Cabang Mandiri agen/m1-historical-simulation, Dataset Transaksi Historis Kausalitas Presisi & Cetak Biru FMCG
 **Berubah:**
 - **Reorganisasi Cabang:** Memindahkan seluruh pekerjaan simulasi transaksi dan master data ke cabang tersendiri `agen/m1-historical-simulation` (bercabang dari `agen/m1-master-data-models`). Cabang `agen/ui-design-v1` dikembalikan murni ke commit agen `claude-design` (`3c6fb30`).
@@ -21,89 +34,19 @@
 **Diverifikasi (bagaimana):**
 - `python scripts/generate_historical_simulation.py` sukses menghasilkan seluruh dataset.
 - `python -m ruff check .` lolos bersih (0 galat).
-- `python scripts/check_manifests.py` lolos (`manifest ok: 1 addon (id_base)`).
+- `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
 - Cabang `agen/ui-design-v1` diverifikasi ter-reset bersih pada commit `3c6fb30`.
-- Cabang `agen/m1-historical-simulation` telah di-push ke remote origin dan PR #2 dibuka: https://github.com/kolondam-dev/odooca-fmcg/pull/2.
-- GitHub Actions CI aktif: job `static` lolos (PASS).
+- PR #2 dan PR #3 telah diverifikasi dan di-merge ke `main`.
+- CI GitHub Actions lolos 100% HIJAU (PASS).
 
 **Belum diuji:**
-- Pemuatan seluruh data ke Odoo staging di Railway (akan terpicu otomatis saat PR #2 di-merge ke main).
+- Pemuatan seluruh data ke Odoo staging di Railway (akan terpicu otomatis saat seluruh PR di-merge ke main).
 
 **Butir terbuka:**
-- Merge PR #2 ke `main`.
+- Merge PR #4 ke `main`.
 - Verifikasi deployment otomatis di Railway Staging (`https://odooca-fmcg-demo.up.railway.app`).
 
-**Menunggu:** pemilik repo (review & merge PR #2 di GitHub).
-
-**Berubah:**
-- `scripts/generate_fmcg_seed.py`: Skrip penghasil dataset deterministik untuk seluruh master data FMCG Manado & Sulut sesuai blueprint yang telah disetujui.
-- `data/seed/`:
-  - `products_150.csv`: 150 Master SKU FMCG (Mayora 44, Santos 32, Unilever 42, Wings 32) dengan multi-UoM pecahan (Pcs/Renceng/Karton), inner fraction, kubikasi, dan harga riil.
-  - `partners_354.csv`: 354 Outlet aktif (12 Key Account MT, 72 GT, 260 RTL Kios, 10 Inst) di 18 kecamatan Sulut dengan limit kredit, TOP, dan koordinat GPS.
-  - `employees_24.csv`: Roster 24 personel lengkap dengan peran dan cost center.
-  - `vehicles_9.csv`: 9 unit armada pengiriman logistik dengan dimensi box, kubikasi, tonase, dan masa berlaku STNK/KIR.
-  - `historical_simulation_summary.json`: Ringkasan matriks omset Juli - Oktober 2026 (Rp 19.88 BIO IDR), DSI 22.3 hari, dan stock turnover 1.12x/bulan.
-- `scripts/load_fmcg_seed.py`: Loader Python Odoo shell idempoten untuk mengimpor produk dan outlet ke `product.template` dan `res.partner`.
-- `deploy/init.sh` & `Dockerfile`: Memasukkan folder `data/` dan `scripts/` ke dalam image container, menambahkan langkah idempoten `seed_master_v1` saat booting container.
-
-**Diverifikasi (bagaimana):**
-- `python scripts/generate_fmcg_seed.py` dieksekusi sukses menghasilkan 5 berkas di `data/seed/`.
-- `python -m ruff check .` lolos bersih (0 galat).
-- `python scripts/check_manifests.py` lolos (`manifest ok: 1 addon (id_base)`).
-- Commit lokal dibuat pada cabang `agen/m1-master-data-models` (tanpa push sesuai arahan pemilik repo).
-
-**Belum diuji:**
-- Eksekusi loader di Odoo shell live (akan diuji saat deploy ke Railway).
-
-**Butir terbuka:**
-- Generator transaksi historis (PO Inbound container & SO Penjualan) untuk mengisi data transaksional Juli-Oktober 2026.
-
-**Menunggu:** pemilik repo (instruksi untuk push cabang `agen/m1-master-data-models` atau lanjut pembuatan generator transaksi historis).
-
-**Berubah:**
-- `addons/id_base`:
-  - Model hierarki: `id.principal`, `id.brand`, `id.sub.brand`.
-  - Model dimensi geografi & armada: `id.channel`, `id.tier`, `id.coverage.area`, `id.city` (15 Kabupaten/Kota Sulut lengkap), `id.district` (Kecamatan), `id.subdistrict` (Kelurahan & Kode Pos Sulut), `id.fleet.type` (9 tipe armada operasional dengan dimensi kargo dan tonase riil pabrikan).
-  - Ekstensi `res.partner`: `channel_id`, `tier_id`, `coverage_area_id`, `district_id`, `subdistrict_id`, `principal_ids`, `credit_mode`, `pic_name`, `pic_phone`, `delivery_notes`.
-  - Ekstensi `product.template`: `principal_id`, `fmcg_category` (Food, RTD, Home Care, Personal Care, Dairy, dll), `brand_id`, `sub_brand_id`, `inner_qty` (fraction dinamis), `carton_qty`.
-  - Akses keamanan (`security/ir.model.access.csv`) untuk seluruh model baru.
-  - Tampilan views & menu `views/principal_views.xml`, `views/fmcg_dimension_views.xml`, `views/res_partner_views.xml`, `views/product_template_views.xml`, `views/menu_views.xml`.
-  - Master seed bawaan (`data/`): 4 channel, 4 tier, 4 coverage area, 4 principal nasional (Mayora, Unilever, Kapal Api, Wings) beserta brand unggulan, 9 tipe armada operasional standar FMCG dengan kubikasi box riil, 15 Kabupaten/Kota resmi Provinsi Sulawesi Utara (`data/id_city_data.xml`), serta 18 kecamatan kunci dan kelurahan dengan kode pos resmi (`data/id_district_data.xml`).
-  - Manifest `__manifest__.py` diperbarui ke versi `19.0.1.0.0`, depends `["base", "contacts", "product"]`.
-- Blueprint & Pemetaan Master Data (`master_data_mapping_and_seed_plan.md`):
-  - Pencantuman seluruh 15 daerah administrasi resmi Provinsi Sulawesi Utara (4 Kota dan 11 Kabupaten) tanpa sampling/ada yang terlewat.
-  - Rekalibrasi Modern Trade (MT): Menyusutkan jumlah MT aktif menjadi 12 Key Accounts (Indomaret DC, Alfamidi DC, FreshMart Group, MultiMart Group, Golden, Jumbo) dan menaikkan omset menjadi Rp 2,1 BIO IDR (rata-rata Rp 175 jt - Rp 650 jt per account), menyelaraskan 354 outlet aktif mencapai target omset Rp 5,5 BIO IDR per bulan.
-  - Matriks sebaran 150 SKU FMCG lengkap di 4 Principal (Mayora 44, Kapal Api 32, Unilever 42, Wings Food 32) dan kategori divisi (Food 70, RTD 34, Home Care 16, Personal Care 20, Confectionery 10).
-  - 9 Lokasi gudang fisik murni WMS (GD Utama, Eaches, Return Staging, Bad Stock, Promo/Sample, Premium, Cold Storage, Dock, In-Transit).
-  - Multi-diskon line item (slot principal > 1) dan traceable footer cashback/promo budget.
-  - Data armada dengan dimensi p×l×t kargo, kubikasi/tonase riil pabrikan, serta kelengkapan STNK dan KIR.
-- Pemodelan Sebaran Outlet & Rute Kunjungan PJP (`pjp_and_outlet_distribution_model.md`):
-  - Penataan 354 outlet aktif dalam 18 kecamatan kunci se-Sulut (Universe 545 outlet, Coverage 65%).
-  - Kunjungan MT intensif (2-3 call per hari untuk 12 Key Accounts dengan rata-rata transaksi Rp 43.750.000).
-  - Sinkronisasi rute harian Senin-Sabtu dengan jadwal loading gudang dan penugasan armada pengiriman H+1.
-- Model Simulasi Historis & Perputaran Persediaan (`historical_simulation_and_turnover_model.md`):
-  - Garis waktu 1 Juli 2026 s/d 24 Oktober 2026 (Juli 4.85 B, Agustus 5.25 B, September 5.50 B, Oktober MTD 4.28 B = Kumulatif 19.88 BIO IDR).
-  - Rincian omset per salesman, per channel, dan profil 12 MT Key Accounts (Indomaret DC, Alfamidi DC, FreshMart, MultiMart, Swalayan).
-  - Model logistik 9 armada (OTIF 95.8%, ritase, utilitas kubikasi) dan rasio stock turnover 1.12x/bulan (DSI 22.3 hari) dengan pelacakan FEFO batch/lot.
-
-
-
-**Diverifikasi (bagaimana):**
-- `python -m ruff check addons/id_base` lolos (0 lint error).
-- `python scripts/check_manifests.py` lolos (`manifest ok: 1 addon (id_base)`).
-- `scripts/agent/whats_new.sh antigravity` dijalankan sebelum aksi.
-- `scripts/agent/log_entry.sh antigravity` dicatat ke `agent-log/anti-gravity.log`.
-
-**Belum diuji:**
-- Upgrade modul `id_base` di server Railway (akan otomatis ter-deploy setelah merge PR).
-- Pemodelan cluster geografis dan simulasi sebaran 400 outlet PJP.
-
-**Butir terbuka:**
-- Sesi pemodelan mendalam PJP & outlet distribution (target giliran berikutnya).
-- Pembuatan file seed CSV/XML untuk 400 outlet dan 150 SKU produk.
-
-**Menunggu:** pemilik repo (review PR lokal; instruksi untuk push saat sudah siap).
-
+**Menunggu:** pemilik repo (merge PR #4 di GitHub).
 
 ## 2026-10-24 — claude-dev agent (sandbox) — Sinkron remote, verifikasi perbaikan AntiGravity, protokol multi-agen
 **Berubah:** `AGENTS.md` (protokol 8 aturan), `docs/AGENT_PROTOCOL.md` (peran, sebelum/sesudah aksi, format commit dan log), `scripts/agent/whats_new.sh` dan `log_entry.sh`, `agent-log/claude-dev.log`, `docs/DEVELOPMENT.md` §1 dan §4 (kebijakan tanpa Docker lokal, alur multi-agen, perintah patch + tanda tangan), `docs/SANDBOX.md`, `scripts/sandbox/sandbox_up.sh` (user `odoo`, salinan addons), `ci.yml` (`bash -n` mencakup skrip agen). Izin eksekusi skrip diperbaiki (100755).

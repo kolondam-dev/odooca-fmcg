@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Dijalankan pada instalasi dan setiap upgrade id_ui. Setelah meng-upgrade
+         modul inti (sale, stock, ...), jalankan ulang: -u id_ui -->
+    <function model="ir.ui.menu" name="_id_ui_apply_navigation"/>
+</odoo>

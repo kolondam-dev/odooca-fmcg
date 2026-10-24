@@ -1,0 +1,5 @@
+// Tab chatter di dalam form (hanya aktif saat tata letak sidebar).
+body.id-shell-sidebar .id_chatter_page {
+    padding: .5rem 0 1rem;
+    .o-mail-Chatter { max-width: 100%; }
+}
