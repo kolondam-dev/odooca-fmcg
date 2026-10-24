@@ -1,5 +1,32 @@
 # HANDOFF
 
+## 2026-10-24 — antigravity (laptop/Railway) — [M1] Implementasi Model Master Data FMCG di id_base
+**Berubah:**
+- `addons/id_base`:
+  - Model baru: `id.principal`, `id.brand`, `id.sub.brand` (hierarki multi-principal FMCG).
+  - Model dimensi: `id.channel` (MT, GT, Retail, Institusional), `id.tier` (Platinum, Gold, Silver, Bronze), `id.coverage.area` (Manado Urban, Tomohon Hinterland, Bitung Port, Minut Rural).
+  - Ekstensi `res.partner`: `channel_id`, `tier_id`, `coverage_area_id`, `principal_ids`, `credit_mode`, `pic_name`, `pic_phone`, `delivery_notes`.
+  - Ekstensi `product.template`: `principal_id`, `brand_id`, `sub_brand_id`, `carton_qty`.
+  - Akses keamanan (`security/ir.model.access.csv`) untuk seluruh model baru.
+  - Tampilan views & menu `views/principal_views.xml`, `views/fmcg_dimension_views.xml`, `views/res_partner_views.xml`, `views/product_template_views.xml`, `views/menu_views.xml`.
+  - Master seed bawaan (`data/`): 4 channel standar, 4 tier pelanggan, 4 zona coverage Sulut, 4 principal nasional (Mayora, Unilever, Kapal Api, Wings) beserta brand unggulan.
+  - Manifest `__manifest__.py` diperbarui ke versi `19.0.1.0.0`, depends `["base", "contacts", "product"]`.
+
+**Diverifikasi (bagaimana):**
+- `python -m ruff check .` lolos (0 lint error).
+- `python scripts/check_manifests.py` lolos (`manifest ok: 1 addon (id_base)`).
+- `scripts/agent/whats_new.sh antigravity` dijalankan sebelum aksi (sinkron dengan commit `9b80505` claude-dev).
+
+**Belum diuji:**
+- Upgrade modul `id_base` di server Railway (akan diuji setelah merge PR).
+- Integrasi PJP dan Pricing Engine (M4).
+
+**Butir terbuka:**
+1. Penyiapan dataset outlet fiktif Manado (±400 outlet) untuk seed M2.
+2. Integrasi desain dari `claude-design` saat siap.
+
+**Menunggu:** pemilik repo (review PR `agen/m1-master-data-models` & deploy ke Railway); `claude-dev` untuk validasi di sandbox.
+
 ## 2026-10-24 — claude-dev agent (sandbox) — Sinkron remote, verifikasi perbaikan AntiGravity, protokol multi-agen
 **Berubah:** `AGENTS.md` (protokol 8 aturan), `docs/AGENT_PROTOCOL.md` (peran, sebelum/sesudah aksi, format commit dan log), `scripts/agent/whats_new.sh` dan `log_entry.sh`, `agent-log/claude-dev.log`, `docs/DEVELOPMENT.md` §1 dan §4 (kebijakan tanpa Docker lokal, alur multi-agen, perintah patch + tanda tangan), `docs/SANDBOX.md`, `scripts/sandbox/sandbox_up.sh` (user `odoo`, salinan addons), `ci.yml` (`bash -n` mencakup skrip agen). Izin eksekusi skrip diperbaiki (100755).
 **Diverifikasi (bagaimana):** (1) `git fetch` menemukan commit AntiGravity `eebee64` dan merge PR #1 `fcd62e8`; (2) perbaikan `init.sh` AntiGravity diuji independen di sandbox: A DB kosong (HTTP 200, Odoo berjalan sebagai `odoo`, data dir `odoo:odoo`, 0 galat), B restart 5 detik semua dilewati, login admin OK, `chown -R` 3000 berkas = 22 ms; (3) `whats_new.sh` dan `log_entry.sh` dijalankan pada repo nyata (2 bug diperbaiki); (4) `ruff`, `check_manifests.py`, `bash -n`, YAML lolos.

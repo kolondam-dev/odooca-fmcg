@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Principal 1: Mayora -->
+    <record id="principal_mayora" model="id.principal">
+        <field name="code">PRIN-MAYORA</field>
+        <field name="name">PT Mayora Indah Tbk</field>
+        <field name="pks_number">PKS/MYR/2026/001</field>
+        <field name="pks_start">2026-01-01</field>
+        <field name="pks_end">2026-12-31</field>
+    </record>
+
+    <record id="brand_torabika" model="id.brand">
+        <field name="code">BRD-TRB</field>
+        <field name="name">Torabika</field>
+        <field name="principal_id" ref="principal_mayora"/>
+    </record>
+
+    <record id="brand_bengbeng" model="id.brand">
+        <field name="code">BRD-BBG</field>
+        <field name="name">Beng-Beng</field>
+        <field name="principal_id" ref="principal_mayora"/>
+    </record>
+
+    <!-- Principal 2: Kapal Api -->
+    <record id="principal_kapalapi" model="id.principal">
+        <field name="code">PRIN-SANTOS</field>
+        <field name="name">PT Santos Jaya Abadi</field>
+        <field name="pks_number">PKS/SJA/2026/014</field>
+        <field name="pks_start">2026-01-01</field>
+        <field name="pks_end">2026-12-31</field>
+    </record>
+
+    <record id="brand_kapalapi" model="id.brand">
+        <field name="code">BRD-KA</field>
+        <field name="name">Kapal Api</field>
+        <field name="principal_id" ref="principal_kapalapi"/>
+    </record>
+
+    <record id="brand_abcfood" model="id.brand">
+        <field name="code">BRD-ABC</field>
+        <field name="name">Kopi ABC</field>
+        <field name="principal_id" ref="principal_kapalapi"/>
+    </record>
+
+    <!-- Principal 3: Unilever -->
+    <record id="principal_unilever" model="id.principal">
+        <field name="code">PRIN-UNILEVER</field>
+        <field name="name">PT Unilever Indonesia Tbk</field>
+        <field name="pks_number">PKS/UNL/2026/088</field>
+        <field name="pks_start">2026-01-01</field>
+        <field name="pks_end">2026-12-31</field>
+    </record>
+
+    <record id="brand_lifebuoy" model="id.brand">
+        <field name="code">BRD-LFB</field>
+        <field name="name">Lifebuoy</field>
+        <field name="principal_id" ref="principal_unilever"/>
+    </record>
+
+    <record id="brand_sunlight" model="id.brand">
+        <field name="code">BRD-SNL</field>
+        <field name="name">Sunlight</field>
+        <field name="principal_id" ref="principal_unilever"/>
+    </record>
+
+    <!-- Principal 4: Wings Food -->
+    <record id="principal_wings" model="id.principal">
+        <field name="code">PRIN-WINGS</field>
+        <field name="name">Wings Food</field>
+        <field name="pks_number">PKS/WNG/2026/022</field>
+        <field name="pks_start">2026-01-01</field>
+        <field name="pks_end">2026-12-31</field>
+    </record>
+
+    <record id="brand_sedaap" model="id.brand">
+        <field name="code">BRD-SDP</field>
+        <field name="name">Mie Sedaap</field>
+        <field name="principal_id" ref="principal_wings"/>
+    </record>
+</odoo>

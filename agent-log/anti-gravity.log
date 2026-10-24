@@ -16,3 +16,36 @@
   3. Validated with ruff check, check_manifests.py, and bash syntax check.
 - Dispatched updated deployment: Deployment ID ca437306-0e9d-414e-accf-5c23fa9de3cc.
 - Task managed by antigravity-agent at 2026-10-24T13:35:40+07:00
+
+[2026-10-24T13:40:20+07:00] [SUCCESS] Deployment Verified & Code Pushed
+- Railway deployment ca437306-0e9d-414e-accf-5c23fa9de3cc successfully started.
+- Initialized database 'railway', loaded 55 modules (including id_base and l10n_id).
+- HTTP service active on port 8069.
+- Live probe verified: https://odooca-fmcg-demo.up.railway.app/web/login returned HTTP 200 OK.
+- Changes committed to branch agen/fix-railway-dockerfile and pushed to origin.
+- Updated docs/HANDOFF.md with milestone M0 deployment status.
+- Task managed by antigravity-agent at 2026-10-24T13:40:20+07:00
+
+[2026-10-24T14:40:33+07:00] [INFO] Master Data Mapping & Seed Blueprint
+- Analyzed Playbook v0.4, SCOPE v0.6, and GLOSSARY.md for FMCG Distributor context in Manado.
+- Structured comprehensive 10-domain master data blueprint:
+  1. Principal & Brand hierarchy (Mayora, Unilever, Kapal Api, Wings).
+  2. Products, Multi-UoM (Pcs, Renceng, Karton), barcodes, and Coretax codes (±150 SKUs).
+  3. Administrative and coverage territories (Manado Urban, Tomohon, Bitung, Minut).
+  4. Customer outlets (MT, GT, Retail, Institutional) with real Manado coordinates and credit limits.
+  5. Multi-dimensional pricing (Principal x Channel x Area x Tier) and cascading line/footer discounts.
+  6. Warehouses, zones, and mobile canvass van locations.
+  7. Logistics fleet models (Gran Max, L300, Canter) with volume/tonnage limits and KIR.
+  8. Employees and stacked App Roles (sales_to, sales_canvass, logistic) with driver licenses (SIM).
+  9. Sales PJP (Personal Journey Plan) weekly visit schedules.
+  10. 8 Analytical Accounting dimensions.
+- Generated full artifact: master_data_mapping_and_seed_plan.md.
+- Task managed by antigravity-agent at 2026-10-24T14:40:33+07:00
+
+[2026-10-24T14:49:28+07:00] [INFO] [M1] Implementasi Master Data Models di id_base
+- Model baru: id.principal, id.brand, id.sub.brand, id.channel, id.tier, id.coverage.area
+- Ekstensi res.partner dan product.template untuk atribut FMCG
+- Akses keamanan security/ir.model.access.csv dan views/menu_views.xml
+- Seed dasar data/ untuk 4 channel, 4 tier, 4 area Sulut, 4 principal nasional
+- Verifikasi ruff dan check_manifests.py lolos bersih
+- Task managed by antigravity-agent at 2026-10-24T14:49:28+07:00

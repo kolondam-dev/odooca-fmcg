@@ -1,1 +1,4 @@
-# Model ditambahkan mulai M1 (principal, area/wilayah, channel, tier, geotag).
+from . import principal
+from . import fmcg_dimension
+from . import res_partner
+from . import product_template

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Top-level FMCG Distribution Menu -->
+    <menuitem id="menu_fmcg_root"
+              name="FMCG Distribution"
+              sequence="25"
+              web_icon="id_base,static/description/icon.png"/>
+
+    <!-- Master Data Menu -->
+    <menuitem id="menu_fmcg_master"
+              name="Master Data"
+              parent="menu_fmcg_root"
+              sequence="10"/>
+
+    <menuitem id="menu_fmcg_principal"
+              name="Principals"
+              parent="menu_fmcg_master"
+              action="action_id_principal"
+              sequence="10"/>
+
+    <menuitem id="menu_fmcg_brand"
+              name="Brands"
+              parent="menu_fmcg_master"
+              action="action_id_brand"
+              sequence="20"/>
+
+    <menuitem id="menu_fmcg_channel"
+              name="Distribution Channels"
+              parent="menu_fmcg_master"
+              action="action_id_channel"
+              sequence="30"/>
+
+    <menuitem id="menu_fmcg_tier"
+              name="Customer Tiers"
+              parent="menu_fmcg_master"
+              action="action_id_tier"
+              sequence="40"/>
+
+    <menuitem id="menu_fmcg_coverage_area"
+              name="Coverage Areas"
+              parent="menu_fmcg_master"
+              action="action_id_coverage_area"
+              sequence="50"/>
+</odoo>

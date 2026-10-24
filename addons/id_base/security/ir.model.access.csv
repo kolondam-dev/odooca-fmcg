@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_id_principal_user,id.principal.user,model_id_principal,base.group_user,1,0,0,0
+access_id_principal_manager,id.principal.manager,model_id_principal,base.group_system,1,1,1,1
+access_id_brand_user,id.brand.user,model_id_brand,base.group_user,1,0,0,0
+access_id_brand_manager,id.brand.manager,model_id_brand,base.group_system,1,1,1,1
+access_id_sub_brand_user,id.sub.brand.user,model_id_sub_brand,base.group_user,1,0,0,0
+access_id_sub_brand_manager,id.sub.brand.manager,model_id_sub_brand,base.group_system,1,1,1,1
+access_id_channel_user,id.channel.user,model_id_channel,base.group_user,1,0,0,0
+access_id_channel_manager,id.channel.manager,model_id_channel,base.group_system,1,1,1,1
+access_id_tier_user,id.tier.user,model_id_tier,base.group_user,1,0,0,0
+access_id_tier_manager,id.tier.manager,model_id_tier,base.group_system,1,1,1,1
+access_id_coverage_area_user,id.coverage.area.user,model_id_coverage_area,base.group_user,1,0,0,0
+access_id_coverage_area_manager,id.coverage.area.manager,model_id_coverage_area,base.group_system,1,1,1,1

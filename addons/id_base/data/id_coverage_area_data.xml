@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="area_mnd_urban" model="id.coverage.area">
+        <field name="code">AREA-MND-URB</field>
+        <field name="name">Manado Pusat &amp; Urban</field>
+        <field name="category">urban</field>
+        <field name="city">Kota Manado</field>
+    </record>
+
+    <record id="area_tmh_hinterland" model="id.coverage.area">
+        <field name="code">AREA-TMH-HNT</field>
+        <field name="name">Tomohon &amp; Minahasa Hinterland</field>
+        <field name="category">hinterland</field>
+        <field name="city">Kota Tomohon</field>
+    </record>
+
+    <record id="area_btg_port" model="id.coverage.area">
+        <field name="code">AREA-BTG-PORT</field>
+        <field name="name">Bitung Port &amp; Industri</field>
+        <field name="category">port</field>
+        <field name="city">Kota Bitung</field>
+    </record>
+
+    <record id="area_minut_rural" model="id.coverage.area">
+        <field name="code">AREA-MINUT-RUR</field>
+        <field name="name">Minahasa Utara &amp; Rural</field>
+        <field name="category">rural</field>
+        <field name="city">Kab. Minahasa Utara</field>
+    </record>
+</odoo>

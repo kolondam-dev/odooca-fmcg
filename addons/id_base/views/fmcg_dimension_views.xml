@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Channel Views -->
+    <record id="view_id_channel_tree" model="ir.ui.view">
+        <field name="name">id.channel.list</field>
+        <field name="model">id.channel</field>
+        <field name="arch" type="xml">
+            <list string="Distribution Channels">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="description"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_id_channel" model="ir.actions.act_window">
+        <field name="name">Distribution Channels</field>
+        <field name="res_model">id.channel</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Tier Views -->
+    <record id="view_id_tier_tree" model="ir.ui.view">
+        <field name="name">id.tier.list</field>
+        <field name="model">id.tier</field>
+        <field name="arch" type="xml">
+            <list string="Customer Tiers">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="discount_percent"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_id_tier" model="ir.actions.act_window">
+        <field name="name">Customer Tiers</field>
+        <field name="res_model">id.tier</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Coverage Area Views -->
+    <record id="view_id_coverage_area_tree" model="ir.ui.view">
+        <field name="name">id.coverage.area.list</field>
+        <field name="model">id.coverage.area</field>
+        <field name="arch" type="xml">
+            <list string="Coverage Areas">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="category"/>
+                <field name="city"/>
+                <field name="state_id"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_id_coverage_area" model="ir.actions.act_window">
+        <field name="name">Coverage Areas</field>
+        <field name="res_model">id.coverage.area</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

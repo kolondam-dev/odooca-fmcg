@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_fmcg_inherit" model="ir.ui.view">
+        <field name="name">res.partner.form.fmcg.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="FMCG Distribution" name="fmcg_distribution">
+                    <group>
+                        <group string="Outlet Classification">
+                            <field name="channel_id"/>
+                            <field name="tier_id"/>
+                            <field name="coverage_area_id"/>
+                            <field name="credit_mode"/>
+                        </group>
+                        <group string="PIC &amp; Operations">
+                            <field name="pic_name"/>
+                            <field name="pic_phone"/>
+                            <field name="delivery_notes" placeholder="e.g. Accessible by 4-wheel box, unload via back alley..."/>
+                        </group>
+                    </group>
+                    <group string="Authorized Principals">
+                        <field name="principal_ids" widget="many2many_tags" placeholder="Select authorized principals for this outlet..."/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
