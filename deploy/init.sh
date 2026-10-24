@@ -142,6 +142,15 @@ PY
   set_mark postinit_v1
 fi
 
+# 5b. Master Seed FMCG (150 SKU, 354 Outlet)
+if ! has_mark seed_master_v1; then
+  if [ -f "/opt/scripts/load_fmcg_seed.py" ]; then
+    log "seed_master_v1: memuat master seed FMCG..."
+    odoo_run shell --no-http < /opt/scripts/load_fmcg_seed.py || log "seed_master_v1 warning: gagal atau dilewati"
+  fi
+  set_mark seed_master_v1
+fi
+
 # 6. Jalankan Odoo (hemat RAM untuk Railway Hobby; sesuaikan lewat env)
 log "menjalankan Odoo"
 exec env PGUSER="$ODOO_DB_USER" PGPASSWORD="$ODOO_DB_PASSWORD" \

@@ -1,0 +1,25 @@
+code,name,role,dept,cost_center,sim
+EMP-001,Bpk. Teddy Kolondam,owner,Management,CC-MGT,
+EMP-002,Hendrik Polii,branch_manager,Management,CC-MGT,SIM A
+EMP-003,Feybe Lumempouw,finance_lead,Finance,CC-FIN,SIM A
+EMP-004,Grace Sumual,accounting_staff,Finance,CC-FIN,
+EMP-005,Rudi Tumbelaka,tax_staff,Finance,CC-FIN,
+EMP-006,Meike Wondal,cashier,Finance,CC-FIN,
+EMP-007,Joni Kumajas,sales_spv,Sales,CC-SALES,SIM A
+EMP-008,Rivaldo Mamahit,sales_admin_lead,Sales,CC-SALES,
+EMP-009,Priscilia Tielung,sales_admin,Sales,CC-SALES,
+EMP-010,Willem Runtu,warehouse_lead,Warehouse,CC-WMS,SIM B1
+EMP-011,Jemmy Pangaila,staging_lead,Warehouse,CC-WMS,
+EMP-012,Robby Karundeng,picker_staff,Warehouse,CC-WMS,
+EMP-013,Christian Wowor,sales_mt,Sales,CC-SALES,SIM A
+EMP-014,Andre Pangemanan,sales_to,Sales,CC-SALES,SIM C & A
+EMP-015,Meidy Wowor,sales_to,Sales,CC-SALES,SIM C & A
+EMP-016,Refly Sondakh,sales_to,Sales,CC-SALES,SIM C & A
+EMP-017,Novry Mandagi,sales_canvass,Sales,CC-SALES,SIM A
+EMP-018,Steven Lumenta,sales_canvass,Sales,CC-SALES,SIM A
+EMP-019,Eko Prasetyo,driver,Logistik,CC-LOG,SIM B1
+EMP-020,Frits Wenas,driver,Logistik,CC-LOG,SIM B1
+EMP-021,Stenly Rompas,driver,Logistik,CC-LOG,SIM B1
+EMP-022,Johan Rori,driver,Logistik,CC-LOG,SIM B2
+EMP-023,Maxi Walangitan,helper,Logistik,CC-LOG,
+EMP-024,Royke Manopo,helper,Logistik,CC-LOG,

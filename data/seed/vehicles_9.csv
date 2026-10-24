@@ -1,0 +1,10 @@
+plate,type,model,cbm,ton,route,driver,stnk_exp,kir_exp
+DB 8123 QA,GM_BV,Daihatsu Gran Max BV 1.3,3.6,0.75,Canvassing Urban,Novry Mandagi,2027-05-14,2026-11-18
+DB 8234 QX,GM_BOX,Daihatsu Gran Max Box 1.5,4.7,1.0,Canvassing Sub-Urban,Steven Lumenta,2028-08-22,2026-12-05
+DB 8345 PL,GM_OPEN,Daihatsu Gran Max Bak 1.5,3.5,1.0,Staging Cepat & Retur,Boyke Tendean,2026-11-10,2026-10-28
+DB 8456 FB,L300,Mitsubishi L300 Box Euro 4,5.4,1.5,Delivery Urban Barat,Eko Prasetyo,2027-03-19,2026-09-15
+DB 8567 TR,TRAGA,Isuzu Traga Box Euro 4,6.1,1.8,Delivery Urban Timur,Frits Wenas,2028-07-04,2027-01-12
+DB 8910 TK,CDE,Isuzu Elf NLR 55 TX 4-Roda,10.0,3.5,Delivery Tomohon/Kawangkoan,Stenly Rompas,2027-09-11,2026-10-20
+DB 8890 EL,CDEL,Hino Dutro 110 SDBL 4-Roda Long,14.3,4.0,Delivery Minsel/Amurang,David Kalalo,2028-12-16,2027-02-08
+DB 8345 MK,CDD,Canter FE 74 HD 6-Roda Double,17.2,6.0,Grosir & MT Bitung,Johan Rori,2027-01-25,2026-08-14
+DB 8765 DL,CDDL,Hino Ranger FG 235 JJ 6-Roda Long,34.4,8.5,Inbound Pelabuhan Bitung,Agus Supit,2027-10-30,2026-11-19

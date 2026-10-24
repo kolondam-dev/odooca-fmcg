@@ -1,0 +1,45 @@
+{
+  "period": "2026-07-01 to 2026-10-24",
+  "working_days": 98,
+  "monthly_realization": {
+    "2026-07": {
+      "target": 5500000000,
+      "actual": 4850000000,
+      "active_outlets": 310,
+      "otif_pct": 94.2
+    },
+    "2026-08": {
+      "target": 5500000000,
+      "actual": 5250000000,
+      "active_outlets": 335,
+      "otif_pct": 95.5
+    },
+    "2026-09": {
+      "target": 5500000000,
+      "actual": 5500000000,
+      "active_outlets": 354,
+      "otif_pct": 96.1
+    },
+    "2026-10_mtd": {
+      "target": 4200000000,
+      "actual": 4280000000,
+      "active_outlets": 354,
+      "otif_pct": 97.4
+    }
+  },
+  "total_revenue_idr": 19880000000,
+  "inventory_metrics": {
+    "initial_stock_july_1_idr": 4100000000,
+    "average_inventory_idr": 4400000000,
+    "cogs_pct": 89.5,
+    "dsi_days": 22.3,
+    "stock_turnover_monthly": 1.12
+  },
+  "logistics_metrics": {
+    "total_fleet": 9,
+    "average_daily_cartons": 1540,
+    "average_daily_tonnage": 6.5,
+    "overall_otif_pct": 95.8,
+    "delivery_rejection_pct": 1.2
+  }
+}
