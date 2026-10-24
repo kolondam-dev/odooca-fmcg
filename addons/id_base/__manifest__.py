@@ -13,6 +13,7 @@
         "data/id_coverage_area_data.xml",
         "data/id_principal_data.xml",
         "data/id_fleet_type_data.xml",
+        "data/id_city_data.xml",
         "data/id_district_data.xml",
         "views/principal_views.xml",
         "views/fmcg_dimension_views.xml",

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Seluruh 15 Daerah Administrasi Kabupaten / Kota di Provinsi Sulawesi Utara (BPS Prov. Sulut) -->
+    
+    <!-- 1. Kota Manado -->
+    <record id="city_mnd" model="id.city">
+        <field name="code">7171</field>
+        <field name="name">Kota Manado</field>
+        <field name="type">kota</field>
+        <field name="is_out_of_town" eval="False"/>
+    </record>
+
+    <!-- 2. Kota Bitung -->
+    <record id="city_btg" model="id.city">
+        <field name="code">7172</field>
+        <field name="name">Kota Bitung</field>
+        <field name="type">kota</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 3. Kota Tomohon -->
+    <record id="city_tmh" model="id.city">
+        <field name="code">7173</field>
+        <field name="name">Kota Tomohon</field>
+        <field name="type">kota</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 4. Kota Kotamobagu -->
+    <record id="city_ktg" model="id.city">
+        <field name="code">7174</field>
+        <field name="name">Kota Kotamobagu</field>
+        <field name="type">kota</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 5. Kabupaten Minahasa -->
+    <record id="city_mnh" model="id.city">
+        <field name="code">7102</field>
+        <field name="name">Kabupaten Minahasa</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 6. Kabupaten Minahasa Utara -->
+    <record id="city_mnt" model="id.city">
+        <field name="code">7106</field>
+        <field name="name">Kabupaten Minahasa Utara</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 7. Kabupaten Minahasa Selatan -->
+    <record id="city_mns" model="id.city">
+        <field name="code">7105</field>
+        <field name="name">Kabupaten Minahasa Selatan</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 8. Kabupaten Minahasa Tenggara -->
+    <record id="city_mtr" model="id.city">
+        <field name="code">7109</field>
+        <field name="name">Kabupaten Minahasa Tenggara</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 9. Kabupaten Bolaang Mongondow -->
+    <record id="city_blm" model="id.city">
+        <field name="code">7101</field>
+        <field name="name">Kabupaten Bolaang Mongondow</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 10. Kabupaten Bolaang Mongondow Utara -->
+    <record id="city_bmu" model="id.city">
+        <field name="code">7108</field>
+        <field name="name">Kabupaten Bolaang Mongondow Utara</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 11. Kabupaten Bolaang Mongondow Selatan -->
+    <record id="city_bms" model="id.city">
+        <field name="code">7111</field>
+        <field name="name">Kabupaten Bolaang Mongondow Selatan</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 12. Kabupaten Bolaang Mongondow Timur -->
+    <record id="city_bmt" model="id.city">
+        <field name="code">7110</field>
+        <field name="name">Kabupaten Bolaang Mongondow Timur</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 13. Kabupaten Kepulauan Sangihe -->
+    <record id="city_sgh" model="id.city">
+        <field name="code">7103</field>
+        <field name="name">Kabupaten Kepulauan Sangihe</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 14. Kabupaten Kepulauan Siau Tagulandang Biaro (Sitaro) -->
+    <record id="city_str" model="id.city">
+        <field name="code">7107</field>
+        <field name="name">Kabupaten Kepulauan Siau Tagulandang Biaro</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+
+    <!-- 15. Kabupaten Kepulauan Talaud -->
+    <record id="city_tld" model="id.city">
+        <field name="code">7104</field>
+        <field name="name">Kabupaten Kepulauan Talaud</field>
+        <field name="type">kabupaten</field>
+        <field name="is_out_of_town" eval="True"/>
+    </record>
+</odoo>
