@@ -16,3 +16,33 @@
   3. Validated with ruff check, check_manifests.py, and bash syntax check.
 - Dispatched updated deployment: Deployment ID ca437306-0e9d-414e-accf-5c23fa9de3cc.
 - Task managed by antigravity-agent at 2026-10-24T13:35:40+07:00
+
+[2026-10-24T13:40:20+07:00] [SUCCESS] Deployment Verified & Code Pushed
+- Railway deployment ca437306-0e9d-414e-accf-5c23fa9de3cc successfully started.
+- Initialized database 'railway', loaded 55 modules (including id_base and l10n_id).
+- HTTP service active on port 8069.
+- Live probe verified: https://odooca-fmcg-demo.up.railway.app/web/login returned HTTP 200 OK.
+- Changes committed to branch agen/fix-railway-dockerfile and pushed to origin.
+- Updated docs/HANDOFF.md with milestone M0 deployment status.
+- Task managed by antigravity-agent at 2026-10-24T13:40:20+07:00
+
+[2026-10-24T13:43:16+07:00] [INFO] Workflow Clarification
+- User inquired regarding deployment path: live server edit vs git commit vs railway up CLI.
+- Clarification: No live server data or containers were manually altered (Rule 3 compliant). Changes were made strictly to local files (Dockerfile, init.sh, .gitignore, HANDOFF.md).
+- Verification deployment was dispatched from local codebase via Railway CLI (railway up) to validate build before polluting main branch.
+- Validated code was subsequently committed to branch agen/fix-railway-dockerfile and pushed to remote for PR review (Rule 2 compliant).
+- Task managed by antigravity-agent at 2026-10-24T13:43:16+07:00
+
+[2026-10-24T13:45:11+07:00] [INFO] User Credential & Persona Inventory
+- Audited default users in current milestone M0 deployment:
+  * Application superuser: admin (default pass: admin, or overridden via ADMIN_LOGIN_PASSWORD).
+  * System internal bots: OdooBot / __system__.
+  * Master Database password: Controlled by ADMIN_PASSWD (management interface hidden via --no-database-list).
+  * Database roles: postgres (Railway admin), odoo_app (Odoo app role).
+- Outlined future persona roadmap for FMCG (staf akuntansi, sales lead, warehouse, PWA field tokens) for upcoming milestones (M1-M4).
+- Task managed by antigravity-agent at 2026-10-24T13:45:11+07:00
+
+[2026-10-24T14:21:31+07:00] [INFO] Synchronization & Log Commit
+- Synced agent-log and documentation state.
+- Ready to commit and push tracking logs to remote branch agen/fix-railway-dockerfile.
+- Task managed by antigravity-agent at 2026-10-24T14:21:31+07:00
