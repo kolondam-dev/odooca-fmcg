@@ -4,24 +4,23 @@
 **Berubah:**
 - `addons/id_base`:
   - Model hierarki: `id.principal`, `id.brand`, `id.sub.brand`.
-  - Model dimensi geografi & armada: `id.channel`, `id.tier`, `id.coverage.area`, `id.district` (Kecamatan), `id.subdistrict` (Kelurahan & Kode Pos Sulut), `id.fleet.type` (9 tipe armada operasional dengan dimensi kargo dan tonase riil pabrikan).
+  - Model dimensi geografi & armada: `id.channel`, `id.tier`, `id.coverage.area`, `id.city` (15 Kabupaten/Kota Sulut lengkap), `id.district` (Kecamatan), `id.subdistrict` (Kelurahan & Kode Pos Sulut), `id.fleet.type` (9 tipe armada operasional dengan dimensi kargo dan tonase riil pabrikan).
   - Ekstensi `res.partner`: `channel_id`, `tier_id`, `coverage_area_id`, `district_id`, `subdistrict_id`, `principal_ids`, `credit_mode`, `pic_name`, `pic_phone`, `delivery_notes`.
   - Ekstensi `product.template`: `principal_id`, `fmcg_category` (Food, RTD, Home Care, Personal Care, Dairy, dll), `brand_id`, `sub_brand_id`, `inner_qty` (fraction dinamis), `carton_qty`.
   - Akses keamanan (`security/ir.model.access.csv`) untuk seluruh model baru.
   - Tampilan views & menu `views/principal_views.xml`, `views/fmcg_dimension_views.xml`, `views/res_partner_views.xml`, `views/product_template_views.xml`, `views/menu_views.xml`.
-  - Master seed bawaan (`data/`): 4 channel, 4 tier, 4 coverage area, 4 principal nasional (Mayora, Unilever, Kapal Api, Wings) beserta brand unggulan, 9 tipe armada operasional standar FMCG dengan kubikasi box riil, serta 18 kecamatan kunci se-Sulut (Manado, Bitung Maesa, Tomohon, Tondano, Kawangkoan, Minut, Minsel) dan kelurahan dengan kode pos resmi.
+  - Master seed bawaan (`data/`): 4 channel, 4 tier, 4 coverage area, 4 principal nasional (Mayora, Unilever, Kapal Api, Wings) beserta brand unggulan, 9 tipe armada operasional standar FMCG dengan kubikasi box riil, 15 Kabupaten/Kota resmi Provinsi Sulawesi Utara (`data/id_city_data.xml`), serta 18 kecamatan kunci dan kelurahan dengan kode pos resmi (`data/id_district_data.xml`).
   - Manifest `__manifest__.py` diperbarui ke versi `19.0.1.0.0`, depends `["base", "contacts", "product"]`.
 - Blueprint & Pemetaan Master Data (`master_data_mapping_and_seed_plan.md`):
-  - Penyelarasan target omset Rp 5-6 BIO IDR per bulan dengan universe 620 outlet (coverage 65% = 403 outlet aktif, gap 35% untuk narasi improvement demo).
-  - Pemetaan berbasis Kecamatan (Manado Urban, Maesa Urban Bitung, Tomohon/Tondano/Kawangkoan Hinterland, Minut/Minsel Luar Kota).
-  - Penugasan Direct Selling (Horeka/RS) langsung ke Branch Manager & Sales Supervisor.
-  - Arsitektur Multi-UoM dinamis (Satuan Terbesar, INNER/FRACTION dinamis, Satuan Terkecil/Base UoM untuk retur eceran) dan kode SKU sama persis dengan faktur principal Coretax.
+  - Pencantuman seluruh 15 daerah administrasi resmi Provinsi Sulawesi Utara (4 Kota dan 11 Kabupaten) tanpa sampling/ada yang terlewat.
+  - Rekalibrasi Modern Trade (MT): Menyusutkan jumlah MT aktif menjadi 12 Key Accounts (Indomaret DC, Alfamidi DC, FreshMart Group, MultiMart Group, Golden, Jumbo) dan menaikkan omset menjadi Rp 2,1 BIO IDR (rata-rata Rp 175 jt - Rp 650 jt per account), menyelaraskan 354 outlet aktif mencapai target omset Rp 5,5 BIO IDR per bulan.
+  - Matriks sebaran 150 SKU FMCG lengkap di 4 Principal (Mayora 44, Kapal Api 32, Unilever 42, Wings Food 32) dan kategori divisi (Food 70, RTD 34, Home Care 16, Personal Care 20, Confectionery 10).
   - 9 Lokasi gudang fisik murni WMS (GD Utama, Eaches, Return Staging, Bad Stock, Promo/Sample, Premium, Cold Storage, Dock, In-Transit).
   - Multi-diskon line item (slot principal > 1) dan traceable footer cashback/promo budget.
   - Data armada dengan dimensi p×l×t kargo, kubikasi/tonase riil pabrikan, serta kelengkapan STNK dan KIR.
 - Pemodelan Sebaran Outlet & Rute Kunjungan PJP (`pjp_and_outlet_distribution_model.md`):
-  - Penataan 403 outlet aktif dalam 18 kecamatan kunci se-Sulut (Universe 620 outlet, Coverage 65%).
-  - Segregasi channel ketat (MT 8-10 call, GT 20-22 call, Canvass 25-30 call, Direct Selling Horeka).
+  - Penataan 354 outlet aktif dalam 18 kecamatan kunci se-Sulut (Universe 545 outlet, Coverage 65%).
+  - Kunjungan MT intensif (2-3 call per hari untuk 12 Key Accounts dengan rata-rata transaksi Rp 43.750.000).
   - Sinkronisasi rute harian Senin-Sabtu dengan jadwal loading gudang dan penugasan armada pengiriman H+1.
 
 

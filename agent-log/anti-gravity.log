@@ -72,3 +72,9 @@
 - Menambahkan dataset data/id_district_data.xml yang memuat 18 kecamatan kunci (Manado, Bitung Maesa, Tomohon, Tondano, Kawangkoan, Minut, Minsel) dan kelurahan dengan kode pos resmi serta koordinat geotag.
 - Mendaftarkan berkas data ke manifest id_base dan memverifikasi lint ruff serta manifest check lolos 100%.
 - Task managed by antigravity-agent at 2026-10-24T08:59:30+00:00
+
+[2026-10-24T11:26:24+00:00] [INFO] Implementasi 15 Kabupaten/Kota Lengkap Sulut, Rekalibrasi Modern Trade, dan Matriks 150 SKU FMCG
+- Menambahkan model id.city dan dataset data/id_city_data.xml yang memuat lengkap seluruh 15 Kabupaten/Kota di Sulawesi Utara tanpa sampling.
+- Memutakhirkan master_data_mapping_and_seed_plan.md dan pjp_and_outlet_distribution_model.md dengan rincian 150 SKU (Mayora 44, Santos 32, Unilever 42, Wings 32) dan rekalibrasi 12 MT Key Accounts (Rp 2.1 BIO IDR) dengan total 354 outlet aktif (Rp 5.5 BIO IDR target).
+- Commit lokal dilakukan (tanpa push sesuai instruksi pemilik repo).
+- Task managed by antigravity-agent at 2026-10-24T11:26:24+00:00
