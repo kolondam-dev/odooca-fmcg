@@ -16,6 +16,19 @@ log() { echo "[init] $*"; }
 : "${ADMIN_PASSWD:?ADMIN_PASSWD wajib}"
 PGPORT="${PGPORT:-5432}"; PGDATABASE="${PGDATABASE:-fmcg}"
 DATA_DIR="${ODOO_DATA_DIR:-/var/lib/odoo}"
+
+if [ "$(id -u)" = "0" ]; then
+  mkdir -p "$DATA_DIR"
+  chown -R odoo:odoo "$DATA_DIR"
+  if command -v gosu >/dev/null 2>&1; then
+    exec gosu odoo "$0" "$@"
+  elif command -v runuser >/dev/null 2>&1; then
+    exec runuser -u odoo -- "$0" "$@"
+  else
+    exec su -s /bin/bash odoo -c "exec '$0' \"\$@\"" -- "$@"
+  fi
+fi
+
 INIT_MODULES="${INIT_MODULES:-id_base,l10n_id}"
 export PGHOST PGPORT PGUSER PGPASSWORD PGDATABASE
 case "$ODOO_DB_USER" in postgres) log "ODOO_DB_USER tidak boleh 'postgres'"; exit 1;; esac

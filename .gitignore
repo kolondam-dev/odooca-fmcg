@@ -5,6 +5,7 @@ node_modules/
 dist/
 .ruff_cache/
 *.log
+!agent-log/*.log
 # Dump & filestore TIDAK masuk git (repo publik); dibagikan sebagai GitHub Release asset
 deploy/seed/*.sql.gz
 deploy/seed/*.tgz
