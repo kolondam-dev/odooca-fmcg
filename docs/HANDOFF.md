@@ -1,31 +1,38 @@
 # HANDOFF
 
-## 2026-10-24 — antigravity (laptop/Railway) — [M1] Implementasi Model Master Data FMCG di id_base
+## 2026-10-24 — antigravity (laptop/Railway) — [M1] Implementasi Model Master Data FMCG & Tipe Armada di id_base
 **Berubah:**
 - `addons/id_base`:
   - Model baru: `id.principal`, `id.brand`, `id.sub.brand` (hierarki multi-principal FMCG).
   - Model dimensi: `id.channel` (MT, GT, Retail, Institusional), `id.tier` (Platinum, Gold, Silver, Bronze), `id.coverage.area` (Manado Urban, Tomohon Hinterland, Bitung Port, Minut Rural).
+  - Model operasional logistik: `id.fleet.type` (CDDL/6 Roda Long, CDD/6 Roda Std, CDEL/4 Roda Long, CDE/4 Roda Std, L300, TRAGA, GM BOX, GM BV, GM OPEN) dilengkapi kapasitas m3 dan tonase.
   - Ekstensi `res.partner`: `channel_id`, `tier_id`, `coverage_area_id`, `principal_ids`, `credit_mode`, `pic_name`, `pic_phone`, `delivery_notes`.
   - Ekstensi `product.template`: `principal_id`, `brand_id`, `sub_brand_id`, `carton_qty`.
   - Akses keamanan (`security/ir.model.access.csv`) untuk seluruh model baru.
   - Tampilan views & menu `views/principal_views.xml`, `views/fmcg_dimension_views.xml`, `views/res_partner_views.xml`, `views/product_template_views.xml`, `views/menu_views.xml`.
-  - Master seed bawaan (`data/`): 4 channel standar, 4 tier pelanggan, 4 zona coverage Sulut, 4 principal nasional (Mayora, Unilever, Kapal Api, Wings) beserta brand unggulan.
+  - Master seed bawaan (`data/`): 4 channel standar, 4 tier pelanggan, 4 zona coverage Sulut, 4 principal nasional (Mayora, Unilever, Kapal Api, Wings) beserta brand unggulan, dan 9 tipe armada operasional standar distributor FMCG.
   - Manifest `__manifest__.py` diperbarui ke versi `19.0.1.0.0`, depends `["base", "contacts", "product"]`.
+- Blueprint & Pemetaan Master Data (`master_data_mapping_and_seed_plan.md`):
+  - Penambahan kolom Tipe Operasional pada armada logistik.
+  - Perluasan roster karyawan menjadi 24 personel (Owner, BM, Finance Lead, Accounting, Tax, Kasir, Sales SPV, 2 Admin Sales, Gudang Lead, 2 Fulfillment/Picker, 4 TO Sales, 2 Canvasser, 4 Driver, 2 Helper Delivery).
+  - Pembatasan disiplin ketat rute kunjungan PJP (segregasi channel mutlak, target 20-25 visit/hari GT dan 8-12 visit/hari MT).
 
 **Diverifikasi (bagaimana):**
-- `python -m ruff check .` lolos (0 lint error).
+- `python -m ruff check addons/id_base` lolos (0 lint error).
 - `python scripts/check_manifests.py` lolos (`manifest ok: 1 addon (id_base)`).
-- `scripts/agent/whats_new.sh antigravity` dijalankan sebelum aksi (sinkron dengan commit `9b80505` claude-dev).
+- `scripts/agent/whats_new.sh antigravity` dijalankan sebelum aksi.
+- `scripts/agent/log_entry.sh antigravity` dicatat ke `agent-log/anti-gravity.log`.
 
 **Belum diuji:**
-- Upgrade modul `id_base` di server Railway (akan diuji setelah merge PR).
-- Integrasi PJP dan Pricing Engine (M4).
+- Upgrade modul `id_base` di server Railway (akan otomatis ter-deploy setelah merge PR).
+- Pemodelan cluster geografis dan simulasi sebaran 400 outlet PJP.
 
 **Butir terbuka:**
-1. Penyiapan dataset outlet fiktif Manado (±400 outlet) untuk seed M2.
-2. Integrasi desain dari `claude-design` saat siap.
+- Sesi pemodelan mendalam PJP & outlet distribution (target giliran berikutnya).
+- Pembuatan file seed CSV/XML untuk 400 outlet dan 150 SKU produk.
 
-**Menunggu:** pemilik repo (review PR `agen/m1-master-data-models` & deploy ke Railway); `claude-dev` untuk validasi di sandbox.
+**Menunggu:** pemilik repo (review & merge PR `agen/m1-master-data-models` ke `main`).
+
 
 ## 2026-10-24 — claude-dev agent (sandbox) — Sinkron remote, verifikasi perbaikan AntiGravity, protokol multi-agen
 **Berubah:** `AGENTS.md` (protokol 8 aturan), `docs/AGENT_PROTOCOL.md` (peran, sebelum/sesudah aksi, format commit dan log), `scripts/agent/whats_new.sh` dan `log_entry.sh`, `agent-log/claude-dev.log`, `docs/DEVELOPMENT.md` §1 dan §4 (kebijakan tanpa Docker lokal, alur multi-agen, perintah patch + tanda tangan), `docs/SANDBOX.md`, `scripts/sandbox/sandbox_up.sh` (user `odoo`, salinan addons), `ci.yml` (`bash -n` mencakup skrip agen). Izin eksekusi skrip diperbaiki (100755).
