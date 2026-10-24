@@ -87,4 +87,48 @@
         <field name="res_model">id.fleet.type</field>
         <field name="view_mode">list,form</field>
     </record>
+
+    <!-- District (Kecamatan) Views -->
+    <record id="view_id_district_tree" model="ir.ui.view">
+        <field name="name">id.district.list</field>
+        <field name="model">id.district</field>
+        <field name="arch" type="xml">
+            <list string="Kecamatan (Districts)">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="city"/>
+                <field name="coverage_area_id"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_id_district" model="ir.actions.act_window">
+        <field name="name">Kecamatan (Districts)</field>
+        <field name="res_model">id.district</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Subdistrict (Kelurahan / Desa) Views -->
+    <record id="view_id_subdistrict_tree" model="ir.ui.view">
+        <field name="name">id.subdistrict.list</field>
+        <field name="model">id.subdistrict</field>
+        <field name="arch" type="xml">
+            <list string="Kelurahan / Desa">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="district_id"/>
+                <field name="postal_code"/>
+                <field name="latitude"/>
+                <field name="longitude"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_id_subdistrict" model="ir.actions.act_window">
+        <field name="name">Kelurahan / Desa &amp; Kode Pos</field>
+        <field name="res_model">id.subdistrict</field>
+        <field name="view_mode">list,form</field>
+    </record>
 </odoo>

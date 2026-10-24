@@ -47,4 +47,16 @@
               parent="menu_fmcg_master"
               action="action_id_fleet_type"
               sequence="60"/>
+
+    <menuitem id="menu_fmcg_district"
+              name="Kecamatan"
+              parent="menu_fmcg_master"
+              action="action_id_district"
+              sequence="70"/>
+
+    <menuitem id="menu_fmcg_subdistrict"
+              name="Kelurahan &amp; Kode Pos"
+              parent="menu_fmcg_master"
+              action="action_id_subdistrict"
+              sequence="80"/>
 </odoo>

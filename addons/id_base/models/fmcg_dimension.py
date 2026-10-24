@@ -78,3 +78,32 @@ class IdFleetType(models.Model):
         ("code_uniq", "unique(code)", "Fleet type code must be unique!"),
     ]
 
+
+class IdDistrict(models.Model):
+    _name = "id.district"
+    _description = "Kecamatan (District)"
+    _order = "city, name"
+
+    name = fields.Char(string="Nama Kecamatan", required=True)
+    code = fields.Char(string="Kode Kecamatan", copy=False)
+    city = fields.Char(string="Kabupaten / Kota", required=True)
+    state_id = fields.Many2one("res.country.state", string="Provinsi")
+    coverage_area_id = fields.Many2one("id.coverage.area", string="Zona Coverage")
+    geojson_polygon = fields.Text(string="GeoJSON Boundary Polygon")
+    active = fields.Boolean(default=True)
+
+
+class IdSubdistrict(models.Model):
+    _name = "id.subdistrict"
+    _description = "Kelurahan / Desa"
+    _order = "district_id, name"
+
+    name = fields.Char(string="Nama Kelurahan / Desa", required=True)
+    code = fields.Char(string="Kode Kelurahan", copy=False)
+    district_id = fields.Many2one("id.district", string="Kecamatan", required=True, ondelete="cascade")
+    postal_code = fields.Char(string="Kode Pos", index=True)
+    latitude = fields.Float(string="Latitude", digits=(10, 7))
+    longitude = fields.Float(string="Longitude", digits=(10, 7))
+    active = fields.Boolean(default=True)
+
+

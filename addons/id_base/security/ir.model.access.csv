@@ -13,4 +13,8 @@ access_id_coverage_area_user,id.coverage.area.user,model_id_coverage_area,base.g
 access_id_coverage_area_manager,id.coverage.area.manager,model_id_coverage_area,base.group_system,1,1,1,1
 access_id_fleet_type_user,id.fleet.type.user,model_id_fleet_type,base.group_user,1,0,0,0
 access_id_fleet_type_manager,id.fleet.type.manager,model_id_fleet_type,base.group_system,1,1,1,1
+access_id_district_user,id.district.user,model_id_district,base.group_user,1,0,0,0
+access_id_district_manager,id.district.manager,model_id_district,base.group_system,1,1,1,1
+access_id_subdistrict_user,id.subdistrict.user,model_id_subdistrict,base.group_user,1,0,0,0
+access_id_subdistrict_manager,id.subdistrict.manager,model_id_subdistrict,base.group_system,1,1,1,1
 

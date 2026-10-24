@@ -5,7 +5,7 @@
         <field name="code">CDDL</field>
         <field name="name">CDDL / 6 RODA LONG</field>
         <field name="wheel_count">6</field>
-        <field name="capacity_cbm">24.0</field>
+        <field name="capacity_cbm">34.4</field>
         <field name="capacity_ton">8.5</field>
         <field name="description">Cold Diesel Double Long Chassis (volume besar, antar-depo &amp; inbound pelabuhan Bitung)</field>
     </record>
@@ -15,7 +15,7 @@
         <field name="code">CDD</field>
         <field name="name">CDD / 6 RODA STD</field>
         <field name="wheel_count">6</field>
-        <field name="capacity_cbm">16.0</field>
+        <field name="capacity_cbm">17.2</field>
         <field name="capacity_ton">6.0</field>
         <field name="description">Cold Diesel Double Standard Chassis (grosir besar &amp; rute muatan berat Bitung/Minut)</field>
     </record>
@@ -25,7 +25,7 @@
         <field name="code">CDEL</field>
         <field name="name">CDEL / 4 RODA LONG</field>
         <field name="wheel_count">4</field>
-        <field name="capacity_cbm">12.0</field>
+        <field name="capacity_cbm">14.3</field>
         <field name="capacity_ton">4.0</field>
         <field name="description">Cold Diesel Engkel Long Chassis (pengiriman luar kota kapasitas sedang)</field>
     </record>
@@ -35,9 +35,9 @@
         <field name="code">CDE</field>
         <field name="name">CDE / 4 RODA STD</field>
         <field name="wheel_count">4</field>
-        <field name="capacity_cbm">9.5</field>
+        <field name="capacity_cbm">10.0</field>
         <field name="capacity_ton">3.5</field>
-        <field name="description">Cold Diesel Engkel Standard Chassis (delivery taking order dalam dan luar kota Tomohon/Tondano)</field>
+        <field name="description">Cold Diesel Engkel Standard Chassis (delivery taking order dalam dan luar kota Tomohon/Tondano/Kawangkoan)</field>
     </record>
 
     <record id="fleet_type_l300" model="id.fleet.type">
@@ -45,7 +45,7 @@
         <field name="code">L300</field>
         <field name="name">L300</field>
         <field name="wheel_count">4</field>
-        <field name="capacity_cbm">5.2</field>
+        <field name="capacity_cbm">5.4</field>
         <field name="capacity_ton">1.5</field>
         <field name="description">Mitsubishi L300 Box (delivery lincah medium volume rute perkotaan Manado)</field>
     </record>
@@ -55,7 +55,7 @@
         <field name="code">TRAGA</field>
         <field name="name">TRAGA</field>
         <field name="wheel_count">4</field>
-        <field name="capacity_cbm">5.8</field>
+        <field name="capacity_cbm">6.1</field>
         <field name="capacity_ton">1.8</field>
         <field name="description">Isuzu Traga Box (medium volume, efisiensi bahan bakar rute semi-urban &amp; tanjakan)</field>
     </record>
@@ -65,7 +65,7 @@
         <field name="code">GM_BOX</field>
         <field name="name">(Grand Max) GM BOX</field>
         <field name="wheel_count">4</field>
-        <field name="capacity_cbm">4.2</field>
+        <field name="capacity_cbm">4.7</field>
         <field name="capacity_ton">1.0</field>
         <field name="description">Daihatsu Gran Max Box (delivery retail tertutup &amp; tahan cuaca hujan)</field>
     </record>
@@ -75,8 +75,8 @@
         <field name="code">GM_BV</field>
         <field name="name">(Grand Max) GM BV</field>
         <field name="wheel_count">4</field>
-        <field name="capacity_cbm">3.5</field>
-        <field name="capacity_ton">0.8</field>
+        <field name="capacity_cbm">3.6</field>
+        <field name="capacity_ton">0.75</field>
         <field name="description">Daihatsu Gran Max Blind Van (canvassing tunai retail perkotaan &amp; gang sempit Wenang/Tikala)</field>
     </record>
 
@@ -85,7 +85,7 @@
         <field name="code">GM_OPEN</field>
         <field name="name">(Grand Max) GM OPEN</field>
         <field name="wheel_count">4</field>
-        <field name="capacity_cbm">3.8</field>
+        <field name="capacity_cbm">3.5</field>
         <field name="capacity_ton">1.0</field>
         <field name="description">Daihatsu Gran Max Bak Terbuka / Pick-Up (staging cepat &amp; logistik darurat)</field>
     </record>
