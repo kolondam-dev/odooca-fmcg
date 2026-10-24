@@ -41,4 +41,10 @@
               parent="menu_fmcg_master"
               action="action_id_coverage_area"
               sequence="50"/>
+
+    <menuitem id="menu_fmcg_fleet_type"
+              name="Tipe Armada Operasional"
+              parent="menu_fmcg_master"
+              action="action_id_fleet_type"
+              sequence="60"/>
 </odoo>

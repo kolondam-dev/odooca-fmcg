@@ -63,4 +63,28 @@
         <field name="res_model">id.coverage.area</field>
         <field name="view_mode">list,form</field>
     </record>
+
+    <!-- Operational Fleet Type Views -->
+    <record id="view_id_fleet_type_tree" model="ir.ui.view">
+        <field name="name">id.fleet.type.list</field>
+        <field name="model">id.fleet.type</field>
+        <field name="arch" type="xml">
+            <list string="Tipe Operasional Armada">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="wheel_count"/>
+                <field name="capacity_cbm"/>
+                <field name="capacity_ton"/>
+                <field name="description"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_id_fleet_type" model="ir.actions.act_window">
+        <field name="name">Tipe Operasional Armada</field>
+        <field name="res_model">id.fleet.type</field>
+        <field name="view_mode">list,form</field>
+    </record>
 </odoo>

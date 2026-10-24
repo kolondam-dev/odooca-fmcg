@@ -58,3 +58,23 @@ class IdCoverageArea(models.Model):
     _sql_constraints = [
         ("code_uniq", "unique(code)", "Coverage Area code must be unique!"),
     ]
+
+
+class IdFleetType(models.Model):
+    _name = "id.fleet.type"
+    _description = "FMCG Operational Fleet Type"
+    _order = "sequence, name"
+
+    sequence = fields.Integer(default=10)
+    name = fields.Char(string="Tipe Operasional", required=True)
+    code = fields.Char(string="Kode", required=True, copy=False)
+    wheel_count = fields.Integer(string="Jumlah Roda", default=4)
+    capacity_cbm = fields.Float(string="Kapasitas Kubikasi (m³)", digits=(5, 2))
+    capacity_ton = fields.Float(string="Kapasitas Tonase (Ton)", digits=(5, 2))
+    description = fields.Text(string="Deskripsi / Karakteristik Rute")
+    active = fields.Boolean(default=True)
+
+    _sql_constraints = [
+        ("code_uniq", "unique(code)", "Fleet type code must be unique!"),
+    ]
+

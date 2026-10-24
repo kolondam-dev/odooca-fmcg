@@ -12,6 +12,7 @@
         "data/id_tier_data.xml",
         "data/id_coverage_area_data.xml",
         "data/id_principal_data.xml",
+        "data/id_fleet_type_data.xml",
         "views/principal_views.xml",
         "views/fmcg_dimension_views.xml",
         "views/res_partner_views.xml",
