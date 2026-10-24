@@ -1,0 +1,5 @@
+# Template terjemahan id_base. Buat ulang: odoo -d <db> --i18n-export=id_base.pot --modules=id_base
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"

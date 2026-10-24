@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+node_modules/
+dist/
+.ruff_cache/
+*.log
+# Dump & filestore TIDAK masuk git (repo publik); dibagikan sebagai GitHub Release asset
+deploy/seed/*.sql.gz
+deploy/seed/*.tgz

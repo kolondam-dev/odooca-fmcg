@@ -1,0 +1,38 @@
+# Pengembangan LOKAL saja. Kredensial di bawah hanya untuk mesin lokal Anda.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PGPASSWORD:-postgres-lokal}
+      POSTGRES_DB: ${PGDATABASE:-fmcg}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  odoo:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: ${PGPASSWORD:-postgres-lokal}
+      PGDATABASE: ${PGDATABASE:-fmcg}
+      ODOO_DB_USER: odoo
+      ODOO_DB_PASSWORD: ${ODOO_DB_PASSWORD:-odoo-lokal}
+      ADMIN_PASSWD: ${ADMIN_PASSWD:-master-lokal}
+      ADMIN_LOGIN_PASSWORD: ${ADMIN_LOGIN_PASSWORD:-admin-lokal}
+      BASE_URL: http://localhost:8069
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoodata:/var/lib/odoo
+      - ./addons:/opt/id-addons   # edit kode tanpa build ulang; perbarui modul dengan -u
+volumes:
+  pgdata:
+  odoodata:

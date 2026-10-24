@@ -1,0 +1,27 @@
+# repo  branch  sha   — pin OCA 19.0; diverifikasi 2026-10-23. Perbarui lewat scripts/oca_bump.sh
+rest-framework 19.0 615191208b0dc753b708a4c34f1993d9bdf27574
+queue 19.0 da2664795eb525698f93dfdd63f6ba5c4c9fccba
+credit-control 19.0 153ffd6aebbc799127dfb3d0cef3b9dd6f66164c
+sale-workflow 19.0 b457387a885b0925a286ecb1d661e7ae5a96eceb
+stock-logistics-workflow 19.0 8a06c01a4e04f0f3f630f51c8d6c3635e25501b7
+stock-logistics-warehouse 19.0 ae373d190a295298c5bcf29d391f9098bb154435
+account-financial-reporting 19.0 f48b4ea777c444256aa1c215ec3117d604b5feff
+mis-builder 19.0 7d519f31e1a553d7a5499571a9146f7e3ea49ea4
+reporting-engine 19.0 b9e8c6cdd2d106614eddaf81bd78f487ae35db45
+bank-statement-import 19.0 3a8c86a61232c2888bd94fb32e3ce04a72707807
+account-reconcile 19.0 14ddec26314e5a8b0470f301b95fa79ca2c2fd7d
+hr 19.0 23e948031779315958c3897652d04da813a058fb
+hr-holidays 19.0 abd1ff286b505d95f8fd6219adbe1a711f1a3ba7
+hr-attendance 19.0 f9ff6f58f43c9c63cb5ed3228943c5ef0c4c8677
+payroll 19.0 58f8a39799383ef98d50097f81f4abcc6dd03782
+fleet 19.0 412e1ce4588dc1c25c64308e3e9b1f7f6f38255e
+partner-contact 19.0 7bed34a43f264c078d241f03699150366bde5793
+stock-logistics-barcode 19.0 bed9ffe9af52aa6679167c3ce3869efc64ff8f15
+calendar 19.0 a0f55db96b9f5e1d7889b1b50dc0c3e5dd677baf
+connector 19.0 cce76545ea56b85864fde9a1afb69748bc766e99
+product-attribute 19.0 2bfd93c444731730ddf4a219d5069ee34cb1489e
+server-auth 19.0 4f5bf8a18a087b83808a832c4414ad605aa09289
+server-backend 19.0 5b4b85f1d476ce2ea3a661a27a5fe09d3b9d3e84
+server-tools 19.0 feddb04c6e2e0e64d32a7a4a7d9ae92ff30f93cd
+server-ux 19.0 2e040168c4ed27ac6e732c68516ca47781eb1a0f
+web-api 19.0 796b6a9cadb663fe9957bab60d94614d309d8e1d

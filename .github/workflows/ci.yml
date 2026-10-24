@@ -1,0 +1,111 @@
+# CI repo publik: tanpa secret. PR dari fork berjalan tanpa akses ke Railway.
+# STATUS: BELUM DIJALANKAN (draf M0). Verifikasi versi action dan image saat run pertama.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pasang alat
+        run: pip install ruff==0.6.9 pyyaml
+      - name: Lint
+        run: ruff check .
+      - name: Manifest addon
+        run: python scripts/check_manifests.py
+      - name: Sintaks shell
+        run: bash -n deploy/init.sh deploy/addons_path.sh scripts/fetch_oca.sh scripts/oca_bump.sh
+      - name: Validitas YAML
+        run: python -c "import glob,yaml; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+['docker-compose.yml']]"
+
+  install-test:
+    needs: static
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U odoo" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t fmcg-odoo:ci .
+      - name: Instal dan uji addon id_* pada DB kosong
+        run: |
+          set -o pipefail
+          docker run --rm --network host --entrypoint bash fmcg-odoo:ci -c '
+            odoo -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
+              -i id_base --test-tags /id_base --stop-after-init --log-level=test
+          ' 2>&1 | tee odoo.log
+      - name: Log harus bersih
+        run: |
+          if grep -E " (ERROR|CRITICAL) |Traceback" odoo.log; then
+            echo "Ditemukan ERROR/Traceback pada log"; exit 1
+          fi
+
+  init-test:
+    # Meniru uji sandbox A dan B: init.sh pada DB kosong (build penuh) lalu restart (semua langkah dilewati).
+    needs: static
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-postgres
+          POSTGRES_DB: fmcg
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t fmcg-odoo:ci .
+      - name: init.sh pada DB kosong (build penuh)
+        run: |
+          docker run -d --name odoo --network host \
+            -e PGHOST=localhost -e PGUSER=postgres -e PGPASSWORD=ci-postgres -e PGDATABASE=fmcg \
+            -e ODOO_DB_USER=odoo_app -e ODOO_DB_PASSWORD=ci-app -e ADMIN_PASSWD=ci-master \
+            -e ADMIN_LOGIN_PASSWORD=ci-admin -e BASE_URL=http://ci.example.test \
+            -e INIT_MODULES=id_base,l10n_id,sale_management,stock fmcg-odoo:ci
+          for i in $(seq 1 120); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8069/web/login)" = "200" ] && break
+            sleep 5
+          done
+          curl -sf -o /dev/null http://localhost:8069/web/login
+          docker logs odoo > init1.log 2>&1
+          grep -q "tanpa dump: build penuh" init1.log
+      - name: Restart idempoten
+        run: |
+          docker restart odoo
+          for i in $(seq 1 60); do
+            [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8069/web/login)" = "200" ] && break
+            sleep 3
+          done
+          curl -sf -o /dev/null http://localhost:8069/web/login
+          docker logs odoo > init2.log 2>&1
+          grep -q "init.base sudah ada; lewati" init2.log
+      - name: Log harus bersih
+        run: |
+          cat init1.log init2.log > init.log
+          if grep -E " (ERROR|CRITICAL) |Traceback" init.log; then exit 1; fi
