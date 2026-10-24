@@ -22,6 +22,11 @@
   - Penataan 354 outlet aktif dalam 18 kecamatan kunci se-Sulut (Universe 545 outlet, Coverage 65%).
   - Kunjungan MT intensif (2-3 call per hari untuk 12 Key Accounts dengan rata-rata transaksi Rp 43.750.000).
   - Sinkronisasi rute harian Senin-Sabtu dengan jadwal loading gudang dan penugasan armada pengiriman H+1.
+- Model Simulasi Historis & Perputaran Persediaan (`historical_simulation_and_turnover_model.md`):
+  - Garis waktu 1 Juli 2026 s/d 24 Oktober 2026 (Juli 4.85 B, Agustus 5.25 B, September 5.50 B, Oktober MTD 4.28 B = Kumulatif 19.88 BIO IDR).
+  - Rincian omset per salesman, per channel, dan profil 12 MT Key Accounts (Indomaret DC, Alfamidi DC, FreshMart, MultiMart, Swalayan).
+  - Model logistik 9 armada (OTIF 95.8%, ritase, utilitas kubikasi) dan rasio stock turnover 1.12x/bulan (DSI 22.3 hari) dengan pelacakan FEFO batch/lot.
+
 
 
 **Diverifikasi (bagaimana):**

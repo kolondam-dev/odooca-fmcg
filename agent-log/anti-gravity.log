@@ -83,3 +83,9 @@
 - Menambahkan seluruh definisi master brand untuk 4 principal nasional (Mayora, Santos, Unilever, Wings) di data/id_principal_data.xml.
 - Menyelaraskan kesiapan data loader seed untuk 150 SKU produk FMCG dan 354 partner outlet.
 - Task managed by antigravity-agent at 2026-10-24T11:28:25+00:00
+
+[2026-10-24T11:41:45+00:00] [INFO] Penyusunan Model Simulasi Historis FMCG Juli - Oktober 2026
+- Menyelesaikan perumusan dokumen historical_simulation_and_turnover_model.md yang memodelkan omset per salesman, per channel, dan 12 MT Key Accounts dari Juli s/d Oktober 2026 MTD.
+- Memodelkan fulfillment logistik 9 armada (OTIF 95.8%, kapasitas, utilisasi kubikasi) dan rasio perputaran persediaan (Stock Turnover 1.12x/bulan, DSI 22.3 hari, konsumsi FEFO batch/lot).
+- Menyusun arsitektur script generator deterministic pseudo-random untuk transaksi historis.
+- Task managed by antigravity-agent at 2026-10-24T11:41:45+00:00
