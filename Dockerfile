@@ -12,12 +12,11 @@ FROM odoo:19.0
 USER root
 COPY --from=oca /opt/oca /opt/oca
 RUN cat /opt/oca/*/requirements.txt 2>/dev/null | grep -Ev '^\s*(#|$)' | sort -u > /tmp/oca-req.txt \
-    && pip3 install --no-cache-dir --break-system-packages -r /tmp/oca-req.txt \
+    && pip3 install --no-cache-dir --break-system-packages --ignore-installed -r /tmp/oca-req.txt \
     && rm -f /tmp/oca-req.txt
 COPY addons /opt/id-addons
 # deploy/ memuat init.sh dan seed/ (dump tidak disimpan di git; lihat deploy/seed/README.md)
 COPY deploy /opt/deploy
 RUN chmod +x /opt/deploy/*.sh && chown -R odoo:odoo /opt/oca /opt/id-addons /opt/deploy
-USER odoo
 ENTRYPOINT ["/opt/deploy/init.sh"]
 CMD []
