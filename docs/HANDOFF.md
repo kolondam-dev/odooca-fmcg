@@ -11,7 +11,42 @@
 4. Urutan dan nama menu inti diterapkan lewat kode; setelah meng-upgrade modul inti jalankan `-u id_ui`.
 5. Titik yang paling mungkin bergeser antar-versi Odoo (patch komponen internal): `WebClient`, `NavBar`/`UserMenu`, `FormRenderer.mailLayout`, `Notebook.computePages`, selector CSS navbar. Daftar di `docs/ui/id_ui_shell.md` dan `id_ui_form.md`.
 6. Istilah baru usulan (Gudang & Stok, Armada, Diskusi, Dashboard) di `docs/ui/glossary-additions.md` belum masuk `GLOSSARY.md`.
-**Menunggu:** pemilik (unzip, commit, push, PR); `claude-dev` (tambah `-i id_ui_form` dan `--test-tags /id_ui,/id_ui_shell` ke job CI `install-test`; putuskan `INIT_MODULES`; terima/koreksi istilah glosarium); `antigravity` (uji di Railway setelah merge).
+**Menunggu:** pemilik repo (merge PR #4); `antigravity` (uji di Railway setelah merge).
+
+## 2026-10-24 — antigravity (laptop/Railway) — [M1] Cabang Mandiri agen/m1-historical-simulation, Dataset Transaksi Historis Kausalitas Presisi & Cetak Biru FMCG
+**Berubah:**
+- **Reorganisasi Cabang:** Memindahkan seluruh pekerjaan simulasi transaksi dan master data ke cabang tersendiri `agen/m1-historical-simulation` (bercabang dari `agen/m1-master-data-models`). Cabang `agen/ui-design-v1` dikembalikan murni ke commit agen `claude-design` (`3c6fb30`).
+- **Dokumentasi Cetak Biru (`docs/blueprints/`):**
+  - `master_data_mapping_and_seed_plan.md`: Cetak biru hierarki master data, 15 Kab/Kota Sulut, 150 SKU, 354 outlet, 24 roster staf, 9 tipe armada kargo riil, dan 9 zona gudang WMS.
+  - `pjp_and_outlet_distribution_model.md`: Pemodelan rute kunjungan PJP Senin–Sabtu, rasio call density (MT 8-10, GT 20-22, Canvass 25-30), dan loading armada H+1.
+  - `historical_simulation_and_turnover_model.md`: Pemodelan simulasi kausalitas historis 1 Juli s/d 24 Oktober 2026 (Juli krisis overstok 10B net margin 0.9%, Agustus drop 23% net margin 2.5%, September konsolidasi sehat net margin 3.7%, Oktober rebound MTD 5.3B net margin 5.0%, utilisasi armada 89%).
+  - `REVIEW_FEEDBACK_LOG.md`: Dokumentasi riwayat komprehensif review pengguna, feedback lapangan, dan keputusan desain arsitektur.
+- **Generator & Loader Transaksi Historis:**
+  - `scripts/generate_historical_simulation.py`: Menghasilkan dataset deterministik terkalibrasi presisi:
+    - `data/seed/sales_orders_historical.csv`: 3.762 transaksi faktur penjualan harian riil (97 hari kerja operasional).
+    - `data/seed/sales_order_lines_historical.csv`: 8.513 baris line item produk, karton, dan lot FEFO.
+    - `data/seed/inbound_po_historical.csv` & `inbound_po_lines_historical.csv`: 11 Inbound PO Kontainer Bitung & jadwal AP.
+    - `data/seed/opex_vendor_bills.csv`: 20 Vendor Bills beban operasional bulanan.
+    - `data/seed/daily_logistics_metrics.csv`: 97 hari metrik okupansi gudang dan utilisasi 9 armada.
+    - `data/seed/historical_simulation_summary.json`: Ringkasan finansial terkalibrasi (Omset Rp 18.995 BIO, OPEX Rp 1.619 BIO, Laba Bersih Rp 566.89 jt, Margin 2.98%).
+  - `scripts/load_historical_simulation.py`: Loader Odoo shell idempoten untuk `account.move` (OPEX vendor bills), `purchase.order`, dan `sale.order`.
+
+**Diverifikasi (bagaimana):**
+- `python scripts/generate_historical_simulation.py` sukses menghasilkan seluruh dataset.
+- `python -m ruff check .` lolos bersih (0 galat).
+- `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
+- Cabang `agen/ui-design-v1` diverifikasi ter-reset bersih pada commit `3c6fb30`.
+- PR #2 dan PR #3 telah diverifikasi dan di-merge ke `main`.
+- CI GitHub Actions lolos 100% HIJAU (PASS).
+
+**Belum diuji:**
+- Pemuatan seluruh data ke Odoo staging di Railway (akan terpicu otomatis saat seluruh PR di-merge ke main).
+
+**Butir terbuka:**
+- Merge PR #4 ke `main`.
+- Verifikasi deployment otomatis di Railway Staging (`https://odooca-fmcg-demo.up.railway.app`).
+
+**Menunggu:** pemilik repo (merge PR #4 di GitHub).
 
 ## 2026-10-24 — claude-dev agent (sandbox) — Sinkron remote, verifikasi perbaikan AntiGravity, protokol multi-agen
 **Berubah:** `AGENTS.md` (protokol 8 aturan), `docs/AGENT_PROTOCOL.md` (peran, sebelum/sesudah aksi, format commit dan log), `scripts/agent/whats_new.sh` dan `log_entry.sh`, `agent-log/claude-dev.log`, `docs/DEVELOPMENT.md` §1 dan §4 (kebijakan tanpa Docker lokal, alur multi-agen, perintah patch + tanda tangan), `docs/SANDBOX.md`, `scripts/sandbox/sandbox_up.sh` (user `odoo`, salinan addons), `ci.yml` (`bash -n` mencakup skrip agen). Izin eksekusi skrip diperbaiki (100755).

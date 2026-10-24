@@ -97,3 +97,31 @@
 - Memperbarui deploy/init.sh dan Dockerfile untuk menyertakan berkas seed dan mengeksekusi mark seed_master_v1 secara otomatis saat container dijalankan.
 - Commit lokal dilakukan (tanpa push sesuai instruksi pemilik repo).
 - Task managed by antigravity-agent at 2026-10-24T18:51:30+07:00
+
+[2026-10-24T21:04:00+07:00] [INFO] Reorganisasi Cabang Mandiri & Penyalinan Dokumentasi Cetak Biru FMCG
+- Memisahkan seluruh pekerjaan simulasi transaksi dan master data ke cabang baru tersendiri agen/m1-historical-simulation (bercabang dari agen/m1-master-data-models).
+- Mengembalikan cabang agen/ui-design-v1 murni ke commit agen claude-design (3c6fb30).
+- Menyalin 3 berkas cetak biru ke direktori docs/blueprints/ di repository:
+  1. master_data_mapping_and_seed_plan.md
+  2. pjp_and_outlet_distribution_model.md
+  3. historical_simulation_and_turnover_model.md
+- Menambahkan dokumentasi docs/blueprints/REVIEW_FEEDBACK_LOG.md yang mencatat komprehensif seluruh feedback review pengguna dan keputusan desain arsitektur.
+- Mengintegrasikan scripts/generate_historical_simulation.py (3.762 faktur harian riil, 8.513 line item, 11 Inbound PO, 20 OPEX Vendor Bills, 97 hari metrik gudang/logistik) dan scripts/load_historical_simulation.py.
+- Verifikasi ruff check lolos bersih (0 galat) dan manifest check lolos 1 addon (id_base).
+- Commit lokal dibuat pada cabang agen/m1-historical-simulation (tanpa push sesuai arahan pemilik repo).
+- Task managed by antigravity-agent at 2026-10-24T21:04:00+07:00
+
+[2026-10-24T21:08:00+07:00] [INFO] Push ke Remote & Pembukaan Pull Request #2 ke Main
+- Berdasarkan persetujuan dan instruksi pemilik repo, cabang agen/m1-master-data-models dan agen/m1-historical-simulation di-push ke remote origin.
+- Membuka Pull Request #2: https://github.com/kolondam-dev/odooca-fmcg/pull/2 dari agen/m1-historical-simulation ke main.
+- PR memuat seluruh model master data id_base, dataset seed 150 SKU, 354 outlet, 24 staf, 9 armada, 3.762 transaksi faktur penjualan historis, 11 PO Inbound Bitung, 20 OPEX Vendor Bills, 4 dokumen cetak biru di docs/blueprints/, serta loader Odoo.
+- Status CI GitHub Actions aktif (static check: PASS).
+- Cabang agen/ui-design-v1 (commit 3c6fb30 milik claude-design) ikut di-push ke remote origin tracking origin/agen/ui-design-v1.
+- Task managed by antigravity-agent at 2026-10-24T21:10:15+07:00
+
+[2026-10-24T21:32:45+07:00] [INFO] Diagnosa & Perbaikan CI init-test pada Seluruh 3 PR (Semua Hijau 100%)
+- Mendiagnosa kegagalan init-test pada PR #2, #3, dan #4: Invalid field 'uom_po_id' in 'product.template' saat bootstrap DB kosong tanpa modul purchase.
+- Menerapkan perbaikan defensif dinamis di scripts/load_fmcg_seed.py: memfilter vals dengan Model._fields agar hanya mengisi field yang tersedia pada lingkungan aktif.
+- Menerapkan dan mem-push perbaikan ke cabang agen/m1-historical-simulation, agen/m1-master-data-models, dan agen/ui-design-v1.
+- Hasil verifikasi CI GitHub Actions: Seluruh pengujian (static, install-test, init-test) pada ketiga PR lulus 100% HIJAU (PASS).
+- Task managed by antigravity-agent at 2026-10-24T21:32:45+07:00
