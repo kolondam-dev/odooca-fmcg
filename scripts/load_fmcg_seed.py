@@ -90,6 +90,8 @@ def load_products():
                 "sale_ok": True,
                 "purchase_ok": True,
             }
+            # Filter hanya field yang tersedia pada model di environment saat ini
+            vals = {k: v for k, v in vals.items() if k in ProductTemplate._fields}
 
             prod = ProductTemplate.search([("default_code", "=", code)], limit=1)
             if prod:
@@ -151,6 +153,8 @@ def load_partners():
                 "partner_latitude": float(row.get("latitude", 0.0)),
                 "partner_longitude": float(row.get("longitude", 0.0)),
             }
+            # Filter hanya field yang tersedia pada model di environment saat ini
+            vals = {k: v for k, v in vals.items() if k in Partner._fields}
 
             partner = Partner.search([("ref", "=", ref)], limit=1)
             if partner:
