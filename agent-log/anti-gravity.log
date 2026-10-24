@@ -125,3 +125,9 @@
 - Menerapkan dan mem-push perbaikan ke cabang agen/m1-historical-simulation, agen/m1-master-data-models, dan agen/ui-design-v1.
 - Hasil verifikasi CI GitHub Actions: Seluruh pengujian (static, install-test, init-test) pada ketiga PR lulus 100% HIJAU (PASS).
 - Task managed by antigravity-agent at 2026-10-24T21:32:45+07:00
+
+[2026-10-24T14:54:33+00:00] [INFO] Fix Module Synchronization on Boot in deploy/init.sh
+- Menambahkan id_ui, id_ui_shell, id_ui_form ke INIT_MODULES
+- Menambahkan fase upgrade_modules_v1 (odoo -i -u) untuk sinkronisasi kolom model baru seperti res_partner.channel_id
+- Menaikkan seed mark ke seed_master_v2 agar seed data dimuat ulang dengan field FMCG lengkap
+- Task managed by antigravity-agent at 2026-10-24T14:54:33+00:00

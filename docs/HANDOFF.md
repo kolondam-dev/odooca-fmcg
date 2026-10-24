@@ -1,5 +1,22 @@
 # HANDOFF
 
+## 2026-10-24 — antigravity (laptop/Railway) — Sinkronisasi Modul Otomatis (Fix 500 UndefinedColumn res_partner.channel_id) & Seed Data v2
+**Berubah:**
+- `deploy/init.sh`:
+  - Menambahkan modul `id_ui`, `id_ui_shell`, `id_ui_form` ke variabel default `INIT_MODULES`.
+  - Menambahkan fase `upgrade_modules_v1` (`odoo_run -i "$INIT_MODULES" -u "$INIT_MODULES" --stop-after-init`) agar saat container baru boot pada DB yang sudah ada, kolom-kolom baru (seperti `res_partner.channel_id`, `product_template.principal_id`, dll.) dan modul UI baru langsung terpasang dan tersinkronisasi di skema PostgreSQL.
+  - Memperbarui mark seed data menjadi `seed_master_v2` sehingga data master 150 produk & 354 outlet dimuat ulang secara lengkap dengan kolom FMCG yang valid setelah modul terpasang.
+- Log: `agent-log/anti-gravity.log`.
+
+**Diverifikasi (bagaimana):**
+- Analisis log Railway menemukan akar penyebab error HTTP 500: `psycopg2.errors.UndefinedColumn: column res_partner.channel_id does not exist` saat merender `/odoo` atau memproses cron background, akibat DB belum pernah di-upgrade dengan `-u id_base`.
+- `ruff check .` lolos bersih (0 galat).
+- `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
+- Sintaks `deploy/init.sh` diverifikasi valid via bash check.
+
+**Belum diuji:**
+- Menunggu deployment container baru di Railway untuk memverifikasi endpoint `/odoo` dan `/web` kembali 200 OK secara visual.
+
 ## 2026-10-24 — claude-design agent (chat + sandbox) — UI redesign v1: sidebar, topbar, chatter sebagai tab
 **Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
 **Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893–998 ms (sidebar) vs 923–1030 ms (klasik), heap setelah GC 33,5 vs 35,6 MB.
