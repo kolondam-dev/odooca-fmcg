@@ -2,6 +2,7 @@
 // klasik tidak tersentuh. Token disimpan sebagai CSS variable agar mudah disetel.
 body.id-shell-sidebar {
     --id-sidebar-w: 248px;
+    --id-panel-w: 0px;
     --id-sidebar-bg: #001a57;
     --id-sidebar-fg: rgba(255, 255, 255, .86);
     --id-sidebar-fg-strong: #fff;
@@ -12,41 +13,50 @@ body.id-shell-sidebar {
     --id-topbar-bg: #fff;
     --id-topbar-fg: #0b1f4d;
     --id-topbar-muted: #5b6b8c;
-    --id-topbar-border: #e3e8ee;
     --id-topbar-h: 58px;
+    --id-panel-bg: #fff;
+    --id-panel-border: #e3e8ee;
+    --id-panel-active: #d6e9f8;
+    --id-panel-hover: #f1f4f9;
 
-    // Grid: kolom sidebar + isi; baris topbar + aksi. Halaman tidak ikut scroll.
+    // Grid: sidebar | panel seksi | isi. Baris: topbar | isi. Halaman tidak ikut scroll.
     display: grid !important;
-    grid-template-columns: var(--id-sidebar-w) minmax(0, 1fr);
+    grid-template-columns: var(--id-sidebar-w) var(--id-panel-w) minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
     height: 100dvh;
     overflow: hidden;
 
-    &.id-shell-collapsed {
-        --id-sidebar-w: 68px;
-    }
+    &.id-shell-collapsed { --id-sidebar-w: 68px; }
+    &.id-shell-panel { --id-panel-w: 232px; }
+    &.id-shell-panel-collapsed { --id-panel-w: 28px; }
 
     > .id_sidebar { grid-column: 1; grid-row: 1 / -1; }
-    > .o_navbar { grid-column: 2; grid-row: 1; min-width: 0; }
-    > .o_action_manager { grid-column: 2; grid-row: 2; min-height: 0; }
+    > .o_navbar { grid-column: 2 / -1; grid-row: 1; min-width: 0; }
+    > .id_panel { grid-column: 2; grid-row: 2; }
+    > .o_action_manager { grid-column: 3; grid-row: 2; min-height: 0; }
     > .o-main-components-container { display: contents; }
 
-    // ---- Topbar: judul besar | tab seksi | cari menu | systray | pengguna ----
-    .o_main_navbar {
+    // ---- Topbar polos: judul besar | cari menu | systray | pengguna ----
+    .o_navbar, .o_main_navbar {
         --NavBar-entry-color: var(--id-topbar-fg);
         --NavBar-entry-color--hover: var(--id-topbar-fg);
         --NavBar-entry-backgroundColor: transparent;
         --NavBar-entry-backgroundColor--hover: rgba(0, 26, 87, .07);
         --NavBar-entry-backgroundColor--focus: rgba(0, 26, 87, .07);
         --NavBar-entry-backgroundColor--active: rgba(0, 26, 87, .1);
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+    .o_main_navbar {
         height: var(--id-topbar-h);
         padding-inline: 1rem .75rem;
         gap: .5rem;
+        align-items: center;
         background: var(--id-topbar-bg);
         color: var(--id-topbar-fg);
-        border-bottom: 1px solid var(--id-topbar-border);
 
-        .o_navbar_apps_menu { display: none !important; }
+        .o_navbar_apps_menu,
+        .o_menu_sections { display: none !important; }
 
         // Judul halaman = nama aplikasi aktif.
         .o_menu_brand {
@@ -60,38 +70,26 @@ body.id-shell-sidebar {
             background: transparent;
         }
 
-        // Seksi aplikasi sebagai tab horizontal (penyesuaian prioritas "lainnya" tetap dari Odoo).
-        .o_menu_sections {
-            gap: .125rem;
-            .o_nav_entry, .dropdown-toggle, button {
-                padding: .45rem .8rem;
-                border-radius: .5rem;
-                font-weight: 500;
-                color: var(--id-topbar-muted);
-                &:hover, &:focus, &.show { color: var(--id-topbar-fg); background: rgba(0, 26, 87, .07); }
-            }
-        }
-
         .o_menu_systray { color: var(--id-topbar-fg); margin-inline-start: 0; }
         .o_menu_systray .o-dropdown > .dropdown-toggle,
         .o_menu_systray .o_nav_entry { color: var(--id-topbar-fg); }
     }
-    &.id-shell-collapsed .o_main_navbar .o_menu_sections { flex: 1 1 auto; }
 
-    // Cari menu global (membuka command palette bawaan).
+    // Cari menu global (membuka command palette bawaan), sejajar tengah topbar.
     .id_menu_search {
         all: unset; box-sizing: border-box; cursor: pointer;
-        display: flex; align-items: center; gap: .5rem; flex: 0 1 280px; min-width: 150px;
+        display: flex; align-items: center; align-self: center; gap: .5rem;
+        flex: 0 1 280px; min-width: 150px; height: 34px;
         margin-inline-start: auto;
-        padding: .45rem .75rem; border-radius: .75rem;
-        background: #f1f4f9; color: var(--id-topbar-muted); font-size: .875rem;
+        padding: 0 .75rem; border-radius: .6rem;
+        background: #f1f4f9; color: var(--id-topbar-muted); font-size: .85rem; line-height: 1;
         &:hover { background: #e7ecf5; }
-        &:focus-visible { outline: 2px solid var(--id-sidebar-accent); }
-        .id_icon, svg { display: inline-flex; width: 1.1rem; height: 1.1rem; flex: none; }
+        &:focus-visible { outline: 2px solid var(--id-sidebar-accent); outline-offset: 1px; }
+        .id_icon, svg { display: inline-flex; width: 1rem; height: 1rem; flex: none; }
         svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         &__text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        kbd { background: #fff; color: var(--id-topbar-muted); border: 1px solid var(--id-topbar-border);
-            box-shadow: none; border-radius: .3rem; padding: 0 .35rem; font-size: .7rem; font-family: inherit; }
+        kbd { background: #fff; color: var(--id-topbar-muted); border: 1px solid var(--id-panel-border);
+            box-shadow: none; border-radius: .3rem; padding: 0 .35rem; font-size: .68rem; line-height: 1.4; font-family: inherit; }
     }
     .id_menu_search + .o_menu_systray { margin-inline-start: .25rem; }
 
@@ -103,13 +101,22 @@ body.id-shell-sidebar {
         small { font-size: .7rem; color: var(--id-topbar-muted); }
     }
 }
-// Di mode klasik nama/role tidak ditampilkan.
-.id_user_meta { display: none; }
+// Di mode klasik nama/role dan pencarian menu tidak ditampilkan.
+.id_user_meta, .id_menu_search { display: none; }
 body.id-shell-sidebar .id_user_meta { display: flex; }
-.id_menu_search { display: none; }
 body.id-shell-sidebar .id_menu_search { display: flex; }
 
-// ---- Sidebar ----
+// Scrollbar disamarkan: tersembunyi, muncul tipis dan transparan saat hover.
+@mixin id-quiet-scroll($thumb) {
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+    &:hover { scrollbar-width: thin; scrollbar-color: $thumb transparent; }
+    &:hover::-webkit-scrollbar { display: block; width: 6px; }
+    &:hover::-webkit-scrollbar-track { background: transparent; }
+    &:hover::-webkit-scrollbar-thumb { background: $thumb; border-radius: 3px; }
+}
+
+// ---- Sidebar aplikasi ----
 .id_sidebar {
     display: flex;
     flex-direction: column;
@@ -133,28 +140,35 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
         display: flex; align-items: center; gap: .625rem;
         height: var(--id-topbar-h); padding: 0 .75rem 0 1rem; flex: none;
     }
+    // Logo aplikasi (ikon Odoo) dengan glow dan gerak tipis saat hover.
     &__logo {
         display: grid; place-items: center; flex: none;
         width: 2rem; height: 2rem; border-radius: .5rem;
-        background: var(--id-sidebar-accent); color: #08283d; font-weight: 700;
+        background: var(--id-sidebar-accent); color: #08283d; font-size: 1.15rem;
+        transition: box-shadow .25s ease, transform .25s ease;
+        &:hover {
+            box-shadow: 0 0 0 3px rgba(91, 179, 230, .25), 0 0 18px 4px rgba(91, 179, 230, .65);
+            transform: translateY(-1px) scale(1.07);
+            animation: id-logo-float 1.8s ease-in-out infinite alternate;
+        }
     }
     &__title { flex: 1; font-weight: 700; font-size: 1rem; color: var(--id-sidebar-fg-strong); white-space: nowrap; }
     &__collapse { padding: .375rem; border-radius: .375rem; color: var(--id-sidebar-fg);
         &:hover { background: var(--id-sidebar-hover); } }
-    &__heading { padding: .75rem 1.25rem .25rem; font-size: .8rem; font-weight: 700;
+    &__heading { padding: .75rem 1rem .25rem; font-size: .8rem; font-weight: 700;
         letter-spacing: .04em; color: var(--id-sidebar-fg-strong); }
 
-    &__nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: .25rem .75rem; scrollbar-width: thin; }
+    &__nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: .25rem 0; @include id-quiet-scroll(rgba(255, 255, 255, .28)); }
     &__foot { flex: none; padding: .625rem 1rem; font-size: .7rem; color: rgba(255,255,255,.5); white-space: nowrap; }
 
+    // Item persegi selebar sidebar; yang aktif menyambung ke panel/konten di sebelahnya.
     .id_item {
-        display: flex !important; align-items: center; gap: .75rem; width: 100%;
-        padding: .5rem .65rem; border-radius: .75rem; color: var(--id-sidebar-fg); font-weight: 600;
+        display: flex !important; align-items: center; gap: .75rem; width: 100%; height: 44px;
+        padding: 0 1rem; border-radius: 0; color: var(--id-sidebar-fg); font-weight: 600;
         &:hover { background: var(--id-sidebar-hover); color: var(--id-sidebar-fg-strong); }
-        // Aplikasi aktif = pil putih (seperti referensi).
         &.is-current { background: var(--id-sidebar-pill-bg); color: var(--id-sidebar-pill-fg); }
+        &:focus-visible { outline-offset: -3px; }
     }
-    .id_item--app { margin-top: .2rem; }
     .id_appicon { flex: none; width: 1.75rem; height: 1.75rem; border-radius: .45rem; object-fit: cover; }
     .id_appicon--built { display: inline-grid; place-items: center; font-size: .95rem; }
 
@@ -164,6 +178,54 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
         .id_sidebar__head { flex-direction: column; justify-content: center; height: auto; gap: .25rem; padding: .5rem 0; }
         .id_item--app { justify-content: center; padding-inline: 0; }
         .id_appicon { width: 2rem; height: 2rem; }
-        .id_sidebar__nav { padding-inline: .5rem; }
     }
+}
+
+@keyframes id-logo-float {
+    from { transform: translateY(-1px) scale(1.07) rotate(-3deg); }
+    to { transform: translateY(-3px) scale(1.09) rotate(3deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .id_sidebar__logo:hover { animation: none; }
+}
+
+// ---- Panel seksi (sidebar dalam): seksi > sub-seksi > sub ----
+.id_panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--id-panel-bg);
+    border-right: 1px solid var(--id-panel-border);
+    color: #0b1f4d;
+    font-size: .875rem;
+    overflow: hidden;
+
+    :where(button) { all: unset; box-sizing: border-box; cursor: pointer; }
+    button:focus-visible { outline: 2px solid var(--id-sidebar-accent); outline-offset: -2px; }
+    svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .id_icon, .id_caret { display: inline-flex; flex: none; }
+
+    &__head { flex: none; display: flex; justify-content: flex-end; padding: .5rem .5rem 0; }
+    &__toggle { padding: .3rem; border-radius: .375rem; color: #5b6b8c;
+        &:hover { background: var(--id-panel-hover); color: #0b1f4d; } }
+    &__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: .25rem 0 1rem; @include id-quiet-scroll(rgba(11, 31, 77, .25)); }
+
+    .id_pitem { display: flex !important; align-items: center; gap: .4rem; width: 100%; color: #0b1f4d; }
+    // Judul seksi (tingkat 1).
+    .id_pitem--group.id_depth-0 { padding: .9rem 1rem .35rem; font-size: .75rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .04em; }
+    // Sub-seksi (tingkat 2 dan seterusnya).
+    .id_pitem--group:not(.id_depth-0) { padding: .4rem 1rem .4rem 1.5rem; font-weight: 600; }
+    .id_pitem--group {
+        .id_caret { transition: transform .12s; svg { width: .75rem; height: .75rem; } }
+        &[aria-expanded="true"] .id_caret { transform: rotate(90deg); }
+        &:hover { color: #1B5E8C; }
+    }
+    .id_pitem--leaf { padding: .42rem 1rem .42rem 1.5rem; margin-inline: .5rem; width: auto; border-radius: .3rem;
+        &:hover { background: var(--id-panel-hover); }
+        &.is-active { background: var(--id-panel-active); font-weight: 600; } }
+    .id_pchildren .id_pchildren .id_pitem--leaf { padding-inline-start: 2.25rem; }
+
+    // Ciut: hanya tombol bentang.
+    &--collapsed { .id_panel__head { justify-content: center; padding-inline: 0; } }
 }

@@ -6,3 +6,11 @@
 - Tidak mengubah addon lain, CI, init.sh, Dockerfile. Satu-satunya jejak DB: kolom res_users_settings.id_ui_shell.
 - Belum diuji: stack OCA penuh bersama addon UI; docker build dan Railway; CI GitHub Actions; browser selain Chromium; layar mobile (memakai NavBar bawaan); form tanpa notebook; daftar besar.
 - Task managed by claude-design agent at 2026-10-24T19:10:33+07:00
+
+[2026-10-25T00:21:48+07:00] [INFO] UI refinement v2: panel seksi, topbar polos, alur Tab, logo oi-odoo (feedback pemilik)
+- Berangkat dari whats_new.sh: tidak ada commit baru dari agen lain yang menyentuh addon id_ui*; v1 sudah di-commit pemilik.
+- Perubahan: seksi aplikasi pindah dari tab navbar ke panel seksi di kiri isi (seksi > sub-seksi > sub, bisa diciutkan, Alt+P); sidebar hanya aplikasi, item aktif persegi selebar sidebar, scrollbar disamarkan; topbar tanpa garis bawah, pencarian menu 34px rata tengah; logo oi-odoo dengan glow+gerak tipis saat hover; alur Tab: halaman dirender -> pencarian menu -> sidebar -> isi (field pertama form atau kolom cari); panah kanan dari sidebar masuk ke panel.
+- Diperbaiki saat uji: panel tidak dirender ulang saat aplikasi berganti (getter tree tidak membaca state reaktif).
+- Diverifikasi di Odoo f4378f29, DB kosong: 0 failed dari 7 uji (id_ui, id_ui_shell, id_base); ruff dan check_manifests lolos; smoke Playwright 19/19 (diperluas: fokus awal, Tab, panel, tinggi dan posisi pencarian, tanpa garis navbar); id.po diperbarui.
+- Belum diuji: stack OCA penuh, docker build/Railway, CI, browser selain Chromium, mobile. Terbuka: halaman Dashboards kini punya dua panel kiri (panel seksi + panel milik dashboard).
+- Task managed by claude-design agent at 2026-10-25T00:21:48+07:00

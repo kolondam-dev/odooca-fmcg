@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="id_ui_shell.SectionPanel">
+        <nav t-if="visible" class="id_panel" t-ref="root"
+             t-att-class="{'id_panel--collapsed': shell.panelCollapsed}"
+             aria-label="Sections" t-on-keydown="onKeydown">
+            <div class="id_panel__head">
+                <button type="button" class="id_panel__toggle" tabindex="-1"
+                        t-att-title="toggleTitle"
+                        t-on-click="() => shellService.togglePanel()">
+                    <span class="id_icon"><t t-out="toggleIcon"/></span>
+                </button>
+            </div>
+            <div class="id_panel__body" t-if="!shell.panelCollapsed">
+                <t t-foreach="tree" t-as="node" t-key="node.id">
+                    <t t-call="id_ui_shell.PanelNode"><t t-set="depth" t-value="0"/></t>
+                </t>
+            </div>
+        </nav>
+    </t>
+
+    <t t-name="id_ui_shell.PanelNode">
+        <t t-if="node.childrenTree and node.childrenTree.length">
+            <button type="button" tabindex="-1" data-panel-nav="1"
+                    class="id_pitem id_pitem--group" t-att-class="'id_depth-' + depth"
+                    t-att-data-group-id="node.id" t-att-aria-expanded="isOpen(node, depth) ? 'true' : 'false'"
+                    t-on-click="() => this.toggleGroup(node, depth)">
+                <span class="id_caret"><t t-out="icons.chevron"/></span>
+                <span t-esc="node.name"/>
+            </button>
+            <div class="id_pchildren" t-if="isOpen(node, depth)">
+                <t t-foreach="node.childrenTree" t-as="child" t-key="child.id">
+                    <t t-call="id_ui_shell.PanelNode">
+                        <t t-set="node" t-value="child"/>
+                        <t t-set="depth" t-value="depth + 1"/>
+                    </t>
+                </t>
+            </div>
+        </t>
+        <t t-elif="node.actionID">
+            <button type="button" tabindex="-1" data-panel-nav="1"
+                    class="id_pitem id_pitem--leaf" t-att-class="{'is-active': state.activeId === node.id}"
+                    t-on-click="() => this.openMenu(node)" t-esc="node.name"/>
+        </t>
+    </t>
+
+</templates>

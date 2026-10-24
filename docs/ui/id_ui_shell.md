@@ -1,33 +1,42 @@
-# id_ui_shell: shell sidebar dan navigasi keyboard
+# id_ui_shell: shell sidebar, topbar, panel seksi, navigasi keyboard
 
-Langkah 2 UI/view (redesign). Berdampingan dengan tata letak klasik; dipilih per pengguna lewat
-menu pengguna ("Tata letak: ganti ke ..."). Bawaan pengguna baru: parameter sistem
-`id_ui_shell.default_mode` (`sidebar` atau `classic`, bawaan `sidebar`).
+Berdampingan dengan tata letak klasik; dipilih per pengguna lewat menu pengguna
+("Layout: switch to ..."). Bawaan pengguna baru: parameter sistem `id_ui_shell.default_mode`
+(`sidebar` atau `classic`, bawaan `sidebar`).
+
+## Susunan layar (tata letak sidebar)
+- **Sidebar** (kiri): hanya daftar aplikasi dengan ikon bawaan Odoo. Item aktif persegi dan selebar
+  sidebar sehingga menyambung ke panel/isi. Scrollbar tersembunyi (tipis dan transparan saat hover).
+  Logo `oi-odoo` dengan glow dan gerak tipis saat hover (mati bila `prefers-reduced-motion`).
+- **Topbar**: judul besar = aplikasi aktif, pencarian menu global (command palette bawaan, awalan `/`),
+  systray, nama dan role pengguna. Polos: tanpa garis bawah, tanpa tab seksi.
+- **Panel seksi** (kiri isi): seksi > sub-seksi > sub dari menu aplikasi aktif, bisa diciutkan
+  (tombol atau `Alt+P`). Sub-seksi tertutup kecuali dilalui menu aktif. Menu aktif dikenali dari
+  `action.currentController`. Aplikasi tanpa submenu tidak menampilkan panel.
+
+## Alur Tab
+Halaman selesai dirender -> fokus di pencarian menu. `Tab` -> sidebar (satu perhentian, aplikasi aktif).
+Di sidebar: panah atas/bawah pindah aplikasi, `Home`/`End`, `Enter` buka, panah kanan masuk ke panel.
+Di panel: panah atas/bawah, panah kanan/kiri buka/tutup grup (kiri pada item = kembali ke sidebar).
+`Tab` dari sidebar atau panel -> isi: field pertama di form, atau kolom cari bila ada. `Shift+Tab`
+dari sidebar -> pencarian. `Esc` -> isi. `Alt+M` fokus sidebar, `Alt+B` ciutkan sidebar,
+`Alt+P` ciutkan panel, `Ctrl+K` palette. Tab di dalam isi belum diatur (menyusul).
 
 ## Jejak ke sistem lain (untuk koordinasi antar-agent)
 - DB: satu kolom `id_ui_shell` pada `res_users_settings`. Tidak ada tabel, model, atau data lain.
-- Titik sentuh Odoo yang dipakai: `patch(WebClient, {components})` + `t-inherit` pada
-  `web.WebClient` (sisip `<IdSidebar/>` sebelum `<NavBar/>`), registry `services`
-  (`id_shell`), registry `user_menuitems`, service `menu`, `command`, `ui`, dan hook `useHotkey`.
-- NavBar bawaan tidak diubah di JS; di mode sidebar ia disesuaikan lewat CSS pada selector
-  `.o_main_navbar`, `.o_navbar_apps_menu`, `.o_menu_brand`, `.o_menu_sections`. Selector ini
-  yang paling mungkin bergeser antar-versi Odoo.
-- Semua CSS ada di bawah `body.id-shell-sidebar`; mode klasik tidak tersentuh. Layar kecil
-  (`ui.isSmall`) otomatis memakai NavBar bawaan.
-- Ikon aplikasi memakai ikon bawaan Odoo (`webIconData` atau `webIcon`), bukan set ikon sendiri.
+- Titik sentuh Odoo: `patch(WebClient, {components})` + `t-inherit` pada `web.WebClient` (sisip
+  `<IdSidebar/>` dan `<IdSectionPanel/>` setelah `<NavBar/>`), `patch(NavBar, {components})` + `t-inherit`
+  `web.NavBar`/`web.UserMenu`, registry `services` (`id_shell`) dan `user_menuitems`, service `menu`,
+  `action`, `command`, `ui`, hook `useHotkey`, event bus `MENUS:APP-CHANGED` dan
+  `ACTION_MANAGER:UI-UPDATED`.
+- NavBar bawaan tidak diubah di JS; disesuaikan lewat CSS (`.o_main_navbar`, `.o_navbar_apps_menu`,
+  `.o_menu_sections`, `.o_menu_brand`). Selector ini paling mungkin bergeser antar-versi Odoo.
+- Pengelola fokus mencari elemen lewat selector (`.o_action_manager`, `.o_form_sheet`,
+  `.o_searchview_input`); ikut diperiksa saat upgrade Odoo.
+- Semua CSS di bawah `body.id-shell-sidebar`; klasik tidak tersentuh. Layar kecil (`ui.isSmall`)
+  memakai NavBar bawaan. Role pengguna placeholder (`UserMenu.idRoleLabel`) sampai `id_app` ada.
 - Tidak membaca atau menulis field bisnis, tidak menyentuh addon `id_*` lain.
 
-## Keyboard
-`Alt+M` fokus ke menu, panah atas/bawah pindah item, panah kanan/kiri buka/tutup grup,
-`Home`/`End`, `Enter` buka, `Esc` kembali ke isi, `Alt+B` ciutkan/bentang, `Ctrl+K` palette
-bawaan Odoo (tidak dibuat ulang).
-
-## Topbar (v0.2)
-Judul besar = aplikasi aktif, seksi aplikasi sebagai tab horizontal (NavBar bawaan, termasuk
-overflow "+" dan hotkey Alt+1..9), pencarian menu global (membuka command palette bawaan,
-awalan `/`), systray, nama dan role pengguna di samping avatar. Sidebar hanya berisi aplikasi
-(ikon bawaan Odoo). Role saat ini placeholder (`UserMenu.idRoleLabel`) sampai `id_app` ada.
-
 ## Belum dikerjakan
-Aplikasi mobile (bottom nav), highlight item aktif berdasarkan URL, string JS lewat `_t`,
-form profile (tab dan visible/hidden by default), layout form tanpa scroll.
+Pola mobile (bottom nav), Tab di dalam isi, panel khusus aplikasi Dashboards (saat ini dobel dengan
+panel milik halaman dashboard), form profile, layout daftar, beranda.

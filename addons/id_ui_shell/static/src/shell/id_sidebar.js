@@ -1,14 +1,15 @@
-import { Component, useEffect, useRef, useState } from "@odoo/owl";
+import { Component, onMounted, useEffect, useRef, useState } from "@odoo/owl";
 import { useHotkey } from "@web/core/hotkeys/hotkey_hook";
 import { useBus, useService } from "@web/core/utils/hooks";
 import { ICONS } from "./id_icons";
 
 /**
  * Sidebar daftar aplikasi. Hanya membaca menu lewat service `menu` (API publik);
- * seksi aplikasi tampil sebagai tab di topbar (NavBar bawaan, disesuaikan lewat CSS).
+ * seksi aplikasi ada di IdSectionPanel.
  *
- * Keyboard: Alt+M fokus ke aplikasi, Alt+B ciutkan/bentang, panah atas/bawah pindah
- * aplikasi, Home/End, Enter buka, Esc kembali ke isi. Seksi: Alt+1..9 (bawaan Odoo).
+ * Keyboard: roving tabindex (satu perhentian Tab). Panah atas/bawah pindah aplikasi,
+ * panah kanan masuk ke panel seksi, Tab ke isi, Shift+Tab ke pencarian menu,
+ * Home/End, Enter buka, Esc ke isi. Alt+M fokus ke menu, Alt+B ciutkan/bentang.
  */
 export class IdSidebar extends Component {
     static template = "id_ui_shell.Sidebar";
@@ -21,10 +22,17 @@ export class IdSidebar extends Component {
         this.shellService = useService("id_shell");
         this.root = useRef("root");
         this.icons = ICONS;
-        this.state = useState({ appId: this.menu.getCurrentApp()?.id });
+        this.state = useState({ appId: this.menu.getCurrentApp()?.id, focusId: null });
         useBus(this.env.bus, "MENUS:APP-CHANGED", () => {
             this.state.appId = this.menu.getCurrentApp()?.id;
         });
+        // Setiap halaman selesai dirender, fokus kembali ke pencarian menu.
+        useBus(this.env.bus, "ACTION_MANAGER:UI-UPDATED", ({ detail: mode }) => {
+            if (mode !== "new") {
+                this.shellService.focusSearchSoon();
+            }
+        });
+        onMounted(() => this.shellService.focusSearchSoon());
         const hotkeyOptions = { global: true, bypassEditableProtection: true };
         useHotkey("alt+m", () => this.focusNav(), hotkeyOptions);
         useHotkey("alt+b", () => this.isActive && this.shellService.toggleCollapsed(), hotkeyOptions);
@@ -45,6 +53,12 @@ export class IdSidebar extends Component {
 
     get apps() {
         return this.menu.getApps();
+    }
+
+    /** Hanya satu aplikasi yang menjadi perhentian Tab: yang terakhir difokus, atau yang aktif. */
+    tabindexOf(app) {
+        const stop = this.state.focusId ?? this.state.appId ?? this.apps[0]?.id;
+        return app.id === stop ? 0 : -1;
     }
 
     /** Ikon aplikasi bawaan Odoo: gambar (webIconData) atau ikon bentukan (class, warna, latar). */
@@ -74,6 +88,7 @@ export class IdSidebar extends Component {
 
     async openApp(app) {
         this.state.appId = app.id;
+        this.state.focusId = app.id;
         const target = this.firstActionMenu(app);
         if (target) {
             await this.menu.selectMenu(target);
@@ -85,28 +100,44 @@ export class IdSidebar extends Component {
     }
 
     focusNav() {
-        if (!this.isActive) {
-            return;
+        if (this.isActive) {
+            this.shellService.focusSidebar();
         }
-        const items = this.navItems;
-        (items.find((el) => el.classList.contains("is-current")) || items[0])?.focus();
+    }
+
+    onFocusItem(app) {
+        this.state.focusId = app.id;
     }
 
     onKeydown(ev) {
         const items = this.navItems;
         const index = items.indexOf(document.activeElement);
         const key = ev.key;
-        if (key === "ArrowDown" || key === "ArrowUp") {
+        if (key === "Tab") {
+            ev.preventDefault();
+            if (ev.shiftKey) {
+                this.shellService.focusSearch();
+            } else {
+                this.shellService.focusContent();
+            }
+        } else if (key === "ArrowDown" || key === "ArrowUp") {
             ev.preventDefault();
             const next = key === "ArrowDown" ? index + 1 : index - 1;
             items[Math.max(0, Math.min(items.length - 1, next))]?.focus();
         } else if (key === "Home" || key === "End") {
             ev.preventDefault();
             items[key === "Home" ? 0 : items.length - 1]?.focus();
+        } else if (key === "ArrowRight") {
+            const panelItem =
+                document.querySelector(".id_panel [data-panel-nav].is-active") ||
+                document.querySelector(".id_panel [data-panel-nav]");
+            if (panelItem) {
+                ev.preventDefault();
+                panelItem.focus();
+            }
         } else if (key === "Escape") {
             ev.preventDefault();
-            document.activeElement?.blur();
-            document.querySelector(".o_action_manager .o_content, .o_action_manager")?.focus?.();
+            this.shellService.focusContent();
         }
     }
 }
