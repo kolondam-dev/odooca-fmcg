@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Districts (Kecamatan) Sulawesi Utara -->
+    <record id="district_mnd_wenang" model="id.district">
+        <field name="code">KEC-MND-WNG</field>
+        <field name="name">Wenang</field>
+        <field name="city">Kota Manado</field>
+        <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
+    </record>
+
+    <record id="district_mnd_sario" model="id.district">
+        <field name="code">KEC-MND-SRO</field>
+        <field name="name">Sario</field>
+        <field name="city">Kota Manado</field>
+        <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
+    </record>
+
+    <record id="district_mnd_malalayang" model="id.district">
+        <field name="code">KEC-MND-MLY</field>
+        <field name="name">Malalayang</field>
+        <field name="city">Kota Manado</field>
+        <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
+    </record>
+
+    <record id="district_mnd_wane" model="id.district">
+        <field name="code">KEC-MND-WNA</field>
+        <field name="name">Wanea</field>
+        <field name="city">Kota Manado</field>
+        <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
+    </record>
+
+    <record id="district_mnd_tikala" model="id.district">
+        <field name="code">KEC-MND-TKL</field>
+        <field name="name">Tikala</field>
+        <field name="city">Kota Manado</field>
+        <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
+    </record>
+
+    <record id="district_mnd_paal_dua" model="id.district">
+        <field name="code">KEC-MND-PLD</field>
+        <field name="name">Paal Dua</field>
+        <field name="city">Kota Manado</field>
+        <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
+    </record>
+
+    <record id="district_mnd_tuminting" model="id.district">
+        <field name="code">KEC-MND-TMT</field>
+        <field name="name">Tuminting</field>
+        <field name="city">Kota Manado</field>
+        <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
+    </record>
+
+    <record id="district_mnd_singkil" model="id.district">
+        <field name="code">KEC-MND-SKL</field>
+        <field name="name">Singkil</field>
+        <field name="city">Kota Manado</field>
+        <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
+    </record>
+
+    <record id="district_mnd_mapanget" model="id.district">
+        <field name="code">KEC-MND-MPG</field>
+        <field name="name">Mapanget</field>
+        <field name="city">Kota Manado</field>
+        <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
+    </record>
+
+    <record id="district_btg_maesa" model="id.district">
+        <field name="code">KEC-BTG-MAS</field>
+        <field name="name">Maesa</field>
+        <field name="city">Kota Bitung</field>
+        <field name="coverage_area_id" ref="id_base.area_btg_port"/>
+    </record>
+
+    <record id="district_btg_madidir" model="id.district">
+        <field name="code">KEC-BTG-MDR</field>
+        <field name="name">Madidir</field>
+        <field name="city">Kota Bitung</field>
+        <field name="coverage_area_id" ref="id_base.area_btg_port"/>
+    </record>
+
+    <record id="district_btg_girian" model="id.district">
+        <field name="code">KEC-BTG-GRN</field>
+        <field name="name">Girian</field>
+        <field name="city">Kota Bitung</field>
+        <field name="coverage_area_id" ref="id_base.area_btg_port"/>
+    </record>
+
+    <record id="district_btg_aertembaga" model="id.district">
+        <field name="code">KEC-BTG-ATB</field>
+        <field name="name">Aertembaga</field>
+        <field name="city">Kota Bitung</field>
+        <field name="coverage_area_id" ref="id_base.area_btg_port"/>
+    </record>
+
+    <record id="district_tmh_tengah" model="id.district">
+        <field name="code">KEC-TMH-TGH</field>
+        <field name="name">Tomohon Tengah</field>
+        <field name="city">Kota Tomohon</field>
+        <field name="coverage_area_id" ref="id_base.area_tmh_hinterland"/>
+    </record>
+
+    <record id="district_mnh_tondano" model="id.district">
+        <field name="code">KEC-MNH-TDN</field>
+        <field name="name">Tondano Barat</field>
+        <field name="city">Kab. Minahasa</field>
+        <field name="coverage_area_id" ref="id_base.area_tmh_hinterland"/>
+    </record>
+
+    <record id="district_mnh_kawangkoan" model="id.district">
+        <field name="code">KEC-MNH-KWG</field>
+        <field name="name">Kawangkoan</field>
+        <field name="city">Kab. Minahasa</field>
+        <field name="coverage_area_id" ref="id_base.area_tmh_hinterland"/>
+    </record>
+
+    <record id="district_mnt_airmadidi" model="id.district">
+        <field name="code">KEC-MNT-AMD</field>
+        <field name="name">Airmadidi</field>
+        <field name="city">Kab. Minahasa Utara</field>
+        <field name="coverage_area_id" ref="id_base.area_minut_rural"/>
+    </record>
+
+    <record id="district_mns_amurang" model="id.district">
+        <field name="code">KEC-MNS-AMR</field>
+        <field name="name">Amurang</field>
+        <field name="city">Kab. Minahasa Selatan</field>
+        <field name="coverage_area_id" ref="id_base.area_minut_rural"/>
+    </record>
+
+    <!-- Subdistricts (Kelurahan / Desa & Kode Pos) -->
+    <record id="subdistrict_calaca" model="id.subdistrict">
+        <field name="name">Calaca (Pasar 45)</field>
+        <field name="code">KEL-MND-CLC</field>
+        <field name="district_id" ref="district_mnd_wenang"/>
+        <field name="postal_code">95112</field>
+        <field name="latitude">1.4925</field>
+        <field name="longitude">124.8421</field>
+    </record>
+
+    <record id="subdistrict_wenang_selatan" model="id.subdistrict">
+        <field name="name">Wenang Selatan</field>
+        <field name="code">KEL-MND-WNS</field>
+        <field name="district_id" ref="district_mnd_wenang"/>
+        <field name="postal_code">95111</field>
+        <field name="latitude">1.4880</field>
+        <field name="longitude">124.8415</field>
+    </record>
+
+    <record id="subdistrict_sario_kotabaru" model="id.subdistrict">
+        <field name="name">Sario Kotabaru</field>
+        <field name="code">KEL-MND-SKB</field>
+        <field name="district_id" ref="district_mnd_sario"/>
+        <field name="postal_code">95114</field>
+        <field name="latitude">1.4721</field>
+        <field name="longitude">124.8312</field>
+    </record>
+
+    <record id="subdistrict_bahu" model="id.subdistrict">
+        <field name="name">Bahu (FreshMart Bahu Mall)</field>
+        <field name="code">KEL-MND-BAH</field>
+        <field name="district_id" ref="district_mnd_malalayang"/>
+        <field name="postal_code">95115</field>
+        <field name="latitude">1.4580</field>
+        <field name="longitude">124.8250</field>
+    </record>
+
+    <record id="subdistrict_tikala_baru" model="id.subdistrict">
+        <field name="name">Tikala Baru</field>
+        <field name="code">KEL-MND-TKB</field>
+        <field name="district_id" ref="district_mnd_tikala"/>
+        <field name="postal_code">95126</field>
+        <field name="latitude">1.4815</field>
+        <field name="longitude">124.8580</field>
+    </record>
+
+    <record id="subdistrict_paal_dua" model="id.subdistrict">
+        <field name="name">Paal Dua</field>
+        <field name="code">KEL-MND-PLD</field>
+        <field name="district_id" ref="district_mnd_paal_dua"/>
+        <field name="postal_code">95129</field>
+        <field name="latitude">1.4870</field>
+        <field name="longitude">124.8690</field>
+    </record>
+
+    <record id="subdistrict_tuminting" model="id.subdistrict">
+        <field name="name">Tuminting</field>
+        <field name="code">KEL-MND-TMT</field>
+        <field name="district_id" ref="district_mnd_tuminting"/>
+        <field name="postal_code">95239</field>
+        <field name="latitude">1.5050</field>
+        <field name="longitude">124.8490</field>
+    </record>
+
+    <record id="subdistrict_paniki_bawah" model="id.subdistrict">
+        <field name="name">Paniki Bawah</field>
+        <field name="code">KEL-MND-PKB</field>
+        <field name="district_id" ref="district_mnd_mapanget"/>
+        <field name="postal_code">95258</field>
+        <field name="latitude">1.5280</field>
+        <field name="longitude">124.9080</field>
+    </record>
+
+    <record id="subdistrict_bitung_maesa" model="id.subdistrict">
+        <field name="name">Bitung Timur (Maesa Pasar)</field>
+        <field name="code">KEL-BTG-BTM</field>
+        <field name="district_id" ref="district_btg_maesa"/>
+        <field name="postal_code">95521</field>
+        <field name="latitude">1.4420</field>
+        <field name="longitude">125.1880</field>
+    </record>
+
+    <record id="subdistrict_tomohon_paslaten" model="id.subdistrict">
+        <field name="name">Paslaten Satu</field>
+        <field name="code">KEL-TMH-PSL</field>
+        <field name="district_id" ref="district_tmh_tengah"/>
+        <field name="postal_code">95431</field>
+        <field name="latitude">1.3250</field>
+        <field name="longitude">124.8390</field>
+    </record>
+
+    <record id="subdistrict_tondano_rinegetan" model="id.subdistrict">
+        <field name="name">Rinegetan</field>
+        <field name="code">KEL-MNH-RNG</field>
+        <field name="district_id" ref="district_mnh_tondano"/>
+        <field name="postal_code">95618</field>
+        <field name="latitude">1.3050</field>
+        <field name="longitude">124.9120</field>
+    </record>
+
+    <record id="subdistrict_kawangkoan_sendangan" model="id.subdistrict">
+        <field name="name">Sendangan</field>
+        <field name="code">KEL-MNH-SDG</field>
+        <field name="district_id" ref="district_mnh_kawangkoan"/>
+        <field name="postal_code">95671</field>
+        <field name="latitude">1.2180</field>
+        <field name="longitude">124.7890</field>
+    </record>
+
+    <record id="subdistrict_airmadidi_atas" model="id.subdistrict">
+        <field name="name">Airmadidi Atas</field>
+        <field name="code">KEL-MNT-AMA</field>
+        <field name="district_id" ref="district_mnt_airmadidi"/>
+        <field name="postal_code">95371</field>
+        <field name="latitude">1.4280</field>
+        <field name="longitude">124.9780</field>
+    </record>
+
+    <record id="subdistrict_amurang_buyungon" model="id.subdistrict">
+        <field name="name">Buyungon</field>
+        <field name="code">KEL-MNS-BYG</field>
+        <field name="district_id" ref="district_mns_amurang"/>
+        <field name="postal_code">95954</field>
+        <field name="latitude">1.1850</field>
+        <field name="longitude">124.5680</field>
+    </record>
+</odoo>
