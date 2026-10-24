@@ -9,7 +9,7 @@
   - Ekstensi `product.template`: `principal_id`, `fmcg_category` (Food, RTD, Home Care, Personal Care, Dairy, dll), `brand_id`, `sub_brand_id`, `inner_qty` (fraction dinamis), `carton_qty`.
   - Akses keamanan (`security/ir.model.access.csv`) untuk seluruh model baru.
   - Tampilan views & menu `views/principal_views.xml`, `views/fmcg_dimension_views.xml`, `views/res_partner_views.xml`, `views/product_template_views.xml`, `views/menu_views.xml`.
-  - Master seed bawaan (`data/`): 4 channel, 4 tier, 4 coverage area, 4 principal nasional (Mayora, Unilever, Kapal Api, Wings) beserta brand unggulan, dan 9 tipe armada operasional standar distributor FMCG dengan kubikasi box riil.
+  - Master seed bawaan (`data/`): 4 channel, 4 tier, 4 coverage area, 4 principal nasional (Mayora, Unilever, Kapal Api, Wings) beserta brand unggulan, 9 tipe armada operasional standar FMCG dengan kubikasi box riil, serta 18 kecamatan kunci se-Sulut (Manado, Bitung Maesa, Tomohon, Tondano, Kawangkoan, Minut, Minsel) dan kelurahan dengan kode pos resmi.
   - Manifest `__manifest__.py` diperbarui ke versi `19.0.1.0.0`, depends `["base", "contacts", "product"]`.
 - Blueprint & Pemetaan Master Data (`master_data_mapping_and_seed_plan.md`):
   - Penyelarasan target omset Rp 5-6 BIO IDR per bulan dengan universe 620 outlet (coverage 65% = 403 outlet aktif, gap 35% untuk narasi improvement demo).
