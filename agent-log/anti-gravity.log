@@ -89,3 +89,11 @@
 - Memodelkan fulfillment logistik 9 armada (OTIF 95.8%, kapasitas, utilisasi kubikasi) dan rasio perputaran persediaan (Stock Turnover 1.12x/bulan, DSI 22.3 hari, konsumsi FEFO batch/lot).
 - Menyusun arsitektur script generator deterministic pseudo-random untuk transaksi historis.
 - Task managed by antigravity-agent at 2026-10-24T11:41:45+00:00
+
+[2026-10-24T18:51:30+07:00] [INFO] Implementasi Generator Seed Dataset FMCG dan Loader Odoo Idempoten
+- Membuat scripts/generate_fmcg_seed.py yang menghasilkan 150 Master SKU (Mayora 44, Kapal Api 32, Unilever 42, Wings 32), 354 Partner Outlet aktif (12 MT, 72 GT, 260 RTL, 10 INST), 24 Karyawan roster, 9 Armada Logistik, dan historical_simulation_summary.json.
+- Menghasilkan berkas data/seed/*.csv secara deterministik (reproducible seed).
+- Membuat scripts/load_fmcg_seed.py untuk pemuatan otomatis ke Odoo shell secara aman dan idempoten.
+- Memperbarui deploy/init.sh dan Dockerfile untuk menyertakan berkas seed dan mengeksekusi mark seed_master_v1 secara otomatis saat container dijalankan.
+- Commit lokal dilakukan (tanpa push sesuai instruksi pemilik repo).
+- Task managed by antigravity-agent at 2026-10-24T18:51:30+07:00

@@ -1,6 +1,31 @@
 # HANDOFF
 
-## 2026-10-24 — antigravity (laptop/Railway) — [M1] Implementasi Model Master Data FMCG, Geografi Kecamatan & Tipe Armada di id_base
+## 2026-10-24 — antigravity (laptop/Railway) — [M1] Generator & Loader Seed Data Master FMCG (150 SKU, 354 Outlet, 24 Karyawan, 9 Armada)
+**Berubah:**
+- `scripts/generate_fmcg_seed.py`: Skrip penghasil dataset deterministik untuk seluruh master data FMCG Manado & Sulut sesuai blueprint yang telah disetujui.
+- `data/seed/`:
+  - `products_150.csv`: 150 Master SKU FMCG (Mayora 44, Santos 32, Unilever 42, Wings 32) dengan multi-UoM pecahan (Pcs/Renceng/Karton), inner fraction, kubikasi, dan harga riil.
+  - `partners_354.csv`: 354 Outlet aktif (12 Key Account MT, 72 GT, 260 RTL Kios, 10 Inst) di 18 kecamatan Sulut dengan limit kredit, TOP, dan koordinat GPS.
+  - `employees_24.csv`: Roster 24 personel lengkap dengan peran dan cost center.
+  - `vehicles_9.csv`: 9 unit armada pengiriman logistik dengan dimensi box, kubikasi, tonase, dan masa berlaku STNK/KIR.
+  - `historical_simulation_summary.json`: Ringkasan matriks omset Juli - Oktober 2026 (Rp 19.88 BIO IDR), DSI 22.3 hari, dan stock turnover 1.12x/bulan.
+- `scripts/load_fmcg_seed.py`: Loader Python Odoo shell idempoten untuk mengimpor produk dan outlet ke `product.template` dan `res.partner`.
+- `deploy/init.sh` & `Dockerfile`: Memasukkan folder `data/` dan `scripts/` ke dalam image container, menambahkan langkah idempoten `seed_master_v1` saat booting container.
+
+**Diverifikasi (bagaimana):**
+- `python scripts/generate_fmcg_seed.py` dieksekusi sukses menghasilkan 5 berkas di `data/seed/`.
+- `python -m ruff check .` lolos bersih (0 galat).
+- `python scripts/check_manifests.py` lolos (`manifest ok: 1 addon (id_base)`).
+- Commit lokal dibuat pada cabang `agen/m1-master-data-models` (tanpa push sesuai arahan pemilik repo).
+
+**Belum diuji:**
+- Eksekusi loader di Odoo shell live (akan diuji saat deploy ke Railway).
+
+**Butir terbuka:**
+- Generator transaksi historis (PO Inbound container & SO Penjualan) untuk mengisi data transaksional Juli-Oktober 2026.
+
+**Menunggu:** pemilik repo (instruksi untuk push cabang `agen/m1-master-data-models` atau lanjut pembuatan generator transaksi historis).
+
 **Berubah:**
 - `addons/id_base`:
   - Model hierarki: `id.principal`, `id.brand`, `id.sub.brand`.
