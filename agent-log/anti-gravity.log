@@ -61,3 +61,9 @@
 - Menambahkan model id.district (Kecamatan), id.subdistrict (Kelurahan/Kode Pos), fmcg_category, dan inner_qty (fraction dinamis) ke id_base.
 - Commit lokal dilakukan (tanpa push sesuai instruksi pemilik repo).
 - Task managed by antigravity-agent at 2026-10-24T08:55:20+00:00
+
+[2026-10-24T08:57:27+00:00] [INFO] Pemodelan Matematis Sebaran Outlet dan Rute Kunjungan PJP (Personal Journey Plan)
+- Menuntaskan dokumen pemodelan rute kunjungan harian pjp_and_outlet_distribution_model.md untuk 403 outlet aktif dari 620 universe (gap 35%).
+- Menghubungkan target omset Rp 5.5 BIO IDR per bulan dengan rasio panggilan harian (MT 8-10 call, GT 20-22 call, Canvass 25-30 call).
+- Memetakan siklus jadwal rute Senin-Sabtu per salesman terhadap jadwal loading gudang dan penugasan armada pengiriman H+1.
+- Task managed by antigravity-agent at 2026-10-24T08:57:27+00:00

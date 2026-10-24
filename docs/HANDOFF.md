@@ -19,6 +19,11 @@
   - 9 Lokasi gudang fisik murni WMS (GD Utama, Eaches, Return Staging, Bad Stock, Promo/Sample, Premium, Cold Storage, Dock, In-Transit).
   - Multi-diskon line item (slot principal > 1) dan traceable footer cashback/promo budget.
   - Data armada dengan dimensi p×l×t kargo, kubikasi/tonase riil pabrikan, serta kelengkapan STNK dan KIR.
+- Pemodelan Sebaran Outlet & Rute Kunjungan PJP (`pjp_and_outlet_distribution_model.md`):
+  - Penataan 403 outlet aktif dalam 18 kecamatan kunci se-Sulut (Universe 620 outlet, Coverage 65%).
+  - Segregasi channel ketat (MT 8-10 call, GT 20-22 call, Canvass 25-30 call, Direct Selling Horeka).
+  - Sinkronisasi rute harian Senin-Sabtu dengan jadwal loading gudang dan penugasan armada pengiriman H+1.
+
 
 **Diverifikasi (bagaimana):**
 - `python -m ruff check addons/id_base` lolos (0 lint error).
