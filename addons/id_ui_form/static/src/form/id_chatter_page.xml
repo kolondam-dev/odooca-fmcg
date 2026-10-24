@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="id_ui_form.ChatterPage">
+        <div class="id_chatter_page o-mail-Form-chatter">
+            <Chatter t-props="props.chatter"/>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,8 @@
+[2026-10-24T19:10:33+07:00] [INFO] UI redesign v1: shell sidebar, topbar, chatter sebagai tab (addon id_ui, id_ui_shell, id_ui_form)
+- Mulai dari whats_new.sh (acuan = commit akar; belum ada commit bertanda tangan claude-design) dan membaca AGENTS.md, AGENT_PROTOCOL.md, DEVELOPMENT.md, HANDOFF.md, log claude-dev dan anti-gravity. Basis kerja dipindah dari cabang lokal lama ke origin/main (9b80505) lalu cabang agen/ui-design-v1.
+- Addon baru: id_ui (tema, urutan menu inti, istilah glosarium, aktivasi en_US+id_ID), id_ui_shell (sidebar, topbar, hotkey, mode per pengguna di res.users.settings), id_ui_form (chatter jadi tab terakhir). Sumber string English, terjemahan di i18n/id.po (sesuai AGENTS.md butir 8).
+- Diverifikasi di Odoo 19 commit f4378f29 (sama dengan SANDBOX.md): DB kosong -i id_base,id_ui_form --without-demo=true, 0 failed dari 8 uji (id_base + id_ui + id_ui_shell); ruff dan check_manifests lolos; smoke Playwright docs/ui/e2e/smoke_ui.py 10/10; terjemahan id_ID tampil (Penjualan, Gudang & Stok, Pesan & Aktivitas).
+- Performa (lokal, 1 form, 6 muat ulang): waktu form siap 893-998 ms (sidebar) vs 923-1030 ms (klasik); DOM 401 vs 418; heap setelah GC 33,5 vs 35,6 MB.
+- Tidak mengubah addon lain, CI, init.sh, Dockerfile. Satu-satunya jejak DB: kolom res_users_settings.id_ui_shell.
+- Belum diuji: stack OCA penuh bersama addon UI; docker build dan Railway; CI GitHub Actions; browser selain Chromium; layar mobile (memakai NavBar bawaan); form tanpa notebook; daftar besar.
+- Task managed by claude-design agent at 2026-10-24T19:10:33+07:00

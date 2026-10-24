@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="id_ui_shell.Sidebar">
+        <aside t-if="isActive" class="id_sidebar" t-ref="root"
+               t-att-class="{'id_sidebar--collapsed': shell.collapsed}"
+               aria-label="Main menu" t-on-keydown="onKeydown">
+            <div class="id_sidebar__head">
+                <span class="id_sidebar__logo">O</span>
+                <span class="id_sidebar__title">Odooca FMCG</span>
+                <button class="id_sidebar__collapse" type="button" title="Collapse / expand (Alt+B)"
+                        t-on-click="() => shellService.toggleCollapsed()">
+                    <span class="id_icon"><t t-out="icons.collapse"/></span>
+                </button>
+            </div>
+            <div class="id_sidebar__heading id_label">Menu</div>
+            <nav class="id_sidebar__nav">
+                <t t-foreach="apps" t-as="app" t-key="app.id">
+                    <button type="button" data-nav="1" class="id_item id_item--app"
+                            t-att-class="{'is-current': app.id === state.appId}"
+                            t-att-title="app.name" t-att-data-menu-xmlid="app.xmlid"
+                            t-on-click="() => this.openApp(app)">
+                        <t t-set="icon" t-value="iconOf(app)"/>
+                        <img t-if="icon.src" class="id_appicon" t-att-src="icon.src" alt=""/>
+                        <span t-else="" class="id_appicon id_appicon--built" t-att-style="icon.style"><i t-att-class="icon.iconClass"/></span>
+                        <span class="id_label" t-esc="app.name"/>
+                    </button>
+                </t>
+            </nav>
+            <div class="id_sidebar__foot id_label">Alt+M menu · Alt+B collapse · Ctrl+K search</div>
+        </aside>
+    </t>
+
+</templates>

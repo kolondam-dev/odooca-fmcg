@@ -1,0 +1,97 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* id_ui_shell
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-24 07:33+0000\n"
+"PO-Revision-Date: 2026-10-24 07:33+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/navbar_patch.js:0
+msgid "Administrator"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/id_sidebar.xml:0
+msgid "Alt+M menu · Alt+B collapse · Ctrl+K search"
+msgstr ""
+
+#. module: id_ui_shell
+#: model:ir.model.fields.selection,name:id_ui_shell.selection__res_users_settings__id_ui_shell__classic
+msgid "Classic"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/id_sidebar.xml:0
+msgid "Collapse / expand (Alt+B)"
+msgstr ""
+
+#. module: id_ui_shell
+#: model:ir.model.fields,field_description:id_ui_shell.field_res_users_settings__id_ui_shell
+msgid "Interface layout"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/user_menu_item.js:0
+msgid "Layout: switch to Classic"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/user_menu_item.js:0
+msgid "Layout: switch to Sidebar"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/id_sidebar.xml:0
+msgid "Main menu"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/id_sidebar.xml:0
+msgid "Menu"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/navbar_patch.js:0
+msgid "Portal"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/id_menu_search.xml:0
+msgid "Search menus or commands (Ctrl+K)"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/id_menu_search.xml:0
+msgid "Search menus, sub-menus…"
+msgstr ""
+
+#. module: id_ui_shell
+#: model:ir.model.fields.selection,name:id_ui_shell.selection__res_users_settings__id_ui_shell__sidebar
+msgid "Sidebar"
+msgstr ""
+
+#. module: id_ui_shell
+#. odoo-javascript
+#: code:addons/id_ui_shell/static/src/shell/navbar_patch.js:0
+msgid "User"
+msgstr ""
