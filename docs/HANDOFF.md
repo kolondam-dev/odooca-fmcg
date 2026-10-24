@@ -23,15 +23,17 @@
 - `python -m ruff check .` lolos bersih (0 galat).
 - `python scripts/check_manifests.py` lolos (`manifest ok: 1 addon (id_base)`).
 - Cabang `agen/ui-design-v1` diverifikasi ter-reset bersih pada commit `3c6fb30`.
-- Commit lokal dibuat pada cabang `agen/m1-historical-simulation` (tanpa push sesuai instruksi pemilik repo).
+- Cabang `agen/m1-historical-simulation` telah di-push ke remote origin dan PR #2 dibuka: https://github.com/kolondam-dev/odooca-fmcg/pull/2.
+- GitHub Actions CI aktif: job `static` lolos (PASS).
 
 **Belum diuji:**
-- Pemuatan seluruh data ke Odoo staging di Railway.
+- Pemuatan seluruh data ke Odoo staging di Railway (akan terpicu otomatis saat PR #2 di-merge ke main).
 
 **Butir terbuka:**
-- Penggabungan (merge) PR ke `main` dan deployment ke Railway saat pemilik repo memberi instruksi.
+- Merge PR #2 ke `main`.
+- Verifikasi deployment otomatis di Railway Staging (`https://odooca-fmcg-demo.up.railway.app`).
 
-**Menunggu:** pemilik repo (review cabang dan instruksi untuk push).
+**Menunggu:** pemilik repo (review & merge PR #2 di GitHub).
 
 **Berubah:**
 - `scripts/generate_fmcg_seed.py`: Skrip penghasil dataset deterministik untuk seluruh master data FMCG Manado & Sulut sesuai blueprint yang telah disetujui.
