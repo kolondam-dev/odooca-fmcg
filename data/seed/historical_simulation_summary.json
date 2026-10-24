@@ -1,0 +1,17 @@
+{
+  "simulation_period": "2026-07-01 to 2026-10-24",
+  "working_days": 97,
+  "total_sales_transactions": 3762,
+  "total_revenue_dpp": 18994999999.82,
+  "total_cogs_dpp": 16808880000.07,
+  "gross_margin_dpp": 2186119999.75,
+  "total_opex_dpp": 1619225000,
+  "net_profit_dpp": 566894999.75,
+  "overall_net_margin_pct": 2.98,
+  "monthly_net_revenue": {
+    "2026-07": 5500000000.06,
+    "2026-08": 4234999999.94,
+    "2026-09": 3959999999.9,
+    "2026-10_mtd": 5299999999.92
+  }
+}

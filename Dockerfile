@@ -15,8 +15,10 @@ RUN cat /opt/oca/*/requirements.txt 2>/dev/null | grep -Ev '^\s*(#|$)' | sort -u
     && pip3 install --no-cache-dir --break-system-packages --ignore-installed -r /tmp/oca-req.txt \
     && rm -f /tmp/oca-req.txt
 COPY addons /opt/id-addons
+COPY data /opt/data
+COPY scripts /opt/scripts
 # deploy/ memuat init.sh dan seed/ (dump tidak disimpan di git; lihat deploy/seed/README.md)
 COPY deploy /opt/deploy
-RUN chmod +x /opt/deploy/*.sh && chown -R odoo:odoo /opt/oca /opt/id-addons /opt/deploy
+RUN chmod +x /opt/deploy/*.sh && chown -R odoo:odoo /opt/oca /opt/id-addons /opt/deploy /opt/data /opt/scripts
 ENTRYPOINT ["/opt/deploy/init.sh"]
 CMD []

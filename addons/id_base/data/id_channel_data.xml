@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="channel_mt" model="id.channel">
+        <field name="code">MT</field>
+        <field name="name">Modern Trade</field>
+        <field name="sequence">10</field>
+        <field name="description">Supermarket, hypermarket, National Key Account</field>
+    </record>
+
+    <record id="channel_gt" model="id.channel">
+        <field name="code">GT</field>
+        <field name="name">General Trade</field>
+        <field name="sequence">20</field>
+        <field name="description">Grosir, toko kelontong besar, supermarket lokal</field>
+    </record>
+
+    <record id="channel_rtl" model="id.channel">
+        <field name="code">RTL</field>
+        <field name="name">Retail</field>
+        <field name="sequence">30</field>
+        <field name="description">Warung kelontong pemukiman, kios kecil, rombong</field>
+    </record>
+
+    <record id="channel_inst" model="id.channel">
+        <field name="code">INST</field>
+        <field name="name">Institusional</field>
+        <field name="sequence">40</field>
+        <field name="description">Rumah sakit, hotel, katering, yayasan, kantor</field>
+    </record>
+</odoo>
