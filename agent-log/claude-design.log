@@ -14,3 +14,11 @@
 - Diverifikasi di Odoo f4378f29, DB kosong: 0 failed dari 7 uji (id_ui, id_ui_shell, id_base); ruff dan check_manifests lolos; smoke Playwright 19/19 (diperluas: fokus awal, Tab, panel, tinggi dan posisi pencarian, tanpa garis navbar); id.po diperbarui.
 - Belum diuji: stack OCA penuh, docker build/Railway, CI, browser selain Chromium, mobile. Terbuka: halaman Dashboards kini punya dua panel kiri (panel seksi + panel milik dashboard).
 - Task managed by claude-design agent at 2026-10-25T00:21:48+07:00
+
+[2026-10-25T08:17:27+07:00] [INFO] UI refinement v3: ikon duo-tone, wordmark Odoo FMCG, panel seksi tenang, topbar ditukar
+- Berangkat dari whats_new.sh: v2 sudah ter-merge (PR #6, da5f06f); basis patch = origin/main.
+- Perubahan: scrollbar sidebar/panel selalu tersembunyi (lebar menu tidak menyusut saat hover, latar item terpilih penuh); ikon aplikasi tanpa latar, duo-tone saat diam (filter SVG feColorMatrix) dan warna asli Odoo saat hover/fokus/terpilih dengan glow tipis dan crossfade halus; judul sidebar = wordmark resmi Odoo + kotak FMCG; panel seksi: menu aktif cukup tebal tanpa latar, font lebih kecil, lebar 208px; topbar: pencarian di kiri, judul di kanan.
+- Diperbaiki saat uji: url(#id_duotone) di SCSS ditulis ulang pipeline aset menjadi alamat absolut sehingga filter tidak berlaku; dipindah ke atribut style di template. Systray memakai ms-auto bawaan sehingga judul tidak menempel kanan; di-override dengan margin !important.
+- Diverifikasi di Odoo f4378f29: 0 failed dari 7 uji; ruff dan check_manifests lolos; smoke Playwright 24/24 (ditambah duo-tone, lebar menu saat hover, urutan cari/judul, menu panel aktif tebal tanpa latar).
+- Belum diuji: stack OCA penuh, docker build/Railway, CI, browser selain Chromium, mobile. Keputusan terbuka: wordmark Odoo berwarna bawaan (ungu/abu) di atas navy kurang kontras; tersedia varian putih odoo_logo_dark.svg.
+- Task managed by claude-design agent at 2026-10-25T08:17:27+07:00

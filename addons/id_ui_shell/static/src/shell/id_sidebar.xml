@@ -5,9 +5,19 @@
         <aside t-if="isActive" class="id_sidebar" t-ref="root"
                t-att-class="{'id_sidebar--collapsed': shell.collapsed}"
                aria-label="Main menu" t-on-keydown="onKeydown">
+            <!-- Filter duo-tone (biru transparan + putih) untuk ikon aplikasi dalam keadaan diam. -->
+            <svg class="id_defs" width="0" height="0" aria-hidden="true" focusable="false">
+                <filter id="id_duotone" color-interpolation-filters="sRGB">
+                    <feColorMatrix type="matrix"
+                        values="0.1361 0.4577 0.0462 0 0.36  0.0850 0.2861 0.0289 0 0.60  0.0213 0.0715 0.0072 0 0.90  0 0 0 0.9 0"/>
+                </filter>
+            </svg>
             <div class="id_sidebar__head">
                 <span class="id_sidebar__logo" aria-hidden="true"><i class="oi oi-odoo"/></span>
-                <span class="id_sidebar__title">Odooca FMCG</span>
+                <span class="id_sidebar__title">
+                    <img class="id_wordmark" src="/web/static/img/odoo_logo.svg" alt="Odoo"/>
+                    <span class="id_brandbox">FMCG</span>
+                </span>
                 <button class="id_sidebar__collapse" type="button" tabindex="-1" title="Collapse / expand (Alt+B)"
                         t-on-click="() => shellService.toggleCollapsed()">
                     <span class="id_icon"><t t-out="icons.collapse"/></span>
@@ -23,8 +33,16 @@
                             t-on-focus="() => this.onFocusItem(app)"
                             t-on-click="() => this.openApp(app)">
                         <t t-set="icon" t-value="iconOf(app)"/>
-                        <img t-if="icon.src" class="id_appicon" t-att-src="icon.src" alt=""/>
-                        <span t-else="" class="id_appicon id_appicon--built" t-att-style="icon.style"><i t-att-class="icon.iconClass"/></span>
+                        <span class="id_appwrap">
+                            <t t-if="icon.src">
+                                <img class="id_appicon id_appicon--duo" style="filter: url(#id_duotone)" t-att-src="icon.src" alt=""/>
+                                <img class="id_appicon id_appicon--color" t-att-src="icon.src" alt=""/>
+                            </t>
+                            <t t-else="">
+                                <i class="id_appicon id_appicon--duo id_appicon--glyph" t-att-class="icon.iconClass"/>
+                                <i class="id_appicon id_appicon--color id_appicon--glyph" t-att-class="icon.iconClass" t-att-style="icon.glyphStyle"/>
+                            </t>
+                        </span>
                         <span class="id_label" t-esc="app.name"/>
                     </button>
                 </t>
