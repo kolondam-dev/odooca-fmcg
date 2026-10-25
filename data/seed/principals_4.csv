@@ -1,0 +1,5 @@
+code,name,legal_name,street,city,zip,phone,email,vat,pic_name,pic_phone,pic_email,lead_time_days,sla_delivery_pct
+PRIN-MAYORA,PT Mayyora Indahh Tbk,PT Mayyora Indahh Tbk,"Gedung Mayora, Jl. Tomang Raya 21-23",Jakarta Barat,11440,021-5655320,customercare@mayora.co.id,012345678054000,Indra Wijaya,08123344556,indra.wijaya@mayora.co.id,10,96.0
+PRIN-SANTOS,PT Santos Jaya Abadii,PT Santos Jaya Abadii,"Jl. Raya Gilang 159, Taman",Kab. Sidoarjo,61257,031-7882200,corporate@kapalapi.co.id,013245678054000,Ahmad Fauzi,08134455667,ahmad.fauzi@kapalapi.co.id,12,94.5
+PRIN-UNILEVER,PT Unilevr Indonezia Tbk,PT Unilevr Indonezia Tbk,"Grha Unilever, Green Office Park Kav. 3, Jl. BSD Boulevard Barat",Kab. Tangerang,15345,021-80827000,suara.konsumen@unilever.com,011234567054000,Dewi Lestari,08145566778,dewi.lestari@unilever.com,14,97.0
+PRIN-WINGS,PT Sayapp Mas Utamma,PT Sayapp Mas Utamma,"Jl. Tipar Cakung Kav. F 5-7, Cakung Barat",Jakarta Timur,13910,021-4602685,sales.corporate@wingscorp.com,013456789054000,Budi Santoso,08111223344,budi.santoso@wingscorp.com,14,95.0

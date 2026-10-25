@@ -155,3 +155,35 @@
 - Amankan relasi variant packaging dan field filtering vendor
 - Tampilkan trace detail saat kegagalan loader
 - Task managed by antigravity-agent at 2026-10-25T08:05:53+00:00
+
+[2026-10-25T08:56:55+00:00] [INFO] Hapus customer tier dan tambahkan spesifikasi kargo armada serta kontak prinsipal
+- Hapus model id.tier, views, dan data XML (tier tidak relevan di FMCG B2B)
+- Tambahkan inherisi fleet.vehicle untuk kapasitas m3, tonase, dimensi box, STNK, dan KIR
+- Tambahkan field kontak dan PIC pada model id.principal
+- Tambahkan dependensi fleet, hr, uom pada id_base
+- Task managed by antigravity-agent at 2026-10-25T08:56:55+00:00
+
+[2026-10-25T16:05:00+07:00] [INFO] Rekalibrasi koordinat outlet, dimensi fisik produk/karton, armada box kargo, dan hirarki karyawan
+- Perbarui scripts/generate_fmcg_seed.py untuk menambatkan koordinat 354 outlet tepat di koridor jalan darat tiap kecamatan (anti-drowning di teluk Manado & anti-lereng gunung)
+- Tambahkan dimensi fisik realistis (L/W/H, cbm, kg) untuk eaches (Pcs) dan Karton pada 150 Master SKU
+- Tambahkan dimensi box kargo armada logistik (box_length_m, box_width_m, box_height_m) pada 9 armada
+- Tambahkan manager_code untuk relasi hirarki pelaporan organisasi (parent_id) pada 24 personel
+- Tambahkan generator principals_4.csv yang memuat kontak resmi, alamat, NPWP, dan PIC 4 principal nasional
+- Task managed by antigravity-agent at 2026-10-25T16:05:00+07:00
+
+[2026-10-25T16:08:30+07:00] [INFO] Loader kategori hirarkis FMCG, metadata kargo armada, hirarki HR, profil PT MDU, dan kalender kerja
+- Perbarui scripts/load_fmcg_seed.py untuk membangun pohon kategori produk [PRINSIPAL] > [DIVISI KATEGORI] > [BRAND] demi isolasi akuntansi persediaan dan SLA retur
+- Kaitkan data vendor resmi dan PIC prinsipal dari seed/principals_4.csv
+- Isi metadata kargo armada logistik (tonase, CBM, dimensi box PxLxT, rute operasional, STNK, KIR) ke fleet.vehicle
+- Hubungkan pohon departemen dan relasi pelaporan manajer (parent_id) pada hr.employee
+- Perbarui deploy/init.sh dengan profil resmi PT Manado Distribusi Utama (Interchange Maumbi), jadwal kerja 5 hari (Senin-Jumat 08:00-17:00, Sabtu-Minggu libur), dependensi modul fleet/hr/uom, serta mark seed_master_v4
+- Task managed by antigravity-agent at 2026-10-25T16:08:30+07:00
+
+[2026-10-25T16:45:00+07:00] [INFO] Sinkronisasi kode prinsipal XML, perbaikan konteks VAT profil perusahaan, dan diagnostik CI
+- Selaraskan kode prinsipal pada generate_fmcg_seed.py dan principals_4.csv dengan id_principal_data.xml (PRIN-MAYORA, PRIN-SANTOS, PRIN-UNILEVER, PRIN-WINGS)
+- Amankan setup company_profile_v2 di deploy/init.sh dengan no_vat_validation=True dan try-except agar tidak memblokir startup Odoo saat l10n_id aktif
+- Sempurnakan urutan penangkapan log docker container pada workflow CI untuk memudahkan troubleshooting
+- Task managed by antigravity-agent at 2026-10-25T16:45:00+07:00
+
+
+

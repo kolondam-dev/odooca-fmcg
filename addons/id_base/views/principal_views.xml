@@ -37,6 +37,11 @@
                             <field name="pks_start"/>
                             <field name="pks_end"/>
                         </group>
+                        <group string="Key Contact / PIC">
+                            <field name="pic_name"/>
+                            <field name="pic_phone"/>
+                            <field name="pic_email"/>
+                        </group>
                     </group>
                     <notebook>
                         <page string="Brands" name="brands">

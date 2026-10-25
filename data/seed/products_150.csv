@@ -1,151 +1,151 @@
-default_code,name,principal_code,fmcg_category,brand_code,base_uom,purchase_uom,inner_qty,carton_qty,cost_price,list_price,weight_kg,volume_cbm,barcode,description
-MYR-RMA-01,Rroma Kelapa 300g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.3,0.0012,899275310001,Biskuit Kelapa Gurih
-MYR-RMA-02,Rroma Marie Susu 115g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.115,0.0012,899275310002,Biskuit Marie Susu
-MYR-RMA-03,Rroma Sandwich Cokelat 216g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.216,0.0012,899275310003,Biskuit Sandwich Krim Cokelat
-MYR-RMA-04,Rroma Sandwich Peanut 216g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.216,0.0012,899275310004,Biskuit Sandwich Krim Kacang
-MYR-RMA-05,Rroma Sari Gandum 149g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.149,0.0012,899275310005,Biskuit Gandum Utuh
-MYR-RMA-06,Rroma Sari Gandum Cokelat 115g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.115,0.0012,899275310006,Biskuit Gandum Lapis Cokelat
-MYR-RMA-07,Rroma Malkist Keju Manis 120g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.12,0.0012,899275310007,Malkist Tabur Keju Manis
-MYR-RMA-08,Rroma Malkist Abon 135g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.135,0.0012,899275310008,Malkist Tabur Abon Sapi Gurih
-MYR-RMA-09,Rroma Malkist Crackers 135g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.135,0.0012,899275310009,Malkist Gurih Renyah
-MYR-RMA-10,Rroma Malkist Cokelat 120g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.12,0.0012,899275310010,Malkist Salut Cokelat Belgia
-MYR-BTR-01,Bettar Vanilla Sandwich 22g,PRIN-MAYORA,food,BRD-BTR,Pcs,Karton,20,160,1800,2000,0.022,0.0001,899275320001,Biskuit Sandwich Lapis Cokelat Krim Vanila
-MYR-BTR-02,Bettar Cokelat 120g,PRIN-MAYORA,food,BRD-BTR,Pcs,Karton,1,24,8200,9500,0.12,0.0008,899275320002,Biskuit Bettar Family Pack
-MYR-SLI-01,Slaii O'lai Strawberry 128g,PRIN-MAYORA,food,BRD-SLI,Pcs,Karton,1,24,6500,7500,0.128,0.0006,899275330001,Biskuit Selai Buah Stroberi Asli
-MYR-SLI-02,Slaii O'lai Blueberry 128g,PRIN-MAYORA,food,BRD-SLI,Pcs,Karton,1,24,6500,7500,0.128,0.0006,899275330002,Biskuit Selai Buah Blueberry Asli
-MYR-BBG-01,Benn-Beng Reguler 20g,PRIN-MAYORA,food,BRD-BBG,Pcs,Karton,20,160,2000,2500,0.025,0.0002,899275340001,Wafer Karamel Cokelat Crispy
-MYR-BBG-02,Benn-Beng Maxx 32g,PRIN-MAYORA,food,BRD-BBG,Pcs,Karton,12,120,3200,3800,0.025,0.0002,899275340002,Wafer Cokelat Porsi Ekstra
-MYR-BBG-03,Benn-Beng Share It Pouch 100g,PRIN-MAYORA,food,BRD-BBG,Pcs,Karton,1,24,11000,13000,0.025,0.0002,899275340003,Benn-Beng Mini Pouch Pesta
-MYR-BBG-04,Benn-Beng White 22g,PRIN-MAYORA,food,BRD-BBG,Pcs,Karton,20,160,2200,2700,0.025,0.0002,899275340004,Wafer Lapis Cokelat Putih & Kelapa
-MYR-TRB-01,Torabikka Duo 25g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1200,1500,0.03,0.00015,899275350001,Kopi + Gula Mantap
-MYR-TRB-02,Torabikka Duo Susu Full Cream 28g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1400,1700,0.03,0.00015,899275350002,Kopi Susu Gurih
-MYR-TRB-03,Torabikka Cappuccino 25g + Choco Granule,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1800,2200,0.03,0.00015,899275350003,Cappuccino Busa Melimpah
-MYR-TRB-04,Torabikka Gilus Mix Gula Aren 23g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1100,1300,0.03,0.00015,899275350004,Kopi Giling Halus Aroma Aren
-MYR-TRB-05,Torabikka Gilus Mix Pandan 23g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1100,1300,0.03,0.00015,899275350005,Kopi Halus Wangi Pandan
-MYR-TRB-06,Torabikka Creamy Latte 25g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1600,2000,0.03,0.00015,899275350006,Latte Lembut Rasa Susu
-MYR-TRB-07,Torabikka Kopi Susu Espresso 28g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1500,1800,0.03,0.00015,899275350007,Kopi Espresso Susu Kental
-MYR-TRB-08,Torabikka Moka 28g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1400,1700,0.03,0.00015,899275350008,Paduan Kopi & Cokelat Moka
-MYR-TRB-09,Torabikka Natacinno 25g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1700,2100,0.03,0.00015,899275350009,Cappuccino Kelapa Segar
-MYR-TRB-10,Torabikka Jahe Susu 25g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1500,1800,0.03,0.00015,899275350010,Kopi Hangat Jahe Alami
-MYR-KPK-RTD-01,Koppiko Lucky Day Kopi Botol 250ml,PRIN-MAYORA,rtd,BRD-KPK,Botol,Karton,1,24,6500,7500,0.28,0.0008,899275360001,Kopi Susu Energi Thailand Blend
-MYR-KPK-RTD-02,Koppiko 78C Coffee Latte 240ml,PRIN-MAYORA,rtd,BRD-KPK,Botol,Karton,1,24,6000,7000,0.28,0.0008,899275360002,Latte Suhu Sempurna Ekstraksi
-MYR-KPK-RTD-03,Koppiko 78C Macchiato 240ml,PRIN-MAYORA,rtd,BRD-KPK,Botol,Karton,1,24,6000,7000,0.28,0.0008,899275360003,Kopi Macchiato Gurih
-MYR-KPK-RTD-04,Koppiko 78C Calorie Low 240ml,PRIN-MAYORA,rtd,BRD-KPK,Botol,Karton,1,24,6200,7200,0.28,0.0008,899275360004,Kopi Ringan Rendah Kalori
-MYR-EGN-01,Ennergen Sereal Cokelat 30g,PRIN-MAYORA,rtd,BRD-EGN,Sachet,Karton,10,120,1800,2200,0.035,0.0002,899275370001,Minuman Sereal Nutrisi Sarapan
-MYR-EGN-02,Ennergen Sereal Vanila 30g,PRIN-MAYORA,rtd,BRD-EGN,Sachet,Karton,10,120,1800,2200,0.035,0.0002,899275370002,Minuman Sereal Vanila Lezat
-MYR-CND-01,Koppiko Coffee Candy Sak 150g,PRIN-MAYORA,confectionery,BRD-KPK,Pcs,Karton,1,24,7500,9000,0.15,0.0004,899275380001,Permen Kopi Asli
-MYR-CND-02,Koppiko Blister Pack 32g,PRIN-MAYORA,confectionery,BRD-KPK,Pcs,Karton,12,120,2500,3000,0.15,0.0004,899275380002,Permen Kopi Kantong Saku
-MYR-CND-03,Koppiko Cappuccino 150g,PRIN-MAYORA,confectionery,BRD-KPK,Pcs,Karton,1,24,7800,9200,0.15,0.0004,899275380003,Permen Rasa Cappuccino
-MYR-CND-04,Kiss Mint Cherry Sak 125g,PRIN-MAYORA,confectionery,BRD-KIS,Pcs,Karton,1,24,6800,8000,0.15,0.0004,899275380004,Permen Mint Segar Emoticon
-MYR-CND-05,Kiss Mint Barley Sak 125g,PRIN-MAYORA,confectionery,BRD-KIS,Pcs,Karton,1,24,6800,8000,0.15,0.0004,899275380005,Permen Mint Barley
-MYR-CND-06,Kiss Mint Apple Peach 125g,PRIN-MAYORA,confectionery,BRD-KIS,Pcs,Karton,1,24,6800,8000,0.15,0.0004,899275380006,Permen Rasa Apel Persik
-MYR-CND-07,Kiss Grape Mint 125g,PRIN-MAYORA,confectionery,BRD-KIS,Pcs,Karton,1,24,6800,8000,0.15,0.0004,899275380007,Permen Rasa Anggur Segar
-MYR-CND-08,Tamarrin Permen Asam Sak 135g,PRIN-MAYORA,confectionery,BRD-TMR,Pcs,Karton,1,24,7000,8200,0.15,0.0004,899275380008,Permen Asam Jawa Alami
-MYR-CND-09,Tamarrin Bag 50g,PRIN-MAYORA,confectionery,BRD-TMR,Pcs,Karton,1,48,3000,3600,0.15,0.0004,899275380009,Permen Asam Kemasan Mini
-MYR-CND-10,Tamarrin Roll Pack 30g,PRIN-MAYORA,confectionery,BRD-TMR,Pcs,Karton,12,120,2000,2500,0.15,0.0004,899275380010,Permen Asam Roll Praktis
-KPA-KA-01,Kapall Api Special Merah 65g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,40,4800,5600,0.08,0.0003,899100110001,Kopi Bubuk Murni Khas
-KPA-KA-02,Kapall Api Special Merah 165g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,24,11500,13200,0.08,0.0003,899100110002,Kopi Bubuk Sedang
-KPA-KA-03,Kapall Api Special Merah 380g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,12,25500,29000,0.08,0.0003,899100110003,Kopi Bubuk Kemasan Keluarga
-KPA-KA-04,Kapall Api Special Mix 24g (Kopi+Gula),PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1300,1600,0.08,0.0003,899100110004,Kopi Campur Gula Sachet
-KPA-KA-05,Kapall Api Kopi Susu Mantap 31g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1500,1800,0.08,0.0003,899100110005,Kopi Susu Formula Baru
-KPA-KA-06,Kapall Api White Koffie 20g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1400,1700,0.08,0.0003,899100110006,Kopi Putih Ramah Lambung
-KPA-KA-07,Kapall Api Grande White Coffee 20g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1600,1900,0.08,0.0003,899100110007,Kopi Putih Premium Creamy
-KPA-KA-08,Kapall Api Signature Original 65g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,30,8500,10000,0.08,0.0003,899100110008,Kopi Bubuk Pilihan Arabika
-KPA-KA-09,Kapall Api Easy Drip Blend 50g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,20,18000,21000,0.08,0.0003,899100110009,Kopi Drip Bag Eksklusif
-KPA-KA-10,Kapall Api Mantap 75g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,40,5500,6500,0.08,0.0003,899100110010,Kopi Bubuk Aroma Tajam
-KPA-KA-11,Kapall Api Krim Cafe Non-Dairy 500g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,12,28000,32000,0.08,0.0003,899100110011,Krimer Bubuk Pengganti Susu
-KPA-KA-12,Kapall Api Gula Aren 23g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1400,1700,0.08,0.0003,899100110012,Kopi Bubuk Manis Aren Asli
-KPA-ABC-01,Kopi ABCC Kopi Susu 31g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1400,1700,0.035,0.00018,899100120001,Kopi Susu Melegenda
-KPA-ABC-02,Kopi ABCC Kopi Moka 31g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1400,1700,0.035,0.00018,899100120002,Kopi Moka Manis
-KPA-ABC-03,Kopi ABCC Plus Gula 25g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1200,1500,0.035,0.00018,899100120003,Kopi Hitam Gula
-KPA-ABC-04,Kopi ABCC Brownies Kopi 27g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1600,1900,0.035,0.00018,899100120004,Kopi Rasa Kue Brownies
-KPA-ABC-05,Kopi ABCC White Coffee 20g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1400,1700,0.035,0.00018,899100120005,Kopi Putih Nikmat
-KPA-ABC-06,Kopi ABCC Kopi Klepon 25g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1600,1900,0.035,0.00018,899100120006,Kopi Rasa Tradisional Klepon
-KPA-YA-01,Koppi Ya! Susu Sachet 25g,PRIN-SANTOS,food,BRD-YA,Sachet,Karton,10,120,950,1200,0.025,0.00015,899100130001,Kopi Susu Ekonomis Kios
-KPA-YA-02,Koppi Ya! Hitam Manis 20g,PRIN-SANTOS,food,BRD-YA,Sachet,Karton,10,120,850,1100,0.02,0.00015,899100130002,Kopi Hitam Gula Ekonomis
-KPA-KPT-01,Koppi Kapten Hitam Mantap 60g,PRIN-SANTOS,food,BRD-KPT,Pcs,Karton,1,40,4200,5000,0.07,0.00025,899100140001,Kopi Bubuk Sedang
-KPA-KPT-02,Koppi Kapten Kopi Murni 150g,PRIN-SANTOS,food,BRD-KPT,Pcs,Karton,1,24,9800,11500,0.07,0.00025,899100140002,Kopi Murni Robusta
-KPA-KPT-03,Koppi Kapten Plus Gula 25g,PRIN-SANTOS,food,BRD-KPT,Pcs,Karton,10,120,1100,1350,0.07,0.00025,899100140003,Kopi Hitam Gula Sachet
-KPA-KPT-04,Koppi Kapten Kopi Susu 28g,PRIN-SANTOS,food,BRD-KPT,Pcs,Karton,10,120,1300,1600,0.07,0.00025,899100140004,Kopi Susu Mantap
-KPA-RTD-01,Kapall Api Signature Black Botol 200ml,PRIN-SANTOS,rtd,BRD-KA,Botol,Karton,1,24,5500,6500,0.24,0.0007,899100150001,Kopi Hitam Dingin
-KPA-RTD-02,Kapall Api White Coffee Botol 200ml,PRIN-SANTOS,rtd,BRD-KA,Botol,Karton,1,24,5800,7000,0.24,0.0007,899100150002,Kopi Putih Dingin
-KPA-RTD-03,Kapall Api Kopi Susu Kaleng 240ml,PRIN-SANTOS,rtd,BRD-KA,Botol,Karton,1,24,7500,8800,0.24,0.0007,899100150003,Kopi Susu Kaleng Premium
-KPA-RTD-04,Kapall Api Cold Brew Can 240ml,PRIN-SANTOS,rtd,BRD-KA,Botol,Karton,1,24,8200,9500,0.24,0.0007,899100150004,Kopi Cold Brew Ekstraktif
-KPA-RTD-05,Kopi ABCC Choco Malt Tetra Pack 200ml,PRIN-SANTOS,rtd,BRD-ABC,Botol,Karton,1,24,4500,5300,0.24,0.0007,899100150005,Minuman Malt Cokelat Susu
-KPA-RTD-06,Kopi ABCC Coffee Latte Tetra 200ml,PRIN-SANTOS,rtd,BRD-ABC,Botol,Karton,1,24,4500,5300,0.24,0.0007,899100150006,Latte Kemasan Kotak
-KPA-RTD-07,Kopi ABCC Kopi Moka Botol 250ml,PRIN-SANTOS,rtd,BRD-ABC,Botol,Karton,1,24,6000,7000,0.24,0.0007,899100150007,Kopi Moka Siap Minum
-KPA-RTD-08,Kopi ABCC Kopi Susu Botol 250ml,PRIN-SANTOS,rtd,BRD-ABC,Botol,Karton,1,24,6000,7000,0.24,0.0007,899100150008,Kopi Susu Siap Minum
-ULV-SNL-01,Sunnlight Jeruk Nipis Pouch 650ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,2,24,13500,15500,0.68,0.0011,899999910001,Pencuci Piring Jeruk Nipis
-ULV-SNL-02,Sunnlight Jeruk Nipis Pouch 210ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,1,48,5200,6000,0.68,0.0011,899999910002,Kemasan Ekonomis Kios
-ULV-SNL-03,Sunnlight Habbatussauda 650ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,2,24,14000,16000,0.68,0.0011,899999910003,Pembersih dengan Anti Bakteri Habbatus
-ULV-SNL-04,Sunnlight Ekstra Higienis 650ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,2,24,14200,16500,0.68,0.0011,899999910004,Formula Higienis Sayur & Buah
-ULV-SNL-05,Sunnlight Botol Pompa 750ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,1,12,19500,22500,0.68,0.0011,899999910005,Kemasan Botol Meja
-ULV-SNL-06,Sunnlight Biocare Alami 650ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,2,24,14500,17000,0.68,0.0011,899999910006,Formula Ramah Lingkungan
-ULV-RNS-01,Rinnso Anti Noda Klasik Bubuk 770g,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,1,12,21500,24500,0.8,0.0015,899999920001,Deterjen Bubuk Bersih Cemerlang
-ULV-RNS-02,Rinnso Mollto Rose Fresh 770g,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,1,12,22000,25000,0.8,0.0015,899999920002,Deterjen Harum Bunga
-ULV-RNS-03,Rinnso Cair Konsentrat Refill 750ml,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,2,12,18500,21000,0.8,0.0015,899999920003,Deterjen Cair Anti Noda
-ULV-RNS-04,Rinnso Matic Front Load Cair 1.6L,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,1,6,42000,48000,0.8,0.0015,899999920004,Khusus Mesin Cuci Bukaan Depan
-ULV-RNS-05,Rinnso Matic Top Load Cair 1.6L,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,1,6,38000,44000,0.8,0.0015,899999920005,Khusus Mesin Cuci Bukaan Atas
-ULV-RNS-06,Rinnso Japanese Peach Cair 700ml,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,2,12,19000,22000,0.8,0.0015,899999920006,Deterjen Wangi Buah Peach
-ULV-MLT-01,Mollto All-in-1 Blue Refill 720ml,PRIN-UNILEVER,home_care,BRD-MLT,Pouch,Karton,2,12,17500,20000,0.75,0.0012,899999930001,Pelembut & Pewangi Pakaian Biru
-ULV-MLT-02,Mollto All-in-1 Pink Refill 720ml,PRIN-UNILEVER,home_care,BRD-MLT,Pouch,Karton,2,12,17500,20000,0.75,0.0012,899999930002,Pelembut Wangi Mawar Merah
-ULV-MLT-03,Mollto Floral Bliss Refill 780ml,PRIN-UNILEVER,home_care,BRD-MLT,Pouch,Karton,2,12,16000,18500,0.75,0.0012,899999930003,Pewangi Konsentrat
-ULV-MLT-04,Mollto Pure Softener Bayi 720ml,PRIN-UNILEVER,home_care,BRD-MLT,Pouch,Karton,2,12,19000,22000,0.75,0.0012,899999930004,Formula Lembut Kulit Sensitif
-ULV-LFB-01,Lifebuooy Sabun Batang Total 10 110g,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,3,72,3800,4500,0.12,0.0003,899999940001,Sabun Mandi Anti Bakteri Merah
-ULV-LFB-02,Lifebuooy Sabun Batang Lemon 110g,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,3,72,3800,4500,0.12,0.0003,899999940002,Sabun Mandi Kesegaran Lemon
-ULV-LFB-03,Lifebuooy Sabun Batang Mild Care 110g,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,3,72,3800,4500,0.12,0.0003,899999940003,Sabun Mandi Susu Lembut
-ULV-LFB-04,Lifebuooy Bodywash Refill Total 10 450ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,24,21000,24000,0.12,0.0003,899999940004,Sabun Cair Pouch
-ULV-LFB-05,Lifebuooy Bodywash Refill Lemon 450ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,24,21000,24000,0.12,0.0003,899999940005,Sabun Cair Lemon Fresh Pouch
-ULV-LFB-06,Lifebuooy Shampoo Rambut Sehat 170ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,24,18500,21500,0.12,0.0003,899999940006,Sampo Rambut Kuat Berkilau
-ULV-LFB-07,Lifebuooy Shampoo Anti Dandruff 170ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,24,19500,22500,0.12,0.0003,899999940007,Sampo Bebas Ketombe
-ULV-LFB-08,Lifebuooy Hand Sanitizer Gel 50ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,48,7500,9000,0.12,0.0003,899999940008,Pembersih Tangan Higienis
-ULV-PSD-01,Pepsodentt Pencegah Gigi Berlubang 190g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,11500,13500,0.21,0.0004,899999950001,Pasta Gigi Perlindungan Maksimal
-ULV-PSD-02,Pepsodentt Pencegah Gigi Berlubang 120g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,8500,10000,0.21,0.0004,899999950002,Pasta Gigi Sedang
-ULV-PSD-03,Pepsodentt Pencegah Gigi Berlubang 75g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,5500,6500,0.21,0.0004,899999950003,Pasta Gigi Ekonomis
-ULV-PSD-04,Pepsodentt Herbal Alami 190g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,14500,17000,0.21,0.0004,899999950004,Pasta Gigi Daun Sirih & Garam
-ULV-PSD-05,Pepsodentt Complete 8 Multi Action 150g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,16000,18500,0.21,0.0004,899999950005,Pasta Gigi Komplit Perlindungan
-ULV-PSD-06,Pepsodentt White Action Double 190g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,15000,17500,0.21,0.0004,899999950006,Gigi Putih Alami Bersinar
-ULV-CLR-01,Clearr Shampoo Ice Cool Menthol 160ml,PRIN-UNILEVER,personal_care,BRD-CLR,Botol,Karton,1,24,23000,26500,0.18,0.0005,899999960001,Sampo Dingin Anti Ketombe
-ULV-CLR-02,Clearr Shampoo Complete Soft Care 160ml,PRIN-UNILEVER,personal_care,BRD-CLR,Botol,Karton,1,24,23000,26500,0.18,0.0005,899999960002,Sampo Lembut Kulit Kepala
-ULV-CLR-03,Clearr Shampoo Men Cool Sport Menthol 160ml,PRIN-UNILEVER,personal_care,BRD-CLR,Botol,Karton,1,24,24000,27500,0.18,0.0005,899999960003,Khusus Pria Aktif
-ULV-CLR-04,Clearr Shampoo Men Anti Hairfall 160ml,PRIN-UNILEVER,personal_care,BRD-CLR,Botol,Karton,1,24,24000,27500,0.18,0.0005,899999960004,Pengurang Rambut Rontok
-ULV-RXN-01,Rexxona Men Roll On Invisible Dry 45ml,PRIN-UNILEVER,personal_care,BRD-RXN,Botol,Karton,6,36,17500,20500,0.065,0.0002,899999970001,Deodoran Pria Tanpa Noda
-ULV-RXN-02,Rexxona Women Brightening Roll On 45ml,PRIN-UNILEVER,personal_care,BRD-RXN,Botol,Karton,6,36,17500,20500,0.065,0.0002,899999970002,Deodoran Wanita Mencerahkan
-ULV-RYC-01,Royyco Bumbu Pelezat Rasa Ayam 230g,PRIN-UNILEVER,food,BRD-RYC,Pouch,Karton,1,40,8500,10000,0.24,0.0005,899999980001,Kaldu Ayam Alami
-ULV-RYC-02,Royyco Bumbu Pelezat Rasa Sapi 230g,PRIN-UNILEVER,food,BRD-RYC,Pouch,Karton,1,40,8500,10000,0.24,0.0005,899999980002,Kaldu Sapi Gurih
-ULV-RYC-03,Royyco Kaldu Spesial Jamur 100g,PRIN-UNILEVER,food,BRD-RYC,Pouch,Karton,1,40,6500,7800,0.24,0.0005,899999980003,Kaldu Vegetarian Jamur
-ULV-RYC-04,Royyco Bumbu Kuah Bakso 100g,PRIN-UNILEVER,food,BRD-RYC,Pouch,Karton,1,40,6000,7200,0.24,0.0005,899999980004,Bumbu Kuah Spesial Bakso
-ULV-BNG-01,Banngo Kecap Manis Pouch Refill 550ml,PRIN-UNILEVER,food,BRD-BNG,Pouch,Karton,1,24,21000,24000,0.72,0.0012,899999990001,Kecap Kedelai Hitam Malika
-ULV-BNG-02,Banngo Kecap Manis Pouch Refill 220ml,PRIN-UNILEVER,food,BRD-BNG,Pouch,Karton,1,48,9500,11000,0.28,0.0006,899999990002,Kecap Manis Kemasan Sedang
-WNG-SDP-01,Mie Seddaap Goreng 90g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2700,3100,0.09,0.0005,899886610001,Mie Goreng Bawang Renyah
-WNG-SDP-02,Mie Seddaap Kuah Rasa Soto 75g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2500,2900,0.09,0.0005,899886610002,Mie Kuah Rasa Soto Segar
-WNG-SDP-03,Mie Seddaap Kuah Ayam Bawang 70g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2500,2900,0.09,0.0005,899886610003,Mie Kuah Kaldu Gurih
-WNG-SDP-04,Mie Seddaap Kuah Kari Spesial 72g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2600,3000,0.09,0.0005,899886610004,Kari Kental Kaya Rempah
-WNG-SDP-05,Mie Seddaap Korean Spicy Chicken 87g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,3000,3500,0.09,0.0005,899886610005,Pedas Korea Level 1-2
-WNG-SDP-06,Mie Seddaap Korean Spicy Soup 75g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,3000,3500,0.09,0.0005,899886610006,Kuah Pedas Hangat Korea
-WNG-SDP-07,Mie Seddaap Singapore Spicy Laksa 83g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,3100,3600,0.09,0.0005,899886610007,Laksa Santan Gurih
-WNG-SDP-08,Mie Seddaap Rawon Asli Jawa Timur 80g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2900,3400,0.09,0.0005,899886610008,Kuah Hitam Khas Rawon
-WNG-SDP-09,Mie Seddaap Cup Goreng 85g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,24,4500,5200,0.09,0.0005,899886610009,Mie Cup Praktis
-WNG-SDP-10,Mie Seddaap Cup Soto 81g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,24,4400,5100,0.09,0.0005,899886610010,Mie Cup Kuah Soto
-WNG-SDP-11,Mie Seddaap Cup Rawon 81g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,24,4600,5300,0.09,0.0005,899886610011,Mie Cup Kuah Rawon
-WNG-SDP-12,Mie Seddaap Sambal Goreng 88g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2800,3200,0.09,0.0005,899886610012,Mie Rasa Sambal Nikmat
-WNG-JSJ-01,Jassjus Jeruk Segar Renceng 10s,PRIN-WINGS,food,BRD-JSJ,Sachet,Karton,10,120,850,1100,0.015,0.0001,899886620001,Minuman Serbuk Buah
-WNG-JSJ-02,Jassjus Mangga Manis Renceng 10s,PRIN-WINGS,food,BRD-JSJ,Sachet,Karton,10,120,850,1100,0.015,0.0001,899886620002,Minuman Rasa Mangga
-WNG-JSJ-03,Jassjus Anggur Merah Renceng 10s,PRIN-WINGS,food,BRD-JSJ,Sachet,Karton,10,120,850,1100,0.015,0.0001,899886620003,Minuman Rasa Anggur
-WNG-JSJ-04,Jassjus Melon Wangi Renceng 10s,PRIN-WINGS,food,BRD-JSJ,Sachet,Karton,10,120,850,1100,0.015,0.0001,899886620004,Minuman Rasa Melon
-WNG-SGD-01,Segarr Dingin Madu Lemon Box 24s,PRIN-WINGS,food,BRD-SGD,Box,Karton,1,24,18500,22000,0.25,0.0006,899886630001,Pereda Panas Dalam Alami
-WNG-SGD-02,Segarr Dingin Sirsak Box 24s,PRIN-WINGS,food,BRD-SGD,Box,Karton,1,24,18500,22000,0.25,0.0006,899886630002,Pereda Panas Dalam Rasa Sirsak
-WNG-TOP-01,Topp Kopi Gula Aren 25g,PRIN-WINGS,food,BRD-TOP,Sachet,Karton,10,120,1200,1500,0.03,0.00018,899886640001,Kopi Instan Gula Aren
-WNG-TOP-02,Topp Kopi Kopi Susu 31g,PRIN-WINGS,food,BRD-TOP,Sachet,Karton,10,120,1300,1600,0.03,0.00018,899886640002,Kopi Susu Mantap
-WNG-TOP-03,Topp Kopi Kopi Moka 31g,PRIN-WINGS,food,BRD-TOP,Sachet,Karton,10,120,1300,1600,0.03,0.00018,899886640003,Kopi Paduan Cokelat Moka
-WNG-TOP-04,Topp Kopi Barista Tubruk 25g,PRIN-WINGS,food,BRD-TOP,Sachet,Karton,10,120,1100,1400,0.03,0.00018,899886640004,Kopi Tubruk Asli
-WNG-FLD-01,Floriddina Orange Pulpy 350ml Pet,PRIN-WINGS,rtd,BRD-FLD,Botol,Karton,1,24,3000,3600,0.38,0.001,899886650001,Jus Jeruk Bulir Nyata
-WNG-FLD-02,Floriddina Lemon Coco 350ml Pet,PRIN-WINGS,rtd,BRD-FLD,Botol,Karton,1,24,3000,3600,0.38,0.001,899886650002,Jus Lemon Kelapa
-WNG-FLD-03,Floriddina Apple Pulpy 350ml Pet,PRIN-WINGS,rtd,BRD-FLD,Botol,Karton,1,24,3000,3600,0.38,0.001,899886650003,Jus Apel Bulir Segar
-WNG-JVN-01,Tehh Javana Gula Batu 350ml Pet,PRIN-WINGS,rtd,BRD-JVN,Botol,Karton,1,24,2800,3300,0.38,0.001,899886660001,Teh Melati Rasa Gula Batu
-WNG-JVN-02,Tehh Javana Melati Asli 350ml Pet,PRIN-WINGS,rtd,BRD-JVN,Botol,Karton,1,24,2800,3300,0.38,0.001,899886660002,Teh Wangi Melati Murni
-WNG-JVN-03,Tehh Javana Less Sugar 350ml Pet,PRIN-WINGS,rtd,BRD-JVN,Botol,Karton,1,24,2800,3300,0.38,0.001,899886660003,Teh Rendah Gula
-WNG-GLD-01,Goldaa Coffee Dolce Latte 200ml Pet,PRIN-WINGS,rtd,BRD-GLD,Botol,Karton,1,24,3000,3500,0.22,0.0006,899886670001,Kopi Latte Susu Gurih
-WNG-GLD-02,Goldaa Coffee Cappuccino 200ml Pet,PRIN-WINGS,rtd,BRD-GLD,Botol,Karton,1,24,3000,3500,0.22,0.0006,899886670002,Kopi Cappuccino Dingin
-WNG-GLD-03,Goldaa Coffee Classic Black 200ml Pet,PRIN-WINGS,rtd,BRD-GLD,Botol,Karton,1,24,2800,3300,0.22,0.0006,899886670003,Kopi Hitam Nikmat
-WNG-GLD-04,Goldaa Coffee White Mocha 200ml Pet,PRIN-WINGS,rtd,BRD-GLD,Botol,Karton,1,24,3000,3500,0.22,0.0006,899886670004,Kopi Moka Putih
+default_code,name,principal_code,fmcg_category,brand_code,base_uom,purchase_uom,inner_qty,carton_qty,cost_price,list_price,weight_kg,volume_cbm,barcode,description,length_cm,width_cm,height_cm,carton_length_cm,carton_width_cm,carton_height_cm,carton_volume_cbm,carton_weight_kg
+MYR-RMA-01,Rroma Kelapa 300g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.3,0.00126,899275310001,Biskuit Kelapa Gurih,20.0,14.0,4.5,39.3,28.3,40.1,0.0446,9.45
+MYR-RMA-02,Rroma Marie Susu 115g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.115,0.00062,899275310002,Biskuit Marie Susu,16.0,11.0,3.5,31.1,22.4,31.5,0.0219,3.9
+MYR-RMA-03,Rroma Sandwich Cokelat 216g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.216,0.00126,899275310003,Biskuit Sandwich Krim Cokelat,20.0,14.0,4.5,39.3,28.3,40.1,0.0446,6.93
+MYR-RMA-04,Rroma Sandwich Peanut 216g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.216,0.00126,899275310004,Biskuit Sandwich Krim Kacang,20.0,14.0,4.5,39.3,28.3,40.1,0.0446,6.93
+MYR-RMA-05,Rroma Sari Gandum 149g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.149,0.00062,899275310005,Biskuit Gandum Utuh,16.0,11.0,3.5,31.1,22.4,31.5,0.0219,4.92
+MYR-RMA-06,Rroma Sari Gandum Cokelat 115g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.115,0.00062,899275310006,Biskuit Gandum Lapis Cokelat,16.0,11.0,3.5,31.1,22.4,31.5,0.0219,3.9
+MYR-RMA-07,Rroma Malkist Keju Manis 120g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.12,0.00062,899275310007,Malkist Tabur Keju Manis,16.0,11.0,3.5,31.1,22.4,31.5,0.0219,4.05
+MYR-RMA-08,Rroma Malkist Abon 135g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.135,0.00062,899275310008,Malkist Tabur Abon Sapi Gurih,16.0,11.0,3.5,31.1,22.4,31.5,0.0219,4.5
+MYR-RMA-09,Rroma Malkist Crackers 135g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.135,0.00062,899275310009,Malkist Gurih Renyah,16.0,11.0,3.5,31.1,22.4,31.5,0.0219,4.5
+MYR-RMA-10,Rroma Malkist Cokelat 120g,PRIN-MAYORA,food,BRD-RMA,Pcs,Karton,1,30,7500,8500,0.12,0.00062,899275310010,Malkist Salut Cokelat Belgia,16.0,11.0,3.5,31.1,22.4,31.5,0.0219,4.05
+MYR-BTR-01,Bettar Vanilla Sandwich 22g,PRIN-MAYORA,food,BRD-BTR,Pcs,Karton,20,160,1800,2000,0.022,0.00011,899275320001,Biskuit Sandwich Lapis Cokelat Krim Vanila,10.0,7.0,1.5,30.5,22.0,31.0,0.0208,3.97
+MYR-BTR-02,Bettar Cokelat 120g,PRIN-MAYORA,food,BRD-BTR,Pcs,Karton,1,24,8200,9500,0.12,0.00062,899275320002,Biskuit Bettar Family Pack,16.0,11.0,3.5,28.8,20.7,29.5,0.0176,3.33
+MYR-SLI-01,Slaii O'lai Strawberry 128g,PRIN-MAYORA,food,BRD-SLI,Pcs,Karton,1,24,6500,7500,0.128,0.00062,899275330001,Biskuit Selai Buah Stroberi Asli,16.0,11.0,3.5,28.8,20.7,29.5,0.0176,3.52
+MYR-SLI-02,Slaii O'lai Blueberry 128g,PRIN-MAYORA,food,BRD-SLI,Pcs,Karton,1,24,6500,7500,0.128,0.00062,899275330002,Biskuit Selai Buah Blueberry Asli,16.0,11.0,3.5,28.8,20.7,29.5,0.0176,3.52
+MYR-BBG-01,Benn-Beng Reguler 20g,PRIN-MAYORA,food,BRD-BBG,Pcs,Karton,20,160,2000,2500,0.025,0.00011,899275340001,Wafer Karamel Cokelat Crispy,10.0,7.0,1.5,30.5,22.0,31.0,0.0208,4.45
+MYR-BBG-02,Benn-Beng Maxx 32g,PRIN-MAYORA,food,BRD-BBG,Pcs,Karton,12,120,3200,3800,0.025,0.00011,899275340002,Wafer Cokelat Porsi Ekstra,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,3.45
+MYR-BBG-03,Benn-Beng Share It Pouch 100g,PRIN-MAYORA,food,BRD-BBG,Pcs,Karton,1,24,11000,13000,0.025,0.00011,899275340003,Benn-Beng Mini Pouch Pesta,10.0,7.0,1.5,24.0,18.0,14.0,0.006,1.05
+MYR-BBG-04,Benn-Beng White 22g,PRIN-MAYORA,food,BRD-BBG,Pcs,Karton,20,160,2200,2700,0.025,0.00011,899275340004,Wafer Lapis Cokelat Putih & Kelapa,10.0,7.0,1.5,30.5,22.0,31.0,0.0208,4.45
+MYR-TRB-01,Torabikka Duo 25g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1200,1500,0.03,0.00042,899275350001,Kopi + Gula Mantap,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-TRB-02,Torabikka Duo Susu Full Cream 28g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1400,1700,0.03,0.00042,899275350002,Kopi Susu Gurih,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-TRB-03,Torabikka Cappuccino 25g + Choco Granule,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1800,2200,0.03,0.00042,899275350003,Cappuccino Busa Melimpah,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-TRB-04,Torabikka Gilus Mix Gula Aren 23g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1100,1300,0.03,0.00042,899275350004,Kopi Giling Halus Aroma Aren,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-TRB-05,Torabikka Gilus Mix Pandan 23g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1100,1300,0.03,0.00042,899275350005,Kopi Halus Wangi Pandan,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-TRB-06,Torabikka Creamy Latte 25g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1600,2000,0.03,0.00042,899275350006,Latte Lembut Rasa Susu,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-TRB-07,Torabikka Kopi Susu Espresso 28g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1500,1800,0.03,0.00042,899275350007,Kopi Espresso Susu Kental,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-TRB-08,Torabikka Moka 28g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1400,1700,0.03,0.00042,899275350008,Paduan Kopi & Cokelat Moka,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-TRB-09,Torabikka Natacinno 25g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1700,2100,0.03,0.00042,899275350009,Cappuccino Kelapa Segar,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-TRB-10,Torabikka Jahe Susu 25g,PRIN-MAYORA,rtd,BRD-TRB,Sachet,Karton,10,120,1500,1800,0.03,0.00042,899275350010,Kopi Hangat Jahe Alami,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.05
+MYR-KPK-RTD-01,Koppiko Lucky Day Kopi Botol 250ml,PRIN-MAYORA,rtd,BRD-KPK,Botol,Karton,1,24,6500,7500,0.28,0.00067,899275360001,Kopi Susu Energi Thailand Blend,6.2,6.2,17.5,29.6,21.3,30.1,0.019,7.17
+MYR-KPK-RTD-02,Koppiko 78C Coffee Latte 240ml,PRIN-MAYORA,rtd,BRD-KPK,Botol,Karton,1,24,6000,7000,0.28,0.00067,899275360002,Latte Suhu Sempurna Ekstraksi,6.2,6.2,17.5,29.6,21.3,30.1,0.019,7.17
+MYR-KPK-RTD-03,Koppiko 78C Macchiato 240ml,PRIN-MAYORA,rtd,BRD-KPK,Botol,Karton,1,24,6000,7000,0.28,0.00067,899275360003,Kopi Macchiato Gurih,6.2,6.2,17.5,29.6,21.3,30.1,0.019,7.17
+MYR-KPK-RTD-04,Koppiko 78C Calorie Low 240ml,PRIN-MAYORA,rtd,BRD-KPK,Botol,Karton,1,24,6200,7200,0.28,0.00067,899275360004,Kopi Ringan Rendah Kalori,6.2,6.2,17.5,29.6,21.3,30.1,0.019,7.17
+MYR-EGN-01,Ennergen Sereal Cokelat 30g,PRIN-MAYORA,rtd,BRD-EGN,Sachet,Karton,10,120,1800,2200,0.035,0.00042,899275370001,Minuman Sereal Nutrisi Sarapan,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.65
+MYR-EGN-02,Ennergen Sereal Vanila 30g,PRIN-MAYORA,rtd,BRD-EGN,Sachet,Karton,10,120,1800,2200,0.035,0.00042,899275370002,Minuman Sereal Vanila Lezat,5.5,5.5,14.0,43.3,31.2,44.0,0.0594,4.65
+MYR-CND-01,Koppiko Coffee Candy Sak 150g,PRIN-MAYORA,confectionery,BRD-KPK,Pcs,Karton,1,24,7500,9000,0.15,0.00035,899275380001,Permen Kopi Asli,14.0,10.0,2.5,24.0,18.0,22.9,0.0099,4.05
+MYR-CND-02,Koppiko Blister Pack 32g,PRIN-MAYORA,confectionery,BRD-KPK,Pcs,Karton,12,120,2500,3000,0.15,0.00035,899275380002,Permen Kopi Kantong Saku,14.0,10.0,2.5,40.7,29.3,41.6,0.0496,18.45
+MYR-CND-03,Koppiko Cappuccino 150g,PRIN-MAYORA,confectionery,BRD-KPK,Pcs,Karton,1,24,7800,9200,0.15,0.00035,899275380003,Permen Rasa Cappuccino,14.0,10.0,2.5,24.0,18.0,22.9,0.0099,4.05
+MYR-CND-04,Kiss Mint Cherry Sak 125g,PRIN-MAYORA,confectionery,BRD-KIS,Pcs,Karton,1,24,6800,8000,0.15,0.00035,899275380004,Permen Mint Segar Emoticon,14.0,10.0,2.5,24.0,18.0,22.9,0.0099,4.05
+MYR-CND-05,Kiss Mint Barley Sak 125g,PRIN-MAYORA,confectionery,BRD-KIS,Pcs,Karton,1,24,6800,8000,0.15,0.00035,899275380005,Permen Mint Barley,14.0,10.0,2.5,24.0,18.0,22.9,0.0099,4.05
+MYR-CND-06,Kiss Mint Apple Peach 125g,PRIN-MAYORA,confectionery,BRD-KIS,Pcs,Karton,1,24,6800,8000,0.15,0.00035,899275380006,Permen Rasa Apel Persik,14.0,10.0,2.5,24.0,18.0,22.9,0.0099,4.05
+MYR-CND-07,Kiss Grape Mint 125g,PRIN-MAYORA,confectionery,BRD-KIS,Pcs,Karton,1,24,6800,8000,0.15,0.00035,899275380007,Permen Rasa Anggur Segar,14.0,10.0,2.5,24.0,18.0,22.9,0.0099,4.05
+MYR-CND-08,Tamarrin Permen Asam Sak 135g,PRIN-MAYORA,confectionery,BRD-TMR,Pcs,Karton,1,24,7000,8200,0.15,0.00035,899275380008,Permen Asam Jawa Alami,14.0,10.0,2.5,24.0,18.0,22.9,0.0099,4.05
+MYR-CND-09,Tamarrin Bag 50g,PRIN-MAYORA,confectionery,BRD-TMR,Pcs,Karton,1,48,3000,3600,0.15,0.00035,899275380009,Permen Asam Kemasan Mini,14.0,10.0,2.5,30.0,21.6,30.6,0.0198,7.65
+MYR-CND-10,Tamarrin Roll Pack 30g,PRIN-MAYORA,confectionery,BRD-TMR,Pcs,Karton,12,120,2000,2500,0.15,0.00035,899275380010,Permen Asam Roll Praktis,14.0,10.0,2.5,40.7,29.3,41.6,0.0496,18.45
+KPA-KA-01,Kapall Api Special Merah 65g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,40,4800,5600,0.08,0.00062,899100110001,Kopi Bubuk Murni Khas,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,3.65
+KPA-KA-02,Kapall Api Special Merah 165g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,24,11500,13200,0.08,0.00062,899100110002,Kopi Bubuk Sedang,16.0,11.0,3.5,28.8,20.7,29.5,0.0176,2.37
+KPA-KA-03,Kapall Api Special Merah 380g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,12,25500,29000,0.08,0.00062,899100110003,Kopi Bubuk Kemasan Keluarga,16.0,11.0,3.5,24.0,18.0,20.3,0.0088,1.41
+KPA-KA-04,Kapall Api Special Mix 24g (Kopi+Gula),PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1300,1600,0.08,0.00062,899100110004,Kopi Campur Gula Sachet,16.0,11.0,3.5,49.3,35.5,50.2,0.0879,10.05
+KPA-KA-05,Kapall Api Kopi Susu Mantap 31g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1500,1800,0.08,0.00062,899100110005,Kopi Susu Formula Baru,16.0,11.0,3.5,49.3,35.5,50.2,0.0879,10.05
+KPA-KA-06,Kapall Api White Koffie 20g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1400,1700,0.08,0.00062,899100110006,Kopi Putih Ramah Lambung,16.0,11.0,3.5,49.3,35.5,50.2,0.0879,10.05
+KPA-KA-07,Kapall Api Grande White Coffee 20g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1600,1900,0.08,0.00062,899100110007,Kopi Putih Premium Creamy,16.0,11.0,3.5,49.3,35.5,50.2,0.0879,10.05
+KPA-KA-08,Kapall Api Signature Original 65g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,30,8500,10000,0.08,0.00062,899100110008,Kopi Bubuk Pilihan Arabika,16.0,11.0,3.5,31.1,22.4,31.5,0.0219,2.85
+KPA-KA-09,Kapall Api Easy Drip Blend 50g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,20,18000,21000,0.08,0.00062,899100110009,Kopi Drip Bag Eksklusif,16.0,11.0,3.5,27.1,19.5,27.7,0.0146,2.05
+KPA-KA-10,Kapall Api Mantap 75g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,40,5500,6500,0.08,0.00062,899100110010,Kopi Bubuk Aroma Tajam,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,3.65
+KPA-KA-11,Kapall Api Krim Cafe Non-Dairy 500g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,1,12,28000,32000,0.08,0.00062,899100110011,Krimer Bubuk Pengganti Susu,16.0,11.0,3.5,24.0,18.0,20.3,0.0088,1.41
+KPA-KA-12,Kapall Api Gula Aren 23g,PRIN-SANTOS,food,BRD-KA,Pcs,Karton,10,120,1400,1700,0.08,0.00062,899100110012,Kopi Bubuk Manis Aren Asli,16.0,11.0,3.5,49.3,35.5,50.2,0.0879,10.05
+KPA-ABC-01,Kopi ABCC Kopi Susu 31g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1400,1700,0.035,0.00011,899100120001,Kopi Susu Melegenda,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.65
+KPA-ABC-02,Kopi ABCC Kopi Moka 31g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1400,1700,0.035,0.00011,899100120002,Kopi Moka Manis,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.65
+KPA-ABC-03,Kopi ABCC Plus Gula 25g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1200,1500,0.035,0.00011,899100120003,Kopi Hitam Gula,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.65
+KPA-ABC-04,Kopi ABCC Brownies Kopi 27g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1600,1900,0.035,0.00011,899100120004,Kopi Rasa Kue Brownies,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.65
+KPA-ABC-05,Kopi ABCC White Coffee 20g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1400,1700,0.035,0.00011,899100120005,Kopi Putih Nikmat,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.65
+KPA-ABC-06,Kopi ABCC Kopi Klepon 25g,PRIN-SANTOS,food,BRD-ABC,Sachet,Karton,10,120,1600,1900,0.035,0.00011,899100120006,Kopi Rasa Tradisional Klepon,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.65
+KPA-YA-01,Koppi Ya! Susu Sachet 25g,PRIN-SANTOS,food,BRD-YA,Sachet,Karton,10,120,950,1200,0.025,0.00011,899100130001,Kopi Susu Ekonomis Kios,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,3.45
+KPA-YA-02,Koppi Ya! Hitam Manis 20g,PRIN-SANTOS,food,BRD-YA,Sachet,Karton,10,120,850,1100,0.02,0.00011,899100130002,Kopi Hitam Gula Ekonomis,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,2.85
+KPA-KPT-01,Koppi Kapten Hitam Mantap 60g,PRIN-SANTOS,food,BRD-KPT,Pcs,Karton,1,40,4200,5000,0.07,0.00062,899100140001,Kopi Bubuk Sedang,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,3.25
+KPA-KPT-02,Koppi Kapten Kopi Murni 150g,PRIN-SANTOS,food,BRD-KPT,Pcs,Karton,1,24,9800,11500,0.07,0.00062,899100140002,Kopi Murni Robusta,16.0,11.0,3.5,28.8,20.7,29.5,0.0176,2.13
+KPA-KPT-03,Koppi Kapten Plus Gula 25g,PRIN-SANTOS,food,BRD-KPT,Pcs,Karton,10,120,1100,1350,0.07,0.00062,899100140003,Kopi Hitam Gula Sachet,16.0,11.0,3.5,49.3,35.5,50.2,0.0879,8.85
+KPA-KPT-04,Koppi Kapten Kopi Susu 28g,PRIN-SANTOS,food,BRD-KPT,Pcs,Karton,10,120,1300,1600,0.07,0.00062,899100140004,Kopi Susu Mantap,16.0,11.0,3.5,49.3,35.5,50.2,0.0879,8.85
+KPA-RTD-01,Kapall Api Signature Black Botol 200ml,PRIN-SANTOS,rtd,BRD-KA,Botol,Karton,1,24,5500,6500,0.24,0.00042,899100150001,Kopi Hitam Dingin,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,6.21
+KPA-RTD-02,Kapall Api White Coffee Botol 200ml,PRIN-SANTOS,rtd,BRD-KA,Botol,Karton,1,24,5800,7000,0.24,0.00042,899100150002,Kopi Putih Dingin,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,6.21
+KPA-RTD-03,Kapall Api Kopi Susu Kaleng 240ml,PRIN-SANTOS,rtd,BRD-KA,Botol,Karton,1,24,7500,8800,0.24,0.00042,899100150003,Kopi Susu Kaleng Premium,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,6.21
+KPA-RTD-04,Kapall Api Cold Brew Can 240ml,PRIN-SANTOS,rtd,BRD-KA,Botol,Karton,1,24,8200,9500,0.24,0.00042,899100150004,Kopi Cold Brew Ekstraktif,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,6.21
+KPA-RTD-05,Kopi ABCC Choco Malt Tetra Pack 200ml,PRIN-SANTOS,rtd,BRD-ABC,Botol,Karton,1,24,4500,5300,0.24,0.00042,899100150005,Minuman Malt Cokelat Susu,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,6.21
+KPA-RTD-06,Kopi ABCC Coffee Latte Tetra 200ml,PRIN-SANTOS,rtd,BRD-ABC,Botol,Karton,1,24,4500,5300,0.24,0.00042,899100150006,Latte Kemasan Kotak,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,6.21
+KPA-RTD-07,Kopi ABCC Kopi Moka Botol 250ml,PRIN-SANTOS,rtd,BRD-ABC,Botol,Karton,1,24,6000,7000,0.24,0.00042,899100150007,Kopi Moka Siap Minum,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,6.21
+KPA-RTD-08,Kopi ABCC Kopi Susu Botol 250ml,PRIN-SANTOS,rtd,BRD-ABC,Botol,Karton,1,24,6000,7000,0.24,0.00042,899100150008,Kopi Susu Siap Minum,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,6.21
+ULV-SNL-01,Sunnlight Jeruk Nipis Pouch 650ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,2,24,13500,15500,0.68,0.00307,899999910001,Pencuci Piring Jeruk Nipis,16.0,8.0,24.0,49.1,35.4,50.0,0.0869,16.77
+ULV-SNL-02,Sunnlight Jeruk Nipis Pouch 210ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,1,48,5200,6000,0.68,0.00307,899999910002,Kemasan Ekonomis Kios,16.0,8.0,24.0,60.0,43.2,67.1,0.1739,33.09
+ULV-SNL-03,Sunnlight Habbatussauda 650ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,2,24,14000,16000,0.68,0.00307,899999910003,Pembersih dengan Anti Bakteri Habbatus,16.0,8.0,24.0,49.1,35.4,50.0,0.0869,16.77
+ULV-SNL-04,Sunnlight Ekstra Higienis 650ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,2,24,14200,16500,0.68,0.00307,899999910004,Formula Higienis Sayur & Buah,16.0,8.0,24.0,49.1,35.4,50.0,0.0869,16.77
+ULV-SNL-05,Sunnlight Botol Pompa 750ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,1,12,19500,22500,0.68,0.00307,899999910005,Kemasan Botol Meja,16.0,8.0,24.0,39.0,28.1,39.7,0.0435,8.61
+ULV-SNL-06,Sunnlight Biocare Alami 650ml,PRIN-UNILEVER,home_care,BRD-SNL,Pouch,Karton,2,24,14500,17000,0.68,0.00307,899999910006,Formula Ramah Lingkungan,16.0,8.0,24.0,49.1,35.4,50.0,0.0869,16.77
+ULV-RNS-01,Rinnso Anti Noda Klasik Bubuk 770g,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,1,12,21500,24500,0.8,0.00307,899999920001,Deterjen Bubuk Bersih Cemerlang,16.0,8.0,24.0,39.0,28.1,39.7,0.0435,10.05
+ULV-RNS-02,Rinnso Mollto Rose Fresh 770g,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,1,12,22000,25000,0.8,0.00307,899999920002,Deterjen Harum Bunga,16.0,8.0,24.0,39.0,28.1,39.7,0.0435,10.05
+ULV-RNS-03,Rinnso Cair Konsentrat Refill 750ml,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,2,12,18500,21000,0.8,0.00307,899999920003,Deterjen Cair Anti Noda,16.0,8.0,24.0,39.0,28.1,39.7,0.0435,10.05
+ULV-RNS-04,Rinnso Matic Front Load Cair 1.6L,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,1,6,42000,48000,0.8,0.00307,899999920004,Khusus Mesin Cuci Bukaan Depan,16.0,8.0,24.0,31.0,22.3,31.4,0.0217,5.25
+ULV-RNS-05,Rinnso Matic Top Load Cair 1.6L,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,1,6,38000,44000,0.8,0.00307,899999920005,Khusus Mesin Cuci Bukaan Atas,16.0,8.0,24.0,31.0,22.3,31.4,0.0217,5.25
+ULV-RNS-06,Rinnso Japanese Peach Cair 700ml,PRIN-UNILEVER,home_care,BRD-RNS,Pouch,Karton,2,12,19000,22000,0.8,0.00307,899999920006,Deterjen Wangi Buah Peach,16.0,8.0,24.0,39.0,28.1,39.7,0.0435,10.05
+ULV-MLT-01,Mollto All-in-1 Blue Refill 720ml,PRIN-UNILEVER,home_care,BRD-MLT,Pouch,Karton,2,12,17500,20000,0.75,0.00307,899999930001,Pelembut & Pewangi Pakaian Biru,16.0,8.0,24.0,39.0,28.1,39.7,0.0435,9.45
+ULV-MLT-02,Mollto All-in-1 Pink Refill 720ml,PRIN-UNILEVER,home_care,BRD-MLT,Pouch,Karton,2,12,17500,20000,0.75,0.00307,899999930002,Pelembut Wangi Mawar Merah,16.0,8.0,24.0,39.0,28.1,39.7,0.0435,9.45
+ULV-MLT-03,Mollto Floral Bliss Refill 780ml,PRIN-UNILEVER,home_care,BRD-MLT,Pouch,Karton,2,12,16000,18500,0.75,0.00307,899999930003,Pewangi Konsentrat,16.0,8.0,24.0,39.0,28.1,39.7,0.0435,9.45
+ULV-MLT-04,Mollto Pure Softener Bayi 720ml,PRIN-UNILEVER,home_care,BRD-MLT,Pouch,Karton,2,12,19000,22000,0.75,0.00307,899999930004,Formula Lembut Kulit Sensitif,16.0,8.0,24.0,39.0,28.1,39.7,0.0435,9.45
+ULV-LFB-01,Lifebuooy Sabun Batang Total 10 110g,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,3,72,3800,4500,0.12,0.00014,899999940001,Sabun Mandi Anti Bakteri Merah,10.0,4.5,3.0,25.3,18.2,25.8,0.0119,9.09
+ULV-LFB-02,Lifebuooy Sabun Batang Lemon 110g,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,3,72,3800,4500,0.12,0.00014,899999940002,Sabun Mandi Kesegaran Lemon,10.0,4.5,3.0,25.3,18.2,25.8,0.0119,9.09
+ULV-LFB-03,Lifebuooy Sabun Batang Mild Care 110g,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,3,72,3800,4500,0.12,0.00014,899999940003,Sabun Mandi Susu Lembut,10.0,4.5,3.0,25.3,18.2,25.8,0.0119,9.09
+ULV-LFB-04,Lifebuooy Bodywash Refill Total 10 450ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,24,21000,24000,0.12,0.00014,899999940004,Sabun Cair Pouch,10.0,4.5,3.0,24.0,18.0,14.0,0.006,3.33
+ULV-LFB-05,Lifebuooy Bodywash Refill Lemon 450ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,24,21000,24000,0.12,0.00014,899999940005,Sabun Cair Lemon Fresh Pouch,10.0,4.5,3.0,24.0,18.0,14.0,0.006,3.33
+ULV-LFB-06,Lifebuooy Shampoo Rambut Sehat 170ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,24,18500,21500,0.12,0.00014,899999940006,Sampo Rambut Kuat Berkilau,10.0,4.5,3.0,24.0,18.0,14.0,0.006,3.33
+ULV-LFB-07,Lifebuooy Shampoo Anti Dandruff 170ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,24,19500,22500,0.12,0.00014,899999940007,Sampo Bebas Ketombe,10.0,4.5,3.0,24.0,18.0,14.0,0.006,3.33
+ULV-LFB-08,Lifebuooy Hand Sanitizer Gel 50ml,PRIN-UNILEVER,personal_care,BRD-LFB,Pcs,Karton,1,48,7500,9000,0.12,0.00014,899999940008,Pembersih Tangan Higienis,10.0,4.5,3.0,24.0,18.0,18.4,0.0079,6.21
+ULV-PSD-01,Pepsodentt Pencegah Gigi Berlubang 190g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,11500,13500,0.21,0.0021,899999950001,Pasta Gigi Perlindungan Maksimal,15.0,7.0,20.0,60.0,43.2,68.8,0.1783,15.57
+ULV-PSD-02,Pepsodentt Pencegah Gigi Berlubang 120g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,8500,10000,0.21,0.0021,899999950002,Pasta Gigi Sedang,15.0,7.0,20.0,60.0,43.2,68.8,0.1783,15.57
+ULV-PSD-03,Pepsodentt Pencegah Gigi Berlubang 75g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,5500,6500,0.21,0.0021,899999950003,Pasta Gigi Ekonomis,15.0,7.0,20.0,60.0,43.2,68.8,0.1783,15.57
+ULV-PSD-04,Pepsodentt Herbal Alami 190g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,14500,17000,0.21,0.0021,899999950004,Pasta Gigi Daun Sirih & Garam,15.0,7.0,20.0,60.0,43.2,68.8,0.1783,15.57
+ULV-PSD-05,Pepsodentt Complete 8 Multi Action 150g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,16000,18500,0.21,0.0021,899999950005,Pasta Gigi Komplit Perlindungan,15.0,7.0,20.0,60.0,43.2,68.8,0.1783,15.57
+ULV-PSD-06,Pepsodentt White Action Double 190g,PRIN-UNILEVER,personal_care,BRD-PSD,Pcs,Karton,1,72,15000,17500,0.21,0.0021,899999950006,Gigi Putih Alami Bersinar,15.0,7.0,20.0,60.0,43.2,68.8,0.1783,15.57
+ULV-CLR-01,Clearr Shampoo Ice Cool Menthol 160ml,PRIN-UNILEVER,personal_care,BRD-CLR,Botol,Karton,1,24,23000,26500,0.18,0.00032,899999960001,Sampo Dingin Anti Ketombe,18.0,4.5,4.0,24.0,18.0,21.0,0.0091,4.77
+ULV-CLR-02,Clearr Shampoo Complete Soft Care 160ml,PRIN-UNILEVER,personal_care,BRD-CLR,Botol,Karton,1,24,23000,26500,0.18,0.00032,899999960002,Sampo Lembut Kulit Kepala,18.0,4.5,4.0,24.0,18.0,21.0,0.0091,4.77
+ULV-CLR-03,Clearr Shampoo Men Cool Sport Menthol 160ml,PRIN-UNILEVER,personal_care,BRD-CLR,Botol,Karton,1,24,24000,27500,0.18,0.00032,899999960003,Khusus Pria Aktif,18.0,4.5,4.0,24.0,18.0,21.0,0.0091,4.77
+ULV-CLR-04,Clearr Shampoo Men Anti Hairfall 160ml,PRIN-UNILEVER,personal_care,BRD-CLR,Botol,Karton,1,24,24000,27500,0.18,0.00032,899999960004,Pengurang Rambut Rontok,18.0,4.5,4.0,24.0,18.0,21.0,0.0091,4.77
+ULV-RXN-01,Rexxona Men Roll On Invisible Dry 45ml,PRIN-UNILEVER,personal_care,BRD-RXN,Botol,Karton,6,36,17500,20500,0.065,0.00014,899999970001,Deodoran Pria Tanpa Noda,10.0,4.5,3.0,24.0,18.0,14.0,0.006,2.79
+ULV-RXN-02,Rexxona Women Brightening Roll On 45ml,PRIN-UNILEVER,personal_care,BRD-RXN,Botol,Karton,6,36,17500,20500,0.065,0.00014,899999970002,Deodoran Wanita Mencerahkan,10.0,4.5,3.0,24.0,18.0,14.0,0.006,2.79
+ULV-RYC-01,Royyco Bumbu Pelezat Rasa Ayam 230g,PRIN-UNILEVER,food,BRD-RYC,Pouch,Karton,1,40,8500,10000,0.24,0.00126,899999980001,Kaldu Ayam Alami,20.0,14.0,4.5,43.3,31.2,44.0,0.0594,10.05
+ULV-RYC-02,Royyco Bumbu Pelezat Rasa Sapi 230g,PRIN-UNILEVER,food,BRD-RYC,Pouch,Karton,1,40,8500,10000,0.24,0.00126,899999980002,Kaldu Sapi Gurih,20.0,14.0,4.5,43.3,31.2,44.0,0.0594,10.05
+ULV-RYC-03,Royyco Kaldu Spesial Jamur 100g,PRIN-UNILEVER,food,BRD-RYC,Pouch,Karton,1,40,6500,7800,0.24,0.00126,899999980003,Kaldu Vegetarian Jamur,20.0,14.0,4.5,43.3,31.2,44.0,0.0594,10.05
+ULV-RYC-04,Royyco Bumbu Kuah Bakso 100g,PRIN-UNILEVER,food,BRD-RYC,Pouch,Karton,1,40,6000,7200,0.24,0.00126,899999980004,Bumbu Kuah Spesial Bakso,20.0,14.0,4.5,43.3,31.2,44.0,0.0594,10.05
+ULV-BNG-01,Banngo Kecap Manis Pouch Refill 550ml,PRIN-UNILEVER,food,BRD-BNG,Pouch,Karton,1,24,21000,24000,0.72,0.00126,899999990001,Kecap Kedelai Hitam Malika,20.0,14.0,4.5,36.5,26.3,37.2,0.0357,17.73
+ULV-BNG-02,Banngo Kecap Manis Pouch Refill 220ml,PRIN-UNILEVER,food,BRD-BNG,Pouch,Karton,1,48,9500,11000,0.28,0.00126,899999990002,Kecap Manis Kemasan Sedang,20.0,14.0,4.5,46.0,33.1,46.9,0.0714,13.89
+WNG-SDP-01,Mie Seddaap Goreng 90g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2700,3100,0.09,0.00062,899886610001,Mie Goreng Bawang Renyah,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,4.05
+WNG-SDP-02,Mie Seddaap Kuah Rasa Soto 75g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2500,2900,0.09,0.00062,899886610002,Mie Kuah Rasa Soto Segar,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,4.05
+WNG-SDP-03,Mie Seddaap Kuah Ayam Bawang 70g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2500,2900,0.09,0.00062,899886610003,Mie Kuah Kaldu Gurih,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,4.05
+WNG-SDP-04,Mie Seddaap Kuah Kari Spesial 72g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2600,3000,0.09,0.00062,899886610004,Kari Kental Kaya Rempah,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,4.05
+WNG-SDP-05,Mie Seddaap Korean Spicy Chicken 87g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,3000,3500,0.09,0.00062,899886610005,Pedas Korea Level 1-2,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,4.05
+WNG-SDP-06,Mie Seddaap Korean Spicy Soup 75g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,3000,3500,0.09,0.00062,899886610006,Kuah Pedas Hangat Korea,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,4.05
+WNG-SDP-07,Mie Seddaap Singapore Spicy Laksa 83g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,3100,3600,0.09,0.00062,899886610007,Laksa Santan Gurih,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,4.05
+WNG-SDP-08,Mie Seddaap Rawon Asli Jawa Timur 80g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2900,3400,0.09,0.00062,899886610008,Kuah Hitam Khas Rawon,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,4.05
+WNG-SDP-09,Mie Seddaap Cup Goreng 85g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,24,4500,5200,0.09,0.00062,899886610009,Mie Cup Praktis,16.0,11.0,3.5,28.8,20.7,29.5,0.0176,2.61
+WNG-SDP-10,Mie Seddaap Cup Soto 81g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,24,4400,5100,0.09,0.00062,899886610010,Mie Cup Kuah Soto,16.0,11.0,3.5,28.8,20.7,29.5,0.0176,2.61
+WNG-SDP-11,Mie Seddaap Cup Rawon 81g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,24,4600,5300,0.09,0.00062,899886610011,Mie Cup Kuah Rawon,16.0,11.0,3.5,28.8,20.7,29.5,0.0176,2.61
+WNG-SDP-12,Mie Seddaap Sambal Goreng 88g,PRIN-WINGS,food,BRD-SDP,Pcs,Karton,1,40,2800,3200,0.09,0.00062,899886610012,Mie Rasa Sambal Nikmat,16.0,11.0,3.5,34.2,24.6,34.8,0.0293,4.05
+WNG-JSJ-01,Jassjus Jeruk Segar Renceng 10s,PRIN-WINGS,food,BRD-JSJ,Sachet,Karton,10,120,850,1100,0.015,0.00011,899886620001,Minuman Serbuk Buah,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,2.25
+WNG-JSJ-02,Jassjus Mangga Manis Renceng 10s,PRIN-WINGS,food,BRD-JSJ,Sachet,Karton,10,120,850,1100,0.015,0.00011,899886620002,Minuman Rasa Mangga,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,2.25
+WNG-JSJ-03,Jassjus Anggur Merah Renceng 10s,PRIN-WINGS,food,BRD-JSJ,Sachet,Karton,10,120,850,1100,0.015,0.00011,899886620003,Minuman Rasa Anggur,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,2.25
+WNG-JSJ-04,Jassjus Melon Wangi Renceng 10s,PRIN-WINGS,food,BRD-JSJ,Sachet,Karton,10,120,850,1100,0.015,0.00011,899886620004,Minuman Rasa Melon,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,2.25
+WNG-SGD-01,Segarr Dingin Madu Lemon Box 24s,PRIN-WINGS,food,BRD-SGD,Box,Karton,1,24,18500,22000,0.25,0.00126,899886630001,Pereda Panas Dalam Alami,20.0,14.0,4.5,36.5,26.3,37.2,0.0357,6.45
+WNG-SGD-02,Segarr Dingin Sirsak Box 24s,PRIN-WINGS,food,BRD-SGD,Box,Karton,1,24,18500,22000,0.25,0.00126,899886630002,Pereda Panas Dalam Rasa Sirsak,20.0,14.0,4.5,36.5,26.3,37.2,0.0357,6.45
+WNG-TOP-01,Topp Kopi Gula Aren 25g,PRIN-WINGS,food,BRD-TOP,Sachet,Karton,10,120,1200,1500,0.03,0.00011,899886640001,Kopi Instan Gula Aren,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.05
+WNG-TOP-02,Topp Kopi Kopi Susu 31g,PRIN-WINGS,food,BRD-TOP,Sachet,Karton,10,120,1300,1600,0.03,0.00011,899886640002,Kopi Susu Mantap,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.05
+WNG-TOP-03,Topp Kopi Kopi Moka 31g,PRIN-WINGS,food,BRD-TOP,Sachet,Karton,10,120,1300,1600,0.03,0.00011,899886640003,Kopi Paduan Cokelat Moka,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.05
+WNG-TOP-04,Topp Kopi Barista Tubruk 25g,PRIN-WINGS,food,BRD-TOP,Sachet,Karton,10,120,1100,1400,0.03,0.00011,899886640004,Kopi Tubruk Asli,10.0,7.0,1.5,27.7,19.9,28.3,0.0156,4.05
+WNG-FLD-01,Floriddina Orange Pulpy 350ml Pet,PRIN-WINGS,rtd,BRD-FLD,Botol,Karton,1,24,3000,3600,0.38,0.00067,899886650001,Jus Jeruk Bulir Nyata,6.2,6.2,17.5,29.6,21.3,30.1,0.019,9.57
+WNG-FLD-02,Floriddina Lemon Coco 350ml Pet,PRIN-WINGS,rtd,BRD-FLD,Botol,Karton,1,24,3000,3600,0.38,0.00067,899886650002,Jus Lemon Kelapa,6.2,6.2,17.5,29.6,21.3,30.1,0.019,9.57
+WNG-FLD-03,Floriddina Apple Pulpy 350ml Pet,PRIN-WINGS,rtd,BRD-FLD,Botol,Karton,1,24,3000,3600,0.38,0.00067,899886650003,Jus Apel Bulir Segar,6.2,6.2,17.5,29.6,21.3,30.1,0.019,9.57
+WNG-JVN-01,Tehh Javana Gula Batu 350ml Pet,PRIN-WINGS,rtd,BRD-JVN,Botol,Karton,1,24,2800,3300,0.38,0.00067,899886660001,Teh Melati Rasa Gula Batu,6.2,6.2,17.5,29.6,21.3,30.1,0.019,9.57
+WNG-JVN-02,Tehh Javana Melati Asli 350ml Pet,PRIN-WINGS,rtd,BRD-JVN,Botol,Karton,1,24,2800,3300,0.38,0.00067,899886660002,Teh Wangi Melati Murni,6.2,6.2,17.5,29.6,21.3,30.1,0.019,9.57
+WNG-JVN-03,Tehh Javana Less Sugar 350ml Pet,PRIN-WINGS,rtd,BRD-JVN,Botol,Karton,1,24,2800,3300,0.38,0.00067,899886660003,Teh Rendah Gula,6.2,6.2,17.5,29.6,21.3,30.1,0.019,9.57
+WNG-GLD-01,Goldaa Coffee Dolce Latte 200ml Pet,PRIN-WINGS,rtd,BRD-GLD,Botol,Karton,1,24,3000,3500,0.22,0.00042,899886670001,Kopi Latte Susu Gurih,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,5.73
+WNG-GLD-02,Goldaa Coffee Cappuccino 200ml Pet,PRIN-WINGS,rtd,BRD-GLD,Botol,Karton,1,24,3000,3500,0.22,0.00042,899886670002,Kopi Cappuccino Dingin,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,5.73
+WNG-GLD-03,Goldaa Coffee Classic Black 200ml Pet,PRIN-WINGS,rtd,BRD-GLD,Botol,Karton,1,24,2800,3300,0.22,0.00042,899886670003,Kopi Hitam Nikmat,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,5.73
+WNG-GLD-04,Goldaa Coffee White Mocha 200ml Pet,PRIN-WINGS,rtd,BRD-GLD,Botol,Karton,1,24,3000,3500,0.22,0.00042,899886670004,Kopi Moka Putih,5.5,5.5,14.0,25.3,18.2,25.8,0.0119,5.73

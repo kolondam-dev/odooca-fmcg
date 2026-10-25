@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_fleet_vehicle_form_fmcg_inherit" model="ir.ui.view">
+        <field name="name">fleet.vehicle.form.fmcg.inherit</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="inherit_id" ref="fleet.fleet_vehicle_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page string="Spesifikasi Kargo FMCG" name="fmcg_cargo_specs">
+                        <group>
+                            <group string="Kapasitas Muatan">
+                                <field name="fleet_type_id"/>
+                                <field name="capacity_ton"/>
+                                <field name="capacity_cbm"/>
+                                <field name="operational_route"/>
+                            </group>
+                            <group string="Dimensi Box Kargo">
+                                <field name="box_length"/>
+                                <field name="box_width"/>
+                                <field name="box_height"/>
+                                <field name="stnk_expiry"/>
+                                <field name="kir_expiry"/>
+                            </group>
+                        </group>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+</odoo>

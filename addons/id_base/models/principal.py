@@ -12,6 +12,9 @@ class IdPrincipal(models.Model):
     pks_number = fields.Char(string="PKS Number")
     pks_start = fields.Date(string="PKS Start Date")
     pks_end = fields.Date(string="PKS End Date")
+    pic_name = fields.Char(string="Key Contact / PIC")
+    pic_phone = fields.Char(string="PIC Phone")
+    pic_email = fields.Char(string="PIC Email")
     brand_ids = fields.One2many("id.brand", "principal_id", string="Brands")
     active = fields.Boolean(default=True)
 

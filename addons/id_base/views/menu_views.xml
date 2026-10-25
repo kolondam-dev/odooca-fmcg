@@ -30,12 +30,6 @@
               action="action_id_channel"
               sequence="30"/>
 
-    <menuitem id="menu_fmcg_tier"
-              name="Customer Tiers"
-              parent="menu_fmcg_master"
-              action="action_id_tier"
-              sequence="40"/>
-
     <menuitem id="menu_fmcg_coverage_area"
               name="Coverage Areas"
               parent="menu_fmcg_master"

@@ -17,21 +17,6 @@ class IdChannel(models.Model):
     ]
 
 
-class IdTier(models.Model):
-    _name = "id.tier"
-    _description = "Customer Tier / Classification"
-    _order = "sequence, name"
-
-    sequence = fields.Integer(default=10)
-    name = fields.Char(string="Tier Name", required=True)
-    code = fields.Char(string="Code", required=True, copy=False)
-    discount_percent = fields.Float(string="Base Discount (%)", digits=(5, 2), default=0.0)
-    active = fields.Boolean(default=True)
-
-    _sql_constraints = [
-        ("code_uniq", "unique(code)", "Tier code must be unique!"),
-    ]
-
 
 class IdCoverageArea(models.Model):
     _name = "id.coverage.area"

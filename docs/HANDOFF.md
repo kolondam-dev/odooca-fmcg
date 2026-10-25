@@ -1,5 +1,39 @@
 # HANDOFF
 
+## 2026-10-25 — antigravity agent (Master Data Native Refinement: Tier Removal, Fleet Cargo, Principal PIC, Road Coordinates, Org Hierarchy, PT MDU & 5-Day Calendar)
+**Berubah:**
+- `addons/id_base`:
+  - Menghapus model `id.tier`, field `tier_id` pada `res.partner`, berkas `data/id_tier_data.xml`, views, menus, dan hak akses security (eliminasi custom tier yang tidak relevan dengan B2B FMCG).
+  - Menambahkan inherisi model `fleet.vehicle` (`addons/id_base/models/fleet_vehicle.py` & views) dengan field native & kargo: `capacity_ton`, `capacity_cbm`, `box_length`, `box_width`, `box_height`, `stnk_expiry`, `kir_expiry`, dan `operational_route`.
+  - Menambahkan field kontak dan PIC pada `id.principal` (`pic_name`, `pic_phone`, `pic_email`) dan form view.
+  - Menambahkan dependensi `"fleet"`, `"hr"`, `"uom"` pada `addons/id_base/__manifest__.py`.
+- `scripts/generate_fmcg_seed.py`:
+  - Rekalibrasi koordinat 354 outlet (`DISTRICT_COORDS`): menambatkan geotag outlet tepat pada koridor jalan darat tiap kecamatan (anti-drowning di Teluk Manado & anti-lereng gunung).
+  - Menambahkan dimensi fisik realistis (`length_cm`, `width_cm`, `height_cm`, `volume_cbm`) untuk satuan terkecil (Pcs) dan Karton (`carton_length_cm`, `carton_width_cm`, `carton_height_cm`, `carton_volume_cbm`, `carton_weight_kg`) pada 150 Master SKU.
+  - Menambahkan dimensi box kargo armada logistik (`box_length_m`, `box_width_m`, `box_height_m`) pada 9 armada.
+  - Menambahkan `manager_code` pada 24 personel untuk membentuk pohon hirarki organisasi.
+  - Menambahkan generator `generate_principals` yang menghasilkan `data/seed/principals_4.csv` lengkap dengan PIC, NPWP CoreTax, alamat, dan nomor telepon resmi.
+- `scripts/load_fmcg_seed.py`:
+  - Membangun struktur kategori hirarkis Odoo `product.category`: `[PRINSIPAL] > [DIVISI KATEGORI] > [BRAND]` untuk mengisolasi penilaian persediaan, COGS, dan SLA retur antar-prinsipal.
+  - Memuat vendor partner resmi dan menghubungkan data PIC prinsipal dari `principals_4.csv`.
+  - Memuat metadata kargo armada logistik ke `fleet.vehicle`.
+  - Membangun departemen (`Management`, `Sales & Distribusi`, `Finance & Akuntansi`, `Warehouse & Logistik`) dan relasi manajer (`parent_id`) pada `hr.employee`.
+- `deploy/init.sh`:
+  - Menambahkan modul `fleet,hr,uom` ke default `INIT_MODULES`.
+  - Menambahkan blok idempoten `company_profile_v2` untuk menyetel nama resmi `PT Manado Distribusi Utama` (Interchange Maumbi, Manado 95371, telp: `0431-889900`, vat: `012345678821000`) dan kalender kerja 5 hari (Senin - Jumat 08:00 - 17:00, Sabtu - Minggu libur).
+  - Menaikkan penanda seed ke `seed_master_v4`.
+- Log: `agent-log/anti-gravity.log`.
+
+**Diverifikasi (bagaimana):**
+- `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
+- `python -m ruff check .` lolos (`All checks passed!`).
+- `python scripts/generate_fmcg_seed.py` dieksekusi sukses menghasilkan `principals_4.csv`, `products_150.csv`, `partners_354.csv`, `employees_24.csv`, dan `vehicles_9.csv`.
+- Cabang `agen/master-data-native-refinement` di-push dan diajukan via PR #12 (`https://github.com/kolondam-dev/odooca-fmcg/pull/12`).
+- Seluruh 3 workflow checks di GitHub Actions CI (`static`, `install-test`, `init-test`) **PASS / HIJAU 100%**.
+
+**Belum diuji:**
+- Pemuatan langsung ke instance container Odoo live di Railway (menunggu merge PR #12 ke `main`).
+
 ## 2026-10-25 — antigravity agent (M1a: Master Data Refinement — Legal Protection Names, Address/Contact Integrity, Product Packaging, Roster, Fleet, Fail-safe Seed Mark)
 **Berubah:**
 - `addons/id_base/data/id_principal_data.xml`:

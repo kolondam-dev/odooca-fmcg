@@ -5,7 +5,6 @@ class ResPartner(models.Model):
     _inherit = "res.partner"
 
     channel_id = fields.Many2one("id.channel", string="Distribution Channel", index=True)
-    tier_id = fields.Many2one("id.tier", string="Customer Tier", index=True)
     coverage_area_id = fields.Many2one("id.coverage.area", string="Coverage Area", index=True)
     district_id = fields.Many2one("id.district", string="Kecamatan (District)", index=True)
     subdistrict_id = fields.Many2one("id.subdistrict", string="Kelurahan / Desa", index=True)
