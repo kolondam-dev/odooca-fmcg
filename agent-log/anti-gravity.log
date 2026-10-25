@@ -131,3 +131,15 @@
 - Menambahkan fase upgrade_modules_v1 (odoo -i -u) untuk sinkronisasi kolom model baru seperti res_partner.channel_id
 - Menaikkan seed mark ke seed_master_v2 agar seed data dimuat ulang dengan field FMCG lengkap
 - Task managed by antigravity-agent at 2026-10-24T14:54:33+00:00
+
+[2026-10-25T06:30:01+00:00] [INFO] M1a: Master Data Refinement (Legal Name Protection, Address Completeness, Packaging, Armada, Roster)
+- Perlindungan hukum nama principal & brand di id_principal_data.xml dan generator seed (E1, E2)
+- Penggantian EMP-001 Teddy Kolondam menjadi fiktif Ronald Mongisidi serta melengkapi work_email dan work_phone (24 roster)
+- Melengkapi alamat 354 outlet: city, state_id (Sulawesi Utara), country_id (Indonesia), valid dummy phone, dan 16-digit CoreTax NPWP (A2)
+- Decouple customer tier_id sesuai arahan pemilik (A1)
+- Pemuatan vendor partner untuk tiap principal FMCG dengan supplier_rank=1 (A6)
+- Pemuatan 24 karyawan ke hr.employee dan hr.department serta 9 armada ke fleet.vehicle (A6)
+- Aktivasi is_storable=True, tracking=lot, dan product.packaging (Karton) untuk produk (A4, A5)
+- Pemetaan payment_term_days ke property_payment_term_id dan salesman_code ke user_id (A3)
+- Peningkatan deploy/init.sh ke mark seed_master_v3 dengan proteksi kegagalan idempoten (C1)
+- Task managed by antigravity-agent at 2026-10-25T06:30:01+00:00

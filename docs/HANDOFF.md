@@ -1,5 +1,37 @@
 # HANDOFF
 
+## 2026-10-25 — antigravity agent (M1a: Master Data Refinement — Legal Protection Names, Address/Contact Integrity, Product Packaging, Roster, Fleet, Fail-safe Seed Mark)
+**Berubah:**
+- `addons/id_base/data/id_principal_data.xml`:
+  - Mengubah 4 Principal dan 29 brand menjadi nama fiktif pelindung hukum (`PT Mayyora Indahh Tbk`, `PT Santos Jaya Abadii`, `PT Unilevr Indonezia Tbk`, `PT Sayapp Mas Utamma`, dsb.) untuk mitigasi risiko hak cipta/merek dagang nyata [E1].
+- `scripts/generate_fmcg_seed.py`:
+  - Mengacak dan menyesuaikan nama brand fiktif pada 150 SKU FMCG.
+  - Mengganti `EMP-001` Bpk. Teddy Kolondam menjadi nama fiktif "Bpk. Ronald Mongisidi" serta menambahkan `work_email` (`@fmcg-demo.id`) dan `work_phone` (`08xxxxxxxxxx`) pada seluruh 24 personel roster [E2].
+  - Menambahkan data geografis dan kontak pada seluruh 354 partner: `city` (Manado, Bitung, Tomohon, Minahasa, dsb.), `state` ("Sulawesi Utara"), `country` ("Indonesia"), `phone` (`08xxxxxxxxxx`), dan NPWP format CoreTax 16-digit [A2].
+  - Menghilangkan/decouple `tier_code` sesuai arahan pemilik [A1].
+  - Mengganti nama outlet GT dan RTL dengan nama warung/kios/toko lokal Minahasa/Manado yang variatif.
+- `data/seed/*.csv`:
+  - Regenerasi deterministik untuk `products_150.csv`, `partners_354.csv`, `employees_24.csv`, dan `vehicles_9.csv`.
+- `scripts/load_fmcg_seed.py`:
+  - Menambahkan pembuatan vendor partner (`res.partner`, `supplier_rank=1`) untuk principal yang terhubung ke `principal.partner_id`.
+  - Menambahkan pembuatan kategori hirarkis FMCG di `product.category` dan linking kategori produk.
+  - Memperbarui `load_products`: mengaktifkan `is_storable = True`, `tracking = 'lot'`, dan membuat packaging kemasan Karton (`product.packaging`) berbasis UoM Pcs [A4, A5].
+  - Menambahkan pemuatan 24 karyawan ke `hr.employee` dan `hr.department` [A6].
+  - Menambahkan pemuatan 9 unit armada ke `fleet.vehicle`, `fleet.vehicle.model`, dan `fleet.vehicle.model.brand` [A6].
+  - Memperbarui `load_partners`: memetakan `city`, `state_id`, `country_id`, `phone`, `vat`, `property_payment_term_id` (TOP), dan `user_id` (salesman), serta memastikan `tier_id` tidak digunakan [A1, A2, A3].
+- `deploy/init.sh`:
+  - Menaikkan penanda seed ke `seed_master_v3` dan membungkus eksekusi seed dengan kondisional fail-safe agar jika skrip gagal, penanda tidak terbuat [C1].
+- Log: `agent-log/anti-gravity.log`.
+
+**Diverifikasi (bagaimana):**
+- `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
+- `python -m ruff check .` lolos (`All checks passed!`).
+- `python scripts/generate_fmcg_seed.py` dieksekusi sukses menghasilkan 150 produk, 354 partner, 24 karyawan, dan 9 armada secara konsisten.
+
+**Belum diuji:**
+- Pemuatan langsung ke instance aktif Railway (cabang belum di-push, menunggu instruksi pemilik).
+- Simulasi transaksi historis M2 (line vs header consistency) yang dijadwalkan pada Prioritas 2.
+
 ## 2026-10-25 — claude-design agent (UI Refinement v6: Systray Dividers Alignment, Form Statusbar Middle Align Without Rounded Box, Edge-to-Edge Form, Steady Sticky Footer)
 **Berubah:**
 - `addons/id_ui_shell/static/src/shell/id_shell.scss`:

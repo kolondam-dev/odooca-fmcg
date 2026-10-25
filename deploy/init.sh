@@ -149,13 +149,17 @@ PY
   set_mark postinit_v1
 fi
 
-# 5b. Master Seed FMCG (150 SKU, 354 Outlet)
-if ! has_mark seed_master_v2; then
+# 5b. Master Seed FMCG (150 SKU, 354 Outlet, Vendor, Armada, Roster)
+if ! has_mark seed_master_v3; then
   if [ -f "/opt/scripts/load_fmcg_seed.py" ]; then
-    log "seed_master_v2: memuat master seed FMCG setelah modul id_base terpasang..."
-    odoo_run shell --no-http < /opt/scripts/load_fmcg_seed.py || log "seed_master_v2 warning: gagal atau dilewati"
+    log "seed_master_v3: memuat master seed FMCG setelah modul id_base terpasang..."
+    if odoo_run shell --no-http < /opt/scripts/load_fmcg_seed.py; then
+      set_mark seed_master_v3
+      log "seed_master_v3: berhasil dimuat dan ditandai."
+    else
+      log "seed_master_v3 error: pemuatan gagal, mark tidak diset agar dapat diulang pada boot berikutnya."
+    fi
   fi
-  set_mark seed_master_v2
 fi
 
 # 6. Jalankan Odoo (hemat RAM untuk Railway Hobby; sesuaikan lewat env)

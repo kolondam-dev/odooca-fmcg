@@ -1,25 +1,25 @@
-code,name,role,dept,cost_center,sim
-EMP-001,Bpk. Teddy Kolondam,owner,Management,CC-MGT,
-EMP-002,Hendrik Polii,branch_manager,Management,CC-MGT,SIM A
-EMP-003,Feybe Lumempouw,finance_lead,Finance,CC-FIN,SIM A
-EMP-004,Grace Sumual,accounting_staff,Finance,CC-FIN,
-EMP-005,Rudi Tumbelaka,tax_staff,Finance,CC-FIN,
-EMP-006,Meike Wondal,cashier,Finance,CC-FIN,
-EMP-007,Joni Kumajas,sales_spv,Sales,CC-SALES,SIM A
-EMP-008,Rivaldo Mamahit,sales_admin_lead,Sales,CC-SALES,
-EMP-009,Priscilia Tielung,sales_admin,Sales,CC-SALES,
-EMP-010,Willem Runtu,warehouse_lead,Warehouse,CC-WMS,SIM B1
-EMP-011,Jemmy Pangaila,staging_lead,Warehouse,CC-WMS,
-EMP-012,Robby Karundeng,picker_staff,Warehouse,CC-WMS,
-EMP-013,Christian Wowor,sales_mt,Sales,CC-SALES,SIM A
-EMP-014,Andre Pangemanan,sales_to,Sales,CC-SALES,SIM C & A
-EMP-015,Meidy Wowor,sales_to,Sales,CC-SALES,SIM C & A
-EMP-016,Refly Sondakh,sales_to,Sales,CC-SALES,SIM C & A
-EMP-017,Novry Mandagi,sales_canvass,Sales,CC-SALES,SIM A
-EMP-018,Steven Lumenta,sales_canvass,Sales,CC-SALES,SIM A
-EMP-019,Eko Prasetyo,driver,Logistik,CC-LOG,SIM B1
-EMP-020,Frits Wenas,driver,Logistik,CC-LOG,SIM B1
-EMP-021,Stenly Rompas,driver,Logistik,CC-LOG,SIM B1
-EMP-022,Johan Rori,driver,Logistik,CC-LOG,SIM B2
-EMP-023,Maxi Walangitan,helper,Logistik,CC-LOG,
-EMP-024,Royke Manopo,helper,Logistik,CC-LOG,
+code,name,role,dept,cost_center,sim,work_email,work_phone
+EMP-001,Bpk. Ronald Mongisidi,owner,Management,CC-MGT,,ronald.mongisidi@mdu-manado.co.id,0811-432-1001
+EMP-002,Hendrik Polii,branch_manager,Management,CC-MGT,SIM A,hendrik.polii@mdu-manado.co.id,0811-432-1002
+EMP-003,Feybe Lumempouw,finance_lead,Finance,CC-FIN,SIM A,feybe.lumempouw@mdu-manado.co.id,0812-441-2003
+EMP-004,Grace Sumual,accounting_staff,Finance,CC-FIN,,grace.sumual@mdu-manado.co.id,0813-562-2004
+EMP-005,Rudi Tumbelaka,tax_staff,Finance,CC-FIN,,rudi.tumbelaka@mdu-manado.co.id,0821-883-2005
+EMP-006,Meike Wondal,cashier,Finance,CC-FIN,,meike.wondal@mdu-manado.co.id,0852-401-2006
+EMP-007,Joni Kumajas,sales_spv,Sales,CC-SALES,SIM A,joni.kumajas@mdu-manado.co.id,0811-432-3007
+EMP-008,Rivaldo Mamahit,sales_admin_lead,Sales,CC-SALES,,rivaldo.mamahit@mdu-manado.co.id,0812-441-3008
+EMP-009,Priscilia Tielung,sales_admin,Sales,CC-SALES,,priscilia.tielung@mdu-manado.co.id,0813-562-3009
+EMP-010,Willem Runtu,warehouse_lead,Warehouse,CC-WMS,SIM B1,willem.runtu@mdu-manado.co.id,0811-432-4010
+EMP-011,Jemmy Pangaila,staging_lead,Warehouse,CC-WMS,,jemmy.pangaila@mdu-manado.co.id,0821-883-4011
+EMP-012,Robby Karundeng,picker_staff,Warehouse,CC-WMS,,robby.karundeng@mdu-manado.co.id,0852-401-4012
+EMP-013,Christian Wowor,sales_mt,Sales,CC-SALES,SIM A,christian.wowor@mdu-manado.co.id,0812-441-5013
+EMP-014,Andre Pangemanan,sales_to,Sales,CC-SALES,SIM C & A,andre.pangemanan@mdu-manado.co.id,0813-562-5014
+EMP-015,Meidy Wowor,sales_to,Sales,CC-SALES,SIM C & A,meidy.wowor@mdu-manado.co.id,0821-883-5015
+EMP-016,Refly Sondakh,sales_to,Sales,CC-SALES,SIM C & A,refly.sondakh@mdu-manado.co.id,0852-401-5016
+EMP-017,Novry Mandagi,sales_canvass,Sales,CC-SALES,SIM A,novry.mandagi@mdu-manado.co.id,0812-441-5017
+EMP-018,Steven Lumenta,sales_canvass,Sales,CC-SALES,SIM A,steven.lumenta@mdu-manado.co.id,0813-562-5018
+EMP-019,Eko Prasetyo,driver,Logistik,CC-LOG,SIM B1,eko.prasetyo@mdu-manado.co.id,0821-883-6019
+EMP-020,Frits Wenas,driver,Logistik,CC-LOG,SIM B1,frits.wenas@mdu-manado.co.id,0852-401-6020
+EMP-021,Stenly Rompas,driver,Logistik,CC-LOG,SIM B1,stenly.rompas@mdu-manado.co.id,0812-441-6021
+EMP-022,Johan Rori,driver,Logistik,CC-LOG,SIM B2,johan.rori@mdu-manado.co.id,0813-562-6022
+EMP-023,Maxi Walangitan,helper,Logistik,CC-LOG,,maxi.walangitan@mdu-manado.co.id,0821-883-6023
+EMP-024,Royke Manopo,helper,Logistik,CC-LOG,,royke.manopo@mdu-manado.co.id,0852-401-6024
