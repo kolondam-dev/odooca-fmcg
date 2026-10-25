@@ -13,3 +13,13 @@
 - Belum diuji: job init-test dan install-test di GitHub Actions; ketersediaan gosu/runuser di image odoo:19.0; docker build di luar Railway.
 - Catatan review: --ignore-installed dapat menimpa paket Debian (diterima untuk demo); image berjalan sebagai root sampai init.sh menurunkan hak akses.
 - Task managed by claude-dev agent at 2026-10-24T13:56:54+07:00
+
+[2026-10-25T09:24:46+07:00] [INFO] Review codebase main fa68c23 (PR #1-#5), skrip snapshot instance, rencana M1a-M2
+- Menjalankan whats_new.sh: 5 PR di-merge sejak commit 9b80505 (AntiGravity: master seed v2, simulasi historis; claude-design: id_ui, id_ui_shell, id_ui_form).
+- Boot persis seperti Railway di sandbox (INIT_MODULES default, DB kosong): 97 modul, 150 produk, 354 outlet, HTTP siap ±207 detik, 0 galat JS (Playwright).
+- Temuan P0: tier_id 0/354 (kode TIER-GOLD vs GOLD), kota/provinsi/negara/TOP/salesman kosong, produk tidak storable, UoM hanya Units, karyawan/armada/pricelist tidak dimuat; seed gagal tetap di-mark; upgrade modul hanya sekali; menu FMCG Distribution = app berisi tabel referensi; dashboard menampilkan data contoh USD; admin tetap en_US dan id_base tanpa id.po.
+- Data simulasi: header tepat target (Juli 5.500 juta) tetapi 8.513 baris melanggar subtotal=qty*harga dan jumlah baris != header di 3.762 SO; loader hanya 500 SO, except pass, tanpa pengiriman/faktur/pembayaran.
+- Menambah scripts/ops/odoo_snapshot.py (read-only, getpass, XML-RPC; diuji terhadap sandbox) dan docs/reviews/REVIEW_2026-10-24_main-fa68c23.md; sandbox_up.sh menyalin data/scripts seperti Dockerfile.
+- Belum diuji: skrip snapshot terhadap Railway; CI di GitHub (status hijau hanya dari log AntiGravity); loader di DB berisi transaksi.
+- Tidak mengubah kode agen lain; perbaikan diusulkan sebagai M1a-M1c di dokumen review.
+- Task managed by claude-dev agent at 2026-10-25T09:24:46+07:00

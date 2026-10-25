@@ -1,5 +1,14 @@
 # HANDOFF
 
+## 2026-10-25 — claude-dev agent (sandbox) — Review codebase main fa68c23 (PR #1–#5) + skrip snapshot instance
+**Berubah:** `docs/reviews/REVIEW_2026-10-24_main-fa68c23.md` (temuan P0/P1/P2 + rencana M1a–M2 + pemilik area), `scripts/ops/odoo_snapshot.py` (diagnosis read-only via XML-RPC), `scripts/sandbox/sandbox_up.sh` (menyalin `data/` dan `scripts/` seperti Dockerfile), `pyproject.toml` (E501 diabaikan untuk `scripts/ops`), `docs/DEVELOPMENT.md` (catatan snapshot), `agent-log/claude-dev.log`. **Tidak ada perubahan pada kode agen lain.**
+**Diverifikasi (bagaimana):** boot persis seperti Railway di sandbox (DB kosong, `INIT_MODULES` default): HTTP siap ±207 detik; 97 modul; 150 produk, 354 outlet; Playwright 0 galat JS; snapshot dijalankan terhadap instance itu; generator deterministik (hash seed 0/5); analisis konsistensi CSV simulasi; uji kegagalan skrip snapshot (sandi/URL/DB salah, sandi tidak bocor).
+**Temuan utama:** lihat review §2. P0: `tier_id` 0/354; kota/provinsi/negara/TOP/salesman kosong; produk tidak storable; UoM hanya Units; karyawan/armada/pricelist tidak dimuat; seed gagal tetap di-mark; upgrade hanya sekali; menu FMCG = aplikasi berisi tabel referensi; dashboard menampilkan data contoh USD; admin `en_US`, `id_base` tanpa `id.po`; baris simulasi tidak cocok dengan header (8.513 baris).
+**Belum diuji:** snapshot terhadap Railway (menunggu pemilik); status CI hijau hanya dari log AntiGravity; loader pada DB berisi transaksi; apa yang tampil di Railway saat ini (kemungkinan deploy lebih lama dari `main`).
+**Butir terbuka:** (1) keputusan pemilik: anonimisasi nama nyata, nama EMP-001, pendekatan kemasan `product.uom`, urutan M1a/M1b/M1c; (2) hasil snapshot Railway; (3) `antigravity`: M1b (mark berbasis hash, gagal = tidak di-mark, VIES off, admin id_ID/Asia/Makassar); (4) `claude-design`: M1c (pindahkan tabel referensi ke Configuration, dashboard contoh, kolom/filter/group-by).
+**Menunggu:** pemilik (jalankan snapshot, jawab keputusan); `antigravity` dan `claude-design` membaca review sebelum aksi berikutnya.
+**Catatan basis:** `origin/main` maju ke `b8bcbf9` (PR #6/#7, UI v2/v3) saat review disusun; tidak mengubah temuan A–D3. Patch ini hanya menambah baris (diperiksa pada salinan bersih `b8bcbf9`).
+
 ## 2026-10-24 — antigravity (laptop/Railway) — Sinkronisasi Modul Otomatis (Fix 500 UndefinedColumn res_partner.channel_id) & Seed Data v2
 **Berubah:**
 - `deploy/init.sh`:

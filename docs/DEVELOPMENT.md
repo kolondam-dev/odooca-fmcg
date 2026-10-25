@@ -61,6 +61,7 @@ pip install ruff pyyaml
 ruff check . && python scripts/check_manifests.py
 bash -n deploy/init.sh deploy/addons_path.sh scripts/*.sh scripts/sandbox/*.sh scripts/agent/*.sh
 ```
+Diagnosis instance yang sedang berjalan (read-only, mis. Railway): `python3 scripts/ops/odoo_snapshot.py --url https://<host> --db <db> --user admin --out snapshot.md` (sandi diminta lewat prompt tersembunyi; tidak disimpan/dicetak). Memuat modul terinstal vs diharapkan, bahasa, menu, jumlah data, kelengkapan field outlet/produk, user, transaksi. Hanya baca; bisa dipakai di proyek lain (`--expect-modules`, `--extra-models`, `--menu-root`).
 Uji runtime di sandbox agen: `scripts/sandbox/sandbox_up.sh`, lalu `odoo ... -i <modul> --test-tags /<modul> --stop-after-init` dan `scripts/sandbox/test_init.sh` (lihat `docs/SANDBOX.md`).
 
 ## 6. Invarian data
