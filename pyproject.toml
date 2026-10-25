@@ -8,3 +8,4 @@ select = ["E", "F", "W"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["F401"]   # pola impor submodul Odoo
+"scripts/ops/*.py" = ["E501"]   # skrip diagnostik: string laporan panjang
