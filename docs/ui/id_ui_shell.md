@@ -5,13 +5,20 @@ Berdampingan dengan tata letak klasik; dipilih per pengguna lewat menu pengguna
 (`sidebar` atau `classic`, bawaan `sidebar`).
 
 ## Susunan layar (tata letak sidebar)
-- **Sidebar** (kiri): hanya daftar aplikasi dengan ikon bawaan Odoo. Item aktif persegi dan selebar
-  sidebar sehingga menyambung ke panel/isi. Scrollbar tersembunyi (tipis dan transparan saat hover).
-  Logo `oi-odoo` dengan glow dan gerak tipis saat hover (mati bila `prefers-reduced-motion`).
-- **Topbar**: judul besar = aplikasi aktif, pencarian menu global (command palette bawaan, awalan `/`),
-  systray, nama dan role pengguna. Polos: tanpa garis bawah, tanpa tab seksi.
+- **Sidebar** (kiri): hanya daftar aplikasi. Item aktif persegi dan selebar sidebar sehingga menyambung
+  ke panel/isi. Scrollbar selalu tersembunyi (tetap bisa di-scroll), jadi lebar item tidak berubah
+  saat hover. Judul = wordmark resmi Odoo (`/web/static/img/odoo_logo.svg`, warna bawaan) + kotak
+  "FMCG" (token `--id-brand-box`). Logo `oi-odoo` dengan glow dan gerak tipis saat hover (mati bila
+  `prefers-reduced-motion`).
+- **Ikon aplikasi**: ikon bawaan Odoo tanpa latar. Diam = duo-tone (biru transparan + putih) lewat filter
+  SVG `feColorMatrix` yang dihitung peramban (tanpa aset tambahan); hover/fokus/terpilih = warna asli
+  Odoo (crossfade halus) dengan glow putih tipis. Filter dipasang inline di template karena pipeline
+  aset menulis ulang `url(#...)` di SCSS.
+- **Topbar**: pencarian menu global di kiri (command palette bawaan, awalan `/`), judul besar =
+  aplikasi aktif di kanan, lalu systray, nama dan role pengguna. Polos: tanpa garis bawah, tanpa tab seksi.
 - **Panel seksi** (kiri isi): seksi > sub-seksi > sub dari menu aplikasi aktif, bisa diciutkan
-  (tombol atau `Alt+P`). Sub-seksi tertutup kecuali dilalui menu aktif. Menu aktif dikenali dari
+  (tombol atau `Alt+P`), lebar 208px, font kecil. Menu aktif cukup tebal tanpa latar. Sub-seksi
+  tertutup kecuali dilalui menu aktif. Menu aktif dikenali dari
   `action.currentController`. Aplikasi tanpa submenu tidak menampilkan panel.
 
 ## Alur Tab

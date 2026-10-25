@@ -68,7 +68,8 @@ export class IdSidebar extends Component {
         }
         const [iconClass, color, backgroundColor] = (app.webIcon || "").split(",");
         if (backgroundColor !== undefined) {
-            return { iconClass, style: `color:${color};background-color:${backgroundColor}` };
+            // Tanpa kotak latar: glyph berwarna sesuai warna latar aslinya.
+            return { iconClass, glyphStyle: `color:${backgroundColor}` };
         }
         return { src: "/web/static/img/default_icon_app.png" };
     }

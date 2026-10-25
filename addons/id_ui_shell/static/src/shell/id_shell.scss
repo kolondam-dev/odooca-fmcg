@@ -18,6 +18,7 @@ body.id-shell-sidebar {
     --id-panel-border: #e3e8ee;
     --id-panel-active: #d6e9f8;
     --id-panel-hover: #f1f4f9;
+    --id-brand-box: #00a09d;
 
     // Grid: sidebar | panel seksi | isi. Baris: topbar | isi. Halaman tidak ikut scroll.
     display: grid !important;
@@ -27,7 +28,7 @@ body.id-shell-sidebar {
     overflow: hidden;
 
     &.id-shell-collapsed { --id-sidebar-w: 68px; }
-    &.id-shell-panel { --id-panel-w: 232px; }
+    &.id-shell-panel { --id-panel-w: 208px; }
     &.id-shell-panel-collapsed { --id-panel-w: 28px; }
 
     > .id_sidebar { grid-column: 1; grid-row: 1 / -1; }
@@ -62,7 +63,9 @@ body.id-shell-sidebar {
         .o_menu_brand {
             display: flex !important;
             flex: none;
-            padding: 0 1rem 0 .25rem;
+            order: 2;
+            margin-inline-start: auto;
+            padding: 0 .75rem;
             font-size: 1.35rem;
             font-weight: 700;
             letter-spacing: -.01em;
@@ -70,7 +73,7 @@ body.id-shell-sidebar {
             background: transparent;
         }
 
-        .o_menu_systray { color: var(--id-topbar-fg); margin-inline-start: 0; }
+        .o_menu_systray { color: var(--id-topbar-fg); margin-inline-start: 0 !important; }
         .o_menu_systray .o-dropdown > .dropdown-toggle,
         .o_menu_systray .o_nav_entry { color: var(--id-topbar-fg); }
     }
@@ -80,7 +83,7 @@ body.id-shell-sidebar {
         all: unset; box-sizing: border-box; cursor: pointer;
         display: flex; align-items: center; align-self: center; gap: .5rem;
         flex: 0 1 280px; min-width: 150px; height: 34px;
-        margin-inline-start: auto;
+        order: 1;
         padding: 0 .75rem; border-radius: .6rem;
         background: #f1f4f9; color: var(--id-topbar-muted); font-size: .85rem; line-height: 1;
         &:hover { background: #e7ecf5; }
@@ -91,7 +94,7 @@ body.id-shell-sidebar {
         kbd { background: #fff; color: var(--id-topbar-muted); border: 1px solid var(--id-panel-border);
             box-shadow: none; border-radius: .3rem; padding: 0 .35rem; font-size: .68rem; line-height: 1.4; font-family: inherit; }
     }
-    .id_menu_search + .o_menu_systray { margin-inline-start: .25rem; }
+    .o_menu_systray { order: 3; }
 
     // Nama dan role di samping avatar.
     .o_user_menu button { display: flex; align-items: center; gap: .6rem; }
@@ -106,14 +109,12 @@ body.id-shell-sidebar {
 body.id-shell-sidebar .id_user_meta { display: flex; }
 body.id-shell-sidebar .id_menu_search { display: flex; }
 
-// Scrollbar disamarkan: tersembunyi, muncul tipis dan transparan saat hover.
+// Scrollbar disembunyikan (tanpa perubahan lebar saat hover).
 @mixin id-quiet-scroll($thumb) {
+    // Tersembunyi total (tetap bisa di-scroll dengan roda/keyboard) agar lebar elemen
+    // tidak pernah menyusut dan latar item terpilih selalu penuh hingga tepi.
     scrollbar-width: none;
     &::-webkit-scrollbar { display: none; }
-    &:hover { scrollbar-width: thin; scrollbar-color: $thumb transparent; }
-    &:hover::-webkit-scrollbar { display: block; width: 6px; }
-    &:hover::-webkit-scrollbar-track { background: transparent; }
-    &:hover::-webkit-scrollbar-thumb { background: $thumb; border-radius: 3px; }
 }
 
 // ---- Sidebar aplikasi ----
@@ -152,7 +153,11 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
             animation: id-logo-float 1.8s ease-in-out infinite alternate;
         }
     }
-    &__title { flex: 1; font-weight: 700; font-size: 1rem; color: var(--id-sidebar-fg-strong); white-space: nowrap; }
+    &__title { flex: 1; display: flex; align-items: center; gap: .4rem; min-width: 0; white-space: nowrap; }
+    // Wordmark resmi Odoo (warna bawaan) + kotak FMCG berlatar kontras.
+    .id_wordmark { height: 1.3rem; width: auto; flex: none; }
+    .id_brandbox { background: var(--id-brand-box); color: #fff; font-weight: 700; font-size: .7rem;
+        letter-spacing: .06em; padding: .15rem .4rem; border-radius: .3rem; line-height: 1.2; }
     &__collapse { padding: .375rem; border-radius: .375rem; color: var(--id-sidebar-fg);
         &:hover { background: var(--id-sidebar-hover); } }
     &__heading { padding: .75rem 1rem .25rem; font-size: .8rem; font-weight: 700;
@@ -169,15 +174,32 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
         &.is-current { background: var(--id-sidebar-pill-bg); color: var(--id-sidebar-pill-fg); }
         &:focus-visible { outline-offset: -3px; }
     }
-    .id_appicon { flex: none; width: 1.75rem; height: 1.75rem; border-radius: .45rem; object-fit: cover; }
-    .id_appicon--built { display: inline-grid; place-items: center; font-size: .95rem; }
+    // Ikon aplikasi tanpa latar: duo-tone saat diam, warna asli Odoo saat hover/fokus/terpilih.
+    .id_appwrap { position: relative; flex: none; width: 1.75rem; height: 1.75rem;
+        transition: transform .4s cubic-bezier(.22, 1, .36, 1), filter .4s cubic-bezier(.22, 1, .36, 1); }
+    .id_appicon { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+        transition: opacity .4s cubic-bezier(.22, 1, .36, 1); }
+    // Filter duo-tone dipasang inline di template (url(#...) di SCSS ditulis ulang oleh pipeline aset).
+    .id_appicon--duo { opacity: 1; }
+    .id_appicon--color { opacity: 0; }
+    .id_appicon--glyph { display: grid; place-items: center; font-size: 1.35rem; line-height: 1; }
+    .id_appicon--duo.id_appicon--glyph { color: #cfe0ff; filter: none; opacity: .85; }
+    .id_item:hover, .id_item:focus-visible, .id_item.is-current {
+        .id_appicon--duo { opacity: 0; }
+        .id_appicon--color { opacity: 1; }
+    }
+    .id_item:hover .id_appwrap, .id_item:focus-visible .id_appwrap {
+        transform: scale(1.07);
+        filter: drop-shadow(0 0 5px rgba(255, 255, 255, .3));
+    }
+    .id_defs { position: absolute; width: 0; height: 0; }
 
     // Mode ciut: hanya ikon.
     &--collapsed {
         .id_sidebar__title, .id_label { display: none !important; }
         .id_sidebar__head { flex-direction: column; justify-content: center; height: auto; gap: .25rem; padding: .5rem 0; }
         .id_item--app { justify-content: center; padding-inline: 0; }
-        .id_appicon { width: 2rem; height: 2rem; }
+        .id_appwrap { width: 2rem; height: 2rem; }
     }
 }
 
@@ -197,7 +219,7 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
     background: var(--id-panel-bg);
     border-right: 1px solid var(--id-panel-border);
     color: #0b1f4d;
-    font-size: .875rem;
+    font-size: .8125rem;
     overflow: hidden;
 
     :where(button) { all: unset; box-sizing: border-box; cursor: pointer; }
@@ -212,19 +234,20 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
 
     .id_pitem { display: flex !important; align-items: center; gap: .4rem; width: 100%; color: #0b1f4d; }
     // Judul seksi (tingkat 1).
-    .id_pitem--group.id_depth-0 { padding: .9rem 1rem .35rem; font-size: .75rem; font-weight: 700;
+    .id_pitem--group.id_depth-0 { padding: .85rem .9rem .3rem; font-size: .7rem; font-weight: 700;
         text-transform: uppercase; letter-spacing: .04em; }
     // Sub-seksi (tingkat 2 dan seterusnya).
-    .id_pitem--group:not(.id_depth-0) { padding: .4rem 1rem .4rem 1.5rem; font-weight: 600; }
+    .id_pitem--group:not(.id_depth-0) { padding: .35rem .9rem .35rem 1.25rem; font-weight: 600; }
     .id_pitem--group {
         .id_caret { transition: transform .12s; svg { width: .75rem; height: .75rem; } }
         &[aria-expanded="true"] .id_caret { transform: rotate(90deg); }
         &:hover { color: #1B5E8C; }
     }
-    .id_pitem--leaf { padding: .42rem 1rem .42rem 1.5rem; margin-inline: .5rem; width: auto; border-radius: .3rem;
+    // Menu aktif cukup ditandai tebal, tanpa latar.
+    .id_pitem--leaf { padding: .36rem .9rem .36rem 1.25rem; font-weight: 400;
         &:hover { background: var(--id-panel-hover); }
-        &.is-active { background: var(--id-panel-active); font-weight: 600; } }
-    .id_pchildren .id_pchildren .id_pitem--leaf { padding-inline-start: 2.25rem; }
+        &.is-active { font-weight: 700; } }
+    .id_pchildren .id_pchildren .id_pitem--leaf { padding-inline-start: 2rem; }
 
     // Ciut: hanya tombol bentang.
     &--collapsed { .id_panel__head { justify-content: center; padding-inline: 0; } }
