@@ -994,532 +994,49 @@ def generate_products() -> list[dict]:
     for p in products:
         dims = get_product_dimensions(p["fmcg_category"], p["weight_kg"], p["carton_qty"])
         p.update(dims)
+        p["carton_barcode"] = f"1{p['barcode']}"
 
     return products
 
 
-DISTRICT_CITY_MAP = {
-    "KEC-MND-WNG": "Kota Manado",
-    "KEC-MND-SRO": "Kota Manado",
-    "KEC-MND-MLY": "Kota Manado",
-    "KEC-MND-WNA": "Kota Manado",
-    "KEC-MND-TKL": "Kota Manado",
-    "KEC-MND-PLD": "Kota Manado",
-    "KEC-MND-TMT": "Kota Manado",
-    "KEC-MND-SKL": "Kota Manado",
-    "KEC-MND-MPG": "Kota Manado",
-    "KEC-BTG-MAS": "Kota Bitung",
-    "KEC-TMH-TGH": "Kota Tomohon",
-    "KEC-MNH-KWG": "Kab. Minahasa",
-    "KEC-MNH-TDN": "Kab. Minahasa",
-    "KEC-MNT-AMD": "Kab. Minahasa Utara",
-}
-
-
-DISTRICT_COORDS = {
-    "KEC-MND-WNG": (1.4910, 124.8420),  # Wenang (Pusat Kota Manado, Jl. Sam Ratulangi / Jl. Sudirman)
-    "KEC-MND-SRO": (1.4720, 124.8380),  # Sario (Jl. Sam Ratulangi, Stadion Klabat)
-    "KEC-MND-MLY": (1.4580, 124.8290),  # Malalayang (Jl. Wolter Monginsidi koridor darat)
-    "KEC-MND-WNA": (1.4650, 124.8480),  # Wanea (Jl. Sam Ratulangi / Teling)
-    "KEC-MND-TKL": (1.4850, 124.8580),  # Tikala (Balai Kota, Tikala Ares)
-    "KEC-MND-PLD": (1.4880, 124.8720),  # Paal Dua (Jl. Yos Sudarso, Kairagi)
-    "KEC-MND-TMT": (1.5120, 124.8550),  # Tuminting (Jl. Hasanuddin darat)
-    "KEC-MND-SKL": (1.5020, 124.8620),  # Singkil (Jl. Karame, Kombos)
-    "KEC-MND-MPG": (1.5320, 124.8980),  # Mapanget (Jl. AA Maramis koridor Paniki)
-    "KEC-BTG-MAS": (1.4450, 125.1820),  # Bitung Maesa (Pusat Kota Bitung / Pelabuhan Darat)
-    "KEC-TMH-TGH": (1.3250, 124.8380),  # Tomohon (Pasar Beriman / Kolongan darat)
-    "KEC-MNH-KWG": (1.2050, 124.7880),  # Kawangkoan (Pusat Kawangkoan, Sendangan)
-    "KEC-MNH-TDN": (1.3050, 124.9120),  # Tondano (Pusat Kota Tondano darat)
-    "KEC-MNT-AMD": (1.4280, 124.9850),  # Airmadidi / Kauditan Minahasa Utara
-}
-
-
 def generate_partners() -> list[dict]:
-    """Menghasilkan 354 Partner Outlet terstratifikasi (12 MT, 72 GT, 260 RTL, 10 INST)."""
-    partners = []
+    """Menghasilkan 354 Partner Outlet terstratifikasi (12 MT, 72 GT, 260 RTL, 10 INST)
+    konsisten 100% dengan customer registry terestrial Sulut."""
+    registry_file = ROOT / "data" / "registers" / "customer_registry_354.json"
+    if registry_file.exists():
+        with registry_file.open("r", encoding="utf-8") as f:
+            reg = json.load(f)
+        partners = []
+        cust_list = reg if isinstance(reg, list) else reg.get("customers", [])
+        for c in cust_list:
+            partners.append(
+                {
+                    "ref": c["ref"],
+                    "name": c["name"],
+                    "channel_code": c["channel_code"],
+                    "district_code": c["district_code"],
+                    "subdistrict_code": c["subdistrict_code"],
+                    "street": c["street"],
+                    "city": c["city"],
+                    "state": c["state"],
+                    "country": c["country"],
+                    "zip": c["zip"],
+                    "phone": c["phone"],
+                    "vat": c["vat"],
+                    "credit_limit": c["credit_limit"],
+                    "credit_mode": c["credit_mode"],
+                    "payment_term_days": c["payment_term_days"],
+                    "salesman_code": c["salesman_code"],
+                    "latitude": c["latitude"],
+                    "longitude": c["longitude"],
+                    "is_company": c["is_company"],
+                }
+            )
+        return partners
 
-    # 1. Modern Trade (12 Key Accounts)
-    mt_accounts = [
-        (
-            "Indomarett DC Manado",
-            "KEC-MND-MPG",
-            "KEL-MND-PKB",
-            "Jl. AA Maramis KM 10 Paniki",
-            "95258",
-            "0123456789054001",
-            250000000,
-            "strict",
-            45,
-            "SLS-01",
-            1.5280,
-            124.9080,
-        ),
-        (
-            "Alfamiddii DC Manado",
-            "KEC-MND-MPG",
-            "KEL-MND-PKB",
-            "Kawasan Pergudangan Kairagi Dua",
-            "95254",
-            "0187654321054002",
-            200000000,
-            "strict",
-            45,
-            "SLS-01",
-            1.5190,
-            124.8970,
-        ),
-        (
-            "FreshhMart Superstore Bahu",
-            "KEC-MND-MLY",
-            "KEL-MND-BAH",
-            "Bahu Mall Blok A No. 1",
-            "95115",
-            "0211122233821003",
-            120000000,
-            "limit",
-            30,
-            "SLS-01",
-            1.4580,
-            124.8250,
-        ),
-        (
-            "FreshhMart Lifestyle Paniki",
-            "KEC-MND-MPG",
-            "KEL-MND-PKB",
-            "Grand Kawanua City Walk",
-            "95258",
-            "0211122233821004",
-            80000000,
-            "limit",
-            30,
-            "SLS-01",
-            1.5210,
-            124.9010,
-        ),
-        (
-            "FreshhMart Express Tikala",
-            "KEC-MND-TKL",
-            "KEL-MND-TKB",
-            "Jl. Balai Kota No. 12",
-            "95126",
-            "0211122233821005",
-            50000000,
-            "limit",
-            30,
-            "SLS-01",
-            1.4815,
-            124.8580,
-        ),
-        (
-            "MultiiMart Megamas Manado",
-            "KEC-MND-WNG",
-            "KEL-MND-WNS",
-            "Kawasan Megamas Blok 1D",
-            "95111",
-            "0344455566821006",
-            100000000,
-            "limit",
-            30,
-            "SLS-01",
-            1.4880,
-            124.8350,
-        ),
-        (
-            "MultiiMart Sam Ratulangi",
-            "KEC-MND-WNA",
-            "KEL-MND-WNS",
-            "Jl. Sam Ratulangi No. 188",
-            "95117",
-            "0344455566821007",
-            75000000,
-            "limit",
-            30,
-            "SLS-01",
-            1.4750,
-            124.8410,
-        ),
-        (
-            "MultiiMart Tomohon",
-            "KEC-TMH-TGH",
-            "KEL-TMH-PSL",
-            "Jl. Raya Tomohon-Manado",
-            "95431",
-            "0344455566821008",
-            50000000,
-            "limit",
-            30,
-            "SLS-01",
-            1.3250,
-            124.8390,
-        ),
-        (
-            "Goldenn Swalayan Pasar 45",
-            "KEC-MND-WNG",
-            "KEL-MND-CLC",
-            "Jl. Sam Ratulangi No. 12 Calaca",
-            "95112",
-            "0477788899821009",
-            80000000,
-            "limit",
-            14,
-            "SLS-01",
-            1.4925,
-            124.8421,
-        ),
-        (
-            "Jumbbo Swalayan Pasar 45",
-            "KEC-MND-WNG",
-            "KEL-MND-CLC",
-            "Kawasan Pasar 45 Manado",
-            "95112",
-            "0599900011821010",
-            50000000,
-            "limit",
-            14,
-            "SLS-01",
-            1.4930,
-            124.8418,
-        ),
-        (
-            "Jumbbo Swalayan Bitung",
-            "KEC-BTG-MAS",
-            "KEL-BTG-BTM",
-            "Jl. Sam Ratulangi Bitung Timur",
-            "95521",
-            "0599900011821011",
-            40000000,
-            "limit",
-            14,
-            "SLS-01",
-            1.4420,
-            125.1880,
-        ),
-        (
-            "Tranzmart Star Square Bahu",
-            "KEC-MND-MLY",
-            "KEL-MND-BAH",
-            "Star Square Mall Bahu",
-            "95115",
-            "0622233344054012",
-            40000000,
-            "strict",
-            45,
-            "SLS-01",
-            1.4590,
-            124.8260,
-        ),
-    ]
-    for idx, (name, dist, subdist, street, zipc, npwp, cl, cm, pt, sls, lat, lng) in enumerate(mt_accounts, start=1):
-        city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
-        partners.append(
-            {
-                "ref": f"CUST-MT-{idx:02d}",
-                "name": name,
-                "channel_code": "MT",
-                "district_code": dist,
-                "subdistrict_code": subdist,
-                "street": street,
-                "city": city,
-                "state": "Sulawesi Utara",
-                "country": "Indonesia",
-                "zip": zipc,
-                "phone": f"081143{idx:06d}",
-                "vat": npwp,
-                "credit_limit": cl,
-                "credit_mode": cm,
-                "payment_term_days": pt,
-                "salesman_code": sls,
-                "latitude": lat,
-                "longitude": lng,
-                "is_company": True,
-            }
-        )
+    from scripts.generate_customer_registry_and_pjp import build_customer_registry
 
-    # 2. General Trade (72 Grosir & Sembako)
-    gt_names = [
-        "Toko Sembako Berkat Pasar 45", "Toko Harapan Bersehati",
-        "Grosir Bintang Samrat Sario", "Grosir Krida Bahu",
-        "Grosir Tikala Baru", "Toko Paal Dua Jaya",
-        "Grosir Sumber Mulia Tuminting", "Toko Bintang Matuari Maesa",
-        "Toko Jaya Sejahtera Tomohon", "Toko Berkat Kawangkoan",
-        "Toko Rezeki Tondano", "Grosir Kauditan Makmur",
-        "Toko Kawanua Sejati Wenang", "Grosir Sinar Terang Calaca",
-        "Toko Anugerah Kasih Karombasan", "Grosir Rukun Damai Ranotana",
-        "Toko Sumber Berkat Malalayang", "Grosir Manado Raya Sario",
-        "Toko Pelita Jaya Wanea", "Grosir Makmur Abadi Tikala",
-        "Toko Berkat Melimpah Paal Dua", "Grosir Sentosa Perkasa Perkamil",
-        "Toko Surya Indah Tuminting", "Grosir Cahaya Utara Mahakeret",
-        "Toko Usaha Bersama Singkil", "Grosir Kairagi Mandiri",
-        "Toko Paniki Permai Mapanget", "Grosir Karombasan Baru",
-        "Toko Bintang Timur Ranomuut", "Grosir Bahu Sentosa",
-        "Toko Sam Ratulangi Perkasa", "Grosir Megamas Abadi",
-        "Toko Tondano Makmur Tondano", "Grosir Paslaten Mandiri Tomohon",
-        "Toko Kakaskasen Sejahtera", "Grosir Girian Indah Bitung",
-        "Toko Madidir Berkat Bitung", "Grosir Danowudu Jaya Bitung",
-        "Toko Matuari Sejati Bitung", "Grosir Airmidi Baru Minut",
-        "Toko Kalawat Berkat Minut", "Grosir Suwaan Indah Minut",
-        "Toko Kolongan Jaya Minut", "Grosir Kawangkoan Permai",
-        "Toko Sonder Sejahtera Minahasa", "Grosir Langowan Berkat",
-        "Toko Pineleng Makmur Minahasa", "Grosir Kombos Jaya Singkil",
-        "Toko Dendengan Mandiri Paal Dua", "Grosir Taas Damai Tikala",
-        "Toko Banjer Berkah Tikala", "Grosir Teling Sentosa Wanea",
-        "Toko Pakowa Sejahtera Wanea", "Grosir Tingkulu Jaya Wanea",
-        "Toko Bumi Nyiur Permai", "Grosir Malalayang Satu",
-        "Toko Batu Kota Indah", "Grosir Kleak Mandiri",
-        "Toko Winangun Berkat", "Grosir Perkamil Jaya",
-        "Toko Kairagi Satu Makmur", "Grosir Buha Indah Mapanget",
-        "Toko Bengkol Sejahtera", "Grosir Bailang Mandiri",
-        "Toko Pandu Berkah Mapanget", "Grosir Molas Pesisir",
-        "Toko Bunaken Bahari", "Grosir Tumumpa Berkat",
-        "Toko Sindulang Jaya", "Grosir Calaca Baru",
-        "Toko Pinaesaan Wenang", "Grosir Istiqlal Sentosa",
-    ]
-    gt_districts = [
-        ("KEC-MND-WNG", "KEL-MND-CLC", "Pasar 45 Calaca", "95112", "SLS-02"),
-        ("KEC-MND-SRO", "KEL-MND-SKB", "Jl. Sam Ratulangi Sario", "95114", "SLS-02"),
-        ("KEC-MND-MLY", "KEL-MND-BAH", "Jl. Wolter Monginsidi Bahu", "95115", "SLS-02"),
-        ("KEC-MND-WNA", "KEL-MND-WNS", "Jl. Sam Ratulangi Wanea", "95117", "SLS-02"),
-        ("KEC-MND-TKL", "KEL-MND-TKB", "Jl. Tikala Ares", "95126", "SLS-03"),
-        ("KEC-MND-PLD", "KEL-MND-PLD", "Jl. Yos Sudarso Paal Dua", "95129", "SLS-03"),
-        ("KEC-MND-TMT", "KEL-MND-TMT", "Jl. Hasanuddin Tuminting", "95239", "SLS-03"),
-        ("KEC-MND-SKL", "KEL-MND-TMT", "Jl. Singkil Karame", "95231", "SLS-03"),
-        ("KEC-MND-MPG", "KEL-MND-PKB", "Jl. AA Maramis Paniki", "95258", "SLS-03"),
-        ("KEC-BTG-MAS", "KEL-BTG-BTM", "Kompleks Pasar Tua Maesa", "95521", "SLS-04"),
-        ("KEC-TMH-TGH", "KEL-TMH-PSL", "Pasar Beriman Paslaten", "95431", "SLS-04"),
-        ("KEC-MNH-KWG", "KEL-MNH-SDG", "Pasar Kawangkoan Sendangan", "95671", "SLS-04"),
-        ("KEC-MNH-TDN", "KEL-MNH-RNG", "Jl. Sam Ratulangi Tondano", "95618", "SLS-04"),
-        ("KEC-MNT-AMD", "KEL-MNT-AMA", "Jl. Raya Manado-Bitung Kauditan", "95371", "SLS-04"),
-    ]
-    for idx in range(1, 73):
-        t_name = gt_names[idx - 1]
-        dist, subdist, street_base, zip_code, sls = gt_districts[(idx - 1) % len(gt_districts)]
-        street = f"{street_base} No. {idx * 2}"
-        base_lat, base_lng = DISTRICT_COORDS.get(dist, (1.4910, 124.8420))
-        d_lat = (((idx * 7) % 11) - 5) * 0.00035
-        d_lng = (((idx * 13) % 11) - 5) * 0.00035
-        lat = round(base_lat + d_lat, 6)
-        lng = round(base_lng + d_lng, 6)
-        city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
-        npwp = f"08{idx:04d}1234821000"
-
-        partners.append(
-            {
-                "ref": f"CUST-GT-{idx:02d}",
-                "name": t_name,
-                "channel_code": "GT",
-                "district_code": dist,
-                "subdistrict_code": subdist,
-                "street": street,
-                "city": city,
-                "state": "Sulawesi Utara",
-                "country": "Indonesia",
-                "zip": zip_code,
-                "phone": f"081244{idx:06d}",
-                "vat": npwp,
-                "credit_limit": 45000000 if idx <= 25 else 25000000,
-                "credit_mode": "limit",
-                "payment_term_days": 14 if idx <= 25 else 7,
-                "salesman_code": sls,
-                "latitude": lat,
-                "longitude": lng,
-                "is_company": True,
-            }
-        )
-
-    # 3. Retail Kios Canvass (260 Kios)
-    rtl_prefixes = [
-        "Kios Tante", "Warung Om", "Kios Ci", "Warung Tante", "Kios Ko",
-        "Warung", "Kios Berkat", "Kios Gloria", "Warung Kasih", "Kios Filadelfia",
-    ]
-    rtl_names_pool = [
-        "Tin", "Oce", "Utu", "Meyke", "Ferry", "Dani", "Ventje", "Novry", "Ritha",
-        "Meylan", "Hein", "Vonny", "Meiske", "Joppy", "Deasy", "Ronny", "Grace",
-        "Bobby", "Erna", "Jacky", "Lita", "Nico", "Vicky", "Yola", "Franky", "Siska",
-        "Stenly", "Wanda", "Roy", "Vera", "Pingkan", "Toar", "Lumimuut", "Engelin", "Marietje",
-    ]
-    rtl_suffixes = [
-        "Lorong 1", "Lorong 2", "Lorong 3", "Dekat Gereja", "Pintu Masuk", "Ujung Lorong",
-        "Bawah Pohon", "Perempatan", "Jalan Salib", "Pondok Damai", "Samping Lapangan",
-        "Tikungan", "Jembatan", "Kompleks", "Pasar", "Depan SD", "Dekat Mesjid", "Puncak",
-    ]
-
-    for idx in range(1, 261):
-        sls = "CVS-01" if idx <= 135 else "CVS-02"
-        dist = (
-            "KEC-MND-WNG"
-            if idx <= 70
-            else ("KEC-MND-MLY" if idx <= 135 else ("KEC-MND-MPG" if idx <= 200 else "KEC-MNT-AMD"))
-        )
-        subdist = "KEL-MND-WNS" if idx <= 70 else ("KEL-MND-BAH" if idx <= 135 else "KEL-MND-PKB")
-        city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
-        pfx = rtl_prefixes[(idx - 1) % len(rtl_prefixes)]
-        nm = rtl_names_pool[(idx - 1) % len(rtl_names_pool)]
-        sfx = rtl_suffixes[(idx - 1) % len(rtl_suffixes)]
-        kios_name = f"{pfx} {nm} {sfx}"
-
-        base_lat, base_lng = DISTRICT_COORDS.get(dist, (1.4910, 124.8420))
-        d_lat = (((idx * 5) % 13) - 6) * 0.0003
-        d_lng = (((idx * 11) % 13) - 6) * 0.0003
-        lat = round(base_lat + d_lat, 6)
-        lng = round(base_lng + d_lng, 6)
-
-        partners.append(
-            {
-                "ref": f"CUST-RTL-{idx:03d}",
-                "name": kios_name,
-                "channel_code": "RTL",
-                "district_code": dist,
-                "subdistrict_code": subdist,
-                "street": f"Lorong Pemukiman RW 0{idx % 6 + 1}",
-                "city": city,
-                "state": "Sulawesi Utara",
-                "country": "Indonesia",
-                "zip": "95100",
-                "phone": f"085240{idx:06d}",
-                "vat": "",
-                "credit_limit": 1500000,
-                "credit_mode": "strict",
-                "payment_term_days": 0,  # Cash COD
-                "salesman_code": sls,
-                "latitude": lat,
-                "longitude": lng,
-                "is_company": False,
-            }
-        )
-
-    # 4. Institusional (10 Outlet Horeka & RS)
-    inst_samples = [
-        (
-            "RSUP Mandiri Sehat Malalayang",
-            "KEC-MND-MLY",
-            "KEL-MND-BAH",
-            "Jl. Raya Tanawangko Malalayang",
-            "95162",
-            "0112345678821001",
-            60000000,
-            30,
-        ),
-        (
-            "Hotel Teluk Manado Sario",
-            "KEC-MND-SRO",
-            "KEL-MND-SKB",
-            "Jl. Sam Ratulangi Sario",
-            "95114",
-            "0234567890821002",
-            45000000,
-            30,
-        ),
-        (
-            "Hotel Sintesa Bukit Wenang",
-            "KEC-MND-WNG",
-            "KEL-MND-WNS",
-            "Jl. Jend. Sudirman Wenang",
-            "95111",
-            "0356789012821003",
-            40000000,
-            30,
-        ),
-        (
-            "Hotel Grand Ranotana",
-            "KEC-MND-SRO",
-            "KEL-MND-SKB",
-            "Jl. Sam Ratulangi No. 458",
-            "95114",
-            "0478901234821004",
-            30000000,
-            30,
-        ),
-        (
-            "Grand Resort Paniki Mapanget",
-            "KEC-MND-MPG",
-            "KEL-MND-PKB",
-            "Grand Kawanua International City",
-            "95258",
-            "0589012345821005",
-            35000000,
-            30,
-        ),
-        (
-            "RS Sam Ratulangi Wenang",
-            "KEC-MND-WNG",
-            "KEL-MND-WNS",
-            "Jl. Sam Ratulangi No. 22",
-            "95111",
-            "0690123456821006",
-            35000000,
-            30,
-        ),
-        (
-            "Katering Minahasa Indah",
-            "KEC-MND-TKL",
-            "KEL-MND-TKB",
-            "Jl. Tikala Ares No. 8",
-            "95126",
-            "0701234567821007",
-            25000000,
-            14,
-        ),
-        (
-            "Katering Bahu Sejahtera",
-            "KEC-MND-MLY",
-            "KEL-MND-BAH",
-            "Jl. Wolter Monginsidi No. 12",
-            "95115",
-            "0812345678821008",
-            20000000,
-            14,
-        ),
-        (
-            "Restoran Rasa Bahari Megamas",
-            "KEC-MND-WNG",
-            "KEL-MND-WNS",
-            "Kawasan Megamas Blok 2C",
-            "95111",
-            "0923456789821009",
-            20000000,
-            14,
-        ),
-        (
-            "Dapur Tradisional Tomohon",
-            "KEC-TMH-TGH",
-            "KEL-TMH-PSL",
-            "Jl. Raya Paslaten Tomohon",
-            "95431",
-            "1034567890821010",
-            15000000,
-            14,
-        ),
-    ]
-    for idx, (name, dist, subdist, street, zipc, npwp, cl, pt) in enumerate(inst_samples, start=1):
-        city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
-        base_lat, base_lng = DISTRICT_COORDS.get(dist, (1.4910, 124.8420))
-        d_lat = (((idx * 3) % 7) - 3) * 0.0004
-        d_lng = (((idx * 5) % 7) - 3) * 0.0004
-        partners.append(
-            {
-                "ref": f"CUST-INST-{idx:02d}",
-                "name": name,
-                "channel_code": "INST",
-                "district_code": dist,
-                "subdistrict_code": subdist,
-                "street": street,
-                "city": city,
-                "state": "Sulawesi Utara",
-                "country": "Indonesia",
-                "zip": zipc,
-                "phone": f"081356{idx:06d}",
-                "vat": npwp,
-                "credit_limit": cl,
-                "credit_mode": "limit",
-                "payment_term_days": pt,
-                "salesman_code": "MGT-01",
-                "latitude": round(base_lat + d_lat, 6),
-                "longitude": round(base_lng + d_lng, 6),
-                "is_company": True,
-            }
-        )
-
-    return partners
+    return build_customer_registry()
 
 
 def generate_principals() -> list[dict]:
@@ -1595,54 +1112,270 @@ def generate_principals() -> list[dict]:
 def generate_employees() -> list[dict]:
     """Menghasilkan roster 24 personel PT Manado Distribusi Utama dengan hirarki pelaporan."""
     roster = [
-        ("EMP-001", "Bpk. Ronald Mongisidi", "owner", "Management", "CC-MGT", "",
-         "ronald.mongisidi@mdu-manado.co.id", "0811-432-1001", ""),
-        ("EMP-002", "Hendrik Polii", "branch_manager", "Management", "CC-MGT", "SIM A",
-         "hendrik.polii@mdu-manado.co.id", "0811-432-1002", "EMP-001"),
-        ("EMP-003", "Feybe Lumempouw", "finance_lead", "Finance", "CC-FIN", "SIM A",
-         "feybe.lumempouw@mdu-manado.co.id", "0812-441-2003", "EMP-002"),
-        ("EMP-004", "Grace Sumual", "accounting_staff", "Finance", "CC-FIN", "",
-         "grace.sumual@mdu-manado.co.id", "0813-562-2004", "EMP-003"),
-        ("EMP-005", "Rudi Tumbelaka", "tax_staff", "Finance", "CC-FIN", "",
-         "rudi.tumbelaka@mdu-manado.co.id", "0821-883-2005", "EMP-003"),
-        ("EMP-006", "Meike Wondal", "cashier", "Finance", "CC-FIN", "",
-         "meike.wondal@mdu-manado.co.id", "0852-401-2006", "EMP-003"),
-        ("EMP-007", "Joni Kumajas", "sales_spv", "Sales", "CC-SALES", "SIM A",
-         "joni.kumajas@mdu-manado.co.id", "0811-432-3007", "EMP-002"),
-        ("EMP-008", "Rivaldo Mamahit", "sales_admin_lead", "Sales", "CC-SALES", "",
-         "rivaldo.mamahit@mdu-manado.co.id", "0812-441-3008", "EMP-007"),
-        ("EMP-009", "Priscilia Tielung", "sales_admin", "Sales", "CC-SALES", "",
-         "priscilia.tielung@mdu-manado.co.id", "0813-562-3009", "EMP-008"),
-        ("EMP-010", "Willem Runtu", "warehouse_lead", "Warehouse", "CC-WMS", "SIM B1",
-         "willem.runtu@mdu-manado.co.id", "0811-432-4010", "EMP-002"),
-        ("EMP-011", "Jemmy Pangaila", "staging_lead", "Warehouse", "CC-WMS", "",
-         "jemmy.pangaila@mdu-manado.co.id", "0821-883-4011", "EMP-010"),
-        ("EMP-012", "Robby Karundeng", "picker_staff", "Warehouse", "CC-WMS", "",
-         "robby.karundeng@mdu-manado.co.id", "0852-401-4012", "EMP-011"),
-        ("EMP-013", "Christian Wowor", "sales_mt", "Sales", "CC-SALES", "SIM A",
-         "christian.wowor@mdu-manado.co.id", "0812-441-5013", "EMP-007"),
-        ("EMP-014", "Andre Pangemanan", "sales_to", "Sales", "CC-SALES", "SIM C & A",
-         "andre.pangemanan@mdu-manado.co.id", "0813-562-5014", "EMP-007"),
-        ("EMP-015", "Meidy Wowor", "sales_to", "Sales", "CC-SALES", "SIM C & A",
-         "meidy.wowor@mdu-manado.co.id", "0821-883-5015", "EMP-007"),
-        ("EMP-016", "Refly Sondakh", "sales_to", "Sales", "CC-SALES", "SIM C & A",
-         "refly.sondakh@mdu-manado.co.id", "0852-401-5016", "EMP-007"),
-        ("EMP-017", "Novry Mandagi", "sales_canvass", "Sales", "CC-SALES", "SIM A",
-         "novry.mandagi@mdu-manado.co.id", "0812-441-5017", "EMP-007"),
-        ("EMP-018", "Steven Lumenta", "sales_canvass", "Sales", "CC-SALES", "SIM A",
-         "steven.lumenta@mdu-manado.co.id", "0813-562-5018", "EMP-007"),
-        ("EMP-019", "Eko Prasetyo", "driver", "Logistik", "CC-LOG", "SIM B1",
-         "eko.prasetyo@mdu-manado.co.id", "0821-883-6019", "EMP-010"),
-        ("EMP-020", "Frits Wenas", "driver", "Logistik", "CC-LOG", "SIM B1",
-         "frits.wenas@mdu-manado.co.id", "0852-401-6020", "EMP-010"),
-        ("EMP-021", "Stenly Rompas", "driver", "Logistik", "CC-LOG", "SIM B1",
-         "stenly.rompas@mdu-manado.co.id", "0812-441-6021", "EMP-010"),
-        ("EMP-022", "Johan Rori", "driver", "Logistik", "CC-LOG", "SIM B2",
-         "johan.rori@mdu-manado.co.id", "0813-562-6022", "EMP-010"),
-        ("EMP-023", "Maxi Walangitan", "helper", "Logistik", "CC-LOG", "",
-         "maxi.walangitan@mdu-manado.co.id", "0821-883-6023", "EMP-010"),
-        ("EMP-024", "Royke Manopo", "helper", "Logistik", "CC-LOG", "",
-         "royke.manopo@mdu-manado.co.id", "0852-401-6024", "EMP-010"),
+        (
+            "EMP-001",
+            "Bpk. Ronald Mongisidi",
+            "owner",
+            "Management",
+            "CC-MGT",
+            "",
+            "ronald.mongisidi@mdu-manado.co.id",
+            "0811-432-1001",
+            "",
+        ),
+        (
+            "EMP-002",
+            "Hendrik Polii",
+            "branch_manager",
+            "Management",
+            "CC-MGT",
+            "SIM A",
+            "hendrik.polii@mdu-manado.co.id",
+            "0811-432-1002",
+            "EMP-001",
+        ),
+        (
+            "EMP-003",
+            "Feybe Lumempouw",
+            "finance_lead",
+            "Finance",
+            "CC-FIN",
+            "SIM A",
+            "feybe.lumempouw@mdu-manado.co.id",
+            "0812-441-2003",
+            "EMP-002",
+        ),
+        (
+            "EMP-004",
+            "Grace Sumual",
+            "accounting_staff",
+            "Finance",
+            "CC-FIN",
+            "",
+            "grace.sumual@mdu-manado.co.id",
+            "0813-562-2004",
+            "EMP-003",
+        ),
+        (
+            "EMP-005",
+            "Rudi Tumbelaka",
+            "tax_staff",
+            "Finance",
+            "CC-FIN",
+            "",
+            "rudi.tumbelaka@mdu-manado.co.id",
+            "0821-883-2005",
+            "EMP-003",
+        ),
+        (
+            "EMP-006",
+            "Meike Wondal",
+            "cashier",
+            "Finance",
+            "CC-FIN",
+            "",
+            "meike.wondal@mdu-manado.co.id",
+            "0852-401-2006",
+            "EMP-003",
+        ),
+        (
+            "EMP-007",
+            "Joni Kumajas",
+            "sales_spv",
+            "Sales",
+            "CC-SALES",
+            "SIM A",
+            "joni.kumajas@mdu-manado.co.id",
+            "0811-432-3007",
+            "EMP-002",
+        ),
+        (
+            "EMP-008",
+            "Rivaldo Mamahit",
+            "sales_admin_lead",
+            "Sales",
+            "CC-SALES",
+            "",
+            "rivaldo.mamahit@mdu-manado.co.id",
+            "0812-441-3008",
+            "EMP-007",
+        ),
+        (
+            "EMP-009",
+            "Priscilia Tielung",
+            "sales_admin",
+            "Sales",
+            "CC-SALES",
+            "",
+            "priscilia.tielung@mdu-manado.co.id",
+            "0813-562-3009",
+            "EMP-008",
+        ),
+        (
+            "EMP-010",
+            "Willem Runtu",
+            "warehouse_lead",
+            "Warehouse",
+            "CC-WMS",
+            "SIM B1",
+            "willem.runtu@mdu-manado.co.id",
+            "0811-432-4010",
+            "EMP-002",
+        ),
+        (
+            "EMP-011",
+            "Jemmy Pangaila",
+            "staging_lead",
+            "Warehouse",
+            "CC-WMS",
+            "",
+            "jemmy.pangaila@mdu-manado.co.id",
+            "0821-883-4011",
+            "EMP-010",
+        ),
+        (
+            "EMP-012",
+            "Robby Karundeng",
+            "picker_staff",
+            "Warehouse",
+            "CC-WMS",
+            "",
+            "robby.karundeng@mdu-manado.co.id",
+            "0852-401-4012",
+            "EMP-011",
+        ),
+        (
+            "EMP-013",
+            "Christian Wowor",
+            "sales_mt",
+            "Sales",
+            "CC-SALES",
+            "SIM A",
+            "christian.wowor@mdu-manado.co.id",
+            "0812-441-5013",
+            "EMP-007",
+        ),
+        (
+            "EMP-014",
+            "Andre Pangemanan",
+            "sales_to",
+            "Sales",
+            "CC-SALES",
+            "SIM C & A",
+            "andre.pangemanan@mdu-manado.co.id",
+            "0813-562-5014",
+            "EMP-007",
+        ),
+        (
+            "EMP-015",
+            "Meidy Wowor",
+            "sales_to",
+            "Sales",
+            "CC-SALES",
+            "SIM C & A",
+            "meidy.wowor@mdu-manado.co.id",
+            "0821-883-5015",
+            "EMP-007",
+        ),
+        (
+            "EMP-016",
+            "Refly Sondakh",
+            "sales_to",
+            "Sales",
+            "CC-SALES",
+            "SIM C & A",
+            "refly.sondakh@mdu-manado.co.id",
+            "0852-401-5016",
+            "EMP-007",
+        ),
+        (
+            "EMP-017",
+            "Novry Mandagi",
+            "sales_canvass",
+            "Sales",
+            "CC-SALES",
+            "SIM A",
+            "novry.mandagi@mdu-manado.co.id",
+            "0812-441-5017",
+            "EMP-007",
+        ),
+        (
+            "EMP-018",
+            "Steven Lumenta",
+            "sales_canvass",
+            "Sales",
+            "CC-SALES",
+            "SIM A",
+            "steven.lumenta@mdu-manado.co.id",
+            "0813-562-5018",
+            "EMP-007",
+        ),
+        (
+            "EMP-019",
+            "Eko Prasetyo",
+            "driver",
+            "Logistik",
+            "CC-LOG",
+            "SIM B1",
+            "eko.prasetyo@mdu-manado.co.id",
+            "0821-883-6019",
+            "EMP-010",
+        ),
+        (
+            "EMP-020",
+            "Frits Wenas",
+            "driver",
+            "Logistik",
+            "CC-LOG",
+            "SIM B1",
+            "frits.wenas@mdu-manado.co.id",
+            "0852-401-6020",
+            "EMP-010",
+        ),
+        (
+            "EMP-021",
+            "Stenly Rompas",
+            "driver",
+            "Logistik",
+            "CC-LOG",
+            "SIM B1",
+            "stenly.rompas@mdu-manado.co.id",
+            "0812-441-6021",
+            "EMP-010",
+        ),
+        (
+            "EMP-022",
+            "Johan Rori",
+            "driver",
+            "Logistik",
+            "CC-LOG",
+            "SIM B2",
+            "johan.rori@mdu-manado.co.id",
+            "0813-562-6022",
+            "EMP-010",
+        ),
+        (
+            "EMP-023",
+            "Maxi Walangitan",
+            "helper",
+            "Logistik",
+            "CC-LOG",
+            "",
+            "maxi.walangitan@mdu-manado.co.id",
+            "0821-883-6023",
+            "EMP-010",
+        ),
+        (
+            "EMP-024",
+            "Royke Manopo",
+            "helper",
+            "Logistik",
+            "CC-LOG",
+            "",
+            "royke.manopo@mdu-manado.co.id",
+            "0852-401-6024",
+            "EMP-010",
+        ),
     ]
     return [
         {
@@ -1824,30 +1557,57 @@ def main():
     print(f" - Menghasilkan {len(vehicles)} Armada Logistik...")
     write_csv(SEED_DIR / "vehicles_9.csv", vehicles, list(vehicles[0].keys()))
 
-    # Summary JSON untuk simulasi historis
+    # Summary JSON untuk simulasi historis selaras dengan ledger operasional
     historical_summary = {
         "period": "2026-07-01 to 2026-10-24",
         "working_days": 98,
         "monthly_realization": {
-            "2026-07": {"target": 5500000000, "actual": 4850000000, "active_outlets": 310, "otif_pct": 94.2},
-            "2026-08": {"target": 5500000000, "actual": 5250000000, "active_outlets": 335, "otif_pct": 95.5},
-            "2026-09": {"target": 5500000000, "actual": 5500000000, "active_outlets": 354, "otif_pct": 96.1},
-            "2026-10_mtd": {"target": 4200000000, "actual": 4280000000, "active_outlets": 354, "otif_pct": 97.4},
+            "2026-07": {
+                "target": 5500000000,
+                "actual": 5500000000,
+                "net_margin_pct": 0.90,
+                "active_outlets": 177,
+                "otif_pct": 91.5,
+                "peak_warehouse_occupancy_pct": 107.4,
+            },
+            "2026-08": {
+                "target": 4235000000,
+                "actual": 4235000000,
+                "growth_pct": -23.0,
+                "net_margin_pct": 2.50,
+                "active_outlets": 198,
+                "otif_pct": 94.8,
+            },
+            "2026-09": {
+                "target": 3960000000,
+                "actual": 3960000000,
+                "growth_pct": -6.5,
+                "net_margin_pct": 3.70,
+                "active_outlets": 226,
+                "otif_pct": 96.2,
+            },
+            "2026-10_mtd": {
+                "target": 5300000000,
+                "actual": 5300000000,
+                "net_margin_pct": 5.00,
+                "active_outlets": 354,
+                "otif_pct": 97.8,
+            },
         },
-        "total_revenue_idr": 19880000000,
+        "total_revenue_idr": 18995000000,
         "inventory_metrics": {
-            "initial_stock_july_1_idr": 4100000000,
-            "average_inventory_idr": 4400000000,
-            "cogs_pct": 89.5,
-            "dsi_days": 22.3,
-            "stock_turnover_monthly": 1.12,
+            "initial_stock_july_1_idr": 4300000000,
+            "inbound_purchases_idr": 18274000000,
+            "cogs_pct": 90.8,
+            "dsi_days": 24.1,
+            "stock_turnover_monthly": 1.15,
         },
         "logistics_metrics": {
             "total_fleet": 9,
-            "average_daily_cartons": 1540,
-            "average_daily_tonnage": 6.5,
-            "overall_otif_pct": 95.8,
-            "delivery_rejection_pct": 1.2,
+            "average_daily_cartons": 1480,
+            "average_daily_tonnage": 6.8,
+            "overall_otif_pct": 95.1,
+            "delivery_rejection_pct": 0.8,
         },
     }
     with (SEED_DIR / "historical_simulation_summary.json").open("w", encoding="utf-8") as f:

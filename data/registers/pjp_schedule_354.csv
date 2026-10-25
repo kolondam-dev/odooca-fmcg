@@ -1,0 +1,355 @@
+customer_ref,customer_name,channel,city,district,salesman_code,salesman_name,pjp_frequency,pjp_call_day,delivery_route,delivery_vehicle,cohort_date
+CUST-MT-01,Indomarett DC Manado,MT,Kota Manado,Mapanget,SLS-01,Christian Wowor,F1,Senin,DELIV-MT-SENIN,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-02,Alfamiddii DC Manado,MT,Kota Manado,Mapanget,SLS-01,Christian Wowor,F1,Senin,DELIV-MT-SENIN,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-03,FreshhMart Superstore Bahu,MT,Kota Manado,Malalayang,SLS-01,Christian Wowor,F1,Selasa,DELIV-MT-SELASA,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-04,FreshhMart Lifestyle Paniki,MT,Kota Manado,Mapanget,SLS-01,Christian Wowor,F1,Rabu,DELIV-MT-RABU,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-05,FreshhMart Express Tikala,MT,Kota Manado,Tikala,SLS-01,Christian Wowor,F1,Kamis,DELIV-MT-KAMIS,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-06,MultiiMart Megamas Manado,MT,Kota Manado,Wenang,SLS-01,Christian Wowor,F1,Jumat,DELIV-MT-JUMAT,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-07,MultiiMart Sam Ratulangi,MT,Kota Manado,Wanea,SLS-01,Christian Wowor,F1,Sabtu,DELIV-MT-SABTU,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-08,MultiiMart Tomohon,MT,Kota Tomohon,Tomohon Tengah,SLS-01,Christian Wowor,F1,Rabu,DELIV-MT-RABU,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-09,Goldenn Swalayan Pasar 45,MT,Kota Manado,Wenang,SLS-01,Christian Wowor,F1,Selasa,DELIV-MT-SELASA,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-10,Jumbbo Swalayan Pasar 45,MT,Kota Manado,Wenang,SLS-01,Christian Wowor,F1,Kamis,DELIV-MT-KAMIS,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-11,Jumbbo Swalayan Bitung,MT,Kota Bitung,Maesa,SLS-01,Christian Wowor,F1,Jumat,DELIV-MT-JUMAT,DB 8345 MK (Canter CDD),2026-07-01
+CUST-MT-12,Tranzmart Star Square Bahu,MT,Kota Manado,Malalayang,SLS-01,Christian Wowor,F1,Sabtu,DELIV-MT-SABTU,DB 8345 MK (Canter CDD),2026-07-01
+CUST-GT-01,Toko Sembako Berkat Pasar 45,GT,Kota Manado,Wenang,SLS-02,Andre Pangemanan,F1,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-02,Toko Kawanua Sejati Wenang,GT,Kota Manado,Wenang,SLS-02,Andre Pangemanan,F1,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-03,Grosir Sinar Terang Calaca,GT,Kota Manado,Wenang,SLS-02,Andre Pangemanan,F1,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-04,Toko Pinaesaan Calaca,GT,Kota Manado,Wenang,SLS-02,Andre Pangemanan,F2,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-05,Grosir Istiqlal Sentosa,GT,Kota Manado,Wenang,SLS-02,Andre Pangemanan,F2,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-06,Grosir Calaca Baru,GT,Kota Manado,Wenang,SLS-02,Andre Pangemanan,F2,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-07,Toko Harapan Bersehati,GT,Kota Manado,Sario,SLS-02,Andre Pangemanan,F1,Selasa,DELIV-GT-MANADO-SELASA,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-08,Grosir Bintang Samrat Sario,GT,Kota Manado,Sario,SLS-02,Andre Pangemanan,F1,Selasa,DELIV-GT-MANADO-SELASA,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-09,Grosir Manado Raya Sario,GT,Kota Manado,Sario,SLS-02,Andre Pangemanan,F2,Selasa,DELIV-GT-MANADO-SELASA,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-10,Toko Sario Makmur,GT,Kota Manado,Sario,SLS-02,Andre Pangemanan,F2,Selasa,DELIV-GT-MANADO-SELASA,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-11,Grosir Krida Bahu,GT,Kota Manado,Malalayang,SLS-02,Andre Pangemanan,F1,Rabu,DELIV-GT-MANADO-RABU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-12,Toko Sumber Berkat Malalayang,GT,Kota Manado,Malalayang,SLS-02,Andre Pangemanan,F1,Rabu,DELIV-GT-MANADO-RABU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-13,Grosir Malalayang Satu,GT,Kota Manado,Malalayang,SLS-02,Andre Pangemanan,F2,Rabu,DELIV-GT-MANADO-RABU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-14,Toko Batu Kota Indah,GT,Kota Manado,Malalayang,SLS-02,Andre Pangemanan,F2,Rabu,DELIV-GT-MANADO-RABU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-15,Grosir Kleak Mandiri,GT,Kota Manado,Malalayang,SLS-02,Andre Pangemanan,F2,Rabu,DELIV-GT-MANADO-RABU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-16,Toko Pelita Jaya Wanea,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F1,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-17,Toko Anugerah Kasih Karombasan,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F1,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-18,Grosir Rukun Damai Ranotana,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F2,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-19,Grosir Teling Sentosa Wanea,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F2,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-20,Toko Pakowa Sejahtera Wanea,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F2,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-21,Grosir Tingkulu Jaya Wanea,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F2,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-22,Toko Winangun Berkat,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F2,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-23,Toko Bumi Nyiur Permai,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F2,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-24,Toko Cahaya Samrat Wenang,GT,Kota Manado,Wenang,SLS-02,Andre Pangemanan,F1,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-25,Grosir Megamas Abadi,GT,Kota Manado,Wenang,SLS-02,Andre Pangemanan,F1,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-26,Toko Karombasan Baru,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F2,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-27,Grosir Bahu Sentosa,GT,Kota Manado,Malalayang,SLS-02,Andre Pangemanan,F2,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-28,Toko Sam Ratulangi Perkasa,GT,Kota Manado,Sario,SLS-02,Andre Pangemanan,F2,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-29,Grosir Pasar 45 Rezeki,GT,Kota Manado,Wenang,SLS-02,Andre Pangemanan,F1,Sabtu,DELIV-GT-MANADO-SABTU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-30,Toko Berkat Bahu Sejahtera,GT,Kota Manado,Malalayang,SLS-02,Andre Pangemanan,F2,Sabtu,DELIV-GT-MANADO-SABTU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-31,Grosir Sario Damai,GT,Kota Manado,Sario,SLS-02,Andre Pangemanan,F2,Sabtu,DELIV-GT-MANADO-SABTU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-32,Toko Ranotana Jaya,GT,Kota Manado,Wanea,SLS-02,Andre Pangemanan,F2,Sabtu,DELIV-GT-MANADO-SABTU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-33,Toko Malalayang Megah,GT,Kota Manado,Malalayang,SLS-02,Andre Pangemanan,F2,Sabtu,DELIV-GT-MANADO-SABTU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-34,Grosir Tikala Baru,GT,Kota Manado,Tikala,SLS-03,Meidy Wowor,F1,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-35,Toko Banjer Berkah Tikala,GT,Kota Manado,Tikala,SLS-03,Meidy Wowor,F1,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-36,Grosir Taas Damai Tikala,GT,Kota Manado,Tikala,SLS-03,Meidy Wowor,F2,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-37,Grosir Makmur Abadi Tikala,GT,Kota Manado,Tikala,SLS-03,Meidy Wowor,F2,Senin,DELIV-GT-MANADO-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-38,Toko Paal Dua Jaya,GT,Kota Manado,Paal Dua,SLS-03,Meidy Wowor,F1,Selasa,DELIV-GT-MANADO-SELASA,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-39,Toko Berkat Melimpah Paal Dua,GT,Kota Manado,Paal Dua,SLS-03,Meidy Wowor,F1,Selasa,DELIV-GT-MANADO-SELASA,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-40,Grosir Sentosa Perkasa Perkamil,GT,Kota Manado,Paal Dua,SLS-03,Meidy Wowor,F2,Selasa,DELIV-GT-MANADO-SELASA,DB 8456 FB (L300 Urban),2026-07-01
+CUST-GT-41,Toko Dendengan Mandiri Paal Dua,GT,Kota Manado,Paal Dua,SLS-03,Meidy Wowor,F2,Selasa,DELIV-GT-MANADO-SELASA,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-42,Toko Bintang Timur Ranomuut,GT,Kota Manado,Paal Dua,SLS-03,Meidy Wowor,F2,Selasa,DELIV-GT-MANADO-SELASA,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-43,Grosir Sumber Mulia Tuminting,GT,Kota Manado,Tuminting,SLS-03,Meidy Wowor,F1,Rabu,DELIV-GT-MANADO-RABU,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-44,Toko Surya Indah Tuminting,GT,Kota Manado,Tuminting,SLS-03,Meidy Wowor,F1,Rabu,DELIV-GT-MANADO-RABU,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-45,Grosir Tumumpa Berkat,GT,Kota Manado,Tuminting,SLS-03,Meidy Wowor,F2,Rabu,DELIV-GT-MANADO-RABU,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-46,Toko Sindulang Jaya,GT,Kota Manado,Tuminting,SLS-03,Meidy Wowor,F2,Rabu,DELIV-GT-MANADO-RABU,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-47,Toko Bintang Matuari Singkil,GT,Kota Manado,Singkil,SLS-03,Meidy Wowor,F1,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-48,Toko Usaha Bersama Singkil,GT,Kota Manado,Singkil,SLS-03,Meidy Wowor,F2,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-49,Grosir Kombos Jaya Singkil,GT,Kota Manado,Singkil,SLS-03,Meidy Wowor,F2,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-50,Grosir Cahaya Utara Mahakeret,GT,Kota Manado,Singkil,SLS-03,Meidy Wowor,F2,Kamis,DELIV-GT-MANADO-KAMIS,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-51,Toko Paniki Permai Mapanget,GT,Kota Manado,Mapanget,SLS-03,Meidy Wowor,F1,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-52,Grosir Kairagi Mandiri,GT,Kota Manado,Mapanget,SLS-03,Meidy Wowor,F1,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-53,Grosir Buha Indah Mapanget,GT,Kota Manado,Mapanget,SLS-03,Meidy Wowor,F2,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-54,Toko Bengkol Sejahtera,GT,Kota Manado,Mapanget,SLS-03,Meidy Wowor,F2,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-55,Toko Pandu Berkah Mapanget,GT,Kota Manado,Mapanget,SLS-03,Meidy Wowor,F2,Jumat,DELIV-GT-MANADO-JUMAT,DB 8456 FB (L300 Urban),2026-08-01
+CUST-GT-56,Toko Kairagi Satu Makmur,GT,Kota Manado,Mapanget,SLS-03,Meidy Wowor,F2,Sabtu,DELIV-GT-MANADO-SABTU,DB 8456 FB (L300 Urban),2026-09-01
+CUST-GT-57,Grosir Bailang Mandiri,GT,Kota Manado,Tuminting,SLS-03,Meidy Wowor,F2,Sabtu,DELIV-GT-MANADO-SABTU,DB 8456 FB (L300 Urban),2026-09-01
+CUST-GT-58,Toko Bintang Matuari Maesa,GT,Kota Bitung,Maesa,SLS-04,Refly Sondakh,F1,Senin,DELIV-GT-BITUNG-SENIN,DB 8910 TK (Elf Luar Kota),2026-09-01
+CUST-GT-59,Grosir Girian Indah Bitung,GT,Kota Bitung,Girian,SLS-04,Refly Sondakh,F1,Senin,DELIV-GT-BITUNG-SENIN,DB 8910 TK (Elf Luar Kota),2026-09-01
+CUST-GT-60,Toko Madidir Berkat Bitung,GT,Kota Bitung,Madidir,SLS-04,Refly Sondakh,F2,Senin,DELIV-GT-BITUNG-SENIN,DB 8910 TK (Elf Luar Kota),2026-09-01
+CUST-GT-61,Grosir Danowudu Jaya Bitung,GT,Kota Bitung,Madidir,SLS-04,Refly Sondakh,F2,Senin,DELIV-GT-BITUNG-SENIN,DB 8910 TK (Elf Luar Kota),2026-09-01
+CUST-GT-62,Toko Matuari Sejati Bitung,GT,Kota Bitung,Aertembaga,SLS-04,Refly Sondakh,F2,Senin,DELIV-GT-BITUNG-SENIN,DB 8910 TK (Elf Luar Kota),2026-09-01
+CUST-GT-63,Toko Jaya Sejahtera Tomohon,GT,Kota Tomohon,Tomohon Tengah,SLS-04,Refly Sondakh,F1,Selasa,DELIV-GT-TOMOHON-SELASA,DB 8910 TK (Elf Luar Kota),2026-09-01
+CUST-GT-64,Grosir Paslaten Mandiri Tomohon,GT,Kota Tomohon,Tomohon Tengah,SLS-04,Refly Sondakh,F1,Selasa,DELIV-GT-TOMOHON-SELASA,DB 8910 TK (Elf Luar Kota),2026-09-01
+CUST-GT-65,Toko Kakaskasen Sejahtera,GT,Kota Tomohon,Tomohon Tengah,SLS-04,Refly Sondakh,F2,Selasa,DELIV-GT-TOMOHON-SELASA,DB 8910 TK (Elf Luar Kota),2026-09-01
+CUST-GT-66,Toko Rezeki Tondano,GT,Kab. Minahasa,Tondano Barat,SLS-04,Refly Sondakh,F1,Rabu,DELIV-GT-MINAHASA-RABU,DB 8910 TK (Elf Luar Kota),2026-10-01
+CUST-GT-67,Toko Tondano Makmur Tondano,GT,Kab. Minahasa,Tondano Barat,SLS-04,Refly Sondakh,F2,Rabu,DELIV-GT-MINAHASA-RABU,DB 8910 TK (Elf Luar Kota),2026-10-01
+CUST-GT-68,Toko Berkat Kawangkoan,GT,Kab. Minahasa,Kawangkoan,SLS-04,Refly Sondakh,F1,Kamis,DELIV-GT-MINAHASA-KAMIS,DB 8910 TK (Elf Luar Kota),2026-10-01
+CUST-GT-69,Grosir Kawangkoan Permai,GT,Kab. Minahasa,Kawangkoan,SLS-04,Refly Sondakh,F2,Kamis,DELIV-GT-MINAHASA-KAMIS,DB 8910 TK (Elf Luar Kota),2026-10-01
+CUST-GT-70,Grosir Airmadidi Baru Minut,GT,Kab. Minahasa Utara,Airmadidi,SLS-04,Refly Sondakh,F1,Jumat,DELIV-GT-UTARA-JUMAT,DB 8910 TK (Elf Luar Kota),2026-10-01
+CUST-GT-71,Toko Kalawat Berkat Minut,GT,Kab. Minahasa Utara,Airmadidi,SLS-04,Refly Sondakh,F2,Jumat,DELIV-GT-UTARA-JUMAT,DB 8910 TK (Elf Luar Kota),2026-10-01
+CUST-GT-72,Toko Amurang Sentosa Minsel,GT,Kab. Minahasa Selatan,Amurang,SLS-04,Refly Sondakh,F2,Sabtu,DELIV-GT-SELATAN-SABTU,DB 8910 TK (Elf Luar Kota),2026-10-01
+CUST-RTL-001,Kios Tante Tin Lorong 1,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-WENANG-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-002,Warung Om Oce Lorong 2,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-WENANG-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-003,Kios Ci Utu Lorong 3,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-WENANG-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-004,Warung Tante Meyke Dekat Gereja,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-WENANG-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-005,Kios Ko Ferry Pintu Masuk,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-WENANG-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-006,Warung Dani Ujung Lorong,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-WENANG-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-007,Kios Berkat Ventje Bawah Pohon,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-WENANG-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-008,Kios Gloria Novry Perempatan,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-WENANG-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-009,Warung Kasih Ritha Jalan Salib,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-WENANG-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-010,Kios Filadelfia Meylan Pondok Damai,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-WENANG-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-011,Kios Tante Hein Samping Lapangan,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-WENANG-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-012,Warung Om Vonny Tikungan,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-WENANG-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-013,Kios Ci Meiske Jembatan,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-WENANG-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-014,Warung Tante Joppy Kompleks,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-WENANG-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-015,Kios Ko Deasy Pasar,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-WENANG-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-016,Warung Ronny Depan SD,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-WENANG-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-017,Kios Berkat Grace Dekat Mesjid,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-WENANG-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-018,Kios Gloria Bobby Puncak,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-WENANG-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-019,Warung Kasih Erna Lorong 1,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-WENANG-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-020,Kios Filadelfia Jacky Lorong 2,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-WENANG-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-021,Kios Tante Lita Lorong 3,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-WENANG-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-022,Warung Om Nico Dekat Gereja,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-WENANG-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-023,Kios Ci Vicky Pintu Masuk,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-WENANG-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-024,Warung Tante Yola Ujung Lorong,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-WENANG-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-025,Kios Ko Franky Bawah Pohon,RTL,Kota Manado,Wenang,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-WENANG-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-026,Warung Siska Perempatan,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-SARIO-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-027,Kios Berkat Stenly Jalan Salib,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-SARIO-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-028,Kios Gloria Wanda Pondok Damai,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-SARIO-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-029,Warung Kasih Roy Samping Lapangan,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-SARIO-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-030,Kios Filadelfia Vera Tikungan,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-SARIO-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-031,Kios Tante Pingkan Jembatan,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-SARIO-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-032,Warung Om Toar Kompleks,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-SARIO-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-033,Kios Ci Lumimuut Pasar,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-SARIO-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-034,Warung Tante Engelin Depan SD,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-SARIO-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-035,Kios Ko Marietje Dekat Mesjid,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-SARIO-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-036,Warung Tin Puncak,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-SARIO-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-037,Kios Berkat Oce Lorong 1,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-SARIO-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-038,Kios Gloria Utu Lorong 2,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-SARIO-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-039,Warung Kasih Meyke Lorong 3,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-SARIO-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-040,Kios Filadelfia Ferry Dekat Gereja,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-SARIO-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-041,Kios Tante Dani Pintu Masuk,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-SARIO-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-042,Warung Om Ventje Ujung Lorong,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-SARIO-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-043,Kios Ci Novry Bawah Pohon,RTL,Kota Manado,Sario,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-SARIO-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-044,Warung Tante Ritha Perempatan,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-MALALAYANG-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-045,Kios Ko Meylan Jalan Salib,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-MALALAYANG-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-046,Warung Hein Pondok Damai,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-MALALAYANG-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-047,Kios Berkat Vonny Samping Lapangan,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-MALALAYANG-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-048,Kios Gloria Meiske Tikungan,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-MALALAYANG-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-049,Warung Kasih Joppy Jembatan,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-MALALAYANG-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-050,Kios Filadelfia Deasy Kompleks,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-MALALAYANG-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-051,Kios Tante Ronny Pasar,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-MALALAYANG-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-052,Warung Om Grace Depan SD,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-MALALAYANG-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-053,Kios Ci Bobby Dekat Mesjid,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-MALALAYANG-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-054,Warung Tante Erna Puncak,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-MALALAYANG-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-055,Kios Ko Jacky Lorong 1,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-MALALAYANG-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-056,Warung Lita Lorong 2,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-MALALAYANG-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-057,Kios Berkat Nico Lorong 3,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-MALALAYANG-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-058,Kios Gloria Vicky Dekat Gereja,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-MALALAYANG-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-059,Warung Kasih Yola Pintu Masuk,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-MALALAYANG-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-060,Kios Filadelfia Franky Ujung Lorong,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-MALALAYANG-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-061,Kios Tante Siska Bawah Pohon,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-MALALAYANG-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-062,Warung Om Stenly Perempatan,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-MALALAYANG-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-063,Kios Ci Wanda Jalan Salib,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-MALALAYANG-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-064,Warung Tante Roy Pondok Damai,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-MALALAYANG-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-065,Kios Ko Vera Samping Lapangan,RTL,Kota Manado,Malalayang,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-MALALAYANG-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-066,Warung Pingkan Tikungan,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-WANEA-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-067,Kios Berkat Toar Jembatan,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-WANEA-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-068,Kios Gloria Lumimuut Kompleks,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-WANEA-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-069,Warung Kasih Engelin Pasar,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-WANEA-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-070,Kios Filadelfia Marietje Depan SD,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-WANEA-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-071,Kios Tante Tin Dekat Mesjid,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-WANEA-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-072,Warung Om Oce Puncak,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-WANEA-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-073,Kios Ci Utu Lorong 1,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-WANEA-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-074,Warung Tante Meyke Lorong 2,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-WANEA-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-075,Kios Ko Ferry Lorong 3,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Rabu,CANVASS-WANEA-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-076,Warung Dani Dekat Gereja,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Kamis,CANVASS-WANEA-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-077,Kios Berkat Ventje Pintu Masuk,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Jumat,CANVASS-WANEA-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-078,Kios Gloria Novry Ujung Lorong,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Sabtu,CANVASS-WANEA-SABTU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-079,Warung Kasih Ritha Bawah Pohon,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Senin,CANVASS-WANEA-SENIN,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-080,Kios Filadelfia Meylan Perempatan,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F2,Selasa,CANVASS-WANEA-SELASA,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-081,Kios Tante Hein Jalan Salib,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F4,Rabu,CANVASS-WANEA-RABU,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-082,Warung Om Vonny Pondok Damai,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F4,Kamis,CANVASS-WANEA-KAMIS,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-083,Kios Ci Meiske Samping Lapangan,RTL,Kota Manado,Wanea,CVS-01,Novry Mandagi (Van 01),F4,Jumat,CANVASS-WANEA-JUMAT,DB 8123 QA (Gran Max BV),2026-07-01
+CUST-RTL-084,Warung Tante Joppy Tikungan,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-TIKALA-SABTU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-085,Kios Ko Deasy Jembatan,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-TIKALA-SENIN,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-086,Warung Ronny Kompleks,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-TIKALA-SELASA,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-087,Kios Berkat Grace Pasar,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TIKALA-RABU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-088,Kios Gloria Bobby Depan SD,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-TIKALA-KAMIS,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-089,Warung Kasih Erna Dekat Mesjid,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-TIKALA-JUMAT,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-090,Kios Filadelfia Jacky Puncak,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-TIKALA-SABTU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-091,Kios Tante Lita Lorong 1,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-TIKALA-SENIN,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-092,Warung Om Nico Lorong 2,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-TIKALA-SELASA,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-093,Kios Ci Vicky Lorong 3,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TIKALA-RABU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-094,Warung Tante Yola Dekat Gereja,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-TIKALA-KAMIS,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-095,Kios Ko Franky Pintu Masuk,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-TIKALA-JUMAT,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-096,Warung Siska Ujung Lorong,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-TIKALA-SABTU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-097,Kios Berkat Stenly Bawah Pohon,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-TIKALA-SENIN,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-098,Kios Gloria Wanda Perempatan,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-TIKALA-SELASA,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-099,Warung Kasih Roy Jalan Salib,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TIKALA-RABU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-100,Kios Filadelfia Vera Pondok Damai,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-TIKALA-KAMIS,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-101,Kios Tante Pingkan Samping Lapangan,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-TIKALA-JUMAT,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-102,Warung Om Toar Tikungan,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-TIKALA-SABTU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-103,Kios Ci Lumimuut Jembatan,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-TIKALA-SENIN,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-104,Warung Tante Engelin Kompleks,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-TIKALA-SELASA,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-105,Kios Ko Marietje Pasar,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TIKALA-RABU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-106,Warung Tin Depan SD,RTL,Kota Manado,Tikala,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-TIKALA-KAMIS,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-107,Kios Berkat Oce Dekat Mesjid,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-PAAL DUA-JUMAT,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-108,Kios Gloria Utu Puncak,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-PAAL DUA-SABTU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-109,Warung Kasih Meyke Lorong 1,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-PAAL DUA-SENIN,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-110,Kios Filadelfia Ferry Lorong 2,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-PAAL DUA-SELASA,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-111,Kios Tante Dani Lorong 3,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-PAAL DUA-RABU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-112,Warung Om Ventje Dekat Gereja,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-PAAL DUA-KAMIS,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-113,Kios Ci Novry Pintu Masuk,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-PAAL DUA-JUMAT,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-114,Warung Tante Ritha Ujung Lorong,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-PAAL DUA-SABTU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-115,Kios Ko Meylan Bawah Pohon,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-PAAL DUA-SENIN,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-116,Warung Hein Perempatan,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-PAAL DUA-SELASA,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-117,Kios Berkat Vonny Jalan Salib,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-PAAL DUA-RABU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-118,Kios Gloria Meiske Pondok Damai,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-PAAL DUA-KAMIS,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-119,Warung Kasih Joppy Samping Lapangan,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-PAAL DUA-JUMAT,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-120,Kios Filadelfia Deasy Tikungan,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-PAAL DUA-SABTU,DB 8234 QX (Gran Max Box),2026-07-01
+CUST-RTL-121,Kios Tante Ronny Jembatan,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-PAAL DUA-SENIN,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-122,Warung Om Grace Kompleks,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-PAAL DUA-SELASA,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-123,Kios Ci Bobby Pasar,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-PAAL DUA-RABU,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-124,Warung Tante Erna Depan SD,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-PAAL DUA-KAMIS,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-125,Kios Ko Jacky Dekat Mesjid,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-PAAL DUA-JUMAT,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-126,Warung Lita Puncak,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-PAAL DUA-SABTU,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-127,Kios Berkat Nico Lorong 1,RTL,Kota Manado,Paal Dua,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-PAAL DUA-SENIN,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-128,Kios Gloria Vicky Lorong 2,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-TUMINTING-SELASA,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-129,Warung Kasih Yola Lorong 3,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TUMINTING-RABU,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-130,Kios Filadelfia Franky Dekat Gereja,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-TUMINTING-KAMIS,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-131,Kios Tante Siska Pintu Masuk,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-TUMINTING-JUMAT,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-132,Warung Om Stenly Ujung Lorong,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-TUMINTING-SABTU,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-133,Kios Ci Wanda Bawah Pohon,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-TUMINTING-SENIN,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-134,Warung Tante Roy Perempatan,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-TUMINTING-SELASA,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-135,Kios Ko Vera Jalan Salib,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TUMINTING-RABU,DB 8234 QX (Gran Max Box),2026-08-01
+CUST-RTL-136,Warung Pingkan Pondok Damai,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-TUMINTING-KAMIS,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-137,Kios Berkat Toar Samping Lapangan,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-TUMINTING-JUMAT,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-138,Kios Gloria Lumimuut Tikungan,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-TUMINTING-SABTU,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-139,Warung Kasih Engelin Jembatan,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-TUMINTING-SENIN,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-140,Kios Filadelfia Marietje Kompleks,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-TUMINTING-SELASA,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-141,Kios Tante Tin Pasar,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TUMINTING-RABU,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-142,Warung Om Oce Depan SD,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-TUMINTING-KAMIS,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-143,Kios Ci Utu Dekat Mesjid,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-TUMINTING-JUMAT,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-144,Warung Tante Meyke Puncak,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-TUMINTING-SABTU,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-145,Kios Ko Ferry Lorong 1,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-TUMINTING-SENIN,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-146,Warung Dani Lorong 2,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-TUMINTING-SELASA,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-147,Kios Berkat Ventje Lorong 3,RTL,Kota Manado,Tuminting,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TUMINTING-RABU,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-148,Kios Gloria Novry Dekat Gereja,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-SINGKIL-KAMIS,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-149,Warung Kasih Ritha Pintu Masuk,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-SINGKIL-JUMAT,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-150,Kios Filadelfia Meylan Ujung Lorong,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-SINGKIL-SABTU,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-151,Kios Tante Hein Bawah Pohon,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-SINGKIL-SENIN,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-152,Warung Om Vonny Perempatan,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-SINGKIL-SELASA,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-153,Kios Ci Meiske Jalan Salib,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-SINGKIL-RABU,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-154,Warung Tante Joppy Pondok Damai,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-SINGKIL-KAMIS,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-155,Kios Ko Deasy Samping Lapangan,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-SINGKIL-JUMAT,DB 8234 QX (Gran Max Box),2026-09-01
+CUST-RTL-156,Warung Ronny Tikungan,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-SINGKIL-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-157,Kios Berkat Grace Jembatan,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-SINGKIL-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-158,Kios Gloria Bobby Kompleks,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-SINGKIL-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-159,Warung Kasih Erna Pasar,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-SINGKIL-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-160,Kios Filadelfia Jacky Depan SD,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-SINGKIL-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-161,Kios Tante Lita Dekat Mesjid,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-SINGKIL-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-162,Warung Om Nico Puncak,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-SINGKIL-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-163,Kios Ci Vicky Lorong 1,RTL,Kota Manado,Singkil,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-SINGKIL-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-164,Warung Tante Yola Lorong 2,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-MAPANGET-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-165,Kios Ko Franky Lorong 3,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-MAPANGET-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-166,Warung Siska Dekat Gereja,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-MAPANGET-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-167,Kios Berkat Stenly Pintu Masuk,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-MAPANGET-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-168,Kios Gloria Wanda Ujung Lorong,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-MAPANGET-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-169,Warung Kasih Roy Bawah Pohon,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-MAPANGET-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-170,Kios Filadelfia Vera Perempatan,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-MAPANGET-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-171,Kios Tante Pingkan Jalan Salib,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-MAPANGET-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-172,Warung Om Toar Pondok Damai,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-MAPANGET-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-173,Kios Ci Lumimuut Samping Lapangan,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-MAPANGET-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-174,Warung Tante Engelin Tikungan,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-MAPANGET-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-175,Kios Ko Marietje Jembatan,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-MAPANGET-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-176,Warung Tin Kompleks,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-MAPANGET-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-177,Kios Berkat Oce Pasar,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-MAPANGET-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-178,Kios Gloria Utu Depan SD,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-MAPANGET-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-179,Warung Kasih Meyke Dekat Mesjid,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-MAPANGET-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-180,Kios Filadelfia Ferry Puncak,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-MAPANGET-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-181,Kios Tante Dani Lorong 1,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-MAPANGET-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-182,Warung Om Ventje Lorong 2,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-MAPANGET-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-183,Kios Ci Novry Lorong 3,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-MAPANGET-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-184,Warung Tante Ritha Dekat Gereja,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-MAPANGET-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-185,Kios Ko Meylan Pintu Masuk,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-MAPANGET-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-186,Warung Hein Ujung Lorong,RTL,Kota Manado,Mapanget,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-MAPANGET-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-187,Kios Berkat Vonny Bawah Pohon,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-MAESA-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-188,Kios Gloria Meiske Perempatan,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-MAESA-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-189,Warung Kasih Joppy Jalan Salib,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-MAESA-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-190,Kios Filadelfia Deasy Pondok Damai,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-MAESA-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-191,Kios Tante Ronny Samping Lapangan,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-MAESA-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-192,Warung Om Grace Tikungan,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-MAESA-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-193,Kios Ci Bobby Jembatan,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-MAESA-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-194,Warung Tante Erna Kompleks,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-MAESA-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-195,Kios Ko Jacky Pasar,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-MAESA-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-196,Warung Lita Depan SD,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-MAESA-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-197,Kios Berkat Nico Dekat Mesjid,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-MAESA-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-198,Kios Gloria Vicky Puncak,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-MAESA-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-199,Warung Kasih Yola Lorong 1,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-MAESA-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-200,Kios Filadelfia Franky Lorong 2,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-MAESA-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-201,Kios Tante Siska Lorong 3,RTL,Kota Bitung,Maesa,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-MAESA-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-202,Warung Om Stenly Dekat Gereja,RTL,Kota Bitung,Madidir,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-MADIDIR-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-203,Kios Ci Wanda Pintu Masuk,RTL,Kota Bitung,Madidir,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-MADIDIR-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-204,Warung Tante Roy Ujung Lorong,RTL,Kota Bitung,Madidir,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-MADIDIR-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-205,Kios Ko Vera Bawah Pohon,RTL,Kota Bitung,Madidir,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-MADIDIR-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-206,Warung Pingkan Perempatan,RTL,Kota Bitung,Madidir,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-MADIDIR-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-207,Kios Berkat Toar Jalan Salib,RTL,Kota Bitung,Madidir,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-MADIDIR-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-208,Kios Gloria Lumimuut Pondok Damai,RTL,Kota Bitung,Madidir,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-MADIDIR-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-209,Warung Kasih Engelin Samping Lapangan,RTL,Kota Bitung,Madidir,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-MADIDIR-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-210,Kios Filadelfia Marietje Tikungan,RTL,Kota Bitung,Girian,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-GIRIAN-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-211,Kios Tante Tin Jembatan,RTL,Kota Bitung,Girian,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-GIRIAN-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-212,Warung Om Oce Kompleks,RTL,Kota Bitung,Girian,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-GIRIAN-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-213,Kios Ci Utu Pasar,RTL,Kota Bitung,Girian,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-GIRIAN-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-214,Warung Tante Meyke Depan SD,RTL,Kota Bitung,Girian,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-GIRIAN-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-215,Kios Ko Ferry Dekat Mesjid,RTL,Kota Bitung,Aertembaga,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-AERTEMBAGA-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-216,Warung Dani Puncak,RTL,Kota Bitung,Aertembaga,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-AERTEMBAGA-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-217,Kios Berkat Ventje Lorong 1,RTL,Kota Bitung,Aertembaga,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-AERTEMBAGA-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-218,Kios Gloria Novry Lorong 2,RTL,Kota Bitung,Aertembaga,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-AERTEMBAGA-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-219,Warung Kasih Ritha Lorong 3,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Rabu,CANVASS-TOMOHON TENGAH-RABU,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-220,Kios Filadelfia Meylan Dekat Gereja,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Kamis,CANVASS-TOMOHON TENGAH-KAMIS,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-221,Kios Tante Hein Pintu Masuk,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Jumat,CANVASS-TOMOHON TENGAH-JUMAT,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-222,Warung Om Vonny Ujung Lorong,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Sabtu,CANVASS-TOMOHON TENGAH-SABTU,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-223,Kios Ci Meiske Bawah Pohon,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Senin,CANVASS-TOMOHON TENGAH-SENIN,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-224,Warung Tante Joppy Perempatan,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Selasa,CANVASS-TOMOHON TENGAH-SELASA,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-225,Kios Ko Deasy Jalan Salib,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Rabu,CANVASS-TOMOHON TENGAH-RABU,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-226,Warung Ronny Pondok Damai,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Kamis,CANVASS-TOMOHON TENGAH-KAMIS,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-227,Kios Berkat Grace Samping Lapangan,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Jumat,CANVASS-TOMOHON TENGAH-JUMAT,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-228,Kios Gloria Bobby Tikungan,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Sabtu,CANVASS-TOMOHON TENGAH-SABTU,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-229,Warung Kasih Erna Jembatan,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Senin,CANVASS-TOMOHON TENGAH-SENIN,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-230,Kios Filadelfia Jacky Kompleks,RTL,Kota Tomohon,Tomohon Tengah,CVS-01,Novry Mandagi (Van 01),F4,Selasa,CANVASS-TOMOHON TENGAH-SELASA,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-231,Kios Tante Lita Pasar,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TONDANO BARAT-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-232,Warung Om Nico Depan SD,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-TONDANO BARAT-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-233,Kios Ci Vicky Dekat Mesjid,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-TONDANO BARAT-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-234,Warung Tante Yola Puncak,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-TONDANO BARAT-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-235,Kios Ko Franky Lorong 1,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-TONDANO BARAT-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-236,Warung Siska Lorong 2,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-TONDANO BARAT-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-237,Kios Berkat Stenly Lorong 3,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-TONDANO BARAT-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-238,Kios Gloria Wanda Dekat Gereja,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-TONDANO BARAT-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-239,Warung Kasih Roy Pintu Masuk,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-TONDANO BARAT-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-240,Kios Filadelfia Vera Ujung Lorong,RTL,Kab. Minahasa,Tondano Barat,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-TONDANO BARAT-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-241,Kios Tante Pingkan Bawah Pohon,RTL,Kab. Minahasa,Kawangkoan,CVS-01,Novry Mandagi (Van 01),F4,Senin,CANVASS-KAWANGKOAN-SENIN,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-242,Warung Om Toar Perempatan,RTL,Kab. Minahasa,Kawangkoan,CVS-01,Novry Mandagi (Van 01),F4,Selasa,CANVASS-KAWANGKOAN-SELASA,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-243,Kios Ci Lumimuut Jalan Salib,RTL,Kab. Minahasa,Kawangkoan,CVS-01,Novry Mandagi (Van 01),F4,Rabu,CANVASS-KAWANGKOAN-RABU,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-244,Warung Tante Engelin Pondok Damai,RTL,Kab. Minahasa,Kawangkoan,CVS-01,Novry Mandagi (Van 01),F4,Kamis,CANVASS-KAWANGKOAN-KAMIS,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-245,Kios Ko Marietje Samping Lapangan,RTL,Kab. Minahasa,Kawangkoan,CVS-01,Novry Mandagi (Van 01),F4,Jumat,CANVASS-KAWANGKOAN-JUMAT,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-246,Warung Tin Tikungan,RTL,Kab. Minahasa,Kawangkoan,CVS-01,Novry Mandagi (Van 01),F4,Sabtu,CANVASS-KAWANGKOAN-SABTU,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-247,Kios Berkat Oce Jembatan,RTL,Kab. Minahasa Utara,Airmadidi,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-AIRMADIDI-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-248,Kios Gloria Utu Kompleks,RTL,Kab. Minahasa Utara,Airmadidi,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-AIRMADIDI-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-249,Warung Kasih Meyke Pasar,RTL,Kab. Minahasa Utara,Airmadidi,CVS-02,Steven Lumenta (Van 02),F4,Rabu,CANVASS-AIRMADIDI-RABU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-250,Kios Filadelfia Ferry Depan SD,RTL,Kab. Minahasa Utara,Airmadidi,CVS-02,Steven Lumenta (Van 02),F4,Kamis,CANVASS-AIRMADIDI-KAMIS,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-251,Kios Tante Dani Dekat Mesjid,RTL,Kab. Minahasa Utara,Airmadidi,CVS-02,Steven Lumenta (Van 02),F4,Jumat,CANVASS-AIRMADIDI-JUMAT,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-252,Warung Om Ventje Puncak,RTL,Kab. Minahasa Utara,Airmadidi,CVS-02,Steven Lumenta (Van 02),F4,Sabtu,CANVASS-AIRMADIDI-SABTU,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-253,Kios Ci Novry Lorong 1,RTL,Kab. Minahasa Utara,Airmadidi,CVS-02,Steven Lumenta (Van 02),F4,Senin,CANVASS-AIRMADIDI-SENIN,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-254,Warung Tante Ritha Lorong 2,RTL,Kab. Minahasa Utara,Airmadidi,CVS-02,Steven Lumenta (Van 02),F4,Selasa,CANVASS-AIRMADIDI-SELASA,DB 8234 QX (Gran Max Box),2026-10-01
+CUST-RTL-255,Kios Ko Meylan Lorong 3,RTL,Kab. Minahasa Selatan,Amurang,CVS-01,Novry Mandagi (Van 01),F4,Rabu,CANVASS-AMURANG-RABU,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-256,Warung Hein Dekat Gereja,RTL,Kab. Minahasa Selatan,Amurang,CVS-01,Novry Mandagi (Van 01),F4,Kamis,CANVASS-AMURANG-KAMIS,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-257,Kios Berkat Vonny Pintu Masuk,RTL,Kab. Minahasa Selatan,Amurang,CVS-01,Novry Mandagi (Van 01),F4,Jumat,CANVASS-AMURANG-JUMAT,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-258,Kios Gloria Meiske Ujung Lorong,RTL,Kab. Minahasa Selatan,Amurang,CVS-01,Novry Mandagi (Van 01),F4,Sabtu,CANVASS-AMURANG-SABTU,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-259,Warung Kasih Joppy Bawah Pohon,RTL,Kab. Minahasa Selatan,Amurang,CVS-01,Novry Mandagi (Van 01),F4,Senin,CANVASS-AMURANG-SENIN,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-RTL-260,Kios Filadelfia Deasy Perempatan,RTL,Kab. Minahasa Selatan,Amurang,CVS-01,Novry Mandagi (Van 01),F4,Selasa,CANVASS-AMURANG-SELASA,DB 8123 QA (Gran Max BV),2026-10-01
+CUST-INST-01,RSUP Prof. Kandou Malalayang,INST,Kota Manado,Malalayang,MGT-01,Hendrik Polii & Joni Kumajas,F2,Senin,DELIV-INST-SENIN,DB 8456 FB (L300 Urban),2026-07-01
+CUST-INST-02,Four Points by Sheraton Manado,INST,Kota Manado,Sario,MGT-01,Hendrik Polii & Joni Kumajas,F2,Selasa,DELIV-INST-SELASA,DB 8456 FB (L300 Urban),2026-07-01
+CUST-INST-03,Hotel Sintesa Peninsula Manado,INST,Kota Manado,Wenang,MGT-01,Hendrik Polii & Joni Kumajas,F2,Rabu,DELIV-INST-RABU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-INST-04,Katering Minahasa Indah,INST,Kota Manado,Tikala,MGT-01,Hendrik Polii & Joni Kumajas,F2,Kamis,DELIV-INST-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-INST-05,Restoran Raja Sate Paniki,INST,Kota Manado,Mapanget,MGT-01,Hendrik Polii & Joni Kumajas,F2,Jumat,DELIV-INST-JUMAT,DB 8456 FB (L300 Urban),2026-07-01
+CUST-INST-06,Hotel Novotel Manado Golf Resort,INST,Kota Manado,Mapanget,MGT-01,Hendrik Polii & Joni Kumajas,F2,Sabtu,DELIV-INST-SABTU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-INST-07,Katering Bahu Makmur,INST,Kota Manado,Malalayang,MGT-01,Hendrik Polii & Joni Kumajas,F2,Selasa,DELIV-INST-SELASA,DB 8456 FB (L300 Urban),2026-07-01
+CUST-INST-08,Restoran Nelayan Megamas,INST,Kota Manado,Wenang,MGT-01,Hendrik Polii & Joni Kumajas,F2,Rabu,DELIV-INST-RABU,DB 8456 FB (L300 Urban),2026-07-01
+CUST-INST-09,Katering Berkat Tondano,INST,Kab. Minahasa,Tondano Barat,MGT-01,Hendrik Polii & Joni Kumajas,F2,Kamis,DELIV-INST-KAMIS,DB 8456 FB (L300 Urban),2026-07-01
+CUST-INST-10,Mess Karyawan Pelabuhan Bitung,INST,Kota Bitung,Maesa,MGT-01,Hendrik Polii & Joni Kumajas,F2,Jumat,DELIV-INST-JUMAT,DB 8456 FB (L300 Urban),2026-07-01

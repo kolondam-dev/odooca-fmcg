@@ -1,0 +1,696 @@
+{
+  "type": "FeatureCollection",
+  "name": "sulut_districts",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MND-WNG",
+        "name": "Kecamatan Wenang",
+        "city_code": "7171",
+        "city_name": "Kota Manado",
+        "center_latitude": 1.491,
+        "center_longitude": 124.842
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.835,
+              1.482
+            ],
+            [
+              124.85,
+              1.482
+            ],
+            [
+              124.85,
+              1.502
+            ],
+            [
+              124.835,
+              1.502
+            ],
+            [
+              124.835,
+              1.482
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MND-SRO",
+        "name": "Kecamatan Sario",
+        "city_code": "7171",
+        "city_name": "Kota Manado",
+        "center_latitude": 1.472,
+        "center_longitude": 124.838
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.83,
+              1.465
+            ],
+            [
+              124.845,
+              1.465
+            ],
+            [
+              124.845,
+              1.48
+            ],
+            [
+              124.83,
+              1.48
+            ],
+            [
+              124.83,
+              1.465
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MND-MLY",
+        "name": "Kecamatan Malalayang",
+        "city_code": "7171",
+        "city_name": "Kota Manado",
+        "center_latitude": 1.458,
+        "center_longitude": 124.825
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.815,
+              1.442
+            ],
+            [
+              124.835,
+              1.442
+            ],
+            [
+              124.835,
+              1.472
+            ],
+            [
+              124.815,
+              1.472
+            ],
+            [
+              124.815,
+              1.442
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MND-WNA",
+        "name": "Kecamatan Wanea",
+        "city_code": "7171",
+        "city_name": "Kota Manado",
+        "center_latitude": 1.465,
+        "center_longitude": 124.849
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.84,
+              1.455
+            ],
+            [
+              124.86,
+              1.455
+            ],
+            [
+              124.86,
+              1.478
+            ],
+            [
+              124.84,
+              1.478
+            ],
+            [
+              124.84,
+              1.455
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MND-TKL",
+        "name": "Kecamatan Tikala",
+        "city_code": "7171",
+        "city_name": "Kota Manado",
+        "center_latitude": 1.483,
+        "center_longitude": 124.86
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.852,
+              1.475
+            ],
+            [
+              124.87,
+              1.475
+            ],
+            [
+              124.87,
+              1.492
+            ],
+            [
+              124.852,
+              1.492
+            ],
+            [
+              124.852,
+              1.475
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MND-PLD",
+        "name": "Kecamatan Paal Dua",
+        "city_code": "7171",
+        "city_name": "Kota Manado",
+        "center_latitude": 1.489,
+        "center_longitude": 124.871
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.862,
+              1.48
+            ],
+            [
+              124.882,
+              1.48
+            ],
+            [
+              124.882,
+              1.498
+            ],
+            [
+              124.862,
+              1.498
+            ],
+            [
+              124.862,
+              1.48
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MND-TMT",
+        "name": "Kecamatan Tuminting",
+        "city_code": "7171",
+        "city_name": "Kota Manado",
+        "center_latitude": 1.512,
+        "center_longitude": 124.854
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.845,
+              1.502
+            ],
+            [
+              124.865,
+              1.502
+            ],
+            [
+              124.865,
+              1.525
+            ],
+            [
+              124.845,
+              1.525
+            ],
+            [
+              124.845,
+              1.502
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MND-SKL",
+        "name": "Kecamatan Singkil",
+        "city_code": "7171",
+        "city_name": "Kota Manado",
+        "center_latitude": 1.501,
+        "center_longitude": 124.862
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.855,
+              1.492
+            ],
+            [
+              124.872,
+              1.492
+            ],
+            [
+              124.872,
+              1.51
+            ],
+            [
+              124.855,
+              1.51
+            ],
+            [
+              124.855,
+              1.492
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MND-MPG",
+        "name": "Kecamatan Mapanget",
+        "city_code": "7171",
+        "city_name": "Kota Manado",
+        "center_latitude": 1.531,
+        "center_longitude": 124.899
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.88,
+              1.515
+            ],
+            [
+              124.925,
+              1.515
+            ],
+            [
+              124.925,
+              1.56
+            ],
+            [
+              124.88,
+              1.56
+            ],
+            [
+              124.88,
+              1.515
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-BTG-MAS",
+        "name": "Kecamatan Maesa",
+        "city_code": "7172",
+        "city_name": "Kota Bitung",
+        "center_latitude": 1.444,
+        "center_longitude": 125.184
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              125.172,
+              1.435
+            ],
+            [
+              125.198,
+              1.435
+            ],
+            [
+              125.198,
+              1.458
+            ],
+            [
+              125.172,
+              1.458
+            ],
+            [
+              125.172,
+              1.435
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-BTG-MAD",
+        "name": "Kecamatan Madidir",
+        "city_code": "7172",
+        "city_name": "Kota Bitung",
+        "center_latitude": 1.45,
+        "center_longitude": 125.155
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              125.142,
+              1.438
+            ],
+            [
+              125.17,
+              1.438
+            ],
+            [
+              125.17,
+              1.465
+            ],
+            [
+              125.142,
+              1.465
+            ],
+            [
+              125.142,
+              1.438
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-BTG-GIR",
+        "name": "Kecamatan Girian",
+        "city_code": "7172",
+        "city_name": "Kota Bitung",
+        "center_latitude": 1.442,
+        "center_longitude": 125.135
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              125.12,
+              1.43
+            ],
+            [
+              125.148,
+              1.43
+            ],
+            [
+              125.148,
+              1.455
+            ],
+            [
+              125.12,
+              1.455
+            ],
+            [
+              125.12,
+              1.43
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-BTG-AER",
+        "name": "Kecamatan Aertembaga",
+        "city_code": "7172",
+        "city_name": "Kota Bitung",
+        "center_latitude": 1.455,
+        "center_longitude": 125.21
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              125.195,
+              1.44
+            ],
+            [
+              125.23,
+              1.44
+            ],
+            [
+              125.23,
+              1.47
+            ],
+            [
+              125.195,
+              1.47
+            ],
+            [
+              125.195,
+              1.44
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-TMH-TGH",
+        "name": "Kecamatan Tomohon Tengah",
+        "city_code": "7173",
+        "city_name": "Kota Tomohon",
+        "center_latitude": 1.323,
+        "center_longitude": 124.836
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.825,
+              1.312
+            ],
+            [
+              124.848,
+              1.312
+            ],
+            [
+              124.848,
+              1.338
+            ],
+            [
+              124.825,
+              1.338
+            ],
+            [
+              124.825,
+              1.312
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MNH-TDN",
+        "name": "Kecamatan Tondano Barat",
+        "city_code": "7102",
+        "city_name": "Kab. Minahasa",
+        "center_latitude": 1.308,
+        "center_longitude": 124.908
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.895,
+              1.295
+            ],
+            [
+              124.922,
+              1.295
+            ],
+            [
+              124.922,
+              1.325
+            ],
+            [
+              124.895,
+              1.325
+            ],
+            [
+              124.895,
+              1.295
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MNH-KWG",
+        "name": "Kecamatan Kawangkoan",
+        "city_code": "7102",
+        "city_name": "Kab. Minahasa",
+        "center_latitude": 1.205,
+        "center_longitude": 124.787
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.775,
+              1.192
+            ],
+            [
+              124.802,
+              1.192
+            ],
+            [
+              124.802,
+              1.22
+            ],
+            [
+              124.775,
+              1.22
+            ],
+            [
+              124.775,
+              1.192
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MNT-AMD",
+        "name": "Kecamatan Airmadidi",
+        "city_code": "7106",
+        "city_name": "Kab. Minahasa Utara",
+        "center_latitude": 1.428,
+        "center_longitude": 124.982
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.965,
+              1.415
+            ],
+            [
+              125.005,
+              1.415
+            ],
+            [
+              125.005,
+              1.445
+            ],
+            [
+              124.965,
+              1.445
+            ],
+            [
+              124.965,
+              1.415
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "KEC-MNS-AMR",
+        "name": "Kecamatan Amurang",
+        "city_code": "7105",
+        "city_name": "Kab. Minahasa Selatan",
+        "center_latitude": 1.188,
+        "center_longitude": 124.572
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.555,
+              1.172
+            ],
+            [
+              124.59,
+              1.172
+            ],
+            [
+              124.59,
+              1.205
+            ],
+            [
+              124.555,
+              1.205
+            ],
+            [
+              124.555,
+              1.172
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
