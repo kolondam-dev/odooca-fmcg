@@ -171,26 +171,29 @@ def main():
                 dist = visit["district"]
                 veh = visit["delivery_vehicle"]
 
-                # Target basket size realistis per channel untuk mencapai target Juli ~Rp 5.50 BIO
+                # Target basket size realistis per channel untuk mencapai target Juli ~Rp 5.2 - 5.5 BIO
                 if ch == "MT":
-                    target_subtotal = random.uniform(30_000_000, 39_000_000)
+                    target_subtotal = random.uniform(30_000_000, 42_000_000)
                     sku_count = random.randint(8, 14)
                     disc_pct = 0.052  # 5.2% trade promo push MT Juli
                 elif ch == "GT":
-                    target_subtotal = random.uniform(10_500_000, 16_500_000)
-                    sku_count = random.randint(5, 9)
+                    target_subtotal = random.uniform(16_000_000, 26_000_000)
+                    sku_count = random.randint(6, 11)
                     disc_pct = 0.048  # 4.8% diskon taktis grosir
                 elif ch == "INST":
-                    target_subtotal = random.uniform(6_000_000, 10_000_000)
-                    sku_count = random.randint(3, 6)
+                    target_subtotal = random.uniform(15_000_000, 24_000_000)
+                    sku_count = random.randint(4, 8)
                     disc_pct = 0.040
                 else:  # RTL
-                    target_subtotal = random.uniform(1_800_000, 3_800_000)
-                    sku_count = random.randint(2, 4)
+                    target_subtotal = random.uniform(3_500_000, 6_500_000)
+                    sku_count = random.randint(3, 5)
                     disc_pct = 0.035  # 3.5% cash discount kios
 
-                # Filter SKU yang HANYA memiliki stok ON-HAND > 0 pada hari ini!
-                available_skus = [s for s, data in stock_on_hand.items() if data["cartons"] >= 2]
+                # Filter SKU yang HANYA memiliki stok ON-HAND > 0 pada hari ini dan belum expired!
+                available_skus = [
+                    s for s, data in stock_on_hand.items()
+                    if any(lot_item["qty"] > 0 and lot_item["exp"] >= d_str for lot_item in data["lots"])
+                ]
                 if not available_skus:
                     continue
 
@@ -211,38 +214,52 @@ def main():
 
                     # Kuantitas karton dipesan (disesuaikan dengan sisa stok on-hand)
                     desired_ctns = max(1, int(round((target_subtotal / len(selected_skus)) / c_price)))
-                    # Potong sesuai batas on-hand maksimal
-                    allocated_ctns = min(desired_ctns, stock_on_hand[sku]["cartons"])
+                    sku_lots = stock_on_hand[sku]["lots"]
+                    available_for_sku = sum(
+                        lot_item["qty"]
+                        for lot_item in sku_lots
+                        if lot_item["qty"] > 0 and lot_item["exp"] >= d_str
+                    )
+                    allocated_ctns = min(desired_ctns, available_for_sku)
                     if allocated_ctns <= 0:
                         continue
 
-                    # Potong stok on-hand perpetual (Strict Allocation)
-                    stock_on_hand[sku]["cartons"] -= allocated_ctns
+                    # Konsumsi strictly FEFO (First Expired, First Out)
+                    sku_lots.sort(key=lambda x: x["exp"])
+                    rem_to_take = allocated_ctns
 
-                    # Ambil FEFO lot & hitung COGS per baris
-                    assigned_lot = stock_on_hand[sku]["lots"][0]["lot"] if stock_on_hand[sku]["lots"] else "LOT-DEF"
+                    for lot_entry in sku_lots:
+                        if lot_entry["qty"] <= 0 or lot_entry["exp"] < d_str:
+                            continue
+                        take_qty = min(rem_to_take, lot_entry["qty"])
+                        lot_entry["qty"] -= take_qty
+                        stock_on_hand[sku]["cartons"] -= take_qty
+                        rem_to_take -= take_qty
 
-                    line_gross = allocated_ctns * c_price
-                    line_cogs = allocated_ctns * c_cost
+                        line_gross = take_qty * c_price
+                        line_cogs = take_qty * c_cost
 
-                    current_so_gross += line_gross
-                    current_so_cogs += line_cogs
+                        current_so_gross += line_gross
+                        current_so_cogs += line_cogs
 
-                    current_so_lines.append({
-                        "so_number": so_num,
-                        "date_order": d_str,
-                        "sku_code": sku,
-                        "product_name": p["name"],
-                        "brand_code": p["brand_code"],
-                        "fmcg_category": p["fmcg_category"],
-                        "qty_cartons": allocated_ctns,
-                        "carton_qty": int(p["carton_qty"]),
-                        "unit_price_dpp": float(p["list_price"]),
-                        "carton_price_dpp": c_price,
-                        "line_subtotal_dpp": round(line_gross, 2),
-                        "cogs_subtotal": round(line_cogs, 2),
-                        "lot_number": assigned_lot,
-                    })
+                        current_so_lines.append({
+                            "so_number": so_num,
+                            "date_order": d_str,
+                            "sku_code": sku,
+                            "product_name": p["name"],
+                            "brand_code": p["brand_code"],
+                            "fmcg_category": p["fmcg_category"],
+                            "qty_cartons": take_qty,
+                            "carton_qty": int(p["carton_qty"]),
+                            "unit_price_dpp": float(p["list_price"]),
+                            "carton_price_dpp": c_price,
+                            "line_subtotal_dpp": round(line_gross, 2),
+                            "cogs_subtotal": round(line_cogs, 2),
+                            "lot_number": lot_entry["lot"],
+                        })
+
+                        if rem_to_take == 0:
+                            break
 
                 if not current_so_lines:
                     continue
@@ -252,22 +269,9 @@ def main():
                 # Hitung Diskon Faktur
                 disc_amt = round(current_so_gross * disc_pct, 2)
                 net_so = round(current_so_gross - disc_amt, 2)
+                do_delivered_amt = current_so_gross
 
-                # Skenario Tolakan Toko (Partial Rejection / Damage Transit 1-2%)
-                has_rejection = random.random() < 0.08 and ch in ("GT", "MT")
-                if has_rejection:
-                    # Tolak 1 karton dari baris pertama
-                    rej_line = current_so_lines[0]
-                    rej_amt = rej_line["carton_price_dpp"]
-                    rej_cogs = float(prod_map[rej_line["sku_code"]]["cost_price"]) * rej_line["carton_qty"]
-                    # Balikkan 1 karton ke stok karantina
-                    stock_on_hand[rej_line["sku_code"]]["cartons"] += 1
-                else:
-                    rej_amt = 0.0
-                    rej_cogs = 0.0
-
-                do_delivered_amt = round(current_so_gross - rej_amt, 2)
-                final_inv_dpp = round(net_so - (rej_amt * (1 - disc_pct)), 2)
+                final_inv_dpp = net_so
                 ppn_11_amt = round(final_inv_dpp * 0.11, 2)
                 final_inv_total = round(final_inv_dpp + ppn_11_amt, 2)
 
@@ -284,14 +288,17 @@ def main():
                     "discount_dpp": round(disc_amt, 2),
                     "net_dpp": round(net_so, 2),
                     "cogs_dpp": round(current_so_cogs, 2),
-                    "rejection_dpp": round(rej_amt, 2),
+                    "rejection_dpp": 0.0,
                     "do_delivered_dpp": round(do_delivered_amt, 2),
                 })
 
-                # Simpan Packlist / Delivery Order (DO H+1)
+                # Simpan Packlist / Delivery Order (DO H+1 kerja berikutnya, Minggu libur geser ke Senin)
                 do_num = f"DO-202607-{do_counter:04d}"
                 do_counter += 1
-                deliv_date = (curr_dt + timedelta(days=1)).strftime("%Y-%m-%d")
+                days_to_deliv = 2 if curr_dt.weekday() == 5 else 1
+                deliv_dt = curr_dt + timedelta(days=days_to_deliv)
+                deliv_date = deliv_dt.strftime("%Y-%m-%d")
+
                 deliveries.append({
                     "do_number": do_num,
                     "so_number": so_num,
@@ -300,14 +307,15 @@ def main():
                     "customer": cust,
                     "channel": ch,
                     "do_delivered_dpp": round(do_delivered_amt, 2),
-                    "rejection_reason": "Kemasan basah/penyok saat transit" if rej_amt > 0 else "-",
+                    "rejection_reason": "-",
                 })
 
-                # Simpan Customer Invoice (Tercetak H+1 Pagi)
+                # Simpan Customer Invoice (Tercetak H+1 Pagi pada saat barang dikirim)
                 inv_num = f"INV-202607-{inv_counter:04d}"
                 inv_counter += 1
                 top_days = 0 if ch == "RTL" else (14 if ch == "GT" else (30 if ch == "MT" else 21))
-                due_date_str = (curr_dt + timedelta(days=top_days)).strftime("%Y-%m-%d")
+                due_dt = deliv_dt + timedelta(days=top_days)
+                due_date_str = due_dt.strftime("%Y-%m-%d")
 
                 invoices.append({
                     "invoice_number": inv_num,
@@ -339,7 +347,7 @@ def main():
 
                 daily_so_gross += current_so_gross
                 daily_so_disc += disc_amt
-                daily_so_cogs += (current_so_cogs - rej_cogs)
+                daily_so_cogs += current_so_cogs
                 daily_so_delivered += do_delivered_amt
 
         # -------------------------------------------------------------

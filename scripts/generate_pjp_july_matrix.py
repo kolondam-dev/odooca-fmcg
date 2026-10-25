@@ -134,6 +134,8 @@ def main():
             # F4: Muncul 1 bulan sekali (pada week_num yang sesuai)
             scheduled_calls = []
             for idx, c in enumerate(day_candidates):
+                if c.get("cohort_date") and date_str < c["cohort_date"]:
+                    continue
                 freq = c["pjp_frequency"]
                 include = False
 

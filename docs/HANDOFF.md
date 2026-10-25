@@ -1,5 +1,46 @@
 # HANDOFF
 
+## 2026-10-25 — antigravity agent — Perbaikan Invariant Gate Seed & Rekonsiliasi Transaksi (Status PASS)
+**Konteks & Arahan Supervisi:**
+Menindaklanjuti supervisi PR #14 (komentar issuecomment-6400313553) pada branch `agen/fix-seed-invariants` yang dicabangkan dari `origin/agen/supervision-invariant-gates` (commit base `02ecc81`).
+Mengeliminasi seluruh 1.709 pelanggaran invariant tanpa menambal CSV manual, tanpa melonggarkan gate, dan tanpa continue-on-error.
+
+**Akar Masalah & Perbaikan Generator/Master Sumber:**
+1. `MASTER-GEO` (77 pelanggaran -> 0):
+   - Menambahkan 5 record `id.subdistrict` resmi di `addons/id_base/data/id_district_data.xml` untuk 5 kecamatan yang belum memiliki kelurahan: Pakowa (`KEL-MND-PKW`, Wanea), Karame (`KEL-MND-KRM`, Singkil), Madidir Ure (`KEL-BTG-MDU`, Madidir), Girian Weru (`KEL-BTG-GRW`, Girian), dan Aertembaga Satu (`KEL-BTG-ATB`, Aertembaga).
+   - Memperbaiki `DISTRICT_MASTER` dan mapping di `scripts/generate_customer_registry_and_pjp.py` (KEC-BTG-MDR, KEC-BTG-GRN, KEC-BTG-ATB, KEL-MNS-BYG) lalu meregenerasi `customer_registry_354.*` dan `partners_354.csv`.
+2. `COHORT-PJP` (228 pelanggaran -> 0) & `COHORT-SO` (219 pelanggaran -> 0):
+   - Memfilter penjadwalan PJP di `scripts/generate_pjp_july_matrix.py` berdasarkan `cohort_date` customer (`cohort_date <= date_str`), sehingga customer yang baru aktif Agustus/September/Oktober tidak dijadwalkan visit maupun order di bulan Juli.
+3. `CALENDAR` (84 pelanggaran -> 0):
+   - Menggeser jadwal pengiriman pesanan hari Sabtu dari Minggu ke Senin (`curr_dt + timedelta(days=2 if curr_dt.weekday() == 5 else 1)`), karena Minggu adalah hari libur operasional.
+4. `EVENT-ORDER` (331 pelanggaran -> 0):
+   - Menghitung `due_date` invoice dari tanggal invoice/delivery (`deliv_dt + timedelta(days=top_days)`), bukan tanggal order. Untuk customer COD (TOP 0), `due_date == date_invoice` sehingga tidak pernah terjadi `due_date < date_invoice`.
+5. `LOT-BALANCE` (770 pelanggaran -> 0) & `LOT-FEFO` (0 pelanggaran):
+   - Mengimplementasikan alokasi kuantitas lot secara bertahap dan ketat mengikuti FEFO (`lots.sort(key=lambda x: x["exp"])`). Kuantitas dipotong dari lot tertua hingga habis sebelum berpindah ke lot berikutnya, dan memecah order line jika melintasi beberapa lot sehingga kuantitas lot tidak pernah minus (`LOT-BALANCE` = 0) dan lot tertua selalu dihabiskan lebih dulu (`LOT-FEFO` = 0).
+
+**Hasil Diagnostik Sebelum vs Sesudah:**
+| Invariant Gate Rule | Sebelum (Baseline) | Sesudah (Fixed) | Keterangan Status |
+| :--- | :---: | :---: | :--- |
+| `MASTER-GEO` | 77 | 0 | PASSED (District & Subdistrict Odoo XML sinkron 100%) |
+| `COHORT-PJP` | 228 | 0 | PASSED (Hanya 177 outlet cohort Juli dijadwalkan) |
+| `COHORT-SO` | 219 | 0 | PASSED (Tidak ada SO mendahului cohort) |
+| `CALENDAR` | 84 | 0 | PASSED (Tidak ada pengiriman hari Minggu) |
+| `EVENT-ORDER` | 331 | 0 | PASSED (Jatuh tempo >= tanggal faktur) |
+| `LOT-BALANCE` | 770 | 0 | PASSED (Stok lot tidak pernah minus / overdraft) |
+| `LOT-FEFO` | 0 | 0 | PASSED (FEFO konsisten tanpa loncat expiry) |
+| **TOTAL VIOLATIONS** | **1.709** | **0** | **OVERALL STATUS: PASS** |
+
+**Diverifikasi:**
+- `python scripts/ops/verify_seed_invariants.py --report invariant-report.json`: Status `PASS`, violations: `[]` (0).
+- `python -m unittest discover -s tests -p "test_*.py" -v`: 17 unit test lulus (`OK`).
+- `python -m ruff check .`: `All checks passed!`.
+- `python scripts/check_manifests.py`: `manifest ok: 4 addon`.
+
+**Hal yang Masih Memerlukan Validasi Runtime Odoo:**
+1. Injeksi database runtime Odoo (idempotensi loader `scripts/load_fmcg_seed.py` saat memuat master data geospasial baru dan transaksi multi-lot).
+2. Penerapan protokol 4-Lapis Anti-Jebakan SVL pada Stock Valuation Layer Odoo 19 agar saldo backdated 1-31 Juli 2026 tidak tercemar tanggal transaksi hari ini.
+3. Rekonsiliasi jurnal akuntansi umum di Odoo runtime (`account.move` & `stock.valuation.layer`).
+
 ## 2026-10-25 — codex agent — Gate supervisi seed (draft, baseline merah)
 **Berubah:** workflow Seed supervision, validator independen, 17 uji fixture/mutasi,
 kontrak invariant dan kewajiban workflow pada AGENTS/DEVELOPMENT/AGENT_PROTOCOL.

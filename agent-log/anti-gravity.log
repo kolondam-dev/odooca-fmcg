@@ -261,3 +261,19 @@
   * 31 Kartu stok harian membuktikan puncak okupansi gudang 102,8% terverifikasi di awal Juli
 - Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
 - Task managed by antigravity at 2026-10-25T22:15:00+07:00
+
+[2026-10-25T23:58:00+07:00] [INFO] Perbaikan Invariant Gate Seed & Rekonsiliasi Transaksi (Status PASS)
+- Mencabangkan branch agen/fix-seed-invariants dari origin/agen/supervision-invariant-gates (commit 02ecc81).
+- Mereproduksi baseline kegagalan verifikasi invariant (1.709 pelanggaran).
+- Memperbaiki akar masalah generator dan master data sumber:
+  * Menambah 5 record subdistrik Odoo XML pada addons/id_base/data/id_district_data.xml (Pakowa, Karame, Madidir Ure, Girian Weru, Aertembaga Satu) dan menyelaraskan DISTRICT_MASTER scripts/generate_customer_registry_and_pjp.py (MASTER-GEO: 77 -> 0).
+  * Meregenerasi customer_registry_354.* dan partners_354.csv (354 records sinkron 100%).
+  * Memfilter jadwal kunjungan PJP berdasarkan customer cohort_date pada scripts/generate_pjp_july_matrix.py (COHORT-PJP: 228 -> 0, COHORT-SO: 219 -> 0).
+  * Menggeser jadwal pengiriman pesanan hari Sabtu dari Minggu ke Senin pada scripts/ops/generate_perpetual_transactions.py (CALENDAR: 84 -> 0).
+  * Menghitung tanggal jatuh tempo (due_date) dari tanggal invoice/delivery (EVENT-ORDER: 331 -> 0).
+  * Mengimplementasikan alokasi kuantitas lot bertahap strictly FEFO dengan pemecahan baris order line jika melintasi lot (LOT-BALANCE: 770 -> 0, LOT-FEFO: 0).
+- Meregenerasi 8 dataset transaksi perpetual Juli 2026 (SO: 403, lines: 2.687, DO: 403, Inv: 403, AR: 296, AP: 4, OPEX: 29, Kartu stok: 31).
+- Verifikasi invariant gate (verify_seed_invariants.py): Status PASS, violations 0.
+- Verifikasi unit tests (test_seed_invariants.py): 17/17 PASS.
+- Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
+- Task managed by antigravity at 2026-10-25T23:58:00+07:00
