@@ -1,5 +1,40 @@
 # HANDOFF
 
+## 2026-10-26 — antigravity agent — Tindak Lanjut Penutupan 4 Penghalang Review Supervisi PR #15: Regresi AP, Reproduksibilitas CI, Gate Ledger & Laporan, serta Checksum Kanonikal LF (Status PASS)
+**Konteks & Arahan Supervisi:**
+Menindaklanjuti secara tuntas 4 temuan penghalang supervisor pada komentar PR #15 (issuecomment-6402401192) atas commit `e45106e`:
+1. *[P1][Regresi Pembayaran AP]:* Jadwal pembayaran AP pada `scripts/ops/generate_perpetual_transactions.py` diturunkan langsung secara dinamis dari master `inbound_po_intransit_june_headers.csv`. Keempat pembayaran menunjuk nomor PO riil:
+   - PO-2026-06-01: PT Sayap Mas Utama (Wings) Rp 1.849.772.800,00 (lunas 22 Juli 2026)
+   - PO-2026-06-02: PT Santos Jaya Abadi (Kapal Api) Rp 1.449.737.600,00 (lunas 29 Juli 2026)
+   - PO-2026-06-03: PT Mayora Indah Tbk (Biskuit) Rp 699.826.000,00 (lunas 31 Juli 2026)
+   - PO-2026-06-04: PT Mayora Indah Tbk (Kopi & Wafer) Rp 2.598.138.400,00 (lunas 31 Juli 2026)
+   - PO-2026-06-05: PT Unilever Indonesia Tbk Rp 2.899.971.200,00 (jatuh tempo 8 Agustus 2026 -> Open AP Juli).
+   - Total Realisasi AP Juli: Rp 6.597.474.800,00 (Match 100% terhadap PO sumber; konstanta fiktif dieliminasi).
+2. *[P1][Uji Reproduksibilitas Masuk CI & Isolasi Workspace]:*
+   - Workflow `.github/workflows/seed-invariants.yml` diubah dari `-p 'test_seed_invariants.py'` menjadi `-p 'test_*.py'`, sehingga seluruh tes otomatis mengawal CI sebelum merge.
+   - `tests/test_generator_reproducibility.py` kini menggunakan isolasi `tempfile.TemporaryDirectory` ganda dengan opsi `--output-dir`, menjaga workspace git repo tetap bersih tanpa ditimpa selama pengujian.
+   - Hasil generator diverifikasi deterministik antar seed (`PYTHONHASHSEED=1` vs `2`) dan identik 100% dengan committed snapshot repo.
+3. *[P1][Gate Invariant Memeriksa Ledger & Laporan Kanonikal]:*
+   - `verify_seed_invariants.py` diperluas dengan gate `LEDGER-REPLAY` yang mereplay granular event ledger mutasi fisik, reserved, dan karantina per SKU/lot per tanggal. Memastikan `lot_phys >= 0`, `lot_res >= 0`, `lot_quar >= 0`, `lot_res <= lot_phys`, serta merekonsiliasi saldo penutupan setiap tanggal ke kartu stok harian.
+   - Uji mutasi membuktikan mutasi opening physical impact ke -999.999 kini langsung tertangkap dan menggagalkan gate (`LEDGER-REPLAY`).
+   - Gate `REPORT-RECON` memvalidasi integritas 15 input checksum dan konsistensi seluruh agregat laporan finansial terhadap register riil.
+   - Gate `AP-FK` & `AP-RECON` memvalidasi referensi PO, principal, batas overpayment, dan kesesuaian tanggal pembayaran.
+4. *[P1][Provenance Checksum Dibakukan dengan Normalisasi Kanonikal LF]:*
+   - Dibakukan kontrak hashing kanonikal `canonical_file_hash` yang menormalisasi byte CRLF/CR ke LF sebelum SHA-256 dihitung.
+   - Seluruh 15 file input register menghasilkan SHA-256 yang portabel dan identik 100% antara Windows dan runner Linux CI.
+   - Seluruh file CSV dan JSON kanonikal ditulis dengan `\n` LF eksplisit (`lineterminator="\n"`).
+5. *Catatan Kalender & Valuasi:*
+   - Kalender `scripts/ops/fmcg_calendar.py` menyempurnakan 17 hari libur nasional resmi SKB 3 Menteri No. 1017/2025 (Hari Suci Nyepi dikoreksi ke 19 Maret 2026 dan Hari Raya Idul Adha ditambahkan pada 27 Mei 2026).
+   - Valuasi akhir stok dipisahkan eksplisit: *Saleable Physical Valuation* (Rp 9.001.139.000,00) dan *Quarantine Asset Value* (Rp 1.963.200,00) dengan *Total Warehouse Stock Valuation* Rp 9.003.102.200,00.
+
+**Verifikasi Lokal:**
+- `python scripts/ops/verify_seed_invariants.py --report invariant-report.json`: Status PASS, 0 violations.
+- `python -m unittest discover -s tests -p 'test_*.py' -v`: 39/39 tests PASS.
+- `python -m ruff check .`: All checks passed!
+- `python scripts/check_manifests.py`: 4 addon ok.
+
+---
+
 ## 2026-10-26 — antigravity agent — Tindak Lanjut Lengkap 5 Temuan Supervisi PR #15: Reproduksibilitas Determinisme, Pemisahan Fisik/Reserved/Karantina, Rekonsiliasi Valuasi Retur, Kalender SKB 3 Menteri, & Laporan Kanonikal (Status PASS)
 **Konteks & Arahan Supervisi:**
 Menindaklanjuti secara menyeluruh 5 temuan supervisi PR #15 pada review commit `dee5179`:

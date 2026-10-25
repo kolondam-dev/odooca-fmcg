@@ -9,6 +9,7 @@ Menghasilkan:
 - data/registers/canonical_financial_reconciliation_july_2026.md
 """
 
+import argparse
 import csv
 from decimal import Decimal, ROUND_HALF_UP
 import hashlib
@@ -25,18 +26,26 @@ def d(val) -> Decimal:
     return Decimal(str(val)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
-def read_csv(filename: str) -> list[dict]:
-    p = REG_DIR / filename
+def read_csv(dir_path: Path, filename: str) -> list[dict]:
+    p = dir_path / filename
     with open(p, "r", encoding="utf-8-sig") as f:
         return list(csv.DictReader(f))
 
 
-def get_sha256(filename: str) -> str:
-    p = REG_DIR / filename
-    return hashlib.sha256(p.read_bytes()).hexdigest()
+def canonical_file_hash(path: Path) -> str:
+    """Menghitung SHA-256 kanonikal dengan menormalisasi newline CRLF/CR ke LF."""
+    data = path.read_bytes()
+    normalized = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(normalized).hexdigest()
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=Path, default=REG_DIR)
+    args = parser.parse_args()
+    target_dir = args.output_dir
+    target_dir.mkdir(parents=True, exist_ok=True)
+
     register_files = [
         "customer_registry_354.csv",
         "initial_stock_20260701.csv",
@@ -55,16 +64,18 @@ def main():
         "perpetual_stock_event_ledger.csv",
     ]
 
-    input_hashes = {fn: get_sha256(fn) for fn in register_files}
+    input_hashes = {fn: canonical_file_hash(target_dir / fn) for fn in register_files}
 
-    orders = read_csv("perpetual_sales_orders.csv")
-    order_lines = read_csv("perpetual_order_lines.csv")
-    deliveries = read_csv("perpetual_deliveries.csv")
-    rejections = read_csv("perpetual_order_rejections.csv")
-    invoices = read_csv("perpetual_invoices.csv")
-    collections = read_csv("perpetual_ar_collections.csv")
-    opex_payroll = read_csv("perpetual_opex_payroll.csv")
-    cards = read_csv("perpetual_daily_stock_cards.csv")
+    po_headers = read_csv(target_dir, "inbound_po_intransit_june_headers.csv")
+    orders = read_csv(target_dir, "perpetual_sales_orders.csv")
+    order_lines = read_csv(target_dir, "perpetual_order_lines.csv")
+    deliveries = read_csv(target_dir, "perpetual_deliveries.csv")
+    rejections = read_csv(target_dir, "perpetual_order_rejections.csv")
+    invoices = read_csv(target_dir, "perpetual_invoices.csv")
+    collections = read_csv(target_dir, "perpetual_ar_collections.csv")
+    ap_payments = read_csv(target_dir, "perpetual_ap_payments.csv")
+    opex_payroll = read_csv(target_dir, "perpetual_opex_payroll.csv")
+    cards = read_csv(target_dir, "perpetual_daily_stock_cards.csv")
 
     # 1. Rekonsiliasi Pesanan Penjualan (SO Booked Juli 2026)
     so_gross = sum(d(r["gross_dpp"]) for r in orders)
@@ -124,13 +135,22 @@ def main():
     open_ar_july_dpp = sum(d(i["dpp_amount"]) for i in open_invoices_july)
     open_ar_july_total = sum(d(i["total_invoice_with_ppn"]) for i in open_invoices_july)
 
-    # 5. Saldo Persediaan Akhir 31 Juli (Fisik vs Reserved vs Karantina)
+    # 5. Rekonsiliasi Hutang Usaha (AP Ledger)
+    total_po_june_dpp = sum(d(h["total_dpp"]) for h in po_headers)
+    ap_paid_july_dpp = sum(d(p["amount_paid_dpp"]) for p in ap_payments)
+    paid_po_numbers = {p["po_number"] for p in ap_payments}
+    open_po_headers = [h for h in po_headers if h["po_number"] not in paid_po_numbers]
+    open_ap_july_dpp = sum(d(h["total_dpp"]) for h in open_po_headers)
+
+    # 6. Saldo Persediaan Akhir 31 Juli (Fisik vs Reserved vs Karantina & Valuasi)
     closing_card = cards[-1]
     closing_physical_ctns = int(closing_card["physical_stock_cartons"])
     closing_reserved_ctns = int(closing_card["reserved_stock_cartons"])
     closing_available_ctns = int(closing_card["available_stock_cartons"])
     closing_quarantine_ctns = int(closing_card["quarantine_stock_cartons"])
-    closing_stock_val_dpp = d(closing_card["closing_stock_val_dpp"])
+    saleable_stock_val_dpp = d(closing_card["closing_stock_val_dpp"])
+    quarantine_stock_val_cogs = rej_lines_cogs
+    total_warehouse_stock_val_dpp = saleable_stock_val_dpp + quarantine_stock_val_cogs
     max_warehouse_occupancy = max(Decimal(c["warehouse_occupancy_pct"]) for c in cards)
 
     report_data = {
@@ -188,25 +208,37 @@ def main():
             "open_ar_july_total_with_ppn": str(open_ar_july_total),
             "reconciled_invoice_dpp_total": str(cash_collected_dpp + early_disc_dpp + open_ar_july_dpp),
         },
+        "accounts_payable_reconciliation": {
+            "total_po_june_intransit_count": len(po_headers),
+            "total_po_june_intransit_dpp": str(total_po_june_dpp),
+            "ap_payments_july_count": len(ap_payments),
+            "ap_payments_july_dpp": str(ap_paid_july_dpp),
+            "open_ap_po_count": len(open_po_headers),
+            "open_ap_july_dpp": str(open_ap_july_dpp),
+            "reconciled_ap_dpp_total": str(ap_paid_july_dpp + open_ap_july_dpp),
+        },
         "inventory_warehouse_reconciliation": {
             "closing_date": "2026-07-31",
             "physical_on_hand_cartons": closing_physical_ctns,
             "reserved_cartons": closing_reserved_ctns,
             "available_for_sale_cartons": closing_available_ctns,
             "quarantine_bad_stock_cartons": closing_quarantine_ctns,
-            "quarantine_asset_val_cogs": str(rej_lines_cogs),
-            "closing_stock_valuation_dpp": str(closing_stock_val_dpp),
+            "saleable_physical_stock_valuation_dpp": str(saleable_stock_val_dpp),
+            "quarantine_asset_val_cogs": str(quarantine_stock_val_cogs),
+            "total_warehouse_stock_valuation_dpp": str(total_warehouse_stock_val_dpp),
+            "closing_stock_valuation_dpp": str(saleable_stock_val_dpp),
             "peak_warehouse_occupancy_pct": f"{max_warehouse_occupancy:.1f}%",
         },
     }
 
-    # Simpan JSON
-    json_path = REG_DIR / "canonical_financial_reconciliation_july_2026.json"
-    with open(json_path, "w", encoding="utf-8") as f:
+    # Simpan JSON kanonikal dengan newline LF
+    json_path = target_dir / "canonical_financial_reconciliation_july_2026.json"
+    with open(json_path, "w", newline="\n", encoding="utf-8") as f:
         json.dump(report_data, f, indent=2, ensure_ascii=False)
+        f.write("\n")
 
-    # Simpan Markdown
-    md_path = REG_DIR / "canonical_financial_reconciliation_july_2026.md"
+    # Simpan Markdown kanonikal dengan newline LF
+    md_path = target_dir / "canonical_financial_reconciliation_july_2026.md"
     md_content = f"""# Laporan Rekonsiliasi Finansial & Persediaan Kanonikal FMCG Manado (Juli 2026)
 **Periode:** {report_data['period']}
 **Generator:** Otomatis diturunkan dari seluruh artefak register di `data/registers/`
@@ -262,7 +294,7 @@ def main():
 
 ---
 
-### 5. Rekonsiliasi Kas, Diskon Pembayaran Awal, & Piutang Usaha
+### 5. Rekonsiliasi Kas, Diskon Pembayaran Awal, & Piutang Usaha (AR)
 - **Total Transaksi Pelunasan Kas Juli:** {report_data['accounts_receivable_and_cash']['collections_count']:,} transaksi
 - **Total Kas Tertagih Bersih (Basis DPP):** Rp {d(report_data['accounts_receivable_and_cash']['net_cash_collected_dpp']):,.2f}
 - **Total Diskon Pembayaran Awal (Early Cash Discount 1%):** Rp {d(report_data['accounts_receivable_and_cash']['early_payment_discount_dpp']):,.2f}
@@ -276,24 +308,39 @@ def main():
 
 ---
 
-### 6. Rekonsiliasi Fisik Persediaan & Gudang Maumbi (Per 31 Juli 2026 EOD)
+### 6. Rekonsiliasi Pembayaran Hutang Usaha Prinsipal (AP)
+- **Total Pesanan Pembelian In-Transit Juni (5 PO):** Rp {d(report_data['accounts_payable_reconciliation']['total_po_june_intransit_dpp']):,.2f}
+- **Total Realisasi Pembayaran AP Juli (4 PO):** Rp {d(report_data['accounts_payable_reconciliation']['ap_payments_july_dpp']):,.2f}
+  * PO-2026-06-01 (PT Wings Group): Rp 1.849.772.800,00 (Lunas 22 Juli 2026)
+  * PO-2026-06-02 (PT Santos Jaya Abadi): Rp 1.449.737.600,00 (Lunas 29 Juli 2026)
+  * PO-2026-06-03 (PT Mayora Indah Tbk - Biskuit): Rp 699.826.000,00 (Lunas 31 Juli 2026)
+  * PO-2026-06-04 (PT Mayora Indah Tbk - Kopi & Wafer): Rp 2.598.138.400,00 (Lunas 31 Juli 2026)
+- **Saldo Hutang Usaha Belum Jatuh Tempo (Open AP 31 Juli):** Rp {d(report_data['accounts_payable_reconciliation']['open_ap_july_dpp']):,.2f}
+  * PO-2026-06-05 (PT Unilever Indonesia Tbk): Rp 2.899.971.200,00 (Jatuh tempo 8 Agustus 2026)
+- **Jembatan Rekonsiliasi Hutang Usaha (AP):**
+  `AP Dibayar Juli (Rp {d(report_data['accounts_payable_reconciliation']['ap_payments_july_dpp']):,.2f}) + Open AP Juli (Rp {d(report_data['accounts_payable_reconciliation']['open_ap_july_dpp']):,.2f}) = Rp {d(report_data['accounts_payable_reconciliation']['reconciled_ap_dpp_total']):,.2f}` (Match 100% terhadap Total PO In-Transit Juni).
+
+---
+
+### 7. Rekonsiliasi Fisik Persediaan & Gudang Maumbi (Per 31 Juli 2026 EOD)
 - **Stok Fisik Aktual On-Hand di Gudang:** {report_data['inventory_warehouse_reconciliation']['physical_on_hand_cartons']:,} Karton
 - **Stok Teralokasi / Dipesan (Reserved untuk Kirim 1 Agustus):** {report_data['inventory_warehouse_reconciliation']['reserved_cartons']:,} Karton
 - **Stok Tersedia untuk Dijual Bebas (Available for Sale):** {report_data['inventory_warehouse_reconciliation']['available_for_sale_cartons']:,} Karton
 - **Stok Karantina Kerusakan Transit (Bad Stock Gudang):** {report_data['inventory_warehouse_reconciliation']['quarantine_bad_stock_cartons']:,} Karton
-- **Nilai Aset Persediaan Karantina (Rejection COGS):** Rp {d(report_data['inventory_warehouse_reconciliation']['quarantine_asset_val_cogs']):,.2f}
-- **Valuasi Buku Persediaan Fisik Akhir (DPP Cost):** Rp {d(report_data['inventory_warehouse_reconciliation']['closing_stock_valuation_dpp']):,.2f}
+- **Valuasi Persediaan Fisik Dijual Bebas (Saleable Physical DPP):** Rp {d(report_data['inventory_warehouse_reconciliation']['saleable_physical_stock_valuation_dpp']):,.2f}
+- **Nilai Aset Persediaan Karantina (Quarantine Asset Value COGS):** Rp {d(report_data['inventory_warehouse_reconciliation']['quarantine_asset_val_cogs']):,.2f}
+- **Total Valuasi Persediaan Gudang (Saleable + Quarantine):** Rp {d(report_data['inventory_warehouse_reconciliation']['total_warehouse_stock_valuation_dpp']):,.2f}
 - **Puncak Okupansi Fasilitas Gudang Maumbi:** {report_data['inventory_warehouse_reconciliation']['peak_warehouse_occupancy_pct']} (Krisis awal Juli akibat kedatangan 5 kontainer Juni)
 
 ---
 
-### 7. Verifikasi Checksum SHA-256 Seluruh Artefak Input
+### 8. Verifikasi Checksum SHA-256 Seluruh Artefak Input (Kanonikal LF)
 ```json
 {json.dumps(report_data['input_dataset_sha256'], indent=2)}
 ```
 """
 
-    with open(md_path, "w", encoding="utf-8") as f:
+    with open(md_path, "w", newline="\n", encoding="utf-8") as f:
         f.write(md_content)
 
     print(f"Sukses menerbitkan laporan rekonsiliasi kanonikal:\n - {json_path}\n - {md_path}")

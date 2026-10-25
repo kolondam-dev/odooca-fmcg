@@ -43,6 +43,13 @@ def deterministic_hash(key: str, salt: str = "fmcg-manado-salt") -> int:
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=pathlib.Path, default=REG_DIR)
+    args = parser.parse_args()
+    out_dir = args.output_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     print("=" * 85)
     print("GRANULAR PERPETUAL INVENTORY TURNOVER & TRANSACTION ENGINE (JULI 2026)")
     print("=" * 85)
@@ -68,13 +75,7 @@ def main():
     with open(REG_DIR / "pjp_july_2026_matrix.csv", "r", encoding="utf-8") as f:
         pjp_matrix = list(csv.DictReader(f))
 
-    # Struktur Status Stok Multi-Level per SKU:
-    # stock_state[sku] = {
-    #     "physical": int,   # Fisik aktual di gudang
-    #     "reserved": int,   # Dipesan oleh SO, menunggu dispatch DO
-    #     "quarantine": int, # Barang reject di lokasi karantina
-    #     "lots": [ {"lot": str, "physical": int, "reserved": int, "cost": float, "exp": str} ]
-    # }
+    # Struktur Status Stok Multi-Level per SKU
     stock_state = {}
     for item in initial_stock:
         sku = item["sku_code"]
@@ -109,13 +110,17 @@ def main():
             continue
         pjp_by_date.setdefault(row["tanggal"], []).append(row)
 
-    # Jadwal AP Payments atas PO In-Transit Juni
-    ap_schedule = [
-        {"po_number": "PO-202606-WNG01", "principal_name": "Wings Group", "amount": 1_850_000_000.0, "due_date": "2026-07-22", "pay_date": "2026-07-22", "status": "Open"},
-        {"po_number": "PO-202606-KAP01", "principal_name": "PT Santos Jaya Abadi (Kapal Api)", "amount": 1_450_000_000.0, "due_date": "2026-07-29", "pay_date": "2026-07-29", "status": "Open"},
-        {"po_number": "PO-202606-MYR01", "principal_name": "Mayora Indah Tbk", "amount": 3_300_000_000.0, "due_date": "2026-08-01", "pay_date": "2026-07-31", "status": "Open"},
-        {"po_number": "PO-202606-UNL01", "principal_name": "Unilever Indonesia Tbk", "amount": 2_896_000_000.0, "due_date": "2026-08-08", "pay_date": "2026-07-31", "status": "Open"},
-    ]
+    # Jadwal AP Payments atas PO In-Transit Juni diturunkan langsung dari PO Header sumber
+    ap_schedule = []
+    for h in po_headers:
+        ap_schedule.append({
+            "po_number": h["po_number"],
+            "principal_name": h["principal_name"],
+            "amount": float(h["total_dpp"]),
+            "due_date": h["due_date"],
+            "pay_date": h["ap_payment_date"],
+            "status": "Open",
+        })
 
     # Containers Output Transaksi
     sales_orders = []
@@ -764,8 +769,8 @@ def main():
     ]
 
     for name, data in datasets:
-        csv_file = REG_DIR / f"{name}.csv"
-        json_file = REG_DIR / f"{name}.json"
+        csv_file = out_dir / f"{name}.csv"
+        json_file = out_dir / f"{name}.json"
 
         if data:
             fieldnames = list(data[0].keys())
@@ -773,12 +778,13 @@ def main():
             fieldnames = []
 
         with open(csv_file, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
             writer.writeheader()
             writer.writerows(data)
 
-        with open(json_file, "w", encoding="utf-8") as f:
+        with open(json_file, "w", newline="\n", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write("\n")
 
         print(f"   [OK] {name}.csv & .json ({len(data):,} records)")
 

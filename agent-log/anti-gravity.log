@@ -302,3 +302,18 @@
 - Memperluas unit tests tests/test_seed_invariants.py (30/30 tests PASS).
 - Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
 - Task managed by antigravity at 2026-10-26T02:35:00+07:00
+
+[2026-10-26T03:07:00+07:00] [INFO] Tindak Lanjut Penutupan 4 Penghalang Review Supervisi PR #15: Regresi AP, Reproduksibilitas CI, Gate Ledger & Laporan, serta Checksum LF
+- Menurunkan jadwal AP dinamis dari master header PO Juni pada scripts/ops/generate_perpetual_transactions.py: 4 pembayaran mereferensikan PO riil (PO-01 Wings Rp 1,85 M, PO-02 Santos Rp 1,45 M, PO-03 Mayora Rp 700 Jt, PO-04 Mayora Rp 2,60 M) dengan total AP Juli Rp 6.597.474.800,00 dan Open AP Unilever Rp 2.899.971.200,00 jatuh tempo Agustus.
+- Memasukkan seluruh unit test ke CI workflow .github/workflows/seed-invariants.yml (test_*.py) agar test reproduksibilitas ikut menjaga merge.
+- Mengisolasi tests/test_generator_reproducibility.py dengan temporary directory dan opsi --output-dir sehingga workspace git repo tidak tersentuh saat pengujian.
+- Memperluas scripts/ops/verify_seed_invariants.py:
+  * LEDGER-REPLAY: replay running balances physical, reserved, quarantine per SKU/lot per tanggal, pastikan reserved <= physical dan saldo tidak negatif, serta rekonsiliasi ke kartu stok harian.
+  * REPORT-RECON: validasi 15 hash input dataset serta agregat finansial kanonikal terhadap register.
+  * AP-FK & AP-RECON: verifikasi keberadaan PO, principal, batas amount, dan tanggal pembayaran.
+- Membakukan kontrak hashing kanonikal LF (canonical_file_hash) dan penulisan LF eksplisit untuk seluruh file CSV/JSON register dan laporan kanonikal.
+- Menyempurnakan kalender fmcg_calendar.py: Nyepi 19 Maret 2026 & Idul Adha 27 Mei 2026 (17 hari libur nasional resmi SKB 3 Menteri No. 1017/2025 lengkap).
+- Memisahkan valuasi stok fisik saleable (Rp 9.001.139.000,00) dan karantina (Rp 1.963.200,00) dengan total persediaan gudang Rp 9.003.102.200,00.
+- Memperluas unit tests mutasi tests/test_seed_invariants.py (39/39 unit tests PASS).
+- Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
+- Task managed by antigravity at 2026-10-26T03:07:00+07:00

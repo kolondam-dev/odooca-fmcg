@@ -17,19 +17,20 @@ Referensi Resmi Hari Libur Nasional & Cuti Bersama 2026:
 
 import datetime as dt
 
-# Hari Libur Nasional Resmi Indonesia 2026 (SKB 3 Menteri)
-# Catatan: 16 Juni 2026 adalah Tahun Baru Islam 1448 H. Bulan Juli 2026 tidak memiliki libur nasional.
+# Hari Libur Nasional Resmi Indonesia 2026 (17 Hari - SKB 3 Menteri No. 1017/2025)
+# Referensi: Kemenko PMK (16 Juni 2026: Tahun Baru Islam 1448 H; Juli 2026: nihil libur nasional)
 NATIONAL_HOLIDAYS_2026 = {
     dt.date(2026, 1, 1): "Tahun Baru 2026 Masehi",
     dt.date(2026, 1, 16): "Isra Mikraj Nabi Muhammad SAW",
     dt.date(2026, 2, 17): "Tahun Baru Imlek 2577 Kongzili",
-    dt.date(2026, 3, 20): "Hari Suci Nyepi (Tahun Baru Saka 1948)",
+    dt.date(2026, 3, 19): "Hari Suci Nyepi (Tahun Baru Saka 1948)",
     dt.date(2026, 3, 21): "Hari Raya Idul Fitri 1447 H (Hari Pertama)",
     dt.date(2026, 3, 22): "Hari Raya Idul Fitri 1447 H (Hari Kedua)",
     dt.date(2026, 4, 3): "Wafat Yesus Kristus",
     dt.date(2026, 4, 5): "Kebangkitan Yesus Kristus (Paskah)",
     dt.date(2026, 5, 1): "Hari Buruh Internasional",
     dt.date(2026, 5, 14): "Kenaikan Yesus Kristus",
+    dt.date(2026, 5, 27): "Hari Raya Idul Adha 1447 Hijriah",
     dt.date(2026, 5, 31): "Hari Suci Waisak 2570 BE",
     dt.date(2026, 6, 1): "Hari Lahir Pancasila",
     dt.date(2026, 6, 16): "Tahun Baru Islam 1448 Hijriah",

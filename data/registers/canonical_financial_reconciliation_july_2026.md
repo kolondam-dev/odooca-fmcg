@@ -53,7 +53,7 @@
 
 ---
 
-### 5. Rekonsiliasi Kas, Diskon Pembayaran Awal, & Piutang Usaha
+### 5. Rekonsiliasi Kas, Diskon Pembayaran Awal, & Piutang Usaha (AR)
 - **Total Transaksi Pelunasan Kas Juli:** 320 transaksi
 - **Total Kas Tertagih Bersih (Basis DPP):** Rp 3,434,177,723.54
 - **Total Diskon Pembayaran Awal (Early Cash Discount 1%):** Rp 10,056,419.06
@@ -67,34 +67,49 @@
 
 ---
 
-### 6. Rekonsiliasi Fisik Persediaan & Gudang Maumbi (Per 31 Juli 2026 EOD)
+### 6. Rekonsiliasi Pembayaran Hutang Usaha Prinsipal (AP)
+- **Total Pesanan Pembelian In-Transit Juni (5 PO):** Rp 9,497,446,000.00
+- **Total Realisasi Pembayaran AP Juli (4 PO):** Rp 6,597,474,800.00
+  * PO-2026-06-01 (PT Wings Group): Rp 1.849.772.800,00 (Lunas 22 Juli 2026)
+  * PO-2026-06-02 (PT Santos Jaya Abadi): Rp 1.449.737.600,00 (Lunas 29 Juli 2026)
+  * PO-2026-06-03 (PT Mayora Indah Tbk - Biskuit): Rp 699.826.000,00 (Lunas 31 Juli 2026)
+  * PO-2026-06-04 (PT Mayora Indah Tbk - Kopi & Wafer): Rp 2.598.138.400,00 (Lunas 31 Juli 2026)
+- **Saldo Hutang Usaha Belum Jatuh Tempo (Open AP 31 Juli):** Rp 2,899,971,200.00
+  * PO-2026-06-05 (PT Unilever Indonesia Tbk): Rp 2.899.971.200,00 (Jatuh tempo 8 Agustus 2026)
+- **Jembatan Rekonsiliasi Hutang Usaha (AP):**
+  `AP Dibayar Juli (Rp 6,597,474,800.00) + Open AP Juli (Rp 2,899,971,200.00) = Rp 9,497,446,000.00` (Match 100% terhadap Total PO In-Transit Juni).
+
+---
+
+### 7. Rekonsiliasi Fisik Persediaan & Gudang Maumbi (Per 31 Juli 2026 EOD)
 - **Stok Fisik Aktual On-Hand di Gudang:** 53,837 Karton
 - **Stok Teralokasi / Dipesan (Reserved untuk Kirim 1 Agustus):** 1,038 Karton
 - **Stok Tersedia untuk Dijual Bebas (Available for Sale):** 52,799 Karton
 - **Stok Karantina Kerusakan Transit (Bad Stock Gudang):** 9 Karton
-- **Nilai Aset Persediaan Karantina (Rejection COGS):** Rp 1,963,200.00
-- **Valuasi Buku Persediaan Fisik Akhir (DPP Cost):** Rp 9,001,139,000.00
+- **Valuasi Persediaan Fisik Dijual Bebas (Saleable Physical DPP):** Rp 9,001,139,000.00
+- **Nilai Aset Persediaan Karantina (Quarantine Asset Value COGS):** Rp 1,963,200.00
+- **Total Valuasi Persediaan Gudang (Saleable + Quarantine):** Rp 9,003,102,200.00
 - **Puncak Okupansi Fasilitas Gudang Maumbi:** 104.2% (Krisis awal Juli akibat kedatangan 5 kontainer Juni)
 
 ---
 
-### 7. Verifikasi Checksum SHA-256 Seluruh Artefak Input
+### 8. Verifikasi Checksum SHA-256 Seluruh Artefak Input (Kanonikal LF)
 ```json
 {
-  "customer_registry_354.csv": "fad4914dd3c8ccfa376e397615a61818d78948b3eedf6d95a0bbba6e6d4e1544",
-  "initial_stock_20260701.csv": "aa17b574ec1eabb6c82cad406370f83f024299b87ced3eed1725855fda6d4277",
-  "inbound_po_intransit_june_headers.csv": "9fd864f1bc006ec08d985c1475ae31f88b5339775882e85a56def81efce0c861",
-  "inbound_po_intransit_june_lines.csv": "9925eb2cf04e91612ada8ead6b321a361e0dad35e4c18db102b343760e679a97",
-  "pjp_july_2026_matrix.csv": "94145987f3df31ae2bd71b11e330557265e8e03d6b9ab00195d60d337f7e7654",
-  "perpetual_sales_orders.csv": "93e4d63d0fc871ab0ea65f2dd8e7c01c637b257d29fdd65d26e20516b4a567ee",
-  "perpetual_order_lines.csv": "fff911127e3b300b22470edcc3850e835a540d6a73c6180b66fb99d103a82af6",
-  "perpetual_deliveries.csv": "0c101a9099b98a01d3c9de369cd1cbbab1553effb7da989c36e49a337384e206",
-  "perpetual_order_rejections.csv": "72323faeefbd290a109e8ec56fbbe35ee9204bdf280d5f96a1aedfc47faf6dad",
-  "perpetual_invoices.csv": "cec3225547d7285c8d7e6d0b4ebabf9b32b1d277e3e71c2a44907c38a3a81668",
-  "perpetual_ar_collections.csv": "45e95cd27fd40c0ef9561240a1f6fb8167cb8eeb567350cd5deed0ee51b98faf",
-  "perpetual_ap_payments.csv": "af6ea537f1797b21d7aae8407390fe1d90b65e9d6cc6f5e5041e4069905f5229",
-  "perpetual_opex_payroll.csv": "fa81bbc78918a942bd85aeb0d24f8c612bed3ce426fc09b35c3df7445b46c489",
-  "perpetual_daily_stock_cards.csv": "8e5efb57a43d6746f4edb50361bd9c0ff93522f57dbd34e8dedc71cabf36cb9a",
-  "perpetual_stock_event_ledger.csv": "d3e5a567f0b8e4f132fb323cb2248d078f48921ac76e5682b5c3430b65cda4b8"
+  "customer_registry_354.csv": "9303e7fd9aab35134e481611545a9c8704f6e36b66e3e6c10ddf43c386250fb3",
+  "initial_stock_20260701.csv": "6a4539fb978eab00c60ac071f222574a054cfbcff5bfc19e999fd9a3275e6408",
+  "inbound_po_intransit_june_headers.csv": "3643efa63031fac441e68bfb5118ece350415056ffd92f6df1d8bd61d1d6852d",
+  "inbound_po_intransit_june_lines.csv": "fec4f7491fc3b29bfaccac0b98dd7281a304e329c7d3b267753549f35d70a91c",
+  "pjp_july_2026_matrix.csv": "f17fc52b03575b82498062d6dc89baad2c5235a4e09ff3f15524f4a359e3a67e",
+  "perpetual_sales_orders.csv": "021e9d0ca67b10f0e07333200f0ecbdb47288cf14d9541b2812bcd8763e68a7c",
+  "perpetual_order_lines.csv": "4db5f9ebea936ab1c1564755cbf5f1e98f1ae20db2c673d16372ad9f72cba3f2",
+  "perpetual_deliveries.csv": "0da359c91f6634c0275aeee0d2d6eaafffdf9adf32d2e097d516de85f8d7f62f",
+  "perpetual_order_rejections.csv": "33e9faa8d2abea7363e3edcc3084e1f433aa25ef96ba48373c6a2a0324d4705f",
+  "perpetual_invoices.csv": "2d1d301ab78564f7f64f1faf0f035ad6f830b93b870cd7e38dae57454710d566",
+  "perpetual_ar_collections.csv": "701e39b6b5979aeb692a67c1cbe7ef1ae388b05d5a2941f0179ab779c87a554d",
+  "perpetual_ap_payments.csv": "7a5083096ac0d96795c24972f33946d58989f7a3b1567b2fe649d08f585467f3",
+  "perpetual_opex_payroll.csv": "48017137991dac72f66d785cae67c132603c315f3d93cbd7a09a40daddf60625",
+  "perpetual_daily_stock_cards.csv": "7acef464308e5a1dec4f3dc7c8ef4e3357c65405308237197d559252890c8dab",
+  "perpetual_stock_event_ledger.csv": "9c62515640dcd7e875ba30d0e17d03d97961301c6e832cd2267b3f81bf514415"
 }
 ```

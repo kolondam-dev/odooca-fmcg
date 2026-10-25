@@ -1,6 +1,8 @@
 """Mutation tests: clean fixture passes; each corrupted relationship must fail."""
 import csv
+import hashlib
 import importlib.util
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -50,20 +52,40 @@ class SeedGateTests(unittest.TestCase):
             'data/registers/perpetual_ar_collections.csv': [dict(
                 payment_id='PAY1', invoice_number='I1', payment_date='2026-07-02', invoice_dpp='90',
                 early_payment_discount='0', net_cash_collected='90')],
+            'data/registers/perpetual_ap_payments.csv': [dict(
+                ap_payment_id='PAY-AP-1', po_number='PO1', principal_name='Prin1', payment_date='2026-07-22',
+                amount_paid_dpp='50')],
+            'data/registers/perpetual_opex_payroll.csv': [dict(
+                entry_id='OPEX-1', date='2026-07-01', amount='1000')],
             'data/registers/perpetual_daily_stock_cards.csv': [
-                dict(date='2026-07-01', is_working_day='True'),
-                dict(date='2026-07-02', is_working_day='True'),
-                dict(date='2026-07-16', is_working_day='False'),
+                dict(date='2026-07-01', is_working_day='True', physical_stock_cartons='3',
+                     reserved_stock_cartons='2', quarantine_stock_cartons='0'),
+                dict(date='2026-07-02', is_working_day='True', physical_stock_cartons='2',
+                     reserved_stock_cartons='0', quarantine_stock_cartons='1'),
+                dict(date='2026-07-16', is_working_day='False', physical_stock_cartons='2',
+                     reserved_stock_cartons='0', quarantine_stock_cartons='1'),
             ],
             'data/registers/initial_stock_20260701.csv': [dict(
                 sku_code='P1', qty_cartons_on_hand='3', carton_qty='10', qty_units_on_hand='30',
                 unit_cost_price='5', subtotal_dpp='150', lot_number='L1', expiry_date='2027-01-01')],
             'data/registers/inbound_po_intransit_june_headers.csv': [dict(
-                po_number='PO1', arrival_maumbi_date='2026-07-03', total_dpp='50')],
+                po_number='PO1', principal_name='Prin1', order_date='2026-06-15',
+                arrival_maumbi_date='2026-07-03', total_dpp='50')],
             'data/registers/inbound_po_intransit_june_lines.csv': [dict(
                 po_number='PO1', sku_code='P1', qty_cartons='1', carton_qty='10', unit_cost_price='5',
                 subtotal_dpp='50', lot_number='L2', expiry_date='2028-01-01')],
+            'data/registers/perpetual_stock_event_ledger.csv': [
+                dict(event_id='EVT-1', date='2026-07-01', sku_code='P1', lot_number='L1',
+                     physical_impact='3', reserved_impact='0', quarantine_impact='0'),
+                dict(event_id='EVT-2', date='2026-07-01', sku_code='P1', lot_number='L1',
+                     physical_impact='0', reserved_impact='2', quarantine_impact='0'),
+                dict(event_id='EVT-3', date='2026-07-02', sku_code='P1', lot_number='L1',
+                     physical_impact='-1', reserved_impact='-1', quarantine_impact='0'),
+                dict(event_id='EVT-4', date='2026-07-02', sku_code='P1', lot_number='L1',
+                     physical_impact='0', reserved_impact='-1', quarantine_impact='1'),
+            ],
         }
+        self.custom_report = None
         p = self.root / 'addons/id_base/data/id_district_data.xml'
         p.parent.mkdir(parents=True)
         p.write_text('''<odoo><record id="district1" model="id.district"><field name="code">D1</field>
@@ -71,14 +93,40 @@ class SeedGateTests(unittest.TestCase):
 <field name="district_id" ref="district1"/></record></odoo>''')
 
     def run_gate(self):
+        input_hashes = {}
         for name, rows in self.data.items():
             p = self.root / name
             p.parent.mkdir(parents=True, exist_ok=True)
-            with p.open('w', newline='') as f:
+            with p.open('w', newline='', encoding='utf-8') as f:
                 fields = rows[0].keys() if rows else self.headers.get(name, [])
-                writer = csv.DictWriter(f, fieldnames=fields)
+                writer = csv.DictWriter(f, fieldnames=fields, lineterminator='\n')
                 writer.writeheader()
                 writer.writerows(rows)
+            # Simpan kanonikal LF hash
+            data_bytes = p.read_bytes().replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+            if name.startswith('data/registers/'):
+                input_hashes[Path(name).name] = hashlib.sha256(data_bytes).hexdigest()
+
+        # Generate canonical reconciliation JSON for the fixture
+        report_file = self.root / 'data/registers/canonical_financial_reconciliation_july_2026.json'
+        if self.custom_report is not None:
+            report_data = self.custom_report
+        else:
+            report_data = {
+                'report_title': 'LAPORAN REKONSILIASI KANONIKAL',
+                'period': '1 Juli 2026 s/d 31 Juli 2026',
+                'input_dataset_sha256': input_hashes,
+                'sales_orders_booked_july': {'gross_dpp': '200', 'net_dpp': '180'},
+                'period_cutoff_july_invoiced': {'invoiced_dpp': '90'},
+                'accounts_payable_reconciliation': {'ap_payments_july_dpp': '50'},
+                'inventory_warehouse_reconciliation': {
+                    'physical_on_hand_cartons': '2',
+                    'quarantine_bad_stock_cartons': '1',
+                },
+            }
+        report_file.parent.mkdir(parents=True, exist_ok=True)
+        report_file.write_text(json.dumps(report_data, indent=2) + '\n', encoding='utf-8')
+
         violations, _ = gate.validate(self.root, sizes=(1, 1))
         return {v['invariant'] for v in violations}
 
@@ -176,6 +224,60 @@ class SeedGateTests(unittest.TestCase):
 
     def test_missing_visit(self):
         self.mutate('perpetual_sales_orders', 'salesman', 'other', 'PJP-SO')
+
+    # Mutasi Uji Baru untuk Temuan Supervisor:
+    def test_ap_invalid_po(self):
+        self.mutate('perpetual_ap_payments', 'po_number', 'PO-NONEXISTENT', 'AP-FK')
+
+    def test_ap_principal_mismatch(self):
+        self.mutate('perpetual_ap_payments', 'principal_name', 'Wrong Principal', 'AP-FK')
+
+    def test_ap_overpayment(self):
+        self.mutate('perpetual_ap_payments', 'amount_paid_dpp', '999999', 'AP-RECON')
+
+    def test_ap_payment_before_order(self):
+        self.mutate('perpetual_ap_payments', 'payment_date', '2026-06-01', 'EVENT-ORDER')
+
+    def test_ledger_negative_physical(self):
+        self.mutate('perpetual_stock_event_ledger', 'physical_impact', '-999999', 'LEDGER-REPLAY')
+
+    def test_ledger_reserved_exceeds_physical(self):
+        self.data['data/registers/perpetual_stock_event_ledger.csv'][1]['reserved_impact'] = '999'
+        self.assertIn('LEDGER-REPLAY', self.run_gate())
+
+    def test_ledger_card_mismatch(self):
+        self.data['data/registers/perpetual_daily_stock_cards.csv'][0]['physical_stock_cartons'] = '999'
+        self.assertIn('LEDGER-REPLAY', self.run_gate())
+
+    def test_report_hash_mismatch(self):
+        self.custom_report = {
+            'report_title': 'FAKE',
+            'period': '1 Juli 2026 s/d 31 Juli 2026',
+            'input_dataset_sha256': {'perpetual_sales_orders.csv': 'badhash0000000000000000000000000000000000'},
+            'sales_orders_booked_july': {'gross_dpp': '200', 'net_dpp': '180'},
+            'period_cutoff_july_invoiced': {'invoiced_dpp': '90'},
+            'accounts_payable_reconciliation': {'ap_payments_july_dpp': '50'},
+            'inventory_warehouse_reconciliation': {
+                'physical_on_hand_cartons': '2',
+                'quarantine_bad_stock_cartons': '1',
+            },
+        }
+        self.assertIn('REPORT-RECON', self.run_gate())
+
+    def test_report_aggregate_mismatch(self):
+        self.custom_report = {
+            'report_title': 'FAKE',
+            'period': '1 Juli 2026 s/d 31 Juli 2026',
+            'input_dataset_sha256': {},
+            'sales_orders_booked_july': {'gross_dpp': '9999', 'net_dpp': '180'},
+            'period_cutoff_july_invoiced': {'invoiced_dpp': '90'},
+            'accounts_payable_reconciliation': {'ap_payments_july_dpp': '50'},
+            'inventory_warehouse_reconciliation': {
+                'physical_on_hand_cartons': '2',
+                'quarantine_bad_stock_cartons': '1',
+            },
+        }
+        self.assertIn('REPORT-RECON', self.run_gate())
 
     def test_nan_rejected(self):
         with self.assertRaises(ValueError):

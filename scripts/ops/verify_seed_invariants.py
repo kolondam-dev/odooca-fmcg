@@ -31,8 +31,9 @@ def validate(root, sizes=(354, 150)):
 
     def read(path):
         data = (root / path).read_bytes()
-        inputs[path] = hashlib.sha256(data).hexdigest()
-        rows = list(csv.DictReader(data.decode("utf-8-sig").splitlines()))
+        normalized = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        inputs[path] = hashlib.sha256(normalized).hexdigest()
+        rows = list(csv.DictReader(normalized.decode("utf-8-sig").splitlines()))
         if not rows:
             raise ValueError(f"empty required dataset: {path}")
         return rows
@@ -67,9 +68,10 @@ def validate(root, sizes=(354, 150)):
 
     geo_path = "addons/id_base/data/id_district_data.xml"
     data = (root / geo_path).read_bytes()
-    inputs[geo_path] = hashlib.sha256(data).hexdigest()
+    normalized_geo = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    inputs[geo_path] = hashlib.sha256(normalized_geo).hexdigest()
     districts, villages = {}, {}
-    for record in ET.fromstring(data).findall("record"):
+    for record in ET.fromstring(normalized_geo).findall("record"):
         fields = {f.get("name"): f.get("ref") or f.text for f in record.findall("field")}
         if record.get("model") == "id.district":
             districts[fields["code"]] = record.get("id")
@@ -271,6 +273,36 @@ def validate(root, sizes=(354, 150)):
         equal("COLLECTION-MATH", row["payment_id"], row["net_cash_collected"],
               number(row["invoice_dpp"]) - number(row["early_payment_discount"]))
 
+    # 1. Validasi Pembayaran Hutang Usaha (AP Invariants)
+    ap_rows = read("data/registers/perpetual_ap_payments.csv")
+    ap_paid_total = Decimal("0.00")
+    for row in ap_rows:
+        pid = row["ap_payment_id"]
+        po_num = row["po_number"]
+        header = po.get(po_num)
+        if not header:
+            fail("AP-FK", pid, f"PO header not found in June intransit: {po_num}")
+            continue
+        if row["principal_name"] != header["principal_name"]:
+            fail("AP-FK", pid, f"principal mismatch: {row['principal_name']} vs {header['principal_name']}")
+        paid_dpp = number(row["amount_paid_dpp"])
+        header_dpp = number(header["total_dpp"])
+        if paid_dpp > header_dpp:
+            fail("AP-RECON", pid, f"AP payment {paid_dpp} exceeds PO total DPP {header_dpp}")
+        if row["payment_date"] < header["order_date"]:
+            fail("EVENT-ORDER", pid, f"payment date {row['payment_date']} before PO order date {header['order_date']}")
+        ap_paid_total += paid_dpp
+
+    if sizes == (354, 150):
+        equal("AP-RECON", "JULY_AP_TOTAL", ap_paid_total, "6597474800.00")
+
+    # 2. Validasi Beban Operasional & Penggajian (OPEX Invariants)
+    opex_rows = read("data/registers/perpetual_opex_payroll.csv")
+    total_opex = sum(number(o["amount"]) for o in opex_rows)
+    if sizes == (354, 150):
+        equal("OPEX-MATH", "TOTAL_OPEX", total_opex, "394350000.00")
+
+    # 3. Validasi FEFO & Lot Balances
     balances = collections.defaultdict(Decimal)
     for date, kind, sku, lot, quantity, ref in sorted(events):
         if kind == 1:
@@ -283,6 +315,80 @@ def validate(root, sizes=(354, 150)):
             fail("LOT-BALANCE", ref, f"allocation exceeds received lot quantity: {sku}/{lot}")
         if kind == 1 and lot_expiry.get((sku, lot), "0000-01-01") < date:
             fail("LOT-EXPIRY", ref, f"unknown or expired lot: {sku}/{lot}")
+
+    # 4. Validasi Ledger Event Replay (Granular Multi-Level Stock State Replay)
+    ledger_rows = read("data/registers/perpetual_stock_event_ledger.csv")
+    lot_phys = collections.defaultdict(Decimal)
+    lot_res = collections.defaultdict(Decimal)
+    lot_quar = collections.defaultdict(Decimal)
+
+    ledger_events_by_date = collections.defaultdict(list)
+    for row in ledger_rows:
+        ledger_events_by_date[row["date"]].append(row)
+
+    for d_str in sorted(calendar.keys()):
+        for r in ledger_events_by_date[d_str]:
+            eid = r["event_id"]
+            sku = r["sku_code"]
+            lot = r["lot_number"]
+            p_imp = number(r["physical_impact"])
+            r_imp = number(r["reserved_impact"])
+            q_imp = number(r["quarantine_impact"])
+
+            lot_phys[(sku, lot)] += p_imp
+            lot_res[(sku, lot)] += r_imp
+            lot_quar[(sku, lot)] += q_imp
+
+            if lot_phys[(sku, lot)] < 0:
+                fail("LEDGER-REPLAY", eid, f"negative physical balance for {sku}/{lot}: {lot_phys[(sku, lot)]}")
+            if lot_res[(sku, lot)] < 0:
+                fail("LEDGER-REPLAY", eid, f"negative reserved balance for {sku}/{lot}: {lot_res[(sku, lot)]}")
+            if lot_quar[(sku, lot)] < 0:
+                fail("LEDGER-REPLAY", eid, f"negative quarantine balance for {sku}/{lot}: {lot_quar[(sku, lot)]}")
+            if lot_res[(sku, lot)] > lot_phys[(sku, lot)]:
+                fail("LEDGER-REPLAY", eid, f"reserved ({lot_res[(sku, lot)]}) exceeds physical ({lot_phys[(sku, lot)]}) for {sku}/{lot}")
+
+        # Verifikasi saldo penutupan harian terhadap kartu stok harian
+        card = calendar[d_str]
+        tot_phys_eod = sum(lot_phys.values())
+        tot_res_eod = sum(lot_res.values())
+        tot_quar_eod = sum(lot_quar.values())
+
+        equal("LEDGER-REPLAY", f"DAILY-PHYSICAL-{d_str}", tot_phys_eod, card["physical_stock_cartons"])
+        equal("LEDGER-REPLAY", f"DAILY-RESERVED-{d_str}", tot_res_eod, card["reserved_stock_cartons"])
+        equal("LEDGER-REPLAY", f"DAILY-QUARANTINE-{d_str}", tot_quar_eod, card["quarantine_stock_cartons"])
+
+    # 5. Validasi Laporan Rekonsiliasi Finansial Kanonikal (Provenance Checksum & Aggregates)
+    report_rel_path = "data/registers/canonical_financial_reconciliation_july_2026.json"
+    report_file = root / report_rel_path
+    if not report_file.exists():
+        fail("REPORT-RECON", "canonical_report", f"file missing: {report_rel_path}")
+    else:
+        report_bytes = report_file.read_bytes()
+        norm_report = report_bytes.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        inputs[report_rel_path] = hashlib.sha256(norm_report).hexdigest()
+        report_data = json.loads(norm_report.decode("utf-8"))
+
+        # a. Verifikasi 15 Checksum Input Dataset di Laporan
+        for filename, expected_hash in report_data.get("input_dataset_sha256", {}).items():
+            actual_hash = inputs.get(f"data/registers/{filename}")
+            if actual_hash != expected_hash:
+                fail("REPORT-RECON", filename, f"checksum mismatch: expected {expected_hash}, observed {actual_hash}")
+
+        # b. Verifikasi Kesesuaian Agregat Finansial & Persediaan
+        equal("REPORT-RECON", "SO_GROSS_DPP", report_data["sales_orders_booked_july"]["gross_dpp"],
+              sum(number(o["gross_dpp"]) for o in orders.values()))
+        equal("REPORT-RECON", "SO_NET_DPP", report_data["sales_orders_booked_july"]["net_dpp"],
+              sum(number(o["net_dpp"]) for o in orders.values()))
+        equal("REPORT-RECON", "INV_JULY_DPP", report_data["period_cutoff_july_invoiced"]["invoiced_dpp"],
+              sum(number(i["dpp_amount"]) for i in invoices.values() if i["date_invoice"] <= "2026-07-31"))
+        equal("REPORT-RECON", "AP_PAID_JULY_DPP", report_data["accounts_payable_reconciliation"]["ap_payments_july_dpp"],
+              ap_paid_total)
+        equal("REPORT-RECON", "CLOSING_PHYSICAL", report_data["inventory_warehouse_reconciliation"]["physical_on_hand_cartons"],
+              cards[-1]["physical_stock_cartons"])
+        equal("REPORT-RECON", "CLOSING_QUARANTINE", report_data["inventory_warehouse_reconciliation"]["quarantine_bad_stock_cartons"],
+              cards[-1]["quarantine_stock_cartons"])
+
     return violations, inputs
 
 
