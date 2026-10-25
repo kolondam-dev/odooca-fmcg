@@ -60,28 +60,28 @@
     "so_number": "SO-202607-0005",
     "do_number": "DO-202607-0005",
     "date_invoice": "2026-07-02",
-    "due_date": "2026-07-16",
+    "due_date": "2026-07-09",
     "customer": "CUST-GT-13 - Grosir Malalayang Satu",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 20523977.6,
     "ppn_11_amount": 2257637.54,
     "total_invoice_with_ppn": 22781615.14,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0006",
     "so_number": "SO-202607-0006",
     "do_number": "DO-202607-0006",
     "date_invoice": "2026-07-02",
-    "due_date": "2026-07-16",
+    "due_date": "2026-07-09",
     "customer": "CUST-GT-15 - Grosir Kleak Mandiri",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 16952454.4,
     "ppn_11_amount": 1864769.98,
     "total_invoice_with_ppn": 18817224.38,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0007",
@@ -214,14 +214,14 @@
     "so_number": "SO-202607-0016",
     "do_number": "DO-202607-0016",
     "date_invoice": "2026-07-02",
-    "due_date": "2026-07-23",
+    "due_date": "2026-08-01",
     "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
     "dpp_amount": 15453696.0,
     "ppn_11_amount": 1699906.56,
     "total_invoice_with_ppn": 17153602.56,
-    "payment_term_days": 21
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0017",
@@ -242,14 +242,14 @@
     "so_number": "SO-202607-0018",
     "do_number": "DO-202607-0018",
     "date_invoice": "2026-07-03",
-    "due_date": "2026-08-02",
+    "due_date": "2026-07-17",
     "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
     "dpp_amount": 28802704.8,
     "ppn_11_amount": 3168297.53,
     "total_invoice_with_ppn": 31971002.33,
-    "payment_term_days": 30
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0019",
@@ -260,9 +260,9 @@
     "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 19216120.0,
-    "ppn_11_amount": 2113773.2,
-    "total_invoice_with_ppn": 21329893.2,
+    "dpp_amount": 18976216.0,
+    "ppn_11_amount": 2087383.76,
+    "total_invoice_with_ppn": 21063599.76,
     "payment_term_days": 14
   },
   {
@@ -284,42 +284,42 @@
     "so_number": "SO-202607-0021",
     "do_number": "DO-202607-0021",
     "date_invoice": "2026-07-03",
-    "due_date": "2026-07-17",
+    "due_date": "2026-07-10",
     "customer": "CUST-GT-18 - Grosir Rukun Damai Ranotana",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 24178896.0,
     "ppn_11_amount": 2659678.56,
     "total_invoice_with_ppn": 26838574.56,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0022",
     "so_number": "SO-202607-0022",
     "do_number": "DO-202607-0022",
     "date_invoice": "2026-07-03",
-    "due_date": "2026-07-17",
+    "due_date": "2026-07-10",
     "customer": "CUST-GT-20 - Toko Pakowa Sejahtera Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 23339232.0,
     "ppn_11_amount": 2567315.52,
     "total_invoice_with_ppn": 25906547.52,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0023",
     "so_number": "SO-202607-0023",
     "do_number": "DO-202607-0023",
     "date_invoice": "2026-07-03",
-    "due_date": "2026-07-17",
+    "due_date": "2026-07-10",
     "customer": "CUST-GT-22 - Toko Winangun Berkat",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 18504595.2,
     "ppn_11_amount": 2035505.47,
     "total_invoice_with_ppn": 20540100.67,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0024",
@@ -452,14 +452,14 @@
     "so_number": "SO-202607-0033",
     "do_number": "DO-202607-0033",
     "date_invoice": "2026-07-03",
-    "due_date": "2026-07-24",
+    "due_date": "2026-07-17",
     "customer": "CUST-INST-04 - Katering Minahasa Indah",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
     "dpp_amount": 16099200.0,
     "ppn_11_amount": 1770912.0,
     "total_invoice_with_ppn": 17870112.0,
-    "payment_term_days": 21
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0034",
@@ -480,14 +480,14 @@
     "so_number": "SO-202607-0035",
     "do_number": "DO-202607-0035",
     "date_invoice": "2026-07-04",
-    "due_date": "2026-08-03",
+    "due_date": "2026-07-18",
     "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
     "dpp_amount": 36261568.8,
     "ppn_11_amount": 3988772.57,
     "total_invoice_with_ppn": 40250341.37,
-    "payment_term_days": 30
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0036",
@@ -522,28 +522,28 @@
     "so_number": "SO-202607-0038",
     "do_number": "DO-202607-0038",
     "date_invoice": "2026-07-04",
-    "due_date": "2026-07-18",
+    "due_date": "2026-07-11",
     "customer": "CUST-GT-26 - Toko Karombasan Baru",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 16382016.0,
     "ppn_11_amount": 1802021.76,
     "total_invoice_with_ppn": 18184037.76,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0039",
     "so_number": "SO-202607-0039",
     "do_number": "DO-202607-0039",
     "date_invoice": "2026-07-04",
-    "due_date": "2026-07-18",
+    "due_date": "2026-07-11",
     "customer": "CUST-GT-28 - Toko Sam Ratulangi Perkasa",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 16716548.8,
-    "ppn_11_amount": 1838820.37,
-    "total_invoice_with_ppn": 18555369.17,
-    "payment_term_days": 14
+    "dpp_amount": 16488068.8,
+    "ppn_11_amount": 1813687.57,
+    "total_invoice_with_ppn": 18301756.37,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0040",
@@ -676,14 +676,14 @@
     "so_number": "SO-202607-0049",
     "do_number": "DO-202607-0049",
     "date_invoice": "2026-07-04",
-    "due_date": "2026-07-25",
+    "due_date": "2026-07-18",
     "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
     "dpp_amount": 21081600.0,
     "ppn_11_amount": 2318976.0,
     "total_invoice_with_ppn": 23400576.0,
-    "payment_term_days": 21
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0050",
@@ -704,14 +704,14 @@
     "so_number": "SO-202607-0051",
     "do_number": "DO-202607-0051",
     "date_invoice": "2026-07-06",
-    "due_date": "2026-08-05",
+    "due_date": "2026-08-20",
     "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
     "dpp_amount": 33633523.2,
     "ppn_11_amount": 3699687.55,
     "total_invoice_with_ppn": 37333210.75,
-    "payment_term_days": 30
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0052",
@@ -732,28 +732,28 @@
     "so_number": "SO-202607-0053",
     "do_number": "DO-202607-0053",
     "date_invoice": "2026-07-06",
-    "due_date": "2026-07-20",
+    "due_date": "2026-07-13",
     "customer": "CUST-GT-31 - Grosir Sario Damai",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 17247193.6,
     "ppn_11_amount": 1897191.3,
     "total_invoice_with_ppn": 19144384.9,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0054",
     "so_number": "SO-202607-0054",
     "do_number": "DO-202607-0054",
     "date_invoice": "2026-07-06",
-    "due_date": "2026-07-20",
+    "due_date": "2026-07-13",
     "customer": "CUST-GT-33 - Toko Malalayang Megah",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 17912832.0,
     "ppn_11_amount": 1970411.52,
     "total_invoice_with_ppn": 19883243.52,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0055",
@@ -886,42 +886,42 @@
     "so_number": "SO-202607-0064",
     "do_number": "DO-202607-0064",
     "date_invoice": "2026-07-06",
-    "due_date": "2026-07-27",
+    "due_date": "2026-08-05",
     "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
     "dpp_amount": 14618880.0,
     "ppn_11_amount": 1608076.8,
     "total_invoice_with_ppn": 16226956.8,
-    "payment_term_days": 21
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0065",
     "so_number": "SO-202607-0065",
     "do_number": "DO-202607-0065",
     "date_invoice": "2026-07-07",
-    "due_date": "2026-08-06",
+    "due_date": "2026-08-21",
     "customer": "CUST-MT-01 - Indomarett DC Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
     "dpp_amount": 36612518.4,
     "ppn_11_amount": 4027377.02,
     "total_invoice_with_ppn": 40639895.42,
-    "payment_term_days": 30
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0066",
     "so_number": "SO-202607-0066",
     "do_number": "DO-202607-0066",
     "date_invoice": "2026-07-07",
-    "due_date": "2026-08-06",
+    "due_date": "2026-08-21",
     "customer": "CUST-MT-02 - Alfamiddii DC Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
     "dpp_amount": 32410792.8,
     "ppn_11_amount": 3565187.21,
     "total_invoice_with_ppn": 35975980.01,
-    "payment_term_days": 30
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0067",
@@ -970,28 +970,28 @@
     "so_number": "SO-202607-0070",
     "do_number": "DO-202607-0070",
     "date_invoice": "2026-07-07",
-    "due_date": "2026-07-21",
+    "due_date": "2026-07-14",
     "customer": "CUST-GT-04 - Toko Pinaesaan Calaca",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 15353856.0,
     "ppn_11_amount": 1688924.16,
     "total_invoice_with_ppn": 17042780.16,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0071",
     "so_number": "SO-202607-0071",
     "do_number": "DO-202607-0071",
     "date_invoice": "2026-07-07",
-    "due_date": "2026-07-21",
+    "due_date": "2026-07-14",
     "customer": "CUST-GT-06 - Grosir Calaca Baru",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 16314233.6,
     "ppn_11_amount": 1794565.7,
     "total_invoice_with_ppn": 18108799.3,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0072",
@@ -1026,14 +1026,14 @@
     "so_number": "SO-202607-0074",
     "do_number": "DO-202607-0074",
     "date_invoice": "2026-07-07",
-    "due_date": "2026-07-21",
+    "due_date": "2026-07-14",
     "customer": "CUST-GT-37 - Grosir Makmur Abadi Tikala",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
     "dpp_amount": 19272288.0,
     "ppn_11_amount": 2119951.68,
     "total_invoice_with_ppn": 21392239.68,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0075",
@@ -1180,14 +1180,14 @@
     "so_number": "SO-202607-0085",
     "do_number": "DO-202607-0085",
     "date_invoice": "2026-07-08",
-    "due_date": "2026-08-07",
+    "due_date": "2026-07-22",
     "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
     "dpp_amount": 40100400.0,
     "ppn_11_amount": 4411044.0,
     "total_invoice_with_ppn": 44511444.0,
-    "payment_term_days": 30
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0086",
@@ -1222,14 +1222,14 @@
     "so_number": "SO-202607-0088",
     "do_number": "DO-202607-0088",
     "date_invoice": "2026-07-08",
-    "due_date": "2026-07-22",
+    "due_date": "2026-07-15",
     "customer": "CUST-GT-10 - Toko Sario Makmur",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
     "dpp_amount": 15718662.4,
     "ppn_11_amount": 1729052.86,
     "total_invoice_with_ppn": 17447715.26,
-    "payment_term_days": 14
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0089",
@@ -1390,14 +1390,14 @@
     "so_number": "SO-202607-0100",
     "do_number": "DO-202607-0100",
     "date_invoice": "2026-07-08",
-    "due_date": "2026-07-29",
+    "due_date": "2026-07-22",
     "customer": "CUST-INST-07 - Katering Bahu Makmur",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
     "dpp_amount": 14865984.0,
     "ppn_11_amount": 1635258.24,
     "total_invoice_with_ppn": 16501242.24,
-    "payment_term_days": 21
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0101",
@@ -1408,9 +1408,9 @@
     "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 29072316.0,
-    "ppn_11_amount": 3197954.76,
-    "total_invoice_with_ppn": 32270270.76,
+    "dpp_amount": 39092486.4,
+    "ppn_11_amount": 4300173.5,
+    "total_invoice_with_ppn": 43392659.9,
     "payment_term_days": 30
   },
   {
@@ -1422,9 +1422,9 @@
     "customer": "CUST-MT-08 - MultiiMart Tomohon",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 35848620.0,
-    "ppn_11_amount": 3943348.2,
-    "total_invoice_with_ppn": 39791968.2,
+    "dpp_amount": 37938960.0,
+    "ppn_11_amount": 4173285.6,
+    "total_invoice_with_ppn": 42112245.6,
     "payment_term_days": 30
   },
   {
@@ -1436,9 +1436,9 @@
     "customer": "CUST-GT-11 - Grosir Krida Bahu",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 24350256.0,
-    "ppn_11_amount": 2678528.16,
-    "total_invoice_with_ppn": 27028784.16,
+    "dpp_amount": 24000681.6,
+    "ppn_11_amount": 2640074.98,
+    "total_invoice_with_ppn": 26640756.58,
     "payment_term_days": 14
   },
   {
@@ -1450,9 +1450,9 @@
     "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17580012.8,
-    "ppn_11_amount": 1933801.41,
-    "total_invoice_with_ppn": 19513814.21,
+    "dpp_amount": 23258121.6,
+    "ppn_11_amount": 2558393.38,
+    "total_invoice_with_ppn": 25816514.98,
     "payment_term_days": 14
   },
   {
@@ -1460,14 +1460,14 @@
     "so_number": "SO-202607-0105",
     "do_number": "DO-202607-0105",
     "date_invoice": "2026-07-09",
-    "due_date": "2026-07-23",
+    "due_date": "2026-07-16",
     "customer": "CUST-GT-14 - Toko Batu Kota Indah",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 23395209.6,
-    "ppn_11_amount": 2573473.06,
-    "total_invoice_with_ppn": 25968682.66,
-    "payment_term_days": 14
+    "dpp_amount": 23423769.6,
+    "ppn_11_amount": 2576614.66,
+    "total_invoice_with_ppn": 26000384.26,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0106",
@@ -1478,9 +1478,9 @@
     "customer": "CUST-RTL-009 - Warung Kasih Ritha Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3835875.0,
-    "ppn_11_amount": 421946.25,
-    "total_invoice_with_ppn": 4257821.25,
+    "dpp_amount": 3910180.0,
+    "ppn_11_amount": 430119.8,
+    "total_invoice_with_ppn": 4340299.8,
     "payment_term_days": 0
   },
   {
@@ -1492,9 +1492,9 @@
     "customer": "CUST-RTL-021 - Kios Tante Lita Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6183720.0,
-    "ppn_11_amount": 680209.2,
-    "total_invoice_with_ppn": 6863929.2,
+    "dpp_amount": 5784210.0,
+    "ppn_11_amount": 636263.1,
+    "total_invoice_with_ppn": 6420473.1,
     "payment_term_days": 0
   },
   {
@@ -1506,9 +1506,9 @@
     "customer": "CUST-RTL-033 - Kios Ci Lumimuut Pasar",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4708428.0,
-    "ppn_11_amount": 517927.08,
-    "total_invoice_with_ppn": 5226355.08,
+    "dpp_amount": 4817280.0,
+    "ppn_11_amount": 529900.8,
+    "total_invoice_with_ppn": 5347180.8,
     "payment_term_days": 0
   },
   {
@@ -1520,9 +1520,9 @@
     "customer": "CUST-RTL-045 - Kios Ko Meylan Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4041420.0,
-    "ppn_11_amount": 444556.2,
-    "total_invoice_with_ppn": 4485976.2,
+    "dpp_amount": 5732100.0,
+    "ppn_11_amount": 630531.0,
+    "total_invoice_with_ppn": 6362631.0,
     "payment_term_days": 0
   },
   {
@@ -1534,9 +1534,9 @@
     "customer": "CUST-RTL-057 - Kios Berkat Nico Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5959840.0,
-    "ppn_11_amount": 655582.4,
-    "total_invoice_with_ppn": 6615422.4,
+    "dpp_amount": 6137400.0,
+    "ppn_11_amount": 675114.0,
+    "total_invoice_with_ppn": 6812514.0,
     "payment_term_days": 0
   },
   {
@@ -1548,9 +1548,9 @@
     "customer": "CUST-RTL-069 - Warung Kasih Engelin Pasar",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4313550.0,
-    "ppn_11_amount": 474490.5,
-    "total_invoice_with_ppn": 4788040.5,
+    "dpp_amount": 5878008.0,
+    "ppn_11_amount": 646580.88,
+    "total_invoice_with_ppn": 6524588.88,
     "payment_term_days": 0
   },
   {
@@ -1562,9 +1562,9 @@
     "customer": "CUST-RTL-081 - Kios Tante Hein Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5376980.0,
-    "ppn_11_amount": 591467.8,
-    "total_invoice_with_ppn": 5968447.8,
+    "dpp_amount": 4041420.0,
+    "ppn_11_amount": 444556.2,
+    "total_invoice_with_ppn": 4485976.2,
     "payment_term_days": 0
   },
   {
@@ -1576,9 +1576,9 @@
     "customer": "CUST-RTL-093 - Kios Ci Vicky Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5259636.0,
-    "ppn_11_amount": 578559.96,
-    "total_invoice_with_ppn": 5838195.96,
+    "dpp_amount": 5959840.0,
+    "ppn_11_amount": 655582.4,
+    "total_invoice_with_ppn": 6615422.4,
     "payment_term_days": 0
   },
   {
@@ -1590,9 +1590,9 @@
     "customer": "CUST-RTL-117 - Kios Berkat Vonny Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 4365660.0,
-    "ppn_11_amount": 480222.6,
-    "total_invoice_with_ppn": 4845882.6,
+    "dpp_amount": 4313550.0,
+    "ppn_11_amount": 474490.5,
+    "total_invoice_with_ppn": 4788040.5,
     "payment_term_days": 0
   },
   {
@@ -1600,14 +1600,14 @@
     "so_number": "SO-202607-0115",
     "do_number": "DO-202607-0115",
     "date_invoice": "2026-07-09",
-    "due_date": "2026-07-30",
+    "due_date": "2026-07-23",
     "customer": "CUST-INST-08 - Restoran Nelayan Megamas",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 23554560.0,
-    "ppn_11_amount": 2591001.6,
-    "total_invoice_with_ppn": 26145561.6,
-    "payment_term_days": 21
+    "dpp_amount": 20782080.0,
+    "ppn_11_amount": 2286028.8,
+    "total_invoice_with_ppn": 23068108.8,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0116",
@@ -1618,9 +1618,9 @@
     "customer": "CUST-MT-05 - FreshhMart Express Tikala",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 30472891.2,
-    "ppn_11_amount": 3352018.03,
-    "total_invoice_with_ppn": 33824909.23,
+    "dpp_amount": 35512080.0,
+    "ppn_11_amount": 3906328.8,
+    "total_invoice_with_ppn": 39418408.8,
     "payment_term_days": 30
   },
   {
@@ -1628,14 +1628,14 @@
     "so_number": "SO-202607-0117",
     "do_number": "DO-202607-0117",
     "date_invoice": "2026-07-10",
-    "due_date": "2026-08-09",
+    "due_date": "2026-07-24",
     "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 31657512.0,
-    "ppn_11_amount": 3482326.32,
-    "total_invoice_with_ppn": 35139838.32,
-    "payment_term_days": 30
+    "dpp_amount": 28012262.4,
+    "ppn_11_amount": 3081348.86,
+    "total_invoice_with_ppn": 31093611.26,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0118",
@@ -1646,9 +1646,9 @@
     "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 21159532.8,
-    "ppn_11_amount": 2327548.61,
-    "total_invoice_with_ppn": 23487081.41,
+    "dpp_amount": 22465296.0,
+    "ppn_11_amount": 2471182.56,
+    "total_invoice_with_ppn": 24936478.56,
     "payment_term_days": 14
   },
   {
@@ -1660,9 +1660,9 @@
     "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 20492371.2,
-    "ppn_11_amount": 2254160.83,
-    "total_invoice_with_ppn": 22746532.03,
+    "dpp_amount": 21178192.0,
+    "ppn_11_amount": 2329601.12,
+    "total_invoice_with_ppn": 23507793.12,
     "payment_term_days": 14
   },
   {
@@ -1670,42 +1670,42 @@
     "so_number": "SO-202607-0120",
     "do_number": "DO-202607-0120",
     "date_invoice": "2026-07-10",
-    "due_date": "2026-07-24",
+    "due_date": "2026-07-17",
     "customer": "CUST-GT-19 - Grosir Teling Sentosa Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 24317888.0,
-    "ppn_11_amount": 2674967.68,
-    "total_invoice_with_ppn": 26992855.68,
-    "payment_term_days": 14
+    "dpp_amount": 23001843.2,
+    "ppn_11_amount": 2530202.75,
+    "total_invoice_with_ppn": 25532045.95,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0121",
     "so_number": "SO-202607-0121",
     "do_number": "DO-202607-0121",
     "date_invoice": "2026-07-10",
-    "due_date": "2026-07-24",
+    "due_date": "2026-07-17",
     "customer": "CUST-GT-21 - Grosir Tingkulu Jaya Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 16835168.0,
-    "ppn_11_amount": 1851868.48,
-    "total_invoice_with_ppn": 18687036.48,
-    "payment_term_days": 14
+    "dpp_amount": 17131430.4,
+    "ppn_11_amount": 1884457.34,
+    "total_invoice_with_ppn": 19015887.74,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0122",
     "so_number": "SO-202607-0122",
     "do_number": "DO-202607-0122",
     "date_invoice": "2026-07-10",
-    "due_date": "2026-07-24",
+    "due_date": "2026-07-17",
     "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18744880.0,
-    "ppn_11_amount": 2061936.8,
-    "total_invoice_with_ppn": 20806816.8,
-    "payment_term_days": 14
+    "dpp_amount": 16161152.0,
+    "ppn_11_amount": 1777726.72,
+    "total_invoice_with_ppn": 17938878.72,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0123",
@@ -1716,9 +1716,9 @@
     "customer": "CUST-RTL-010 - Kios Filadelfia Meylan Pondok Damai",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3694020.0,
-    "ppn_11_amount": 406342.2,
-    "total_invoice_with_ppn": 4100362.2,
+    "dpp_amount": 3991240.0,
+    "ppn_11_amount": 439036.4,
+    "total_invoice_with_ppn": 4430276.4,
     "payment_term_days": 0
   },
   {
@@ -1730,9 +1730,9 @@
     "customer": "CUST-RTL-022 - Warung Om Nico Dekat Gereja",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3795924.0,
-    "ppn_11_amount": 417551.64,
-    "total_invoice_with_ppn": 4213475.64,
+    "dpp_amount": 4813420.0,
+    "ppn_11_amount": 529476.2,
+    "total_invoice_with_ppn": 5342896.2,
     "payment_term_days": 0
   },
   {
@@ -1744,9 +1744,9 @@
     "customer": "CUST-RTL-034 - Warung Tante Engelin Depan SD",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5693500.0,
-    "ppn_11_amount": 626285.0,
-    "total_invoice_with_ppn": 6319785.0,
+    "dpp_amount": 5651040.0,
+    "ppn_11_amount": 621614.4,
+    "total_invoice_with_ppn": 6272654.4,
     "payment_term_days": 0
   },
   {
@@ -1758,9 +1758,9 @@
     "customer": "CUST-RTL-046 - Warung Hein Pondok Damai",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5446460.0,
-    "ppn_11_amount": 599110.6,
-    "total_invoice_with_ppn": 6045570.6,
+    "dpp_amount": 4411980.0,
+    "ppn_11_amount": 485317.8,
+    "total_invoice_with_ppn": 4897297.8,
     "payment_term_days": 0
   },
   {
@@ -1772,9 +1772,9 @@
     "customer": "CUST-RTL-058 - Kios Gloria Vicky Dekat Gereja",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4429736.0,
-    "ppn_11_amount": 487270.96,
-    "total_invoice_with_ppn": 4917006.96,
+    "dpp_amount": 3311880.0,
+    "ppn_11_amount": 364306.8,
+    "total_invoice_with_ppn": 3676186.8,
     "payment_term_days": 0
   },
   {
@@ -1786,9 +1786,9 @@
     "customer": "CUST-RTL-070 - Kios Filadelfia Marietje Depan SD",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4745484.0,
-    "ppn_11_amount": 522003.24,
-    "total_invoice_with_ppn": 5267487.24,
+    "dpp_amount": 4527780.0,
+    "ppn_11_amount": 498055.8,
+    "total_invoice_with_ppn": 5025835.8,
     "payment_term_days": 0
   },
   {
@@ -1800,9 +1800,9 @@
     "customer": "CUST-RTL-082 - Warung Om Vonny Pondok Damai",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4819596.0,
-    "ppn_11_amount": 530155.56,
-    "total_invoice_with_ppn": 5349751.56,
+    "dpp_amount": 5056600.0,
+    "ppn_11_amount": 556226.0,
+    "total_invoice_with_ppn": 5612826.0,
     "payment_term_days": 0
   },
   {
@@ -1814,9 +1814,9 @@
     "customer": "CUST-RTL-094 - Warung Tante Yola Dekat Gereja",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 4071528.0,
-    "ppn_11_amount": 447868.08,
-    "total_invoice_with_ppn": 4519396.08,
+    "dpp_amount": 4334008.0,
+    "ppn_11_amount": 476740.88,
+    "total_invoice_with_ppn": 4810748.88,
     "payment_term_days": 0
   },
   {
@@ -1828,9 +1828,9 @@
     "customer": "CUST-RTL-118 - Kios Gloria Meiske Pondok Damai",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 4238280.0,
-    "ppn_11_amount": 466210.8,
-    "total_invoice_with_ppn": 4704490.8,
+    "dpp_amount": 4317024.0,
+    "ppn_11_amount": 474872.64,
+    "total_invoice_with_ppn": 4791896.64,
     "payment_term_days": 0
   },
   {
@@ -1838,14 +1838,14 @@
     "so_number": "SO-202607-0132",
     "do_number": "DO-202607-0132",
     "date_invoice": "2026-07-10",
-    "due_date": "2026-07-31",
+    "due_date": "2026-07-24",
     "customer": "CUST-INST-09 - Katering Berkat Tondano",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 18401280.0,
-    "ppn_11_amount": 2024140.8,
-    "total_invoice_with_ppn": 20425420.8,
-    "payment_term_days": 21
+    "dpp_amount": 18634752.0,
+    "ppn_11_amount": 2049822.72,
+    "total_invoice_with_ppn": 20684574.72,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0133",
@@ -1856,9 +1856,9 @@
     "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 37590854.4,
-    "ppn_11_amount": 4134993.98,
-    "total_invoice_with_ppn": 41725848.38,
+    "dpp_amount": 28978084.8,
+    "ppn_11_amount": 3187589.33,
+    "total_invoice_with_ppn": 32165674.13,
     "payment_term_days": 30
   },
   {
@@ -1866,14 +1866,14 @@
     "so_number": "SO-202607-0134",
     "do_number": "DO-202607-0134",
     "date_invoice": "2026-07-11",
-    "due_date": "2026-08-10",
+    "due_date": "2026-07-25",
     "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 30114547.2,
-    "ppn_11_amount": 3312600.19,
-    "total_invoice_with_ppn": 33427147.39,
-    "payment_term_days": 30
+    "dpp_amount": 35152598.4,
+    "ppn_11_amount": 3866785.82,
+    "total_invoice_with_ppn": 39019384.22,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0135",
@@ -1884,9 +1884,9 @@
     "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17330969.6,
-    "ppn_11_amount": 1906406.66,
-    "total_invoice_with_ppn": 19237376.26,
+    "dpp_amount": 20483232.0,
+    "ppn_11_amount": 2253155.52,
+    "total_invoice_with_ppn": 22736387.52,
     "payment_term_days": 14
   },
   {
@@ -1898,9 +1898,9 @@
     "customer": "CUST-GT-25 - Grosir Megamas Abadi",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17667216.0,
-    "ppn_11_amount": 1943393.76,
-    "total_invoice_with_ppn": 19610609.76,
+    "dpp_amount": 17555070.4,
+    "ppn_11_amount": 1931057.74,
+    "total_invoice_with_ppn": 19486128.14,
     "payment_term_days": 14
   },
   {
@@ -1908,14 +1908,14 @@
     "so_number": "SO-202607-0137",
     "do_number": "DO-202607-0137",
     "date_invoice": "2026-07-11",
-    "due_date": "2026-07-25",
+    "due_date": "2026-07-18",
     "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 16290624.0,
-    "ppn_11_amount": 1791968.64,
-    "total_invoice_with_ppn": 18082592.64,
-    "payment_term_days": 14
+    "dpp_amount": 21189996.8,
+    "ppn_11_amount": 2330899.65,
+    "total_invoice_with_ppn": 23520896.45,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0138",
@@ -1926,9 +1926,9 @@
     "customer": "CUST-RTL-011 - Kios Tante Hein Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5109675.0,
-    "ppn_11_amount": 562064.25,
-    "total_invoice_with_ppn": 5671739.25,
+    "dpp_amount": 4565608.0,
+    "ppn_11_amount": 502216.88,
+    "total_invoice_with_ppn": 5067824.88,
     "payment_term_days": 0
   },
   {
@@ -1940,9 +1940,9 @@
     "customer": "CUST-RTL-023 - Kios Ci Vicky Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3951675.0,
-    "ppn_11_amount": 434684.25,
-    "total_invoice_with_ppn": 4386359.25,
+    "dpp_amount": 4319340.0,
+    "ppn_11_amount": 475127.4,
+    "total_invoice_with_ppn": 4794467.4,
     "payment_term_days": 0
   },
   {
@@ -1954,9 +1954,9 @@
     "customer": "CUST-RTL-035 - Kios Ko Marietje Dekat Mesjid",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5028036.0,
-    "ppn_11_amount": 553083.96,
-    "total_invoice_with_ppn": 5581119.96,
+    "dpp_amount": 4831755.0,
+    "ppn_11_amount": 531493.05,
+    "total_invoice_with_ppn": 5363248.05,
     "payment_term_days": 0
   },
   {
@@ -1968,9 +1968,9 @@
     "customer": "CUST-RTL-047 - Kios Berkat Vonny Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5034984.0,
-    "ppn_11_amount": 553848.24,
-    "total_invoice_with_ppn": 5588832.24,
+    "dpp_amount": 4351185.0,
+    "ppn_11_amount": 478630.35,
+    "total_invoice_with_ppn": 4829815.35,
     "payment_term_days": 0
   },
   {
@@ -1982,9 +1982,9 @@
     "customer": "CUST-RTL-059 - Warung Kasih Yola Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5292060.0,
-    "ppn_11_amount": 582126.6,
-    "total_invoice_with_ppn": 5874186.6,
+    "dpp_amount": 5357680.0,
+    "ppn_11_amount": 589344.8,
+    "total_invoice_with_ppn": 5947024.8,
     "payment_term_days": 0
   },
   {
@@ -1996,9 +1996,9 @@
     "customer": "CUST-RTL-071 - Kios Tante Tin Dekat Mesjid",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5593140.0,
-    "ppn_11_amount": 615245.4,
-    "total_invoice_with_ppn": 6208385.4,
+    "dpp_amount": 5703150.0,
+    "ppn_11_amount": 627346.5,
+    "total_invoice_with_ppn": 6330496.5,
     "payment_term_days": 0
   },
   {
@@ -2010,9 +2010,9 @@
     "customer": "CUST-RTL-083 - Kios Ci Meiske Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6091080.0,
-    "ppn_11_amount": 670018.8,
-    "total_invoice_with_ppn": 6761098.8,
+    "dpp_amount": 3589800.0,
+    "ppn_11_amount": 394878.0,
+    "total_invoice_with_ppn": 3984678.0,
     "payment_term_days": 0
   },
   {
@@ -2024,9 +2024,9 @@
     "customer": "CUST-RTL-095 - Kios Ko Franky Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5491815.0,
-    "ppn_11_amount": 604099.65,
-    "total_invoice_with_ppn": 6095914.65,
+    "dpp_amount": 5005455.0,
+    "ppn_11_amount": 550600.05,
+    "total_invoice_with_ppn": 5556055.05,
     "payment_term_days": 0
   },
   {
@@ -2038,9 +2038,9 @@
     "customer": "CUST-RTL-119 - Warung Kasih Joppy Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 6125820.0,
-    "ppn_11_amount": 673840.2,
-    "total_invoice_with_ppn": 6799660.2,
+    "dpp_amount": 4706112.0,
+    "ppn_11_amount": 517672.32,
+    "total_invoice_with_ppn": 5223784.32,
     "payment_term_days": 0
   },
   {
@@ -2048,14 +2048,14 @@
     "so_number": "SO-202607-0147",
     "do_number": "DO-202607-0147",
     "date_invoice": "2026-07-11",
-    "due_date": "2026-08-01",
+    "due_date": "2026-08-10",
     "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 18397440.0,
-    "ppn_11_amount": 2023718.4,
-    "total_invoice_with_ppn": 20421158.4,
-    "payment_term_days": 21
+    "dpp_amount": 18456960.0,
+    "ppn_11_amount": 2030265.6,
+    "total_invoice_with_ppn": 20487225.6,
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0148",
@@ -2066,9 +2066,9 @@
     "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 35189949.6,
-    "ppn_11_amount": 3870894.46,
-    "total_invoice_with_ppn": 39060844.06,
+    "dpp_amount": 30601440.0,
+    "ppn_11_amount": 3366158.4,
+    "total_invoice_with_ppn": 33967598.4,
     "payment_term_days": 30
   },
   {
@@ -2076,14 +2076,14 @@
     "so_number": "SO-202607-0149",
     "do_number": "DO-202607-0149",
     "date_invoice": "2026-07-13",
-    "due_date": "2026-08-12",
+    "due_date": "2026-08-27",
     "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 36795103.2,
-    "ppn_11_amount": 4047461.35,
-    "total_invoice_with_ppn": 40842564.55,
-    "payment_term_days": 30
+    "dpp_amount": 28594713.6,
+    "ppn_11_amount": 3145418.5,
+    "total_invoice_with_ppn": 31740132.1,
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0150",
@@ -2094,9 +2094,9 @@
     "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 21771859.2,
-    "ppn_11_amount": 2394904.51,
-    "total_invoice_with_ppn": 24166763.71,
+    "dpp_amount": 20789395.2,
+    "ppn_11_amount": 2286833.47,
+    "total_invoice_with_ppn": 23076228.67,
     "payment_term_days": 14
   },
   {
@@ -2104,28 +2104,28 @@
     "so_number": "SO-202607-0151",
     "do_number": "DO-202607-0151",
     "date_invoice": "2026-07-13",
-    "due_date": "2026-07-27",
+    "due_date": "2026-07-20",
     "customer": "CUST-GT-30 - Toko Berkat Bahu Sejahtera",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 23266880.0,
-    "ppn_11_amount": 2559356.8,
-    "total_invoice_with_ppn": 25826236.8,
-    "payment_term_days": 14
+    "dpp_amount": 21260064.0,
+    "ppn_11_amount": 2338607.04,
+    "total_invoice_with_ppn": 23598671.04,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0152",
     "so_number": "SO-202607-0152",
     "do_number": "DO-202607-0152",
     "date_invoice": "2026-07-13",
-    "due_date": "2026-07-27",
+    "due_date": "2026-07-20",
     "customer": "CUST-GT-32 - Toko Ranotana Jaya",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 19917744.0,
-    "ppn_11_amount": 2190951.84,
-    "total_invoice_with_ppn": 22108695.84,
-    "payment_term_days": 14
+    "dpp_amount": 21806131.2,
+    "ppn_11_amount": 2398674.43,
+    "total_invoice_with_ppn": 24204805.63,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0153",
@@ -2136,9 +2136,9 @@
     "customer": "CUST-RTL-012 - Warung Om Vonny Tikungan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4342500.0,
-    "ppn_11_amount": 477675.0,
-    "total_invoice_with_ppn": 4820175.0,
+    "dpp_amount": 5301324.0,
+    "ppn_11_amount": 583145.64,
+    "total_invoice_with_ppn": 5884469.64,
     "payment_term_days": 0
   },
   {
@@ -2150,9 +2150,9 @@
     "customer": "CUST-RTL-024 - Warung Tante Yola Ujung Lorong",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4713060.0,
-    "ppn_11_amount": 518436.6,
-    "total_invoice_with_ppn": 5231496.6,
+    "dpp_amount": 3531900.0,
+    "ppn_11_amount": 388509.0,
+    "total_invoice_with_ppn": 3920409.0,
     "payment_term_days": 0
   },
   {
@@ -2164,9 +2164,9 @@
     "customer": "CUST-RTL-036 - Warung Tin Puncak",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4341728.0,
-    "ppn_11_amount": 477590.08,
-    "total_invoice_with_ppn": 4819318.08,
+    "dpp_amount": 3454700.0,
+    "ppn_11_amount": 380017.0,
+    "total_invoice_with_ppn": 3834717.0,
     "payment_term_days": 0
   },
   {
@@ -2178,9 +2178,9 @@
     "customer": "CUST-RTL-048 - Kios Gloria Meiske Tikungan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5779192.0,
-    "ppn_11_amount": 635711.12,
-    "total_invoice_with_ppn": 6414903.12,
+    "dpp_amount": 4400400.0,
+    "ppn_11_amount": 484044.0,
+    "total_invoice_with_ppn": 4884444.0,
     "payment_term_days": 0
   },
   {
@@ -2192,9 +2192,9 @@
     "customer": "CUST-RTL-060 - Kios Filadelfia Franky Ujung Lorong",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3559692.0,
-    "ppn_11_amount": 391566.12,
-    "total_invoice_with_ppn": 3951258.12,
+    "dpp_amount": 3543480.0,
+    "ppn_11_amount": 389782.8,
+    "total_invoice_with_ppn": 3933262.8,
     "payment_term_days": 0
   },
   {
@@ -2206,9 +2206,9 @@
     "customer": "CUST-RTL-072 - Warung Om Oce Puncak",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3910180.0,
-    "ppn_11_amount": 430119.8,
-    "total_invoice_with_ppn": 4340299.8,
+    "dpp_amount": 4713060.0,
+    "ppn_11_amount": 518436.6,
+    "total_invoice_with_ppn": 5231496.6,
     "payment_term_days": 0
   },
   {
@@ -2220,9 +2220,9 @@
     "customer": "CUST-RTL-090 - Kios Filadelfia Jacky Puncak",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5778420.0,
-    "ppn_11_amount": 635626.2,
-    "total_invoice_with_ppn": 6414046.2,
+    "dpp_amount": 4341728.0,
+    "ppn_11_amount": 477590.08,
+    "total_invoice_with_ppn": 4819318.08,
     "payment_term_days": 0
   },
   {
@@ -2234,9 +2234,9 @@
     "customer": "CUST-RTL-114 - Warung Tante Ritha Ujung Lorong",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5380840.0,
-    "ppn_11_amount": 591892.4,
-    "total_invoice_with_ppn": 5972732.4,
+    "dpp_amount": 5779192.0,
+    "ppn_11_amount": 635711.12,
+    "total_invoice_with_ppn": 6414903.12,
     "payment_term_days": 0
   },
   {
@@ -2244,28 +2244,28 @@
     "so_number": "SO-202607-0161",
     "do_number": "DO-202607-0161",
     "date_invoice": "2026-07-14",
-    "due_date": "2026-08-13",
+    "due_date": "2026-08-28",
     "customer": "CUST-MT-01 - Indomarett DC Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 35795342.4,
-    "ppn_11_amount": 3937487.66,
-    "total_invoice_with_ppn": 39732830.06,
-    "payment_term_days": 30
+    "dpp_amount": 30489955.2,
+    "ppn_11_amount": 3353895.07,
+    "total_invoice_with_ppn": 33843850.27,
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0162",
     "so_number": "SO-202607-0162",
     "do_number": "DO-202607-0162",
     "date_invoice": "2026-07-14",
-    "due_date": "2026-08-13",
+    "due_date": "2026-08-28",
     "customer": "CUST-MT-02 - Alfamiddii DC Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 33457953.6,
-    "ppn_11_amount": 3680374.9,
-    "total_invoice_with_ppn": 37138328.5,
-    "payment_term_days": 30
+    "dpp_amount": 30919778.4,
+    "ppn_11_amount": 3401175.62,
+    "total_invoice_with_ppn": 34320954.02,
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0163",
@@ -2276,9 +2276,9 @@
     "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 21762910.4,
-    "ppn_11_amount": 2393920.14,
-    "total_invoice_with_ppn": 24156830.54,
+    "dpp_amount": 19066656.0,
+    "ppn_11_amount": 2097332.16,
+    "total_invoice_with_ppn": 21163988.16,
     "payment_term_days": 14
   },
   {
@@ -2290,9 +2290,9 @@
     "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 19573881.6,
-    "ppn_11_amount": 2153126.98,
-    "total_invoice_with_ppn": 21727008.58,
+    "dpp_amount": 17356864.0,
+    "ppn_11_amount": 1909255.04,
+    "total_invoice_with_ppn": 19266119.04,
     "payment_term_days": 14
   },
   {
@@ -2304,9 +2304,9 @@
     "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 23338089.6,
-    "ppn_11_amount": 2567189.86,
-    "total_invoice_with_ppn": 25905279.46,
+    "dpp_amount": 16162675.2,
+    "ppn_11_amount": 1777894.27,
+    "total_invoice_with_ppn": 17940569.47,
     "payment_term_days": 14
   },
   {
@@ -2314,14 +2314,14 @@
     "so_number": "SO-202607-0166",
     "do_number": "DO-202607-0166",
     "date_invoice": "2026-07-14",
-    "due_date": "2026-07-28",
+    "due_date": "2026-07-21",
     "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 22740614.4,
-    "ppn_11_amount": 2501467.58,
-    "total_invoice_with_ppn": 25242081.98,
-    "payment_term_days": 14
+    "dpp_amount": 23031926.4,
+    "ppn_11_amount": 2533511.9,
+    "total_invoice_with_ppn": 25565438.3,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0167",
@@ -2332,9 +2332,9 @@
     "customer": "CUST-GT-34 - Grosir Tikala Baru",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 21666377.6,
-    "ppn_11_amount": 2383301.54,
-    "total_invoice_with_ppn": 24049679.14,
+    "dpp_amount": 19155001.6,
+    "ppn_11_amount": 2107050.18,
+    "total_invoice_with_ppn": 21262051.78,
     "payment_term_days": 14
   },
   {
@@ -2346,9 +2346,9 @@
     "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 22920923.2,
-    "ppn_11_amount": 2521301.55,
-    "total_invoice_with_ppn": 25442224.75,
+    "dpp_amount": 22919971.2,
+    "ppn_11_amount": 2521196.83,
+    "total_invoice_with_ppn": 25441168.03,
     "payment_term_days": 14
   },
   {
@@ -2356,14 +2356,14 @@
     "so_number": "SO-202607-0169",
     "do_number": "DO-202607-0169",
     "date_invoice": "2026-07-14",
-    "due_date": "2026-07-28",
+    "due_date": "2026-07-21",
     "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 22268232.0,
-    "ppn_11_amount": 2449505.52,
-    "total_invoice_with_ppn": 24717737.52,
-    "payment_term_days": 14
+    "dpp_amount": 22740614.4,
+    "ppn_11_amount": 2501467.58,
+    "total_invoice_with_ppn": 25242081.98,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0170",
@@ -2374,9 +2374,9 @@
     "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5837092.0,
-    "ppn_11_amount": 642080.12,
-    "total_invoice_with_ppn": 6479172.12,
+    "dpp_amount": 5114500.0,
+    "ppn_11_amount": 562595.0,
+    "total_invoice_with_ppn": 5677095.0,
     "payment_term_days": 0
   },
   {
@@ -2388,9 +2388,9 @@
     "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5865270.0,
-    "ppn_11_amount": 645179.7,
-    "total_invoice_with_ppn": 6510449.7,
+    "dpp_amount": 4223226.0,
+    "ppn_11_amount": 464554.86,
+    "total_invoice_with_ppn": 4687780.86,
     "payment_term_days": 0
   },
   {
@@ -2402,9 +2402,9 @@
     "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4990980.0,
-    "ppn_11_amount": 549007.8,
-    "total_invoice_with_ppn": 5539987.8,
+    "dpp_amount": 5035563.0,
+    "ppn_11_amount": 553911.93,
+    "total_invoice_with_ppn": 5589474.93,
     "payment_term_days": 0
   },
   {
@@ -2416,9 +2416,9 @@
     "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4511568.0,
-    "ppn_11_amount": 496272.48,
-    "total_invoice_with_ppn": 5007840.48,
+    "dpp_amount": 4801840.0,
+    "ppn_11_amount": 528202.4,
+    "total_invoice_with_ppn": 5330042.4,
     "payment_term_days": 0
   },
   {
@@ -2430,9 +2430,9 @@
     "customer": "CUST-RTL-049 - Warung Kasih Joppy Jembatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3497160.0,
-    "ppn_11_amount": 384687.6,
-    "total_invoice_with_ppn": 3881847.6,
+    "dpp_amount": 5384700.0,
+    "ppn_11_amount": 592317.0,
+    "total_invoice_with_ppn": 5977017.0,
     "payment_term_days": 0
   },
   {
@@ -2444,9 +2444,9 @@
     "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5400912.0,
-    "ppn_11_amount": 594100.32,
-    "total_invoice_with_ppn": 5995012.32,
+    "dpp_amount": 3474000.0,
+    "ppn_11_amount": 382140.0,
+    "total_invoice_with_ppn": 3856140.0,
     "payment_term_days": 0
   },
   {
@@ -2458,9 +2458,9 @@
     "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5025720.0,
-    "ppn_11_amount": 552829.2,
-    "total_invoice_with_ppn": 5578549.2,
+    "dpp_amount": 4817280.0,
+    "ppn_11_amount": 529900.8,
+    "total_invoice_with_ppn": 5347180.8,
     "payment_term_days": 0
   },
   {
@@ -2472,9 +2472,9 @@
     "customer": "CUST-RTL-097 - Kios Berkat Stenly Bawah Pohon",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5573840.0,
-    "ppn_11_amount": 613122.4,
-    "total_invoice_with_ppn": 6186962.4,
+    "dpp_amount": 3362832.0,
+    "ppn_11_amount": 369911.52,
+    "total_invoice_with_ppn": 3732743.52,
     "payment_term_days": 0
   },
   {
@@ -2482,14 +2482,14 @@
     "so_number": "SO-202607-0178",
     "do_number": "DO-202607-0178",
     "date_invoice": "2026-07-14",
-    "due_date": "2026-08-04",
+    "due_date": "2026-08-13",
     "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 21040128.0,
-    "ppn_11_amount": 2314414.08,
-    "total_invoice_with_ppn": 23354542.08,
-    "payment_term_days": 21
+    "dpp_amount": 14935680.0,
+    "ppn_11_amount": 1642924.8,
+    "total_invoice_with_ppn": 16578604.8,
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0179",
@@ -2500,9 +2500,9 @@
     "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 38358734.4,
-    "ppn_11_amount": 4219460.78,
-    "total_invoice_with_ppn": 42578195.18,
+    "dpp_amount": 34209907.2,
+    "ppn_11_amount": 3763089.79,
+    "total_invoice_with_ppn": 37972996.99,
     "payment_term_days": 30
   },
   {
@@ -2510,14 +2510,14 @@
     "so_number": "SO-202607-0180",
     "do_number": "DO-202607-0180",
     "date_invoice": "2026-07-15",
-    "due_date": "2026-08-14",
+    "due_date": "2026-07-29",
     "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 37894214.4,
-    "ppn_11_amount": 4168363.58,
-    "total_invoice_with_ppn": 42062577.98,
-    "payment_term_days": 30
+    "dpp_amount": 33748800.0,
+    "ppn_11_amount": 3712368.0,
+    "total_invoice_with_ppn": 37461168.0,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0181",
@@ -2528,9 +2528,9 @@
     "customer": "CUST-GT-07 - Toko Harapan Bersehati",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 16720928.0,
-    "ppn_11_amount": 1839302.08,
-    "total_invoice_with_ppn": 18560230.08,
+    "dpp_amount": 23391782.4,
+    "ppn_11_amount": 2573096.06,
+    "total_invoice_with_ppn": 25964878.46,
     "payment_term_days": 14
   },
   {
@@ -2542,9 +2542,9 @@
     "customer": "CUST-GT-08 - Grosir Bintang Samrat Sario",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 19565884.8,
-    "ppn_11_amount": 2152247.33,
-    "total_invoice_with_ppn": 21718132.13,
+    "dpp_amount": 17353056.0,
+    "ppn_11_amount": 1908836.16,
+    "total_invoice_with_ppn": 19261892.16,
     "payment_term_days": 14
   },
   {
@@ -2552,14 +2552,14 @@
     "so_number": "SO-202607-0183",
     "do_number": "DO-202607-0183",
     "date_invoice": "2026-07-15",
-    "due_date": "2026-07-29",
+    "due_date": "2026-07-22",
     "customer": "CUST-GT-09 - Grosir Manado Raya Sario",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 15463526.4,
-    "ppn_11_amount": 1700987.9,
-    "total_invoice_with_ppn": 17164514.3,
-    "payment_term_days": 14
+    "dpp_amount": 20752457.6,
+    "ppn_11_amount": 2282770.34,
+    "total_invoice_with_ppn": 23035227.94,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0184",
@@ -2570,9 +2570,9 @@
     "customer": "CUST-GT-38 - Toko Paal Dua Jaya",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 16468457.6,
-    "ppn_11_amount": 1811530.34,
-    "total_invoice_with_ppn": 18279987.94,
+    "dpp_amount": 15909824.0,
+    "ppn_11_amount": 1750080.64,
+    "total_invoice_with_ppn": 17659904.64,
     "payment_term_days": 14
   },
   {
@@ -2584,9 +2584,9 @@
     "customer": "CUST-GT-39 - Toko Berkat Melimpah Paal Dua",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 16841832.0,
-    "ppn_11_amount": 1852601.52,
-    "total_invoice_with_ppn": 18694433.52,
+    "dpp_amount": 16004262.4,
+    "ppn_11_amount": 1760468.86,
+    "total_invoice_with_ppn": 17764731.26,
     "payment_term_days": 14
   },
   {
@@ -2594,14 +2594,14 @@
     "so_number": "SO-202607-0186",
     "do_number": "DO-202607-0186",
     "date_invoice": "2026-07-15",
-    "due_date": "2026-07-29",
+    "due_date": "2026-07-22",
     "customer": "CUST-GT-40 - Grosir Sentosa Perkasa Perkamil",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 23328950.4,
-    "ppn_11_amount": 2566184.54,
-    "total_invoice_with_ppn": 25895134.94,
-    "payment_term_days": 14
+    "dpp_amount": 20704096.0,
+    "ppn_11_amount": 2277450.56,
+    "total_invoice_with_ppn": 22981546.56,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0187",
@@ -2612,9 +2612,9 @@
     "customer": "CUST-RTL-002 - Warung Om Oce Lorong 2",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5402070.0,
-    "ppn_11_amount": 594227.7,
-    "total_invoice_with_ppn": 5996297.7,
+    "dpp_amount": 5368488.0,
+    "ppn_11_amount": 590533.68,
+    "total_invoice_with_ppn": 5959021.68,
     "payment_term_days": 0
   },
   {
@@ -2626,9 +2626,9 @@
     "customer": "CUST-RTL-014 - Warung Tante Joppy Kompleks",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4289232.0,
-    "ppn_11_amount": 471815.52,
-    "total_invoice_with_ppn": 4761047.52,
+    "dpp_amount": 3557376.0,
+    "ppn_11_amount": 391311.36,
+    "total_invoice_with_ppn": 3948687.36,
     "payment_term_days": 0
   },
   {
@@ -2640,9 +2640,9 @@
     "customer": "CUST-RTL-026 - Warung Siska Perempatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4889655.0,
-    "ppn_11_amount": 537862.05,
-    "total_invoice_with_ppn": 5427517.05,
+    "dpp_amount": 3587484.0,
+    "ppn_11_amount": 394623.24,
+    "total_invoice_with_ppn": 3982107.24,
     "payment_term_days": 0
   },
   {
@@ -2654,9 +2654,9 @@
     "customer": "CUST-RTL-038 - Kios Gloria Utu Lorong 2",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5222580.0,
-    "ppn_11_amount": 574483.8,
-    "total_invoice_with_ppn": 5797063.8,
+    "dpp_amount": 3973870.0,
+    "ppn_11_amount": 437125.7,
+    "total_invoice_with_ppn": 4410995.7,
     "payment_term_days": 0
   },
   {
@@ -2668,9 +2668,9 @@
     "customer": "CUST-RTL-050 - Kios Filadelfia Deasy Kompleks",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5924328.0,
-    "ppn_11_amount": 651676.08,
-    "total_invoice_with_ppn": 6576004.08,
+    "dpp_amount": 4967820.0,
+    "ppn_11_amount": 546460.2,
+    "total_invoice_with_ppn": 5514280.2,
     "payment_term_days": 0
   },
   {
@@ -2682,9 +2682,9 @@
     "customer": "CUST-RTL-062 - Warung Om Stenly Perempatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3547340.0,
-    "ppn_11_amount": 390207.4,
-    "total_invoice_with_ppn": 3937547.4,
+    "dpp_amount": 3960360.0,
+    "ppn_11_amount": 435639.6,
+    "total_invoice_with_ppn": 4395999.6,
     "payment_term_days": 0
   },
   {
@@ -2696,9 +2696,9 @@
     "customer": "CUST-RTL-074 - Warung Tante Meyke Lorong 2",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4006680.0,
-    "ppn_11_amount": 440734.8,
-    "total_invoice_with_ppn": 4447414.8,
+    "dpp_amount": 4879040.0,
+    "ppn_11_amount": 536694.4,
+    "total_invoice_with_ppn": 5415734.4,
     "payment_term_days": 0
   },
   {
@@ -2710,9 +2710,9 @@
     "customer": "CUST-RTL-098 - Kios Gloria Wanda Perempatan",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 4328604.0,
-    "ppn_11_amount": 476146.44,
-    "total_invoice_with_ppn": 4804750.44,
+    "dpp_amount": 4311620.0,
+    "ppn_11_amount": 474278.2,
+    "total_invoice_with_ppn": 4785898.2,
     "payment_term_days": 0
   },
   {
@@ -2720,224 +2720,224 @@
     "so_number": "SO-202607-0195",
     "do_number": "DO-202607-0195",
     "date_invoice": "2026-07-15",
-    "due_date": "2026-08-05",
+    "due_date": "2026-08-14",
     "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 20859264.0,
-    "ppn_11_amount": 2294519.04,
-    "total_invoice_with_ppn": 23153783.04,
-    "payment_term_days": 21
+    "dpp_amount": 14883456.0,
+    "ppn_11_amount": 1637180.16,
+    "total_invoice_with_ppn": 16520636.16,
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0196",
     "so_number": "SO-202607-0196",
     "do_number": "DO-202607-0196",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-08-15",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-08-16",
     "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 39275640.0,
-    "ppn_11_amount": 4320320.4,
-    "total_invoice_with_ppn": 43595960.4,
+    "dpp_amount": 36515822.4,
+    "ppn_11_amount": 4016740.46,
+    "total_invoice_with_ppn": 40532562.86,
     "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0197",
     "so_number": "SO-202607-0197",
     "do_number": "DO-202607-0197",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-08-15",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-08-16",
     "customer": "CUST-MT-08 - MultiiMart Tomohon",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 36124108.8,
-    "ppn_11_amount": 3973651.97,
-    "total_invoice_with_ppn": 40097760.77,
+    "dpp_amount": 35196206.4,
+    "ppn_11_amount": 3871582.7,
+    "total_invoice_with_ppn": 39067789.1,
     "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0198",
     "so_number": "SO-202607-0198",
     "do_number": "DO-202607-0198",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-30",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-31",
     "customer": "CUST-GT-11 - Grosir Krida Bahu",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 20421542.4,
-    "ppn_11_amount": 2246369.66,
-    "total_invoice_with_ppn": 22667912.06,
+    "dpp_amount": 15334244.8,
+    "ppn_11_amount": 1686766.93,
+    "total_invoice_with_ppn": 17021011.73,
     "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0199",
     "so_number": "SO-202607-0199",
     "do_number": "DO-202607-0199",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-30",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-31",
     "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18640350.4,
-    "ppn_11_amount": 2050438.54,
-    "total_invoice_with_ppn": 20690788.94,
+    "dpp_amount": 24272001.6,
+    "ppn_11_amount": 2669920.18,
+    "total_invoice_with_ppn": 26941921.78,
     "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0200",
     "so_number": "SO-202607-0200",
     "do_number": "DO-202607-0200",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-30",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-24",
     "customer": "CUST-GT-13 - Grosir Malalayang Satu",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17556784.0,
-    "ppn_11_amount": 1931246.24,
-    "total_invoice_with_ppn": 19488030.24,
-    "payment_term_days": 14
+    "dpp_amount": 16809273.6,
+    "ppn_11_amount": 1849020.1,
+    "total_invoice_with_ppn": 18658293.7,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0201",
     "so_number": "SO-202607-0201",
     "do_number": "DO-202607-0201",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-30",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-24",
     "customer": "CUST-GT-15 - Grosir Kleak Mandiri",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 24608248.0,
-    "ppn_11_amount": 2706907.28,
-    "total_invoice_with_ppn": 27315155.28,
-    "payment_term_days": 14
+    "dpp_amount": 22742518.4,
+    "ppn_11_amount": 2501677.02,
+    "total_invoice_with_ppn": 25244195.42,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0202",
     "so_number": "SO-202607-0202",
     "do_number": "DO-202607-0202",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-16",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-17",
     "customer": "CUST-RTL-003 - Kios Ci Utu Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5783052.0,
-    "ppn_11_amount": 636135.72,
-    "total_invoice_with_ppn": 6419187.72,
+    "dpp_amount": 6129680.0,
+    "ppn_11_amount": 674264.8,
+    "total_invoice_with_ppn": 6803944.8,
     "payment_term_days": 0
   },
   {
     "invoice_number": "INV-202607-0203",
     "so_number": "SO-202607-0203",
     "do_number": "DO-202607-0203",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-16",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-17",
     "customer": "CUST-RTL-015 - Kios Ko Deasy Pasar",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3612960.0,
-    "ppn_11_amount": 397425.6,
-    "total_invoice_with_ppn": 4010385.6,
+    "dpp_amount": 4805700.0,
+    "ppn_11_amount": 528627.0,
+    "total_invoice_with_ppn": 5334327.0,
     "payment_term_days": 0
   },
   {
     "invoice_number": "INV-202607-0204",
     "so_number": "SO-202607-0204",
     "do_number": "DO-202607-0204",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-16",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-17",
     "customer": "CUST-RTL-027 - Kios Berkat Stenly Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5257320.0,
-    "ppn_11_amount": 578305.2,
-    "total_invoice_with_ppn": 5835625.2,
+    "dpp_amount": 5127624.0,
+    "ppn_11_amount": 564038.64,
+    "total_invoice_with_ppn": 5691662.64,
     "payment_term_days": 0
   },
   {
     "invoice_number": "INV-202607-0205",
     "so_number": "SO-202607-0205",
     "do_number": "DO-202607-0205",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-16",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-17",
     "customer": "CUST-RTL-039 - Warung Kasih Meyke Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3528040.0,
-    "ppn_11_amount": 388084.4,
-    "total_invoice_with_ppn": 3916124.4,
+    "dpp_amount": 5199420.0,
+    "ppn_11_amount": 571936.2,
+    "total_invoice_with_ppn": 5771356.2,
     "payment_term_days": 0
   },
   {
     "invoice_number": "INV-202607-0206",
     "so_number": "SO-202607-0206",
     "do_number": "DO-202607-0206",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-16",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-17",
     "customer": "CUST-RTL-051 - Kios Tante Ronny Pasar",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3804030.0,
-    "ppn_11_amount": 418443.3,
-    "total_invoice_with_ppn": 4222473.3,
+    "dpp_amount": 4918605.0,
+    "ppn_11_amount": 541046.55,
+    "total_invoice_with_ppn": 5459651.55,
     "payment_term_days": 0
   },
   {
     "invoice_number": "INV-202607-0207",
     "so_number": "SO-202607-0207",
     "do_number": "DO-202607-0207",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-16",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-17",
     "customer": "CUST-RTL-063 - Kios Ci Wanda Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5731135.0,
-    "ppn_11_amount": 630424.85,
-    "total_invoice_with_ppn": 6361559.85,
+    "dpp_amount": 5106780.0,
+    "ppn_11_amount": 561745.8,
+    "total_invoice_with_ppn": 5668525.8,
     "payment_term_days": 0
   },
   {
     "invoice_number": "INV-202607-0208",
     "so_number": "SO-202607-0208",
     "do_number": "DO-202607-0208",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-16",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-17",
     "customer": "CUST-RTL-075 - Kios Ko Ferry Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4053000.0,
-    "ppn_11_amount": 445830.0,
-    "total_invoice_with_ppn": 4498830.0,
+    "dpp_amount": 6161718.0,
+    "ppn_11_amount": 677788.98,
+    "total_invoice_with_ppn": 6839506.98,
     "payment_term_days": 0
   },
   {
     "invoice_number": "INV-202607-0209",
     "so_number": "SO-202607-0209",
     "do_number": "DO-202607-0209",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-07-16",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-07-17",
     "customer": "CUST-RTL-099 - Warung Kasih Roy Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5118360.0,
-    "ppn_11_amount": 563019.6,
-    "total_invoice_with_ppn": 5681379.6,
+    "dpp_amount": 3814645.0,
+    "ppn_11_amount": 419610.95,
+    "total_invoice_with_ppn": 4234255.95,
     "payment_term_days": 0
   },
   {
     "invoice_number": "INV-202607-0210",
     "so_number": "SO-202607-0210",
     "do_number": "DO-202607-0210",
-    "date_invoice": "2026-07-16",
-    "due_date": "2026-08-06",
+    "date_invoice": "2026-07-17",
+    "due_date": "2026-08-16",
     "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 16229376.0,
-    "ppn_11_amount": 1785231.36,
-    "total_invoice_with_ppn": 18014607.36,
-    "payment_term_days": 21
+    "dpp_amount": 16076160.0,
+    "ppn_11_amount": 1768377.6,
+    "total_invoice_with_ppn": 17844537.6,
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0211",
@@ -2948,9 +2948,9 @@
     "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 34836724.8,
-    "ppn_11_amount": 3832039.73,
-    "total_invoice_with_ppn": 38668764.53,
+    "dpp_amount": 38743053.6,
+    "ppn_11_amount": 4261735.9,
+    "total_invoice_with_ppn": 43004789.5,
     "payment_term_days": 30
   },
   {
@@ -2958,14 +2958,14 @@
     "so_number": "SO-202607-0212",
     "do_number": "DO-202607-0212",
     "date_invoice": "2026-07-18",
-    "due_date": "2026-08-17",
+    "due_date": "2026-08-01",
     "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 36410025.6,
-    "ppn_11_amount": 4005102.82,
-    "total_invoice_with_ppn": 40415128.42,
-    "payment_term_days": 30
+    "dpp_amount": 30078144.0,
+    "ppn_11_amount": 3308595.84,
+    "total_invoice_with_ppn": 33386739.84,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0213",
@@ -2976,9 +2976,9 @@
     "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 22091160.0,
-    "ppn_11_amount": 2430027.6,
-    "total_invoice_with_ppn": 24521187.6,
+    "dpp_amount": 18286016.0,
+    "ppn_11_amount": 2011461.76,
+    "total_invoice_with_ppn": 20297477.76,
     "payment_term_days": 14
   },
   {
@@ -2990,9 +2990,9 @@
     "customer": "CUST-GT-25 - Grosir Megamas Abadi",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 23934993.6,
-    "ppn_11_amount": 2632849.3,
-    "total_invoice_with_ppn": 26567842.9,
+    "dpp_amount": 16837072.0,
+    "ppn_11_amount": 1852077.92,
+    "total_invoice_with_ppn": 18689149.92,
     "payment_term_days": 14
   },
   {
@@ -3000,28 +3000,28 @@
     "so_number": "SO-202607-0215",
     "do_number": "DO-202607-0215",
     "date_invoice": "2026-07-18",
-    "due_date": "2026-08-01",
+    "due_date": "2026-07-25",
     "customer": "CUST-GT-26 - Toko Karombasan Baru",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 19396809.6,
-    "ppn_11_amount": 2133649.06,
-    "total_invoice_with_ppn": 21530458.66,
-    "payment_term_days": 14
+    "dpp_amount": 17330208.0,
+    "ppn_11_amount": 1906322.88,
+    "total_invoice_with_ppn": 19236530.88,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0216",
     "so_number": "SO-202607-0216",
     "do_number": "DO-202607-0216",
     "date_invoice": "2026-07-18",
-    "due_date": "2026-08-01",
+    "due_date": "2026-07-25",
     "customer": "CUST-GT-28 - Toko Sam Ratulangi Perkasa",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 19890326.4,
-    "ppn_11_amount": 2187935.9,
-    "total_invoice_with_ppn": 22078262.3,
-    "payment_term_days": 14
+    "dpp_amount": 24125584.0,
+    "ppn_11_amount": 2653814.24,
+    "total_invoice_with_ppn": 26779398.24,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0217",
@@ -3032,9 +3032,9 @@
     "customer": "CUST-RTL-005 - Kios Ko Ferry Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4303128.0,
-    "ppn_11_amount": 473344.08,
-    "total_invoice_with_ppn": 4776472.08,
+    "dpp_amount": 4805700.0,
+    "ppn_11_amount": 528627.0,
+    "total_invoice_with_ppn": 5334327.0,
     "payment_term_days": 0
   },
   {
@@ -3046,9 +3046,9 @@
     "customer": "CUST-RTL-017 - Kios Berkat Grace Dekat Mesjid",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4377240.0,
-    "ppn_11_amount": 481496.4,
-    "total_invoice_with_ppn": 4858736.4,
+    "dpp_amount": 3427680.0,
+    "ppn_11_amount": 377044.8,
+    "total_invoice_with_ppn": 3804724.8,
     "payment_term_days": 0
   },
   {
@@ -3060,9 +3060,9 @@
     "customer": "CUST-RTL-029 - Warung Kasih Roy Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5060460.0,
-    "ppn_11_amount": 556650.6,
-    "total_invoice_with_ppn": 5617110.6,
+    "dpp_amount": 4660950.0,
+    "ppn_11_amount": 512704.5,
+    "total_invoice_with_ppn": 5173654.5,
     "payment_term_days": 0
   },
   {
@@ -3074,9 +3074,9 @@
     "customer": "CUST-RTL-041 - Kios Tante Dani Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5894220.0,
-    "ppn_11_amount": 648364.2,
-    "total_invoice_with_ppn": 6542584.2,
+    "dpp_amount": 4814964.0,
+    "ppn_11_amount": 529646.04,
+    "total_invoice_with_ppn": 5344610.04,
     "payment_term_days": 0
   },
   {
@@ -3088,9 +3088,9 @@
     "customer": "CUST-RTL-053 - Kios Ci Bobby Dekat Mesjid",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3927550.0,
-    "ppn_11_amount": 432030.5,
-    "total_invoice_with_ppn": 4359580.5,
+    "dpp_amount": 4861284.0,
+    "ppn_11_amount": 534741.24,
+    "total_invoice_with_ppn": 5396025.24,
     "payment_term_days": 0
   },
   {
@@ -3102,9 +3102,9 @@
     "customer": "CUST-RTL-065 - Kios Ko Vera Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3944920.0,
-    "ppn_11_amount": 433941.2,
-    "total_invoice_with_ppn": 4378861.2,
+    "dpp_amount": 6260148.0,
+    "ppn_11_amount": 688616.28,
+    "total_invoice_with_ppn": 6948764.28,
     "payment_term_days": 0
   },
   {
@@ -3116,9 +3116,9 @@
     "customer": "CUST-RTL-077 - Kios Berkat Ventje Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5080725.0,
-    "ppn_11_amount": 558879.75,
-    "total_invoice_with_ppn": 5639604.75,
+    "dpp_amount": 5964858.0,
+    "ppn_11_amount": 656134.38,
+    "total_invoice_with_ppn": 6620992.38,
     "payment_term_days": 0
   },
   {
@@ -3130,9 +3130,9 @@
     "customer": "CUST-RTL-101 - Kios Tante Pingkan Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 3612960.0,
-    "ppn_11_amount": 397425.6,
-    "total_invoice_with_ppn": 4010385.6,
+    "dpp_amount": 4678320.0,
+    "ppn_11_amount": 514615.2,
+    "total_invoice_with_ppn": 5192935.2,
     "payment_term_days": 0
   },
   {
@@ -3140,14 +3140,14 @@
     "so_number": "SO-202607-0225",
     "do_number": "DO-202607-0225",
     "date_invoice": "2026-07-18",
-    "due_date": "2026-08-08",
+    "due_date": "2026-08-01",
     "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 17268480.0,
-    "ppn_11_amount": 1899532.8,
-    "total_invoice_with_ppn": 19168012.8,
-    "payment_term_days": 21
+    "dpp_amount": 22308480.0,
+    "ppn_11_amount": 2453932.8,
+    "total_invoice_with_ppn": 24762412.8,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0226",
@@ -3158,9 +3158,9 @@
     "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 35968636.8,
-    "ppn_11_amount": 3956550.05,
-    "total_invoice_with_ppn": 39925186.85,
+    "dpp_amount": 29936702.4,
+    "ppn_11_amount": 3293037.26,
+    "total_invoice_with_ppn": 33229739.66,
     "payment_term_days": 30
   },
   {
@@ -3168,14 +3168,14 @@
     "so_number": "SO-202607-0227",
     "do_number": "DO-202607-0227",
     "date_invoice": "2026-07-20",
-    "due_date": "2026-08-19",
+    "due_date": "2026-09-03",
     "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 34401592.8,
-    "ppn_11_amount": 3784175.21,
-    "total_invoice_with_ppn": 38185768.01,
-    "payment_term_days": 30
+    "dpp_amount": 38811878.4,
+    "ppn_11_amount": 4269306.62,
+    "total_invoice_with_ppn": 43081185.02,
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0228",
@@ -3186,9 +3186,9 @@
     "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18239558.4,
-    "ppn_11_amount": 2006351.42,
-    "total_invoice_with_ppn": 20245909.82,
+    "dpp_amount": 21863632.0,
+    "ppn_11_amount": 2404999.52,
+    "total_invoice_with_ppn": 24268631.52,
     "payment_term_days": 14
   },
   {
@@ -3196,28 +3196,28 @@
     "so_number": "SO-202607-0229",
     "do_number": "DO-202607-0229",
     "date_invoice": "2026-07-20",
-    "due_date": "2026-08-03",
+    "due_date": "2026-07-27",
     "customer": "CUST-GT-31 - Grosir Sario Damai",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17252524.8,
-    "ppn_11_amount": 1897777.73,
-    "total_invoice_with_ppn": 19150302.53,
-    "payment_term_days": 14
+    "dpp_amount": 20178782.4,
+    "ppn_11_amount": 2219666.06,
+    "total_invoice_with_ppn": 22398448.46,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0230",
     "so_number": "SO-202607-0230",
     "do_number": "DO-202607-0230",
     "date_invoice": "2026-07-20",
-    "due_date": "2026-08-03",
+    "due_date": "2026-07-27",
     "customer": "CUST-GT-33 - Toko Malalayang Megah",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 20156505.6,
-    "ppn_11_amount": 2217215.62,
-    "total_invoice_with_ppn": 22373721.22,
-    "payment_term_days": 14
+    "dpp_amount": 17765843.2,
+    "ppn_11_amount": 1954242.75,
+    "total_invoice_with_ppn": 19720085.95,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0231",
@@ -3228,9 +3228,9 @@
     "customer": "CUST-RTL-006 - Warung Dani Ujung Lorong",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3681475.0,
-    "ppn_11_amount": 404962.25,
-    "total_invoice_with_ppn": 4086437.25,
+    "dpp_amount": 3944920.0,
+    "ppn_11_amount": 433941.2,
+    "total_invoice_with_ppn": 4378861.2,
     "payment_term_days": 0
   },
   {
@@ -3242,9 +3242,9 @@
     "customer": "CUST-RTL-018 - Kios Gloria Bobby Puncak",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3694020.0,
-    "ppn_11_amount": 406342.2,
-    "total_invoice_with_ppn": 4100362.2,
+    "dpp_amount": 5080725.0,
+    "ppn_11_amount": 558879.75,
+    "total_invoice_with_ppn": 5639604.75,
     "payment_term_days": 0
   },
   {
@@ -3256,9 +3256,9 @@
     "customer": "CUST-RTL-030 - Kios Filadelfia Vera Tikungan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5746575.0,
-    "ppn_11_amount": 632123.25,
-    "total_invoice_with_ppn": 6378698.25,
+    "dpp_amount": 3612960.0,
+    "ppn_11_amount": 397425.6,
+    "total_invoice_with_ppn": 4010385.6,
     "payment_term_days": 0
   },
   {
@@ -3270,9 +3270,9 @@
     "customer": "CUST-RTL-042 - Warung Om Ventje Ujung Lorong",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6484800.0,
-    "ppn_11_amount": 713328.0,
-    "total_invoice_with_ppn": 7198128.0,
+    "dpp_amount": 4632000.0,
+    "ppn_11_amount": 509520.0,
+    "total_invoice_with_ppn": 5141520.0,
     "payment_term_days": 0
   },
   {
@@ -3284,9 +3284,9 @@
     "customer": "CUST-RTL-054 - Warung Tante Erna Puncak",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6382510.0,
-    "ppn_11_amount": 702076.1,
-    "total_invoice_with_ppn": 7084586.1,
+    "dpp_amount": 4423560.0,
+    "ppn_11_amount": 486591.6,
+    "total_invoice_with_ppn": 4910151.6,
     "payment_term_days": 0
   },
   {
@@ -3298,9 +3298,9 @@
     "customer": "CUST-RTL-066 - Warung Pingkan Tikungan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5299780.0,
-    "ppn_11_amount": 582975.8,
-    "total_invoice_with_ppn": 5882755.8,
+    "dpp_amount": 5722836.0,
+    "ppn_11_amount": 629511.96,
+    "total_invoice_with_ppn": 6352347.96,
     "payment_term_days": 0
   },
   {
@@ -3312,9 +3312,9 @@
     "customer": "CUST-RTL-078 - Kios Gloria Novry Ujung Lorong",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3873510.0,
-    "ppn_11_amount": 426086.1,
-    "total_invoice_with_ppn": 4299596.1,
+    "dpp_amount": 5398596.0,
+    "ppn_11_amount": 593845.56,
+    "total_invoice_with_ppn": 5992441.56,
     "payment_term_days": 0
   },
   {
@@ -3326,9 +3326,9 @@
     "customer": "CUST-RTL-096 - Warung Siska Ujung Lorong",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 4321270.0,
-    "ppn_11_amount": 475339.7,
-    "total_invoice_with_ppn": 4796609.7,
+    "dpp_amount": 6121188.0,
+    "ppn_11_amount": 673330.68,
+    "total_invoice_with_ppn": 6794518.68,
     "payment_term_days": 0
   },
   {
@@ -3340,9 +3340,9 @@
     "customer": "CUST-RTL-120 - Kios Filadelfia Deasy Tikungan",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 3580536.0,
-    "ppn_11_amount": 393858.96,
-    "total_invoice_with_ppn": 3974394.96,
+    "dpp_amount": 3914040.0,
+    "ppn_11_amount": 430544.4,
+    "total_invoice_with_ppn": 4344584.4,
     "payment_term_days": 0
   },
   {
@@ -3350,42 +3350,42 @@
     "so_number": "SO-202607-0240",
     "do_number": "DO-202607-0240",
     "date_invoice": "2026-07-20",
-    "due_date": "2026-08-10",
+    "due_date": "2026-08-19",
     "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 22761216.0,
-    "ppn_11_amount": 2503733.76,
-    "total_invoice_with_ppn": 25264949.76,
-    "payment_term_days": 21
+    "dpp_amount": 20125440.0,
+    "ppn_11_amount": 2213798.4,
+    "total_invoice_with_ppn": 22339238.4,
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0241",
     "so_number": "SO-202607-0241",
     "do_number": "DO-202607-0241",
     "date_invoice": "2026-07-21",
-    "due_date": "2026-08-20",
+    "due_date": "2026-09-04",
     "customer": "CUST-MT-01 - Indomarett DC Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 36737654.4,
-    "ppn_11_amount": 4041141.98,
-    "total_invoice_with_ppn": 40778796.38,
-    "payment_term_days": 30
+    "dpp_amount": 31621867.2,
+    "ppn_11_amount": 3478405.39,
+    "total_invoice_with_ppn": 35100272.59,
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0242",
     "so_number": "SO-202607-0242",
     "do_number": "DO-202607-0242",
     "date_invoice": "2026-07-21",
-    "due_date": "2026-08-20",
+    "due_date": "2026-09-04",
     "customer": "CUST-MT-02 - Alfamiddii DC Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 30749138.4,
-    "ppn_11_amount": 3382405.22,
-    "total_invoice_with_ppn": 34131543.62,
-    "payment_term_days": 30
+    "dpp_amount": 36782210.4,
+    "ppn_11_amount": 4046043.14,
+    "total_invoice_with_ppn": 40828253.54,
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0243",
@@ -3396,9 +3396,9 @@
     "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 22640083.2,
-    "ppn_11_amount": 2490409.15,
-    "total_invoice_with_ppn": 25130492.35,
+    "dpp_amount": 20878692.8,
+    "ppn_11_amount": 2296656.21,
+    "total_invoice_with_ppn": 23175349.01,
     "payment_term_days": 14
   },
   {
@@ -3410,9 +3410,9 @@
     "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18034688.0,
-    "ppn_11_amount": 1983815.68,
-    "total_invoice_with_ppn": 20018503.68,
+    "dpp_amount": 15737702.4,
+    "ppn_11_amount": 1731147.26,
+    "total_invoice_with_ppn": 17468849.66,
     "payment_term_days": 14
   },
   {
@@ -3424,9 +3424,9 @@
     "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 16410956.8,
-    "ppn_11_amount": 1805205.25,
-    "total_invoice_with_ppn": 18216162.05,
+    "dpp_amount": 18625880.0,
+    "ppn_11_amount": 2048846.8,
+    "total_invoice_with_ppn": 20674726.8,
     "payment_term_days": 14
   },
   {
@@ -3434,28 +3434,28 @@
     "so_number": "SO-202607-0246",
     "do_number": "DO-202607-0246",
     "date_invoice": "2026-07-21",
-    "due_date": "2026-08-04",
+    "due_date": "2026-07-28",
     "customer": "CUST-GT-04 - Toko Pinaesaan Calaca",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 15956281.6,
-    "ppn_11_amount": 1755190.98,
-    "total_invoice_with_ppn": 17711472.58,
-    "payment_term_days": 14
+    "dpp_amount": 21519008.0,
+    "ppn_11_amount": 2367090.88,
+    "total_invoice_with_ppn": 23886098.88,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0247",
     "so_number": "SO-202607-0247",
     "do_number": "DO-202607-0247",
     "date_invoice": "2026-07-21",
-    "due_date": "2026-08-04",
+    "due_date": "2026-07-28",
     "customer": "CUST-GT-06 - Grosir Calaca Baru",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 15863366.4,
-    "ppn_11_amount": 1744970.3,
-    "total_invoice_with_ppn": 17608336.7,
-    "payment_term_days": 14
+    "dpp_amount": 16966924.8,
+    "ppn_11_amount": 1866361.73,
+    "total_invoice_with_ppn": 18833286.53,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0248",
@@ -3466,9 +3466,9 @@
     "customer": "CUST-GT-34 - Grosir Tikala Baru",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 22613046.4,
-    "ppn_11_amount": 2487435.1,
-    "total_invoice_with_ppn": 25100481.5,
+    "dpp_amount": 19407091.2,
+    "ppn_11_amount": 2134780.03,
+    "total_invoice_with_ppn": 21541871.23,
     "payment_term_days": 14
   },
   {
@@ -3480,9 +3480,9 @@
     "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 15899161.6,
-    "ppn_11_amount": 1748907.78,
-    "total_invoice_with_ppn": 17648069.38,
+    "dpp_amount": 23870828.8,
+    "ppn_11_amount": 2625791.17,
+    "total_invoice_with_ppn": 26496619.97,
     "payment_term_days": 14
   },
   {
@@ -3490,14 +3490,14 @@
     "so_number": "SO-202607-0250",
     "do_number": "DO-202607-0250",
     "date_invoice": "2026-07-21",
-    "due_date": "2026-08-04",
+    "due_date": "2026-07-28",
     "customer": "CUST-GT-37 - Grosir Makmur Abadi Tikala",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 21206752.0,
-    "ppn_11_amount": 2332742.72,
-    "total_invoice_with_ppn": 23539494.72,
-    "payment_term_days": 14
+    "dpp_amount": 18886156.8,
+    "ppn_11_amount": 2077477.25,
+    "total_invoice_with_ppn": 20963634.05,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0251",
@@ -3508,9 +3508,9 @@
     "customer": "CUST-RTL-007 - Kios Berkat Ventje Bawah Pohon",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5382384.0,
-    "ppn_11_amount": 592062.24,
-    "total_invoice_with_ppn": 5974446.24,
+    "dpp_amount": 3976572.0,
+    "ppn_11_amount": 437422.92,
+    "total_invoice_with_ppn": 4413994.92,
     "payment_term_days": 0
   },
   {
@@ -3522,9 +3522,9 @@
     "customer": "CUST-RTL-019 - Warung Kasih Erna Lorong 1",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4361800.0,
-    "ppn_11_amount": 479798.0,
-    "total_invoice_with_ppn": 4841598.0,
+    "dpp_amount": 4632000.0,
+    "ppn_11_amount": 509520.0,
+    "total_invoice_with_ppn": 5141520.0,
     "payment_term_days": 0
   },
   {
@@ -3536,9 +3536,9 @@
     "customer": "CUST-RTL-031 - Kios Tante Pingkan Jembatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6137979.0,
-    "ppn_11_amount": 675177.69,
-    "total_invoice_with_ppn": 6813156.69,
+    "dpp_amount": 4789488.0,
+    "ppn_11_amount": 526843.68,
+    "total_invoice_with_ppn": 5316331.68,
     "payment_term_days": 0
   },
   {
@@ -3550,9 +3550,9 @@
     "customer": "CUST-RTL-043 - Kios Ci Novry Bawah Pohon",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4655160.0,
-    "ppn_11_amount": 512067.6,
-    "total_invoice_with_ppn": 5167227.6,
+    "dpp_amount": 5303640.0,
+    "ppn_11_amount": 583400.4,
+    "total_invoice_with_ppn": 5887040.4,
     "payment_term_days": 0
   },
   {
@@ -3564,9 +3564,9 @@
     "customer": "CUST-RTL-055 - Kios Ko Jacky Lorong 1",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4701480.0,
-    "ppn_11_amount": 517162.8,
-    "total_invoice_with_ppn": 5218642.8,
+    "dpp_amount": 3219240.0,
+    "ppn_11_amount": 354116.4,
+    "total_invoice_with_ppn": 3573356.4,
     "payment_term_days": 0
   },
   {
@@ -3578,9 +3578,9 @@
     "customer": "CUST-RTL-067 - Kios Berkat Toar Jembatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4713060.0,
-    "ppn_11_amount": 518436.6,
-    "total_invoice_with_ppn": 5231496.6,
+    "dpp_amount": 4018260.0,
+    "ppn_11_amount": 442008.6,
+    "total_invoice_with_ppn": 4460268.6,
     "payment_term_days": 0
   },
   {
@@ -3592,9 +3592,9 @@
     "customer": "CUST-RTL-079 - Warung Kasih Ritha Bawah Pohon",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3934884.0,
-    "ppn_11_amount": 432837.24,
-    "total_invoice_with_ppn": 4367721.24,
+    "dpp_amount": 3939516.0,
+    "ppn_11_amount": 433346.76,
+    "total_invoice_with_ppn": 4372862.76,
     "payment_term_days": 0
   },
   {
@@ -3606,9 +3606,9 @@
     "customer": "CUST-RTL-103 - Kios Ci Lumimuut Jembatan",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 3682440.0,
-    "ppn_11_amount": 405068.4,
-    "total_invoice_with_ppn": 4087508.4,
+    "dpp_amount": 5288200.0,
+    "ppn_11_amount": 581702.0,
+    "total_invoice_with_ppn": 5869902.0,
     "payment_term_days": 0
   },
   {
@@ -3620,9 +3620,9 @@
     "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 36976740.0,
-    "ppn_11_amount": 4067441.4,
-    "total_invoice_with_ppn": 41044181.4,
+    "dpp_amount": 31966180.8,
+    "ppn_11_amount": 3516279.89,
+    "total_invoice_with_ppn": 35482460.69,
     "payment_term_days": 30
   },
   {
@@ -3630,14 +3630,14 @@
     "so_number": "SO-202607-0260",
     "do_number": "DO-202607-0260",
     "date_invoice": "2026-07-22",
-    "due_date": "2026-08-21",
+    "due_date": "2026-08-05",
     "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 31566504.0,
-    "ppn_11_amount": 3472315.44,
-    "total_invoice_with_ppn": 35038819.44,
-    "payment_term_days": 30
+    "dpp_amount": 37010678.4,
+    "ppn_11_amount": 4071174.62,
+    "total_invoice_with_ppn": 41081853.02,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0261",
@@ -3648,9 +3648,9 @@
     "customer": "CUST-GT-07 - Toko Harapan Bersehati",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17634086.4,
-    "ppn_11_amount": 1939749.5,
-    "total_invoice_with_ppn": 19573835.9,
+    "dpp_amount": 18671385.6,
+    "ppn_11_amount": 2053852.42,
+    "total_invoice_with_ppn": 20725238.02,
     "payment_term_days": 14
   },
   {
@@ -3662,9 +3662,9 @@
     "customer": "CUST-GT-08 - Grosir Bintang Samrat Sario",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 22389326.4,
-    "ppn_11_amount": 2462825.9,
-    "total_invoice_with_ppn": 24852152.3,
+    "dpp_amount": 22071168.0,
+    "ppn_11_amount": 2427828.48,
+    "total_invoice_with_ppn": 24498996.48,
     "payment_term_days": 14
   },
   {
@@ -3672,14 +3672,14 @@
     "so_number": "SO-202607-0263",
     "do_number": "DO-202607-0263",
     "date_invoice": "2026-07-22",
-    "due_date": "2026-08-05",
+    "due_date": "2026-07-29",
     "customer": "CUST-GT-10 - Toko Sario Makmur",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18906720.0,
-    "ppn_11_amount": 2079739.2,
-    "total_invoice_with_ppn": 20986459.2,
-    "payment_term_days": 14
+    "dpp_amount": 18695376.0,
+    "ppn_11_amount": 2056491.36,
+    "total_invoice_with_ppn": 20751867.36,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0264",
@@ -3690,9 +3690,9 @@
     "customer": "CUST-GT-38 - Toko Paal Dua Jaya",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 17865612.8,
-    "ppn_11_amount": 1965217.41,
-    "total_invoice_with_ppn": 19830830.21,
+    "dpp_amount": 23548672.0,
+    "ppn_11_amount": 2590353.92,
+    "total_invoice_with_ppn": 26139025.92,
     "payment_term_days": 14
   },
   {
@@ -3704,9 +3704,9 @@
     "customer": "CUST-GT-39 - Toko Berkat Melimpah Paal Dua",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 19698784.0,
-    "ppn_11_amount": 2166866.24,
-    "total_invoice_with_ppn": 21865650.24,
+    "dpp_amount": 23367411.2,
+    "ppn_11_amount": 2570415.23,
+    "total_invoice_with_ppn": 25937826.43,
     "payment_term_days": 14
   },
   {
@@ -3718,9 +3718,9 @@
     "customer": "CUST-RTL-008 - Kios Gloria Novry Perempatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5426774.0,
-    "ppn_11_amount": 596945.14,
-    "total_invoice_with_ppn": 6023719.14,
+    "dpp_amount": 6137979.0,
+    "ppn_11_amount": 675177.69,
+    "total_invoice_with_ppn": 6813156.69,
     "payment_term_days": 0
   },
   {
@@ -3732,9 +3732,9 @@
     "customer": "CUST-RTL-020 - Kios Filadelfia Jacky Lorong 2",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5609352.0,
-    "ppn_11_amount": 617028.72,
-    "total_invoice_with_ppn": 6226380.72,
+    "dpp_amount": 4655160.0,
+    "ppn_11_amount": 512067.6,
+    "total_invoice_with_ppn": 5167227.6,
     "payment_term_days": 0
   },
   {
@@ -3746,9 +3746,9 @@
     "customer": "CUST-RTL-032 - Warung Om Toar Kompleks",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3830085.0,
-    "ppn_11_amount": 421309.35,
-    "total_invoice_with_ppn": 4251394.35,
+    "dpp_amount": 4701480.0,
+    "ppn_11_amount": 517162.8,
+    "total_invoice_with_ppn": 5218642.8,
     "payment_term_days": 0
   },
   {
@@ -3760,9 +3760,9 @@
     "customer": "CUST-RTL-044 - Warung Tante Ritha Perempatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4076160.0,
-    "ppn_11_amount": 448377.6,
-    "total_invoice_with_ppn": 4524537.6,
+    "dpp_amount": 4713060.0,
+    "ppn_11_amount": 518436.6,
+    "total_invoice_with_ppn": 5231496.6,
     "payment_term_days": 0
   },
   {
@@ -3774,9 +3774,9 @@
     "customer": "CUST-RTL-056 - Warung Lita Lorong 2",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5008350.0,
-    "ppn_11_amount": 550918.5,
-    "total_invoice_with_ppn": 5559268.5,
+    "dpp_amount": 3934884.0,
+    "ppn_11_amount": 432837.24,
+    "total_invoice_with_ppn": 4367721.24,
     "payment_term_days": 0
   },
   {
@@ -3788,9 +3788,9 @@
     "customer": "CUST-RTL-068 - Kios Gloria Lumimuut Kompleks",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6087220.0,
-    "ppn_11_amount": 669594.2,
-    "total_invoice_with_ppn": 6756814.2,
+    "dpp_amount": 3682440.0,
+    "ppn_11_amount": 405068.4,
+    "total_invoice_with_ppn": 4087508.4,
     "payment_term_days": 0
   },
   {
@@ -3802,9 +3802,9 @@
     "customer": "CUST-RTL-080 - Kios Filadelfia Meylan Perempatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4892550.0,
-    "ppn_11_amount": 538180.5,
-    "total_invoice_with_ppn": 5430730.5,
+    "dpp_amount": 5903870.0,
+    "ppn_11_amount": 649425.7,
+    "total_invoice_with_ppn": 6553295.7,
     "payment_term_days": 0
   },
   {
@@ -3816,9 +3816,9 @@
     "customer": "CUST-RTL-104 - Warung Tante Engelin Kompleks",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5133800.0,
-    "ppn_11_amount": 564718.0,
-    "total_invoice_with_ppn": 5698518.0,
+    "dpp_amount": 3523215.0,
+    "ppn_11_amount": 387553.65,
+    "total_invoice_with_ppn": 3910768.65,
     "payment_term_days": 0
   },
   {
@@ -3826,14 +3826,14 @@
     "so_number": "SO-202607-0274",
     "do_number": "DO-202607-0274",
     "date_invoice": "2026-07-22",
-    "due_date": "2026-08-12",
+    "due_date": "2026-08-05",
     "customer": "CUST-INST-07 - Katering Bahu Makmur",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 15335424.0,
-    "ppn_11_amount": 1686896.64,
-    "total_invoice_with_ppn": 17022320.64,
-    "payment_term_days": 21
+    "dpp_amount": 15770880.0,
+    "ppn_11_amount": 1734796.8,
+    "total_invoice_with_ppn": 17505676.8,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0275",
@@ -3844,9 +3844,9 @@
     "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 37653991.2,
-    "ppn_11_amount": 4141939.03,
-    "total_invoice_with_ppn": 41795930.23,
+    "dpp_amount": 33628593.6,
+    "ppn_11_amount": 3699145.3,
+    "total_invoice_with_ppn": 37327738.9,
     "payment_term_days": 30
   },
   {
@@ -3858,9 +3858,9 @@
     "customer": "CUST-MT-08 - MultiiMart Tomohon",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 35281526.4,
-    "ppn_11_amount": 3880967.9,
-    "total_invoice_with_ppn": 39162494.3,
+    "dpp_amount": 37999632.0,
+    "ppn_11_amount": 4179959.52,
+    "total_invoice_with_ppn": 42179591.52,
     "payment_term_days": 30
   },
   {
@@ -3872,9 +3872,9 @@
     "customer": "CUST-GT-11 - Grosir Krida Bahu",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 20003424.0,
-    "ppn_11_amount": 2200376.64,
-    "total_invoice_with_ppn": 22203800.64,
+    "dpp_amount": 20848800.0,
+    "ppn_11_amount": 2293368.0,
+    "total_invoice_with_ppn": 23142168.0,
     "payment_term_days": 14
   },
   {
@@ -3886,9 +3886,9 @@
     "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 22461488.0,
-    "ppn_11_amount": 2470763.68,
-    "total_invoice_with_ppn": 24932251.68,
+    "dpp_amount": 17255380.8,
+    "ppn_11_amount": 1898091.89,
+    "total_invoice_with_ppn": 19153472.69,
     "payment_term_days": 14
   },
   {
@@ -3896,14 +3896,14 @@
     "so_number": "SO-202607-0279",
     "do_number": "DO-202607-0279",
     "date_invoice": "2026-07-23",
-    "due_date": "2026-08-06",
+    "due_date": "2026-07-30",
     "customer": "CUST-GT-14 - Toko Batu Kota Indah",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18303532.8,
-    "ppn_11_amount": 2013388.61,
-    "total_invoice_with_ppn": 20316921.41,
-    "payment_term_days": 14
+    "dpp_amount": 16998912.0,
+    "ppn_11_amount": 1869880.32,
+    "total_invoice_with_ppn": 18868792.32,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0280",
@@ -3914,9 +3914,9 @@
     "customer": "CUST-RTL-009 - Warung Kasih Ritha Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4826544.0,
-    "ppn_11_amount": 530919.84,
-    "total_invoice_with_ppn": 5357463.84,
+    "dpp_amount": 3788976.0,
+    "ppn_11_amount": 416787.36,
+    "total_invoice_with_ppn": 4205763.36,
     "payment_term_days": 0
   },
   {
@@ -3928,9 +3928,9 @@
     "customer": "CUST-RTL-021 - Kios Tante Lita Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5083620.0,
-    "ppn_11_amount": 559198.2,
-    "total_invoice_with_ppn": 5642818.2,
+    "dpp_amount": 5890360.0,
+    "ppn_11_amount": 647939.6,
+    "total_invoice_with_ppn": 6538299.6,
     "payment_term_days": 0
   },
   {
@@ -3942,9 +3942,9 @@
     "customer": "CUST-RTL-033 - Kios Ci Lumimuut Pasar",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5581560.0,
-    "ppn_11_amount": 613971.6,
-    "total_invoice_with_ppn": 6195531.6,
+    "dpp_amount": 3836840.0,
+    "ppn_11_amount": 422052.4,
+    "total_invoice_with_ppn": 4258892.4,
     "payment_term_days": 0
   },
   {
@@ -3956,9 +3956,9 @@
     "customer": "CUST-RTL-045 - Kios Ko Meylan Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5761050.0,
-    "ppn_11_amount": 633715.5,
-    "total_invoice_with_ppn": 6394765.5,
+    "dpp_amount": 4057632.0,
+    "ppn_11_amount": 446339.52,
+    "total_invoice_with_ppn": 4503971.52,
     "payment_term_days": 0
   },
   {
@@ -3970,9 +3970,9 @@
     "customer": "CUST-RTL-057 - Kios Berkat Nico Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3978888.0,
-    "ppn_11_amount": 437677.68,
-    "total_invoice_with_ppn": 4416565.68,
+    "dpp_amount": 5764910.0,
+    "ppn_11_amount": 634140.1,
+    "total_invoice_with_ppn": 6399050.1,
     "payment_term_days": 0
   },
   {
@@ -3984,9 +3984,9 @@
     "customer": "CUST-RTL-069 - Warung Kasih Engelin Pasar",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4330920.0,
-    "ppn_11_amount": 476401.2,
-    "total_invoice_with_ppn": 4807321.2,
+    "dpp_amount": 5912748.0,
+    "ppn_11_amount": 650402.28,
+    "total_invoice_with_ppn": 6563150.28,
     "payment_term_days": 0
   },
   {
@@ -3998,9 +3998,9 @@
     "customer": "CUST-RTL-105 - Kios Ko Marietje Pasar",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 3572430.0,
-    "ppn_11_amount": 392967.3,
-    "total_invoice_with_ppn": 3965397.3,
+    "dpp_amount": 4061685.0,
+    "ppn_11_amount": 446785.35,
+    "total_invoice_with_ppn": 4508470.35,
     "payment_term_days": 0
   },
   {
@@ -4008,14 +4008,14 @@
     "so_number": "SO-202607-0287",
     "do_number": "DO-202607-0287",
     "date_invoice": "2026-07-23",
-    "due_date": "2026-08-13",
+    "due_date": "2026-08-06",
     "customer": "CUST-INST-08 - Restoran Nelayan Megamas",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 19475712.0,
-    "ppn_11_amount": 2142328.32,
-    "total_invoice_with_ppn": 21618040.32,
-    "payment_term_days": 21
+    "dpp_amount": 22049280.0,
+    "ppn_11_amount": 2425420.8,
+    "total_invoice_with_ppn": 24474700.8,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0288",
@@ -4026,9 +4026,9 @@
     "customer": "CUST-MT-05 - FreshhMart Express Tikala",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 33648312.0,
-    "ppn_11_amount": 3701314.32,
-    "total_invoice_with_ppn": 37349626.32,
+    "dpp_amount": 39147470.4,
+    "ppn_11_amount": 4306221.74,
+    "total_invoice_with_ppn": 43453692.14,
     "payment_term_days": 30
   },
   {
@@ -4036,14 +4036,14 @@
     "so_number": "SO-202607-0289",
     "do_number": "DO-202607-0289",
     "date_invoice": "2026-07-24",
-    "due_date": "2026-08-23",
+    "due_date": "2026-08-07",
     "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 29005008.0,
-    "ppn_11_amount": 3190550.88,
-    "total_invoice_with_ppn": 32195558.88,
-    "payment_term_days": 30
+    "dpp_amount": 28057008.0,
+    "ppn_11_amount": 3086270.88,
+    "total_invoice_with_ppn": 31143278.88,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0290",
@@ -4054,9 +4054,9 @@
     "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 15930006.4,
-    "ppn_11_amount": 1752300.7,
-    "total_invoice_with_ppn": 17682307.1,
+    "dpp_amount": 21731304.0,
+    "ppn_11_amount": 2390443.44,
+    "total_invoice_with_ppn": 24121747.44,
     "payment_term_days": 14
   },
   {
@@ -4068,9 +4068,9 @@
     "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18731361.6,
-    "ppn_11_amount": 2060449.78,
-    "total_invoice_with_ppn": 20791811.38,
+    "dpp_amount": 18569331.2,
+    "ppn_11_amount": 2042626.43,
+    "total_invoice_with_ppn": 20611957.63,
     "payment_term_days": 14
   },
   {
@@ -4078,42 +4078,42 @@
     "so_number": "SO-202607-0292",
     "do_number": "DO-202607-0292",
     "date_invoice": "2026-07-24",
-    "due_date": "2026-08-07",
+    "due_date": "2026-07-31",
     "customer": "CUST-GT-19 - Grosir Teling Sentosa Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 21877721.6,
-    "ppn_11_amount": 2406549.38,
-    "total_invoice_with_ppn": 24284270.98,
-    "payment_term_days": 14
+    "dpp_amount": 16168768.0,
+    "ppn_11_amount": 1778564.48,
+    "total_invoice_with_ppn": 17947332.48,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0293",
     "so_number": "SO-202607-0293",
     "do_number": "DO-202607-0293",
     "date_invoice": "2026-07-24",
-    "due_date": "2026-08-07",
+    "due_date": "2026-07-31",
     "customer": "CUST-GT-21 - Grosir Tingkulu Jaya Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 16127260.8,
-    "ppn_11_amount": 1773998.69,
-    "total_invoice_with_ppn": 17901259.49,
-    "payment_term_days": 14
+    "dpp_amount": 20182400.0,
+    "ppn_11_amount": 2220064.0,
+    "total_invoice_with_ppn": 22402464.0,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0294",
     "so_number": "SO-202607-0294",
     "do_number": "DO-202607-0294",
     "date_invoice": "2026-07-24",
-    "due_date": "2026-08-07",
+    "due_date": "2026-07-31",
     "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 24554364.8,
-    "ppn_11_amount": 2700980.13,
-    "total_invoice_with_ppn": 27255344.93,
-    "payment_term_days": 14
+    "dpp_amount": 20003424.0,
+    "ppn_11_amount": 2200376.64,
+    "total_invoice_with_ppn": 22203800.64,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0295",
@@ -4124,9 +4124,9 @@
     "customer": "CUST-RTL-010 - Kios Filadelfia Meylan Pondok Damai",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4493040.0,
-    "ppn_11_amount": 494234.4,
-    "total_invoice_with_ppn": 4987274.4,
+    "dpp_amount": 5720520.0,
+    "ppn_11_amount": 629257.2,
+    "total_invoice_with_ppn": 6349777.2,
     "payment_term_days": 0
   },
   {
@@ -4138,9 +4138,9 @@
     "customer": "CUST-RTL-022 - Warung Om Nico Dekat Gereja",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4938291.0,
-    "ppn_11_amount": 543212.01,
-    "total_invoice_with_ppn": 5481503.01,
+    "dpp_amount": 3662175.0,
+    "ppn_11_amount": 402839.25,
+    "total_invoice_with_ppn": 4065014.25,
     "payment_term_days": 0
   },
   {
@@ -4152,9 +4152,9 @@
     "customer": "CUST-RTL-034 - Warung Tante Engelin Depan SD",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3486738.0,
-    "ppn_11_amount": 383541.18,
-    "total_invoice_with_ppn": 3870279.18,
+    "dpp_amount": 4354080.0,
+    "ppn_11_amount": 478948.8,
+    "total_invoice_with_ppn": 4833028.8,
     "payment_term_days": 0
   },
   {
@@ -4166,9 +4166,9 @@
     "customer": "CUST-RTL-046 - Warung Hein Pondok Damai",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4601120.0,
-    "ppn_11_amount": 506123.2,
-    "total_invoice_with_ppn": 5107243.2,
+    "dpp_amount": 4676004.0,
+    "ppn_11_amount": 514360.44,
+    "total_invoice_with_ppn": 5190364.44,
     "payment_term_days": 0
   },
   {
@@ -4180,9 +4180,9 @@
     "customer": "CUST-RTL-058 - Kios Gloria Vicky Dekat Gereja",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5092305.0,
-    "ppn_11_amount": 560153.55,
-    "total_invoice_with_ppn": 5652458.55,
+    "dpp_amount": 5732100.0,
+    "ppn_11_amount": 630531.0,
+    "total_invoice_with_ppn": 6362631.0,
     "payment_term_days": 0
   },
   {
@@ -4194,9 +4194,9 @@
     "customer": "CUST-RTL-070 - Kios Filadelfia Marietje Depan SD",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5784210.0,
-    "ppn_11_amount": 636263.1,
-    "total_invoice_with_ppn": 6420473.1,
+    "dpp_amount": 5940540.0,
+    "ppn_11_amount": 653459.4,
+    "total_invoice_with_ppn": 6593999.4,
     "payment_term_days": 0
   },
   {
@@ -4208,9 +4208,9 @@
     "customer": "CUST-RTL-106 - Warung Tin Depan SD",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5127624.0,
-    "ppn_11_amount": 564038.64,
-    "total_invoice_with_ppn": 5691662.64,
+    "dpp_amount": 5581560.0,
+    "ppn_11_amount": 613971.6,
+    "total_invoice_with_ppn": 6195531.6,
     "payment_term_days": 0
   },
   {
@@ -4218,14 +4218,14 @@
     "so_number": "SO-202607-0302",
     "do_number": "DO-202607-0302",
     "date_invoice": "2026-07-24",
-    "due_date": "2026-08-14",
+    "due_date": "2026-08-07",
     "customer": "CUST-INST-09 - Katering Berkat Tondano",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 20448576.0,
-    "ppn_11_amount": 2249343.36,
-    "total_invoice_with_ppn": 22697919.36,
-    "payment_term_days": 21
+    "dpp_amount": 20678400.0,
+    "ppn_11_amount": 2274624.0,
+    "total_invoice_with_ppn": 22953024.0,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0303",
@@ -4236,9 +4236,9 @@
     "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 31581672.0,
-    "ppn_11_amount": 3473983.92,
-    "total_invoice_with_ppn": 35055655.92,
+    "dpp_amount": 30539251.2,
+    "ppn_11_amount": 3359317.63,
+    "total_invoice_with_ppn": 33898568.83,
     "payment_term_days": 30
   },
   {
@@ -4246,14 +4246,14 @@
     "so_number": "SO-202607-0304",
     "do_number": "DO-202607-0304",
     "date_invoice": "2026-07-25",
-    "due_date": "2026-08-24",
+    "due_date": "2026-08-08",
     "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 37882838.4,
-    "ppn_11_amount": 4167112.22,
-    "total_invoice_with_ppn": 42049950.62,
-    "payment_term_days": 30
+    "dpp_amount": 35740358.4,
+    "ppn_11_amount": 3931439.42,
+    "total_invoice_with_ppn": 39671797.82,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0305",
@@ -4264,9 +4264,9 @@
     "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 19064752.0,
-    "ppn_11_amount": 2097122.72,
-    "total_invoice_with_ppn": 21161874.72,
+    "dpp_amount": 14776944.0,
+    "ppn_11_amount": 1625463.84,
+    "total_invoice_with_ppn": 16402407.84,
     "payment_term_days": 14
   },
   {
@@ -4278,9 +4278,9 @@
     "customer": "CUST-GT-25 - Grosir Megamas Abadi",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18107040.0,
-    "ppn_11_amount": 1991774.4,
-    "total_invoice_with_ppn": 20098814.4,
+    "dpp_amount": 18156163.2,
+    "ppn_11_amount": 1997177.95,
+    "total_invoice_with_ppn": 20153341.15,
     "payment_term_days": 14
   },
   {
@@ -4288,14 +4288,14 @@
     "so_number": "SO-202607-0307",
     "do_number": "DO-202607-0307",
     "date_invoice": "2026-07-25",
-    "due_date": "2026-08-08",
+    "due_date": "2026-08-01",
     "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 16747584.0,
-    "ppn_11_amount": 1842234.24,
-    "total_invoice_with_ppn": 18589818.24,
-    "payment_term_days": 14
+    "dpp_amount": 16818032.0,
+    "ppn_11_amount": 1849983.52,
+    "total_invoice_with_ppn": 18668015.52,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0308",
@@ -4306,9 +4306,9 @@
     "customer": "CUST-RTL-011 - Kios Tante Hein Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6114240.0,
-    "ppn_11_amount": 672566.4,
-    "total_invoice_with_ppn": 6786806.4,
+    "dpp_amount": 3446980.0,
+    "ppn_11_amount": 379167.8,
+    "total_invoice_with_ppn": 3826147.8,
     "payment_term_days": 0
   },
   {
@@ -4320,9 +4320,9 @@
     "customer": "CUST-RTL-023 - Kios Ci Vicky Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5847900.0,
-    "ppn_11_amount": 643269.0,
-    "total_invoice_with_ppn": 6491169.0,
+    "dpp_amount": 4464090.0,
+    "ppn_11_amount": 491049.9,
+    "total_invoice_with_ppn": 4955139.9,
     "payment_term_days": 0
   },
   {
@@ -4334,9 +4334,9 @@
     "customer": "CUST-RTL-035 - Kios Ko Marietje Dekat Mesjid",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3242400.0,
-    "ppn_11_amount": 356664.0,
-    "total_invoice_with_ppn": 3599064.0,
+    "dpp_amount": 3345655.0,
+    "ppn_11_amount": 368022.05,
+    "total_invoice_with_ppn": 3713677.05,
     "payment_term_days": 0
   },
   {
@@ -4348,9 +4348,9 @@
     "customer": "CUST-RTL-047 - Kios Berkat Vonny Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3749025.0,
-    "ppn_11_amount": 412392.75,
-    "total_invoice_with_ppn": 4161417.75,
+    "dpp_amount": 5805054.0,
+    "ppn_11_amount": 638555.94,
+    "total_invoice_with_ppn": 6443609.94,
     "payment_term_days": 0
   },
   {
@@ -4362,9 +4362,9 @@
     "customer": "CUST-RTL-059 - Warung Kasih Yola Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5396280.0,
-    "ppn_11_amount": 593590.8,
-    "total_invoice_with_ppn": 5989870.8,
+    "dpp_amount": 5728240.0,
+    "ppn_11_amount": 630106.4,
+    "total_invoice_with_ppn": 6358346.4,
     "payment_term_days": 0
   },
   {
@@ -4376,9 +4376,9 @@
     "customer": "CUST-RTL-071 - Kios Tante Tin Dekat Mesjid",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3559885.0,
-    "ppn_11_amount": 391587.35,
-    "total_invoice_with_ppn": 3951472.35,
+    "dpp_amount": 3647700.0,
+    "ppn_11_amount": 401247.0,
+    "total_invoice_with_ppn": 4048947.0,
     "payment_term_days": 0
   },
   {
@@ -4390,9 +4390,9 @@
     "customer": "CUST-RTL-107 - Kios Berkat Oce Dekat Mesjid",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5467497.0,
-    "ppn_11_amount": 601424.67,
-    "total_invoice_with_ppn": 6068921.67,
+    "dpp_amount": 4849704.0,
+    "ppn_11_amount": 533467.44,
+    "total_invoice_with_ppn": 5383171.44,
     "payment_term_days": 0
   },
   {
@@ -4400,14 +4400,14 @@
     "so_number": "SO-202607-0315",
     "do_number": "DO-202607-0315",
     "date_invoice": "2026-07-25",
-    "due_date": "2026-08-15",
+    "due_date": "2026-08-24",
     "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 17118720.0,
-    "ppn_11_amount": 1883059.2,
-    "total_invoice_with_ppn": 19001779.2,
-    "payment_term_days": 21
+    "dpp_amount": 15830784.0,
+    "ppn_11_amount": 1741386.24,
+    "total_invoice_with_ppn": 17572170.24,
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0316",
@@ -4418,9 +4418,9 @@
     "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 36950006.4,
-    "ppn_11_amount": 4064500.7,
-    "total_invoice_with_ppn": 41014507.1,
+    "dpp_amount": 32040124.8,
+    "ppn_11_amount": 3524413.73,
+    "total_invoice_with_ppn": 35564538.53,
     "payment_term_days": 30
   },
   {
@@ -4428,14 +4428,14 @@
     "so_number": "SO-202607-0317",
     "do_number": "DO-202607-0317",
     "date_invoice": "2026-07-27",
-    "due_date": "2026-08-26",
+    "due_date": "2026-09-10",
     "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 37438416.0,
-    "ppn_11_amount": 4118225.76,
-    "total_invoice_with_ppn": 41556641.76,
-    "payment_term_days": 30
+    "dpp_amount": 36252468.0,
+    "ppn_11_amount": 3987771.48,
+    "total_invoice_with_ppn": 40240239.48,
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0318",
@@ -4446,9 +4446,9 @@
     "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18289824.0,
-    "ppn_11_amount": 2011880.64,
-    "total_invoice_with_ppn": 20301704.64,
+    "dpp_amount": 24030384.0,
+    "ppn_11_amount": 2643342.24,
+    "total_invoice_with_ppn": 26673726.24,
     "payment_term_days": 14
   },
   {
@@ -4456,28 +4456,28 @@
     "so_number": "SO-202607-0319",
     "do_number": "DO-202607-0319",
     "date_invoice": "2026-07-27",
-    "due_date": "2026-08-10",
+    "due_date": "2026-08-03",
     "customer": "CUST-GT-30 - Toko Berkat Bahu Sejahtera",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 21800419.2,
-    "ppn_11_amount": 2398046.11,
-    "total_invoice_with_ppn": 24198465.31,
-    "payment_term_days": 14
+    "dpp_amount": 23560096.0,
+    "ppn_11_amount": 2591610.56,
+    "total_invoice_with_ppn": 26151706.56,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0320",
     "so_number": "SO-202607-0320",
     "do_number": "DO-202607-0320",
     "date_invoice": "2026-07-27",
-    "due_date": "2026-08-10",
+    "due_date": "2026-08-03",
     "customer": "CUST-GT-32 - Toko Ranotana Jaya",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 22061648.0,
-    "ppn_11_amount": 2426781.28,
-    "total_invoice_with_ppn": 24488429.28,
-    "payment_term_days": 14
+    "dpp_amount": 17024044.8,
+    "ppn_11_amount": 1872644.93,
+    "total_invoice_with_ppn": 18896689.73,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0321",
@@ -4488,9 +4488,9 @@
     "customer": "CUST-RTL-012 - Warung Om Vonny Tikungan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5477340.0,
-    "ppn_11_amount": 602507.4,
-    "total_invoice_with_ppn": 6079847.4,
+    "dpp_amount": 6067920.0,
+    "ppn_11_amount": 667471.2,
+    "total_invoice_with_ppn": 6735391.2,
     "payment_term_days": 0
   },
   {
@@ -4502,9 +4502,9 @@
     "customer": "CUST-RTL-024 - Warung Tante Yola Ujung Lorong",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5727468.0,
-    "ppn_11_amount": 630021.48,
-    "total_invoice_with_ppn": 6357489.48,
+    "dpp_amount": 5790000.0,
+    "ppn_11_amount": 636900.0,
+    "total_invoice_with_ppn": 6426900.0,
     "payment_term_days": 0
   },
   {
@@ -4516,9 +4516,9 @@
     "customer": "CUST-RTL-036 - Warung Tin Puncak",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4736220.0,
-    "ppn_11_amount": 520984.2,
-    "total_invoice_with_ppn": 5257204.2,
+    "dpp_amount": 5759120.0,
+    "ppn_11_amount": 633503.2,
+    "total_invoice_with_ppn": 6392623.2,
     "payment_term_days": 0
   },
   {
@@ -4530,9 +4530,9 @@
     "customer": "CUST-RTL-048 - Kios Gloria Meiske Tikungan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5714730.0,
-    "ppn_11_amount": 628620.3,
-    "total_invoice_with_ppn": 6343350.3,
+    "dpp_amount": 5442600.0,
+    "ppn_11_amount": 598686.0,
+    "total_invoice_with_ppn": 6041286.0,
     "payment_term_days": 0
   },
   {
@@ -4544,9 +4544,9 @@
     "customer": "CUST-RTL-060 - Kios Filadelfia Franky Ujung Lorong",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5486025.0,
-    "ppn_11_amount": 603462.75,
-    "total_invoice_with_ppn": 6089487.75,
+    "dpp_amount": 4689900.0,
+    "ppn_11_amount": 515889.0,
+    "total_invoice_with_ppn": 5205789.0,
     "payment_term_days": 0
   },
   {
@@ -4558,9 +4558,9 @@
     "customer": "CUST-RTL-072 - Warung Om Oce Puncak",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6210740.0,
-    "ppn_11_amount": 683181.4,
-    "total_invoice_with_ppn": 6893921.4,
+    "dpp_amount": 4018260.0,
+    "ppn_11_amount": 442008.6,
+    "total_invoice_with_ppn": 4460268.6,
     "payment_term_days": 0
   },
   {
@@ -4572,9 +4572,9 @@
     "customer": "CUST-RTL-102 - Warung Om Toar Tikungan",
     "channel": "RTL",
     "salesman": "CVS-02 - Steven Lumenta",
-    "dpp_amount": 5182050.0,
-    "ppn_11_amount": 570025.5,
-    "total_invoice_with_ppn": 5752075.5,
+    "dpp_amount": 4411980.0,
+    "ppn_11_amount": 485317.8,
+    "total_invoice_with_ppn": 4897297.8,
     "payment_term_days": 0
   },
   {
@@ -4582,28 +4582,28 @@
     "so_number": "SO-202607-0328",
     "do_number": "DO-202607-0328",
     "date_invoice": "2026-07-28",
-    "due_date": "2026-08-27",
+    "due_date": "2026-09-11",
     "customer": "CUST-MT-01 - Indomarett DC Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 37260950.4,
-    "ppn_11_amount": 4098704.54,
-    "total_invoice_with_ppn": 41359654.94,
-    "payment_term_days": 30
+    "dpp_amount": 38325744.0,
+    "ppn_11_amount": 4215831.84,
+    "total_invoice_with_ppn": 42541575.84,
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0329",
     "so_number": "SO-202607-0329",
     "do_number": "DO-202607-0329",
     "date_invoice": "2026-07-28",
-    "due_date": "2026-08-27",
+    "due_date": "2026-09-11",
     "customer": "CUST-MT-02 - Alfamiddii DC Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 39166430.4,
-    "ppn_11_amount": 4308307.34,
-    "total_invoice_with_ppn": 43474737.74,
-    "payment_term_days": 30
+    "dpp_amount": 35504496.0,
+    "ppn_11_amount": 3905494.56,
+    "total_invoice_with_ppn": 39409990.56,
+    "payment_term_days": 45
   },
   {
     "invoice_number": "INV-202607-0330",
@@ -4614,9 +4614,9 @@
     "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 21265776.0,
-    "ppn_11_amount": 2339235.36,
-    "total_invoice_with_ppn": 23605011.36,
+    "dpp_amount": 19120920.0,
+    "ppn_11_amount": 2103301.2,
+    "total_invoice_with_ppn": 21224221.2,
     "payment_term_days": 14
   },
   {
@@ -4628,9 +4628,9 @@
     "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18481747.2,
-    "ppn_11_amount": 2032992.19,
-    "total_invoice_with_ppn": 20514739.39,
+    "dpp_amount": 19439078.4,
+    "ppn_11_amount": 2138298.62,
+    "total_invoice_with_ppn": 21577377.02,
     "payment_term_days": 14
   },
   {
@@ -4642,9 +4642,9 @@
     "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17404083.2,
-    "ppn_11_amount": 1914449.15,
-    "total_invoice_with_ppn": 19318532.35,
+    "dpp_amount": 23524300.8,
+    "ppn_11_amount": 2587673.09,
+    "total_invoice_with_ppn": 26111973.89,
     "payment_term_days": 14
   },
   {
@@ -4652,14 +4652,14 @@
     "so_number": "SO-202607-0333",
     "do_number": "DO-202607-0333",
     "date_invoice": "2026-07-28",
-    "due_date": "2026-08-11",
+    "due_date": "2026-08-04",
     "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 23520683.2,
-    "ppn_11_amount": 2587275.15,
-    "total_invoice_with_ppn": 26107958.35,
-    "payment_term_days": 14
+    "dpp_amount": 18535059.2,
+    "ppn_11_amount": 2038856.51,
+    "total_invoice_with_ppn": 20573915.71,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0334",
@@ -4670,9 +4670,9 @@
     "customer": "CUST-GT-34 - Grosir Tikala Baru",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 21721784.0,
-    "ppn_11_amount": 2389396.24,
-    "total_invoice_with_ppn": 24111180.24,
+    "dpp_amount": 22346105.6,
+    "ppn_11_amount": 2458071.62,
+    "total_invoice_with_ppn": 24804177.22,
     "payment_term_days": 14
   },
   {
@@ -4684,9 +4684,9 @@
     "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 22585248.0,
-    "ppn_11_amount": 2484377.28,
-    "total_invoice_with_ppn": 25069625.28,
+    "dpp_amount": 21441705.6,
+    "ppn_11_amount": 2358587.62,
+    "total_invoice_with_ppn": 23800293.22,
     "payment_term_days": 14
   },
   {
@@ -4694,14 +4694,14 @@
     "so_number": "SO-202607-0336",
     "do_number": "DO-202607-0336",
     "date_invoice": "2026-07-28",
-    "due_date": "2026-08-11",
+    "due_date": "2026-08-04",
     "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 20414688.0,
-    "ppn_11_amount": 2245615.68,
-    "total_invoice_with_ppn": 22660303.68,
-    "payment_term_days": 14
+    "dpp_amount": 18317241.6,
+    "ppn_11_amount": 2014896.58,
+    "total_invoice_with_ppn": 20332138.18,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0337",
@@ -4712,9 +4712,9 @@
     "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5604720.0,
-    "ppn_11_amount": 616519.2,
-    "total_invoice_with_ppn": 6221239.2,
+    "dpp_amount": 5979140.0,
+    "ppn_11_amount": 657705.4,
+    "total_invoice_with_ppn": 6636845.4,
     "payment_term_days": 0
   },
   {
@@ -4726,9 +4726,9 @@
     "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6027390.0,
-    "ppn_11_amount": 663012.9,
-    "total_invoice_with_ppn": 6690402.9,
+    "dpp_amount": 4890620.0,
+    "ppn_11_amount": 537968.2,
+    "total_invoice_with_ppn": 5428588.2,
     "payment_term_days": 0
   },
   {
@@ -4740,9 +4740,9 @@
     "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3512600.0,
-    "ppn_11_amount": 386386.0,
-    "total_invoice_with_ppn": 3898986.0,
+    "dpp_amount": 5477340.0,
+    "ppn_11_amount": 602507.4,
+    "total_invoice_with_ppn": 6079847.4,
     "payment_term_days": 0
   },
   {
@@ -4754,9 +4754,9 @@
     "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4578732.0,
-    "ppn_11_amount": 503660.52,
-    "total_invoice_with_ppn": 5082392.52,
+    "dpp_amount": 5727468.0,
+    "ppn_11_amount": 630021.48,
+    "total_invoice_with_ppn": 6357489.48,
     "payment_term_days": 0
   },
   {
@@ -4768,9 +4768,9 @@
     "customer": "CUST-RTL-049 - Warung Kasih Joppy Jembatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6141260.0,
-    "ppn_11_amount": 675538.6,
-    "total_invoice_with_ppn": 6816798.6,
+    "dpp_amount": 4736220.0,
+    "ppn_11_amount": 520984.2,
+    "total_invoice_with_ppn": 5257204.2,
     "payment_term_days": 0
   },
   {
@@ -4782,9 +4782,9 @@
     "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3593660.0,
-    "ppn_11_amount": 395302.6,
-    "total_invoice_with_ppn": 3988962.6,
+    "dpp_amount": 5714730.0,
+    "ppn_11_amount": 628620.3,
+    "total_invoice_with_ppn": 6343350.3,
     "payment_term_days": 0
   },
   {
@@ -4796,9 +4796,9 @@
     "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4182696.0,
-    "ppn_11_amount": 460096.56,
-    "total_invoice_with_ppn": 4642792.56,
+    "dpp_amount": 5486025.0,
+    "ppn_11_amount": 603462.75,
+    "total_invoice_with_ppn": 6089487.75,
     "payment_term_days": 0
   },
   {
@@ -4806,14 +4806,14 @@
     "so_number": "SO-202607-0344",
     "do_number": "DO-202607-0344",
     "date_invoice": "2026-07-28",
-    "due_date": "2026-08-18",
+    "due_date": "2026-08-27",
     "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 16532544.0,
-    "ppn_11_amount": 1818579.84,
-    "total_invoice_with_ppn": 18351123.84,
-    "payment_term_days": 21
+    "dpp_amount": 22502400.0,
+    "ppn_11_amount": 2475264.0,
+    "total_invoice_with_ppn": 24977664.0,
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0345",
@@ -4824,9 +4824,9 @@
     "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 28830765.6,
-    "ppn_11_amount": 3171384.22,
-    "total_invoice_with_ppn": 32002149.82,
+    "dpp_amount": 29192901.6,
+    "ppn_11_amount": 3211219.18,
+    "total_invoice_with_ppn": 32404120.78,
     "payment_term_days": 30
   },
   {
@@ -4834,14 +4834,14 @@
     "so_number": "SO-202607-0346",
     "do_number": "DO-202607-0346",
     "date_invoice": "2026-07-29",
-    "due_date": "2026-08-28",
+    "due_date": "2026-08-12",
     "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 32115585.6,
-    "ppn_11_amount": 3532714.42,
-    "total_invoice_with_ppn": 35648300.02,
-    "payment_term_days": 30
+    "dpp_amount": 36307641.6,
+    "ppn_11_amount": 3993840.58,
+    "total_invoice_with_ppn": 40301482.18,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0347",
@@ -4852,9 +4852,9 @@
     "customer": "CUST-GT-07 - Toko Harapan Bersehati",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 15915536.0,
-    "ppn_11_amount": 1750708.96,
-    "total_invoice_with_ppn": 17666244.96,
+    "dpp_amount": 19906320.0,
+    "ppn_11_amount": 2189695.2,
+    "total_invoice_with_ppn": 22096015.2,
     "payment_term_days": 14
   },
   {
@@ -4866,9 +4866,9 @@
     "customer": "CUST-GT-08 - Grosir Bintang Samrat Sario",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 21882672.0,
-    "ppn_11_amount": 2407093.92,
-    "total_invoice_with_ppn": 24289765.92,
+    "dpp_amount": 24669366.4,
+    "ppn_11_amount": 2713630.3,
+    "total_invoice_with_ppn": 27382996.7,
     "payment_term_days": 14
   },
   {
@@ -4876,14 +4876,14 @@
     "so_number": "SO-202607-0349",
     "do_number": "DO-202607-0349",
     "date_invoice": "2026-07-29",
-    "due_date": "2026-08-12",
+    "due_date": "2026-08-05",
     "customer": "CUST-GT-09 - Grosir Manado Raya Sario",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 22459584.0,
-    "ppn_11_amount": 2470554.24,
-    "total_invoice_with_ppn": 24930138.24,
-    "payment_term_days": 14
+    "dpp_amount": 23352560.0,
+    "ppn_11_amount": 2568781.6,
+    "total_invoice_with_ppn": 25921341.6,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0350",
@@ -4894,9 +4894,9 @@
     "customer": "CUST-GT-38 - Toko Paal Dua Jaya",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 17675784.0,
-    "ppn_11_amount": 1944336.24,
-    "total_invoice_with_ppn": 19620120.24,
+    "dpp_amount": 15952473.6,
+    "ppn_11_amount": 1754772.1,
+    "total_invoice_with_ppn": 17707245.7,
     "payment_term_days": 14
   },
   {
@@ -4908,9 +4908,9 @@
     "customer": "CUST-GT-39 - Toko Berkat Melimpah Paal Dua",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 18146643.2,
-    "ppn_11_amount": 1996130.75,
-    "total_invoice_with_ppn": 20142773.95,
+    "dpp_amount": 22139712.0,
+    "ppn_11_amount": 2435368.32,
+    "total_invoice_with_ppn": 24575080.32,
     "payment_term_days": 14
   },
   {
@@ -4918,14 +4918,14 @@
     "so_number": "SO-202607-0352",
     "do_number": "DO-202607-0352",
     "date_invoice": "2026-07-29",
-    "due_date": "2026-08-12",
+    "due_date": "2026-08-05",
     "customer": "CUST-GT-40 - Grosir Sentosa Perkasa Perkamil",
     "channel": "GT",
     "salesman": "SLS-03 - Meidy Wowor",
-    "dpp_amount": 16092036.8,
-    "ppn_11_amount": 1770124.05,
-    "total_invoice_with_ppn": 17862160.85,
-    "payment_term_days": 14
+    "dpp_amount": 21234931.2,
+    "ppn_11_amount": 2335842.43,
+    "total_invoice_with_ppn": 23570773.63,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0353",
@@ -4936,9 +4936,9 @@
     "customer": "CUST-RTL-002 - Warung Om Oce Lorong 2",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5097516.0,
-    "ppn_11_amount": 560726.76,
-    "total_invoice_with_ppn": 5658242.76,
+    "dpp_amount": 5854076.0,
+    "ppn_11_amount": 643948.36,
+    "total_invoice_with_ppn": 6498024.36,
     "payment_term_days": 0
   },
   {
@@ -4950,9 +4950,9 @@
     "customer": "CUST-RTL-014 - Warung Tante Joppy Kompleks",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3524180.0,
-    "ppn_11_amount": 387659.8,
-    "total_invoice_with_ppn": 3911839.8,
+    "dpp_amount": 4050684.0,
+    "ppn_11_amount": 445575.24,
+    "total_invoice_with_ppn": 4496259.24,
     "payment_term_days": 0
   },
   {
@@ -4964,9 +4964,9 @@
     "customer": "CUST-RTL-026 - Warung Siska Perempatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3427680.0,
-    "ppn_11_amount": 377044.8,
-    "total_invoice_with_ppn": 3804724.8,
+    "dpp_amount": 4539360.0,
+    "ppn_11_amount": 499329.6,
+    "total_invoice_with_ppn": 5038689.6,
     "payment_term_days": 0
   },
   {
@@ -4978,9 +4978,9 @@
     "customer": "CUST-RTL-038 - Kios Gloria Utu Lorong 2",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3725865.0,
-    "ppn_11_amount": 409845.15,
-    "total_invoice_with_ppn": 4135710.15,
+    "dpp_amount": 6304731.0,
+    "ppn_11_amount": 693520.41,
+    "total_invoice_with_ppn": 6998251.41,
     "payment_term_days": 0
   },
   {
@@ -4992,9 +4992,9 @@
     "customer": "CUST-RTL-050 - Kios Filadelfia Deasy Kompleks",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4435140.0,
-    "ppn_11_amount": 487865.4,
-    "total_invoice_with_ppn": 4923005.4,
+    "dpp_amount": 4894480.0,
+    "ppn_11_amount": 538392.8,
+    "total_invoice_with_ppn": 5432872.8,
     "payment_term_days": 0
   },
   {
@@ -5006,9 +5006,9 @@
     "customer": "CUST-RTL-062 - Warung Om Stenly Perempatan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4689900.0,
-    "ppn_11_amount": 515889.0,
-    "total_invoice_with_ppn": 5205789.0,
+    "dpp_amount": 4754748.0,
+    "ppn_11_amount": 523022.28,
+    "total_invoice_with_ppn": 5277770.28,
     "payment_term_days": 0
   },
   {
@@ -5020,9 +5020,9 @@
     "customer": "CUST-RTL-074 - Warung Tante Meyke Lorong 2",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5674200.0,
-    "ppn_11_amount": 624162.0,
-    "total_invoice_with_ppn": 6298362.0,
+    "dpp_amount": 4330920.0,
+    "ppn_11_amount": 476401.2,
+    "total_invoice_with_ppn": 4807321.2,
     "payment_term_days": 0
   },
   {
@@ -5030,14 +5030,14 @@
     "so_number": "SO-202607-0360",
     "do_number": "DO-202607-0360",
     "date_invoice": "2026-07-29",
-    "due_date": "2026-08-19",
+    "due_date": "2026-08-28",
     "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 22233600.0,
-    "ppn_11_amount": 2445696.0,
-    "total_invoice_with_ppn": 24679296.0,
-    "payment_term_days": 21
+    "dpp_amount": 14252160.0,
+    "ppn_11_amount": 1567737.6,
+    "total_invoice_with_ppn": 15819897.6,
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0361",
@@ -5048,9 +5048,9 @@
     "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 35424295.2,
-    "ppn_11_amount": 3896672.47,
-    "total_invoice_with_ppn": 39320967.67,
+    "dpp_amount": 28870012.8,
+    "ppn_11_amount": 3175701.41,
+    "total_invoice_with_ppn": 32045714.21,
     "payment_term_days": 30
   },
   {
@@ -5062,9 +5062,9 @@
     "customer": "CUST-MT-08 - MultiiMart Tomohon",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 34354003.2,
-    "ppn_11_amount": 3778940.35,
-    "total_invoice_with_ppn": 38132943.55,
+    "dpp_amount": 39529704.0,
+    "ppn_11_amount": 4348267.44,
+    "total_invoice_with_ppn": 43877971.44,
     "payment_term_days": 30
   },
   {
@@ -5076,9 +5076,9 @@
     "customer": "CUST-GT-11 - Grosir Krida Bahu",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17273088.0,
-    "ppn_11_amount": 1900039.68,
-    "total_invoice_with_ppn": 19173127.68,
+    "dpp_amount": 18187008.0,
+    "ppn_11_amount": 2000570.88,
+    "total_invoice_with_ppn": 20187578.88,
     "payment_term_days": 14
   },
   {
@@ -5090,9 +5090,9 @@
     "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17607240.0,
-    "ppn_11_amount": 1936796.4,
-    "total_invoice_with_ppn": 19544036.4,
+    "dpp_amount": 25267032.0,
+    "ppn_11_amount": 2779373.52,
+    "total_invoice_with_ppn": 28046405.52,
     "payment_term_days": 14
   },
   {
@@ -5100,28 +5100,28 @@
     "so_number": "SO-202607-0365",
     "do_number": "DO-202607-0365",
     "date_invoice": "2026-07-30",
-    "due_date": "2026-08-13",
+    "due_date": "2026-08-06",
     "customer": "CUST-GT-13 - Grosir Malalayang Satu",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 21245784.0,
-    "ppn_11_amount": 2337036.24,
-    "total_invoice_with_ppn": 23582820.24,
-    "payment_term_days": 14
+    "dpp_amount": 15430016.0,
+    "ppn_11_amount": 1697301.76,
+    "total_invoice_with_ppn": 17127317.76,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0366",
     "so_number": "SO-202607-0366",
     "do_number": "DO-202607-0366",
     "date_invoice": "2026-07-30",
-    "due_date": "2026-08-13",
+    "due_date": "2026-08-06",
     "customer": "CUST-GT-15 - Grosir Kleak Mandiri",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 16267014.4,
-    "ppn_11_amount": 1789371.58,
-    "total_invoice_with_ppn": 18056385.98,
-    "payment_term_days": 14
+    "dpp_amount": 20384224.0,
+    "ppn_11_amount": 2242264.64,
+    "total_invoice_with_ppn": 22626488.64,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0367",
@@ -5132,9 +5132,9 @@
     "customer": "CUST-RTL-003 - Kios Ci Utu Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3420732.0,
-    "ppn_11_amount": 376280.52,
-    "total_invoice_with_ppn": 3797012.52,
+    "dpp_amount": 4330920.0,
+    "ppn_11_amount": 476401.2,
+    "total_invoice_with_ppn": 4807321.2,
     "payment_term_days": 0
   },
   {
@@ -5146,9 +5146,9 @@
     "customer": "CUST-RTL-015 - Kios Ko Deasy Pasar",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3462420.0,
-    "ppn_11_amount": 380866.2,
-    "total_invoice_with_ppn": 3843286.2,
+    "dpp_amount": 5066636.0,
+    "ppn_11_amount": 557329.96,
+    "total_invoice_with_ppn": 5623965.96,
     "payment_term_days": 0
   },
   {
@@ -5160,9 +5160,9 @@
     "customer": "CUST-RTL-027 - Kios Berkat Stenly Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3960360.0,
-    "ppn_11_amount": 435639.6,
-    "total_invoice_with_ppn": 4395999.6,
+    "dpp_amount": 4134060.0,
+    "ppn_11_amount": 454746.6,
+    "total_invoice_with_ppn": 4588806.6,
     "payment_term_days": 0
   },
   {
@@ -5174,9 +5174,9 @@
     "customer": "CUST-RTL-039 - Warung Kasih Meyke Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5072040.0,
-    "ppn_11_amount": 557924.4,
-    "total_invoice_with_ppn": 5629964.4,
+    "dpp_amount": 3557569.0,
+    "ppn_11_amount": 391332.59,
+    "total_invoice_with_ppn": 3948901.59,
     "payment_term_days": 0
   },
   {
@@ -5188,9 +5188,9 @@
     "customer": "CUST-RTL-051 - Kios Tante Ronny Pasar",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5280480.0,
-    "ppn_11_amount": 580852.8,
-    "total_invoice_with_ppn": 5861332.8,
+    "dpp_amount": 5349960.0,
+    "ppn_11_amount": 588495.6,
+    "total_invoice_with_ppn": 5938455.6,
     "payment_term_days": 0
   },
   {
@@ -5202,9 +5202,9 @@
     "customer": "CUST-RTL-063 - Kios Ci Wanda Jalan Salib",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5338380.0,
-    "ppn_11_amount": 587221.8,
-    "total_invoice_with_ppn": 5925601.8,
+    "dpp_amount": 6050550.0,
+    "ppn_11_amount": 665560.5,
+    "total_invoice_with_ppn": 6716110.5,
     "payment_term_days": 0
   },
   {
@@ -5216,9 +5216,9 @@
     "customer": "CUST-RTL-075 - Kios Ko Ferry Lorong 3",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5014140.0,
-    "ppn_11_amount": 551555.4,
-    "total_invoice_with_ppn": 5565695.4,
+    "dpp_amount": 5678060.0,
+    "ppn_11_amount": 624586.6,
+    "total_invoice_with_ppn": 6302646.6,
     "payment_term_days": 0
   },
   {
@@ -5226,14 +5226,14 @@
     "so_number": "SO-202607-0374",
     "do_number": "DO-202607-0374",
     "date_invoice": "2026-07-30",
-    "due_date": "2026-08-20",
+    "due_date": "2026-08-29",
     "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 19044864.0,
-    "ppn_11_amount": 2094935.04,
-    "total_invoice_with_ppn": 21139799.04,
-    "payment_term_days": 21
+    "dpp_amount": 18689280.0,
+    "ppn_11_amount": 2055820.8,
+    "total_invoice_with_ppn": 20745100.8,
+    "payment_term_days": 30
   },
   {
     "invoice_number": "INV-202607-0375",
@@ -5244,9 +5244,9 @@
     "customer": "CUST-MT-05 - FreshhMart Express Tikala",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 34090459.2,
-    "ppn_11_amount": 3749950.51,
-    "total_invoice_with_ppn": 37840409.71,
+    "dpp_amount": 33775344.0,
+    "ppn_11_amount": 3715287.84,
+    "total_invoice_with_ppn": 37490631.84,
     "payment_term_days": 30
   },
   {
@@ -5254,14 +5254,14 @@
     "so_number": "SO-202607-0376",
     "do_number": "DO-202607-0376",
     "date_invoice": "2026-07-31",
-    "due_date": "2026-08-30",
+    "due_date": "2026-08-14",
     "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 29375107.2,
-    "ppn_11_amount": 3231261.79,
-    "total_invoice_with_ppn": 32606368.99,
-    "payment_term_days": 30
+    "dpp_amount": 29015625.6,
+    "ppn_11_amount": 3191718.82,
+    "total_invoice_with_ppn": 32207344.42,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0377",
@@ -5272,9 +5272,9 @@
     "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 15488659.2,
-    "ppn_11_amount": 1703752.51,
-    "total_invoice_with_ppn": 17192411.71,
+    "dpp_amount": 16366784.0,
+    "ppn_11_amount": 1800346.24,
+    "total_invoice_with_ppn": 18167130.24,
     "payment_term_days": 14
   },
   {
@@ -5286,9 +5286,9 @@
     "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 19216120.0,
-    "ppn_11_amount": 2113773.2,
-    "total_invoice_with_ppn": 21329893.2,
+    "dpp_amount": 15968848.0,
+    "ppn_11_amount": 1756573.28,
+    "total_invoice_with_ppn": 17725421.28,
     "payment_term_days": 14
   },
   {
@@ -5296,42 +5296,42 @@
     "so_number": "SO-202607-0379",
     "do_number": "DO-202607-0379",
     "date_invoice": "2026-07-31",
-    "due_date": "2026-08-14",
+    "due_date": "2026-08-07",
     "customer": "CUST-GT-18 - Grosir Rukun Damai Ranotana",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 23135694.4,
-    "ppn_11_amount": 2544926.38,
-    "total_invoice_with_ppn": 25680620.78,
-    "payment_term_days": 14
+    "dpp_amount": 17563448.0,
+    "ppn_11_amount": 1931979.28,
+    "total_invoice_with_ppn": 19495427.28,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0380",
     "so_number": "SO-202607-0380",
     "do_number": "DO-202607-0380",
     "date_invoice": "2026-07-31",
-    "due_date": "2026-08-14",
+    "due_date": "2026-08-07",
     "customer": "CUST-GT-20 - Toko Pakowa Sejahtera Wanea",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 17656934.4,
-    "ppn_11_amount": 1942262.78,
-    "total_invoice_with_ppn": 19599197.18,
-    "payment_term_days": 14
+    "dpp_amount": 16393440.0,
+    "ppn_11_amount": 1803278.4,
+    "total_invoice_with_ppn": 18196718.4,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0381",
     "so_number": "SO-202607-0381",
     "do_number": "DO-202607-0381",
     "date_invoice": "2026-07-31",
-    "due_date": "2026-08-14",
+    "due_date": "2026-08-07",
     "customer": "CUST-GT-22 - Toko Winangun Berkat",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 23857881.6,
-    "ppn_11_amount": 2624366.98,
-    "total_invoice_with_ppn": 26482248.58,
-    "payment_term_days": 14
+    "dpp_amount": 21377350.4,
+    "ppn_11_amount": 2351508.54,
+    "total_invoice_with_ppn": 23728858.94,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0382",
@@ -5342,9 +5342,9 @@
     "customer": "CUST-RTL-004 - Warung Tante Meyke Dekat Gereja",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5593140.0,
-    "ppn_11_amount": 615245.4,
-    "total_invoice_with_ppn": 6208385.4,
+    "dpp_amount": 5817020.0,
+    "ppn_11_amount": 639872.2,
+    "total_invoice_with_ppn": 6456892.2,
     "payment_term_days": 0
   },
   {
@@ -5356,9 +5356,9 @@
     "customer": "CUST-RTL-016 - Warung Ronny Depan SD",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4696848.0,
-    "ppn_11_amount": 516653.28,
-    "total_invoice_with_ppn": 5213501.28,
+    "dpp_amount": 4176906.0,
+    "ppn_11_amount": 459459.66,
+    "total_invoice_with_ppn": 4636365.66,
     "payment_term_days": 0
   },
   {
@@ -5370,9 +5370,9 @@
     "customer": "CUST-RTL-028 - Kios Gloria Wanda Pondok Damai",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4709200.0,
-    "ppn_11_amount": 518012.0,
-    "total_invoice_with_ppn": 5227212.0,
+    "dpp_amount": 3844560.0,
+    "ppn_11_amount": 422901.6,
+    "total_invoice_with_ppn": 4267461.6,
     "payment_term_days": 0
   },
   {
@@ -5384,9 +5384,9 @@
     "customer": "CUST-RTL-040 - Kios Filadelfia Ferry Dekat Gereja",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4581048.0,
-    "ppn_11_amount": 503915.28,
-    "total_invoice_with_ppn": 5084963.28,
+    "dpp_amount": 5319080.0,
+    "ppn_11_amount": 585098.8,
+    "total_invoice_with_ppn": 5904178.8,
     "payment_term_days": 0
   },
   {
@@ -5398,9 +5398,9 @@
     "customer": "CUST-RTL-052 - Warung Om Grace Depan SD",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4929220.0,
-    "ppn_11_amount": 542214.2,
-    "total_invoice_with_ppn": 5471434.2,
+    "dpp_amount": 6369000.0,
+    "ppn_11_amount": 700590.0,
+    "total_invoice_with_ppn": 7069590.0,
     "payment_term_days": 0
   },
   {
@@ -5412,9 +5412,9 @@
     "customer": "CUST-RTL-064 - Warung Tante Roy Pondok Damai",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5045985.0,
-    "ppn_11_amount": 555058.35,
-    "total_invoice_with_ppn": 5601043.35,
+    "dpp_amount": 5403228.0,
+    "ppn_11_amount": 594355.08,
+    "total_invoice_with_ppn": 5997583.08,
     "payment_term_days": 0
   },
   {
@@ -5426,9 +5426,9 @@
     "customer": "CUST-RTL-076 - Warung Dani Dekat Gereja",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 3419960.0,
-    "ppn_11_amount": 376195.6,
-    "total_invoice_with_ppn": 3796155.6,
+    "dpp_amount": 4814964.0,
+    "ppn_11_amount": 529646.04,
+    "total_invoice_with_ppn": 5344610.04,
     "payment_term_days": 0
   },
   {
@@ -5436,14 +5436,14 @@
     "so_number": "SO-202607-0389",
     "do_number": "DO-202607-0389",
     "date_invoice": "2026-07-31",
-    "due_date": "2026-08-21",
+    "due_date": "2026-08-14",
     "customer": "CUST-INST-04 - Katering Minahasa Indah",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 15344640.0,
-    "ppn_11_amount": 1687910.4,
-    "total_invoice_with_ppn": 17032550.4,
-    "payment_term_days": 21
+    "dpp_amount": 19238400.0,
+    "ppn_11_amount": 2116224.0,
+    "total_invoice_with_ppn": 21354624.0,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0390",
@@ -5454,9 +5454,9 @@
     "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 37848710.4,
-    "ppn_11_amount": 4163358.14,
-    "total_invoice_with_ppn": 42012068.54,
+    "dpp_amount": 31090608.0,
+    "ppn_11_amount": 3419966.88,
+    "total_invoice_with_ppn": 34510574.88,
     "payment_term_days": 30
   },
   {
@@ -5464,14 +5464,14 @@
     "so_number": "SO-202607-0391",
     "do_number": "DO-202607-0391",
     "date_invoice": "2026-08-01",
-    "due_date": "2026-08-31",
+    "due_date": "2026-08-15",
     "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
     "channel": "MT",
     "salesman": "SLS-01 - Christian Wowor",
-    "dpp_amount": 28740326.4,
-    "ppn_11_amount": 3161435.9,
-    "total_invoice_with_ppn": 31901762.3,
-    "payment_term_days": 30
+    "dpp_amount": 28872288.0,
+    "ppn_11_amount": 3175951.68,
+    "total_invoice_with_ppn": 32048239.68,
+    "payment_term_days": 14
   },
   {
     "invoice_number": "INV-202607-0392",
@@ -5482,9 +5482,9 @@
     "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 16060049.6,
-    "ppn_11_amount": 1766605.46,
-    "total_invoice_with_ppn": 17826655.06,
+    "dpp_amount": 19712112.0,
+    "ppn_11_amount": 2168332.32,
+    "total_invoice_with_ppn": 21880444.32,
     "payment_term_days": 14
   },
   {
@@ -5496,9 +5496,9 @@
     "customer": "CUST-GT-25 - Grosir Megamas Abadi",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 18441763.2,
-    "ppn_11_amount": 2028593.95,
-    "total_invoice_with_ppn": 20470357.15,
+    "dpp_amount": 15205344.0,
+    "ppn_11_amount": 1672587.84,
+    "total_invoice_with_ppn": 16877931.84,
     "payment_term_days": 14
   },
   {
@@ -5506,28 +5506,28 @@
     "so_number": "SO-202607-0394",
     "do_number": "DO-202607-0394",
     "date_invoice": "2026-08-01",
-    "due_date": "2026-08-15",
+    "due_date": "2026-08-08",
     "customer": "CUST-GT-26 - Toko Karombasan Baru",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 24218880.0,
-    "ppn_11_amount": 2664076.8,
-    "total_invoice_with_ppn": 26882956.8,
-    "payment_term_days": 14
+    "dpp_amount": 21785568.0,
+    "ppn_11_amount": 2396412.48,
+    "total_invoice_with_ppn": 24181980.48,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0395",
     "so_number": "SO-202607-0395",
     "do_number": "DO-202607-0395",
     "date_invoice": "2026-08-01",
-    "due_date": "2026-08-15",
+    "due_date": "2026-08-08",
     "customer": "CUST-GT-28 - Toko Sam Ratulangi Perkasa",
     "channel": "GT",
     "salesman": "SLS-02 - Andre Pangemanan",
-    "dpp_amount": 21111552.0,
-    "ppn_11_amount": 2322270.72,
-    "total_invoice_with_ppn": 23433822.72,
-    "payment_term_days": 14
+    "dpp_amount": 17110296.0,
+    "ppn_11_amount": 1882132.56,
+    "total_invoice_with_ppn": 18992428.56,
+    "payment_term_days": 7
   },
   {
     "invoice_number": "INV-202607-0396",
@@ -5538,9 +5538,9 @@
     "customer": "CUST-RTL-005 - Kios Ko Ferry Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5176260.0,
-    "ppn_11_amount": 569388.6,
-    "total_invoice_with_ppn": 5745648.6,
+    "dpp_amount": 3914040.0,
+    "ppn_11_amount": 430544.4,
+    "total_invoice_with_ppn": 4344584.4,
     "payment_term_days": 0
   },
   {
@@ -5552,9 +5552,9 @@
     "customer": "CUST-RTL-017 - Kios Berkat Grace Dekat Mesjid",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5958875.0,
-    "ppn_11_amount": 655476.25,
-    "total_invoice_with_ppn": 6614351.25,
+    "dpp_amount": 3746130.0,
+    "ppn_11_amount": 412074.3,
+    "total_invoice_with_ppn": 4158204.3,
     "payment_term_days": 0
   },
   {
@@ -5566,9 +5566,9 @@
     "customer": "CUST-RTL-029 - Warung Kasih Roy Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 6210740.0,
-    "ppn_11_amount": 683181.4,
-    "total_invoice_with_ppn": 6893921.4,
+    "dpp_amount": 5602404.0,
+    "ppn_11_amount": 616264.44,
+    "total_invoice_with_ppn": 6218668.44,
     "payment_term_days": 0
   },
   {
@@ -5580,9 +5580,9 @@
     "customer": "CUST-RTL-041 - Kios Tante Dani Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 5935908.0,
-    "ppn_11_amount": 652949.88,
-    "total_invoice_with_ppn": 6588857.88,
+    "dpp_amount": 4238280.0,
+    "ppn_11_amount": 466210.8,
+    "total_invoice_with_ppn": 4704490.8,
     "payment_term_days": 0
   },
   {
@@ -5594,9 +5594,9 @@
     "customer": "CUST-RTL-053 - Kios Ci Bobby Dekat Mesjid",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4025980.0,
-    "ppn_11_amount": 442857.8,
-    "total_invoice_with_ppn": 4468837.8,
+    "dpp_amount": 4783505.0,
+    "ppn_11_amount": 526185.55,
+    "total_invoice_with_ppn": 5309690.55,
     "payment_term_days": 0
   },
   {
@@ -5608,9 +5608,9 @@
     "customer": "CUST-RTL-065 - Kios Ko Vera Samping Lapangan",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4901235.0,
-    "ppn_11_amount": 539135.85,
-    "total_invoice_with_ppn": 5440370.85,
+    "dpp_amount": 3777396.0,
+    "ppn_11_amount": 415513.56,
+    "total_invoice_with_ppn": 4192909.56,
     "payment_term_days": 0
   },
   {
@@ -5622,9 +5622,9 @@
     "customer": "CUST-RTL-077 - Kios Berkat Ventje Pintu Masuk",
     "channel": "RTL",
     "salesman": "CVS-01 - Novry Mandagi",
-    "dpp_amount": 4763240.0,
-    "ppn_11_amount": 523956.4,
-    "total_invoice_with_ppn": 5287196.4,
+    "dpp_amount": 6260727.0,
+    "ppn_11_amount": 688679.97,
+    "total_invoice_with_ppn": 6949406.97,
     "payment_term_days": 0
   },
   {
@@ -5632,13 +5632,13 @@
     "so_number": "SO-202607-0403",
     "do_number": "DO-202607-0403",
     "date_invoice": "2026-08-01",
-    "due_date": "2026-08-22",
+    "due_date": "2026-08-15",
     "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
     "channel": "INST",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
-    "dpp_amount": 16725888.0,
-    "ppn_11_amount": 1839847.68,
-    "total_invoice_with_ppn": 18565735.68,
-    "payment_term_days": 21
+    "dpp_amount": 22169088.0,
+    "ppn_11_amount": 2438599.68,
+    "total_invoice_with_ppn": 24607687.68,
+    "payment_term_days": 14
   }
 ]

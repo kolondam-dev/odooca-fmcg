@@ -16,31 +16,48 @@ class SeedGateTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
+        self.headers = {
+            'data/registers/perpetual_order_rejections.csv': [
+                'rejection_id', 'so_number', 'do_number', 'rejection_date',
+                'sku_code', 'qty_cartons', 'carton_qty', 'unit_price_dpp', 'line_subtotal_dpp'
+            ]
+        }
         self.data = {
             'data/registers/customer_registry_354.csv': [dict(
-                ref='C1', district_code='D1', subdistrict_code='V1', cohort_date='2026-07-01')],
+                ref='C1', district_code='D1', subdistrict_code='V1', cohort_date='2026-07-01',
+                payment_term_days='0')],
             'data/seed/partners_354.csv': [dict(ref='C1', district_code='D1', subdistrict_code='V1')],
             'data/seed/products_150.csv': [dict(default_code='P1', carton_qty='10')],
             'data/registers/pjp_july_2026_matrix.csv': [dict(
                 customer='C1 - Customer', tanggal='2026-07-01', salesman='S1', frekuensi_call='F1')],
             'data/registers/perpetual_sales_orders.csv': [dict(
                 so_number='SO1', customer='C1 - Customer', date_order='2026-07-01', salesman='S1',
-                gross_dpp='100', discount_dpp='10', net_dpp='90')],
+                gross_dpp='200', discount_dpp='20', net_dpp='180')],
             'data/registers/perpetual_order_lines.csv': [dict(
-                so_number='SO1', sku_code='P1', qty_cartons='1', carton_qty='10',
-                unit_price_dpp='10', line_subtotal_dpp='100', lot_number='L1')],
+                so_number='SO1', sku_code='P1', qty_cartons='2', carton_qty='10',
+                unit_price_dpp='10', line_subtotal_dpp='200', lot_number='L1')],
             'data/registers/perpetual_deliveries.csv': [dict(
-                do_number='DO1', so_number='SO1', scheduled_delivery_date='2026-07-02')],
+                do_number='DO1', so_number='SO1', scheduled_delivery_date='2026-07-02',
+                gross_order_dpp='200', rejection_dpp='100', do_delivered_dpp='100')],
+            'data/registers/perpetual_order_rejections.csv': [dict(
+                rejection_id='R1', so_number='SO1', do_number='DO1', rejection_date='2026-07-02',
+                sku_code='P1', qty_cartons='1', carton_qty='10', unit_price_dpp='10',
+                line_subtotal_dpp='100')],
             'data/registers/perpetual_invoices.csv': [dict(
                 invoice_number='I1', so_number='SO1', do_number='DO1', date_invoice='2026-07-02',
-                due_date='2026-07-02', dpp_amount='90', ppn_11_amount='9.90', total_invoice_with_ppn='99.90')],
+                due_date='2026-07-02', payment_term_days='0', dpp_amount='90', ppn_11_amount='9.90',
+                total_invoice_with_ppn='99.90')],
             'data/registers/perpetual_ar_collections.csv': [dict(
                 payment_id='PAY1', invoice_number='I1', payment_date='2026-07-02', invoice_dpp='90',
                 early_payment_discount='0', net_cash_collected='90')],
-            'data/registers/perpetual_daily_stock_cards.csv': [dict(date='2026-07-01', is_working_day='True')],
+            'data/registers/perpetual_daily_stock_cards.csv': [
+                dict(date='2026-07-01', is_working_day='True'),
+                dict(date='2026-07-02', is_working_day='True'),
+                dict(date='2026-07-16', is_working_day='False'),
+            ],
             'data/registers/initial_stock_20260701.csv': [dict(
-                sku_code='P1', qty_cartons_on_hand='2', carton_qty='10', qty_units_on_hand='20',
-                unit_cost_price='5', subtotal_dpp='100', lot_number='L1', expiry_date='2027-01-01')],
+                sku_code='P1', qty_cartons_on_hand='3', carton_qty='10', qty_units_on_hand='30',
+                unit_cost_price='5', subtotal_dpp='150', lot_number='L1', expiry_date='2027-01-01')],
             'data/registers/inbound_po_intransit_june_headers.csv': [dict(
                 po_number='PO1', arrival_maumbi_date='2026-07-03', total_dpp='50')],
             'data/registers/inbound_po_intransit_june_lines.csv': [dict(
@@ -58,7 +75,8 @@ class SeedGateTests(unittest.TestCase):
             p = self.root / name
             p.parent.mkdir(parents=True, exist_ok=True)
             with p.open('w', newline='') as f:
-                writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+                fields = rows[0].keys() if rows else self.headers.get(name, [])
+                writer = csv.DictWriter(f, fieldnames=fields)
                 writer.writeheader()
                 writer.writerows(rows)
         violations, _ = gate.validate(self.root, sizes=(1, 1))
@@ -99,8 +117,34 @@ class SeedGateTests(unittest.TestCase):
     def test_due_date(self):
         self.mutate('perpetual_invoices', 'due_date', '2026-07-01', 'EVENT-ORDER')
 
+    def test_top_mismatch(self):
+        self.mutate('perpetual_invoices', 'payment_term_days', '14', 'MASTER-TOP')
+
     def test_sunday_delivery(self):
         self.mutate('perpetual_deliveries', 'scheduled_delivery_date', '2026-07-05', 'CALENDAR')
+
+    def test_holiday_delivery(self):
+        self.data['data/registers/perpetual_invoices.csv'][0]['date_invoice'] = '2026-07-16'
+        self.data['data/registers/perpetual_invoices.csv'][0]['due_date'] = '2026-07-16'
+        self.mutate('perpetual_deliveries', 'scheduled_delivery_date', '2026-07-16', 'CALENDAR')
+
+    def test_period_cutoff_mismatch(self):
+        self.mutate('perpetual_deliveries', 'scheduled_delivery_date', '2026-07-03', 'PERIOD-CUTOFF')
+
+    def test_rejection_reconciliation(self):
+        self.mutate('perpetual_deliveries', 'rejection_dpp', '10', 'RETURN-RECON')
+
+    def test_rejection_fk_invalid(self):
+        self.data['data/registers/perpetual_order_rejections.csv'] = [dict(
+            rejection_id='R1', so_number='SO999', do_number='DO1', rejection_date='2026-07-02',
+            sku_code='P1', qty_cartons='1', carton_qty='10', unit_price_dpp='10', line_subtotal_dpp='100')]
+        self.assertIn('TX-FK', self.run_gate())
+
+    def test_rejection_non_positive_qty(self):
+        self.data['data/registers/perpetual_order_rejections.csv'] = [dict(
+            rejection_id='R1', so_number='SO1', do_number='DO1', rejection_date='2026-07-02',
+            sku_code='P1', qty_cartons='0', carton_qty='10', unit_price_dpp='10', line_subtotal_dpp='0')]
+        self.assertIn('LINE-MATH', self.run_gate())
 
     def test_payment_before_invoice(self):
         self.mutate('perpetual_ar_collections', 'payment_date', '2026-07-01', 'COLLECTION')

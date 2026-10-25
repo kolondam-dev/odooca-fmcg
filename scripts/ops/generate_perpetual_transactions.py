@@ -13,6 +13,7 @@ Mensimulasikan seluruh rantai transaksi kausal dan deterministik:
 9. OPEX harian (BBM, uang jalan, tol) + Payroll Penggajian Karyawan Rp 185 Jt & Lembur di tanggal 30/31
 """
 
+import collections
 import csv
 from datetime import date, datetime, timedelta
 import json
@@ -28,11 +29,23 @@ random.seed(20260701)
 
 
 def is_working_day(d: date) -> bool:
-    """Senin s/d Sabtu adalah hari kerja operasional FMCG Manado."""
+    """Senin s/d Sabtu adalah hari kerja operasional FMCG Manado.
+    Hari Minggu libur mingguan operasional armada distributor.
+    16 Juli 2026: Libur Nasional Tahun Baru Islam 1448 H (SKB 3 Menteri 2026).
+    """
     if d.weekday() == 6:  # Minggu off
         return False
-    holidays = [date(2026, 7, 16)]  # Tahun Baru Islam
-    return d not in holidays
+    if d == date(2026, 7, 16):  # Tahun Baru Islam 1448 H
+        return False
+    return True
+
+
+def get_next_working_day(d: date) -> date:
+    """Menghitung hari kerja operasional berikutnya (melewati Minggu & Hari Libur Nasional)."""
+    curr = d + timedelta(days=1)
+    while not is_working_day(curr):
+        curr += timedelta(days=1)
+    return curr
 
 
 def main():
@@ -44,6 +57,10 @@ def main():
     with open(SEED_DIR / "products_150.csv", "r", encoding="utf-8") as f:
         products = list(csv.DictReader(f))
     prod_map = {p["default_code"]: p for p in products}
+
+    with open(REG_DIR / "customer_registry_354.json", "r", encoding="utf-8") as f:
+        customers_reg = json.load(f)
+    cust_map = {c["ref"]: c for c in customers_reg}
 
     with open(REG_DIR / "initial_stock_20260701.json", "r", encoding="utf-8") as f:
         initial_stock = json.load(f)
@@ -93,6 +110,7 @@ def main():
     order_lines = []
     deliveries = []
     invoices = []
+    rejections = []
     ar_collections = []
     ap_payments = []
     daily_stock_cards = []
@@ -101,10 +119,14 @@ def main():
     so_counter = 1
     inv_counter = 1
     do_counter = 1
+    rej_counter = 1
     pay_counter = 1
 
+    # Lokasi Karantina Gudang Maumbi (Stok Bad Stock / Rusak Transit)
+    quarantine_stock = collections.defaultdict(int)
+
     # Open AR Tracking: list of unpaid invoices
-    # [ {"inv_no": str, "partner_name": str, "channel": str, "amount": float, "date": str, "due_date": str, "pjp_day": str, "salesman": str} ]
+    # [ {"inv_no": str, "partner_name": str, "channel": str, "amount": float, "date": str, "due_date": str, "payment_term_days": int, "pjp_day": str, "salesman": str} ]
     open_ar_ledger = []
 
     # AP Tracking
@@ -266,12 +288,57 @@ def main():
 
                 order_lines.extend(current_so_lines)
 
-                # Hitung Diskon Faktur
-                disc_amt = round(current_so_gross * disc_pct, 2)
-                net_so = round(current_so_gross - disc_amt, 2)
-                do_delivered_amt = current_so_gross
+                # Simpan Packlist / Delivery Order (H+1 kerja berikutnya via kanonikal get_next_working_day)
+                do_num = f"DO-202607-{do_counter:04d}"
+                do_counter += 1
+                deliv_dt = get_next_working_day(curr_dt)
+                deliv_date = deliv_dt.strftime("%Y-%m-%d")
 
-                final_inv_dpp = net_so
+                # Skenario Rejection / Retur Fisik Saat Pengiriman (DO)
+                # Berlaku deterministik pada ~4-5% order GT dan MT akibat kerusakan handling transit
+                rej_amt = 0.0
+                rej_cogs = 0.0
+                if ch in ("GT", "MT") and len(current_so_lines) >= 2 and (so_counter % 20 == 0):
+                    rej_line = current_so_lines[0]
+                    rej_sku = rej_line["sku_code"]
+                    rej_lot = rej_line["lot_number"]
+                    rej_qty = 1  # 1 karton rusak
+                    rej_c_price = rej_line["carton_price_dpp"]
+                    rej_c_cost = float(prod_map[rej_sku]["cost_price"]) * int(prod_map[rej_sku]["carton_qty"])
+                    rej_amt = round(rej_c_price * rej_qty, 2)
+                    rej_cogs = round(rej_c_cost * rej_qty, 2)
+
+                    rej_id = f"REJ-202607-{rej_counter:03d}"
+                    rej_counter += 1
+
+                    rejections.append({
+                        "rejection_id": rej_id,
+                        "so_number": so_num,
+                        "do_number": do_num,
+                        "rejection_date": deliv_date,
+                        "customer": cust,
+                        "channel": ch,
+                        "sku_code": rej_sku,
+                        "product_name": rej_line["product_name"],
+                        "lot_number": rej_lot,
+                        "qty_cartons": rej_qty,
+                        "carton_qty": rej_line["carton_qty"],
+                        "unit_price_dpp": rej_line["unit_price_dpp"],
+                        "line_subtotal_dpp": rej_amt,
+                        "cogs_subtotal": rej_cogs,
+                        "rejection_reason": "Kemasan basah/penyok saat handling transit",
+                        "disposition": "Karantina Gudang Maumbi / Bad Stock",
+                    })
+                    quarantine_stock[(rej_sku, rej_lot)] += rej_qty
+
+                # Hitung Diskon dan Nilai Terkirim Bersih
+                do_delivered_amt = round(current_so_gross - rej_amt, 2)
+                so_disc_amt = round(current_so_gross * disc_pct, 2)
+                so_net_dpp = round(current_so_gross - so_disc_amt, 2)
+
+                # DPP Faktur ditagihkan atas barang yang benar-benar diterima (delivered net of rejection)
+                inv_disc_amt = round(do_delivered_amt * disc_pct, 2)
+                final_inv_dpp = round(do_delivered_amt - inv_disc_amt, 2)
                 ppn_11_amt = round(final_inv_dpp * 0.11, 2)
                 final_inv_total = round(final_inv_dpp + ppn_11_amt, 2)
 
@@ -285,19 +352,12 @@ def main():
                     "district": dist,
                     "delivery_vehicle": veh,
                     "gross_dpp": round(current_so_gross, 2),
-                    "discount_dpp": round(disc_amt, 2),
-                    "net_dpp": round(net_so, 2),
+                    "discount_dpp": round(so_disc_amt, 2),
+                    "net_dpp": round(so_net_dpp, 2),
                     "cogs_dpp": round(current_so_cogs, 2),
-                    "rejection_dpp": 0.0,
+                    "rejection_dpp": round(rej_amt, 2),
                     "do_delivered_dpp": round(do_delivered_amt, 2),
                 })
-
-                # Simpan Packlist / Delivery Order (DO H+1 kerja berikutnya, Minggu libur geser ke Senin)
-                do_num = f"DO-202607-{do_counter:04d}"
-                do_counter += 1
-                days_to_deliv = 2 if curr_dt.weekday() == 5 else 1
-                deliv_dt = curr_dt + timedelta(days=days_to_deliv)
-                deliv_date = deliv_dt.strftime("%Y-%m-%d")
 
                 deliveries.append({
                     "do_number": do_num,
@@ -306,16 +366,22 @@ def main():
                     "delivery_vehicle": veh,
                     "customer": cust,
                     "channel": ch,
+                    "gross_order_dpp": round(current_so_gross, 2),
+                    "rejection_dpp": round(rej_amt, 2),
                     "do_delivered_dpp": round(do_delivered_amt, 2),
-                    "rejection_reason": "-",
+                    "rejection_reason": "Kemasan basah/penyok saat handling transit" if rej_amt > 0 else "-",
                 })
 
-                # Simpan Customer Invoice (Tercetak H+1 Pagi pada saat barang dikirim)
-                inv_num = f"INV-202607-{inv_counter:04d}"
-                inv_counter += 1
-                top_days = 0 if ch == "RTL" else (14 if ch == "GT" else (30 if ch == "MT" else 21))
+                # Simpan Customer Invoice (Tercetak pada tanggal barang diserahterimakan)
+                # TOP (Term of Payment) diambil WAJIB dari master customer registry
+                cust_ref = cust.split(" - ")[0]
+                cust_master = cust_map[cust_ref]
+                top_days = int(cust_master["payment_term_days"])
                 due_dt = deliv_dt + timedelta(days=top_days)
                 due_date_str = due_dt.strftime("%Y-%m-%d")
+
+                inv_num = f"INV-202607-{inv_counter:04d}"
+                inv_counter += 1
 
                 invoices.append({
                     "invoice_number": inv_num,
@@ -341,12 +407,13 @@ def main():
                     "dpp_amount": final_inv_dpp,
                     "invoice_date": deliv_date,
                     "due_date": due_date_str,
+                    "payment_term_days": top_days,
                     "pjp_call_day": day_name,
                     "status": "Open",
                 })
 
                 daily_so_gross += current_so_gross
-                daily_so_disc += disc_amt
+                daily_so_disc += so_disc_amt
                 daily_so_cogs += current_so_cogs
                 daily_so_delivered += do_delivered_amt
 
@@ -354,43 +421,41 @@ def main():
         # STEP 3: AR CASH & TRANSFER COLLECTIONS (Pelunasan Piutang)
         # -------------------------------------------------------------
         # Logika Pelunasan:
-        # A. Kios RTL Canvass (COD): Lunas pada hari H penyerahan
-        # B. GT (TOP 7-14 hari): Ditagih saat salesman PJP datang pada hari yang sama di minggu berikutnya
-        #    Skenario Pemajuan Tagihan (Cash Discount 1% 7 hari): Toko membayar maju di hari ke-5/7.
-        # C. MT (TOP 21-35 hari): Lunas pada tanggal jatuh tempo.
+        # A. Kios RTL Cash COD (TOP 0 hari): Lunas pada hari H penyerahan/faktur terbit
+        # B. GT/MT/INST dengan termin kredit (TOP >= 7):
+        #    Skenario Pemajuan Tagihan (Cash Discount 1% 7 hari): Bayar maju di hari ke 5-7.
+        # C. Pelunasan saat jatuh tempo sesuai termin master customer.
         daily_ar_collected = 0.0
         for ar in open_ar_ledger:
             if ar["status"] != "Open":
                 continue
 
             inv_dt = datetime.strptime(ar["invoice_date"], "%Y-%m-%d").date()
+            due_dt = datetime.strptime(ar["due_date"], "%Y-%m-%d").date()
             days_passed = (curr_dt - inv_dt).days
+            term_days = ar["payment_term_days"]
 
             is_paid = False
             disc_taken = 0.0
             pay_reason = ""
 
-            # Skenario A: Kios RTL Cash COD
-            if ar["channel"] == "RTL" and days_passed >= 0:
+            # Skenario A: Kios RTL Cash COD (TOP 0 hari)
+            if term_days == 0 and curr_dt >= inv_dt:
                 is_paid = True
-                pay_reason = "Cash COD Salesman Canvass"
-            # Skenario B: GT Pemajuan Tagihan (Hari ke 5-7 untuk dapat potongan 1%)
-            elif ar["channel"] == "GT" and days_passed in (5, 6, 7) and random.random() < 0.40:
+                pay_reason = "Cash COD Penyerahan Barang"
+            # Skenario B: Termin kredit yang memanfaatkan Cash Discount 1% (maju bayar di hari ke 5-7)
+            elif term_days >= 7 and days_passed in (5, 6, 7) and (hash(ar["invoice_number"]) % 10 < 3):
                 is_paid = True
                 disc_taken = round(ar["dpp_amount"] * 0.01, 2)
                 pay_reason = "Early Payment Discount (Maju Bayar Cash Disc 1%)"
-            # Skenario C: GT Regular Weekly Call (Hari ke 12-14 saat salesman PJP berkunjung)
-            elif ar["channel"] == "GT" and days_passed >= 12 and ar["pjp_call_day"] == day_name:
+            # Skenario C: Pelunasan saat jatuh tempo sesuai termin master
+            elif curr_dt >= due_dt:
                 is_paid = True
-                pay_reason = f"Pelunasan PJP Mingguan Salesman ({ar['salesman']})"
-            # Skenario D: MT & INST Jatuh Tempo
-            elif ar["channel"] in ("MT", "INST") and curr_dt >= datetime.strptime(ar["due_date"], "%Y-%m-%d").date():
-                is_paid = True
-                pay_reason = "Bank Batch Transfer Jatuh Tempo"
+                pay_reason = f"Pelunasan Termin Jatuh Tempo ({term_days} Hari)"
 
             if is_paid:
                 ar["status"] = "Paid"
-                net_collected = ar["dpp_amount"] - disc_taken
+                net_collected = round(ar["dpp_amount"] - disc_taken, 2)
                 daily_ar_collected += net_collected
                 ar_collections.append({
                     "payment_id": f"PAY-AR-{pay_counter:05d}",
@@ -402,7 +467,7 @@ def main():
                     "invoice_dpp": round(ar["dpp_amount"], 2),
                     "early_payment_discount": round(disc_taken, 2),
                     "net_cash_collected": round(net_collected, 2),
-                    "payment_method": "Cash Tunai" if ar["channel"] == "RTL" else "Transfer Bank BCA/Mandiri",
+                    "payment_method": "Cash Tunai" if term_days == 0 else "Transfer Bank BCA/Mandiri",
                     "payment_note": pay_reason,
                 })
                 pay_counter += 1
@@ -518,26 +583,83 @@ def main():
 
         curr_dt += timedelta(days=1)
 
-    print("\n--- REKONSILIASI AKHIR SIMULASI PERPETUAL BULAN JULI 2026 ---")
-    print(f"Total Gross Sales DPP      : Rp {total_gross_july:,.2f}")
-    print(f"Total Diskon Promosi DPP   : Rp {total_disc_july:,.2f}")
-    print(f"Total Net Sales DPP        : Rp {total_net_july:,.2f}")
-    print(f"Total COGS Persediaan DPP  : Rp {total_cogs_july:,.2f}")
-    print(f"Gross Margin               : Rp {total_net_july - total_cogs_july:,.2f}")
-    print(f"Total Beban OPEX & Payroll : Rp {total_opex_july:,.2f}")
-    net_profit = (total_net_july - total_cogs_july) - total_opex_july
-    net_margin_pct = (net_profit / total_net_july) * 100.0
-    print(f"Net Profit Bersih          : Rp {net_profit:,.2f} (Net Margin: {net_margin_pct:.2f}%)")
-    print(f"Total AR Cash Collected    : Rp {total_ar_collected_july:,.2f}")
-    print(f"Total AP Principal Paid    : Rp {total_ap_paid_july:,.2f}")
+    # -------------------------------------------------------------
+    # REKONSILIASI KANONIKAL DUA PERIODE (CUT-OFF JULI VS CARRY-FORWARD AGUSTUS)
+    # -------------------------------------------------------------
+    # Pemisahan berbasis tanggal pengakuan faktur dan penyerahan fisik:
+    invoices_july = [inv for inv in invoices if inv["date_invoice"] <= "2026-07-31"]
+    invoices_aug = [inv for inv in invoices if inv["date_invoice"] > "2026-07-31"]
+
+    deliveries_july = [do for do in deliveries if do["scheduled_delivery_date"] <= "2026-07-31"]
+    deliveries_aug = [do for do in deliveries if do["scheduled_delivery_date"] > "2026-07-31"]
+
+    rejections_july = [r for r in rejections if r["rejection_date"] <= "2026-07-31"]
+    rejections_aug = [r for r in rejections if r["rejection_date"] > "2026-07-31"]
+
+    sum_inv_july_dpp = sum(inv["dpp_amount"] for inv in invoices_july)
+    sum_inv_aug_dpp = sum(inv["dpp_amount"] for inv in invoices_aug)
+
+    sum_do_july_dpp = sum(do["do_delivered_dpp"] for do in deliveries_july)
+    sum_do_aug_dpp = sum(do["do_delivered_dpp"] for do in deliveries_aug)
+
+    sum_rej_july_dpp = sum(r["line_subtotal_dpp"] for r in rejections_july)
+    sum_rej_aug_dpp = sum(r["line_subtotal_dpp"] for r in rejections_aug)
+
+    # COGS atas barang yang terkirim fisik di Juli
+    so_num_aug = {do["so_number"] for do in deliveries_aug}
+    cogs_july = sum(so["cogs_dpp"] for so in sales_orders if so["so_number"] not in so_num_aug)
+    cogs_aug = sum(so["cogs_dpp"] for so in sales_orders if so["so_number"] in so_num_aug)
+
+    net_margin_july_accrual = sum_inv_july_dpp - cogs_july
+    net_operating_profit_july = net_margin_july_accrual - total_opex_july
+
+    print("\n" + "=" * 85)
+    print("REKONSILIASI KANONIKAL CUT-OFF JULI 2026 & CARRY-FORWARD AGUSTUS 2026")
+    print("=" * 85)
+    print("1. KOMITMEN PENJUALAN JULI (SALES ORDER BOOKED 1-31 JULI):")
+    print(f"   - Total Sales Order Diterbitkan : {len(sales_orders)} SO")
+    print(f"   - Total Gross SO DPP             : Rp {total_gross_july:,.2f}")
+    print(f"   - Total Diskon Promosi SO        : Rp {total_disc_july:,.2f}")
+    print(f"   - Total Net SO DPP               : Rp {total_net_july:,.2f}")
+    print(f"   - Total COGS Ter-reservasi       : Rp {total_cogs_july:,.2f}")
+    print()
+    print("2. PENGAKUAN PENDAPATAN & BEBAN PERIODE JULI 2026 (CUT-OFF 31 JULI 2026):")
+    print(f"   - Jumlah Faktur Terbit Juli      : {len(invoices_july)} Faktur")
+    print(f"   - DPP Penjualan Terfaktur Juli   : Rp {sum_inv_july_dpp:,.2f}")
+    print(f"   - PPN 11% Terfaktur Juli         : Rp {sum(inv['ppn_11_amount'] for inv in invoices_july):,.2f}")
+    print(f"   - DO Terkirim Fisik Juli (DPP)   : Rp {sum_do_july_dpp:,.2f}")
+    print(f"   - Retur/Rejection Karantina Juli : Rp {sum_rej_july_dpp:,.2f} ({len(rejections_july)} kejadian)")
+    print(f"   - COGS Terkirim Fisik Juli       : Rp {cogs_july:,.2f}")
+    print(f"   - Gross Profit Terfaktur Juli    : Rp {net_margin_july_accrual:,.2f} ({net_margin_july_accrual/sum_inv_july_dpp*100:.2f}%)")
+    print(f"   - Beban OPEX & Payroll Juli      : Rp {total_opex_july:,.2f}")
+    print(f"   - Net Operating Profit Sah Juli  : Rp {net_operating_profit_july:,.2f} ({net_operating_profit_july/sum_inv_july_dpp*100:.2f}%)")
+    print()
+    print("3. CARRY-FORWARD KE PERIODE AGUSTUS 2026 (SO 31 JULI, DELIVERED & INVOICED 1 AGUSTUS):")
+    print(f"   - Jumlah Pesanan Carry-Forward   : {len(invoices_aug)} SO / DO / Faktur")
+    print(f"   - Nilai DO Terkirim Carry-Fwd    : Rp {sum_do_aug_dpp:,.2f}")
+    print(f"   - Nilai Invoiced DPP Carry-Fwd   : Rp {sum_inv_aug_dpp:,.2f}")
+    print(f"   - Nilai COGS Carry-Forward       : Rp {cogs_aug:,.2f}")
+    print(f"   - Retur Karantina Carry-Forward  : Rp {sum_rej_aug_dpp:,.2f} ({len(rejections_aug)} kejadian)")
+    print()
+    print("4. REKONSILIASI KAS & PIUTANG USAHA (ACCOUNTS RECEIVABLE) JULI 2026:")
+    print(f"   - Total Kas Tertagih Juli        : Rp {total_ar_collected_july:,.2f}")
+    open_ar_31_july = sum(ar["dpp_amount"] for ar in open_ar_ledger if ar["status"] == "Open" and ar["invoice_date"] <= "2026-07-31")
+    print(f"   - Saldo Piutang Usaha Akhir Juli : Rp {open_ar_31_july:,.2f} (Jatuh tempo Agustus sesuai termin master)")
+    print()
+    print("5. REKONSILIASI FISIK PERSEDIAAN & STOK KARANTINA (31 JULI 2026):")
+    total_quarantine_ctns = sum(quarantine_stock.values())
+    print(f"   - Saldo Akhir Stok Fisik Saleable: {sum(d['cartons'] for d in stock_on_hand.values()):,} Karton")
+    print(f"   - Saldo Akhir Stok Karantina BS  : {total_quarantine_ctns:,} Karton (Masuk Virtual Location/Quarantine)")
     max_occ = max(d["warehouse_occupancy_pct"] for d in daily_stock_cards)
-    print(f"Puncak Okupansi Gudang     : {max_occ:.1f}%")
+    print(f"   - Puncak Okupansi Gudang Maumbi  : {max_occ:.1f}%")
+    print("=" * 85)
 
     # 4. Simpan seluruh dataset transaksi perpetual ke data/registers/
     datasets = [
         ("perpetual_sales_orders", sales_orders),
         ("perpetual_order_lines", order_lines),
         ("perpetual_deliveries", deliveries),
+        ("perpetual_order_rejections", rejections),
         ("perpetual_invoices", invoices),
         ("perpetual_ar_collections", ar_collections),
         ("perpetual_ap_payments", ap_payments),

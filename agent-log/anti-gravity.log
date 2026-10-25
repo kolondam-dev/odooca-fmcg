@@ -275,5 +275,16 @@
 - Meregenerasi 8 dataset transaksi perpetual Juli 2026 (SO: 403, lines: 2.687, DO: 403, Inv: 403, AR: 296, AP: 4, OPEX: 29, Kartu stok: 31).
 - Verifikasi invariant gate (verify_seed_invariants.py): Status PASS, violations 0.
 - Verifikasi unit tests (test_seed_invariants.py): 17/17 PASS.
-- Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
 - Task managed by antigravity at 2026-10-25T23:58:00+07:00
+
+[2026-10-26T02:15:00+07:00] [INFO] Tindak Lanjut Supervisi PR #15: Return Karantina, Master TOP, Kalender Libur, & Rekonsiliasi Dua Periode
+- Memulihkan pemodelan skenario return/rejection deterministik pada pengiriman DO (~4-5% order GT & MT rusak handling transit, 9 kejadian senilai Rp 3.079.200 DPP dialokasikan ke Bad Stock / quarantine_stock Gudang Maumbi).
+- Menerbitkan dataset baru data/registers/perpetual_order_rejections.csv dan .json (9 records terikat SO, DO, dan SKU).
+- Menyelaraskan TOP faktur dan tanggal jatuh tempo dengan master customer registry (payment_term_days).
+- Menyatukan kalender hari kerja operasional (get_next_working_day) agar pengiriman tidak jatuh pada libur nasional 16 Juli 2026 maupun hari Minggu.
+- Meregenerasi dataset PJP matrix (403 kunjungan efektif Juli) dan dataset transaksi perpetual Juli 2026.
+- Memisahkan rekonsiliasi finansial dua periode: cut-off Juli (389 SO/DO/Faktur, Gross Profit Rp 593,7 Jt, Net Profit Rp 202,9 Jt) vs Carry-Forward Agustus (14 SO tanggal 31 Juli terfaktur 1 Agustus senilai Rp 188,3 Jt DPP).
+- Memperluas invariant gate verify_seed_invariants.py dengan aturan RETURN-RECON, MASTER-TOP, PERIOD-CUTOFF, dan penyaringan libur kalender.
+- Memperluas tes regresi mutasi tests/test_seed_invariants.py (23/23 unit tests PASS).
+- Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
+- Task managed by antigravity at 2026-10-26T02:15:00+07:00

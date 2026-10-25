@@ -281,8 +281,8 @@
     "discount_dpp": 968880.0,
     "net_dpp": 19216120.0,
     "cogs_dpp": 16977000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20185000.0
+    "rejection_dpp": 252000.0,
+    "do_delivered_dpp": 19933000.0
   },
   {
     "so_number": "SO-202607-0020",
@@ -581,8 +581,8 @@
     "discount_dpp": 842851.2,
     "net_dpp": 16716548.8,
     "cogs_dpp": 14933000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17559400.0
+    "rejection_dpp": 240000.0,
+    "do_delivered_dpp": 17319400.0
   },
   {
     "so_number": "SO-202607-0040",
@@ -1507,12 +1507,12 @@
     "channel": "MT",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 30667000.0,
-    "discount_dpp": 1594684.0,
-    "net_dpp": 29072316.0,
-    "cogs_dpp": 25937000.0,
+    "gross_dpp": 41236800.0,
+    "discount_dpp": 2144313.6,
+    "net_dpp": 39092486.4,
+    "cogs_dpp": 34880400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 30667000.0
+    "do_delivered_dpp": 41236800.0
   },
   {
     "so_number": "SO-202607-0102",
@@ -1522,12 +1522,12 @@
     "channel": "MT",
     "district": "Tomohon Tengah",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 37815000.0,
-    "discount_dpp": 1966380.0,
-    "net_dpp": 35848620.0,
-    "cogs_dpp": 32077200.0,
+    "gross_dpp": 40020000.0,
+    "discount_dpp": 2081040.0,
+    "net_dpp": 37938960.0,
+    "cogs_dpp": 34051200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 37815000.0
+    "do_delivered_dpp": 40020000.0
   },
   {
     "so_number": "SO-202607-0103",
@@ -1537,12 +1537,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 25578000.0,
-    "discount_dpp": 1227744.0,
-    "net_dpp": 24350256.0,
-    "cogs_dpp": 21415200.0,
+    "gross_dpp": 25210800.0,
+    "discount_dpp": 1210118.4,
+    "net_dpp": 24000681.6,
+    "cogs_dpp": 21144000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 25578000.0
+    "do_delivered_dpp": 25210800.0
   },
   {
     "so_number": "SO-202607-0104",
@@ -1552,12 +1552,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18466400.0,
-    "discount_dpp": 886387.2,
-    "net_dpp": 17580012.8,
-    "cogs_dpp": 15672000.0,
+    "gross_dpp": 24430800.0,
+    "discount_dpp": 1172678.4,
+    "net_dpp": 23258121.6,
+    "cogs_dpp": 20458800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18466400.0
+    "do_delivered_dpp": 24430800.0
   },
   {
     "so_number": "SO-202607-0105",
@@ -1567,12 +1567,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 24574800.0,
-    "discount_dpp": 1179590.4,
-    "net_dpp": 23395209.6,
-    "cogs_dpp": 20610000.0,
+    "gross_dpp": 24604800.0,
+    "discount_dpp": 1181030.4,
+    "net_dpp": 23423769.6,
+    "cogs_dpp": 20747200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 24574800.0
+    "do_delivered_dpp": 24604800.0
   },
   {
     "so_number": "SO-202607-0106",
@@ -1582,12 +1582,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3975000.0,
-    "discount_dpp": 139125.0,
-    "net_dpp": 3835875.0,
-    "cogs_dpp": 3367800.0,
+    "gross_dpp": 4052000.0,
+    "discount_dpp": 141820.0,
+    "net_dpp": 3910180.0,
+    "cogs_dpp": 3408000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3975000.0
+    "do_delivered_dpp": 4052000.0
   },
   {
     "so_number": "SO-202607-0107",
@@ -1597,12 +1597,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6408000.0,
-    "discount_dpp": 224280.0,
-    "net_dpp": 6183720.0,
-    "cogs_dpp": 5508000.0,
+    "gross_dpp": 5994000.0,
+    "discount_dpp": 209790.0,
+    "net_dpp": 5784210.0,
+    "cogs_dpp": 5214000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6408000.0
+    "do_delivered_dpp": 5994000.0
   },
   {
     "so_number": "SO-202607-0108",
@@ -1612,12 +1612,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4879200.0,
-    "discount_dpp": 170772.0,
-    "net_dpp": 4708428.0,
-    "cogs_dpp": 4192800.0,
+    "gross_dpp": 4992000.0,
+    "discount_dpp": 174720.0,
+    "net_dpp": 4817280.0,
+    "cogs_dpp": 4212000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4879200.0
+    "do_delivered_dpp": 4992000.0
   },
   {
     "so_number": "SO-202607-0109",
@@ -1627,12 +1627,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4188000.0,
-    "discount_dpp": 146580.0,
-    "net_dpp": 4041420.0,
-    "cogs_dpp": 3444000.0,
+    "gross_dpp": 5940000.0,
+    "discount_dpp": 207900.0,
+    "net_dpp": 5732100.0,
+    "cogs_dpp": 5133600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4188000.0
+    "do_delivered_dpp": 5940000.0
   },
   {
     "so_number": "SO-202607-0110",
@@ -1642,12 +1642,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6176000.0,
-    "discount_dpp": 216160.0,
-    "net_dpp": 5959840.0,
-    "cogs_dpp": 5229600.0,
+    "gross_dpp": 6360000.0,
+    "discount_dpp": 222600.0,
+    "net_dpp": 6137400.0,
+    "cogs_dpp": 5346000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6176000.0
+    "do_delivered_dpp": 6360000.0
   },
   {
     "so_number": "SO-202607-0111",
@@ -1657,12 +1657,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4470000.0,
-    "discount_dpp": 156450.0,
-    "net_dpp": 4313550.0,
-    "cogs_dpp": 3798000.0,
+    "gross_dpp": 6091200.0,
+    "discount_dpp": 213192.0,
+    "net_dpp": 5878008.0,
+    "cogs_dpp": 5234400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4470000.0
+    "do_delivered_dpp": 6091200.0
   },
   {
     "so_number": "SO-202607-0112",
@@ -1672,12 +1672,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5572000.0,
-    "discount_dpp": 195020.0,
-    "net_dpp": 5376980.0,
-    "cogs_dpp": 4826000.0,
+    "gross_dpp": 4188000.0,
+    "discount_dpp": 146580.0,
+    "net_dpp": 4041420.0,
+    "cogs_dpp": 3444000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5572000.0
+    "do_delivered_dpp": 4188000.0
   },
   {
     "so_number": "SO-202607-0113",
@@ -1687,12 +1687,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5450400.0,
-    "discount_dpp": 190764.0,
-    "net_dpp": 5259636.0,
-    "cogs_dpp": 4668000.0,
+    "gross_dpp": 6176000.0,
+    "discount_dpp": 216160.0,
+    "net_dpp": 5959840.0,
+    "cogs_dpp": 5229600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5450400.0
+    "do_delivered_dpp": 6176000.0
   },
   {
     "so_number": "SO-202607-0114",
@@ -1702,12 +1702,12 @@
     "channel": "RTL",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 4524000.0,
-    "discount_dpp": 158340.0,
-    "net_dpp": 4365660.0,
-    "cogs_dpp": 3786000.0,
+    "gross_dpp": 4470000.0,
+    "discount_dpp": 156450.0,
+    "net_dpp": 4313550.0,
+    "cogs_dpp": 3798000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4524000.0
+    "do_delivered_dpp": 4470000.0
   },
   {
     "so_number": "SO-202607-0115",
@@ -1717,12 +1717,12 @@
     "channel": "INST",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 24536000.0,
-    "discount_dpp": 981440.0,
-    "net_dpp": 23554560.0,
-    "cogs_dpp": 20924000.0,
+    "gross_dpp": 21648000.0,
+    "discount_dpp": 865920.0,
+    "net_dpp": 20782080.0,
+    "cogs_dpp": 18578000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 24536000.0
+    "do_delivered_dpp": 21648000.0
   },
   {
     "so_number": "SO-202607-0116",
@@ -1732,12 +1732,12 @@
     "channel": "MT",
     "district": "Tikala",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 32144400.0,
-    "discount_dpp": 1671508.8,
-    "net_dpp": 30472891.2,
-    "cogs_dpp": 27169200.0,
+    "gross_dpp": 37460000.0,
+    "discount_dpp": 1947920.0,
+    "net_dpp": 35512080.0,
+    "cogs_dpp": 31704000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 32144400.0
+    "do_delivered_dpp": 37460000.0
   },
   {
     "so_number": "SO-202607-0117",
@@ -1747,12 +1747,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 33394000.0,
-    "discount_dpp": 1736488.0,
-    "net_dpp": 31657512.0,
-    "cogs_dpp": 28489000.0,
+    "gross_dpp": 29548800.0,
+    "discount_dpp": 1536537.6,
+    "net_dpp": 28012262.4,
+    "cogs_dpp": 24700800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 33394000.0
+    "do_delivered_dpp": 29548800.0
   },
   {
     "so_number": "SO-202607-0118",
@@ -1762,12 +1762,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 22226400.0,
-    "discount_dpp": 1066867.2,
-    "net_dpp": 21159532.8,
-    "cogs_dpp": 18856800.0,
+    "gross_dpp": 23598000.0,
+    "discount_dpp": 1132704.0,
+    "net_dpp": 22465296.0,
+    "cogs_dpp": 20100600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22226400.0
+    "do_delivered_dpp": 23598000.0
   },
   {
     "so_number": "SO-202607-0119",
@@ -1777,12 +1777,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 21525600.0,
-    "discount_dpp": 1033228.8,
-    "net_dpp": 20492371.2,
-    "cogs_dpp": 18278400.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 21525600.0
+    "gross_dpp": 22762000.0,
+    "discount_dpp": 1092576.0,
+    "net_dpp": 21669424.0,
+    "cogs_dpp": 19774000.0,
+    "rejection_dpp": 516000.0,
+    "do_delivered_dpp": 22246000.0
   },
   {
     "so_number": "SO-202607-0120",
@@ -1792,12 +1792,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 25544000.0,
-    "discount_dpp": 1226112.0,
-    "net_dpp": 24317888.0,
-    "cogs_dpp": 21352000.0,
+    "gross_dpp": 24161600.0,
+    "discount_dpp": 1159756.8,
+    "net_dpp": 23001843.2,
+    "cogs_dpp": 20252800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 25544000.0
+    "do_delivered_dpp": 24161600.0
   },
   {
     "so_number": "SO-202607-0121",
@@ -1807,12 +1807,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 17684000.0,
-    "discount_dpp": 848832.0,
-    "net_dpp": 16835168.0,
-    "cogs_dpp": 14737600.0,
+    "gross_dpp": 17995200.0,
+    "discount_dpp": 863769.6,
+    "net_dpp": 17131430.4,
+    "cogs_dpp": 15396000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17684000.0
+    "do_delivered_dpp": 17995200.0
   },
   {
     "so_number": "SO-202607-0122",
@@ -1822,12 +1822,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19690000.0,
-    "discount_dpp": 945120.0,
-    "net_dpp": 18744880.0,
-    "cogs_dpp": 17020800.0,
+    "gross_dpp": 16976000.0,
+    "discount_dpp": 814848.0,
+    "net_dpp": 16161152.0,
+    "cogs_dpp": 13948000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19690000.0
+    "do_delivered_dpp": 16976000.0
   },
   {
     "so_number": "SO-202607-0123",
@@ -1837,12 +1837,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3828000.0,
-    "discount_dpp": 133980.0,
-    "net_dpp": 3694020.0,
-    "cogs_dpp": 3204000.0,
+    "gross_dpp": 4136000.0,
+    "discount_dpp": 144760.0,
+    "net_dpp": 3991240.0,
+    "cogs_dpp": 3500800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3828000.0
+    "do_delivered_dpp": 4136000.0
   },
   {
     "so_number": "SO-202607-0124",
@@ -1852,12 +1852,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3933600.0,
-    "discount_dpp": 137676.0,
-    "net_dpp": 3795924.0,
-    "cogs_dpp": 3388800.0,
+    "gross_dpp": 4988000.0,
+    "discount_dpp": 174580.0,
+    "net_dpp": 4813420.0,
+    "cogs_dpp": 4112800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3933600.0
+    "do_delivered_dpp": 4988000.0
   },
   {
     "so_number": "SO-202607-0125",
@@ -1867,12 +1867,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5900000.0,
-    "discount_dpp": 206500.0,
-    "net_dpp": 5693500.0,
-    "cogs_dpp": 5022000.0,
+    "gross_dpp": 5856000.0,
+    "discount_dpp": 204960.0,
+    "net_dpp": 5651040.0,
+    "cogs_dpp": 5032800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5900000.0
+    "do_delivered_dpp": 5856000.0
   },
   {
     "so_number": "SO-202607-0126",
@@ -1882,12 +1882,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5644000.0,
-    "discount_dpp": 197540.0,
-    "net_dpp": 5446460.0,
-    "cogs_dpp": 4776000.0,
+    "gross_dpp": 4572000.0,
+    "discount_dpp": 160020.0,
+    "net_dpp": 4411980.0,
+    "cogs_dpp": 3912000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5644000.0
+    "do_delivered_dpp": 4572000.0
   },
   {
     "so_number": "SO-202607-0127",
@@ -1897,12 +1897,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4590400.0,
-    "discount_dpp": 160664.0,
-    "net_dpp": 4429736.0,
-    "cogs_dpp": 3892800.0,
+    "gross_dpp": 3432000.0,
+    "discount_dpp": 120120.0,
+    "net_dpp": 3311880.0,
+    "cogs_dpp": 2818800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4590400.0
+    "do_delivered_dpp": 3432000.0
   },
   {
     "so_number": "SO-202607-0128",
@@ -1912,12 +1912,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4917600.0,
-    "discount_dpp": 172116.0,
-    "net_dpp": 4745484.0,
-    "cogs_dpp": 4176000.0,
+    "gross_dpp": 4692000.0,
+    "discount_dpp": 164220.0,
+    "net_dpp": 4527780.0,
+    "cogs_dpp": 3918000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4917600.0
+    "do_delivered_dpp": 4692000.0
   },
   {
     "so_number": "SO-202607-0129",
@@ -1927,12 +1927,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4994400.0,
-    "discount_dpp": 174804.0,
-    "net_dpp": 4819596.0,
-    "cogs_dpp": 4208000.0,
+    "gross_dpp": 5240000.0,
+    "discount_dpp": 183400.0,
+    "net_dpp": 5056600.0,
+    "cogs_dpp": 4476000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4994400.0
+    "do_delivered_dpp": 5240000.0
   },
   {
     "so_number": "SO-202607-0130",
@@ -1942,12 +1942,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 4219200.0,
-    "discount_dpp": 147672.0,
-    "net_dpp": 4071528.0,
-    "cogs_dpp": 3552000.0,
+    "gross_dpp": 4491200.0,
+    "discount_dpp": 157192.0,
+    "net_dpp": 4334008.0,
+    "cogs_dpp": 3818400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4219200.0
+    "do_delivered_dpp": 4491200.0
   },
   {
     "so_number": "SO-202607-0131",
@@ -1957,12 +1957,12 @@
     "channel": "RTL",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 4392000.0,
-    "discount_dpp": 153720.0,
-    "net_dpp": 4238280.0,
-    "cogs_dpp": 3748800.0,
+    "gross_dpp": 4473600.0,
+    "discount_dpp": 156576.0,
+    "net_dpp": 4317024.0,
+    "cogs_dpp": 3780000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4392000.0
+    "do_delivered_dpp": 4473600.0
   },
   {
     "so_number": "SO-202607-0132",
@@ -1972,12 +1972,12 @@
     "channel": "INST",
     "district": "Tondano Barat",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
-    "gross_dpp": 19168000.0,
-    "discount_dpp": 766720.0,
-    "net_dpp": 18401280.0,
-    "cogs_dpp": 16055600.0,
+    "gross_dpp": 19411200.0,
+    "discount_dpp": 776448.0,
+    "net_dpp": 18634752.0,
+    "cogs_dpp": 16375200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19168000.0
+    "do_delivered_dpp": 19411200.0
   },
   {
     "so_number": "SO-202607-0133",
@@ -1987,12 +1987,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 39652800.0,
-    "discount_dpp": 2061945.6,
-    "net_dpp": 37590854.4,
-    "cogs_dpp": 33434000.0,
+    "gross_dpp": 30567600.0,
+    "discount_dpp": 1589515.2,
+    "net_dpp": 28978084.8,
+    "cogs_dpp": 25694400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 39652800.0
+    "do_delivered_dpp": 30567600.0
   },
   {
     "so_number": "SO-202607-0134",
@@ -2002,12 +2002,12 @@
     "channel": "MT",
     "district": "Maesa",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 31766400.0,
-    "discount_dpp": 1651852.8,
-    "net_dpp": 30114547.2,
-    "cogs_dpp": 27024000.0,
+    "gross_dpp": 37080800.0,
+    "discount_dpp": 1928201.6,
+    "net_dpp": 35152598.4,
+    "cogs_dpp": 31425200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 31766400.0
+    "do_delivered_dpp": 37080800.0
   },
   {
     "so_number": "SO-202607-0135",
@@ -2017,12 +2017,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18204800.0,
-    "discount_dpp": 873830.4,
-    "net_dpp": 17330969.6,
-    "cogs_dpp": 15350800.0,
+    "gross_dpp": 21516000.0,
+    "discount_dpp": 1032768.0,
+    "net_dpp": 20483232.0,
+    "cogs_dpp": 18117600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18204800.0
+    "do_delivered_dpp": 21516000.0
   },
   {
     "so_number": "SO-202607-0136",
@@ -2032,12 +2032,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18558000.0,
-    "discount_dpp": 890784.0,
-    "net_dpp": 17667216.0,
-    "cogs_dpp": 15852000.0,
+    "gross_dpp": 18440200.0,
+    "discount_dpp": 885129.6,
+    "net_dpp": 17555070.4,
+    "cogs_dpp": 15479400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18558000.0
+    "do_delivered_dpp": 18440200.0
   },
   {
     "so_number": "SO-202607-0137",
@@ -2047,12 +2047,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 17112000.0,
-    "discount_dpp": 821376.0,
-    "net_dpp": 16290624.0,
-    "cogs_dpp": 14524000.0,
+    "gross_dpp": 22258400.0,
+    "discount_dpp": 1068403.2,
+    "net_dpp": 21189996.8,
+    "cogs_dpp": 19134000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17112000.0
+    "do_delivered_dpp": 22258400.0
   },
   {
     "so_number": "SO-202607-0138",
@@ -2062,12 +2062,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5295000.0,
-    "discount_dpp": 185325.0,
-    "net_dpp": 5109675.0,
-    "cogs_dpp": 4467000.0,
+    "gross_dpp": 4731200.0,
+    "discount_dpp": 165592.0,
+    "net_dpp": 4565608.0,
+    "cogs_dpp": 3968800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5295000.0
+    "do_delivered_dpp": 4731200.0
   },
   {
     "so_number": "SO-202607-0139",
@@ -2077,12 +2077,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4095000.0,
-    "discount_dpp": 143325.0,
-    "net_dpp": 3951675.0,
-    "cogs_dpp": 3501000.0,
+    "gross_dpp": 4476000.0,
+    "discount_dpp": 156660.0,
+    "net_dpp": 4319340.0,
+    "cogs_dpp": 3844800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4095000.0
+    "do_delivered_dpp": 4476000.0
   },
   {
     "so_number": "SO-202607-0140",
@@ -2092,12 +2092,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5210400.0,
-    "discount_dpp": 182364.0,
-    "net_dpp": 5028036.0,
-    "cogs_dpp": 4432800.0,
+    "gross_dpp": 5007000.0,
+    "discount_dpp": 175245.0,
+    "net_dpp": 4831755.0,
+    "cogs_dpp": 4313400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5210400.0
+    "do_delivered_dpp": 5007000.0
   },
   {
     "so_number": "SO-202607-0141",
@@ -2107,12 +2107,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5217600.0,
-    "discount_dpp": 182616.0,
-    "net_dpp": 5034984.0,
-    "cogs_dpp": 4478400.0,
+    "gross_dpp": 4509000.0,
+    "discount_dpp": 157815.0,
+    "net_dpp": 4351185.0,
+    "cogs_dpp": 3879000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5217600.0
+    "do_delivered_dpp": 4509000.0
   },
   {
     "so_number": "SO-202607-0142",
@@ -2122,12 +2122,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5484000.0,
-    "discount_dpp": 191940.0,
-    "net_dpp": 5292060.0,
-    "cogs_dpp": 4536000.0,
+    "gross_dpp": 5552000.0,
+    "discount_dpp": 194320.0,
+    "net_dpp": 5357680.0,
+    "cogs_dpp": 4800000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5484000.0
+    "do_delivered_dpp": 5552000.0
   },
   {
     "so_number": "SO-202607-0143",
@@ -2137,12 +2137,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5796000.0,
-    "discount_dpp": 202860.0,
-    "net_dpp": 5593140.0,
-    "cogs_dpp": 4884000.0,
+    "gross_dpp": 5910000.0,
+    "discount_dpp": 206850.0,
+    "net_dpp": 5703150.0,
+    "cogs_dpp": 5010000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5796000.0
+    "do_delivered_dpp": 5910000.0
   },
   {
     "so_number": "SO-202607-0144",
@@ -2152,12 +2152,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6312000.0,
-    "discount_dpp": 220920.0,
-    "net_dpp": 6091080.0,
-    "cogs_dpp": 5316000.0,
+    "gross_dpp": 3720000.0,
+    "discount_dpp": 130200.0,
+    "net_dpp": 3589800.0,
+    "cogs_dpp": 3168000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6312000.0
+    "do_delivered_dpp": 3720000.0
   },
   {
     "so_number": "SO-202607-0145",
@@ -2167,12 +2167,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5691000.0,
-    "discount_dpp": 199185.0,
-    "net_dpp": 5491815.0,
-    "cogs_dpp": 4873000.0,
+    "gross_dpp": 5187000.0,
+    "discount_dpp": 181545.0,
+    "net_dpp": 5005455.0,
+    "cogs_dpp": 4349400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5691000.0
+    "do_delivered_dpp": 5187000.0
   },
   {
     "so_number": "SO-202607-0146",
@@ -2182,12 +2182,12 @@
     "channel": "RTL",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 6348000.0,
-    "discount_dpp": 222180.0,
-    "net_dpp": 6125820.0,
-    "cogs_dpp": 5340000.0,
+    "gross_dpp": 4876800.0,
+    "discount_dpp": 170688.0,
+    "net_dpp": 4706112.0,
+    "cogs_dpp": 4159200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6348000.0
+    "do_delivered_dpp": 4876800.0
   },
   {
     "so_number": "SO-202607-0147",
@@ -2197,12 +2197,12 @@
     "channel": "INST",
     "district": "Maesa",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
-    "gross_dpp": 19164000.0,
-    "discount_dpp": 766560.0,
-    "net_dpp": 18397440.0,
-    "cogs_dpp": 16400000.0,
+    "gross_dpp": 19226000.0,
+    "discount_dpp": 769040.0,
+    "net_dpp": 18456960.0,
+    "cogs_dpp": 16086000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19164000.0
+    "do_delivered_dpp": 19226000.0
   },
   {
     "so_number": "SO-202607-0148",
@@ -2212,12 +2212,12 @@
     "channel": "MT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 37120200.0,
-    "discount_dpp": 1930250.4,
-    "net_dpp": 35189949.6,
-    "cogs_dpp": 31654200.0,
+    "gross_dpp": 32280000.0,
+    "discount_dpp": 1678560.0,
+    "net_dpp": 30601440.0,
+    "cogs_dpp": 27424800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 37120200.0
+    "do_delivered_dpp": 32280000.0
   },
   {
     "so_number": "SO-202607-0149",
@@ -2227,12 +2227,12 @@
     "channel": "MT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 38813400.0,
-    "discount_dpp": 2018296.8,
-    "net_dpp": 36795103.2,
-    "cogs_dpp": 32745000.0,
+    "gross_dpp": 30163200.0,
+    "discount_dpp": 1568486.4,
+    "net_dpp": 28594713.6,
+    "cogs_dpp": 25589600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 38813400.0
+    "do_delivered_dpp": 30163200.0
   },
   {
     "so_number": "SO-202607-0150",
@@ -2242,12 +2242,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 22869600.0,
-    "discount_dpp": 1097740.8,
-    "net_dpp": 21771859.2,
-    "cogs_dpp": 19512000.0,
+    "gross_dpp": 21837600.0,
+    "discount_dpp": 1048204.8,
+    "net_dpp": 20789395.2,
+    "cogs_dpp": 18570000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22869600.0
+    "do_delivered_dpp": 21837600.0
   },
   {
     "so_number": "SO-202607-0151",
@@ -2257,12 +2257,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 24440000.0,
-    "discount_dpp": 1173120.0,
-    "net_dpp": 23266880.0,
-    "cogs_dpp": 20576000.0,
+    "gross_dpp": 22332000.0,
+    "discount_dpp": 1071936.0,
+    "net_dpp": 21260064.0,
+    "cogs_dpp": 19092000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 24440000.0
+    "do_delivered_dpp": 22332000.0
   },
   {
     "so_number": "SO-202607-0152",
@@ -2272,12 +2272,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 20922000.0,
-    "discount_dpp": 1004256.0,
-    "net_dpp": 19917744.0,
-    "cogs_dpp": 17847200.0,
+    "gross_dpp": 22905600.0,
+    "discount_dpp": 1099468.8,
+    "net_dpp": 21806131.2,
+    "cogs_dpp": 18902400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20922000.0
+    "do_delivered_dpp": 22905600.0
   },
   {
     "so_number": "SO-202607-0153",
@@ -2287,12 +2287,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4500000.0,
-    "discount_dpp": 157500.0,
-    "net_dpp": 4342500.0,
-    "cogs_dpp": 3828000.0,
+    "gross_dpp": 5493600.0,
+    "discount_dpp": 192276.0,
+    "net_dpp": 5301324.0,
+    "cogs_dpp": 4670400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4500000.0
+    "do_delivered_dpp": 5493600.0
   },
   {
     "so_number": "SO-202607-0154",
@@ -2302,12 +2302,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4884000.0,
-    "discount_dpp": 170940.0,
-    "net_dpp": 4713060.0,
-    "cogs_dpp": 4116000.0,
+    "gross_dpp": 3660000.0,
+    "discount_dpp": 128100.0,
+    "net_dpp": 3531900.0,
+    "cogs_dpp": 3096000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4884000.0
+    "do_delivered_dpp": 3660000.0
   },
   {
     "so_number": "SO-202607-0155",
@@ -2317,12 +2317,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4499200.0,
-    "discount_dpp": 157472.0,
-    "net_dpp": 4341728.0,
-    "cogs_dpp": 3844800.0,
+    "gross_dpp": 3580000.0,
+    "discount_dpp": 125300.0,
+    "net_dpp": 3454700.0,
+    "cogs_dpp": 3045600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4499200.0
+    "do_delivered_dpp": 3580000.0
   },
   {
     "so_number": "SO-202607-0156",
@@ -2332,12 +2332,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5988800.0,
-    "discount_dpp": 209608.0,
-    "net_dpp": 5779192.0,
-    "cogs_dpp": 5167600.0,
+    "gross_dpp": 4560000.0,
+    "discount_dpp": 159600.0,
+    "net_dpp": 4400400.0,
+    "cogs_dpp": 3828000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5988800.0
+    "do_delivered_dpp": 4560000.0
   },
   {
     "so_number": "SO-202607-0157",
@@ -2347,12 +2347,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3688800.0,
-    "discount_dpp": 129108.0,
-    "net_dpp": 3559692.0,
-    "cogs_dpp": 3204000.0,
+    "gross_dpp": 3672000.0,
+    "discount_dpp": 128520.0,
+    "net_dpp": 3543480.0,
+    "cogs_dpp": 3120000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3688800.0
+    "do_delivered_dpp": 3672000.0
   },
   {
     "so_number": "SO-202607-0158",
@@ -2362,12 +2362,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4052000.0,
-    "discount_dpp": 141820.0,
-    "net_dpp": 3910180.0,
-    "cogs_dpp": 3492000.0,
+    "gross_dpp": 4884000.0,
+    "discount_dpp": 170940.0,
+    "net_dpp": 4713060.0,
+    "cogs_dpp": 4116000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4052000.0
+    "do_delivered_dpp": 4884000.0
   },
   {
     "so_number": "SO-202607-0159",
@@ -2377,12 +2377,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5988000.0,
-    "discount_dpp": 209580.0,
-    "net_dpp": 5778420.0,
-    "cogs_dpp": 5064000.0,
+    "gross_dpp": 4499200.0,
+    "discount_dpp": 157472.0,
+    "net_dpp": 4341728.0,
+    "cogs_dpp": 3844800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5988000.0
+    "do_delivered_dpp": 4499200.0
   },
   {
     "so_number": "SO-202607-0160",
@@ -2392,12 +2392,12 @@
     "channel": "RTL",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5576000.0,
-    "discount_dpp": 195160.0,
-    "net_dpp": 5380840.0,
-    "cogs_dpp": 4708000.0,
+    "gross_dpp": 5988800.0,
+    "discount_dpp": 209608.0,
+    "net_dpp": 5779192.0,
+    "cogs_dpp": 5167600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5576000.0
+    "do_delivered_dpp": 5988800.0
   },
   {
     "so_number": "SO-202607-0161",
@@ -2407,12 +2407,12 @@
     "channel": "MT",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 37758800.0,
-    "discount_dpp": 1963457.6,
-    "net_dpp": 35795342.4,
-    "cogs_dpp": 31902400.0,
+    "gross_dpp": 32162400.0,
+    "discount_dpp": 1672444.8,
+    "net_dpp": 30489955.2,
+    "cogs_dpp": 27822000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 37758800.0
+    "do_delivered_dpp": 32162400.0
   },
   {
     "so_number": "SO-202607-0162",
@@ -2422,12 +2422,12 @@
     "channel": "MT",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 35293200.0,
-    "discount_dpp": 1835246.4,
-    "net_dpp": 33457953.6,
-    "cogs_dpp": 29698800.0,
+    "gross_dpp": 32615800.0,
+    "discount_dpp": 1696021.6,
+    "net_dpp": 30919778.4,
+    "cogs_dpp": 27872600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 35293200.0
+    "do_delivered_dpp": 32615800.0
   },
   {
     "so_number": "SO-202607-0163",
@@ -2437,12 +2437,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 22860200.0,
-    "discount_dpp": 1097289.6,
-    "net_dpp": 21762910.4,
-    "cogs_dpp": 19409400.0,
+    "gross_dpp": 20028000.0,
+    "discount_dpp": 961344.0,
+    "net_dpp": 19066656.0,
+    "cogs_dpp": 16860000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22860200.0
+    "do_delivered_dpp": 20028000.0
   },
   {
     "so_number": "SO-202607-0164",
@@ -2452,12 +2452,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 20560800.0,
-    "discount_dpp": 986918.4,
-    "net_dpp": 19573881.6,
-    "cogs_dpp": 17539200.0,
+    "gross_dpp": 18232000.0,
+    "discount_dpp": 875136.0,
+    "net_dpp": 17356864.0,
+    "cogs_dpp": 15327200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20560800.0
+    "do_delivered_dpp": 18232000.0
   },
   {
     "so_number": "SO-202607-0165",
@@ -2467,12 +2467,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 24514800.0,
-    "discount_dpp": 1176710.4,
-    "net_dpp": 23338089.6,
-    "cogs_dpp": 20660800.0,
+    "gross_dpp": 16977600.0,
+    "discount_dpp": 814924.8,
+    "net_dpp": 16162675.2,
+    "cogs_dpp": 14496000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 24514800.0
+    "do_delivered_dpp": 16977600.0
   },
   {
     "so_number": "SO-202607-0166",
@@ -2482,12 +2482,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 23887200.0,
-    "discount_dpp": 1146585.6,
-    "net_dpp": 22740614.4,
-    "cogs_dpp": 20224800.0,
+    "gross_dpp": 24193200.0,
+    "discount_dpp": 1161273.6,
+    "net_dpp": 23031926.4,
+    "cogs_dpp": 20480400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23887200.0
+    "do_delivered_dpp": 24193200.0
   },
   {
     "so_number": "SO-202607-0167",
@@ -2497,12 +2497,12 @@
     "channel": "GT",
     "district": "Tikala",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 22758800.0,
-    "discount_dpp": 1092422.4,
-    "net_dpp": 21666377.6,
-    "cogs_dpp": 19532000.0,
+    "gross_dpp": 20120800.0,
+    "discount_dpp": 965798.4,
+    "net_dpp": 19155001.6,
+    "cogs_dpp": 17400000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22758800.0
+    "do_delivered_dpp": 20120800.0
   },
   {
     "so_number": "SO-202607-0168",
@@ -2512,12 +2512,12 @@
     "channel": "GT",
     "district": "Tikala",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 24076600.0,
-    "discount_dpp": 1155676.8,
-    "net_dpp": 22920923.2,
-    "cogs_dpp": 20748200.0,
+    "gross_dpp": 24075600.0,
+    "discount_dpp": 1155628.8,
+    "net_dpp": 22919971.2,
+    "cogs_dpp": 20361600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 24076600.0
+    "do_delivered_dpp": 24075600.0
   },
   {
     "so_number": "SO-202607-0169",
@@ -2527,12 +2527,12 @@
     "channel": "GT",
     "district": "Tikala",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 23391000.0,
-    "discount_dpp": 1122768.0,
-    "net_dpp": 22268232.0,
-    "cogs_dpp": 20127000.0,
+    "gross_dpp": 23887200.0,
+    "discount_dpp": 1146585.6,
+    "net_dpp": 22740614.4,
+    "cogs_dpp": 20224800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23391000.0
+    "do_delivered_dpp": 23887200.0
   },
   {
     "so_number": "SO-202607-0170",
@@ -2542,12 +2542,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6048800.0,
-    "discount_dpp": 211708.0,
-    "net_dpp": 5837092.0,
-    "cogs_dpp": 5173600.0,
+    "gross_dpp": 5300000.0,
+    "discount_dpp": 185500.0,
+    "net_dpp": 5114500.0,
+    "cogs_dpp": 4544800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6048800.0
+    "do_delivered_dpp": 5300000.0
   },
   {
     "so_number": "SO-202607-0171",
@@ -2557,12 +2557,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6078000.0,
-    "discount_dpp": 212730.0,
-    "net_dpp": 5865270.0,
-    "cogs_dpp": 5235600.0,
+    "gross_dpp": 4376400.0,
+    "discount_dpp": 153174.0,
+    "net_dpp": 4223226.0,
+    "cogs_dpp": 3816000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6078000.0
+    "do_delivered_dpp": 4376400.0
   },
   {
     "so_number": "SO-202607-0172",
@@ -2572,12 +2572,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5172000.0,
-    "discount_dpp": 181020.0,
-    "net_dpp": 4990980.0,
-    "cogs_dpp": 4452000.0,
+    "gross_dpp": 5218200.0,
+    "discount_dpp": 182637.0,
+    "net_dpp": 5035563.0,
+    "cogs_dpp": 4463400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5172000.0
+    "do_delivered_dpp": 5218200.0
   },
   {
     "so_number": "SO-202607-0173",
@@ -2587,12 +2587,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4675200.0,
-    "discount_dpp": 163632.0,
-    "net_dpp": 4511568.0,
-    "cogs_dpp": 3982400.0,
+    "gross_dpp": 4976000.0,
+    "discount_dpp": 174160.0,
+    "net_dpp": 4801840.0,
+    "cogs_dpp": 4252000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4675200.0
+    "do_delivered_dpp": 4976000.0
   },
   {
     "so_number": "SO-202607-0174",
@@ -2602,12 +2602,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3624000.0,
-    "discount_dpp": 126840.0,
-    "net_dpp": 3497160.0,
-    "cogs_dpp": 2982000.0,
+    "gross_dpp": 5580000.0,
+    "discount_dpp": 195300.0,
+    "net_dpp": 5384700.0,
+    "cogs_dpp": 4752000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3624000.0
+    "do_delivered_dpp": 5580000.0
   },
   {
     "so_number": "SO-202607-0175",
@@ -2617,12 +2617,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5596800.0,
-    "discount_dpp": 195888.0,
-    "net_dpp": 5400912.0,
-    "cogs_dpp": 4680000.0,
+    "gross_dpp": 3600000.0,
+    "discount_dpp": 126000.0,
+    "net_dpp": 3474000.0,
+    "cogs_dpp": 3060000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5596800.0
+    "do_delivered_dpp": 3600000.0
   },
   {
     "so_number": "SO-202607-0176",
@@ -2632,12 +2632,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5208000.0,
-    "discount_dpp": 182280.0,
-    "net_dpp": 5025720.0,
-    "cogs_dpp": 4308000.0,
+    "gross_dpp": 4992000.0,
+    "discount_dpp": 174720.0,
+    "net_dpp": 4817280.0,
+    "cogs_dpp": 4221600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5208000.0
+    "do_delivered_dpp": 4992000.0
   },
   {
     "so_number": "SO-202607-0177",
@@ -2647,12 +2647,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5776000.0,
-    "discount_dpp": 202160.0,
-    "net_dpp": 5573840.0,
-    "cogs_dpp": 4952000.0,
+    "gross_dpp": 3484800.0,
+    "discount_dpp": 121968.0,
+    "net_dpp": 3362832.0,
+    "cogs_dpp": 2970000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5776000.0
+    "do_delivered_dpp": 3484800.0
   },
   {
     "so_number": "SO-202607-0178",
@@ -2662,12 +2662,12 @@
     "channel": "INST",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 21916800.0,
-    "discount_dpp": 876672.0,
-    "net_dpp": 21040128.0,
-    "cogs_dpp": 18450600.0,
+    "gross_dpp": 15558000.0,
+    "discount_dpp": 622320.0,
+    "net_dpp": 14935680.0,
+    "cogs_dpp": 13398400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 21916800.0
+    "do_delivered_dpp": 15558000.0
   },
   {
     "so_number": "SO-202607-0179",
@@ -2677,12 +2677,12 @@
     "channel": "MT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 40462800.0,
-    "discount_dpp": 2104065.6,
-    "net_dpp": 38358734.4,
-    "cogs_dpp": 34114800.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 40462800.0
+    "gross_dpp": 36165600.0,
+    "discount_dpp": 1880611.2,
+    "net_dpp": 34284988.8,
+    "cogs_dpp": 30362400.0,
+    "rejection_dpp": 79200.0,
+    "do_delivered_dpp": 36086400.0
   },
   {
     "so_number": "SO-202607-0180",
@@ -2692,12 +2692,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 39972800.0,
-    "discount_dpp": 2078585.6,
-    "net_dpp": 37894214.4,
-    "cogs_dpp": 33374800.0,
+    "gross_dpp": 35600000.0,
+    "discount_dpp": 1851200.0,
+    "net_dpp": 33748800.0,
+    "cogs_dpp": 30130000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 39972800.0
+    "do_delivered_dpp": 35600000.0
   },
   {
     "so_number": "SO-202607-0181",
@@ -2707,12 +2707,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 17564000.0,
-    "discount_dpp": 843072.0,
-    "net_dpp": 16720928.0,
-    "cogs_dpp": 14927200.0,
+    "gross_dpp": 24571200.0,
+    "discount_dpp": 1179417.6,
+    "net_dpp": 23391782.4,
+    "cogs_dpp": 20563200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17564000.0
+    "do_delivered_dpp": 24571200.0
   },
   {
     "so_number": "SO-202607-0182",
@@ -2722,12 +2722,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 20552400.0,
-    "discount_dpp": 986515.2,
-    "net_dpp": 19565884.8,
-    "cogs_dpp": 17866800.0,
+    "gross_dpp": 18228000.0,
+    "discount_dpp": 874944.0,
+    "net_dpp": 17353056.0,
+    "cogs_dpp": 15477600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20552400.0
+    "do_delivered_dpp": 18228000.0
   },
   {
     "so_number": "SO-202607-0183",
@@ -2737,12 +2737,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 16243200.0,
-    "discount_dpp": 779673.6,
-    "net_dpp": 15463526.4,
-    "cogs_dpp": 13739200.0,
+    "gross_dpp": 21798800.0,
+    "discount_dpp": 1046342.4,
+    "net_dpp": 20752457.6,
+    "cogs_dpp": 18373600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16243200.0
+    "do_delivered_dpp": 21798800.0
   },
   {
     "so_number": "SO-202607-0184",
@@ -2752,12 +2752,12 @@
     "channel": "GT",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 17298800.0,
-    "discount_dpp": 830342.4,
-    "net_dpp": 16468457.6,
-    "cogs_dpp": 14552000.0,
+    "gross_dpp": 16712000.0,
+    "discount_dpp": 802176.0,
+    "net_dpp": 15909824.0,
+    "cogs_dpp": 14000800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17298800.0
+    "do_delivered_dpp": 16712000.0
   },
   {
     "so_number": "SO-202607-0185",
@@ -2767,12 +2767,12 @@
     "channel": "GT",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 17691000.0,
-    "discount_dpp": 849168.0,
-    "net_dpp": 16841832.0,
-    "cogs_dpp": 15079800.0,
+    "gross_dpp": 16811200.0,
+    "discount_dpp": 806937.6,
+    "net_dpp": 16004262.4,
+    "cogs_dpp": 14509200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17691000.0
+    "do_delivered_dpp": 16811200.0
   },
   {
     "so_number": "SO-202607-0186",
@@ -2782,12 +2782,12 @@
     "channel": "GT",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 24505200.0,
-    "discount_dpp": 1176249.6,
-    "net_dpp": 23328950.4,
-    "cogs_dpp": 20675600.0,
+    "gross_dpp": 21748000.0,
+    "discount_dpp": 1043904.0,
+    "net_dpp": 20704096.0,
+    "cogs_dpp": 18764000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 24505200.0
+    "do_delivered_dpp": 21748000.0
   },
   {
     "so_number": "SO-202607-0187",
@@ -2797,12 +2797,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5598000.0,
-    "discount_dpp": 195930.0,
-    "net_dpp": 5402070.0,
-    "cogs_dpp": 4794000.0,
+    "gross_dpp": 5563200.0,
+    "discount_dpp": 194712.0,
+    "net_dpp": 5368488.0,
+    "cogs_dpp": 4668000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5598000.0
+    "do_delivered_dpp": 5563200.0
   },
   {
     "so_number": "SO-202607-0188",
@@ -2812,12 +2812,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4444800.0,
-    "discount_dpp": 155568.0,
-    "net_dpp": 4289232.0,
-    "cogs_dpp": 3729600.0,
+    "gross_dpp": 3686400.0,
+    "discount_dpp": 129024.0,
+    "net_dpp": 3557376.0,
+    "cogs_dpp": 3172800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4444800.0
+    "do_delivered_dpp": 3686400.0
   },
   {
     "so_number": "SO-202607-0189",
@@ -2827,12 +2827,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5067000.0,
-    "discount_dpp": 177345.0,
-    "net_dpp": 4889655.0,
-    "cogs_dpp": 4343400.0,
+    "gross_dpp": 3717600.0,
+    "discount_dpp": 130116.0,
+    "net_dpp": 3587484.0,
+    "cogs_dpp": 3066000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5067000.0
+    "do_delivered_dpp": 3717600.0
   },
   {
     "so_number": "SO-202607-0190",
@@ -2842,12 +2842,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5412000.0,
-    "discount_dpp": 189420.0,
-    "net_dpp": 5222580.0,
-    "cogs_dpp": 4423200.0,
+    "gross_dpp": 4118000.0,
+    "discount_dpp": 144130.0,
+    "net_dpp": 3973870.0,
+    "cogs_dpp": 3540800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5412000.0
+    "do_delivered_dpp": 4118000.0
   },
   {
     "so_number": "SO-202607-0191",
@@ -2857,12 +2857,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6139200.0,
-    "discount_dpp": 214872.0,
-    "net_dpp": 5924328.0,
-    "cogs_dpp": 5232000.0,
+    "gross_dpp": 5148000.0,
+    "discount_dpp": 180180.0,
+    "net_dpp": 4967820.0,
+    "cogs_dpp": 4447200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6139200.0
+    "do_delivered_dpp": 5148000.0
   },
   {
     "so_number": "SO-202607-0192",
@@ -2872,12 +2872,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3676000.0,
-    "discount_dpp": 128660.0,
-    "net_dpp": 3547340.0,
-    "cogs_dpp": 3128000.0,
+    "gross_dpp": 4104000.0,
+    "discount_dpp": 143640.0,
+    "net_dpp": 3960360.0,
+    "cogs_dpp": 3312000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3676000.0
+    "do_delivered_dpp": 4104000.0
   },
   {
     "so_number": "SO-202607-0193",
@@ -2887,12 +2887,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4152000.0,
-    "discount_dpp": 145320.0,
-    "net_dpp": 4006680.0,
-    "cogs_dpp": 3432000.0,
+    "gross_dpp": 5056000.0,
+    "discount_dpp": 176960.0,
+    "net_dpp": 4879040.0,
+    "cogs_dpp": 4301200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4152000.0
+    "do_delivered_dpp": 5056000.0
   },
   {
     "so_number": "SO-202607-0194",
@@ -2902,12 +2902,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 4485600.0,
-    "discount_dpp": 156996.0,
-    "net_dpp": 4328604.0,
-    "cogs_dpp": 3864000.0,
+    "gross_dpp": 4468000.0,
+    "discount_dpp": 156380.0,
+    "net_dpp": 4311620.0,
+    "cogs_dpp": 3794400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4485600.0
+    "do_delivered_dpp": 4468000.0
   },
   {
     "so_number": "SO-202607-0195",
@@ -2917,12 +2917,12 @@
     "channel": "INST",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 21728400.0,
-    "discount_dpp": 869136.0,
-    "net_dpp": 20859264.0,
-    "cogs_dpp": 18514800.0,
+    "gross_dpp": 15503600.0,
+    "discount_dpp": 620144.0,
+    "net_dpp": 14883456.0,
+    "cogs_dpp": 13296400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 21728400.0
+    "do_delivered_dpp": 15503600.0
   },
   {
     "so_number": "SO-202607-0196",
@@ -2932,12 +2932,12 @@
     "channel": "MT",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 41430000.0,
-    "discount_dpp": 2154360.0,
-    "net_dpp": 39275640.0,
-    "cogs_dpp": 35256000.0,
+    "gross_dpp": 38518800.0,
+    "discount_dpp": 2002977.6,
+    "net_dpp": 36515822.4,
+    "cogs_dpp": 33097200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 41430000.0
+    "do_delivered_dpp": 38518800.0
   },
   {
     "so_number": "SO-202607-0197",
@@ -2947,12 +2947,12 @@
     "channel": "MT",
     "district": "Tomohon Tengah",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 38105600.0,
-    "discount_dpp": 1981491.2,
-    "net_dpp": 36124108.8,
-    "cogs_dpp": 32216400.0,
+    "gross_dpp": 37126800.0,
+    "discount_dpp": 1930593.6,
+    "net_dpp": 35196206.4,
+    "cogs_dpp": 30934800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 38105600.0
+    "do_delivered_dpp": 37126800.0
   },
   {
     "so_number": "SO-202607-0198",
@@ -2962,12 +2962,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 21451200.0,
-    "discount_dpp": 1029657.6,
-    "net_dpp": 20421542.4,
-    "cogs_dpp": 18252000.0,
+    "gross_dpp": 16107400.0,
+    "discount_dpp": 773155.2,
+    "net_dpp": 15334244.8,
+    "cogs_dpp": 13461800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 21451200.0
+    "do_delivered_dpp": 16107400.0
   },
   {
     "so_number": "SO-202607-0199",
@@ -2977,12 +2977,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19580200.0,
-    "discount_dpp": 939849.6,
-    "net_dpp": 18640350.4,
-    "cogs_dpp": 16630200.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19580200.0
+    "gross_dpp": 26011800.0,
+    "discount_dpp": 1248566.4,
+    "net_dpp": 24763233.6,
+    "cogs_dpp": 22257000.0,
+    "rejection_dpp": 516000.0,
+    "do_delivered_dpp": 25495800.0
   },
   {
     "so_number": "SO-202607-0200",
@@ -2992,12 +2992,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18442000.0,
-    "discount_dpp": 885216.0,
-    "net_dpp": 17556784.0,
-    "cogs_dpp": 15790000.0,
+    "gross_dpp": 17656800.0,
+    "discount_dpp": 847526.4,
+    "net_dpp": 16809273.6,
+    "cogs_dpp": 15064800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18442000.0
+    "do_delivered_dpp": 17656800.0
   },
   {
     "so_number": "SO-202607-0201",
@@ -3007,12 +3007,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 25849000.0,
-    "discount_dpp": 1240752.0,
-    "net_dpp": 24608248.0,
-    "cogs_dpp": 21829400.0,
+    "gross_dpp": 23889200.0,
+    "discount_dpp": 1146681.6,
+    "net_dpp": 22742518.4,
+    "cogs_dpp": 20052000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 25849000.0
+    "do_delivered_dpp": 23889200.0
   },
   {
     "so_number": "SO-202607-0202",
@@ -3022,12 +3022,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5992800.0,
-    "discount_dpp": 209748.0,
-    "net_dpp": 5783052.0,
-    "cogs_dpp": 5092800.0,
+    "gross_dpp": 6352000.0,
+    "discount_dpp": 222320.0,
+    "net_dpp": 6129680.0,
+    "cogs_dpp": 5323200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5992800.0
+    "do_delivered_dpp": 6352000.0
   },
   {
     "so_number": "SO-202607-0203",
@@ -3037,12 +3037,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3744000.0,
-    "discount_dpp": 131040.0,
-    "net_dpp": 3612960.0,
-    "cogs_dpp": 3182400.0,
+    "gross_dpp": 4980000.0,
+    "discount_dpp": 174300.0,
+    "net_dpp": 4805700.0,
+    "cogs_dpp": 4248000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3744000.0
+    "do_delivered_dpp": 4980000.0
   },
   {
     "so_number": "SO-202607-0204",
@@ -3052,12 +3052,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5448000.0,
-    "discount_dpp": 190680.0,
-    "net_dpp": 5257320.0,
-    "cogs_dpp": 4656000.0,
+    "gross_dpp": 5313600.0,
+    "discount_dpp": 185976.0,
+    "net_dpp": 5127624.0,
+    "cogs_dpp": 4587600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5448000.0
+    "do_delivered_dpp": 5313600.0
   },
   {
     "so_number": "SO-202607-0205",
@@ -3067,12 +3067,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3656000.0,
-    "discount_dpp": 127960.0,
-    "net_dpp": 3528040.0,
-    "cogs_dpp": 3100000.0,
+    "gross_dpp": 5388000.0,
+    "discount_dpp": 188580.0,
+    "net_dpp": 5199420.0,
+    "cogs_dpp": 4470400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3656000.0
+    "do_delivered_dpp": 5388000.0
   },
   {
     "so_number": "SO-202607-0206",
@@ -3082,12 +3082,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3942000.0,
-    "discount_dpp": 137970.0,
-    "net_dpp": 3804030.0,
-    "cogs_dpp": 3354000.0,
+    "gross_dpp": 5097000.0,
+    "discount_dpp": 178395.0,
+    "net_dpp": 4918605.0,
+    "cogs_dpp": 4311000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3942000.0
+    "do_delivered_dpp": 5097000.0
   },
   {
     "so_number": "SO-202607-0207",
@@ -3097,12 +3097,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5939000.0,
-    "discount_dpp": 207865.0,
-    "net_dpp": 5731135.0,
-    "cogs_dpp": 5068200.0,
+    "gross_dpp": 5292000.0,
+    "discount_dpp": 185220.0,
+    "net_dpp": 5106780.0,
+    "cogs_dpp": 4596000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5939000.0
+    "do_delivered_dpp": 5292000.0
   },
   {
     "so_number": "SO-202607-0208",
@@ -3112,12 +3112,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4200000.0,
-    "discount_dpp": 147000.0,
-    "net_dpp": 4053000.0,
-    "cogs_dpp": 3540000.0,
+    "gross_dpp": 6385200.0,
+    "discount_dpp": 223482.0,
+    "net_dpp": 6161718.0,
+    "cogs_dpp": 5353200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4200000.0
+    "do_delivered_dpp": 6385200.0
   },
   {
     "so_number": "SO-202607-0209",
@@ -3127,12 +3127,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5304000.0,
-    "discount_dpp": 185640.0,
-    "net_dpp": 5118360.0,
-    "cogs_dpp": 4536000.0,
+    "gross_dpp": 3953000.0,
+    "discount_dpp": 138355.0,
+    "net_dpp": 3814645.0,
+    "cogs_dpp": 3347000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5304000.0
+    "do_delivered_dpp": 3953000.0
   },
   {
     "so_number": "SO-202607-0210",
@@ -3142,12 +3142,12 @@
     "channel": "INST",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 16905600.0,
-    "discount_dpp": 676224.0,
-    "net_dpp": 16229376.0,
-    "cogs_dpp": 14102400.0,
+    "gross_dpp": 16746000.0,
+    "discount_dpp": 669840.0,
+    "net_dpp": 16076160.0,
+    "cogs_dpp": 14407600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16905600.0
+    "do_delivered_dpp": 16746000.0
   },
   {
     "so_number": "SO-202607-0211",
@@ -3157,12 +3157,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 36747600.0,
-    "discount_dpp": 1910875.2,
-    "net_dpp": 34836724.8,
-    "cogs_dpp": 31234800.0,
+    "gross_dpp": 40868200.0,
+    "discount_dpp": 2125146.4,
+    "net_dpp": 38743053.6,
+    "cogs_dpp": 34604600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 36747600.0
+    "do_delivered_dpp": 40868200.0
   },
   {
     "so_number": "SO-202607-0212",
@@ -3172,12 +3172,12 @@
     "channel": "MT",
     "district": "Maesa",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 38407200.0,
-    "discount_dpp": 1997174.4,
-    "net_dpp": 36410025.6,
-    "cogs_dpp": 32198400.0,
+    "gross_dpp": 31728000.0,
+    "discount_dpp": 1649856.0,
+    "net_dpp": 30078144.0,
+    "cogs_dpp": 26867200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 38407200.0
+    "do_delivered_dpp": 31728000.0
   },
   {
     "so_number": "SO-202607-0213",
@@ -3187,12 +3187,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 23205000.0,
-    "discount_dpp": 1113840.0,
-    "net_dpp": 22091160.0,
-    "cogs_dpp": 19617000.0,
+    "gross_dpp": 19208000.0,
+    "discount_dpp": 921984.0,
+    "net_dpp": 18286016.0,
+    "cogs_dpp": 16251000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23205000.0
+    "do_delivered_dpp": 19208000.0
   },
   {
     "so_number": "SO-202607-0214",
@@ -3202,12 +3202,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 25141800.0,
-    "discount_dpp": 1206806.4,
-    "net_dpp": 23934993.6,
-    "cogs_dpp": 21217800.0,
+    "gross_dpp": 17686000.0,
+    "discount_dpp": 848928.0,
+    "net_dpp": 16837072.0,
+    "cogs_dpp": 14895600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 25141800.0
+    "do_delivered_dpp": 17686000.0
   },
   {
     "so_number": "SO-202607-0215",
@@ -3217,12 +3217,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 20374800.0,
-    "discount_dpp": 977990.4,
-    "net_dpp": 19396809.6,
-    "cogs_dpp": 17175600.0,
+    "gross_dpp": 18204000.0,
+    "discount_dpp": 873792.0,
+    "net_dpp": 17330208.0,
+    "cogs_dpp": 15540000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20374800.0
+    "do_delivered_dpp": 18204000.0
   },
   {
     "so_number": "SO-202607-0216",
@@ -3232,12 +3232,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 20893200.0,
-    "discount_dpp": 1002873.6,
-    "net_dpp": 19890326.4,
-    "cogs_dpp": 17420400.0,
+    "gross_dpp": 25342000.0,
+    "discount_dpp": 1216416.0,
+    "net_dpp": 24125584.0,
+    "cogs_dpp": 21621600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20893200.0
+    "do_delivered_dpp": 25342000.0
   },
   {
     "so_number": "SO-202607-0217",
@@ -3247,12 +3247,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4459200.0,
-    "discount_dpp": 156072.0,
-    "net_dpp": 4303128.0,
-    "cogs_dpp": 3816000.0,
+    "gross_dpp": 4980000.0,
+    "discount_dpp": 174300.0,
+    "net_dpp": 4805700.0,
+    "cogs_dpp": 4128000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4459200.0
+    "do_delivered_dpp": 4980000.0
   },
   {
     "so_number": "SO-202607-0218",
@@ -3262,12 +3262,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4536000.0,
-    "discount_dpp": 158760.0,
-    "net_dpp": 4377240.0,
-    "cogs_dpp": 3888000.0,
+    "gross_dpp": 3552000.0,
+    "discount_dpp": 124320.0,
+    "net_dpp": 3427680.0,
+    "cogs_dpp": 3067200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4536000.0
+    "do_delivered_dpp": 3552000.0
   },
   {
     "so_number": "SO-202607-0219",
@@ -3277,12 +3277,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5244000.0,
-    "discount_dpp": 183540.0,
-    "net_dpp": 5060460.0,
-    "cogs_dpp": 4382400.0,
+    "gross_dpp": 4830000.0,
+    "discount_dpp": 169050.0,
+    "net_dpp": 4660950.0,
+    "cogs_dpp": 4126800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5244000.0
+    "do_delivered_dpp": 4830000.0
   },
   {
     "so_number": "SO-202607-0220",
@@ -3292,12 +3292,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6108000.0,
-    "discount_dpp": 213780.0,
-    "net_dpp": 5894220.0,
-    "cogs_dpp": 5124000.0,
+    "gross_dpp": 4989600.0,
+    "discount_dpp": 174636.0,
+    "net_dpp": 4814964.0,
+    "cogs_dpp": 4119600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6108000.0
+    "do_delivered_dpp": 4989600.0
   },
   {
     "so_number": "SO-202607-0221",
@@ -3307,12 +3307,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4070000.0,
-    "discount_dpp": 142450.0,
-    "net_dpp": 3927550.0,
-    "cogs_dpp": 3382000.0,
+    "gross_dpp": 5037600.0,
+    "discount_dpp": 176316.0,
+    "net_dpp": 4861284.0,
+    "cogs_dpp": 4152000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4070000.0
+    "do_delivered_dpp": 5037600.0
   },
   {
     "so_number": "SO-202607-0222",
@@ -3322,12 +3322,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4088000.0,
-    "discount_dpp": 143080.0,
-    "net_dpp": 3944920.0,
-    "cogs_dpp": 3480000.0,
+    "gross_dpp": 6487200.0,
+    "discount_dpp": 227052.0,
+    "net_dpp": 6260148.0,
+    "cogs_dpp": 5400000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4088000.0
+    "do_delivered_dpp": 6487200.0
   },
   {
     "so_number": "SO-202607-0223",
@@ -3337,12 +3337,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5265000.0,
-    "discount_dpp": 184275.0,
-    "net_dpp": 5080725.0,
-    "cogs_dpp": 4575000.0,
+    "gross_dpp": 6181200.0,
+    "discount_dpp": 216342.0,
+    "net_dpp": 5964858.0,
+    "cogs_dpp": 5202000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5265000.0
+    "do_delivered_dpp": 6181200.0
   },
   {
     "so_number": "SO-202607-0224",
@@ -3352,12 +3352,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 3744000.0,
-    "discount_dpp": 131040.0,
-    "net_dpp": 3612960.0,
-    "cogs_dpp": 3096000.0,
+    "gross_dpp": 4848000.0,
+    "discount_dpp": 169680.0,
+    "net_dpp": 4678320.0,
+    "cogs_dpp": 4083000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3744000.0
+    "do_delivered_dpp": 4848000.0
   },
   {
     "so_number": "SO-202607-0225",
@@ -3367,12 +3367,12 @@
     "channel": "INST",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 17988000.0,
-    "discount_dpp": 719520.0,
-    "net_dpp": 17268480.0,
-    "cogs_dpp": 15236400.0,
+    "gross_dpp": 23238000.0,
+    "discount_dpp": 929520.0,
+    "net_dpp": 22308480.0,
+    "cogs_dpp": 19824000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17988000.0
+    "do_delivered_dpp": 23238000.0
   },
   {
     "so_number": "SO-202607-0226",
@@ -3382,12 +3382,12 @@
     "channel": "MT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 37941600.0,
-    "discount_dpp": 1972963.2,
-    "net_dpp": 35968636.8,
-    "cogs_dpp": 32306400.0,
+    "gross_dpp": 31578800.0,
+    "discount_dpp": 1642097.6,
+    "net_dpp": 29936702.4,
+    "cogs_dpp": 26751600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 37941600.0
+    "do_delivered_dpp": 31578800.0
   },
   {
     "so_number": "SO-202607-0227",
@@ -3397,12 +3397,12 @@
     "channel": "MT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 36288600.0,
-    "discount_dpp": 1887007.2,
-    "net_dpp": 34401592.8,
-    "cogs_dpp": 30749400.0,
+    "gross_dpp": 40940800.0,
+    "discount_dpp": 2128921.6,
+    "net_dpp": 38811878.4,
+    "cogs_dpp": 34568800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 36288600.0
+    "do_delivered_dpp": 40940800.0
   },
   {
     "so_number": "SO-202607-0228",
@@ -3412,12 +3412,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19159200.0,
-    "discount_dpp": 919641.6,
-    "net_dpp": 18239558.4,
-    "cogs_dpp": 16386000.0,
+    "gross_dpp": 22966000.0,
+    "discount_dpp": 1102368.0,
+    "net_dpp": 21863632.0,
+    "cogs_dpp": 19432800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19159200.0
+    "do_delivered_dpp": 22966000.0
   },
   {
     "so_number": "SO-202607-0229",
@@ -3427,12 +3427,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18122400.0,
-    "discount_dpp": 869875.2,
-    "net_dpp": 17252524.8,
-    "cogs_dpp": 15424800.0,
+    "gross_dpp": 21196200.0,
+    "discount_dpp": 1017417.6,
+    "net_dpp": 20178782.4,
+    "cogs_dpp": 17938200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18122400.0
+    "do_delivered_dpp": 21196200.0
   },
   {
     "so_number": "SO-202607-0230",
@@ -3442,12 +3442,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 21172800.0,
-    "discount_dpp": 1016294.4,
-    "net_dpp": 20156505.6,
-    "cogs_dpp": 17810400.0,
+    "gross_dpp": 18661600.0,
+    "discount_dpp": 895756.8,
+    "net_dpp": 17765843.2,
+    "cogs_dpp": 15604400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 21172800.0
+    "do_delivered_dpp": 18661600.0
   },
   {
     "so_number": "SO-202607-0231",
@@ -3457,12 +3457,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3815000.0,
-    "discount_dpp": 133525.0,
-    "net_dpp": 3681475.0,
-    "cogs_dpp": 3285000.0,
+    "gross_dpp": 4088000.0,
+    "discount_dpp": 143080.0,
+    "net_dpp": 3944920.0,
+    "cogs_dpp": 3480000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3815000.0
+    "do_delivered_dpp": 4088000.0
   },
   {
     "so_number": "SO-202607-0232",
@@ -3472,12 +3472,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3828000.0,
-    "discount_dpp": 133980.0,
-    "net_dpp": 3694020.0,
-    "cogs_dpp": 3300000.0,
+    "gross_dpp": 5265000.0,
+    "discount_dpp": 184275.0,
+    "net_dpp": 5080725.0,
+    "cogs_dpp": 4575000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3828000.0
+    "do_delivered_dpp": 5265000.0
   },
   {
     "so_number": "SO-202607-0233",
@@ -3487,12 +3487,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5955000.0,
-    "discount_dpp": 208425.0,
-    "net_dpp": 5746575.0,
-    "cogs_dpp": 5103000.0,
+    "gross_dpp": 3744000.0,
+    "discount_dpp": 131040.0,
+    "net_dpp": 3612960.0,
+    "cogs_dpp": 3096000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5955000.0
+    "do_delivered_dpp": 3744000.0
   },
   {
     "so_number": "SO-202607-0234",
@@ -3502,12 +3502,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6720000.0,
-    "discount_dpp": 235200.0,
-    "net_dpp": 6484800.0,
-    "cogs_dpp": 5760000.0,
+    "gross_dpp": 4800000.0,
+    "discount_dpp": 168000.0,
+    "net_dpp": 4632000.0,
+    "cogs_dpp": 4084800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6720000.0
+    "do_delivered_dpp": 4800000.0
   },
   {
     "so_number": "SO-202607-0235",
@@ -3517,12 +3517,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6614000.0,
-    "discount_dpp": 231490.0,
-    "net_dpp": 6382510.0,
-    "cogs_dpp": 5602000.0,
+    "gross_dpp": 4584000.0,
+    "discount_dpp": 160440.0,
+    "net_dpp": 4423560.0,
+    "cogs_dpp": 3816000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6614000.0
+    "do_delivered_dpp": 4584000.0
   },
   {
     "so_number": "SO-202607-0236",
@@ -3532,12 +3532,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5492000.0,
-    "discount_dpp": 192220.0,
-    "net_dpp": 5299780.0,
-    "cogs_dpp": 4626400.0,
+    "gross_dpp": 5930400.0,
+    "discount_dpp": 207564.0,
+    "net_dpp": 5722836.0,
+    "cogs_dpp": 4965600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5492000.0
+    "do_delivered_dpp": 5930400.0
   },
   {
     "so_number": "SO-202607-0237",
@@ -3547,12 +3547,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4014000.0,
-    "discount_dpp": 140490.0,
-    "net_dpp": 3873510.0,
-    "cogs_dpp": 3474000.0,
+    "gross_dpp": 5594400.0,
+    "discount_dpp": 195804.0,
+    "net_dpp": 5398596.0,
+    "cogs_dpp": 4752000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4014000.0
+    "do_delivered_dpp": 5594400.0
   },
   {
     "so_number": "SO-202607-0238",
@@ -3562,12 +3562,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 4478000.0,
-    "discount_dpp": 156730.0,
-    "net_dpp": 4321270.0,
-    "cogs_dpp": 3882000.0,
+    "gross_dpp": 6343200.0,
+    "discount_dpp": 222012.0,
+    "net_dpp": 6121188.0,
+    "cogs_dpp": 5467200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4478000.0
+    "do_delivered_dpp": 6343200.0
   },
   {
     "so_number": "SO-202607-0239",
@@ -3577,12 +3577,12 @@
     "channel": "RTL",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 3710400.0,
-    "discount_dpp": 129864.0,
-    "net_dpp": 3580536.0,
-    "cogs_dpp": 3084000.0,
+    "gross_dpp": 4056000.0,
+    "discount_dpp": 141960.0,
+    "net_dpp": 3914040.0,
+    "cogs_dpp": 3336000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3710400.0
+    "do_delivered_dpp": 4056000.0
   },
   {
     "so_number": "SO-202607-0240",
@@ -3592,12 +3592,12 @@
     "channel": "INST",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 23709600.0,
-    "discount_dpp": 948384.0,
-    "net_dpp": 22761216.0,
-    "cogs_dpp": 20073600.0,
+    "gross_dpp": 20964000.0,
+    "discount_dpp": 838560.0,
+    "net_dpp": 20125440.0,
+    "cogs_dpp": 17709600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23709600.0
+    "do_delivered_dpp": 20964000.0
   },
   {
     "so_number": "SO-202607-0241",
@@ -3607,12 +3607,12 @@
     "channel": "MT",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 38752800.0,
-    "discount_dpp": 2015145.6,
-    "net_dpp": 36737654.4,
-    "cogs_dpp": 32832000.0,
+    "gross_dpp": 33356400.0,
+    "discount_dpp": 1734532.8,
+    "net_dpp": 31621867.2,
+    "cogs_dpp": 28584000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 38752800.0
+    "do_delivered_dpp": 33356400.0
   },
   {
     "so_number": "SO-202607-0242",
@@ -3622,12 +3622,12 @@
     "channel": "MT",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 32435800.0,
-    "discount_dpp": 1686661.6,
-    "net_dpp": 30749138.4,
-    "cogs_dpp": 27565800.0,
+    "gross_dpp": 38799800.0,
+    "discount_dpp": 2017589.6,
+    "net_dpp": 36782210.4,
+    "cogs_dpp": 33081000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 32435800.0
+    "do_delivered_dpp": 38799800.0
   },
   {
     "so_number": "SO-202607-0243",
@@ -3637,12 +3637,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 23781600.0,
-    "discount_dpp": 1141516.8,
-    "net_dpp": 22640083.2,
-    "cogs_dpp": 20336000.0,
+    "gross_dpp": 21931400.0,
+    "discount_dpp": 1052707.2,
+    "net_dpp": 20878692.8,
+    "cogs_dpp": 18642600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23781600.0
+    "do_delivered_dpp": 21931400.0
   },
   {
     "so_number": "SO-202607-0244",
@@ -3652,12 +3652,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18944000.0,
-    "discount_dpp": 909312.0,
-    "net_dpp": 18034688.0,
-    "cogs_dpp": 16142400.0,
+    "gross_dpp": 16531200.0,
+    "discount_dpp": 793497.6,
+    "net_dpp": 15737702.4,
+    "cogs_dpp": 13850400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18944000.0
+    "do_delivered_dpp": 16531200.0
   },
   {
     "so_number": "SO-202607-0245",
@@ -3667,12 +3667,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 17238400.0,
-    "discount_dpp": 827443.2,
-    "net_dpp": 16410956.8,
-    "cogs_dpp": 14845600.0,
+    "gross_dpp": 19565000.0,
+    "discount_dpp": 939120.0,
+    "net_dpp": 18625880.0,
+    "cogs_dpp": 16899000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17238400.0
+    "do_delivered_dpp": 19565000.0
   },
   {
     "so_number": "SO-202607-0246",
@@ -3682,12 +3682,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 16760800.0,
-    "discount_dpp": 804518.4,
-    "net_dpp": 15956281.6,
-    "cogs_dpp": 14195200.0,
+    "gross_dpp": 22604000.0,
+    "discount_dpp": 1084992.0,
+    "net_dpp": 21519008.0,
+    "cogs_dpp": 18983200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16760800.0
+    "do_delivered_dpp": 22604000.0
   },
   {
     "so_number": "SO-202607-0247",
@@ -3697,12 +3697,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 16663200.0,
-    "discount_dpp": 799833.6,
-    "net_dpp": 15863366.4,
-    "cogs_dpp": 13983800.0,
+    "gross_dpp": 17822400.0,
+    "discount_dpp": 855475.2,
+    "net_dpp": 16966924.8,
+    "cogs_dpp": 15348000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16663200.0
+    "do_delivered_dpp": 17822400.0
   },
   {
     "so_number": "SO-202607-0248",
@@ -3712,12 +3712,12 @@
     "channel": "GT",
     "district": "Tikala",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 23753200.0,
-    "discount_dpp": 1140153.6,
-    "net_dpp": 22613046.4,
-    "cogs_dpp": 20268800.0,
+    "gross_dpp": 20385600.0,
+    "discount_dpp": 978508.8,
+    "net_dpp": 19407091.2,
+    "cogs_dpp": 17148000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23753200.0
+    "do_delivered_dpp": 20385600.0
   },
   {
     "so_number": "SO-202607-0249",
@@ -3727,12 +3727,12 @@
     "channel": "GT",
     "district": "Tikala",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 16700800.0,
-    "discount_dpp": 801638.4,
-    "net_dpp": 15899161.6,
-    "cogs_dpp": 13976800.0,
+    "gross_dpp": 25074400.0,
+    "discount_dpp": 1203571.2,
+    "net_dpp": 23870828.8,
+    "cogs_dpp": 21269600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16700800.0
+    "do_delivered_dpp": 25074400.0
   },
   {
     "so_number": "SO-202607-0250",
@@ -3742,12 +3742,12 @@
     "channel": "GT",
     "district": "Tikala",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 22276000.0,
-    "discount_dpp": 1069248.0,
-    "net_dpp": 21206752.0,
-    "cogs_dpp": 18430000.0,
+    "gross_dpp": 19838400.0,
+    "discount_dpp": 952243.2,
+    "net_dpp": 18886156.8,
+    "cogs_dpp": 16776000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22276000.0
+    "do_delivered_dpp": 19838400.0
   },
   {
     "so_number": "SO-202607-0251",
@@ -3757,12 +3757,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5577600.0,
-    "discount_dpp": 195216.0,
-    "net_dpp": 5382384.0,
-    "cogs_dpp": 4599600.0,
+    "gross_dpp": 4120800.0,
+    "discount_dpp": 144228.0,
+    "net_dpp": 3976572.0,
+    "cogs_dpp": 3481200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5577600.0
+    "do_delivered_dpp": 4120800.0
   },
   {
     "so_number": "SO-202607-0252",
@@ -3772,12 +3772,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4520000.0,
-    "discount_dpp": 158200.0,
-    "net_dpp": 4361800.0,
-    "cogs_dpp": 3864000.0,
+    "gross_dpp": 4800000.0,
+    "discount_dpp": 168000.0,
+    "net_dpp": 4632000.0,
+    "cogs_dpp": 4088400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4520000.0
+    "do_delivered_dpp": 4800000.0
   },
   {
     "so_number": "SO-202607-0253",
@@ -3787,12 +3787,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6360600.0,
-    "discount_dpp": 222621.0,
-    "net_dpp": 6137979.0,
-    "cogs_dpp": 5369000.0,
+    "gross_dpp": 4963200.0,
+    "discount_dpp": 173712.0,
+    "net_dpp": 4789488.0,
+    "cogs_dpp": 4292000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6360600.0
+    "do_delivered_dpp": 4963200.0
   },
   {
     "so_number": "SO-202607-0254",
@@ -3802,12 +3802,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4824000.0,
-    "discount_dpp": 168840.0,
-    "net_dpp": 4655160.0,
-    "cogs_dpp": 4144000.0,
+    "gross_dpp": 5496000.0,
+    "discount_dpp": 192360.0,
+    "net_dpp": 5303640.0,
+    "cogs_dpp": 4578000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4824000.0
+    "do_delivered_dpp": 5496000.0
   },
   {
     "so_number": "SO-202607-0255",
@@ -3817,12 +3817,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4872000.0,
-    "discount_dpp": 170520.0,
-    "net_dpp": 4701480.0,
-    "cogs_dpp": 4192000.0,
+    "gross_dpp": 3336000.0,
+    "discount_dpp": 116760.0,
+    "net_dpp": 3219240.0,
+    "cogs_dpp": 2908800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4872000.0
+    "do_delivered_dpp": 3336000.0
   },
   {
     "so_number": "SO-202607-0256",
@@ -3832,12 +3832,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4884000.0,
-    "discount_dpp": 170940.0,
-    "net_dpp": 4713060.0,
-    "cogs_dpp": 4177800.0,
+    "gross_dpp": 4164000.0,
+    "discount_dpp": 145740.0,
+    "net_dpp": 4018260.0,
+    "cogs_dpp": 3516000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4884000.0
+    "do_delivered_dpp": 4164000.0
   },
   {
     "so_number": "SO-202607-0257",
@@ -3847,12 +3847,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4077600.0,
-    "discount_dpp": 142716.0,
-    "net_dpp": 3934884.0,
-    "cogs_dpp": 3420000.0,
+    "gross_dpp": 4082400.0,
+    "discount_dpp": 142884.0,
+    "net_dpp": 3939516.0,
+    "cogs_dpp": 3482400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4077600.0
+    "do_delivered_dpp": 4082400.0
   },
   {
     "so_number": "SO-202607-0258",
@@ -3862,12 +3862,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 3816000.0,
-    "discount_dpp": 133560.0,
-    "net_dpp": 3682440.0,
-    "cogs_dpp": 3300000.0,
+    "gross_dpp": 5480000.0,
+    "discount_dpp": 191800.0,
+    "net_dpp": 5288200.0,
+    "cogs_dpp": 4704000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3816000.0
+    "do_delivered_dpp": 5480000.0
   },
   {
     "so_number": "SO-202607-0259",
@@ -3877,12 +3877,12 @@
     "channel": "MT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 39005000.0,
-    "discount_dpp": 2028260.0,
-    "net_dpp": 36976740.0,
-    "cogs_dpp": 33175000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 39005000.0
+    "gross_dpp": 34091600.0,
+    "discount_dpp": 1772763.2,
+    "net_dpp": 32318836.8,
+    "cogs_dpp": 29026000.0,
+    "rejection_dpp": 372000.0,
+    "do_delivered_dpp": 33719600.0
   },
   {
     "so_number": "SO-202607-0260",
@@ -3892,12 +3892,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 33298000.0,
-    "discount_dpp": 1731496.0,
-    "net_dpp": 31566504.0,
-    "cogs_dpp": 28341200.0,
+    "gross_dpp": 39040800.0,
+    "discount_dpp": 2030121.6,
+    "net_dpp": 37010678.4,
+    "cogs_dpp": 32510400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 33298000.0
+    "do_delivered_dpp": 39040800.0
   },
   {
     "so_number": "SO-202607-0261",
@@ -3907,12 +3907,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18523200.0,
-    "discount_dpp": 889113.6,
-    "net_dpp": 17634086.4,
-    "cogs_dpp": 15460800.0,
+    "gross_dpp": 19612800.0,
+    "discount_dpp": 941414.4,
+    "net_dpp": 18671385.6,
+    "cogs_dpp": 16711600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18523200.0
+    "do_delivered_dpp": 19612800.0
   },
   {
     "so_number": "SO-202607-0262",
@@ -3922,12 +3922,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 23518200.0,
-    "discount_dpp": 1128873.6,
-    "net_dpp": 22389326.4,
-    "cogs_dpp": 19931400.0,
+    "gross_dpp": 23184000.0,
+    "discount_dpp": 1112832.0,
+    "net_dpp": 22071168.0,
+    "cogs_dpp": 19634400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23518200.0
+    "do_delivered_dpp": 23184000.0
   },
   {
     "so_number": "SO-202607-0263",
@@ -3937,12 +3937,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19860000.0,
-    "discount_dpp": 953280.0,
-    "net_dpp": 18906720.0,
-    "cogs_dpp": 16730400.0,
+    "gross_dpp": 19638000.0,
+    "discount_dpp": 942624.0,
+    "net_dpp": 18695376.0,
+    "cogs_dpp": 16608000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19860000.0
+    "do_delivered_dpp": 19638000.0
   },
   {
     "so_number": "SO-202607-0264",
@@ -3952,12 +3952,12 @@
     "channel": "GT",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 18766400.0,
-    "discount_dpp": 900787.2,
-    "net_dpp": 17865612.8,
-    "cogs_dpp": 15598400.0,
+    "gross_dpp": 24736000.0,
+    "discount_dpp": 1187328.0,
+    "net_dpp": 23548672.0,
+    "cogs_dpp": 20526000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18766400.0
+    "do_delivered_dpp": 24736000.0
   },
   {
     "so_number": "SO-202607-0265",
@@ -3967,12 +3967,12 @@
     "channel": "GT",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 20692000.0,
-    "discount_dpp": 993216.0,
-    "net_dpp": 19698784.0,
-    "cogs_dpp": 17428000.0,
+    "gross_dpp": 24545600.0,
+    "discount_dpp": 1178188.8,
+    "net_dpp": 23367411.2,
+    "cogs_dpp": 20674800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20692000.0
+    "do_delivered_dpp": 24545600.0
   },
   {
     "so_number": "SO-202607-0266",
@@ -3982,12 +3982,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5623600.0,
-    "discount_dpp": 196826.0,
-    "net_dpp": 5426774.0,
-    "cogs_dpp": 4692000.0,
+    "gross_dpp": 6360600.0,
+    "discount_dpp": 222621.0,
+    "net_dpp": 6137979.0,
+    "cogs_dpp": 5369000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5623600.0
+    "do_delivered_dpp": 6360600.0
   },
   {
     "so_number": "SO-202607-0267",
@@ -3997,12 +3997,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5812800.0,
-    "discount_dpp": 203448.0,
-    "net_dpp": 5609352.0,
-    "cogs_dpp": 5037600.0,
+    "gross_dpp": 4824000.0,
+    "discount_dpp": 168840.0,
+    "net_dpp": 4655160.0,
+    "cogs_dpp": 4144000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5812800.0
+    "do_delivered_dpp": 4824000.0
   },
   {
     "so_number": "SO-202607-0268",
@@ -4012,12 +4012,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3969000.0,
-    "discount_dpp": 138915.0,
-    "net_dpp": 3830085.0,
-    "cogs_dpp": 3427800.0,
+    "gross_dpp": 4872000.0,
+    "discount_dpp": 170520.0,
+    "net_dpp": 4701480.0,
+    "cogs_dpp": 4192000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3969000.0
+    "do_delivered_dpp": 4872000.0
   },
   {
     "so_number": "SO-202607-0269",
@@ -4027,12 +4027,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4224000.0,
-    "discount_dpp": 147840.0,
-    "net_dpp": 4076160.0,
-    "cogs_dpp": 3630000.0,
+    "gross_dpp": 4884000.0,
+    "discount_dpp": 170940.0,
+    "net_dpp": 4713060.0,
+    "cogs_dpp": 4177800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4224000.0
+    "do_delivered_dpp": 4884000.0
   },
   {
     "so_number": "SO-202607-0270",
@@ -4042,12 +4042,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5190000.0,
-    "discount_dpp": 181650.0,
-    "net_dpp": 5008350.0,
-    "cogs_dpp": 4422000.0,
+    "gross_dpp": 4077600.0,
+    "discount_dpp": 142716.0,
+    "net_dpp": 3934884.0,
+    "cogs_dpp": 3420000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5190000.0
+    "do_delivered_dpp": 4077600.0
   },
   {
     "so_number": "SO-202607-0271",
@@ -4057,12 +4057,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6308000.0,
-    "discount_dpp": 220780.0,
-    "net_dpp": 6087220.0,
-    "cogs_dpp": 5448000.0,
+    "gross_dpp": 3816000.0,
+    "discount_dpp": 133560.0,
+    "net_dpp": 3682440.0,
+    "cogs_dpp": 3300000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6308000.0
+    "do_delivered_dpp": 3816000.0
   },
   {
     "so_number": "SO-202607-0272",
@@ -4072,12 +4072,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5070000.0,
-    "discount_dpp": 177450.0,
-    "net_dpp": 4892550.0,
-    "cogs_dpp": 4320000.0,
+    "gross_dpp": 6118000.0,
+    "discount_dpp": 214130.0,
+    "net_dpp": 5903870.0,
+    "cogs_dpp": 5230000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5070000.0
+    "do_delivered_dpp": 6118000.0
   },
   {
     "so_number": "SO-202607-0273",
@@ -4087,12 +4087,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5320000.0,
-    "discount_dpp": 186200.0,
-    "net_dpp": 5133800.0,
-    "cogs_dpp": 4388000.0,
+    "gross_dpp": 3651000.0,
+    "discount_dpp": 127785.0,
+    "net_dpp": 3523215.0,
+    "cogs_dpp": 3009000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5320000.0
+    "do_delivered_dpp": 3651000.0
   },
   {
     "so_number": "SO-202607-0274",
@@ -4102,12 +4102,12 @@
     "channel": "INST",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 15974400.0,
-    "discount_dpp": 638976.0,
-    "net_dpp": 15335424.0,
-    "cogs_dpp": 13620000.0,
+    "gross_dpp": 16428000.0,
+    "discount_dpp": 657120.0,
+    "net_dpp": 15770880.0,
+    "cogs_dpp": 13866000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 15974400.0
+    "do_delivered_dpp": 16428000.0
   },
   {
     "so_number": "SO-202607-0275",
@@ -4117,12 +4117,12 @@
     "channel": "MT",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 39719400.0,
-    "discount_dpp": 2065408.8,
-    "net_dpp": 37653991.2,
-    "cogs_dpp": 33533400.0,
+    "gross_dpp": 35473200.0,
+    "discount_dpp": 1844606.4,
+    "net_dpp": 33628593.6,
+    "cogs_dpp": 29774000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 39719400.0
+    "do_delivered_dpp": 35473200.0
   },
   {
     "so_number": "SO-202607-0276",
@@ -4132,12 +4132,12 @@
     "channel": "MT",
     "district": "Tomohon Tengah",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 37216800.0,
-    "discount_dpp": 1935273.6,
-    "net_dpp": 35281526.4,
-    "cogs_dpp": 31756800.0,
+    "gross_dpp": 40084000.0,
+    "discount_dpp": 2084368.0,
+    "net_dpp": 37999632.0,
+    "cogs_dpp": 34408000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 37216800.0
+    "do_delivered_dpp": 40084000.0
   },
   {
     "so_number": "SO-202607-0277",
@@ -4147,12 +4147,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 21012000.0,
-    "discount_dpp": 1008576.0,
-    "net_dpp": 20003424.0,
-    "cogs_dpp": 17563200.0,
+    "gross_dpp": 21900000.0,
+    "discount_dpp": 1051200.0,
+    "net_dpp": 20848800.0,
+    "cogs_dpp": 18160800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 21012000.0
+    "do_delivered_dpp": 21900000.0
   },
   {
     "so_number": "SO-202607-0278",
@@ -4162,12 +4162,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 23594000.0,
-    "discount_dpp": 1132512.0,
-    "net_dpp": 22461488.0,
-    "cogs_dpp": 20010000.0,
+    "gross_dpp": 18125400.0,
+    "discount_dpp": 870019.2,
+    "net_dpp": 17255380.8,
+    "cogs_dpp": 15263400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23594000.0
+    "do_delivered_dpp": 18125400.0
   },
   {
     "so_number": "SO-202607-0279",
@@ -4177,12 +4177,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19226400.0,
-    "discount_dpp": 922867.2,
-    "net_dpp": 18303532.8,
-    "cogs_dpp": 16520800.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19226400.0
+    "gross_dpp": 18168000.0,
+    "discount_dpp": 872064.0,
+    "net_dpp": 17295936.0,
+    "cogs_dpp": 15201600.0,
+    "rejection_dpp": 312000.0,
+    "do_delivered_dpp": 17856000.0
   },
   {
     "so_number": "SO-202607-0280",
@@ -4192,12 +4192,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5001600.0,
-    "discount_dpp": 175056.0,
-    "net_dpp": 4826544.0,
-    "cogs_dpp": 4224000.0,
+    "gross_dpp": 3926400.0,
+    "discount_dpp": 137424.0,
+    "net_dpp": 3788976.0,
+    "cogs_dpp": 3228000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5001600.0
+    "do_delivered_dpp": 3926400.0
   },
   {
     "so_number": "SO-202607-0281",
@@ -4207,12 +4207,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5268000.0,
-    "discount_dpp": 184380.0,
-    "net_dpp": 5083620.0,
-    "cogs_dpp": 4566000.0,
+    "gross_dpp": 6104000.0,
+    "discount_dpp": 213640.0,
+    "net_dpp": 5890360.0,
+    "cogs_dpp": 5128000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5268000.0
+    "do_delivered_dpp": 6104000.0
   },
   {
     "so_number": "SO-202607-0282",
@@ -4222,12 +4222,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5784000.0,
-    "discount_dpp": 202440.0,
-    "net_dpp": 5581560.0,
-    "cogs_dpp": 4956000.0,
+    "gross_dpp": 3976000.0,
+    "discount_dpp": 139160.0,
+    "net_dpp": 3836840.0,
+    "cogs_dpp": 3304000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5784000.0
+    "do_delivered_dpp": 3976000.0
   },
   {
     "so_number": "SO-202607-0283",
@@ -4237,12 +4237,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5970000.0,
-    "discount_dpp": 208950.0,
-    "net_dpp": 5761050.0,
-    "cogs_dpp": 5034000.0,
+    "gross_dpp": 4204800.0,
+    "discount_dpp": 147168.0,
+    "net_dpp": 4057632.0,
+    "cogs_dpp": 3528000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5970000.0
+    "do_delivered_dpp": 4204800.0
   },
   {
     "so_number": "SO-202607-0284",
@@ -4252,12 +4252,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4123200.0,
-    "discount_dpp": 144312.0,
-    "net_dpp": 3978888.0,
-    "cogs_dpp": 3406800.0,
+    "gross_dpp": 5974000.0,
+    "discount_dpp": 209090.0,
+    "net_dpp": 5764910.0,
+    "cogs_dpp": 5052000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4123200.0
+    "do_delivered_dpp": 5974000.0
   },
   {
     "so_number": "SO-202607-0285",
@@ -4267,12 +4267,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4488000.0,
-    "discount_dpp": 157080.0,
-    "net_dpp": 4330920.0,
-    "cogs_dpp": 3753600.0,
+    "gross_dpp": 6127200.0,
+    "discount_dpp": 214452.0,
+    "net_dpp": 5912748.0,
+    "cogs_dpp": 5280000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4488000.0
+    "do_delivered_dpp": 6127200.0
   },
   {
     "so_number": "SO-202607-0286",
@@ -4282,12 +4282,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 3702000.0,
-    "discount_dpp": 129570.0,
-    "net_dpp": 3572430.0,
-    "cogs_dpp": 3138000.0,
+    "gross_dpp": 4209000.0,
+    "discount_dpp": 147315.0,
+    "net_dpp": 4061685.0,
+    "cogs_dpp": 3627000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3702000.0
+    "do_delivered_dpp": 4209000.0
   },
   {
     "so_number": "SO-202607-0287",
@@ -4297,12 +4297,12 @@
     "channel": "INST",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 20287200.0,
-    "discount_dpp": 811488.0,
-    "net_dpp": 19475712.0,
-    "cogs_dpp": 17145600.0,
+    "gross_dpp": 22968000.0,
+    "discount_dpp": 918720.0,
+    "net_dpp": 22049280.0,
+    "cogs_dpp": 19782000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20287200.0
+    "do_delivered_dpp": 22968000.0
   },
   {
     "so_number": "SO-202607-0288",
@@ -4312,12 +4312,12 @@
     "channel": "MT",
     "district": "Tikala",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 35494000.0,
-    "discount_dpp": 1845688.0,
-    "net_dpp": 33648312.0,
-    "cogs_dpp": 30108000.0,
+    "gross_dpp": 41294800.0,
+    "discount_dpp": 2147329.6,
+    "net_dpp": 39147470.4,
+    "cogs_dpp": 35210000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 35494000.0
+    "do_delivered_dpp": 41294800.0
   },
   {
     "so_number": "SO-202607-0289",
@@ -4327,12 +4327,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 30596000.0,
-    "discount_dpp": 1590992.0,
-    "net_dpp": 29005008.0,
-    "cogs_dpp": 26458000.0,
+    "gross_dpp": 29596000.0,
+    "discount_dpp": 1538992.0,
+    "net_dpp": 28057008.0,
+    "cogs_dpp": 24936400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 30596000.0
+    "do_delivered_dpp": 29596000.0
   },
   {
     "so_number": "SO-202607-0290",
@@ -4342,12 +4342,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 16733200.0,
-    "discount_dpp": 803193.6,
-    "net_dpp": 15930006.4,
-    "cogs_dpp": 14119200.0,
+    "gross_dpp": 22827000.0,
+    "discount_dpp": 1095696.0,
+    "net_dpp": 21731304.0,
+    "cogs_dpp": 19359000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16733200.0
+    "do_delivered_dpp": 22827000.0
   },
   {
     "so_number": "SO-202607-0291",
@@ -4357,12 +4357,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19675800.0,
-    "discount_dpp": 944438.4,
-    "net_dpp": 18731361.6,
-    "cogs_dpp": 16505400.0,
+    "gross_dpp": 19505600.0,
+    "discount_dpp": 936268.8,
+    "net_dpp": 18569331.2,
+    "cogs_dpp": 16449600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19675800.0
+    "do_delivered_dpp": 19505600.0
   },
   {
     "so_number": "SO-202607-0292",
@@ -4372,12 +4372,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 22980800.0,
-    "discount_dpp": 1103078.4,
-    "net_dpp": 21877721.6,
-    "cogs_dpp": 19768800.0,
+    "gross_dpp": 16984000.0,
+    "discount_dpp": 815232.0,
+    "net_dpp": 16168768.0,
+    "cogs_dpp": 14488000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22980800.0
+    "do_delivered_dpp": 16984000.0
   },
   {
     "so_number": "SO-202607-0293",
@@ -4387,12 +4387,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 16940400.0,
-    "discount_dpp": 813139.2,
-    "net_dpp": 16127260.8,
-    "cogs_dpp": 14634000.0,
+    "gross_dpp": 21200000.0,
+    "discount_dpp": 1017600.0,
+    "net_dpp": 20182400.0,
+    "cogs_dpp": 18067200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16940400.0
+    "do_delivered_dpp": 21200000.0
   },
   {
     "so_number": "SO-202607-0294",
@@ -4402,12 +4402,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 25792400.0,
-    "discount_dpp": 1238035.2,
-    "net_dpp": 24554364.8,
-    "cogs_dpp": 21842200.0,
+    "gross_dpp": 21012000.0,
+    "discount_dpp": 1008576.0,
+    "net_dpp": 20003424.0,
+    "cogs_dpp": 17563200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 25792400.0
+    "do_delivered_dpp": 21012000.0
   },
   {
     "so_number": "SO-202607-0295",
@@ -4417,12 +4417,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4656000.0,
-    "discount_dpp": 162960.0,
-    "net_dpp": 4493040.0,
-    "cogs_dpp": 3944400.0,
+    "gross_dpp": 5928000.0,
+    "discount_dpp": 207480.0,
+    "net_dpp": 5720520.0,
+    "cogs_dpp": 5028000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4656000.0
+    "do_delivered_dpp": 5928000.0
   },
   {
     "so_number": "SO-202607-0296",
@@ -4432,12 +4432,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5117400.0,
-    "discount_dpp": 179109.0,
-    "net_dpp": 4938291.0,
-    "cogs_dpp": 4417800.0,
+    "gross_dpp": 3795000.0,
+    "discount_dpp": 132825.0,
+    "net_dpp": 3662175.0,
+    "cogs_dpp": 3213000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5117400.0
+    "do_delivered_dpp": 3795000.0
   },
   {
     "so_number": "SO-202607-0297",
@@ -4447,12 +4447,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3613200.0,
-    "discount_dpp": 126462.0,
-    "net_dpp": 3486738.0,
-    "cogs_dpp": 3082000.0,
+    "gross_dpp": 4512000.0,
+    "discount_dpp": 157920.0,
+    "net_dpp": 4354080.0,
+    "cogs_dpp": 3859200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3613200.0
+    "do_delivered_dpp": 4512000.0
   },
   {
     "so_number": "SO-202607-0298",
@@ -4462,12 +4462,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4768000.0,
-    "discount_dpp": 166880.0,
-    "net_dpp": 4601120.0,
-    "cogs_dpp": 4058000.0,
+    "gross_dpp": 4845600.0,
+    "discount_dpp": 169596.0,
+    "net_dpp": 4676004.0,
+    "cogs_dpp": 4116000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4768000.0
+    "do_delivered_dpp": 4845600.0
   },
   {
     "so_number": "SO-202607-0299",
@@ -4477,12 +4477,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5277000.0,
-    "discount_dpp": 184695.0,
-    "net_dpp": 5092305.0,
-    "cogs_dpp": 4569000.0,
+    "gross_dpp": 5940000.0,
+    "discount_dpp": 207900.0,
+    "net_dpp": 5732100.0,
+    "cogs_dpp": 5024000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5277000.0
+    "do_delivered_dpp": 5940000.0
   },
   {
     "so_number": "SO-202607-0300",
@@ -4492,12 +4492,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5994000.0,
-    "discount_dpp": 209790.0,
-    "net_dpp": 5784210.0,
-    "cogs_dpp": 5190000.0,
+    "gross_dpp": 6156000.0,
+    "discount_dpp": 215460.0,
+    "net_dpp": 5940540.0,
+    "cogs_dpp": 5298000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5994000.0
+    "do_delivered_dpp": 6156000.0
   },
   {
     "so_number": "SO-202607-0301",
@@ -4507,12 +4507,12 @@
     "channel": "RTL",
     "district": "Tikala",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5313600.0,
-    "discount_dpp": 185976.0,
-    "net_dpp": 5127624.0,
-    "cogs_dpp": 4490400.0,
+    "gross_dpp": 5784000.0,
+    "discount_dpp": 202440.0,
+    "net_dpp": 5581560.0,
+    "cogs_dpp": 4956000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5313600.0
+    "do_delivered_dpp": 5784000.0
   },
   {
     "so_number": "SO-202607-0302",
@@ -4522,12 +4522,12 @@
     "channel": "INST",
     "district": "Tondano Barat",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
-    "gross_dpp": 21300600.0,
-    "discount_dpp": 852024.0,
-    "net_dpp": 20448576.0,
-    "cogs_dpp": 18534600.0,
+    "gross_dpp": 21540000.0,
+    "discount_dpp": 861600.0,
+    "net_dpp": 20678400.0,
+    "cogs_dpp": 18114400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 21300600.0
+    "do_delivered_dpp": 21540000.0
   },
   {
     "so_number": "SO-202607-0303",
@@ -4537,12 +4537,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 33314000.0,
-    "discount_dpp": 1732328.0,
-    "net_dpp": 31581672.0,
-    "cogs_dpp": 27930800.0,
+    "gross_dpp": 32214400.0,
+    "discount_dpp": 1675148.8,
+    "net_dpp": 30539251.2,
+    "cogs_dpp": 27321600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 33314000.0
+    "do_delivered_dpp": 32214400.0
   },
   {
     "so_number": "SO-202607-0304",
@@ -4552,12 +4552,12 @@
     "channel": "MT",
     "district": "Maesa",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 39960800.0,
-    "discount_dpp": 2077961.6,
-    "net_dpp": 37882838.4,
-    "cogs_dpp": 33162000.0,
+    "gross_dpp": 37700800.0,
+    "discount_dpp": 1960441.6,
+    "net_dpp": 35740358.4,
+    "cogs_dpp": 32054400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 39960800.0
+    "do_delivered_dpp": 37700800.0
   },
   {
     "so_number": "SO-202607-0305",
@@ -4567,12 +4567,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 20026000.0,
-    "discount_dpp": 961248.0,
-    "net_dpp": 19064752.0,
-    "cogs_dpp": 16902000.0,
+    "gross_dpp": 15522000.0,
+    "discount_dpp": 745056.0,
+    "net_dpp": 14776944.0,
+    "cogs_dpp": 13206000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20026000.0
+    "do_delivered_dpp": 15522000.0
   },
   {
     "so_number": "SO-202607-0306",
@@ -4582,12 +4582,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19020000.0,
-    "discount_dpp": 912960.0,
-    "net_dpp": 18107040.0,
-    "cogs_dpp": 16308000.0,
+    "gross_dpp": 19071600.0,
+    "discount_dpp": 915436.8,
+    "net_dpp": 18156163.2,
+    "cogs_dpp": 16545000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19020000.0
+    "do_delivered_dpp": 19071600.0
   },
   {
     "so_number": "SO-202607-0307",
@@ -4597,12 +4597,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 17592000.0,
-    "discount_dpp": 844416.0,
-    "net_dpp": 16747584.0,
-    "cogs_dpp": 14526000.0,
+    "gross_dpp": 17666000.0,
+    "discount_dpp": 847968.0,
+    "net_dpp": 16818032.0,
+    "cogs_dpp": 15110000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17592000.0
+    "do_delivered_dpp": 17666000.0
   },
   {
     "so_number": "SO-202607-0308",
@@ -4612,12 +4612,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6336000.0,
-    "discount_dpp": 221760.0,
-    "net_dpp": 6114240.0,
-    "cogs_dpp": 5265600.0,
+    "gross_dpp": 3572000.0,
+    "discount_dpp": 125020.0,
+    "net_dpp": 3446980.0,
+    "cogs_dpp": 3004000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6336000.0
+    "do_delivered_dpp": 3572000.0
   },
   {
     "so_number": "SO-202607-0309",
@@ -4627,12 +4627,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6060000.0,
-    "discount_dpp": 212100.0,
-    "net_dpp": 5847900.0,
-    "cogs_dpp": 5167200.0,
+    "gross_dpp": 4626000.0,
+    "discount_dpp": 161910.0,
+    "net_dpp": 4464090.0,
+    "cogs_dpp": 3775200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6060000.0
+    "do_delivered_dpp": 4626000.0
   },
   {
     "so_number": "SO-202607-0310",
@@ -4642,12 +4642,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3360000.0,
-    "discount_dpp": 117600.0,
-    "net_dpp": 3242400.0,
-    "cogs_dpp": 2862000.0,
+    "gross_dpp": 3467000.0,
+    "discount_dpp": 121345.0,
+    "net_dpp": 3345655.0,
+    "cogs_dpp": 3013000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3360000.0
+    "do_delivered_dpp": 3467000.0
   },
   {
     "so_number": "SO-202607-0311",
@@ -4657,12 +4657,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3885000.0,
-    "discount_dpp": 135975.0,
-    "net_dpp": 3749025.0,
-    "cogs_dpp": 3279000.0,
+    "gross_dpp": 6015600.0,
+    "discount_dpp": 210546.0,
+    "net_dpp": 5805054.0,
+    "cogs_dpp": 5142000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3885000.0
+    "do_delivered_dpp": 6015600.0
   },
   {
     "so_number": "SO-202607-0312",
@@ -4672,12 +4672,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5592000.0,
-    "discount_dpp": 195720.0,
-    "net_dpp": 5396280.0,
-    "cogs_dpp": 4554000.0,
+    "gross_dpp": 5936000.0,
+    "discount_dpp": 207760.0,
+    "net_dpp": 5728240.0,
+    "cogs_dpp": 5108000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5592000.0
+    "do_delivered_dpp": 5936000.0
   },
   {
     "so_number": "SO-202607-0313",
@@ -4687,12 +4687,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3689000.0,
-    "discount_dpp": 129115.0,
-    "net_dpp": 3559885.0,
-    "cogs_dpp": 3131800.0,
+    "gross_dpp": 3780000.0,
+    "discount_dpp": 132300.0,
+    "net_dpp": 3647700.0,
+    "cogs_dpp": 3300000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3689000.0
+    "do_delivered_dpp": 3780000.0
   },
   {
     "so_number": "SO-202607-0314",
@@ -4702,12 +4702,12 @@
     "channel": "RTL",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5665800.0,
-    "discount_dpp": 198303.0,
-    "net_dpp": 5467497.0,
-    "cogs_dpp": 4815000.0,
+    "gross_dpp": 5025600.0,
+    "discount_dpp": 175896.0,
+    "net_dpp": 4849704.0,
+    "cogs_dpp": 4164000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5665800.0
+    "do_delivered_dpp": 5025600.0
   },
   {
     "so_number": "SO-202607-0315",
@@ -4717,12 +4717,12 @@
     "channel": "INST",
     "district": "Maesa",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
-    "gross_dpp": 17832000.0,
-    "discount_dpp": 713280.0,
-    "net_dpp": 17118720.0,
-    "cogs_dpp": 14868000.0,
+    "gross_dpp": 16490400.0,
+    "discount_dpp": 659616.0,
+    "net_dpp": 15830784.0,
+    "cogs_dpp": 14054400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17832000.0
+    "do_delivered_dpp": 16490400.0
   },
   {
     "so_number": "SO-202607-0316",
@@ -4732,12 +4732,12 @@
     "channel": "MT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 38976800.0,
-    "discount_dpp": 2026793.6,
-    "net_dpp": 36950006.4,
-    "cogs_dpp": 32564800.0,
+    "gross_dpp": 33797600.0,
+    "discount_dpp": 1757475.2,
+    "net_dpp": 32040124.8,
+    "cogs_dpp": 28379200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 38976800.0
+    "do_delivered_dpp": 33797600.0
   },
   {
     "so_number": "SO-202607-0317",
@@ -4747,12 +4747,12 @@
     "channel": "MT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 39492000.0,
-    "discount_dpp": 2053584.0,
-    "net_dpp": 37438416.0,
-    "cogs_dpp": 33470400.0,
+    "gross_dpp": 38241000.0,
+    "discount_dpp": 1988532.0,
+    "net_dpp": 36252468.0,
+    "cogs_dpp": 32971000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 39492000.0
+    "do_delivered_dpp": 38241000.0
   },
   {
     "so_number": "SO-202607-0318",
@@ -4762,12 +4762,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19212000.0,
-    "discount_dpp": 922176.0,
-    "net_dpp": 18289824.0,
-    "cogs_dpp": 16218000.0,
+    "gross_dpp": 25242000.0,
+    "discount_dpp": 1211616.0,
+    "net_dpp": 24030384.0,
+    "cogs_dpp": 21670800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19212000.0
+    "do_delivered_dpp": 25242000.0
   },
   {
     "so_number": "SO-202607-0319",
@@ -4777,12 +4777,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 22899600.0,
-    "discount_dpp": 1099180.8,
-    "net_dpp": 21800419.2,
-    "cogs_dpp": 19354800.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22899600.0
+    "gross_dpp": 25012000.0,
+    "discount_dpp": 1200576.0,
+    "net_dpp": 23811424.0,
+    "cogs_dpp": 21459200.0,
+    "rejection_dpp": 264000.0,
+    "do_delivered_dpp": 24748000.0
   },
   {
     "so_number": "SO-202607-0320",
@@ -4792,18 +4792,288 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 23174000.0,
-    "discount_dpp": 1112352.0,
-    "net_dpp": 22061648.0,
-    "cogs_dpp": 19822800.0,
+    "gross_dpp": 17882400.0,
+    "discount_dpp": 858355.2,
+    "net_dpp": 17024044.8,
+    "cogs_dpp": 15686400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23174000.0
+    "do_delivered_dpp": 17882400.0
   },
   {
     "so_number": "SO-202607-0321",
     "date_order": "2026-07-25",
     "salesman": "CVS-01 - Novry Mandagi",
     "customer": "CUST-RTL-012 - Warung Om Vonny Tikungan",
+    "channel": "RTL",
+    "district": "Wenang",
+    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
+    "gross_dpp": 6288000.0,
+    "discount_dpp": 220080.0,
+    "net_dpp": 6067920.0,
+    "cogs_dpp": 5282400.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 6288000.0
+  },
+  {
+    "so_number": "SO-202607-0322",
+    "date_order": "2026-07-25",
+    "salesman": "CVS-01 - Novry Mandagi",
+    "customer": "CUST-RTL-024 - Warung Tante Yola Ujung Lorong",
+    "channel": "RTL",
+    "district": "Wenang",
+    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
+    "gross_dpp": 6000000.0,
+    "discount_dpp": 210000.0,
+    "net_dpp": 5790000.0,
+    "cogs_dpp": 4992000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 6000000.0
+  },
+  {
+    "so_number": "SO-202607-0323",
+    "date_order": "2026-07-25",
+    "salesman": "CVS-01 - Novry Mandagi",
+    "customer": "CUST-RTL-036 - Warung Tin Puncak",
+    "channel": "RTL",
+    "district": "Sario",
+    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
+    "gross_dpp": 5968000.0,
+    "discount_dpp": 208880.0,
+    "net_dpp": 5759120.0,
+    "cogs_dpp": 5077600.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 5968000.0
+  },
+  {
+    "so_number": "SO-202607-0324",
+    "date_order": "2026-07-25",
+    "salesman": "CVS-01 - Novry Mandagi",
+    "customer": "CUST-RTL-048 - Kios Gloria Meiske Tikungan",
+    "channel": "RTL",
+    "district": "Malalayang",
+    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
+    "gross_dpp": 5640000.0,
+    "discount_dpp": 197400.0,
+    "net_dpp": 5442600.0,
+    "cogs_dpp": 4620000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 5640000.0
+  },
+  {
+    "so_number": "SO-202607-0325",
+    "date_order": "2026-07-25",
+    "salesman": "CVS-01 - Novry Mandagi",
+    "customer": "CUST-RTL-060 - Kios Filadelfia Franky Ujung Lorong",
+    "channel": "RTL",
+    "district": "Malalayang",
+    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
+    "gross_dpp": 4860000.0,
+    "discount_dpp": 170100.0,
+    "net_dpp": 4689900.0,
+    "cogs_dpp": 4092000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 4860000.0
+  },
+  {
+    "so_number": "SO-202607-0326",
+    "date_order": "2026-07-25",
+    "salesman": "CVS-01 - Novry Mandagi",
+    "customer": "CUST-RTL-072 - Warung Om Oce Puncak",
+    "channel": "RTL",
+    "district": "Wanea",
+    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
+    "gross_dpp": 4164000.0,
+    "discount_dpp": 145740.0,
+    "net_dpp": 4018260.0,
+    "cogs_dpp": 3504000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 4164000.0
+  },
+  {
+    "so_number": "SO-202607-0327",
+    "date_order": "2026-07-25",
+    "salesman": "CVS-02 - Steven Lumenta",
+    "customer": "CUST-RTL-102 - Warung Om Toar Tikungan",
+    "channel": "RTL",
+    "district": "Tikala",
+    "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
+    "gross_dpp": 4572000.0,
+    "discount_dpp": 160020.0,
+    "net_dpp": 4411980.0,
+    "cogs_dpp": 3912000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 4572000.0
+  },
+  {
+    "so_number": "SO-202607-0328",
+    "date_order": "2026-07-27",
+    "salesman": "SLS-01 - Christian Wowor",
+    "customer": "CUST-MT-01 - Indomarett DC Manado",
+    "channel": "MT",
+    "district": "Mapanget",
+    "delivery_vehicle": "DB 8345 MK (Canter CDD)",
+    "gross_dpp": 40428000.0,
+    "discount_dpp": 2102256.0,
+    "net_dpp": 38325744.0,
+    "cogs_dpp": 33661200.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 40428000.0
+  },
+  {
+    "so_number": "SO-202607-0329",
+    "date_order": "2026-07-27",
+    "salesman": "SLS-01 - Christian Wowor",
+    "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+    "channel": "MT",
+    "district": "Mapanget",
+    "delivery_vehicle": "DB 8345 MK (Canter CDD)",
+    "gross_dpp": 37452000.0,
+    "discount_dpp": 1947504.0,
+    "net_dpp": 35504496.0,
+    "cogs_dpp": 31720800.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 37452000.0
+  },
+  {
+    "so_number": "SO-202607-0330",
+    "date_order": "2026-07-27",
+    "salesman": "SLS-02 - Andre Pangemanan",
+    "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
+    "channel": "GT",
+    "district": "Wenang",
+    "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
+    "gross_dpp": 20085000.0,
+    "discount_dpp": 964080.0,
+    "net_dpp": 19120920.0,
+    "cogs_dpp": 16815000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 20085000.0
+  },
+  {
+    "so_number": "SO-202607-0331",
+    "date_order": "2026-07-27",
+    "salesman": "SLS-02 - Andre Pangemanan",
+    "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
+    "channel": "GT",
+    "district": "Wenang",
+    "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
+    "gross_dpp": 20419200.0,
+    "discount_dpp": 980121.6,
+    "net_dpp": 19439078.4,
+    "cogs_dpp": 17182400.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 20419200.0
+  },
+  {
+    "so_number": "SO-202607-0332",
+    "date_order": "2026-07-27",
+    "salesman": "SLS-02 - Andre Pangemanan",
+    "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
+    "channel": "GT",
+    "district": "Wenang",
+    "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
+    "gross_dpp": 24710400.0,
+    "discount_dpp": 1186099.2,
+    "net_dpp": 23524300.8,
+    "cogs_dpp": 20916000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 24710400.0
+  },
+  {
+    "so_number": "SO-202607-0333",
+    "date_order": "2026-07-27",
+    "salesman": "SLS-02 - Andre Pangemanan",
+    "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa",
+    "channel": "GT",
+    "district": "Wenang",
+    "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
+    "gross_dpp": 19469600.0,
+    "discount_dpp": 934540.8,
+    "net_dpp": 18535059.2,
+    "cogs_dpp": 16298400.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 19469600.0
+  },
+  {
+    "so_number": "SO-202607-0334",
+    "date_order": "2026-07-27",
+    "salesman": "SLS-03 - Meidy Wowor",
+    "customer": "CUST-GT-34 - Grosir Tikala Baru",
+    "channel": "GT",
+    "district": "Tikala",
+    "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
+    "gross_dpp": 23472800.0,
+    "discount_dpp": 1126694.4,
+    "net_dpp": 22346105.6,
+    "cogs_dpp": 19922400.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 23472800.0
+  },
+  {
+    "so_number": "SO-202607-0335",
+    "date_order": "2026-07-27",
+    "salesman": "SLS-03 - Meidy Wowor",
+    "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
+    "channel": "GT",
+    "district": "Tikala",
+    "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
+    "gross_dpp": 22522800.0,
+    "discount_dpp": 1081094.4,
+    "net_dpp": 21441705.6,
+    "cogs_dpp": 19038000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 22522800.0
+  },
+  {
+    "so_number": "SO-202607-0336",
+    "date_order": "2026-07-27",
+    "salesman": "SLS-03 - Meidy Wowor",
+    "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
+    "channel": "GT",
+    "district": "Tikala",
+    "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
+    "gross_dpp": 19240800.0,
+    "discount_dpp": 923558.4,
+    "net_dpp": 18317241.6,
+    "cogs_dpp": 16128000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 19240800.0
+  },
+  {
+    "so_number": "SO-202607-0337",
+    "date_order": "2026-07-27",
+    "salesman": "CVS-01 - Novry Mandagi",
+    "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1",
+    "channel": "RTL",
+    "district": "Wenang",
+    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
+    "gross_dpp": 6196000.0,
+    "discount_dpp": 216860.0,
+    "net_dpp": 5979140.0,
+    "cogs_dpp": 5301600.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 6196000.0
+  },
+  {
+    "so_number": "SO-202607-0338",
+    "date_order": "2026-07-27",
+    "salesman": "CVS-01 - Novry Mandagi",
+    "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan",
+    "channel": "RTL",
+    "district": "Wenang",
+    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
+    "gross_dpp": 5068000.0,
+    "discount_dpp": 177380.0,
+    "net_dpp": 4890620.0,
+    "cogs_dpp": 4356000.0,
+    "rejection_dpp": 0.0,
+    "do_delivered_dpp": 5068000.0
+  },
+  {
+    "so_number": "SO-202607-0339",
+    "date_order": "2026-07-27",
+    "salesman": "CVS-01 - Novry Mandagi",
+    "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon",
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
@@ -4815,12 +5085,12 @@
     "do_delivered_dpp": 5676000.0
   },
   {
-    "so_number": "SO-202607-0322",
-    "date_order": "2026-07-25",
+    "so_number": "SO-202607-0340",
+    "date_order": "2026-07-27",
     "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-024 - Warung Tante Yola Ujung Lorong",
+    "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1",
     "channel": "RTL",
-    "district": "Wenang",
+    "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "gross_dpp": 5935200.0,
     "discount_dpp": 207732.0,
@@ -4830,12 +5100,12 @@
     "do_delivered_dpp": 5935200.0
   },
   {
-    "so_number": "SO-202607-0323",
-    "date_order": "2026-07-25",
+    "so_number": "SO-202607-0341",
+    "date_order": "2026-07-27",
     "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-036 - Warung Tin Puncak",
+    "customer": "CUST-RTL-049 - Warung Kasih Joppy Jembatan",
     "channel": "RTL",
-    "district": "Sario",
+    "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "gross_dpp": 4908000.0,
     "discount_dpp": 171780.0,
@@ -4845,10 +5115,10 @@
     "do_delivered_dpp": 4908000.0
   },
   {
-    "so_number": "SO-202607-0324",
-    "date_order": "2026-07-25",
+    "so_number": "SO-202607-0342",
+    "date_order": "2026-07-27",
     "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-048 - Kios Gloria Meiske Tikungan",
+    "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon",
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
@@ -4860,12 +5130,12 @@
     "do_delivered_dpp": 5922000.0
   },
   {
-    "so_number": "SO-202607-0325",
-    "date_order": "2026-07-25",
+    "so_number": "SO-202607-0343",
+    "date_order": "2026-07-27",
     "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-060 - Kios Filadelfia Franky Ujung Lorong",
+    "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
     "channel": "RTL",
-    "district": "Malalayang",
+    "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "gross_dpp": 5685000.0,
     "discount_dpp": 198975.0,
@@ -4875,276 +5145,6 @@
     "do_delivered_dpp": 5685000.0
   },
   {
-    "so_number": "SO-202607-0326",
-    "date_order": "2026-07-25",
-    "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-072 - Warung Om Oce Puncak",
-    "channel": "RTL",
-    "district": "Wanea",
-    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6436000.0,
-    "discount_dpp": 225260.0,
-    "net_dpp": 6210740.0,
-    "cogs_dpp": 5506400.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6436000.0
-  },
-  {
-    "so_number": "SO-202607-0327",
-    "date_order": "2026-07-25",
-    "salesman": "CVS-02 - Steven Lumenta",
-    "customer": "CUST-RTL-102 - Warung Om Toar Tikungan",
-    "channel": "RTL",
-    "district": "Tikala",
-    "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
-    "gross_dpp": 5370000.0,
-    "discount_dpp": 187950.0,
-    "net_dpp": 5182050.0,
-    "cogs_dpp": 4590000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5370000.0
-  },
-  {
-    "so_number": "SO-202607-0328",
-    "date_order": "2026-07-27",
-    "salesman": "SLS-01 - Christian Wowor",
-    "customer": "CUST-MT-01 - Indomarett DC Manado",
-    "channel": "MT",
-    "district": "Mapanget",
-    "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 39304800.0,
-    "discount_dpp": 2043849.6,
-    "net_dpp": 37260950.4,
-    "cogs_dpp": 33427200.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 39304800.0
-  },
-  {
-    "so_number": "SO-202607-0329",
-    "date_order": "2026-07-27",
-    "salesman": "SLS-01 - Christian Wowor",
-    "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-    "channel": "MT",
-    "district": "Mapanget",
-    "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 41314800.0,
-    "discount_dpp": 2148369.6,
-    "net_dpp": 39166430.4,
-    "cogs_dpp": 35207400.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 41314800.0
-  },
-  {
-    "so_number": "SO-202607-0330",
-    "date_order": "2026-07-27",
-    "salesman": "SLS-02 - Andre Pangemanan",
-    "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
-    "channel": "GT",
-    "district": "Wenang",
-    "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 22338000.0,
-    "discount_dpp": 1072224.0,
-    "net_dpp": 21265776.0,
-    "cogs_dpp": 18740000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22338000.0
-  },
-  {
-    "so_number": "SO-202607-0331",
-    "date_order": "2026-07-27",
-    "salesman": "SLS-02 - Andre Pangemanan",
-    "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-    "channel": "GT",
-    "district": "Wenang",
-    "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19413600.0,
-    "discount_dpp": 931852.8,
-    "net_dpp": 18481747.2,
-    "cogs_dpp": 16586400.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19413600.0
-  },
-  {
-    "so_number": "SO-202607-0332",
-    "date_order": "2026-07-27",
-    "salesman": "SLS-02 - Andre Pangemanan",
-    "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
-    "channel": "GT",
-    "district": "Wenang",
-    "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18281600.0,
-    "discount_dpp": 877516.8,
-    "net_dpp": 17404083.2,
-    "cogs_dpp": 15565600.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18281600.0
-  },
-  {
-    "so_number": "SO-202607-0333",
-    "date_order": "2026-07-27",
-    "salesman": "SLS-02 - Andre Pangemanan",
-    "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa",
-    "channel": "GT",
-    "district": "Wenang",
-    "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 24706600.0,
-    "discount_dpp": 1185916.8,
-    "net_dpp": 23520683.2,
-    "cogs_dpp": 20917000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 24706600.0
-  },
-  {
-    "so_number": "SO-202607-0334",
-    "date_order": "2026-07-27",
-    "salesman": "SLS-03 - Meidy Wowor",
-    "customer": "CUST-GT-34 - Grosir Tikala Baru",
-    "channel": "GT",
-    "district": "Tikala",
-    "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 22817000.0,
-    "discount_dpp": 1095216.0,
-    "net_dpp": 21721784.0,
-    "cogs_dpp": 19485400.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22817000.0
-  },
-  {
-    "so_number": "SO-202607-0335",
-    "date_order": "2026-07-27",
-    "salesman": "SLS-03 - Meidy Wowor",
-    "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
-    "channel": "GT",
-    "district": "Tikala",
-    "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 23724000.0,
-    "discount_dpp": 1138752.0,
-    "net_dpp": 22585248.0,
-    "cogs_dpp": 20118000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23724000.0
-  },
-  {
-    "so_number": "SO-202607-0336",
-    "date_order": "2026-07-27",
-    "salesman": "SLS-03 - Meidy Wowor",
-    "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
-    "channel": "GT",
-    "district": "Tikala",
-    "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 21444000.0,
-    "discount_dpp": 1029312.0,
-    "net_dpp": 20414688.0,
-    "cogs_dpp": 18024000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 21444000.0
-  },
-  {
-    "so_number": "SO-202607-0337",
-    "date_order": "2026-07-27",
-    "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1",
-    "channel": "RTL",
-    "district": "Wenang",
-    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5808000.0,
-    "discount_dpp": 203280.0,
-    "net_dpp": 5604720.0,
-    "cogs_dpp": 4932000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5808000.0
-  },
-  {
-    "so_number": "SO-202607-0338",
-    "date_order": "2026-07-27",
-    "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan",
-    "channel": "RTL",
-    "district": "Wenang",
-    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6246000.0,
-    "discount_dpp": 218610.0,
-    "net_dpp": 6027390.0,
-    "cogs_dpp": 5430000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6246000.0
-  },
-  {
-    "so_number": "SO-202607-0339",
-    "date_order": "2026-07-27",
-    "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon",
-    "channel": "RTL",
-    "district": "Wenang",
-    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3640000.0,
-    "discount_dpp": 127400.0,
-    "net_dpp": 3512600.0,
-    "cogs_dpp": 3062400.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3640000.0
-  },
-  {
-    "so_number": "SO-202607-0340",
-    "date_order": "2026-07-27",
-    "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1",
-    "channel": "RTL",
-    "district": "Sario",
-    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4744800.0,
-    "discount_dpp": 166068.0,
-    "net_dpp": 4578732.0,
-    "cogs_dpp": 4024800.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4744800.0
-  },
-  {
-    "so_number": "SO-202607-0341",
-    "date_order": "2026-07-27",
-    "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-049 - Warung Kasih Joppy Jembatan",
-    "channel": "RTL",
-    "district": "Malalayang",
-    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6364000.0,
-    "discount_dpp": 222740.0,
-    "net_dpp": 6141260.0,
-    "cogs_dpp": 5292000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6364000.0
-  },
-  {
-    "so_number": "SO-202607-0342",
-    "date_order": "2026-07-27",
-    "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon",
-    "channel": "RTL",
-    "district": "Malalayang",
-    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3724000.0,
-    "discount_dpp": 130340.0,
-    "net_dpp": 3593660.0,
-    "cogs_dpp": 3200000.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3724000.0
-  },
-  {
-    "so_number": "SO-202607-0343",
-    "date_order": "2026-07-27",
-    "salesman": "CVS-01 - Novry Mandagi",
-    "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
-    "channel": "RTL",
-    "district": "Wanea",
-    "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4334400.0,
-    "discount_dpp": 151704.0,
-    "net_dpp": 4182696.0,
-    "cogs_dpp": 3626400.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4334400.0
-  },
-  {
     "so_number": "SO-202607-0344",
     "date_order": "2026-07-27",
     "salesman": "MGT-01 - Hendrik Polii & Joni Kumajas",
@@ -5152,12 +5152,12 @@
     "channel": "INST",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 17221400.0,
-    "discount_dpp": 688856.0,
-    "net_dpp": 16532544.0,
-    "cogs_dpp": 14807800.0,
+    "gross_dpp": 23440000.0,
+    "discount_dpp": 937600.0,
+    "net_dpp": 22502400.0,
+    "cogs_dpp": 19940800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17221400.0
+    "do_delivered_dpp": 23440000.0
   },
   {
     "so_number": "SO-202607-0345",
@@ -5167,12 +5167,12 @@
     "channel": "MT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 30412200.0,
-    "discount_dpp": 1581434.4,
-    "net_dpp": 28830765.6,
-    "cogs_dpp": 25761000.0,
+    "gross_dpp": 30794200.0,
+    "discount_dpp": 1601298.4,
+    "net_dpp": 29192901.6,
+    "cogs_dpp": 25899400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 30412200.0
+    "do_delivered_dpp": 30794200.0
   },
   {
     "so_number": "SO-202607-0346",
@@ -5182,12 +5182,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 33877200.0,
-    "discount_dpp": 1761614.4,
-    "net_dpp": 32115585.6,
-    "cogs_dpp": 28869600.0,
+    "gross_dpp": 38299200.0,
+    "discount_dpp": 1991558.4,
+    "net_dpp": 36307641.6,
+    "cogs_dpp": 32803200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 33877200.0
+    "do_delivered_dpp": 38299200.0
   },
   {
     "so_number": "SO-202607-0347",
@@ -5197,12 +5197,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 16718000.0,
-    "discount_dpp": 802464.0,
-    "net_dpp": 15915536.0,
-    "cogs_dpp": 14122000.0,
+    "gross_dpp": 20910000.0,
+    "discount_dpp": 1003680.0,
+    "net_dpp": 19906320.0,
+    "cogs_dpp": 18082800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16718000.0
+    "do_delivered_dpp": 20910000.0
   },
   {
     "so_number": "SO-202607-0348",
@@ -5212,12 +5212,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 22986000.0,
-    "discount_dpp": 1103328.0,
-    "net_dpp": 21882672.0,
-    "cogs_dpp": 19466000.0,
+    "gross_dpp": 25913200.0,
+    "discount_dpp": 1243833.6,
+    "net_dpp": 24669366.4,
+    "cogs_dpp": 21532400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22986000.0
+    "do_delivered_dpp": 25913200.0
   },
   {
     "so_number": "SO-202607-0349",
@@ -5227,12 +5227,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 23592000.0,
-    "discount_dpp": 1132416.0,
-    "net_dpp": 22459584.0,
-    "cogs_dpp": 20012800.0,
+    "gross_dpp": 24530000.0,
+    "discount_dpp": 1177440.0,
+    "net_dpp": 23352560.0,
+    "cogs_dpp": 20940000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23592000.0
+    "do_delivered_dpp": 24530000.0
   },
   {
     "so_number": "SO-202607-0350",
@@ -5242,12 +5242,12 @@
     "channel": "GT",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 18567000.0,
-    "discount_dpp": 891216.0,
-    "net_dpp": 17675784.0,
-    "cogs_dpp": 16050600.0,
+    "gross_dpp": 16756800.0,
+    "discount_dpp": 804326.4,
+    "net_dpp": 15952473.6,
+    "cogs_dpp": 14006000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18567000.0
+    "do_delivered_dpp": 16756800.0
   },
   {
     "so_number": "SO-202607-0351",
@@ -5257,12 +5257,12 @@
     "channel": "GT",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 19061600.0,
-    "discount_dpp": 914956.8,
-    "net_dpp": 18146643.2,
-    "cogs_dpp": 15850000.0,
+    "gross_dpp": 23256000.0,
+    "discount_dpp": 1116288.0,
+    "net_dpp": 22139712.0,
+    "cogs_dpp": 19819200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19061600.0
+    "do_delivered_dpp": 23256000.0
   },
   {
     "so_number": "SO-202607-0352",
@@ -5272,12 +5272,12 @@
     "channel": "GT",
     "district": "Paal Dua",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 16903400.0,
-    "discount_dpp": 811363.2,
-    "net_dpp": 16092036.8,
-    "cogs_dpp": 14328600.0,
+    "gross_dpp": 22305600.0,
+    "discount_dpp": 1070668.8,
+    "net_dpp": 21234931.2,
+    "cogs_dpp": 18909600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16903400.0
+    "do_delivered_dpp": 22305600.0
   },
   {
     "so_number": "SO-202607-0353",
@@ -5287,12 +5287,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5282400.0,
-    "discount_dpp": 184884.0,
-    "net_dpp": 5097516.0,
-    "cogs_dpp": 4530000.0,
+    "gross_dpp": 6066400.0,
+    "discount_dpp": 212324.0,
+    "net_dpp": 5854076.0,
+    "cogs_dpp": 5116000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5282400.0
+    "do_delivered_dpp": 6066400.0
   },
   {
     "so_number": "SO-202607-0354",
@@ -5302,12 +5302,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3652000.0,
-    "discount_dpp": 127820.0,
-    "net_dpp": 3524180.0,
-    "cogs_dpp": 3164000.0,
+    "gross_dpp": 4197600.0,
+    "discount_dpp": 146916.0,
+    "net_dpp": 4050684.0,
+    "cogs_dpp": 3537600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3652000.0
+    "do_delivered_dpp": 4197600.0
   },
   {
     "so_number": "SO-202607-0355",
@@ -5317,12 +5317,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3552000.0,
-    "discount_dpp": 124320.0,
-    "net_dpp": 3427680.0,
-    "cogs_dpp": 2992000.0,
+    "gross_dpp": 4704000.0,
+    "discount_dpp": 164640.0,
+    "net_dpp": 4539360.0,
+    "cogs_dpp": 4045200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3552000.0
+    "do_delivered_dpp": 4704000.0
   },
   {
     "so_number": "SO-202607-0356",
@@ -5332,12 +5332,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3861000.0,
-    "discount_dpp": 135135.0,
-    "net_dpp": 3725865.0,
-    "cogs_dpp": 3273000.0,
+    "gross_dpp": 6533400.0,
+    "discount_dpp": 228669.0,
+    "net_dpp": 6304731.0,
+    "cogs_dpp": 5526600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3861000.0
+    "do_delivered_dpp": 6533400.0
   },
   {
     "so_number": "SO-202607-0357",
@@ -5347,12 +5347,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4596000.0,
-    "discount_dpp": 160860.0,
-    "net_dpp": 4435140.0,
-    "cogs_dpp": 3842400.0,
+    "gross_dpp": 5072000.0,
+    "discount_dpp": 177520.0,
+    "net_dpp": 4894480.0,
+    "cogs_dpp": 4312000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4596000.0
+    "do_delivered_dpp": 5072000.0
   },
   {
     "so_number": "SO-202607-0358",
@@ -5362,12 +5362,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4860000.0,
-    "discount_dpp": 170100.0,
-    "net_dpp": 4689900.0,
-    "cogs_dpp": 4104000.0,
+    "gross_dpp": 4927200.0,
+    "discount_dpp": 172452.0,
+    "net_dpp": 4754748.0,
+    "cogs_dpp": 4159200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4860000.0
+    "do_delivered_dpp": 4927200.0
   },
   {
     "so_number": "SO-202607-0359",
@@ -5377,12 +5377,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5880000.0,
-    "discount_dpp": 205800.0,
-    "net_dpp": 5674200.0,
-    "cogs_dpp": 4994400.0,
+    "gross_dpp": 4488000.0,
+    "discount_dpp": 157080.0,
+    "net_dpp": 4330920.0,
+    "cogs_dpp": 3732000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5880000.0
+    "do_delivered_dpp": 4488000.0
   },
   {
     "so_number": "SO-202607-0360",
@@ -5392,12 +5392,12 @@
     "channel": "INST",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 23160000.0,
-    "discount_dpp": 926400.0,
-    "net_dpp": 22233600.0,
-    "cogs_dpp": 19266000.0,
+    "gross_dpp": 14846000.0,
+    "discount_dpp": 593840.0,
+    "net_dpp": 14252160.0,
+    "cogs_dpp": 12630000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 23160000.0
+    "do_delivered_dpp": 14846000.0
   },
   {
     "so_number": "SO-202607-0361",
@@ -5407,12 +5407,12 @@
     "channel": "MT",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 37367400.0,
-    "discount_dpp": 1943104.8,
-    "net_dpp": 35424295.2,
-    "cogs_dpp": 32143800.0,
+    "gross_dpp": 30453600.0,
+    "discount_dpp": 1583587.2,
+    "net_dpp": 28870012.8,
+    "cogs_dpp": 25593600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 37367400.0
+    "do_delivered_dpp": 30453600.0
   },
   {
     "so_number": "SO-202607-0362",
@@ -5422,12 +5422,12 @@
     "channel": "MT",
     "district": "Tomohon Tengah",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 36238400.0,
-    "discount_dpp": 1884396.8,
-    "net_dpp": 34354003.2,
-    "cogs_dpp": 30570000.0,
+    "gross_dpp": 41698000.0,
+    "discount_dpp": 2168296.0,
+    "net_dpp": 39529704.0,
+    "cogs_dpp": 35252000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 36238400.0
+    "do_delivered_dpp": 41698000.0
   },
   {
     "so_number": "SO-202607-0363",
@@ -5437,12 +5437,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18144000.0,
-    "discount_dpp": 870912.0,
-    "net_dpp": 17273088.0,
-    "cogs_dpp": 15316800.0,
+    "gross_dpp": 19104000.0,
+    "discount_dpp": 916992.0,
+    "net_dpp": 18187008.0,
+    "cogs_dpp": 16077600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18144000.0
+    "do_delivered_dpp": 19104000.0
   },
   {
     "so_number": "SO-202607-0364",
@@ -5452,12 +5452,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18495000.0,
-    "discount_dpp": 887760.0,
-    "net_dpp": 17607240.0,
-    "cogs_dpp": 15651000.0,
+    "gross_dpp": 26541000.0,
+    "discount_dpp": 1273968.0,
+    "net_dpp": 25267032.0,
+    "cogs_dpp": 22774200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18495000.0
+    "do_delivered_dpp": 26541000.0
   },
   {
     "so_number": "SO-202607-0365",
@@ -5467,12 +5467,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 22317000.0,
-    "discount_dpp": 1071216.0,
-    "net_dpp": 21245784.0,
-    "cogs_dpp": 18711000.0,
+    "gross_dpp": 16208000.0,
+    "discount_dpp": 777984.0,
+    "net_dpp": 15430016.0,
+    "cogs_dpp": 13693600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22317000.0
+    "do_delivered_dpp": 16208000.0
   },
   {
     "so_number": "SO-202607-0366",
@@ -5482,12 +5482,12 @@
     "channel": "GT",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 17087200.0,
-    "discount_dpp": 820185.6,
-    "net_dpp": 16267014.4,
-    "cogs_dpp": 14364000.0,
+    "gross_dpp": 21412000.0,
+    "discount_dpp": 1027776.0,
+    "net_dpp": 20384224.0,
+    "cogs_dpp": 18300800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17087200.0
+    "do_delivered_dpp": 21412000.0
   },
   {
     "so_number": "SO-202607-0367",
@@ -5497,12 +5497,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3544800.0,
-    "discount_dpp": 124068.0,
-    "net_dpp": 3420732.0,
-    "cogs_dpp": 2988000.0,
+    "gross_dpp": 4488000.0,
+    "discount_dpp": 157080.0,
+    "net_dpp": 4330920.0,
+    "cogs_dpp": 3780000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3544800.0
+    "do_delivered_dpp": 4488000.0
   },
   {
     "so_number": "SO-202607-0368",
@@ -5512,12 +5512,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3588000.0,
-    "discount_dpp": 125580.0,
-    "net_dpp": 3462420.0,
-    "cogs_dpp": 3026400.0,
+    "gross_dpp": 5250400.0,
+    "discount_dpp": 183764.0,
+    "net_dpp": 5066636.0,
+    "cogs_dpp": 4474400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3588000.0
+    "do_delivered_dpp": 5250400.0
   },
   {
     "so_number": "SO-202607-0369",
@@ -5527,12 +5527,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4104000.0,
-    "discount_dpp": 143640.0,
-    "net_dpp": 3960360.0,
-    "cogs_dpp": 3530400.0,
+    "gross_dpp": 4284000.0,
+    "discount_dpp": 149940.0,
+    "net_dpp": 4134060.0,
+    "cogs_dpp": 3588800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4104000.0
+    "do_delivered_dpp": 4284000.0
   },
   {
     "so_number": "SO-202607-0370",
@@ -5542,12 +5542,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5256000.0,
-    "discount_dpp": 183960.0,
-    "net_dpp": 5072040.0,
-    "cogs_dpp": 4356000.0,
+    "gross_dpp": 3686600.0,
+    "discount_dpp": 129031.0,
+    "net_dpp": 3557569.0,
+    "cogs_dpp": 3129400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5256000.0
+    "do_delivered_dpp": 3686600.0
   },
   {
     "so_number": "SO-202607-0371",
@@ -5557,12 +5557,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5472000.0,
-    "discount_dpp": 191520.0,
-    "net_dpp": 5280480.0,
-    "cogs_dpp": 4584000.0,
+    "gross_dpp": 5544000.0,
+    "discount_dpp": 194040.0,
+    "net_dpp": 5349960.0,
+    "cogs_dpp": 4704000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5472000.0
+    "do_delivered_dpp": 5544000.0
   },
   {
     "so_number": "SO-202607-0372",
@@ -5572,12 +5572,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5532000.0,
-    "discount_dpp": 193620.0,
-    "net_dpp": 5338380.0,
-    "cogs_dpp": 4644000.0,
+    "gross_dpp": 6270000.0,
+    "discount_dpp": 219450.0,
+    "net_dpp": 6050550.0,
+    "cogs_dpp": 5298000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5532000.0
+    "do_delivered_dpp": 6270000.0
   },
   {
     "so_number": "SO-202607-0373",
@@ -5587,12 +5587,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5196000.0,
-    "discount_dpp": 181860.0,
-    "net_dpp": 5014140.0,
-    "cogs_dpp": 4314000.0,
+    "gross_dpp": 5884000.0,
+    "discount_dpp": 205940.0,
+    "net_dpp": 5678060.0,
+    "cogs_dpp": 5000000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5196000.0
+    "do_delivered_dpp": 5884000.0
   },
   {
     "so_number": "SO-202607-0374",
@@ -5602,12 +5602,12 @@
     "channel": "INST",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19838400.0,
-    "discount_dpp": 793536.0,
-    "net_dpp": 19044864.0,
-    "cogs_dpp": 16965600.0,
+    "gross_dpp": 19468000.0,
+    "discount_dpp": 778720.0,
+    "net_dpp": 18689280.0,
+    "cogs_dpp": 16492800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19838400.0
+    "do_delivered_dpp": 19468000.0
   },
   {
     "so_number": "SO-202607-0375",
@@ -5617,12 +5617,12 @@
     "channel": "MT",
     "district": "Tikala",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 35960400.0,
-    "discount_dpp": 1869940.8,
-    "net_dpp": 34090459.2,
-    "cogs_dpp": 30693200.0,
+    "gross_dpp": 35628000.0,
+    "discount_dpp": 1852656.0,
+    "net_dpp": 33775344.0,
+    "cogs_dpp": 30700800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 35960400.0
+    "do_delivered_dpp": 35628000.0
   },
   {
     "so_number": "SO-202607-0376",
@@ -5632,12 +5632,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 30986400.0,
-    "discount_dpp": 1611292.8,
-    "net_dpp": 29375107.2,
-    "cogs_dpp": 26152800.0,
+    "gross_dpp": 30607200.0,
+    "discount_dpp": 1591574.4,
+    "net_dpp": 29015625.6,
+    "cogs_dpp": 25390000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 30986400.0
+    "do_delivered_dpp": 30607200.0
   },
   {
     "so_number": "SO-202607-0377",
@@ -5647,12 +5647,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 16269600.0,
-    "discount_dpp": 780940.8,
-    "net_dpp": 15488659.2,
-    "cogs_dpp": 13747200.0,
+    "gross_dpp": 17192000.0,
+    "discount_dpp": 825216.0,
+    "net_dpp": 16366784.0,
+    "cogs_dpp": 14336000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16269600.0
+    "do_delivered_dpp": 17192000.0
   },
   {
     "so_number": "SO-202607-0378",
@@ -5662,12 +5662,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 20185000.0,
-    "discount_dpp": 968880.0,
-    "net_dpp": 19216120.0,
-    "cogs_dpp": 16967000.0,
+    "gross_dpp": 16774000.0,
+    "discount_dpp": 805152.0,
+    "net_dpp": 15968848.0,
+    "cogs_dpp": 14230000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 20185000.0
+    "do_delivered_dpp": 16774000.0
   },
   {
     "so_number": "SO-202607-0379",
@@ -5677,12 +5677,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 24302200.0,
-    "discount_dpp": 1166505.6,
-    "net_dpp": 23135694.4,
-    "cogs_dpp": 20824200.0,
-    "rejection_dpp": 0.0,
-    "do_delivered_dpp": 24302200.0
+    "gross_dpp": 18977000.0,
+    "discount_dpp": 910896.0,
+    "net_dpp": 18066104.0,
+    "cogs_dpp": 15931000.0,
+    "rejection_dpp": 528000.0,
+    "do_delivered_dpp": 18449000.0
   },
   {
     "so_number": "SO-202607-0380",
@@ -5692,12 +5692,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 18547200.0,
-    "discount_dpp": 890265.6,
-    "net_dpp": 17656934.4,
-    "cogs_dpp": 15778800.0,
+    "gross_dpp": 17220000.0,
+    "discount_dpp": 826560.0,
+    "net_dpp": 16393440.0,
+    "cogs_dpp": 14711200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 18547200.0
+    "do_delivered_dpp": 17220000.0
   },
   {
     "so_number": "SO-202607-0381",
@@ -5707,12 +5707,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 25060800.0,
-    "discount_dpp": 1202918.4,
-    "net_dpp": 23857881.6,
-    "cogs_dpp": 21212000.0,
+    "gross_dpp": 22455200.0,
+    "discount_dpp": 1077849.6,
+    "net_dpp": 21377350.4,
+    "cogs_dpp": 18804400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 25060800.0
+    "do_delivered_dpp": 22455200.0
   },
   {
     "so_number": "SO-202607-0382",
@@ -5722,12 +5722,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5796000.0,
-    "discount_dpp": 202860.0,
-    "net_dpp": 5593140.0,
-    "cogs_dpp": 4836000.0,
+    "gross_dpp": 6028000.0,
+    "discount_dpp": 210980.0,
+    "net_dpp": 5817020.0,
+    "cogs_dpp": 5121600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5796000.0
+    "do_delivered_dpp": 6028000.0
   },
   {
     "so_number": "SO-202607-0383",
@@ -5737,12 +5737,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4867200.0,
-    "discount_dpp": 170352.0,
-    "net_dpp": 4696848.0,
-    "cogs_dpp": 4123200.0,
+    "gross_dpp": 4328400.0,
+    "discount_dpp": 151494.0,
+    "net_dpp": 4176906.0,
+    "cogs_dpp": 3711600.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4867200.0
+    "do_delivered_dpp": 4328400.0
   },
   {
     "so_number": "SO-202607-0384",
@@ -5752,12 +5752,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4880000.0,
-    "discount_dpp": 170800.0,
-    "net_dpp": 4709200.0,
-    "cogs_dpp": 4211200.0,
+    "gross_dpp": 3984000.0,
+    "discount_dpp": 139440.0,
+    "net_dpp": 3844560.0,
+    "cogs_dpp": 3364800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4880000.0
+    "do_delivered_dpp": 3984000.0
   },
   {
     "so_number": "SO-202607-0385",
@@ -5767,12 +5767,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4747200.0,
-    "discount_dpp": 166152.0,
-    "net_dpp": 4581048.0,
-    "cogs_dpp": 4084800.0,
+    "gross_dpp": 5512000.0,
+    "discount_dpp": 192920.0,
+    "net_dpp": 5319080.0,
+    "cogs_dpp": 4724000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4747200.0
+    "do_delivered_dpp": 5512000.0
   },
   {
     "so_number": "SO-202607-0386",
@@ -5782,12 +5782,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5108000.0,
-    "discount_dpp": 178780.0,
-    "net_dpp": 4929220.0,
-    "cogs_dpp": 4330000.0,
+    "gross_dpp": 6600000.0,
+    "discount_dpp": 231000.0,
+    "net_dpp": 6369000.0,
+    "cogs_dpp": 5659200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5108000.0
+    "do_delivered_dpp": 6600000.0
   },
   {
     "so_number": "SO-202607-0387",
@@ -5797,12 +5797,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5229000.0,
-    "discount_dpp": 183015.0,
-    "net_dpp": 5045985.0,
-    "cogs_dpp": 4431000.0,
+    "gross_dpp": 5599200.0,
+    "discount_dpp": 195972.0,
+    "net_dpp": 5403228.0,
+    "cogs_dpp": 4836000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5229000.0
+    "do_delivered_dpp": 5599200.0
   },
   {
     "so_number": "SO-202607-0388",
@@ -5812,12 +5812,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 3544000.0,
-    "discount_dpp": 124040.0,
-    "net_dpp": 3419960.0,
-    "cogs_dpp": 3007200.0,
+    "gross_dpp": 4989600.0,
+    "discount_dpp": 174636.0,
+    "net_dpp": 4814964.0,
+    "cogs_dpp": 4284000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 3544000.0
+    "do_delivered_dpp": 4989600.0
   },
   {
     "so_number": "SO-202607-0389",
@@ -5827,12 +5827,12 @@
     "channel": "INST",
     "district": "Tikala",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 15984000.0,
-    "discount_dpp": 639360.0,
-    "net_dpp": 15344640.0,
-    "cogs_dpp": 13464000.0,
+    "gross_dpp": 20040000.0,
+    "discount_dpp": 801600.0,
+    "net_dpp": 19238400.0,
+    "cogs_dpp": 16986000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 15984000.0
+    "do_delivered_dpp": 20040000.0
   },
   {
     "so_number": "SO-202607-0390",
@@ -5842,12 +5842,12 @@
     "channel": "MT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 39924800.0,
-    "discount_dpp": 2076089.6,
-    "net_dpp": 37848710.4,
-    "cogs_dpp": 33862400.0,
+    "gross_dpp": 32796000.0,
+    "discount_dpp": 1705392.0,
+    "net_dpp": 31090608.0,
+    "cogs_dpp": 27514800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 39924800.0
+    "do_delivered_dpp": 32796000.0
   },
   {
     "so_number": "SO-202607-0391",
@@ -5857,12 +5857,12 @@
     "channel": "MT",
     "district": "Maesa",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
-    "gross_dpp": 30316800.0,
-    "discount_dpp": 1576473.6,
-    "net_dpp": 28740326.4,
-    "cogs_dpp": 25498800.0,
+    "gross_dpp": 30456000.0,
+    "discount_dpp": 1583712.0,
+    "net_dpp": 28872288.0,
+    "cogs_dpp": 25674000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 30316800.0
+    "do_delivered_dpp": 30456000.0
   },
   {
     "so_number": "SO-202607-0392",
@@ -5872,12 +5872,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 16869800.0,
-    "discount_dpp": 809750.4,
-    "net_dpp": 16060049.6,
-    "cogs_dpp": 14107000.0,
+    "gross_dpp": 20706000.0,
+    "discount_dpp": 993888.0,
+    "net_dpp": 19712112.0,
+    "cogs_dpp": 17569200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 16869800.0
+    "do_delivered_dpp": 20706000.0
   },
   {
     "so_number": "SO-202607-0393",
@@ -5887,12 +5887,12 @@
     "channel": "GT",
     "district": "Wenang",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 19371600.0,
-    "discount_dpp": 929836.8,
-    "net_dpp": 18441763.2,
-    "cogs_dpp": 16520800.0,
+    "gross_dpp": 15972000.0,
+    "discount_dpp": 766656.0,
+    "net_dpp": 15205344.0,
+    "cogs_dpp": 13599200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 19371600.0
+    "do_delivered_dpp": 15972000.0
   },
   {
     "so_number": "SO-202607-0394",
@@ -5902,12 +5902,12 @@
     "channel": "GT",
     "district": "Wanea",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 25440000.0,
-    "discount_dpp": 1221120.0,
-    "net_dpp": 24218880.0,
-    "cogs_dpp": 21463200.0,
+    "gross_dpp": 22884000.0,
+    "discount_dpp": 1098432.0,
+    "net_dpp": 21785568.0,
+    "cogs_dpp": 19344000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 25440000.0
+    "do_delivered_dpp": 22884000.0
   },
   {
     "so_number": "SO-202607-0395",
@@ -5917,12 +5917,12 @@
     "channel": "GT",
     "district": "Sario",
     "delivery_vehicle": "DB 8456 FB (L300 Urban Barat)",
-    "gross_dpp": 22176000.0,
-    "discount_dpp": 1064448.0,
-    "net_dpp": 21111552.0,
-    "cogs_dpp": 18636000.0,
+    "gross_dpp": 17973000.0,
+    "discount_dpp": 862704.0,
+    "net_dpp": 17110296.0,
+    "cogs_dpp": 15005400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 22176000.0
+    "do_delivered_dpp": 17973000.0
   },
   {
     "so_number": "SO-202607-0396",
@@ -5932,12 +5932,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5364000.0,
-    "discount_dpp": 187740.0,
-    "net_dpp": 5176260.0,
-    "cogs_dpp": 4572000.0,
+    "gross_dpp": 4056000.0,
+    "discount_dpp": 141960.0,
+    "net_dpp": 3914040.0,
+    "cogs_dpp": 3468000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5364000.0
+    "do_delivered_dpp": 4056000.0
   },
   {
     "so_number": "SO-202607-0397",
@@ -5947,12 +5947,12 @@
     "channel": "RTL",
     "district": "Wenang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6175000.0,
-    "discount_dpp": 216125.0,
-    "net_dpp": 5958875.0,
-    "cogs_dpp": 5309000.0,
+    "gross_dpp": 3882000.0,
+    "discount_dpp": 135870.0,
+    "net_dpp": 3746130.0,
+    "cogs_dpp": 3348000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6175000.0
+    "do_delivered_dpp": 3882000.0
   },
   {
     "so_number": "SO-202607-0398",
@@ -5962,12 +5962,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6436000.0,
-    "discount_dpp": 225260.0,
-    "net_dpp": 6210740.0,
-    "cogs_dpp": 5252000.0,
+    "gross_dpp": 5805600.0,
+    "discount_dpp": 203196.0,
+    "net_dpp": 5602404.0,
+    "cogs_dpp": 4852800.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6436000.0
+    "do_delivered_dpp": 5805600.0
   },
   {
     "so_number": "SO-202607-0399",
@@ -5977,12 +5977,12 @@
     "channel": "RTL",
     "district": "Sario",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 6151200.0,
-    "discount_dpp": 215292.0,
-    "net_dpp": 5935908.0,
-    "cogs_dpp": 5128800.0,
+    "gross_dpp": 4392000.0,
+    "discount_dpp": 153720.0,
+    "net_dpp": 4238280.0,
+    "cogs_dpp": 3768000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 6151200.0
+    "do_delivered_dpp": 4392000.0
   },
   {
     "so_number": "SO-202607-0400",
@@ -5992,12 +5992,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4172000.0,
-    "discount_dpp": 146020.0,
-    "net_dpp": 4025980.0,
-    "cogs_dpp": 3600000.0,
+    "gross_dpp": 4957000.0,
+    "discount_dpp": 173495.0,
+    "net_dpp": 4783505.0,
+    "cogs_dpp": 4205000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4172000.0
+    "do_delivered_dpp": 4957000.0
   },
   {
     "so_number": "SO-202607-0401",
@@ -6007,12 +6007,12 @@
     "channel": "RTL",
     "district": "Malalayang",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 5079000.0,
-    "discount_dpp": 177765.0,
-    "net_dpp": 4901235.0,
-    "cogs_dpp": 4305000.0,
+    "gross_dpp": 3914400.0,
+    "discount_dpp": 137004.0,
+    "net_dpp": 3777396.0,
+    "cogs_dpp": 3302400.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 5079000.0
+    "do_delivered_dpp": 3914400.0
   },
   {
     "so_number": "SO-202607-0402",
@@ -6022,12 +6022,12 @@
     "channel": "RTL",
     "district": "Wanea",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
-    "gross_dpp": 4936000.0,
-    "discount_dpp": 172760.0,
-    "net_dpp": 4763240.0,
-    "cogs_dpp": 4215200.0,
+    "gross_dpp": 6487800.0,
+    "discount_dpp": 227073.0,
+    "net_dpp": 6260727.0,
+    "cogs_dpp": 5488200.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 4936000.0
+    "do_delivered_dpp": 6487800.0
   },
   {
     "so_number": "SO-202607-0403",
@@ -6037,11 +6037,11 @@
     "channel": "INST",
     "district": "Mapanget",
     "delivery_vehicle": "DB 8567 TR (Traga Urban Timur)",
-    "gross_dpp": 17422800.0,
-    "discount_dpp": 696912.0,
-    "net_dpp": 16725888.0,
-    "cogs_dpp": 14377200.0,
+    "gross_dpp": 23092800.0,
+    "discount_dpp": 923712.0,
+    "net_dpp": 22169088.0,
+    "cogs_dpp": 19476000.0,
     "rejection_dpp": 0.0,
-    "do_delivered_dpp": 17422800.0
+    "do_delivered_dpp": 23092800.0
   }
 ]

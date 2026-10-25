@@ -46,10 +46,22 @@ SALESMEN = [
 ]
 
 
+def is_working_day(d: dt.date) -> bool:
+    """Senin s/d Sabtu adalah hari kerja operasional FMCG Manado.
+    Hari Minggu libur mingguan operasional armada distributor.
+    16 Juli 2026: Libur Nasional Tahun Baru Islam 1448 H (SKB 3 Menteri 2026).
+    """
+    if d.weekday() == 6:  # Minggu
+        return False
+    if d == dt.date(2026, 7, 16):  # Tahun Baru Islam 1448 H
+        return False
+    return True
+
+
 def get_delivery_date(call_date: dt.date) -> dt.date:
-    """Menghitung tanggal delivery H+1 kerja berikutnya (Sabtu -> Senin, Minggu libur)."""
+    """Menghitung tanggal delivery H+1 kerja berikutnya (melewati Minggu & Hari Libur Nasional)."""
     curr = call_date + dt.timedelta(days=1)
-    while curr.weekday() == 6:  # Lewati hari Minggu
+    while not is_working_day(curr):
         curr += dt.timedelta(days=1)
     return curr
 
@@ -97,15 +109,14 @@ def main():
     while curr_date <= end_date:
         w_idx = curr_date.weekday()
         day_name = DAY_NAMES[w_idx]
-        is_sunday = w_idx == 6
+        is_work = is_working_day(curr_date)
         week_num = determine_week_of_month(curr_date)
         date_str = curr_date.strftime("%Y-%m-%d")
 
-        for sls_code, sls_name, sls_role in SALESMEN:
-            salesman_label = f"{sls_code} - {sls_name}"
-
-            if is_sunday:
-                # Hari Minggu: Seluruh armada libur operasional
+        if not is_work:
+            reason = "LIBUR OPERASIONAL (MINGGU)" if w_idx == 6 else "LIBUR OPERASIONAL (TAHUN BARU ISLAM 1448 H)"
+            for sls_code, sls_name, sls_role in SALESMEN:
+                salesman_label = f"{sls_code} - {sls_name}"
                 matrix_rows.append(
                     {
                         "salesman": salesman_label,
@@ -116,15 +127,18 @@ def main():
                         "channel": "-",
                         "area": "-",
                         "district": "-",
-                        "customer": "LIBUR OPERASIONAL (MINGGU)",
+                        "customer": reason,
                         "latitude": "-",
                         "longitude": "-",
                         "delivery_date": "-",
                         "delivery_vehicle": "-",
                     }
                 )
-                continue
+            curr_date += dt.timedelta(days=1)
+            continue
 
+        for sls_code, sls_name, sls_role in SALESMEN:
+            salesman_label = f"{sls_code} - {sls_name}"
             # Ambil seluruh outlet kandidat untuk hari ini
             day_candidates = cust_map.get(sls_code, {}).get(day_name, [])
 

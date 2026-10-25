@@ -161,14 +161,65 @@ def validate(root, sizes=(354, 150)):
             fail("EVENT-ORDER", key, "delivery before order or missing order")
         if date.weekday() == 6:
             fail("CALENDAR", key, "Sunday delivery")
+        deliv_day = calendar.get(delivery["scheduled_delivery_date"])
+        if deliv_day and str(deliv_day["is_working_day"]).lower() != "true":
+            fail("CALENDAR", key, f"delivery on non-working date: {delivery['scheduled_delivery_date']}")
+
     for key, invoice in invoices.items():
         delivery = deliveries.get(invoice["do_number"])
         if not delivery or delivery["so_number"] != invoice["so_number"] or invoice["so_number"] not in orders:
             fail("TX-FK", key, "invoice/order/delivery link invalid")
+        order = orders.get(invoice["so_number"])
+        ref = order["customer"].split(" - ")[0] if order else ""
+        customer = customers.get(ref)
+        if not customer:
+            fail("TX-FK", key, f"unknown customer for invoice: {ref}")
+            continue
+
+        top_master = int(customer.get("payment_term_days", 0))
+        top_inv = int(invoice.get("payment_term_days", -1))
+        if top_inv != top_master:
+            fail("MASTER-TOP", key, f"payment term mismatch: invoice={top_inv} vs master={top_master}")
+
+        inv_date = dt.date.fromisoformat(invoice["date_invoice"])
+        expected_due = (inv_date + dt.timedelta(days=top_master)).isoformat()
+        if invoice["due_date"] != expected_due:
+            fail("EVENT-ORDER", key, f"due date mismatch: expected {expected_due}, observed {invoice['due_date']}")
+
+        if delivery and delivery["scheduled_delivery_date"] != invoice["date_invoice"]:
+            fail("PERIOD-CUTOFF", key, f"delivery date {delivery['scheduled_delivery_date']} != invoice date {invoice['date_invoice']}")
+
         if invoice["due_date"] < invoice["date_invoice"]:
             fail("EVENT-ORDER", key, "due date before invoice")
         equal("INVOICE-MATH", key, invoice["total_invoice_with_ppn"],
               number(invoice["dpp_amount"]) + number(invoice["ppn_11_amount"]))
+
+    rejections_raw = read("data/registers/perpetual_order_rejections.csv")
+    rejection_dpp_totals = collections.defaultdict(Decimal)
+    for row in rejections_raw:
+        rej_id = row["rejection_id"]
+        so_num = row["so_number"]
+        do_num = row["do_number"]
+        if so_num not in orders or do_num not in deliveries:
+            fail("TX-FK", rej_id, "rejection SO or DO link invalid")
+        product = product_map.get(row["sku_code"])
+        if not product:
+            fail("TX-FK", rej_id, "rejection SKU unknown")
+        qty = number(row["qty_cartons"])
+        if qty <= 0:
+            fail("LINE-MATH", rej_id, "rejection quantity must be positive")
+        equal("LINE-MATH", rej_id, row["carton_qty"], product["carton_qty"])
+        equal("LINE-MATH", rej_id, row["line_subtotal_dpp"],
+              qty * number(row["carton_qty"]) * number(row["unit_price_dpp"]))
+        rejection_dpp_totals[do_num] += number(row["line_subtotal_dpp"])
+
+    for do_num, delivery in deliveries.items():
+        rej_total = rejection_dpp_totals.get(do_num, Decimal("0.00"))
+        equal("RETURN-RECON", do_num, delivery["rejection_dpp"], rej_total)
+        order = orders.get(delivery["so_number"])
+        if order:
+            equal("RETURN-RECON", do_num, delivery["do_delivered_dpp"], number(order["gross_dpp"]) - rej_total)
+
     for row in read("data/registers/perpetual_ar_collections.csv"):
         invoice = invoices.get(row["invoice_number"])
         if not invoice or row["payment_date"] < invoice["date_invoice"]:

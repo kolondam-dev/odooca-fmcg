@@ -1,5 +1,67 @@
 # HANDOFF
 
+## 2026-10-26 — antigravity agent — Tindak Lanjut Supervisi PR #15: Perbaikan Return Karantina, Master TOP, Kalender Libur, & Rekonsiliasi Finansial Dua Periode (Status PASS)
+**Konteks & Arahan Supervisi:**
+Menindaklanjuti seluruh 4 temuan supervisi PR #15 (review komentar supervisor) pada branch `agen/fix-seed-invariants`:
+1. *[P1][Regresi PR] Skenario Return/Rejection:* Memulihkan pemodelan return/tolakan barang saat DO secara deterministik (~4-5% order GT & MT rusak handling transit, 9 karton senilai Rp 3.079.200 DPP masuk `quarantine_stock`/Bad Stock Gudang Maumbi). Register baru: `data/registers/perpetual_order_rejections.csv` dan `.json`. Invariant diperluas dengan aturan `RETURN-RECON`.
+2. *[P1][Celah Lama] Sinkronisasi TOP Master Customer:* Mengambil `payment_term_days` dari master customer (`customer_registry_354.csv`) untuk invoice, tanggal jatuh tempo (`due_date`), dan pelunasan AR. Invariant gate diperluas dengan aturan `MASTER-TOP` yang menolak ketidakcocokan termin faktur dengan master.
+3. *[P1][Celah Periode & Rekonsiliasi] Pemisahan Cut-off Juli vs Carry-Forward Agustus:* Memisahkan secara tegas 389 pesanan terkirim dan terfaktur di bulan Juli dengan 14 pesanan tanggal 31 Juli yang terkirim dan terfaktur pada 1 Agustus. Invariant gate diperluas dengan aturan `PERIOD-CUTOFF` (`delivery date == invoice date`).
+4. *[P2][Inkonsistensi Kalender Libur]:* Menyelaraskan kalender kerja operasional (`get_next_working_day`), menggeser pengiriman yang jatuh pada hari libur nasional 16 Juli 2026 (Tahun Baru Islam 1448 H / SKB 3 Menteri) dan Minggu ke hari kerja berikutnya. Invariant gate diperluas dengan aturan `CALENDAR` checking `deliv_day["is_working_day"] == True`.
+5. *[Scope & Kalibrasi Basket Size]:* Dengan berlakunya filter cohort customer aktif Juli (177 outlet aktif dari 354 master), drop size per call dikalibrasi (GT Rp 16–26 jt, MT Rp 45–60 jt, INST Rp 15–24 jt, RTL Rp 3,5–6,5 jt) agar target omset distributor FMCG Manado tercapai (~Rp 5,35 BIO DPP Juli) secara organik tanpa angka genap buatan.
+
+**Rekonsiliasi Finansial Kanonikal Dua Periode (Juli vs Carry-Forward Agustus 2026):**
+1. *Pesanan Penjualan Terbit (Sales Order Juli):*
+   - Total SO Booked Juli (403 SO): Gross DPP Rp 5.815.035.400,00 | Diskon Rp 269.696.709,72 | Net DPP Rp 5.545.338.690,28
+2. *Realisasi Pengiriman & Faktur Juli (Cut-off 31 Juli 2026):*
+   - Realisasi Terfaktur Juli: 389 SO / DO / Faktur
+   - Nilai Invoiced DPP Juli: Rp 5.354.141.310,48
+   - PPN Keluaran 11% Juli: Rp 588.955.544,15
+   - Total Tagihan Bruto Terfaktur (DPP + PPN): Rp 5.943.096.854,63
+   - Retur Fisik Karantina Juli: Rp 3.079.200,00 (9 karton masuk Gudang Karantina Maumbi)
+   - Beban Pokok Pendapatan (COGS) Fisik Terkirim: Rp 4.760.427.600,00
+   - Laba Kotor (Gross Profit) Terfaktur Juli: Rp 593.713.710,48 (11,09%)
+   - Beban Operasional & Payroll Juli: Rp 390.800.000,00 (Logistik Rp 92,3 Jt + Gaji 24 staf Rp 185 Jt + Lembur Overstok Rp 68,5 Jt + Sewa Gudang Rp 45 Jt)
+   - Laba Bersih Operasional Sah (Accrual Juli): Rp 202.913.710,48 (3,79%)
+3. *Carry-Forward ke Periode Agustus 2026 (SO 31 Juli, Terkirim & Terfaktur 1 Agustus):*
+   - Jumlah Pesanan Carry-Forward: 14 SO / DO / Faktur
+   - Nilai DO Terkirim Carry-Forward: Rp 188.267.786,00
+   - Nilai Invoiced DPP Carry-Forward: Rp 188.267.786,00
+   - Nilai COGS Carry-Forward: Rp 166.615.000,00
+   - Retur Karantina Carry-Forward: Rp 0,00 (0 kejadian)
+4. *Rekonsiliasi Kas & Piutang Usaha (AR Ledger 31 Juli 2026):*
+   - Total Kas Tertagih Juli: Rp 3.299.917.536,36 (termasuk early cash discount 1% Rp 1.144.205,51)
+   - Saldo Piutang Usaha Akhir Juli (Open AR): Rp 2.041.726.856,12 (Jatuh tempo Agustus sesuai termin master)
+5. *Rekonsiliasi Fisik Persediaan (Gudang Maumbi 31 Juli 2026):*
+   - Saldo Akhir Stok Fisik Saleable: 54.371 Karton
+   - Saldo Akhir Stok Karantina BS: 9 Karton (Lokasi Virtual Karantina Gudang Maumbi)
+   - Puncak Okupansi Gudang Maumbi: 102,8%
+
+**Hasil Diagnostik Sebelum vs Sesudah PR #15 Supervisor Review:**
+| Invariant Gate Rule | Baseline PR #14 | PR #15 Initial | PR #15 Post-Review (Kini) | Status |
+| :--- | :---: | :---: | :---: | :--- |
+| `MASTER-GEO` | 77 | 0 | 0 | PASSED |
+| `COHORT-PJP` | 228 | 0 | 0 | PASSED |
+| `COHORT-SO` | 219 | 0 | 0 | PASSED |
+| `CALENDAR` | 84 | 0 | 0 | PASSED (Termasuk filter libur 16 Juli) |
+| `EVENT-ORDER` | 331 | 0 | 0 | PASSED (Jatuh tempo terikat TOP master) |
+| `MASTER-TOP` (Baru) | - | - | 0 | PASSED (Invoice TOP == Customer TOP) |
+| `PERIOD-CUTOFF` (Baru)| - | - | 0 | PASSED (DO Date == Invoice Date) |
+| `RETURN-RECON` (Baru) | - | - | 0 | PASSED (Rejeksi karantina terekonsiliasi) |
+| `LOT-BALANCE` | 770 | 0 | 0 | PASSED |
+| `LOT-FEFO` | 0 | 0 | 0 | PASSED |
+| **TOTAL VIOLATIONS** | **1.709** | **0** | **0** | **OVERALL STATUS: PASS** |
+
+**Verifikasi:**
+- `python scripts/ops/verify_seed_invariants.py --report invariant-report.json`: Status `PASS`, violations `[]` (0).
+- `python -m unittest discover -s tests -p "test_*.py" -v`: 23/23 tests lulus (`OK`), termasuk 6 mutation tests baru (`test_top_mismatch`, `test_holiday_delivery`, `test_period_cutoff_mismatch`, `test_rejection_reconciliation`, `test_rejection_fk_invalid`, `test_rejection_non_positive_qty`).
+- `python -m ruff check .`: `All checks passed!`.
+- `python scripts/check_manifests.py`: `manifest ok: 4 addon`.
+
+**Hal yang Masih Memerlukan Validasi Runtime Odoo:**
+1. Injeksi database runtime Odoo (idempotensi loader `scripts/load_fmcg_seed.py` saat memuat lokasi karantina gudang virtual dan transaksi retur).
+2. Penanganan multi-lot dan stock quant pada Stock Valuation Layer Odoo 19 agar saldo backdated 1-31 Juli 2026 tidak tercemar tanggal transaksi hari ini.
+3. Rekonsiliasi pembukuan akuntansi umum di Odoo runtime (`account.move` & `stock.valuation.layer`).
+
 ## 2026-10-25 — antigravity agent — Perbaikan Invariant Gate Seed & Rekonsiliasi Transaksi (Status PASS)
 **Konteks & Arahan Supervisi:**
 Menindaklanjuti supervisi PR #14 (komentar issuecomment-6400313553) pada branch `agen/fix-seed-invariants` yang dicabangkan dari `origin/agen/supervision-invariant-gates` (commit base `02ecc81`).

@@ -1,297 +1,308 @@
 payment_id,payment_date,invoice_number,customer,channel,salesman,invoice_dpp,early_payment_discount,net_cash_collected,payment_method,payment_note
-PAY-AR-00001,2026-07-02,INV-202607-0007,CUST-RTL-003 - Kios Ci Utu Lorong 3,RTL,CVS-01 - Novry Mandagi,5787684.0,0.0,5787684.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00002,2026-07-02,INV-202607-0008,CUST-RTL-015 - Kios Ko Deasy Pasar,RTL,CVS-01 - Novry Mandagi,3737638.0,0.0,3737638.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00003,2026-07-02,INV-202607-0009,CUST-RTL-027 - Kios Berkat Stenly Jalan Salib,RTL,CVS-01 - Novry Mandagi,6148980.0,0.0,6148980.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00004,2026-07-02,INV-202607-0010,CUST-RTL-039 - Warung Kasih Meyke Lorong 3,RTL,CVS-01 - Novry Mandagi,4326288.0,0.0,4326288.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00005,2026-07-02,INV-202607-0011,CUST-RTL-051 - Kios Tante Ronny Pasar,RTL,CVS-01 - Novry Mandagi,5208684.0,0.0,5208684.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00006,2026-07-02,INV-202607-0012,CUST-RTL-063 - Kios Ci Wanda Jalan Salib,RTL,CVS-01 - Novry Mandagi,3914040.0,0.0,3914040.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00007,2026-07-02,INV-202607-0013,CUST-RTL-075 - Kios Ko Ferry Lorong 3,RTL,CVS-01 - Novry Mandagi,5500500.0,0.0,5500500.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00008,2026-07-02,INV-202607-0014,CUST-RTL-087 - Kios Berkat Grace Pasar,RTL,CVS-02 - Steven Lumenta,5813160.0,0.0,5813160.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00009,2026-07-02,INV-202607-0015,CUST-RTL-111 - Kios Tante Dani Lorong 3,RTL,CVS-02 - Steven Lumenta,4083880.0,0.0,4083880.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00010,2026-07-03,INV-202607-0024,CUST-RTL-004 - Warung Tante Meyke Dekat Gereja,RTL,CVS-01 - Novry Mandagi,4533570.0,0.0,4533570.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00011,2026-07-03,INV-202607-0025,CUST-RTL-016 - Warung Ronny Depan SD,RTL,CVS-01 - Novry Mandagi,4015172.0,0.0,4015172.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00012,2026-07-03,INV-202607-0026,CUST-RTL-028 - Kios Gloria Wanda Pondok Damai,RTL,CVS-01 - Novry Mandagi,3897828.0,0.0,3897828.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00013,2026-07-03,INV-202607-0027,CUST-RTL-040 - Kios Filadelfia Ferry Dekat Gereja,RTL,CVS-01 - Novry Mandagi,5516712.0,0.0,5516712.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00014,2026-07-03,INV-202607-0028,CUST-RTL-052 - Warung Om Grace Depan SD,RTL,CVS-01 - Novry Mandagi,3777975.0,0.0,3777975.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00015,2026-07-03,INV-202607-0029,CUST-RTL-064 - Warung Tante Roy Pondok Damai,RTL,CVS-01 - Novry Mandagi,4553256.0,0.0,4553256.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00016,2026-07-03,INV-202607-0030,CUST-RTL-076 - Warung Dani Dekat Gereja,RTL,CVS-01 - Novry Mandagi,5813160.0,0.0,5813160.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00017,2026-07-03,INV-202607-0031,CUST-RTL-088 - Kios Gloria Bobby Depan SD,RTL,CVS-02 - Steven Lumenta,5017035.0,0.0,5017035.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00018,2026-07-03,INV-202607-0032,CUST-RTL-112 - Warung Om Ventje Dekat Gereja,RTL,CVS-02 - Steven Lumenta,6168280.0,0.0,6168280.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00019,2026-07-04,INV-202607-0040,CUST-RTL-005 - Kios Ko Ferry Pintu Masuk,RTL,CVS-01 - Novry Mandagi,4967820.0,0.0,4967820.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00020,2026-07-04,INV-202607-0041,CUST-RTL-017 - Kios Berkat Grace Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,4325130.0,0.0,4325130.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00021,2026-07-04,INV-202607-0042,CUST-RTL-029 - Warung Kasih Roy Samping Lapangan,RTL,CVS-01 - Novry Mandagi,5340696.0,0.0,5340696.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00022,2026-07-04,INV-202607-0043,CUST-RTL-041 - Kios Tante Dani Pintu Masuk,RTL,CVS-01 - Novry Mandagi,3867720.0,0.0,3867720.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00023,2026-07-04,INV-202607-0044,CUST-RTL-053 - Kios Ci Bobby Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,5303640.0,0.0,5303640.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00024,2026-07-04,INV-202607-0045,CUST-RTL-065 - Kios Ko Vera Samping Lapangan,RTL,CVS-01 - Novry Mandagi,4349448.0,0.0,4349448.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00025,2026-07-04,INV-202607-0046,CUST-RTL-077 - Kios Berkat Ventje Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5338380.0,0.0,5338380.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00026,2026-07-04,INV-202607-0047,CUST-RTL-089 - Warung Kasih Erna Dekat Mesjid,RTL,CVS-02 - Steven Lumenta,4819596.0,0.0,4819596.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00027,2026-07-04,INV-202607-0048,CUST-RTL-113 - Kios Ci Novry Pintu Masuk,RTL,CVS-02 - Steven Lumenta,4724640.0,0.0,4724640.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00028,2026-07-06,INV-202607-0055,CUST-RTL-006 - Warung Dani Ujung Lorong,RTL,CVS-01 - Novry Mandagi,4747800.0,0.0,4747800.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00029,2026-07-06,INV-202607-0056,CUST-RTL-018 - Kios Gloria Bobby Puncak,RTL,CVS-01 - Novry Mandagi,5527520.0,0.0,5527520.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00030,2026-07-06,INV-202607-0057,CUST-RTL-030 - Kios Filadelfia Vera Tikungan,RTL,CVS-01 - Novry Mandagi,4774820.0,0.0,4774820.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00031,2026-07-06,INV-202607-0058,CUST-RTL-042 - Warung Om Ventje Ujung Lorong,RTL,CVS-01 - Novry Mandagi,5164680.0,0.0,5164680.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00032,2026-07-06,INV-202607-0059,CUST-RTL-054 - Warung Tante Erna Puncak,RTL,CVS-01 - Novry Mandagi,5699676.0,0.0,5699676.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00033,2026-07-06,INV-202607-0060,CUST-RTL-066 - Warung Pingkan Tikungan,RTL,CVS-01 - Novry Mandagi,5276620.0,0.0,5276620.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00034,2026-07-06,INV-202607-0061,CUST-RTL-078 - Kios Gloria Novry Ujung Lorong,RTL,CVS-01 - Novry Mandagi,4333236.0,0.0,4333236.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00035,2026-07-06,INV-202607-0062,CUST-RTL-084 - Warung Tante Joppy Tikungan,RTL,CVS-02 - Steven Lumenta,4909920.0,0.0,4909920.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00036,2026-07-06,INV-202607-0063,CUST-RTL-108 - Kios Gloria Utu Puncak,RTL,CVS-02 - Steven Lumenta,5697360.0,0.0,5697360.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00037,2026-07-07,INV-202607-0075,CUST-RTL-007 - Kios Berkat Ventje Bawah Pohon,RTL,CVS-01 - Novry Mandagi,4383030.0,0.0,4383030.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00038,2026-07-07,INV-202607-0076,CUST-RTL-019 - Warung Kasih Erna Lorong 1,RTL,CVS-01 - Novry Mandagi,4435140.0,0.0,4435140.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00039,2026-07-07,INV-202607-0077,CUST-RTL-031 - Kios Tante Pingkan Jembatan,RTL,CVS-01 - Novry Mandagi,5905800.0,0.0,5905800.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00040,2026-07-07,INV-202607-0078,CUST-RTL-043 - Kios Ci Novry Bawah Pohon,RTL,CVS-01 - Novry Mandagi,4142745.0,0.0,4142745.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00041,2026-07-07,INV-202607-0079,CUST-RTL-055 - Kios Ko Jacky Lorong 1,RTL,CVS-01 - Novry Mandagi,5111991.0,0.0,5111991.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00042,2026-07-07,INV-202607-0080,CUST-RTL-067 - Kios Berkat Toar Jembatan,RTL,CVS-01 - Novry Mandagi,4845844.0,0.0,4845844.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00043,2026-07-07,INV-202607-0081,CUST-RTL-079 - Warung Kasih Ritha Bawah Pohon,RTL,CVS-01 - Novry Mandagi,3710425.0,0.0,3710425.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00044,2026-07-07,INV-202607-0082,CUST-RTL-091 - Kios Tante Lita Lorong 1,RTL,CVS-02 - Steven Lumenta,5497412.0,0.0,5497412.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00045,2026-07-07,INV-202607-0083,CUST-RTL-115 - Kios Ko Meylan Bawah Pohon,RTL,CVS-02 - Steven Lumenta,3842244.0,0.0,3842244.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00046,2026-07-08,INV-202607-0020,CUST-GT-17 - Toko Anugerah Kasih Karombasan,GT,SLS-02 - Andre Pangemanan,24907747.2,249077.47,24658669.73,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00047,2026-07-08,INV-202607-0091,CUST-RTL-008 - Kios Gloria Novry Perempatan,RTL,CVS-01 - Novry Mandagi,5034984.0,0.0,5034984.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00048,2026-07-08,INV-202607-0092,CUST-RTL-020 - Kios Filadelfia Jacky Lorong 2,RTL,CVS-01 - Novry Mandagi,5772630.0,0.0,5772630.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00049,2026-07-08,INV-202607-0093,CUST-RTL-032 - Warung Om Toar Kompleks,RTL,CVS-01 - Novry Mandagi,4972452.0,0.0,4972452.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00050,2026-07-08,INV-202607-0094,CUST-RTL-044 - Warung Tante Ritha Perempatan,RTL,CVS-01 - Novry Mandagi,6164420.0,0.0,6164420.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00051,2026-07-08,INV-202607-0095,CUST-RTL-056 - Warung Lita Lorong 2,RTL,CVS-01 - Novry Mandagi,4068440.0,0.0,4068440.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00052,2026-07-08,INV-202607-0096,CUST-RTL-068 - Kios Gloria Lumimuut Kompleks,RTL,CVS-01 - Novry Mandagi,5936680.0,0.0,5936680.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00053,2026-07-08,INV-202607-0097,CUST-RTL-080 - Kios Filadelfia Meylan Perempatan,RTL,CVS-01 - Novry Mandagi,5153100.0,0.0,5153100.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00054,2026-07-08,INV-202607-0098,CUST-RTL-092 - Warung Om Nico Lorong 2,RTL,CVS-02 - Steven Lumenta,4381100.0,0.0,4381100.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00055,2026-07-08,INV-202607-0099,CUST-RTL-116 - Warung Hein Perempatan,RTL,CVS-02 - Steven Lumenta,3867720.0,0.0,3867720.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00056,2026-07-09,INV-202607-0005,CUST-GT-13 - Grosir Malalayang Satu,GT,SLS-02 - Andre Pangemanan,20523977.6,205239.78,20318737.82,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00057,2026-07-09,INV-202607-0006,CUST-GT-15 - Grosir Kleak Mandiri,GT,SLS-02 - Andre Pangemanan,16952454.4,169524.54,16782929.86,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00058,2026-07-09,INV-202607-0019,CUST-GT-16 - Toko Pelita Jaya Wanea,GT,SLS-02 - Andre Pangemanan,19216120.0,192161.2,19023958.8,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00059,2026-07-09,INV-202607-0021,CUST-GT-18 - Grosir Rukun Damai Ranotana,GT,SLS-02 - Andre Pangemanan,24178896.0,241788.96,23937107.04,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00060,2026-07-09,INV-202607-0022,CUST-GT-20 - Toko Pakowa Sejahtera Wanea,GT,SLS-02 - Andre Pangemanan,23339232.0,233392.32,23105839.68,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00061,2026-07-09,INV-202607-0023,CUST-GT-22 - Toko Winangun Berkat,GT,SLS-02 - Andre Pangemanan,18504595.2,185045.95,18319549.25,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00062,2026-07-09,INV-202607-0036,CUST-GT-24 - Toko Cahaya Samrat Wenang,GT,SLS-02 - Andre Pangemanan,22772601.6,227726.02,22544875.58,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00063,2026-07-09,INV-202607-0039,CUST-GT-28 - Toko Sam Ratulangi Perkasa,GT,SLS-02 - Andre Pangemanan,16716548.8,167165.49,16549383.31,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00064,2026-07-09,INV-202607-0106,CUST-RTL-009 - Warung Kasih Ritha Jalan Salib,RTL,CVS-01 - Novry Mandagi,3835875.0,0.0,3835875.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00065,2026-07-09,INV-202607-0107,CUST-RTL-021 - Kios Tante Lita Lorong 3,RTL,CVS-01 - Novry Mandagi,6183720.0,0.0,6183720.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00066,2026-07-09,INV-202607-0108,CUST-RTL-033 - Kios Ci Lumimuut Pasar,RTL,CVS-01 - Novry Mandagi,4708428.0,0.0,4708428.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00067,2026-07-09,INV-202607-0109,CUST-RTL-045 - Kios Ko Meylan Jalan Salib,RTL,CVS-01 - Novry Mandagi,4041420.0,0.0,4041420.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00068,2026-07-09,INV-202607-0110,CUST-RTL-057 - Kios Berkat Nico Lorong 3,RTL,CVS-01 - Novry Mandagi,5959840.0,0.0,5959840.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00069,2026-07-09,INV-202607-0111,CUST-RTL-069 - Warung Kasih Engelin Pasar,RTL,CVS-01 - Novry Mandagi,4313550.0,0.0,4313550.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00070,2026-07-09,INV-202607-0112,CUST-RTL-081 - Kios Tante Hein Jalan Salib,RTL,CVS-01 - Novry Mandagi,5376980.0,0.0,5376980.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00071,2026-07-09,INV-202607-0113,CUST-RTL-093 - Kios Ci Vicky Lorong 3,RTL,CVS-02 - Steven Lumenta,5259636.0,0.0,5259636.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00072,2026-07-09,INV-202607-0114,CUST-RTL-117 - Kios Berkat Vonny Jalan Salib,RTL,CVS-02 - Steven Lumenta,4365660.0,0.0,4365660.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00073,2026-07-10,INV-202607-0038,CUST-GT-26 - Toko Karombasan Baru,GT,SLS-02 - Andre Pangemanan,16382016.0,163820.16,16218195.84,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00074,2026-07-10,INV-202607-0123,CUST-RTL-010 - Kios Filadelfia Meylan Pondok Damai,RTL,CVS-01 - Novry Mandagi,3694020.0,0.0,3694020.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00075,2026-07-10,INV-202607-0124,CUST-RTL-022 - Warung Om Nico Dekat Gereja,RTL,CVS-01 - Novry Mandagi,3795924.0,0.0,3795924.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00076,2026-07-10,INV-202607-0125,CUST-RTL-034 - Warung Tante Engelin Depan SD,RTL,CVS-01 - Novry Mandagi,5693500.0,0.0,5693500.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00077,2026-07-10,INV-202607-0126,CUST-RTL-046 - Warung Hein Pondok Damai,RTL,CVS-01 - Novry Mandagi,5446460.0,0.0,5446460.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00078,2026-07-10,INV-202607-0127,CUST-RTL-058 - Kios Gloria Vicky Dekat Gereja,RTL,CVS-01 - Novry Mandagi,4429736.0,0.0,4429736.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00079,2026-07-10,INV-202607-0128,CUST-RTL-070 - Kios Filadelfia Marietje Depan SD,RTL,CVS-01 - Novry Mandagi,4745484.0,0.0,4745484.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00080,2026-07-10,INV-202607-0129,CUST-RTL-082 - Warung Om Vonny Pondok Damai,RTL,CVS-01 - Novry Mandagi,4819596.0,0.0,4819596.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00081,2026-07-10,INV-202607-0130,CUST-RTL-094 - Warung Tante Yola Dekat Gereja,RTL,CVS-02 - Steven Lumenta,4071528.0,0.0,4071528.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00082,2026-07-10,INV-202607-0131,CUST-RTL-118 - Kios Gloria Meiske Pondok Damai,RTL,CVS-02 - Steven Lumenta,4238280.0,0.0,4238280.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00083,2026-07-11,INV-202607-0138,CUST-RTL-011 - Kios Tante Hein Samping Lapangan,RTL,CVS-01 - Novry Mandagi,5109675.0,0.0,5109675.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00084,2026-07-11,INV-202607-0139,CUST-RTL-023 - Kios Ci Vicky Pintu Masuk,RTL,CVS-01 - Novry Mandagi,3951675.0,0.0,3951675.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00085,2026-07-11,INV-202607-0140,CUST-RTL-035 - Kios Ko Marietje Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,5028036.0,0.0,5028036.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00086,2026-07-11,INV-202607-0141,CUST-RTL-047 - Kios Berkat Vonny Samping Lapangan,RTL,CVS-01 - Novry Mandagi,5034984.0,0.0,5034984.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00087,2026-07-11,INV-202607-0142,CUST-RTL-059 - Warung Kasih Yola Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5292060.0,0.0,5292060.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00088,2026-07-11,INV-202607-0143,CUST-RTL-071 - Kios Tante Tin Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,5593140.0,0.0,5593140.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00089,2026-07-11,INV-202607-0144,CUST-RTL-083 - Kios Ci Meiske Samping Lapangan,RTL,CVS-01 - Novry Mandagi,6091080.0,0.0,6091080.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00090,2026-07-11,INV-202607-0145,CUST-RTL-095 - Kios Ko Franky Pintu Masuk,RTL,CVS-02 - Steven Lumenta,5491815.0,0.0,5491815.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00091,2026-07-11,INV-202607-0146,CUST-RTL-119 - Warung Kasih Joppy Samping Lapangan,RTL,CVS-02 - Steven Lumenta,6125820.0,0.0,6125820.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00092,2026-07-12,INV-202607-0067,CUST-GT-01 - Toko Sembako Berkat Pasar 45,GT,SLS-02 - Andre Pangemanan,22482432.0,224824.32,22257607.68,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00093,2026-07-12,INV-202607-0068,CUST-GT-02 - Toko Kawanua Sejati Wenang,GT,SLS-02 - Andre Pangemanan,22699488.0,226994.88,22472493.12,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00094,2026-07-12,INV-202607-0069,CUST-GT-03 - Grosir Sinar Terang Calaca,GT,SLS-02 - Andre Pangemanan,22676640.0,226766.4,22449873.6,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00095,2026-07-12,INV-202607-0072,CUST-GT-34 - Grosir Tikala Baru,GT,SLS-03 - Meidy Wowor,19123776.0,191237.76,18932538.24,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00096,2026-07-12,INV-202607-0074,CUST-GT-37 - Grosir Makmur Abadi Tikala,GT,SLS-03 - Meidy Wowor,19272288.0,192722.88,19079565.12,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00097,2026-07-13,INV-202607-0053,CUST-GT-31 - Grosir Sario Damai,GT,SLS-02 - Andre Pangemanan,17247193.6,172471.94,17074721.66,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00098,2026-07-13,INV-202607-0054,CUST-GT-33 - Toko Malalayang Megah,GT,SLS-02 - Andre Pangemanan,17912832.0,179128.32,17733703.68,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00099,2026-07-13,INV-202607-0087,CUST-GT-08 - Grosir Bintang Samrat Sario,GT,SLS-02 - Andre Pangemanan,16146681.6,161466.82,15985214.78,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00100,2026-07-13,INV-202607-0088,CUST-GT-10 - Toko Sario Makmur,GT,SLS-02 - Andre Pangemanan,15718662.4,157186.62,15561475.78,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00101,2026-07-13,INV-202607-0089,CUST-GT-38 - Toko Paal Dua Jaya,GT,SLS-03 - Meidy Wowor,21705600.0,217056.0,21488544.0,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00102,2026-07-13,INV-202607-0153,CUST-RTL-012 - Warung Om Vonny Tikungan,RTL,CVS-01 - Novry Mandagi,4342500.0,0.0,4342500.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00103,2026-07-13,INV-202607-0154,CUST-RTL-024 - Warung Tante Yola Ujung Lorong,RTL,CVS-01 - Novry Mandagi,4713060.0,0.0,4713060.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00104,2026-07-13,INV-202607-0155,CUST-RTL-036 - Warung Tin Puncak,RTL,CVS-01 - Novry Mandagi,4341728.0,0.0,4341728.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00105,2026-07-13,INV-202607-0156,CUST-RTL-048 - Kios Gloria Meiske Tikungan,RTL,CVS-01 - Novry Mandagi,5779192.0,0.0,5779192.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00106,2026-07-13,INV-202607-0157,CUST-RTL-060 - Kios Filadelfia Franky Ujung Lorong,RTL,CVS-01 - Novry Mandagi,3559692.0,0.0,3559692.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00107,2026-07-13,INV-202607-0158,CUST-RTL-072 - Warung Om Oce Puncak,RTL,CVS-01 - Novry Mandagi,3910180.0,0.0,3910180.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00108,2026-07-13,INV-202607-0159,CUST-RTL-090 - Kios Filadelfia Jacky Puncak,RTL,CVS-02 - Steven Lumenta,5778420.0,0.0,5778420.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00109,2026-07-13,INV-202607-0160,CUST-RTL-114 - Warung Tante Ritha Ujung Lorong,RTL,CVS-02 - Steven Lumenta,5380840.0,0.0,5380840.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00110,2026-07-14,INV-202607-0070,CUST-GT-04 - Toko Pinaesaan Calaca,GT,SLS-02 - Andre Pangemanan,15353856.0,153538.56,15200317.44,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00111,2026-07-14,INV-202607-0071,CUST-GT-06 - Grosir Calaca Baru,GT,SLS-02 - Andre Pangemanan,16314233.6,163142.34,16151091.26,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00112,2026-07-14,INV-202607-0103,CUST-GT-11 - Grosir Krida Bahu,GT,SLS-02 - Andre Pangemanan,24350256.0,243502.56,24106753.44,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00113,2026-07-14,INV-202607-0104,CUST-GT-12 - Toko Sumber Berkat Malalayang,GT,SLS-02 - Andre Pangemanan,17580012.8,175800.13,17404212.67,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00114,2026-07-14,INV-202607-0105,CUST-GT-14 - Toko Batu Kota Indah,GT,SLS-02 - Andre Pangemanan,23395209.6,233952.1,23161257.5,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00115,2026-07-14,INV-202607-0170,CUST-RTL-001 - Kios Tante Tin Lorong 1,RTL,CVS-01 - Novry Mandagi,5837092.0,0.0,5837092.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00116,2026-07-14,INV-202607-0171,CUST-RTL-013 - Kios Ci Meiske Jembatan,RTL,CVS-01 - Novry Mandagi,5865270.0,0.0,5865270.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00117,2026-07-14,INV-202607-0172,CUST-RTL-025 - Kios Ko Franky Bawah Pohon,RTL,CVS-01 - Novry Mandagi,4990980.0,0.0,4990980.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00118,2026-07-14,INV-202607-0173,CUST-RTL-037 - Kios Berkat Oce Lorong 1,RTL,CVS-01 - Novry Mandagi,4511568.0,0.0,4511568.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00119,2026-07-14,INV-202607-0174,CUST-RTL-049 - Warung Kasih Joppy Jembatan,RTL,CVS-01 - Novry Mandagi,3497160.0,0.0,3497160.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00120,2026-07-14,INV-202607-0175,CUST-RTL-061 - Kios Tante Siska Bawah Pohon,RTL,CVS-01 - Novry Mandagi,5400912.0,0.0,5400912.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00121,2026-07-14,INV-202607-0176,CUST-RTL-073 - Kios Ci Utu Lorong 1,RTL,CVS-01 - Novry Mandagi,5025720.0,0.0,5025720.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00122,2026-07-14,INV-202607-0177,CUST-RTL-097 - Kios Berkat Stenly Bawah Pohon,RTL,CVS-02 - Steven Lumenta,5573840.0,0.0,5573840.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00123,2026-07-15,INV-202607-0003,CUST-GT-11 - Grosir Krida Bahu,GT,SLS-02 - Andre Pangemanan,20071968.0,0.0,20071968.0,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00124,2026-07-15,INV-202607-0004,CUST-GT-12 - Toko Sumber Berkat Malalayang,GT,SLS-02 - Andre Pangemanan,16370592.0,0.0,16370592.0,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00125,2026-07-15,INV-202607-0090,CUST-GT-39 - Toko Berkat Melimpah Paal Dua,GT,SLS-03 - Meidy Wowor,16200945.6,162009.46,16038936.14,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00126,2026-07-15,INV-202607-0121,CUST-GT-21 - Grosir Tingkulu Jaya Wanea,GT,SLS-02 - Andre Pangemanan,16835168.0,168351.68,16666816.32,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00127,2026-07-15,INV-202607-0187,CUST-RTL-002 - Warung Om Oce Lorong 2,RTL,CVS-01 - Novry Mandagi,5402070.0,0.0,5402070.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00128,2026-07-15,INV-202607-0188,CUST-RTL-014 - Warung Tante Joppy Kompleks,RTL,CVS-01 - Novry Mandagi,4289232.0,0.0,4289232.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00129,2026-07-15,INV-202607-0189,CUST-RTL-026 - Warung Siska Perempatan,RTL,CVS-01 - Novry Mandagi,4889655.0,0.0,4889655.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00130,2026-07-15,INV-202607-0190,CUST-RTL-038 - Kios Gloria Utu Lorong 2,RTL,CVS-01 - Novry Mandagi,5222580.0,0.0,5222580.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00131,2026-07-15,INV-202607-0191,CUST-RTL-050 - Kios Filadelfia Deasy Kompleks,RTL,CVS-01 - Novry Mandagi,5924328.0,0.0,5924328.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00132,2026-07-15,INV-202607-0192,CUST-RTL-062 - Warung Om Stenly Perempatan,RTL,CVS-01 - Novry Mandagi,3547340.0,0.0,3547340.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00133,2026-07-15,INV-202607-0193,CUST-RTL-074 - Warung Tante Meyke Lorong 2,RTL,CVS-01 - Novry Mandagi,4006680.0,0.0,4006680.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00134,2026-07-15,INV-202607-0194,CUST-RTL-098 - Kios Gloria Wanda Perempatan,RTL,CVS-02 - Steven Lumenta,4328604.0,0.0,4328604.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00135,2026-07-16,INV-202607-0135,CUST-GT-24 - Toko Cahaya Samrat Wenang,GT,SLS-02 - Andre Pangemanan,17330969.6,173309.7,17157659.9,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00136,2026-07-16,INV-202607-0202,CUST-RTL-003 - Kios Ci Utu Lorong 3,RTL,CVS-01 - Novry Mandagi,5783052.0,0.0,5783052.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00137,2026-07-16,INV-202607-0203,CUST-RTL-015 - Kios Ko Deasy Pasar,RTL,CVS-01 - Novry Mandagi,3612960.0,0.0,3612960.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00138,2026-07-16,INV-202607-0204,CUST-RTL-027 - Kios Berkat Stenly Jalan Salib,RTL,CVS-01 - Novry Mandagi,5257320.0,0.0,5257320.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00139,2026-07-16,INV-202607-0205,CUST-RTL-039 - Warung Kasih Meyke Lorong 3,RTL,CVS-01 - Novry Mandagi,3528040.0,0.0,3528040.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00140,2026-07-16,INV-202607-0206,CUST-RTL-051 - Kios Tante Ronny Pasar,RTL,CVS-01 - Novry Mandagi,3804030.0,0.0,3804030.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00141,2026-07-16,INV-202607-0207,CUST-RTL-063 - Kios Ci Wanda Jalan Salib,RTL,CVS-01 - Novry Mandagi,5731135.0,0.0,5731135.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00142,2026-07-16,INV-202607-0208,CUST-RTL-075 - Kios Ko Ferry Lorong 3,RTL,CVS-01 - Novry Mandagi,4053000.0,0.0,4053000.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00143,2026-07-16,INV-202607-0209,CUST-RTL-099 - Warung Kasih Roy Jalan Salib,RTL,CVS-02 - Steven Lumenta,5118360.0,0.0,5118360.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00144,2026-07-17,INV-202607-0037,CUST-GT-25 - Grosir Megamas Abadi,GT,SLS-02 - Andre Pangemanan,20091008.0,0.0,20091008.0,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00145,2026-07-17,INV-202607-0122,CUST-GT-23 - Toko Bumi Nyiur Permai,GT,SLS-02 - Andre Pangemanan,18744880.0,187448.8,18557431.2,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00146,2026-07-17,INV-202607-0137,CUST-GT-27 - Grosir Bahu Sentosa,GT,SLS-02 - Andre Pangemanan,16290624.0,162906.24,16127717.76,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00147,2026-07-18,INV-202607-0052,CUST-GT-29 - Grosir Pasar 45 Rezeki,GT,SLS-02 - Andre Pangemanan,20570816.0,0.0,20570816.0,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00148,2026-07-18,INV-202607-0136,CUST-GT-25 - Grosir Megamas Abadi,GT,SLS-02 - Andre Pangemanan,17667216.0,176672.16,17490543.84,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00149,2026-07-18,INV-202607-0217,CUST-RTL-005 - Kios Ko Ferry Pintu Masuk,RTL,CVS-01 - Novry Mandagi,4303128.0,0.0,4303128.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00150,2026-07-18,INV-202607-0218,CUST-RTL-017 - Kios Berkat Grace Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,4377240.0,0.0,4377240.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00151,2026-07-18,INV-202607-0219,CUST-RTL-029 - Warung Kasih Roy Samping Lapangan,RTL,CVS-01 - Novry Mandagi,5060460.0,0.0,5060460.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00152,2026-07-18,INV-202607-0220,CUST-RTL-041 - Kios Tante Dani Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5894220.0,0.0,5894220.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00153,2026-07-18,INV-202607-0221,CUST-RTL-053 - Kios Ci Bobby Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,3927550.0,0.0,3927550.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00154,2026-07-18,INV-202607-0222,CUST-RTL-065 - Kios Ko Vera Samping Lapangan,RTL,CVS-01 - Novry Mandagi,3944920.0,0.0,3944920.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00155,2026-07-18,INV-202607-0223,CUST-RTL-077 - Kios Berkat Ventje Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5080725.0,0.0,5080725.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00156,2026-07-18,INV-202607-0224,CUST-RTL-101 - Kios Tante Pingkan Samping Lapangan,RTL,CVS-02 - Steven Lumenta,3612960.0,0.0,3612960.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00157,2026-07-19,INV-202607-0150,CUST-GT-29 - Grosir Pasar 45 Rezeki,GT,SLS-02 - Andre Pangemanan,21771859.2,217718.59,21554140.61,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00158,2026-07-19,INV-202607-0152,CUST-GT-32 - Toko Ranotana Jaya,GT,SLS-02 - Andre Pangemanan,19917744.0,199177.44,19718566.56,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00159,2026-07-19,INV-202607-0163,CUST-GT-01 - Toko Sembako Berkat Pasar 45,GT,SLS-02 - Andre Pangemanan,21762910.4,217629.1,21545281.3,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00160,2026-07-19,INV-202607-0168,CUST-GT-35 - Toko Banjer Berkah Tikala,GT,SLS-03 - Meidy Wowor,22920923.2,229209.23,22691713.97,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00161,2026-07-20,INV-202607-0073,CUST-GT-35 - Toko Banjer Berkah Tikala,GT,SLS-03 - Meidy Wowor,16787187.2,0.0,16787187.2,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-03 - Meidy Wowor)
-PAY-AR-00162,2026-07-20,INV-202607-0184,CUST-GT-38 - Toko Paal Dua Jaya,GT,SLS-03 - Meidy Wowor,16468457.6,164684.58,16303773.02,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00163,2026-07-20,INV-202607-0186,CUST-GT-40 - Grosir Sentosa Perkasa Perkamil,GT,SLS-03 - Meidy Wowor,23328950.4,233289.5,23095660.9,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00164,2026-07-20,INV-202607-0231,CUST-RTL-006 - Warung Dani Ujung Lorong,RTL,CVS-01 - Novry Mandagi,3681475.0,0.0,3681475.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00165,2026-07-20,INV-202607-0232,CUST-RTL-018 - Kios Gloria Bobby Puncak,RTL,CVS-01 - Novry Mandagi,3694020.0,0.0,3694020.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00166,2026-07-20,INV-202607-0233,CUST-RTL-030 - Kios Filadelfia Vera Tikungan,RTL,CVS-01 - Novry Mandagi,5746575.0,0.0,5746575.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00167,2026-07-20,INV-202607-0234,CUST-RTL-042 - Warung Om Ventje Ujung Lorong,RTL,CVS-01 - Novry Mandagi,6484800.0,0.0,6484800.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00168,2026-07-20,INV-202607-0235,CUST-RTL-054 - Warung Tante Erna Puncak,RTL,CVS-01 - Novry Mandagi,6382510.0,0.0,6382510.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00169,2026-07-20,INV-202607-0236,CUST-RTL-066 - Warung Pingkan Tikungan,RTL,CVS-01 - Novry Mandagi,5299780.0,0.0,5299780.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00170,2026-07-20,INV-202607-0237,CUST-RTL-078 - Kios Gloria Novry Ujung Lorong,RTL,CVS-01 - Novry Mandagi,3873510.0,0.0,3873510.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00171,2026-07-20,INV-202607-0238,CUST-RTL-096 - Warung Siska Ujung Lorong,RTL,CVS-02 - Steven Lumenta,4321270.0,0.0,4321270.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00172,2026-07-20,INV-202607-0239,CUST-RTL-120 - Kios Filadelfia Deasy Tikungan,RTL,CVS-02 - Steven Lumenta,3580536.0,0.0,3580536.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00173,2026-07-21,INV-202607-0086,CUST-GT-07 - Toko Harapan Bersehati,GT,SLS-02 - Andre Pangemanan,23503737.6,0.0,23503737.6,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00174,2026-07-21,INV-202607-0164,CUST-GT-02 - Toko Kawanua Sejati Wenang,GT,SLS-02 - Andre Pangemanan,19573881.6,195738.82,19378142.78,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00175,2026-07-21,INV-202607-0169,CUST-GT-36 - Grosir Taas Damai Tikala,GT,SLS-03 - Meidy Wowor,22268232.0,222682.32,22045549.68,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00176,2026-07-21,INV-202607-0181,CUST-GT-07 - Toko Harapan Bersehati,GT,SLS-02 - Andre Pangemanan,16720928.0,167209.28,16553718.72,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00177,2026-07-21,INV-202607-0183,CUST-GT-09 - Grosir Manado Raya Sario,GT,SLS-02 - Andre Pangemanan,15463526.4,154635.26,15308891.14,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00178,2026-07-21,INV-202607-0185,CUST-GT-39 - Toko Berkat Melimpah Paal Dua,GT,SLS-03 - Meidy Wowor,16841832.0,168418.32,16673413.68,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00179,2026-07-21,INV-202607-0198,CUST-GT-11 - Grosir Krida Bahu,GT,SLS-02 - Andre Pangemanan,20421542.4,204215.42,20217326.98,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00180,2026-07-21,INV-202607-0200,CUST-GT-13 - Grosir Malalayang Satu,GT,SLS-02 - Andre Pangemanan,17556784.0,175567.84,17381216.16,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00181,2026-07-21,INV-202607-0251,CUST-RTL-007 - Kios Berkat Ventje Bawah Pohon,RTL,CVS-01 - Novry Mandagi,5382384.0,0.0,5382384.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00182,2026-07-21,INV-202607-0252,CUST-RTL-019 - Warung Kasih Erna Lorong 1,RTL,CVS-01 - Novry Mandagi,4361800.0,0.0,4361800.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00183,2026-07-21,INV-202607-0253,CUST-RTL-031 - Kios Tante Pingkan Jembatan,RTL,CVS-01 - Novry Mandagi,6137979.0,0.0,6137979.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00184,2026-07-21,INV-202607-0254,CUST-RTL-043 - Kios Ci Novry Bawah Pohon,RTL,CVS-01 - Novry Mandagi,4655160.0,0.0,4655160.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00185,2026-07-21,INV-202607-0255,CUST-RTL-055 - Kios Ko Jacky Lorong 1,RTL,CVS-01 - Novry Mandagi,4701480.0,0.0,4701480.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00186,2026-07-21,INV-202607-0256,CUST-RTL-067 - Kios Berkat Toar Jembatan,RTL,CVS-01 - Novry Mandagi,4713060.0,0.0,4713060.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00187,2026-07-21,INV-202607-0257,CUST-RTL-079 - Warung Kasih Ritha Bawah Pohon,RTL,CVS-01 - Novry Mandagi,3934884.0,0.0,3934884.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00188,2026-07-21,INV-202607-0258,CUST-RTL-103 - Kios Ci Lumimuut Jembatan,RTL,CVS-02 - Steven Lumenta,3682440.0,0.0,3682440.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00189,2026-07-22,INV-202607-0201,CUST-GT-15 - Grosir Kleak Mandiri,GT,SLS-02 - Andre Pangemanan,24608248.0,246082.48,24362165.52,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00190,2026-07-22,INV-202607-0266,CUST-RTL-008 - Kios Gloria Novry Perempatan,RTL,CVS-01 - Novry Mandagi,5426774.0,0.0,5426774.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00191,2026-07-22,INV-202607-0267,CUST-RTL-020 - Kios Filadelfia Jacky Lorong 2,RTL,CVS-01 - Novry Mandagi,5609352.0,0.0,5609352.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00192,2026-07-22,INV-202607-0268,CUST-RTL-032 - Warung Om Toar Kompleks,RTL,CVS-01 - Novry Mandagi,3830085.0,0.0,3830085.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00193,2026-07-22,INV-202607-0269,CUST-RTL-044 - Warung Tante Ritha Perempatan,RTL,CVS-01 - Novry Mandagi,4076160.0,0.0,4076160.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00194,2026-07-22,INV-202607-0270,CUST-RTL-056 - Warung Lita Lorong 2,RTL,CVS-01 - Novry Mandagi,5008350.0,0.0,5008350.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00195,2026-07-22,INV-202607-0271,CUST-RTL-068 - Kios Gloria Lumimuut Kompleks,RTL,CVS-01 - Novry Mandagi,6087220.0,0.0,6087220.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00196,2026-07-22,INV-202607-0272,CUST-RTL-080 - Kios Filadelfia Meylan Perempatan,RTL,CVS-01 - Novry Mandagi,4892550.0,0.0,4892550.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00197,2026-07-22,INV-202607-0273,CUST-RTL-104 - Warung Tante Engelin Kompleks,RTL,CVS-02 - Steven Lumenta,5133800.0,0.0,5133800.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00198,2026-07-23,INV-202607-0016,CUST-INST-03 - Hotel Sintesa Peninsula Manado,INST,MGT-01 - Hendrik Polii & Joni Kumajas,15453696.0,0.0,15453696.0,Transfer Bank BCA/Mandiri,Bank Batch Transfer Jatuh Tempo
-PAY-AR-00199,2026-07-23,INV-202607-0118,CUST-GT-16 - Toko Pelita Jaya Wanea,GT,SLS-02 - Andre Pangemanan,21159532.8,0.0,21159532.8,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00200,2026-07-23,INV-202607-0119,CUST-GT-17 - Toko Anugerah Kasih Karombasan,GT,SLS-02 - Andre Pangemanan,20492371.2,0.0,20492371.2,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00201,2026-07-23,INV-202607-0120,CUST-GT-19 - Grosir Teling Sentosa Wanea,GT,SLS-02 - Andre Pangemanan,24317888.0,0.0,24317888.0,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00202,2026-07-23,INV-202607-0214,CUST-GT-25 - Grosir Megamas Abadi,GT,SLS-02 - Andre Pangemanan,23934993.6,239349.94,23695643.66,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00203,2026-07-23,INV-202607-0216,CUST-GT-28 - Toko Sam Ratulangi Perkasa,GT,SLS-02 - Andre Pangemanan,19890326.4,198903.26,19691423.14,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00204,2026-07-23,INV-202607-0280,CUST-RTL-009 - Warung Kasih Ritha Jalan Salib,RTL,CVS-01 - Novry Mandagi,4826544.0,0.0,4826544.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00205,2026-07-23,INV-202607-0281,CUST-RTL-021 - Kios Tante Lita Lorong 3,RTL,CVS-01 - Novry Mandagi,5083620.0,0.0,5083620.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00206,2026-07-23,INV-202607-0282,CUST-RTL-033 - Kios Ci Lumimuut Pasar,RTL,CVS-01 - Novry Mandagi,5581560.0,0.0,5581560.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00207,2026-07-23,INV-202607-0283,CUST-RTL-045 - Kios Ko Meylan Jalan Salib,RTL,CVS-01 - Novry Mandagi,5761050.0,0.0,5761050.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00208,2026-07-23,INV-202607-0284,CUST-RTL-057 - Kios Berkat Nico Lorong 3,RTL,CVS-01 - Novry Mandagi,3978888.0,0.0,3978888.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00209,2026-07-23,INV-202607-0285,CUST-RTL-069 - Warung Kasih Engelin Pasar,RTL,CVS-01 - Novry Mandagi,4330920.0,0.0,4330920.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00210,2026-07-23,INV-202607-0286,CUST-RTL-105 - Kios Ko Marietje Pasar,RTL,CVS-02 - Steven Lumenta,3572430.0,0.0,3572430.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00211,2026-07-24,INV-202607-0033,CUST-INST-04 - Katering Minahasa Indah,INST,MGT-01 - Hendrik Polii & Joni Kumajas,16099200.0,0.0,16099200.0,Transfer Bank BCA/Mandiri,Bank Batch Transfer Jatuh Tempo
-PAY-AR-00212,2026-07-24,INV-202607-0213,CUST-GT-24 - Toko Cahaya Samrat Wenang,GT,SLS-02 - Andre Pangemanan,22091160.0,220911.6,21870248.4,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00213,2026-07-24,INV-202607-0295,CUST-RTL-010 - Kios Filadelfia Meylan Pondok Damai,RTL,CVS-01 - Novry Mandagi,4493040.0,0.0,4493040.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00214,2026-07-24,INV-202607-0296,CUST-RTL-022 - Warung Om Nico Dekat Gereja,RTL,CVS-01 - Novry Mandagi,4938291.0,0.0,4938291.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00215,2026-07-24,INV-202607-0297,CUST-RTL-034 - Warung Tante Engelin Depan SD,RTL,CVS-01 - Novry Mandagi,3486738.0,0.0,3486738.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00216,2026-07-24,INV-202607-0298,CUST-RTL-046 - Warung Hein Pondok Damai,RTL,CVS-01 - Novry Mandagi,4601120.0,0.0,4601120.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00217,2026-07-24,INV-202607-0299,CUST-RTL-058 - Kios Gloria Vicky Dekat Gereja,RTL,CVS-01 - Novry Mandagi,5092305.0,0.0,5092305.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00218,2026-07-24,INV-202607-0300,CUST-RTL-070 - Kios Filadelfia Marietje Depan SD,RTL,CVS-01 - Novry Mandagi,5784210.0,0.0,5784210.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00219,2026-07-24,INV-202607-0301,CUST-RTL-106 - Warung Tin Depan SD,RTL,CVS-02 - Steven Lumenta,5127624.0,0.0,5127624.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00220,2026-07-25,INV-202607-0049,CUST-INST-05 - Restoran Raja Sate Paniki,INST,MGT-01 - Hendrik Polii & Joni Kumajas,21081600.0,0.0,21081600.0,Transfer Bank BCA/Mandiri,Bank Batch Transfer Jatuh Tempo
-PAY-AR-00221,2026-07-25,INV-202607-0151,CUST-GT-30 - Toko Berkat Bahu Sejahtera,GT,SLS-02 - Andre Pangemanan,23266880.0,0.0,23266880.0,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00222,2026-07-25,INV-202607-0229,CUST-GT-31 - Grosir Sario Damai,GT,SLS-02 - Andre Pangemanan,17252524.8,172525.25,17079999.55,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00223,2026-07-25,INV-202607-0308,CUST-RTL-011 - Kios Tante Hein Samping Lapangan,RTL,CVS-01 - Novry Mandagi,6114240.0,0.0,6114240.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00224,2026-07-25,INV-202607-0309,CUST-RTL-023 - Kios Ci Vicky Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5847900.0,0.0,5847900.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00225,2026-07-25,INV-202607-0310,CUST-RTL-035 - Kios Ko Marietje Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,3242400.0,0.0,3242400.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00226,2026-07-25,INV-202607-0311,CUST-RTL-047 - Kios Berkat Vonny Samping Lapangan,RTL,CVS-01 - Novry Mandagi,3749025.0,0.0,3749025.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00227,2026-07-25,INV-202607-0312,CUST-RTL-059 - Warung Kasih Yola Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5396280.0,0.0,5396280.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00228,2026-07-25,INV-202607-0313,CUST-RTL-071 - Kios Tante Tin Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,3559885.0,0.0,3559885.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00229,2026-07-25,INV-202607-0314,CUST-RTL-107 - Kios Berkat Oce Dekat Mesjid,RTL,CVS-02 - Steven Lumenta,5467497.0,0.0,5467497.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00230,2026-07-26,INV-202607-0230,CUST-GT-33 - Toko Malalayang Megah,GT,SLS-02 - Andre Pangemanan,20156505.6,201565.06,19954940.54,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00231,2026-07-26,INV-202607-0244,CUST-GT-02 - Toko Kawanua Sejati Wenang,GT,SLS-02 - Andre Pangemanan,18034688.0,180346.88,17854341.12,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00232,2026-07-26,INV-202607-0245,CUST-GT-03 - Grosir Sinar Terang Calaca,GT,SLS-02 - Andre Pangemanan,16410956.8,164109.57,16246847.23,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00233,2026-07-26,INV-202607-0247,CUST-GT-06 - Grosir Calaca Baru,GT,SLS-02 - Andre Pangemanan,15863366.4,158633.66,15704732.74,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00234,2026-07-26,INV-202607-0250,CUST-GT-37 - Grosir Makmur Abadi Tikala,GT,SLS-03 - Meidy Wowor,21206752.0,212067.52,20994684.48,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00235,2026-07-27,INV-202607-0064,CUST-INST-06 - Hotel Novotel Manado Golf Resort,INST,MGT-01 - Hendrik Polii & Joni Kumajas,14618880.0,0.0,14618880.0,Transfer Bank BCA/Mandiri,Bank Batch Transfer Jatuh Tempo
-PAY-AR-00236,2026-07-27,INV-202607-0165,CUST-GT-03 - Grosir Sinar Terang Calaca,GT,SLS-02 - Andre Pangemanan,23338089.6,0.0,23338089.6,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00237,2026-07-27,INV-202607-0166,CUST-GT-05 - Grosir Istiqlal Sentosa,GT,SLS-02 - Andre Pangemanan,22740614.4,0.0,22740614.4,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00238,2026-07-27,INV-202607-0167,CUST-GT-34 - Grosir Tikala Baru,GT,SLS-03 - Meidy Wowor,21666377.6,0.0,21666377.6,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-03 - Meidy Wowor)
-PAY-AR-00239,2026-07-27,INV-202607-0228,CUST-GT-29 - Grosir Pasar 45 Rezeki,GT,SLS-02 - Andre Pangemanan,18239558.4,182395.58,18057162.82,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00240,2026-07-27,INV-202607-0243,CUST-GT-01 - Toko Sembako Berkat Pasar 45,GT,SLS-02 - Andre Pangemanan,22640083.2,226400.83,22413682.37,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00241,2026-07-27,INV-202607-0262,CUST-GT-08 - Grosir Bintang Samrat Sario,GT,SLS-02 - Andre Pangemanan,22389326.4,223893.26,22165433.14,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00242,2026-07-27,INV-202607-0263,CUST-GT-10 - Toko Sario Makmur,GT,SLS-02 - Andre Pangemanan,18906720.0,189067.2,18717652.8,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00243,2026-07-27,INV-202607-0321,CUST-RTL-012 - Warung Om Vonny Tikungan,RTL,CVS-01 - Novry Mandagi,5477340.0,0.0,5477340.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00244,2026-07-27,INV-202607-0322,CUST-RTL-024 - Warung Tante Yola Ujung Lorong,RTL,CVS-01 - Novry Mandagi,5727468.0,0.0,5727468.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00245,2026-07-27,INV-202607-0323,CUST-RTL-036 - Warung Tin Puncak,RTL,CVS-01 - Novry Mandagi,4736220.0,0.0,4736220.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00246,2026-07-27,INV-202607-0324,CUST-RTL-048 - Kios Gloria Meiske Tikungan,RTL,CVS-01 - Novry Mandagi,5714730.0,0.0,5714730.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00247,2026-07-27,INV-202607-0325,CUST-RTL-060 - Kios Filadelfia Franky Ujung Lorong,RTL,CVS-01 - Novry Mandagi,5486025.0,0.0,5486025.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00248,2026-07-27,INV-202607-0326,CUST-RTL-072 - Warung Om Oce Puncak,RTL,CVS-01 - Novry Mandagi,6210740.0,0.0,6210740.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00249,2026-07-27,INV-202607-0327,CUST-RTL-102 - Warung Om Toar Tikungan,RTL,CVS-02 - Steven Lumenta,5182050.0,0.0,5182050.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00250,2026-07-28,INV-202607-0182,CUST-GT-08 - Grosir Bintang Samrat Sario,GT,SLS-02 - Andre Pangemanan,19565884.8,0.0,19565884.8,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00251,2026-07-28,INV-202607-0246,CUST-GT-04 - Toko Pinaesaan Calaca,GT,SLS-02 - Andre Pangemanan,15956281.6,159562.82,15796718.78,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00252,2026-07-28,INV-202607-0261,CUST-GT-07 - Toko Harapan Bersehati,GT,SLS-02 - Andre Pangemanan,17634086.4,176340.86,17457745.54,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00253,2026-07-28,INV-202607-0264,CUST-GT-38 - Toko Paal Dua Jaya,GT,SLS-03 - Meidy Wowor,17865612.8,178656.13,17686956.67,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00254,2026-07-28,INV-202607-0265,CUST-GT-39 - Toko Berkat Melimpah Paal Dua,GT,SLS-03 - Meidy Wowor,19698784.0,196987.84,19501796.16,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00255,2026-07-28,INV-202607-0279,CUST-GT-14 - Toko Batu Kota Indah,GT,SLS-02 - Andre Pangemanan,18303532.8,183035.33,18120497.47,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00256,2026-07-28,INV-202607-0337,CUST-RTL-001 - Kios Tante Tin Lorong 1,RTL,CVS-01 - Novry Mandagi,5604720.0,0.0,5604720.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00257,2026-07-28,INV-202607-0338,CUST-RTL-013 - Kios Ci Meiske Jembatan,RTL,CVS-01 - Novry Mandagi,6027390.0,0.0,6027390.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00258,2026-07-28,INV-202607-0339,CUST-RTL-025 - Kios Ko Franky Bawah Pohon,RTL,CVS-01 - Novry Mandagi,3512600.0,0.0,3512600.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00259,2026-07-28,INV-202607-0340,CUST-RTL-037 - Kios Berkat Oce Lorong 1,RTL,CVS-01 - Novry Mandagi,4578732.0,0.0,4578732.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00260,2026-07-28,INV-202607-0341,CUST-RTL-049 - Warung Kasih Joppy Jembatan,RTL,CVS-01 - Novry Mandagi,6141260.0,0.0,6141260.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00261,2026-07-28,INV-202607-0342,CUST-RTL-061 - Kios Tante Siska Bawah Pohon,RTL,CVS-01 - Novry Mandagi,3593660.0,0.0,3593660.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00262,2026-07-28,INV-202607-0343,CUST-RTL-073 - Kios Ci Utu Lorong 1,RTL,CVS-01 - Novry Mandagi,4182696.0,0.0,4182696.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00263,2026-07-29,INV-202607-0100,CUST-INST-07 - Katering Bahu Makmur,INST,MGT-01 - Hendrik Polii & Joni Kumajas,14865984.0,0.0,14865984.0,Transfer Bank BCA/Mandiri,Bank Batch Transfer Jatuh Tempo
-PAY-AR-00264,2026-07-29,INV-202607-0199,CUST-GT-12 - Toko Sumber Berkat Malalayang,GT,SLS-02 - Andre Pangemanan,18640350.4,0.0,18640350.4,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00265,2026-07-29,INV-202607-0290,CUST-GT-16 - Toko Pelita Jaya Wanea,GT,SLS-02 - Andre Pangemanan,15930006.4,159300.06,15770706.34,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00266,2026-07-29,INV-202607-0294,CUST-GT-23 - Toko Bumi Nyiur Permai,GT,SLS-02 - Andre Pangemanan,24554364.8,245543.65,24308821.15,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00267,2026-07-29,INV-202607-0353,CUST-RTL-002 - Warung Om Oce Lorong 2,RTL,CVS-01 - Novry Mandagi,5097516.0,0.0,5097516.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00268,2026-07-29,INV-202607-0354,CUST-RTL-014 - Warung Tante Joppy Kompleks,RTL,CVS-01 - Novry Mandagi,3524180.0,0.0,3524180.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00269,2026-07-29,INV-202607-0355,CUST-RTL-026 - Warung Siska Perempatan,RTL,CVS-01 - Novry Mandagi,3427680.0,0.0,3427680.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00270,2026-07-29,INV-202607-0356,CUST-RTL-038 - Kios Gloria Utu Lorong 2,RTL,CVS-01 - Novry Mandagi,3725865.0,0.0,3725865.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00271,2026-07-29,INV-202607-0357,CUST-RTL-050 - Kios Filadelfia Deasy Kompleks,RTL,CVS-01 - Novry Mandagi,4435140.0,0.0,4435140.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00272,2026-07-29,INV-202607-0358,CUST-RTL-062 - Warung Om Stenly Perempatan,RTL,CVS-01 - Novry Mandagi,4689900.0,0.0,4689900.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00273,2026-07-29,INV-202607-0359,CUST-RTL-074 - Warung Tante Meyke Lorong 2,RTL,CVS-01 - Novry Mandagi,5674200.0,0.0,5674200.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00274,2026-07-30,INV-202607-0115,CUST-INST-08 - Restoran Nelayan Megamas,INST,MGT-01 - Hendrik Polii & Joni Kumajas,23554560.0,0.0,23554560.0,Transfer Bank BCA/Mandiri,Bank Batch Transfer Jatuh Tempo
-PAY-AR-00275,2026-07-30,INV-202607-0277,CUST-GT-11 - Grosir Krida Bahu,GT,SLS-02 - Andre Pangemanan,20003424.0,200034.24,19803389.76,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00276,2026-07-30,INV-202607-0367,CUST-RTL-003 - Kios Ci Utu Lorong 3,RTL,CVS-01 - Novry Mandagi,3420732.0,0.0,3420732.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00277,2026-07-30,INV-202607-0368,CUST-RTL-015 - Kios Ko Deasy Pasar,RTL,CVS-01 - Novry Mandagi,3462420.0,0.0,3462420.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00278,2026-07-30,INV-202607-0369,CUST-RTL-027 - Kios Berkat Stenly Jalan Salib,RTL,CVS-01 - Novry Mandagi,3960360.0,0.0,3960360.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00279,2026-07-30,INV-202607-0370,CUST-RTL-039 - Warung Kasih Meyke Lorong 3,RTL,CVS-01 - Novry Mandagi,5072040.0,0.0,5072040.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00280,2026-07-30,INV-202607-0371,CUST-RTL-051 - Kios Tante Ronny Pasar,RTL,CVS-01 - Novry Mandagi,5280480.0,0.0,5280480.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00281,2026-07-30,INV-202607-0372,CUST-RTL-063 - Kios Ci Wanda Jalan Salib,RTL,CVS-01 - Novry Mandagi,5338380.0,0.0,5338380.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00282,2026-07-30,INV-202607-0373,CUST-RTL-075 - Kios Ko Ferry Lorong 3,RTL,CVS-01 - Novry Mandagi,5014140.0,0.0,5014140.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00283,2026-07-31,INV-202607-0132,CUST-INST-09 - Katering Berkat Tondano,INST,MGT-01 - Hendrik Polii & Joni Kumajas,18401280.0,0.0,18401280.0,Transfer Bank BCA/Mandiri,Bank Batch Transfer Jatuh Tempo
-PAY-AR-00284,2026-07-31,INV-202607-0215,CUST-GT-26 - Toko Karombasan Baru,GT,SLS-02 - Andre Pangemanan,19396809.6,0.0,19396809.6,Transfer Bank BCA/Mandiri,Pelunasan PJP Mingguan Salesman (SLS-02 - Andre Pangemanan)
-PAY-AR-00285,2026-07-31,INV-202607-0291,CUST-GT-17 - Toko Anugerah Kasih Karombasan,GT,SLS-02 - Andre Pangemanan,18731361.6,187313.62,18544047.98,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00286,2026-07-31,INV-202607-0292,CUST-GT-19 - Grosir Teling Sentosa Wanea,GT,SLS-02 - Andre Pangemanan,21877721.6,218777.22,21658944.38,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00287,2026-07-31,INV-202607-0293,CUST-GT-21 - Grosir Tingkulu Jaya Wanea,GT,SLS-02 - Andre Pangemanan,16127260.8,161272.61,15965988.19,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00288,2026-07-31,INV-202607-0306,CUST-GT-25 - Grosir Megamas Abadi,GT,SLS-02 - Andre Pangemanan,18107040.0,181070.4,17925969.6,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00289,2026-07-31,INV-202607-0307,CUST-GT-27 - Grosir Bahu Sentosa,GT,SLS-02 - Andre Pangemanan,16747584.0,167475.84,16580108.16,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
-PAY-AR-00290,2026-07-31,INV-202607-0382,CUST-RTL-004 - Warung Tante Meyke Dekat Gereja,RTL,CVS-01 - Novry Mandagi,5593140.0,0.0,5593140.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00291,2026-07-31,INV-202607-0383,CUST-RTL-016 - Warung Ronny Depan SD,RTL,CVS-01 - Novry Mandagi,4696848.0,0.0,4696848.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00292,2026-07-31,INV-202607-0384,CUST-RTL-028 - Kios Gloria Wanda Pondok Damai,RTL,CVS-01 - Novry Mandagi,4709200.0,0.0,4709200.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00293,2026-07-31,INV-202607-0385,CUST-RTL-040 - Kios Filadelfia Ferry Dekat Gereja,RTL,CVS-01 - Novry Mandagi,4581048.0,0.0,4581048.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00294,2026-07-31,INV-202607-0386,CUST-RTL-052 - Warung Om Grace Depan SD,RTL,CVS-01 - Novry Mandagi,4929220.0,0.0,4929220.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00295,2026-07-31,INV-202607-0387,CUST-RTL-064 - Warung Tante Roy Pondok Damai,RTL,CVS-01 - Novry Mandagi,5045985.0,0.0,5045985.0,Cash Tunai,Cash COD Salesman Canvass
-PAY-AR-00296,2026-07-31,INV-202607-0388,CUST-RTL-076 - Warung Dani Dekat Gereja,RTL,CVS-01 - Novry Mandagi,3419960.0,0.0,3419960.0,Cash Tunai,Cash COD Salesman Canvass
+PAY-AR-00001,2026-07-02,INV-202607-0007,CUST-RTL-003 - Kios Ci Utu Lorong 3,RTL,CVS-01 - Novry Mandagi,5787684.0,0.0,5787684.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00002,2026-07-02,INV-202607-0008,CUST-RTL-015 - Kios Ko Deasy Pasar,RTL,CVS-01 - Novry Mandagi,3737638.0,0.0,3737638.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00003,2026-07-02,INV-202607-0009,CUST-RTL-027 - Kios Berkat Stenly Jalan Salib,RTL,CVS-01 - Novry Mandagi,6148980.0,0.0,6148980.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00004,2026-07-02,INV-202607-0010,CUST-RTL-039 - Warung Kasih Meyke Lorong 3,RTL,CVS-01 - Novry Mandagi,4326288.0,0.0,4326288.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00005,2026-07-02,INV-202607-0011,CUST-RTL-051 - Kios Tante Ronny Pasar,RTL,CVS-01 - Novry Mandagi,5208684.0,0.0,5208684.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00006,2026-07-02,INV-202607-0012,CUST-RTL-063 - Kios Ci Wanda Jalan Salib,RTL,CVS-01 - Novry Mandagi,3914040.0,0.0,3914040.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00007,2026-07-02,INV-202607-0013,CUST-RTL-075 - Kios Ko Ferry Lorong 3,RTL,CVS-01 - Novry Mandagi,5500500.0,0.0,5500500.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00008,2026-07-02,INV-202607-0014,CUST-RTL-087 - Kios Berkat Grace Pasar,RTL,CVS-02 - Steven Lumenta,5813160.0,0.0,5813160.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00009,2026-07-02,INV-202607-0015,CUST-RTL-111 - Kios Tante Dani Lorong 3,RTL,CVS-02 - Steven Lumenta,4083880.0,0.0,4083880.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00010,2026-07-03,INV-202607-0024,CUST-RTL-004 - Warung Tante Meyke Dekat Gereja,RTL,CVS-01 - Novry Mandagi,4533570.0,0.0,4533570.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00011,2026-07-03,INV-202607-0025,CUST-RTL-016 - Warung Ronny Depan SD,RTL,CVS-01 - Novry Mandagi,4015172.0,0.0,4015172.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00012,2026-07-03,INV-202607-0026,CUST-RTL-028 - Kios Gloria Wanda Pondok Damai,RTL,CVS-01 - Novry Mandagi,3897828.0,0.0,3897828.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00013,2026-07-03,INV-202607-0027,CUST-RTL-040 - Kios Filadelfia Ferry Dekat Gereja,RTL,CVS-01 - Novry Mandagi,5516712.0,0.0,5516712.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00014,2026-07-03,INV-202607-0028,CUST-RTL-052 - Warung Om Grace Depan SD,RTL,CVS-01 - Novry Mandagi,3777975.0,0.0,3777975.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00015,2026-07-03,INV-202607-0029,CUST-RTL-064 - Warung Tante Roy Pondok Damai,RTL,CVS-01 - Novry Mandagi,4553256.0,0.0,4553256.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00016,2026-07-03,INV-202607-0030,CUST-RTL-076 - Warung Dani Dekat Gereja,RTL,CVS-01 - Novry Mandagi,5813160.0,0.0,5813160.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00017,2026-07-03,INV-202607-0031,CUST-RTL-088 - Kios Gloria Bobby Depan SD,RTL,CVS-02 - Steven Lumenta,5017035.0,0.0,5017035.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00018,2026-07-03,INV-202607-0032,CUST-RTL-112 - Warung Om Ventje Dekat Gereja,RTL,CVS-02 - Steven Lumenta,6168280.0,0.0,6168280.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00019,2026-07-04,INV-202607-0040,CUST-RTL-005 - Kios Ko Ferry Pintu Masuk,RTL,CVS-01 - Novry Mandagi,4967820.0,0.0,4967820.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00020,2026-07-04,INV-202607-0041,CUST-RTL-017 - Kios Berkat Grace Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,4325130.0,0.0,4325130.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00021,2026-07-04,INV-202607-0042,CUST-RTL-029 - Warung Kasih Roy Samping Lapangan,RTL,CVS-01 - Novry Mandagi,5340696.0,0.0,5340696.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00022,2026-07-04,INV-202607-0043,CUST-RTL-041 - Kios Tante Dani Pintu Masuk,RTL,CVS-01 - Novry Mandagi,3867720.0,0.0,3867720.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00023,2026-07-04,INV-202607-0044,CUST-RTL-053 - Kios Ci Bobby Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,5303640.0,0.0,5303640.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00024,2026-07-04,INV-202607-0045,CUST-RTL-065 - Kios Ko Vera Samping Lapangan,RTL,CVS-01 - Novry Mandagi,4349448.0,0.0,4349448.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00025,2026-07-04,INV-202607-0046,CUST-RTL-077 - Kios Berkat Ventje Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5338380.0,0.0,5338380.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00026,2026-07-04,INV-202607-0047,CUST-RTL-089 - Warung Kasih Erna Dekat Mesjid,RTL,CVS-02 - Steven Lumenta,4819596.0,0.0,4819596.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00027,2026-07-04,INV-202607-0048,CUST-RTL-113 - Kios Ci Novry Pintu Masuk,RTL,CVS-02 - Steven Lumenta,4724640.0,0.0,4724640.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00028,2026-07-06,INV-202607-0055,CUST-RTL-006 - Warung Dani Ujung Lorong,RTL,CVS-01 - Novry Mandagi,4747800.0,0.0,4747800.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00029,2026-07-06,INV-202607-0056,CUST-RTL-018 - Kios Gloria Bobby Puncak,RTL,CVS-01 - Novry Mandagi,5527520.0,0.0,5527520.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00030,2026-07-06,INV-202607-0057,CUST-RTL-030 - Kios Filadelfia Vera Tikungan,RTL,CVS-01 - Novry Mandagi,4774820.0,0.0,4774820.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00031,2026-07-06,INV-202607-0058,CUST-RTL-042 - Warung Om Ventje Ujung Lorong,RTL,CVS-01 - Novry Mandagi,5164680.0,0.0,5164680.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00032,2026-07-06,INV-202607-0059,CUST-RTL-054 - Warung Tante Erna Puncak,RTL,CVS-01 - Novry Mandagi,5699676.0,0.0,5699676.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00033,2026-07-06,INV-202607-0060,CUST-RTL-066 - Warung Pingkan Tikungan,RTL,CVS-01 - Novry Mandagi,5276620.0,0.0,5276620.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00034,2026-07-06,INV-202607-0061,CUST-RTL-078 - Kios Gloria Novry Ujung Lorong,RTL,CVS-01 - Novry Mandagi,4333236.0,0.0,4333236.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00035,2026-07-06,INV-202607-0062,CUST-RTL-084 - Warung Tante Joppy Tikungan,RTL,CVS-02 - Steven Lumenta,4909920.0,0.0,4909920.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00036,2026-07-06,INV-202607-0063,CUST-RTL-108 - Kios Gloria Utu Puncak,RTL,CVS-02 - Steven Lumenta,5697360.0,0.0,5697360.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00037,2026-07-07,INV-202607-0003,CUST-GT-11 - Grosir Krida Bahu,GT,SLS-02 - Andre Pangemanan,20071968.0,200719.68,19871248.32,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00038,2026-07-07,INV-202607-0004,CUST-GT-12 - Toko Sumber Berkat Malalayang,GT,SLS-02 - Andre Pangemanan,16370592.0,163705.92,16206886.08,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00039,2026-07-07,INV-202607-0075,CUST-RTL-007 - Kios Berkat Ventje Bawah Pohon,RTL,CVS-01 - Novry Mandagi,4383030.0,0.0,4383030.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00040,2026-07-07,INV-202607-0076,CUST-RTL-019 - Warung Kasih Erna Lorong 1,RTL,CVS-01 - Novry Mandagi,4435140.0,0.0,4435140.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00041,2026-07-07,INV-202607-0077,CUST-RTL-031 - Kios Tante Pingkan Jembatan,RTL,CVS-01 - Novry Mandagi,5905800.0,0.0,5905800.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00042,2026-07-07,INV-202607-0078,CUST-RTL-043 - Kios Ci Novry Bawah Pohon,RTL,CVS-01 - Novry Mandagi,4142745.0,0.0,4142745.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00043,2026-07-07,INV-202607-0079,CUST-RTL-055 - Kios Ko Jacky Lorong 1,RTL,CVS-01 - Novry Mandagi,5111991.0,0.0,5111991.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00044,2026-07-07,INV-202607-0080,CUST-RTL-067 - Kios Berkat Toar Jembatan,RTL,CVS-01 - Novry Mandagi,4845844.0,0.0,4845844.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00045,2026-07-07,INV-202607-0081,CUST-RTL-079 - Warung Kasih Ritha Bawah Pohon,RTL,CVS-01 - Novry Mandagi,3710425.0,0.0,3710425.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00046,2026-07-07,INV-202607-0082,CUST-RTL-091 - Kios Tante Lita Lorong 1,RTL,CVS-02 - Steven Lumenta,5497412.0,0.0,5497412.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00047,2026-07-07,INV-202607-0083,CUST-RTL-115 - Kios Ko Meylan Bawah Pohon,RTL,CVS-02 - Steven Lumenta,3842244.0,0.0,3842244.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00048,2026-07-08,INV-202607-0017,CUST-MT-05 - FreshhMart Express Tikala,MT,SLS-01 - Christian Wowor,31012872.0,310128.72,30702743.28,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00049,2026-07-08,INV-202607-0020,CUST-GT-17 - Toko Anugerah Kasih Karombasan,GT,SLS-02 - Andre Pangemanan,24907747.2,249077.47,24658669.73,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00050,2026-07-08,INV-202607-0021,CUST-GT-18 - Grosir Rukun Damai Ranotana,GT,SLS-02 - Andre Pangemanan,24178896.0,241788.96,23937107.04,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00051,2026-07-08,INV-202607-0023,CUST-GT-22 - Toko Winangun Berkat,GT,SLS-02 - Andre Pangemanan,18504595.2,185045.95,18319549.25,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00052,2026-07-08,INV-202607-0091,CUST-RTL-008 - Kios Gloria Novry Perempatan,RTL,CVS-01 - Novry Mandagi,5034984.0,0.0,5034984.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00053,2026-07-08,INV-202607-0092,CUST-RTL-020 - Kios Filadelfia Jacky Lorong 2,RTL,CVS-01 - Novry Mandagi,5772630.0,0.0,5772630.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00054,2026-07-08,INV-202607-0093,CUST-RTL-032 - Warung Om Toar Kompleks,RTL,CVS-01 - Novry Mandagi,4972452.0,0.0,4972452.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00055,2026-07-08,INV-202607-0094,CUST-RTL-044 - Warung Tante Ritha Perempatan,RTL,CVS-01 - Novry Mandagi,6164420.0,0.0,6164420.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00056,2026-07-08,INV-202607-0095,CUST-RTL-056 - Warung Lita Lorong 2,RTL,CVS-01 - Novry Mandagi,4068440.0,0.0,4068440.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00057,2026-07-08,INV-202607-0096,CUST-RTL-068 - Kios Gloria Lumimuut Kompleks,RTL,CVS-01 - Novry Mandagi,5936680.0,0.0,5936680.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00058,2026-07-08,INV-202607-0097,CUST-RTL-080 - Kios Filadelfia Meylan Perempatan,RTL,CVS-01 - Novry Mandagi,5153100.0,0.0,5153100.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00059,2026-07-08,INV-202607-0098,CUST-RTL-092 - Warung Om Nico Lorong 2,RTL,CVS-02 - Steven Lumenta,4381100.0,0.0,4381100.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00060,2026-07-08,INV-202607-0099,CUST-RTL-116 - Warung Hein Perempatan,RTL,CVS-02 - Steven Lumenta,3867720.0,0.0,3867720.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00061,2026-07-09,INV-202607-0005,CUST-GT-13 - Grosir Malalayang Satu,GT,SLS-02 - Andre Pangemanan,20523977.6,0.0,20523977.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00062,2026-07-09,INV-202607-0006,CUST-GT-15 - Grosir Kleak Mandiri,GT,SLS-02 - Andre Pangemanan,16952454.4,0.0,16952454.4,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00063,2026-07-09,INV-202607-0038,CUST-GT-26 - Toko Karombasan Baru,GT,SLS-02 - Andre Pangemanan,16382016.0,163820.16,16218195.84,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00064,2026-07-09,INV-202607-0049,CUST-INST-05 - Restoran Raja Sate Paniki,INST,MGT-01 - Hendrik Polii & Joni Kumajas,21081600.0,210816.0,20870784.0,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00065,2026-07-09,INV-202607-0106,CUST-RTL-009 - Warung Kasih Ritha Jalan Salib,RTL,CVS-01 - Novry Mandagi,3910180.0,0.0,3910180.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00066,2026-07-09,INV-202607-0107,CUST-RTL-021 - Kios Tante Lita Lorong 3,RTL,CVS-01 - Novry Mandagi,5784210.0,0.0,5784210.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00067,2026-07-09,INV-202607-0108,CUST-RTL-033 - Kios Ci Lumimuut Pasar,RTL,CVS-01 - Novry Mandagi,4817280.0,0.0,4817280.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00068,2026-07-09,INV-202607-0109,CUST-RTL-045 - Kios Ko Meylan Jalan Salib,RTL,CVS-01 - Novry Mandagi,5732100.0,0.0,5732100.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00069,2026-07-09,INV-202607-0110,CUST-RTL-057 - Kios Berkat Nico Lorong 3,RTL,CVS-01 - Novry Mandagi,6137400.0,0.0,6137400.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00070,2026-07-09,INV-202607-0111,CUST-RTL-069 - Warung Kasih Engelin Pasar,RTL,CVS-01 - Novry Mandagi,5878008.0,0.0,5878008.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00071,2026-07-09,INV-202607-0112,CUST-RTL-081 - Kios Tante Hein Jalan Salib,RTL,CVS-01 - Novry Mandagi,4041420.0,0.0,4041420.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00072,2026-07-09,INV-202607-0113,CUST-RTL-093 - Kios Ci Vicky Lorong 3,RTL,CVS-02 - Steven Lumenta,5959840.0,0.0,5959840.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00073,2026-07-09,INV-202607-0114,CUST-RTL-117 - Kios Berkat Vonny Jalan Salib,RTL,CVS-02 - Steven Lumenta,4313550.0,0.0,4313550.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00074,2026-07-10,INV-202607-0022,CUST-GT-20 - Toko Pakowa Sejahtera Wanea,GT,SLS-02 - Andre Pangemanan,23339232.0,0.0,23339232.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00075,2026-07-10,INV-202607-0123,CUST-RTL-010 - Kios Filadelfia Meylan Pondok Damai,RTL,CVS-01 - Novry Mandagi,3991240.0,0.0,3991240.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00076,2026-07-10,INV-202607-0124,CUST-RTL-022 - Warung Om Nico Dekat Gereja,RTL,CVS-01 - Novry Mandagi,4813420.0,0.0,4813420.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00077,2026-07-10,INV-202607-0125,CUST-RTL-034 - Warung Tante Engelin Depan SD,RTL,CVS-01 - Novry Mandagi,5651040.0,0.0,5651040.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00078,2026-07-10,INV-202607-0126,CUST-RTL-046 - Warung Hein Pondok Damai,RTL,CVS-01 - Novry Mandagi,4411980.0,0.0,4411980.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00079,2026-07-10,INV-202607-0127,CUST-RTL-058 - Kios Gloria Vicky Dekat Gereja,RTL,CVS-01 - Novry Mandagi,3311880.0,0.0,3311880.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00080,2026-07-10,INV-202607-0128,CUST-RTL-070 - Kios Filadelfia Marietje Depan SD,RTL,CVS-01 - Novry Mandagi,4527780.0,0.0,4527780.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00081,2026-07-10,INV-202607-0129,CUST-RTL-082 - Warung Om Vonny Pondok Damai,RTL,CVS-01 - Novry Mandagi,5056600.0,0.0,5056600.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00082,2026-07-10,INV-202607-0130,CUST-RTL-094 - Warung Tante Yola Dekat Gereja,RTL,CVS-02 - Steven Lumenta,4334008.0,0.0,4334008.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00083,2026-07-10,INV-202607-0131,CUST-RTL-118 - Kios Gloria Meiske Pondok Damai,RTL,CVS-02 - Steven Lumenta,4317024.0,0.0,4317024.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00084,2026-07-11,INV-202607-0039,CUST-GT-28 - Toko Sam Ratulangi Perkasa,GT,SLS-02 - Andre Pangemanan,16488068.8,0.0,16488068.8,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00085,2026-07-11,INV-202607-0050,CUST-MT-07 - MultiiMart Sam Ratulangi,MT,SLS-01 - Christian Wowor,39565728.0,395657.28,39170070.72,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00086,2026-07-11,INV-202607-0054,CUST-GT-33 - Toko Malalayang Megah,GT,SLS-02 - Andre Pangemanan,17912832.0,179128.32,17733703.68,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00087,2026-07-11,INV-202607-0138,CUST-RTL-011 - Kios Tante Hein Samping Lapangan,RTL,CVS-01 - Novry Mandagi,4565608.0,0.0,4565608.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00088,2026-07-11,INV-202607-0139,CUST-RTL-023 - Kios Ci Vicky Pintu Masuk,RTL,CVS-01 - Novry Mandagi,4319340.0,0.0,4319340.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00089,2026-07-11,INV-202607-0140,CUST-RTL-035 - Kios Ko Marietje Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,4831755.0,0.0,4831755.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00090,2026-07-11,INV-202607-0141,CUST-RTL-047 - Kios Berkat Vonny Samping Lapangan,RTL,CVS-01 - Novry Mandagi,4351185.0,0.0,4351185.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00091,2026-07-11,INV-202607-0142,CUST-RTL-059 - Warung Kasih Yola Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5357680.0,0.0,5357680.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00092,2026-07-11,INV-202607-0143,CUST-RTL-071 - Kios Tante Tin Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,5703150.0,0.0,5703150.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00093,2026-07-11,INV-202607-0144,CUST-RTL-083 - Kios Ci Meiske Samping Lapangan,RTL,CVS-01 - Novry Mandagi,3589800.0,0.0,3589800.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00094,2026-07-11,INV-202607-0145,CUST-RTL-095 - Kios Ko Franky Pintu Masuk,RTL,CVS-02 - Steven Lumenta,5005455.0,0.0,5005455.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00095,2026-07-11,INV-202607-0146,CUST-RTL-119 - Warung Kasih Joppy Samping Lapangan,RTL,CVS-02 - Steven Lumenta,4706112.0,0.0,4706112.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00096,2026-07-12,INV-202607-0067,CUST-GT-01 - Toko Sembako Berkat Pasar 45,GT,SLS-02 - Andre Pangemanan,22482432.0,224824.32,22257607.68,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00097,2026-07-12,INV-202607-0068,CUST-GT-02 - Toko Kawanua Sejati Wenang,GT,SLS-02 - Andre Pangemanan,22699488.0,226994.88,22472493.12,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00098,2026-07-12,INV-202607-0072,CUST-GT-34 - Grosir Tikala Baru,GT,SLS-03 - Meidy Wowor,19123776.0,191237.76,18932538.24,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00099,2026-07-13,INV-202607-0053,CUST-GT-31 - Grosir Sario Damai,GT,SLS-02 - Andre Pangemanan,17247193.6,0.0,17247193.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00100,2026-07-13,INV-202607-0084,CUST-MT-03 - FreshhMart Superstore Bahu,MT,SLS-01 - Christian Wowor,36095100.0,360951.0,35734149.0,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00101,2026-07-13,INV-202607-0086,CUST-GT-07 - Toko Harapan Bersehati,GT,SLS-02 - Andre Pangemanan,23503737.6,235037.38,23268700.22,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00102,2026-07-13,INV-202607-0088,CUST-GT-10 - Toko Sario Makmur,GT,SLS-02 - Andre Pangemanan,15718662.4,157186.62,15561475.78,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00103,2026-07-13,INV-202607-0089,CUST-GT-38 - Toko Paal Dua Jaya,GT,SLS-03 - Meidy Wowor,21705600.0,217056.0,21488544.0,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00104,2026-07-13,INV-202607-0100,CUST-INST-07 - Katering Bahu Makmur,INST,MGT-01 - Hendrik Polii & Joni Kumajas,14865984.0,148659.84,14717324.16,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00105,2026-07-13,INV-202607-0153,CUST-RTL-012 - Warung Om Vonny Tikungan,RTL,CVS-01 - Novry Mandagi,5301324.0,0.0,5301324.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00106,2026-07-13,INV-202607-0154,CUST-RTL-024 - Warung Tante Yola Ujung Lorong,RTL,CVS-01 - Novry Mandagi,3531900.0,0.0,3531900.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00107,2026-07-13,INV-202607-0155,CUST-RTL-036 - Warung Tin Puncak,RTL,CVS-01 - Novry Mandagi,3454700.0,0.0,3454700.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00108,2026-07-13,INV-202607-0156,CUST-RTL-048 - Kios Gloria Meiske Tikungan,RTL,CVS-01 - Novry Mandagi,4400400.0,0.0,4400400.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00109,2026-07-13,INV-202607-0157,CUST-RTL-060 - Kios Filadelfia Franky Ujung Lorong,RTL,CVS-01 - Novry Mandagi,3543480.0,0.0,3543480.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00110,2026-07-13,INV-202607-0158,CUST-RTL-072 - Warung Om Oce Puncak,RTL,CVS-01 - Novry Mandagi,4713060.0,0.0,4713060.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00111,2026-07-13,INV-202607-0159,CUST-RTL-090 - Kios Filadelfia Jacky Puncak,RTL,CVS-02 - Steven Lumenta,4341728.0,0.0,4341728.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00112,2026-07-13,INV-202607-0160,CUST-RTL-114 - Warung Tante Ritha Ujung Lorong,RTL,CVS-02 - Steven Lumenta,5779192.0,0.0,5779192.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00113,2026-07-14,INV-202607-0070,CUST-GT-04 - Toko Pinaesaan Calaca,GT,SLS-02 - Andre Pangemanan,15353856.0,0.0,15353856.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00114,2026-07-14,INV-202607-0071,CUST-GT-06 - Grosir Calaca Baru,GT,SLS-02 - Andre Pangemanan,16314233.6,0.0,16314233.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00115,2026-07-14,INV-202607-0074,CUST-GT-37 - Grosir Makmur Abadi Tikala,GT,SLS-03 - Meidy Wowor,19272288.0,0.0,19272288.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00116,2026-07-14,INV-202607-0104,CUST-GT-12 - Toko Sumber Berkat Malalayang,GT,SLS-02 - Andre Pangemanan,23258121.6,232581.22,23025540.38,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00117,2026-07-14,INV-202607-0105,CUST-GT-14 - Toko Batu Kota Indah,GT,SLS-02 - Andre Pangemanan,23423769.6,234237.7,23189531.9,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00118,2026-07-14,INV-202607-0170,CUST-RTL-001 - Kios Tante Tin Lorong 1,RTL,CVS-01 - Novry Mandagi,5114500.0,0.0,5114500.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00119,2026-07-14,INV-202607-0171,CUST-RTL-013 - Kios Ci Meiske Jembatan,RTL,CVS-01 - Novry Mandagi,4223226.0,0.0,4223226.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00120,2026-07-14,INV-202607-0172,CUST-RTL-025 - Kios Ko Franky Bawah Pohon,RTL,CVS-01 - Novry Mandagi,5035563.0,0.0,5035563.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00121,2026-07-14,INV-202607-0173,CUST-RTL-037 - Kios Berkat Oce Lorong 1,RTL,CVS-01 - Novry Mandagi,4801840.0,0.0,4801840.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00122,2026-07-14,INV-202607-0174,CUST-RTL-049 - Warung Kasih Joppy Jembatan,RTL,CVS-01 - Novry Mandagi,5384700.0,0.0,5384700.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00123,2026-07-14,INV-202607-0175,CUST-RTL-061 - Kios Tante Siska Bawah Pohon,RTL,CVS-01 - Novry Mandagi,3474000.0,0.0,3474000.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00124,2026-07-14,INV-202607-0176,CUST-RTL-073 - Kios Ci Utu Lorong 1,RTL,CVS-01 - Novry Mandagi,4817280.0,0.0,4817280.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00125,2026-07-14,INV-202607-0177,CUST-RTL-097 - Kios Berkat Stenly Bawah Pohon,RTL,CVS-02 - Steven Lumenta,3362832.0,0.0,3362832.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00126,2026-07-15,INV-202607-0117,CUST-MT-10 - Jumbbo Swalayan Pasar 45,MT,SLS-01 - Christian Wowor,28012262.4,280122.62,27732139.78,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00127,2026-07-15,INV-202607-0120,CUST-GT-19 - Grosir Teling Sentosa Wanea,GT,SLS-02 - Andre Pangemanan,23001843.2,230018.43,22771824.77,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00128,2026-07-15,INV-202607-0187,CUST-RTL-002 - Warung Om Oce Lorong 2,RTL,CVS-01 - Novry Mandagi,5368488.0,0.0,5368488.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00129,2026-07-15,INV-202607-0188,CUST-RTL-014 - Warung Tante Joppy Kompleks,RTL,CVS-01 - Novry Mandagi,3557376.0,0.0,3557376.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00130,2026-07-15,INV-202607-0189,CUST-RTL-026 - Warung Siska Perempatan,RTL,CVS-01 - Novry Mandagi,3587484.0,0.0,3587484.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00131,2026-07-15,INV-202607-0190,CUST-RTL-038 - Kios Gloria Utu Lorong 2,RTL,CVS-01 - Novry Mandagi,3973870.0,0.0,3973870.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00132,2026-07-15,INV-202607-0191,CUST-RTL-050 - Kios Filadelfia Deasy Kompleks,RTL,CVS-01 - Novry Mandagi,4967820.0,0.0,4967820.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00133,2026-07-15,INV-202607-0192,CUST-RTL-062 - Warung Om Stenly Perempatan,RTL,CVS-01 - Novry Mandagi,3960360.0,0.0,3960360.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00134,2026-07-15,INV-202607-0193,CUST-RTL-074 - Warung Tante Meyke Lorong 2,RTL,CVS-01 - Novry Mandagi,4879040.0,0.0,4879040.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00135,2026-07-15,INV-202607-0194,CUST-RTL-098 - Kios Gloria Wanda Perempatan,RTL,CVS-02 - Steven Lumenta,4311620.0,0.0,4311620.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00136,2026-07-16,INV-202607-0136,CUST-GT-25 - Grosir Megamas Abadi,GT,SLS-02 - Andre Pangemanan,17555070.4,175550.7,17379519.7,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00137,2026-07-16,INV-202607-0137,CUST-GT-27 - Grosir Bahu Sentosa,GT,SLS-02 - Andre Pangemanan,21189996.8,211899.97,20978096.83,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00138,2026-07-16,INV-202607-0147,CUST-INST-10 - Mess Karyawan Pelabuhan Bitung,INST,MGT-01 - Hendrik Polii & Joni Kumajas,18456960.0,184569.6,18272390.4,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00139,2026-07-17,INV-202607-0018,CUST-MT-10 - Jumbbo Swalayan Pasar 45,MT,SLS-01 - Christian Wowor,28802704.8,0.0,28802704.8,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00140,2026-07-17,INV-202607-0019,CUST-GT-16 - Toko Pelita Jaya Wanea,GT,SLS-02 - Andre Pangemanan,18976216.0,0.0,18976216.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00141,2026-07-17,INV-202607-0033,CUST-INST-04 - Katering Minahasa Indah,INST,MGT-01 - Hendrik Polii & Joni Kumajas,16099200.0,0.0,16099200.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00142,2026-07-17,INV-202607-0121,CUST-GT-21 - Grosir Tingkulu Jaya Wanea,GT,SLS-02 - Andre Pangemanan,17131430.4,0.0,17131430.4,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00143,2026-07-17,INV-202607-0122,CUST-GT-23 - Toko Bumi Nyiur Permai,GT,SLS-02 - Andre Pangemanan,16161152.0,0.0,16161152.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00144,2026-07-17,INV-202607-0202,CUST-RTL-003 - Kios Ci Utu Lorong 3,RTL,CVS-01 - Novry Mandagi,6129680.0,0.0,6129680.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00145,2026-07-17,INV-202607-0203,CUST-RTL-015 - Kios Ko Deasy Pasar,RTL,CVS-01 - Novry Mandagi,4805700.0,0.0,4805700.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00146,2026-07-17,INV-202607-0204,CUST-RTL-027 - Kios Berkat Stenly Jalan Salib,RTL,CVS-01 - Novry Mandagi,5127624.0,0.0,5127624.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00147,2026-07-17,INV-202607-0205,CUST-RTL-039 - Warung Kasih Meyke Lorong 3,RTL,CVS-01 - Novry Mandagi,5199420.0,0.0,5199420.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00148,2026-07-17,INV-202607-0206,CUST-RTL-051 - Kios Tante Ronny Pasar,RTL,CVS-01 - Novry Mandagi,4918605.0,0.0,4918605.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00149,2026-07-17,INV-202607-0207,CUST-RTL-063 - Kios Ci Wanda Jalan Salib,RTL,CVS-01 - Novry Mandagi,5106780.0,0.0,5106780.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00150,2026-07-17,INV-202607-0208,CUST-RTL-075 - Kios Ko Ferry Lorong 3,RTL,CVS-01 - Novry Mandagi,6161718.0,0.0,6161718.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00151,2026-07-17,INV-202607-0209,CUST-RTL-099 - Warung Kasih Roy Jalan Salib,RTL,CVS-02 - Steven Lumenta,3814645.0,0.0,3814645.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00152,2026-07-18,INV-202607-0035,CUST-MT-11 - Jumbbo Swalayan Bitung,MT,SLS-01 - Christian Wowor,36261568.8,0.0,36261568.8,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00153,2026-07-18,INV-202607-0036,CUST-GT-24 - Toko Cahaya Samrat Wenang,GT,SLS-02 - Andre Pangemanan,22772601.6,0.0,22772601.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00154,2026-07-18,INV-202607-0037,CUST-GT-25 - Grosir Megamas Abadi,GT,SLS-02 - Andre Pangemanan,20091008.0,0.0,20091008.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00155,2026-07-18,INV-202607-0149,CUST-MT-12 - Tranzmart Star Square Bahu,MT,SLS-01 - Christian Wowor,28594713.6,285947.14,28308766.46,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00156,2026-07-18,INV-202607-0217,CUST-RTL-005 - Kios Ko Ferry Pintu Masuk,RTL,CVS-01 - Novry Mandagi,4805700.0,0.0,4805700.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00157,2026-07-18,INV-202607-0218,CUST-RTL-017 - Kios Berkat Grace Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,3427680.0,0.0,3427680.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00158,2026-07-18,INV-202607-0219,CUST-RTL-029 - Warung Kasih Roy Samping Lapangan,RTL,CVS-01 - Novry Mandagi,4660950.0,0.0,4660950.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00159,2026-07-18,INV-202607-0220,CUST-RTL-041 - Kios Tante Dani Pintu Masuk,RTL,CVS-01 - Novry Mandagi,4814964.0,0.0,4814964.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00160,2026-07-18,INV-202607-0221,CUST-RTL-053 - Kios Ci Bobby Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,4861284.0,0.0,4861284.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00161,2026-07-18,INV-202607-0222,CUST-RTL-065 - Kios Ko Vera Samping Lapangan,RTL,CVS-01 - Novry Mandagi,6260148.0,0.0,6260148.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00162,2026-07-18,INV-202607-0223,CUST-RTL-077 - Kios Berkat Ventje Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5964858.0,0.0,5964858.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00163,2026-07-18,INV-202607-0224,CUST-RTL-101 - Kios Tante Pingkan Samping Lapangan,RTL,CVS-02 - Steven Lumenta,4678320.0,0.0,4678320.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00164,2026-07-19,INV-202607-0162,CUST-MT-02 - Alfamiddii DC Manado,MT,SLS-01 - Christian Wowor,30919778.4,309197.78,30610580.62,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00165,2026-07-19,INV-202607-0165,CUST-GT-03 - Grosir Sinar Terang Calaca,GT,SLS-02 - Andre Pangemanan,16162675.2,161626.75,16001048.45,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00166,2026-07-19,INV-202607-0178,CUST-INST-01 - RSUP Prof. Kandou Malalayang,INST,MGT-01 - Hendrik Polii & Joni Kumajas,14935680.0,149356.8,14786323.2,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00167,2026-07-20,INV-202607-0052,CUST-GT-29 - Grosir Pasar 45 Rezeki,GT,SLS-02 - Andre Pangemanan,20570816.0,0.0,20570816.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00168,2026-07-20,INV-202607-0151,CUST-GT-30 - Toko Berkat Bahu Sejahtera,GT,SLS-02 - Andre Pangemanan,21260064.0,0.0,21260064.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00169,2026-07-20,INV-202607-0152,CUST-GT-32 - Toko Ranotana Jaya,GT,SLS-02 - Andre Pangemanan,21806131.2,0.0,21806131.2,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00170,2026-07-20,INV-202607-0179,CUST-MT-03 - FreshhMart Superstore Bahu,MT,SLS-01 - Christian Wowor,34209907.2,342099.07,33867808.13,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00171,2026-07-20,INV-202607-0184,CUST-GT-38 - Toko Paal Dua Jaya,GT,SLS-03 - Meidy Wowor,15909824.0,159098.24,15750725.76,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00172,2026-07-20,INV-202607-0185,CUST-GT-39 - Toko Berkat Melimpah Paal Dua,GT,SLS-03 - Meidy Wowor,16004262.4,160042.62,15844219.78,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00173,2026-07-20,INV-202607-0231,CUST-RTL-006 - Warung Dani Ujung Lorong,RTL,CVS-01 - Novry Mandagi,3944920.0,0.0,3944920.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00174,2026-07-20,INV-202607-0232,CUST-RTL-018 - Kios Gloria Bobby Puncak,RTL,CVS-01 - Novry Mandagi,5080725.0,0.0,5080725.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00175,2026-07-20,INV-202607-0233,CUST-RTL-030 - Kios Filadelfia Vera Tikungan,RTL,CVS-01 - Novry Mandagi,3612960.0,0.0,3612960.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00176,2026-07-20,INV-202607-0234,CUST-RTL-042 - Warung Om Ventje Ujung Lorong,RTL,CVS-01 - Novry Mandagi,4632000.0,0.0,4632000.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00177,2026-07-20,INV-202607-0235,CUST-RTL-054 - Warung Tante Erna Puncak,RTL,CVS-01 - Novry Mandagi,4423560.0,0.0,4423560.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00178,2026-07-20,INV-202607-0236,CUST-RTL-066 - Warung Pingkan Tikungan,RTL,CVS-01 - Novry Mandagi,5722836.0,0.0,5722836.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00179,2026-07-20,INV-202607-0237,CUST-RTL-078 - Kios Gloria Novry Ujung Lorong,RTL,CVS-01 - Novry Mandagi,5398596.0,0.0,5398596.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00180,2026-07-20,INV-202607-0238,CUST-RTL-096 - Warung Siska Ujung Lorong,RTL,CVS-02 - Steven Lumenta,6121188.0,0.0,6121188.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00181,2026-07-20,INV-202607-0239,CUST-RTL-120 - Kios Filadelfia Deasy Tikungan,RTL,CVS-02 - Steven Lumenta,3914040.0,0.0,3914040.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00182,2026-07-21,INV-202607-0069,CUST-GT-03 - Grosir Sinar Terang Calaca,GT,SLS-02 - Andre Pangemanan,22676640.0,0.0,22676640.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00183,2026-07-21,INV-202607-0073,CUST-GT-35 - Toko Banjer Berkah Tikala,GT,SLS-03 - Meidy Wowor,16787187.2,0.0,16787187.2,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00184,2026-07-21,INV-202607-0166,CUST-GT-05 - Grosir Istiqlal Sentosa,GT,SLS-02 - Andre Pangemanan,23031926.4,0.0,23031926.4,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00185,2026-07-21,INV-202607-0169,CUST-GT-36 - Grosir Taas Damai Tikala,GT,SLS-03 - Meidy Wowor,22740614.4,0.0,22740614.4,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00186,2026-07-21,INV-202607-0251,CUST-RTL-007 - Kios Berkat Ventje Bawah Pohon,RTL,CVS-01 - Novry Mandagi,3976572.0,0.0,3976572.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00187,2026-07-21,INV-202607-0252,CUST-RTL-019 - Warung Kasih Erna Lorong 1,RTL,CVS-01 - Novry Mandagi,4632000.0,0.0,4632000.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00188,2026-07-21,INV-202607-0253,CUST-RTL-031 - Kios Tante Pingkan Jembatan,RTL,CVS-01 - Novry Mandagi,4789488.0,0.0,4789488.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00189,2026-07-21,INV-202607-0254,CUST-RTL-043 - Kios Ci Novry Bawah Pohon,RTL,CVS-01 - Novry Mandagi,5303640.0,0.0,5303640.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00190,2026-07-21,INV-202607-0255,CUST-RTL-055 - Kios Ko Jacky Lorong 1,RTL,CVS-01 - Novry Mandagi,3219240.0,0.0,3219240.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00191,2026-07-21,INV-202607-0256,CUST-RTL-067 - Kios Berkat Toar Jembatan,RTL,CVS-01 - Novry Mandagi,4018260.0,0.0,4018260.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00192,2026-07-21,INV-202607-0257,CUST-RTL-079 - Warung Kasih Ritha Bawah Pohon,RTL,CVS-01 - Novry Mandagi,3939516.0,0.0,3939516.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00193,2026-07-21,INV-202607-0258,CUST-RTL-103 - Kios Ci Lumimuut Jembatan,RTL,CVS-02 - Steven Lumenta,5288200.0,0.0,5288200.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00194,2026-07-22,INV-202607-0085,CUST-MT-09 - Goldenn Swalayan Pasar 45,MT,SLS-01 - Christian Wowor,40100400.0,0.0,40100400.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00195,2026-07-22,INV-202607-0087,CUST-GT-08 - Grosir Bintang Samrat Sario,GT,SLS-02 - Andre Pangemanan,16146681.6,0.0,16146681.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00196,2026-07-22,INV-202607-0090,CUST-GT-39 - Toko Berkat Melimpah Paal Dua,GT,SLS-03 - Meidy Wowor,16200945.6,0.0,16200945.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00197,2026-07-22,INV-202607-0183,CUST-GT-09 - Grosir Manado Raya Sario,GT,SLS-02 - Andre Pangemanan,20752457.6,0.0,20752457.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00198,2026-07-22,INV-202607-0186,CUST-GT-40 - Grosir Sentosa Perkasa Perkamil,GT,SLS-03 - Meidy Wowor,20704096.0,0.0,20704096.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00199,2026-07-22,INV-202607-0197,CUST-MT-08 - MultiiMart Tomohon,MT,SLS-01 - Christian Wowor,35196206.4,351962.06,34844244.34,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00200,2026-07-22,INV-202607-0199,CUST-GT-12 - Toko Sumber Berkat Malalayang,GT,SLS-02 - Andre Pangemanan,24272001.6,242720.02,24029281.58,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00201,2026-07-22,INV-202607-0201,CUST-GT-15 - Grosir Kleak Mandiri,GT,SLS-02 - Andre Pangemanan,22742518.4,227425.18,22515093.22,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00202,2026-07-22,INV-202607-0266,CUST-RTL-008 - Kios Gloria Novry Perempatan,RTL,CVS-01 - Novry Mandagi,6137979.0,0.0,6137979.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00203,2026-07-22,INV-202607-0267,CUST-RTL-020 - Kios Filadelfia Jacky Lorong 2,RTL,CVS-01 - Novry Mandagi,4655160.0,0.0,4655160.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00204,2026-07-22,INV-202607-0268,CUST-RTL-032 - Warung Om Toar Kompleks,RTL,CVS-01 - Novry Mandagi,4701480.0,0.0,4701480.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00205,2026-07-22,INV-202607-0269,CUST-RTL-044 - Warung Tante Ritha Perempatan,RTL,CVS-01 - Novry Mandagi,4713060.0,0.0,4713060.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00206,2026-07-22,INV-202607-0270,CUST-RTL-056 - Warung Lita Lorong 2,RTL,CVS-01 - Novry Mandagi,3934884.0,0.0,3934884.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00207,2026-07-22,INV-202607-0271,CUST-RTL-068 - Kios Gloria Lumimuut Kompleks,RTL,CVS-01 - Novry Mandagi,3682440.0,0.0,3682440.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00208,2026-07-22,INV-202607-0272,CUST-RTL-080 - Kios Filadelfia Meylan Perempatan,RTL,CVS-01 - Novry Mandagi,5903870.0,0.0,5903870.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00209,2026-07-22,INV-202607-0273,CUST-RTL-104 - Warung Tante Engelin Kompleks,RTL,CVS-02 - Steven Lumenta,3523215.0,0.0,3523215.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00210,2026-07-23,INV-202607-0103,CUST-GT-11 - Grosir Krida Bahu,GT,SLS-02 - Andre Pangemanan,24000681.6,0.0,24000681.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00211,2026-07-23,INV-202607-0115,CUST-INST-08 - Restoran Nelayan Megamas,INST,MGT-01 - Hendrik Polii & Joni Kumajas,20782080.0,0.0,20782080.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00212,2026-07-23,INV-202607-0212,CUST-MT-11 - Jumbbo Swalayan Bitung,MT,SLS-01 - Christian Wowor,30078144.0,300781.44,29777362.56,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00213,2026-07-23,INV-202607-0215,CUST-GT-26 - Toko Karombasan Baru,GT,SLS-02 - Andre Pangemanan,17330208.0,173302.08,17156905.92,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00214,2026-07-23,INV-202607-0280,CUST-RTL-009 - Warung Kasih Ritha Jalan Salib,RTL,CVS-01 - Novry Mandagi,3788976.0,0.0,3788976.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00215,2026-07-23,INV-202607-0281,CUST-RTL-021 - Kios Tante Lita Lorong 3,RTL,CVS-01 - Novry Mandagi,5890360.0,0.0,5890360.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00216,2026-07-23,INV-202607-0282,CUST-RTL-033 - Kios Ci Lumimuut Pasar,RTL,CVS-01 - Novry Mandagi,3836840.0,0.0,3836840.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00217,2026-07-23,INV-202607-0283,CUST-RTL-045 - Kios Ko Meylan Jalan Salib,RTL,CVS-01 - Novry Mandagi,4057632.0,0.0,4057632.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00218,2026-07-23,INV-202607-0284,CUST-RTL-057 - Kios Berkat Nico Lorong 3,RTL,CVS-01 - Novry Mandagi,5764910.0,0.0,5764910.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00219,2026-07-23,INV-202607-0285,CUST-RTL-069 - Warung Kasih Engelin Pasar,RTL,CVS-01 - Novry Mandagi,5912748.0,0.0,5912748.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00220,2026-07-23,INV-202607-0286,CUST-RTL-105 - Kios Ko Marietje Pasar,RTL,CVS-02 - Steven Lumenta,4061685.0,0.0,4061685.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00221,2026-07-24,INV-202607-0118,CUST-GT-16 - Toko Pelita Jaya Wanea,GT,SLS-02 - Andre Pangemanan,22465296.0,0.0,22465296.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00222,2026-07-24,INV-202607-0119,CUST-GT-17 - Toko Anugerah Kasih Karombasan,GT,SLS-02 - Andre Pangemanan,21178192.0,0.0,21178192.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00223,2026-07-24,INV-202607-0132,CUST-INST-09 - Katering Berkat Tondano,INST,MGT-01 - Hendrik Polii & Joni Kumajas,18634752.0,0.0,18634752.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00224,2026-07-24,INV-202607-0200,CUST-GT-13 - Grosir Malalayang Satu,GT,SLS-02 - Andre Pangemanan,16809273.6,0.0,16809273.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00225,2026-07-24,INV-202607-0295,CUST-RTL-010 - Kios Filadelfia Meylan Pondok Damai,RTL,CVS-01 - Novry Mandagi,5720520.0,0.0,5720520.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00226,2026-07-24,INV-202607-0296,CUST-RTL-022 - Warung Om Nico Dekat Gereja,RTL,CVS-01 - Novry Mandagi,3662175.0,0.0,3662175.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00227,2026-07-24,INV-202607-0297,CUST-RTL-034 - Warung Tante Engelin Depan SD,RTL,CVS-01 - Novry Mandagi,4354080.0,0.0,4354080.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00228,2026-07-24,INV-202607-0298,CUST-RTL-046 - Warung Hein Pondok Damai,RTL,CVS-01 - Novry Mandagi,4676004.0,0.0,4676004.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00229,2026-07-24,INV-202607-0299,CUST-RTL-058 - Kios Gloria Vicky Dekat Gereja,RTL,CVS-01 - Novry Mandagi,5732100.0,0.0,5732100.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00230,2026-07-24,INV-202607-0300,CUST-RTL-070 - Kios Filadelfia Marietje Depan SD,RTL,CVS-01 - Novry Mandagi,5940540.0,0.0,5940540.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00231,2026-07-24,INV-202607-0301,CUST-RTL-106 - Warung Tin Depan SD,RTL,CVS-02 - Steven Lumenta,5581560.0,0.0,5581560.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00232,2026-07-25,INV-202607-0134,CUST-MT-11 - Jumbbo Swalayan Bitung,MT,SLS-01 - Christian Wowor,35152598.4,0.0,35152598.4,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00233,2026-07-25,INV-202607-0135,CUST-GT-24 - Toko Cahaya Samrat Wenang,GT,SLS-02 - Andre Pangemanan,20483232.0,0.0,20483232.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00234,2026-07-25,INV-202607-0216,CUST-GT-28 - Toko Sam Ratulangi Perkasa,GT,SLS-02 - Andre Pangemanan,24125584.0,0.0,24125584.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00235,2026-07-25,INV-202607-0226,CUST-MT-07 - MultiiMart Sam Ratulangi,MT,SLS-01 - Christian Wowor,29936702.4,299367.02,29637335.38,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00236,2026-07-25,INV-202607-0227,CUST-MT-12 - Tranzmart Star Square Bahu,MT,SLS-01 - Christian Wowor,38811878.4,388118.78,38423759.62,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00237,2026-07-25,INV-202607-0308,CUST-RTL-011 - Kios Tante Hein Samping Lapangan,RTL,CVS-01 - Novry Mandagi,3446980.0,0.0,3446980.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00238,2026-07-25,INV-202607-0309,CUST-RTL-023 - Kios Ci Vicky Pintu Masuk,RTL,CVS-01 - Novry Mandagi,4464090.0,0.0,4464090.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00239,2026-07-25,INV-202607-0310,CUST-RTL-035 - Kios Ko Marietje Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,3345655.0,0.0,3345655.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00240,2026-07-25,INV-202607-0311,CUST-RTL-047 - Kios Berkat Vonny Samping Lapangan,RTL,CVS-01 - Novry Mandagi,5805054.0,0.0,5805054.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00241,2026-07-25,INV-202607-0312,CUST-RTL-059 - Warung Kasih Yola Pintu Masuk,RTL,CVS-01 - Novry Mandagi,5728240.0,0.0,5728240.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00242,2026-07-25,INV-202607-0313,CUST-RTL-071 - Kios Tante Tin Dekat Mesjid,RTL,CVS-01 - Novry Mandagi,3647700.0,0.0,3647700.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00243,2026-07-25,INV-202607-0314,CUST-RTL-107 - Kios Berkat Oce Dekat Mesjid,RTL,CVS-02 - Steven Lumenta,4849704.0,0.0,4849704.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00244,2026-07-26,INV-202607-0241,CUST-MT-01 - Indomarett DC Manado,MT,SLS-01 - Christian Wowor,31621867.2,316218.67,31305648.53,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00245,2026-07-26,INV-202607-0242,CUST-MT-02 - Alfamiddii DC Manado,MT,SLS-01 - Christian Wowor,36782210.4,367822.1,36414388.3,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00246,2026-07-26,INV-202607-0244,CUST-GT-02 - Toko Kawanua Sejati Wenang,GT,SLS-02 - Andre Pangemanan,15737702.4,157377.02,15580325.38,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00247,2026-07-26,INV-202607-0246,CUST-GT-04 - Toko Pinaesaan Calaca,GT,SLS-02 - Andre Pangemanan,21519008.0,215190.08,21303817.92,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00248,2026-07-26,INV-202607-0250,CUST-GT-37 - Grosir Makmur Abadi Tikala,GT,SLS-03 - Meidy Wowor,18886156.8,188861.57,18697295.23,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00249,2026-07-27,INV-202607-0150,CUST-GT-29 - Grosir Pasar 45 Rezeki,GT,SLS-02 - Andre Pangemanan,20789395.2,0.0,20789395.2,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00250,2026-07-27,INV-202607-0229,CUST-GT-31 - Grosir Sario Damai,GT,SLS-02 - Andre Pangemanan,20178782.4,0.0,20178782.4,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00251,2026-07-27,INV-202607-0230,CUST-GT-33 - Toko Malalayang Megah,GT,SLS-02 - Andre Pangemanan,17765843.2,0.0,17765843.2,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00252,2026-07-27,INV-202607-0259,CUST-MT-03 - FreshhMart Superstore Bahu,MT,SLS-01 - Christian Wowor,31966180.8,319661.81,31646518.99,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00253,2026-07-27,INV-202607-0274,CUST-INST-07 - Katering Bahu Makmur,INST,MGT-01 - Hendrik Polii & Joni Kumajas,15770880.0,157708.8,15613171.2,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00254,2026-07-27,INV-202607-0321,CUST-RTL-012 - Warung Om Vonny Tikungan,RTL,CVS-01 - Novry Mandagi,6067920.0,0.0,6067920.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00255,2026-07-27,INV-202607-0322,CUST-RTL-024 - Warung Tante Yola Ujung Lorong,RTL,CVS-01 - Novry Mandagi,5790000.0,0.0,5790000.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00256,2026-07-27,INV-202607-0323,CUST-RTL-036 - Warung Tin Puncak,RTL,CVS-01 - Novry Mandagi,5759120.0,0.0,5759120.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00257,2026-07-27,INV-202607-0324,CUST-RTL-048 - Kios Gloria Meiske Tikungan,RTL,CVS-01 - Novry Mandagi,5442600.0,0.0,5442600.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00258,2026-07-27,INV-202607-0325,CUST-RTL-060 - Kios Filadelfia Franky Ujung Lorong,RTL,CVS-01 - Novry Mandagi,4689900.0,0.0,4689900.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00259,2026-07-27,INV-202607-0326,CUST-RTL-072 - Warung Om Oce Puncak,RTL,CVS-01 - Novry Mandagi,4018260.0,0.0,4018260.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00260,2026-07-27,INV-202607-0327,CUST-RTL-102 - Warung Om Toar Tikungan,RTL,CVS-02 - Steven Lumenta,4411980.0,0.0,4411980.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00261,2026-07-28,INV-202607-0163,CUST-GT-01 - Toko Sembako Berkat Pasar 45,GT,SLS-02 - Andre Pangemanan,19066656.0,0.0,19066656.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00262,2026-07-28,INV-202607-0164,CUST-GT-02 - Toko Kawanua Sejati Wenang,GT,SLS-02 - Andre Pangemanan,17356864.0,0.0,17356864.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00263,2026-07-28,INV-202607-0167,CUST-GT-34 - Grosir Tikala Baru,GT,SLS-03 - Meidy Wowor,19155001.6,0.0,19155001.6,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00264,2026-07-28,INV-202607-0168,CUST-GT-35 - Toko Banjer Berkah Tikala,GT,SLS-03 - Meidy Wowor,22919971.2,0.0,22919971.2,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00265,2026-07-28,INV-202607-0247,CUST-GT-06 - Grosir Calaca Baru,GT,SLS-02 - Andre Pangemanan,16966924.8,0.0,16966924.8,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00266,2026-07-28,INV-202607-0275,CUST-MT-04 - FreshhMart Lifestyle Paniki,MT,SLS-01 - Christian Wowor,33628593.6,336285.94,33292307.66,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00267,2026-07-28,INV-202607-0337,CUST-RTL-001 - Kios Tante Tin Lorong 1,RTL,CVS-01 - Novry Mandagi,5979140.0,0.0,5979140.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00268,2026-07-28,INV-202607-0338,CUST-RTL-013 - Kios Ci Meiske Jembatan,RTL,CVS-01 - Novry Mandagi,4890620.0,0.0,4890620.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00269,2026-07-28,INV-202607-0339,CUST-RTL-025 - Kios Ko Franky Bawah Pohon,RTL,CVS-01 - Novry Mandagi,5477340.0,0.0,5477340.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00270,2026-07-28,INV-202607-0340,CUST-RTL-037 - Kios Berkat Oce Lorong 1,RTL,CVS-01 - Novry Mandagi,5727468.0,0.0,5727468.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00271,2026-07-28,INV-202607-0341,CUST-RTL-049 - Warung Kasih Joppy Jembatan,RTL,CVS-01 - Novry Mandagi,4736220.0,0.0,4736220.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00272,2026-07-28,INV-202607-0342,CUST-RTL-061 - Kios Tante Siska Bawah Pohon,RTL,CVS-01 - Novry Mandagi,5714730.0,0.0,5714730.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00273,2026-07-28,INV-202607-0343,CUST-RTL-073 - Kios Ci Utu Lorong 1,RTL,CVS-01 - Novry Mandagi,5486025.0,0.0,5486025.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00274,2026-07-29,INV-202607-0180,CUST-MT-09 - Goldenn Swalayan Pasar 45,MT,SLS-01 - Christian Wowor,33748800.0,0.0,33748800.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00275,2026-07-29,INV-202607-0181,CUST-GT-07 - Toko Harapan Bersehati,GT,SLS-02 - Andre Pangemanan,23391782.4,0.0,23391782.4,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00276,2026-07-29,INV-202607-0182,CUST-GT-08 - Grosir Bintang Samrat Sario,GT,SLS-02 - Andre Pangemanan,17353056.0,0.0,17353056.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00277,2026-07-29,INV-202607-0263,CUST-GT-10 - Toko Sario Makmur,GT,SLS-02 - Andre Pangemanan,18695376.0,0.0,18695376.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00278,2026-07-29,INV-202607-0288,CUST-MT-05 - FreshhMart Express Tikala,MT,SLS-01 - Christian Wowor,39147470.4,391474.7,38755995.7,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00279,2026-07-29,INV-202607-0292,CUST-GT-19 - Grosir Teling Sentosa Wanea,GT,SLS-02 - Andre Pangemanan,16168768.0,161687.68,16007080.32,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00280,2026-07-29,INV-202607-0294,CUST-GT-23 - Toko Bumi Nyiur Permai,GT,SLS-02 - Andre Pangemanan,20003424.0,200034.24,19803389.76,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00281,2026-07-29,INV-202607-0302,CUST-INST-09 - Katering Berkat Tondano,INST,MGT-01 - Hendrik Polii & Joni Kumajas,20678400.0,206784.0,20471616.0,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00282,2026-07-29,INV-202607-0353,CUST-RTL-002 - Warung Om Oce Lorong 2,RTL,CVS-01 - Novry Mandagi,5854076.0,0.0,5854076.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00283,2026-07-29,INV-202607-0354,CUST-RTL-014 - Warung Tante Joppy Kompleks,RTL,CVS-01 - Novry Mandagi,4050684.0,0.0,4050684.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00284,2026-07-29,INV-202607-0355,CUST-RTL-026 - Warung Siska Perempatan,RTL,CVS-01 - Novry Mandagi,4539360.0,0.0,4539360.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00285,2026-07-29,INV-202607-0356,CUST-RTL-038 - Kios Gloria Utu Lorong 2,RTL,CVS-01 - Novry Mandagi,6304731.0,0.0,6304731.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00286,2026-07-29,INV-202607-0357,CUST-RTL-050 - Kios Filadelfia Deasy Kompleks,RTL,CVS-01 - Novry Mandagi,4894480.0,0.0,4894480.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00287,2026-07-29,INV-202607-0358,CUST-RTL-062 - Warung Om Stenly Perempatan,RTL,CVS-01 - Novry Mandagi,4754748.0,0.0,4754748.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00288,2026-07-29,INV-202607-0359,CUST-RTL-074 - Warung Tante Meyke Lorong 2,RTL,CVS-01 - Novry Mandagi,4330920.0,0.0,4330920.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00289,2026-07-30,INV-202607-0279,CUST-GT-14 - Toko Batu Kota Indah,GT,SLS-02 - Andre Pangemanan,16998912.0,0.0,16998912.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00290,2026-07-30,INV-202607-0305,CUST-GT-24 - Toko Cahaya Samrat Wenang,GT,SLS-02 - Andre Pangemanan,14776944.0,147769.44,14629174.56,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00291,2026-07-30,INV-202607-0307,CUST-GT-27 - Grosir Bahu Sentosa,GT,SLS-02 - Andre Pangemanan,16818032.0,168180.32,16649851.68,Transfer Bank BCA/Mandiri,Early Payment Discount (Maju Bayar Cash Disc 1%)
+PAY-AR-00292,2026-07-30,INV-202607-0367,CUST-RTL-003 - Kios Ci Utu Lorong 3,RTL,CVS-01 - Novry Mandagi,4330920.0,0.0,4330920.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00293,2026-07-30,INV-202607-0368,CUST-RTL-015 - Kios Ko Deasy Pasar,RTL,CVS-01 - Novry Mandagi,5066636.0,0.0,5066636.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00294,2026-07-30,INV-202607-0369,CUST-RTL-027 - Kios Berkat Stenly Jalan Salib,RTL,CVS-01 - Novry Mandagi,4134060.0,0.0,4134060.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00295,2026-07-30,INV-202607-0370,CUST-RTL-039 - Warung Kasih Meyke Lorong 3,RTL,CVS-01 - Novry Mandagi,3557569.0,0.0,3557569.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00296,2026-07-30,INV-202607-0371,CUST-RTL-051 - Kios Tante Ronny Pasar,RTL,CVS-01 - Novry Mandagi,5349960.0,0.0,5349960.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00297,2026-07-30,INV-202607-0372,CUST-RTL-063 - Kios Ci Wanda Jalan Salib,RTL,CVS-01 - Novry Mandagi,6050550.0,0.0,6050550.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00298,2026-07-30,INV-202607-0373,CUST-RTL-075 - Kios Ko Ferry Lorong 3,RTL,CVS-01 - Novry Mandagi,5678060.0,0.0,5678060.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00299,2026-07-31,INV-202607-0198,CUST-GT-11 - Grosir Krida Bahu,GT,SLS-02 - Andre Pangemanan,15334244.8,0.0,15334244.8,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (14 Hari)
+PAY-AR-00300,2026-07-31,INV-202607-0293,CUST-GT-21 - Grosir Tingkulu Jaya Wanea,GT,SLS-02 - Andre Pangemanan,20182400.0,0.0,20182400.0,Transfer Bank BCA/Mandiri,Pelunasan Termin Jatuh Tempo (7 Hari)
+PAY-AR-00301,2026-07-31,INV-202607-0382,CUST-RTL-004 - Warung Tante Meyke Dekat Gereja,RTL,CVS-01 - Novry Mandagi,5817020.0,0.0,5817020.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00302,2026-07-31,INV-202607-0383,CUST-RTL-016 - Warung Ronny Depan SD,RTL,CVS-01 - Novry Mandagi,4176906.0,0.0,4176906.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00303,2026-07-31,INV-202607-0384,CUST-RTL-028 - Kios Gloria Wanda Pondok Damai,RTL,CVS-01 - Novry Mandagi,3844560.0,0.0,3844560.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00304,2026-07-31,INV-202607-0385,CUST-RTL-040 - Kios Filadelfia Ferry Dekat Gereja,RTL,CVS-01 - Novry Mandagi,5319080.0,0.0,5319080.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00305,2026-07-31,INV-202607-0386,CUST-RTL-052 - Warung Om Grace Depan SD,RTL,CVS-01 - Novry Mandagi,6369000.0,0.0,6369000.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00306,2026-07-31,INV-202607-0387,CUST-RTL-064 - Warung Tante Roy Pondok Damai,RTL,CVS-01 - Novry Mandagi,5403228.0,0.0,5403228.0,Cash Tunai,Cash COD Penyerahan Barang
+PAY-AR-00307,2026-07-31,INV-202607-0388,CUST-RTL-076 - Warung Dani Dekat Gereja,RTL,CVS-01 - Novry Mandagi,4814964.0,0.0,4814964.0,Cash Tunai,Cash COD Penyerahan Barang
