@@ -143,3 +143,9 @@
 - Pemetaan payment_term_days ke property_payment_term_id dan salesman_code ke user_id (A3)
 - Peningkatan deploy/init.sh ke mark seed_master_v3 dengan proteksi kegagalan idempoten (C1)
 - Task managed by antigravity-agent at 2026-10-25T06:30:01+00:00
+
+[2026-10-25T07:57:02+00:00] [INFO] Fix seed loader packaging barcode collision & safe ORM writes
+- Hapus barcode pada product.packaging untuk mencegah tabrakan constraint barcode produk bawaan Odoo
+- Gunakan p.write untuk penugasan partner_id
+- Tambahkan guard account.payment.term dan lookup term yang aman
+- Task managed by antigravity-agent at 2026-10-25T07:57:02+00:00

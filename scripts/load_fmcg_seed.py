@@ -64,7 +64,7 @@ def load_principals_and_vendors():
         else:
             vendor = Partner.create(vals)
         if hasattr(p, "partner_id") and p.partner_id != vendor:
-            p.partner_id = vendor.id
+            p.write({"partner_id": vendor.id})
         count += 1
     print(f"    Selesai: {count} Principal terhubung ke Vendor Partner.")
 
@@ -191,7 +191,6 @@ def load_products():
                             "name": pkg_name,
                             "product_id": prod.product_variant_id.id,
                             "qty": carton_qty,
-                            "barcode": row.get("barcode") or False,
                         }
                     )
 
@@ -329,7 +328,7 @@ def load_partners():
     Subdistrict = env["id.subdistrict"].sudo()
     Country = env["res.country"].sudo()
     State = env["res.country.state"].sudo()
-    PaymentTerm = env["account.payment.term"].sudo()
+    PaymentTerm = env["account.payment.term"].sudo() if "account.payment.term" in env else None
     User = env["res.users"].sudo()
 
     # Preload wilayah
@@ -342,13 +341,25 @@ def load_partners():
         sulut = State.search([("name", "ilike", "Sulawesi Utara")], limit=1)
 
     # Preload payment terms (TOP)
-    term_immediate = PaymentTerm.search([("name", "ilike", "Immediate")], limit=1) or PaymentTerm.browse(1)
-    term_15 = PaymentTerm.search([("name", "ilike", "15")], limit=1)
-    term_21 = PaymentTerm.search([("name", "ilike", "21")], limit=1) or term_15
-    term_30 = PaymentTerm.search([("name", "ilike", "30")], limit=1)
-    term_45 = PaymentTerm.search([("name", "ilike", "45")], limit=1) or term_30
+    term_immediate = None
+    term_15 = None
+    term_21 = None
+    term_30 = None
+    term_45 = None
+    if PaymentTerm:
+        term_immediate = (
+            env.ref("account.account_payment_term_immediate", raise_if_not_found=False)
+            or PaymentTerm.search([("name", "ilike", "Immediate")], limit=1)
+            or PaymentTerm.search([], limit=1)
+        )
+        term_15 = PaymentTerm.search([("name", "ilike", "15")], limit=1)
+        term_21 = PaymentTerm.search([("name", "ilike", "21")], limit=1) or term_15
+        term_30 = PaymentTerm.search([("name", "ilike", "30")], limit=1)
+        term_45 = PaymentTerm.search([("name", "ilike", "45")], limit=1) or term_30
 
     def get_term(days):
+        if not PaymentTerm:
+            return False
         if days == 0:
             return term_immediate.id if term_immediate else False
         elif days <= 15:
