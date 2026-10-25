@@ -35,4 +35,3 @@ class ProductTemplate(models.Model):
         default=1,
         help="Konversi kemasan sekunder: jumlah satuan dasar per dus/karton.",
     )
-
