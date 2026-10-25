@@ -218,3 +218,12 @@
 - Mengabaikan cache unduhan data/raw/ di .gitignore.
 - Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
 - Task managed by antigravity at 2026-10-25T19:23:00+07:00
+
+[2026-10-25T19:46:00+07:00] [INFO] Analisis PJP Matrix, Metrik Drop Size, Biaya Delivery, dan Okupansi Kubikasi/Tonase Armada Juli 2026
+- Menghasilkan tabel matrix PJP Juli 2026 lengkap 31 hari (data/registers/pjp_july_2026_matrix.csv): 686 baris, 647 call efektif, 27 hari kerja operasional (Senin-Sabtu), 4 hari Minggu OFF.
+- Menghitung metrik sales per call: Drop size MT Rp 32,59 Jt, GT Rp 12,22 Jt, RTL Rp 2,39 Jt, INST Rp 7,17 Jt (Rata-rata Rp 8,50 Jt/call). ARPU bulanan: MT Rp 146,67 Jt, GT Rp 38,19 Jt, RTL Rp 3,38 Jt, INST Rp 16,50 Jt.
+- Menghitung KM delivery H+1 dari Gudang Maumbi: 128 trip, 11.415,4 KM total, 422,8 KM/hari kerja (rata-rata 89,2 KM/trip armada).
+- Menghitung struktur biaya logistik delivery: Total Rp 91,08 Jt (1,66% dari Gross Sales Rp 5,5 BIO), terdiri atas Solar BBM Rp 22,07 Jt (24,2%) dan Non-BBM Rp 69,01 Jt (75,8%: Uang jalan ritase, tol/retribusi pasar, ban/oli M&R, depresiasi, KIR/STNK, dan risiko packaging defect transit).
+- Menganalisis okupansi harian armada logistik secara kubikasi (CBM) dan tonase (scripts/ops/analyze_fleet_occupancy_july.py): Membuktikan sifat space-constrained produk FMCG (okupansi CBM rata-rata 1.8x - 2.0x lebih cepat jenuh dibanding tonase). Mengidentifikasi rute padat Manado Barat (DB 8456 FB) yang beroperasi dengan multi-ritase 2 ritase/hari pada hari sibuk atau dibantu armada cadangan L300 (DB 8678 CD).
+- Verifikasi ruff check (All checks passed!) dan commit git feat(fleet).
+- Task managed by antigravity at 2026-10-25T19:46:00+07:00

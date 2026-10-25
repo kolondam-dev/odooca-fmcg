@@ -1,5 +1,30 @@
 # HANDOFF
 
+## 2026-10-25 — antigravity agent (Tabel Matrix PJP Juli 2026, Analisis Drop Size, KM & Biaya Delivery, dan Okupansi Kubikasi/Tonase Armada)
+**Berubah:**
+- Matrix PJP Juli 2026 31 Hari Penuh ([`data/registers/pjp_july_2026_matrix.csv`](file:///c:/Users/ACER/dev/odooca-fmcg/data/registers/pjp_july_2026_matrix.csv) & [`scripts/generate_pjp_july_matrix.py`](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/generate_pjp_july_matrix.py)):
+  - 686 baris matrix mencakup seluruh tanggal (1 s/d 31 Juli 2026), 647 kunjungan call efektif, 27 hari kerja operasional (Senin-Sabtu), dan 4 hari Minggu OFF.
+  - Kolom lengkap: `salesman`, `salesman_role`, `tanggal`, `hari`, `frekuensi_call`, `channel`, `area`, `district`, `customer`, `latitude`, `longitude`, `delivery_date`, `delivery_vehicle`.
+- Analisis Sales per Call & Delivery Unit Economics ([`scripts/ops/analyze_pjp_july_metrics.py`](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/analyze_pjp_july_metrics.py)):
+  - Drop size rata-rata: MT Rp 32,59 Jt, GT Rp 12,22 Jt, RTL Rp 2,39 Jt, INST Rp 7,17 Jt (Rata-rata tertimbang Rp 8,50 Jt/call).
+  - ARPU belanja bulanan: MT Rp 146,67 Jt, GT Rp 38,19 Jt, RTL Rp 3,38 Jt, INST Rp 16,50 Jt.
+  - KM delivery: 128 trip armada, 11.415,4 KM total, rata-rata 422,8 KM/hari kerja (89,2 KM/trip armada dari Gudang Maumbi).
+  - Total Delivery Cost: Rp 91,08 Jt (1,66% dari Gross Revenue Rp 5,5 BIO): BBM Solar Rp 22,07 Jt (24,2%), Non-BBM Rp 69,01 Jt (75,8%: Uang jalan ritase, tol/retribusi, M&R ban/oli, depresiasi, KIR/STNK, dan risiko transit damage).
+- Analisis Okupansi Harian Armada Kubikasi & Tonase ([`scripts/ops/analyze_fleet_occupancy_july.py`](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/analyze_fleet_occupancy_july.py)):
+  - Membuktikan sifat produk FMCG yang *space-constrained* (rata-rata rasio CBM/Tonase mencapai 1.8x - 2.0x lebih cepat jenuh kubikasi daripada tonase).
+  - Rata-rata okupansi kubikasi box harian: Canter CDD 48,9% CBM (25,2% Ton), Traga Timur 76,3% CBM (46,5% Ton), Gran Max BV 65,4% CBM (56,4% Ton), Gran Max Box 41,5% CBM (35,1% Ton), Elf Luar Kota 31,1% CBM (16,0% Ton).
+  - Untuk rute padat Manado Barat (DB 8456 FB L300), rata-rata harian mencapai 6,4 m³ / 1,1 T (118,4% CBM single-trip), yang secara operasional dieksekusi melalui **2 ritase pengiriman per hari** (ritase pagi 3,2 m³ / 59% CBM dan ritase siang 3,2 m³ / 59% CBM) serta cadangan L300 (`DB 8678 CD`) pada hari puncak.
+- Log: `agent-log/anti-gravity.log`.
+
+**Diverifikasi (bagaimana):**
+- `python scripts/ops/analyze_fleet_occupancy_july.py`: Berhasil menghasilkan matriks utilisasi kubikasi dan tonase 9 armada.
+- `python -m ruff check .`: `All checks passed!`.
+- `python scripts/check_manifests.py`: `manifest ok: 4 addon`.
+- Commit git: `001cb4f` (*feat(fleet): analisis okupansi harian armada logistik secara kubikasi dan tonase juli 2026*).
+
+**Menunggu / Langkah Berikutnya:**
+- Melanjutkan ke Task 3 (Loader Master Odoo dengan akun `res.users` salesman, packaging karton, dan UoM FMCG) dan Task 4 (Pengisian data simulasi transaksi historis ke Odoo berdasarkan ledger harian yang sudah tervalidasi).
+
 ## 2026-10-25 — antigravity agent (Integrasi Master Data Wilayah Resmi Sulut 2.026 Wilayah & Penyelesaian Task 1 & Task 2)
 **Berubah:**
 - Master Data Administrasi & Geospasial Sulawesi Utara (`data/master/`, `data/geo/`, `docs/geo/SULUT_ADMINISTRASI_GEO.md`):
