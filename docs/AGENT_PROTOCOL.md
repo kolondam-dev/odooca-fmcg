@@ -47,3 +47,8 @@ Level: `INFO`, `WARN`, `ERROR`. Satu entri per aksi bermakna (bukan per perintah
 
 ## 8. Batasan yang jujur
 Tanda tangan tidak diverifikasi otomatis; pemilik menulis commit sehingga tidak ada bukti kriptografis tentang agen. **Butir terbuka:** job CI yang menolak commit non-merge tanpa tanda tangan (belum dibuat), dan konfirmasi nama tanda tangan `claude-design`.
+
+## 9. Supervision et gate seed (2026-10-25)
+`codex` / tanda tangan `codex agent` / `agent-log/codex.log`: supervisi invariant,
+validator independen, CI, dan bukti penerimaan. Kontrak dan workflow bersama:
+`docs/reviews/SEED_INVARIANT_CONTRACT.md`.

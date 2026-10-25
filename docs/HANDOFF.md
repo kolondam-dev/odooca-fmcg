@@ -1,5 +1,17 @@
 # HANDOFF
 
+## 2026-10-25 — codex agent — Gate supervisi seed (draft, baseline merah)
+**Berubah:** workflow Seed supervision, validator independen, 17 uji fixture/mutasi,
+kontrak invariant dan kewajiban workflow pada AGENTS/DEVELOPMENT/AGENT_PROTOCOL.
+Dibangun di atas 57f5768, branch agen/supervision-invariant-gates.
+**Diverifikasi:** 17 uji lulus; ruff dan manifest lulus. Baseline data ditolak:
+MASTER-GEO 77, COHORT-PJP 228, COHORT-SO 219, CALENDAR 84, EVENT-ORDER 331,
+LOT-BALANCE 770. Laporan JSON mengikat commit dan hash input. Tidak mengubah seed.
+**Belum diuji:** runtime Odoo, Railway, idempotensi loader, upgrade DB, laporan
+historis/valuasi. Ruleset required-checks belum dikonfigurasi.
+**Menunggu:** antigravity membenahi data/generator sesuai diagnostik; pemilik
+mengaktifkan required checks setelah nama check tersedia dari run GitHub.
+
 ## 2026-10-25 — antigravity agent (Branch Baru: Implementasi Transaksi Historis Perpetual & Anti-Jebakan SVL)
 **Berubah:**
 - Branch aktif: `agen/transaksi-historis-perpetual` (berbasis `agen/rekonstruksi-seed-audit` commit `1e12ebe`).
