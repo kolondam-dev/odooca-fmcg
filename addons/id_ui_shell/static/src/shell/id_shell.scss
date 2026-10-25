@@ -83,26 +83,35 @@ body.id-shell-sidebar {
             margin-inline-start: auto !important;
             display: flex;
             align-items: center;
+            height: 100%;
             gap: 0;
 
             > *:empty { display: none !important; }
 
-            // Tepat 3 pemisah antara 4 menu (Discuss, Activity, Company, User) tanpa merusak tata letak.
+            // 4 menu aktif dengan tinggi dan baseline yang sejajar sempurna
             .o-mail-DiscussSystray-class,
             .o-dropdown:has(.fa-clock-o),
-            .o_switch_company_menu {
-                display: flex;
-                align-items: center;
+            .o_switch_company_menu,
+            .o_user_menu {
+                display: flex !important;
+                align-items: center !important;
+                height: 38px !important;
+                position: relative !important;
+            }
 
-                &::after {
-                    content: "";
-                    display: inline-block;
-                    width: 1px;
-                    height: 22px;
-                    background: #d8dee8;
-                    margin-inline: .6rem;
-                    flex-shrink: 0;
-                }
+            // Tepat 3 pemisah vertikal rapi di antara 4 menu, sejajar dan presisi
+            .o-dropdown:has(.fa-clock-o)::before,
+            .o_switch_company_menu::before,
+            .o_user_menu::before {
+                content: "" !important;
+                display: block !important;
+                width: 1px !important;
+                height: 20px !important;
+                background: #d8dee8 !important;
+                margin-right: .6rem !important;
+                margin-left: .2rem !important;
+                align-self: center !important;
+                flex-shrink: 0 !important;
             }
         }
         .o_menu_systray .o-dropdown > .dropdown-toggle,

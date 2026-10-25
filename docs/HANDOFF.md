@@ -1,5 +1,24 @@
 # HANDOFF
 
+## 2026-10-25 — claude-design agent (UI Refinement v6: Systray Dividers Alignment, Form Statusbar Middle Align Without Rounded Box, Edge-to-Edge Form, Steady Sticky Footer)
+**Berubah:**
+- `addons/id_ui_shell/static/src/shell/id_shell.scss`:
+  - Systray navbar kanan: 4 menu aktif (`.o-mail-DiscussSystray-class`, `.o-dropdown:has(.fa-clock-o)`, `.o_switch_company_menu`, `.o_user_menu`) diseragamkan `height: 38px; display: flex; align-items: center;`.
+  - Tepat 3 pemisah vertikal rapi dipasang via `::before` pada item 2, 3, dan 4 dengan `height: 20px; width: 1px; background: #d8dee8; align-self: center;`, menghilangkan garis divider yang meleset atau turun keluar deret menu.
+- `addons/id_ui_form/static/src/form/id_form.scss`:
+  - Form Full Width edge-to-edge: `.o_form_sheet_bg` disetel `padding: 0; background: #fff;`, `.o_form_sheet` disetel `border: none; border-radius: 0; padding: 1rem 1.25rem 0; width: 100%; max-width: 100%;`.
+  - Statusbar form: tombol aksi, judul form (.oe_title / .id_statusbar_title), dan statusbar pipeline disetel `align-items: center !important` (sejajar align middle secara presisi). Background box rounded putih dihilangkan total (`background: transparent; border: 0; border-radius: 0; box-shadow: none;`).
+  - Sticky footer: padding/margin disesuaikan flush edge-to-edge, border-bottom dihilangkan, posisi footer tetap diam (steady di bottom) tanpa bergeser/bouncing saat scroll ke atas.
+- Log: `agent-log/claude-design.log`.
+
+**Diverifikasi (bagaimana):**
+- Verifikasi Playwright headless: alignment statusbar presisi (pusat Y = 156.25px untuk ketiga komponen), form selebar 100% viewport, sticky footer tetap menempel diam di bottom saat di-scroll bolak-balik, 3 divider systray rapi sejajar.
+- `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
+
+**Belum diuji:**
+- Browser Firefox/Safari (hanya diuji Chromium/Edge).
+- Layar mobile (akan fallback ke tampilan responsif bawaan).
+
 ## 2026-10-25 — claude-design agent (UI Refinement v5: Form Full Width, Sticky Footer, 3 Systray Dividers, Form Title Statusbar, Badge & Logo O Glow)
 **Berubah:**
 - `addons/id_ui_shell/static/src/shell/id_shell.scss`:

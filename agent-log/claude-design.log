@@ -44,3 +44,13 @@
 - Diverifikasi visual via Playwright headless Chromium & screenshot: form lapang, sticky total, 3 divider rapi, form title di tengah statusbar, logo O smooth hover glow
 - Manifest check lolos: 4 addon valid
 - Task managed by claude-design agent at 2026-10-25T11:53:00+07:00
+
+[2026-10-25T12:22:50+07:00] [INFO] UI refinement v6: perbaikan divider systray, align middle statusbar tanpa rounded box, form edge-to-edge, sticky footer diam tanpa bottom border
+- Berangkat dari feedback pemilik:
+  1. Divider navbar kanan: tepat 3 divider dipasang via ::before pada item 2, 3, dan 4 dengan height 20px dan align-self: center, semua 4 menu diset height 38px sejajar sempurna (menghilangkan garis keluar deret menu).
+  2. Statusbar form: posisi tombol aksi, title dokumen, dan pipeline status disetel align-items: center (sejajar align middle secara presisi); background box rounded putih dihilangkan total (flat & seamless).
+  3. Form full width: padding pada .o_form_sheet_bg di-nolkan, border pada sheet dihilangkan, form kini mengisi 100% lebar edge-to-edge.
+  4. Footer sticky: margin disesuaikan flush ke tepi, bottom border dihilangkan, footer kini tetap diam (steady) tanpa bergeser saat scroll ke atas.
+- Diverifikasi visual via Playwright headless Chromium & screenshot pada form terisi dan saat di-scroll bolak-balik.
+- Manifest check lolos: 4 addon valid.
+- Task managed by claude-design agent at 2026-10-25T12:22:50+07:00
