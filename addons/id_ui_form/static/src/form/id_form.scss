@@ -1,60 +1,97 @@
-// Form view tata letak luas & lapang
+// Form view tata letak luas & lapang edge-to-edge
 body.id-shell-sidebar {
     .o_form_view {
         .o_form_sheet_bg {
             max-width: 100% !important;
-            padding: 0.5rem 1rem !important;
+            width: 100% !important;
+            padding: 0 !important;
+            background: #ffffff !important;
 
             .o_form_sheet {
                 max-width: 100% !important;
                 width: 100% !important;
                 margin: 0 !important;
                 box-shadow: none !important;
-                border: 1px solid #e3e8ee !important;
-                border-radius: 6px !important;
-                padding: 1rem 1.25rem !important;
+                border: none !important;
+                border-radius: 0 !important;
+                padding: 1rem 1.25rem 0 !important;
             }
 
             .o_form_statusbar {
-                margin: 0 0 0.5rem 0 !important;
-                padding: 0.35rem 0.75rem !important;
-                border: 1px solid #e3e8ee !important;
-                border-radius: 6px !important;
-                background: #fff !important;
-                min-height: 44px;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                margin: 0 !important;
+                padding: 0.35rem 1.25rem !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                min-height: 42px !important;
 
-                // Judul form dipindah ke tengah statusbar
+                .o_statusbar_buttons {
+                    display: flex !important;
+                    align-items: center !important;
+                    align-self: center !important;
+                    margin: 0 !important;
+                    gap: 0.35rem !important;
+                }
+
+                // Judul form dipindah ke tengah statusbar, sejajar align middle
                 .id_statusbar_title {
-                    flex: 1 1 auto;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    text-align: center;
-                    margin: 0;
-                    padding: 0 0.5rem;
+                    flex: 1 1 auto !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    align-self: center !important;
+                    text-align: center !important;
+                    margin: 0 !important;
+                    padding: 0 1rem !important;
 
                     h1 {
-                        font-size: 1.25rem;
-                        font-weight: 700;
-                        margin: 0;
-                        color: #0b1f4d;
-                        line-height: 1.2;
+                        font-size: 1.35rem !important;
+                        font-weight: 700 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        color: #0b1f4d !important;
+                        line-height: 1 !important;
+                        display: flex !important;
+                        align-items: center !important;
                     }
+
+                    .o_field_widget {
+                        display: inline-flex !important;
+                        align-items: center !important;
+                        margin: 0 !important;
+                    }
+                }
+
+                .o_field_statusbar,
+                .o_statusbar_status {
+                    display: flex !important;
+                    align-items: center !important;
+                    align-self: center !important;
+                    margin: 0 !important;
                 }
             }
         }
 
-        // Footer form sticky (total & terms)
+        .o_control_panel {
+            padding-left: 1.25rem !important;
+            padding-right: 1.25rem !important;
+        }
+
+        // Footer form sticky (total & terms): tetap diam di bottom, tanpa border bottom
         .o_form_sheet .o_group:has(.oe_subtotal_footer) {
             position: sticky !important;
             bottom: 0 !important;
             background: #ffffff !important;
             z-index: 4 !important;
             border-top: 1px solid #dee2e6 !important;
-            border-bottom: 1px solid #dee2e6 !important;
-            padding: 0.6rem 0.75rem !important;
-            margin-top: 0.5rem !important;
-            margin-bottom: 0 !important;
+            border-bottom: none !important;
+            padding: 0.65rem 1.25rem !important;
+            margin: 0.5rem -1.25rem 0 -1.25rem !important;
+            box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.03) !important;
         }
     }
 }
