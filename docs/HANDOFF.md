@@ -1,5 +1,32 @@
 # HANDOFF
 
+## 2026-10-25 — claude-design agent (UI Refinement v5: Form Full Width, Sticky Footer, 3 Systray Dividers, Form Title Statusbar, Badge & Logo O Glow)
+**Berubah:**
+- `addons/id_ui_shell/static/src/shell/id_shell.scss`:
+  - Token `--id-brand-box` disetel ke warna ungu Odoo (`#714B67`).
+  - `.o_menu_brand`: ukuran font diperbesar menjadi `1.45rem` (bold 700) di tengah navbar.
+  - `.o_menu_systray`: tepat 3 divider pemisah vertikal (tinggi 22px) antar 4 menu (Discuss, Activity, Company, User). Child kosong disembunyikan.
+  - `.id_sidebar .id_brandbox`: font lebih besar (0.75rem), bold 700, sudut tegas tanpa rounded, background ungu Odoo.
+  - `.id_sidebar__logo`: transisi hover/active diperhalus tanpa shaky rotation, menggunakan `@keyframes id-logo-pulse` dengan double drop-shadow ungu Odoo.
+- `addons/id_ui_form/static/src/form/id_form.scss`:
+  - `.o_form_sheet_bg`: `max-width: 100% !important; padding: 0.5rem 1rem !important;`
+  - `.o_form_sheet`: `max-width: 100% !important; width: 100% !important; margin: 0 !important;` (form lapang dan luas mengisi rongga kiri-kanan).
+  - `.o_form_statusbar`: border rapi, background putih, penampung judul dokumen di tengah.
+  - `.o_form_sheet .o_group:has(.oe_subtotal_footer)`: sticky bottom (`position: sticky; bottom: 0; background: #fff; z-index: 4; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6;`).
+  - `.id_statusbar_title`: judul dokumen ("New" / nomor referensi) rata tengah di antara tombol aksi dan pipeline status.
+- `addons/id_ui_form/static/src/form/form_patch.js`:
+  - Relokasi judul form `.oe_title` secara otomatis ke dalam `.o_form_statusbar` pada siklus `onMounted` dan `onPatched`.
+- Log: `agent-log/claude-design.log`.
+
+**Diverifikasi (bagaimana):**
+- Verifikasi visual Playwright di Chromium: form luas penuh, footer total sticky saat scroll, statusbar title di tengah, systray 3 divider rapi, icon O hover halus.
+- `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
+- Git diff diperiksa bersih dan tidak ada file sementara yang ter-commit.
+
+**Belum diuji:**
+- Browser Firefox/Safari (hanya diuji Chromium/Edge).
+- Layar mobile (akan fallback ke tampilan responsif bawaan).
+
 ## 2026-10-25 — claude-dev agent (sandbox) — Review codebase main fa68c23 (PR #1–#5) + skrip snapshot instance
 **Berubah:** `docs/reviews/REVIEW_2026-10-24_main-fa68c23.md` (temuan P0/P1/P2 + rencana M1a–M2 + pemilik area), `scripts/ops/odoo_snapshot.py` (diagnosis read-only via XML-RPC), `scripts/sandbox/sandbox_up.sh` (menyalin `data/` dan `scripts/` seperti Dockerfile), `pyproject.toml` (E501 diabaikan untuk `scripts/ops`), `docs/DEVELOPMENT.md` (catatan snapshot), `agent-log/claude-dev.log`. **Tidak ada perubahan pada kode agen lain.**
 **Diverifikasi (bagaimana):** boot persis seperti Railway di sandbox (DB kosong, `INIT_MODULES` default): HTTP siap ±207 detik; 97 modul; 150 produk, 354 outlet; Playwright 0 galat JS; snapshot dijalankan terhadap instance itu; generator deterministik (hash seed 0/5); analisis konsistensi CSV simulasi; uji kegagalan skrip snapshot (sandi/URL/DB salah, sandi tidak bocor).
