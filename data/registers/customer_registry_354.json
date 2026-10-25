@@ -10,7 +10,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Jl. AA Maramis KM 10 Paniki",
     "phone": "0811-430-0001",
     "vat": "0123456789000001",
@@ -24,8 +24,8 @@
     "delivery_route": "DELIV-MT-SENIN",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.5285,
-    "longitude": 124.9091,
+    "latitude": 1.517818,
+    "longitude": 124.905702,
     "is_company": true
   },
   {
@@ -39,7 +39,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Kawasan Pergudangan Kairagi Dua",
     "phone": "0811-430-0002",
     "vat": "0123456789000002",
@@ -53,8 +53,8 @@
     "delivery_route": "DELIV-MT-SENIN",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.5294,
-    "longitude": 124.9085,
+    "latitude": 1.518718,
+    "longitude": 124.905102,
     "is_company": true
   },
   {
@@ -82,8 +82,8 @@
     "delivery_route": "DELIV-MT-SELASA",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4582,
-    "longitude": 124.8249,
+    "latitude": 1.455461,
+    "longitude": 124.824762,
     "is_company": true
   },
   {
@@ -97,7 +97,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Grand Kawanua City Walk",
     "phone": "0811-430-0004",
     "vat": "0123456789000004",
@@ -111,8 +111,8 @@
     "delivery_route": "DELIV-MT-RABU",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.5291,
-    "longitude": 124.9094,
+    "latitude": 1.518418,
+    "longitude": 124.906002,
     "is_company": true
   },
   {
@@ -140,8 +140,8 @@
     "delivery_route": "DELIV-MT-KAMIS",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4814,
-    "longitude": 124.8593,
+    "latitude": 1.476222,
+    "longitude": 124.859022,
     "is_company": true
   },
   {
@@ -155,7 +155,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Kawasan Megamas Blok 1D",
     "phone": "0811-430-0006",
     "vat": "0123456789000006",
@@ -169,8 +169,8 @@
     "delivery_route": "DELIV-MT-JUMAT",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4928,
-    "longitude": 124.8417,
+    "latitude": 1.497046,
+    "longitude": 124.842534,
     "is_company": true
   },
   {
@@ -184,7 +184,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi No. 188",
     "phone": "0811-430-0007",
     "vat": "0123456789000007",
@@ -198,8 +198,8 @@
     "delivery_route": "DELIV-MT-SABTU",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4641,
-    "longitude": 124.8481,
+    "latitude": 1.48336,
+    "longitude": 124.833092,
     "is_company": true
   },
   {
@@ -213,7 +213,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Jl. Raya Tomohon-Manado Paslaten",
     "phone": "0811-430-0008",
     "vat": "0123456789000008",
@@ -227,8 +227,8 @@
     "delivery_route": "DELIV-MT-RABU",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.3235,
-    "longitude": 124.8371,
+    "latitude": 1.320825,
+    "longitude": 124.834302,
     "is_company": true
   },
   {
@@ -242,7 +242,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi No. 12 Calaca",
     "phone": "0811-430-0009",
     "vat": "0123456789000009",
@@ -256,8 +256,8 @@
     "delivery_route": "DELIV-MT-SELASA",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4934,
-    "longitude": 124.842,
+    "latitude": 1.497646,
+    "longitude": 124.842834,
     "is_company": true
   },
   {
@@ -271,7 +271,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Kawasan Pasar 45 Manado",
     "phone": "0811-430-0010",
     "vat": "0123456789000010",
@@ -285,8 +285,8 @@
     "delivery_route": "DELIV-MT-KAMIS",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4922,
-    "longitude": 124.8414,
+    "latitude": 1.496446,
+    "longitude": 124.842234,
     "is_company": true
   },
   {
@@ -314,8 +314,8 @@
     "delivery_route": "DELIV-MT-JUMAT",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4446,
-    "longitude": 125.1849,
+    "latitude": 1.457376,
+    "longitude": 125.189008,
     "is_company": true
   },
   {
@@ -343,8 +343,8 @@
     "delivery_route": "DELIV-MT-SABTU",
     "delivery_vehicle": "DB 8345 MK (Canter CDD)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4579,
-    "longitude": 124.8258,
+    "latitude": 1.455161,
+    "longitude": 124.825662,
     "is_company": true
   },
   {
@@ -358,7 +358,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi / Calaca No. 2",
     "phone": "0812-441-0001",
     "vat": "080000011234821000",
@@ -372,8 +372,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4932,
-    "longitude": 124.84095,
+    "latitude": 1.497446,
+    "longitude": 124.841784,
     "is_company": true
   },
   {
@@ -387,7 +387,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi / Calaca No. 4",
     "phone": "0812-441-0002",
     "vat": "080000021234821000",
@@ -401,8 +401,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4918,
-    "longitude": 124.84165,
+    "latitude": 1.496046,
+    "longitude": 124.842484,
     "is_company": true
   },
   {
@@ -416,7 +416,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi / Calaca No. 6",
     "phone": "0812-441-0003",
     "vat": "080000031234821000",
@@ -430,8 +430,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.49425,
-    "longitude": 124.84235,
+    "latitude": 1.498496,
+    "longitude": 124.843184,
     "is_company": true
   },
   {
@@ -445,7 +445,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi / Calaca No. 8",
     "phone": "0812-441-0004",
     "vat": "080000041234821000",
@@ -459,8 +459,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.49285,
-    "longitude": 124.84305,
+    "latitude": 1.497096,
+    "longitude": 124.843884,
     "is_company": true
   },
   {
@@ -474,7 +474,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi / Calaca No. 10",
     "phone": "0812-441-0005",
     "vat": "080000051234821000",
@@ -488,8 +488,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.49145,
-    "longitude": 124.84375,
+    "latitude": 1.495696,
+    "longitude": 124.844584,
     "is_company": true
   },
   {
@@ -503,7 +503,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi / Calaca No. 12",
     "phone": "0812-441-0006",
     "vat": "080000061234821000",
@@ -517,8 +517,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4939,
-    "longitude": 124.8406,
+    "latitude": 1.498146,
+    "longitude": 124.841434,
     "is_company": true
   },
   {
@@ -532,7 +532,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Jl. Sam Ratulangi Sario No. 14",
     "phone": "0812-441-0007",
     "vat": "080000071234821000",
@@ -546,8 +546,8 @@
     "delivery_route": "DELIV-GT-MANADO-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4715,
-    "longitude": 124.8368,
+    "latitude": 1.473254,
+    "longitude": 124.834066,
     "is_company": true
   },
   {
@@ -561,7 +561,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Jl. Sam Ratulangi Sario No. 16",
     "phone": "0812-441-0008",
     "vat": "080000081234821000",
@@ -575,8 +575,8 @@
     "delivery_route": "DELIV-GT-MANADO-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4701,
-    "longitude": 124.8375,
+    "latitude": 1.471854,
+    "longitude": 124.834766,
     "is_company": true
   },
   {
@@ -590,7 +590,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Jl. Sam Ratulangi Sario No. 18",
     "phone": "0812-441-0009",
     "vat": "080000091234821000",
@@ -604,8 +604,8 @@
     "delivery_route": "DELIV-GT-MANADO-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.47255,
-    "longitude": 124.8382,
+    "latitude": 1.474304,
+    "longitude": 124.835466,
     "is_company": true
   },
   {
@@ -619,7 +619,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Jl. Sam Ratulangi Sario No. 20",
     "phone": "0812-441-0010",
     "vat": "080000101234821000",
@@ -633,8 +633,8 @@
     "delivery_route": "DELIV-GT-MANADO-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.47115,
-    "longitude": 124.8389,
+    "latitude": 1.472904,
+    "longitude": 124.836166,
     "is_company": true
   },
   {
@@ -662,8 +662,8 @@
     "delivery_route": "DELIV-GT-MANADO-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.45675,
-    "longitude": 124.82375,
+    "latitude": 1.454011,
+    "longitude": 124.823612,
     "is_company": true
   },
   {
@@ -691,8 +691,8 @@
     "delivery_route": "DELIV-GT-MANADO-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4592,
-    "longitude": 124.82445,
+    "latitude": 1.456461,
+    "longitude": 124.824312,
     "is_company": true
   },
   {
@@ -720,8 +720,8 @@
     "delivery_route": "DELIV-GT-MANADO-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4578,
-    "longitude": 124.82515,
+    "latitude": 1.455061,
+    "longitude": 124.825012,
     "is_company": true
   },
   {
@@ -749,8 +749,8 @@
     "delivery_route": "DELIV-GT-MANADO-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.46025,
-    "longitude": 124.82585,
+    "latitude": 1.457511,
+    "longitude": 124.825712,
     "is_company": true
   },
   {
@@ -778,8 +778,8 @@
     "delivery_route": "DELIV-GT-MANADO-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.45885,
-    "longitude": 124.82655,
+    "latitude": 1.456111,
+    "longitude": 124.826412,
     "is_company": true
   },
   {
@@ -793,7 +793,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 32",
     "phone": "0812-441-0016",
     "vat": "080000161234821000",
@@ -807,8 +807,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.46395,
-    "longitude": 124.85075,
+    "latitude": 1.48321,
+    "longitude": 124.835742,
     "is_company": true
   },
   {
@@ -822,7 +822,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 34",
     "phone": "0812-441-0017",
     "vat": "080000171234821000",
@@ -836,8 +836,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4664,
-    "longitude": 124.8476,
+    "latitude": 1.48566,
+    "longitude": 124.832592,
     "is_company": true
   },
   {
@@ -851,7 +851,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 36",
     "phone": "0812-441-0018",
     "vat": "080000181234821000",
@@ -865,8 +865,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.465,
-    "longitude": 124.8483,
+    "latitude": 1.48426,
+    "longitude": 124.833292,
     "is_company": true
   },
   {
@@ -880,7 +880,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 38",
     "phone": "0812-441-0019",
     "vat": "080000191234821000",
@@ -894,8 +894,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4636,
-    "longitude": 124.849,
+    "latitude": 1.48286,
+    "longitude": 124.833992,
     "is_company": true
   },
   {
@@ -909,7 +909,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 40",
     "phone": "0812-441-0020",
     "vat": "080000201234821000",
@@ -923,8 +923,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.46605,
-    "longitude": 124.8497,
+    "latitude": 1.48531,
+    "longitude": 124.834692,
     "is_company": true
   },
   {
@@ -938,7 +938,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 42",
     "phone": "0812-441-0021",
     "vat": "080000211234821000",
@@ -952,8 +952,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.46465,
-    "longitude": 124.8504,
+    "latitude": 1.48391,
+    "longitude": 124.835392,
     "is_company": true
   },
   {
@@ -967,7 +967,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 44",
     "phone": "0812-441-0022",
     "vat": "080000221234821000",
@@ -981,8 +981,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.46325,
-    "longitude": 124.84725,
+    "latitude": 1.48251,
+    "longitude": 124.832242,
     "is_company": true
   },
   {
@@ -996,7 +996,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 46",
     "phone": "0812-441-0023",
     "vat": "080000231234821000",
@@ -1010,8 +1010,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4657,
-    "longitude": 124.84795,
+    "latitude": 1.48496,
+    "longitude": 124.832942,
     "is_company": true
   },
   {
@@ -1025,7 +1025,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi / Calaca No. 48",
     "phone": "0812-441-0024",
     "vat": "080000241234821000",
@@ -1039,8 +1039,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4918,
-    "longitude": 124.84165,
+    "latitude": 1.496046,
+    "longitude": 124.842484,
     "is_company": true
   },
   {
@@ -1054,7 +1054,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi / Calaca No. 50",
     "phone": "0812-441-0025",
     "vat": "080000251234821000",
@@ -1068,8 +1068,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.49425,
-    "longitude": 124.84235,
+    "latitude": 1.498496,
+    "longitude": 124.843184,
     "is_company": true
   },
   {
@@ -1083,7 +1083,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 52",
     "phone": "0812-441-0026",
     "vat": "080000261234821000",
@@ -1097,8 +1097,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.46535,
-    "longitude": 124.85005,
+    "latitude": 1.48461,
+    "longitude": 124.835042,
     "is_company": true
   },
   {
@@ -1126,8 +1126,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.45745,
-    "longitude": 124.82725,
+    "latitude": 1.454711,
+    "longitude": 124.827112,
     "is_company": true
   },
   {
@@ -1141,7 +1141,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Jl. Sam Ratulangi Sario No. 56",
     "phone": "0812-441-0028",
     "vat": "080000281234821000",
@@ -1155,8 +1155,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4729,
-    "longitude": 124.8361,
+    "latitude": 1.474654,
+    "longitude": 124.833366,
     "is_company": true
   },
   {
@@ -1170,7 +1170,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Sam Ratulangi / Calaca No. 58",
     "phone": "0812-441-0029",
     "vat": "080000291234821000",
@@ -1184,8 +1184,8 @@
     "delivery_route": "DELIV-GT-MANADO-SABTU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4925,
-    "longitude": 124.8413,
+    "latitude": 1.496746,
+    "longitude": 124.842134,
     "is_company": true
   },
   {
@@ -1213,8 +1213,8 @@
     "delivery_route": "DELIV-GT-MANADO-SABTU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4571,
-    "longitude": 124.8255,
+    "latitude": 1.454361,
+    "longitude": 124.825362,
     "is_company": true
   },
   {
@@ -1228,7 +1228,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Jl. Sam Ratulangi Sario No. 62",
     "phone": "0812-441-0031",
     "vat": "080000311234821000",
@@ -1242,8 +1242,8 @@
     "delivery_route": "DELIV-GT-MANADO-SABTU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.47255,
-    "longitude": 124.8382,
+    "latitude": 1.474304,
+    "longitude": 124.835466,
     "is_company": true
   },
   {
@@ -1257,7 +1257,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Jl. Sam Ratulangi Wanea No. 64",
     "phone": "0812-441-0032",
     "vat": "080000321234821000",
@@ -1271,8 +1271,8 @@
     "delivery_route": "DELIV-GT-MANADO-SABTU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.46465,
-    "longitude": 124.8504,
+    "latitude": 1.48391,
+    "longitude": 124.835392,
     "is_company": true
   },
   {
@@ -1300,8 +1300,8 @@
     "delivery_route": "DELIV-GT-MANADO-SABTU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.45675,
-    "longitude": 124.82375,
+    "latitude": 1.454011,
+    "longitude": 124.823612,
     "is_company": true
   },
   {
@@ -1329,8 +1329,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4827,
-    "longitude": 124.85795,
+    "latitude": 1.477522,
+    "longitude": 124.857672,
     "is_company": true
   },
   {
@@ -1358,8 +1358,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4813,
-    "longitude": 124.85865,
+    "latitude": 1.476122,
+    "longitude": 124.858372,
     "is_company": true
   },
   {
@@ -1387,8 +1387,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.48375,
-    "longitude": 124.85935,
+    "latitude": 1.478572,
+    "longitude": 124.859072,
     "is_company": true
   },
   {
@@ -1416,8 +1416,8 @@
     "delivery_route": "DELIV-GT-MANADO-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.48235,
-    "longitude": 124.86005,
+    "latitude": 1.477172,
+    "longitude": 124.859772,
     "is_company": true
   },
   {
@@ -1445,8 +1445,8 @@
     "delivery_route": "DELIV-GT-MANADO-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.48845,
-    "longitude": 124.87225,
+    "latitude": 1.484412,
+    "longitude": 124.878389,
     "is_company": true
   },
   {
@@ -1474,8 +1474,8 @@
     "delivery_route": "DELIV-GT-MANADO-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4909,
-    "longitude": 124.8691,
+    "latitude": 1.486862,
+    "longitude": 124.875239,
     "is_company": true
   },
   {
@@ -1503,8 +1503,8 @@
     "delivery_route": "DELIV-GT-MANADO-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4895,
-    "longitude": 124.8698,
+    "latitude": 1.485462,
+    "longitude": 124.875939,
     "is_company": true
   },
   {
@@ -1532,8 +1532,8 @@
     "delivery_route": "DELIV-GT-MANADO-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.4881,
-    "longitude": 124.8705,
+    "latitude": 1.484062,
+    "longitude": 124.876639,
     "is_company": true
   },
   {
@@ -1561,8 +1561,8 @@
     "delivery_route": "DELIV-GT-MANADO-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.49055,
-    "longitude": 124.8712,
+    "latitude": 1.486512,
+    "longitude": 124.877339,
     "is_company": true
   },
   {
@@ -1590,8 +1590,8 @@
     "delivery_route": "DELIV-GT-MANADO-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.51165,
-    "longitude": 124.8554,
+    "latitude": 1.511313,
+    "longitude": 124.853455,
     "is_company": true
   },
   {
@@ -1619,8 +1619,8 @@
     "delivery_route": "DELIV-GT-MANADO-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.51025,
-    "longitude": 124.85225,
+    "latitude": 1.509913,
+    "longitude": 124.850305,
     "is_company": true
   },
   {
@@ -1648,8 +1648,8 @@
     "delivery_route": "DELIV-GT-MANADO-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5127,
-    "longitude": 124.85295,
+    "latitude": 1.512363,
+    "longitude": 124.851005,
     "is_company": true
   },
   {
@@ -1677,8 +1677,8 @@
     "delivery_route": "DELIV-GT-MANADO-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5113,
-    "longitude": 124.85365,
+    "latitude": 1.510963,
+    "longitude": 124.851705,
     "is_company": true
   },
   {
@@ -1706,8 +1706,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.50275,
-    "longitude": 124.86235,
+    "latitude": 1.506831,
+    "longitude": 124.861796,
     "is_company": true
   },
   {
@@ -1735,8 +1735,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.50135,
-    "longitude": 124.86305,
+    "latitude": 1.505431,
+    "longitude": 124.862496,
     "is_company": true
   },
   {
@@ -1764,8 +1764,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.49995,
-    "longitude": 124.86375,
+    "latitude": 1.504031,
+    "longitude": 124.863196,
     "is_company": true
   },
   {
@@ -1793,8 +1793,8 @@
     "delivery_route": "DELIV-GT-MANADO-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5024,
-    "longitude": 124.8606,
+    "latitude": 1.506481,
+    "longitude": 124.860046,
     "is_company": true
   },
   {
@@ -1808,7 +1808,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Jl. AA Maramis Paniki No. 102",
     "phone": "0812-441-0051",
     "vat": "080000511234821000",
@@ -1822,8 +1822,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5285,
-    "longitude": 124.9078,
+    "latitude": 1.517818,
+    "longitude": 124.904402,
     "is_company": true
   },
   {
@@ -1837,7 +1837,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Jl. AA Maramis Paniki No. 104",
     "phone": "0812-441-0052",
     "vat": "080000521234821000",
@@ -1851,8 +1851,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5271,
-    "longitude": 124.9085,
+    "latitude": 1.516418,
+    "longitude": 124.905102,
     "is_company": true
   },
   {
@@ -1866,7 +1866,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Jl. AA Maramis Paniki No. 106",
     "phone": "0812-441-0053",
     "vat": "080000531234821000",
@@ -1880,8 +1880,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.52955,
-    "longitude": 124.9092,
+    "latitude": 1.518868,
+    "longitude": 124.905802,
     "is_company": true
   },
   {
@@ -1895,7 +1895,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Jl. AA Maramis Paniki No. 108",
     "phone": "0812-441-0054",
     "vat": "080000541234821000",
@@ -1909,8 +1909,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.52815,
-    "longitude": 124.9099,
+    "latitude": 1.517468,
+    "longitude": 124.906502,
     "is_company": true
   },
   {
@@ -1924,7 +1924,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Jl. AA Maramis Paniki No. 110",
     "phone": "0812-441-0055",
     "vat": "080000551234821000",
@@ -1938,8 +1938,8 @@
     "delivery_route": "DELIV-GT-MANADO-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.52675,
-    "longitude": 124.90675,
+    "latitude": 1.516068,
+    "longitude": 124.903352,
     "is_company": true
   },
   {
@@ -1953,7 +1953,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Jl. AA Maramis Paniki No. 112",
     "phone": "0812-441-0056",
     "vat": "080000561234821000",
@@ -1967,8 +1967,8 @@
     "delivery_route": "DELIV-GT-MANADO-SABTU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5292,
-    "longitude": 124.90745,
+    "latitude": 1.518518,
+    "longitude": 124.904052,
     "is_company": true
   },
   {
@@ -1996,8 +1996,8 @@
     "delivery_route": "DELIV-GT-MANADO-SABTU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5113,
-    "longitude": 124.85365,
+    "latitude": 1.510963,
+    "longitude": 124.851705,
     "is_company": true
   },
   {
@@ -2025,8 +2025,8 @@
     "delivery_route": "DELIV-GT-BITUNG-SENIN",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.44575,
-    "longitude": 125.18435,
+    "latitude": 1.458526,
+    "longitude": 125.188458,
     "is_company": true
   },
   {
@@ -2054,8 +2054,8 @@
     "delivery_route": "DELIV-GT-BITUNG-SENIN",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.44235,
-    "longitude": 125.13605,
+    "latitude": 1.449824,
+    "longitude": 125.133213,
     "is_company": true
   },
   {
@@ -2083,8 +2083,8 @@
     "delivery_route": "DELIV-GT-BITUNG-SENIN",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.44895,
-    "longitude": 125.15675,
+    "latitude": 1.449624,
+    "longitude": 125.16268,
     "is_company": true
   },
   {
@@ -2112,8 +2112,8 @@
     "delivery_route": "DELIV-GT-BITUNG-SENIN",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.4514,
-    "longitude": 125.1536,
+    "latitude": 1.452074,
+    "longitude": 125.15953,
     "is_company": true
   },
   {
@@ -2141,8 +2141,8 @@
     "delivery_route": "DELIV-GT-BITUNG-SENIN",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.455,
-    "longitude": 125.2093,
+    "latitude": 1.489889,
+    "longitude": 125.206028,
     "is_company": true
   },
   {
@@ -2156,7 +2156,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Pasar Beriman Paslaten No. 126",
     "phone": "0812-441-0063",
     "vat": "080000631234821000",
@@ -2170,8 +2170,8 @@
     "delivery_route": "DELIV-GT-TOMOHON-SELASA",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.3221,
-    "longitude": 124.8365,
+    "latitude": 1.319425,
+    "longitude": 124.833702,
     "is_company": true
   },
   {
@@ -2185,7 +2185,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Pasar Beriman Paslaten No. 128",
     "phone": "0812-441-0064",
     "vat": "080000641234821000",
@@ -2199,8 +2199,8 @@
     "delivery_route": "DELIV-GT-TOMOHON-SELASA",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.32455,
-    "longitude": 124.8372,
+    "latitude": 1.321875,
+    "longitude": 124.834402,
     "is_company": true
   },
   {
@@ -2214,7 +2214,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Pasar Beriman Paslaten No. 130",
     "phone": "0812-441-0065",
     "vat": "080000651234821000",
@@ -2228,8 +2228,8 @@
     "delivery_route": "DELIV-GT-TOMOHON-SELASA",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.32315,
-    "longitude": 124.8379,
+    "latitude": 1.320475,
+    "longitude": 124.835102,
     "is_company": true
   },
   {
@@ -2243,7 +2243,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Jl. Sam Ratulangi Tondano No. 132",
     "phone": "0812-441-0066",
     "vat": "080000661234821000",
@@ -2257,8 +2257,8 @@
     "delivery_route": "DELIV-GT-MINAHASA-RABU",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.30675,
-    "longitude": 124.90675,
+    "latitude": 1.259431,
+    "longitude": 124.889771,
     "is_company": true
   },
   {
@@ -2272,7 +2272,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Jl. Sam Ratulangi Tondano No. 134",
     "phone": "0812-441-0067",
     "vat": "080000671234821000",
@@ -2286,8 +2286,8 @@
     "delivery_route": "DELIV-GT-MINAHASA-RABU",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3092,
-    "longitude": 124.90745,
+    "latitude": 1.261881,
+    "longitude": 124.890471,
     "is_company": true
   },
   {
@@ -2301,7 +2301,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95671",
+    "zip": "95690",
     "street": "Pasar Kawangkoan Sendangan No. 136",
     "phone": "0812-441-0068",
     "vat": "080000681234821000",
@@ -2315,8 +2315,8 @@
     "delivery_route": "DELIV-GT-MINAHASA-KAMIS",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.2048,
-    "longitude": 124.78615,
+    "latitude": 1.201994,
+    "longitude": 124.779951,
     "is_company": true
   },
   {
@@ -2330,7 +2330,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95671",
+    "zip": "95690",
     "street": "Pasar Kawangkoan Sendangan No. 138",
     "phone": "0812-441-0069",
     "vat": "080000691234821000",
@@ -2344,8 +2344,8 @@
     "delivery_route": "DELIV-GT-MINAHASA-KAMIS",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.20725,
-    "longitude": 124.78685,
+    "latitude": 1.204444,
+    "longitude": 124.780651,
     "is_company": true
   },
   {
@@ -2373,8 +2373,8 @@
     "delivery_route": "DELIV-GT-UTARA-JUMAT",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.42885,
-    "longitude": 124.98355,
+    "latitude": 1.436298,
+    "longitude": 124.99876,
     "is_company": true
   },
   {
@@ -2402,8 +2402,8 @@
     "delivery_route": "DELIV-GT-UTARA-JUMAT",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.42745,
-    "longitude": 124.98425,
+    "latitude": 1.434898,
+    "longitude": 124.99946,
     "is_company": true
   },
   {
@@ -2417,7 +2417,7 @@
     "city": "Kab. Minahasa Selatan",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95954",
+    "zip": "95957",
     "street": "Jl. Trans Sulawesi Amurang No. 144",
     "phone": "0812-441-0072",
     "vat": "080000721234821000",
@@ -2431,8 +2431,8 @@
     "delivery_route": "DELIV-GT-SELATAN-SABTU",
     "delivery_vehicle": "DB 8910 TK (Elf Luar Kota)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.1894,
-    "longitude": 124.5706,
+    "latitude": 1.146996,
+    "longitude": 124.58687,
     "is_company": true
   },
   {
@@ -2446,7 +2446,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 01",
     "phone": "0852-401-0001",
     "vat": "",
@@ -2460,8 +2460,8 @@
     "delivery_route": "CANVASS-WENANG-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4922,
-    "longitude": 124.8435,
+    "latitude": 1.496446,
+    "longitude": 124.844334,
     "is_company": false
   },
   {
@@ -2475,7 +2475,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 02",
     "phone": "0852-401-0002",
     "vat": "",
@@ -2489,8 +2489,8 @@
     "delivery_route": "CANVASS-WENANG-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4937,
-    "longitude": 124.8429,
+    "latitude": 1.497946,
+    "longitude": 124.843734,
     "is_company": false
   },
   {
@@ -2504,7 +2504,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 03",
     "phone": "0852-401-0003",
     "vat": "",
@@ -2518,8 +2518,8 @@
     "delivery_route": "CANVASS-WENANG-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4913,
-    "longitude": 124.8423,
+    "latitude": 1.495546,
+    "longitude": 124.843134,
     "is_company": false
   },
   {
@@ -2533,7 +2533,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 04",
     "phone": "0852-401-0004",
     "vat": "",
@@ -2547,8 +2547,8 @@
     "delivery_route": "CANVASS-WENANG-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4928,
-    "longitude": 124.8417,
+    "latitude": 1.497046,
+    "longitude": 124.842534,
     "is_company": false
   },
   {
@@ -2562,7 +2562,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 05",
     "phone": "0852-401-0005",
     "vat": "",
@@ -2576,8 +2576,8 @@
     "delivery_route": "CANVASS-WENANG-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4943,
-    "longitude": 124.8411,
+    "latitude": 1.498546,
+    "longitude": 124.841934,
     "is_company": false
   },
   {
@@ -2591,7 +2591,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 06",
     "phone": "0852-401-0006",
     "vat": "",
@@ -2605,8 +2605,8 @@
     "delivery_route": "CANVASS-WENANG-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4919,
-    "longitude": 124.8405,
+    "latitude": 1.496146,
+    "longitude": 124.841334,
     "is_company": false
   },
   {
@@ -2620,7 +2620,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 01",
     "phone": "0852-401-0007",
     "vat": "",
@@ -2634,8 +2634,8 @@
     "delivery_route": "CANVASS-WENANG-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4934,
-    "longitude": 124.8438,
+    "latitude": 1.497646,
+    "longitude": 124.844634,
     "is_company": false
   },
   {
@@ -2649,7 +2649,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 02",
     "phone": "0852-401-0008",
     "vat": "",
@@ -2663,8 +2663,8 @@
     "delivery_route": "CANVASS-WENANG-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.491,
-    "longitude": 124.8432,
+    "latitude": 1.495246,
+    "longitude": 124.844034,
     "is_company": false
   },
   {
@@ -2678,7 +2678,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 03",
     "phone": "0852-401-0009",
     "vat": "",
@@ -2692,8 +2692,8 @@
     "delivery_route": "CANVASS-WENANG-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4925,
-    "longitude": 124.8426,
+    "latitude": 1.496746,
+    "longitude": 124.843434,
     "is_company": false
   },
   {
@@ -2707,7 +2707,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 04",
     "phone": "0852-401-0010",
     "vat": "",
@@ -2721,8 +2721,8 @@
     "delivery_route": "CANVASS-WENANG-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.494,
-    "longitude": 124.842,
+    "latitude": 1.498246,
+    "longitude": 124.842834,
     "is_company": false
   },
   {
@@ -2736,7 +2736,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 05",
     "phone": "0852-401-0011",
     "vat": "",
@@ -2750,8 +2750,8 @@
     "delivery_route": "CANVASS-WENANG-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4916,
-    "longitude": 124.8414,
+    "latitude": 1.495846,
+    "longitude": 124.842234,
     "is_company": false
   },
   {
@@ -2765,7 +2765,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 06",
     "phone": "0852-401-0012",
     "vat": "",
@@ -2779,8 +2779,8 @@
     "delivery_route": "CANVASS-WENANG-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4931,
-    "longitude": 124.8408,
+    "latitude": 1.497346,
+    "longitude": 124.841634,
     "is_company": false
   },
   {
@@ -2794,7 +2794,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 01",
     "phone": "0852-401-0013",
     "vat": "",
@@ -2808,8 +2808,8 @@
     "delivery_route": "CANVASS-WENANG-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4907,
-    "longitude": 124.8402,
+    "latitude": 1.494946,
+    "longitude": 124.841034,
     "is_company": false
   },
   {
@@ -2823,7 +2823,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 02",
     "phone": "0852-401-0014",
     "vat": "",
@@ -2837,8 +2837,8 @@
     "delivery_route": "CANVASS-WENANG-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4922,
-    "longitude": 124.8435,
+    "latitude": 1.496446,
+    "longitude": 124.844334,
     "is_company": false
   },
   {
@@ -2852,7 +2852,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 03",
     "phone": "0852-401-0015",
     "vat": "",
@@ -2866,8 +2866,8 @@
     "delivery_route": "CANVASS-WENANG-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4937,
-    "longitude": 124.8429,
+    "latitude": 1.497946,
+    "longitude": 124.843734,
     "is_company": false
   },
   {
@@ -2881,7 +2881,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 04",
     "phone": "0852-401-0016",
     "vat": "",
@@ -2895,8 +2895,8 @@
     "delivery_route": "CANVASS-WENANG-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4913,
-    "longitude": 124.8423,
+    "latitude": 1.495546,
+    "longitude": 124.843134,
     "is_company": false
   },
   {
@@ -2910,7 +2910,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 05",
     "phone": "0852-401-0017",
     "vat": "",
@@ -2924,8 +2924,8 @@
     "delivery_route": "CANVASS-WENANG-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4928,
-    "longitude": 124.8417,
+    "latitude": 1.497046,
+    "longitude": 124.842534,
     "is_company": false
   },
   {
@@ -2939,7 +2939,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 06",
     "phone": "0852-401-0018",
     "vat": "",
@@ -2953,8 +2953,8 @@
     "delivery_route": "CANVASS-WENANG-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4943,
-    "longitude": 124.8411,
+    "latitude": 1.498546,
+    "longitude": 124.841934,
     "is_company": false
   },
   {
@@ -2968,7 +2968,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 01",
     "phone": "0852-401-0019",
     "vat": "",
@@ -2982,8 +2982,8 @@
     "delivery_route": "CANVASS-WENANG-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4919,
-    "longitude": 124.8405,
+    "latitude": 1.496146,
+    "longitude": 124.841334,
     "is_company": false
   },
   {
@@ -2997,7 +2997,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 02",
     "phone": "0852-401-0020",
     "vat": "",
@@ -3011,8 +3011,8 @@
     "delivery_route": "CANVASS-WENANG-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4934,
-    "longitude": 124.8438,
+    "latitude": 1.497646,
+    "longitude": 124.844634,
     "is_company": false
   },
   {
@@ -3026,7 +3026,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 03",
     "phone": "0852-401-0021",
     "vat": "",
@@ -3040,8 +3040,8 @@
     "delivery_route": "CANVASS-WENANG-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.491,
-    "longitude": 124.8432,
+    "latitude": 1.495246,
+    "longitude": 124.844034,
     "is_company": false
   },
   {
@@ -3055,7 +3055,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 04",
     "phone": "0852-401-0022",
     "vat": "",
@@ -3069,8 +3069,8 @@
     "delivery_route": "CANVASS-WENANG-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4925,
-    "longitude": 124.8426,
+    "latitude": 1.496746,
+    "longitude": 124.843434,
     "is_company": false
   },
   {
@@ -3084,7 +3084,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 05",
     "phone": "0852-401-0023",
     "vat": "",
@@ -3098,8 +3098,8 @@
     "delivery_route": "CANVASS-WENANG-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.494,
-    "longitude": 124.842,
+    "latitude": 1.498246,
+    "longitude": 124.842834,
     "is_company": false
   },
   {
@@ -3113,7 +3113,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 06",
     "phone": "0852-401-0024",
     "vat": "",
@@ -3127,8 +3127,8 @@
     "delivery_route": "CANVASS-WENANG-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4916,
-    "longitude": 124.8414,
+    "latitude": 1.495846,
+    "longitude": 124.842234,
     "is_company": false
   },
   {
@@ -3142,7 +3142,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Lorong Pemukiman Wenang RW 01",
     "phone": "0852-401-0025",
     "vat": "",
@@ -3156,8 +3156,8 @@
     "delivery_route": "CANVASS-WENANG-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4931,
-    "longitude": 124.8408,
+    "latitude": 1.497346,
+    "longitude": 124.841634,
     "is_company": false
   },
   {
@@ -3171,7 +3171,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 01",
     "phone": "0852-401-0026",
     "vat": "",
@@ -3185,8 +3185,8 @@
     "delivery_route": "CANVASS-SARIO-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4697,
-    "longitude": 124.8357,
+    "latitude": 1.471454,
+    "longitude": 124.832966,
     "is_company": false
   },
   {
@@ -3200,7 +3200,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 02",
     "phone": "0852-401-0027",
     "vat": "",
@@ -3214,8 +3214,8 @@
     "delivery_route": "CANVASS-SARIO-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4712,
-    "longitude": 124.839,
+    "latitude": 1.472954,
+    "longitude": 124.836266,
     "is_company": false
   },
   {
@@ -3229,7 +3229,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 03",
     "phone": "0852-401-0028",
     "vat": "",
@@ -3243,8 +3243,8 @@
     "delivery_route": "CANVASS-SARIO-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4727,
-    "longitude": 124.8384,
+    "latitude": 1.474454,
+    "longitude": 124.835666,
     "is_company": false
   },
   {
@@ -3258,7 +3258,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 04",
     "phone": "0852-401-0029",
     "vat": "",
@@ -3272,8 +3272,8 @@
     "delivery_route": "CANVASS-SARIO-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4703,
-    "longitude": 124.8378,
+    "latitude": 1.472054,
+    "longitude": 124.835066,
     "is_company": false
   },
   {
@@ -3287,7 +3287,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 05",
     "phone": "0852-401-0030",
     "vat": "",
@@ -3301,8 +3301,8 @@
     "delivery_route": "CANVASS-SARIO-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4718,
-    "longitude": 124.8372,
+    "latitude": 1.473554,
+    "longitude": 124.834466,
     "is_company": false
   },
   {
@@ -3316,7 +3316,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 06",
     "phone": "0852-401-0031",
     "vat": "",
@@ -3330,8 +3330,8 @@
     "delivery_route": "CANVASS-SARIO-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4733,
-    "longitude": 124.8366,
+    "latitude": 1.475054,
+    "longitude": 124.833866,
     "is_company": false
   },
   {
@@ -3345,7 +3345,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 01",
     "phone": "0852-401-0032",
     "vat": "",
@@ -3359,8 +3359,8 @@
     "delivery_route": "CANVASS-SARIO-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4709,
-    "longitude": 124.836,
+    "latitude": 1.472654,
+    "longitude": 124.833266,
     "is_company": false
   },
   {
@@ -3374,7 +3374,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 02",
     "phone": "0852-401-0033",
     "vat": "",
@@ -3388,8 +3388,8 @@
     "delivery_route": "CANVASS-SARIO-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4724,
-    "longitude": 124.8393,
+    "latitude": 1.474154,
+    "longitude": 124.836566,
     "is_company": false
   },
   {
@@ -3403,7 +3403,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 03",
     "phone": "0852-401-0034",
     "vat": "",
@@ -3417,8 +3417,8 @@
     "delivery_route": "CANVASS-SARIO-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.47,
-    "longitude": 124.8387,
+    "latitude": 1.471754,
+    "longitude": 124.835966,
     "is_company": false
   },
   {
@@ -3432,7 +3432,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 04",
     "phone": "0852-401-0035",
     "vat": "",
@@ -3446,8 +3446,8 @@
     "delivery_route": "CANVASS-SARIO-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4715,
-    "longitude": 124.8381,
+    "latitude": 1.473254,
+    "longitude": 124.835366,
     "is_company": false
   },
   {
@@ -3461,7 +3461,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 05",
     "phone": "0852-401-0036",
     "vat": "",
@@ -3475,8 +3475,8 @@
     "delivery_route": "CANVASS-SARIO-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.473,
-    "longitude": 124.8375,
+    "latitude": 1.474754,
+    "longitude": 124.834766,
     "is_company": false
   },
   {
@@ -3490,7 +3490,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 06",
     "phone": "0852-401-0037",
     "vat": "",
@@ -3504,8 +3504,8 @@
     "delivery_route": "CANVASS-SARIO-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4706,
-    "longitude": 124.8369,
+    "latitude": 1.472354,
+    "longitude": 124.834166,
     "is_company": false
   },
   {
@@ -3519,7 +3519,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 01",
     "phone": "0852-401-0038",
     "vat": "",
@@ -3533,8 +3533,8 @@
     "delivery_route": "CANVASS-SARIO-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4721,
-    "longitude": 124.8363,
+    "latitude": 1.473854,
+    "longitude": 124.833566,
     "is_company": false
   },
   {
@@ -3548,7 +3548,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 02",
     "phone": "0852-401-0039",
     "vat": "",
@@ -3562,8 +3562,8 @@
     "delivery_route": "CANVASS-SARIO-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4697,
-    "longitude": 124.8357,
+    "latitude": 1.471454,
+    "longitude": 124.832966,
     "is_company": false
   },
   {
@@ -3577,7 +3577,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 03",
     "phone": "0852-401-0040",
     "vat": "",
@@ -3591,8 +3591,8 @@
     "delivery_route": "CANVASS-SARIO-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4712,
-    "longitude": 124.839,
+    "latitude": 1.472954,
+    "longitude": 124.836266,
     "is_company": false
   },
   {
@@ -3606,7 +3606,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 04",
     "phone": "0852-401-0041",
     "vat": "",
@@ -3620,8 +3620,8 @@
     "delivery_route": "CANVASS-SARIO-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4727,
-    "longitude": 124.8384,
+    "latitude": 1.474454,
+    "longitude": 124.835666,
     "is_company": false
   },
   {
@@ -3635,7 +3635,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 05",
     "phone": "0852-401-0042",
     "vat": "",
@@ -3649,8 +3649,8 @@
     "delivery_route": "CANVASS-SARIO-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4703,
-    "longitude": 124.8378,
+    "latitude": 1.472054,
+    "longitude": 124.835066,
     "is_company": false
   },
   {
@@ -3664,7 +3664,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Lorong Pemukiman Sario RW 06",
     "phone": "0852-401-0043",
     "vat": "",
@@ -3678,8 +3678,8 @@
     "delivery_route": "CANVASS-SARIO-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4718,
-    "longitude": 124.8372,
+    "latitude": 1.473554,
+    "longitude": 124.834466,
     "is_company": false
   },
   {
@@ -3707,8 +3707,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4603,
-    "longitude": 124.8246,
+    "latitude": 1.457561,
+    "longitude": 124.824462,
     "is_company": false
   },
   {
@@ -3736,8 +3736,8 @@
     "delivery_route": "CANVASS-MALALAYANG-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4579,
-    "longitude": 124.824,
+    "latitude": 1.455161,
+    "longitude": 124.823862,
     "is_company": false
   },
   {
@@ -3765,8 +3765,8 @@
     "delivery_route": "CANVASS-MALALAYANG-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4594,
-    "longitude": 124.8273,
+    "latitude": 1.456661,
+    "longitude": 124.827162,
     "is_company": false
   },
   {
@@ -3794,8 +3794,8 @@
     "delivery_route": "CANVASS-MALALAYANG-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.457,
-    "longitude": 124.8267,
+    "latitude": 1.454261,
+    "longitude": 124.826562,
     "is_company": false
   },
   {
@@ -3823,8 +3823,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4585,
-    "longitude": 124.8261,
+    "latitude": 1.455761,
+    "longitude": 124.825962,
     "is_company": false
   },
   {
@@ -3852,8 +3852,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.46,
-    "longitude": 124.8255,
+    "latitude": 1.457261,
+    "longitude": 124.825362,
     "is_company": false
   },
   {
@@ -3881,8 +3881,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4576,
-    "longitude": 124.8249,
+    "latitude": 1.454861,
+    "longitude": 124.824762,
     "is_company": false
   },
   {
@@ -3910,8 +3910,8 @@
     "delivery_route": "CANVASS-MALALAYANG-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4591,
-    "longitude": 124.8243,
+    "latitude": 1.456361,
+    "longitude": 124.824162,
     "is_company": false
   },
   {
@@ -3939,8 +3939,8 @@
     "delivery_route": "CANVASS-MALALAYANG-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4567,
-    "longitude": 124.8237,
+    "latitude": 1.453961,
+    "longitude": 124.823562,
     "is_company": false
   },
   {
@@ -3968,8 +3968,8 @@
     "delivery_route": "CANVASS-MALALAYANG-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4582,
-    "longitude": 124.827,
+    "latitude": 1.455461,
+    "longitude": 124.826862,
     "is_company": false
   },
   {
@@ -3997,8 +3997,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4597,
-    "longitude": 124.8264,
+    "latitude": 1.456961,
+    "longitude": 124.826262,
     "is_company": false
   },
   {
@@ -4026,8 +4026,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4573,
-    "longitude": 124.8258,
+    "latitude": 1.454561,
+    "longitude": 124.825662,
     "is_company": false
   },
   {
@@ -4055,8 +4055,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4588,
-    "longitude": 124.8252,
+    "latitude": 1.456061,
+    "longitude": 124.825062,
     "is_company": false
   },
   {
@@ -4084,8 +4084,8 @@
     "delivery_route": "CANVASS-MALALAYANG-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4603,
-    "longitude": 124.8246,
+    "latitude": 1.457561,
+    "longitude": 124.824462,
     "is_company": false
   },
   {
@@ -4113,8 +4113,8 @@
     "delivery_route": "CANVASS-MALALAYANG-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4579,
-    "longitude": 124.824,
+    "latitude": 1.455161,
+    "longitude": 124.823862,
     "is_company": false
   },
   {
@@ -4142,8 +4142,8 @@
     "delivery_route": "CANVASS-MALALAYANG-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4594,
-    "longitude": 124.8273,
+    "latitude": 1.456661,
+    "longitude": 124.827162,
     "is_company": false
   },
   {
@@ -4171,8 +4171,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.457,
-    "longitude": 124.8267,
+    "latitude": 1.454261,
+    "longitude": 124.826562,
     "is_company": false
   },
   {
@@ -4200,8 +4200,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4585,
-    "longitude": 124.8261,
+    "latitude": 1.455761,
+    "longitude": 124.825962,
     "is_company": false
   },
   {
@@ -4229,8 +4229,8 @@
     "delivery_route": "CANVASS-MALALAYANG-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.46,
-    "longitude": 124.8255,
+    "latitude": 1.457261,
+    "longitude": 124.825362,
     "is_company": false
   },
   {
@@ -4258,8 +4258,8 @@
     "delivery_route": "CANVASS-MALALAYANG-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4576,
-    "longitude": 124.8249,
+    "latitude": 1.454861,
+    "longitude": 124.824762,
     "is_company": false
   },
   {
@@ -4287,8 +4287,8 @@
     "delivery_route": "CANVASS-MALALAYANG-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4591,
-    "longitude": 124.8243,
+    "latitude": 1.456361,
+    "longitude": 124.824162,
     "is_company": false
   },
   {
@@ -4316,8 +4316,8 @@
     "delivery_route": "CANVASS-MALALAYANG-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4567,
-    "longitude": 124.8237,
+    "latitude": 1.453961,
+    "longitude": 124.823562,
     "is_company": false
   },
   {
@@ -4331,7 +4331,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 01",
     "phone": "0852-401-0066",
     "vat": "",
@@ -4345,8 +4345,8 @@
     "delivery_route": "CANVASS-WANEA-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4647,
-    "longitude": 124.8505,
+    "latitude": 1.48396,
+    "longitude": 124.835492,
     "is_company": false
   },
   {
@@ -4360,7 +4360,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 02",
     "phone": "0852-401-0067",
     "vat": "",
@@ -4374,8 +4374,8 @@
     "delivery_route": "CANVASS-WANEA-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4662,
-    "longitude": 124.8499,
+    "latitude": 1.48546,
+    "longitude": 124.834892,
     "is_company": false
   },
   {
@@ -4389,7 +4389,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 03",
     "phone": "0852-401-0068",
     "vat": "",
@@ -4403,8 +4403,8 @@
     "delivery_route": "CANVASS-WANEA-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4638,
-    "longitude": 124.8493,
+    "latitude": 1.48306,
+    "longitude": 124.834292,
     "is_company": false
   },
   {
@@ -4418,7 +4418,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 04",
     "phone": "0852-401-0069",
     "vat": "",
@@ -4432,8 +4432,8 @@
     "delivery_route": "CANVASS-WANEA-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4653,
-    "longitude": 124.8487,
+    "latitude": 1.48456,
+    "longitude": 124.833692,
     "is_company": false
   },
   {
@@ -4447,7 +4447,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 05",
     "phone": "0852-401-0070",
     "vat": "",
@@ -4461,8 +4461,8 @@
     "delivery_route": "CANVASS-WANEA-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4668,
-    "longitude": 124.8481,
+    "latitude": 1.48606,
+    "longitude": 124.833092,
     "is_company": false
   },
   {
@@ -4476,7 +4476,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 06",
     "phone": "0852-401-0071",
     "vat": "",
@@ -4490,8 +4490,8 @@
     "delivery_route": "CANVASS-WANEA-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4644,
-    "longitude": 124.8475,
+    "latitude": 1.48366,
+    "longitude": 124.832492,
     "is_company": false
   },
   {
@@ -4505,7 +4505,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 01",
     "phone": "0852-401-0072",
     "vat": "",
@@ -4519,8 +4519,8 @@
     "delivery_route": "CANVASS-WANEA-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4659,
-    "longitude": 124.8508,
+    "latitude": 1.48516,
+    "longitude": 124.835792,
     "is_company": false
   },
   {
@@ -4534,7 +4534,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 02",
     "phone": "0852-401-0073",
     "vat": "",
@@ -4548,8 +4548,8 @@
     "delivery_route": "CANVASS-WANEA-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4635,
-    "longitude": 124.8502,
+    "latitude": 1.48276,
+    "longitude": 124.835192,
     "is_company": false
   },
   {
@@ -4563,7 +4563,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 03",
     "phone": "0852-401-0074",
     "vat": "",
@@ -4577,8 +4577,8 @@
     "delivery_route": "CANVASS-WANEA-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.465,
-    "longitude": 124.8496,
+    "latitude": 1.48426,
+    "longitude": 124.834592,
     "is_company": false
   },
   {
@@ -4592,7 +4592,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 04",
     "phone": "0852-401-0075",
     "vat": "",
@@ -4606,8 +4606,8 @@
     "delivery_route": "CANVASS-WANEA-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4665,
-    "longitude": 124.849,
+    "latitude": 1.48576,
+    "longitude": 124.833992,
     "is_company": false
   },
   {
@@ -4621,7 +4621,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 05",
     "phone": "0852-401-0076",
     "vat": "",
@@ -4635,8 +4635,8 @@
     "delivery_route": "CANVASS-WANEA-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4641,
-    "longitude": 124.8484,
+    "latitude": 1.48336,
+    "longitude": 124.833392,
     "is_company": false
   },
   {
@@ -4650,7 +4650,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 06",
     "phone": "0852-401-0077",
     "vat": "",
@@ -4664,8 +4664,8 @@
     "delivery_route": "CANVASS-WANEA-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4656,
-    "longitude": 124.8478,
+    "latitude": 1.48486,
+    "longitude": 124.832792,
     "is_company": false
   },
   {
@@ -4679,7 +4679,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 01",
     "phone": "0852-401-0078",
     "vat": "",
@@ -4693,8 +4693,8 @@
     "delivery_route": "CANVASS-WANEA-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4632,
-    "longitude": 124.8472,
+    "latitude": 1.48246,
+    "longitude": 124.832192,
     "is_company": false
   },
   {
@@ -4708,7 +4708,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 02",
     "phone": "0852-401-0079",
     "vat": "",
@@ -4722,8 +4722,8 @@
     "delivery_route": "CANVASS-WANEA-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4647,
-    "longitude": 124.8505,
+    "latitude": 1.48396,
+    "longitude": 124.835492,
     "is_company": false
   },
   {
@@ -4737,7 +4737,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 03",
     "phone": "0852-401-0080",
     "vat": "",
@@ -4751,8 +4751,8 @@
     "delivery_route": "CANVASS-WANEA-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4662,
-    "longitude": 124.8499,
+    "latitude": 1.48546,
+    "longitude": 124.834892,
     "is_company": false
   },
   {
@@ -4766,7 +4766,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 04",
     "phone": "0852-401-0081",
     "vat": "",
@@ -4780,8 +4780,8 @@
     "delivery_route": "CANVASS-WANEA-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4638,
-    "longitude": 124.8493,
+    "latitude": 1.48306,
+    "longitude": 124.834292,
     "is_company": false
   },
   {
@@ -4795,7 +4795,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 05",
     "phone": "0852-401-0082",
     "vat": "",
@@ -4809,8 +4809,8 @@
     "delivery_route": "CANVASS-WANEA-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4653,
-    "longitude": 124.8487,
+    "latitude": 1.48456,
+    "longitude": 124.833692,
     "is_company": false
   },
   {
@@ -4824,7 +4824,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95117",
+    "zip": "95111",
     "street": "Lorong Pemukiman Wanea RW 06",
     "phone": "0852-401-0083",
     "vat": "",
@@ -4838,8 +4838,8 @@
     "delivery_route": "CANVASS-WANEA-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4668,
-    "longitude": 124.8481,
+    "latitude": 1.48606,
+    "longitude": 124.833092,
     "is_company": false
   },
   {
@@ -4867,8 +4867,8 @@
     "delivery_route": "CANVASS-TIKALA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4814,
-    "longitude": 124.8575,
+    "latitude": 1.476222,
+    "longitude": 124.857222,
     "is_company": false
   },
   {
@@ -4896,8 +4896,8 @@
     "delivery_route": "CANVASS-TIKALA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4829,
-    "longitude": 124.8608,
+    "latitude": 1.477722,
+    "longitude": 124.860522,
     "is_company": false
   },
   {
@@ -4925,8 +4925,8 @@
     "delivery_route": "CANVASS-TIKALA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4805,
-    "longitude": 124.8602,
+    "latitude": 1.475322,
+    "longitude": 124.859922,
     "is_company": false
   },
   {
@@ -4954,8 +4954,8 @@
     "delivery_route": "CANVASS-TIKALA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.482,
-    "longitude": 124.8596,
+    "latitude": 1.476822,
+    "longitude": 124.859322,
     "is_company": false
   },
   {
@@ -4983,8 +4983,8 @@
     "delivery_route": "CANVASS-TIKALA-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4835,
-    "longitude": 124.859,
+    "latitude": 1.478322,
+    "longitude": 124.858722,
     "is_company": false
   },
   {
@@ -5012,8 +5012,8 @@
     "delivery_route": "CANVASS-TIKALA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4811,
-    "longitude": 124.8584,
+    "latitude": 1.475922,
+    "longitude": 124.858122,
     "is_company": false
   },
   {
@@ -5041,8 +5041,8 @@
     "delivery_route": "CANVASS-TIKALA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4826,
-    "longitude": 124.8578,
+    "latitude": 1.477422,
+    "longitude": 124.857522,
     "is_company": false
   },
   {
@@ -5070,8 +5070,8 @@
     "delivery_route": "CANVASS-TIKALA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4802,
-    "longitude": 124.8572,
+    "latitude": 1.475022,
+    "longitude": 124.856922,
     "is_company": false
   },
   {
@@ -5099,8 +5099,8 @@
     "delivery_route": "CANVASS-TIKALA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4817,
-    "longitude": 124.8605,
+    "latitude": 1.476522,
+    "longitude": 124.860222,
     "is_company": false
   },
   {
@@ -5128,8 +5128,8 @@
     "delivery_route": "CANVASS-TIKALA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4832,
-    "longitude": 124.8599,
+    "latitude": 1.478022,
+    "longitude": 124.859622,
     "is_company": false
   },
   {
@@ -5157,8 +5157,8 @@
     "delivery_route": "CANVASS-TIKALA-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4808,
-    "longitude": 124.8593,
+    "latitude": 1.475622,
+    "longitude": 124.859022,
     "is_company": false
   },
   {
@@ -5186,8 +5186,8 @@
     "delivery_route": "CANVASS-TIKALA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4823,
-    "longitude": 124.8587,
+    "latitude": 1.477122,
+    "longitude": 124.858422,
     "is_company": false
   },
   {
@@ -5215,8 +5215,8 @@
     "delivery_route": "CANVASS-TIKALA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4838,
-    "longitude": 124.8581,
+    "latitude": 1.478622,
+    "longitude": 124.857822,
     "is_company": false
   },
   {
@@ -5244,8 +5244,8 @@
     "delivery_route": "CANVASS-TIKALA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4814,
-    "longitude": 124.8575,
+    "latitude": 1.476222,
+    "longitude": 124.857222,
     "is_company": false
   },
   {
@@ -5273,8 +5273,8 @@
     "delivery_route": "CANVASS-TIKALA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4829,
-    "longitude": 124.8608,
+    "latitude": 1.477722,
+    "longitude": 124.860522,
     "is_company": false
   },
   {
@@ -5302,8 +5302,8 @@
     "delivery_route": "CANVASS-TIKALA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4805,
-    "longitude": 124.8602,
+    "latitude": 1.475322,
+    "longitude": 124.859922,
     "is_company": false
   },
   {
@@ -5331,8 +5331,8 @@
     "delivery_route": "CANVASS-TIKALA-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.482,
-    "longitude": 124.8596,
+    "latitude": 1.476822,
+    "longitude": 124.859322,
     "is_company": false
   },
   {
@@ -5360,8 +5360,8 @@
     "delivery_route": "CANVASS-TIKALA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4835,
-    "longitude": 124.859,
+    "latitude": 1.478322,
+    "longitude": 124.858722,
     "is_company": false
   },
   {
@@ -5389,8 +5389,8 @@
     "delivery_route": "CANVASS-TIKALA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4811,
-    "longitude": 124.8584,
+    "latitude": 1.475922,
+    "longitude": 124.858122,
     "is_company": false
   },
   {
@@ -5418,8 +5418,8 @@
     "delivery_route": "CANVASS-TIKALA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4826,
-    "longitude": 124.8578,
+    "latitude": 1.477422,
+    "longitude": 124.857522,
     "is_company": false
   },
   {
@@ -5447,8 +5447,8 @@
     "delivery_route": "CANVASS-TIKALA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4802,
-    "longitude": 124.8572,
+    "latitude": 1.475022,
+    "longitude": 124.856922,
     "is_company": false
   },
   {
@@ -5476,8 +5476,8 @@
     "delivery_route": "CANVASS-TIKALA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4817,
-    "longitude": 124.8605,
+    "latitude": 1.476522,
+    "longitude": 124.860222,
     "is_company": false
   },
   {
@@ -5505,8 +5505,8 @@
     "delivery_route": "CANVASS-TIKALA-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4832,
-    "longitude": 124.8599,
+    "latitude": 1.478022,
+    "longitude": 124.859622,
     "is_company": false
   },
   {
@@ -5534,8 +5534,8 @@
     "delivery_route": "CANVASS-PAAL DUA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4883,
-    "longitude": 124.8708,
+    "latitude": 1.484262,
+    "longitude": 124.876939,
     "is_company": false
   },
   {
@@ -5563,8 +5563,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4898,
-    "longitude": 124.8702,
+    "latitude": 1.485762,
+    "longitude": 124.876339,
     "is_company": false
   },
   {
@@ -5592,8 +5592,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4913,
-    "longitude": 124.8696,
+    "latitude": 1.487262,
+    "longitude": 124.875739,
     "is_company": false
   },
   {
@@ -5621,8 +5621,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4889,
-    "longitude": 124.869,
+    "latitude": 1.484862,
+    "longitude": 124.875139,
     "is_company": false
   },
   {
@@ -5650,8 +5650,8 @@
     "delivery_route": "CANVASS-PAAL DUA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4904,
-    "longitude": 124.8723,
+    "latitude": 1.486362,
+    "longitude": 124.878439,
     "is_company": false
   },
   {
@@ -5679,8 +5679,8 @@
     "delivery_route": "CANVASS-PAAL DUA-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.488,
-    "longitude": 124.8717,
+    "latitude": 1.483962,
+    "longitude": 124.877839,
     "is_company": false
   },
   {
@@ -5708,8 +5708,8 @@
     "delivery_route": "CANVASS-PAAL DUA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4895,
-    "longitude": 124.8711,
+    "latitude": 1.485462,
+    "longitude": 124.877239,
     "is_company": false
   },
   {
@@ -5737,8 +5737,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.491,
-    "longitude": 124.8705,
+    "latitude": 1.486962,
+    "longitude": 124.876639,
     "is_company": false
   },
   {
@@ -5766,8 +5766,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4886,
-    "longitude": 124.8699,
+    "latitude": 1.484562,
+    "longitude": 124.876039,
     "is_company": false
   },
   {
@@ -5795,8 +5795,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4901,
-    "longitude": 124.8693,
+    "latitude": 1.486062,
+    "longitude": 124.875439,
     "is_company": false
   },
   {
@@ -5824,8 +5824,8 @@
     "delivery_route": "CANVASS-PAAL DUA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4877,
-    "longitude": 124.8687,
+    "latitude": 1.483662,
+    "longitude": 124.874839,
     "is_company": false
   },
   {
@@ -5853,8 +5853,8 @@
     "delivery_route": "CANVASS-PAAL DUA-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4892,
-    "longitude": 124.872,
+    "latitude": 1.485162,
+    "longitude": 124.878139,
     "is_company": false
   },
   {
@@ -5882,8 +5882,8 @@
     "delivery_route": "CANVASS-PAAL DUA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4907,
-    "longitude": 124.8714,
+    "latitude": 1.486662,
+    "longitude": 124.877539,
     "is_company": false
   },
   {
@@ -5911,8 +5911,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4883,
-    "longitude": 124.8708,
+    "latitude": 1.484262,
+    "longitude": 124.876939,
     "is_company": false
   },
   {
@@ -5940,8 +5940,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.4898,
-    "longitude": 124.8702,
+    "latitude": 1.485762,
+    "longitude": 124.876339,
     "is_company": false
   },
   {
@@ -5969,8 +5969,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.4913,
-    "longitude": 124.8696,
+    "latitude": 1.487262,
+    "longitude": 124.875739,
     "is_company": false
   },
   {
@@ -5998,8 +5998,8 @@
     "delivery_route": "CANVASS-PAAL DUA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.4889,
-    "longitude": 124.869,
+    "latitude": 1.484862,
+    "longitude": 124.875139,
     "is_company": false
   },
   {
@@ -6027,8 +6027,8 @@
     "delivery_route": "CANVASS-PAAL DUA-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.4904,
-    "longitude": 124.8723,
+    "latitude": 1.486362,
+    "longitude": 124.878439,
     "is_company": false
   },
   {
@@ -6056,8 +6056,8 @@
     "delivery_route": "CANVASS-PAAL DUA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.488,
-    "longitude": 124.8717,
+    "latitude": 1.483962,
+    "longitude": 124.877839,
     "is_company": false
   },
   {
@@ -6085,8 +6085,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.4895,
-    "longitude": 124.8711,
+    "latitude": 1.485462,
+    "longitude": 124.877239,
     "is_company": false
   },
   {
@@ -6114,8 +6114,8 @@
     "delivery_route": "CANVASS-PAAL DUA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.491,
-    "longitude": 124.8705,
+    "latitude": 1.486962,
+    "longitude": 124.876639,
     "is_company": false
   },
   {
@@ -6143,8 +6143,8 @@
     "delivery_route": "CANVASS-TUMINTING-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5111,
-    "longitude": 124.8534,
+    "latitude": 1.510763,
+    "longitude": 124.851455,
     "is_company": false
   },
   {
@@ -6172,8 +6172,8 @@
     "delivery_route": "CANVASS-TUMINTING-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5126,
-    "longitude": 124.8528,
+    "latitude": 1.512263,
+    "longitude": 124.850855,
     "is_company": false
   },
   {
@@ -6201,8 +6201,8 @@
     "delivery_route": "CANVASS-TUMINTING-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5102,
-    "longitude": 124.8522,
+    "latitude": 1.509863,
+    "longitude": 124.850255,
     "is_company": false
   },
   {
@@ -6230,8 +6230,8 @@
     "delivery_route": "CANVASS-TUMINTING-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5117,
-    "longitude": 124.8555,
+    "latitude": 1.511363,
+    "longitude": 124.853555,
     "is_company": false
   },
   {
@@ -6259,8 +6259,8 @@
     "delivery_route": "CANVASS-TUMINTING-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5132,
-    "longitude": 124.8549,
+    "latitude": 1.512863,
+    "longitude": 124.852955,
     "is_company": false
   },
   {
@@ -6288,8 +6288,8 @@
     "delivery_route": "CANVASS-TUMINTING-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5108,
-    "longitude": 124.8543,
+    "latitude": 1.510463,
+    "longitude": 124.852355,
     "is_company": false
   },
   {
@@ -6317,8 +6317,8 @@
     "delivery_route": "CANVASS-TUMINTING-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5123,
-    "longitude": 124.8537,
+    "latitude": 1.511963,
+    "longitude": 124.851755,
     "is_company": false
   },
   {
@@ -6346,8 +6346,8 @@
     "delivery_route": "CANVASS-TUMINTING-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-08-01",
-    "latitude": 1.5138,
-    "longitude": 124.8531,
+    "latitude": 1.513463,
+    "longitude": 124.851155,
     "is_company": false
   },
   {
@@ -6375,8 +6375,8 @@
     "delivery_route": "CANVASS-TUMINTING-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5114,
-    "longitude": 124.8525,
+    "latitude": 1.511063,
+    "longitude": 124.850555,
     "is_company": false
   },
   {
@@ -6404,8 +6404,8 @@
     "delivery_route": "CANVASS-TUMINTING-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5129,
-    "longitude": 124.8558,
+    "latitude": 1.512563,
+    "longitude": 124.853855,
     "is_company": false
   },
   {
@@ -6433,8 +6433,8 @@
     "delivery_route": "CANVASS-TUMINTING-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5105,
-    "longitude": 124.8552,
+    "latitude": 1.510163,
+    "longitude": 124.853255,
     "is_company": false
   },
   {
@@ -6462,8 +6462,8 @@
     "delivery_route": "CANVASS-TUMINTING-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.512,
-    "longitude": 124.8546,
+    "latitude": 1.511663,
+    "longitude": 124.852655,
     "is_company": false
   },
   {
@@ -6491,8 +6491,8 @@
     "delivery_route": "CANVASS-TUMINTING-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5135,
-    "longitude": 124.854,
+    "latitude": 1.513163,
+    "longitude": 124.852055,
     "is_company": false
   },
   {
@@ -6520,8 +6520,8 @@
     "delivery_route": "CANVASS-TUMINTING-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5111,
-    "longitude": 124.8534,
+    "latitude": 1.510763,
+    "longitude": 124.851455,
     "is_company": false
   },
   {
@@ -6549,8 +6549,8 @@
     "delivery_route": "CANVASS-TUMINTING-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5126,
-    "longitude": 124.8528,
+    "latitude": 1.512263,
+    "longitude": 124.850855,
     "is_company": false
   },
   {
@@ -6578,8 +6578,8 @@
     "delivery_route": "CANVASS-TUMINTING-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5102,
-    "longitude": 124.8522,
+    "latitude": 1.509863,
+    "longitude": 124.850255,
     "is_company": false
   },
   {
@@ -6607,8 +6607,8 @@
     "delivery_route": "CANVASS-TUMINTING-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5117,
-    "longitude": 124.8555,
+    "latitude": 1.511363,
+    "longitude": 124.853555,
     "is_company": false
   },
   {
@@ -6636,8 +6636,8 @@
     "delivery_route": "CANVASS-TUMINTING-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5132,
-    "longitude": 124.8549,
+    "latitude": 1.512863,
+    "longitude": 124.852955,
     "is_company": false
   },
   {
@@ -6665,8 +6665,8 @@
     "delivery_route": "CANVASS-TUMINTING-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5108,
-    "longitude": 124.8543,
+    "latitude": 1.510463,
+    "longitude": 124.852355,
     "is_company": false
   },
   {
@@ -6694,8 +6694,8 @@
     "delivery_route": "CANVASS-TUMINTING-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5123,
-    "longitude": 124.8537,
+    "latitude": 1.511963,
+    "longitude": 124.851755,
     "is_company": false
   },
   {
@@ -6723,8 +6723,8 @@
     "delivery_route": "CANVASS-SINGKIL-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5028,
-    "longitude": 124.8611,
+    "latitude": 1.506881,
+    "longitude": 124.860546,
     "is_company": false
   },
   {
@@ -6752,8 +6752,8 @@
     "delivery_route": "CANVASS-SINGKIL-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5004,
-    "longitude": 124.8605,
+    "latitude": 1.504481,
+    "longitude": 124.859946,
     "is_company": false
   },
   {
@@ -6781,8 +6781,8 @@
     "delivery_route": "CANVASS-SINGKIL-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5019,
-    "longitude": 124.8638,
+    "latitude": 1.505981,
+    "longitude": 124.863246,
     "is_company": false
   },
   {
@@ -6810,8 +6810,8 @@
     "delivery_route": "CANVASS-SINGKIL-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.4995,
-    "longitude": 124.8632,
+    "latitude": 1.503581,
+    "longitude": 124.862646,
     "is_company": false
   },
   {
@@ -6839,8 +6839,8 @@
     "delivery_route": "CANVASS-SINGKIL-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.501,
-    "longitude": 124.8626,
+    "latitude": 1.505081,
+    "longitude": 124.862046,
     "is_company": false
   },
   {
@@ -6868,8 +6868,8 @@
     "delivery_route": "CANVASS-SINGKIL-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5025,
-    "longitude": 124.862,
+    "latitude": 1.506581,
+    "longitude": 124.861446,
     "is_company": false
   },
   {
@@ -6897,8 +6897,8 @@
     "delivery_route": "CANVASS-SINGKIL-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5001,
-    "longitude": 124.8614,
+    "latitude": 1.504181,
+    "longitude": 124.860846,
     "is_company": false
   },
   {
@@ -6926,8 +6926,8 @@
     "delivery_route": "CANVASS-SINGKIL-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-09-01",
-    "latitude": 1.5016,
-    "longitude": 124.8608,
+    "latitude": 1.505681,
+    "longitude": 124.860246,
     "is_company": false
   },
   {
@@ -6955,8 +6955,8 @@
     "delivery_route": "CANVASS-SINGKIL-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4992,
-    "longitude": 124.8602,
+    "latitude": 1.503281,
+    "longitude": 124.859646,
     "is_company": false
   },
   {
@@ -6984,8 +6984,8 @@
     "delivery_route": "CANVASS-SINGKIL-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5007,
-    "longitude": 124.8635,
+    "latitude": 1.504781,
+    "longitude": 124.862946,
     "is_company": false
   },
   {
@@ -7013,8 +7013,8 @@
     "delivery_route": "CANVASS-SINGKIL-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5022,
-    "longitude": 124.8629,
+    "latitude": 1.506281,
+    "longitude": 124.862346,
     "is_company": false
   },
   {
@@ -7042,8 +7042,8 @@
     "delivery_route": "CANVASS-SINGKIL-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4998,
-    "longitude": 124.8623,
+    "latitude": 1.503881,
+    "longitude": 124.861746,
     "is_company": false
   },
   {
@@ -7071,8 +7071,8 @@
     "delivery_route": "CANVASS-SINGKIL-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5013,
-    "longitude": 124.8617,
+    "latitude": 1.505381,
+    "longitude": 124.861146,
     "is_company": false
   },
   {
@@ -7100,8 +7100,8 @@
     "delivery_route": "CANVASS-SINGKIL-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5028,
-    "longitude": 124.8611,
+    "latitude": 1.506881,
+    "longitude": 124.860546,
     "is_company": false
   },
   {
@@ -7129,8 +7129,8 @@
     "delivery_route": "CANVASS-SINGKIL-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5004,
-    "longitude": 124.8605,
+    "latitude": 1.504481,
+    "longitude": 124.859946,
     "is_company": false
   },
   {
@@ -7158,8 +7158,8 @@
     "delivery_route": "CANVASS-SINGKIL-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5019,
-    "longitude": 124.8638,
+    "latitude": 1.505981,
+    "longitude": 124.863246,
     "is_company": false
   },
   {
@@ -7173,7 +7173,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 01",
     "phone": "0852-401-0164",
     "vat": "",
@@ -7187,8 +7187,8 @@
     "delivery_route": "CANVASS-MAPANGET-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.527,
-    "longitude": 124.9097,
+    "latitude": 1.516318,
+    "longitude": 124.906302,
     "is_company": false
   },
   {
@@ -7202,7 +7202,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 02",
     "phone": "0852-401-0165",
     "vat": "",
@@ -7216,8 +7216,8 @@
     "delivery_route": "CANVASS-MAPANGET-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5285,
-    "longitude": 124.9091,
+    "latitude": 1.517818,
+    "longitude": 124.905702,
     "is_company": false
   },
   {
@@ -7231,7 +7231,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 03",
     "phone": "0852-401-0166",
     "vat": "",
@@ -7245,8 +7245,8 @@
     "delivery_route": "CANVASS-MAPANGET-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.53,
-    "longitude": 124.9085,
+    "latitude": 1.519318,
+    "longitude": 124.905102,
     "is_company": false
   },
   {
@@ -7260,7 +7260,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 04",
     "phone": "0852-401-0167",
     "vat": "",
@@ -7274,8 +7274,8 @@
     "delivery_route": "CANVASS-MAPANGET-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5276,
-    "longitude": 124.9079,
+    "latitude": 1.516918,
+    "longitude": 124.904502,
     "is_company": false
   },
   {
@@ -7289,7 +7289,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 05",
     "phone": "0852-401-0168",
     "vat": "",
@@ -7303,8 +7303,8 @@
     "delivery_route": "CANVASS-MAPANGET-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5291,
-    "longitude": 124.9073,
+    "latitude": 1.518418,
+    "longitude": 124.903902,
     "is_company": false
   },
   {
@@ -7318,7 +7318,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 06",
     "phone": "0852-401-0169",
     "vat": "",
@@ -7332,8 +7332,8 @@
     "delivery_route": "CANVASS-MAPANGET-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5267,
-    "longitude": 124.9067,
+    "latitude": 1.516018,
+    "longitude": 124.903302,
     "is_company": false
   },
   {
@@ -7347,7 +7347,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 01",
     "phone": "0852-401-0170",
     "vat": "",
@@ -7361,8 +7361,8 @@
     "delivery_route": "CANVASS-MAPANGET-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5282,
-    "longitude": 124.91,
+    "latitude": 1.517518,
+    "longitude": 124.906602,
     "is_company": false
   },
   {
@@ -7376,7 +7376,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 02",
     "phone": "0852-401-0171",
     "vat": "",
@@ -7390,8 +7390,8 @@
     "delivery_route": "CANVASS-MAPANGET-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5297,
-    "longitude": 124.9094,
+    "latitude": 1.519018,
+    "longitude": 124.906002,
     "is_company": false
   },
   {
@@ -7405,7 +7405,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 03",
     "phone": "0852-401-0172",
     "vat": "",
@@ -7419,8 +7419,8 @@
     "delivery_route": "CANVASS-MAPANGET-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5273,
-    "longitude": 124.9088,
+    "latitude": 1.516618,
+    "longitude": 124.905402,
     "is_company": false
   },
   {
@@ -7434,7 +7434,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 04",
     "phone": "0852-401-0173",
     "vat": "",
@@ -7448,8 +7448,8 @@
     "delivery_route": "CANVASS-MAPANGET-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5288,
-    "longitude": 124.9082,
+    "latitude": 1.518118,
+    "longitude": 124.904802,
     "is_company": false
   },
   {
@@ -7463,7 +7463,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 05",
     "phone": "0852-401-0174",
     "vat": "",
@@ -7477,8 +7477,8 @@
     "delivery_route": "CANVASS-MAPANGET-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5303,
-    "longitude": 124.9076,
+    "latitude": 1.519618,
+    "longitude": 124.904202,
     "is_company": false
   },
   {
@@ -7492,7 +7492,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 06",
     "phone": "0852-401-0175",
     "vat": "",
@@ -7506,8 +7506,8 @@
     "delivery_route": "CANVASS-MAPANGET-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5279,
-    "longitude": 124.907,
+    "latitude": 1.517218,
+    "longitude": 124.903602,
     "is_company": false
   },
   {
@@ -7521,7 +7521,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 01",
     "phone": "0852-401-0176",
     "vat": "",
@@ -7535,8 +7535,8 @@
     "delivery_route": "CANVASS-MAPANGET-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5294,
-    "longitude": 124.9103,
+    "latitude": 1.518718,
+    "longitude": 124.906902,
     "is_company": false
   },
   {
@@ -7550,7 +7550,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 02",
     "phone": "0852-401-0177",
     "vat": "",
@@ -7564,8 +7564,8 @@
     "delivery_route": "CANVASS-MAPANGET-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.527,
-    "longitude": 124.9097,
+    "latitude": 1.516318,
+    "longitude": 124.906302,
     "is_company": false
   },
   {
@@ -7579,7 +7579,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 03",
     "phone": "0852-401-0178",
     "vat": "",
@@ -7593,8 +7593,8 @@
     "delivery_route": "CANVASS-MAPANGET-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5285,
-    "longitude": 124.9091,
+    "latitude": 1.517818,
+    "longitude": 124.905702,
     "is_company": false
   },
   {
@@ -7608,7 +7608,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 04",
     "phone": "0852-401-0179",
     "vat": "",
@@ -7622,8 +7622,8 @@
     "delivery_route": "CANVASS-MAPANGET-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.53,
-    "longitude": 124.9085,
+    "latitude": 1.519318,
+    "longitude": 124.905102,
     "is_company": false
   },
   {
@@ -7637,7 +7637,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 05",
     "phone": "0852-401-0180",
     "vat": "",
@@ -7651,8 +7651,8 @@
     "delivery_route": "CANVASS-MAPANGET-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5276,
-    "longitude": 124.9079,
+    "latitude": 1.516918,
+    "longitude": 124.904502,
     "is_company": false
   },
   {
@@ -7666,7 +7666,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 06",
     "phone": "0852-401-0181",
     "vat": "",
@@ -7680,8 +7680,8 @@
     "delivery_route": "CANVASS-MAPANGET-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5291,
-    "longitude": 124.9073,
+    "latitude": 1.518418,
+    "longitude": 124.903902,
     "is_company": false
   },
   {
@@ -7695,7 +7695,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 01",
     "phone": "0852-401-0182",
     "vat": "",
@@ -7709,8 +7709,8 @@
     "delivery_route": "CANVASS-MAPANGET-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5267,
-    "longitude": 124.9067,
+    "latitude": 1.516018,
+    "longitude": 124.903302,
     "is_company": false
   },
   {
@@ -7724,7 +7724,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 02",
     "phone": "0852-401-0183",
     "vat": "",
@@ -7738,8 +7738,8 @@
     "delivery_route": "CANVASS-MAPANGET-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5282,
-    "longitude": 124.91,
+    "latitude": 1.517518,
+    "longitude": 124.906602,
     "is_company": false
   },
   {
@@ -7753,7 +7753,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 03",
     "phone": "0852-401-0184",
     "vat": "",
@@ -7767,8 +7767,8 @@
     "delivery_route": "CANVASS-MAPANGET-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5297,
-    "longitude": 124.9094,
+    "latitude": 1.519018,
+    "longitude": 124.906002,
     "is_company": false
   },
   {
@@ -7782,7 +7782,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 04",
     "phone": "0852-401-0185",
     "vat": "",
@@ -7796,8 +7796,8 @@
     "delivery_route": "CANVASS-MAPANGET-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5273,
-    "longitude": 124.9088,
+    "latitude": 1.516618,
+    "longitude": 124.905402,
     "is_company": false
   },
   {
@@ -7811,7 +7811,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Lorong Pemukiman Mapanget RW 05",
     "phone": "0852-401-0186",
     "vat": "",
@@ -7825,8 +7825,8 @@
     "delivery_route": "CANVASS-MAPANGET-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.5288,
-    "longitude": 124.9082,
+    "latitude": 1.518118,
+    "longitude": 124.904802,
     "is_company": false
   },
   {
@@ -7854,8 +7854,8 @@
     "delivery_route": "CANVASS-MAESA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4458,
-    "longitude": 125.1831,
+    "latitude": 1.458576,
+    "longitude": 125.187208,
     "is_company": false
   },
   {
@@ -7883,8 +7883,8 @@
     "delivery_route": "CANVASS-MAESA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4434,
-    "longitude": 125.1825,
+    "latitude": 1.456176,
+    "longitude": 125.186608,
     "is_company": false
   },
   {
@@ -7912,8 +7912,8 @@
     "delivery_route": "CANVASS-MAESA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4449,
-    "longitude": 125.1858,
+    "latitude": 1.457676,
+    "longitude": 125.189908,
     "is_company": false
   },
   {
@@ -7941,8 +7941,8 @@
     "delivery_route": "CANVASS-MAESA-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4425,
-    "longitude": 125.1852,
+    "latitude": 1.455276,
+    "longitude": 125.189308,
     "is_company": false
   },
   {
@@ -7970,8 +7970,8 @@
     "delivery_route": "CANVASS-MAESA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.444,
-    "longitude": 125.1846,
+    "latitude": 1.456776,
+    "longitude": 125.188708,
     "is_company": false
   },
   {
@@ -7999,8 +7999,8 @@
     "delivery_route": "CANVASS-MAESA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4455,
-    "longitude": 125.184,
+    "latitude": 1.458276,
+    "longitude": 125.188108,
     "is_company": false
   },
   {
@@ -8028,8 +8028,8 @@
     "delivery_route": "CANVASS-MAESA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4431,
-    "longitude": 125.1834,
+    "latitude": 1.455876,
+    "longitude": 125.187508,
     "is_company": false
   },
   {
@@ -8057,8 +8057,8 @@
     "delivery_route": "CANVASS-MAESA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4446,
-    "longitude": 125.1828,
+    "latitude": 1.457376,
+    "longitude": 125.186908,
     "is_company": false
   },
   {
@@ -8086,8 +8086,8 @@
     "delivery_route": "CANVASS-MAESA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4422,
-    "longitude": 125.1822,
+    "latitude": 1.454976,
+    "longitude": 125.186308,
     "is_company": false
   },
   {
@@ -8115,8 +8115,8 @@
     "delivery_route": "CANVASS-MAESA-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4437,
-    "longitude": 125.1855,
+    "latitude": 1.456476,
+    "longitude": 125.189608,
     "is_company": false
   },
   {
@@ -8144,8 +8144,8 @@
     "delivery_route": "CANVASS-MAESA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4452,
-    "longitude": 125.1849,
+    "latitude": 1.457976,
+    "longitude": 125.189008,
     "is_company": false
   },
   {
@@ -8173,8 +8173,8 @@
     "delivery_route": "CANVASS-MAESA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4428,
-    "longitude": 125.1843,
+    "latitude": 1.455576,
+    "longitude": 125.188408,
     "is_company": false
   },
   {
@@ -8202,8 +8202,8 @@
     "delivery_route": "CANVASS-MAESA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4443,
-    "longitude": 125.1837,
+    "latitude": 1.457076,
+    "longitude": 125.187808,
     "is_company": false
   },
   {
@@ -8231,8 +8231,8 @@
     "delivery_route": "CANVASS-MAESA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4458,
-    "longitude": 125.1831,
+    "latitude": 1.458576,
+    "longitude": 125.187208,
     "is_company": false
   },
   {
@@ -8260,8 +8260,8 @@
     "delivery_route": "CANVASS-MAESA-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4434,
-    "longitude": 125.1825,
+    "latitude": 1.456176,
+    "longitude": 125.186608,
     "is_company": false
   },
   {
@@ -8289,8 +8289,8 @@
     "delivery_route": "CANVASS-MADIDIR-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4509,
-    "longitude": 125.1568,
+    "latitude": 1.451574,
+    "longitude": 125.16273,
     "is_company": false
   },
   {
@@ -8318,8 +8318,8 @@
     "delivery_route": "CANVASS-MADIDIR-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4485,
-    "longitude": 125.1562,
+    "latitude": 1.449174,
+    "longitude": 125.16213,
     "is_company": false
   },
   {
@@ -8347,8 +8347,8 @@
     "delivery_route": "CANVASS-MADIDIR-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.45,
-    "longitude": 125.1556,
+    "latitude": 1.450674,
+    "longitude": 125.16153,
     "is_company": false
   },
   {
@@ -8376,8 +8376,8 @@
     "delivery_route": "CANVASS-MADIDIR-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4515,
-    "longitude": 125.155,
+    "latitude": 1.452174,
+    "longitude": 125.16093,
     "is_company": false
   },
   {
@@ -8405,8 +8405,8 @@
     "delivery_route": "CANVASS-MADIDIR-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4491,
-    "longitude": 125.1544,
+    "latitude": 1.449774,
+    "longitude": 125.16033,
     "is_company": false
   },
   {
@@ -8434,8 +8434,8 @@
     "delivery_route": "CANVASS-MADIDIR-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4506,
-    "longitude": 125.1538,
+    "latitude": 1.451274,
+    "longitude": 125.15973,
     "is_company": false
   },
   {
@@ -8463,8 +8463,8 @@
     "delivery_route": "CANVASS-MADIDIR-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4482,
-    "longitude": 125.1532,
+    "latitude": 1.448874,
+    "longitude": 125.15913,
     "is_company": false
   },
   {
@@ -8492,8 +8492,8 @@
     "delivery_route": "CANVASS-MADIDIR-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4497,
-    "longitude": 125.1565,
+    "latitude": 1.450374,
+    "longitude": 125.16243,
     "is_company": false
   },
   {
@@ -8521,8 +8521,8 @@
     "delivery_route": "CANVASS-GIRIAN-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4432,
-    "longitude": 125.1359,
+    "latitude": 1.450674,
+    "longitude": 125.133063,
     "is_company": false
   },
   {
@@ -8550,8 +8550,8 @@
     "delivery_route": "CANVASS-GIRIAN-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4408,
-    "longitude": 125.1353,
+    "latitude": 1.448274,
+    "longitude": 125.132463,
     "is_company": false
   },
   {
@@ -8579,8 +8579,8 @@
     "delivery_route": "CANVASS-GIRIAN-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4423,
-    "longitude": 125.1347,
+    "latitude": 1.449774,
+    "longitude": 125.131863,
     "is_company": false
   },
   {
@@ -8608,8 +8608,8 @@
     "delivery_route": "CANVASS-GIRIAN-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4438,
-    "longitude": 125.1341,
+    "latitude": 1.451274,
+    "longitude": 125.131263,
     "is_company": false
   },
   {
@@ -8637,8 +8637,8 @@
     "delivery_route": "CANVASS-GIRIAN-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4414,
-    "longitude": 125.1335,
+    "latitude": 1.448874,
+    "longitude": 125.130663,
     "is_company": false
   },
   {
@@ -8666,8 +8666,8 @@
     "delivery_route": "CANVASS-AERTEMBAGA-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4559,
-    "longitude": 125.2118,
+    "latitude": 1.490789,
+    "longitude": 125.208528,
     "is_company": false
   },
   {
@@ -8695,8 +8695,8 @@
     "delivery_route": "CANVASS-AERTEMBAGA-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4535,
-    "longitude": 125.2112,
+    "latitude": 1.488389,
+    "longitude": 125.207928,
     "is_company": false
   },
   {
@@ -8724,8 +8724,8 @@
     "delivery_route": "CANVASS-AERTEMBAGA-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.455,
-    "longitude": 125.2106,
+    "latitude": 1.489889,
+    "longitude": 125.207328,
     "is_company": false
   },
   {
@@ -8753,8 +8753,8 @@
     "delivery_route": "CANVASS-AERTEMBAGA-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4565,
-    "longitude": 125.21,
+    "latitude": 1.491389,
+    "longitude": 125.206728,
     "is_company": false
   },
   {
@@ -8768,7 +8768,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 01",
     "phone": "0852-401-0219",
     "vat": "",
@@ -8782,8 +8782,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3226,
-    "longitude": 124.8359,
+    "latitude": 1.319925,
+    "longitude": 124.833102,
     "is_company": false
   },
   {
@@ -8797,7 +8797,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 02",
     "phone": "0852-401-0220",
     "vat": "",
@@ -8811,8 +8811,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3241,
-    "longitude": 124.8353,
+    "latitude": 1.321425,
+    "longitude": 124.832502,
     "is_company": false
   },
   {
@@ -8826,7 +8826,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 03",
     "phone": "0852-401-0221",
     "vat": "",
@@ -8840,8 +8840,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3217,
-    "longitude": 124.8347,
+    "latitude": 1.319025,
+    "longitude": 124.831902,
     "is_company": false
   },
   {
@@ -8855,7 +8855,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 04",
     "phone": "0852-401-0222",
     "vat": "",
@@ -8869,8 +8869,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3232,
-    "longitude": 124.838,
+    "latitude": 1.320525,
+    "longitude": 124.835202,
     "is_company": false
   },
   {
@@ -8884,7 +8884,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 05",
     "phone": "0852-401-0223",
     "vat": "",
@@ -8898,8 +8898,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3247,
-    "longitude": 124.8374,
+    "latitude": 1.322025,
+    "longitude": 124.834602,
     "is_company": false
   },
   {
@@ -8913,7 +8913,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 06",
     "phone": "0852-401-0224",
     "vat": "",
@@ -8927,8 +8927,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3223,
-    "longitude": 124.8368,
+    "latitude": 1.319625,
+    "longitude": 124.834002,
     "is_company": false
   },
   {
@@ -8942,7 +8942,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 01",
     "phone": "0852-401-0225",
     "vat": "",
@@ -8956,8 +8956,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3238,
-    "longitude": 124.8362,
+    "latitude": 1.321125,
+    "longitude": 124.833402,
     "is_company": false
   },
   {
@@ -8971,7 +8971,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 02",
     "phone": "0852-401-0226",
     "vat": "",
@@ -8985,8 +8985,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3253,
-    "longitude": 124.8356,
+    "latitude": 1.322625,
+    "longitude": 124.832802,
     "is_company": false
   },
   {
@@ -9000,7 +9000,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 03",
     "phone": "0852-401-0227",
     "vat": "",
@@ -9014,8 +9014,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3229,
-    "longitude": 124.835,
+    "latitude": 1.320225,
+    "longitude": 124.832202,
     "is_company": false
   },
   {
@@ -9029,7 +9029,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 04",
     "phone": "0852-401-0228",
     "vat": "",
@@ -9043,8 +9043,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3244,
-    "longitude": 124.8383,
+    "latitude": 1.321725,
+    "longitude": 124.835502,
     "is_company": false
   },
   {
@@ -9058,7 +9058,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 05",
     "phone": "0852-401-0229",
     "vat": "",
@@ -9072,8 +9072,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.322,
-    "longitude": 124.8377,
+    "latitude": 1.319325,
+    "longitude": 124.834902,
     "is_company": false
   },
   {
@@ -9087,7 +9087,7 @@
     "city": "Kota Tomohon",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95431",
+    "zip": "95446",
     "street": "Lorong Pemukiman Tomohon Tengah RW 06",
     "phone": "0852-401-0230",
     "vat": "",
@@ -9101,8 +9101,8 @@
     "delivery_route": "CANVASS-TOMOHON TENGAH-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3235,
-    "longitude": 124.8371,
+    "latitude": 1.320825,
+    "longitude": 124.834302,
     "is_company": false
   },
   {
@@ -9116,7 +9116,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 01",
     "phone": "0852-401-0231",
     "vat": "",
@@ -9130,8 +9130,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.31,
-    "longitude": 124.9085,
+    "latitude": 1.262681,
+    "longitude": 124.891521,
     "is_company": false
   },
   {
@@ -9145,7 +9145,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 02",
     "phone": "0852-401-0232",
     "vat": "",
@@ -9159,8 +9159,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3076,
-    "longitude": 124.9079,
+    "latitude": 1.260281,
+    "longitude": 124.890921,
     "is_company": false
   },
   {
@@ -9174,7 +9174,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 03",
     "phone": "0852-401-0233",
     "vat": "",
@@ -9188,8 +9188,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3091,
-    "longitude": 124.9073,
+    "latitude": 1.261781,
+    "longitude": 124.890321,
     "is_company": false
   },
   {
@@ -9203,7 +9203,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 04",
     "phone": "0852-401-0234",
     "vat": "",
@@ -9217,8 +9217,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3067,
-    "longitude": 124.9067,
+    "latitude": 1.259381,
+    "longitude": 124.889721,
     "is_company": false
   },
   {
@@ -9232,7 +9232,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 05",
     "phone": "0852-401-0235",
     "vat": "",
@@ -9246,8 +9246,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3082,
-    "longitude": 124.91,
+    "latitude": 1.260881,
+    "longitude": 124.893021,
     "is_company": false
   },
   {
@@ -9261,7 +9261,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 06",
     "phone": "0852-401-0236",
     "vat": "",
@@ -9275,8 +9275,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3097,
-    "longitude": 124.9094,
+    "latitude": 1.262381,
+    "longitude": 124.892421,
     "is_company": false
   },
   {
@@ -9290,7 +9290,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 01",
     "phone": "0852-401-0237",
     "vat": "",
@@ -9304,8 +9304,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3073,
-    "longitude": 124.9088,
+    "latitude": 1.259981,
+    "longitude": 124.891821,
     "is_company": false
   },
   {
@@ -9319,7 +9319,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 02",
     "phone": "0852-401-0238",
     "vat": "",
@@ -9333,8 +9333,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3088,
-    "longitude": 124.9082,
+    "latitude": 1.261481,
+    "longitude": 124.891221,
     "is_company": false
   },
   {
@@ -9348,7 +9348,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 03",
     "phone": "0852-401-0239",
     "vat": "",
@@ -9362,8 +9362,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3103,
-    "longitude": 124.9076,
+    "latitude": 1.262981,
+    "longitude": 124.890621,
     "is_company": false
   },
   {
@@ -9377,7 +9377,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Lorong Pemukiman Tondano Barat RW 04",
     "phone": "0852-401-0240",
     "vat": "",
@@ -9391,8 +9391,8 @@
     "delivery_route": "CANVASS-TONDANO BARAT-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.3079,
-    "longitude": 124.907,
+    "latitude": 1.260581,
+    "longitude": 124.890021,
     "is_company": false
   },
   {
@@ -9406,7 +9406,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95671",
+    "zip": "95690",
     "street": "Lorong Pemukiman Kawangkoan RW 01",
     "phone": "0852-401-0241",
     "vat": "",
@@ -9420,8 +9420,8 @@
     "delivery_route": "CANVASS-KAWANGKOAN-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.2064,
-    "longitude": 124.7883,
+    "latitude": 1.203594,
+    "longitude": 124.782101,
     "is_company": false
   },
   {
@@ -9435,7 +9435,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95671",
+    "zip": "95690",
     "street": "Lorong Pemukiman Kawangkoan RW 02",
     "phone": "0852-401-0242",
     "vat": "",
@@ -9449,8 +9449,8 @@
     "delivery_route": "CANVASS-KAWANGKOAN-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.204,
-    "longitude": 124.7877,
+    "latitude": 1.201194,
+    "longitude": 124.781501,
     "is_company": false
   },
   {
@@ -9464,7 +9464,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95671",
+    "zip": "95690",
     "street": "Lorong Pemukiman Kawangkoan RW 03",
     "phone": "0852-401-0243",
     "vat": "",
@@ -9478,8 +9478,8 @@
     "delivery_route": "CANVASS-KAWANGKOAN-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.2055,
-    "longitude": 124.7871,
+    "latitude": 1.202694,
+    "longitude": 124.780901,
     "is_company": false
   },
   {
@@ -9493,7 +9493,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95671",
+    "zip": "95690",
     "street": "Lorong Pemukiman Kawangkoan RW 04",
     "phone": "0852-401-0244",
     "vat": "",
@@ -9507,8 +9507,8 @@
     "delivery_route": "CANVASS-KAWANGKOAN-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.207,
-    "longitude": 124.7865,
+    "latitude": 1.204194,
+    "longitude": 124.780301,
     "is_company": false
   },
   {
@@ -9522,7 +9522,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95671",
+    "zip": "95690",
     "street": "Lorong Pemukiman Kawangkoan RW 05",
     "phone": "0852-401-0245",
     "vat": "",
@@ -9536,8 +9536,8 @@
     "delivery_route": "CANVASS-KAWANGKOAN-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.2046,
-    "longitude": 124.7859,
+    "latitude": 1.201794,
+    "longitude": 124.779701,
     "is_company": false
   },
   {
@@ -9551,7 +9551,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95671",
+    "zip": "95690",
     "street": "Lorong Pemukiman Kawangkoan RW 06",
     "phone": "0852-401-0246",
     "vat": "",
@@ -9565,8 +9565,8 @@
     "delivery_route": "CANVASS-KAWANGKOAN-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.2061,
-    "longitude": 124.7853,
+    "latitude": 1.203294,
+    "longitude": 124.779101,
     "is_company": false
   },
   {
@@ -9594,8 +9594,8 @@
     "delivery_route": "CANVASS-AIRMADIDI-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4267,
-    "longitude": 124.9807,
+    "latitude": 1.434148,
+    "longitude": 124.99591,
     "is_company": false
   },
   {
@@ -9623,8 +9623,8 @@
     "delivery_route": "CANVASS-AIRMADIDI-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4282,
-    "longitude": 124.984,
+    "latitude": 1.435648,
+    "longitude": 124.99921,
     "is_company": false
   },
   {
@@ -9652,8 +9652,8 @@
     "delivery_route": "CANVASS-AIRMADIDI-RABU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4297,
-    "longitude": 124.9834,
+    "latitude": 1.437148,
+    "longitude": 124.99861,
     "is_company": false
   },
   {
@@ -9681,8 +9681,8 @@
     "delivery_route": "CANVASS-AIRMADIDI-KAMIS",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4273,
-    "longitude": 124.9828,
+    "latitude": 1.434748,
+    "longitude": 124.99801,
     "is_company": false
   },
   {
@@ -9710,8 +9710,8 @@
     "delivery_route": "CANVASS-AIRMADIDI-JUMAT",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4288,
-    "longitude": 124.9822,
+    "latitude": 1.436248,
+    "longitude": 124.99741,
     "is_company": false
   },
   {
@@ -9739,8 +9739,8 @@
     "delivery_route": "CANVASS-AIRMADIDI-SABTU",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4303,
-    "longitude": 124.9816,
+    "latitude": 1.437748,
+    "longitude": 124.99681,
     "is_company": false
   },
   {
@@ -9768,8 +9768,8 @@
     "delivery_route": "CANVASS-AIRMADIDI-SENIN",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4279,
-    "longitude": 124.981,
+    "latitude": 1.435348,
+    "longitude": 124.99621,
     "is_company": false
   },
   {
@@ -9797,8 +9797,8 @@
     "delivery_route": "CANVASS-AIRMADIDI-SELASA",
     "delivery_vehicle": "DB 8234 QX (Gran Max Box)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.4294,
-    "longitude": 124.9843,
+    "latitude": 1.436848,
+    "longitude": 124.99951,
     "is_company": false
   },
   {
@@ -9812,7 +9812,7 @@
     "city": "Kab. Minahasa Selatan",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95954",
+    "zip": "95957",
     "street": "Lorong Pemukiman Amurang RW 01",
     "phone": "0852-401-0255",
     "vat": "",
@@ -9826,8 +9826,8 @@
     "delivery_route": "CANVASS-AMURANG-RABU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.1865,
-    "longitude": 124.5732,
+    "latitude": 1.144096,
+    "longitude": 124.58947,
     "is_company": false
   },
   {
@@ -9841,7 +9841,7 @@
     "city": "Kab. Minahasa Selatan",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95954",
+    "zip": "95957",
     "street": "Lorong Pemukiman Amurang RW 02",
     "phone": "0852-401-0256",
     "vat": "",
@@ -9855,8 +9855,8 @@
     "delivery_route": "CANVASS-AMURANG-KAMIS",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.188,
-    "longitude": 124.5726,
+    "latitude": 1.145596,
+    "longitude": 124.58887,
     "is_company": false
   },
   {
@@ -9870,7 +9870,7 @@
     "city": "Kab. Minahasa Selatan",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95954",
+    "zip": "95957",
     "street": "Lorong Pemukiman Amurang RW 03",
     "phone": "0852-401-0257",
     "vat": "",
@@ -9884,8 +9884,8 @@
     "delivery_route": "CANVASS-AMURANG-JUMAT",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.1895,
-    "longitude": 124.572,
+    "latitude": 1.147096,
+    "longitude": 124.58827,
     "is_company": false
   },
   {
@@ -9899,7 +9899,7 @@
     "city": "Kab. Minahasa Selatan",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95954",
+    "zip": "95957",
     "street": "Lorong Pemukiman Amurang RW 04",
     "phone": "0852-401-0258",
     "vat": "",
@@ -9913,8 +9913,8 @@
     "delivery_route": "CANVASS-AMURANG-SABTU",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.1871,
-    "longitude": 124.5714,
+    "latitude": 1.144696,
+    "longitude": 124.58767,
     "is_company": false
   },
   {
@@ -9928,7 +9928,7 @@
     "city": "Kab. Minahasa Selatan",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95954",
+    "zip": "95957",
     "street": "Lorong Pemukiman Amurang RW 05",
     "phone": "0852-401-0259",
     "vat": "",
@@ -9942,8 +9942,8 @@
     "delivery_route": "CANVASS-AMURANG-SENIN",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.1886,
-    "longitude": 124.5708,
+    "latitude": 1.146196,
+    "longitude": 124.58707,
     "is_company": false
   },
   {
@@ -9957,7 +9957,7 @@
     "city": "Kab. Minahasa Selatan",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95954",
+    "zip": "95957",
     "street": "Lorong Pemukiman Amurang RW 06",
     "phone": "0852-401-0260",
     "vat": "",
@@ -9971,8 +9971,8 @@
     "delivery_route": "CANVASS-AMURANG-SELASA",
     "delivery_vehicle": "DB 8123 QA (Gran Max BV)",
     "cohort_date": "2026-10-01",
-    "latitude": 1.1862,
-    "longitude": 124.5702,
+    "latitude": 1.143796,
+    "longitude": 124.58647,
     "is_company": false
   },
   {
@@ -10000,8 +10000,8 @@
     "delivery_route": "DELIV-INST-SENIN",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4585,
-    "longitude": 124.8261,
+    "latitude": 1.455761,
+    "longitude": 124.825962,
     "is_company": true
   },
   {
@@ -10015,7 +10015,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95114",
+    "zip": "95113",
     "street": "Jl. Piere Tendean Boulevard",
     "phone": "0811-432-0002",
     "vat": "0112345678821002",
@@ -10029,8 +10029,8 @@
     "delivery_route": "DELIV-INST-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4721,
-    "longitude": 124.8378,
+    "latitude": 1.473854,
+    "longitude": 124.835066,
     "is_company": true
   },
   {
@@ -10044,7 +10044,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Jl. Jendral Sudirman No. 1",
     "phone": "0811-432-0003",
     "vat": "0112345678821003",
@@ -10058,8 +10058,8 @@
     "delivery_route": "DELIV-INST-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4922,
-    "longitude": 124.842,
+    "latitude": 1.496446,
+    "longitude": 124.842834,
     "is_company": true
   },
   {
@@ -10087,8 +10087,8 @@
     "delivery_route": "DELIV-INST-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4823,
-    "longitude": 124.8587,
+    "latitude": 1.477122,
+    "longitude": 124.858422,
     "is_company": true
   },
   {
@@ -10102,7 +10102,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Jl. AA Maramis Paniki Dua",
     "phone": "0811-432-0005",
     "vat": "0112345678821005",
@@ -10116,8 +10116,8 @@
     "delivery_route": "DELIV-INST-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.5279,
-    "longitude": 124.9079,
+    "latitude": 1.517218,
+    "longitude": 124.904502,
     "is_company": true
   },
   {
@@ -10131,7 +10131,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95258",
+    "zip": "95256",
     "street": "Jl. AA Maramis Kairagi Dua",
     "phone": "0811-432-0006",
     "vat": "0112345678821006",
@@ -10145,8 +10145,8 @@
     "delivery_route": "DELIV-INST-SABTU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.5285,
-    "longitude": 124.9091,
+    "latitude": 1.517818,
+    "longitude": 124.905702,
     "is_company": true
   },
   {
@@ -10174,8 +10174,8 @@
     "delivery_route": "DELIV-INST-SELASA",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4591,
-    "longitude": 124.8258,
+    "latitude": 1.456361,
+    "longitude": 124.825662,
     "is_company": true
   },
   {
@@ -10189,7 +10189,7 @@
     "city": "Kota Manado",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95112",
+    "zip": "95121",
     "street": "Kawasan Megamas Blok 2B",
     "phone": "0811-432-0008",
     "vat": "0112345678821008",
@@ -10203,8 +10203,8 @@
     "delivery_route": "DELIV-INST-RABU",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4922,
-    "longitude": 124.842,
+    "latitude": 1.496446,
+    "longitude": 124.842834,
     "is_company": true
   },
   {
@@ -10218,7 +10218,7 @@
     "city": "Kab. Minahasa",
     "state": "Sulawesi Utara",
     "country": "Indonesia",
-    "zip": "95618",
+    "zip": "95617",
     "street": "Jl. Sam Ratulangi Tondano",
     "phone": "0811-432-0009",
     "vat": "0112345678821009",
@@ -10232,8 +10232,8 @@
     "delivery_route": "DELIV-INST-KAMIS",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.3088,
-    "longitude": 124.9082,
+    "latitude": 1.261481,
+    "longitude": 124.891221,
     "is_company": true
   },
   {
@@ -10261,8 +10261,8 @@
     "delivery_route": "DELIV-INST-JUMAT",
     "delivery_vehicle": "DB 8456 FB (L300 Urban)",
     "cohort_date": "2026-07-01",
-    "latitude": 1.4434,
-    "longitude": 125.1834,
+    "latitude": 1.456176,
+    "longitude": 125.187508,
     "is_company": true
   }
 ]

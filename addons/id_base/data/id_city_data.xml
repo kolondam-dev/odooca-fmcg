@@ -60,7 +60,7 @@
 
     <!-- 8. Kabupaten Minahasa Tenggara -->
     <record id="city_mtr" model="id.city">
-        <field name="code">7109</field>
+        <field name="code">7107</field>
         <field name="name">Kabupaten Minahasa Tenggara</field>
         <field name="type">kabupaten</field>
         <field name="is_out_of_town" eval="True"/>
@@ -108,7 +108,7 @@
 
     <!-- 14. Kabupaten Kepulauan Siau Tagulandang Biaro (Sitaro) -->
     <record id="city_str" model="id.city">
-        <field name="code">7107</field>
+        <field name="code">7109</field>
         <field name="name">Kabupaten Kepulauan Siau Tagulandang Biaro</field>
         <field name="type">kabupaten</field>
         <field name="is_out_of_town" eval="True"/>

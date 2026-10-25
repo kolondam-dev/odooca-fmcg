@@ -1,14 +1,17 @@
 # HANDOFF
 
-## 2026-10-25 — antigravity agent (Penyelesaian Task 1 & Task 2: Native Model id_base, Geo Sulut, Customer Registry, PJP Model, dan Local Ledger Verifikasi)
+## 2026-10-25 — antigravity agent (Integrasi Master Data Wilayah Resmi Sulut 2.026 Wilayah & Penyelesaian Task 1 & Task 2)
 **Berubah:**
+- Master Data Administrasi & Geospasial Sulawesi Utara (`data/master/`, `data/geo/`, `docs/geo/SULUT_ADMINISTRASI_GEO.md`):
+  - Mengintegrasikan hasil riset dan sumber data presisi dari `sulut_master_data.zip` (sumber Kemendagri 2025, Pos Indonesia, dan batas MultiPolygon terestrial).
+  - Skrip generator baru: [`scripts/generate_sulut_master.py`](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/generate_sulut_master.py) (menggantikan bounding box manual lama), memproses hierarki lengkap: **1 Provinsi → 15 Kab/Kota (11 Kab + 4 Kota) → 171 Kecamatan → 1.839 Desa/Kelurahan (332 Kelurahan + 1.507 Desa)**.
+  - Memperbaiki kode Kemendagri di [`addons/id_base/data/id_city_data.xml`](file:///c:/Users/ACER/dev/odooca-fmcg/addons/id_base/data/id_city_data.xml) yang tertukar: Minahasa Tenggara adalah `7107` (bukan 7109) dan Kep. Sitaro adalah `7109` (bukan 7107).
+  - Memutakhirkan 4 berkas GeoJSON terestrial: `sulut_provinsi.geojson`, `sulut_kab_kota.geojson`, `sulut_districts.geojson` (171 kecamatan), dan `sulut_villages.geojson` (1.839 desa/kelurahan).
+- Master Customer Register & PJP Schedule (`data/registers/` & `scripts/generate_customer_registry_and_pjp.py`):
+  - Memutakhirkan `DISTRICT_MASTER` dengan kode Kemendagri resmi (`71.71.04`, dsb.), kode pos akurat (Calaca 95121, Sario Kotabaru 95113, Paniki Bawah 95256, Paslaten Satu 95446, Roong 95617, Sendangan 95690, Buyungon 95957), dan titik koordinat representatif daratan (`lat_titik_dalam`, `lng_titik_dalam`).
+  - Menghasilkan ulang `customer_registry_354.*` dan mensinkronkan `data/seed/partners_354.csv`.
 - `addons/id_base/__manifest__.py`:
   - Menambahkan dependensi `base_geolocalize` bawaan core Odoo agar field `partner_latitude` dan `partner_longitude` pada `res.partner` terjamin selalu native tanpa custom field berlebih.
-- Master Poligon Geospasial Sulawesi Utara (`data/geo/` & `scripts/generate_sulut_geojson.py`):
-  - Membuat GeoJSON valid: `sulut_provinsi.geojson` (Provinsi 71), `sulut_kab_kota.geojson` (15 Kabupaten/Kota lengkap se-Sulut tanpa sampling), `sulut_districts.geojson` (18 kecamatan operasional kunci), dan `sulut_villages.geojson` (kelurahan pusat niaga).
-- Master Customer Register 354 Outlet & PJP Schedule (`data/registers/` & `scripts/generate_customer_registry_and_pjp.py`):
-  - `customer_registry_354.json` & `.csv`: 354 outlet (12 MT, 72 GT, 260 RTL, 10 INST) dengan alamat terestrial jalan riil di Manado & Minahasa Raya, kode pos akurat, koordinat anti-tenggelam terikat daratan koridor jalan, eliminasi tuntas mismatch semantik toko vs kecamatan, dan pentahapan pembukaan toko (*cohort date*: Juli 177, Agustus 198, Sept 226, Okt 354).
-  - `pjp_schedule_354.json` & `.csv`: Pola call PJP best practice (F1 Weekly untuk MT & GT besar, F2 Bi-weekly untuk GT reguler & retail utama, F4 Monthly untuk rural) disinkronkan dengan rute pengiriman armada delivery H+1.
 - Sinkronisasi Master FMCG Seed (`scripts/generate_fmcg_seed.py`):
   - Menjadikan register 354 customer sebagai sumber kebenaran tunggal (*Single Source of Truth*), menghasilkan `data/seed/partners_354.csv` yang 100% konsisten.
   - Menambahkan `carton_barcode` (GS1 prefix 1) dan dimensi karton lengkap ke `data/seed/products_150.csv`.

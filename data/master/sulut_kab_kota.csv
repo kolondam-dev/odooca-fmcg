@@ -1,0 +1,16 @@
+kode_kemendagri,kode_nodot,nama,nama_tanpa_prefix,jenis,kode_provinsi,lat_sentral,lng_sentral,centroid_sumber_di_dalam_poligon,lat_titik_dalam,lng_titik_dalam,luas_km2_approx,qa_persen_di_dalam_induk,qa_flag,src_kode_nama,src_lat_lng
+71.01,7101,Kabupaten Bolaang Mongondow,Bolaang Mongondow,Kabupaten,71,0.707541,124.038557,true,0.719759,123.987349,3312.567,100.0,ok,S1,S3
+71.02,7102,Kabupaten Minahasa,Minahasa,Kabupaten,71,1.250031,124.858113,true,1.234491,124.900866,1136.524,98.3,ok,S1,S3
+71.03,7103,Kabupaten Kepulauan Sangihe,Kepulauan Sangihe,Kabupaten,71,3.55268,125.540981,true,3.551785,125.551179,605.749,94.9,geometri_diperbaiki,S1,S3
+71.04,7104,Kabupaten Kepulauan Talaud,Kepulauan Talaud,Kabupaten,71,4.225723,126.781076,false,4.267416,126.80926,1011.995,96.7,geometri_diperbaiki,S1,S3
+71.05,7105,Kabupaten Minahasa Selatan,Minahasa Selatan,Kabupaten,71,1.084971,124.5189,true,1.057579,124.437319,1468.132,99.1,ok,S1,S3
+71.06,7106,Kabupaten Minahasa Utara,Minahasa Utara,Kabupaten,71,1.548092,125.005295,true,1.516701,125.001549,994.779,97.2,geometri_diperbaiki,S1,S3
+71.07,7107,Kabupaten Minahasa Tenggara,Minahasa Tenggara,Kabupaten,71,1.012199,124.716653,true,0.985375,124.730898,754.644,99.7,ok,S1,S3
+71.08,7108,Kabupaten Bolaang Mongondow Utara,Bolaang Mongondow Utara,Kabupaten,71,0.76764,123.476468,true,0.763603,123.485081,1659.446,98.3,ok,S1,S3
+71.09,7109,Kabupaten Kep. Siau Tagulandang Biaro,Kep. Siau Tagulandang Biaro,Kabupaten,71,2.539118,125.396936,false,2.354874,125.417618,214.633,92.0,geometri_diperbaiki,S1,S3
+71.10,7110,Kabupaten Bolaang Mongondow Timur,Bolaang Mongondow Timur,Kabupaten,71,0.716022,124.509887,true,0.709759,124.492068,864.033,99.0,geometri_diperbaiki,S1,S3
+71.11,7111,Kabupaten Bolaang Mongondow Selatan,Bolaang Mongondow Selatan,Kabupaten,71,0.443107,123.928263,false,0.454163,124.18315,1780.179,99.2,ok,S1,S3
+71.71,7171,Kota Manado,Manado,Kota,71,1.524921,124.8479,true,1.503008,124.880262,160.904,97.4,ok,S1,S3
+71.72,7172,Kota Bitung,Bitung,Kota,71,1.489811,125.157974,true,1.49636,125.149013,333.619,97.1,geometri_diperbaiki,S1,S3
+71.73,7173,Kota Tomohon,Tomohon,Kota,71,1.330532,124.815047,true,1.319787,124.802974,168.012,100.0,ok,S1,S3
+71.74,7174,Kota Kotamobagu,Kotamobagu,Kota,71,0.711077,124.318308,true,0.710525,124.315892,111.976,100.0,ok,S1,S3

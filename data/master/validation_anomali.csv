@@ -1,0 +1,32 @@
+kode_kemendagri,level,nama,jenis_anomali,keterangan
+71.01.10.2020,desa_kelurahan,Kembang Sari,periksa_lokasi,hanya 31.5% luas di dalam induk 71.01.10; titik dalam berada di: 71.01.33
+71.01.19.2017,desa_kelurahan,Bintau,periksa_lokasi,hanya 33.6% luas di dalam induk 71.01.19; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.02.13.2003,desa_kelurahan,Sea I,periksa_lokasi,hanya 42.7% luas di dalam induk 71.02.13; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.03.09.2005,desa_kelurahan,Nanusa,periksa_lokasi,hanya 33.1% luas di dalam induk 71.03.09; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.04.17.2003,desa_kelurahan,Moronge II,periksa_lokasi,hanya 22.1% luas di dalam induk 71.04.17; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.04.17.2004,desa_kelurahan,Moronge Selatan,periksa_lokasi,hanya 28.7% luas di dalam induk 71.04.17; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.04.17.2006,desa_kelurahan,Moronge Selatan I,periksa_lokasi,hanya 16.5% luas di dalam induk 71.04.17; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.06.06.2002,desa_kelurahan,Gangga II,periksa_lokasi,hanya 43.4% luas di dalam induk 71.06.06; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.07.10.2004,desa_kelurahan,Tombatu Dua Tengah,periksa_lokasi,hanya 29.0% luas di dalam induk 71.07.10; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.07.10.2006,desa_kelurahan,Tombatu Tiga Tengah,periksa_lokasi,hanya 0.0% luas di dalam induk 71.07.10; titik dalam berada di: 71.07.05
+71.08.01.2010,desa_kelurahan,Busisingo Utara,periksa_lokasi,hanya 44.9% luas di dalam induk 71.08.01; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.71.02.1005,desa_kelurahan,Sindulang Satu,periksa_lokasi,hanya 43.3% luas di dalam induk 71.71.02; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.71.03.1005,desa_kelurahan,Ketang Baru,periksa_lokasi,hanya 1.6% luas di dalam induk 71.71.03; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.71.03.1006,desa_kelurahan,Ternate Baru,periksa_lokasi,hanya 39.9% luas di dalam induk 71.71.03; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.71.03.1009,desa_kelurahan,Ternate Tanjung,periksa_lokasi,hanya 13.1% luas di dalam induk 71.71.03; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.71.06.1005,desa_kelurahan,Titiwungan Utara,periksa_lokasi,hanya 22.6% luas di dalam induk 71.71.06; titik dalam berada di: 71.71.04
+71.72.04.1003,desa_kelurahan,Pateten Satu,periksa_lokasi,hanya 46.4% luas di dalam induk 71.72.04; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.72.04.1005,desa_kelurahan,Aertembaga Satu,periksa_lokasi,hanya 45.0% luas di dalam induk 71.72.04; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.72.08.1005,desa_kelurahan,Lirang,periksa_lokasi,hanya 46.9% luas di dalam induk 71.72.08; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
+71.02.07,kecamatan,Tompaso,tumpang_tindih,14.5% luas poligon terkecil tumpang tindih dengan 71.02.19 Langowan Utara
+71.02.09,kecamatan,Langowan Timur,tumpang_tindih,6.1% luas poligon terkecil tumpang tindih dengan 71.02.19 Langowan Utara
+71.02.10,kecamatan,Langowan Barat,tumpang_tindih,11.6% luas poligon terkecil tumpang tindih dengan 71.02.19 Langowan Utara
+71.03.08,kecamatan,Tabukan Utara,tumpang_tindih,7.8% luas poligon terkecil tumpang tindih dengan 71.03.17 Tahuna
+71.10.04,kecamatan,Modayag,tumpang_tindih,5.1% luas poligon terkecil tumpang tindih dengan 71.10.05 Modayag Barat
+71.71.02,kecamatan,Tuminting,tumpang_tindih,7.3% luas poligon terkecil tumpang tindih dengan 71.71.03 Singkil
+71.71.05,kecamatan,Tikala,tumpang_tindih,5.6% luas poligon terkecil tumpang tindih dengan 71.71.11 Paal Dua
+71.71.05,kecamatan,Tikala,tumpang_tindih,11.2% luas poligon terkecil tumpang tindih dengan 71.71.07 Wanea
+71.71.06,kecamatan,Sario,tumpang_tindih,9.1% luas poligon terkecil tumpang tindih dengan 71.71.09 Malalayang
+71.71.06,kecamatan,Sario,tumpang_tindih,30.2% luas poligon terkecil tumpang tindih dengan 71.71.07 Wanea
+71.72.03,kecamatan,Ranowulu,tumpang_tindih,7.0% luas poligon terkecil tumpang tindih dengan 71.72.06 Girian
+71.72.04,kecamatan,Aertembaga,tumpang_tindih,7.2% luas poligon terkecil tumpang tindih dengan 71.72.07 Maesa

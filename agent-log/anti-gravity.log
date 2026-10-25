@@ -207,3 +207,14 @@
 - Local Day-to-Day Financial Ledger & Auditor (data/registers/historical_ledger_day_to_day.* & scripts/ops/verify_ledger.py): Menilai secara lokal seluruh rantai transaksi 116 hari (PO -> Stok -> SO -> DO -> Invoice -> Return -> Collection -> OPEX -> AP); membuktikan 100% invarian narasi bisnis terpenuhi (Juli 5.5 BIO net margin 0.90% & overstok puncak 107.4%, Agustus drop -23% margin 2.50%, September margin 3.70%, Oktober 5.30 BIO margin 5.00%).
 - Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
 - Task managed by antigravity at 2026-10-25T19:08:00+07:00
+
+[2026-10-25T19:23:00+07:00] [INFO] Integrasi Master Data Wilayah Resmi Sulut (sulut_master_data.zip) & Rekalibrasi Geospasial
+- Mengadopsi riset dan sourcing akurat dari pemilik repo: Kepmendagri 2025, Pos Indonesia, dan poligon boundaries terestrial nyata (MultiPolygon).
+- Menggantikan generator lama scripts/generate_sulut_geojson.py dengan scripts/generate_sulut_master.py.
+- Menghasilkan master hierarki lengkap 2.026 wilayah: 1 Provinsi, 15 Kab/Kota (11 kab + 4 kota), 171 Kecamatan, 1.839 Desa/Kelurahan (332 kelurahan + 1.507 desa), kode pos 100% terisi (data/master/).
+- Memperbaiki kode Kemendagri tertukar di addons/id_base/data/id_city_data.xml: Minahasa Tenggara adalah 7107 dan Kep. Sitaro adalah 7109.
+- Memutakhirkan data/geo/*.geojson dengan poligon riil (sulut_provinsi, sulut_kab_kota, sulut_districts 171 kec, sulut_villages 1.839 desa).
+- Rekalibrasi koordinat terestrial dan kode pos resmi di scripts/generate_customer_registry_and_pjp.py, customer_registry_354.*, dan partners_354.csv.
+- Mengabaikan cache unduhan data/raw/ di .gitignore.
+- Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
+- Task managed by antigravity at 2026-10-25T19:23:00+07:00
