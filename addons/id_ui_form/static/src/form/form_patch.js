@@ -1,4 +1,4 @@
-import { onMounted, onWillDestroy, useState, useSubEnv } from "@odoo/owl";
+import { onMounted, onPatched, onWillDestroy, useState, useSubEnv } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { Notebook } from "@web/core/notebook/notebook";
 import { useService } from "@web/core/utils/hooks";
@@ -13,6 +13,7 @@ import { IdChatterPage } from "./id_chatter_page";
  *    (nilai yang sudah dikenal kompiler form) dan dirender ulang di dalam tab;
  *  - bila form tidak punya notebook, ada pratinjau lampiran, atau notebook tak pernah
  *    muncul, tata letak chatter bawaan dipakai kembali.
+ *  - judul form (.oe_title) dipindah ke tengah statusbar di antara tombol aksi dan pipeline.
  */
 patch(FormRenderer.prototype, {
     setup() {
@@ -32,11 +33,33 @@ patch(FormRenderer.prototype, {
         };
         this.idChatterTab = tab;
         useSubEnv({ idChatterTab: tab });
+
+        const relocateTitle = () => {
+            if (this.idShellState?.mode !== "sidebar" || this.env.inDialog) {
+                return;
+            }
+            const rendererEl = document.querySelector(".o_action_manager .o_form_renderer");
+            if (!rendererEl) return;
+            const statusbar = rendererEl.querySelector(".o_form_statusbar");
+            const title = rendererEl.querySelector(".o_form_sheet > .oe_title");
+            if (statusbar && title) {
+                title.classList.add("id_statusbar_title");
+                const status = statusbar.querySelector(".o_field_statusbar, .o_statusbar_status");
+                if (status) {
+                    statusbar.insertBefore(title, status);
+                } else {
+                    statusbar.appendChild(title);
+                }
+            }
+        };
+
         onMounted(() => {
             if (this.idChatterTabEnabled && !tab.owner) {
                 this.idChatterFallback.value = true;
             }
+            relocateTitle();
         });
+        onPatched(relocateTitle);
     },
 
     get idChatterTabEnabled() {

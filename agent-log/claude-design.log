@@ -31,3 +31,16 @@
 - Judul halaman diposisikan persis di tengah (align center) dengan font seimbang
 - Systray kanan dilengkapi divider tipis vertikal antar-ikon
 - Task managed by claude-design agent at 2026-10-25T03:51:28+00:00
+
+[2026-10-25T11:53:00+07:00] [INFO] UI refinement v5: form full width, sticky footer total & terms, 3 divider systray, title form di statusbar, badge & logo O glow
+- Berangkat dari feedback pemilik pada tangkapan layar form Sales/Quotation:
+  A. Section form: width full (max-width: 100%) mengisi rongga kiri-kanan agar sales order & invoice lebih lapang
+  B. Footer form: sticky (position: sticky; bottom: 0) dengan garis pembatas atas-bawah saat scroll
+  C. Systray kanan: tepat 3 divider vertikal (tinggi 22px) yang memisahkan 4 menu (Discuss, Activity, Company, User), menyembunyikan child kosong agar tidak merusak layout
+  D. Title halaman navbar: ukuran font diperbesar menjadi 1.45rem 700
+  E. Badge FMCG: background ungu Odoo (#714B67), font tebal (font-weight: 700), sedikit lebih besar (0.75rem)
+  F. Form title (New / nomor dokumen): dipindah ke bagian tengah .o_form_statusbar di antara tombol aksi kiri dan pipeline tahapan kanan
+  G. Icon O (sidebar ciut saat hover): animasi smooth tanpa shaky rotation, transisi halus, glow ungu lebih kaya
+- Diverifikasi visual via Playwright headless Chromium & screenshot: form lapang, sticky total, 3 divider rapi, form title di tengah statusbar, logo O smooth hover glow
+- Manifest check lolos: 4 addon valid
+- Task managed by claude-design agent at 2026-10-25T11:53:00+07:00

@@ -18,7 +18,7 @@ body.id-shell-sidebar {
     --id-panel-border: #e3e8ee;
     --id-panel-active: #d6e9f8;
     --id-panel-hover: #f1f4f9;
-    --id-brand-box: #00a09d;
+    --id-brand-box: #714B67;
 
     // Grid: sidebar | panel seksi | isi. Baris: topbar | isi. Halaman tidak ikut scroll.
     display: grid !important;
@@ -59,7 +59,7 @@ body.id-shell-sidebar {
         .o_navbar_apps_menu,
         .o_menu_sections { display: none !important; }
 
-        // Judul halaman = nama aplikasi aktif (persis di tengah, font elegan).
+        // Judul halaman = nama aplikasi aktif (persis di tengah, font elegan & jelas).
         .o_menu_brand {
             display: flex !important;
             flex: 1 1 auto;
@@ -69,8 +69,8 @@ body.id-shell-sidebar {
             order: 2;
             margin: 0 !important;
             padding: 0 .75rem;
-            font-size: 1.25rem;
-            font-weight: 600;
+            font-size: 1.45rem;
+            font-weight: 700;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             letter-spacing: -.02em;
             color: var(--id-topbar-fg);
@@ -83,20 +83,25 @@ body.id-shell-sidebar {
             margin-inline-start: auto !important;
             display: flex;
             align-items: center;
+            gap: 0;
 
-            // Divider tipis antara icon menu pada navbar bagian kanan (icon discuss s.d nama user)
-            > * {
+            > *:empty { display: none !important; }
+
+            // Tepat 3 pemisah antara 4 menu (Discuss, Activity, Company, User) tanpa merusak tata letak.
+            .o-mail-DiscussSystray-class,
+            .o-dropdown:has(.fa-clock-o),
+            .o_switch_company_menu {
                 display: flex;
                 align-items: center;
-                position: relative;
 
-                &:not(:last-child)::after {
+                &::after {
                     content: "";
                     display: inline-block;
                     width: 1px;
-                    height: 16px;
-                    background: #e3e8ee;
-                    margin-inline: .35rem;
+                    height: 22px;
+                    background: #d8dee8;
+                    margin-inline: .6rem;
+                    flex-shrink: 0;
                 }
             }
         }
@@ -175,12 +180,14 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
         background: transparent !important; border: 0 !important; box-shadow: none !important;
         color: #ffffff; font-size: 1.75rem;
         cursor: pointer;
-        transition: color .25s ease, filter .25s ease, transform .25s ease;
+        transition: color .3s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    filter .3s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    transform .3s cubic-bezier(0.2, 0.8, 0.2, 1);
         &:hover, &:active {
             color: #714B67; // warna ungu odoo
-            filter: drop-shadow(0 0 8px rgba(113, 75, 103, .75));
-            transform: scale(1.08) translateY(-1px);
-            animation: id-logo-float 1.8s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 12px rgba(113, 75, 103, .9)) drop-shadow(0 0 20px rgba(113, 75, 103, .4));
+            transform: scale(1.12);
+            animation: id-logo-pulse 2s ease-in-out infinite alternate;
         }
     }
     &__title { flex: 1; display: flex; align-items: center; gap: .4rem; min-width: 0; white-space: nowrap; }
@@ -190,11 +197,11 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
         background: var(--id-brand-box);
         color: #fff;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        font-weight: 300;
-        font-size: .68rem;
-        letter-spacing: .12em;
+        font-weight: 700;
+        font-size: .75rem;
+        letter-spacing: .08em;
         text-transform: uppercase;
-        padding: .15rem .45rem;
+        padding: .18rem .5rem;
         border-radius: 0 !important; // jangan rounded
         line-height: 1.2;
     }
@@ -239,9 +246,9 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
     }
 }
 
-@keyframes id-logo-float {
-    from { transform: translateY(-1px) scale(1.07) rotate(-3deg); }
-    to { transform: translateY(-3px) scale(1.09) rotate(3deg); }
+@keyframes id-logo-pulse {
+    from { transform: scale(1.12); filter: drop-shadow(0 0 10px rgba(113, 75, 103, .8)); }
+    to { transform: scale(1.16) translateY(-1px); filter: drop-shadow(0 0 18px rgba(113, 75, 103, .95)) drop-shadow(0 0 26px rgba(113, 75, 103, .45)); }
 }
 @media (prefers-reduced-motion: reduce) {
     .id_sidebar__logo:hover { animation: none; }
