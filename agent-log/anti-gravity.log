@@ -179,11 +179,17 @@
 - Perbarui deploy/init.sh dengan profil resmi PT Manado Distribusi Utama (Interchange Maumbi), jadwal kerja 5 hari (Senin-Jumat 08:00-17:00, Sabtu-Minggu libur), dependensi modul fleet/hr/uom, serta mark seed_master_v4
 - Task managed by antigravity-agent at 2026-10-25T16:08:30+07:00
 
-[2026-10-25T16:45:00+07:00] [INFO] Sinkronisasi kode prinsipal XML, perbaikan konteks VAT profil perusahaan, dan diagnostik CI
-- Selaraskan kode prinsipal pada generate_fmcg_seed.py dan principals_4.csv dengan id_principal_data.xml (PRIN-MAYORA, PRIN-SANTOS, PRIN-UNILEVER, PRIN-WINGS)
-- Amankan setup company_profile_v2 di deploy/init.sh dengan no_vat_validation=True dan try-except agar tidak memblokir startup Odoo saat l10n_id aktif
-- Sempurnakan urutan penangkapan log docker container pada workflow CI untuk memudahkan troubleshooting
-- Task managed by antigravity-agent at 2026-10-25T16:45:00+07:00
+[2026-10-25T17:26:00+07:00] [INFO] Verifikasi live Railway & Playwright sukses, perbaikan schema upgrade & eliminasi browse error
+- Investigasi error runtime Railway: penanda upgrade_modules_v1 pada DB persisten mencegah eksekusi -u $INIT_MODULES, mengakibatkan hilangnya kolom id_principal.pic_name dan kargo armada fleet_vehicle
+- Hotfix Railway MCP: set FORCE_UPGRADE=1 memicu re-indexing skema lengkap (fleet, product, hr, id_base, id_ui) dengan 97 modul ter-load sempurna
+- Verifikasi Playwright komprehensif pada https://odooca-fmcg-demo.up.railway.app:
+  * FMCG Principals: daftar dan form view (PT Mayora Indah Tbk dkk) terbuka sempurna tanpa modal error dialog; PIC dan kontak tampil rapi
+  * Products: kanban katalog & form view (Banngo Kecap Manis, Benn-Beng dkk) terbuka mulus dengan kategori hirarkis [PRINSIPAL] > [DIVISI] > [BRAND], dimensi karton, dan UoM
+  * Sales & Contacts: form mitra/outlet terbuka bersih tanpa tier field yang usang
+  * Fleet: daftar dan form kendaraan (DB 8123 QA) tampil lengkap dengan pengemudi Novry Mandagi
+  * Employees: form karyawan menampilkan profil resmi PT Manado Distribusi Utama (Interchange Maumbi)
+- Perbaikan permanen: naikkan penanda init.sh ke upgrade_modules_v2 dan reset FORCE_UPGRADE=0 di Railway untuk efisiensi boot container
+- Task managed by antigravity-agent at 2026-10-25T17:26:00+07:00
 
 
 
