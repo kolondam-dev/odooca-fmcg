@@ -317,3 +317,17 @@
 - Memperluas unit tests mutasi tests/test_seed_invariants.py (39/39 unit tests PASS).
 - Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
 - Task managed by antigravity at 2026-10-26T03:07:00+07:00
+
+[2026-10-26T03:42:00+07:00] [INFO] Pemisahan SO per Kunjungan & Prinsipal (Gate SO-PRINCIPAL Lolos 100%)
+- Mengintegrasikan gate SO-PRINCIPAL dari PR #16 (commit 500dbcc) sebagai basis pengujian.
+- Memodifikasi generator scripts/ops/generate_perpetual_transactions.py:
+  * Mengelompokkan baris pesanan per visit berdasarkan master product.principal_code.
+  * Menerbitkan 1 SO independen untuk setiap grup prinsipal yang dipesan dalam satu kunjungan.
+  * Jumlah SO bertambah dari 419 menjadi 1.324 SO (0 pelanggaran SO-PRINCIPAL).
+  * Menjaga integritas kebutuhan belanja outlet: 2.738 order lines, Gross DPP Rp 6.065.892.600,00, COGS Rp 5.138.995.000,00 identik 100%.
+  * Menerbitkan 1.324 DO dan 1.324 Faktur (1.276 Faktur Juli Rp 5,594 M DPP; 48 Faktur Carry-Forward Agustus Rp 187,85 Jt DPP).
+  * Retur kualitatif tetap 9 kejadian, 9 karton, DPP Rp 2.279.200,00, COGS Rp 1.963.200,00 terikat presisi ke SO/DO prinsipal terkait.
+  * Pergerakan stok fisik (53.837 karton), reservasi (1.038 karton), dan karantina (9 karton) identik 100%.
+- Meregenerasi laporan canonical_financial_reconciliation_july_2026.json & .md.
+- Verifikasi lokal: 44/44 unit tests PASS, verify_seed_invariants.py PASS (0 violations), ruff check ok, check_manifests ok.
+- Task managed by antigravity at 2026-10-26T03:42:00+07:00

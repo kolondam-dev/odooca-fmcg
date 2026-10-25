@@ -145,6 +145,7 @@ def main():
     inv_counter = 1
     pay_counter = 1
     event_counter = 1
+    visit_order_counter = 0
 
     # Catat event saldo awal 1 Juli 2026 di event ledger
     for item in initial_stock:
@@ -336,12 +337,7 @@ def main():
 
                 selected_skus = random.sample(available_skus, min(sku_count, len(available_skus)))
 
-                current_so_gross = 0.0
-                current_so_cogs = 0.0
-                current_so_lines = []
-
-                so_num = f"SO-202607-{so_counter:04d}"
-                so_counter += 1
+                visit_candidate_lines = []
 
                 for sku in selected_skus:
                     p = prod_map[sku]
@@ -377,15 +373,12 @@ def main():
                         line_gross = round(take_qty * c_price, 2)
                         line_cogs = round(take_qty * c_cost, 2)
 
-                        current_so_gross += line_gross
-                        current_so_cogs += line_cogs
-
-                        current_so_lines.append({
-                            "so_number": so_num,
+                        visit_candidate_lines.append({
                             "date_order": d_str,
                             "sku_code": sku,
                             "product_name": p["name"],
                             "brand_code": p["brand_code"],
+                            "principal_code": p["principal_code"],
                             "fmcg_category": p["fmcg_category"],
                             "qty_cartons": take_qty,
                             "carton_qty": int(p["carton_qty"]),
@@ -397,179 +390,205 @@ def main():
                             "unit_cost": float(p["cost_price"]),
                         })
 
-                        stock_event_ledger.append({
-                            "event_id": f"EVT-{event_counter:06d}",
-                            "date": d_str,
-                            "event_type": "SO_RESERVATION",
-                            "reference": so_num,
-                            "sku_code": sku,
-                            "lot_number": lot_entry["lot"],
-                            "qty_cartons": take_qty,
-                            "unit_cost_price": float(p["cost_price"]),
-                            "total_cost_dpp": line_cogs,
-                            "physical_impact": 0,
-                            "reserved_impact": take_qty,
-                            "quarantine_impact": 0,
-                            "notes": f"Reservasi Stok Pesanan Sales Order {so_num}",
-                        })
-                        event_counter += 1
-
                         if rem_to_take == 0:
                             break
 
-                if not current_so_lines:
+                if not visit_candidate_lines:
                     continue
 
-                order_lines.extend(current_so_lines)
+                visit_order_counter += 1
 
-                # Simpan Packlist / Delivery Order (H+1 kerja berikutnya via kanonikal get_next_working_day)
-                do_num = f"DO-202607-{do_counter:04d}"
-                do_counter += 1
+                # Cek apakah kunjungan ini mengalami rejection penolakan transit (~4-5% order GT & MT)
+                has_visit_rejection = (ch in ("GT", "MT") and len(visit_candidate_lines) >= 2 and ((visit_order_counter + 1) % 20 == 0))
+                target_rej_sku = visit_candidate_lines[0]["sku_code"] if has_visit_rejection else None
+                target_rej_lot = visit_candidate_lines[0]["lot_number"] if has_visit_rejection else None
+                target_rej_prin = prod_map[target_rej_sku]["principal_code"] if has_visit_rejection else None
+
                 deliv_dt = get_next_working_day(curr_dt)
                 deliv_date = deliv_dt.strftime("%Y-%m-%d")
-
-                # Skenario Rejection / Retur Fisik Saat Pengiriman (DO)
-                # Berlaku deterministik pada ~4-5% order GT dan MT akibat kerusakan handling transit
-                rej_amt = 0.0
-                rej_cogs = 0.0
-                rejection_payload = None
-
-                if ch in ("GT", "MT") and len(current_so_lines) >= 2 and (so_counter % 20 == 0):
-                    rej_line = current_so_lines[0]
-                    rej_sku = rej_line["sku_code"]
-                    rej_lot = rej_line["lot_number"]
-                    rej_qty = 1  # 1 karton rusak
-                    rej_c_price = rej_line["carton_price_dpp"]
-                    rej_c_cost = float(prod_map[rej_sku]["cost_price"]) * int(prod_map[rej_sku]["carton_qty"])
-                    rej_amt = round(rej_c_price * rej_qty, 2)
-                    rej_cogs = round(rej_c_cost * rej_qty, 2)
-
-                    rej_id = f"REJ-202607-{rej_counter:03d}"
-                    rej_counter += 1
-
-                    rejection_payload = {
-                        "rejection_id": rej_id,
-                        "so_number": so_num,
-                        "do_number": do_num,
-                        "rejection_date": deliv_date,
-                        "customer": cust,
-                        "channel": ch,
-                        "sku_code": rej_sku,
-                        "product_name": rej_line["product_name"],
-                        "lot_number": rej_lot,
-                        "qty_cartons": rej_qty,
-                        "carton_qty": rej_line["carton_qty"],
-                        "unit_price_dpp": rej_line["unit_price_dpp"],
-                        "line_subtotal_dpp": rej_amt,
-                        "cogs_subtotal": rej_cogs,
-                        "rejection_reason": "Kemasan basah/penyok saat handling transit",
-                        "disposition": "Karantina Gudang Maumbi / Bad Stock",
-                        "unit_cost": float(prod_map[rej_sku]["cost_price"]),
-                    }
-                    rejections.append(rejection_payload)
-
-                do_delivered_amt = round(current_so_gross - rej_amt, 2)
-                so_disc_amt = round(current_so_gross * disc_pct, 2)
-                so_net_dpp = round(current_so_gross - so_disc_amt, 2)
-
-                # COGS Terbagi: Accepted COGS (HPP Laba Rugi) vs Rejection COGS (Aset Karantina)
-                delivered_cogs = round(current_so_cogs - rej_cogs, 2)
-
-                # Daftarkan ke pending_dispatches pada tanggal pengiriman fisik (deliv_date)
-                pending_dispatches[deliv_date].append({
-                    "so_number": so_num,
-                    "do_number": do_num,
-                    "deliv_date": deliv_date,
-                    "lines": current_so_lines,
-                    "rejection_line": rejection_payload,
-                    "do_delivered_dpp": do_delivered_amt,
-                    "rejection_dpp": rej_amt,
-                    "delivered_cogs_dpp": delivered_cogs,
-                    "rejection_cogs_dpp": rej_cogs,
-                })
-
-                # Simpan Sales Order Header
-                sales_orders.append({
-                    "so_number": so_num,
-                    "date_order": d_str,
-                    "salesman": sls,
-                    "customer": cust,
-                    "channel": ch,
-                    "district": dist,
-                    "delivery_vehicle": veh,
-                    "gross_dpp": round(current_so_gross, 2),
-                    "discount_dpp": round(so_disc_amt, 2),
-                    "net_dpp": round(so_net_dpp, 2),
-                    "cogs_dpp": round(current_so_cogs, 2),
-                    "rejection_dpp": round(rej_amt, 2),
-                    "do_delivered_dpp": round(do_delivered_amt, 2),
-                })
-
-                # Simpan Packlist / Delivery Order Header
-                deliveries.append({
-                    "do_number": do_num,
-                    "so_number": so_num,
-                    "scheduled_delivery_date": deliv_date,
-                    "delivery_vehicle": veh,
-                    "customer": cust,
-                    "channel": ch,
-                    "gross_order_dpp": round(current_so_gross, 2),
-                    "rejection_dpp": round(rej_amt, 2),
-                    "do_delivered_dpp": round(do_delivered_amt, 2),
-                    "rejection_reason": "Kemasan basah/penyok saat handling transit" if rej_amt > 0 else "-",
-                })
-
-                # Simpan Customer Invoice (Tercetak dan diakui pada tanggal barang diserahterimakan)
-                # TOP (Term of Payment) diambil WAJIB dari master customer registry
                 cust_ref = cust.split(" - ")[0]
                 cust_master = cust_map[cust_ref]
                 top_days = int(cust_master["payment_term_days"])
                 due_dt = deliv_dt + dt.timedelta(days=top_days)
                 due_date_str = due_dt.strftime("%Y-%m-%d")
 
-                inv_num = f"INV-202607-{inv_counter:04d}"
-                inv_counter += 1
+                # Kelompokkan baris pesanan kunjungan per prinsipal
+                lines_by_prin = collections.defaultdict(list)
+                for cand_line in visit_candidate_lines:
+                    lines_by_prin[cand_line["principal_code"]].append(cand_line)
 
-                # DPP Faktur ditagihkan atas barang yang benar-benar diterima (delivered net of rejection)
-                inv_disc_amt = round(do_delivered_amt * disc_pct, 2)
-                final_inv_dpp = round(do_delivered_amt - inv_disc_amt, 2)
-                ppn_11_amt = round(final_inv_dpp * 0.11, 2)
-                final_inv_total = round(final_inv_dpp + ppn_11_amt, 2)
+                for prin in sorted(lines_by_prin.keys()):
+                    prin_lines = lines_by_prin[prin]
+                    so_num = f"SO-202607-{so_counter:04d}"
+                    so_counter += 1
+                    do_num = f"DO-202607-{do_counter:04d}"
+                    do_counter += 1
 
-                invoices.append({
-                    "invoice_number": inv_num,
-                    "so_number": so_num,
-                    "do_number": do_num,
-                    "date_invoice": deliv_date,
-                    "due_date": due_date_str,
-                    "customer": cust,
-                    "channel": ch,
-                    "salesman": sls,
-                    "dpp_amount": round(final_inv_dpp, 2),
-                    "ppn_11_amount": round(ppn_11_amt, 2),
-                    "total_invoice_with_ppn": round(final_inv_total, 2),
-                    "payment_term_days": top_days,
-                })
+                    current_so_gross = 0.0
+                    current_so_cogs = 0.0
 
-                # Daftarkan ke Open AR Tracking
-                open_ar_ledger.append({
-                    "invoice_number": inv_num,
-                    "customer": cust,
-                    "channel": ch,
-                    "salesman": sls,
-                    "dpp_amount": final_inv_dpp,
-                    "ppn_amount": ppn_11_amt,
-                    "total_with_ppn": final_inv_total,
-                    "invoice_date": deliv_date,
-                    "due_date": due_date_str,
-                    "payment_term_days": top_days,
-                    "status": "Open",
-                })
+                    for line in prin_lines:
+                        current_so_gross += line["line_subtotal_dpp"]
+                        current_so_cogs += line["cogs_subtotal"]
 
-                daily_so_gross += current_so_gross
-                daily_so_disc += so_disc_amt
-                daily_so_net += so_net_dpp
-                daily_so_cogs += current_so_cogs
+                        order_lines.append({
+                            "so_number": so_num,
+                            "date_order": d_str,
+                            "sku_code": line["sku_code"],
+                            "product_name": line["product_name"],
+                            "brand_code": line["brand_code"],
+                            "fmcg_category": line["fmcg_category"],
+                            "qty_cartons": line["qty_cartons"],
+                            "carton_qty": line["carton_qty"],
+                            "unit_price_dpp": line["unit_price_dpp"],
+                            "carton_price_dpp": line["carton_price_dpp"],
+                            "line_subtotal_dpp": line["line_subtotal_dpp"],
+                            "cogs_subtotal": line["cogs_subtotal"],
+                            "lot_number": line["lot_number"],
+                            "unit_cost": line["unit_cost"],
+                        })
+
+                        stock_event_ledger.append({
+                            "event_id": f"EVT-{event_counter:06d}",
+                            "date": d_str,
+                            "event_type": "SO_RESERVATION",
+                            "reference": so_num,
+                            "sku_code": line["sku_code"],
+                            "lot_number": line["lot_number"],
+                            "qty_cartons": line["qty_cartons"],
+                            "unit_cost_price": line["unit_cost"],
+                            "total_cost_dpp": line["cogs_subtotal"],
+                            "physical_impact": 0,
+                            "reserved_impact": line["qty_cartons"],
+                            "quarantine_impact": 0,
+                            "notes": f"Reservasi Stok Pesanan Sales Order {so_num}",
+                        })
+                        event_counter += 1
+
+                    rej_amt = 0.0
+                    rej_cogs = 0.0
+                    rejection_payload = None
+
+                    if has_visit_rejection and prin == target_rej_prin:
+                        rej_sku = target_rej_sku
+                        rej_lot = target_rej_lot
+                        rej_qty = 1
+                        rej_c_price = prin_lines[0]["carton_price_dpp"]
+                        rej_c_cost = float(prod_map[rej_sku]["cost_price"]) * int(prod_map[rej_sku]["carton_qty"])
+                        rej_amt = round(rej_c_price * rej_qty, 2)
+                        rej_cogs = round(rej_c_cost * rej_qty, 2)
+
+                        rej_id = f"REJ-202607-{rej_counter:03d}"
+                        rej_counter += 1
+
+                        rejection_payload = {
+                            "rejection_id": rej_id,
+                            "so_number": so_num,
+                            "do_number": do_num,
+                            "rejection_date": deliv_date,
+                            "customer": cust,
+                            "channel": ch,
+                            "sku_code": rej_sku,
+                            "product_name": prin_lines[0]["product_name"],
+                            "lot_number": rej_lot,
+                            "qty_cartons": rej_qty,
+                            "carton_qty": prin_lines[0]["carton_qty"],
+                            "unit_price_dpp": prin_lines[0]["unit_price_dpp"],
+                            "line_subtotal_dpp": rej_amt,
+                            "cogs_subtotal": rej_cogs,
+                            "rejection_reason": "Kemasan basah/penyok saat handling transit",
+                            "disposition": "Karantina Gudang Maumbi / Bad Stock",
+                            "unit_cost": float(prod_map[rej_sku]["cost_price"]),
+                        }
+                        rejections.append(rejection_payload)
+
+                    do_delivered_amt = round(current_so_gross - rej_amt, 2)
+                    so_disc_amt = round(current_so_gross * disc_pct, 2)
+                    so_net_dpp = round(current_so_gross - so_disc_amt, 2)
+                    delivered_cogs = round(current_so_cogs - rej_cogs, 2)
+
+                    pending_dispatches[deliv_date].append({
+                        "so_number": so_num,
+                        "do_number": do_num,
+                        "deliv_date": deliv_date,
+                        "lines": prin_lines,
+                        "rejection_line": rejection_payload,
+                        "do_delivered_dpp": do_delivered_amt,
+                        "rejection_dpp": rej_amt,
+                        "delivered_cogs_dpp": delivered_cogs,
+                        "rejection_cogs_dpp": rej_cogs,
+                    })
+
+                    sales_orders.append({
+                        "so_number": so_num,
+                        "date_order": d_str,
+                        "salesman": sls,
+                        "customer": cust,
+                        "channel": ch,
+                        "district": dist,
+                        "delivery_vehicle": veh,
+                        "gross_dpp": round(current_so_gross, 2),
+                        "discount_dpp": round(so_disc_amt, 2),
+                        "net_dpp": round(so_net_dpp, 2),
+                        "cogs_dpp": round(current_so_cogs, 2),
+                        "rejection_dpp": round(rej_amt, 2),
+                        "do_delivered_dpp": round(do_delivered_amt, 2),
+                    })
+
+                    deliveries.append({
+                        "do_number": do_num,
+                        "so_number": so_num,
+                        "scheduled_delivery_date": deliv_date,
+                        "delivery_vehicle": veh,
+                        "customer": cust,
+                        "channel": ch,
+                        "gross_order_dpp": round(current_so_gross, 2),
+                        "rejection_dpp": round(rej_amt, 2),
+                        "do_delivered_dpp": round(do_delivered_amt, 2),
+                        "rejection_reason": "Kemasan basah/penyok saat handling transit" if rej_amt > 0 else "-",
+                    })
+
+                    inv_num = f"INV-202607-{inv_counter:04d}"
+                    inv_counter += 1
+
+                    inv_disc_amt = round(do_delivered_amt * disc_pct, 2)
+                    final_inv_dpp = round(do_delivered_amt - inv_disc_amt, 2)
+                    ppn_11_amt = round(final_inv_dpp * 0.11, 2)
+                    final_inv_total = round(final_inv_dpp + ppn_11_amt, 2)
+
+                    invoices.append({
+                        "invoice_number": inv_num,
+                        "so_number": so_num,
+                        "do_number": do_num,
+                        "date_invoice": deliv_date,
+                        "due_date": due_date_str,
+                        "customer": cust,
+                        "channel": ch,
+                        "salesman": sls,
+                        "dpp_amount": round(final_inv_dpp, 2),
+                        "ppn_11_amount": round(ppn_11_amt, 2),
+                        "total_invoice_with_ppn": round(final_inv_total, 2),
+                        "payment_term_days": top_days,
+                    })
+
+                    open_ar_ledger.append({
+                        "invoice_number": inv_num,
+                        "customer": cust,
+                        "channel": ch,
+                        "salesman": sls,
+                        "dpp_amount": final_inv_dpp,
+                        "ppn_amount": ppn_11_amt,
+                        "total_with_ppn": final_inv_total,
+                        "invoice_date": deliv_date,
+                        "due_date": due_date_str,
+                        "payment_term_days": top_days,
+                        "status": "Open",
+                    })
+
+                    daily_so_gross += current_so_gross
+                    daily_so_disc += so_disc_amt
+                    daily_so_net += so_net_dpp
+                    daily_so_cogs += current_so_cogs
 
         # -------------------------------------------------------------
         # STEP 4: AR CASH & TRANSFER COLLECTIONS (Pelunasan Piutang)

@@ -1,8 +1,8 @@
 [
   {
     "rejection_id": "REJ-202607-001",
-    "so_number": "SO-202607-0019",
-    "do_number": "DO-202607-0019",
+    "so_number": "SO-202607-0063",
+    "do_number": "DO-202607-0063",
     "rejection_date": "2026-07-03",
     "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
     "channel": "GT",
@@ -20,8 +20,8 @@
   },
   {
     "rejection_id": "REJ-202607-002",
-    "so_number": "SO-202607-0039",
-    "do_number": "DO-202607-0039",
+    "so_number": "SO-202607-0125",
+    "do_number": "DO-202607-0125",
     "rejection_date": "2026-07-04",
     "customer": "CUST-GT-28 - Toko Sam Ratulangi Perkasa",
     "channel": "GT",
@@ -39,8 +39,8 @@
   },
   {
     "rejection_id": "REJ-202607-003",
-    "so_number": "SO-202607-0119",
-    "do_number": "DO-202607-0119",
+    "so_number": "SO-202607-0368",
+    "do_number": "DO-202607-0368",
     "rejection_date": "2026-07-10",
     "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
     "channel": "GT",
@@ -58,8 +58,8 @@
   },
   {
     "rejection_id": "REJ-202607-004",
-    "so_number": "SO-202607-0179",
-    "do_number": "DO-202607-0179",
+    "so_number": "SO-202607-0554",
+    "do_number": "DO-202607-0554",
     "rejection_date": "2026-07-15",
     "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
     "channel": "MT",
@@ -77,8 +77,8 @@
   },
   {
     "rejection_id": "REJ-202607-005",
-    "so_number": "SO-202607-0199",
-    "do_number": "DO-202607-0199",
+    "so_number": "SO-202607-0619",
+    "do_number": "DO-202607-0619",
     "rejection_date": "2026-07-16",
     "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
     "channel": "GT",
@@ -96,8 +96,8 @@
   },
   {
     "rejection_id": "REJ-202607-006",
-    "so_number": "SO-202607-0259",
-    "do_number": "DO-202607-0259",
+    "so_number": "SO-202607-0807",
+    "do_number": "DO-202607-0807",
     "rejection_date": "2026-07-21",
     "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
     "channel": "GT",
@@ -115,8 +115,8 @@
   },
   {
     "rejection_id": "REJ-202607-007",
-    "so_number": "SO-202607-0279",
-    "do_number": "DO-202607-0279",
+    "so_number": "SO-202607-0880",
+    "do_number": "DO-202607-0880",
     "rejection_date": "2026-07-22",
     "customer": "CUST-GT-10 - Toko Sario Makmur",
     "channel": "GT",
@@ -134,8 +134,8 @@
   },
   {
     "rejection_id": "REJ-202607-008",
-    "so_number": "SO-202607-0319",
-    "do_number": "DO-202607-0319",
+    "so_number": "SO-202607-1003",
+    "do_number": "DO-202607-1003",
     "rejection_date": "2026-07-25",
     "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
     "channel": "MT",
@@ -153,8 +153,8 @@
   },
   {
     "rejection_id": "REJ-202607-009",
-    "so_number": "SO-202607-0379",
-    "do_number": "DO-202607-0379",
+    "so_number": "SO-202607-1203",
+    "do_number": "DO-202607-1203",
     "rejection_date": "2026-07-30",
     "customer": "CUST-GT-11 - Grosir Krida Bahu",
     "channel": "GT",

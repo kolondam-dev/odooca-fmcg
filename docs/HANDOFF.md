@@ -1,5 +1,37 @@
 # HANDOFF
 
+## 2026-10-26 — antigravity agent — Pemisahan SO per Kunjungan & Prinsipal (Gate SO-PRINCIPAL PASS) & Rekonsiliasi Kuantitas/Nilai
+**Konteks & Arahan Pemilik:**
+Menindaklanjuti gate `SO-PRINCIPAL` dari PR #16 yang menemukan 413 SO campuran prinsipal pada baseline sebelumnya. Melakukan pemisahan pesanan per customer, kunjungan, dan prinsipal tunggal berdasarkan `product.principal_code` master produk tanpa mengurangi kebutuhan belanja maupun kuantitas/nilai pesanan.
+
+**Rekonsiliasi Lengkap Sebelum vs Sesudah Pemisahan SO:**
+- *Jumlah Sales Order (SO):* **419 SO -> 1.324 SO** (bertambah 905 SO karena 1 kunjungan dengan multi-prinsipal kini dipecah rapi per prinsipal; 0 pelanggaran `SO-PRINCIPAL`).
+- *Jumlah Baris Order (Order Lines):* **2.738 baris -> 2.738 baris** (Tepat 100% identik; tidak ada line yang dihapus atau dikurangi).
+- *Total Nilai Pesanan Bruto (Gross DPP):* **Rp 6.065.892.600,00 -> Rp 6.065.892.600,00** (Tepat 100% identik).
+- *Total Biaya Pokok Pesanan (COGS DPP):* **Rp 5.138.995.000,00 -> Rp 5.138.995.000,00** (Tepat 100% identik).
+- *Realisasi Pengiriman (DO):* **419 DO -> 1.324 DO** (Gross DO Rp 6.065.892.600,00; Delivered Net DO Rp 6.063.613.400,00).
+- *Retur Karantina Fisik:* **9 retur / 9 karton** (DPP Rp 2.279.200,00; COGS Rp 1.963.200,00) terikat presisi ke SO dan DO prinsipal yang bersangkutan.
+- *Faktur Komersial Sah Juli:* **405 Faktur -> 1.276 Faktur** (Invoiced DPP **Rp 5.594.622.485,00**; Accepted COGS **Rp 4.969.777.800,00** identik 100%).
+- *Carry-Forward Agustus (Cut-off 31 Juli):* **14 Faktur -> 48 Faktur** (Invoiced DPP **Rp 187.858.691,40**; COGS **Rp 167.254.000,00** identik 100%).
+- *Pelunasan Kas Piutang Usaha (AR):* **320 transaksi -> 967 transaksi** (Pelunasan diproses per invoice unik secara deterministik; Kas DPP Rp 3.448.145.006,75).
+- *Saldo Akhir Persediaan Gudang Maumbi (31 Juli 2026 EOD):*
+  * Fisik On-Hand: **53.837 Karton** (identik 100%).
+  * Reserved (Kirim 1 Agustus): **1.038 Karton** (identik 100%).
+  * Available Bebas Jual: **52.799 Karton** (identik 100%).
+  * Karantina Bad Stock: **9 Karton** (identik 100%).
+  * Valuasi Fisik Bebas Jual: **Rp 9.001.139.000,00** (identik 100%).
+  * Nilai Aset Karantina: **Rp 1.963.200,00** (identik 100%).
+  * Total Valuasi Gudang: **Rp 9.003.102.200,00** (identik 100%).
+- *Event Ledger Persediaan:* **5.741 records -> 5.741 records** (Reservasi dan dispatch mereferensikan SO/DO prinsipal secara presisi tanpa ada duplikasi mutasi stok).
+
+**Hasil Pengujian & Verifikasi:**
+- `python scripts/ops/verify_seed_invariants.py --report invariant-report.json`: Status PASS, **0 violations** (413 pelanggaran `SO-PRINCIPAL` tuntas tertutup).
+- `python -m unittest discover -s tests -p 'test_*.py' -v`: **44/44 unit tests PASS** (termasuk uji reproduksibilitas determinisme lintas proses & integritas snapshot repo).
+- `python -m ruff check .`: All checks passed!
+- `python scripts/check_manifests.py`: 4 addon ok.
+
+---
+
 ## 2026-10-26 — codex agent — Gate SO satu prinsipal (baseline merah)
 **Arahan pemilik:** setiap SO hanya boleh berisi SKU dari satu prinsipal.
 **Berubah:** SO-PRINCIPAL pada validator independen, lima regression tests,

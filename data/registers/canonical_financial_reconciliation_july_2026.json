@@ -7,19 +7,19 @@
     "inbound_po_intransit_june_headers.csv": "3643efa63031fac441e68bfb5118ece350415056ffd92f6df1d8bd61d1d6852d",
     "inbound_po_intransit_june_lines.csv": "fec4f7491fc3b29bfaccac0b98dd7281a304e329c7d3b267753549f35d70a91c",
     "pjp_july_2026_matrix.csv": "f17fc52b03575b82498062d6dc89baad2c5235a4e09ff3f15524f4a359e3a67e",
-    "perpetual_sales_orders.csv": "021e9d0ca67b10f0e07333200f0ecbdb47288cf14d9541b2812bcd8763e68a7c",
-    "perpetual_order_lines.csv": "4db5f9ebea936ab1c1564755cbf5f1e98f1ae20db2c673d16372ad9f72cba3f2",
-    "perpetual_deliveries.csv": "0da359c91f6634c0275aeee0d2d6eaafffdf9adf32d2e097d516de85f8d7f62f",
-    "perpetual_order_rejections.csv": "33e9faa8d2abea7363e3edcc3084e1f433aa25ef96ba48373c6a2a0324d4705f",
-    "perpetual_invoices.csv": "2d1d301ab78564f7f64f1faf0f035ad6f830b93b870cd7e38dae57454710d566",
-    "perpetual_ar_collections.csv": "701e39b6b5979aeb692a67c1cbe7ef1ae388b05d5a2941f0179ab779c87a554d",
+    "perpetual_sales_orders.csv": "fbfc22e86cb8b0678938a9a83485814d64e391b359d2980a9828d4fd9282f35f",
+    "perpetual_order_lines.csv": "a011c8ebb690dc7724b1d9c6fee8ad01fc6bc899cc8df14ba88aac31ede8bf56",
+    "perpetual_deliveries.csv": "dcd62acddbaa1829f343e3f2fde6caa5496b16641687526696499eae49084b19",
+    "perpetual_order_rejections.csv": "ace21a299e0361e4e8838f679e33120592f98fc20e3b66162610b61fea589578",
+    "perpetual_invoices.csv": "b58486598cf69e0aeb4ad9f28c1eb8fadc619fbb3324ac4788ca6982e4aef398",
+    "perpetual_ar_collections.csv": "0214da5d755dacdc004a13b17a9729e436ebfac6467b8253213d961c045bd906",
     "perpetual_ap_payments.csv": "7a5083096ac0d96795c24972f33946d58989f7a3b1567b2fe649d08f585467f3",
     "perpetual_opex_payroll.csv": "48017137991dac72f66d785cae67c132603c315f3d93cbd7a09a40daddf60625",
-    "perpetual_daily_stock_cards.csv": "7acef464308e5a1dec4f3dc7c8ef4e3357c65405308237197d559252890c8dab",
-    "perpetual_stock_event_ledger.csv": "9c62515640dcd7e875ba30d0e17d03d97961301c6e832cd2267b3f81bf514415"
+    "perpetual_daily_stock_cards.csv": "40bc3e2d2fe92d2cb4273a431e6af2090e8832237c302379d24e53ad8314fc7f",
+    "perpetual_stock_event_ledger.csv": "b5a326f8480effcbeba6e130cd290cb2c4de4fad4e721e0e4f6276943422bf86"
   },
   "sales_orders_booked_july": {
-    "so_count": 419,
+    "so_count": 1324,
     "gross_dpp": "6065892600.00",
     "discount_dpp": "281242486.00",
     "net_dpp": "5784650114.00",
@@ -29,7 +29,7 @@
     "lines_cogs_dpp": "5138995000.00"
   },
   "delivery_orders_reconciliation": {
-    "do_count": 419,
+    "do_count": 1324,
     "gross_order_dpp": "6065892600.00",
     "rejection_dpp": "2279200.00",
     "rejection_cogs_dpp": "1963200.00",
@@ -38,10 +38,10 @@
     "rejections_cartons": 9
   },
   "period_cutoff_july_invoiced": {
-    "invoice_count": 405,
+    "invoice_count": 1276,
     "invoiced_dpp": "5594622485.00",
-    "ppn_11_amount": "615408473.33",
-    "total_invoice_with_ppn": "6210030958.33",
+    "ppn_11_amount": "615408473.32",
+    "total_invoice_with_ppn": "6210030958.32",
     "delivered_cogs_accepted": "4969777800.00",
     "gross_profit": "624844685.00",
     "gross_margin_pct": "11.17%",
@@ -50,7 +50,7 @@
     "net_margin_pct": "4.12%"
   },
   "carry_forward_august": {
-    "invoice_count": 14,
+    "invoice_count": 48,
     "do_delivered_dpp": "197030000.00",
     "invoiced_dpp": "187858691.40",
     "ppn_11_amount": "20664456.06",
@@ -59,14 +59,14 @@
     "rejections_count": 0
   },
   "accounts_receivable_and_cash": {
-    "collections_count": 320,
-    "net_cash_collected_dpp": "3434177723.54",
-    "early_payment_discount_dpp": "10056419.06",
-    "total_cash_and_discount_dpp": "3444234142.60",
-    "net_cash_collected_total_with_ppn": "3813043479.21",
-    "open_ar_july_invoices_count": 85,
-    "open_ar_july_dpp": "2150388342.40",
-    "open_ar_july_total_with_ppn": "2386931060.06",
+    "collections_count": 967,
+    "net_cash_collected_dpp": "3448145006.75",
+    "early_payment_discount_dpp": "11007225.45",
+    "total_cash_and_discount_dpp": "3459152232.20",
+    "net_cash_collected_total_with_ppn": "3828651752.29",
+    "open_ar_july_invoices_count": 309,
+    "open_ar_july_dpp": "2135470252.80",
+    "open_ar_july_total_with_ppn": "2370371980.58",
     "reconciled_invoice_dpp_total": "5594622485.00"
   },
   "accounts_payable_reconciliation": {
