@@ -191,5 +191,10 @@
 - Perbaikan permanen: naikkan penanda init.sh ke upgrade_modules_v2 dan reset FORCE_UPGRADE=0 di Railway untuk efisiensi boot container
 - Task managed by antigravity-agent at 2026-10-25T17:26:00+07:00
 
-
-
+[2026-10-25T18:35:00+07:00] [INFO] Audit Komprehensif Drift Eksekusi Demo Data & Rencana Rekonstruksi
+- Mempelajari menyeluruh riwayat prompt pemilik, transkrip eksekusi, ulasan claude-dev (REVIEW_2026-10-24_main-fa68c23.md), dan codebase.
+- Menemukan drift eksekusi utama: hardcoded UoM Units pada seluruh 150 produk, dimensi karton terbuang, mismatch semantik geografi outlet (Toko Tomohon di Mapanget, Toko Kawangkoan di Bitung, dsb.), broken foreign key salesman (354 outlet ter-assign ke Administrator karena ketiadaan res.users), serta skrip simulasi historis yang crash fatal (KeyError: tier_code) dan inkonsistensi kalkulasi nilai transaksi baris vs header.
+- Menetapkan arahan pemilik: prioritas native fields ketimbang custom fields, kalender kerja Senin s/d Sabtu (6 hari kerja), kausalitas presisi simulasi historis Juli-Oktober 2026, dan cohort outlet coverage.
+- Menyusun dokumen komprehensif docs/reviews/AUDIT_AND_RECONSTRUCTION_PLAN_2026-10-25.md dan memperbarui docs/HANDOFF.md.
+- Membuat cabang kerja terisolasi agen/rekonstruksi-seed-audit berbasis origin/main.
+- Task managed by antigravity-agent at 2026-10-25T18:35:00+07:00

@@ -1,5 +1,20 @@
 # HANDOFF
 
+## 2026-10-25 — antigravity agent (Audit Drift Eksekusi Demo Data & Rencana Rekonstruksi Komprehensif)
+**Berubah:**
+- `docs/reviews/AUDIT_AND_RECONSTRUCTION_PLAN_2026-10-25.md`:
+  - Mendokumentasikan secara komprehensif arahan pemilik repo (prioritaskan native fields, hari kerja Senin s/d Sabtu, kausalitas presisi transaksi historis Juli-Oktober 2026, cohort outlet).
+  - Mengaudit temuan drift eksekusi agen sebelumnya: hardcoded UoM Units 150/150 SKU, dimensi karton terbuang, mismatch semantik nama toko vs kecamatan di `partners_354.csv`, pseudo-anchoring koordinat jalan, broken foreign key salesman (seluruh 354 outlet di-assign ke Administrator karena tidak ada `res.users`), serta crash fatal `KeyError: 'tier_code'` dan pelanggaran subtotal matematika pada generator simulasi historis.
+  - Merumuskan 5 tahapan rekonstruksi: (1) audit & eliminasi custom field berlebih, (2) sinkronisasi identitas salesman & user Odoo, (3) rekalibrasi geografi dan master dataset, (4) rekonstruksi skrip simulasi historis kausal & 6 hari kerja, (5) loader idempoten dan verifikasi CI.
+- Log: `agent-log/anti-gravity.log`.
+
+**Diverifikasi (bagaimana):**
+- Review kode `generate_fmcg_seed.py`, `load_fmcg_seed.py`, `generate_historical_simulation.py`, `load_historical_simulation.py`, transkrip percakapan sebelumnya, serta ulasan `claude-dev` (`REVIEW_2026-10-24_main-fa68c23.md`).
+- Pengujian reproduksi error: `python scripts/generate_historical_simulation.py` terbukti crash `KeyError: 'tier_code'`.
+
+**Menunggu / Langkah Berikutnya:**
+- Melaksanakan Task 1: Audit model native, eliminasi custom fields yang tidak perlu, dan perancangan UoM resmi FMCG serta akun user salesman.
+
 ## 2026-10-25 — antigravity agent (Live Railway & Playwright Verification: Database Schema Synchronization & Browse Error Resolution)
 **Berubah:**
 - `deploy/init.sh`:
