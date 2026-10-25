@@ -78,7 +78,7 @@ def load_master_seed():
                     "ref": row["ref"],
                     "name": row["name"],
                     "channel_code": row["channel_code"],
-                    "tier_code": row["tier_code"],
+                    "tier_code": row.get("tier_code", ""),
                     "district_code": row["district_code"],
                     "payment_term_days": int(row["payment_term_days"]),
                     "salesman_code": row["salesman_code"],
