@@ -1,5 +1,39 @@
 # HANDOFF
 
+## 2026-10-25 — antigravity agent (Branch Baru: Implementasi Transaksi Historis Perpetual & Anti-Jebakan SVL)
+**Berubah:**
+- Branch aktif: `agen/transaksi-historis-perpetual` (berbasis `agen/rekonstruksi-seed-audit` commit `1e12ebe`).
+- Kategorisasi Produk FMCG Bersih ([`addons/id_base/models/product_template.py`](file:///c:/Users/ACER/dev/odooca-fmcg/addons/id_base/models/product_template.py), [`data/seed/products_150.csv`](file:///c:/Users/ACER/dev/odooca-fmcg/data/seed/products_150.csv), & [`scripts/load_fmcg_seed.py`](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_fmcg_seed.py)):
+  - Menghilangkan pencampuran kategori silang, menetapkan divisi resmi per prinsipal:
+    * Mayora: *Biscuit & Wafer* (Roma, Better, Slai O'lai), *Chocolate & Confectionery* (Beng-Beng, Kopiko, Kis), *Coffee & Powdered Beverage* (Torabika, Energen).
+    * Santos: *Coffee & Hot Beverages* (Kapal Api, Kopi ABC, Kopi Ya!, Kopi Kapten).
+    * Unilever: *Foods & Savory* (Royco, Bango), *Home Care & Hygiene* (Rinso, Molto, Sunlight), *Personal Care & Beauty* (Lifebuoy, Sunsilk, Clear, Pepsodent, Rexona).
+    * Wings: *Instant Noodles & Foods* (Mie Sedaap), *Ready to Drink (RTD) & Beverage* (Floridina, Golda, Teh Javana, Jasjus), *Coffee* (Top Kopi).
+  - Hirarki Odoo `product.category` 3 level: `[PRINSIPAL] > [DIVISI] > [BRAND]`.
+- Master Saldo Awal 1 Juli & PO In-Transit Juni ([`scripts/ops/generate_initial_stock_and_intransit.py`](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/generate_initial_stock_and_intransit.py) & `data/registers/`):
+  - Saldo awal on-hand 1 Juli 2026: 150 SKU, Rp 4,475 Miliar DPP, 940,2 m³ (52,9% kapasitas gudang).
+  - PO In-Transit pengapalan Juni tiba 1-4 Juli: Rp 9,496 Miliar DPP (Wings 1 Juli, Santos 1 Juli, Mayora 2 & 3 Juli, Unilever 4 Juli).
+- Granular Perpetual Inventory Turnover Engine ([`scripts/ops/generate_perpetual_transactions.py`](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/generate_perpetual_transactions.py) & `data/registers/`):
+  - 622 Sales Orders (SO) terbit hanya dari saldo on-hand yang tersedia pukul 08:00 pada hari kunjungan PJP.
+  - 3.227 Baris Order dengan SKU, kuantitas karton, harga satuan DPP, subtotal riil tanpa pembulatan genap buatan, dan lot FEFO.
+  - 622 Packlist/DO terkirim H+1 dengan pencatatan parsial retur/tolakan toko.
+  - 622 Customer Invoices tercetak H+1 dengan DPP di luar PPN dan PPN 11% (UU HPP No. 7/2021).
+  - 485 AR Cash & Bank Collections terikat ke `invoice_number`, mencakup simulasi pemajuan tagihan (*cash discount* 1% hari ke-5/7) dan pelunasan mingguan PJP.
+  - 4 AP Payments ke principal sesuai termin dagang resmi (21, 28, 30, 35 hari).
+  - 29 OPEX/Payroll entries: Biaya logistik harian rutin (Rp 3,55 Jt/hari) + Konsentrasi beban gaji 24 karyawan (Rp 185 Jt), lembur overstok (Rp 68,5 Jt), dan sewa gudang (Rp 45 Jt) tepat di tanggal 31 Juli.
+  - 31 Kartu stok harian membuktikan puncak okupansi gudang mencapai **102,8%** di awal Juli akibat kedatangan 5 kontainer susulan.
+- Log: `agent-log/anti-gravity.log`.
+
+**Diverifikasi (bagaimana):**
+- `python scripts/ops/generate_initial_stock_and_intransit.py`: Lolos verifikasi, 150 SKU dan 5 PO in-transit tersimpan.
+- `python scripts/ops/generate_perpetual_transactions.py`: Berhasil menghasilkan 8 dataset granular dan rekonsiliasi finansial Juli 2026.
+- `python -m ruff check .`: `All checks passed!`.
+- `python scripts/check_manifests.py`: `manifest ok: 4 addon`.
+- Commit git: `aa3c4f6` (*feat(perpetual): implementasi saldo awal 1 juli, po in-transit, kategorisasi divisi fmcg, dan granular perpetual turnover engine*).
+
+**Menunggu / Langkah Berikutnya:**
+- Menerapkan protokol Anti-Jebakan SVL pada loader Odoo untuk injeksi saldo awal, PO, SO, DO, Invoice, dan Payment ke database Odoo.
+
 ## 2026-10-25 — antigravity agent (Pengarsipan Keputusan Arsitektur Transaksi Historis, Saldo Awal, Kategori Produk, & Protokol Anti-Jebakan SVL)
 **Berubah:**
 - Dokumentasi & Arsip Keputusan Arsitektur ([`docs/reviews/ARCHITECTURAL_DECISIONS_AND_ROLLBACK_2026-10-25.md`](file:///c:/Users/ACER/dev/odooca-fmcg/docs/reviews/ARCHITECTURAL_DECISIONS_AND_ROLLBACK_2026-10-25.md)):

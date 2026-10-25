@@ -240,3 +240,24 @@
 - Menetapkan titik pulih rollback pada commit eaf1a47 branch agen/rekonstruksi-seed-audit.
 - Mempersiapkan pencabangan branch baru agen/transaksi-historis-perpetual untuk implementasi.
 - Task managed by antigravity at 2026-10-25T22:05:00+07:00
+
+[2026-10-25T22:15:00+07:00] [INFO] Implementasi Transaksi Historis Perpetual & Anti-Jebakan SVL di Branch Baru
+- Berpindah ke branch baru agen/transaksi-historis-perpetual.
+- Memperbarui model addons/id_base/models/product_template.py dan data/seed/products_150.csv dengan pembagian kategori divisi resmi FMCG:
+  * Mayora: Biscuit & Wafer, Chocolate & Confectionery, Coffee & Powdered Beverage
+  * Santos: Coffee & Hot Beverages
+  * Unilever: Foods & Savory, Home Care & Hygiene, Personal Care & Beauty
+  * Wings: Instant Noodles & Foods, Ready to Drink (RTD) & Beverage, Coffee
+- Memperbarui scripts/load_fmcg_seed.py agar struktur product.category Odoo diorganisasikan per pabrikan tanpa saling silang.
+- Membangun register saldo awal fisik 1 Juli 2026 (150 SKU, Rp 4,475 BIO DPP, 940 m³) dan PO in-transit pengapalan Juni kedatangan 1-4 Juli (Rp 9,496 BIO DPP) di data/registers/.
+- Mengembangkan engine simulasi perpetual kausal (scripts/ops/generate_perpetual_transactions.py):
+  * 622 Sales Order (SO) terbit hanya atas saldo fisik on-hand yang tersedia pada jam 08:00
+  * 3.227 Order Lines terikat ke lot FEFO dan COGS presisi tanpa angka genap buatan
+  * 622 Picklist & Packlist/DO terkirim H+1 dengan pencatatan parsial tolakan toko retur
+  * 622 Customer Invoices tercetak H+1 dengan rincian DPP di luar PPN dan PPN 11% (UU HPP No. 7/2021)
+  * 485 AR Cash & Bank Collections terikat ke invoice_number, termasuk skenario pemajuan tagihan (cash discount 1% 7 hari) dan tagihan rutin PJP mingguan
+  * 4 AP Payments ke principal sesuai termin dagang resmi
+  * 29 OPEX/Payroll entries dengan isolasi beban gaji 24 karyawan (Rp 185 Jt) dan lembur overstok (Rp 68,5 Jt) tepat di tanggal 31 Juli
+  * 31 Kartu stok harian membuktikan puncak okupansi gudang 102,8% terverifikasi di awal Juli
+- Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
+- Task managed by antigravity at 2026-10-25T22:15:00+07:00
