@@ -27,9 +27,11 @@
 - `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
 - `python -m ruff check .` lolos (`All checks passed!`).
 - `python scripts/generate_fmcg_seed.py` dieksekusi sukses menghasilkan 150 produk, 354 partner, 24 karyawan, dan 9 armada secara konsisten.
+- Cabang `agen/m1a-master-data-refinement` di-push ke remote dan diajukan via PR #11 (`https://github.com/kolondam-dev/odooca-fmcg/pull/11`).
+- Seluruh 3 workflow check GitHub Actions CI (static, install-test, init-test pada DB kosong + restart idempoten) **PASS / HIJAU 100%**.
 
 **Belum diuji:**
-- Pemuatan langsung ke instance aktif Railway (cabang belum di-push, menunggu instruksi pemilik).
+- Pemuatan langsung ke instance aktif Railway (menunggu merge PR #11 ke `main`).
 - Simulasi transaksi historis M2 (line vs header consistency) yang dijadwalkan pada Prioritas 2.
 
 ## 2026-10-25 — claude-design agent (UI Refinement v6: Systray Dividers Alignment, Form Statusbar Middle Align Without Rounded Box, Edge-to-Edge Form, Steady Sticky Footer)
