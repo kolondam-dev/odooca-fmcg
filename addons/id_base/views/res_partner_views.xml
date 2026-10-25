@@ -10,7 +10,6 @@
                     <group>
                         <group string="Outlet Classification">
                             <field name="channel_id"/>
-                            <field name="tier_id"/>
                             <field name="coverage_area_id"/>
                             <field name="district_id"/>
                             <field name="subdistrict_id" domain="[('district_id', '=?', district_id)]"/>

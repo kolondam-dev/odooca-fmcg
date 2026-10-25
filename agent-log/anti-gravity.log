@@ -155,3 +155,10 @@
 - Amankan relasi variant packaging dan field filtering vendor
 - Tampilkan trace detail saat kegagalan loader
 - Task managed by antigravity-agent at 2026-10-25T08:05:53+00:00
+
+[2026-10-25T08:56:55+00:00] [INFO] Hapus customer tier dan tambahkan spesifikasi kargo armada serta kontak prinsipal
+- Hapus model id.tier, views, dan data XML (tier tidak relevan di FMCG B2B)
+- Tambahkan inherisi fleet.vehicle untuk kapasitas m3, tonase, dimensi box, STNK, dan KIR
+- Tambahkan field kontak dan PIC pada model id.principal
+- Tambahkan dependensi fleet, hr, uom pada id_base
+- Task managed by antigravity-agent at 2026-10-25T08:56:55+00:00
