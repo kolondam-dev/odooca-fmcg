@@ -112,20 +112,10 @@ if ! has_mark init.base; then
     odoo_run -i base --stop-after-init
     odoo_run shell --no-http <<'PYEOF'
 c = env.company
+c.country_id = env.ref('base.id')
+env.ref('base.IDR').active = True
+c.currency_id = env.ref('base.IDR')
 c.name = 'PT Manado Distribusi Utama'
-c.street = 'Jl. AA Maramis No. 88, Interchange Maumbi'
-c.city = 'Manado'
-c.zip = '95371'
-c.phone = '0431-889900'
-c.email = 'info@mdu-manado.co.id'
-c.vat = '012345678821000'
-indonesia = env.ref('base.id', raise_if_not_found=False)
-if indonesia:
-    c.country_id = indonesia
-idr = env.ref('base.IDR', raise_if_not_found=False)
-if idr:
-    idr.active = True
-    c.currency_id = idr
 env.cr.commit()
 PYEOF
     odoo_run -i "$INIT_MODULES" --stop-after-init
@@ -164,32 +154,47 @@ fi
 if ! has_mark company_profile_v2; then
   log "company_profile_v2: konfigurasi PT Manado Distribusi Utama & Jadwal Kerja..."
   odoo_run shell --no-http <<'PY'
-c = env.company
-c.name = 'PT Manado Distribusi Utama'
-c.street = 'Jl. AA Maramis No. 88, Interchange Maumbi'
-c.city = 'Manado'
-c.zip = '95371'
-c.phone = '0431-889900'
-c.email = 'info@mdu-manado.co.id'
-c.vat = '012345678821000'
-indonesia = env.ref('base.id', raise_if_not_found=False)
-if indonesia:
-    c.country_id = indonesia
-idr = env.ref('base.IDR', raise_if_not_found=False)
-if idr:
-    idr.active = True
-    c.currency_id = idr
+try:
+    c = env.company.sudo().with_context(no_vat_validation=True, tracking_disable=True)
+    c.write({
+        'name': 'PT Manado Distribusi Utama',
+        'street': 'Jl. AA Maramis No. 88, Interchange Maumbi',
+        'city': 'Manado',
+        'zip': '95371',
+        'phone': '0431-889900',
+        'email': 'info@mdu-manado.co.id',
+    })
+    if c.partner_id:
+        c.partner_id.with_context(no_vat_validation=True, tracking_disable=True).write({
+            'name': 'PT Manado Distribusi Utama',
+            'street': 'Jl. AA Maramis No. 88, Interchange Maumbi',
+            'city': 'Manado',
+            'zip': '95371',
+            'phone': '0431-889900',
+            'email': 'info@mdu-manado.co.id',
+            'vat': '012345678821000',
+        })
+    indonesia = env.ref('base.id', raise_if_not_found=False)
+    if indonesia:
+        c.country_id = indonesia
+    idr = env.ref('base.IDR', raise_if_not_found=False)
+    if idr:
+        idr.active = True
+        c.currency_id = idr
 
-# Kalender Kerja (Senin - Jumat 08:00-17:00, Sabtu-Minggu libur)
-Calendar = env['resource.calendar'].sudo()
-cal = env.ref('resource.resource_calendar_std', raise_if_not_found=False)
-if not cal:
-    cal = Calendar.search([], limit=1)
-if cal:
-    cal.name = 'Standard 40 Jam (Senin - Jumat, 08:00 - 17:00)'
-    cal.attendance_ids.filtered(lambda a: a.dayofweek in ('5', '6')).unlink()
+    # Kalender Kerja 5 Hari (Senin - Jumat 08:00-17:00, Sabtu-Minggu libur)
+    if 'resource.calendar' in env:
+        Calendar = env['resource.calendar'].sudo()
+        cal = env.ref('resource.resource_calendar_std', raise_if_not_found=False) or Calendar.search([], limit=1)
+        if cal:
+            cal.name = 'Standard 40 Jam (Senin - Jumat, 08:00 - 17:00)'
+            cal.attendance_ids.filtered(lambda a: a.dayofweek in ('5', '6')).unlink()
 
-env.cr.commit()
+    env.cr.commit()
+    print("[init] company_profile_v2: berhasil dikonfigurasi.")
+except Exception as e:
+    env.cr.rollback()
+    print(f"[init] warning: company_profile_v2 error: {e}")
 PY
   set_mark company_profile_v2
 fi

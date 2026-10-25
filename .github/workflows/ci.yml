@@ -92,8 +92,8 @@ jobs:
             [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8069/web/login)" = "200" ] && break
             sleep 5
           done
-          curl -sf -o /dev/null http://localhost:8069/web/login
           docker logs odoo > init1.log 2>&1
+          curl -sf -o /dev/null http://localhost:8069/web/login || { tail -n 100 init1.log; exit 1; }
           grep -q "tanpa dump: build penuh" init1.log
       - name: Restart idempoten
         run: |
@@ -102,8 +102,8 @@ jobs:
             [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8069/web/login)" = "200" ] && break
             sleep 3
           done
-          curl -sf -o /dev/null http://localhost:8069/web/login
           docker logs odoo > init2.log 2>&1
+          curl -sf -o /dev/null http://localhost:8069/web/login || { tail -n 100 init2.log; exit 1; }
           grep -q "init.base sudah ada; lewati" init2.log
       - name: Log harus bersih
         run: |

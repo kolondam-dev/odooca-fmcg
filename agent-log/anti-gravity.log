@@ -179,4 +179,11 @@
 - Perbarui deploy/init.sh dengan profil resmi PT Manado Distribusi Utama (Interchange Maumbi), jadwal kerja 5 hari (Senin-Jumat 08:00-17:00, Sabtu-Minggu libur), dependensi modul fleet/hr/uom, serta mark seed_master_v4
 - Task managed by antigravity-agent at 2026-10-25T16:08:30+07:00
 
+[2026-10-25T16:45:00+07:00] [INFO] Sinkronisasi kode prinsipal XML, perbaikan konteks VAT profil perusahaan, dan diagnostik CI
+- Selaraskan kode prinsipal pada generate_fmcg_seed.py dan principals_4.csv dengan id_principal_data.xml (PRIN-MAYORA, PRIN-SANTOS, PRIN-UNILEVER, PRIN-WINGS)
+- Amankan setup company_profile_v2 di deploy/init.sh dengan no_vat_validation=True dan try-except agar tidak memblokir startup Odoo saat l10n_id aktif
+- Sempurnakan urutan penangkapan log docker container pada workflow CI untuk memudahkan troubleshooting
+- Task managed by antigravity-agent at 2026-10-25T16:45:00+07:00
+
+
 
