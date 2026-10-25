@@ -424,7 +424,9 @@ def generate_all_customers():
                 "pjp_call_day": call_day,
                 "delivery_route": f"DELIV-GT-{dm['city'].split()[-1].upper()}-{call_day.upper()}",
                 "delivery_vehicle": (
-                    "DB 8456 FB (L300 Urban)" if "Manado" in dm["city"] else "DB 8910 TK (Elf Luar Kota)"
+                    "DB 8456 FB (L300 Urban Barat)"
+                    if sls == "SLS-02"
+                    else ("DB 8567 TR (Traga Urban Timur)" if sls == "SLS-03" else "DB 8910 TK (Elf Luar Kota)")
                 ),
                 "cohort_date": cdate,
                 "latitude": round(dm["lat"] + d_lat, 6),
@@ -645,7 +647,15 @@ def generate_all_customers():
                 "pjp_frequency": "F2",
                 "pjp_call_day": call_day,
                 "delivery_route": f"DELIV-INST-{call_day.upper()}",
-                "delivery_vehicle": "DB 8456 FB (L300 Urban)",
+                "delivery_vehicle": (
+                    "DB 8456 FB (L300 Urban Barat)"
+                    if dist_code in ["KEC-MND-WNG", "KEC-MND-SRO", "KEC-MND-MLY", "KEC-MND-WNA"]
+                    else (
+                        "DB 8567 TR (Traga Urban Timur)"
+                        if dist_code in ["KEC-MND-TKL", "KEC-MND-PLD", "KEC-MND-TMT", "KEC-MND-SKL", "KEC-MND-MPG"]
+                        else "DB 8910 TK (Elf Luar Kota)"
+                    )
+                ),
                 "cohort_date": "2026-07-01",
                 "latitude": round(dm["lat"] + d_lat, 6),
                 "longitude": round(dm["lng"] + d_lng, 6),
