@@ -28,9 +28,11 @@
 - `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
 - `python -m ruff check .` lolos (`All checks passed!`).
 - `python scripts/generate_fmcg_seed.py` dieksekusi sukses menghasilkan `principals_4.csv`, `products_150.csv`, `partners_354.csv`, `employees_24.csv`, dan `vehicles_9.csv`.
+- Cabang `agen/master-data-native-refinement` di-push dan diajukan via PR #12 (`https://github.com/kolondam-dev/odooca-fmcg/pull/12`).
+- Seluruh 3 workflow checks di GitHub Actions CI (`static`, `install-test`, `init-test`) **PASS / HIJAU 100%**.
 
 **Belum diuji:**
-- Pemuatan langsung ke instance container Odoo live / Railway (menunggu push dan review PR).
+- Pemuatan langsung ke instance container Odoo live di Railway (menunggu merge PR #12 ke `main`).
 
 ## 2026-10-25 — antigravity agent (M1a: Master Data Refinement — Legal Protection Names, Address/Contact Integrity, Product Packaging, Roster, Fleet, Fail-safe Seed Mark)
 **Berubah:**
