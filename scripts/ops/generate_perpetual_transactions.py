@@ -2,50 +2,44 @@
 """Granular Perpetual Inventory Turnover & Transaction Engine FMCG Manado.
 
 Mensimulasikan seluruh rantai transaksi kausal dan deterministik:
-1. Saldo Awal Fisik 1 Juli 2026 (150 SKU)
-2. PO In-Transit Juni tiba 1-4 Juli di Pelabuhan Bitung & Gudang Maumbi
-3. Daily Sales Order (SO) hanya atas stok ON-HAND yang ada pada jam 08:00
-4. Picklist, Packlist/DO H+1, dan Invoice tercetak dengan DPP di luar PPN (PPN 11%)
-5. Tidak ada angka genap/bulat buatan (berpatokan pada karton x harga satuan SKU)
-6. AR Cash Collection terikat 1-ke-1 dengan invoice_number (termasuk skenario pemajuan tagihan cash discount 1%)
-7. Purchasing Reorder Point saat stok menipis
-8. AP Payments ke principal sesuai termin (21, 28, 30, 35 hari)
-9. OPEX harian (BBM, uang jalan, tol) + Payroll Penggajian Karyawan Rp 185 Jt & Lembur di tanggal 30/31
+1. Saldo Awal Fisik 1 Juli 2026 (150 SKU, 32.748 karton).
+2. PO In-Transit Juni tiba 1-4 Juli di Pelabuhan Bitung & Gudang Maumbi (41.442 karton).
+3. Daily Sales Order (SO) hanya atas stok AVAILABLE (Physical - Reserved) pada jam 08:00.
+4. Pemisahan eksplisit: Physical On-Hand vs Reserved vs Delivered vs Quarantine.
+5. Picklist, Packlist/DO H+1, dan Invoice tercetak atas barang diterima (net of rejection).
+6. Rekonsiliasi retur: Rejection masuk ke Aset Persediaan Karantina Gudang Maumbi senilai COGS.
+   COGS Laba Rugi hanya membebankan barang yang benar-benar diterima customer (Accepted COGS).
+7. AR Cash Collection terikat 1-ke-1 dengan invoice_number secara deterministik (kebal PYTHONHASHSEED).
+8. AP Payments ke principal sesuai termin dagang resmi.
+9. OPEX harian logistik + Payroll 24 Personel & Lembur Overstok di akhir Juli.
+10. Event ledger stok terpisah per SKU/lot/tanggal untuk auditability dan replay.
 """
 
 import collections
 import csv
-from datetime import date, datetime, timedelta
+import datetime as dt
+import hashlib
 import json
 import pathlib
 import random
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(ROOT))
+from scripts.ops.fmcg_calendar import get_next_working_day, is_working_day  # noqa: E402
+
 REG_DIR = ROOT / "data" / "registers"
 SEED_DIR = ROOT / "data" / "seed"
+REG_DIR.mkdir(parents=True, exist_ok=True)
 
-# Seed deterministik agar transaksi 100% dapat di-reproduksi
+# Seed PRNG deterministik
 random.seed(20260701)
 
 
-def is_working_day(d: date) -> bool:
-    """Senin s/d Sabtu adalah hari kerja operasional FMCG Manado.
-    Hari Minggu libur mingguan operasional armada distributor.
-    16 Juli 2026: Libur Nasional Tahun Baru Islam 1448 H (SKB 3 Menteri 2026).
-    """
-    if d.weekday() == 6:  # Minggu off
-        return False
-    if d == date(2026, 7, 16):  # Tahun Baru Islam 1448 H
-        return False
-    return True
-
-
-def get_next_working_day(d: date) -> date:
-    """Menghitung hari kerja operasional berikutnya (melewati Minggu & Hari Libur Nasional)."""
-    curr = d + timedelta(days=1)
-    while not is_working_day(curr):
-        curr += timedelta(days=1)
-    return curr
+def deterministic_hash(key: str, salt: str = "fmcg-manado-salt") -> int:
+    """Hash deterministik berbasis SHA-256 (independen dari PYTHONHASHSEED)."""
+    digest = hashlib.sha256(f"{salt}:{key}".encode("utf-8")).hexdigest()
+    return int(digest, 16)
 
 
 def main():
@@ -74,24 +68,33 @@ def main():
     with open(REG_DIR / "pjp_july_2026_matrix.csv", "r", encoding="utf-8") as f:
         pjp_matrix = list(csv.DictReader(f))
 
-    # Inisialisasi Perpetual Stock per SKU (Karton on-hand, FIFO Lot queue)
-    # stock_on_hand[sku] = { "cartons": int, "lots": [ {"lot": str, "qty": int, "cost": float, "exp": str} ] }
-    stock_on_hand = {}
+    # Struktur Status Stok Multi-Level per SKU:
+    # stock_state[sku] = {
+    #     "physical": int,   # Fisik aktual di gudang
+    #     "reserved": int,   # Dipesan oleh SO, menunggu dispatch DO
+    #     "quarantine": int, # Barang reject di lokasi karantina
+    #     "lots": [ {"lot": str, "physical": int, "reserved": int, "cost": float, "exp": str} ]
+    # }
+    stock_state = {}
     for item in initial_stock:
         sku = item["sku_code"]
-        stock_on_hand[sku] = {
-            "cartons": item["qty_cartons_on_hand"],
+        qty = int(item["qty_cartons_on_hand"])
+        stock_state[sku] = {
+            "physical": qty,
+            "reserved": 0,
+            "quarantine": 0,
             "lots": [
                 {
                     "lot": item["lot_number"],
-                    "qty": item["qty_cartons_on_hand"],
-                    "cost": item["unit_cost_price"],
+                    "physical": qty,
+                    "reserved": 0,
+                    "cost": float(item["unit_cost_price"]),
                     "exp": item["expiry_date"],
                 }
             ],
         }
 
-    # Kelompokkan PO Lines berdasarkan tanggal tiba di Gudang Maumbi
+    # Inbound PO lines dikelompokkan per tanggal tiba
     inbound_by_date = {}
     for h in po_headers:
         arr_dt = h["arrival_maumbi_date"]
@@ -99,61 +102,68 @@ def main():
         lines = [line for line in po_lines if line["po_number"] == po_num]
         inbound_by_date.setdefault(arr_dt, []).extend(lines)
 
-    # Kelompokkan PJP visits per tanggal
+    # PJP Matrix dikelompokkan per tanggal kunjungan (hanya kunjungan outlet riil, abaikan STANDBY kantor)
     pjp_by_date = {}
     for row in pjp_matrix:
-        if row["frekuensi_call"] in ("F1", "F2", "F4"):
-            pjp_by_date.setdefault(row["tanggal"], []).append(row)
+        if row.get("frekuensi_call") == "STANDBY" or row.get("customer") == "ADMIN / STAGING LOGISTIK":
+            continue
+        pjp_by_date.setdefault(row["tanggal"], []).append(row)
 
-    # Struktur penampung transaksi granular
+    # Jadwal AP Payments atas PO In-Transit Juni
+    ap_schedule = [
+        {"po_number": "PO-202606-WNG01", "principal_name": "Wings Group", "amount": 1_850_000_000.0, "due_date": "2026-07-22", "pay_date": "2026-07-22", "status": "Open"},
+        {"po_number": "PO-202606-KAP01", "principal_name": "PT Santos Jaya Abadi (Kapal Api)", "amount": 1_450_000_000.0, "due_date": "2026-07-29", "pay_date": "2026-07-29", "status": "Open"},
+        {"po_number": "PO-202606-MYR01", "principal_name": "Mayora Indah Tbk", "amount": 3_300_000_000.0, "due_date": "2026-08-01", "pay_date": "2026-07-31", "status": "Open"},
+        {"po_number": "PO-202606-UNL01", "principal_name": "Unilever Indonesia Tbk", "amount": 2_896_000_000.0, "due_date": "2026-08-08", "pay_date": "2026-07-31", "status": "Open"},
+    ]
+
+    # Containers Output Transaksi
     sales_orders = []
     order_lines = []
     deliveries = []
-    invoices = []
     rejections = []
+    invoices = []
     ar_collections = []
     ap_payments = []
-    daily_stock_cards = []
     opex_payroll_entries = []
+    daily_stock_cards = []
+    stock_event_ledger = []
 
+    # Penampung Open Deliveries yang menunggu dispatch fisik per tanggal:
+    # pending_dispatches[deliv_date] = [ { "so_num": str, "do_num": str, "lines": list, ... } ]
+    pending_dispatches = collections.defaultdict(list)
+
+    open_ar_ledger = []
     so_counter = 1
-    inv_counter = 1
     do_counter = 1
     rej_counter = 1
+    inv_counter = 1
     pay_counter = 1
+    event_counter = 1
 
-    # Lokasi Karantina Gudang Maumbi (Stok Bad Stock / Rusak Transit)
-    quarantine_stock = collections.defaultdict(int)
-
-    # Open AR Tracking: list of unpaid invoices
-    # [ {"inv_no": str, "partner_name": str, "channel": str, "amount": float, "date": str, "due_date": str, "payment_term_days": int, "pjp_day": str, "salesman": str} ]
-    open_ar_ledger = []
-
-    # AP Tracking
-    open_ap_ledger = []
-    for h in po_headers:
-        open_ap_ledger.append({
-            "po_number": h["po_number"],
-            "principal_name": h["principal_name"],
-            "amount": h["total_dpp"],
-            "due_date": h["due_date"],
-            "pay_date": h["ap_payment_date"],
-            "status": "Open",
+    # Catat event saldo awal 1 Juli 2026 di event ledger
+    for item in initial_stock:
+        sku = item["sku_code"]
+        stock_event_ledger.append({
+            "event_id": f"EVT-{event_counter:06d}",
+            "date": "2026-07-01",
+            "event_type": "INITIAL_STOCK",
+            "reference": "OPENING-20260701",
+            "sku_code": sku,
+            "lot_number": item["lot_number"],
+            "qty_cartons": int(item["qty_cartons_on_hand"]),
+            "unit_cost_price": float(item["unit_cost_price"]),
+            "total_cost_dpp": float(item["subtotal_dpp"]),
+            "physical_impact": int(item["qty_cartons_on_hand"]),
+            "reserved_impact": 0,
+            "quarantine_impact": 0,
+            "notes": "Saldo Awal Fisik Gudang Maumbi per 1 Juli 2026",
         })
+        event_counter += 1
 
-    # Simulasi 31 hari Juli 2026 (1 s/d 31 Juli)
-    start_dt = date(2026, 7, 1)
-    end_dt = date(2026, 7, 31)
+    start_dt = dt.date(2026, 7, 1)
+    end_dt = dt.date(2026, 7, 31)
     curr_dt = start_dt
-
-    total_gross_july = 0.0
-    total_disc_july = 0.0
-    total_net_july = 0.0
-    total_cogs_july = 0.0
-    total_do_july = 0.0
-    total_ar_collected_july = 0.0
-    total_ap_paid_july = 0.0
-    total_opex_july = 0.0
 
     while curr_dt <= end_dt:
         d_str = curr_dt.strftime("%Y-%m-%d")
@@ -166,26 +176,120 @@ def main():
         inbound_lines_today = inbound_by_date.get(d_str, [])
         for line in inbound_lines_today:
             sku = line["sku_code"]
-            ctns = line["qty_cartons"]
-            stock_on_hand[sku]["cartons"] += ctns
-            stock_on_hand[sku]["lots"].append({
-                "lot": line["lot_number"],
-                "qty": ctns,
-                "cost": line["unit_cost_price"],
-                "exp": line["expiry_date"],
+            ctns = int(line["qty_cartons"])
+            cost = float(line["unit_cost_price"])
+            lot = line["lot_number"]
+            exp = line["expiry_date"]
+            stock_state[sku]["physical"] += ctns
+            stock_state[sku]["lots"].append({
+                "lot": lot,
+                "physical": ctns,
+                "reserved": 0,
+                "cost": cost,
+                "exp": exp,
             })
+            stock_event_ledger.append({
+                "event_id": f"EVT-{event_counter:06d}",
+                "date": d_str,
+                "event_type": "PO_RECEIPT",
+                "reference": line["po_number"],
+                "sku_code": sku,
+                "lot_number": lot,
+                "qty_cartons": ctns,
+                "unit_cost_price": cost,
+                "total_cost_dpp": round(float(line["subtotal_dpp"]), 2),
+                "physical_impact": ctns,
+                "reserved_impact": 0,
+                "quarantine_impact": 0,
+                "notes": f"Penerimaan Kontainer In-Transit Juni {line['po_number']}",
+            })
+            event_counter += 1
 
         # -------------------------------------------------------------
-        # STEP 2: PJP SALES CALLS & STRICT ON-HAND ORDERS (08:00 - 14:00)
+        # STEP 2: DISPATCH FISIK DO PADA HARI INI (Pagi 07:30 WITA)
+        # -------------------------------------------------------------
+        # Pengiriman fisik atas SO yang dijadwalkan tiba/dikirim hari ini
+        dispatches_today = pending_dispatches.get(d_str, [])
+        daily_do_delivered_dpp = 0.0
+        daily_do_rejection_dpp = 0.0
+        daily_cogs_accepted = 0.0
+        daily_cogs_rejection = 0.0
+
+        for disp in dispatches_today:
+            # Eksekusi pengurangan fisik gudang dan pelepasan reservasi
+            for line_disp in disp["lines"]:
+                sku = line_disp["sku_code"]
+                lot = line_disp["lot_number"]
+                take_qty = line_disp["qty_cartons"]
+
+                stock_state[sku]["physical"] -= take_qty
+                stock_state[sku]["reserved"] -= take_qty
+
+                # Update status di dalam lot
+                for lot_item in stock_state[sku]["lots"]:
+                    if lot_item["lot"] == lot:
+                        lot_item["physical"] -= take_qty
+                        lot_item["reserved"] -= take_qty
+                        break
+
+                stock_event_ledger.append({
+                    "event_id": f"EVT-{event_counter:06d}",
+                    "date": d_str,
+                    "event_type": "DO_DISPATCH",
+                    "reference": disp["do_number"],
+                    "sku_code": sku,
+                    "lot_number": lot,
+                    "qty_cartons": take_qty,
+                    "unit_cost_price": line_disp["unit_cost"],
+                    "total_cost_dpp": round(take_qty * line_disp["unit_cost"] * line_disp["carton_qty"], 2),
+                    "physical_impact": -take_qty,
+                    "reserved_impact": -take_qty,
+                    "quarantine_impact": 0,
+                    "notes": f"Dispatch Pengiriman Fisik DO {disp['do_number']} atas SO {disp['so_number']}",
+                })
+                event_counter += 1
+
+            # Tangani jika ada barang reject / retur handling transit
+            if disp["rejection_line"]:
+                rej = disp["rejection_line"]
+                rej_sku = rej["sku_code"]
+                rej_lot = rej["lot_number"]
+                rej_qty = rej["qty_cartons"]
+
+                stock_state[rej_sku]["quarantine"] += rej_qty
+
+                stock_event_ledger.append({
+                    "event_id": f"EVT-{event_counter:06d}",
+                    "date": d_str,
+                    "event_type": "QUARANTINE_RECEIPT",
+                    "reference": rej["rejection_id"],
+                    "sku_code": rej_sku,
+                    "lot_number": rej_lot,
+                    "qty_cartons": rej_qty,
+                    "unit_cost_price": rej["unit_cost"],
+                    "total_cost_dpp": round(rej["cogs_subtotal"], 2),
+                    "physical_impact": 0,
+                    "reserved_impact": 0,
+                    "quarantine_impact": rej_qty,
+                    "notes": f"Penerimaan Retur Karantina Bad Stock DO {disp['do_number']}",
+                })
+                event_counter += 1
+
+            daily_do_delivered_dpp += disp["do_delivered_dpp"]
+            daily_do_rejection_dpp += disp["rejection_dpp"]
+            daily_cogs_accepted += disp["delivered_cogs_dpp"]
+            daily_cogs_rejection += disp["rejection_cogs_dpp"]
+
+        # -------------------------------------------------------------
+        # STEP 3: PJP SALES CALLS & STRICT AVAILABLE ORDERS (08:00 - 14:00)
         # -------------------------------------------------------------
         visits_today = pjp_by_date.get(d_str, [])
         daily_so_gross = 0.0
         daily_so_disc = 0.0
+        daily_so_net = 0.0
         daily_so_cogs = 0.0
-        daily_so_delivered = 0.0
 
         if is_work and visits_today:
-            # Urutkan kunjungan salesman
             for visit in visits_today:
                 ch = visit["channel"]
                 sls = visit["salesman"]
@@ -193,7 +297,7 @@ def main():
                 dist = visit["district"]
                 veh = visit["delivery_vehicle"]
 
-                # Target basket size realistis per channel untuk mencapai target Juli ~Rp 5.2 - 5.5 BIO
+                # Target basket size realistis per channel untuk target distributor ~Rp 5.2 - 5.5 BIO
                 if ch == "MT":
                     target_subtotal = random.uniform(30_000_000, 42_000_000)
                     sku_count = random.randint(8, 14)
@@ -211,15 +315,20 @@ def main():
                     sku_count = random.randint(3, 5)
                     disc_pct = 0.035  # 3.5% cash discount kios
 
-                # Filter SKU yang HANYA memiliki stok ON-HAND > 0 pada hari ini dan belum expired!
-                available_skus = [
-                    s for s, data in stock_on_hand.items()
-                    if any(lot_item["qty"] > 0 and lot_item["exp"] >= d_str for lot_item in data["lots"])
-                ]
+                # Filter SKU yang memiliki AVAILABLE stock (Physical - Reserved) > 0 dan belum kedaluwarsa
+                available_skus = []
+                for s, data in stock_state.items():
+                    avail_qty = sum(
+                        lot_item["physical"] - lot_item["reserved"]
+                        for lot_item in data["lots"]
+                        if (lot_item["physical"] - lot_item["reserved"]) > 0 and lot_item["exp"] >= d_str
+                    )
+                    if avail_qty > 0:
+                        available_skus.append(s)
+
                 if not available_skus:
                     continue
 
-                # Pilih SKU sesuai ketersediaan stok
                 selected_skus = random.sample(available_skus, min(sku_count, len(available_skus)))
 
                 current_so_gross = 0.0
@@ -234,32 +343,34 @@ def main():
                     c_cost = float(p["cost_price"]) * int(p["carton_qty"])
                     c_price = float(p["list_price"]) * int(p["carton_qty"])
 
-                    # Kuantitas karton dipesan (disesuaikan dengan sisa stok on-hand)
                     desired_ctns = max(1, int(round((target_subtotal / len(selected_skus)) / c_price)))
-                    sku_lots = stock_on_hand[sku]["lots"]
+                    sku_lots = stock_state[sku]["lots"]
                     available_for_sku = sum(
-                        lot_item["qty"]
+                        lot_item["physical"] - lot_item["reserved"]
                         for lot_item in sku_lots
-                        if lot_item["qty"] > 0 and lot_item["exp"] >= d_str
+                        if (lot_item["physical"] - lot_item["reserved"]) > 0 and lot_item["exp"] >= d_str
                     )
                     allocated_ctns = min(desired_ctns, available_for_sku)
                     if allocated_ctns <= 0:
                         continue
 
-                    # Konsumsi strictly FEFO (First Expired, First Out)
+                    # Alokasi strictly FEFO pada ketersediaan available
                     sku_lots.sort(key=lambda x: x["exp"])
                     rem_to_take = allocated_ctns
 
                     for lot_entry in sku_lots:
-                        if lot_entry["qty"] <= 0 or lot_entry["exp"] < d_str:
+                        lot_avail = lot_entry["physical"] - lot_entry["reserved"]
+                        if lot_avail <= 0 or lot_entry["exp"] < d_str:
                             continue
-                        take_qty = min(rem_to_take, lot_entry["qty"])
-                        lot_entry["qty"] -= take_qty
-                        stock_on_hand[sku]["cartons"] -= take_qty
+
+                        take_qty = min(rem_to_take, lot_avail)
+                        # Reservasi bertambah; fisik BELUM berkurang hingga DO diberangkatkan
+                        lot_entry["reserved"] += take_qty
+                        stock_state[sku]["reserved"] += take_qty
                         rem_to_take -= take_qty
 
-                        line_gross = take_qty * c_price
-                        line_cogs = take_qty * c_cost
+                        line_gross = round(take_qty * c_price, 2)
+                        line_cogs = round(take_qty * c_cost, 2)
 
                         current_so_gross += line_gross
                         current_so_cogs += line_cogs
@@ -275,10 +386,28 @@ def main():
                             "carton_qty": int(p["carton_qty"]),
                             "unit_price_dpp": float(p["list_price"]),
                             "carton_price_dpp": c_price,
-                            "line_subtotal_dpp": round(line_gross, 2),
-                            "cogs_subtotal": round(line_cogs, 2),
+                            "line_subtotal_dpp": line_gross,
+                            "cogs_subtotal": line_cogs,
                             "lot_number": lot_entry["lot"],
+                            "unit_cost": float(p["cost_price"]),
                         })
+
+                        stock_event_ledger.append({
+                            "event_id": f"EVT-{event_counter:06d}",
+                            "date": d_str,
+                            "event_type": "SO_RESERVATION",
+                            "reference": so_num,
+                            "sku_code": sku,
+                            "lot_number": lot_entry["lot"],
+                            "qty_cartons": take_qty,
+                            "unit_cost_price": float(p["cost_price"]),
+                            "total_cost_dpp": line_cogs,
+                            "physical_impact": 0,
+                            "reserved_impact": take_qty,
+                            "quarantine_impact": 0,
+                            "notes": f"Reservasi Stok Pesanan Sales Order {so_num}",
+                        })
+                        event_counter += 1
 
                         if rem_to_take == 0:
                             break
@@ -298,6 +427,8 @@ def main():
                 # Berlaku deterministik pada ~4-5% order GT dan MT akibat kerusakan handling transit
                 rej_amt = 0.0
                 rej_cogs = 0.0
+                rejection_payload = None
+
                 if ch in ("GT", "MT") and len(current_so_lines) >= 2 and (so_counter % 20 == 0):
                     rej_line = current_so_lines[0]
                     rej_sku = rej_line["sku_code"]
@@ -311,7 +442,7 @@ def main():
                     rej_id = f"REJ-202607-{rej_counter:03d}"
                     rej_counter += 1
 
-                    rejections.append({
+                    rejection_payload = {
                         "rejection_id": rej_id,
                         "so_number": so_num,
                         "do_number": do_num,
@@ -328,19 +459,29 @@ def main():
                         "cogs_subtotal": rej_cogs,
                         "rejection_reason": "Kemasan basah/penyok saat handling transit",
                         "disposition": "Karantina Gudang Maumbi / Bad Stock",
-                    })
-                    quarantine_stock[(rej_sku, rej_lot)] += rej_qty
+                        "unit_cost": float(prod_map[rej_sku]["cost_price"]),
+                    }
+                    rejections.append(rejection_payload)
 
-                # Hitung Diskon dan Nilai Terkirim Bersih
                 do_delivered_amt = round(current_so_gross - rej_amt, 2)
                 so_disc_amt = round(current_so_gross * disc_pct, 2)
                 so_net_dpp = round(current_so_gross - so_disc_amt, 2)
 
-                # DPP Faktur ditagihkan atas barang yang benar-benar diterima (delivered net of rejection)
-                inv_disc_amt = round(do_delivered_amt * disc_pct, 2)
-                final_inv_dpp = round(do_delivered_amt - inv_disc_amt, 2)
-                ppn_11_amt = round(final_inv_dpp * 0.11, 2)
-                final_inv_total = round(final_inv_dpp + ppn_11_amt, 2)
+                # COGS Terbagi: Accepted COGS (HPP Laba Rugi) vs Rejection COGS (Aset Karantina)
+                delivered_cogs = round(current_so_cogs - rej_cogs, 2)
+
+                # Daftarkan ke pending_dispatches pada tanggal pengiriman fisik (deliv_date)
+                pending_dispatches[deliv_date].append({
+                    "so_number": so_num,
+                    "do_number": do_num,
+                    "deliv_date": deliv_date,
+                    "lines": current_so_lines,
+                    "rejection_line": rejection_payload,
+                    "do_delivered_dpp": do_delivered_amt,
+                    "rejection_dpp": rej_amt,
+                    "delivered_cogs_dpp": delivered_cogs,
+                    "rejection_cogs_dpp": rej_cogs,
+                })
 
                 # Simpan Sales Order Header
                 sales_orders.append({
@@ -359,6 +500,7 @@ def main():
                     "do_delivered_dpp": round(do_delivered_amt, 2),
                 })
 
+                # Simpan Packlist / Delivery Order Header
                 deliveries.append({
                     "do_number": do_num,
                     "so_number": so_num,
@@ -372,16 +514,22 @@ def main():
                     "rejection_reason": "Kemasan basah/penyok saat handling transit" if rej_amt > 0 else "-",
                 })
 
-                # Simpan Customer Invoice (Tercetak pada tanggal barang diserahterimakan)
+                # Simpan Customer Invoice (Tercetak dan diakui pada tanggal barang diserahterimakan)
                 # TOP (Term of Payment) diambil WAJIB dari master customer registry
                 cust_ref = cust.split(" - ")[0]
                 cust_master = cust_map[cust_ref]
                 top_days = int(cust_master["payment_term_days"])
-                due_dt = deliv_dt + timedelta(days=top_days)
+                due_dt = deliv_dt + dt.timedelta(days=top_days)
                 due_date_str = due_dt.strftime("%Y-%m-%d")
 
                 inv_num = f"INV-202607-{inv_counter:04d}"
                 inv_counter += 1
+
+                # DPP Faktur ditagihkan atas barang yang benar-benar diterima (delivered net of rejection)
+                inv_disc_amt = round(do_delivered_amt * disc_pct, 2)
+                final_inv_dpp = round(do_delivered_amt - inv_disc_amt, 2)
+                ppn_11_amt = round(final_inv_dpp * 0.11, 2)
+                final_inv_total = round(final_inv_dpp + ppn_11_amt, 2)
 
                 invoices.append({
                     "invoice_number": inv_num,
@@ -405,36 +553,44 @@ def main():
                     "channel": ch,
                     "salesman": sls,
                     "dpp_amount": final_inv_dpp,
+                    "ppn_amount": ppn_11_amt,
+                    "total_with_ppn": final_inv_total,
                     "invoice_date": deliv_date,
                     "due_date": due_date_str,
                     "payment_term_days": top_days,
-                    "pjp_call_day": day_name,
                     "status": "Open",
                 })
 
                 daily_so_gross += current_so_gross
                 daily_so_disc += so_disc_amt
+                daily_so_net += so_net_dpp
                 daily_so_cogs += current_so_cogs
-                daily_so_delivered += do_delivered_amt
 
         # -------------------------------------------------------------
-        # STEP 3: AR CASH & TRANSFER COLLECTIONS (Pelunasan Piutang)
+        # STEP 4: AR CASH & TRANSFER COLLECTIONS (Pelunasan Piutang)
         # -------------------------------------------------------------
-        # Logika Pelunasan:
+        # Pelunasan deterministik:
         # A. Kios RTL Cash COD (TOP 0 hari): Lunas pada hari H penyerahan/faktur terbit
         # B. GT/MT/INST dengan termin kredit (TOP >= 7):
         #    Skenario Pemajuan Tagihan (Cash Discount 1% 7 hari): Bayar maju di hari ke 5-7.
+        #    Pemilihan stabil memakai deterministic_hash(invoice_number).
         # C. Pelunasan saat jatuh tempo sesuai termin master customer.
-        daily_ar_collected = 0.0
+        daily_ar_collected_dpp = 0.0
+        daily_ar_collected_total = 0.0
+        daily_early_discount_dpp = 0.0
+
         for ar in open_ar_ledger:
             if ar["status"] != "Open":
                 continue
 
-            inv_dt = datetime.strptime(ar["invoice_date"], "%Y-%m-%d").date()
-            due_dt = datetime.strptime(ar["due_date"], "%Y-%m-%d").date()
-            days_passed = (curr_dt - inv_dt).days
+            inv_dt = dt.date.fromisoformat(ar["invoice_date"])
+            due_dt = dt.date.fromisoformat(ar["due_date"])
             term_days = ar["payment_term_days"]
 
+            if curr_dt < inv_dt:
+                continue
+
+            days_passed = (curr_dt - inv_dt).days
             is_paid = False
             disc_taken = 0.0
             pay_reason = ""
@@ -444,7 +600,7 @@ def main():
                 is_paid = True
                 pay_reason = "Cash COD Penyerahan Barang"
             # Skenario B: Termin kredit yang memanfaatkan Cash Discount 1% (maju bayar di hari ke 5-7)
-            elif term_days >= 7 and days_passed in (5, 6, 7) and (hash(ar["invoice_number"]) % 10 < 3):
+            elif term_days >= 7 and days_passed in (5, 6, 7) and (deterministic_hash(ar["invoice_number"]) % 10 < 3):
                 is_paid = True
                 disc_taken = round(ar["dpp_amount"] * 0.01, 2)
                 pay_reason = "Early Payment Discount (Maju Bayar Cash Disc 1%)"
@@ -455,8 +611,13 @@ def main():
 
             if is_paid:
                 ar["status"] = "Paid"
-                net_collected = round(ar["dpp_amount"] - disc_taken, 2)
-                daily_ar_collected += net_collected
+                net_collected_dpp = round(ar["dpp_amount"] - disc_taken, 2)
+                net_collected_total = round(ar["total_with_ppn"] - disc_taken, 2)
+
+                daily_ar_collected_dpp += net_collected_dpp
+                daily_ar_collected_total += net_collected_total
+                daily_early_discount_dpp += disc_taken
+
                 ar_collections.append({
                     "payment_id": f"PAY-AR-{pay_counter:05d}",
                     "payment_date": d_str,
@@ -465,18 +626,21 @@ def main():
                     "channel": ar["channel"],
                     "salesman": ar["salesman"],
                     "invoice_dpp": round(ar["dpp_amount"], 2),
+                    "invoice_ppn": round(ar["ppn_amount"], 2),
+                    "invoice_total_with_ppn": round(ar["total_with_ppn"], 2),
                     "early_payment_discount": round(disc_taken, 2),
-                    "net_cash_collected": round(net_collected, 2),
+                    "net_cash_collected": round(net_collected_dpp, 2),
+                    "net_cash_collected_total": round(net_collected_total, 2),
                     "payment_method": "Cash Tunai" if term_days == 0 else "Transfer Bank BCA/Mandiri",
-                    "payment_note": pay_reason,
+                    "payment_reason": pay_reason,
                 })
                 pay_counter += 1
 
         # -------------------------------------------------------------
-        # STEP 4: PEMBAYARAN HUTANG PRINCIPAL (AP PAYMENTS)
+        # STEP 5: AP PRINCIPAL PAYMENTS
         # -------------------------------------------------------------
         daily_ap_paid = 0.0
-        for ap in open_ap_ledger:
+        for ap in ap_schedule:
             if ap["status"] == "Open" and d_str == ap["pay_date"]:
                 ap["status"] = "Paid"
                 daily_ap_paid += ap["amount"]
@@ -491,14 +655,13 @@ def main():
                 })
 
         # -------------------------------------------------------------
-        # STEP 5: OPEX HARIAN & PENGGAJIAN AKHIR BULAN (PAYROLL TGL 30/31)
+        # STEP 6: OPEX HARIAN & PAYROLL BULANAN
         # -------------------------------------------------------------
-        # Beban Harian: Solar BBM (Rp 817.000/hari) + Uang jalan ritase driver (Rp 1.200.000) + Tol/Retribusi (Rp 350.000) + M&R (Rp 1.183.000) = Rp 3.550.000/hari
         daily_routine_opex = 3_550_000.0 if is_work else 0.0
-
         daily_payroll_opex = 0.0
+
         if d_str == "2026-07-31":
-            # Gaji Pokok 24 Karyawan Roster (Rp 185 Juta)
+            # Gaji Pokok 24 Karyawan (Rp 185 Jt)
             daily_payroll_opex += 185_000_000.0
             opex_payroll_entries.append({
                 "date": d_str,
@@ -507,7 +670,7 @@ def main():
                 "amount": 185_000_000.0,
                 "payment_type": "Direct Payroll Bank Transfer",
             })
-            # Lembur Gudang & Logistik Puncak Krisis Overstok Juli (Rp 68,5 Juta)
+            # Lembur Shift Malam Overstok (Rp 68,5 Jt)
             daily_payroll_opex += 68_500_000.0
             opex_payroll_entries.append({
                 "date": d_str,
@@ -516,7 +679,7 @@ def main():
                 "amount": 68_500_000.0,
                 "payment_type": "Direct Payroll Bank Transfer",
             })
-            # Sewa Gudang & Utilitas Listrik/Genset Juli (Rp 45 Juta)
+            # Sewa Gudang Tambahan & Fasilitas Listrik (Rp 45 Jt)
             daily_payroll_opex += 45_000_000.0
             opex_payroll_entries.append({
                 "date": d_str,
@@ -538,121 +701,53 @@ def main():
         total_daily_opex = daily_routine_opex + daily_payroll_opex
 
         # -------------------------------------------------------------
-        # STEP 6: KARTU STOK PERPETUAL SUMMARY HARI INI
+        # STEP 7: KARTU STOK HARIAN (PHYSICAL VS RESERVED VS QUARANTINE)
         # -------------------------------------------------------------
-        closing_stock_cartons = sum(data["cartons"] for data in stock_on_hand.values())
-        closing_stock_val = sum(
-            data["cartons"] * float(prod_map[sku]["cost_price"]) * int(prod_map[sku]["carton_qty"])
-            for sku, data in stock_on_hand.items()
+        total_physical_ctns = sum(d["physical"] for d in stock_state.values())
+        total_reserved_ctns = sum(d["reserved"] for d in stock_state.values())
+        total_available_ctns = total_physical_ctns - total_reserved_ctns
+        total_quarantine_ctns = sum(d["quarantine"] for d in stock_state.values())
+
+        # Valuasi fisik on-hand gudang (physical saleable + quarantine)
+        total_physical_val = sum(
+            d["physical"] * float(prod_map[sku]["cost_price"]) * int(prod_map[sku]["carton_qty"])
+            for sku, d in stock_state.items()
         )
-        closing_stock_cbm = sum(
-            data["cartons"] * float(prod_map[sku]["carton_volume_cbm"])
-            for sku, data in stock_on_hand.items()
+        total_physical_cbm = sum(
+            (d["physical"] + d["quarantine"]) * float(prod_map[sku]["carton_volume_cbm"])
+            for sku, d in stock_state.items()
         )
-        # Kapasitas racking terpasang gudang Maumbi adalah 1.200 pallet (~2.500 m³)
-        warehouse_occ_pct = round((closing_stock_cbm / 2500.0) * 100.0, 1)
+        occupancy_pct = (total_physical_cbm / 2500.0) * 100.0
 
         daily_stock_cards.append({
             "date": d_str,
             "day_name": day_name,
             "is_working_day": is_work,
             "inbound_lines_count": len(inbound_lines_today),
-            "so_count": len(visits_today) if is_work else 0,
+            "so_count": len([so for so in sales_orders if so["date_order"] == d_str]),
             "gross_sales_dpp": round(daily_so_gross, 2),
             "discount_dpp": round(daily_so_disc, 2),
-            "net_sales_dpp": round(daily_so_gross - daily_so_disc, 2),
+            "net_sales_dpp": round(daily_so_net, 2),
             "cogs_dpp": round(daily_so_cogs, 2),
-            "do_delivered_dpp": round(daily_so_delivered, 2),
-            "ar_collected": round(daily_ar_collected, 2),
+            "do_count": len(dispatches_today),
+            "do_delivered_dpp": round(daily_do_delivered_dpp, 2),
+            "rejection_dpp": round(daily_do_rejection_dpp, 2),
+            "accepted_cogs_dpp": round(daily_cogs_accepted, 2),
+            "rejection_cogs_dpp": round(daily_cogs_rejection, 2),
+            "ar_collected": round(daily_ar_collected_dpp, 2),
             "ap_paid": round(daily_ap_paid, 2),
             "opex_paid": round(total_daily_opex, 2),
-            "closing_stock_cartons": closing_stock_cartons,
-            "closing_stock_val_dpp": round(closing_stock_val, 2),
-            "closing_stock_cbm": round(closing_stock_cbm, 2),
-            "warehouse_occupancy_pct": warehouse_occ_pct,
+            "physical_stock_cartons": total_physical_ctns,
+            "reserved_stock_cartons": total_reserved_ctns,
+            "available_stock_cartons": total_available_ctns,
+            "quarantine_stock_cartons": total_quarantine_ctns,
+            "closing_stock_cartons": total_physical_ctns,
+            "closing_stock_val_dpp": round(total_physical_val, 2),
+            "closing_stock_cbm": round(total_physical_cbm, 2),
+            "warehouse_occupancy_pct": round(occupancy_pct, 2),
         })
 
-        total_gross_july += daily_so_gross
-        total_disc_july += daily_so_disc
-        total_net_july += (daily_so_gross - daily_so_disc)
-        total_cogs_july += daily_so_cogs
-        total_do_july += daily_so_delivered
-        total_ar_collected_july += daily_ar_collected
-        total_ap_paid_july += daily_ap_paid
-        total_opex_july += total_daily_opex
-
-        curr_dt += timedelta(days=1)
-
-    # -------------------------------------------------------------
-    # REKONSILIASI KANONIKAL DUA PERIODE (CUT-OFF JULI VS CARRY-FORWARD AGUSTUS)
-    # -------------------------------------------------------------
-    # Pemisahan berbasis tanggal pengakuan faktur dan penyerahan fisik:
-    invoices_july = [inv for inv in invoices if inv["date_invoice"] <= "2026-07-31"]
-    invoices_aug = [inv for inv in invoices if inv["date_invoice"] > "2026-07-31"]
-
-    deliveries_july = [do for do in deliveries if do["scheduled_delivery_date"] <= "2026-07-31"]
-    deliveries_aug = [do for do in deliveries if do["scheduled_delivery_date"] > "2026-07-31"]
-
-    rejections_july = [r for r in rejections if r["rejection_date"] <= "2026-07-31"]
-    rejections_aug = [r for r in rejections if r["rejection_date"] > "2026-07-31"]
-
-    sum_inv_july_dpp = sum(inv["dpp_amount"] for inv in invoices_july)
-    sum_inv_aug_dpp = sum(inv["dpp_amount"] for inv in invoices_aug)
-
-    sum_do_july_dpp = sum(do["do_delivered_dpp"] for do in deliveries_july)
-    sum_do_aug_dpp = sum(do["do_delivered_dpp"] for do in deliveries_aug)
-
-    sum_rej_july_dpp = sum(r["line_subtotal_dpp"] for r in rejections_july)
-    sum_rej_aug_dpp = sum(r["line_subtotal_dpp"] for r in rejections_aug)
-
-    # COGS atas barang yang terkirim fisik di Juli
-    so_num_aug = {do["so_number"] for do in deliveries_aug}
-    cogs_july = sum(so["cogs_dpp"] for so in sales_orders if so["so_number"] not in so_num_aug)
-    cogs_aug = sum(so["cogs_dpp"] for so in sales_orders if so["so_number"] in so_num_aug)
-
-    net_margin_july_accrual = sum_inv_july_dpp - cogs_july
-    net_operating_profit_july = net_margin_july_accrual - total_opex_july
-
-    print("\n" + "=" * 85)
-    print("REKONSILIASI KANONIKAL CUT-OFF JULI 2026 & CARRY-FORWARD AGUSTUS 2026")
-    print("=" * 85)
-    print("1. KOMITMEN PENJUALAN JULI (SALES ORDER BOOKED 1-31 JULI):")
-    print(f"   - Total Sales Order Diterbitkan : {len(sales_orders)} SO")
-    print(f"   - Total Gross SO DPP             : Rp {total_gross_july:,.2f}")
-    print(f"   - Total Diskon Promosi SO        : Rp {total_disc_july:,.2f}")
-    print(f"   - Total Net SO DPP               : Rp {total_net_july:,.2f}")
-    print(f"   - Total COGS Ter-reservasi       : Rp {total_cogs_july:,.2f}")
-    print()
-    print("2. PENGAKUAN PENDAPATAN & BEBAN PERIODE JULI 2026 (CUT-OFF 31 JULI 2026):")
-    print(f"   - Jumlah Faktur Terbit Juli      : {len(invoices_july)} Faktur")
-    print(f"   - DPP Penjualan Terfaktur Juli   : Rp {sum_inv_july_dpp:,.2f}")
-    print(f"   - PPN 11% Terfaktur Juli         : Rp {sum(inv['ppn_11_amount'] for inv in invoices_july):,.2f}")
-    print(f"   - DO Terkirim Fisik Juli (DPP)   : Rp {sum_do_july_dpp:,.2f}")
-    print(f"   - Retur/Rejection Karantina Juli : Rp {sum_rej_july_dpp:,.2f} ({len(rejections_july)} kejadian)")
-    print(f"   - COGS Terkirim Fisik Juli       : Rp {cogs_july:,.2f}")
-    print(f"   - Gross Profit Terfaktur Juli    : Rp {net_margin_july_accrual:,.2f} ({net_margin_july_accrual/sum_inv_july_dpp*100:.2f}%)")
-    print(f"   - Beban OPEX & Payroll Juli      : Rp {total_opex_july:,.2f}")
-    print(f"   - Net Operating Profit Sah Juli  : Rp {net_operating_profit_july:,.2f} ({net_operating_profit_july/sum_inv_july_dpp*100:.2f}%)")
-    print()
-    print("3. CARRY-FORWARD KE PERIODE AGUSTUS 2026 (SO 31 JULI, DELIVERED & INVOICED 1 AGUSTUS):")
-    print(f"   - Jumlah Pesanan Carry-Forward   : {len(invoices_aug)} SO / DO / Faktur")
-    print(f"   - Nilai DO Terkirim Carry-Fwd    : Rp {sum_do_aug_dpp:,.2f}")
-    print(f"   - Nilai Invoiced DPP Carry-Fwd   : Rp {sum_inv_aug_dpp:,.2f}")
-    print(f"   - Nilai COGS Carry-Forward       : Rp {cogs_aug:,.2f}")
-    print(f"   - Retur Karantina Carry-Forward  : Rp {sum_rej_aug_dpp:,.2f} ({len(rejections_aug)} kejadian)")
-    print()
-    print("4. REKONSILIASI KAS & PIUTANG USAHA (ACCOUNTS RECEIVABLE) JULI 2026:")
-    print(f"   - Total Kas Tertagih Juli        : Rp {total_ar_collected_july:,.2f}")
-    open_ar_31_july = sum(ar["dpp_amount"] for ar in open_ar_ledger if ar["status"] == "Open" and ar["invoice_date"] <= "2026-07-31")
-    print(f"   - Saldo Piutang Usaha Akhir Juli : Rp {open_ar_31_july:,.2f} (Jatuh tempo Agustus sesuai termin master)")
-    print()
-    print("5. REKONSILIASI FISIK PERSEDIAAN & STOK KARANTINA (31 JULI 2026):")
-    total_quarantine_ctns = sum(quarantine_stock.values())
-    print(f"   - Saldo Akhir Stok Fisik Saleable: {sum(d['cartons'] for d in stock_on_hand.values()):,} Karton")
-    print(f"   - Saldo Akhir Stok Karantina BS  : {total_quarantine_ctns:,} Karton (Masuk Virtual Location/Quarantine)")
-    max_occ = max(d["warehouse_occupancy_pct"] for d in daily_stock_cards)
-    print(f"   - Puncak Okupansi Gudang Maumbi  : {max_occ:.1f}%")
-    print("=" * 85)
+        curr_dt += dt.timedelta(days=1)
 
     # 4. Simpan seluruh dataset transaksi perpetual ke data/registers/
     datasets = [
@@ -665,19 +760,42 @@ def main():
         ("perpetual_ap_payments", ap_payments),
         ("perpetual_opex_payroll", opex_payroll_entries),
         ("perpetual_daily_stock_cards", daily_stock_cards),
+        ("perpetual_stock_event_ledger", stock_event_ledger),
     ]
 
-    for filename, data in datasets:
-        if not data:
-            continue
-        with open(REG_DIR / f"{filename}.json", "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-        with open(REG_DIR / f"{filename}.csv", "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=list(data[0].keys()))
+    for name, data in datasets:
+        csv_file = REG_DIR / f"{name}.csv"
+        json_file = REG_DIR / f"{name}.json"
+
+        if data:
+            fieldnames = list(data[0].keys())
+        else:
+            fieldnames = []
+
+        with open(csv_file, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(data)
-        print(f" -> {filename}.csv tersimpan ({len(data)} records).")
 
+        with open(json_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        print(f"   [OK] {name}.csv & .json ({len(data):,} records)")
+
+    print()
+    print("REKONSILIASI KANONIKAL AWAL DARI ENGINE GENERATOR:")
+    inv_july = [i for i in invoices if i["date_invoice"] <= "2026-07-31"]
+    inv_aug = [i for i in invoices if i["date_invoice"] > "2026-07-31"]
+    rej_july = [r for r in rejections if r["rejection_date"] <= "2026-07-31"]
+    rej_aug = [r for r in rejections if r["rejection_date"] > "2026-07-31"]
+
+    print(f"Total SO Booked Juli        : {len(sales_orders):,} SO (Gross Rp {sum(s['gross_dpp'] for s in sales_orders):,.2f})")
+    print(f"Total Faktur Juli Terbit    : {len(inv_july):,} Faktur (Invoiced DPP Rp {sum(i['dpp_amount'] for i in inv_july):,.2f})")
+    print(f"Total Retur Karantina Juli  : {len(rej_july):,} Retur (DPP Rp {sum(r['line_subtotal_dpp'] for r in rej_july):,.2f}, COGS Rp {sum(r['cogs_subtotal'] for r in rej_july):,.2f})")
+    print(f"Total Carry-Forward Agustus : {len(inv_aug):,} Faktur (Invoiced DPP Rp {sum(i['dpp_amount'] for i in inv_aug):,.2f}, Retur: {len(rej_aug)})")
+    print(f"Total Kas Tertagih Juli     : Rp {sum(c['net_cash_collected'] for c in ar_collections):,.2f}")
+    print(f"Saldo Akhir Fisik 31 Juli   : {daily_stock_cards[-1]['physical_stock_cartons']:,} Karton (Reserved: {daily_stock_cards[-1]['reserved_stock_cartons']:,})")
+    print(f"Saldo Akhir Karantina       : {daily_stock_cards[-1]['quarantine_stock_cartons']:,} Karton")
     print("=" * 85)
 
 

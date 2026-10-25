@@ -230,30 +230,41 @@ CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-14,Selasa,F2,RTL
 CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-14,Selasa,F2,RTL,Kota Manado,Wanea,CUST-RTL-074 - Warung Tante Meyke Lorong 2,1.484260,124.834592,2026-07-15,DB 8123 QA (Gran Max BV)
 CVS-02 - Steven Lumenta,Retail Canvass (RTL Kios Area 2),2026-07-14,Selasa,F4,RTL,Kota Manado,Tikala,CUST-RTL-098 - Kios Gloria Wanda Perempatan,1.477722,124.860522,2026-07-15,DB 8234 QX (Gran Max Box)
 MGT-01 - Hendrik Polii & Joni Kumajas,Institusional & Key Horeka (INST),2026-07-14,Selasa,F2,INST,Kota Manado,Sario,CUST-INST-02 - Four Points by Sheraton Manado,1.473854,124.835066,2026-07-15,DB 8456 FB (L300 Urban Barat)
-SLS-01 - Christian Wowor,Modern Trade (MT),2026-07-15,Rabu,F1,MT,Kota Manado,Mapanget,CUST-MT-04 - FreshhMart Lifestyle Paniki,1.518418,124.906002,2026-07-17,DB 8345 MK (Canter CDD)
-SLS-01 - Christian Wowor,Modern Trade (MT),2026-07-15,Rabu,F1,MT,Kota Tomohon,Tomohon Tengah,CUST-MT-08 - MultiiMart Tomohon,1.320825,124.834302,2026-07-17,DB 8345 MK (Canter CDD)
-SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-15,Rabu,F1,GT,Kota Manado,Malalayang,CUST-GT-11 - Grosir Krida Bahu,1.454011,124.823612,2026-07-17,DB 8456 FB (L300 Urban Barat)
-SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-15,Rabu,F1,GT,Kota Manado,Malalayang,CUST-GT-12 - Toko Sumber Berkat Malalayang,1.456461,124.824312,2026-07-17,DB 8456 FB (L300 Urban Barat)
-SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-15,Rabu,F2,GT,Kota Manado,Malalayang,CUST-GT-13 - Grosir Malalayang Satu,1.455061,124.825012,2026-07-17,DB 8456 FB (L300 Urban Barat)
-SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-15,Rabu,F2,GT,Kota Manado,Malalayang,CUST-GT-15 - Grosir Kleak Mandiri,1.456111,124.826412,2026-07-17,DB 8456 FB (L300 Urban Barat)
+SLS-01 - Christian Wowor,Modern Trade (MT),2026-07-15,Rabu,F1,MT,Kota Manado,Mapanget,CUST-MT-04 - FreshhMart Lifestyle Paniki,1.518418,124.906002,2026-07-16,DB 8345 MK (Canter CDD)
+SLS-01 - Christian Wowor,Modern Trade (MT),2026-07-15,Rabu,F1,MT,Kota Tomohon,Tomohon Tengah,CUST-MT-08 - MultiiMart Tomohon,1.320825,124.834302,2026-07-16,DB 8345 MK (Canter CDD)
+SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-15,Rabu,F1,GT,Kota Manado,Malalayang,CUST-GT-11 - Grosir Krida Bahu,1.454011,124.823612,2026-07-16,DB 8456 FB (L300 Urban Barat)
+SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-15,Rabu,F1,GT,Kota Manado,Malalayang,CUST-GT-12 - Toko Sumber Berkat Malalayang,1.456461,124.824312,2026-07-16,DB 8456 FB (L300 Urban Barat)
+SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-15,Rabu,F2,GT,Kota Manado,Malalayang,CUST-GT-13 - Grosir Malalayang Satu,1.455061,124.825012,2026-07-16,DB 8456 FB (L300 Urban Barat)
+SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-15,Rabu,F2,GT,Kota Manado,Malalayang,CUST-GT-15 - Grosir Kleak Mandiri,1.456111,124.826412,2026-07-16,DB 8456 FB (L300 Urban Barat)
 SLS-03 - Meidy Wowor,General Trade (GT Urban 2),2026-07-15,Rabu,STANDBY,-,Kantor PT MDU Maumbi,Kalawat / Airmadidi,ADMIN / STAGING LOGISTIK,1.442000,124.975000,-,-
 SLS-04 - Refly Sondakh,General Trade (GT Outer Sulut),2026-07-15,Rabu,STANDBY,-,Kantor PT MDU Maumbi,Kalawat / Airmadidi,ADMIN / STAGING LOGISTIK,1.442000,124.975000,-,-
-CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Wenang,CUST-RTL-003 - Kios Ci Utu Lorong 3,1.495546,124.843134,2026-07-17,DB 8123 QA (Gran Max BV)
-CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Wenang,CUST-RTL-015 - Kios Ko Deasy Pasar,1.497946,124.843734,2026-07-17,DB 8123 QA (Gran Max BV)
-CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Sario,CUST-RTL-027 - Kios Berkat Stenly Jalan Salib,1.472954,124.836266,2026-07-17,DB 8123 QA (Gran Max BV)
-CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Sario,CUST-RTL-039 - Warung Kasih Meyke Lorong 3,1.471454,124.832966,2026-07-17,DB 8123 QA (Gran Max BV)
-CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Malalayang,CUST-RTL-051 - Kios Tante Ronny Pasar,1.456361,124.824162,2026-07-17,DB 8123 QA (Gran Max BV)
-CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Malalayang,CUST-RTL-063 - Kios Ci Wanda Jalan Salib,1.454861,124.824762,2026-07-17,DB 8123 QA (Gran Max BV)
-CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Wanea,CUST-RTL-075 - Kios Ko Ferry Lorong 3,1.485760,124.833992,2026-07-17,DB 8123 QA (Gran Max BV)
-CVS-02 - Steven Lumenta,Retail Canvass (RTL Kios Area 2),2026-07-15,Rabu,F4,RTL,Kota Manado,Tikala,CUST-RTL-099 - Warung Kasih Roy Jalan Salib,1.475322,124.859922,2026-07-17,DB 8234 QX (Gran Max Box)
-MGT-01 - Hendrik Polii & Joni Kumajas,Institusional & Key Horeka (INST),2026-07-15,Rabu,F2,INST,Kota Manado,Wenang,CUST-INST-03 - Hotel Sintesa Peninsula Manado,1.496446,124.842834,2026-07-17,DB 8456 FB (L300 Urban Barat)
-SLS-01 - Christian Wowor,Modern Trade (MT),2026-07-16,Kamis,OFF,-,-,-,LIBUR OPERASIONAL (TAHUN BARU ISLAM 1448 H),-,-,-,-
-SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-16,Kamis,OFF,-,-,-,LIBUR OPERASIONAL (TAHUN BARU ISLAM 1448 H),-,-,-,-
-SLS-03 - Meidy Wowor,General Trade (GT Urban 2),2026-07-16,Kamis,OFF,-,-,-,LIBUR OPERASIONAL (TAHUN BARU ISLAM 1448 H),-,-,-,-
-SLS-04 - Refly Sondakh,General Trade (GT Outer Sulut),2026-07-16,Kamis,OFF,-,-,-,LIBUR OPERASIONAL (TAHUN BARU ISLAM 1448 H),-,-,-,-
-CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-16,Kamis,OFF,-,-,-,LIBUR OPERASIONAL (TAHUN BARU ISLAM 1448 H),-,-,-,-
-CVS-02 - Steven Lumenta,Retail Canvass (RTL Kios Area 2),2026-07-16,Kamis,OFF,-,-,-,LIBUR OPERASIONAL (TAHUN BARU ISLAM 1448 H),-,-,-,-
-MGT-01 - Hendrik Polii & Joni Kumajas,Institusional & Key Horeka (INST),2026-07-16,Kamis,OFF,-,-,-,LIBUR OPERASIONAL (TAHUN BARU ISLAM 1448 H),-,-,-,-
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Wenang,CUST-RTL-003 - Kios Ci Utu Lorong 3,1.495546,124.843134,2026-07-16,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Wenang,CUST-RTL-015 - Kios Ko Deasy Pasar,1.497946,124.843734,2026-07-16,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Sario,CUST-RTL-027 - Kios Berkat Stenly Jalan Salib,1.472954,124.836266,2026-07-16,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Sario,CUST-RTL-039 - Warung Kasih Meyke Lorong 3,1.471454,124.832966,2026-07-16,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Malalayang,CUST-RTL-051 - Kios Tante Ronny Pasar,1.456361,124.824162,2026-07-16,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Malalayang,CUST-RTL-063 - Kios Ci Wanda Jalan Salib,1.454861,124.824762,2026-07-16,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-15,Rabu,F2,RTL,Kota Manado,Wanea,CUST-RTL-075 - Kios Ko Ferry Lorong 3,1.485760,124.833992,2026-07-16,DB 8123 QA (Gran Max BV)
+CVS-02 - Steven Lumenta,Retail Canvass (RTL Kios Area 2),2026-07-15,Rabu,F4,RTL,Kota Manado,Tikala,CUST-RTL-099 - Warung Kasih Roy Jalan Salib,1.475322,124.859922,2026-07-16,DB 8234 QX (Gran Max Box)
+MGT-01 - Hendrik Polii & Joni Kumajas,Institusional & Key Horeka (INST),2026-07-15,Rabu,F2,INST,Kota Manado,Wenang,CUST-INST-03 - Hotel Sintesa Peninsula Manado,1.496446,124.842834,2026-07-16,DB 8456 FB (L300 Urban Barat)
+SLS-01 - Christian Wowor,Modern Trade (MT),2026-07-16,Kamis,F1,MT,Kota Manado,Tikala,CUST-MT-05 - FreshhMart Express Tikala,1.476222,124.859022,2026-07-17,DB 8345 MK (Canter CDD)
+SLS-01 - Christian Wowor,Modern Trade (MT),2026-07-16,Kamis,F1,MT,Kota Manado,Wenang,CUST-MT-10 - Jumbbo Swalayan Pasar 45,1.496446,124.842234,2026-07-17,DB 8345 MK (Canter CDD)
+SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-16,Kamis,F1,GT,Kota Manado,Wanea,CUST-GT-16 - Toko Pelita Jaya Wanea,1.483210,124.835742,2026-07-17,DB 8456 FB (L300 Urban Barat)
+SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-16,Kamis,F1,GT,Kota Manado,Wanea,CUST-GT-17 - Toko Anugerah Kasih Karombasan,1.485660,124.832592,2026-07-17,DB 8456 FB (L300 Urban Barat)
+SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-16,Kamis,F2,GT,Kota Manado,Wanea,CUST-GT-18 - Grosir Rukun Damai Ranotana,1.484260,124.833292,2026-07-17,DB 8456 FB (L300 Urban Barat)
+SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-16,Kamis,F2,GT,Kota Manado,Wanea,CUST-GT-20 - Toko Pakowa Sejahtera Wanea,1.485310,124.834692,2026-07-17,DB 8456 FB (L300 Urban Barat)
+SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-16,Kamis,F2,GT,Kota Manado,Wanea,CUST-GT-22 - Toko Winangun Berkat,1.482510,124.832242,2026-07-17,DB 8456 FB (L300 Urban Barat)
+SLS-03 - Meidy Wowor,General Trade (GT Urban 2),2026-07-16,Kamis,STANDBY,-,Kantor PT MDU Maumbi,Kalawat / Airmadidi,ADMIN / STAGING LOGISTIK,1.442000,124.975000,-,-
+SLS-04 - Refly Sondakh,General Trade (GT Outer Sulut),2026-07-16,Kamis,STANDBY,-,Kantor PT MDU Maumbi,Kalawat / Airmadidi,ADMIN / STAGING LOGISTIK,1.442000,124.975000,-,-
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-16,Kamis,F2,RTL,Kota Manado,Wenang,CUST-RTL-004 - Warung Tante Meyke Dekat Gereja,1.497046,124.842534,2026-07-17,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-16,Kamis,F2,RTL,Kota Manado,Wenang,CUST-RTL-016 - Warung Ronny Depan SD,1.495546,124.843134,2026-07-17,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-16,Kamis,F2,RTL,Kota Manado,Sario,CUST-RTL-028 - Kios Gloria Wanda Pondok Damai,1.474454,124.835666,2026-07-17,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-16,Kamis,F2,RTL,Kota Manado,Sario,CUST-RTL-040 - Kios Filadelfia Ferry Dekat Gereja,1.472954,124.836266,2026-07-17,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-16,Kamis,F2,RTL,Kota Manado,Malalayang,CUST-RTL-052 - Warung Om Grace Depan SD,1.453961,124.823562,2026-07-17,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-16,Kamis,F2,RTL,Kota Manado,Malalayang,CUST-RTL-064 - Warung Tante Roy Pondok Damai,1.456361,124.824162,2026-07-17,DB 8123 QA (Gran Max BV)
+CVS-01 - Novry Mandagi,Retail Canvass (RTL Kios Area 1),2026-07-16,Kamis,F2,RTL,Kota Manado,Wanea,CUST-RTL-076 - Warung Dani Dekat Gereja,1.483360,124.833392,2026-07-17,DB 8123 QA (Gran Max BV)
+CVS-02 - Steven Lumenta,Retail Canvass (RTL Kios Area 2),2026-07-16,Kamis,F4,RTL,Kota Manado,Tikala,CUST-RTL-100 - Kios Filadelfia Vera Pondok Damai,1.476822,124.859322,2026-07-17,DB 8234 QX (Gran Max Box)
+MGT-01 - Hendrik Polii & Joni Kumajas,Institusional & Key Horeka (INST),2026-07-16,Kamis,F2,INST,Kota Manado,Tikala,CUST-INST-04 - Katering Minahasa Indah,1.477122,124.858422,2026-07-17,DB 8567 TR (Traga Urban Timur)
 SLS-01 - Christian Wowor,Modern Trade (MT),2026-07-17,Jumat,F1,MT,Kota Manado,Wenang,CUST-MT-06 - MultiiMart Megamas Manado,1.497046,124.842534,2026-07-18,DB 8345 MK (Canter CDD)
 SLS-01 - Christian Wowor,Modern Trade (MT),2026-07-17,Jumat,F1,MT,Kota Bitung,Maesa,CUST-MT-11 - Jumbbo Swalayan Bitung,1.457376,125.189008,2026-07-18,DB 8345 MK (Canter CDD)
 SLS-02 - Andre Pangemanan,General Trade (GT Urban 1),2026-07-17,Jumat,F1,GT,Kota Manado,Wenang,CUST-GT-24 - Toko Cahaya Samrat Wenang,1.496046,124.842484,2026-07-18,DB 8456 FB (L300 Urban Barat)

@@ -19,7 +19,7 @@ class SeedGateTests(unittest.TestCase):
         self.headers = {
             'data/registers/perpetual_order_rejections.csv': [
                 'rejection_id', 'so_number', 'do_number', 'rejection_date',
-                'sku_code', 'qty_cartons', 'carton_qty', 'unit_price_dpp', 'line_subtotal_dpp'
+                'sku_code', 'lot_number', 'qty_cartons', 'carton_qty', 'unit_price_dpp', 'line_subtotal_dpp'
             ]
         }
         self.data = {
@@ -41,7 +41,7 @@ class SeedGateTests(unittest.TestCase):
                 gross_order_dpp='200', rejection_dpp='100', do_delivered_dpp='100')],
             'data/registers/perpetual_order_rejections.csv': [dict(
                 rejection_id='R1', so_number='SO1', do_number='DO1', rejection_date='2026-07-02',
-                sku_code='P1', qty_cartons='1', carton_qty='10', unit_price_dpp='10',
+                sku_code='P1', lot_number='L1', qty_cartons='1', carton_qty='10', unit_price_dpp='10',
                 line_subtotal_dpp='100')],
             'data/registers/perpetual_invoices.csv': [dict(
                 invoice_number='I1', so_number='SO1', do_number='DO1', date_invoice='2026-07-02',
@@ -137,14 +137,36 @@ class SeedGateTests(unittest.TestCase):
     def test_rejection_fk_invalid(self):
         self.data['data/registers/perpetual_order_rejections.csv'] = [dict(
             rejection_id='R1', so_number='SO999', do_number='DO1', rejection_date='2026-07-02',
-            sku_code='P1', qty_cartons='1', carton_qty='10', unit_price_dpp='10', line_subtotal_dpp='100')]
+            sku_code='P1', lot_number='L1', qty_cartons='1', carton_qty='10',
+            unit_price_dpp='10', line_subtotal_dpp='100')]
         self.assertIn('TX-FK', self.run_gate())
+
+    def test_rejection_invalid_lot(self):
+        self.mutate('perpetual_order_rejections', 'lot_number', 'NONEXISTENT', 'RETURN-RECON')
+
+    def test_rejection_date_before_do(self):
+        self.mutate('perpetual_order_rejections', 'rejection_date', '2026-06-01', 'EVENT-ORDER')
+
+    def test_rejection_qty_exceeds_line(self):
+        self.mutate('perpetual_order_rejections', 'qty_cartons', '99', 'RETURN-RECON')
+
+    def test_rejection_duplicate_id(self):
+        row = dict(self.data['data/registers/perpetual_order_rejections.csv'][0])
+        self.data['data/registers/perpetual_order_rejections.csv'].append(row)
+        self.assertIn('TX-IDENTITY', self.run_gate())
 
     def test_rejection_non_positive_qty(self):
         self.data['data/registers/perpetual_order_rejections.csv'] = [dict(
             rejection_id='R1', so_number='SO1', do_number='DO1', rejection_date='2026-07-02',
-            sku_code='P1', qty_cartons='0', carton_qty='10', unit_price_dpp='10', line_subtotal_dpp='0')]
+            sku_code='P1', lot_number='L1', qty_cartons='0', carton_qty='10',
+            unit_price_dpp='10', line_subtotal_dpp='0')]
         self.assertIn('LINE-MATH', self.run_gate())
+
+    def test_invoice_dpp_mismatch(self):
+        self.mutate('perpetual_invoices', 'dpp_amount', '80', 'INVOICE-MATH')
+
+    def test_payment_dpp_mismatch(self):
+        self.mutate('perpetual_ar_collections', 'invoice_dpp', '80', 'COLLECTION-MATH')
 
     def test_payment_before_invoice(self):
         self.mutate('perpetual_ar_collections', 'payment_date', '2026-07-01', 'COLLECTION')

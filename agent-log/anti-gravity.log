@@ -286,5 +286,19 @@
 - Memisahkan rekonsiliasi finansial dua periode: cut-off Juli (389 SO/DO/Faktur, Gross Profit Rp 593,7 Jt, Net Profit Rp 202,9 Jt) vs Carry-Forward Agustus (14 SO tanggal 31 Juli terfaktur 1 Agustus senilai Rp 188,3 Jt DPP).
 - Memperluas invariant gate verify_seed_invariants.py dengan aturan RETURN-RECON, MASTER-TOP, PERIOD-CUTOFF, dan penyaringan libur kalender.
 - Memperluas tes regresi mutasi tests/test_seed_invariants.py (23/23 unit tests PASS).
-- Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
 - Task managed by antigravity at 2026-10-26T02:15:00+07:00
+
+[2026-10-26T02:35:00+07:00] [INFO] Tindak Lanjut Lengkap 5 Temuan Supervisi PR #15: Reproduksibilitas, Replay Stok, Valuasi Retur, & Laporan Kanonikal
+- Mengeliminasi hash() bawaan Python, menggantinya dengan deterministic_hash() berbasis SHA-256 pada skenario early payment discount.
+- Menambahkan uji reproduksibilitas lintas proses tests/test_generator_reproducibility.py yang membuktikan kesamaan SHA-256 seluruh dataset pada PYTHONHASHSEED=1 dan PYTHONHASHSEED=2.
+- Memisahkan status stok secara ketat: physical_stock_cartons (berkurang saat DO dispatch) vs reserved_stock_cartons (bertambah saat SO reservation) vs available_stock_cartons (physical - reserved).
+- Menghasilkan event ledger persediaan data/registers/perpetual_stock_event_ledger.csv/.json (5.741 records).
+- Pada cut-off 31 Juli, 14 SO (1.038 karton) kirim 1 Agustus tetap berada di stok fisik gudang Maumbi (53.837 karton) dengan status reserved.
+- Mengalokasikan 9 kejadian retur ke Aset Persediaan Karantina senilai COGS (Rp 1.963.200). Beban COGS penjualan Juli HANYA membebankan Accepted COGS (Rp 4.969.777.800).
+- Memperbaiki kalender operasional berdasarkan SKB 3 Menteri No. 1017/2025: 16 Juli adalah hari kerja normal (Tahun Baru Islam 16 Juni).
+- Regenerasi seluruh turunan: PJP Matrix 419 calls, SO 419, Faktur Juli 405, Carry-forward Agustus 14 faktur.
+- Memperluas gate verify_seed_invariants.py: validasi mendalam RETURN-RECON (lot existence, qty limit, matching DO date), INVOICE-MATH (mengikat net delivered DPP ke invoice DPP), dan COLLECTION-MATH.
+- Menerbitkan skrip dan laporan otomatis canonical_financial_reconciliation_july_2026.json & .md terikat SHA-256 seluruh register.
+- Memperluas unit tests tests/test_seed_invariants.py (30/30 tests PASS).
+- Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
+- Task managed by antigravity at 2026-10-26T02:35:00+07:00

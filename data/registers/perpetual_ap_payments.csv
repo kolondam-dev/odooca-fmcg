@@ -1,5 +1,5 @@
 ap_payment_id,payment_date,po_number,principal_name,amount_paid_dpp,due_date,bank_source
-PAY-AP-01,2026-07-22,PO-2026-06-01,PT Sayapp Mas Utamma,1849772800.0,2026-07-22,Bank Mandiri Rekening Operasional
-PAY-AP-02,2026-07-29,PO-2026-06-02,PT Santos Jaya Abadii,1449737600.0,2026-07-29,Bank Mandiri Rekening Operasional
-PAY-AP-03,2026-07-31,PO-2026-06-03,PT Mayyora Indahh Tbk,699826000.0,2026-08-01,Bank Mandiri Rekening Operasional
-PAY-AP-04,2026-07-31,PO-2026-06-04,PT Mayyora Indahh Tbk,2598138400.0,2026-08-02,Bank Mandiri Rekening Operasional
+PAY-AP-01,2026-07-22,PO-202606-WNG01,Wings Group,1850000000.0,2026-07-22,Bank Mandiri Rekening Operasional
+PAY-AP-02,2026-07-29,PO-202606-KAP01,PT Santos Jaya Abadi (Kapal Api),1450000000.0,2026-07-29,Bank Mandiri Rekening Operasional
+PAY-AP-03,2026-07-31,PO-202606-MYR01,Mayora Indah Tbk,3300000000.0,2026-08-01,Bank Mandiri Rekening Operasional
+PAY-AP-04,2026-07-31,PO-202606-UNL01,Unilever Indonesia Tbk,2896000000.0,2026-08-08,Bank Mandiri Rekening Operasional

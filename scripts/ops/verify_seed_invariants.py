@@ -165,6 +165,10 @@ def validate(root, sizes=(354, 150)):
         if deliv_day and str(deliv_day["is_working_day"]).lower() != "true":
             fail("CALENDAR", key, f"delivery on non-working date: {delivery['scheduled_delivery_date']}")
 
+    order_lot_qtys = collections.defaultdict(lambda: collections.defaultdict(Decimal))
+    for row in lines:
+        order_lot_qtys[row["so_number"]][(row["sku_code"], row["lot_number"])] += number(row["qty_cartons"])
+
     for key, invoice in invoices.items():
         delivery = deliveries.get(invoice["do_number"])
         if not delivery or delivery["so_number"] != invoice["so_number"] or invoice["so_number"] not in orders:
@@ -191,23 +195,59 @@ def validate(root, sizes=(354, 150)):
 
         if invoice["due_date"] < invoice["date_invoice"]:
             fail("EVENT-ORDER", key, "due date before invoice")
+
+        if order and delivery:
+            gross_order = number(order["gross_dpp"])
+            deliv_dpp = number(delivery["do_delivered_dpp"])
+            disc_rate = (number(order["discount_dpp"]) / gross_order) if gross_order > 0 else Decimal("0.0")
+            expected_inv_disc = (deliv_dpp * disc_rate).quantize(Decimal("0.01"))
+            expected_inv_dpp = deliv_dpp - expected_inv_disc
+            equal("INVOICE-MATH", key, invoice["dpp_amount"], expected_inv_dpp)
+            expected_ppn = (number(invoice["dpp_amount"]) * Decimal("0.11")).quantize(Decimal("0.01"))
+            equal("INVOICE-MATH", key, invoice["ppn_11_amount"], expected_ppn)
+
         equal("INVOICE-MATH", key, invoice["total_invoice_with_ppn"],
               number(invoice["dpp_amount"]) + number(invoice["ppn_11_amount"]))
 
     rejections_raw = read("data/registers/perpetual_order_rejections.csv")
     rejection_dpp_totals = collections.defaultdict(Decimal)
+    rejection_ids = set()
+
     for row in rejections_raw:
         rej_id = row["rejection_id"]
+        if rej_id in rejection_ids:
+            fail("TX-IDENTITY", rej_id, "duplicate rejection ID")
+        rejection_ids.add(rej_id)
+
         so_num = row["so_number"]
         do_num = row["do_number"]
-        if so_num not in orders or do_num not in deliveries:
+        delivery = deliveries.get(do_num)
+        order = orders.get(so_num)
+
+        if not order or not delivery or delivery["so_number"] != so_num:
             fail("TX-FK", rej_id, "rejection SO or DO link invalid")
-        product = product_map.get(row["sku_code"])
+            continue
+
+        sku = row["sku_code"]
+        lot = row["lot_number"]
+        product = product_map.get(sku)
         if not product:
             fail("TX-FK", rej_id, "rejection SKU unknown")
+            continue
+
+        delivered_lot_qty = order_lot_qtys[so_num].get((sku, lot), Decimal("0.0"))
+        if delivered_lot_qty <= Decimal("0.0"):
+            fail("RETURN-RECON", rej_id, f"rejected SKU/lot ({sku}/{lot}) was not in order {so_num}")
+
         qty = number(row["qty_cartons"])
         if qty <= 0:
             fail("LINE-MATH", rej_id, "rejection quantity must be positive")
+        if qty > delivered_lot_qty:
+            fail("RETURN-RECON", rej_id, f"rejected quantity {qty} exceeds delivered line quantity {delivered_lot_qty}")
+
+        if row["rejection_date"] < order["date_order"] or row["rejection_date"] != delivery["scheduled_delivery_date"]:
+            fail("EVENT-ORDER", rej_id, f"rejection date {row['rejection_date']} mismatch with delivery {delivery['scheduled_delivery_date']}")
+
         equal("LINE-MATH", rej_id, row["carton_qty"], product["carton_qty"])
         equal("LINE-MATH", rej_id, row["line_subtotal_dpp"],
               qty * number(row["carton_qty"]) * number(row["unit_price_dpp"]))
@@ -222,9 +262,13 @@ def validate(root, sizes=(354, 150)):
 
     for row in read("data/registers/perpetual_ar_collections.csv"):
         invoice = invoices.get(row["invoice_number"])
-        if not invoice or row["payment_date"] < invoice["date_invoice"]:
-            fail("COLLECTION", row["payment_id"], "unknown invoice or payment before invoice")
-        equal("COLLECTION", row["payment_id"], row["net_cash_collected"],
+        if not invoice:
+            fail("COLLECTION", row["payment_id"], "unknown invoice in collection")
+            continue
+        if row["payment_date"] < invoice["date_invoice"]:
+            fail("COLLECTION", row["payment_id"], "payment before invoice date")
+        equal("COLLECTION-MATH", row["payment_id"], row["invoice_dpp"], invoice["dpp_amount"])
+        equal("COLLECTION-MATH", row["payment_id"], row["net_cash_collected"],
               number(row["invoice_dpp"]) - number(row["early_payment_discount"]))
 
     balances = collections.defaultdict(Decimal)

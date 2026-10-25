@@ -19,8 +19,12 @@ import csv
 import datetime as dt
 import json
 import pathlib
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from scripts.ops.fmcg_calendar import get_next_working_day, is_working_day  # noqa: E402
+
 REG_DIR = ROOT / "data" / "registers"
 REG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -46,24 +50,7 @@ SALESMEN = [
 ]
 
 
-def is_working_day(d: dt.date) -> bool:
-    """Senin s/d Sabtu adalah hari kerja operasional FMCG Manado.
-    Hari Minggu libur mingguan operasional armada distributor.
-    16 Juli 2026: Libur Nasional Tahun Baru Islam 1448 H (SKB 3 Menteri 2026).
-    """
-    if d.weekday() == 6:  # Minggu
-        return False
-    if d == dt.date(2026, 7, 16):  # Tahun Baru Islam 1448 H
-        return False
-    return True
-
-
-def get_delivery_date(call_date: dt.date) -> dt.date:
-    """Menghitung tanggal delivery H+1 kerja berikutnya (melewati Minggu & Hari Libur Nasional)."""
-    curr = call_date + dt.timedelta(days=1)
-    while not is_working_day(curr):
-        curr += dt.timedelta(days=1)
-    return curr
+get_delivery_date = get_next_working_day
 
 
 def determine_week_of_month(d: dt.date) -> int:

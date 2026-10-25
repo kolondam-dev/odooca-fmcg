@@ -1,5 +1,91 @@
 # HANDOFF
 
+## 2026-10-26 — antigravity agent — Tindak Lanjut Lengkap 5 Temuan Supervisi PR #15: Reproduksibilitas Determinisme, Pemisahan Fisik/Reserved/Karantina, Rekonsiliasi Valuasi Retur, Kalender SKB 3 Menteri, & Laporan Kanonikal (Status PASS)
+**Konteks & Arahan Supervisi:**
+Menindaklanjuti secara menyeluruh 5 temuan supervisi PR #15 pada review commit `dee5179`:
+1. *[P1][Regresi Determinisme]:* Mengeliminasi seluruh penggunaan `hash()` Python yang bergantung pada acak salt proses. Menggantinya dengan `deterministic_hash()` berbasis SHA-256. Menyertakan unit test reproduksibilitas lintas proses (`tests/test_generator_reproducibility.py`) yang membuktikan checksum SHA-256 seluruh 20 file dataset artefak identik 100% pada `PYTHONHASHSEED=1` dan `PYTHONHASHSEED=2`.
+2. *[P1][Pemisahan Fisik vs Reserved vs Available vs Karantina]:* Mengubah model pergerakan stok: kuantitas fisik on-hand gudang (`physical_stock_cartons`) hanya berkurang saat event pengiriman fisik DO diberangkatkan. Saat SO terbit, kuantitas dialokasikan ke `reserved_stock_cartons` dan membatasi `available_stock = physical - reserved`. Pada cut-off 31 Juli, 14 SO (1.038 karton) yang dijadwalkan kirim 1 Agustus tetap berada di `physical_stock` Gudang Maumbi (53.837 karton) dengan status `reserved`. Menerbitkan event ledger granular `perpetual_stock_event_ledger.csv` dan `.json` (5.741 records).
+3. *[P1][Rekonsiliasi Retur ke Valuasi & Gate Invariant]:* 9 kejadian retur (9 karton senilai DPP Rp 2.279.200,00 dan COGS Rp 1.963.200,00) masuk ke Aset Persediaan Karantina Gudang Maumbi. Beban Pokok Pendapatan (COGS) Laba Rugi Juli HANYA membebankan barang yang benar-benar diterima customer (*Accepted COGS* Rp 4.969.777.800,00), sehingga tidak ada double counting antara aset persediaan karantina dan beban laba rugi. Gate `RETURN-RECON` diperluas memvalidasi keberadaan SKU & lot pada baris SO, batas `qty <= delivered_lot_qty`, kesesuaian tanggal retur dengan DO, dan keunikan ID rejeksi.
+4. *[P1][Kalender Resmi SKB 3 Menteri 2026]:* Berdasarkan SKB 3 Menteri No. 1017/2025 (Kemenko PMK), Tahun Baru Islam 1448 H jatuh pada 16 JUNI 2026, bukan 16 Juli 2026. Di bulan Juli 2026 tidak ada libur nasional, sehingga 16 Juli adalah hari kerja aktif normal (27 hari kerja operasional Juli). Kalender kanonikal disatukan pada `scripts/ops/fmcg_calendar.py`. Seluruh turunan diregenerasi: PJP matrix menghasilkan 419 call efektif, SO Booked 419 SO, Faktur sah Juli 405 faktur, dan carry-forward Agustus 14 faktur (angka lama tidak dipertahankan).
+5. *[P1][Gate Invariant Menyeluruh & Laporan Rekonsiliasi Otomatis]:* Gate `INVOICE-MATH` kini mengikat nilai `do_delivered_dpp` dikurangi diskon proporsional ke invoice DPP. Gate `COLLECTION-MATH` mengikat `invoice_dpp` dan net cash collected. Menerbitkan script generator laporan kanonikal `scripts/ops/generate_financial_reconciliation_report.py` yang menghasilkan `data/registers/canonical_financial_reconciliation_july_2026.json` dan `.md` yang mengikat SHA-256 seluruh register.
+
+**Asumsi Kalibrasi Scope FMCG Manado:**
+- *Customer Cohort & Drop Size:* Dengan berlakunya filter cohort customer aktif Juli (177 outlet aktif dari 354 master), drop size per call dikalibrasi (GT Rp 16–26 jt, MT Rp 30–42 jt, INST Rp 15–24 jt, RTL Rp 3,5–6,5 jt) agar target omset distributor FMCG Manado tercapai (~Rp 5,59 BIO DPP terfaktur Juli) dengan utilisasi armada 6 kendaraan (Engkel, L300 Box, Blindvan) secara organik tanpa angka genap buatan.
+
+**Ringkasan Angka Rekonsiliasi Finansial Kanonikal (Derivasi Otomatis Artefak Registers):**
+1. *Pesanan Penjualan Terbit (SO Booked Juli 2026):*
+   - Total SO Booked: 419 SO
+   - Total Gross Order (DPP): Rp 6.065.892.600,00
+   - Total Diskon Dagang: Rp 281.242.486,00 (4,64%)
+   - Total Net Order (DPP): Rp 5.784.650.114,00
+   - Total Biaya Pokok Pesanan (COGS): Rp 5.138.995.000,00
+   - Kesesuaian Line Math ke SO: 2.738 baris order line identik 100% (Gross Rp 6.065.892.600,00, COGS Rp 5.138.995.000,00).
+2. *Realisasi Pengiriman DO & Retur Karantina:*
+   - Total Pengiriman: 419 DO
+   - Nilai Bruto DO: Rp 6.065.892.600,00
+   - Retur Handling Transit Karantina: Rp 2.279.200,00 (9 kejadian / 9 karton)
+   - Nilai Bersih Diterima Customer (Delivered Net DPP): Rp 6.063.613.400,00
+   - Nilai Buku Retur Masuk Aset Karantina (Rejection COGS): Rp 1.963.200,00
+3. *Pemisahan Periode: Realisasi Terfaktur Juli (Cut-off 31 Juli 2026):*
+   - Realisasi Terfaktur Juli: 405 Faktur
+   - Penjualan Bersih Terfaktur (Invoiced DPP): Rp 5.594.622.485,00
+   - PPN Keluaran 11% (UU HPP No. 7/2021): Rp 615.408.473,33
+   - Total Piutang Faktur Bruto (DPP + PPN): Rp 6.210.030.958,33
+   - Beban Pokok Penjualan Bersih (Accepted COGS): Rp 4.969.777.800,00
+   - Laba Kotor Komersial (Gross Profit): Rp 624.844.685,00 (11,17%)
+   - Beban Operasional & Penggajian (27 hari kerja operasional): Rp 394.350.000,00 (Logistik Rp 95,85 Jt + Gaji 24 staf Rp 185 Jt + Lembur Overstok Rp 68,5 Jt + Sewa Gudang Rp 45 Jt)
+   - Laba Bersih Operasional Sah (Accrual Juli): Rp 230.494.685,00 (4,12%)
+4. *Carry-Forward ke Periode Agustus 2026 (SO 31 Juli -> DO & Faktur 1 Agustus):*
+   - Jumlah Pesanan Carry-Forward: 14 SO / DO / Faktur
+   - Nilai DO Terkirim Carry-Forward: Rp 197.030.000,00
+   - Nilai Invoiced DPP Carry-Forward: Rp 187.858.691,40
+   - PPN 11% Carry-Forward: Rp 20.664.456,06
+   - Total Tagihan Carry-Forward: Rp 208.523.147,46
+   - COGS Terakui di Periode Agustus: Rp 167.254.000,00 (Retur: 0)
+5. *Rekonsiliasi Kas, Diskon Pembayaran Awal, & Piutang Usaha:*
+   - Transaksi Pelunasan Kas: 320 pembayaran
+   - Kas Tertagih Bersih (Basis DPP): Rp 3.434.177.723,54
+   - Diskon Pembayaran Awal (Early Cash Discount 1%): Rp 10.056.419,06
+   - Saldo Piutang Usaha Akhir Juli (Open AR 31 Juli): Rp 2.150.388.342,40 (85 Faktur)
+   - Jembatan Rekonsiliasi DPP: `Kas DPP (Rp 3.434.177.723,54) + Early Discount (Rp 10.056.419,06) + Open AR DPP (Rp 2.150.388.342,40) = Rp 5.594.622.485,00` (Match 100% Invoiced DPP Juli).
+   - Basis Bruto Komersial (dengan PPN): `Kas Total (Rp 3.813.043.479,21) + Early Discount (Rp 10.056.419,06) + Open AR Total (Rp 2.386.931.060,06) = Rp 6.210.030.958,33` (Match 100% Tagihan Faktur Juli).
+6. *Rekonsiliasi Fisik Persediaan & Gudang Maumbi (31 Juli 2026 EOD):*
+   - Stok Fisik Aktual On-Hand di Gudang: 53.837 Karton
+   - Stok Teralokasi / Dipesan (Reserved untuk Kirim 1 Agustus): 1.038 Karton
+   - Stok Tersedia Bebas Dijual (Available for Sale): 52.799 Karton
+   - Stok Karantina Kerusakan Transit (Bad Stock Gudang): 9 Karton
+   - Nilai Aset Persediaan Karantina: Rp 1.963.200,00 (Rejection COGS)
+   - Valuasi Buku Persediaan Fisik Akhir: Rp 9.001.139.000,00 DPP
+   - Puncak Okupansi Gudang Maumbi: 104,2% (Krisis overstok kedatangan 5 kontainer Juni)
+
+**Hasil Diagnostik Sebelum vs Sesudah PR #15 Iterasi 2:**
+| Invariant Gate Rule | Baseline PR #14 | PR #15 SHA dee5179 | PR #15 Kini (Iterasi 2) | Status |
+| :--- | :---: | :---: | :---: | :--- |
+| `MASTER-GEO` | 77 | 0 | 0 | PASSED |
+| `COHORT-PJP` | 228 | 0 | 0 | PASSED |
+| `COHORT-SO` | 219 | 0 | 0 | PASSED |
+| `CALENDAR` | 84 | 0 | 0 | PASSED (SKB 3 Menteri resmi, 27 hari kerja) |
+| `EVENT-ORDER` | 331 | 0 | 0 | PASSED (Due date master, rejection date == DO date) |
+| `MASTER-TOP` | - | 0 | 0 | PASSED (Invoice TOP == Master TOP) |
+| `PERIOD-CUTOFF` | - | 0 | 0 | PASSED (DO Date == Invoice Date) |
+| `RETURN-RECON` (Diperluas) | - | 0 | 0 | PASSED (SKU/lot match, qty <= delivered, math) |
+| `INVOICE-MATH` (Diperluas) | - | 0 | 0 | PASSED (Delivered net dpp terikat ke invoice dpp) |
+| `COLLECTION-MATH` (Baru) | - | - | 0 | PASSED (Payment dpp == Invoice dpp) |
+| `LOT-BALANCE` | 770 | 0 | 0 | PASSED |
+| `LOT-FEFO` | 0 | 0 | 0 | PASSED |
+| **TOTAL VIOLATIONS** | **1.709** | **0** | **0** | **OVERALL STATUS: PASS** |
+
+**Verifikasi:**
+- `python -m unittest discover -s tests -p "test_*.py" -v`: 30/30 unit tests lulus (`OK`), mencakup pengujian reproduksibilitas lintas proses dan seluruh uji mutasi celah return/invoice/collection.
+- `python scripts/ops/verify_seed_invariants.py --report invariant-report.json`: Status `PASS`, violations `[]` (0).
+- `python -m ruff check .`: `All checks passed!`.
+- `python scripts/check_manifests.py`: `manifest ok: 4 addon`.
+
+**Status Ruleset GitHub & Batas Runtime:**
+- GitHub Actions branch protection `main-quality-gate` sudah berstatus Active.
+- Seluruh 5 CI jobs pada GitHub Actions (seed-invariants, invariant-tests, static, install-test, init-test) lulus.
+- Batasan: Perbaikan ini diselesaikan dan divalidasi lokal secara ketat tanpa merge ke main, tanpa merge ke branch base, dan tanpa injeksi database production. Injeksi database runtime Odoo (idempotensi loader `scripts/load_fmcg_seed.py` dan SVL valuation) menjadi tahap pengujian runtime terpisah.
+
 ## 2026-10-26 — antigravity agent — Tindak Lanjut Supervisi PR #15: Perbaikan Return Karantina, Master TOP, Kalender Libur, & Rekonsiliasi Finansial Dua Periode (Status PASS)
 **Konteks & Arahan Supervisi:**
 Menindaklanjuti seluruh 4 temuan supervisi PR #15 (review komentar supervisor) pada branch `agen/fix-seed-invariants`:
