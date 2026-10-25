@@ -171,3 +171,12 @@
 - Tambahkan generator principals_4.csv yang memuat kontak resmi, alamat, NPWP, dan PIC 4 principal nasional
 - Task managed by antigravity-agent at 2026-10-25T16:05:00+07:00
 
+[2026-10-25T16:08:30+07:00] [INFO] Loader kategori hirarkis FMCG, metadata kargo armada, hirarki HR, profil PT MDU, dan kalender kerja
+- Perbarui scripts/load_fmcg_seed.py untuk membangun pohon kategori produk [PRINSIPAL] > [DIVISI KATEGORI] > [BRAND] demi isolasi akuntansi persediaan dan SLA retur
+- Kaitkan data vendor resmi dan PIC prinsipal dari seed/principals_4.csv
+- Isi metadata kargo armada logistik (tonase, CBM, dimensi box PxLxT, rute operasional, STNK, KIR) ke fleet.vehicle
+- Hubungkan pohon departemen dan relasi pelaporan manajer (parent_id) pada hr.employee
+- Perbarui deploy/init.sh dengan profil resmi PT Manado Distribusi Utama (Interchange Maumbi), jadwal kerja 5 hari (Senin-Jumat 08:00-17:00, Sabtu-Minggu libur), dependensi modul fleet/hr/uom, serta mark seed_master_v4
+- Task managed by antigravity-agent at 2026-10-25T16:08:30+07:00
+
+

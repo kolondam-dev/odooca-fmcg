@@ -39,84 +39,164 @@ if not seed_dir:
 
 
 def load_principals_and_vendors():
-    """Memastikan setiap Principal memiliki partner vendor di res.partner (supplier_rank=1)."""
-    print(" -> Memeriksa dan menghubungkan Vendor Partner untuk Principal FMCG...")
+    """Memuat master data 4 Principal Nasional beserta kontak resmi dan partner vendor di res.partner."""
+    print(" -> Memuat Master Principal FMCG dan Vendor Partner...")
     Principal = env["id.principal"].sudo()
     Partner = env["res.partner"].sudo().with_context(no_vat_validation=True, tracking_disable=True)
     Country = env["res.country"].sudo()
 
     indonesia = env.ref("base.id", raise_if_not_found=False) or Country.search([("code", "=", "ID")], limit=1)
 
-    principals = Principal.search([])
+    csv_file = seed_dir / "principals_4.csv"
+    principals_data = []
+    if csv_file.is_file():
+        with open(csv_file, mode="r", encoding="utf-8") as f:
+            principals_data = list(csv.DictReader(f))
+
     count = 0
-    for p in principals:
-        vendor = Partner.search([("ref", "=", p.code)], limit=1)
-        vals = {
-            "name": p.name,
-            "ref": p.code,
+    for p_row in principals_data:
+        code = p_row["code"]
+        name = p_row["name"]
+        street = p_row.get("street", "")
+        city = p_row.get("city", "Jakarta")
+        zip_code = p_row.get("zip", "")
+        phone = p_row.get("phone", "")
+        email = p_row.get("email", "")
+        vat = p_row.get("vat", "")
+        pic_name = p_row.get("pic_name", "")
+        pic_phone = p_row.get("pic_phone", "")
+        pic_email = p_row.get("pic_email", "")
+
+        # 1. Partner Vendor
+        vendor = Partner.search([("ref", "=", code)], limit=1)
+        vendor_vals = {
+            "name": name,
+            "ref": code,
             "is_company": True,
             "supplier_rank": 1,
+            "street": street,
+            "city": city,
+            "zip": zip_code,
+            "phone": phone,
+            "email": email,
+            "vat": vat,
             "country_id": indonesia.id if indonesia else False,
-            "comment": f"Official Principal FMCG: {p.name} (PKS: {p.pks_number or '-'})",
+            "comment": f"Principal Resmi FMCG: {name} (PIC: {pic_name} / {pic_phone})",
         }
-        vals = {k: v for k, v in vals.items() if k in Partner._fields}
+        vendor_vals = {k: v for k, v in vendor_vals.items() if k in Partner._fields}
         if vendor:
-            vendor.write(vals)
+            vendor.write(vendor_vals)
         else:
-            vendor = Partner.create(vals)
-        if hasattr(p, "partner_id") and p.partner_id != vendor:
-            p.write({"partner_id": vendor.id})
+            vendor = Partner.create(vendor_vals)
+
+        # 2. Model id.principal
+        prin_record = Principal.search([("code", "=", code)], limit=1)
+        prin_vals = {
+            "name": name,
+            "code": code,
+            "legal_name": p_row.get("legal_name", name),
+            "partner_id": vendor.id,
+            "pic_name": pic_name,
+            "pic_phone": pic_phone,
+            "pic_email": pic_email,
+            "lead_time_days": int(p_row.get("lead_time_days", 14)),
+            "sla_delivery_pct": float(p_row.get("sla_delivery_pct", 95.0)),
+        }
+        prin_vals = {k: v for k, v in prin_vals.items() if k in Principal._fields}
+        if prin_record:
+            prin_record.write(prin_vals)
+        else:
+            Principal.create(prin_vals)
         count += 1
-    print(f"    Selesai: {count} Principal terhubung ke Vendor Partner.")
+
+    print(f"    Selesai: {count} Principal & Vendor Partner terhubung.")
 
 
-def load_categories():
-    """Menyiapkan struktur kategori produk FMCG pada product.category."""
-    print(" -> Menyiapkan Kategori Produk FMCG (product.category)...")
+def get_or_create_category(Category, name, parent_id=False):
+    """Mencari atau membuat product.category secara idempoten."""
+    domain = [("name", "=", name)]
+    if parent_id:
+        domain.append(("parent_id", "=", parent_id))
+    else:
+        domain.append(("parent_id", "=", False))
+
+    cat = Category.search(domain, limit=1)
+    if not cat:
+        cat = Category.create({"name": name, "parent_id": parent_id})
+    return cat
+
+
+def load_hierarchical_categories():
+    """Membangun struktur hirarki produk FMCG: [PRINSIPAL] > [DIVISI KATEGORI] > [BRAND].
+
+    Struktur ini mengisolasi akun penilaian persediaan, COGS, dan SLA retur antar-prinsipal,
+    sekaligus mencegah pencampuran kategori lintas pabrikan.
+    """
+    print(" -> Menyiapkan Hirarki Kategori Produk ([PRINSIPAL] > [DIVISI] > [BRAND])...")
     Category = env["product.category"].sudo()
+    Principal = env["id.principal"].sudo()
+    Brand = env["id.brand"].sudo()
 
-    parent_cat = Category.search([("name", "=", "FMCG")], limit=1)
-    if not parent_cat:
-        parent_cat = Category.create({"name": "FMCG"})
-
-    sub_categories = {
+    division_labels = {
         "food": "Food & Grocery",
         "rtd": "Ready to Drink (RTD)",
         "home_care": "Home Care",
         "personal_care": "Personal Care",
         "confectionery": "Confectionery & Candy",
     }
-    cat_map = {}
-    for code, label in sub_categories.items():
-        cat = Category.search([("name", "=", label), ("parent_id", "=", parent_cat.id)], limit=1)
-        if not cat:
-            cat = Category.create({"name": label, "parent_id": parent_cat.id})
-        cat_map[code] = cat.id
 
-    return cat_map
+    # Map: (principal_code, fmcg_cat, brand_code) -> category_id
+    leaf_cat_map = {}
+
+    principals = Principal.search([])
+
+    for p in principals:
+        # Level 1: Principal
+        p_cat = get_or_create_category(Category, p.name)
+
+        # Dapatkan semua brand di bawah principal ini
+        p_brands = Brand.search([("principal_id", "=", p.id)])
+        for b in p_brands:
+            # Tentukan divisi default
+            div_code = "food"
+            for code, lbl in division_labels.items():
+                if lbl.lower() in (b.name or "").lower():
+                    div_code = code
+                    break
+
+            # Level 2: Divisi Kategori di bawah Principal
+            div_label = division_labels.get(div_code, "Food & Grocery")
+            div_cat = get_or_create_category(Category, div_label, parent_id=p_cat.id)
+
+            # Level 3: Brand di bawah Divisi
+            brand_cat = get_or_create_category(Category, b.name, parent_id=div_cat.id)
+            leaf_cat_map[(p.code, b.code)] = brand_cat.id
+
+    return leaf_cat_map
 
 
 def load_products():
-    """Memuat 150 Master SKU FMCG ke product.template dengan is_storable=True, tracking=lot, dan packaging."""
+    """Memuat 150 Master SKU FMCG ke product.template lengkap dengan dimensi fisik (Pcs & Karton)."""
     csv_file = seed_dir / "products_150.csv"
     if not csv_file.is_file():
         print(f"[seed_loader] SKIP: {csv_file} tidak ditemukan")
         return
 
-    print(" -> Memuat Master SKU Produk (150 SKU)...")
+    print(" -> Memuat Master SKU Produk (150 SKU) beserta dimensi fisik...")
     ProductTemplate = env["product.template"].sudo()
     Principal = env["id.principal"].sudo()
     Brand = env["id.brand"].sudo()
+    Category = env["product.category"].sudo()
     Uom = env["uom.uom"].sudo()
     Packaging = env["product.packaging"].sudo() if "product.packaging" in env else None
 
-    cat_map = load_categories()
+    # Preload Category Tree
+    leaf_cat_map = load_hierarchical_categories()
 
-    # Cache uom & master
     uom_unit = env.ref("uom.product_uom_unit", raise_if_not_found=False) or Uom.search([], limit=1)
 
-    principal_map = {p.code: p.id for p in Principal.search([])}
-    brand_map = {b.code: b.id for b in Brand.search([])}
+    principal_map = {p.code: p for p in Principal.search([])}
+    brand_map = {b.code: b for b in Brand.search([])}
 
     count_created = 0
     count_updated = 0
@@ -130,16 +210,27 @@ def load_products():
             brand_code = row.get("brand_code")
             fmcg_cat = row.get("fmcg_category", "food")
 
-            prin_id = principal_map.get(prin_code)
-            brand_id = brand_map.get(brand_code)
-            categ_id = cat_map.get(fmcg_cat)
+            prin = principal_map.get(prin_code)
+            brand = brand_map.get(brand_code)
+
+            # Lookup leaf category: [PRINSIPAL] > [DIVISI] > [BRAND]
+            categ_id = leaf_cat_map.get((prin_code, brand_code))
+            if not categ_id and prin:
+                # Fallback: Buat di bawah Principal / Divisi / Brand
+                div_lbl = fmcg_cat.replace("_", " ").title()
+                p_cat = get_or_create_category(Category, prin.name)
+                div_cat = get_or_create_category(Category, div_lbl, parent_id=p_cat.id)
+                brand_name = brand.name if brand else brand_code
+                b_cat = get_or_create_category(Category, brand_name, parent_id=div_cat.id)
+                categ_id = b_cat.id
+                leaf_cat_map[(prin_code, brand_code)] = categ_id
 
             vals = {
                 "name": name,
                 "default_code": code,
                 "fmcg_category": fmcg_cat,
-                "principal_id": prin_id,
-                "brand_id": brand_id,
+                "principal_id": prin.id if prin else False,
+                "brand_id": brand.id if brand else False,
                 "inner_qty": int(row.get("inner_qty", 1)),
                 "carton_qty": int(row.get("carton_qty", 1)),
                 "standard_price": float(row.get("cost_price", 0.0)),
@@ -154,6 +245,9 @@ def load_products():
                 "purchase_ok": True,
             }
 
+            if categ_id and "categ_id" in ProductTemplate._fields:
+                vals["categ_id"] = categ_id
+
             # Odoo 19 Storable & Lot Tracking
             if "is_storable" in ProductTemplate._fields:
                 vals["is_storable"] = True
@@ -164,10 +258,6 @@ def load_products():
             if "tracking" in ProductTemplate._fields:
                 vals["tracking"] = "lot"
 
-            if categ_id and "categ_id" in ProductTemplate._fields:
-                vals["categ_id"] = categ_id
-
-            # Filter field valid
             vals = {k: v for k, v in vals.items() if k in ProductTemplate._fields}
 
             prod = ProductTemplate.search([("default_code", "=", code)], limit=1)
@@ -192,25 +282,24 @@ def load_products():
                             [("product_id", "=", variant.id), ("qty", "=", float(carton_qty))],
                             limit=1,
                         )
+                        pkg_vals = {
+                            "name": pkg_name,
+                            "product_id": variant.id,
+                            "qty": float(carton_qty),
+                        }
                         if not pkg:
-                            Packaging.create(
-                                {
-                                    "name": pkg_name,
-                                    "product_id": variant.id,
-                                    "qty": float(carton_qty),
-                                }
-                            )
+                            Packaging.create(pkg_vals)
                 except Exception as pkg_err:
                     _logger.warning("Gagal membuat packaging untuk %s: %s", code, pkg_err)
 
     print(
         f"    Selesai: {count_created} dibuat, {count_updated} diperbarui "
-        "(Storable, Lot-tracking, & Packaging aktif)."
+        "(Hirarki Kategori, Dimensi Fisik, & Packaging aktif)."
     )
 
 
 def load_employees():
-    """Memuat 24 Karyawan ke hr.employee dan hr.department."""
+    """Memuat 24 Karyawan ke hr.employee dan hr.department dengan struktur organisasi lengkap."""
     csv_file = seed_dir / "employees_24.csv"
     if not csv_file.is_file():
         print(f"[seed_loader] SKIP: {csv_file} tidak ditemukan")
@@ -220,52 +309,84 @@ def load_employees():
         print("[seed_loader] SKIP: Modul hr belum terpasang.")
         return
 
-    print(" -> Memuat Master 24 Karyawan (hr.employee & hr.department)...")
+    print(" -> Memuat Master 24 Karyawan & Struktur Organisasi (hr.employee & hr.department)...")
     Employee = env["hr.employee"].sudo()
     Department = env["hr.department"].sudo()
 
-    # Siapkan departemen
-    dept_names = ["Management", "Finance", "Sales", "Warehouse", "Logistik"]
-    dept_map = {}
-    for d_name in dept_names:
+    # Siapkan pohon departemen
+    mgt_dept = Department.search([("name", "=", "Management")], limit=1)
+    if not mgt_dept:
+        mgt_dept = Department.create({"name": "Management"})
+
+    dept_defs = [
+        ("Finance & Akuntansi", mgt_dept.id),
+        ("Sales & Distribusi", mgt_dept.id),
+        ("Warehouse & Logistik", mgt_dept.id),
+    ]
+    dept_map = {"Management": mgt_dept.id}
+    for d_name, parent_id in dept_defs:
         d = Department.search([("name", "=", d_name)], limit=1)
         if not d:
-            d = Department.create({"name": d_name})
+            d = Department.create({"name": d_name, "parent_id": parent_id})
         dept_map[d_name] = d.id
+
+    dept_alias = {
+        "Finance": dept_map["Finance & Akuntansi"],
+        "Sales": dept_map["Sales & Distribusi"],
+        "Warehouse": dept_map["Warehouse & Logistik"],
+        "Logistik": dept_map["Warehouse & Logistik"],
+        "Management": dept_map["Management"],
+    }
 
     count_created = 0
     count_updated = 0
 
+    emp_records = {}
+
     with open(csv_file, mode="r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            name = row["name"]
-            dept_name = row.get("dept", "Sales")
-            dept_id = dept_map.get(dept_name)
-            job = row.get("role", "").replace("_", " ").title()
+        rows = list(csv.DictReader(f))
 
-            vals = {
-                "name": name,
-                "job_title": job,
-                "work_email": row.get("work_email") or False,
-                "work_phone": row.get("work_phone") or False,
-                "department_id": dept_id,
-            }
-            vals = {k: v for k, v in vals.items() if k in Employee._fields}
+    # Pass 1: Buat/Update data dasar karyawan
+    for row in rows:
+        code = row["code"]
+        name = row["name"]
+        raw_dept = row.get("dept", "Sales")
+        dept_id = dept_alias.get(raw_dept, dept_map["Sales & Distribusi"])
+        job = row.get("role", "").replace("_", " ").title()
 
-            emp = Employee.search([("name", "=", name)], limit=1)
-            if emp:
-                emp.write(vals)
-                count_updated += 1
-            else:
-                Employee.create(vals)
-                count_created += 1
+        vals = {
+            "name": name,
+            "job_title": job,
+            "work_email": row.get("work_email") or False,
+            "work_phone": row.get("work_phone") or False,
+            "department_id": dept_id,
+        }
+        vals = {k: v for k, v in vals.items() if k in Employee._fields}
 
-    print(f"    Selesai: {count_created} dibuat, {count_updated} diperbarui.")
+        emp = Employee.search([("name", "=", name)], limit=1)
+        if emp:
+            emp.write(vals)
+            count_updated += 1
+        else:
+            emp = Employee.create(vals)
+            count_created += 1
+        emp_records[code] = emp
+
+    # Pass 2: Hubungkan hirarki pelaporan (parent_id / Manager)
+    for row in rows:
+        code = row["code"]
+        mgr_code = row.get("manager_code")
+        if mgr_code and mgr_code in emp_records and code in emp_records:
+            emp = emp_records[code]
+            mgr = emp_records[mgr_code]
+            if "parent_id" in Employee._fields and emp.parent_id != mgr:
+                emp.write({"parent_id": mgr.id})
+
+    print(f"    Selesai: {count_created} dibuat, {count_updated} diperbarui (Hirarki Organisasi terhubung).")
 
 
 def load_vehicles():
-    """Memuat 9 Armada Logistik ke fleet.vehicle."""
+    """Memuat 9 Armada Logistik ke fleet.vehicle beserta spesifikasi kargo dan dimensi box."""
     csv_file = seed_dir / "vehicles_9.csv"
     if not csv_file.is_file():
         print(f"[seed_loader] SKIP: {csv_file} tidak ditemukan")
@@ -275,7 +396,7 @@ def load_vehicles():
         print("[seed_loader] SKIP: Modul fleet belum terpasang.")
         return
 
-    print(" -> Memuat Master 9 Armada Logistik (fleet.vehicle)...")
+    print(" -> Memuat Master 9 Armada Logistik beserta spesifikasi kargo (fleet.vehicle)...")
     Vehicle = env["fleet.vehicle"].sudo()
     Model = env["fleet.vehicle.model"].sudo()
     Brand = env["fleet.vehicle.model.brand"].sudo()
@@ -309,6 +430,14 @@ def load_vehicles():
                 "license_plate": plate,
                 "model_id": model.id,
                 "driver_id": driver_partner.id if driver_partner else False,
+                "capacity_ton": float(row.get("ton", 0.0)),
+                "capacity_cbm": float(row.get("cbm", 0.0)),
+                "box_length": float(row.get("box_length_m", 0.0)),
+                "box_width": float(row.get("box_width_m", 0.0)),
+                "box_height": float(row.get("box_height_m", 0.0)),
+                "operational_route": row.get("route", ""),
+                "stnk_expiry": row.get("stnk_exp") or False,
+                "kir_expiry": row.get("kir_exp") or False,
             }
             vals = {k: v for k, v in vals.items() if k in Vehicle._fields}
 
@@ -320,7 +449,7 @@ def load_vehicles():
                 Vehicle.create(vals)
                 count_created += 1
 
-    print(f"    Selesai: {count_created} dibuat, {count_updated} diperbarui.")
+    print(f"    Selesai: {count_created} dibuat, {count_updated} diperbarui (Spesifikasi Kargo & Dimensi Box lengkap).")
 
 
 def load_partners():
@@ -421,7 +550,6 @@ def load_partners():
                 "is_company": row.get("is_company", "True").lower() == "true",
                 "customer_rank": 1,
                 "channel_id": channel_id,
-                "tier_id": False,  # Customer tier didecouple sesuai arahan
                 "district_id": district_id,
                 "subdistrict_id": subdistrict_id,
                 "street": row.get("street", ""),
@@ -471,3 +599,4 @@ def load_all():
 
 
 load_all()
+

@@ -29,7 +29,7 @@ if [ "$(id -u)" = "0" ]; then
   fi
 fi
 
-INIT_MODULES="${INIT_MODULES:-id_base,id_ui,id_ui_shell,id_ui_form,l10n_id}"
+INIT_MODULES="${INIT_MODULES:-id_base,id_ui,id_ui_shell,id_ui_form,l10n_id,fleet,hr,uom}"
 export PGHOST PGPORT PGUSER PGPASSWORD PGDATABASE
 case "$ODOO_DB_USER" in postgres) log "ODOO_DB_USER tidak boleh 'postgres'"; exit 1;; esac
 case "$ODOO_DB_USER$ODOO_DB_PASSWORD$PGDATABASE" in *\'*|*\"*|*\\*) log "kutip/backslash tidak diizinkan pada user, password, atau nama DB"; exit 1;; esac
@@ -112,9 +112,20 @@ if ! has_mark init.base; then
     odoo_run -i base --stop-after-init
     odoo_run shell --no-http <<'PYEOF'
 c = env.company
-c.country_id = env.ref('base.id')
-env.ref('base.IDR').active = True
-c.currency_id = env.ref('base.IDR')
+c.name = 'PT Manado Distribusi Utama'
+c.street = 'Jl. AA Maramis No. 88, Interchange Maumbi'
+c.city = 'Manado'
+c.zip = '95371'
+c.phone = '0431-889900'
+c.email = 'info@mdu-manado.co.id'
+c.vat = '012345678821000'
+indonesia = env.ref('base.id', raise_if_not_found=False)
+if indonesia:
+    c.country_id = indonesia
+idr = env.ref('base.IDR', raise_if_not_found=False)
+if idr:
+    idr.active = True
+    c.currency_id = idr
 env.cr.commit()
 PYEOF
     odoo_run -i "$INIT_MODULES" --stop-after-init
@@ -149,15 +160,49 @@ PY
   set_mark postinit_v1
 fi
 
+# 5a. Profil Perusahaan & Jadwal Kerja 5 Hari
+if ! has_mark company_profile_v2; then
+  log "company_profile_v2: konfigurasi PT Manado Distribusi Utama & Jadwal Kerja..."
+  odoo_run shell --no-http <<'PY'
+c = env.company
+c.name = 'PT Manado Distribusi Utama'
+c.street = 'Jl. AA Maramis No. 88, Interchange Maumbi'
+c.city = 'Manado'
+c.zip = '95371'
+c.phone = '0431-889900'
+c.email = 'info@mdu-manado.co.id'
+c.vat = '012345678821000'
+indonesia = env.ref('base.id', raise_if_not_found=False)
+if indonesia:
+    c.country_id = indonesia
+idr = env.ref('base.IDR', raise_if_not_found=False)
+if idr:
+    idr.active = True
+    c.currency_id = idr
+
+# Kalender Kerja (Senin - Jumat 08:00-17:00, Sabtu-Minggu libur)
+Calendar = env['resource.calendar'].sudo()
+cal = env.ref('resource.resource_calendar_std', raise_if_not_found=False)
+if not cal:
+    cal = Calendar.search([], limit=1)
+if cal:
+    cal.name = 'Standard 40 Jam (Senin - Jumat, 08:00 - 17:00)'
+    cal.attendance_ids.filtered(lambda a: a.dayofweek in ('5', '6')).unlink()
+
+env.cr.commit()
+PY
+  set_mark company_profile_v2
+fi
+
 # 5b. Master Seed FMCG (150 SKU, 354 Outlet, Vendor, Armada, Roster)
-if ! has_mark seed_master_v3; then
+if ! has_mark seed_master_v4; then
   if [ -f "/opt/scripts/load_fmcg_seed.py" ]; then
-    log "seed_master_v3: memuat master seed FMCG setelah modul id_base terpasang..."
+    log "seed_master_v4: memuat master seed FMCG setelah modul id_base terpasang..."
     if odoo_run shell --no-http < /opt/scripts/load_fmcg_seed.py; then
-      set_mark seed_master_v3
-      log "seed_master_v3: berhasil dimuat dan ditandai."
+      set_mark seed_master_v4
+      log "seed_master_v4: berhasil dimuat dan ditandai."
     else
-      log "seed_master_v3 error: pemuatan gagal, mark tidak diset agar dapat diulang pada boot berikutnya."
+      log "seed_master_v4 error: pemuatan gagal, mark tidak diset agar dapat diulang pada boot berikutnya."
     fi
   fi
 fi
