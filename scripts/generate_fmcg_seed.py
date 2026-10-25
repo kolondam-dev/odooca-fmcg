@@ -45,7 +45,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": code,
-                "name": f"Roma {name}",
+                "name": f"Rroma {name}",
                 "principal_code": "PRIN-MAYORA",
                 "fmcg_category": "food",
                 "brand_code": "BRD-RMA",
@@ -65,7 +65,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "MYR-BTR-01",
-            "name": "Better Vanilla Sandwich 22g",
+            "name": "Bettar Vanilla Sandwich 22g",
             "principal_code": "PRIN-MAYORA",
             "fmcg_category": "food",
             "brand_code": "BRD-BTR",
@@ -84,7 +84,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "MYR-BTR-02",
-            "name": "Better Cokelat 120g",
+            "name": "Bettar Cokelat 120g",
             "principal_code": "PRIN-MAYORA",
             "fmcg_category": "food",
             "brand_code": "BRD-BTR",
@@ -97,14 +97,14 @@ def generate_products() -> list[dict]:
             "weight_kg": 0.120,
             "volume_cbm": 0.0008,
             "barcode": "899275320002",
-            "description": "Biskuit Better Family Pack",
+            "description": "Biskuit Bettar Family Pack",
         }
     )
 
     products.append(
         {
             "default_code": "MYR-SLI-01",
-            "name": "Slai O'lai Strawberry 128g",
+            "name": "Slaii O'lai Strawberry 128g",
             "principal_code": "PRIN-MAYORA",
             "fmcg_category": "food",
             "brand_code": "BRD-SLI",
@@ -123,7 +123,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "MYR-SLI-02",
-            "name": "Slai O'lai Blueberry 128g",
+            "name": "Slaii O'lai Blueberry 128g",
             "principal_code": "PRIN-MAYORA",
             "fmcg_category": "food",
             "brand_code": "BRD-SLI",
@@ -143,14 +143,14 @@ def generate_products() -> list[dict]:
     beng_sub = [
         ("Reguler 20g", 20, 160, 2000, 2500, "Wafer Karamel Cokelat Crispy"),
         ("Maxx 32g", 12, 120, 3200, 3800, "Wafer Cokelat Porsi Ekstra"),
-        ("Share It Pouch 100g", 1, 24, 11000, 13000, "Beng-Beng Mini Pouch Pesta"),
+        ("Share It Pouch 100g", 1, 24, 11000, 13000, "Benn-Beng Mini Pouch Pesta"),
         ("White 22g", 20, 160, 2200, 2700, "Wafer Lapis Cokelat Putih & Kelapa"),
     ]
     for idx, (name, in_q, ctn_q, cp, lp, desc) in enumerate(beng_sub, start=1):
         products.append(
             {
                 "default_code": f"MYR-BBG-{idx:02d}",
-                "name": f"Beng-Beng {name}",
+                "name": f"Benn-Beng {name}",
                 "principal_code": "PRIN-MAYORA",
                 "fmcg_category": "food",
                 "brand_code": "BRD-BBG",
@@ -184,7 +184,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"MYR-TRB-{idx:02d}",
-                "name": f"Torabika {name}",
+                "name": f"Torabikka {name}",
                 "principal_code": "PRIN-MAYORA",
                 "fmcg_category": "rtd",
                 "brand_code": "BRD-TRB",
@@ -211,7 +211,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"MYR-KPK-RTD-{idx:02d}",
-                "name": f"Kopiko {name}",
+                "name": f"Koppiko {name}",
                 "principal_code": "PRIN-MAYORA",
                 "fmcg_category": "rtd",
                 "brand_code": "BRD-KPK",
@@ -236,7 +236,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"MYR-EGN-{idx:02d}",
-                "name": f"Energen {name}",
+                "name": f"Ennergen {name}",
                 "principal_code": "PRIN-MAYORA",
                 "fmcg_category": "rtd",
                 "brand_code": "BRD-EGN",
@@ -255,16 +255,16 @@ def generate_products() -> list[dict]:
 
     # Confectionery (10)
     candy_sub = [
-        ("Kopiko Coffee Candy Sak 150g", "BRD-KPK", 1, 24, 7500, 9000, "Permen Kopi Asli"),
-        ("Kopiko Blister Pack 32g", "BRD-KPK", 12, 120, 2500, 3000, "Permen Kopi Kantong Saku"),
-        ("Kopiko Cappuccino 150g", "BRD-KPK", 1, 24, 7800, 9200, "Permen Rasa Cappuccino"),
-        ("Kis Mint Cherry Sak 125g", "BRD-KIS", 1, 24, 6800, 8000, "Permen Mint Segar Emoticon"),
-        ("Kis Mint Barley Sak 125g", "BRD-KIS", 1, 24, 6800, 8000, "Permen Mint Barley"),
-        ("Kis Mint Apple Peach 125g", "BRD-KIS", 1, 24, 6800, 8000, "Permen Rasa Apel Persik"),
-        ("Kis Grape Mint 125g", "BRD-KIS", 1, 24, 6800, 8000, "Permen Rasa Anggur Segar"),
-        ("Tamarin Permen Asam Sak 135g", "BRD-TMR", 1, 24, 7000, 8200, "Permen Asam Jawa Alami"),
-        ("Tamarin Bag 50g", "BRD-TMR", 1, 48, 3000, 3600, "Permen Asam Kemasan Mini"),
-        ("Tamarin Roll Pack 30g", "BRD-TMR", 12, 120, 2000, 2500, "Permen Asam Roll Praktis"),
+        ("Koppiko Coffee Candy Sak 150g", "BRD-KPK", 1, 24, 7500, 9000, "Permen Kopi Asli"),
+        ("Koppiko Blister Pack 32g", "BRD-KPK", 12, 120, 2500, 3000, "Permen Kopi Kantong Saku"),
+        ("Koppiko Cappuccino 150g", "BRD-KPK", 1, 24, 7800, 9200, "Permen Rasa Cappuccino"),
+        ("Kiss Mint Cherry Sak 125g", "BRD-KIS", 1, 24, 6800, 8000, "Permen Mint Segar Emoticon"),
+        ("Kiss Mint Barley Sak 125g", "BRD-KIS", 1, 24, 6800, 8000, "Permen Mint Barley"),
+        ("Kiss Mint Apple Peach 125g", "BRD-KIS", 1, 24, 6800, 8000, "Permen Rasa Apel Persik"),
+        ("Kiss Grape Mint 125g", "BRD-KIS", 1, 24, 6800, 8000, "Permen Rasa Anggur Segar"),
+        ("Tamarrin Permen Asam Sak 135g", "BRD-TMR", 1, 24, 7000, 8200, "Permen Asam Jawa Alami"),
+        ("Tamarrin Bag 50g", "BRD-TMR", 1, 48, 3000, 3600, "Permen Asam Kemasan Mini"),
+        ("Tamarrin Roll Pack 30g", "BRD-TMR", 12, 120, 2000, 2500, "Permen Asam Roll Praktis"),
     ]
     for idx, (name, brd, in_q, ctn_q, cp, lp, desc) in enumerate(candy_sub, start=1):
         products.append(
@@ -306,7 +306,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"KPA-KA-{idx:02d}",
-                "name": f"Kapal Api {name}",
+                "name": f"Kapall Api {name}",
                 "principal_code": "PRIN-SANTOS",
                 "fmcg_category": "food",
                 "brand_code": "BRD-KA",
@@ -335,7 +335,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"KPA-ABC-{idx:02d}",
-                "name": f"Kopi ABC {name}",
+                "name": f"Kopi ABCC {name}",
                 "principal_code": "PRIN-SANTOS",
                 "fmcg_category": "food",
                 "brand_code": "BRD-ABC",
@@ -356,7 +356,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "KPA-YA-01",
-            "name": "Kopi Ya! Susu Sachet 25g",
+            "name": "Koppi Ya! Susu Sachet 25g",
             "principal_code": "PRIN-SANTOS",
             "fmcg_category": "food",
             "brand_code": "BRD-YA",
@@ -375,7 +375,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "KPA-YA-02",
-            "name": "Kopi Ya! Hitam Manis 20g",
+            "name": "Koppi Ya! Hitam Manis 20g",
             "principal_code": "PRIN-SANTOS",
             "fmcg_category": "food",
             "brand_code": "BRD-YA",
@@ -402,7 +402,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"KPA-KPT-{idx:02d}",
-                "name": f"Kopi Kapten {name}",
+                "name": f"Koppi Kapten {name}",
                 "principal_code": "PRIN-SANTOS",
                 "fmcg_category": "food",
                 "brand_code": "BRD-KPT",
@@ -421,14 +421,14 @@ def generate_products() -> list[dict]:
 
     # Kapal Api RTD & ABC RTD (8)
     rtd_santos = [
-        ("Kapal Api Signature Black Botol 200ml", "BRD-KA", 1, 24, 5500, 6500, "Kopi Hitam Dingin"),
-        ("Kapal Api White Coffee Botol 200ml", "BRD-KA", 1, 24, 5800, 7000, "Kopi Putih Dingin"),
-        ("Kapal Api Kopi Susu Kaleng 240ml", "BRD-KA", 1, 24, 7500, 8800, "Kopi Susu Kaleng Premium"),
-        ("Kapal Api Cold Brew Can 240ml", "BRD-KA", 1, 24, 8200, 9500, "Kopi Cold Brew Ekstraktif"),
-        ("ABC Choco Malt Tetra Pack 200ml", "BRD-ABC", 1, 24, 4500, 5300, "Minuman Malt Cokelat Susu"),
-        ("ABC Coffee Latte Tetra 200ml", "BRD-ABC", 1, 24, 4500, 5300, "Latte Kemasan Kotak"),
-        ("ABC Kopi Moka Botol 250ml", "BRD-ABC", 1, 24, 6000, 7000, "Kopi Moka Siap Minum"),
-        ("ABC Kopi Susu Botol 250ml", "BRD-ABC", 1, 24, 6000, 7000, "Kopi Susu Siap Minum"),
+        ("Kapall Api Signature Black Botol 200ml", "BRD-KA", 1, 24, 5500, 6500, "Kopi Hitam Dingin"),
+        ("Kapall Api White Coffee Botol 200ml", "BRD-KA", 1, 24, 5800, 7000, "Kopi Putih Dingin"),
+        ("Kapall Api Kopi Susu Kaleng 240ml", "BRD-KA", 1, 24, 7500, 8800, "Kopi Susu Kaleng Premium"),
+        ("Kapall Api Cold Brew Can 240ml", "BRD-KA", 1, 24, 8200, 9500, "Kopi Cold Brew Ekstraktif"),
+        ("Kopi ABCC Choco Malt Tetra Pack 200ml", "BRD-ABC", 1, 24, 4500, 5300, "Minuman Malt Cokelat Susu"),
+        ("Kopi ABCC Coffee Latte Tetra 200ml", "BRD-ABC", 1, 24, 4500, 5300, "Latte Kemasan Kotak"),
+        ("Kopi ABCC Kopi Moka Botol 250ml", "BRD-ABC", 1, 24, 6000, 7000, "Kopi Moka Siap Minum"),
+        ("Kopi ABCC Kopi Susu Botol 250ml", "BRD-ABC", 1, 24, 6000, 7000, "Kopi Susu Siap Minum"),
     ]
     for idx, (name, brd, in_q, ctn_q, cp, lp, desc) in enumerate(rtd_santos, start=1):
         products.append(
@@ -465,7 +465,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"ULV-SNL-{idx:02d}",
-                "name": f"Sunlight {name}",
+                "name": f"Sunnlight {name}",
                 "principal_code": "PRIN-UNILEVER",
                 "fmcg_category": "home_care",
                 "brand_code": "BRD-SNL",
@@ -484,7 +484,7 @@ def generate_products() -> list[dict]:
 
     rinso_sub = [
         ("Anti Noda Klasik Bubuk 770g", 1, 12, 21500, 24500, "Deterjen Bubuk Bersih Cemerlang"),
-        ("Molto Rose Fresh 770g", 1, 12, 22000, 25000, "Deterjen Harum Bunga"),
+        ("Mollto Rose Fresh 770g", 1, 12, 22000, 25000, "Deterjen Harum Bunga"),
         ("Cair Konsentrat Refill 750ml", 2, 12, 18500, 21000, "Deterjen Cair Anti Noda"),
         ("Matic Front Load Cair 1.6L", 1, 6, 42000, 48000, "Khusus Mesin Cuci Bukaan Depan"),
         ("Matic Top Load Cair 1.6L", 1, 6, 38000, 44000, "Khusus Mesin Cuci Bukaan Atas"),
@@ -494,7 +494,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"ULV-RNS-{idx:02d}",
-                "name": f"Rinso {name}",
+                "name": f"Rinnso {name}",
                 "principal_code": "PRIN-UNILEVER",
                 "fmcg_category": "home_care",
                 "brand_code": "BRD-RNS",
@@ -521,7 +521,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"ULV-MLT-{idx:02d}",
-                "name": f"Molto {name}",
+                "name": f"Mollto {name}",
                 "principal_code": "PRIN-UNILEVER",
                 "fmcg_category": "home_care",
                 "brand_code": "BRD-MLT",
@@ -553,7 +553,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"ULV-LFB-{idx:02d}",
-                "name": f"Lifebuoy {name}",
+                "name": f"Lifebuooy {name}",
                 "principal_code": "PRIN-UNILEVER",
                 "fmcg_category": "personal_care",
                 "brand_code": "BRD-LFB",
@@ -582,7 +582,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"ULV-PSD-{idx:02d}",
-                "name": f"Pepsodent {name}",
+                "name": f"Pepsodentt {name}",
                 "principal_code": "PRIN-UNILEVER",
                 "fmcg_category": "personal_care",
                 "brand_code": "BRD-PSD",
@@ -609,7 +609,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"ULV-CLR-{idx:02d}",
-                "name": f"Clear Shampoo {name}",
+                "name": f"Clearr Shampoo {name}",
                 "principal_code": "PRIN-UNILEVER",
                 "fmcg_category": "personal_care",
                 "brand_code": "BRD-CLR",
@@ -629,7 +629,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "ULV-RXN-01",
-            "name": "Rexona Men Roll On Invisible Dry 45ml",
+            "name": "Rexxona Men Roll On Invisible Dry 45ml",
             "principal_code": "PRIN-UNILEVER",
             "fmcg_category": "personal_care",
             "brand_code": "BRD-RXN",
@@ -648,7 +648,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "ULV-RXN-02",
-            "name": "Rexona Women Brightening Roll On 45ml",
+            "name": "Rexxona Women Brightening Roll On 45ml",
             "principal_code": "PRIN-UNILEVER",
             "fmcg_category": "personal_care",
             "brand_code": "BRD-RXN",
@@ -676,7 +676,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"ULV-RYC-{idx:02d}",
-                "name": f"Royco {name}",
+                "name": f"Royyco {name}",
                 "principal_code": "PRIN-UNILEVER",
                 "fmcg_category": "food",
                 "brand_code": "BRD-RYC",
@@ -696,7 +696,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "ULV-BNG-01",
-            "name": "Bango Kecap Manis Pouch Refill 550ml",
+            "name": "Banngo Kecap Manis Pouch Refill 550ml",
             "principal_code": "PRIN-UNILEVER",
             "fmcg_category": "food",
             "brand_code": "BRD-BNG",
@@ -715,7 +715,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "ULV-BNG-02",
-            "name": "Bango Kecap Manis Pouch Refill 220ml",
+            "name": "Banngo Kecap Manis Pouch Refill 220ml",
             "principal_code": "PRIN-UNILEVER",
             "fmcg_category": "food",
             "brand_code": "BRD-BNG",
@@ -751,7 +751,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"WNG-SDP-{idx:02d}",
-                "name": f"Mie Sedaap {name}",
+                "name": f"Mie Seddaap {name}",
                 "principal_code": "PRIN-WINGS",
                 "fmcg_category": "food",
                 "brand_code": "BRD-SDP",
@@ -778,7 +778,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"WNG-JSJ-{idx:02d}",
-                "name": f"Jasjus {name}",
+                "name": f"Jassjus {name}",
                 "principal_code": "PRIN-WINGS",
                 "fmcg_category": "food",
                 "brand_code": "BRD-JSJ",
@@ -798,7 +798,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "WNG-SGD-01",
-            "name": "Segar Dingin Madu Lemon Box 24s",
+            "name": "Segarr Dingin Madu Lemon Box 24s",
             "principal_code": "PRIN-WINGS",
             "fmcg_category": "food",
             "brand_code": "BRD-SGD",
@@ -817,7 +817,7 @@ def generate_products() -> list[dict]:
     products.append(
         {
             "default_code": "WNG-SGD-02",
-            "name": "Segar Dingin Sirsak Box 24s",
+            "name": "Segarr Dingin Sirsak Box 24s",
             "principal_code": "PRIN-WINGS",
             "fmcg_category": "food",
             "brand_code": "BRD-SGD",
@@ -844,7 +844,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"WNG-TOP-{idx:02d}",
-                "name": f"Top Kopi {name}",
+                "name": f"Topp Kopi {name}",
                 "principal_code": "PRIN-WINGS",
                 "fmcg_category": "food",
                 "brand_code": "BRD-TOP",
@@ -871,7 +871,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"WNG-FLD-{idx:02d}",
-                "name": f"Floridina {name}",
+                "name": f"Floriddina {name}",
                 "principal_code": "PRIN-WINGS",
                 "fmcg_category": "rtd",
                 "brand_code": "BRD-FLD",
@@ -897,7 +897,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"WNG-JVN-{idx:02d}",
-                "name": f"Teh Javana {name}",
+                "name": f"Tehh Javana {name}",
                 "principal_code": "PRIN-WINGS",
                 "fmcg_category": "rtd",
                 "brand_code": "BRD-JVN",
@@ -924,7 +924,7 @@ def generate_products() -> list[dict]:
         products.append(
             {
                 "default_code": f"WNG-GLD-{idx:02d}",
-                "name": f"Golda Coffee {name}",
+                "name": f"Goldaa Coffee {name}",
                 "principal_code": "PRIN-WINGS",
                 "fmcg_category": "rtd",
                 "brand_code": "BRD-GLD",
@@ -944,6 +944,24 @@ def generate_products() -> list[dict]:
     return products
 
 
+DISTRICT_CITY_MAP = {
+    "KEC-MND-WNG": "Kota Manado",
+    "KEC-MND-SRO": "Kota Manado",
+    "KEC-MND-MLY": "Kota Manado",
+    "KEC-MND-WNA": "Kota Manado",
+    "KEC-MND-TKL": "Kota Manado",
+    "KEC-MND-PLD": "Kota Manado",
+    "KEC-MND-TMT": "Kota Manado",
+    "KEC-MND-SKL": "Kota Manado",
+    "KEC-MND-MPG": "Kota Manado",
+    "KEC-BTG-MAS": "Kota Bitung",
+    "KEC-TMH-TGH": "Kota Tomohon",
+    "KEC-MNH-KWG": "Kab. Minahasa",
+    "KEC-MNH-TDN": "Kab. Minahasa",
+    "KEC-MNT-AMD": "Kab. Minahasa Utara",
+}
+
+
 def generate_partners() -> list[dict]:
     """Menghasilkan 354 Partner Outlet terstratifikasi (12 MT, 72 GT, 260 RTL, 10 INST)."""
     partners = []
@@ -951,12 +969,12 @@ def generate_partners() -> list[dict]:
     # 1. Modern Trade (12 Key Accounts)
     mt_accounts = [
         (
-            "Indomaret DC Manado",
+            "Indomarett DC Manado",
             "KEC-MND-MPG",
             "KEL-MND-PKB",
             "Jl. AA Maramis KM 10 Paniki",
             "95258",
-            "01.234.567.8-054.000",
+            "0123456789054001",
             250000000,
             "strict",
             45,
@@ -965,12 +983,12 @@ def generate_partners() -> list[dict]:
             124.9080,
         ),
         (
-            "Alfamidi DC Manado",
+            "Alfamiddii DC Manado",
             "KEC-MND-MPG",
             "KEL-MND-PKB",
             "Kawasan Pergudangan Kairagi Dua",
             "95254",
-            "01.876.543.2-054.000",
+            "0187654321054002",
             200000000,
             "strict",
             45,
@@ -979,12 +997,12 @@ def generate_partners() -> list[dict]:
             124.8970,
         ),
         (
-            "FreshMart Superstore Bahu Mall",
+            "FreshhMart Superstore Bahu",
             "KEC-MND-MLY",
             "KEL-MND-BAH",
             "Bahu Mall Blok A No. 1",
             "95115",
-            "02.111.222.3-821.000",
+            "0211122233821003",
             120000000,
             "limit",
             30,
@@ -993,12 +1011,12 @@ def generate_partners() -> list[dict]:
             124.8250,
         ),
         (
-            "FreshMart Lifestyle Paniki",
+            "FreshhMart Lifestyle Paniki",
             "KEC-MND-MPG",
             "KEL-MND-PKB",
             "Grand Kawanua City Walk",
             "95258",
-            "02.111.222.3-821.001",
+            "0211122233821004",
             80000000,
             "limit",
             30,
@@ -1007,12 +1025,12 @@ def generate_partners() -> list[dict]:
             124.9010,
         ),
         (
-            "FreshMart Express Tikala",
+            "FreshhMart Express Tikala",
             "KEC-MND-TKL",
             "KEL-MND-TKB",
             "Jl. Balai Kota No. 12",
             "95126",
-            "02.111.222.3-821.002",
+            "0211122233821005",
             50000000,
             "limit",
             30,
@@ -1021,12 +1039,12 @@ def generate_partners() -> list[dict]:
             124.8580,
         ),
         (
-            "MultiMart Megamas Manado",
+            "MultiiMart Megamas Manado",
             "KEC-MND-WNG",
             "KEL-MND-WNS",
             "Kawasan Megamas Blok 1D",
             "95111",
-            "03.444.555.6-821.000",
+            "0344455566821006",
             100000000,
             "limit",
             30,
@@ -1035,12 +1053,12 @@ def generate_partners() -> list[dict]:
             124.8350,
         ),
         (
-            "MultiMart Sam Ratulangi",
+            "MultiiMart Sam Ratulangi",
             "KEC-MND-WNA",
             "KEL-MND-WNS",
             "Jl. Sam Ratulangi No. 188",
             "95117",
-            "03.444.555.6-821.001",
+            "0344455566821007",
             75000000,
             "limit",
             30,
@@ -1049,12 +1067,12 @@ def generate_partners() -> list[dict]:
             124.8410,
         ),
         (
-            "MultiMart Tomohon",
+            "MultiiMart Tomohon",
             "KEC-TMH-TGH",
             "KEL-TMH-PSL",
             "Jl. Raya Tomohon-Manado",
             "95431",
-            "03.444.555.6-821.002",
+            "0344455566821008",
             50000000,
             "limit",
             30,
@@ -1063,12 +1081,12 @@ def generate_partners() -> list[dict]:
             124.8390,
         ),
         (
-            "Golden Swalayan Pasar 45",
+            "Goldenn Swalayan Pasar 45",
             "KEC-MND-WNG",
             "KEL-MND-CLC",
             "Jl. Sam Ratulangi No. 12 Calaca",
             "95112",
-            "04.777.888.9-821.000",
+            "0477788899821009",
             80000000,
             "limit",
             14,
@@ -1077,12 +1095,12 @@ def generate_partners() -> list[dict]:
             124.8421,
         ),
         (
-            "Jumbo Swalayan Pasar 45",
+            "Jumbbo Swalayan Pasar 45",
             "KEC-MND-WNG",
             "KEL-MND-CLC",
             "Kawasan Pasar 45 Manado",
             "95112",
-            "05.999.000.1-821.000",
+            "0599900011821010",
             50000000,
             "limit",
             14,
@@ -1091,12 +1109,12 @@ def generate_partners() -> list[dict]:
             124.8418,
         ),
         (
-            "Jumbo Swalayan Bitung",
+            "Jumbbo Swalayan Bitung",
             "KEC-BTG-MAS",
             "KEL-BTG-BTM",
             "Jl. Sam Ratulangi Bitung Timur",
             "95521",
-            "05.999.000.1-821.002",
+            "0599900011821011",
             40000000,
             "limit",
             14,
@@ -1105,12 +1123,12 @@ def generate_partners() -> list[dict]:
             125.1880,
         ),
         (
-            "Transmart Star Square Bahu",
+            "Tranzmart Star Square Bahu",
             "KEC-MND-MLY",
             "KEL-MND-BAH",
             "Star Square Mall Bahu",
             "95115",
-            "06.222.333.4-054.000",
+            "0622233344054012",
             40000000,
             "strict",
             45,
@@ -1120,16 +1138,21 @@ def generate_partners() -> list[dict]:
         ),
     ]
     for idx, (name, dist, subdist, street, zipc, npwp, cl, cm, pt, sls, lat, lng) in enumerate(mt_accounts, start=1):
+        city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
         partners.append(
             {
                 "ref": f"CUST-MT-{idx:02d}",
                 "name": name,
                 "channel_code": "MT",
-                "tier_code": "PLATINUM",
+                "tier_code": "",
                 "district_code": dist,
                 "subdistrict_code": subdist,
                 "street": street,
+                "city": city,
+                "state": "Sulawesi Utara",
+                "country": "Indonesia",
                 "zip": zipc,
+                "phone": f"081143{idx:06d}",
                 "vat": npwp,
                 "credit_limit": cl,
                 "credit_mode": cm,
@@ -1142,157 +1165,84 @@ def generate_partners() -> list[dict]:
         )
 
     # 2. General Trade (72 Grosir & Sembako)
-    gt_samples = [
-        (
-            "Toko Sembako Berkat Pasar 45",
-            "KEC-MND-WNG",
-            "KEL-MND-CLC",
-            "Pasar 45 Calaca",
-            "95112",
-            "SLS-02",
-            1.4920,
-            124.8425,
-        ),
-        (
-            "Toko Harapan Bersehati",
-            "KEC-MND-WNG",
-            "KEL-MND-CLC",
-            "Jl. Nusantara No. 5",
-            "95112",
-            "SLS-02",
-            1.4935,
-            124.8430,
-        ),
-        (
-            "Grosir Bintang Samrat",
-            "KEC-MND-SRO",
-            "KEL-MND-SKB",
-            "Jl. Sam Ratulangi Sario",
-            "95114",
-            "SLS-02",
-            1.4720,
-            124.8315,
-        ),
-        (
-            "Grosir Krida Bahu",
-            "KEC-MND-MLY",
-            "KEL-MND-BAH",
-            "Jl. Wolter Monginsidi Bahu",
-            "95115",
-            "SLS-02",
-            1.4575,
-            124.8240,
-        ),
-        ("Grosir Tikala Baru", "KEC-MND-TKL", "KEL-MND-TKB", "Jl. Tikala Ares", "95126", "SLS-03", 1.4820, 124.8575),
-        (
-            "Toko Paal Dua Jaya",
-            "KEC-MND-PLD",
-            "KEL-MND-PLD",
-            "Jl. Yos Sudarso Paal Dua",
-            "95129",
-            "SLS-03",
-            1.4865,
-            124.8685,
-        ),
-        (
-            "Grosir Sumber Mulia Tuminting",
-            "KEC-MND-TMT",
-            "KEL-MND-TMT",
-            "Jl. Hasanuddin Tuminting",
-            "95239",
-            "SLS-03",
-            1.5045,
-            124.8495,
-        ),
-        (
-            "Toko Bintang Matuari Maesa",
-            "KEC-BTG-MAS",
-            "KEL-BTG-BTM",
-            "Kompleks Pasar Tua Maesa",
-            "95521",
-            "SLS-04",
-            1.4415,
-            125.1875,
-        ),
-        (
-            "Toko Jaya Sejahtera Tomohon",
-            "KEC-TMH-TGH",
-            "KEL-TMH-PSL",
-            "Pasar Beriman Tomohon",
-            "95431",
-            "SLS-04",
-            1.3245,
-            124.8385,
-        ),
-        (
-            "Toko Berkat Kawangkoan",
-            "KEC-MNH-KWG",
-            "KEL-MNH-SDG",
-            "Pasar Kawangkoan Sendangan",
-            "95671",
-            "SLS-04",
-            1.2175,
-            124.7885,
-        ),
-        (
-            "Toko Rezeki Tondano",
-            "KEC-MNH-TDN",
-            "KEL-MNH-RNG",
-            "Jl. Sam Ratulangi Tondano",
-            "95618",
-            "SLS-04",
-            1.3045,
-            124.9115,
-        ),
-        (
-            "Grosir Kauditan Makmur",
-            "KEC-MNT-AMD",
-            "KEL-MNT-AMA",
-            "Jl. Raya Manado-Bitung Kauditan",
-            "95371",
-            "SLS-04",
-            1.4275,
-            124.9775,
-        ),
+    gt_names = [
+        "Toko Sembako Berkat Pasar 45", "Toko Harapan Bersehati",
+        "Grosir Bintang Samrat Sario", "Grosir Krida Bahu",
+        "Grosir Tikala Baru", "Toko Paal Dua Jaya",
+        "Grosir Sumber Mulia Tuminting", "Toko Bintang Matuari Maesa",
+        "Toko Jaya Sejahtera Tomohon", "Toko Berkat Kawangkoan",
+        "Toko Rezeki Tondano", "Grosir Kauditan Makmur",
+        "Toko Kawanua Sejati Wenang", "Grosir Sinar Terang Calaca",
+        "Toko Anugerah Kasih Karombasan", "Grosir Rukun Damai Ranotana",
+        "Toko Sumber Berkat Malalayang", "Grosir Manado Raya Sario",
+        "Toko Pelita Jaya Wanea", "Grosir Makmur Abadi Tikala",
+        "Toko Berkat Melimpah Paal Dua", "Grosir Sentosa Perkasa Perkamil",
+        "Toko Surya Indah Tuminting", "Grosir Cahaya Utara Mahakeret",
+        "Toko Usaha Bersama Singkil", "Grosir Kairagi Mandiri",
+        "Toko Paniki Permai Mapanget", "Grosir Karombasan Baru",
+        "Toko Bintang Timur Ranomuut", "Grosir Bahu Sentosa",
+        "Toko Sam Ratulangi Perkasa", "Grosir Megamas Abadi",
+        "Toko Tondano Makmur Tondano", "Grosir Paslaten Mandiri Tomohon",
+        "Toko Kakaskasen Sejahtera", "Grosir Girian Indah Bitung",
+        "Toko Madidir Berkat Bitung", "Grosir Danowudu Jaya Bitung",
+        "Toko Matuari Sejati Bitung", "Grosir Airmidi Baru Minut",
+        "Toko Kalawat Berkat Minut", "Grosir Suwaan Indah Minut",
+        "Toko Kolongan Jaya Minut", "Grosir Kawangkoan Permai",
+        "Toko Sonder Sejahtera Minahasa", "Grosir Langowan Berkat",
+        "Toko Pineleng Makmur Minahasa", "Grosir Kombos Jaya Singkil",
+        "Toko Dendengan Mandiri Paal Dua", "Grosir Taas Damai Tikala",
+        "Toko Banjer Berkah Tikala", "Grosir Teling Sentosa Wanea",
+        "Toko Pakowa Sejahtera Wanea", "Grosir Tingkulu Jaya Wanea",
+        "Toko Bumi Nyiur Permai", "Grosir Malalayang Satu",
+        "Toko Batu Kota Indah", "Grosir Kleak Mandiri",
+        "Toko Winangun Berkat", "Grosir Perkamil Jaya",
+        "Toko Kairagi Satu Makmur", "Grosir Buha Indah Mapanget",
+        "Toko Bengkol Sejahtera", "Grosir Bailang Mandiri",
+        "Toko Pandu Berkah Mapanget", "Grosir Molas Pesisir",
+        "Toko Bunaken Bahari", "Grosir Tumumpa Berkat",
+        "Toko Sindulang Jaya", "Grosir Calaca Baru",
+        "Toko Pinaesaan Wenang", "Grosir Istiqlal Sentosa",
     ]
-    # Replicate GT to 72 outlets
     gt_districts = [
-        ("KEC-MND-WNG", "KEL-MND-CLC", "Wenang", "SLS-02"),
-        ("KEC-MND-SRO", "KEL-MND-SKB", "Sario", "SLS-02"),
-        ("KEC-MND-MLY", "KEL-MND-BAH", "Malalayang", "SLS-02"),
-        ("KEC-MND-WNA", "KEL-MND-WNS", "Wanea", "SLS-02"),
-        ("KEC-MND-TKL", "KEL-MND-TKB", "Tikala", "SLS-03"),
-        ("KEC-MND-PLD", "KEL-MND-PLD", "Paal Dua", "SLS-03"),
-        ("KEC-MND-TMT", "KEL-MND-TMT", "Tuminting", "SLS-03"),
-        ("KEC-MND-SKL", "KEL-MND-TMT", "Singkil", "SLS-03"),
-        ("KEC-MND-MPG", "KEL-MND-PKB", "Mapanget", "SLS-03"),
-        ("KEC-BTG-MAS", "KEL-BTG-BTM", "Bitung Maesa", "SLS-04"),
-        ("KEC-TMH-TGH", "KEL-TMH-PSL", "Tomohon", "SLS-04"),
-        ("KEC-MNH-KWG", "KEL-MNH-SDG", "Kawangkoan", "SLS-04"),
+        ("KEC-MND-WNG", "KEL-MND-CLC", "Pasar 45 Calaca", "95112", "SLS-02"),
+        ("KEC-MND-SRO", "KEL-MND-SKB", "Jl. Sam Ratulangi Sario", "95114", "SLS-02"),
+        ("KEC-MND-MLY", "KEL-MND-BAH", "Jl. Wolter Monginsidi Bahu", "95115", "SLS-02"),
+        ("KEC-MND-WNA", "KEL-MND-WNS", "Jl. Sam Ratulangi Wanea", "95117", "SLS-02"),
+        ("KEC-MND-TKL", "KEL-MND-TKB", "Jl. Tikala Ares", "95126", "SLS-03"),
+        ("KEC-MND-PLD", "KEL-MND-PLD", "Jl. Yos Sudarso Paal Dua", "95129", "SLS-03"),
+        ("KEC-MND-TMT", "KEL-MND-TMT", "Jl. Hasanuddin Tuminting", "95239", "SLS-03"),
+        ("KEC-MND-SKL", "KEL-MND-TMT", "Jl. Singkil Karame", "95231", "SLS-03"),
+        ("KEC-MND-MPG", "KEL-MND-PKB", "Jl. AA Maramis Paniki", "95258", "SLS-03"),
+        ("KEC-BTG-MAS", "KEL-BTG-BTM", "Kompleks Pasar Tua Maesa", "95521", "SLS-04"),
+        ("KEC-TMH-TGH", "KEL-TMH-PSL", "Pasar Beriman Paslaten", "95431", "SLS-04"),
+        ("KEC-MNH-KWG", "KEL-MNH-SDG", "Pasar Kawangkoan Sendangan", "95671", "SLS-04"),
+        ("KEC-MNH-TDN", "KEL-MNH-RNG", "Jl. Sam Ratulangi Tondano", "95618", "SLS-04"),
+        ("KEC-MNT-AMD", "KEL-MNT-AMA", "Jl. Raya Manado-Bitung Kauditan", "95371", "SLS-04"),
     ]
     for idx in range(1, 73):
-        if idx <= len(gt_samples):
-            name, dist, subdist, street, zip_code, sls, lat, lng = gt_samples[idx - 1]
-            t_name = name
-        else:
-            dist, subdist, dname, sls = gt_districts[(idx - 1) % len(gt_districts)]
-            t_name = f"Toko Sembako Grosir {dname} {idx:02d}"
-            street = f"Jl. Raya Niaga No. {idx * 3}"
-            zip_code = "95100"
-            lat = 1.4800 + (idx * 0.001)
-            lng = 124.8400 + (idx * 0.001)
+        t_name = gt_names[idx - 1]
+        dist, subdist, street_base, zip_code, sls = gt_districts[(idx - 1) % len(gt_districts)]
+        street = f"{street_base} No. {idx * 2}"
+        lat = 1.4800 + (idx * 0.001)
+        lng = 124.8400 + (idx * 0.001)
+        city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
+        npwp = f"08{idx:04d}1234821000"
 
         partners.append(
             {
                 "ref": f"CUST-GT-{idx:02d}",
                 "name": t_name,
                 "channel_code": "GT",
-                "tier_code": "GOLD" if idx <= 25 else "SILVER",
+                "tier_code": "",
                 "district_code": dist,
                 "subdistrict_code": subdist,
                 "street": street,
+                "city": city,
+                "state": "Sulawesi Utara",
+                "country": "Indonesia",
                 "zip": zip_code,
-                "vat": f"08.{idx:03d}.123.4-821.000",
+                "phone": f"081244{idx:06d}",
+                "vat": npwp,
                 "credit_limit": 45000000 if idx <= 25 else 25000000,
                 "credit_mode": "limit",
                 "payment_term_days": 14 if idx <= 25 else 7,
@@ -1304,6 +1254,22 @@ def generate_partners() -> list[dict]:
         )
 
     # 3. Retail Kios Canvass (260 Kios)
+    rtl_prefixes = [
+        "Kios Tante", "Warung Om", "Kios Ci", "Warung Tante", "Kios Ko",
+        "Warung", "Kios Berkat", "Kios Gloria", "Warung Kasih", "Kios Filadelfia",
+    ]
+    rtl_names_pool = [
+        "Tin", "Oce", "Utu", "Meyke", "Ferry", "Dani", "Ventje", "Novry", "Ritha",
+        "Meylan", "Hein", "Vonny", "Meiske", "Joppy", "Deasy", "Ronny", "Grace",
+        "Bobby", "Erna", "Jacky", "Lita", "Nico", "Vicky", "Yola", "Franky", "Siska",
+        "Stenly", "Wanda", "Roy", "Vera", "Pingkan", "Toar", "Lumimuut", "Engelin", "Marietje",
+    ]
+    rtl_suffixes = [
+        "Lorong 1", "Lorong 2", "Lorong 3", "Dekat Gereja", "Pintu Masuk", "Ujung Lorong",
+        "Bawah Pohon", "Perempatan", "Jalan Salib", "Pondok Damai", "Samping Lapangan",
+        "Tikungan", "Jembatan", "Kompleks", "Pasar", "Depan SD", "Dekat Mesjid", "Puncak",
+    ]
+
     for idx in range(1, 261):
         sls = "CVS-01" if idx <= 135 else "CVS-02"
         dist = (
@@ -1312,17 +1278,26 @@ def generate_partners() -> list[dict]:
             else ("KEC-MND-MLY" if idx <= 135 else ("KEC-MND-MPG" if idx <= 200 else "KEC-MNT-AMD"))
         )
         subdist = "KEL-MND-WNS" if idx <= 70 else ("KEL-MND-BAH" if idx <= 135 else "KEL-MND-PKB")
-        owner = ["Tin", "Oce", "Utu", "Meyke", "Ferry", "Dani", "Ventje", "Novry", "Ritha"][idx % 9]
+        city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
+        pfx = rtl_prefixes[(idx - 1) % len(rtl_prefixes)]
+        nm = rtl_names_pool[(idx - 1) % len(rtl_names_pool)]
+        sfx = rtl_suffixes[(idx - 1) % len(rtl_suffixes)]
+        kios_name = f"{pfx} {nm} {sfx}"
+
         partners.append(
             {
                 "ref": f"CUST-RTL-{idx:03d}",
-                "name": f"Kios Tante {owner} {idx:03d}",
+                "name": kios_name,
                 "channel_code": "RTL",
-                "tier_code": "BRONZE",
+                "tier_code": "",
                 "district_code": dist,
                 "subdistrict_code": subdist,
                 "street": f"Lorong Pemukiman RW 0{idx % 6 + 1}",
+                "city": city,
+                "state": "Sulawesi Utara",
+                "country": "Indonesia",
                 "zip": "95100",
+                "phone": f"085240{idx:06d}",
                 "vat": "",
                 "credit_limit": 1500000,
                 "credit_mode": "strict",
@@ -1337,62 +1312,62 @@ def generate_partners() -> list[dict]:
     # 4. Institusional (10 Outlet Horeka & RS)
     inst_samples = [
         (
-            "RSUP Prof. Dr. R. D. Kandou",
+            "RSUP Mandiri Sehat Malalayang",
             "KEC-MND-MLY",
             "KEL-MND-BAH",
             "Jl. Raya Tanawangko Malalayang",
             "95162",
-            "01.123.456.7-821.000",
+            "0112345678821001",
             60000000,
             30,
         ),
         (
-            "Four Points by Sheraton Manado",
+            "Hotel Teluk Manado Sario",
             "KEC-MND-SRO",
             "KEL-MND-SKB",
             "Jl. Sam Ratulangi Sario",
             "95114",
-            "02.345.678.9-821.000",
+            "0234567890821002",
             45000000,
             30,
         ),
         (
-            "Hotel Sintesa Peninsula",
+            "Hotel Sintesa Bukit Wenang",
             "KEC-MND-WNG",
             "KEL-MND-WNS",
             "Jl. Jend. Sudirman Wenang",
             "95111",
-            "03.567.890.1-821.000",
+            "0356789012821003",
             40000000,
             30,
         ),
         (
-            "Hotel Grand Puri Manado",
+            "Hotel Grand Ranotana",
             "KEC-MND-SRO",
             "KEL-MND-SKB",
             "Jl. Sam Ratulangi No. 458",
             "95114",
-            "04.789.012.3-821.000",
+            "0478901234821004",
             30000000,
             30,
         ),
         (
-            "Novotel Manado Golf Resort",
+            "Grand Resort Paniki Mapanget",
             "KEC-MND-MPG",
             "KEL-MND-PKB",
             "Grand Kawanua International City",
             "95258",
-            "05.890.123.4-821.000",
+            "0589012345821005",
             35000000,
             30,
         ),
         (
-            "RS Siloam Hospitals Manado",
+            "RS Sam Ratulangi Wenang",
             "KEC-MND-WNG",
             "KEL-MND-WNS",
             "Jl. Sam Ratulangi No. 22",
             "95111",
-            "06.901.234.5-821.000",
+            "0690123456821006",
             35000000,
             30,
         ),
@@ -1402,7 +1377,7 @@ def generate_partners() -> list[dict]:
             "KEL-MND-TKB",
             "Jl. Tikala Ares No. 8",
             "95126",
-            "07.012.345.6-821.000",
+            "0701234567821007",
             25000000,
             14,
         ),
@@ -1412,42 +1387,47 @@ def generate_partners() -> list[dict]:
             "KEL-MND-BAH",
             "Jl. Wolter Monginsidi No. 12",
             "95115",
-            "08.123.456.7-821.000",
+            "0812345678821008",
             20000000,
             14,
         ),
         (
-            "Restoran Raja Sate Megamas",
+            "Restoran Rasa Bahari Megamas",
             "KEC-MND-WNG",
             "KEL-MND-WNS",
             "Kawasan Megamas Blok 2C",
             "95111",
-            "09.234.567.8-821.000",
+            "0923456789821009",
             20000000,
             14,
         ),
         (
-            "Dapur Minahasa Tomohon",
+            "Dapur Tradisional Tomohon",
             "KEC-TMH-TGH",
             "KEL-TMH-PSL",
             "Jl. Raya Paslaten Tomohon",
             "95431",
-            "10.345.678.9-821.000",
+            "1034567890821010",
             15000000,
             14,
         ),
     ]
     for idx, (name, dist, subdist, street, zipc, npwp, cl, pt) in enumerate(inst_samples, start=1):
+        city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
         partners.append(
             {
                 "ref": f"CUST-INST-{idx:02d}",
                 "name": name,
                 "channel_code": "INST",
-                "tier_code": "GOLD",
+                "tier_code": "",
                 "district_code": dist,
                 "subdistrict_code": subdist,
                 "street": street,
+                "city": city,
+                "state": "Sulawesi Utara",
+                "country": "Indonesia",
                 "zip": zipc,
+                "phone": f"081356{idx:06d}",
                 "vat": npwp,
                 "credit_limit": cl,
                 "credit_mode": "limit",
@@ -1464,199 +1444,68 @@ def generate_partners() -> list[dict]:
 
 def generate_employees() -> list[dict]:
     """Menghasilkan roster 24 personel PT Manado Distribusi Utama."""
+    roster = [
+        ("EMP-001", "Bpk. Ronald Mongisidi", "owner", "Management", "CC-MGT", "",
+         "ronald.mongisidi@mdu-manado.co.id", "0811-432-1001"),
+        ("EMP-002", "Hendrik Polii", "branch_manager", "Management", "CC-MGT", "SIM A",
+         "hendrik.polii@mdu-manado.co.id", "0811-432-1002"),
+        ("EMP-003", "Feybe Lumempouw", "finance_lead", "Finance", "CC-FIN", "SIM A",
+         "feybe.lumempouw@mdu-manado.co.id", "0812-441-2003"),
+        ("EMP-004", "Grace Sumual", "accounting_staff", "Finance", "CC-FIN", "",
+         "grace.sumual@mdu-manado.co.id", "0813-562-2004"),
+        ("EMP-005", "Rudi Tumbelaka", "tax_staff", "Finance", "CC-FIN", "",
+         "rudi.tumbelaka@mdu-manado.co.id", "0821-883-2005"),
+        ("EMP-006", "Meike Wondal", "cashier", "Finance", "CC-FIN", "",
+         "meike.wondal@mdu-manado.co.id", "0852-401-2006"),
+        ("EMP-007", "Joni Kumajas", "sales_spv", "Sales", "CC-SALES", "SIM A",
+         "joni.kumajas@mdu-manado.co.id", "0811-432-3007"),
+        ("EMP-008", "Rivaldo Mamahit", "sales_admin_lead", "Sales", "CC-SALES", "",
+         "rivaldo.mamahit@mdu-manado.co.id", "0812-441-3008"),
+        ("EMP-009", "Priscilia Tielung", "sales_admin", "Sales", "CC-SALES", "",
+         "priscilia.tielung@mdu-manado.co.id", "0813-562-3009"),
+        ("EMP-010", "Willem Runtu", "warehouse_lead", "Warehouse", "CC-WMS", "SIM B1",
+         "willem.runtu@mdu-manado.co.id", "0811-432-4010"),
+        ("EMP-011", "Jemmy Pangaila", "staging_lead", "Warehouse", "CC-WMS", "",
+         "jemmy.pangaila@mdu-manado.co.id", "0821-883-4011"),
+        ("EMP-012", "Robby Karundeng", "picker_staff", "Warehouse", "CC-WMS", "",
+         "robby.karundeng@mdu-manado.co.id", "0852-401-4012"),
+        ("EMP-013", "Christian Wowor", "sales_mt", "Sales", "CC-SALES", "SIM A",
+         "christian.wowor@mdu-manado.co.id", "0812-441-5013"),
+        ("EMP-014", "Andre Pangemanan", "sales_to", "Sales", "CC-SALES", "SIM C & A",
+         "andre.pangemanan@mdu-manado.co.id", "0813-562-5014"),
+        ("EMP-015", "Meidy Wowor", "sales_to", "Sales", "CC-SALES", "SIM C & A",
+         "meidy.wowor@mdu-manado.co.id", "0821-883-5015"),
+        ("EMP-016", "Refly Sondakh", "sales_to", "Sales", "CC-SALES", "SIM C & A",
+         "refly.sondakh@mdu-manado.co.id", "0852-401-5016"),
+        ("EMP-017", "Novry Mandagi", "sales_canvass", "Sales", "CC-SALES", "SIM A",
+         "novry.mandagi@mdu-manado.co.id", "0812-441-5017"),
+        ("EMP-018", "Steven Lumenta", "sales_canvass", "Sales", "CC-SALES", "SIM A",
+         "steven.lumenta@mdu-manado.co.id", "0813-562-5018"),
+        ("EMP-019", "Eko Prasetyo", "driver", "Logistik", "CC-LOG", "SIM B1",
+         "eko.prasetyo@mdu-manado.co.id", "0821-883-6019"),
+        ("EMP-020", "Frits Wenas", "driver", "Logistik", "CC-LOG", "SIM B1",
+         "frits.wenas@mdu-manado.co.id", "0852-401-6020"),
+        ("EMP-021", "Stenly Rompas", "driver", "Logistik", "CC-LOG", "SIM B1",
+         "stenly.rompas@mdu-manado.co.id", "0812-441-6021"),
+        ("EMP-022", "Johan Rori", "driver", "Logistik", "CC-LOG", "SIM B2",
+         "johan.rori@mdu-manado.co.id", "0813-562-6022"),
+        ("EMP-023", "Maxi Walangitan", "helper", "Logistik", "CC-LOG", "",
+         "maxi.walangitan@mdu-manado.co.id", "0821-883-6023"),
+        ("EMP-024", "Royke Manopo", "helper", "Logistik", "CC-LOG", "",
+         "royke.manopo@mdu-manado.co.id", "0852-401-6024"),
+    ]
     return [
         {
-            "code": "EMP-001",
-            "name": "Bpk. Teddy Kolondam",
-            "role": "owner",
-            "dept": "Management",
-            "cost_center": "CC-MGT",
-            "sim": "",
-        },
-        {
-            "code": "EMP-002",
-            "name": "Hendrik Polii",
-            "role": "branch_manager",
-            "dept": "Management",
-            "cost_center": "CC-MGT",
-            "sim": "SIM A",
-        },
-        {
-            "code": "EMP-003",
-            "name": "Feybe Lumempouw",
-            "role": "finance_lead",
-            "dept": "Finance",
-            "cost_center": "CC-FIN",
-            "sim": "SIM A",
-        },
-        {
-            "code": "EMP-004",
-            "name": "Grace Sumual",
-            "role": "accounting_staff",
-            "dept": "Finance",
-            "cost_center": "CC-FIN",
-            "sim": "",
-        },
-        {
-            "code": "EMP-005",
-            "name": "Rudi Tumbelaka",
-            "role": "tax_staff",
-            "dept": "Finance",
-            "cost_center": "CC-FIN",
-            "sim": "",
-        },
-        {
-            "code": "EMP-006",
-            "name": "Meike Wondal",
-            "role": "cashier",
-            "dept": "Finance",
-            "cost_center": "CC-FIN",
-            "sim": "",
-        },
-        {
-            "code": "EMP-007",
-            "name": "Joni Kumajas",
-            "role": "sales_spv",
-            "dept": "Sales",
-            "cost_center": "CC-SALES",
-            "sim": "SIM A",
-        },
-        {
-            "code": "EMP-008",
-            "name": "Rivaldo Mamahit",
-            "role": "sales_admin_lead",
-            "dept": "Sales",
-            "cost_center": "CC-SALES",
-            "sim": "",
-        },
-        {
-            "code": "EMP-009",
-            "name": "Priscilia Tielung",
-            "role": "sales_admin",
-            "dept": "Sales",
-            "cost_center": "CC-SALES",
-            "sim": "",
-        },
-        {
-            "code": "EMP-010",
-            "name": "Willem Runtu",
-            "role": "warehouse_lead",
-            "dept": "Warehouse",
-            "cost_center": "CC-WMS",
-            "sim": "SIM B1",
-        },
-        {
-            "code": "EMP-011",
-            "name": "Jemmy Pangaila",
-            "role": "staging_lead",
-            "dept": "Warehouse",
-            "cost_center": "CC-WMS",
-            "sim": "",
-        },
-        {
-            "code": "EMP-012",
-            "name": "Robby Karundeng",
-            "role": "picker_staff",
-            "dept": "Warehouse",
-            "cost_center": "CC-WMS",
-            "sim": "",
-        },
-        {
-            "code": "EMP-013",
-            "name": "Christian Wowor",
-            "role": "sales_mt",
-            "dept": "Sales",
-            "cost_center": "CC-SALES",
-            "sim": "SIM A",
-        },
-        {
-            "code": "EMP-014",
-            "name": "Andre Pangemanan",
-            "role": "sales_to",
-            "dept": "Sales",
-            "cost_center": "CC-SALES",
-            "sim": "SIM C & A",
-        },
-        {
-            "code": "EMP-015",
-            "name": "Meidy Wowor",
-            "role": "sales_to",
-            "dept": "Sales",
-            "cost_center": "CC-SALES",
-            "sim": "SIM C & A",
-        },
-        {
-            "code": "EMP-016",
-            "name": "Refly Sondakh",
-            "role": "sales_to",
-            "dept": "Sales",
-            "cost_center": "CC-SALES",
-            "sim": "SIM C & A",
-        },
-        {
-            "code": "EMP-017",
-            "name": "Novry Mandagi",
-            "role": "sales_canvass",
-            "dept": "Sales",
-            "cost_center": "CC-SALES",
-            "sim": "SIM A",
-        },
-        {
-            "code": "EMP-018",
-            "name": "Steven Lumenta",
-            "role": "sales_canvass",
-            "dept": "Sales",
-            "cost_center": "CC-SALES",
-            "sim": "SIM A",
-        },
-        {
-            "code": "EMP-019",
-            "name": "Eko Prasetyo",
-            "role": "driver",
-            "dept": "Logistik",
-            "cost_center": "CC-LOG",
-            "sim": "SIM B1",
-        },
-        {
-            "code": "EMP-020",
-            "name": "Frits Wenas",
-            "role": "driver",
-            "dept": "Logistik",
-            "cost_center": "CC-LOG",
-            "sim": "SIM B1",
-        },
-        {
-            "code": "EMP-021",
-            "name": "Stenly Rompas",
-            "role": "driver",
-            "dept": "Logistik",
-            "cost_center": "CC-LOG",
-            "sim": "SIM B1",
-        },
-        {
-            "code": "EMP-022",
-            "name": "Johan Rori",
-            "role": "driver",
-            "dept": "Logistik",
-            "cost_center": "CC-LOG",
-            "sim": "SIM B2",
-        },
-        {
-            "code": "EMP-023",
-            "name": "Maxi Walangitan",
-            "role": "helper",
-            "dept": "Logistik",
-            "cost_center": "CC-LOG",
-            "sim": "",
-        },
-        {
-            "code": "EMP-024",
-            "name": "Royke Manopo",
-            "role": "helper",
-            "dept": "Logistik",
-            "cost_center": "CC-LOG",
-            "sim": "",
-        },
+            "code": c,
+            "name": n,
+            "role": r,
+            "dept": d,
+            "cost_center": cc,
+            "sim": s,
+            "work_email": em,
+            "work_phone": ph,
+        }
+        for c, n, r, d, cc, s, em, ph in roster
     ]
 
 
