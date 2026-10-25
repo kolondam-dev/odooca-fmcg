@@ -198,3 +198,12 @@
 - Menyusun dokumen komprehensif docs/reviews/AUDIT_AND_RECONSTRUCTION_PLAN_2026-10-25.md dan memperbarui docs/HANDOFF.md.
 - Membuat cabang kerja terisolasi agen/rekonstruksi-seed-audit berbasis origin/main.
 - Task managed by antigravity-agent at 2026-10-25T18:35:00+07:00
+
+[2026-10-25T19:08:00+07:00] [INFO] Penyelesaian Task 1 & Task 2: Native Model id_base, Geo Sulut, Customer Registry, PJP Model, dan Local Ledger Verifikasi
+- Task 1: Audit model id_base, tambahkan dependensi modul native base_geolocalize pada __manifest__.py untuk menjamin dukungan native partner_latitude dan partner_longitude di res.partner tanpa custom fields berlebih.
+- Task 2: Master Geospasial Sulut (data/geo/): Poligon Provinsi 71, 15 Kab/Kota lengkap se-Sulut, 18 kecamatan operasional, dan kelurahan pusat bisnis.
+- Task 2: Master Customer Register & PJP Schedule (data/registers/): 354 outlet (12 MT, 72 GT, 260 RTL, 10 INST) dengan alamat terestrial jalan riil di Manado & Minahasa Raya, koordinat anti-tenggelam, eliminasi mismatch nama toko vs kecamatan, pembagian rute PJP (F1 Weekly, F2 Bi-weekly, F4 Monthly), dan pentahapan pembukaan toko (cohort).
+- Task 2: Sinkronisasi FMCG Seed (scripts/generate_fmcg_seed.py): Menghasilkan partners_354.csv yang 100% konsisten dengan customer registry, menyertakan carton_barcode GS1 prefix 1 dan dimensi fisik karton di products_150.csv.
+- Local Day-to-Day Financial Ledger & Auditor (data/registers/historical_ledger_day_to_day.* & scripts/ops/verify_ledger.py): Menilai secara lokal seluruh rantai transaksi 116 hari (PO -> Stok -> SO -> DO -> Invoice -> Return -> Collection -> OPEX -> AP); membuktikan 100% invarian narasi bisnis terpenuhi (Juli 5.5 BIO net margin 0.90% & overstok puncak 107.4%, Agustus drop -23% margin 2.50%, September margin 3.70%, Oktober 5.30 BIO margin 5.00%).
+- Verifikasi ruff check (All checks passed!) dan check_manifests.py (4 addon ok).
+- Task managed by antigravity at 2026-10-25T19:08:00+07:00

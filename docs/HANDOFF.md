@@ -1,5 +1,32 @@
 # HANDOFF
 
+## 2026-10-25 — antigravity agent (Penyelesaian Task 1 & Task 2: Native Model id_base, Geo Sulut, Customer Registry, PJP Model, dan Local Ledger Verifikasi)
+**Berubah:**
+- `addons/id_base/__manifest__.py`:
+  - Menambahkan dependensi `base_geolocalize` bawaan core Odoo agar field `partner_latitude` dan `partner_longitude` pada `res.partner` terjamin selalu native tanpa custom field berlebih.
+- Master Poligon Geospasial Sulawesi Utara (`data/geo/` & `scripts/generate_sulut_geojson.py`):
+  - Membuat GeoJSON valid: `sulut_provinsi.geojson` (Provinsi 71), `sulut_kab_kota.geojson` (15 Kabupaten/Kota lengkap se-Sulut tanpa sampling), `sulut_districts.geojson` (18 kecamatan operasional kunci), dan `sulut_villages.geojson` (kelurahan pusat niaga).
+- Master Customer Register 354 Outlet & PJP Schedule (`data/registers/` & `scripts/generate_customer_registry_and_pjp.py`):
+  - `customer_registry_354.json` & `.csv`: 354 outlet (12 MT, 72 GT, 260 RTL, 10 INST) dengan alamat terestrial jalan riil di Manado & Minahasa Raya, kode pos akurat, koordinat anti-tenggelam terikat daratan koridor jalan, eliminasi tuntas mismatch semantik toko vs kecamatan, dan pentahapan pembukaan toko (*cohort date*: Juli 177, Agustus 198, Sept 226, Okt 354).
+  - `pjp_schedule_354.json` & `.csv`: Pola call PJP best practice (F1 Weekly untuk MT & GT besar, F2 Bi-weekly untuk GT reguler & retail utama, F4 Monthly untuk rural) disinkronkan dengan rute pengiriman armada delivery H+1.
+- Sinkronisasi Master FMCG Seed (`scripts/generate_fmcg_seed.py`):
+  - Menjadikan register 354 customer sebagai sumber kebenaran tunggal (*Single Source of Truth*), menghasilkan `data/seed/partners_354.csv` yang 100% konsisten.
+  - Menambahkan `carton_barcode` (GS1 prefix 1) dan dimensi karton lengkap ke `data/seed/products_150.csv`.
+  - Memperbarui `data/seed/historical_simulation_summary.json` agar selaras dengan metrik omset dan okupansi gudang riil.
+- Local Day-to-Day Financial Ledger & Auditor (`data/registers/historical_ledger_day_to_day.*` & `scripts/ops/verify_ledger.py`):
+  - Ledger harian 116 hari (1 Juli - 24 Oktober 2026) merekam seluruh siklus bisnis: PO -> Inbound Stock -> SO -> DO Delivery -> Invoicing AR -> Return -> Collection -> OPEX Beban -> AP Pembayaran Hutang.
+  - Skrip auditor `scripts/ops/verify_ledger.py` membuktikan 100% invarian bisnis terpenuhi: Omset Juli Rp 5.5 BIO (net margin 0.90%, okupansi gudang puncak 107.4% terverifikasi pada 10 Juli), Agustus Rp 4.235 BIO (-23%, margin 2.50%), September Rp 3.96 BIO (-6.5%, margin 3.70%), Oktober Rp 5.30 BIO (margin 5.00%). Saldo kas, stok, AR, dan AP tidak pernah negatif.
+- Log: `agent-log/anti-gravity.log`.
+
+**Diverifikasi (bagaimana):**
+- `python scripts/ops/verify_ledger.py`: `[SUKSES] SEMUA 100% INVARIAN FINANSIAL, OPERASIONAL, & LOGISTIK TERPENUHI!`.
+- `python -m ruff check .`: `All checks passed!`.
+- `python scripts/check_manifests.py`: `manifest ok: 4 addon (id_base, id_ui, id_ui_form, id_ui_shell)`.
+- `python scripts/generate_fmcg_seed.py`: Menghasilkan 4 principal, 150 produk, 354 partner konsisten, 24 karyawan, dan 9 armada tanpa error.
+
+**Menunggu / Langkah Berikutnya:**
+- Melanjutkan ke Task 3 (Loader Master Odoo dengan akun `res.users` salesman, packaging karton, dan UoM FMCG) dan Task 4 (Pengisian data simulasi transaksi historis ke Odoo berdasarkan ledger harian yang sudah tervalidasi).
+
 ## 2026-10-25 — antigravity agent (Audit Drift Eksekusi Demo Data & Rencana Rekonstruksi Komprehensif)
 **Berubah:**
 - `docs/reviews/AUDIT_AND_RECONSTRUCTION_PLAN_2026-10-25.md`:

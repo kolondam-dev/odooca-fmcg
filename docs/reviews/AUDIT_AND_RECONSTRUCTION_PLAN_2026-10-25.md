@@ -17,8 +17,12 @@
    - Dinamika Oktober (MTD s/d 24 Okt): Pertumbuhan pesat mencapai 5.3 BIO IDR, potensi closing net margin 5%, manajemen gudang efisien, perputaran stok FEFO terjaga, PJP dan fulfillment logistik optimal.
    - Integritas Transaksi: Subtotal line item harus sinkron sempurna dengan total header (`qty * fraction * price == line subtotal == invoice header`).
    - Pertumbuhan Outlet Bertahap: Customer baru yang muncul karena ekspansi coverage harus terdistribusi sesuai periodenya (*cohort date*), tidak boleh terdaftar serentak di awal Juli.
-4. **Dokumentasi & Disiplin Multi-Agen:** Dokumentasikan seluruh perintah, temuan audit, dan rencana aksi ke file terstruktur, rujuk di `docs/HANDOFF.md` dan `agent-log/anti-gravity.log`.
-5. **Manajemen Git:** Eksekusi dilakukan bertahap pada cabang tersendiri (`agen/rekonstruksi-seed-audit`), commit terpisah per milestone task, push dan merge diajukan setelah tervalidasi menyeluruh.
+4. **Register Master Customer & Koordinat:** Alamat dan koordinat lat/long 354 outlet diarsipkan dalam register resmi di repo (`data/registers/customer_registry_354.json` / `.csv`).
+5. **Master Poligon Geospasial Sulawesi Utara:** Menambahkan dataset poligon GeoJSON level Provinsi (71), 15 Kabupaten/Kota, Kecamatan operasional, dan Kelurahan kunci di Sulawesi Utara (`data/geo/`).
+6. **Modelling PJP Best Practice:** Memodelkan PJP yang efisien dengan segregasi channel, rasio kunjungan terukur (Daily, Weekly, Bi-weekly, Monthly), dan sinkronisasi rute pengiriman H+1.
+7. **Simulasi Finansial & Operasional Lokal (Day-to-Day Ledger):** Menilai seluruh rantai transaksi (PO -> Inbound Stock -> Sales Order -> DO Delivery -> Invoicing AR -> Return -> Collection -> Expenses OPEX -> Payables AP) terlebih dahulu di lingkungan lokal melalui ledger harian presisi dan skrip verifikasi Python (`scripts/ops/verify_ledger.py`) sebelum diinjeksikan ke Odoo.
+8. **Dokumentasi & Disiplin Multi-Agen:** Dokumentasikan seluruh perintah, temuan audit, dan rencana aksi ke file terstruktur, rujuk di `docs/HANDOFF.md` dan `agent-log/anti-gravity.log`.
+9. **Manajemen Git:** Eksekusi dilakukan bertahap pada cabang tersendiri (`agen/rekonstruksi-seed-audit`), commit terpisah per milestone task, push dan merge diajukan setelah tervalidasi menyeluruh.
 
 ---
 
@@ -87,26 +91,38 @@ flowchart TD
 3. **Model Partner & User (`res.partner`, `res.users`, `hr.employee`):**
    - Sinkronkan kode salesman: buat akun `res.users` untuk peran Sales TO, Sales Canvass, dan Sales MT, lalu tautkan ke `hr.employee` dan outlet binaannya di `res.partner.user_id`.
 
-### Task 2: Rekonstruksi Generator Master Data (`generate_fmcg_seed.py`)
-1. **Eliminasi Mismatch Geografis:** Cocokkan nama toko dengan kecamatan aslinya (toko Tomohon di Kec. Tomohon Tengah/Utara/Selatan, toko Kawangkoan di Minahasa, toko Bitung di Bitung).
-2. **Distribusi Realistis 260 Kios Retail:** Sebar 260 kios secara proporsional ke 18 kecamatan di Sulawesi Utara (Manado, Bitung, Tomohon, Minahasa, Minut, Minsel).
-3. **Kerapihan Kontak & Legalitas:** Terapkan pengacakan string yang natural dan on-purpose untuk brand/partner tanpa merusak keterbacaan demo.
-4. **Kelengkapan Dimensi Produk & Karton:** Simpan metadata dimensi karton dan konversi inner/fraction secara terstruktur di CSV.
+### Task 2: Master Dataset FMCG, Customer Register, Geo Polygons, & PJP Model
+1. **Master Poligon Geospasial Sulawesi Utara (`data/geo/`):**
+   - Menyediakan GeoJSON valid untuk batas Provinsi Sulut (71), 15 Kabupaten/Kota lengkap tanpa sampling, 18 kecamatan operasional, dan kelurahan pusat bisnis.
+2. **Register Master Customer & Koordinat (`data/registers/customer_registry_354.json` & `.csv`):**
+   - Eliminasi mismatch geografis (Toko Tomohon tepat di Tomohon, Kawangkoan di Minahasa, Bitung di Bitung).
+   - Sebar 260 kios secara proporsional ke 18 kecamatan di Sulut dengan jalan, kode pos, dan koordinat terikat daratan koridor jalan.
+   - Tetapkan tanggal aktif (*cohort date*) pembukaan toko (Juli: 50% = 177 outlet, Agustus: +6% = 21 outlet, Sept: +8% = 28 outlet, Okt: 128 outlet s/d 354).
+3. **Modelling PJP Best Practice (`data/registers/pjp_schedule_354.json` & `.csv`):**
+   - Frekuensi panggilan rasional: F1 (Weekly) untuk 12 MT & 25 GT besar; F2 (Bi-weekly) untuk GT sedang & retail utama; F4 (Monthly) untuk rural.
+   - Segregasi channel per salesman dan keterkaitan jadwal delivery H+1 oleh armada logistik.
+4. **Dataset Master Produk FMCG (`data/seed/products_150.csv`):**
+   - Dimensi fisik lengkap Pcs dan Karton (L/W/H, CBM, Kg) dan rasio konversi unit dinamis.
 
 ### Task 3: Pembaruan Loader Master Odoo (`load_fmcg_seed.py`)
 1. Setup UoM resmi dan packaging produk lengkap dengan dimensi karton.
 2. Setup user sales dan mapping otomatis ke partner outlet.
 3. Pastikan loader berjalan idempoten, tanpa exception pasif, dan melaporkan ringkasan validasi yang jujur.
 
-### Task 4: Rekonstruksi Penuh Simulasi Historis Transaksi (`generate_historical_simulation.py`)
-1. **Perbaiki Crash:** Hapus referensi `tier_code` dan sinkronkan dengan skema master baru.
-2. **Kalender Operasional 6 Hari Kerja:** Terapkan hari kerja **Senin s/d Sabtu** (Minggu dan libur resmi off).
-3. **Konsistensi Matematika 100%:** Pastikan `subtotal_line = qty * unit_price` dan `sum(subtotal_lines) == header_amount` pada seluruh 3.700+ transaksi.
-4. **Pertumbuhan Outlet Bertahap (Cohort):** Outlet bertambah sesuai narasi: Juli 50% coverage, bertambah di Agustus, September, dan Oktober.
-5. **Kausalitas Narasi Bisnis:** Sinkronkan target Juli 5.5 BIO (overstok & diskon tinggi), Agustus drop 23% (flushing), September ekspansi sehat, Oktober 5.3 BIO MTD.
+### Task 4: Rekonstruksi Penuh Simulasi Historis Transaksi & Ledger Lokal
+1. **Local Day-to-Day Financial & Operational Ledger (`data/registers/historical_ledger_day_to_day.json`):**
+   - Menilai secara lokal seluruh siklus harian (1 Juli s/d 24 Oktober 2026): Inbound PO -> Warehouse Stock -> Sales Order -> DO Delivery -> Invoicing AR -> Return -> Collection -> OPEX Expenses -> AP Payables.
+   - Skrip verifikasi mandiri: `scripts/ops/verify_ledger.py` untuk mengaudit seluruh invarian finansial harian (Gross, Diskon, COGS, Net Margin, Kas, Piutang, Hutang, Okupansi Gudang).
+2. **Skrip Generator Simulasi Odoo (`generate_historical_simulation.py`):**
+   - Menghapus dependensi `tier_code` (perbaiki crash).
+   - Menerapkan kalender kerja operasional **Senin s/d Sabtu (6 hari kerja)**.
+   - Sinkronisasi matematika 100%: `subtotal_line = qty * unit_price` dan `sum(subtotal) == header`.
+   - Menyelaraskan dinamika narasi: Juli 5.5 BIO (overstok 10 BIO), Agustus drop 23%, September margin 3.7%, Oktober 5.3 BIO MTD.
 
 ### Task 5: Validasi, Pengujian, & Penyusunan PR
-1. Jalankan `ruff check .` dan `python scripts/check_manifests.py`.
-2. Validasi generator dan pastikan seluruh CSV seed ter-generate tanpa peringatan/galat.
-3. Catat di `agent-log/anti-gravity.log` dan `docs/HANDOFF.md`.
-4. Ajukan PR untuk ditinjau dan di-merge oleh pemilik repo.
+1. Jalankan `python scripts/ops/verify_ledger.py` untuk membuktikan integritas ledger lokal.
+2. Jalankan `ruff check .` dan `python scripts/check_manifests.py`.
+3. Validasi generator dan pastikan seluruh CSV seed ter-generate tanpa peringatan/galat.
+4. Catat di `agent-log/anti-gravity.log` dan `docs/HANDOFF.md`.
+5. Ajukan PR untuk ditinjau dan di-merge oleh pemilik repo.
+
