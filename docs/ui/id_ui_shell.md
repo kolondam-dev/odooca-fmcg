@@ -6,16 +6,13 @@ Berdampingan dengan tata letak klasik; dipilih per pengguna lewat menu pengguna
 
 ## Susunan layar (tata letak sidebar)
 - **Sidebar** (kiri): hanya daftar aplikasi. Item aktif persegi dan selebar sidebar sehingga menyambung
-  ke panel/isi. Scrollbar selalu tersembunyi (tetap bisa di-scroll), jadi lebar item tidak berubah
-  saat hover. Judul = wordmark resmi Odoo (`/web/static/img/odoo_logo.svg`, warna bawaan) + kotak
-  "FMCG" (token `--id-brand-box`). Logo `oi-odoo` dengan glow dan gerak tipis saat hover (mati bila
-  `prefers-reduced-motion`).
-- **Ikon aplikasi**: ikon bawaan Odoo tanpa latar. Diam = duo-tone (biru transparan + putih) lewat filter
-  SVG `feColorMatrix` yang dihitung peramban (tanpa aset tambahan); hover/fokus/terpilih = warna asli
-  Odoo (crossfade halus) dengan glow putih tipis. Filter dipasang inline di template karena pipeline
-  aset menulis ulang `url(#...)` di SCSS.
-- **Topbar**: pencarian menu global di kiri (command palette bawaan, awalan `/`), judul besar =
-  aplikasi aktif di kanan, lalu systray, nama dan role pengguna. Polos: tanpa garis bawah, tanpa tab seksi.
+  ke panel/isi. Scrollbar selalu tersembunyi (tetap bisa di-scroll). Judul = saat terbuka tampil "Odoo FMCG"
+  (wordmark resmi Odoo + kotak "FMCG" sudut tegas tanpa rounded, font tipis elegan). Saat ciut = ikon "O"
+  (`oi-odoo`) besar tanpa background pill (putih saat diam, ungu Odoo `#714B67` dengan animasi & glow tipis saat hover/click).
+- **Ikon aplikasi**: ikon bawaan Odoo tanpa latar. Diam = duo-tone (biru transparan + putih); hover/fokus/terpilih =
+  berubah ke warna normal bawaan Odoo secara bersih tanpa animasi pembesaran dan tanpa glow.
+- **Topbar**: pencarian menu di kiri dengan sudut rounded diperkecil (4px); judul halaman aktif persis di tengah
+  (align center) dengan tipografi seimbang; area kanan (systray) dilengkapi divider tipis vertikal antar-ikon (dari discuss hingga profil user). Polos: tanpa garis bawah, tanpa tab seksi.
 - **Panel seksi** (kiri isi): seksi > sub-seksi > sub dari menu aplikasi aktif, bisa diciutkan
   (tombol atau `Alt+P`), lebar 208px, font kecil. Menu aktif cukup tebal tanpa latar. Sub-seksi
   tertutup kecuali dilalui menu aktif. Menu aktif dikenali dari

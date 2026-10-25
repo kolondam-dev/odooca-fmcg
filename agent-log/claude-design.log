@@ -22,3 +22,12 @@
 - Diverifikasi di Odoo f4378f29: 0 failed dari 7 uji; ruff dan check_manifests lolos; smoke Playwright 24/24 (ditambah duo-tone, lebar menu saat hover, urutan cari/judul, menu panel aktif tebal tanpa latar).
 - Belum diuji: stack OCA penuh, docker build/Railway, CI, browser selain Chromium, mobile. Keputusan terbuka: wordmark Odoo berwarna bawaan (ungu/abu) di atas navy kurang kontras; tersedia varian putih odoo_logo_dark.svg.
 - Task managed by claude-design agent at 2026-10-25T08:17:27+07:00
+
+[2026-10-25T03:51:28+00:00] [INFO] UI refinement v4: logo O tanpa pill, FMCG sudut tegas, topbar rata tengah, divider systray
+- Hilangkan background pill logo O: saat terbuka tampil Odoo FMCG; saat ciut tampil O besar putih yang berubah ke ungu Odoo saat hover/click dengan glow dan animasi halus
+- FMCG brandbox sudut tegas (tanpa rounded) dengan tipografi tipis elegan
+- Ikon menu sidebar berubah ke warna normal tanpa animasi zoom atau glow saat hover
+- Searchbox topbar diperkecil sudut roundednya (4px)
+- Judul halaman diposisikan persis di tengah (align center) dengan font seimbang
+- Systray kanan dilengkapi divider tipis vertikal antar-ikon
+- Task managed by claude-design agent at 2026-10-25T03:51:28+00:00

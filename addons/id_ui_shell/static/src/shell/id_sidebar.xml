@@ -13,7 +13,10 @@
                 </filter>
             </svg>
             <div class="id_sidebar__head">
-                <span class="id_sidebar__logo" aria-hidden="true"><i class="oi oi-odoo"/></span>
+                <span class="id_sidebar__logo" title="Odoo (Alt+B)" aria-label="Odoo"
+                      t-on-click="() => shellService.toggleCollapsed()">
+                    <i class="oi oi-odoo"/>
+                </span>
                 <span class="id_sidebar__title">
                     <img class="id_wordmark" src="/web/static/img/odoo_logo.svg" alt="Odoo"/>
                     <span class="id_brandbox">FMCG</span>
