@@ -149,3 +149,9 @@
 - Gunakan p.write untuk penugasan partner_id
 - Tambahkan guard account.payment.term dan lookup term yang aman
 - Task managed by antigravity-agent at 2026-10-25T07:57:02+00:00
+
+[2026-10-25T08:05:53+00:00] [INFO] Disable VAT validation on seed partners & robust packaging fallback
+- Tambahkan no_vat_validation=True dan tracking_disable=True pada res.partner
+- Amankan relasi variant packaging dan field filtering vendor
+- Tampilkan trace detail saat kegagalan loader
+- Task managed by antigravity-agent at 2026-10-25T08:05:53+00:00

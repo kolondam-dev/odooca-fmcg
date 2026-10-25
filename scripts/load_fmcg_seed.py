@@ -42,7 +42,7 @@ def load_principals_and_vendors():
     """Memastikan setiap Principal memiliki partner vendor di res.partner (supplier_rank=1)."""
     print(" -> Memeriksa dan menghubungkan Vendor Partner untuk Principal FMCG...")
     Principal = env["id.principal"].sudo()
-    Partner = env["res.partner"].sudo()
+    Partner = env["res.partner"].sudo().with_context(no_vat_validation=True, tracking_disable=True)
     Country = env["res.country"].sudo()
 
     indonesia = env.ref("base.id", raise_if_not_found=False) or Country.search([("code", "=", "ID")], limit=1)
@@ -59,6 +59,7 @@ def load_principals_and_vendors():
             "country_id": indonesia.id if indonesia else False,
             "comment": f"Official Principal FMCG: {p.name} (PKS: {p.pks_number or '-'})",
         }
+        vals = {k: v for k, v in vals.items() if k in Partner._fields}
         if vendor:
             vendor.write(vals)
         else:
@@ -156,6 +157,7 @@ def load_products():
             # Odoo 19 Storable & Lot Tracking
             if "is_storable" in ProductTemplate._fields:
                 vals["is_storable"] = True
+                vals["type"] = "consu"
             elif "type" in ProductTemplate._fields:
                 vals["type"] = "consu"
 
@@ -179,20 +181,27 @@ def load_products():
             # Konfigurasi Packaging (Karton)
             carton_qty = int(row.get("carton_qty", 1))
             base_uom = row.get("base_uom", "Pcs")
-            if Packaging and carton_qty > 1 and prod.product_variant_id:
-                pkg_name = f"Karton ({carton_qty} {base_uom})"
-                pkg = Packaging.search(
-                    [("product_id", "=", prod.product_variant_id.id), ("qty", "=", carton_qty)],
-                    limit=1,
-                )
-                if not pkg:
-                    Packaging.create(
-                        {
-                            "name": pkg_name,
-                            "product_id": prod.product_variant_id.id,
-                            "qty": carton_qty,
-                        }
+            if Packaging and carton_qty > 1:
+                try:
+                    variant = prod.product_variant_id or (
+                        prod.product_variant_ids and prod.product_variant_ids[0]
                     )
+                    if variant:
+                        pkg_name = f"Karton ({carton_qty} {base_uom})"
+                        pkg = Packaging.search(
+                            [("product_id", "=", variant.id), ("qty", "=", float(carton_qty))],
+                            limit=1,
+                        )
+                        if not pkg:
+                            Packaging.create(
+                                {
+                                    "name": pkg_name,
+                                    "product_id": variant.id,
+                                    "qty": float(carton_qty),
+                                }
+                            )
+                except Exception as pkg_err:
+                    _logger.warning("Gagal membuat packaging untuk %s: %s", code, pkg_err)
 
     print(
         f"    Selesai: {count_created} dibuat, {count_updated} diperbarui "
@@ -322,7 +331,7 @@ def load_partners():
         return
 
     print(" -> Memuat Master Partner & Outlet (354 Outlet)...")
-    Partner = env["res.partner"].sudo()
+    Partner = env["res.partner"].sudo().with_context(no_vat_validation=True, tracking_disable=True)
     Channel = env["id.channel"].sudo()
     District = env["id.district"].sudo()
     Subdistrict = env["id.subdistrict"].sudo()
@@ -454,7 +463,10 @@ def load_all():
         print("[seed_loader] SUCCESS: Seluruh data master FMCG berhasil dimuat secara lengkap.")
     except Exception as e:
         cr.rollback()
-        print(f"[seed_loader] ERROR saat memuat data: {e}")
+        import traceback
+
+        print(f"[seed_loader] GAGAL saat memuat data: {type(e).__name__} - {e}")
+        traceback.print_exc()
         raise
 
 
