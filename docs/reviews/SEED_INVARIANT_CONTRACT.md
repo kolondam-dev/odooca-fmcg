@@ -90,3 +90,39 @@ EVENT-ORDER 331, LOT-BALANCE 770. Angka adalah jumlah kejadian, bukan unique def
 Laporan JSON CI menjadi daftar kerja worker. Belum ada perbaikan data bisnis atau
 injeksi Odoo oleh supervisor. Draft PR gate tetap merah sampai dataset dibenahi;
 merah ini tidak boleh diganti klaim selesai melalui dokumen.
+
+## Penutupan gate supervisor (2026-10-26)
+Job wajib `seed-invariants` menjalankan **dua** pemeriksa independen:
+`verify_seed_invariants.py` dan `verify_seed_acceptance.py`. Keduanya harus PASS;
+artifact memuat `invariant-report.json` dan `acceptance-report.json`, masing-masing
+terikat commit dan SHA-256 input LF kanonikal. Pemeriksa kedua tidak mengimpor atau
+menjalankan generator transaksi/laporan. Jalankan lokal:
+
+```bash
+python scripts/ops/verify_seed_acceptance.py --report /tmp/acceptance-report.json
+```
+
+- AP: expected payment per PO diturunkan dari `ap_payment_date`, `due_date`,
+  `total_dpp` dan principal pada header sumber, bukan total bulanan konstan.
+  Alokasi pembayaran boleh beberapa baris pada tanggal yang dijadwalkan, dengan
+  ID unik dan jumlah kumulatif tepat. Perubahan jadwal harus eksplisit di sumber.
+- Ledger: multiset event harus identik dengan opening/receipt/SO/DO/rejection
+  sumber pada tingkat tanggal, jenis, referensi, SKU, lot, qty dan tiga impact.
+  Event hilang/berlebih, ID duplikat, referensi fiktif dan impact salah ditolak.
+  Replay memeriksa physical/reserved/quarantine, available, cost dan volume harian.
+- Report: seluruh field numerik tujuh bagian laporan, persentase dan tanggal
+  closing diperiksa ulang. Identitas set 15 fingerprint wajib lengkap.
+  Accepted COGS berasal dari biaya lot sumber dikurangi quarantine; cash + discount
+  + open AR direkonsiliasi pada DPP dan total faktur, serta AP paid + open AP.
+- Kontrak saat ini: periode 1–31 Juli 2026; dokumen Agustus merupakan carry-forward,
+  bukan event fisik Juli. AR mendukung satu pelunasan penuh per invoice. Pembayaran
+  parsial AR memerlukan perluasan schema, aturan dan tes, bukan bypass validator.
+  Nilai pajak tetap berasal dari dataset dan pemeriksa dasar; perubahan konfigurasi
+  pajak harus disertai bukti sumber dan pengujian sendiri.
+- Tes `test_seed_acceptance.py` memakai salinan snapshot repo yang terisolasi;
+  hash diperbarui setelah mutasi sumber untuk membuktikan gate memeriksa kausalitas,
+  bukan sekadar menemukan checksum usang. CI `test_*.py` menjalankan seluruh tes.
+
+PASS artefak lokal tidak membuktikan loader, backdating, upgrade, GL atau runtime
+Odoo. Checklist runtime terdahulu tetap berlaku. Perluasan periode/schema wajib
+mengubah kontrak dan tes secara eksplisit; jangan menambah allowlist baseline.

@@ -302,8 +302,8 @@ def validate(root, sizes=(354, 150)):
             fail("EVENT-ORDER", pid, f"payment date {row['payment_date']} before PO order date {header['order_date']}")
         ap_paid_total += paid_dpp
 
-    if sizes == (354, 150):
-        equal("AP-RECON", "JULY_AP_TOTAL", ap_paid_total, "6597474800.00")
+    # Source-derived per-PO schedule and cumulative coverage are enforced by
+    # verify_seed_acceptance.py in the same required CI job; no fixed AP total.
 
     # 2. Validasi Beban Operasional & Penggajian (OPEX Invariants)
     opex_rows = read("data/registers/perpetual_opex_payroll.csv")

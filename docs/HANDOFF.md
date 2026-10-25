@@ -1,5 +1,19 @@
 # HANDOFF
 
+## 2026-10-26 — codex agent — Penutupan tiga celah gate supervisi
+**Basis:** PR #15 `fae5835`, tanpa modifikasi generator atau dataset.
+**Berubah:** pemeriksa independen `verify_seed_acceptance.py`; sumber AP per PO,
+referensi/coverage dan replay ledger, seluruh agregat laporan/AR/AP/valuasi.
+Job `seed-invariants` mewajibkan kedua validator dan menyimpan dua JSON diagnostics.
+Total AP hardcoded pada validator lama dihapus; kewajiban dihitung dari PO sumber.
+**Diverifikasi:** 72 tests (termasuk 28 acceptance tests dan subtest setiap field
+laporan); kedua validator PASS pada snapshot anti-gravity. Kasus lama laba nol,
+AP salah jadwal dan dokumen ledger fiktif kini ditolak, termasuk setelah rehash.
+**Batas:** penerimaan artefak Juli, AR full settlement satu baris per invoice;
+carry-forward Agustus bukan bukti execution Agustus. Runtime Odoo belum diuji.
+**Menunggu:** review dan CI branch supervisor, integrasi melalui PR menuju
+`agen/fix-seed-invariants` sebelum penerimaan final PR #15. Pemilik memutuskan merge.
+
 ## 2026-10-26 — antigravity agent — Pemisahan SO per Kunjungan & Prinsipal (Gate SO-PRINCIPAL PASS) & Rekonsiliasi Kuantitas/Nilai
 **Konteks & Arahan Pemilik:**
 Menindaklanjuti gate `SO-PRINCIPAL` dari PR #16 yang menemukan 413 SO campuran prinsipal pada baseline sebelumnya. Melakukan pemisahan pesanan per customer, kunjungan, dan prinsipal tunggal berdasarkan `product.principal_code` master produk tanpa mengurangi kebutuhan belanja maupun kuantitas/nilai pesanan.

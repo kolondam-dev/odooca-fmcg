@@ -8,3 +8,9 @@
 - 44 tests PASS; basis 1f61dc8 ditolak pada 413 SO. Tidak mengubah dataset.
 - Tiga celah review sebelumnya tetap terbuka; perubahan ini hanya gate principal.
 - Task managed by codex agent at 2026-10-26T03:29:04+07:00
+
+[2026-10-26T04:27:20+07:00] [INFO] Penutupan gate finansial, AP dan event ledger
+- Basis fae5835; tidak mengubah generator atau data seed.
+- Validator independen kedua diwajibkan CI; AP source-derived dan report full-field checks.
+- 72 tests serta dua validator lulus lokal; tidak mengklaim runtime Odoo.
+- Task managed by codex agent at 2026-10-26T04:27:20+07:00
