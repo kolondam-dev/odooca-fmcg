@@ -1,5 +1,27 @@
 # HANDOFF
 
+## 2026-10-25 — antigravity agent (Live Railway & Playwright Verification: Database Schema Synchronization & Browse Error Resolution)
+**Berubah:**
+- `deploy/init.sh`:
+  - Menaikkan penanda pembaruan skema dari `upgrade_modules_v1` ke `upgrade_modules_v2` agar siklus `-u $INIT_MODULES` selalu dijalankan saat kode modul baru ditambahkan pada container Odoo dengan Postgres persisten.
+- Railway Production Environment:
+  - Mengaktifkan `FORCE_UPGRADE=1` sementara melalui Railway MCP untuk memicu re-indexing skema lengkap (menambahkan kolom baru `id_principal.pic_name`, `fleet_vehicle.capacity_ton`, kargo box, dsb.).
+  - Mengembalikan `FORCE_UPGRADE=0` di Railway setelah skema sukses disinkronkan, sehingga boot container selanjutnya tetap instan dan efisien.
+- Log: `agent-log/anti-gravity.log`.
+
+**Diverifikasi (bagaimana):**
+- Log runtime Railway deployment `5b1a6322-56d1-4d3d-bc3f-7a8c9742990f` mencatat eksekusi sukses pembaruan tabel `fleet`, `product`, `hr`, `id_base`, dan `id_ui` (`Registry loaded in 0.959s`).
+- Pengujian interaktif end-to-end via Playwright headless Edge pada instance live `https://odooca-fmcg-demo.up.railway.app`:
+  - **FMCG Principals:** Daftar prinsipal dan form record (PT Mayora Indah Tbk, PT Santos Jaya Abadi, PT Unilever Indonesia Tbk, PT Wings Surya) terbuka mulus tanpa pesan error; field Key Contact / PIC terisi dan tampil rapi.
+  - **Products / Katalog FMCG:** Kanban view dan form view produk (Banngo Kecap Manis, Benn-Beng dkk) terbuka sempurna; struktur hirarkis kategori `[PRINSIPAL] > [DIVISI] > [BRAND]`, data kemasan karton, dan barcode tampil lengkap.
+  - **Fleet / Armada:** Kanban dan form kendaraan (DB 8123 QA) terbuka tanpa error dan terhubung dengan driver Novry Mandagi.
+  - **Employees / Karyawan:** Profil karyawan terbuka rapi dan terafiliasi dengan alamat resmi `PT Manado Distribusi Utama` di Interchange Maumbi.
+  - **Contacts / Pelanggan:** Daftar kontak outlet terbuka bersih tanpa referensi field tier lama.
+  - Seluruh screenshot hasil verifikasi tersimpan di direktori artefak (`v2_02_principal_form.png`, `v2_07_product_form.png`, `v3_02_fleet_form.png`, `v3_06_employee_form.png`).
+
+**Belum diuji:**
+- Simulasi transaksi end-to-end Sales Order -> Picking/DO -> Invoicing dengan perhitungan margin per divisi prinsipal (dijadwalkan pada M2).
+
 ## 2026-10-25 — antigravity agent (Master Data Native Refinement: Tier Removal, Fleet Cargo, Principal PIC, Road Coordinates, Org Hierarchy, PT MDU & 5-Day Calendar)
 **Berubah:**
 - `addons/id_base`:

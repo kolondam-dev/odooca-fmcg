@@ -126,10 +126,10 @@ else
 fi
 
 # 4b. Sinkronisasi & pembaruan modul (idempoten: memastikan kolom model baru seperti res_partner.channel_id terbuat di DB)
-if ! has_mark upgrade_modules_v1 || [ "${FORCE_UPGRADE:-0}" = "1" ]; then
-  log "upgrade_modules_v1: mengupdate dan menginstal modul ${INIT_MODULES}..."
+if ! has_mark upgrade_modules_v2 || [ "${FORCE_UPGRADE:-0}" = "1" ]; then
+  log "upgrade_modules_v2: mengupdate dan menginstal modul ${INIT_MODULES}..."
   odoo_run -i "$INIT_MODULES" -u "$INIT_MODULES" --stop-after-init
-  set_mark upgrade_modules_v1
+  set_mark upgrade_modules_v2
 fi
 
 # 5. Postinit (v1): URL dasar, kata sandi admin, bahasa. TODO M1: aktifkan id_ID, grup bisnis admin.
