@@ -1,5 +1,31 @@
 # HANDOFF
 
+## 2026-10-25 — antigravity agent (Pengarsipan Keputusan Arsitektur Transaksi Historis, Saldo Awal, Kategori Produk, & Protokol Anti-Jebakan SVL)
+**Berubah:**
+- Dokumentasi & Arsip Keputusan Arsitektur ([`docs/reviews/ARCHITECTURAL_DECISIONS_AND_ROLLBACK_2026-10-25.md`](file:///c:/Users/ACER/dev/odooca-fmcg/docs/reviews/ARCHITECTURAL_DECISIONS_AND_ROLLBACK_2026-10-25.md)):
+  - Mendokumentasikan secara rinci arahan pemilik perihal:
+    1. Saldo awal stok per 1 Juli (150 SKU) sebagai pembatas order SO hari pertama.
+    2. PO In-Transit pengapalan Juni yang tiba 1-4 Juli di Pelabuhan Bitung & Gudang Maumbi (Wings Rp 1,85 Miliar, Kapal Api Rp 1,45 Miliar, Mayora Rp 3,30 Miliar, Unilever Rp 2,90 Miliar) yang memicu lonjakan okupansi gudang 107,4% di awal Juli.
+    3. Sebaran proporsional order per prinsipal: Wings 34%, Mayora 28%, Kapal Api 20%, Unilever 18%.
+    4. Perbaikan struktur kategori produk Odoo (`product.category`): Meniadakan pencampuran/kategori silang, menetapkan nama/istilah resmi divisi FMCG (Biscuit & Wafer, Instant Noodles & Foods, Coffee & Hot Beverages, Fabric & Home Care, Savory, Personal Care).
+    5. Siklus dokumen terintegrasi: SO, Picklist, Packlist/DO dan pemuatan pada hari H sore/malam, Invoice tercetak H/H+1 pagi.
+    6. Eliminasi angka genap: Subtotal dihitung organik dari kuantitas karton x harga satuan SKU.
+    7. Perpajakan: Seluruh target plan adalah DPP di luar PPN; PPN standar berlaku 11% (UU HPP No. 7/2021).
+    8. Protokol 4-Lapis Anti-Jebakan SVL (*Stock Valuation Layer*) Odoo 19 (backdating picking, move, SQL SVL create_date, dan account move) agar laporan keuangan & stok Odoo tidak tercemar tanggal injeksi hari ini.
+  - Menetapkan titik pulih rollback (*restore point*) pada commit `eaf1a47` branch `agen/rekonstruksi-seed-audit`.
+  - Persiapan pembuatan branch baru: `agen/transaksi-historis-perpetual`.
+- Log: `agent-log/anti-gravity.log`.
+
+**Diverifikasi (bagaimana):**
+- Dokumen tersimpan dan lolos verifikasi markdown.
+- `python -m ruff check .`: `All checks passed!`.
+- `python scripts/check_manifests.py`: `manifest ok: 4 addon`.
+
+**Menunggu / Langkah Berikutnya:**
+- Membuat cabang kerja baru `agen/transaksi-historis-perpetual` dari commit saat ini.
+- Mengimplementasikan pembenahan kategori produk 150 SKU di `data/seed/products_150.csv` dan model Odoo.
+- Mengembangkan generator perpetual FIFO ledger dan loader transaksi historis dengan mitigasi SVL.
+
 ## 2026-10-25 — antigravity agent (Tabel Matrix PJP Juli 2026, Analisis Drop Size, KM & Biaya Delivery, dan Okupansi Kubikasi/Tonase Armada)
 **Berubah:**
 - Matrix PJP Juli 2026 31 Hari Penuh ([`data/registers/pjp_july_2026_matrix.csv`](file:///c:/Users/ACER/dev/odooca-fmcg/data/registers/pjp_july_2026_matrix.csv) & [`scripts/generate_pjp_july_matrix.py`](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/generate_pjp_july_matrix.py)):
