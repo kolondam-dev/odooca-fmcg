@@ -29,7 +29,7 @@ class SeedGateTests(unittest.TestCase):
                 ref='C1', district_code='D1', subdistrict_code='V1', cohort_date='2026-07-01',
                 payment_term_days='0')],
             'data/seed/partners_354.csv': [dict(ref='C1', district_code='D1', subdistrict_code='V1')],
-            'data/seed/products_150.csv': [dict(default_code='P1', carton_qty='10')],
+            'data/seed/products_150.csv': [dict(default_code='P1', carton_qty='10', principal_code='PRIN-A')],
             'data/registers/pjp_july_2026_matrix.csv': [dict(
                 customer='C1 - Customer', tanggal='2026-07-01', salesman='S1', frekuensi_call='F1')],
             'data/registers/perpetual_sales_orders.csv': [dict(
@@ -136,6 +136,39 @@ class SeedGateTests(unittest.TestCase):
 
     def test_clean_fixture(self):
         self.assertEqual(self.run_gate(), set())
+
+    def principal_lines(self, principal):
+        # Two real master SKUs; total quantity/value unchanged. Reuse of a lot name
+        # across SKUs is legitimate because stock identity is (SKU, lot).
+        self.data['data/seed/products_150.csv'].append(dict(
+            default_code='P2', carton_qty='10', principal_code=principal))
+        source = self.data['data/registers/perpetual_order_lines.csv'][0]
+        source.update(qty_cartons='1', line_subtotal_dpp='100')
+        self.data['data/registers/perpetual_order_lines.csv'].append(
+            dict(source, sku_code='P2'))
+
+    def test_so_mixed_principals_rejected(self):
+        self.principal_lines('PRIN-B')
+        self.assertIn('SO-PRINCIPAL', self.run_gate())
+
+    def test_so_multiple_skus_same_principal_allowed(self):
+        self.principal_lines('PRIN-A')
+        self.assertNotIn('SO-PRINCIPAL', self.run_gate())
+
+    def test_so_missing_master_principal_rejected(self):
+        del self.data['data/seed/products_150.csv'][0]['principal_code']
+        self.assertIn('SO-PRINCIPAL', self.run_gate())
+
+    def test_so_blank_master_principal_rejected(self):
+        self.data['data/seed/products_150.csv'][0]['principal_code'] = '   '
+        self.assertIn('SO-PRINCIPAL', self.run_gate())
+
+    def test_so_split_lot_same_principal_allowed(self):
+        source = self.data['data/registers/perpetual_order_lines.csv'][0]
+        source.update(qty_cartons='1', line_subtotal_dpp='100')
+        self.data['data/registers/perpetual_order_lines.csv'].append(
+            dict(source, lot_number='L2'))
+        self.assertNotIn('SO-PRINCIPAL', self.run_gate())
 
     def test_future_customer(self):
         self.mutate('customer_registry_354', 'cohort_date', '2026-08-01', 'COHORT-SO')

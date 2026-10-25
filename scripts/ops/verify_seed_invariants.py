@@ -102,6 +102,7 @@ def validate(root, sizes=(354, 150)):
     invoices = index(read("data/registers/perpetual_invoices.csv"), "invoice_number", "TX-IDENTITY")
     cards = read("data/registers/perpetual_daily_stock_cards.csv")
     calendar = index(cards, "date", "TX-IDENTITY")
+    order_principals = collections.defaultdict(set)
     subtotals = collections.defaultdict(Decimal)
     events = []
     lot_expiry = {}
@@ -133,6 +134,11 @@ def validate(root, sizes=(354, 150)):
         if not order or not product:
             fail("TX-FK", key, "order or product missing")
             continue
+        principal = (product.get("principal_code") or "").strip()
+        if not principal:
+            fail("SO-PRINCIPAL", key, f"SKU {row['sku_code']} has no principal in product master")
+        else:
+            order_principals[key].add(principal)
         qty = number(row["qty_cartons"])
         if qty <= 0:
             fail("LINE-MATH", key, "quantity must be positive")
@@ -142,6 +148,9 @@ def validate(root, sizes=(354, 150)):
         subtotals[key] += number(row["line_subtotal_dpp"])
         events.append((order["date_order"], 1, row["sku_code"], row["lot_number"], -qty, key))
     for key, order in orders.items():
+        principals = order_principals[key]
+        if len(principals) != 1:
+            fail("SO-PRINCIPAL", key, f"expected exactly one product-master principal; observed {sorted(principals)}")
         equal("HEADER-MATH", key, order["gross_dpp"], subtotals[key])
         equal("HEADER-MATH", key, order["net_dpp"], number(order["gross_dpp"]) - number(order["discount_dpp"]))
         ref = order["customer"].split(" - ")[0]

@@ -29,6 +29,7 @@ kapasitas gudang dari jawaban agen belum otomatis menjadi ketetapan pemilik.
 | MASTER-SYNC | register dan seed mempunyai key serta nilai field bersama yang sama | Turn 3 |
 | MASTER-GEO | kode kecamatan/kelurahan resolve ke pasangan XML yang dipakai loader | Turn 3/9 |
 | COHORT-PJP/SO | kunjungan dan order tidak sebelum tanggal aktif customer | narasi coverage bertahap |
+| SO-PRINCIPAL | Setiap SO hanya berisi SKU dari tepat satu principal_code pada master produk; principal kosong/hilang dan campuran prinsipal menggagalkan gate. Banyak SKU/brand/lot dari prinsipal sama diperbolehkan. | Instruksi langsung pemilik 2026-10-26 |
 | PJP-SO | order mempunyai visit customer/salesman/tanggal yang cocok | Turn 8 |
 | CALENDAR | Minggu tanpa call/delivery; SO hanya pada hari kerja kartu stok | Turn 2/8 |
 | LINE/HEADER/PO/STOCK-MATH | perkalian dan jumlah antar-artefak konsisten (Decimal, toleransi Rp0,01) | Turn 8/9 |

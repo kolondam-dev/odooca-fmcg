@@ -2,3 +2,9 @@
 - Validator independen, replay lot dan mutation tests; baseline gagal, tanpa modifikasi dataset.
 - Bukti runtime Odoo dan penguncian ruleset belum diverifikasi; lihat kontrak invariant.
 - Task managed by codex agent at 2026-10-25T23:12:56+07:00
+
+[2026-10-26T03:29:04+07:00] [INFO] Gate SO satu prinsipal dari master produk
+- Instruksi pemilik: tolak SKU lintas prinsipal dalam satu SO.
+- 44 tests PASS; basis 1f61dc8 ditolak pada 413 SO. Tidak mengubah dataset.
+- Tiga celah review sebelumnya tetap terbuka; perubahan ini hanya gate principal.
+- Task managed by codex agent at 2026-10-26T03:29:04+07:00

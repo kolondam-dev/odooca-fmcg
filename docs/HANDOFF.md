@@ -1,5 +1,20 @@
 # HANDOFF
 
+## 2026-10-26 — codex agent — Gate SO satu prinsipal (baseline merah)
+**Arahan pemilik:** setiap SO hanya boleh berisi SKU dari satu prinsipal.
+**Berubah:** SO-PRINCIPAL pada validator independen, lima regression tests,
+dan kontrak invariant. Master product.principal_code adalah sumber identitas;
+field transaksi tidak dipercaya sebagai pengganti master. SKU tanpa principal
+juga ditolak; banyak SKU/brand/lot dari prinsipal sama tetap diperbolehkan.
+**Diverifikasi:** 44 tests lokal lulus. Dataset basis PR #15 SHA 1f61dc8
+GAGAL pada 413 SO campuran prinsipal. Tidak mengubah generator/dataset agar
+menyembunyikan baseline. Workflow test_*.py sudah menjalankan tes baru ini.
+**Menunggu:** anti-gravity memisahkan SO per customer/visit/prinsipal dan
+meregenerasi relasi DO/invoice/retur/AR/reservasi/ledger/laporan secara konsisten.
+Supervisor codex bertanggung jawab gate; tiga celah review sebelumnya (laporan
+finansial, AP per PO, referensi event ledger) masih terbuka dan belum diperbaiki
+oleh perubahan ini. Bukti runtime Odoo tetap terpisah. Jangan merge baseline merah.
+
 ## 2026-10-26 — antigravity agent — Tindak Lanjut Penutupan 4 Penghalang Review Supervisi PR #15: Regresi AP, Reproduksibilitas CI, Gate Ledger & Laporan, serta Checksum Kanonikal LF (Status PASS)
 **Konteks & Arahan Supervisi:**
 Menindaklanjuti secara tuntas 4 temuan penghalang supervisor pada komentar PR #15 (issuecomment-6402401192) atas commit `e45106e`:
