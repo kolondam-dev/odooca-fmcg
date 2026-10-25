@@ -24,18 +24,25 @@ random.seed(20260701)
 
 def get_product_dimensions(fmcg_category: str, weight_kg: float, carton_qty: int) -> dict:
     """Menghitung dimensi fisik realistis untuk satuan terkecil (Pcs) dan satuan terbesar (Karton)."""
-    if fmcg_category == "food":
+    if fmcg_category in ("food", "biscuit_wafer", "noodles_food", "foods_savory"):
         if weight_kg <= 0.05:
             p_l, p_w, p_h = 10.0, 7.0, 1.5
         elif weight_kg <= 0.15:
             p_l, p_w, p_h = 16.0, 11.0, 3.5
         else:
             p_l, p_w, p_h = 20.0, 14.0, 4.5
-    elif fmcg_category == "rtd":
+    elif fmcg_category in ("rtd", "beverages_rtd"):
         if weight_kg <= 0.25:
             p_l, p_w, p_h = 5.5, 5.5, 14.0
         else:
             p_l, p_w, p_h = 6.2, 6.2, 17.5
+    elif fmcg_category in ("coffee_powder", "coffee_hot", "coffee_wings"):
+        if weight_kg <= 0.04:
+            p_l, p_w, p_h = 6.0, 5.0, 12.0
+        elif weight_kg <= 0.10:
+            p_l, p_w, p_h = 12.0, 8.0, 3.5
+        else:
+            p_l, p_w, p_h = 16.0, 10.0, 5.0
     elif fmcg_category == "home_care":
         if weight_kg <= 0.3:
             p_l, p_w, p_h = 14.0, 6.0, 18.0
@@ -991,7 +998,46 @@ def generate_products() -> list[dict]:
             }
         )
 
+    brand_cat_map = {
+        # Mayora
+        "BRD-RMA": "biscuit_wafer",
+        "BRD-BTR": "biscuit_wafer",
+        "BRD-SLI": "biscuit_wafer",
+        "BRD-BBG": "confectionery",
+        "BRD-KPK": "confectionery",
+        "BRD-KIS": "confectionery",
+        "BRD-TMR": "confectionery",
+        "BRD-TRB": "coffee_powder",
+        "BRD-EGN": "coffee_powder",
+        # Santos (Kapal Api)
+        "BRD-KA": "coffee_hot",
+        "BRD-ABC": "coffee_hot",
+        "BRD-YA": "coffee_hot",
+        "BRD-KPT": "coffee_hot",
+        # Unilever
+        "BRD-RYC": "foods_savory",
+        "BRD-BNG": "foods_savory",
+        "BRD-RNS": "home_care",
+        "BRD-MLT": "home_care",
+        "BRD-SNL": "home_care",
+        "BRD-LFB": "personal_care",
+        "BRD-CLR": "personal_care",
+        "BRD-PSD": "personal_care",
+        "BRD-RXN": "personal_care",
+        # Wings
+        "BRD-SDP": "noodles_food",
+        "BRD-JSJ": "beverages_rtd",
+        "BRD-SGD": "beverages_rtd",
+        "BRD-TOP": "coffee_wings",
+        "BRD-FLD": "beverages_rtd",
+        "BRD-JVN": "beverages_rtd",
+        "BRD-GLD": "beverages_rtd",
+    }
+
     for p in products:
+        b_code = p.get("brand_code")
+        if b_code in brand_cat_map:
+            p["fmcg_category"] = brand_cat_map[b_code]
         dims = get_product_dimensions(p["fmcg_category"], p["weight_kg"], p["carton_qty"])
         p.update(dims)
         p["carton_barcode"] = f"1{p['barcode']}"

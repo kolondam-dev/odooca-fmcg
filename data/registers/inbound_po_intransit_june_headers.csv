@@ -1,0 +1,6 @@
+po_number,principal_code,principal_name,order_date,eta_bitung,arrival_maumbi_date,container_spec,payment_term_days,due_date,ap_payment_date,total_dpp,total_cbm,total_tonnage
+PO-2026-06-01,PRIN-WINGS,PT Sayapp Mas Utamma,2026-06-15,2026-06-28,2026-07-01,4x 20ft FCL Container,21,2026-07-22,2026-07-22,1849772800.0,517.85,102.85
+PO-2026-06-02,PRIN-SANTOS,PT Santos Jaya Abadii,2026-06-12,2026-06-27,2026-07-01,3x 20ft FCL Container,28,2026-07-29,2026-07-29,1449737600.0,297.18,49.6
+PO-2026-06-03,PRIN-MAYORA,PT Mayyora Indahh Tbk,2026-06-10,2026-06-29,2026-07-02,1x 20ft FCL Container (Biskuit),30,2026-08-01,2026-07-31,699826000.0,110.32,18.92
+PO-2026-06-04,PRIN-MAYORA,PT Mayyora Indahh Tbk,2026-06-20,2026-07-01,2026-07-03,2x 40ft High Cube Container (Kopi & Wafer),30,2026-08-02,2026-07-31,2598138400.0,409.51,70.25
+PO-2026-06-05,PRIN-UNILEVER,PT Unilevr Indonezia Tbk,2026-06-18,2026-07-02,2026-07-04,2x 40ft High Cube Container (Home & Personal),35,2026-08-08,2026-08-08,2899971200.0,444.18,88.27
