@@ -162,3 +162,12 @@
 - Tambahkan field kontak dan PIC pada model id.principal
 - Tambahkan dependensi fleet, hr, uom pada id_base
 - Task managed by antigravity-agent at 2026-10-25T08:56:55+00:00
+
+[2026-10-25T16:05:00+07:00] [INFO] Rekalibrasi koordinat outlet, dimensi fisik produk/karton, armada box kargo, dan hirarki karyawan
+- Perbarui scripts/generate_fmcg_seed.py untuk menambatkan koordinat 354 outlet tepat di koridor jalan darat tiap kecamatan (anti-drowning di teluk Manado & anti-lereng gunung)
+- Tambahkan dimensi fisik realistis (L/W/H, cbm, kg) untuk eaches (Pcs) dan Karton pada 150 Master SKU
+- Tambahkan dimensi box kargo armada logistik (box_length_m, box_width_m, box_height_m) pada 9 armada
+- Tambahkan manager_code untuk relasi hirarki pelaporan organisasi (parent_id) pada 24 personel
+- Tambahkan generator principals_4.csv yang memuat kontak resmi, alamat, NPWP, dan PIC 4 principal nasional
+- Task managed by antigravity-agent at 2026-10-25T16:05:00+07:00
+

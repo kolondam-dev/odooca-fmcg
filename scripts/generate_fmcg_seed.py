@@ -22,6 +22,56 @@ SEED_DIR.mkdir(parents=True, exist_ok=True)
 random.seed(20260701)
 
 
+def get_product_dimensions(fmcg_category: str, weight_kg: float, carton_qty: int) -> dict:
+    """Menghitung dimensi fisik realistis untuk satuan terkecil (Pcs) dan satuan terbesar (Karton)."""
+    if fmcg_category == "food":
+        if weight_kg <= 0.05:
+            p_l, p_w, p_h = 10.0, 7.0, 1.5
+        elif weight_kg <= 0.15:
+            p_l, p_w, p_h = 16.0, 11.0, 3.5
+        else:
+            p_l, p_w, p_h = 20.0, 14.0, 4.5
+    elif fmcg_category == "rtd":
+        if weight_kg <= 0.25:
+            p_l, p_w, p_h = 5.5, 5.5, 14.0
+        else:
+            p_l, p_w, p_h = 6.2, 6.2, 17.5
+    elif fmcg_category == "home_care":
+        if weight_kg <= 0.3:
+            p_l, p_w, p_h = 14.0, 6.0, 18.0
+        else:
+            p_l, p_w, p_h = 16.0, 8.0, 24.0
+    elif fmcg_category == "personal_care":
+        if weight_kg <= 0.12:
+            p_l, p_w, p_h = 10.0, 4.5, 3.0
+        elif weight_kg <= 0.2:
+            p_l, p_w, p_h = 18.0, 4.5, 4.0
+        else:
+            p_l, p_w, p_h = 15.0, 7.0, 20.0
+    else:  # Confectionery
+        p_l, p_w, p_h = 14.0, 10.0, 2.5
+
+    p_vol = round((p_l * p_w * p_h) / 1_000_000.0, 5)
+    total_vol = p_vol * carton_qty * 1.18
+    c_l = round(max(24.0, min(60.0, (total_vol * 1_000_000 / 3.0) ** (1 / 3) * 1.6)), 1)
+    c_w = round(max(18.0, min(45.0, c_l * 0.72)), 1)
+    c_h = round(max(14.0, (total_vol * 1_000_000) / (c_l * c_w)), 1)
+    c_vol = round((c_l * c_w * c_h) / 1_000_000.0, 4)
+    c_weight = round((weight_kg * carton_qty) + 0.45, 2)
+
+    return {
+        "length_cm": p_l,
+        "width_cm": p_w,
+        "height_cm": p_h,
+        "volume_cbm": p_vol,
+        "carton_length_cm": c_l,
+        "carton_width_cm": c_w,
+        "carton_height_cm": c_h,
+        "carton_volume_cbm": c_vol,
+        "carton_weight_kg": c_weight,
+    }
+
+
 def generate_products() -> list[dict]:
     """Menghasilkan 150 Master SKU FMCG terbagi pada 4 Principal Nasional."""
     products = []
@@ -941,6 +991,10 @@ def generate_products() -> list[dict]:
             }
         )
 
+    for p in products:
+        dims = get_product_dimensions(p["fmcg_category"], p["weight_kg"], p["carton_qty"])
+        p.update(dims)
+
     return products
 
 
@@ -959,6 +1013,24 @@ DISTRICT_CITY_MAP = {
     "KEC-MNH-KWG": "Kab. Minahasa",
     "KEC-MNH-TDN": "Kab. Minahasa",
     "KEC-MNT-AMD": "Kab. Minahasa Utara",
+}
+
+
+DISTRICT_COORDS = {
+    "KEC-MND-WNG": (1.4910, 124.8420),  # Wenang (Pusat Kota Manado, Jl. Sam Ratulangi / Jl. Sudirman)
+    "KEC-MND-SRO": (1.4720, 124.8380),  # Sario (Jl. Sam Ratulangi, Stadion Klabat)
+    "KEC-MND-MLY": (1.4580, 124.8290),  # Malalayang (Jl. Wolter Monginsidi koridor darat)
+    "KEC-MND-WNA": (1.4650, 124.8480),  # Wanea (Jl. Sam Ratulangi / Teling)
+    "KEC-MND-TKL": (1.4850, 124.8580),  # Tikala (Balai Kota, Tikala Ares)
+    "KEC-MND-PLD": (1.4880, 124.8720),  # Paal Dua (Jl. Yos Sudarso, Kairagi)
+    "KEC-MND-TMT": (1.5120, 124.8550),  # Tuminting (Jl. Hasanuddin darat)
+    "KEC-MND-SKL": (1.5020, 124.8620),  # Singkil (Jl. Karame, Kombos)
+    "KEC-MND-MPG": (1.5320, 124.8980),  # Mapanget (Jl. AA Maramis koridor Paniki)
+    "KEC-BTG-MAS": (1.4450, 125.1820),  # Bitung Maesa (Pusat Kota Bitung / Pelabuhan Darat)
+    "KEC-TMH-TGH": (1.3250, 124.8380),  # Tomohon (Pasar Beriman / Kolongan darat)
+    "KEC-MNH-KWG": (1.2050, 124.7880),  # Kawangkoan (Pusat Kawangkoan, Sendangan)
+    "KEC-MNH-TDN": (1.3050, 124.9120),  # Tondano (Pusat Kota Tondano darat)
+    "KEC-MNT-AMD": (1.4280, 124.9850),  # Airmadidi / Kauditan Minahasa Utara
 }
 
 
@@ -1144,7 +1216,6 @@ def generate_partners() -> list[dict]:
                 "ref": f"CUST-MT-{idx:02d}",
                 "name": name,
                 "channel_code": "MT",
-                "tier_code": "",
                 "district_code": dist,
                 "subdistrict_code": subdist,
                 "street": street,
@@ -1223,8 +1294,11 @@ def generate_partners() -> list[dict]:
         t_name = gt_names[idx - 1]
         dist, subdist, street_base, zip_code, sls = gt_districts[(idx - 1) % len(gt_districts)]
         street = f"{street_base} No. {idx * 2}"
-        lat = 1.4800 + (idx * 0.001)
-        lng = 124.8400 + (idx * 0.001)
+        base_lat, base_lng = DISTRICT_COORDS.get(dist, (1.4910, 124.8420))
+        d_lat = (((idx * 7) % 11) - 5) * 0.00035
+        d_lng = (((idx * 13) % 11) - 5) * 0.00035
+        lat = round(base_lat + d_lat, 6)
+        lng = round(base_lng + d_lng, 6)
         city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
         npwp = f"08{idx:04d}1234821000"
 
@@ -1233,7 +1307,6 @@ def generate_partners() -> list[dict]:
                 "ref": f"CUST-GT-{idx:02d}",
                 "name": t_name,
                 "channel_code": "GT",
-                "tier_code": "",
                 "district_code": dist,
                 "subdistrict_code": subdist,
                 "street": street,
@@ -1284,12 +1357,17 @@ def generate_partners() -> list[dict]:
         sfx = rtl_suffixes[(idx - 1) % len(rtl_suffixes)]
         kios_name = f"{pfx} {nm} {sfx}"
 
+        base_lat, base_lng = DISTRICT_COORDS.get(dist, (1.4910, 124.8420))
+        d_lat = (((idx * 5) % 13) - 6) * 0.0003
+        d_lng = (((idx * 11) % 13) - 6) * 0.0003
+        lat = round(base_lat + d_lat, 6)
+        lng = round(base_lng + d_lng, 6)
+
         partners.append(
             {
                 "ref": f"CUST-RTL-{idx:03d}",
                 "name": kios_name,
                 "channel_code": "RTL",
-                "tier_code": "",
                 "district_code": dist,
                 "subdistrict_code": subdist,
                 "street": f"Lorong Pemukiman RW 0{idx % 6 + 1}",
@@ -1303,8 +1381,8 @@ def generate_partners() -> list[dict]:
                 "credit_mode": "strict",
                 "payment_term_days": 0,  # Cash COD
                 "salesman_code": sls,
-                "latitude": 1.4850 + (idx * 0.0005),
-                "longitude": 124.8450 + (idx * 0.0005),
+                "latitude": lat,
+                "longitude": lng,
                 "is_company": False,
             }
         )
@@ -1414,12 +1492,14 @@ def generate_partners() -> list[dict]:
     ]
     for idx, (name, dist, subdist, street, zipc, npwp, cl, pt) in enumerate(inst_samples, start=1):
         city = DISTRICT_CITY_MAP.get(dist, "Kota Manado")
+        base_lat, base_lng = DISTRICT_COORDS.get(dist, (1.4910, 124.8420))
+        d_lat = (((idx * 3) % 7) - 3) * 0.0004
+        d_lng = (((idx * 5) % 7) - 3) * 0.0004
         partners.append(
             {
                 "ref": f"CUST-INST-{idx:02d}",
                 "name": name,
                 "channel_code": "INST",
-                "tier_code": "",
                 "district_code": dist,
                 "subdistrict_code": subdist,
                 "street": street,
@@ -1433,8 +1513,8 @@ def generate_partners() -> list[dict]:
                 "credit_mode": "limit",
                 "payment_term_days": pt,
                 "salesman_code": "MGT-01",
-                "latitude": 1.4800,
-                "longitude": 124.8400,
+                "latitude": round(base_lat + d_lat, 6),
+                "longitude": round(base_lng + d_lng, 6),
                 "is_company": True,
             }
         )
@@ -1442,57 +1522,127 @@ def generate_partners() -> list[dict]:
     return partners
 
 
+def generate_principals() -> list[dict]:
+    """Menghasilkan master data 4 Principal Nasional FMCG."""
+    return [
+        {
+            "code": "PRIN-001",
+            "name": "Wings Group",
+            "legal_name": "PT Sayap Mas Utama",
+            "street": "Jl. Tipar Cakung Kav. F 5-7, Cakung Barat",
+            "city": "Jakarta Timur",
+            "zip": "13910",
+            "phone": "021-4602685",
+            "email": "sales.corporate@wingscorp.com",
+            "vat": "013456789054000",
+            "pic_name": "Budi Santoso",
+            "pic_phone": "08111223344",
+            "pic_email": "budi.santoso@wingscorp.com",
+            "lead_time_days": 14,
+            "sla_delivery_pct": 95.0,
+        },
+        {
+            "code": "PRIN-002",
+            "name": "PT Mayora Indah Tbk",
+            "legal_name": "PT Mayora Indah Tbk",
+            "street": "Gedung Mayora, Jl. Tomang Raya 21-23",
+            "city": "Jakarta Barat",
+            "zip": "11440",
+            "phone": "021-5655320",
+            "email": "customercare@mayora.co.id",
+            "vat": "012345678054000",
+            "pic_name": "Indra Wijaya",
+            "pic_phone": "08123344556",
+            "pic_email": "indra.wijaya@mayora.co.id",
+            "lead_time_days": 10,
+            "sla_delivery_pct": 96.0,
+        },
+        {
+            "code": "PRIN-003",
+            "name": "PT Indofood CBP Sukses Makmur Tbk",
+            "legal_name": "PT Indofood CBP Sukses Makmur Tbk",
+            "street": "Sudirman Plaza, Indofood Tower Lt. 23, Jl. Jend. Sudirman Kav. 76-78",
+            "city": "Jakarta Selatan",
+            "zip": "12910",
+            "phone": "021-57958822",
+            "email": "corporate@icbp.indofood.co.id",
+            "vat": "013245678054000",
+            "pic_name": "Ahmad Fauzi",
+            "pic_phone": "08134455667",
+            "pic_email": "ahmad.fauzi@icbp.indofood.co.id",
+            "lead_time_days": 12,
+            "sla_delivery_pct": 94.5,
+        },
+        {
+            "code": "PRIN-004",
+            "name": "PT Unilever Indonesia Tbk",
+            "legal_name": "PT Unilever Indonesia Tbk",
+            "street": "Grha Unilever, Green Office Park Kav. 3, Jl. BSD Boulevard Barat",
+            "city": "Kab. Tangerang",
+            "zip": "15345",
+            "phone": "021-80827000",
+            "email": "suara.konsumen@unilever.com",
+            "vat": "011234567054000",
+            "pic_name": "Dewi Lestari",
+            "pic_phone": "08145566778",
+            "pic_email": "dewi.lestari@unilever.com",
+            "lead_time_days": 14,
+            "sla_delivery_pct": 97.0,
+        },
+    ]
+
+
 def generate_employees() -> list[dict]:
-    """Menghasilkan roster 24 personel PT Manado Distribusi Utama."""
+    """Menghasilkan roster 24 personel PT Manado Distribusi Utama dengan hirarki pelaporan."""
     roster = [
         ("EMP-001", "Bpk. Ronald Mongisidi", "owner", "Management", "CC-MGT", "",
-         "ronald.mongisidi@mdu-manado.co.id", "0811-432-1001"),
+         "ronald.mongisidi@mdu-manado.co.id", "0811-432-1001", ""),
         ("EMP-002", "Hendrik Polii", "branch_manager", "Management", "CC-MGT", "SIM A",
-         "hendrik.polii@mdu-manado.co.id", "0811-432-1002"),
+         "hendrik.polii@mdu-manado.co.id", "0811-432-1002", "EMP-001"),
         ("EMP-003", "Feybe Lumempouw", "finance_lead", "Finance", "CC-FIN", "SIM A",
-         "feybe.lumempouw@mdu-manado.co.id", "0812-441-2003"),
+         "feybe.lumempouw@mdu-manado.co.id", "0812-441-2003", "EMP-002"),
         ("EMP-004", "Grace Sumual", "accounting_staff", "Finance", "CC-FIN", "",
-         "grace.sumual@mdu-manado.co.id", "0813-562-2004"),
+         "grace.sumual@mdu-manado.co.id", "0813-562-2004", "EMP-003"),
         ("EMP-005", "Rudi Tumbelaka", "tax_staff", "Finance", "CC-FIN", "",
-         "rudi.tumbelaka@mdu-manado.co.id", "0821-883-2005"),
+         "rudi.tumbelaka@mdu-manado.co.id", "0821-883-2005", "EMP-003"),
         ("EMP-006", "Meike Wondal", "cashier", "Finance", "CC-FIN", "",
-         "meike.wondal@mdu-manado.co.id", "0852-401-2006"),
+         "meike.wondal@mdu-manado.co.id", "0852-401-2006", "EMP-003"),
         ("EMP-007", "Joni Kumajas", "sales_spv", "Sales", "CC-SALES", "SIM A",
-         "joni.kumajas@mdu-manado.co.id", "0811-432-3007"),
+         "joni.kumajas@mdu-manado.co.id", "0811-432-3007", "EMP-002"),
         ("EMP-008", "Rivaldo Mamahit", "sales_admin_lead", "Sales", "CC-SALES", "",
-         "rivaldo.mamahit@mdu-manado.co.id", "0812-441-3008"),
+         "rivaldo.mamahit@mdu-manado.co.id", "0812-441-3008", "EMP-007"),
         ("EMP-009", "Priscilia Tielung", "sales_admin", "Sales", "CC-SALES", "",
-         "priscilia.tielung@mdu-manado.co.id", "0813-562-3009"),
+         "priscilia.tielung@mdu-manado.co.id", "0813-562-3009", "EMP-008"),
         ("EMP-010", "Willem Runtu", "warehouse_lead", "Warehouse", "CC-WMS", "SIM B1",
-         "willem.runtu@mdu-manado.co.id", "0811-432-4010"),
+         "willem.runtu@mdu-manado.co.id", "0811-432-4010", "EMP-002"),
         ("EMP-011", "Jemmy Pangaila", "staging_lead", "Warehouse", "CC-WMS", "",
-         "jemmy.pangaila@mdu-manado.co.id", "0821-883-4011"),
+         "jemmy.pangaila@mdu-manado.co.id", "0821-883-4011", "EMP-010"),
         ("EMP-012", "Robby Karundeng", "picker_staff", "Warehouse", "CC-WMS", "",
-         "robby.karundeng@mdu-manado.co.id", "0852-401-4012"),
+         "robby.karundeng@mdu-manado.co.id", "0852-401-4012", "EMP-011"),
         ("EMP-013", "Christian Wowor", "sales_mt", "Sales", "CC-SALES", "SIM A",
-         "christian.wowor@mdu-manado.co.id", "0812-441-5013"),
+         "christian.wowor@mdu-manado.co.id", "0812-441-5013", "EMP-007"),
         ("EMP-014", "Andre Pangemanan", "sales_to", "Sales", "CC-SALES", "SIM C & A",
-         "andre.pangemanan@mdu-manado.co.id", "0813-562-5014"),
+         "andre.pangemanan@mdu-manado.co.id", "0813-562-5014", "EMP-007"),
         ("EMP-015", "Meidy Wowor", "sales_to", "Sales", "CC-SALES", "SIM C & A",
-         "meidy.wowor@mdu-manado.co.id", "0821-883-5015"),
+         "meidy.wowor@mdu-manado.co.id", "0821-883-5015", "EMP-007"),
         ("EMP-016", "Refly Sondakh", "sales_to", "Sales", "CC-SALES", "SIM C & A",
-         "refly.sondakh@mdu-manado.co.id", "0852-401-5016"),
+         "refly.sondakh@mdu-manado.co.id", "0852-401-5016", "EMP-007"),
         ("EMP-017", "Novry Mandagi", "sales_canvass", "Sales", "CC-SALES", "SIM A",
-         "novry.mandagi@mdu-manado.co.id", "0812-441-5017"),
+         "novry.mandagi@mdu-manado.co.id", "0812-441-5017", "EMP-007"),
         ("EMP-018", "Steven Lumenta", "sales_canvass", "Sales", "CC-SALES", "SIM A",
-         "steven.lumenta@mdu-manado.co.id", "0813-562-5018"),
+         "steven.lumenta@mdu-manado.co.id", "0813-562-5018", "EMP-007"),
         ("EMP-019", "Eko Prasetyo", "driver", "Logistik", "CC-LOG", "SIM B1",
-         "eko.prasetyo@mdu-manado.co.id", "0821-883-6019"),
+         "eko.prasetyo@mdu-manado.co.id", "0821-883-6019", "EMP-010"),
         ("EMP-020", "Frits Wenas", "driver", "Logistik", "CC-LOG", "SIM B1",
-         "frits.wenas@mdu-manado.co.id", "0852-401-6020"),
+         "frits.wenas@mdu-manado.co.id", "0852-401-6020", "EMP-010"),
         ("EMP-021", "Stenly Rompas", "driver", "Logistik", "CC-LOG", "SIM B1",
-         "stenly.rompas@mdu-manado.co.id", "0812-441-6021"),
+         "stenly.rompas@mdu-manado.co.id", "0812-441-6021", "EMP-010"),
         ("EMP-022", "Johan Rori", "driver", "Logistik", "CC-LOG", "SIM B2",
-         "johan.rori@mdu-manado.co.id", "0813-562-6022"),
+         "johan.rori@mdu-manado.co.id", "0813-562-6022", "EMP-010"),
         ("EMP-023", "Maxi Walangitan", "helper", "Logistik", "CC-LOG", "",
-         "maxi.walangitan@mdu-manado.co.id", "0821-883-6023"),
+         "maxi.walangitan@mdu-manado.co.id", "0821-883-6023", "EMP-010"),
         ("EMP-024", "Royke Manopo", "helper", "Logistik", "CC-LOG", "",
-         "royke.manopo@mdu-manado.co.id", "0852-401-6024"),
+         "royke.manopo@mdu-manado.co.id", "0852-401-6024", "EMP-010"),
     ]
     return [
         {
@@ -1504,18 +1654,22 @@ def generate_employees() -> list[dict]:
             "sim": s,
             "work_email": em,
             "work_phone": ph,
+            "manager_code": m,
         }
-        for c, n, r, d, cc, s, em, ph in roster
+        for c, n, r, d, cc, s, em, ph, m in roster
     ]
 
 
 def generate_vehicles() -> list[dict]:
-    """Menghasilkan master 9 armada logistik."""
+    """Menghasilkan master 9 armada logistik beserta kapasitas dan dimensi box cargo."""
     return [
         {
             "plate": "DB 8123 QA",
             "type": "GM_BV",
             "model": "Daihatsu Gran Max BV 1.3",
+            "box_length_m": 2.1,
+            "box_width_m": 1.4,
+            "box_height_m": 1.25,
             "cbm": 3.6,
             "ton": 0.75,
             "route": "Canvassing Urban",
@@ -1527,6 +1681,9 @@ def generate_vehicles() -> list[dict]:
             "plate": "DB 8234 QX",
             "type": "GM_BOX",
             "model": "Daihatsu Gran Max Box 1.5",
+            "box_length_m": 2.35,
+            "box_width_m": 1.45,
+            "box_height_m": 1.4,
             "cbm": 4.7,
             "ton": 1.0,
             "route": "Canvassing Sub-Urban",
@@ -1538,6 +1695,9 @@ def generate_vehicles() -> list[dict]:
             "plate": "DB 8345 PL",
             "type": "GM_OPEN",
             "model": "Daihatsu Gran Max Bak 1.5",
+            "box_length_m": 2.35,
+            "box_width_m": 1.55,
+            "box_height_m": 0.95,
             "cbm": 3.5,
             "ton": 1.0,
             "route": "Staging Cepat & Retur",
@@ -1549,6 +1709,9 @@ def generate_vehicles() -> list[dict]:
             "plate": "DB 8456 FB",
             "type": "L300",
             "model": "Mitsubishi L300 Box Euro 4",
+            "box_length_m": 2.7,
+            "box_width_m": 1.55,
+            "box_height_m": 1.3,
             "cbm": 5.4,
             "ton": 1.5,
             "route": "Delivery Urban Barat",
@@ -1560,6 +1723,9 @@ def generate_vehicles() -> list[dict]:
             "plate": "DB 8567 TR",
             "type": "TRAGA",
             "model": "Isuzu Traga Box Euro 4",
+            "box_length_m": 2.8,
+            "box_width_m": 1.6,
+            "box_height_m": 1.35,
             "cbm": 6.1,
             "ton": 1.8,
             "route": "Delivery Urban Timur",
@@ -1571,6 +1737,9 @@ def generate_vehicles() -> list[dict]:
             "plate": "DB 8910 TK",
             "type": "CDE",
             "model": "Isuzu Elf NLR 55 TX 4-Roda",
+            "box_length_m": 3.1,
+            "box_width_m": 1.7,
+            "box_height_m": 1.9,
             "cbm": 10.0,
             "ton": 3.5,
             "route": "Delivery Tomohon/Kawangkoan",
@@ -1582,6 +1751,9 @@ def generate_vehicles() -> list[dict]:
             "plate": "DB 8890 EL",
             "type": "CDEL",
             "model": "Hino Dutro 110 SDBL 4-Roda Long",
+            "box_length_m": 4.4,
+            "box_width_m": 1.8,
+            "box_height_m": 1.8,
             "cbm": 14.3,
             "ton": 4.0,
             "route": "Delivery Minsel/Amurang",
@@ -1593,6 +1765,9 @@ def generate_vehicles() -> list[dict]:
             "plate": "DB 8345 MK",
             "type": "CDD",
             "model": "Canter FE 74 HD 6-Roda Double",
+            "box_length_m": 4.3,
+            "box_width_m": 2.0,
+            "box_height_m": 2.0,
             "cbm": 17.2,
             "ton": 6.0,
             "route": "Grosir & MT Bitung",
@@ -1604,6 +1779,9 @@ def generate_vehicles() -> list[dict]:
             "plate": "DB 8765 DL",
             "type": "CDDL",
             "model": "Hino Ranger FG 235 JJ 6-Roda Long",
+            "box_length_m": 6.8,
+            "box_width_m": 2.3,
+            "box_height_m": 2.2,
             "cbm": 34.4,
             "ton": 8.5,
             "route": "Inbound Pelabuhan Bitung",
@@ -1625,10 +1803,14 @@ def write_csv(filepath: pathlib.Path, data: list[dict], fieldnames: list[str]) -
 def main():
     print("Mempersiapkan dataset FMCG Manado...")
 
+    principals = generate_principals()
     products = generate_products()
     partners = generate_partners()
     employees = generate_employees()
     vehicles = generate_vehicles()
+
+    print(f" - Menghasilkan {len(principals)} Principal Nasional...")
+    write_csv(SEED_DIR / "principals_4.csv", principals, list(principals[0].keys()))
 
     print(f" - Menghasilkan {len(products)} Produk SKU...")
     write_csv(SEED_DIR / "products_150.csv", products, list(products[0].keys()))
