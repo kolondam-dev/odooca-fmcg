@@ -51,7 +51,7 @@ jobs:
       - name: Instal dan uji addon id_* pada DB kosong
         run: |
           set -o pipefail
-          docker run --rm --network host --entrypoint bash fmcg-odoo:ci -c '
+          docker run --rm -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             odoo -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
               --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
               -i id_base,id_ui_form --test-tags /id_base,/id_ui,/id_ui_shell --stop-after-init --log-level=test
@@ -64,16 +64,16 @@ jobs:
       - name: Prepare disposable UI fixtures
         run: |
           set -o pipefail
-          docker run --rm -i --network host --entrypoint bash fmcg-odoo:ci -c '
+          docker run --rm -i -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             odoo shell -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
               --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
           ' < scripts/ui/smoke_fixture.py | tee fixture.log
           python -c 'import json; print(json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE=")))["order"])' > ui-order.txt
       - name: Start Odoo for browser smoke
         run: |
-          docker run -d --name ui-smoke --network host --entrypoint bash fmcg-odoo:ci -c '
+          docker run -d --name ui-smoke -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             exec odoo -d ci_db --db-filter "^ci_db$" --db_host localhost --db_port 5432 -r odoo -w odoo \
-              --addons-path "$(/opt/deploy/addons_path.sh)" --http-interface 127.0.0.1 --http-port 8069
+              --addons-path "$(/opt/deploy/addons_path.sh)" --http-interface 127.0.0.1 --http-port 8069 --max-cron-threads 0
           '
           for i in $(seq 1 60); do
             if curl -sf -o /dev/null http://localhost:8069/web/login; then break; fi
@@ -93,6 +93,7 @@ jobs:
         run: |
           docker logs ui-smoke > ui-runtime.log 2>&1 || true
           docker rm -f ui-smoke || true
+          docker volume rm ui-filestore || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -101,6 +102,7 @@ jobs:
             fixture.log
             odoo.log
             ui-runtime.log
+            ui-smoke-failure.png
 
   init-test:
     # Meniru uji sandbox A dan B: init.sh pada DB kosong (build penuh) lalu restart (semua langkah dilewati).

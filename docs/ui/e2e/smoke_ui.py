@@ -27,7 +27,11 @@ async def main():
         browser = await p.chromium.launch()
         page = await browser.new_page(viewport={"width": 1440, "height": 860})
         errors = []
-        page.on("pageerror", lambda e: errors.append(str(e)))
+        def record_error(error):
+            detail = error.stack or str(error)
+            errors.append(detail)
+            print("BROWSER ERROR:", detail, flush=True)
+        page.on("pageerror", record_error)
         await page.goto(f"{BASE}/web/login")
         await page.fill("input[name=login]", os.environ.get("UI_TEST_LOGIN", "admin"))
         await page.fill("input[name=password]", os.environ.get("UI_TEST_PASSWORD", "admin"))
@@ -137,6 +141,8 @@ async def main():
             await switch_layout("Layout: switch to Sidebar")
         check("kembali ke sidebar: judul di statusbar lagi", await page.locator(".o_form_statusbar > .id_statusbar_title").count() == 1)
 
+        if errors:
+            await page.screenshot(path="ui-smoke-failure.png", full_page=True)
         check("tanpa error JS", not errors)
         await browser.close()
     sys.exit(1 if failures else 0)

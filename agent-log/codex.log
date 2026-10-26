@@ -4,3 +4,8 @@
 - Perbaiki visibility systray, pager wajib dua record, integrasi Odoo UI/browser CI.
 - Verifikasi runtime menunggu CI; tanpa Railway/production.
 - Task managed by codex agent at 2026-10-26T10:46:05+07:00
+
+[2026-10-26T10:54:42+07:00] [INFO] UI CI diagnostic correction
+- First runtime:4systray browser regressions PASS; pager/classic/sidebar PASS; JS error check failed.
+- Artifact shows missing filestore attachments between containers. Preserve disposable filestore across install/fixture/server; print browser error stack. Do not suppress errors.
+- Task managed by codex agent at 2026-10-26T10:54:42+07:00
