@@ -79,7 +79,8 @@ EOF
 if [ "${1:-}" = "shell" ]; then
   shift
   log "menjalankan Odoo shell dengan konfigurasi penuh"
-  exec odoo_run shell "$@"
+  odoo_run shell "$@"
+  exit $?
 fi
 
 # 3. Reset terkontrol: token harus BARU (tercatat di id_meta.reset_log); token lama diabaikan

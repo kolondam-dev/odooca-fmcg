@@ -1,5 +1,29 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Perbaikan Dispatch Shell di Entrypoint deploy/init.sh (Panggilan Fungsi Bash Tanpa exec)
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6429246384](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6429246384)):**
+- Menindaklanjuti kegagalan step runtime disposable pada commit `68cffec`:
+  * `exec: odoo_run: not found exit code 127`: `odoo_run` adalah fungsi Bash di dalam berkas skrip, bukan berkas executable biner di filesystem, sehingga `exec odoo_run` gagal mencari binary di `$PATH`.
+  * Akibatnya Odoo shell belum sempat mulai, dan introspeksi schema serta dua run transaksi belum dieksekusi.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Perbaikan Dispatch Shell di Entrypoint ([deploy/init.sh](file:///c:/Users/ACER/dev/odooca-fmcg/deploy/init.sh)):**
+   - Menghapus kata kunci `exec` saat memanggil fungsi shell internal `odoo_run`:
+     ```bash
+     if [ "${1:-}" = "shell" ]; then
+       shift
+       log "menjalankan Odoo shell dengan konfigurasi penuh"
+       odoo_run shell "$@"
+       exit $?
+     fi
+     ```
+   - Memastikan `odoo_run shell "$@"` dieksekusi sebagai fungsi Bash normal dengan konfigurasi `/tmp/odoo.conf` lengkap, membaca input stream stdin, dan meneruskan exit statusnya (`exit $?`) ke container runner.
+2. **Verifikasi Sintaks:**
+   - Sintaks Bash divalidasi via `bash -n deploy/init.sh` (exit code 0).
+   - Seluruh 31/31 unit test adapter dan linter `ruff check .` lolos bersih.
+
+---
 ## 2026-10-27 — antigravity agent — Perbaikan Entrypoint Shell, Konfigurasi Penuh /tmp/odoo.conf & Penanganan Tangguh Stdin __file__ pada Odoo 19 Disposable
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6428917098](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6428917098)):**
 - Menindaklanjuti kegagalan CI runtime pada commit `9db41ba`:
@@ -14,7 +38,7 @@
    - Menentukan `REG_PATH` adaptif (`REPO_ROOT / 'data' / 'registers'` atau fallback `/opt/data/registers`), menjamin pencarian 15 berkas kanonikal LF selalu valid baik di host maupun container.
 2. **Konfigurasi Lengkap `/tmp/odoo.conf` & Subcommand `shell` Entrypoint ([deploy/init.sh](file:///c:/Users/ACER/dev/odooca-fmcg/deploy/init.sh)):**
    - Menuliskan opsi lengkap ke `/tmp/odoo.conf`: `admin_passwd`, `addons_path` (mengambil dari `/opt/deploy/addons_path.sh`), `data_dir`, `without_demo = True`, `db_host`, `db_port`, `db_user`, dan `db_password`.
-   - Menambahkan handler subcommand `shell`: jika argumen pertama adalah `shell`, skrip langsung mengeksekusi `exec odoo_run shell "$@"` dengan seluruh environment dan addons path yang sama persis dengan Odoo server utama.
+   - Menambahkan handler subcommand `shell`: jika argumen pertama adalah `shell`, skrip langsung mengeksekusi `odoo_run shell "$@"` dengan seluruh environment dan addons path yang sama persis dengan Odoo server utama.
    - Menambahkan flag `-p` pada perintah `su` (`su -p -s /bin/bash ...`) untuk menjaga environment variables saat drop privileges.
 3. **Penyelarasan CI GitHub Actions ([.github/workflows/ci.yml](file:///c:/Users/ACER/.gemini/antigravity-ide/brain/fa72665f-eaec-49b7-b9d0-00e8f9e5a9ac/.github/workflows/ci.yml)):**
    - Mengubah pemanggilan runner disposable di step CI menjadi:
