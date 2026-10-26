@@ -62,3 +62,8 @@
 - Regression test menemukan input referensi trip ter-reset pada rerender; diperbaiki dengan defaultValue. DO kosong dinormalisasi null agar pesan validasi spesifik.
 - Docker lokal tidak tersedia; build live/demo dan smoke container ditugaskan gate CI, belum mengklaim PASS atau deploy Railway.
 - Task managed by codex agent at 2026-10-27T06:54:01+07:00
+
+[2026-10-27T06:56:16+07:00] [INFO] Perbaiki retry smoke container saat startup
+- CI quality/browser PASS, image live build PASS; curl health mendapat connection reset sebelum listener siap.
+- Gunakan retry-all-errors dengan timeout per request dan retry terbatas; health/static/API tetap wajib sukses. Hasil run baru diperiksa setelah push.
+- Task managed by codex agent at 2026-10-27T06:56:16+07:00

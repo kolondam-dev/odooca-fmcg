@@ -5,7 +5,7 @@
 **Berubah:** validasi request biaya (H-1 menurut businessDate bootstrap, referensi trip/DO, rupiah bulat, KM BBM dan satu charging scope), schema ExpenseRequest OpenAPI; server hosting Node24, Dockerfile multi-stage live-locked default/demo eksplisit, railway.toml + runbook.
 **CI:** browser memakai server hosting yang sama; test:hosting dan pwa-container additive, aggregator pwa-gate memerlukan quality/browser/container. Tidak mengubah ruleset atau workflow Odoo.
 **Diverifikasi:** 19 unit + 1 hosting test + 14 browser phone/tablet PASS, format/typecheck/contracts/build budget, Ruff/4 manifest PASS. CI diperiksa setelah push.
-**Belum diuji:** Docker lokal tidak tersedia; hasil build image menunggu gate CI. Railway belum dibuat/dideploy, API route mengembalikan 503 eksplisit.
+**CI awal:** quality/browser PASS; image live berhasil dibangun. Smoke health request terkena connection reset saat startup; retry diperluas untuk reset selain refused. Run baru diperiksa setelah fix. Docker lokal tidak tersedia. Railway belum dibuat/dideploy, API route mengembalikan 503 eksplisit.
 **Batas:** businessDate bootstrap bisa stale; server wajib validasi ulang tanggal/cutoff, referensi/ACL, limit, bukti dan approval. Input referensi manual simulasi belum membuktikan DO/trip ada. Absensi/POD, auth/device, peta, realisasi/settlement dan posting backend tetap dependency; live terkunci.
 **Menunggu:** review pemilik; setup service/deploy oleh pemilik/agent deploy setelah review. Backend/seed/loader dan service Odoo tidak disentuh.
 

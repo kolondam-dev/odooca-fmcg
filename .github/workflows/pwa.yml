@@ -74,7 +74,7 @@ jobs:
           docker build -t fmcg-pwa ./pwa
           docker run -d --name pwa-host -e PORT=8080 -p 8080:8080 fmcg-pwa
           trap 'docker logs pwa-host; docker rm -f pwa-host' EXIT
-          curl --retry 10 --retry-connrefused --retry-delay 1 --fail http://localhost:8080/healthz
+          curl --retry 10 --retry-all-errors --retry-delay 1 --max-time 5 --fail http://localhost:8080/healthz
           curl --fail http://localhost:8080/field/ -o /tmp/pwa-index.html
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v1/me/bootstrap)" = 503
           docker build --build-arg PWA_BUILD_MODE=demo -t fmcg-pwa-demo ./pwa
