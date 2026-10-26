@@ -21,7 +21,7 @@ body.id-shell-sidebar {
     --id-brand-box: #714B67;
 
     // Grid: sidebar | panel seksi | isi. Baris: topbar | isi. Halaman tidak ikut scroll.
-    display: grid !important;
+    display: grid;
     grid-template-columns: var(--id-sidebar-w) var(--id-panel-w) minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
     height: 100dvh;
@@ -45,8 +45,8 @@ body.id-shell-sidebar {
         --NavBar-entry-backgroundColor--hover: rgba(0, 26, 87, .07);
         --NavBar-entry-backgroundColor--focus: rgba(0, 26, 87, .07);
         --NavBar-entry-backgroundColor--active: rgba(0, 26, 87, .1);
-        border: 0 !important;
-        box-shadow: none !important;
+        border: 0;
+        box-shadow: none;
     }
     .o_main_navbar {
         height: var(--id-topbar-h);
@@ -61,13 +61,13 @@ body.id-shell-sidebar {
 
         // Judul halaman = nama aplikasi aktif (persis di tengah, font elegan & jelas).
         .o_menu_brand {
-            display: flex !important;
+            display: flex;
             flex: 1 1 auto;
             justify-content: center;
             align-items: center;
             text-align: center;
             order: 2;
-            margin: 0 !important;
+            margin: 0;
             padding: 0 .75rem;
             font-size: 1.45rem;
             font-weight: 700;
@@ -86,32 +86,27 @@ body.id-shell-sidebar {
             height: 100%;
             gap: 0;
 
-            > *:empty { display: none !important; }
+            > *:empty { display: none; }
 
-            // 4 menu aktif dengan tinggi dan baseline yang sejajar sempurna
-            .o-mail-DiscussSystray-class,
-            .o-dropdown:has(.fa-clock-o),
-            .o_switch_company_menu,
-            .o_user_menu {
+            // Semua item systray sejajar tengah; pemisah vertikal di antara item yang tampil
+            // (item pertama tidak berpemisah), berapa pun jumlahnya (mode debug, modul tambahan).
+            // Item kosong dan pembungkus tombol menu mobile (tersembunyi di desktop) tidak dihitung.
+            // display memakai !important karena utilitas d-md-block pada menu perusahaan/pengguna.
+            > :not(:empty):not(:has(> .o_mobile_menu_toggle)) {
                 display: flex !important;
-                align-items: center !important;
-                height: 38px !important;
-                position: relative !important;
+                align-items: center;
+                height: 38px;
+                position: relative;
             }
-
-            // Tepat 3 pemisah vertikal rapi di antara 4 menu, sejajar dan presisi
-            .o-dropdown:has(.fa-clock-o)::before,
-            .o_switch_company_menu::before,
-            .o_user_menu::before {
-                content: "" !important;
-                display: block !important;
-                width: 1px !important;
-                height: 20px !important;
-                background: #d8dee8 !important;
-                margin-right: .6rem !important;
-                margin-left: .2rem !important;
-                align-self: center !important;
-                flex-shrink: 0 !important;
+            > :not(:empty):not(:has(> .o_mobile_menu_toggle)) ~ :not(:empty):not(:has(> .o_mobile_menu_toggle))::before {
+                content: "";
+                display: block;
+                width: 1px;
+                height: 20px;
+                background: #d8dee8;
+                margin-right: .6rem;
+                margin-left: .2rem;
+                flex-shrink: 0;
             }
         }
         .o_menu_systray .o-dropdown > .dropdown-toggle,
@@ -186,7 +181,7 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
         display: none; // disembunyikan saat sidebar terbuka
         place-items: center; flex: none;
         width: 2.25rem; height: 2.25rem;
-        background: transparent !important; border: 0 !important; box-shadow: none !important;
+        background: transparent; border: 0; box-shadow: none;
         color: #ffffff; font-size: 1.75rem;
         cursor: pointer;
         transition: color .3s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -211,7 +206,7 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
         letter-spacing: .08em;
         text-transform: uppercase;
         padding: .18rem .5rem;
-        border-radius: 0 !important; // jangan rounded
+        border-radius: 0; // jangan rounded
         line-height: 1.2;
     }
     &__collapse { padding: .375rem; border-radius: .375rem; color: var(--id-sidebar-fg);
@@ -224,7 +219,7 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
 
     // Item persegi selebar sidebar; yang aktif menyambung ke panel/konten di sebelahnya.
     .id_item {
-        display: flex !important; align-items: center; gap: .75rem; width: 100%; height: 44px;
+        display: flex; align-items: center; gap: .75rem; width: 100%; height: 44px;
         padding: 0 1rem; border-radius: 0; color: var(--id-sidebar-fg); font-weight: 600;
         &:hover { background: var(--id-sidebar-hover); color: var(--id-sidebar-fg-strong); }
         &.is-current { background: var(--id-sidebar-pill-bg); color: var(--id-sidebar-pill-fg); }
@@ -247,8 +242,8 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
 
     // Mode ciut: hanya ikon O besar tanpa background pill.
     &--collapsed {
-        .id_sidebar__title, .id_sidebar__collapse, .id_label { display: none !important; }
-        .id_sidebar__logo { display: grid !important; }
+        .id_sidebar__title, .id_sidebar__collapse, .id_label { display: none; }
+        .id_sidebar__logo { display: grid; }
         .id_sidebar__head { flex-direction: column; justify-content: center; height: auto; gap: .25rem; padding: .65rem 0 .5rem; }
         .id_item--app { justify-content: center; padding-inline: 0; }
         .id_appwrap { width: 2rem; height: 2rem; }
@@ -284,7 +279,7 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
         &:hover { background: var(--id-panel-hover); color: #0b1f4d; } }
     &__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: .25rem 0 1rem; @include id-quiet-scroll(rgba(11, 31, 77, .25)); }
 
-    .id_pitem { display: flex !important; align-items: center; gap: .4rem; width: 100%; color: #0b1f4d; }
+    .id_pitem { display: flex; align-items: center; gap: .4rem; width: 100%; color: #0b1f4d; }
     // Judul seksi (tingkat 1).
     .id_pitem--group.id_depth-0 { padding: .85rem .9rem .3rem; font-size: .7rem; font-weight: 700;
         text-transform: uppercase; letter-spacing: .04em; }

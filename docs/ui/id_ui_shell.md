@@ -12,7 +12,9 @@ Berdampingan dengan tata letak klasik; dipilih per pengguna lewat menu pengguna
 - **Ikon aplikasi**: ikon bawaan Odoo tanpa latar. Diam = duo-tone (biru transparan + putih); hover/fokus/terpilih =
   berubah ke warna normal bawaan Odoo secara bersih tanpa animasi pembesaran dan tanpa glow.
 - **Topbar**: pencarian menu di kiri dengan sudut rounded diperkecil (4px); judul halaman aktif persis di tengah
-  (align center) dengan tipografi seimbang; area kanan (systray) dilengkapi divider tipis vertikal antar-ikon (dari discuss hingga profil user). Polos: tanpa garis bawah, tanpa tab seksi.
+  (align center) dengan tipografi seimbang; area kanan (systray) memakai divider tipis vertikal di antara item yang tampil, berapa pun jumlahnya
+  (aturan generik: item pertama tanpa divider; item kosong dan pembungkus tombol menu mobile tidak dihitung;
+  terbukti di mode debug yang punya 5 item). Polos: tanpa garis bawah, tanpa tab seksi.
 - **Panel seksi** (kiri isi): seksi > sub-seksi > sub dari menu aplikasi aktif, bisa diciutkan
   (tombol atau `Alt+P`), lebar 208px, font kecil. Menu aktif cukup tebal tanpa latar. Sub-seksi
   tertutup kecuali dilalui menu aktif. Menu aktif dikenali dari
@@ -37,9 +39,15 @@ dari sidebar -> pencarian. `Esc` -> isi. `Alt+M` fokus sidebar, `Alt+B` ciutkan 
   `.o_menu_sections`, `.o_menu_brand`). Selector ini paling mungkin bergeser antar-versi Odoo.
 - Pengelola fokus mencari elemen lewat selector (`.o_action_manager`, `.o_form_sheet`,
   `.o_searchview_input`); ikut diperiksa saat upgrade Odoo.
-- Semua CSS di bawah `body.id-shell-sidebar`; klasik tidak tersentuh. Layar kecil (`ui.isSmall`)
+- Semua CSS di bawah `body.id-shell-sidebar`; klasik tidak tersentuh. Kebijakan `!important`: hanya untuk
+  melawan utilitas Bootstrap (`d-flex`/`d-md-block`/`ms-auto`) yang memakai `!important`; setiap pemakaian
+  diberi komentar alasan. Mengurangi `!important` harus dibuktikan dengan snapshot gaya terhitung (lihat Uji). Layar kecil (`ui.isSmall`)
   memakai NavBar bawaan. Role pengguna placeholder (`UserMenu.idRoleLabel`) sampai `id_app` ada.
 - Tidak membaca atau menulis field bisnis, tidak menyentuh addon `id_*` lain.
+
+## Uji
+`docs/ui/e2e/smoke_ui.py` (Playwright, Odoo dengan `id_ui_form` terpasang dan minimal satu order penjualan).
+Untuk refactor CSS gunakan snapshot gaya terhitung dan posisi elemen kunci sebelum/sesudah.
 
 ## Belum dikerjakan
 Pola mobile (bottom nav), Tab di dalam isi, panel khusus aplikasi Dashboards (saat ini dobel dengan

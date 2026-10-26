@@ -23,5 +23,15 @@ Dasar pekerjaan UI/view (agen `claude-design`). Lisensi LGPL-3. Diuji di Odoo 19
   Indonesia. Kode sudah menjaga ini, jangan menonaktifkan `en_US`.
 - Peran per pengguna (menu tampil per app role) menunggu `id_app`.
 
+## Kapan perlu `-u` (mengikuti `deploy/init.sh`)
+Fase upgrade di `init.sh` berjalan **sekali per penanda** (`upgrade_modules_vN`), bukan setiap boot;
+paksa dengan `FORCE_UPGRADE=1` atau naikkan penanda. Hasil uji (Odoo `f4378f29`):
+- **Tanpa `-u`:** perubahan JS, template OWL (`.xml` statis), dan SCSS langsung terpakai setelah restart
+  (bundle aset dibangun ulang otomatis; diuji dengan mengubah ukuran font sidebar).
+- **Perlu `-u`:** perubahan `i18n/*.po`, kode Python, data XML, dan manifest. Termasuk urutan dan nama menu inti
+  (`<function>` `_id_ui_apply_navigation`) serta bahasa bawaan (`post_init_hook` hanya saat instal pertama).
+- Setelah meng-upgrade modul inti (sale, stock, ...) urutan/nama menu bisa tertimpa; jalankan `-u id_ui`
+  (di `init.sh`: `FORCE_UPGRADE=1` atau penanda baru).
+
 ## Uji
 `odoo-bin -d <db> -u id_ui --test-enable --test-tags /id_ui --stop-after-init`
