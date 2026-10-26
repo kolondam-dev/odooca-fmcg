@@ -1,7 +1,7 @@
 # FMCG Lapangan — frontend-first
 
 Implementasi awal client PWA untuk repo Odoo FMCG. Tidak mengubah backend, loader,
-seed atau deployment. Seluruh fixture independen dari data/seed dan hanya masuk
+seed atau deployment Odoo. Paket hosting PWA terisolasi tersedia; belum dideploy. Seluruh fixture independen dari data/seed dan hanya masuk
 build demo. Rujukan utama: [plan mobile](../docs/blueprints/mobile_api_and_pwa_plan.md).
 
 ## Menjalankan
@@ -37,7 +37,7 @@ simulator pada live. Belum ada publikasi web, integrasi auth nyata atau deploy.
 | Sales | Outlet contoh, pemilihan principal, draft quantity yang dipulihkan, estimasi total, validasi satu principal, request extra call |
 | Delivery | Manifest contoh, form POD dan capture bukti; official submit ditahan karena API evidence/map belum tersedia |
 | Personal HRIS | Form absensi/cuti, akun sendiri per persona, slip ditandai belum terintegrasi; tidak meng-cache slip personal |
-| Biaya | Draft request kategori BBM/makan/nginap/darurat, per-trip/per-DO, odometer, narasi tier Supervisor/BM; tidak mencairkan uang atau menghitung limit resmi |
+| Biaya | Request simulasi BBM/makan/nginap/darurat: schema ketat nominal/KM, referensi trip/DO, H-1 menurut tanggal bisnis bootstrap, narasi tier Supervisor/BM; tidak mencairkan uang atau menghitung limit resmi |
 | Outbox | IndexedDB per identity, command UUID tetap, single-engine flush lock, retry/backoff, otomatis saat online/resume, 15s timer saat aktif, terminal 4xx/401 tertahan |
 | Evidence | Foto terkompresi <=1 MB, koordinat/accuracy dan waktu lokal, Blob tersimpan per user, status map_pending; tidak mengklaim kamera asli/geofence sah |
 | API draft | Zod DTO + OpenAPI generated, HTTP adapter tanpa fallback; belum diaktifkan sebagai aplikasi live |
@@ -72,6 +72,7 @@ npm run format:check
 npm run typecheck
 npm run contracts:check
 npm test
+npm run test:hosting
 npm run build:demo
 npm run build
 npm run check:build
@@ -85,7 +86,8 @@ Workflow `.github/workflows/pwa.yml`:
   demo/live builds, total JS gzip <=200 KiB, font <=100 KiB, scope dan fixture leakage.
 - `pwa-browser`: phone/tablet, actual preview, offline reload dan reconnect, persona
   isolation, expense pending approval, missing evidence, live fail-closed, screenshot/trace.
-- `pwa-gate`: always-run aggregator; gagal jika quality/browser gagal, dibatalkan atau skipped.
+- `pwa-container`: build image live/demo terisolasi dan smoke health/static/API.
+- `pwa-gate`: always-run aggregator; gagal jika quality/browser/container gagal, dibatalkan atau skipped.
 
 Tidak memakai path filter agar check wajib tidak menggantung pada PR non-PWA.
 Workflow tidak merge/deploy, tidak memakai secret, dan tidak mengubah workflow Odoo.
@@ -104,3 +106,18 @@ Kode project mengikuti LGPL-3.0-only. Phosphor SVG: MIT; Inter: SIL OFL.
 Salinan license tersedia pada `public/licenses`. Hanya glyph/ikon yang diperlukan
 yang dikirim, tanpa CDN, font icon penuh, map SDK atau dependensi React untuk ikon.
 Aset PNG merupakan rasterisasi icon.svg repo, bukan foto/gambar generatif.
+
+## Hosting dan status biaya
+
+Lihat [paket hosting Railway](hosting/README.md). Default container menyajikan
+build live terkunci; simulasi harus dipilih eksplisit. Tidak membuat service,
+mengubah routing Odoo, atau menyalakan aplikasi operasional.
+
+Schema `ExpenseRequest` diekspor ke OpenAPI sebagai draft kontrak khusus biaya.
+Validasi H-1 menggunakan tanggal bisnis bootstrap (termasuk batas bulan/tahun),
+bukan jam browser. Tanggal bootstrap dapat kedaluwarsa saat aplikasi dibiarkan
+terbuka: server wajib memeriksa ulang tanggal, cutoff, referensi/akses trip-DO,
+limit rupiah, bukti odometer dan seluruh approval. Referensi pada simulasi masih
+input manual; schema dan UI bukan bukti bahwa trip/DO benar-benar ada. Permintaan
+tetap menunggu review simulator, bukan approved/disbursed. Foto masih lokal dan
+map_pending; realisasi/settlement serta limit resmi belum diimplementasi.

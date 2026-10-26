@@ -145,6 +145,91 @@
         ],
         "additionalProperties": false
       },
+      "ExpenseRequest": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "fuel_planned",
+              "fuel_emergency",
+              "meal",
+              "lodging",
+              "repair"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^[1-9]\\d{0,8}$"
+          },
+          "expense_scope": {
+            "type": "string",
+            "enum": [
+              "trip",
+              "delivery"
+            ]
+          },
+          "trip_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "delivery_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          },
+          "odometer": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9999999
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "evidence": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "category",
+          "amount",
+          "expense_scope",
+          "trip_id",
+          "delivery_id",
+          "scheduled_date",
+          "odometer",
+          "reason",
+          "evidence"
+        ],
+        "additionalProperties": false
+      },
       "Receipt": {
         "type": "object",
         "properties": {

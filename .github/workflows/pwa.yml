@@ -26,6 +26,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run contracts:check
       - run: npm test
+      - run: npm run test:hosting
       - run: npm run build:demo
       - run: npm run build
       - run: npm run check:build
@@ -63,13 +64,28 @@ jobs:
             pwa/test-results/
             pwa/playwright-report/
           retention-days: 7
-  pwa-gate:
-    if: always()
-    needs: [pwa-quality, pwa-browser]
+  pwa-container:
+    needs: pwa-quality
     runs-on: ubuntu-24.04
     steps:
-      - name: Require both client gates
+      - uses: actions/checkout@v4
+      - name: Build isolated hosting image and smoke health/static/API boundary
+        run: |
+          docker build -t fmcg-pwa ./pwa
+          docker run -d --name pwa-host -e PORT=8080 -p 8080:8080 fmcg-pwa
+          trap 'docker logs pwa-host; docker rm -f pwa-host' EXIT
+          curl --retry 10 --retry-connrefused --retry-delay 1 --fail http://localhost:8080/healthz
+          curl --fail http://localhost:8080/field/ -o /tmp/pwa-index.html
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v1/me/bootstrap)" = 503
+          docker build --build-arg PWA_BUILD_MODE=demo -t fmcg-pwa-demo ./pwa
+  pwa-gate:
+    if: always()
+    needs: [pwa-quality, pwa-browser, pwa-container]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require client and hosting gates
         env:
           QUALITY_RESULT: ${{ needs.pwa-quality.result }}
           BROWSER_RESULT: ${{ needs.pwa-browser.result }}
-        run: test "$QUALITY_RESULT" = success && test "$BROWSER_RESULT" = success
+          CONTAINER_RESULT: ${{ needs.pwa-container.result }}
+        run: test "$QUALITY_RESULT" = success && test "$BROWSER_RESULT" = success && test "$CONTAINER_RESULT" = success

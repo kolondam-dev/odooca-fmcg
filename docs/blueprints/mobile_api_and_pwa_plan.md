@@ -1005,3 +1005,18 @@ Accepted pada simulator berarti diterima simulator, bukan SO Odoo/approval resmi
 Bukti map_pending tidak meluluskan absensi/POD. CI PWA bersifat additive terhadap
 CI Odoo, dengan pwa-gate sebagai aggregator yang dapat dijadikan required check.
 Workflow tidak mengubah ruleset, melakukan deploy atau menjalankan loader.
+
+### Kelanjutan setelah PR #19 — biaya dan hosting terisolasi
+
+Basis main f636129; branch agen/mobile-expense-hosting. Client menambahkan validasi
+request biaya: referensi trip wajib, per-DO wajib referensi DO, satu charging scope,
+nominal rupiah bulat, KM awal BBM, dan H-1 berdasarkan tanggal bisnis bootstrap.
+Schema ExpenseRequest diekspor terpisah pada OpenAPI draft. Resolusi referensi,
+cutoff, bukti, limit/approval dan realisasi tetap dependency backend; tidak ada
+posting atau pencairan uang.
+
+Paket `pwa/hosting` + Dockerfile + railway.toml menyiapkan satu service static PWA
+terpisah dalam project Railway yang sama, tanpa database baru. Default build live
+tetap terkunci. Gateway API belum disambungkan (503 eksplisit). Browser CI memakai
+server hosting yang sama; pwa-container ditambahkan ke aggregator pwa-gate. Detail
+setup dan alternatif reverse proxy ada di `pwa/hosting/README.md`. Belum deploy.

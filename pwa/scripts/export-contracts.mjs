@@ -6,9 +6,11 @@ import {
     IdentitySchema,
     SnapshotSchema,
 } from "../src/domain/contracts.ts";
+import { ExpenseRequestSchema } from "../src/domain/expense.ts";
 const schemas = Object.fromEntries(
     Object.entries({
         Command: CommandSchema,
+        ExpenseRequest: ExpenseRequestSchema,
         Receipt: ReceiptSchema,
         Identity: IdentitySchema,
         Snapshot: SnapshotSchema,

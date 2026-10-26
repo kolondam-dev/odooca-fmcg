@@ -11,6 +11,7 @@ import {
     type Scenario,
     type Snapshot,
 } from "./domain/contracts";
+import { validateExpense } from "./domain/expense";
 import { Outbox } from "./domain/outbox";
 import { haptic, money, queueLabels, time } from "./domain/format";
 import { FieldStore, type QueueItem } from "./storage/store";
@@ -1059,16 +1060,27 @@ function FormDialog({
                 if (!Number.isFinite(amount) || amount < 1)
                     throw new Error("Nominal harus lebih dari nol.");
                 type = "field_expense.request";
-                payload = {
-                    category,
-                    amount: String(amount),
-                    trip_id: dialog.trip ?? null,
-                    expense_scope: f.get("scope"),
-                    scheduled_date: f.get("date"),
-                    odometer: f.get("odometer"),
-                    reason: f.get("reason"),
-                    evidence: evidence ?? null,
-                };
+                payload = validateExpense(
+                    {
+                        category,
+                        amount: String(amount),
+                        trip_id: String(f.get("trip") ?? ""),
+                        delivery_id:
+                            f.get("scope") === "delivery"
+                                ? String(f.get("delivery") ?? "").trim() || null
+                                : null,
+                        expense_scope: f.get("scope"),
+                        scheduled_date: f.get("date"),
+                        odometer:
+                            f.get("odometer") === null ||
+                            f.get("odometer") === ""
+                                ? null
+                                : Number(f.get("odometer")),
+                        reason: f.get("reason"),
+                        evidence: evidence ?? null,
+                    },
+                    identity.businessDate,
+                );
                 label = `Petty cash • ${money(amount)}`;
             } else if (dialog.type === "leave") {
                 const from = String(f.get("from")),
@@ -1300,6 +1312,19 @@ function FormDialog({
                                         </option>
                                     </select>
                                 </label>
+                                <label>
+                                    Referensi trip / perjalanan
+                                    <input
+                                        name="trip"
+                                        required
+                                        maxLength={100}
+                                        defaultValue={dialog.trip ?? ""}
+                                    />
+                                </label>
+                                <label>
+                                    Referensi DO (untuk biaya per pengiriman)
+                                    <input name="delivery" maxLength={100} />
+                                </label>
                                 <p class="notice">
                                     {category === "fuel_emergency"
                                         ? "BBM insidentil: Supervisor + Branch Manager, berapa pun nominalnya."
@@ -1332,10 +1357,12 @@ function FormDialog({
                                             />
                                         </label>
                                         <p class="footnote">
-                                            Pengajuan BBM H-1 memerlukan foto
-                                            odometer; realisasi memerlukan struk
-                                            dan foto odometer setelah isi. Form
-                                            ini baru draft permohonan simulasi.
+                                            Tanggal bisnis simulasi:{" "}
+                                            {identity.businessDate}. Pengajuan
+                                            BBM H-1 memerlukan foto odometer;
+                                            realisasi memerlukan struk dan foto
+                                            odometer setelah isi. Form ini baru
+                                            draft permohonan simulasi.
                                         </p>
                                     </>
                                 )}
