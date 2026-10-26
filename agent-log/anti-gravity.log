@@ -483,5 +483,18 @@
   * Mengekspor laporan diagnostik ke historical_experiment_report.json dan mengintegrasikannya ke .github/workflows/ci.yml dengan upload-artifact@v4 (if: always()).
 - Menambahkan 2 unit test adapter di tests/test_canonical_loader_adapter.py (total 33/33 PASS, 105/105 repositori PASS).
 - Verifikasi ruff check All checks passed!, check_manifests.py 4 addon ok, verify_seed_invariants.py PASS, verify_seed_acceptance.py PASS.
-- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T06:30:00+07:00
+
+[2026-10-27T06:55:00+07:00] [INFO] Paket Perbaikan Komprehensif Seeding Historis Odoo 19: Source-Driven Oracle, Dependency Modul product_expiry, Kronologi Register Sejati, Native Readback & Replay Idempoten Penuh
+- Menutup temuan review PR #15 (issuecomment-6429963269):
+  * Memasang modul product_expiry di deploy/init.sh dan .github/workflows/ci.yml; introspeksi aman stock.lot.expiration_date di scripts/ops/verify_historical_experiment.py.
+  * Mengganti hardcoded oracle dengan build_source_oracle() yang mem-parse langsung CSV register kanonikal (initial_stock_20260701.csv, perpetual_order_lines.csv, perpetual_deliveries.csv, perpetual_order_rejections.csv, inbound_po_intransit_june_lines.csv, inbound_po_intransit_june_headers.csv).
+  * Memperbaiki kronologi register sejati: DO delivery (3 Juli) dan Retur Karantina (3 Juli) dieksekusi sebelum Receipt PO (4 Juli). Customer: CUST-GT-16 (Toko Pelita Jaya Wanea), Principal: PRIN-UNILEVER.
+  * Memisahkan identitas operasi stok per event (OPENING-20260701, DO-202607-0063, REJ-202607-001, PO-2026-06-05) untuk mencegah collision.
+  * Mengimplementasikan native historical readback pasca-injeksi via pergerakan stock.move.line dan tanggal efektif bisnis (membuktikan cut-off 3 Juli tidak bocor dengan penerimaan PO 4 Juli).
+  * Menghapus fallback quant.quantity = qty_units pada load_opening_stock di scripts/load_canonical_perpetual.py.
+  * Membuktikan Run 2 replay alur lengkap 4 operasi mempertahankan zero drift (0 move baru dibuat).
+  * Mengamankan serialisasi JSON bebas tuple keys via CustomJSONEncoder dalam blok try...finally dan ekstraksi artifact report di CI secara fail-closed.
+- Verifikasi ruff check All checks passed!, check_manifests.py 4 addon ok, 33/33 unit test adapter PASS.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T06:55:00+07:00

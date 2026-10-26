@@ -1,6 +1,44 @@
 # HANDOFF
 
-## 2026-10-27 — antigravity agent — Eksperimen Seeding Historis Minimal Odoo 19 (SKU ULV-RNS-03), Metode Inventory Adjustment Native & Audit Quant Tanpa create()
+## 2026-10-27 — antigravity agent — Paket Perbaikan Komprehensif Seeding Historis Odoo 19: Source-Driven Oracle, Dependency Modul product_expiry, Kronologi Register Sejati, Native Readback & Replay Idempoten Penuh
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6429963269](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6429963269)):**
+- Menindaklanjuti temuan supervisor atas commit `6d99bbb`:
+  1. *Runtime gagal karena `stock.lot.expiration_date` belum tersedia*: Modul `product_expiry` belum terpasang di runtime container Odoo 19 disposable.
+  2. *Oracle masih memakai angka hardcoded*: Oracle belum membaca register sumber kanonikal secara dinamis.
+  3. *Receipt PO berbenturan dengan opening*: Pemakaian origin `OPENING-20260701` pada helper inbound berisiko menimpa atau melewatkan receipt PO 311 karton.
+  4. *Urutan cutoff salah*: Kronologi sumber sebenarnya adalah Delivery DO (3 Juli) dan Retur Karantina (3 Juli) terjadi sebelum Receipt PO (4 Juli). Customer sumber adalah `CUST-GT-16` - Toko Pelita Jaya Wanea dan Principal adalah `PRIN-UNILEVER`.
+  5. *Actual belum membaca laporan historis*: Perlu native historical readback yang membuktikan stok as-of tanggal historis (misal 3 Juli) tidak bocor dengan transaksi masa depan (4 Juli).
+  6. *Jalur loader utama masih memiliki fallback penulisan langsung*: Hapus fallback `if not quant.quantity: quant.quantity = qty_units`.
+  7. *Run 2 dan report belum membuktikan klaim*: Replay Run 2 harus mengulang seluruh alur secara lengkap, dan serialisasi JSON wajib bebas tuple keys serta ditulis via `try...finally`.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Pemasangan Modul `product_expiry` & Introspeksi Lapangan ([deploy/init.sh](file:///c:/Users/ACER/dev/odooca-fmcg/deploy/init.sh) & [.github/workflows/ci.yml](file:///c:/Users/ACER/dev/odooca-fmcg/.github/workflows/ci.yml)):**
+   - Menambahkan `product_expiry` ke dalam `INIT_MODULES` di `deploy/init.sh` dan workflow CI `docker run`.
+   - Menambahkan introspeksi runtime di `verify_historical_experiment.py` untuk menginstal `product_expiry` via `button_immediate_install()` jika belum aktif, serta memeriksa keberadaan `expiration_date` pada `stock.lot._fields`.
+2. **Source-Driven Oracle Dinamis Langsung dari Register Kanonikal CSV ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Mengimplementasikan `build_source_oracle()` yang membaca langsung 6 berkas CSV register kanonikal (`initial_stock_20260701.csv`, `perpetual_order_lines.csv`, `perpetual_deliveries.csv`, `perpetual_order_rejections.csv`, `inbound_po_intransit_june_lines.csv`, `inbound_po_intransit_june_headers.csv`).
+   - Menurunkan nilai ekspektasi 5 cutoff secara dinamis dari baris data sumber:
+     * *Cutoff 0 (Pre-Opening 2026-06-30)*: On-hand fisik 0 ctn, Rp 0.
+     * *Cutoff 1 (Opening 2026-07-01)*: 84 ctn (1.008 pcs) Lot `LOT-VER-20260615-INIT-09` @ Rp 18.500 = Rp 18.648.000.
+     * *Cutoff 2 (Delivery DO-202607-0063 2026-07-03 14:00:00)*: -7 ctn (84 pcs) -> On-hand saleable 77 ctn (924 pcs) = Rp 17.094.000.
+     * *Cutoff 3 (Retur REJ-202607-001 2026-07-03 23:59:59)*: +1 ctn (12 pcs) ke Karantina -> On-hand saleable 77 ctn, Karantina 1 ctn (Total fisik 78 ctn / Rp 17.316.000).
+     * *Cutoff 4 (Receipt PO-2026-06-05 2026-07-04 23:59:59)*: +311 ctn (3.732 pcs) Lot `LOT-VER-20260704-09` @ Rp 18.500 = Rp 69.042.000 -> On-hand saleable 388 ctn, Karantina 1 ctn (Total fisik 389 ctn / Rp 86.358.000).
+3. **Pemisahan Identitas Operasi & Penanganan Collision:**
+   - Setiap operasi stok menggunakan origin, lokasi sumber, dan tujuan yang berbeda secara definitif (`OPENING-20260701`, `DO-202607-0063`, `REJ-202607-001`, `PO-2026-06-05`), mengeliminasi risiko benturan identitas dokumen.
+4. **Native Historical Readback Pasca-Injeksi Seluruh Data:**
+   - Evaluasi saldo on-hand historis pada tiap cutoff dieksekusi setelah seluruh data transaksi diinjeksi, menghitung saldo net dari `stock.move.line` yang selesai dengan `date <= cutoff_dt`.
+   - Membuktikan bahwa pada Cutoff 2 (3 Juli), saldo historis yang terbaca adalah 77 karton saleable (tidak bocor dengan receipt 311 karton tanggal 4 Juli).
+5. **Replay Lengkap Run 2 & Zero Drift:**
+   - Run 2 mereplay ulang ke-4 operasi secara penuh pada database yang sama, memverifikasi bahwa 0 pergerakan baru tercipta (`delta_moves == 0`, `delta_lines == 0`).
+6. **Pembersihan Loader Utama ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menghapus fallback write `quant.quantity = qty_units`.
+   - Menggunakan introspeksi aman `expiration_date` pada pembuatan lot opening.
+   - Menyelaraskan tanggal efektif bisnis historis pada move hasil inventory adjustment (`2026-07-01 00:00:00`).
+7. **Penyempurnaan Ekspor Diagnostik & CI Pipeline:**
+   - JSON report diekspor menggunakan `CustomJSONEncoder` bebas tuple keys di dalam blok `try...finally`.
+   - CI workflow diperbarui dengan step ekstraksi artifact report mandiri berstatus `if: always()`.
+
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6429533010](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6429533010)):**
 - Menindaklanjuti kegagalan Odoo shell commit `6dbc46b` saat `load_opening_stock`:
   `odoo.exceptions.UserError: Quant's creation is restricted, you can't do this operation.`

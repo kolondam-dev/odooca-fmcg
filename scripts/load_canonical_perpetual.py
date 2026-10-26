@@ -531,21 +531,36 @@ class CanonicalPerpetualAdapter:
             if StockLot:
                 lot = StockLot.search([("name", "=", lot_name), ("product_id", "=", prod.id)], limit=1)
                 if not lot:
-                    lot = StockLot.create({
+                    lot_vals = {
                         "name": lot_name,
                         "product_id": prod.id,
                         "company_id": self.company.id,
-                        "expiration_date": p_data["expiry_date"],
-                    })
+                    }
+                    if hasattr(StockLot, "_fields") and "expiration_date" in StockLot._fields:
+                        lot_vals["expiration_date"] = p_data["expiry_date"]
+                    lot = StockLot.create(lot_vals)
                 lot_id = lot.id
 
-            # Idempotency check: jika quant untuk (product, location, lot) sudah ada
+            # Idempotency check: jika opening move atau quant untuk (product, location, lot) sudah pernah diproses
+            StockMove = self.env.get("stock.move")
+            opening_move_exists = False
+            if StockMove:
+                mv_domain = [
+                    ("product_id", "=", prod.id),
+                    ("location_dest_id", "=", warehouse_loc.id),
+                    ("origin", "=", "OPENING-20260701"),
+                    ("state", "=", "done"),
+                ]
+                if lot_id:
+                    mv_domain.append(("lot_ids", "in", [lot_id]))
+                opening_move_exists = bool(StockMove.sudo().search(mv_domain, limit=1))
+
             domain = [("product_id", "=", prod.id), ("location_id", "=", warehouse_loc.id)]
             if lot_id:
                 domain.append(("lot_id", "=", lot_id))
 
             existing_quant = StockQuant.search(domain, limit=1)
-            if existing_quant:
+            if opening_move_exists or (existing_quant and getattr(existing_quant, "quantity", 0) > 0):
                 self.stats["skipped_opening_quants"] += 1
                 continue
 
@@ -562,9 +577,18 @@ class CanonicalPerpetualAdapter:
             if hasattr(quant, "action_apply_inventory"):
                 quant.action_apply_inventory()
 
-            # Pastikan kuantitas terisi pada quant record
-            if not getattr(quant, "quantity", None):
-                quant.quantity = qty_units
+            # Selaraskan tanggal efektif bisnis pada stock.move hasil inventory adjustment
+            if StockMove:
+                adj_moves = StockMove.sudo().search([
+                    ("product_id", "=", prod.id),
+                    ("location_dest_id", "=", warehouse_loc.id),
+                    ("is_inventory", "=", True),
+                    ("state", "=", "done"),
+                ], order="id desc", limit=1)
+                for am in adj_moves:
+                    am.write({"date": "2026-07-01 00:00:00", "origin": "OPENING-20260701"})
+                    if hasattr(am, "move_line_ids"):
+                        am.move_line_ids.write({"date": "2026-07-01 00:00:00"})
 
             self.stats["opening_quants"] += 1
 

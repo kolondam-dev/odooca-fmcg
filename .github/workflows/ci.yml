@@ -87,7 +87,7 @@ jobs:
             -e PGHOST=localhost -e PGUSER=postgres -e PGPASSWORD=ci-postgres -e PGDATABASE=fmcg \
             -e ODOO_DB_USER=odoo_app -e ODOO_DB_PASSWORD=ci-app -e ADMIN_PASSWD=ci-master \
             -e ADMIN_LOGIN_PASSWORD=ci-admin -e BASE_URL=http://ci.example.test \
-            -e INIT_MODULES=id_base,l10n_id,sale_management,stock,purchase,account fmcg-odoo:ci
+            -e INIT_MODULES=id_base,l10n_id,sale_management,stock,purchase,account,product_expiry fmcg-odoo:ci
           for i in $(seq 1 120); do
             [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8069/web/login)" = "200" ] && break
             sleep 5
@@ -113,7 +113,10 @@ jobs:
         run: |
           set -o pipefail
           docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_historical_experiment.py 2>&1 | tee experiment.log
-          docker exec -i odoo cat historical_experiment_report.json > historical_experiment_report.json || true
+      - name: Ekstraksi laporan eksperimen historis
+        if: always()
+        run: |
+          docker exec odoo cat /tmp/historical_experiment_report.json > historical_experiment_report.json 2>/dev/null || docker exec odoo cat historical_experiment_report.json > historical_experiment_report.json 2>/dev/null || true
       - name: Upload artifact diagnostik eksperimen historis Odoo 19
         if: always()
         uses: actions/upload-artifact@v4
