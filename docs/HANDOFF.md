@@ -1,5 +1,25 @@
 # HANDOFF
 
+## 2026-10-26 — codex agent — UI v7 siap review tanpa SQL wilayah
+**Basis:** main f130693 + perubahan UI/dokumentasi claude-design 388eff6.
+**Scope:** 20 SQL data/raw tidak dibawa; file asli tetap di agen/ui-cleanup-v7.
+**Perbaikan:** divider memakai computed visibility observer scoped ke systray,
+tanpa display override, cleanup saat unmount; pager smoke wajib dua record,
+memastikan judul berubah lalu pulih. Empat regression tests Chromium memakai
+SCSS/helper asli (hidden, responsive, dynamic item, observer cleanup).
+**CI:** install-test memasang id_ui_form beserta dependency, menjalankan tests
+id_base/id_ui/id_ui_shell, fixture dua quotation, Odoo server dan browser smoke.
+Tidak memakai Railway/production atau data seed transaksi.
+**Verifikasi lokal:** Ruff dan manifest/syntax checks; browser lokal belum tersedia,
+penerimaan runtime menunggu hasil CI branch ini. Tidak ada klaim merge main.
+
+## 2026-10-25 — claude-design agent (chat + sandbox) — UI cleanup v7: handoff dirapikan, judul statusbar dikokohkan, divider generik, !important dikurangi
+**Berubah:** (1) Entri HANDOFF v2/v3/v4 dilipat ke berkas ini dan `docs/ui/_handoff_v2/_v3/_v4.md` dihapus; mulai sekarang entri ditulis langsung di `HANDOFF.md`, tanpa berkas sementara. (2) `id_ui_form`: `syncTitle` idempoten, dibatasi ke akar renderer (`useRef("compiled_view_root")`), dikembalikan ke sheet bila tata letak klasik atau form di dialog, titik sisip aman. (3) `id_ui_shell`: divider systray generik (item tampil - 1; item kosong dan pembungkus tombol menu mobile tidak dihitung) sehingga benar juga di mode debug (5 item). (4) `!important` turun dari 27 ke 3 (shell) dan dari 60 ke 4 (form), semuanya melawan utilitas Bootstrap/Odoo dan diberi komentar alasan. (5) `smoke_ui.py` 25 -> 32 cek (judul tunggal di statusbar, footer sticky, divider normal/debug, pager, ganti tata letak dan pemulihan judul). (6) `docs/ui/id_ui_form.md` dan `id_ui_shell.md` diperbarui (pemindahan DOM, kebijakan `!important`).
+**Diverifikasi (bagaimana):** sandbox, Odoo `f4378f29`, DB kosong: 0 failed dari 7 uji; smoke 32/32; snapshot gaya terhitung + posisi elemen kunci di 4 halaman (form, form debug, daftar, dashboard) sebelum vs sesudah identik untuk halaman normal (selisih hanya mode debug: ikon debug kini sejajar, divider konsisten); smoke baru GAGAL terhadap SCSS lama (debug: 5 item, 3 divider), jadi cek itu memang menangkap bug; pemindahan DOM judul 1 kali saat mount dan tetap 1 setelah 9 re-render tab; `ruff` dan `check_manifests.py` lolos.
+**Belum diuji:** stack OCA penuh, `docker build`/Railway, CI, browser selain Chromium, mobile; footer sticky pada form selain order penjualan.
+**Butir terbuka:** (1) dua sesi memakai tanda tangan `claude-design agent` sehingga acuan `whats_new.sh` ambigu; usul untuk pemilik/`claude-dev`: bedakan per sesi (mis. akhiran sesi) di `AGENT_PROTOCOL.md` dan wajibkan `log_entry.sh` agar tanda tangan commit sama dengan entri log (log v4 memakai UTC dan tanda tangan v4-v6 berbeda dengan stempel entri log). (2) M1c dari review `claude-dev` (menu referensi ke Configuration, dashboard contoh, kolom/filter/group-by) belum dikerjakan. (3) Panel ganda di aplikasi Dashboards masih terbuka. (4) Koreksi dari saya: entri v2 menyebut fase `-u` berjalan setiap boot; yang benar berbasis penanda (`upgrade_modules_vN`). Aturan kapan perlu `-u` ada di `docs/ui/id_ui.md`. (5) Menu `FMCG Distribution` (id_base, sequence 25) belum punya terjemahan `id_ID` sehingga tampil Inggris di sidebar Indonesia; terjemahan sebaiknya di `id_base/i18n` atau lewat glosarium (istilah baru). (6) CI `install-test` masih hanya memasang `id_base`; permintaan menambah `-i id_ui_form` dan `--test-tags /id_ui,/id_ui_shell` belum terpenuhi (diuji manual bersama id_base terbaru: 0 failed dari 8, log bersih).
+**Menunggu:** pemilik (terapkan patch, commit, push); `claude-dev` (putuskan aturan penamaan sesi di protokol).
+
 ## 2026-10-25 — antigravity agent (Live Railway & Playwright Verification: Database Schema Synchronization & Browse Error Resolution)
 **Berubah:**
 - `deploy/init.sh`:
@@ -135,6 +155,30 @@
 **Belum diuji:**
 - Browser Firefox/Safari (hanya diuji Chromium/Edge).
 - Layar mobile (akan fallback ke tampilan responsif bawaan).
+
+## 2026-10-25 — claude-design agent (chat + sandbox) — UI refinement v4: logo O tanpa pill, FMCG sudut tegas, topbar rata tengah, divider systray
+**Berubah:** `id_ui_shell`:
+- Logo O: background pill dihilangkan. Saat terbuka hanya tampil "Odoo FMCG"; saat ciut tampil ikon "O" (`oi-odoo`) besar putih tanpa background yang berubah menjadi ungu Odoo (`#714B67`) dengan animasi halus dan glow tipis saat di-hover atau di-klik.
+- FMCG brandbox: sudut tegas tanpa rounded (`border-radius: 0`), font tipis elegan (`font-weight: 300`, `letter-spacing: .12em`).
+- Ikon menu sidebar: berubah ke warna normal Odoo saat di-hover/aktif tanpa animasi scale dan tanpa glow.
+- Search box topbar: sudut rounded diperkecil (4px).
+- Judul topbar: diposisikan persis di tengah (`align center`) dengan tipografi seimbang (`font-weight: 600`).
+- Systray topbar: divider tipis vertikal disematkan di antara item (dari discuss hingga avatar profil).
+Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/claude-design.log` diperbarui.
+
+## 2026-10-25 — claude-design agent (chat + sandbox) — UI refinement v3: ikon duo-tone, wordmark Odoo FMCG, panel seksi tenang
+**Berubah:** `id_ui_shell`: scrollbar sidebar/panel selalu tersembunyi (lebar menu tidak menyusut saat hover, latar item terpilih penuh); ikon aplikasi tanpa latar, duo-tone saat diam (filter SVG `feColorMatrix` inline, tanpa aset tambahan) dan warna asli Odoo saat hover/fokus/terpilih (crossfade halus, glow putih tipis); judul sidebar = wordmark resmi Odoo (`/web/static/img/odoo_logo.svg`, dirujuk bukan disalin) + kotak "FMCG"; panel seksi: menu aktif cukup tebal tanpa latar, font lebih kecil, lebar 208px; topbar: pencarian di kiri, judul di kanan. Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; `id.po/pot` diperbarui.
+**Diverifikasi (bagaimana):** sandbox, Odoo `f4378f29`, DB kosong: 0 failed dari 7 uji; `ruff` dan `check_manifests.py` lolos; smoke Playwright 24/24 (duo-tone, lebar menu saat hover, urutan cari/judul, menu panel aktif tebal tanpa latar, serta cek v2). Selama uji ditemukan: pipeline aset menulis ulang `url(#id)` di SCSS menjadi alamat absolut, jadi filter dipasang inline di template.
+**Belum diuji:** stack OCA penuh, `docker build`/Railway, CI, browser selain Chromium, mobile.
+**Butir terbuka:** wordmark Odoo berwarna bawaan (ungu/abu) di atas navy kurang kontras; varian putih `odoo_logo_dark.svg` tersedia bila disetujui. Arti "ketika sidebar dibuka" untuk ikon berwarna masih diasumsikan = hover/fokus/terpilih (**[A]**).
+**Menunggu:** pemilik (unzip, commit, push); tidak ada permintaan baru ke agen lain.
+
+## 2026-10-24 — claude-design agent (chat + sandbox) — UI refinement v2: panel seksi, topbar polos, alur Tab
+**Berubah:** `id_ui_shell`: seksi aplikasi pindah dari tab navbar ke panel seksi di kiri isi (`IdSectionPanel`; seksi > sub-seksi > sub, bisa diciutkan, `Alt+P`); sidebar hanya aplikasi, item aktif persegi selebar sidebar, scrollbar disamarkan; topbar tanpa garis bawah dan pencarian menu 34px rata tengah; logo `oi-odoo` dengan glow dan gerak tipis saat hover; alur Tab: halaman dirender -> pencarian menu -> sidebar -> isi (field pertama form atau kolom cari); pengelola fokus ada di service `id_shell`. `id_ui`: hanya warna navbar klasik. Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui.
+**Diverifikasi (bagaimana):** sandbox, Odoo `f4378f29`, DB kosong: 0 failed dari 7 uji; `ruff` dan `check_manifests.py` lolos; smoke Playwright 19/19 (fokus awal, alur Tab, panel, posisi/tinggi pencarian, tanpa garis navbar, item aktif persegi, chatter tab, hotkey); terjemahan `id.po` diperbarui.
+**Belum diuji:** sama seperti v1 (stack OCA penuh, `docker build`/Railway, CI, browser selain Chromium, mobile). Tab di dalam isi belum diatur.
+**Butir terbuka:** halaman Dashboards kini punya dua panel kiri (panel seksi + panel milik halaman dashboard); belum diputuskan apakah panel seksi disembunyikan untuk aplikasi itu. Titik rawan antar-versi Odoo bertambah: event `ACTION_MANAGER:UI-UPDATED`, `action.currentController`, selector fokus (`.o_form_sheet`, `.o_searchview_input`). Daftar di `docs/ui/id_ui_shell.md`.
+**Menunggu:** pemilik (unzip, commit, push); tidak ada permintaan baru ke agen lain.
 
 ## 2026-10-25 — claude-dev agent (sandbox) — Review codebase main fa68c23 (PR #1–#5) + skrip snapshot instance
 **Berubah:** `docs/reviews/REVIEW_2026-10-24_main-fa68c23.md` (temuan P0/P1/P2 + rencana M1a–M2 + pemilik area), `scripts/ops/odoo_snapshot.py` (diagnosis read-only via XML-RPC), `scripts/sandbox/sandbox_up.sh` (menyalin `data/` dan `scripts/` seperti Dockerfile), `pyproject.toml` (E501 diabaikan untuk `scripts/ops`), `docs/DEVELOPMENT.md` (catatan snapshot), `agent-log/claude-dev.log`. **Tidak ada perubahan pada kode agen lain.**

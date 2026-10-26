@@ -1,9 +1,12 @@
 """Smoke test UI (Playwright). Prasyarat: Odoo berjalan, id_ui, id_ui_shell, id_ui_form
-terpasang, pengguna admin/admin punya akses Penjualan, ada minimal satu order.
+terpasang, pengguna uji punya akses Penjualan, ada minimal dua order. Tes pager
+gagal bila tidak ada record kedua; tidak boleh lulus tanpa navigasi. Pengujian mengganti tata letak pengguna ke klasik lalu
+memulihkannya ke sidebar.
 
     python smoke_ui.py http://localhost:8069 <id_sale_order>
 """
 import asyncio
+import os
 import sys
 
 from playwright.async_api import async_playwright
@@ -24,10 +27,14 @@ async def main():
         browser = await p.chromium.launch()
         page = await browser.new_page(viewport={"width": 1440, "height": 860})
         errors = []
-        page.on("pageerror", lambda e: errors.append(str(e)))
+        def record_error(error):
+            detail = error.stack or str(error)
+            errors.append(detail)
+            print("BROWSER ERROR:", detail, flush=True)
+        page.on("pageerror", record_error)
         await page.goto(f"{BASE}/web/login")
-        await page.fill("input[name=login]", "admin")
-        await page.fill("input[name=password]", "admin")
+        await page.fill("input[name=login]", os.environ.get("UI_TEST_LOGIN", "admin"))
+        await page.fill("input[name=password]", os.environ.get("UI_TEST_PASSWORD", "admin"))
         await page.click("button[type=submit]")
         await page.wait_for_timeout(12000)
         await page.goto(f"{BASE}/odoo/action-sale.action_quotations_with_onboarding/{ORDER}")
@@ -76,6 +83,66 @@ async def main():
         check("Alt+B menciutkan", "id-shell-collapsed" in await page.evaluate("document.body.className"))
         await page.keyboard.press("Alt+b")
 
+        # --- Form: judul di statusbar (idempoten, tanpa sisa di sheet), footer sticky ---
+        await page.keyboard.press("Escape")
+        t = await page.evaluate("({inBar: document.querySelectorAll('.o_form_statusbar > .id_statusbar_title').length, inSheet: document.querySelectorAll('.o_form_sheet > .oe_title').length})")
+        check("judul form tepat satu di statusbar, tidak tersisa di sheet", t["inBar"] == 1 and t["inSheet"] == 0)
+        check("footer total sticky", await page.evaluate("(() => { const f = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer)'); return !!f && getComputedStyle(f).position === 'sticky'; })()"))
+
+        # --- Divider systray: jumlah = item tampil - 1 (normal dan mode debug) ---
+        COUNT = """(() => { const k = [...document.querySelector('.o_menu_systray').children].filter(e => e.offsetWidth > 0 && !e.querySelector(':scope > .o_mobile_menu_toggle')); const d = k.filter(e => getComputedStyle(e, '::before').content === '\"\"').length; return [k.length, d]; })()"""
+        n, d = await page.evaluate(COUNT)
+        check(f"divider systray = item - 1 (normal: {n} item, {d} divider)", d == n - 1)
+        await page.goto(f"{BASE}/odoo/action-sale.action_quotations_with_onboarding/{ORDER}?debug=1")
+        await page.wait_for_timeout(8000)
+        n, d = await page.evaluate(COUNT)
+        check(f"divider systray = item - 1 (debug: {n} item, {d} divider)", d == n - 1)
+
+        # --- Navigasi form (pager) dari daftar: tanpa error, judul tetap satu ---
+        await page.goto(f"{BASE}/odoo/action-sale.action_quotations_with_onboarding")
+        await page.wait_for_timeout(6000)
+        # Filter bawaan "Penawaran Saya" bisa kosong dan memunculkan data contoh; lepas filternya.
+        if await page.locator(".o_facet_remove").count():
+            await page.locator(".o_facet_remove").first.click()
+            await page.wait_for_timeout(2500)
+        await page.locator(".o_data_row").first.click()
+        await page.wait_for_timeout(3000)
+        title = page.locator(".o_form_statusbar > .id_statusbar_title")
+        first_title = (await title.inner_text()).strip()
+        next_button = page.locator(".o_pager_next")
+        if not await next_button.count() or not await next_button.is_enabled():
+            raise AssertionError("Pager requires at least two accessible orders; navigation was not tested")
+        await next_button.click()
+        await page.wait_for_function(
+            "first => document.querySelector('.id_statusbar_title')?.textContent.trim() !== first",
+            arg=first_title,
+        )
+        second_title = (await title.inner_text()).strip()
+        check("pager membuka record berbeda", bool(second_title) and second_title != first_title)
+        check("judul tunggal pada record kedua", await title.count() == 1)
+        await page.locator(".o_pager_previous").click()
+        await page.wait_for_function(
+            "first => document.querySelector('.id_statusbar_title')?.textContent.trim() === first",
+            arg=first_title,
+        )
+        check("pager kembali ke record pertama", (await title.inner_text()).strip() == first_title)
+        check("judul tetap satu setelah pager", await title.count() == 1)
+
+        # --- Ganti ke tata letak klasik: judul kembali ke sheet; lalu pulihkan ke sidebar ---
+        async def switch_layout(label):
+            await page.click(".o_user_menu button")
+            await page.get_by_text(label).first.click()
+            await page.wait_for_timeout(2500)
+        try:
+            await switch_layout("Layout: switch to Classic")
+            back = await page.evaluate("({inBar: document.querySelectorAll('.o_form_statusbar > .oe_title').length, inSheet: document.querySelectorAll('.o_form_sheet > .oe_title').length})")
+            check("mode klasik: judul kembali ke sheet", back["inBar"] == 0 and back["inSheet"] == 1)
+        finally:
+            await switch_layout("Layout: switch to Sidebar")
+        check("kembali ke sidebar: judul di statusbar lagi", await page.locator(".o_form_statusbar > .id_statusbar_title").count() == 1)
+
+        if errors:
+            await page.screenshot(path="ui-smoke-failure.png", full_page=True)
         check("tanpa error JS", not errors)
         await browser.close()
     sys.exit(1 if failures else 0)
