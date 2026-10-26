@@ -421,3 +421,19 @@
   3. test_final_readback_fails_fast_when_discount_moves_missing
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan tidak mengakses server production langsung.
 - Task managed by antigravity at 2026-10-26T21:30:00+07:00
+
+[2026-10-26T22:05:00+07:00] [INFO] Penutupan Dua Celah Supervisi PR #15 (move_id Payment & ID Persis Diskon) & Penguatan Slice Multi-Domain dengan Audit Saldo
+- Menutup temuan payment tanpa move_id yang lolos karena asersi kondisional:
+  * Menghapus pemeriksaan if hasattr(py, 'move_id') and py.move_id.
+  * Menetapkan asersi wajib mutlak: payment AR dan AP wajib memiliki move_id relasional (bukan False/None) dan pay.move_id.state == 'posted'.
+- Menutup temuan substitusi ref diskon (DISC-UNRELATED) yang lolos:
+  * Memvalidasi setiap baris register kanonikal diskon secara persis: jurnal DISC-{pay_id} wajib ada di database, berstatus posted, dan baris piutangnya terekonsiliasi penuh.
+  * Menambahkan audit anti-siluman: mencocokkan jumlah dan keselarasan set ref jurnal diskon di database terhadap register kanonikal, menolak keras entri tidak dikenal.
+- Mendukung pemuatan slice representatif multi-domain target_so_numbers (SO-202607-0001 dan SO-202607-0063) yang mencakup seluruh 8 domain transaksi: Opening Stock, Inbound PO, AP Payments, SO Deliveries, Customer Invoices, AR Payments, Cash Discount (DISC-PAY-AR-00098), Retur Karantina (REJ-202607-001), dan OPEX.
+- Memperbarui runner introspeksi schema dan eksekusi disposable Odoo (scripts/ops/verify_disposable_slice.py) dengan audit komparatif saldo stok (stock.quant) dan saldo buku besar GL (account.move.line) sebelum dan sesudah rerun kedua (membuktikan zero stock drift dan zero GL drift).
+- Menambahkan 3 unit tests baru di tests/test_canonical_loader_adapter.py (total 29/29 tests PASS):
+  1. test_final_readback_fails_fast_when_payment_has_no_move_id
+  2. test_final_readback_fails_fast_when_discount_ref_is_unrelated
+  3. test_representative_slice_with_target_so_numbers_includes_quarantine_rejections
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan tidak mengakses server production langsung.
+- Task managed by antigravity at 2026-10-26T22:05:00+07:00

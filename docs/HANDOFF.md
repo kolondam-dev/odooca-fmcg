@@ -1,6 +1,42 @@
 # HANDOFF
 
-## 2026-10-26 — antigravity agent — Penutupan Dua Penghalang Supervisi PR #15: Pemeriksaan ID Payment Kanonikal & Keselarasan State Odoo 19
+## 2026-10-26 — antigravity agent — Penutupan Celah Asersi move_id Payment, Pencocokan ID Persis Jurnal Diskon & Uji Slice Multi-Domain dengan Audit Saldo Stok/GL
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6418768777](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6418768777)):**
+- Menindaklanjuti reproduksi celah supervisi terhadap commit `c435447`:
+  1. *Payment tanpa move_id tetap diterima*: Asersi pemeriksaan jurnal sebelumnya bersifat kondisional (`if hasattr(py, "move_id") and py.move_id:`), sehingga payment yang rusak atau tidak memiliki `move_id` (bernilai False/None) lolos tanpa terdeteksi.
+  2. *Jurnal diskon diganti DISC-UNRELATED tetap diterima*: Gate sebelumnya hanya memeriksa `len(found_disc) == expected_disc_count` dengan filter `DISC-%`, tanpa mencocokkan ID sumber persis terhadap baris kanonikal dan tanpa mendeteksi ref siluman yang tidak dikenal.
+  3. *Runner disposable belum mencakup karantina & komparasi saldo*: Pemanggilan `limit_orders=1` tidak mencakup retur karantina (rejeksi pertama berada pada `SO-202607-0063`), serta rerun kedua belum membandingkan saldo persediaan fisik maupun saldo buku besar (GL).
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; tidak merge ke `main` dan tidak mengakses production langsung.
+
+**Implementasi Perbaikan:**
+1. **Asersi Mutlak Relasi `move_id` Payment ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menghapus seluruh pemeriksaan kondisional pada `py.move_id`.
+   - Menambahkan asersi wajib mutlak pada seluruh payment AR dan AP:
+     * `assert getattr(py, "move_id", None)` (fail-fast jika `move_id` bernilai False/None).
+     * `assert py.move_id.state == "posted"` (fail-fast jika entri jurnal terkait belum berstatus posted).
+2. **Pencocokan ID Sumber Persis Jurnal Diskon ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Mengambil seluruh baris kanonikal yang memiliki diskon (`early_payment_discount > 0`).
+   - Memvalidasi bahwa setiap jurnal diskon persis `DISC-{pay_id}` wajib ADA, `state == "posted"`, dan baris piutangnya terbukti `_is_reconciled is True` (residual nol).
+   - Menambahkan audit ketat anti-siluman: seluruh jurnal diskon di database wajib berjumlah persis sama dan setiap ref-nya harus bersumber dari register kanonikal (menolak keras `DISC-UNRELATED` atau entri asing).
+3. **Dukungan Slice Representatif Multi-Domain `target_so_numbers` ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menambahkan parameter `target_so_numbers` pada `load_sales_deliveries_and_invoices`, `load_rejections_quarantine`, `load_payments`, dan `run_all`.
+   - Mengizinkan pemuatan slice representatif terarah (`["SO-202607-0001", "SO-202607-0063"]`) yang mencakup seluruh 8 domain transaksi: Opening Stock, Inbound PO & Bills, AP Payments, SO Deliveries, Customer Invoices, AR Payments, Cash Discount (`DISC-PAY-AR-00098`), Retur Karantina (`REJ-202607-001`), dan 30 OPEX/Payroll.
+4. **Runner Introspeksi & Audit Komparasi Saldo Stok & GL ([scripts/ops/verify_disposable_slice.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_disposable_slice.py)):**
+   - Memperbarui runner Odoo shell untuk mengeksekusi slice multi-domain `target_so_slice = ["SO-202607-0001", "SO-202607-0063"]`.
+   - Memvalidasi transfer karantina `REJ-202607-001` (lokasi sumber customer `usage='customer'`, lokasi tujuan `Karantina FMCG Maumbi`).
+   - Merekam snapshot detail:
+     * Saldo stok per `(product, location, lot)` pada `stock.quant`.
+     * Saldo debit/kredit per akun pada `account.move.line`.
+   - Mengeksekusi Run 2 (rerun idempoten sejati) dan membuktikan:
+     * Seluruh operasi create bernilai 0 (100% skipped).
+     * Zero Stock Drift: saldo seluruh quant sebelum dan sesudah rerun bernilai identik (toleransi < 0.001 unit).
+     * Zero GL Drift: saldo debit dan kredit seluruh akun buku besar bernilai identik (toleransi < 0.01 IDR).
+5. **Penambahan Negative Regression Tests Supervisi ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
+   - `test_final_readback_fails_fast_when_payment_has_no_move_id`: membuktikan penolakan commit saat `pay.move_id` False/None.
+   - `test_final_readback_fails_fast_when_discount_ref_is_unrelated`: membuktikan penolakan commit saat ref diskon diganti menjadi `DISC-UNRELATED`.
+   - `test_representative_slice_with_target_so_numbers_includes_quarantine_rejections`: membuktikan slice multi-domain memproses seluruh domain transaksi (termasuk karantina dan diskon) serta lolos 100% idempoten pada Run 2.
+
+---
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6418055292](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6418055292)):**
 - Menindaklanjuti review commit `240181f`:
   1. *Pemeriksaan akhir payment melewati seluruh data canonical*: Kode sebelumnya memfilter `pref.startswith("AR-")` dan `pref.startswith("AP-")`, padahal ID kanonikal sebenarnya berawalan `PAY-AR-` dan `PAY-AP-`. Akibatnya, seluruh 971 payment kanonikal terlewat dan payment yang diubah menjadi draft sebelum commit tetap lolos!

@@ -995,8 +995,8 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
 
         original_load_payments = adapter.load_payments
 
-        def corrupted_load_payments(limit_orders=None):
-            original_load_payments(limit_orders=limit_orders)
+        def corrupted_load_payments(*args, **kwargs):
+            original_load_payments(*args, **kwargs)
             # Hapus jurnal diskon yang terbuat
             to_remove = [
                 mid for mid, m in mock_env["account.move"].store.items()
@@ -1010,9 +1010,91 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         with self.assertRaises(AssertionError) as ctx:
             adapter.run_all(limit_orders=1)
 
-        self.assertIn("Jumlah jurnal diskon tidak cocok", str(ctx.exception))
+        err_msg = str(ctx.exception)
+        self.assertTrue(
+            "Jurnal diskon persis" in err_msg or "Jumlah jurnal diskon di database" in err_msg
+        )
         self.assertTrue(mock_env.cr.rollbacked)
         self.assertFalse(mock_env.cr.committed)
+
+    def test_final_readback_fails_fast_when_payment_has_no_move_id(self):
+        """Jika payment tidak memiliki journal entry move_id (False/None), run_all wajib melempar AssertionError."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        original_load_opex = adapter.load_opex_payroll
+
+        def corrupted_load_opex():
+            original_load_opex()
+            for pay in mock_env["account.payment"].store.values():
+                pref = getattr(pay, "ref", getattr(pay, "memo", ""))
+                if str(pref).startswith("PAY-AR-"):
+                    pay.move_id = False
+                    break
+
+        adapter.load_opex_payroll = corrupted_load_opex
+
+        with self.assertRaises(AssertionError) as ctx:
+            adapter.run_all(limit_orders=1)
+
+        self.assertIn("tidak memiliki journal entry move", str(ctx.exception))
+        self.assertTrue(mock_env.cr.rollbacked)
+        self.assertFalse(mock_env.cr.committed)
+
+    def test_final_readback_fails_fast_when_discount_ref_is_unrelated(self):
+        """Jika jurnal diskon diganti menjadi DISC-UNRELATED, run_all wajib menolak via pencocokan ID persis."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        original_load_payments = adapter.load_payments
+
+        def corrupted_load_payments(limit_orders=None, target_so_numbers=None):
+            original_load_payments(limit_orders=limit_orders, target_so_numbers=target_so_numbers)
+            # Ganti ref jurnal diskon asli menjadi ref tidak dikenal (DISC-UNRELATED)
+            for m in mock_env["account.move"].store.values():
+                if getattr(m, "ref", "").startswith("DISC-"):
+                    m._vals["ref"] = "DISC-UNRELATED"
+                    break
+
+        adapter.load_payments = corrupted_load_payments
+
+        with self.assertRaises(AssertionError) as ctx:
+            adapter.run_all(limit_orders=1)
+
+        # Harus terdeteksi either pada pencocokan ID persis atau deteksi ref tidak dikenal
+        err_msg = str(ctx.exception)
+        self.assertTrue(
+            "Jurnal diskon persis" in err_msg or "Ditemukan jurnal diskon dengan ref tidak dikenal" in err_msg
+        )
+        self.assertTrue(mock_env.cr.rollbacked)
+        self.assertFalse(mock_env.cr.committed)
+
+    def test_representative_slice_with_target_so_numbers_includes_quarantine_rejections(self):
+        """Pemuatan slice target_so_numbers mencakup SO komersial, diskon kas, dan retur karantina secara utuh."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        target_slice = ["SO-202607-0001", "SO-202607-0063"]
+        adapter.run_all(target_so_numbers=target_slice)
+
+        self.assertTrue(mock_env.cr.committed)
+        self.assertEqual(adapter.stats["so_created"], 2)
+        self.assertEqual(adapter.stats["invoices_created"], 2)
+        self.assertEqual(adapter.stats["quarantine_rejections"], 1)
+        self.assertEqual(adapter.stats["discount_moves_created"], 1)
+        self.assertGreaterEqual(adapter.stats["ar_payments_created"], 1)
+
+        # Uji rerun idempoten sejati (Run 2)
+        mock_env.cr.committed = False
+        adapter_run2 = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+        adapter_run2.run_all(target_so_numbers=target_slice)
+
+        self.assertTrue(mock_env.cr.committed)
+        self.assertEqual(adapter_run2.stats["so_created"], 0)
+        self.assertEqual(adapter_run2.stats["invoices_created"], 0)
+        self.assertEqual(adapter_run2.stats["quarantine_rejections"], 0)
+        self.assertEqual(adapter_run2.stats["discount_moves_created"], 0)
+        self.assertEqual(adapter_run2.stats["ar_payments_created"], 0)
 
 
 if __name__ == "__main__":

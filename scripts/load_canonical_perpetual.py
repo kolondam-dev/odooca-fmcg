@@ -646,7 +646,11 @@ class CanonicalPerpetualAdapter:
                     self.stats["po_bills_created"] += 1
 
     # 3. Sales Orders, Deliveries, and Invoices
-    def load_sales_deliveries_and_invoices(self, limit_orders: int | None = None):
+    def load_sales_deliveries_and_invoices(
+        self,
+        limit_orders: int | None = None,
+        target_so_numbers: list[str] | set[str] | None = None,
+    ):
         """Memuat SO Single-Prinsipal, DO, dan Faktur Penjualan (net of rejections)."""
         if "sale.order" not in self.env:
             print("[canonical_loader] SKIP: Modul sale belum terpasang.")
@@ -657,7 +661,10 @@ class CanonicalPerpetualAdapter:
         AccountMove = self.env["account.move"].sudo() if "account.move" in self.env else None
 
         so_rows = self._read_csv("perpetual_sales_orders.csv")
-        if limit_orders is not None:
+        if target_so_numbers is not None:
+            target_set = set(target_so_numbers)
+            so_rows = [s for s in so_rows if s["so_number"] in target_set]
+        elif limit_orders is not None:
             so_rows = so_rows[:limit_orders]
 
         line_rows = self._read_csv("perpetual_order_lines.csv")
@@ -773,11 +780,18 @@ class CanonicalPerpetualAdapter:
                     self.stats["invoices_posted"] += 1
 
     # 4. Retur Karantina
-    def load_rejections_quarantine(self, limit_orders: int | None = None):
+    def load_rejections_quarantine(
+        self,
+        limit_orders: int | None = None,
+        target_so_numbers: list[str] | set[str] | None = None,
+    ):
         """Memuat 9 Retur Karantina ke lokasi karantina khusus via transfer picking internal tanpa duplikasi quant."""
         print(" -> [4/7] Memuat Retur Karantina Barang...")
         rows = self._read_csv("perpetual_order_rejections.csv")
-        if limit_orders is not None:
+        if target_so_numbers is not None:
+            target_set = set(target_so_numbers)
+            rows = [r for r in rows if r["so_number"] in target_set]
+        elif limit_orders is not None:
             so_sample = {s["so_number"] for s in self._read_csv("perpetual_sales_orders.csv")[:limit_orders]}
             rows = [r for r in rows if r["so_number"] in so_sample]
 
@@ -896,7 +910,11 @@ class CanonicalPerpetualAdapter:
             self.stats["quarantine_rejections"] += 1
 
     # 5. AR Collections & AP Payments
-    def load_payments(self, limit_orders: int | None = None):
+    def load_payments(
+        self,
+        limit_orders: int | None = None,
+        target_so_numbers: list[str] | set[str] | None = None,
+    ):
         """Memuat 967 Pembayaran AR Pelanggan & 4 Pembayaran AP Prinsipal dengan rekonsiliasi ketat."""
         if "account.payment" not in self.env:
             print("[canonical_loader] SKIP: Modul account.payment belum terpasang.")
@@ -908,7 +926,15 @@ class CanonicalPerpetualAdapter:
 
         # AR Payments
         ar_rows = self._read_csv("perpetual_ar_collections.csv")
-        if limit_orders is not None:
+        if target_so_numbers is not None:
+            target_set = set(target_so_numbers)
+            inv_sample = {
+                iv["invoice_number"]
+                for iv in self._read_csv("perpetual_invoices.csv")
+                if iv["so_number"] in target_set
+            }
+            ar_rows = [ar for ar in ar_rows if ar["invoice_number"] in inv_sample]
+        elif limit_orders is not None:
             so_sample = {s["so_number"] for s in self._read_csv("perpetual_sales_orders.csv")[:limit_orders]}
             inv_sample = {
                 iv["invoice_number"]
@@ -1219,18 +1245,51 @@ class CanonicalPerpetualAdapter:
             self.stats["opex_moves_created"] += 1
 
     # 7. Eksekusi Penuh & Rekonsiliasi Runtime
-    def run_all(self, limit_orders: int | None = None):
+    def run_all(
+        self,
+        limit_orders: int | None = None,
+        target_so_numbers: list[str] | set[str] | None = None,
+    ):
         """Menjalankan seluruh alur pemuatan canonical seed secara sekuensial dan terisolasi transaksi."""
         try:
             self.load_opening_stock()
             self.load_inbound_pos()
-            self.load_sales_deliveries_and_invoices(limit_orders=limit_orders)
-            self.load_rejections_quarantine(limit_orders=limit_orders)
-            self.load_payments(limit_orders=limit_orders)
+            self.load_sales_deliveries_and_invoices(
+                limit_orders=limit_orders, target_so_numbers=target_so_numbers
+            )
+            self.load_rejections_quarantine(
+                limit_orders=limit_orders, target_so_numbers=target_so_numbers
+            )
+            self.load_payments(
+                limit_orders=limit_orders, target_so_numbers=target_so_numbers
+            )
             self.load_opex_payroll()
 
             # Verifikasi integritas cakupan data dan hasil operasi SEBELUM self.cr.commit()
-            if limit_orders is None:
+            if target_so_numbers is not None:
+                exp_so_count = len(target_so_numbers)
+                total_small_so = self.stats["so_created"] + self.stats["skipped_so"]
+                assert total_small_so == exp_so_count, (
+                    f"Jumlah SO batch representatif tidak cocok! Expected {exp_so_count}, got {total_small_so}"
+                )
+                assert (self.stats["ar_reconciled"] + self.stats["skipped_ar"]) >= 1, (
+                    f"AR batch representatif harus ter-reconcile! Got {self.stats['ar_reconciled']}"
+                )
+                assert (self.stats["ap_reconciled"] + self.stats["skipped_ap"]) == 4, (
+                    f"AP batch representatif harus ter-reconcile! Got {self.stats['ap_reconciled']}"
+                )
+            elif limit_orders is not None:
+                total_small_so = self.stats["so_created"] + self.stats["skipped_so"]
+                assert total_small_so == limit_orders, (
+                    f"Jumlah SO batch kecil tidak cocok! Expected {limit_orders}, got {total_small_so}"
+                )
+                assert (self.stats["ar_reconciled"] + self.stats["skipped_ar"]) >= 1, (
+                    f"AR batch kecil harus ter-reconcile! Got {self.stats['ar_reconciled']}"
+                )
+                assert (self.stats["ap_reconciled"] + self.stats["skipped_ap"]) == 4, (
+                    f"AP batch kecil harus ter-reconcile! Got {self.stats['ap_reconciled']}"
+                )
+            else:
                 total_so = self.stats["so_created"] + self.stats["skipped_so"]
                 assert total_so == 1324, f"Jumlah SO tidak lengkap! Expected 1324, got {total_so}"
 
@@ -1258,18 +1317,6 @@ class CanonicalPerpetualAdapter:
 
                 total_ap_rec = self.stats["ap_reconciled"] + self.stats["skipped_ap"]
                 assert total_ap_rec == 4, f"Jumlah AP reconciled tidak lengkap! Expected 4, got {total_ap_rec}"
-            else:
-                total_small_so = self.stats["so_created"] + self.stats["skipped_so"]
-                assert total_small_so == limit_orders, (
-                    f"Jumlah SO batch kecil tidak cocok! Expected {limit_orders}, got {total_small_so}"
-                )
-                # Pada rantai kecil: setidaknya 1 AR terekonsiliasi dan 4 AP terekonsiliasi
-                assert (self.stats["ar_reconciled"] + self.stats["skipped_ar"]) >= 1, (
-                    f"AR batch kecil harus ter-reconcile! Got {self.stats['ar_reconciled']}"
-                )
-                assert (self.stats["ap_reconciled"] + self.stats["skipped_ap"]) == 4, (
-                    f"AP batch kecil harus ter-reconcile! Got {self.stats['ap_reconciled']}"
-                )
 
             # Verifikasi bahwa tidak ada picking yang tertinggal dalam status unvalidated/draft/assigned
             if "stock.picking" in self.env:
@@ -1296,7 +1343,15 @@ class CanonicalPerpetualAdapter:
             # Muat register AR & AP kanonikal untuk verifikasi readback menyeluruh
             ar_rows = self._read_csv("perpetual_ar_collections.csv")
             ap_rows = self._read_csv("perpetual_ap_payments.csv")
-            if limit_orders is not None:
+            if target_so_numbers is not None:
+                target_set = set(target_so_numbers)
+                inv_sample = {
+                    iv["invoice_number"]
+                    for iv in self._read_csv("perpetual_invoices.csv")
+                    if iv["so_number"] in target_set
+                }
+                ar_rows = [ar for ar in ar_rows if ar["invoice_number"] in inv_sample]
+            elif limit_orders is not None:
                 so_sample = {s["so_number"] for s in self._read_csv("perpetual_sales_orders.csv")[:limit_orders]}
                 inv_sample = {
                     iv["invoice_number"]
@@ -1305,21 +1360,28 @@ class CanonicalPerpetualAdapter:
                 }
                 ar_rows = [ar for ar in ar_rows if ar["invoice_number"] in inv_sample]
 
-            # Verifikasi bahwa seluruh entri diskon berstatus posted dan baris piutangnya terekonsiliasi penuh
+            # Verifikasi bahwa seluruh entri diskon berstatus posted, bersumber dari ID persis,
+            # dan baris piutangnya terekonsiliasi penuh
             if "account.move" in self.env:
                 AccountMove = self.env["account.move"].sudo()
-                disc_moves = AccountMove.search([("ref", "=like", "DISC-%")])
-                expected_disc_count = 160 if limit_orders is None else len([
+                disc_ar_rows = [
                     r for r in ar_rows if float(r.get("early_payment_discount", 0.0)) > 0
-                ])
-                found_disc = [
-                    dm for dm in disc_moves if getattr(dm, "ref", "") and str(dm.ref).startswith("DISC-")
                 ]
-                assert len(found_disc) == expected_disc_count, (
-                    f"Jumlah jurnal diskon tidak cocok! Expected {expected_disc_count}, got {len(found_disc)}"
-                )
-                for dm in found_disc:
-                    assert dm.state == "posted", f"Jurnal diskon '{dm.ref}' belum posted!"
+                expected_discs = {
+                    f"DISC-{r['payment_id']}": float(r["early_payment_discount"])
+                    for r in disc_ar_rows
+                }
+
+                # 1. Validasi setiap ID sumber diskon persis wajib ada, posted, dan terekonsiliasi
+                for disc_ref, expected_amt in expected_discs.items():
+                    dm = AccountMove.search([("ref", "=", disc_ref)], limit=1)
+                    assert dm, (
+                        f"Jurnal diskon persis '{disc_ref}' tidak ditemukan di database! "
+                        "Pencocokan ID sumber persis wajib terpenuhi."
+                    )
+                    assert dm.state == "posted", (
+                        f"Jurnal diskon '{disc_ref}' belum berstatus 'posted'! State: {dm.state}"
+                    )
                     rec_lines = self._get_record_lines(dm)
                     rec_lines_flt = (
                         rec_lines.filtered(
@@ -1333,12 +1395,25 @@ class CanonicalPerpetualAdapter:
                             if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
                         ]
                     )
-                    assert len(rec_lines_flt) > 0, f"Jurnal diskon '{dm.ref}' tidak memiliki baris asset_receivable!"
+                    assert len(rec_lines_flt) > 0, f"Jurnal diskon '{disc_ref}' tidak memiliki baris asset_receivable!"
                     for rl in rec_lines_flt:
                         res_val = getattr(rl, "amount_residual", "N/A")
                         assert self._is_reconciled(rl), (
-                            f"Baris diskon '{dm.ref}' belum terekonsiliasi penuh! Residual: {res_val}"
+                            f"Baris diskon '{disc_ref}' belum terekonsiliasi penuh! Residual: {res_val}"
                         )
+
+                # 2. Validasi ketat bahwa tidak ada jurnal diskon siluman / tidak dikenal di database
+                all_disc_in_db = AccountMove.search([("ref", "=like", "DISC-%")])
+                found_disc_refs = {getattr(dm, "ref", "") for dm in all_disc_in_db if getattr(dm, "ref", "")}
+                assert len(all_disc_in_db) == len(expected_discs), (
+                    f"Jumlah jurnal diskon di database ({len(all_disc_in_db)}) "
+                    f"tidak cocok dengan register kanonikal ({len(expected_discs)})! "
+                    f"Expected: {sorted(expected_discs.keys())}, Got: {sorted(found_disc_refs)}"
+                )
+                unrelated_discs = found_disc_refs - set(expected_discs.keys())
+                assert not unrelated_discs, (
+                    f"Ditemukan jurnal diskon dengan ref tidak dikenal/tidak bersumber dari register: {unrelated_discs}"
+                )
 
             # Verifikasi seluruh payment kanonikal secara persis dari register ID sumber
             if "account.payment" in self.env:
@@ -1358,10 +1433,13 @@ class CanonicalPerpetualAdapter:
                     assert py.state in ("posted", "in_process", "paid"), (
                         f"Payment AR '{pay_id}' masih dalam state '{py.state}', bukan posted/in_process/paid!"
                     )
-                    if hasattr(py, "move_id") and py.move_id:
-                        assert py.move_id.state == "posted", (
-                            f"Journal entry move dari payment AR '{pay_id}' belum berstatus 'posted'!"
-                        )
+                    # WAJIB memiliki move_id relasional dan move_id.state == 'posted' (BUKAN KONDISIONAL!)
+                    assert getattr(py, "move_id", None), (
+                        f"Payment AR '{pay_id}' tidak memiliki journal entry move (move_id bernilai False/None)!"
+                    )
+                    assert py.move_id.state == "posted", (
+                        f"Journal entry move payment AR '{pay_id}' belum posted! State: {py.move_id.state}"
+                    )
 
                     # Verifikasi partner dan nominal pembayaran
                     assert getattr(py.partner_id, "id", None) == cust_partner.id, (
@@ -1429,10 +1507,13 @@ class CanonicalPerpetualAdapter:
                     assert py.state in ("posted", "in_process", "paid"), (
                         f"Payment AP '{pay_id}' masih dalam state '{py.state}', bukan posted/in_process/paid!"
                     )
-                    if hasattr(py, "move_id") and py.move_id:
-                        assert py.move_id.state == "posted", (
-                            f"Journal entry move dari payment AP '{pay_id}' belum berstatus 'posted'!"
-                        )
+                    # WAJIB memiliki move_id relasional dan move_id.state == 'posted' (BUKAN KONDISIONAL!)
+                    assert getattr(py, "move_id", None), (
+                        f"Payment AP '{pay_id}' tidak memiliki journal entry move (move_id bernilai False/None)!"
+                    )
+                    assert py.move_id.state == "posted", (
+                        f"Journal entry move payment AP '{pay_id}' belum posted! State: {py.move_id.state}"
+                    )
 
                     if prin_partner:
                         assert getattr(py.partner_id, "id", None) == prin_partner.id, (
