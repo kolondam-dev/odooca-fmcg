@@ -139,13 +139,22 @@ def run_representative_slice(env):
                 assert adapter._is_reconciled(line), "Line piutang diskon DISC-PAY-AR-00098 belum terekonsiliasi!"
 
     # 4. Snapshot Saldo Stok & GL setelah Run 1
-    stock_snapshot_run1 = {}
+    quant_records_run1 = {}
+    stock_totals_run1 = {}
     if StockQuant:
         for q in StockQuant.search([]):
             prod_code = getattr(getattr(q, "product_id", None), "default_code", getattr(q.product_id, "id", None))
             loc_name = getattr(getattr(q, "location_id", None), "name", getattr(q.location_id, "id", None))
             lot_name = getattr(getattr(q, "lot_id", None), "name", False)
-            stock_snapshot_run1[(prod_code, loc_name, lot_name)] = float(getattr(q, "quantity", 0.0))
+            qty = float(getattr(q, "quantity", 0.0))
+            quant_records_run1[q.id] = {
+                "product_code": prod_code,
+                "location_name": loc_name,
+                "lot_name": lot_name,
+                "quantity": qty,
+            }
+            key = (prod_code, loc_name, lot_name)
+            stock_totals_run1[key] = stock_totals_run1.get(key, 0.0) + qty
 
     gl_snapshot_run1 = {}
     if AccountMoveLine:
@@ -157,7 +166,7 @@ def run_representative_slice(env):
             gl_snapshot_run1[acc_code]["debit"] += float(getattr(line_rec, "debit", 0.0))
             gl_snapshot_run1[acc_code]["credit"] += float(getattr(line_rec, "credit", 0.0))
 
-    print(f"[disposable_slice] Snapshot Saldo Stok Run 1: {len(stock_snapshot_run1)} quants terdata.")
+    print(f"[disposable_slice] Snapshot Saldo Stok Run 1: {len(quant_records_run1)} record quant terdata.")
     print(f"[disposable_slice] Snapshot Saldo GL Run 1: {len(gl_snapshot_run1)} akun GL terdata.")
 
     # 5. Menjalankan Uji Idempotensi Sejati (Run 2)
@@ -173,20 +182,44 @@ def run_representative_slice(env):
     assert adapter_run2.stats["discount_moves_created"] == 0, "Jurnal diskon tidak boleh dibuat ulang pada run 2!"
     assert adapter_run2.stats["quarantine_rejections"] == 0, "Karantina tidak boleh dibuat ulang pada run 2!"
 
-    # 6. Komparasi Saldo Stok Run 1 vs Run 2
+    # 6. Komparasi Saldo Stok Run 1 vs Run 2 (Audit Zero Stock Drift Tanpa Penimpaan)
     if StockQuant:
-        stock_snapshot_run2 = {}
+        quant_records_run2 = {}
+        stock_totals_run2 = {}
         for q in StockQuant.search([]):
             prod_code = getattr(getattr(q, "product_id", None), "default_code", getattr(q.product_id, "id", None))
             loc_name = getattr(getattr(q, "location_id", None), "name", getattr(q.location_id, "id", None))
             lot_name = getattr(getattr(q, "lot_id", None), "name", False)
-            stock_snapshot_run2[(prod_code, loc_name, lot_name)] = float(getattr(q, "quantity", 0.0))
+            qty = float(getattr(q, "quantity", 0.0))
+            quant_records_run2[q.id] = {
+                "product_code": prod_code,
+                "location_name": loc_name,
+                "lot_name": lot_name,
+                "quantity": qty,
+            }
+            key = (prod_code, loc_name, lot_name)
+            stock_totals_run2[key] = stock_totals_run2.get(key, 0.0) + qty
 
-        assert len(stock_snapshot_run1) == len(stock_snapshot_run2), "Jumlah quant berubah pada run 2!"
-        for key, qty1 in stock_snapshot_run1.items():
-            qty2 = stock_snapshot_run2.get(key, 0.0)
-            assert abs(qty1 - qty2) < 0.001, (
-                f"Drift saldo stok terdeteksi pada {key}! Run 1: {qty1}, Run 2: {qty2}"
+        # Audit ID quant tidak boleh bertambah atau berkurang
+        new_quants = set(quant_records_run2.keys()) - set(quant_records_run1.keys())
+        assert not new_quants, f"Ditemukan record quant baru pada Run 2: {new_quants}"
+        del_quants = set(quant_records_run1.keys()) - set(quant_records_run2.keys())
+        assert not del_quants, f"Record quant hilang pada Run 2: {del_quants}"
+
+        # Audit kuantitas fisik per record ID
+        for q_id, info1 in quant_records_run1.items():
+            info2 = quant_records_run2[q_id]
+            assert abs(info1["quantity"] - info2["quantity"]) < 0.001, (
+                f"Drift kuantitas terdeteksi pada quant ID {q_id} ({info1['product_code']})! "
+                f"Run 1: {info1['quantity']}, Run 2: {info2['quantity']}"
+            )
+
+        # Audit total agregasi kuantitas stok per (produk, lokasi, lot)
+        assert len(stock_totals_run1) == len(stock_totals_run2), "Jumlah kombinasi stok berubah pada run 2!"
+        for key, tot1 in stock_totals_run1.items():
+            tot2 = stock_totals_run2.get(key, 0.0)
+            assert abs(tot1 - tot2) < 0.001, (
+                f"Drift agregasi stok terdeteksi pada {key}! Run 1: {tot1}, Run 2: {tot2}"
             )
 
     # 7. Komparasi Saldo GL Run 1 vs Run 2

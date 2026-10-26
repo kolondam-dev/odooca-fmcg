@@ -1396,6 +1396,11 @@ class CanonicalPerpetualAdapter:
                         ]
                     )
                     assert len(rec_lines_flt) > 0, f"Jurnal diskon '{disc_ref}' tidak memiliki baris asset_receivable!"
+                    total_disc_credit = sum(float(getattr(rl, "credit", 0.0)) for rl in rec_lines_flt)
+                    assert abs(total_disc_credit - expected_amt) < 0.01, (
+                        f"Nominal kredit piutang jurnal diskon '{disc_ref}' tidak cocok! "
+                        f"Expected: {expected_amt}, Got: {total_disc_credit}"
+                    )
                     for rl in rec_lines_flt:
                         res_val = getattr(rl, "amount_residual", "N/A")
                         assert self._is_reconciled(rl), (
@@ -1488,6 +1493,14 @@ class CanonicalPerpetualAdapter:
                                 if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
                             ]
                         )
+                        assert len(inv_rec) > 0, (
+                            f"Faktur pasangan '{inv_num}' untuk payment '{pay_id}' "
+                            "tidak memiliki baris piutang (asset_receivable)!"
+                        )
+                        total_inv_debit = sum(float(getattr(il, "debit", 0.0)) for il in inv_rec)
+                        assert total_inv_debit > 0.0, (
+                            f"Total piutang faktur pasangan '{inv_num}' harus bernilai positif! Got {total_inv_debit}"
+                        )
                         for il in inv_rec:
                             res_val = getattr(il, "amount_residual", "N/A")
                             assert self._is_reconciled(il), (
@@ -1560,6 +1573,14 @@ class CanonicalPerpetualAdapter:
                                 if getattr(getattr(line, "account_id", None), "account_type", "")
                                 == "liability_payable"
                             ]
+                        )
+                        assert len(bill_pay) > 0, (
+                            f"Bill pasangan '{po_num}' untuk payment '{pay_id}' "
+                            "tidak memiliki baris utang (liability_payable)!"
+                        )
+                        total_bill_credit = sum(float(getattr(bl, "credit", 0.0)) for bl in bill_pay)
+                        assert total_bill_credit > 0.0, (
+                            f"Total utang bill pasangan '{po_num}' harus bernilai positif! Got {total_bill_credit}"
                         )
                         for bl in bill_pay:
                             res_val = getattr(bl, "amount_residual", "N/A")

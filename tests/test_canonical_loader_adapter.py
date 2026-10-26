@@ -1096,6 +1096,58 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertEqual(adapter_run2.stats["discount_moves_created"], 0)
         self.assertEqual(adapter_run2.stats["ar_payments_created"], 0)
 
+    def test_final_readback_fails_fast_when_discount_amount_tampered_to_one(self):
+        """Jika nominal kredit piutang jurnal diskon diubah (Rp 1), run_all wajib melempar AssertionError."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        original_load_payments = adapter.load_payments
+
+        def corrupted_load_payments(*args, **kwargs):
+            original_load_payments(*args, **kwargs)
+            # Manipulasi baris kredit diskon menjadi 1.0 (Rp 1)
+            for m in mock_env["account.move"].store.values():
+                if getattr(m, "ref", "").startswith("DISC-"):
+                    for line_rec in getattr(m, "line_ids", []):
+                        if getattr(getattr(line_rec, "account_id", None), "account_type", "") == "asset_receivable":
+                            line_rec.credit = 1.0
+                            line_rec.amount_residual = 0.0
+
+        adapter.load_payments = corrupted_load_payments
+
+        with self.assertRaises(AssertionError) as ctx:
+            adapter.run_all(limit_orders=1)
+
+        self.assertIn("Nominal kredit piutang jurnal diskon", str(ctx.exception))
+        self.assertTrue(mock_env.cr.rollbacked)
+        self.assertFalse(mock_env.cr.committed)
+
+    def test_final_readback_fails_fast_when_invoice_receivable_lines_emptied(self):
+        """Jika baris piutang faktur pasangan dikosongkan, run_all wajib melempar AssertionError."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        original_load_payments = adapter.load_payments
+
+        def corrupted_load_payments(*args, **kwargs):
+            original_load_payments(*args, **kwargs)
+            # Kosongkan baris piutang (asset_receivable) pada seluruh faktur pasangan
+            for m in mock_env["account.move"].store.values():
+                if getattr(m, "move_type", "") == "out_invoice":
+                    m.line_ids = MockRecordList([
+                        line_rec for line_rec in getattr(m, "line_ids", [])
+                        if getattr(getattr(line_rec, "account_id", None), "account_type", "") != "asset_receivable"
+                    ])
+
+        adapter.load_payments = corrupted_load_payments
+
+        with self.assertRaises(AssertionError) as ctx:
+            adapter.run_all(limit_orders=1)
+
+        self.assertIn("tidak memiliki baris piutang (asset_receivable)", str(ctx.exception))
+        self.assertTrue(mock_env.cr.rollbacked)
+        self.assertFalse(mock_env.cr.committed)
+
 
 if __name__ == "__main__":
     unittest.main()

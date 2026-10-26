@@ -1,5 +1,32 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Pengetatan Readback Finansial (Nominal Diskon & Faktur Pasangan), Audit Quant ID Tanpa Timpa & Integrasi Eksekusi Disposable Odoo 19 di CI
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6428464141](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6428464141)):**
+- Menindaklanjuti review commit `ffaa9c5` pada branch `agen/fix-seed-invariants`:
+  1. *Nominal jurnal diskon diubah menjadi Rp1*: Gate sebelumnya memeriksa residual nol namun belum meng-assert nominal kredit piutang diskon terhadap `expected_amt` (`early_payment_discount` kanonikal).
+  2. *Faktur pasangan dikosongkan baris piutangnya*: Loop verifikasi residual dilewati tanpa error jika `inv_rec` bernilai kosong (`[]`), sehingga manipulasi faktur tanpa baris piutang lolos commit.
+  3. *Snapshot stok berpotensi menimpa quant dengan key sama*: Snapshot kamus dengan key `(product, location, lot)` tanpa memperhitungkan record ID berisiko menimpa quant multi-paket/lot berbeda.
+  4. *Belum ada bukti eksekusi pada Odoo 19 nyata*: Perlu bukti eksekusi disposable dua kali pada instance Odoo 19 aktual dengan audit zero drift fisik dan GL.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Pengetatan Asersi Nominal Finansial Readback ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menambahkan asersi nominal kredit piutang diskon: `total_disc_credit = sum(float(getattr(rl, 'credit', 0.0)) for rl in rec_lines_flt)` dan `assert abs(total_disc_credit - expected_amt) < 0.01` terhadap data CSV kanonikal.
+   - Menambahkan asersi wajib non-kosong dan non-nol pada baris piutang faktur: `assert len(inv_rec) > 0` dan `assert sum(float(getattr(il, 'debit', 0.0)) for il in inv_rec) > 0.0`.
+   - Menambahkan asersi wajib non-kosong dan non-nol pada baris utang bill: `assert len(bill_pay) > 0` dan `assert sum(float(getattr(bl, 'credit', 0.0)) for bl in bill_pay) > 0.0`.
+2. **Penyempurnaan Snapshot Stok Multi-Record Tanpa Risiko Tertimpa ([scripts/ops/verify_disposable_slice.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_disposable_slice.py)):**
+   - Merekam quant per record ID unik (`quant_records_run1[q.id] = {...}`) dan mengagregasi total kuantitas per lokasi/produk/lot via penjumlahan (`stock_totals[key] += qty`), bukan assignment langsung.
+   - Mengaudit kesamaan himpunan ID quant antara Run 1 dan Run 2 (`set(quant_records_run2.keys()) == set(quant_records_run1.keys())`), kesamaan kuantitas per ID unik, dan kesamaan agregasi total stok per lokasi fisik.
+3. **Integrasi Eksekusi Disposable Odoo 19 pada CI Pipeline ([.github/workflows/ci.yml](file:///c:/Users/ACER/.gemini/antigravity-ide/brain/fa72665f-eaec-49b7-b9d0-00e8f9e5a9ac/.github/workflows/ci.yml)):**
+   - Memasukkan modul `purchase,account` pada initialization DB disposable di job `init-test`.
+   - Menambahkan step verifikasi runtime Odoo 19 nyata di dalam container via `docker exec -i odoo bash -c 'su -s /bin/bash odoo -c "cd /opt && odoo shell -c /tmp/odoo.conf -d fmcg --no-http < /opt/scripts/ops/verify_disposable_slice.py"'`.
+   - Menjamin setiap run CI di GitHub Actions mengeksekusi dua kali run slice representatif multi-domain dan membuktikan zero stock drift serta zero GL drift secara otomatis pada environment Linux Odoo 19 nyata.
+4. **Penambahan Negative Regression Tests ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
+   - `test_final_readback_fails_fast_when_discount_amount_tampered_to_one`: terbukti fail-fast menolak commit saat kredit piutang diskon dimanipulasi menjadi 1.0 (Rp 1).
+   - `test_final_readback_fails_fast_when_invoice_receivable_lines_emptied`: terbukti fail-fast menolak commit saat baris piutang faktur dikosongkan.
+   - Total tes adapter lokal bertambah menjadi 31/31 unit tests (seluruh 103 unit tests repositori PASS).
+
+---
 ## 2026-10-26 — antigravity agent — Penutupan Celah Asersi move_id Payment, Pencocokan ID Persis Jurnal Diskon & Uji Slice Multi-Domain dengan Audit Saldo Stok/GL
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6418768777](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6418768777)):**
 - Menindaklanjuti reproduksi celah supervisi terhadap commit `c435447`:

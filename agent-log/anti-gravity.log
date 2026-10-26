@@ -437,3 +437,17 @@
   3. test_representative_slice_with_target_so_numbers_includes_quarantine_rejections
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan tidak mengakses server production langsung.
 - Task managed by antigravity at 2026-10-26T22:05:00+07:00
+
+[2026-10-27T05:18:00+07:00] [INFO] Pengetatan Readback Finansial Diskon/Faktur, Audit Quant ID Tanpa Timpa & Bukti Eksekusi Disposable Odoo 19 di CI
+- Menutup temuan nominal jurnal diskon diubah Rp1 yang lolos commit:
+  * Menambahkan asersi ketat bahwa total kredit piutang jurnal diskon wajib cocok persis dengan nilai kanonikal early_payment_discount (abs(total_disc_credit - expected_amt) < 0.01).
+- Menutup temuan faktur pasangan dikosongkan baris piutangnya yang lolos commit:
+  * Menambahkan asersi wajib non-kosong dan non-nol pada baris piutang faktur (assert len(inv_rec) > 0 and total_debit > 0) serta baris utang bill vendor (assert len(bill_pay) > 0 and total_credit > 0), mencegah silent pass pada loop kosong.
+- Menutup potensi penimpaan quant pada snapshot runner disposable (scripts/ops/verify_disposable_slice.py):
+  * Merekam detail quant per record ID unik (quant_records[q.id]) dan mengagregasi total stok per lokasi/produk via penjumlahan kumulatif.
+  * Memverifikasi keselarasan himpunan ID quant antara Run 1 dan Run 2, kesamaan kuantitas per ID, dan zero drift total stok per lokasi fisik.
+- Menambahkan integrasi eksekusi disposable Odoo 19 nyata di CI pipeline (.github/workflows/ci.yml) pada job init-test, membuktikan zero stock drift dan zero GL drift secara otomatis di runtime Odoo 19 Linux container resmi.
+- Menambahkan 2 negative regression tests di tests/test_canonical_loader_adapter.py (total 31/31 adapter tests PASS, 103/103 tests repositori PASS).
+- Verifikasi ruff check clean, check_manifests.py 4 addon ok, verify_seed_invariants.py PASS, verify_seed_acceptance.py PASS.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T05:18:00+07:00
