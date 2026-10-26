@@ -72,6 +72,9 @@ class MockRecordList(list):
             return
         for rec in self:
             rec.reconciled = True
+            pay_obj = getattr(rec, "_payment", None)
+            if pay_obj:
+                pay_obj.state = "paid"
 
 
 class MockRecord:
@@ -79,7 +82,7 @@ class MockRecord:
         self._vals = vals.copy() if vals else {}
         self._model = model_name
         self.id = rec_id
-        self.state = "draft"
+        self.state = self._vals.get("state", "draft")
         self.picking_ids = MockRecordList()
         self.line_ids = MockRecordList()
         self.reconciled = False
@@ -127,7 +130,7 @@ class MockRecord:
     def __setattr__(self, name, value):
         valid_attrs = (
             "id", "state", "picking_ids", "line_ids", "reconciled",
-            "scheduled_date", "mock_wizard_mode", "mock_partial_reconcile",
+            "scheduled_date", "mock_wizard_mode", "mock_partial_reconcile", "move_id",
         )
         if name.startswith("_") or name in valid_attrs:
             super().__setattr__(name, value)
@@ -249,44 +252,52 @@ class MockRecord:
                     }, "account.move.line", idx, self._env))
                 self.line_ids = MockRecordList(lines)
         elif self._model == "account.payment":
+            self.state = "in_process"
             p_type = self._vals.get("payment_type", "inbound")
             amt = float(self._vals.get("amount", 0.0))
+            pay_ref = self._vals.get("ref", self._vals.get("memo", ""))
             if p_type == "inbound":
                 cash_line = MockRecord({
-                    "name": self._vals.get("ref", "Cash In"),
+                    "name": pay_ref or "Cash In",
                     "account_id": MockRecord({"account_type": "asset_cash"}, "account.account", 6, self._env),
                     "debit": amt,
                     "credit": 0.0,
                     "reconciled": False,
                 }, "account.move.line", 1, self._env)
                 ar_line = MockRecord({
-                    "name": self._vals.get("ref", "AR Payment"),
+                    "name": pay_ref or "AR Payment",
                     "account_id": MockRecord({"account_type": "asset_receivable"}, "account.account", 1, self._env),
                     "debit": 0.0,
                     "credit": amt,
                     "reconciled": False,
                 }, "account.move.line", 2, self._env)
+                ar_line._payment = self
                 self.line_ids = MockRecordList([cash_line, ar_line])
                 if getattr(self, "mock_partial_reconcile", False):
                     self.line_ids.mock_partial_reconcile = True
             else:
                 ap_line = MockRecord({
-                    "name": self._vals.get("ref", "AP Payment"),
+                    "name": pay_ref or "AP Payment",
                     "account_id": MockRecord({"account_type": "liability_payable"}, "account.account", 3, self._env),
                     "debit": amt,
                     "credit": 0.0,
                     "reconciled": False,
                 }, "account.move.line", 1, self._env)
                 cash_line = MockRecord({
-                    "name": self._vals.get("ref", "Cash Out"),
+                    "name": pay_ref or "Cash Out",
                     "account_id": MockRecord({"account_type": "asset_cash"}, "account.account", 6, self._env),
                     "debit": 0.0,
                     "credit": amt,
                     "reconciled": False,
                 }, "account.move.line", 2, self._env)
+                ap_line._payment = self
                 self.line_ids = MockRecordList([ap_line, cash_line])
                 if getattr(self, "mock_partial_reconcile", False):
                     self.line_ids.mock_partial_reconcile = True
+
+            # Odoo 19: account.payment memiliki move_id relasional yang berstatus posted
+            self.move_id = MockRecord({"state": "posted", "ref": pay_ref}, "account.move", self.id, self._env)
+            self.move_id.line_ids = self.line_ids
 
 
 class MockModel:
@@ -741,7 +752,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
 
         # Seluruh pembayaran AR dan AP berstatus posted dan terhubung rekonsiliasi
         for pay in mock_env["account.payment"].store.values():
-            self.assertEqual(pay.state, "posted")
+            self.assertIn(pay.state, ("paid", "in_process", "posted"))
             receivable_payable_lines = pay.line_ids.filtered(
                 lambda ml: ml.account_id.account_type in ("asset_receivable", "liability_payable")
             )
@@ -879,7 +890,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         pays = list(mock_env["account.payment"].store.values())
         self.assertTrue(len(pays) >= 1)
         target_pay = pays[0]
-        self.assertEqual(target_pay.state, "posted")
+        self.assertIn(target_pay.state, ("paid", "in_process", "posted"))
 
         # Simulasikan situasi celah: payment diubah menjadi draft dan unreconciled
         target_pay.state = "draft"
@@ -894,8 +905,8 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         adapter_run2 = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
         adapter_run2.run_all(limit_orders=1)
 
-        # Buktikan self-healing: payment kembali berstatus posted dan baris piutang kembali reconciled
-        self.assertEqual(target_pay.state, "posted")
+        # Buktikan self-healing: payment kembali aktif (paid/in_process/posted) dan baris piutang kembali reconciled
+        self.assertIn(target_pay.state, ("posted", "in_process", "paid"))
         pay_rec_lines = target_pay.line_ids.filtered(
             lambda line: getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
         )
@@ -924,6 +935,84 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             self.assertEqual(qp.location_id.usage, "customer")
             # Buktikan lokasi tujuan adalah Karantina FMCG Maumbi
             self.assertEqual(qp.location_dest_id.name, "Karantina FMCG Maumbi")
+
+    def test_final_readback_fails_fast_when_canonical_payment_in_draft_state(self):
+        """Jika payment kanonikal diubah menjadi draft sebelum commit, run_all wajib melempar AssertionError."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        original_load_opex = adapter.load_opex_payroll
+
+        def corrupted_load_opex():
+            original_load_opex()
+            # Cari payment AR yang sudah terbuat dan ubah state menjadi draft
+            for pay in mock_env["account.payment"].store.values():
+                pref = getattr(pay, "ref", getattr(pay, "memo", ""))
+                if str(pref).startswith("PAY-AR-"):
+                    pay.state = "draft"
+                    break
+
+        adapter.load_opex_payroll = corrupted_load_opex
+
+        with self.assertRaises(AssertionError) as ctx:
+            adapter.run_all(limit_orders=1)
+
+        self.assertIn("masih dalam state 'draft'", str(ctx.exception))
+        self.assertTrue(mock_env.cr.rollbacked)
+        self.assertFalse(mock_env.cr.committed)
+
+    def test_final_readback_fails_fast_when_payment_receivable_unreconciled(self):
+        """Jika baris piutang payment kanonikal unreconciled sebelum commit, run_all wajib melempar AssertionError."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        original_load_opex = adapter.load_opex_payroll
+
+        def corrupted_load_opex():
+            original_load_opex()
+            for pay in mock_env["account.payment"].store.values():
+                pref = getattr(pay, "ref", getattr(pay, "memo", ""))
+                if str(pref).startswith("PAY-AR-"):
+                    for line in pay.line_ids:
+                        if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable":
+                            line.reconciled = False
+                            line.amount_residual = 500000.0
+                    break
+
+        adapter.load_opex_payroll = corrupted_load_opex
+
+        with self.assertRaises(AssertionError) as ctx:
+            adapter.run_all(limit_orders=1)
+
+        self.assertIn("belum terekonsiliasi", str(ctx.exception))
+        self.assertTrue(mock_env.cr.rollbacked)
+        self.assertFalse(mock_env.cr.committed)
+
+    def test_final_readback_fails_fast_when_discount_moves_missing(self):
+        """Jika entri diskon pembayaran hilang atau berkurang, run_all wajib melempar AssertionError."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        original_load_payments = adapter.load_payments
+
+        def corrupted_load_payments(limit_orders=None):
+            original_load_payments(limit_orders=limit_orders)
+            # Hapus jurnal diskon yang terbuat
+            to_remove = [
+                mid for mid, m in mock_env["account.move"].store.items()
+                if getattr(m, "ref", "").startswith("DISC-")
+            ]
+            for mid in to_remove:
+                del mock_env["account.move"].store[mid]
+
+        adapter.load_payments = corrupted_load_payments
+
+        with self.assertRaises(AssertionError) as ctx:
+            adapter.run_all(limit_orders=1)
+
+        self.assertIn("Jumlah jurnal diskon tidak cocok", str(ctx.exception))
+        self.assertTrue(mock_env.cr.rollbacked)
+        self.assertFalse(mock_env.cr.committed)
 
 
 if __name__ == "__main__":

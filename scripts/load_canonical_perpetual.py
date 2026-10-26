@@ -431,6 +431,37 @@ class CanonicalPerpetualAdapter:
             return record.move_id.line_ids
         return []
 
+    def _find_payment(self, pay_id: str):
+        """Mencari account.payment berdasarkan pay_id pada ref, memo, atau move_id.ref."""
+        if "account.payment" not in self.env:
+            return None
+        AccountPayment = self.env["account.payment"].sudo()
+        p_fields = getattr(AccountPayment, "_fields", {})
+
+        # 1. Coba field ref jika ada di account.payment
+        if "ref" in p_fields:
+            p = AccountPayment.search([("ref", "=", pay_id)], limit=1)
+            if p:
+                return p
+        # 2. Coba field memo native Odoo 19 jika ada
+        if "memo" in p_fields:
+            p = AccountPayment.search([("memo", "=", pay_id)], limit=1)
+            if p:
+                return p
+        # 3. Cari via account.move jika terhubung ke move_id
+        if "account.move" in self.env:
+            AccountMove = self.env["account.move"].sudo()
+            m = AccountMove.search([("ref", "=", pay_id)], limit=1)
+            if m:
+                p = AccountPayment.search([("move_id", "=", m.id)], limit=1)
+                if p:
+                    return p
+        # 4. Fallback search umum
+        try:
+            return AccountPayment.search([("ref", "=", pay_id)], limit=1)
+        except Exception:
+            return None
+
     def _validate_picking_safely(self, pick):
         """Memvalidasi stock picking hingga status 'done', menangani wizard Odoo, dan fail-fast jika gagal."""
         if getattr(pick, "state", "") == "done":
@@ -891,13 +922,13 @@ class CanonicalPerpetualAdapter:
             pay_id = p_data["payment_id"]
             cust_partner = self.get_partner(p_data["customer_ref"])
 
-            existing = AccountPayment.search([("ref", "=", pay_id)], limit=1)
+            existing = self._find_payment(pay_id)
             disc_amt = p_data.get("cash_discount_dpp", 0.0)
             disc_ref = f"DISC-{pay_id}"
 
             if existing:
                 pay = existing
-                if getattr(pay, "state", "") != "posted":
+                if getattr(pay, "state", "") == "draft":
                     pay.action_post()
 
                 pay_lines = self._get_record_lines(pay)
@@ -938,16 +969,27 @@ class CanonicalPerpetualAdapter:
                     self.stats["skipped_ar"] += 1
                     continue
             else:
-                pay = AccountPayment.create({
+                pay_vals = {
                     "payment_type": "inbound",
                     "partner_type": "customer",
                     "partner_id": cust_partner.id,
                     "amount": p_data["net_cash_collected_total"],
                     "date": p_data["payment_date"],
-                    "ref": pay_id,
-                })
+                }
+                pay_fields = getattr(AccountPayment, "_fields", {})
+                if "memo" in pay_fields:
+                    pay_vals["memo"] = pay_id
+                if "ref" in pay_fields or not pay_fields:
+                    pay_vals["ref"] = pay_id
+
+                pay = AccountPayment.create(pay_vals)
                 self.stats["ar_payments_created"] += 1
                 pay.action_post()
+                if hasattr(pay, "move_id") and pay.move_id and not getattr(pay.move_id, "ref", None):
+                    try:
+                        pay.move_id.ref = pay_id
+                    except Exception:
+                        pass
 
             # Diskon Pembayaran Awal (Early Cash Discount)
             disc_move = None
@@ -1047,10 +1089,10 @@ class CanonicalPerpetualAdapter:
             p_data = build_ap_payment_payload(ap)
             pay_id = p_data["ap_payment_id"]
 
-            existing = AccountPayment.search([("ref", "=", pay_id)], limit=1)
+            existing = self._find_payment(pay_id)
             if existing:
                 pay = existing
-                if getattr(pay, "state", "") != "posted":
+                if getattr(pay, "state", "") == "draft":
                     pay.action_post()
 
                 pay_lines = self._get_record_lines(pay)
@@ -1075,16 +1117,27 @@ class CanonicalPerpetualAdapter:
                 if not prin_partner:
                     raise KeyError(f"[canonical_loader] Principal AP payment '{prin_name}' tidak ditemukan!")
 
-                pay = AccountPayment.create({
+                pay_vals = {
                     "payment_type": "outbound",
                     "partner_type": "supplier",
                     "partner_id": prin_partner.id,
                     "amount": p_data["amount_paid_dpp"],
                     "date": p_data["payment_date"],
-                    "ref": pay_id,
-                })
+                }
+                pay_fields = getattr(AccountPayment, "_fields", {})
+                if "memo" in pay_fields:
+                    pay_vals["memo"] = pay_id
+                if "ref" in pay_fields or not pay_fields:
+                    pay_vals["ref"] = pay_id
+
+                pay = AccountPayment.create(pay_vals)
                 self.stats["ap_payments_created"] += 1
                 pay.action_post()
+                if hasattr(pay, "move_id") and pay.move_id and not getattr(pay.move_id, "ref", None):
+                    try:
+                        pay.move_id.ref = pay_id
+                    except Exception:
+                        pass
 
             # Reconcile dengan bill PO
             if AccountMove:
@@ -1240,43 +1293,198 @@ class CanonicalPerpetualAdapter:
                             "Berisiko mengurangi stok gudang utama (WH/Stock) dua kali."
                         )
 
+            # Muat register AR & AP kanonikal untuk verifikasi readback menyeluruh
+            ar_rows = self._read_csv("perpetual_ar_collections.csv")
+            ap_rows = self._read_csv("perpetual_ap_payments.csv")
+            if limit_orders is not None:
+                so_sample = {s["so_number"] for s in self._read_csv("perpetual_sales_orders.csv")[:limit_orders]}
+                inv_sample = {
+                    iv["invoice_number"]
+                    for iv in self._read_csv("perpetual_invoices.csv")
+                    if iv["so_number"] in so_sample
+                }
+                ar_rows = [ar for ar in ar_rows if ar["invoice_number"] in inv_sample]
+
             # Verifikasi bahwa seluruh entri diskon berstatus posted dan baris piutangnya terekonsiliasi penuh
             if "account.move" in self.env:
                 AccountMove = self.env["account.move"].sudo()
                 disc_moves = AccountMove.search([("ref", "=like", "DISC-%")])
-                for dm in disc_moves:
-                    if not getattr(dm, "ref", "") or not str(dm.ref).startswith("DISC-"):
-                        continue
+                expected_disc_count = 160 if limit_orders is None else len([
+                    r for r in ar_rows if float(r.get("early_payment_discount", 0.0)) > 0
+                ])
+                found_disc = [
+                    dm for dm in disc_moves if getattr(dm, "ref", "") and str(dm.ref).startswith("DISC-")
+                ]
+                assert len(found_disc) == expected_disc_count, (
+                    f"Jumlah jurnal diskon tidak cocok! Expected {expected_disc_count}, got {len(found_disc)}"
+                )
+                for dm in found_disc:
                     assert dm.state == "posted", f"Jurnal diskon '{dm.ref}' belum posted!"
-                    if hasattr(dm, "line_ids") and hasattr(dm.line_ids, "filtered"):
-                        rec_lines = dm.line_ids.filtered(
+                    rec_lines = self._get_record_lines(dm)
+                    rec_lines_flt = (
+                        rec_lines.filtered(
                             lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
                             == "asset_receivable"
                         )
-                        for rl in rec_lines:
-                            res_val = getattr(rl, "amount_residual", "N/A")
-                            assert self._is_reconciled(rl), (
-                                f"Baris diskon '{dm.ref}' belum terekonsiliasi penuh! Residual: {res_val}"
+                        if hasattr(rec_lines, "filtered")
+                        else [
+                            line
+                            for line in rec_lines
+                            if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
+                        ]
+                    )
+                    assert len(rec_lines_flt) > 0, f"Jurnal diskon '{dm.ref}' tidak memiliki baris asset_receivable!"
+                    for rl in rec_lines_flt:
+                        res_val = getattr(rl, "amount_residual", "N/A")
+                        assert self._is_reconciled(rl), (
+                            f"Baris diskon '{dm.ref}' belum terekonsiliasi penuh! Residual: {res_val}"
+                        )
+
+            # Verifikasi seluruh payment kanonikal secara persis dari register ID sumber
+            if "account.payment" in self.env:
+                AccountMove = self.env["account.move"].sudo() if "account.move" in self.env else None
+
+                # 1. Validasi seluruh AR Payments kanonikal
+                for ar_row in ar_rows:
+                    p_data = build_ar_payment_payload(ar_row)
+                    pay_id = p_data["payment_id"]
+                    inv_num = p_data["invoice_number"]
+                    cust_partner = self.get_partner(p_data["customer_ref"])
+
+                    py = self._find_payment(pay_id)
+                    assert py, f"[canonical_loader] FATAL: Payment AR '{pay_id}' tidak ditemukan di database!"
+
+                    # State payment Odoo 19: 'in_process', 'paid', atau 'posted' (BUKAN draft/canceled/rejected)
+                    assert py.state in ("posted", "in_process", "paid"), (
+                        f"Payment AR '{pay_id}' masih dalam state '{py.state}', bukan posted/in_process/paid!"
+                    )
+                    if hasattr(py, "move_id") and py.move_id:
+                        assert py.move_id.state == "posted", (
+                            f"Journal entry move dari payment AR '{pay_id}' belum berstatus 'posted'!"
+                        )
+
+                    # Verifikasi partner dan nominal pembayaran
+                    assert getattr(py.partner_id, "id", None) == cust_partner.id, (
+                        f"Partner payment '{pay_id}' tidak cocok dengan register!"
+                    )
+                    assert abs(float(py.amount) - p_data["net_cash_collected_total"]) < 0.01, (
+                        f"Nominal payment '{pay_id}' tidak cocok dengan register!"
+                    )
+
+                    # Verifikasi seluruh baris piutang payment harus terekonsiliasi penuh
+                    p_lines = self._get_record_lines(py)
+                    p_rec = (
+                        p_lines.filtered(
+                            lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                            == "asset_receivable"
+                        )
+                        if hasattr(p_lines, "filtered")
+                        else [
+                            line
+                            for line in p_lines
+                            if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
+                        ]
+                    )
+                    assert len(p_rec) > 0, f"Payment AR '{pay_id}' tidak memiliki baris piutang (asset_receivable)!"
+                    for pl in p_rec:
+                        res_val = getattr(pl, "amount_residual", "N/A")
+                        assert self._is_reconciled(pl), (
+                            f"Baris pembayaran AR '{pay_id}' belum terekonsiliasi! Residual: {res_val}"
+                        )
+
+                    # Verifikasi faktur pasangan komersial
+                    if AccountMove:
+                        inv = AccountMove.search([("ref", "=", inv_num)], limit=1)
+                        assert inv, f"Faktur pasangan '{inv_num}' untuk payment '{pay_id}' tidak ditemukan!"
+                        assert inv.state == "posted", f"Faktur '{inv_num}' belum posted! State: {inv.state}"
+                        inv_lines = self._get_record_lines(inv)
+                        inv_rec = (
+                            inv_lines.filtered(
+                                lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                                == "asset_receivable"
+                            )
+                            if hasattr(inv_lines, "filtered")
+                            else [
+                                line
+                                for line in inv_lines
+                                if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
+                            ]
+                        )
+                        for il in inv_rec:
+                            res_val = getattr(il, "amount_residual", "N/A")
+                            assert self._is_reconciled(il), (
+                                f"Baris faktur '{inv_num}' belum terekonsiliasi penuh! Residual: {res_val}"
                             )
 
-            # Verifikasi bahwa seluruh payment kanonikal berstatus posted dan baris kas/bank-nya tidak menggantung
-            if "account.payment" in self.env:
-                AccountPayment = self.env["account.payment"].sudo()
-                all_pays = AccountPayment.search([])
-                for py in all_pays:
-                    pref = getattr(py, "ref", "") or ""
-                    if pref.startswith("AR-") or pref.startswith("AP-"):
-                        assert py.state == "posted", f"Payment '{pref}' masih dalam state '{py.state}', bukan 'posted'!"
-                        if hasattr(py, "line_ids") and hasattr(py.line_ids, "filtered"):
-                            acct_t = "asset_receivable" if pref.startswith("AR-") else "liability_payable"
-                            p_lines = py.line_ids.filtered(
-                                lambda line: getattr(getattr(line, "account_id", None), "account_type", "") == acct_t
+                # 2. Validasi seluruh AP Payments kanonikal
+                for ap_row in ap_rows:
+                    p_data = build_ap_payment_payload(ap_row)
+                    pay_id = p_data["ap_payment_id"]
+                    po_num = p_data["po_number"]
+                    prin_name = p_data["principal_name"]
+                    prin_partner = self.partner_by_name.get(prin_name) or self.partner_by_ref.get(prin_name)
+
+                    py = self._find_payment(pay_id)
+                    assert py, f"[canonical_loader] FATAL: Payment AP '{pay_id}' tidak ditemukan di database!"
+                    assert py.state in ("posted", "in_process", "paid"), (
+                        f"Payment AP '{pay_id}' masih dalam state '{py.state}', bukan posted/in_process/paid!"
+                    )
+                    if hasattr(py, "move_id") and py.move_id:
+                        assert py.move_id.state == "posted", (
+                            f"Journal entry move dari payment AP '{pay_id}' belum berstatus 'posted'!"
+                        )
+
+                    if prin_partner:
+                        assert getattr(py.partner_id, "id", None) == prin_partner.id, (
+                            f"Principal partner AP payment '{pay_id}' tidak cocok!"
+                        )
+                    assert abs(float(py.amount) - p_data["amount_paid_dpp"]) < 0.01, (
+                        f"Nominal AP payment '{pay_id}' tidak cocok dengan register!"
+                    )
+
+                    p_lines = self._get_record_lines(py)
+                    p_pay = (
+                        p_lines.filtered(
+                            lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                            == "liability_payable"
+                        )
+                        if hasattr(p_lines, "filtered")
+                        else [
+                            line
+                            for line in p_lines
+                            if getattr(getattr(line, "account_id", None), "account_type", "") == "liability_payable"
+                        ]
+                    )
+                    assert len(p_pay) > 0, f"Payment AP '{pay_id}' tidak memiliki baris utang (liability_payable)!"
+                    for pl in p_pay:
+                        res_val = getattr(pl, "amount_residual", "N/A")
+                        assert self._is_reconciled(pl), (
+                            f"Baris pembayaran AP '{pay_id}' belum terekonsiliasi! Residual: {res_val}"
+                        )
+
+                    if AccountMove:
+                        bill = AccountMove.search([("ref", "=", po_num)], limit=1)
+                        assert bill, f"Bill pasangan '{po_num}' untuk payment '{pay_id}' tidak ditemukan!"
+                        assert bill.state == "posted", f"Bill '{po_num}' belum posted! State: {bill.state}"
+                        bill_lines = self._get_record_lines(bill)
+                        bill_pay = (
+                            bill_lines.filtered(
+                                lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                                == "liability_payable"
                             )
-                            for pl in p_lines:
-                                res_val = getattr(pl, "amount_residual", "N/A")
-                                assert self._is_reconciled(pl), (
-                                    f"Baris pembayaran '{pref}' belum terekonsiliasi! Residual: {res_val}"
-                                )
+                            if hasattr(bill_lines, "filtered")
+                            else [
+                                line
+                                for line in bill_lines
+                                if getattr(getattr(line, "account_id", None), "account_type", "")
+                                == "liability_payable"
+                            ]
+                        )
+                        for bl in bill_pay:
+                            res_val = getattr(bl, "amount_residual", "N/A")
+                            assert self._is_reconciled(bl), (
+                                f"Baris bill '{po_num}' belum terekonsiliasi penuh! Residual: {res_val}"
+                            )
 
             # Commit HANYA jika seluruh asersi dan operasi terbukti valid
             self.cr.commit()

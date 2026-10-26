@@ -1,5 +1,49 @@
 # HANDOFF
 
+## 2026-10-26 — antigravity agent — Penutupan Dua Penghalang Supervisi PR #15: Pemeriksaan ID Payment Kanonikal & Keselarasan State Odoo 19
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6418055292](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6418055292)):**
+- Menindaklanjuti review commit `240181f`:
+  1. *Pemeriksaan akhir payment melewati seluruh data canonical*: Kode sebelumnya memfilter `pref.startswith("AR-")` dan `pref.startswith("AP-")`, padahal ID kanonikal sebenarnya berawalan `PAY-AR-` dan `PAY-AP-`. Akibatnya, seluruh 971 payment kanonikal terlewat dan payment yang diubah menjadi draft sebelum commit tetap lolos!
+  2. *Asumsi state payment belum cocok dengan Odoo 19 rujukan*: Adapter dan mock mengharapkan state `posted`, sedangkan pada Odoo 19 core (`account.payment`), state selection native adalah `draft`, `in_process`, `paid`, `canceled`, `rejected` (TIDAK ADA `posted`). Jurnal entri move (`pay.move_id`) yang berstatus `posted`. State jurnal dan state payment perlu dibedakan serta diperiksa pada image aktual.
+  3. *Langkah berikutnya*: Perbaiki pemeriksaan berdasarkan ID sumber, lalu jalankan slice kecil pada Odoo disposable dengan introspeksi model aktual. Pengujian mock tambahan saja belum cukup untuk menerima loader. Dataset canonical tetap dipertahankan; belum perlu merge atau injeksi penuh.
+
+**Implementasi Perbaikan:**
+1. **Pemeriksaan Akhir Membaca Set ID Sumber Persis dari Register Kanonikal ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menghapus filter prefix string keliru (`AR-` / `AP-`).
+   - Membaca langsung baris data kanonikal dari `perpetual_ar_collections.csv` dan `perpetual_ap_payments.csv` (atau subset `limit_orders`), mengambil ID transaksi persis (`PAY-AR-*` dan `PAY-AP-*`), lalu mencari payment via helper adaptif `_find_payment(pay_id)`.
+   - Helper `_find_payment` memeriksa field `memo`, `ref`, atau `move_id.ref` secara adaptif terhadap skema model Odoo yang aktif.
+   - Mengiterasi seluruh payment kanonikal dan melakukan asersi ketat sebelum commit:
+     * Payment wajib ADA (tidak boleh None atau falsey).
+     * Partner dan amount cocok persis dengan data kanonikal.
+     * State payment wajib settled: `pay.state in ("posted", "in_process", "paid")`.
+     * State entri jurnal terkait wajib posted: `pay.move_id.state == "posted"`.
+     * Seluruh baris piutang/utang payment (`asset_receivable` / `liability_payable`) terbukti `_is_reconciled is True` (residual nol).
+     * Invoice/bill pasangannya wajib ADA, `state == "posted"`, dan seluruh baris piutang/utangnya terbukti `_is_reconciled is True` (residual nol).
+   - Memverifikasi secara independen bahwa seluruh 160 jurnal diskon (`DISC-*`) berstatus `posted` dan beresidual nol. Jika pencarian jurnal diskon menghasilkan nol entri, asersi langsung melempar `AssertionError` fail-fast (tidak bisa lolos diam-diam).
+2. **Penyesuaian State Payment & Model Inti Odoo 19 ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menyelaraskan lifecycle state `account.payment` Odoo 19:
+     * Saat di-post, payment bertransisi ke state `in_process` (atau `posted` pada Odoo 16/17).
+     * Saat baris piutang terekonsiliasi penuh dengan invoice, payment bertransisi ke state `paid`.
+     * Jurnal entri move (`pay.move_id`) yang memiliki state `posted`.
+   - Mengisi field `memo` secara native (Odoo 19 standard) dan `ref` (jika didukung) serta menaruh ID sumber pada `pay.move_id.ref`.
+3. **Runner Introspeksi Schema Odoo 19 Aktual & Slice Disposable ([scripts/ops/verify_disposable_slice.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_disposable_slice.py)):**
+   - Menulis skrip mandiri untuk dijalankan di Odoo shell pada container disposable.
+   - Melakukan introspeksi langsung pada model `account.payment`, `account.move`, dan `stock.move.line` untuk memetakan nama field dan selection states aktual runtime.
+   - Mengeksekusi slice transaksi kecil representatif (`limit_orders=1`: 1 PO, 1 SO, 1 Inbound Picking, 1 Outgoing Picking, 1 Customer Invoice, 1 Payment AR, 1 Cash Discount, 1 Karantina).
+   - Menguji Run 2 untuk membuktikan idempotensi sejati (100% skipped, 0 created).
+4. **Mock Model Odoo 19 & Negative Regression Tests ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
+   - Memutakhirkan `MockRecord` agar merefleksikan lifecycle Odoo 19: `action_post()` menghasilkan `in_process` dengan `move_id.state == "posted"`, dan rekonsiliasi move line menghasilkan state `paid`.
+   - Menambahkan 3 negative regression test supervisi baru:
+     1. `test_final_readback_fails_fast_when_canonical_payment_in_draft_state`: terbukti melempar `AssertionError` jika payment diubah menjadi draft sebelum commit.
+     2. `test_final_readback_fails_fast_when_payment_receivable_unreconciled`: terbukti melempar `AssertionError` jika baris piutang payment dibuat unreconciled/beresidual > 0 sebelum commit.
+     3. `test_final_readback_fails_fast_when_discount_moves_missing`: terbukti melempar `AssertionError` jika jurnal diskon hilang/kurang.
+
+**Hasil Pengujian & Verifikasi:**
+- `python -m unittest tests/test_canonical_loader_adapter.py -v`: **26/26 tests PASS** (95,86s).
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke `main` dan tidak mengakses production.
+
+---
+
 ## 2026-10-26 — antigravity agent — Penutupan Dua Celah Supervisi PR #15 & Pembuktian Alur Karantina Bebas Pengurangan Ganda
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6408851456](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6408851456)):**
 - Menindaklanjuti review commit `cc2276c`:

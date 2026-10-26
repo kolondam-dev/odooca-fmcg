@@ -403,3 +403,21 @@
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main.
 - Task managed by antigravity at 2026-10-26T20:45:00+07:00
 
+[2026-10-26T21:30:00+07:00] [INFO] Penutupan Dua Penghalang Supervisi PR #15: Pemeriksaan ID Payment Kanonikal & Penyelarasan Lifecycle Odoo 19
+- Menutup temuan pemeriksaan payment yang melewati seluruh data canonical:
+  * Menghapus filter prefix string keliru (AR- / AP-) yang sebelumnya menyebabkan seluruh payment kanonikal terlewat.
+  * Membaca langsung ID transaksi persis (PAY-AR-* dan PAY-AP-*) dari register kanonikal perpetual_ar_collections.csv dan perpetual_ap_payments.csv.
+  * Mengimplementasikan helper adaptif _find_payment(pay_id) yang mencari payment berdasarkan memo, ref, atau move_id.ref.
+  * Melakukan asersi ketat sebelum commit: payment wajib ada, partner dan amount cocok, state settled ('posted', 'in_process', 'paid'), entri jurnal pay.move_id.state == 'posted', dan seluruh baris piutang/utangnya beresidual nol (_is_reconciled is True).
+  * Memvalidasi bahwa seluruh invoice/bill pasangannya berstatus 'posted' dan beresidual nol.
+  * Memvalidasi secara independen bahwa seluruh 160 jurnal diskon (DISC-*) berstatus 'posted' dan beresidual nol (pencarian kosong langsung fail-fast).
+- Menutup temuan asumsi state payment vs Odoo 19 core:
+  * Menyelaraskan lifecycle Odoo 19: account.payment tidak memiliki state 'posted', melainkan 'in_process' (setelah action_post) dan 'paid' (setelah reconcile tuntas dengan invoice). Jurnal entri move_id yang berstatus 'posted'.
+  * Mendukung field 'memo' secara native dan menaruh referensi ID sumber pada move_id.ref.
+- Menambahkan runner introspeksi schema Odoo 19 aktual & slice disposable (scripts/ops/verify_disposable_slice.py) untuk mengeksekusi introspeksi model runtime dan membuktikan eksekusi slice representatif beserta idempotensi sejati Run 2 di Odoo shell.
+- Memutakhirkan MockRecord dan menambah 3 negative regression test di tests/test_canonical_loader_adapter.py (total 26/26 tests PASS):
+  1. test_final_readback_fails_fast_when_canonical_payment_in_draft_state
+  2. test_final_readback_fails_fast_when_payment_receivable_unreconciled
+  3. test_final_readback_fails_fast_when_discount_moves_missing
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan tidak mengakses server production langsung.
+- Task managed by antigravity at 2026-10-26T21:30:00+07:00
