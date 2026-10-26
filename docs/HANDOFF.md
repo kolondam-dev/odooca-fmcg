@@ -1,5 +1,23 @@
 # HANDOFF
 
+## 2026-10-26 — antigravity agent — Integrasi PR #17 (Acceptance Gates Supervisi) & Verifikasi CI
+**Konteks & Arahan:**
+Mengintegrasikan PR #17 (`origin/agen/supervision-acceptance-gates`, commit `6143538`) ke dalam branch PR #15 (`agen/fix-seed-invariants`).
+- Memverifikasi validator acceptance baru `scripts/ops/verify_seed_acceptance.py`: mengunci jadwal AP per PO tanpa konstanta hardcoded, multiset dokumen event ledger ke sumbernya, dan audit seluruh field numerik 7 bagian canonical report.
+- Menjalankan seluruh 72 unit tests di `tests/` (termasuk 28 acceptance tests baru dan 44 existing invariant/reproducibility tests).
+- Memastikan kedua validator committed artifacts (`verify_seed_invariants.py` dan `verify_seed_acceptance.py`) lulus dengan 0 violations pada snapshot dataset `fae5835`.
+- Mengoreksi dokumentasi alur CI: workflow terdiri dari **lima nama job CI** resmi (yaitu: `seed-invariants`, `invariant-tests`, `static`, `install-test`, dan `init-test`).
+
+**Hasil Verifikasi Lokal:**
+- `python scripts/ops/verify_seed_invariants.py --report invariant-report.json`: Status PASS (0 violations).
+- `python scripts/ops/verify_seed_acceptance.py --report acceptance-report.json`: Status PASS (0 violations).
+- `python -m unittest discover -s tests -p 'test_*.py' -v`: **72/72 tests PASS**.
+- `python -m ruff check .`: All checks passed!
+- `python scripts/check_manifests.py`: 4 addon ok.
+- Dataset transaksi perpetual Juli 2026 dipertahankan utuh tanpa perubahan.
+
+---
+
 ## 2026-10-26 — codex agent — Penutupan tiga celah gate supervisi
 **Basis:** PR #15 `fae5835`, tanpa modifikasi generator atau dataset.
 **Berubah:** pemeriksa independen `verify_seed_acceptance.py`; sumber AP per PO,
