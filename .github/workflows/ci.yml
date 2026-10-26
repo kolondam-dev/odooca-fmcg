@@ -111,8 +111,4 @@ jobs:
           if grep -E " (ERROR|CRITICAL) |Traceback" init.log; then exit 1; fi
       - name: Eksekusi dan verifikasi slice representatif pada Odoo 19 disposable
         run: |
-          docker exec -i odoo bash -c '
-            su -s /bin/bash odoo -c "
-              cd /opt && odoo shell -c /tmp/odoo.conf -d fmcg --no-http < /opt/scripts/ops/verify_disposable_slice.py
-            "
-          '
+          docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_slice.py

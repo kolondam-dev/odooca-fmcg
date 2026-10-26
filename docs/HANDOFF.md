@@ -1,5 +1,27 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Perbaikan Entrypoint Shell, Konfigurasi Penuh /tmp/odoo.conf & Penanganan Tangguh Stdin __file__ pada Odoo 19 Disposable
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6428917098](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6428917098)):**
+- Menindaklanjuti kegagalan CI runtime pada commit `9db41ba`:
+  1. *Runner berhenti dengan `NameError: __file__ is not defined`*: Eksekusi skrip melalui stdin di Odoo shell tidak memiliki variabel global `__file__`.
+  2. *Shell tidak meneruskan konfigurasi addons seperti proses utama*: Odoo shell dipanggil dengan `/tmp/odoo.conf` minimalis tanpa `addons_path` dan kredensial database, serta variabel environment direset saat pergantian user. Akibatnya, `id_base` dan seluruh modul OCA tidak termuat.
+  3. *Introspeksi schema serta Run 1/Run 2 belum terlaksana*: Perlu perbaikan entrypoint container dan konfigurasi shell untuk menjalankan slice disposable secara otomatis tanpa melemahkan gate.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Penanganan Tangguh Stdin `__file__` & Deteksi `REG_PATH` ([scripts/ops/verify_disposable_slice.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_disposable_slice.py)):**
+   - Menambahkan blok fallback `try ... except NameError` saat mendeteksi `REPO_ROOT` (menggunakan `/opt` jika di container atau `Path.cwd()` jika di workspace).
+   - Menentukan `REG_PATH` adaptif (`REPO_ROOT / 'data' / 'registers'` atau fallback `/opt/data/registers`), menjamin pencarian 15 berkas kanonikal LF selalu valid baik di host maupun container.
+2. **Konfigurasi Lengkap `/tmp/odoo.conf` & Subcommand `shell` Entrypoint ([deploy/init.sh](file:///c:/Users/ACER/dev/odooca-fmcg/deploy/init.sh)):**
+   - Menuliskan opsi lengkap ke `/tmp/odoo.conf`: `admin_passwd`, `addons_path` (mengambil dari `/opt/deploy/addons_path.sh`), `data_dir`, `without_demo = True`, `db_host`, `db_port`, `db_user`, dan `db_password`.
+   - Menambahkan handler subcommand `shell`: jika argumen pertama adalah `shell`, skrip langsung mengeksekusi `exec odoo_run shell "$@"` dengan seluruh environment dan addons path yang sama persis dengan Odoo server utama.
+   - Menambahkan flag `-p` pada perintah `su` (`su -p -s /bin/bash ...`) untuk menjaga environment variables saat drop privileges.
+3. **Penyelarasan CI GitHub Actions ([.github/workflows/ci.yml](file:///c:/Users/ACER/.gemini/antigravity-ide/brain/fa72665f-eaec-49b7-b9d0-00e8f9e5a9ac/.github/workflows/ci.yml)):**
+   - Mengubah pemanggilan runner disposable di step CI menjadi:
+     `docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_slice.py`
+   - Memastikan Odoo shell otomatis mewarisi konfigurasi container, memuat `id_base` dan dependensinya, lalu mengeksekusi introspeksi schema, Run 1, dan Run 2 (zero drift stock & GL).
+
+---
 ## 2026-10-27 — antigravity agent — Pengetatan Readback Finansial (Nominal Diskon & Faktur Pasangan), Audit Quant ID Tanpa Timpa & Integrasi Eksekusi Disposable Odoo 19 di CI
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6428464141](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6428464141)):**
 - Menindaklanjuti review commit `ffaa9c5` pada branch `agen/fix-seed-invariants`:

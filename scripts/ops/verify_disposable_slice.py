@@ -18,12 +18,29 @@ Mencakup:
 4. Rerun kedua kali (uji idempotensi sejati) dengan komparasi saldo stok dan GL buku besar
 """
 
+import os
 import sys
 from pathlib import Path
 
-# Path root repositori
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO_ROOT))
+# Path root repositori (tangguh terhadap eksekusi langsung maupun via stdin di Odoo shell)
+try:
+    REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+except NameError:
+    # Saat dieksekusi via stdin di Odoo shell (__file__ tidak terdefinisi)
+    if Path("/opt/scripts/load_canonical_perpetual.py").exists():
+        REPO_ROOT = Path("/opt")
+    elif Path("scripts/load_canonical_perpetual.py").exists():
+        REPO_ROOT = Path.cwd()
+    else:
+        REPO_ROOT = Path(os.environ.get("REPO_ROOT", "/opt"))
+
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+# Deteksi lokasi direktori data registers
+REG_PATH = REPO_ROOT / "data" / "registers"
+if not REG_PATH.exists() and Path("/opt/data/registers").exists():
+    REG_PATH = Path("/opt/data/registers")
 
 from scripts.load_canonical_perpetual import CanonicalPerpetualAdapter  # noqa: E402
 
@@ -76,7 +93,7 @@ def run_representative_slice(env):
 
     target_so_slice = ["SO-202607-0001", "SO-202607-0063"]
     print(f"\n[disposable_slice] MENJALANKAN SLICE TRANSAKSI REPRESENTATIF (RUN 1): {target_so_slice}...")
-    adapter = CanonicalPerpetualAdapter(env, reg_path=REPO_ROOT / "data" / "registers")
+    adapter = CanonicalPerpetualAdapter(env, reg_path=REG_PATH)
 
     # Jalankan slice representatif multi-domain
     adapter.run_all(target_so_numbers=target_so_slice)
@@ -171,7 +188,7 @@ def run_representative_slice(env):
 
     # 5. Menjalankan Uji Idempotensi Sejati (Run 2)
     print("\n[disposable_slice] MENJALANKAN UJI IDEMPOTENSI SEJATI (RUN 2)...")
-    adapter_run2 = CanonicalPerpetualAdapter(env, reg_path=REPO_ROOT / "data" / "registers")
+    adapter_run2 = CanonicalPerpetualAdapter(env, reg_path=REG_PATH)
     adapter_run2.run_all(target_so_numbers=target_so_slice)
 
     print("[disposable_slice] RUN 2 SUKSES. Memeriksa counter create...")
