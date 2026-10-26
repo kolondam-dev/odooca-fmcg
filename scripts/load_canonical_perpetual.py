@@ -382,6 +382,14 @@ class CanonicalPerpetualAdapter:
 
             # Periksa dan update move_line yang ada
             assigned = False
+            sml_fields = getattr(StockMoveLine, "_fields", {}) if StockMoveLine else {}
+            if sml_fields:
+                has_qty_done_field = "qty_done" in sml_fields
+                has_quantity_field = "quantity" in sml_fields
+            else:
+                has_qty_done_field = True
+                has_quantity_field = True
+
             if hasattr(pick, "move_line_ids") and pick.move_line_ids:
                 for ml in pick.move_line_ids:
                     if _rec_id(getattr(ml, "product_id", None)) == prod.id:
@@ -390,9 +398,9 @@ class CanonicalPerpetualAdapter:
                         if not ml_lot or (target_lot and ml_lot == target_lot):
                             if lot_obj and hasattr(ml, "lot_id"):
                                 ml.lot_id = lot_obj.id
-                            if hasattr(ml, "quantity"):
+                            if has_quantity_field and hasattr(ml, "quantity"):
                                 ml.quantity = qty_units
-                            if hasattr(ml, "qty_done"):
+                            if has_qty_done_field and hasattr(ml, "qty_done"):
                                 ml.qty_done = qty_units
                             assigned = True
                             break
@@ -404,14 +412,24 @@ class CanonicalPerpetualAdapter:
                     "move_id": matching_move.id if matching_move and hasattr(matching_move, "id") else False,
                     "product_id": prod.id,
                     "lot_id": lot_obj.id if lot_obj else False,
-                    "quantity": qty_units,
-                    "qty_done": qty_units,
                     "location_id": _rec_id(getattr(pick, "location_id", None)),
                     "location_dest_id": _rec_id(getattr(pick, "location_dest_id", None)),
                 }
+                if has_quantity_field:
+                    ml_vals["quantity"] = qty_units
+                if has_qty_done_field:
+                    ml_vals["qty_done"] = qty_units
                 new_ml = StockMoveLine.create(ml_vals)
                 if hasattr(pick, "move_line_ids") and hasattr(pick.move_line_ids, "append"):
                     pick.move_line_ids.append(new_ml)
+
+    def _get_record_lines(self, record):
+        """Mengambil line_ids dari record langsung atau dari move_id relasionalnya."""
+        if hasattr(record, "line_ids") and record.line_ids:
+            return record.line_ids
+        if hasattr(record, "move_id") and hasattr(record.move_id, "line_ids") and record.move_id.line_ids:
+            return record.move_id.line_ids
+        return []
 
     def _validate_picking_safely(self, pick):
         """Memvalidasi stock picking hingga status 'done', menangani wizard Odoo, dan fail-fast jika gagal."""
@@ -438,7 +456,17 @@ class CanonicalPerpetualAdapter:
                 f"[canonical_loader] FATAL: Validasi picking '{pick_id_label}' gagal! "
                 f"Status picking tetap '{getattr(pick, 'state', 'unknown')}', bukan 'done'. Return value: {res}"
             )
-        return True
+    def _is_reconciled(self, l_rec) -> bool:
+        """Memeriksa status rekonsiliasi baris secara ketat terhadap status boolean dan nilai residual."""
+        if getattr(l_rec, "reconciled", False) is True:
+            return True
+        r_val = getattr(l_rec, "amount_residual", None)
+        if r_val is not None and not isinstance(r_val, bool):
+            try:
+                return abs(float(r_val)) < 0.01
+            except (ValueError, TypeError):
+                pass
+        return False
 
     # 1. Opening Stock
     def load_opening_stock(self):
@@ -735,6 +763,13 @@ class CanonicalPerpetualAdapter:
             return
 
         internal_loc = StockLocation.search([("usage", "=", "internal")], limit=1)
+        customer_loc = StockLocation.search([("usage", "=", "customer")], limit=1)
+        if not customer_loc:
+            customer_loc = StockLocation.create({
+                "name": "Partner Locations/Customers",
+                "usage": "customer",
+            })
+
         quarantine_loc = StockLocation.search([("name", "=", "Karantina FMCG Maumbi")], limit=1)
         if not quarantine_loc:
             quarantine_loc = StockLocation.create({
@@ -760,27 +795,49 @@ class CanonicalPerpetualAdapter:
                     })
 
             # Jika stock.picking tersedia, gunakan transfer internal Odoo murni
+            # Lokasi asal adalah customer_loc (Partner Locations/Customers) karena barang ditolak saat pengiriman,
+            # sehingga stok gudang utama (WH/Stock) tidak terpotong dua kali.
             if StockPicking:
                 existing_pick = StockPicking.search([("origin", "=", rej_id)], limit=1)
                 if existing_pick:
                     self.stats["skipped_quarantine"] += 1
                     continue
 
+                StockPickingType = (
+                    self.env["stock.picking.type"].sudo() if "stock.picking.type" in self.env else None
+                )
+                internal_type = (
+                    StockPickingType.search([("code", "=", "internal")], limit=1) if StockPickingType else None
+                )
+
+                sml_fields = (
+                    getattr(self.env.get("stock.move.line"), "_fields", {}) if "stock.move.line" in self.env else {}
+                )
+                if sml_fields:
+                    has_qty_done_f = "qty_done" in sml_fields
+                    has_quantity_f = "quantity" in sml_fields
+                else:
+                    has_qty_done_f = True
+                    has_quantity_f = True
+
+                ml_item = {
+                    "product_id": prod.id if prod else False,
+                    "lot_id": lot_obj.id if lot_obj else False,
+                    "location_id": customer_loc.id,
+                    "location_dest_id": quarantine_loc.id,
+                }
+                if has_quantity_f:
+                    ml_item["quantity"] = p_data["qty_units"]
+                if has_qty_done_f:
+                    ml_item["qty_done"] = p_data["qty_units"]
+
                 pick_vals = {
                     "origin": rej_id,
-                    "location_id": internal_loc.id if internal_loc else False,
+                    "picking_type_id": internal_type.id if internal_type else False,
+                    "location_id": customer_loc.id,
                     "location_dest_id": quarantine_loc.id,
                     "note": f"Retur Karantina DO {p_data['do_number']}: {p_data['rejection_reason']}",
-                    "move_line_ids": [
-                        (0, 0, {
-                            "product_id": prod.id if prod else False,
-                            "lot_id": lot_obj.id if lot_obj else False,
-                            "qty_done": p_data["qty_units"],
-                            "quantity": p_data["qty_units"],
-                            "location_id": internal_loc.id if internal_loc else False,
-                            "location_dest_id": quarantine_loc.id,
-                        })
-                    ] if prod else [],
+                    "move_line_ids": [(0, 0, ml_item)] if prod else [],
                 }
                 pick = StockPicking.create(pick_vals)
                 self._validate_picking_safely(pick)
@@ -832,30 +889,69 @@ class CanonicalPerpetualAdapter:
         for ar in ar_rows:
             p_data = build_ar_payment_payload(ar)
             pay_id = p_data["payment_id"]
-
-            existing = AccountPayment.search([("ref", "=", pay_id)], limit=1)
-            if existing:
-                self.stats["skipped_ar"] += 1
-                continue
-
             cust_partner = self.get_partner(p_data["customer_ref"])
 
-            pay = AccountPayment.create({
-                "payment_type": "inbound",
-                "partner_type": "customer",
-                "partner_id": cust_partner.id,
-                "amount": p_data["net_cash_collected_total"],
-                "date": p_data["payment_date"],
-                "ref": pay_id,
-            })
-            self.stats["ar_payments_created"] += 1
-            pay.action_post()
+            existing = AccountPayment.search([("ref", "=", pay_id)], limit=1)
+            disc_amt = p_data.get("cash_discount_dpp", 0.0)
+            disc_ref = f"DISC-{pay_id}"
+
+            if existing:
+                pay = existing
+                if getattr(pay, "state", "") != "posted":
+                    pay.action_post()
+
+                pay_lines = self._get_record_lines(pay)
+                pay_rec_lines = (
+                    pay_lines.filtered(
+                        lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                        == "asset_receivable"
+                    )
+                    if hasattr(pay_lines, "filtered")
+                    else [
+                        line
+                        for line in pay_lines
+                        if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
+                    ]
+                )
+
+                disc_move_check = AccountMove.search([("ref", "=", disc_ref)], limit=1) if AccountMove else None
+                disc_lines = self._get_record_lines(disc_move_check) if disc_move_check else []
+                disc_rec_lines = (
+                    disc_lines.filtered(
+                        lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                        == "asset_receivable"
+                    )
+                    if hasattr(disc_lines, "filtered")
+                    else [
+                        line
+                        for line in disc_lines
+                        if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
+                    ]
+                )
+
+                all_check = list(pay_rec_lines)
+                if disc_amt > 0 and disc_rec_lines:
+                    all_check.extend(disc_rec_lines)
+
+                # Idempoten sejati: jika payment dan diskon posted serta piutang sudah terekonsiliasi
+                if all_check and all(self._is_reconciled(line_item) for line_item in all_check):
+                    self.stats["skipped_ar"] += 1
+                    continue
+            else:
+                pay = AccountPayment.create({
+                    "payment_type": "inbound",
+                    "partner_type": "customer",
+                    "partner_id": cust_partner.id,
+                    "amount": p_data["net_cash_collected_total"],
+                    "date": p_data["payment_date"],
+                    "ref": pay_id,
+                })
+                self.stats["ar_payments_created"] += 1
+                pay.action_post()
 
             # Diskon Pembayaran Awal (Early Cash Discount)
-            disc_amt = p_data.get("cash_discount_dpp", 0.0)
             disc_move = None
             if AccountMove and disc_amt > 0:
-                disc_ref = f"DISC-{pay_id}"
                 existing_disc = AccountMove.search([("ref", "=", disc_ref)], limit=1)
                 if not existing_disc:
                     AccountAccount = (
@@ -891,14 +987,20 @@ class CanonicalPerpetualAdapter:
                     self.stats["discount_moves_created"] += 1
                 else:
                     disc_move = existing_disc
+                    if getattr(disc_move, "state", "") != "posted":
+                        disc_move.action_post()
 
             # Reconcile dengan invoice jika ada
             if AccountMove:
                 inv = AccountMove.search([("ref", "=", p_data["invoice_number"])], limit=1)
                 if inv and inv.state == "posted":
-                    to_combine = [pay.line_ids, inv.line_ids]
-                    if disc_move and hasattr(disc_move, "line_ids") and disc_move.line_ids:
-                        to_combine.append(disc_move.line_ids)
+                    pay_l = self._get_record_lines(pay)
+                    inv_l = self._get_record_lines(inv)
+                    to_combine = [pay_l, inv_l]
+                    if disc_move:
+                        disc_l = self._get_record_lines(disc_move)
+                        if disc_l:
+                            to_combine.append(disc_l)
 
                     all_lines = to_combine[0]
                     for other in to_combine[1:]:
@@ -910,27 +1012,31 @@ class CanonicalPerpetualAdapter:
                             == "asset_receivable"
                             and not getattr(line, "reconciled", False)
                         )
+                        # Self-healing: jika payment belum reconciled tapi invoice sudah bertanda reconciled
+                        has_unrec = any(
+                            not self._is_reconciled(p_line)
+                            for p_line in pay_l
+                            if getattr(getattr(p_line, "account_id", None), "account_type", "") == "asset_receivable"
+                        )
+                        if len(lines_to_rec) < 2 and has_unrec:
+                            lines_to_rec = all_lines.filtered(
+                                lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                                == "asset_receivable"
+                            )
+
                         if len(lines_to_rec) >= 2:
                             lines_to_rec.reconcile()
 
-                            def _is_reconciled(l_rec):
-                                if getattr(l_rec, "reconciled", False) is True:
-                                    return True
-                                r_val = getattr(l_rec, "amount_residual", None)
-                                if r_val is not None and not isinstance(r_val, bool):
-                                    try:
-                                        return abs(float(r_val)) < 0.01
-                                    except (ValueError, TypeError):
-                                        pass
-                                return False
-
-                            # Verifikasi tegas bahwa rekonsiliasi menghasilkan status reconciled atau residual nol
-                            reconciled_lines = [line_item for line_item in lines_to_rec if _is_reconciled(line_item)]
-                            if len(reconciled_lines) < 2:
+                            # Verifikasi tegas: SELURUH baris piutang WAJIB terekonsiliasi penuh
+                            reconciled_lines = [
+                                line_item for line_item in lines_to_rec if self._is_reconciled(line_item)
+                            ]
+                            if len(reconciled_lines) != len(lines_to_rec):
                                 inv_ref = p_data["invoice_number"]
                                 raise RuntimeError(
-                                    f"[canonical_loader] FATAL: Rekonsiliasi AR gagal untuk payment '{pay_id}' "
-                                    f"dan invoice '{inv_ref}'! Baris belum berstatus reconciled "
+                                    f"[canonical_loader] FATAL: Rekonsiliasi AR gagal atau tidak tuntas untuk "
+                                    f"payment '{pay_id}' dan invoice '{inv_ref}'! Baris diskon atau piutang "
+                                    f"tertinggal belum berstatus reconciled "
                                     f"(reconciled: {len(reconciled_lines)}/{len(lines_to_rec)})."
                                 )
                             self.stats["ar_reconciled"] += 1
@@ -943,33 +1049,53 @@ class CanonicalPerpetualAdapter:
 
             existing = AccountPayment.search([("ref", "=", pay_id)], limit=1)
             if existing:
-                self.stats["skipped_ap"] += 1
-                continue
+                pay = existing
+                if getattr(pay, "state", "") != "posted":
+                    pay.action_post()
 
-            prin_name = p_data["principal_name"]
-            prin_partner = self.partner_by_name.get(prin_name) or self.partner_by_ref.get(prin_name)
-            if not prin_partner:
-                raise KeyError(f"[canonical_loader] Principal AP payment '{prin_name}' tidak ditemukan!")
+                pay_lines = self._get_record_lines(pay)
+                pay_pay_lines = (
+                    pay_lines.filtered(
+                        lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                        == "liability_payable"
+                    )
+                    if hasattr(pay_lines, "filtered")
+                    else [
+                        line
+                        for line in pay_lines
+                        if getattr(getattr(line, "account_id", None), "account_type", "") == "liability_payable"
+                    ]
+                )
+                if pay_pay_lines and all(self._is_reconciled(p_line) for p_line in pay_pay_lines):
+                    self.stats["skipped_ap"] += 1
+                    continue
+            else:
+                prin_name = p_data["principal_name"]
+                prin_partner = self.partner_by_name.get(prin_name) or self.partner_by_ref.get(prin_name)
+                if not prin_partner:
+                    raise KeyError(f"[canonical_loader] Principal AP payment '{prin_name}' tidak ditemukan!")
 
-            pay = AccountPayment.create({
-                "payment_type": "outbound",
-                "partner_type": "supplier",
-                "partner_id": prin_partner.id,
-                "amount": p_data["amount_paid_dpp"],
-                "date": p_data["payment_date"],
-                "ref": pay_id,
-            })
-            self.stats["ap_payments_created"] += 1
-            pay.action_post()
+                pay = AccountPayment.create({
+                    "payment_type": "outbound",
+                    "partner_type": "supplier",
+                    "partner_id": prin_partner.id,
+                    "amount": p_data["amount_paid_dpp"],
+                    "date": p_data["payment_date"],
+                    "ref": pay_id,
+                })
+                self.stats["ap_payments_created"] += 1
+                pay.action_post()
 
             # Reconcile dengan bill PO
             if AccountMove:
                 bill = AccountMove.search([("ref", "=", p_data["po_number"])], limit=1)
                 if bill and bill.state == "posted":
+                    pay_l = self._get_record_lines(pay)
+                    bill_l = self._get_record_lines(bill)
                     all_lines = (
-                        (pay.line_ids | bill.line_ids)
-                        if hasattr(pay.line_ids, "__or__")
-                        else (pay.line_ids + bill.line_ids)
+                        (pay_l | bill_l)
+                        if hasattr(pay_l, "__or__")
+                        else (pay_l + bill_l)
                     )
                     if hasattr(all_lines, "filtered"):
                         lines_to_rec = all_lines.filtered(
@@ -977,14 +1103,28 @@ class CanonicalPerpetualAdapter:
                             == "liability_payable"
                             and not getattr(line, "reconciled", False)
                         )
+                        # Self-healing: jika payment belum reconciled tapi bill sudah bertanda reconciled
+                        has_unrec_ap = any(
+                            not self._is_reconciled(p_line)
+                            for p_line in pay_l
+                            if getattr(getattr(p_line, "account_id", None), "account_type", "") == "liability_payable"
+                        )
+                        if len(lines_to_rec) < 2 and has_unrec_ap:
+                            lines_to_rec = all_lines.filtered(
+                                lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                                == "liability_payable"
+                            )
+
                         if len(lines_to_rec) >= 2:
                             lines_to_rec.reconcile()
-                            reconciled_lines = [line_item for line_item in lines_to_rec if _is_reconciled(line_item)]
-                            if len(reconciled_lines) < 2:
+                            reconciled_lines = [
+                                line_item for line_item in lines_to_rec if self._is_reconciled(line_item)
+                            ]
+                            if len(reconciled_lines) != len(lines_to_rec):
                                 po_ref = p_data["po_number"]
                                 raise RuntimeError(
-                                    f"[canonical_loader] FATAL: Rekonsiliasi AP gagal untuk payment '{pay_id}' "
-                                    f"dan bill '{po_ref}'! Baris belum berstatus reconciled "
+                                    f"[canonical_loader] FATAL: Rekonsiliasi AP gagal atau tidak tuntas untuk "
+                                    f"payment '{pay_id}' dan bill '{po_ref}'! Baris belum berstatus reconciled "
                                     f"(reconciled: {len(reconciled_lines)}/{len(lines_to_rec)})."
                                 )
                             self.stats["ap_reconciled"] += 1
@@ -1089,6 +1229,54 @@ class CanonicalPerpetualAdapter:
                             assert p.state == "done", (
                                 f"Picking '{p_name}' belum berstatus 'done'! State saat ini: {p.state}"
                             )
+                    # Asersi khusus karantina: lokasi sumber transfer karantina wajib lokasi pelanggan
+                    if p.origin and "REJ-" in str(p.origin):
+                        loc_rec = getattr(p, "location_id", None)
+                        if isinstance(loc_rec, int) and "stock.location" in self.env:
+                            loc_rec = self.env["stock.location"].browse(loc_rec)
+                        loc_usage = getattr(loc_rec, "usage", "")
+                        assert loc_usage == "customer", (
+                            f"Transfer karantina '{p.origin}' bersumber dari usage='{loc_usage}', bukan 'customer'! "
+                            "Berisiko mengurangi stok gudang utama (WH/Stock) dua kali."
+                        )
+
+            # Verifikasi bahwa seluruh entri diskon berstatus posted dan baris piutangnya terekonsiliasi penuh
+            if "account.move" in self.env:
+                AccountMove = self.env["account.move"].sudo()
+                disc_moves = AccountMove.search([("ref", "=like", "DISC-%")])
+                for dm in disc_moves:
+                    if not getattr(dm, "ref", "") or not str(dm.ref).startswith("DISC-"):
+                        continue
+                    assert dm.state == "posted", f"Jurnal diskon '{dm.ref}' belum posted!"
+                    if hasattr(dm, "line_ids") and hasattr(dm.line_ids, "filtered"):
+                        rec_lines = dm.line_ids.filtered(
+                            lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                            == "asset_receivable"
+                        )
+                        for rl in rec_lines:
+                            res_val = getattr(rl, "amount_residual", "N/A")
+                            assert self._is_reconciled(rl), (
+                                f"Baris diskon '{dm.ref}' belum terekonsiliasi penuh! Residual: {res_val}"
+                            )
+
+            # Verifikasi bahwa seluruh payment kanonikal berstatus posted dan baris kas/bank-nya tidak menggantung
+            if "account.payment" in self.env:
+                AccountPayment = self.env["account.payment"].sudo()
+                all_pays = AccountPayment.search([])
+                for py in all_pays:
+                    pref = getattr(py, "ref", "") or ""
+                    if pref.startswith("AR-") or pref.startswith("AP-"):
+                        assert py.state == "posted", f"Payment '{pref}' masih dalam state '{py.state}', bukan 'posted'!"
+                        if hasattr(py, "line_ids") and hasattr(py.line_ids, "filtered"):
+                            acct_t = "asset_receivable" if pref.startswith("AR-") else "liability_payable"
+                            p_lines = py.line_ids.filtered(
+                                lambda line: getattr(getattr(line, "account_id", None), "account_type", "") == acct_t
+                            )
+                            for pl in p_lines:
+                                res_val = getattr(pl, "amount_residual", "N/A")
+                                assert self._is_reconciled(pl), (
+                                    f"Baris pembayaran '{pref}' belum terekonsiliasi! Residual: {res_val}"
+                                )
 
             # Commit HANYA jika seluruh asersi dan operasi terbukti valid
             self.cr.commit()

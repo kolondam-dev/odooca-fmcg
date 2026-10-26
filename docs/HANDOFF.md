@@ -1,6 +1,44 @@
 # HANDOFF
 
-## 2026-10-26 — antigravity agent — Penutupan Celah Supervisi PR #15: Verifikasi State Picking, Rekonsiliasi Ketat, Pemetaan Lot Sumber, dan Karantina Non-Duplikasi
+## 2026-10-26 — antigravity agent — Penutupan Dua Celah Supervisi PR #15 & Pembuktian Alur Karantina Bebas Pengurangan Ganda
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6408851456](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6408851456)):**
+- Menindaklanjuti review commit `cc2276c`:
+  1. *Hanya dua baris rekonsiliasi diselesaikan*: Pada transaksi dengan diskon pelunasan awal (160 transaksi, Rp 11.007.225,45 DPP), terdapat 3 baris piutang (Invoice + Payment + Diskon). Kondisi `len(reconciled_lines) >= 2` sebelumnya menerima parsial, meninggalkan 160 baris diskon terbuka dan tetap commit.
+  2. *Payment existing diubah menjadi draft dan belum direkonsiliasi*: Saat rerun, adapter menemukan existing payment lalu langsung skip tanpa memeriksa state `posted` dan status rekonsiliasi, meloloskan status yang belum settled.
+  3. *Alur mutasi fisik karantina*: Seluruh barang SO dikirim keluar via pengiriman DO (`WH/Stock -> Customer`). Pemindahan barang retur karantina dari `WH/Stock` berisiko mengurangi persediaan gudang dua kali.
+  4. *API Odoo 19*: Model `stock.move.line` Odoo 19 mendeklarasikan `quantity` (bukan `qty_done`), dan rekonsiliasi pembayaran menggunakan penarikan move lines yang aman (`_get_record_lines`).
+- Mempertahankan dataset kanonikal utuh tanpa modifikasi generator; tidak merge ke `main` dan tidak mengakses data production langsung.
+
+**Implementasi Perbaikan:**
+1. **Penutupan Celah Rekonsiliasi Parsial ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Mengharuskan seluruh baris piutang yang dipasangkan terekonsiliasi penuh: `len(reconciled_lines) == len(lines_to_rec)`. Jika rekonsiliasi hanya menyelesaikan 2 baris (baris diskon tertinggal), adapter melempar `RuntimeError` fail-fast dan membatalkan commit.
+   - Menambahkan asersi ketat sebelum commit: seluruh 160 jurnal diskon (`DISC-*`) wajib berstatus `posted` dan baris piutangnya terbukti `_is_reconciled` bernilai `True`.
+2. **Penutupan Celah Idempotensi Existing Payment ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menghapus `continue` buta saat existing payment ditemukan. Adapter memeriksa status: jika berstatus draft, memanggil `action_post()`.
+   - Mengimplementasikan self-healing pair reconciliation: jika payment belum terekonsiliasi penuh atau belum terekonsiliasi dengan pasangannya, adapter melakukan rekonsiliasi ulang dan memverifikasi residual bernilai nol.
+   - Menambahkan asersi sebelum commit: seluruh payment AR dan AP wajib berstatus `posted` dan baris piutang/utangnya terbukti `_is_reconciled` bernilai `True`.
+3. **Penyelarasan Alur Mutasi Karantina Non-Pengurangan Ganda ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Mengubah lokasi sumber transfer karantina (`location_id`) menjadi `customer_loc` (`usage='customer'`, `Partner Locations/Customers`), bukan `WH/Stock`. Karena pengiriman DO telah memotong fisik keluar dari gudang utama ke pelanggan, retur karantina memindahkan barang rusak dari pelanggan ke lokasi karantina (`physical_impact = 0`, `quarantine_impact = +1`), sehingga persediaan gudang utama tidak berkurang dua kali.
+   - Mengisi `picking_type_id` transfer internal secara eksplisit pada payload picking karantina.
+   - Menambahkan asersi sebelum commit: seluruh transfer karantina wajib bersumber dari lokasi dengan `usage == 'customer'`.
+4. **Penyesuaian Kompatibilitas API Odoo 19 ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menambahkan helper `_get_record_lines(record)` yang mengambil move lines baik dari `record.line_ids` maupun `record.move_id.line_ids` secara aman.
+   - Menyesuaikan payload `stock.move.line`: memeriksa `_fields` model Odoo untuk memastikan field `quantity` (Odoo 19) dan `qty_done` terpetakan secara dinamis tanpa konflik.
+5. **Penambahan Regression Tests Supervisi ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
+   - `test_partial_reconciliation_two_lines_fails_fast_and_refuses_commit`: membuktikan adapter melempar `RuntimeError` fail-fast dan membatalkan commit jika rekonsiliasi hanya menyelesaikan 2 baris (baris diskon tertinggal).
+   - `test_existing_draft_unreconciled_payment_self_heals_on_rerun`: membuktikan rerun adapter mendeteksi payment yang diubah menjadi draft/unreconciled, mengepost dan merekonsiliasi ulang hingga residual nol.
+   - `test_quarantine_transfer_uses_customer_source_location_to_avoid_double_reduction`: membuktikan lokasi sumber picking karantina adalah lokasi pelanggan (`usage='customer'`), mencegah pengurangan ganda pada stok gudang utama.
+
+**Hasil Pengujian & Verifikasi:**
+- `python -m unittest tests/test_canonical_loader_adapter.py -v`: **23/23 tests PASS** (68,03s).
+- `python -m unittest discover -s tests -p 'test_*.py'`: **95/95 tests PASS** (156,04s).
+- `python scripts/ops/verify_seed_invariants.py`: Status PASS (0 violations).
+- `python scripts/ops/verify_seed_acceptance.py`: Status PASS (0 violations).
+- `python -m ruff check .`: All checks passed!
+- `python scripts/check_manifests.py`: 4 addon ok.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi.
+
+---
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6408384195](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6408384195)):**
 - Menindaklanjuti temuan sukses palsu dan celah validasi:
   1. *Validasi picking mengembalikan wizard tanpa menjadi done*: klaim picking tervalidasi padahal belum selesai.

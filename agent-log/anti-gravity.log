@@ -385,3 +385,21 @@
 - Menambah 3 unit test spesifik penutupan supervisi pada tests/test_canonical_loader_adapter.py (total 20/20 PASS, seluruh 92 tests repo PASS).
 - Mempertahankan dataset kanonikal utuh tanpa modifikasi generator; tidak merge ke main dan tidak mengakses production.
 - Task managed by antigravity at 2026-10-26T12:06:00+07:00
+
+[2026-10-26T20:45:00+07:00] [INFO] Penutupan Dua Celah Supervisi PR #15 & Pembuktian Alur Karantina Bebas Pengurangan Ganda
+- Menutup celah rekonsiliasi parsial: mewajibkan seluruh baris piutang (len(reconciled_lines) == len(lines_to_rec)) terekonsiliasi penuh. Jika hanya 2 baris diselesaikan pada transaksi dengan diskon pelunasan awal 3 baris (160 transaksi, Rp 11.007.225,45 DPP), adapter langsung melempar RuntimeError fail-fast dan memicu rollback DB.
+- Menutup celah idempotensi payment existing dalam draft/unreconciled: menghilangkan continue buta saat existing payment ditemukan. Adapter memeriksa state payment (memanggil action_post() jika masih draft) dan memverifikasi status rekonsiliasi baris piutang/utang beserta move diskon pasangannya. Jika belum terekonsiliasi, adapter melakukan rekonsiliasi pasangan secara mandiri (self-healing pair reconciliation) dengan faktur terkait.
+- Memperbaiki alur pergerakan karantina FMCG: mengubah lokasi sumber transfer picking karantina (location_id) dari lokasi internal gudang (WH/Stock) ke lokasi pelanggan (usage='customer', Partner Locations/Customers). Karena barang telah keluar saat pengiriman DO (WH/Stock -> Customer), transfer retur karantina memindahkan barang dari Customer ke Karantina FMCG Maumbi, sehingga persediaan gudang utama WH/Stock terjamin tidak berkurang dua kali (physical_impact = 0, quarantine_impact = +1). Mengisi picking_type_id 'internal' eksplisit.
+- Menyelaraskan kompatibilitas API Odoo 19: mengimplementasikan _get_record_lines() untuk menarik baris jurnal aman dari pay.line_ids maupun pay.move_id.line_ids, serta memeriksa _fields pada stock.move.line guna memetakan field 'quantity' Odoo 19 secara native.
+- Menambah asersi pra-commit:
+  1. Seluruh 160 jurnal diskon (DISC-*) wajib posted dan seluruh baris piutangnya terbukti reconciled == True (residual nol).
+  2. Seluruh payment AR dan AP wajib posted dan seluruh baris piutang/utangnya terbukti reconciled == True (residual nol).
+  3. Seluruh transfer retur karantina wajib bersumber dari lokasi dengan usage == 'customer'.
+- Menambah 3 regression test di tests/test_canonical_loader_adapter.py (total 23/23 tests PASS):
+  1. test_partial_reconciliation_two_lines_fails_fast_and_refuses_commit
+  2. test_existing_draft_unreconciled_payment_self_heals_on_rerun
+  3. test_quarantine_transfer_uses_customer_source_location_to_avoid_double_reduction
+- Verifikasi komprehensif: 95/95 unit tests repositori lulus 100%, verify_seed_invariants.py PASS (0 violations), verify_seed_acceptance.py PASS (0 violations), ruff check clean (All checks passed!), check_manifests.py 4 addon ok.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main.
+- Task managed by antigravity at 2026-10-26T20:45:00+07:00
+

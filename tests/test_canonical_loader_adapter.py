@@ -41,10 +41,12 @@ class MockRecordList(list):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.mock_noop_reconcile = False
+        self.mock_partial_reconcile = False
 
     def filtered(self, func):
         res = MockRecordList([x for x in self if func(x)])
         res.mock_noop_reconcile = self.mock_noop_reconcile
+        res.mock_partial_reconcile = self.mock_partial_reconcile
         return res
 
     def __or__(self, other):
@@ -54,10 +56,19 @@ class MockRecordList(list):
                 combined.append(item)
         res = MockRecordList(combined)
         res.mock_noop_reconcile = self.mock_noop_reconcile or getattr(other, "mock_noop_reconcile", False)
+        res.mock_partial_reconcile = self.mock_partial_reconcile or getattr(other, "mock_partial_reconcile", False)
         return res
 
     def reconcile(self):
         if self.mock_noop_reconcile:
+            return
+        if self.mock_partial_reconcile:
+            # Simulasi celah: hanya 2 baris pertama diselesaikan, baris diskon tertinggal
+            for idx, rec in enumerate(self):
+                if idx < 2:
+                    rec.reconciled = True
+                else:
+                    rec.reconciled = False
             return
         for rec in self:
             rec.reconciled = True
@@ -75,6 +86,16 @@ class MockRecord:
         self._env = env
         self.scheduled_date = False
         self.mock_wizard_mode = False
+        self.mock_partial_reconcile = False
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if isinstance(other, MockRecord):
+            return self is other
+        if isinstance(other, int):
+            return self.id == other
+        return False
 
     def __getattr__(self, name):
         if name == "partner_id":
@@ -85,6 +106,15 @@ class MockRecord:
                 existing = self._env["res.partner"].store.get(p_val)
                 return existing or MockRecord({"name": "Partner"}, "res.partner", p_val, self._env)
             return MockRecord({"name": "Partner"}, "res.partner", p_val)
+        if name in ("location_id", "location_dest_id"):
+            l_val = self._vals.get(name)
+            if isinstance(l_val, MockRecord):
+                return l_val
+            if self._env and "stock.location" in self._env and l_val:
+                existing = self._env["stock.location"].store.get(l_val)
+                if existing:
+                    return existing
+            return MockRecord({"name": "Location", "usage": "internal"}, "stock.location", l_val or 1, self._env)
         if name in self._vals:
             return self._vals[name]
         if name == "account_id":
@@ -95,9 +125,11 @@ class MockRecord:
         return False
 
     def __setattr__(self, name, value):
-        if name.startswith("_") or name in (
-            "id", "state", "picking_ids", "line_ids", "reconciled", "scheduled_date", "mock_wizard_mode"
-        ):
+        valid_attrs = (
+            "id", "state", "picking_ids", "line_ids", "reconciled",
+            "scheduled_date", "mock_wizard_mode", "mock_partial_reconcile",
+        )
+        if name.startswith("_") or name in valid_attrs:
             super().__setattr__(name, value)
         else:
             self._vals[name] = value
@@ -235,6 +267,8 @@ class MockRecord:
                     "reconciled": False,
                 }, "account.move.line", 2, self._env)
                 self.line_ids = MockRecordList([cash_line, ar_line])
+                if getattr(self, "mock_partial_reconcile", False):
+                    self.line_ids.mock_partial_reconcile = True
             else:
                 ap_line = MockRecord({
                     "name": self._vals.get("ref", "AP Payment"),
@@ -251,6 +285,8 @@ class MockRecord:
                     "reconciled": False,
                 }, "account.move.line", 2, self._env)
                 self.line_ids = MockRecordList([ap_line, cash_line])
+                if getattr(self, "mock_partial_reconcile", False):
+                    self.line_ids.mock_partial_reconcile = True
 
 
 class MockModel:
@@ -274,12 +310,23 @@ class MockModel:
             for term in domain:
                 field, op, val = term
                 rec_val = getattr(rec, field, False)
-                if op == "=" and rec_val != val:
-                    match = False
+                if op == "=":
+                    if hasattr(rec_val, "id") and isinstance(val, int):
+                        if rec_val.id != val:
+                            match = False
+                    elif hasattr(val, "id") and isinstance(rec_val, int):
+                        if rec_val != val.id:
+                            match = False
+                    elif rec_val != val:
+                        match = False
                 elif op == "!=" and rec_val == val:
                     match = False
                 elif op == "ilike" and (not rec_val or val.lower() not in str(rec_val).lower()):
                     match = False
+                elif op in ("=like", "like"):
+                    clean = str(val).replace("%", "")
+                    if clean.lower() not in str(rec_val).lower():
+                        match = False
             if match:
                 results.append(rec)
                 if limit == 1:
@@ -287,6 +334,11 @@ class MockModel:
         if limit == 1:
             return results[0] if results else False
         return results
+
+    def browse(self, ids):
+        if isinstance(ids, (list, tuple)):
+            return [self.store.get(i) for i in ids if self.store.get(i)]
+        return self.store.get(ids) or MockRecord({}, self.name, ids, env=self.env)
 
     def create(self, vals):
         rec = MockRecord(vals, self.name, self.seq, env=self.env)
@@ -780,6 +832,98 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertEqual(adapter_run2.stats["skipped_po"], 5)
         self.assertEqual(adapter_run2.stats["quarantine_rejections"], 0)
         self.assertEqual(adapter_run2.stats["skipped_quarantine"], 9)
+
+    # -------------------------------------------------------------------------
+    # Temuan Supervisi Terbaru (PR #15 review commit cc2276c):
+    # 1. Partial reconciliation (hanya 2 baris diselesaikan pada transaksi diskon) wajib fail-fast
+    # 2. Existing payment in draft & unreconciled wajib di-self-heal (post & reconcile), bukan diskip
+    # 3. Karantina transfer wajib bersumber dari customer location (bukan internal) agar tidak double reduction
+    # -------------------------------------------------------------------------
+
+    def test_partial_reconciliation_two_lines_fails_fast_and_refuses_commit(self):
+        """Jika rekonsiliasi hanya menyelesaikan 2 baris (diskon terbuka), adapter wajib fail-fast."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        # Muat SO & Invoice sampai ada faktur dengan diskon
+        adapter.load_inbound_pos()
+        adapter.load_sales_deliveries_and_invoices()
+
+        # Modifikasi create account.payment agar menghasilkan lines dengan mock_partial_reconcile = True
+        orig_payment_create = mock_env["account.payment"].create
+
+        def patched_payment_create(vals):
+            rec = orig_payment_create(vals)
+            rec.mock_partial_reconcile = True
+            return rec
+
+        mock_env["account.payment"].create = patched_payment_create
+
+        # Jalankan pemuatan payment: pada transaksi diskon 3 lines, rekonsiliasi partial 2 lines wajib gagal
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter.load_payments()
+
+        self.assertIn("Rekonsiliasi AR", str(ctx.exception))
+        self.assertIn("Baris diskon atau piutang tertinggal", str(ctx.exception))
+
+    def test_existing_draft_unreconciled_payment_self_heals_on_rerun(self):
+        """Jika payment existing draft & unreconciled, rerun wajib memposting & merekonsiliasinya."""
+        mock_env = setup_standard_mock_env()
+
+        # Jalankan batch kecil 1 SO
+        adapter_run1 = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+        adapter_run1.run_all(limit_orders=1)
+        self.assertTrue(mock_env.cr.committed)
+
+        # Ambil payment yang terbuat
+        pays = list(mock_env["account.payment"].store.values())
+        self.assertTrue(len(pays) >= 1)
+        target_pay = pays[0]
+        self.assertEqual(target_pay.state, "posted")
+
+        # Simulasikan situasi celah: payment diubah menjadi draft dan unreconciled
+        target_pay.state = "draft"
+        for line in target_pay.line_ids:
+            line.reconciled = False
+
+        # Reset flag DB commit
+        mock_env.cr.committed = False
+        mock_env.cr.rollbacked = False
+
+        # Jalankan rerun adapter: adapter TIDAK boleh men-skip payment yang masih draft & unreconciled
+        adapter_run2 = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+        adapter_run2.run_all(limit_orders=1)
+
+        # Buktikan self-healing: payment kembali berstatus posted dan baris piutang kembali reconciled
+        self.assertEqual(target_pay.state, "posted")
+        pay_rec_lines = target_pay.line_ids.filtered(
+            lambda line: getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
+        )
+        for pl in pay_rec_lines:
+            self.assertTrue(pl.reconciled)
+
+        self.assertTrue(mock_env.cr.committed)
+        self.assertFalse(mock_env.cr.rollbacked)
+
+    def test_quarantine_transfer_uses_customer_source_location_to_avoid_double_reduction(self):
+        """Transfer retur karantina wajib bersumber dari lokasi customer, bukan internal gudang."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        adapter.load_rejections_quarantine()
+
+        quar_picks = [
+            p for p in mock_env["stock.picking"].store.values()
+            if p.origin and "REJ-" in str(p.origin)
+        ]
+        self.assertEqual(len(quar_picks), 9)
+        for qp in quar_picks:
+            self.assertEqual(qp.state, "done")
+            # Buktikan lokasi sumber adalah customer
+            self.assertIsNotNone(qp.location_id)
+            self.assertEqual(qp.location_id.usage, "customer")
+            # Buktikan lokasi tujuan adalah Karantina FMCG Maumbi
+            self.assertEqual(qp.location_dest_id.name, "Karantina FMCG Maumbi")
 
 
 if __name__ == "__main__":
