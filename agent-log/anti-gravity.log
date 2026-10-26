@@ -341,3 +341,13 @@
 - Mengoreksi catatan dokumentasi CI: 5 nama job CI resmi (seed-invariants, invariant-tests, static, install-test, init-test).
 - Dataset transaksi perpetual Juli 2026 dipertahankan utuh.
 - Task managed by antigravity at 2026-10-26T09:51:00+07:00
+
+[2026-10-26T10:21:00+07:00] [INFO] Implementasi Adapter Loader Transaksi Kanonikal (scripts/load_canonical_perpetual.py) & Pengalihan Loader Historis
+- Membuat scripts/load_canonical_perpetual.py yang membaca secara ketat register kanonikal data/registers/ (15 hash SHA-256 diverifikasi terhadap canonical_financial_reconciliation_july_2026.json) tanpa fallback diam-diam ke CSV lama.
+- Memetakan entitas kanonikal ke model Odoo 19: Opening Stock (stock.quant/stock.lot di WH/Stock), Inbound PO & Bills (purchase.order, incoming picking, account.move), Sales Orders & Deliveries (1.324 SO single-prinsipal, 2.738 baris pesanan, DO outgoing picking), Retur Karantina (9 kasus ke lokasi karantina khusus), 1.324 Faktur (1.276 Juli, 48 carry-forward Agustus), 967 Pembayaran AR, 4 Pembayaran AP, dan 30 Beban OPEX.
+- Mengisolasi pengecekan modul secara aman (misal stock.valuation.layer di stock_account diisolasi agar tidak crash jika modul belum terpasang).
+- Mengalihkan scripts/load_historical_simulation.py untuk mendelegasikan eksekusi langsung ke scripts/load_canonical_perpetual.py.
+- Menambahkan unit tests tests/test_canonical_loader_adapter.py (5 tests baru, total 77 tests di repo lulus 100%).
+- Memperbarui deskripsi PR #15 di GitHub: mengoreksi klaim idempotensi master loader menjadi 'dirancang idempoten, belum dibuktikan untuk canonical seed ini pada runtime Odoo' dan mencatat kesiapan adapter loader.
+- Dataset snapshot tetap dipertahankan dan kedua validator (verify_seed_invariants & verify_seed_acceptance) tetap berstatus PASS 0 violations.
+- Task managed by antigravity at 2026-10-26T10:21:00+07:00

@@ -1,5 +1,40 @@
 # HANDOFF
 
+## 2026-10-26 — antigravity agent — Adapter Loader Canonical Dataset & Pengalihan Loader Transaksi ke Snapshot Registers
+**Konteks & Arahan Supervisi:**
+Menindaklanjuti temuan kesiapan runtime pada review PR #15: loader simulasi lama (`scripts/load_historical_simulation.py`) masih membaca `data/seed/*historical.csv` dan belum membaca register kanonikal (`data/registers/perpetual_*`) yang memuat 1.324 SO single-prinsipal, 1.324 DO, 1.324 Faktur, 9 Retur Karantina, AR/AP, dan 5.741 event ledger.
+
+**Implementasi & Perubahan:**
+1. **Adapter Loader Kanonikal ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Membaca secara eksklusif seluruh berkas register dari `data/registers/` (atau `/opt/data/registers/`).
+   - Menerapkan fail-fast (`FileNotFoundError`) jika berkas kanonikal hilang; **dilarang fallback diam-diam** ke CSV simulasi lama.
+   - Memverifikasi 15 checksum SHA-256 LF kanonikal terhadap `canonical_financial_reconciliation_july_2026.json` saat inisialisasi.
+   - Memetakan entitas kanonikal ke model Odoo 19:
+     * *Opening Stock (150 SKU):* `stock.quant` / `stock.lot` di lokasi internal gudang `WH/Stock`, bertanggal 1 Juli 2026.
+     * *Inbound PO & Penerimaan (5 PO Juni):* `purchase.order`, `purchase.order.line`, konfirmasi PO, penerimaan `stock.picking` kedatangan Maumbi, dan vendor bill `account.move` (`in_invoice`).
+     * *Sales Orders & Deliveries:* 1.324 SO single-prinsipal & 2.738 baris order (`sale.order`, `sale.order.line`), surat jalan DO (`stock.picking` outgoing). Pengiriman Juli divalidasi; 48 carry-forward Agustus dipertahankan reserved.
+     * *Retur Karantina:* 9 retur kualitatif dialokasikan ke lokasi karantina khusus `WH/Quarantine`.
+     * *Faktur Komersial:* 1.324 `account.move` (`out_invoice`), `invoice_date`, `due_date`, dan posting.
+     * *Pembayaran AR & AP:* 967 `account.payment` (inbound) dan 4 `account.payment` (outbound) terekonsiliasi faktur dan tagihan vendor.
+     * *Beban Operasional & Payroll:* 30 entri `account.move` (`in_invoice` / entry).
+   - Isolasi modul aman: mendeteksi ketersediaan modul secara dinamis (misal `stock.valuation.layer` di `stock_account` diisolasi jika modul belum terpasang).
+2. **Pengalihan Loader Historis ([scripts/load_historical_simulation.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_historical_simulation.py)):**
+   - Dialihkan menjadi delegator resmi ke `scripts/load_canonical_perpetual.py`, mencegah eksekusi terhadap dataset historis usang.
+3. **Pengujian Unit ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
+   - 5 unit tests baru menguji integritas 15 hash SHA-256 LF, fail-fast tanpa fallback, fideliitas jumlah baris 12 register perpetual, verifikasi angka rekonsiliasi finansial, dan simulasi idempotensi pemuatan ganda (Run 1: 1.324 create, Run 2: 0 create / 1.324 skip). Total pengujian unit di repo meningkat menjadi **77 tests**.
+4. **Koreksi Deskripsi PR #15 di GitHub:**
+   - Memperbarui body PR #15: mengoreksi klaim master loader menjadi *"dirancang idempoten, belum dibuktikan untuk canonical seed ini pada runtime Odoo"* dan mencatat kualifikasi CI `install-test`/`init-test` yang memvalidasi instalasi modul & restart, bukan transaksi kanonikal penuh.
+
+**Hasil Verifikasi Lokal:**
+- `python -m unittest discover -s tests -p 'test_*.py' -v`: **77/77 tests PASS** (101,10s).
+- `python scripts/ops/verify_seed_invariants.py --report invariant-report.json`: Status PASS (0 violations).
+- `python scripts/ops/verify_seed_acceptance.py --report acceptance-report.json`: Status PASS (0 violations).
+- `python -m ruff check .`: All checks passed!
+- `python scripts/check_manifests.py`: 4 addon ok.
+- Snapshot dataset kanonikal tetap dipertahankan utuh.
+
+---
+
 ## 2026-10-26 — antigravity agent — Integrasi PR #17 (Acceptance Gates Supervisi) & Verifikasi CI
 **Konteks & Arahan:**
 Mengintegrasikan PR #17 (`origin/agen/supervision-acceptance-gates`, commit `6143538`) ke dalam branch PR #15 (`agen/fix-seed-invariants`).
