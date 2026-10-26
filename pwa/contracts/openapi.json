@@ -1,0 +1,377 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FMCG Field client contract draft",
+    "version": "0.1.0",
+    "description": "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "paths": {
+    "/me/bootstrap": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Contract response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Official session required"
+          }
+        }
+      }
+    },
+    "/sync/snapshot": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Contract response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/commands": {
+      "post": {
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Command"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contract response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session expired"
+          },
+          "403": {
+            "description": "Operation/scope denied"
+          },
+          "409": {
+            "description": "Idempotency or revision conflict"
+          },
+          "429": {
+            "description": "Rate limited; retry policy applies"
+          },
+          "503": {
+            "description": "Temporary server failure; retry same UUID"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Command": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "type": "number",
+            "const": 1
+          },
+          "client_uuid": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "sales.order.submit",
+              "sales.extra_call.request",
+              "delivery.proof.submit",
+              "hris.attendance.capture",
+              "hris.leave.request",
+              "field_expense.request"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "payload": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "schema_version",
+          "client_uuid",
+          "type",
+          "occurred_at",
+          "payload"
+        ],
+        "additionalProperties": false
+      },
+      "Receipt": {
+        "type": "object",
+        "properties": {
+          "client_uuid": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "needs_approval",
+              "rejected"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_uuid",
+          "status",
+          "message",
+          "reference"
+        ],
+        "additionalProperties": false
+      },
+      "Identity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "companyId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "sales",
+                "delivery",
+                "hris"
+              ]
+            }
+          },
+          "businessDate": {
+            "type": "string"
+          },
+          "csrfToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "companyId",
+          "name",
+          "title",
+          "roles",
+          "businessDate"
+        ],
+        "additionalProperties": false
+      },
+      "Snapshot": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "outlets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "channel": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": "string"
+                },
+                "distance": {
+                  "type": "string"
+                },
+                "time": {
+                  "type": "string"
+                },
+                "latitude": {
+                  "type": "number"
+                },
+                "longitude": {
+                  "type": "number"
+                },
+                "radius": {
+                  "type": "number",
+                  "minimum": 5,
+                  "maximum": 15
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "channel",
+                "address",
+                "distance",
+                "time",
+                "latitude",
+                "longitude",
+                "radius"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "brand": {
+                  "type": "string"
+                },
+                "principal": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "price": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "stock": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "brand",
+                "principal",
+                "unit",
+                "price",
+                "stock"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "outlet": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": "string"
+                },
+                "items": {
+                  "type": "number"
+                },
+                "cartons": {
+                  "type": "number"
+                },
+                "trip": {
+                  "type": "string"
+                },
+                "vehicle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "outlet",
+                "address",
+                "items",
+                "cartons",
+                "trip",
+                "vehicle"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "version",
+          "updatedAt",
+          "outlets",
+          "products",
+          "deliveries"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "x-status": "draft-client-only",
+  "x-auth": "same-origin cookie; no shared privileged API key"
+}

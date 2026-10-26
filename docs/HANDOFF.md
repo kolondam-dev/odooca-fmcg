@@ -1,5 +1,55 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Frontend PWA awal dan CI additive
+**Basis:** origin/main 69a7ef6 + plan lokal, branch agen/mobile-pwa-foundation.
+**Berubah:** folder pwa (Preact/TS/Vite, Phosphor, Inter, navy/blue, bottom nav, role fixture, form lapangan/personal HRIS/petty cash, local evidence, draft/outbox, provider contract); .github/workflows/pwa.yml; plan §16.
+**Diverifikasi lokal:** format/typecheck/contract drift, 14 unit/contract/storage tests, 12 browser tests phone/tablet; demo/live builds dan budget PASS (demo JS ~36 KiB gzip, font 47,1 KiB). Visual screenshot ditinjau; SVG sizing dan offline cache Vary diperbaiki, ditangkap gate browser.
+**CI baru:** pwa-quality, pwa-browser, pwa-gate aggregator. Tidak mengubah workflow Odoo, ruleset atau deployment. Hasil GitHub CI ditinjau setelah push.
+**Batas:** build live terkunci, fixture hanya demo; accepted bukan SO Odoo. Capture foto/lokasi lokal masih map_pending sehingga absensi/POD tidak dinyatakan sah. I18n English penuh, tracking, realisasi/settlement rinci dan integrasi API/domain masih mengikuti roadmap; README mencatat status per paket.
+**Tidak disentuh:** addon backend/seed/loader, server production dan branch agent lain.
+**Menunggu:** review PR dan CI; backend menjadi dependency/handoff sesuai mandat mobile-only.
+
+## 2026-10-26 — codex agent — Plan v0.4: frontend-first, mandat mobile-only
+**Arahan pemilik:** tidak mengambil pekerjaan agent lain; siapkan mobile/PWA meski backend belum siap.
+**Berubah:** plan mobile §1.1/1.2 dan §7.1/7.2: UI/alur client dengan provider interface dan mock terisolasi, kontrak bertahap, HTTP adapter saat API siap. PWA-01–06 menjadi urutan kerja aktif; MOB existing tetap peta dependency sistem.
+**Batas:** harga/kredit/HPP/approval/auth/posting tetap keputusan backend. Mock berlabel Simulation, tidak fallback diam-diam di produksi. Agent mobile tidak mengoreksi seed/loader atau membangun id_api/id_app tanpa mandat baru.
+**Dokumentasi:** plan satu sumber teknis di blueprints; audit gap snapshot terpisah; integrasi SCOPE/DEVELOPMENT berupa tautan/ringkasan saat koordinasi, bukan duplikasi seluruh desain.
+**Diverifikasi:** contoh JSON, sequence paket dan whitespace; perubahan docs-only, belum ada implementasi/runtime test baru.
+**Menunggu:** eksekusi PWA sesuai urutan frontend-first; tidak ada push, merge atau deploy.
+
+## 2026-10-26 — codex agent — Gap analysis pra-implementasi mobile dan visual plan v0.3
+**Basis:** origin/main 69a7ef6; dependency seed PR #15 head c435447; branch lokal agen/mobile-reconnaissance.
+**Berubah:** `docs/reviews/MOBILE_READINESS_GAP_2026-10-26.md` (G01–G17, inventaris data, workflow/commit, acceptance gates); plan mobile v0.3 (Phosphor duotone, Inter Variable, palette navy/blue, readiness dependency).
+**Diverifikasi:** handoff/log empat agent dan delta branch seed dibaca; PR/checks diperiksa lewat GitHub; dua validator serta 98 tests PASS pada worktree c435447 (26,752s), manifest empat addon PASS; struktur dokumen dan rasio kontras diperiksa.
+**Temuan P1:** truthiness model recordset kosong dipakai adapter/runner sehingga lot/invoice/discount/readback dapat terlewat; guard bukan bukti model tidak terpasang. Runner limit_orders=1 tidak memilih SO rejection yang disebut. Bukti actual runtime Odoo dan snapshot Run1/Run2 lengkap tetap diperlukan.
+**Gap lain:** fallback admin pada master salesman, employee stable code/user/app role belum dipetakan, kalender HR 5 hari vs PJP 6 hari, UoM Units/packaging, geo simulasi bukan presisi geofence, domain approval/expense/trip/API/PWA belum ada.
+**Belum diuji:** DB/image aktual, staging/production, perangkat mobile, Phosphor/font build dan screenshot UI. Tidak mengubah kode/data worker atau menjalankan loader production.
+**Menunggu:** worker seed/backend menutup gap dependency dan runtime; koordinasi agent desain untuk token visual; pemilik menentukan integrasi PR. Rekomendasi handoff belum dikirim sebagai pesan ke agent lain.
+
+## 2026-10-26 — codex agent — Mobile plan v0.2: kontrol operasional dan biaya lapangan
+**Mandat:** 11 tambahan requirement pemilik dimasukkan ke `docs/blueprints/mobile_api_and_pwa_plan.md` (§9–14, traceability R01–R11).
+**Berubah:** binding akun/perangkat dan sesi kerja; petty cash/BBM H-1/insidentil/biaya DO-trip/settlement; extra call dan approval diskon sampai Owner untuk below-cost; seluruh foto berpeta; geofence 5–15m; tracking 5/15 menit; polling/outbox/notifikasi; bottom nav, liquid motion/haptic dengan budget low-end.
+**Diverifikasi:** main tetap 69a7ef6 setelah fetch; sumber W3C/Chrome/MDN untuk batas PWA; contoh JSON, struktur heading/tabel, coverage R01–R11 dan whitespace diperiksa. Manifest validator dijalankan; tidak ada kode runtime baru.
+**Belum diuji:** seluruh kontrol dan angka baseline masih rancangan; tidak menjanjikan background tracking/polling selalu hidup atau anti-spoof mutlak di PWA/native.
+**Butir terbuka:** limit rupiah, cutoff H-1, metode HPP, provider map, kebijakan luar kota/retensi dan hasil spike akun/perangkat. MOB-01 mencakup absensi minimum agar sesi pagi tidak menunggu MOB-05.
+**Menunggu:** paket MOB-00 setelah finalisasi rancangan; tidak ada push, merge atau deploy.
+
+## 2026-10-26 — codex agent — Rancangan dua jalur API backend dan PWA
+**Mandat:** pemilik menegaskan hybrid: Odoo web penuh untuk back-office, PWA sendiri untuk lapangan/personal HRIS.
+**Berubah:** `docs/blueprints/mobile_api_and_pwa_plan.md` v0.1 menjadi rancangan bersama API/PWA; mencakup modul, endpoint usulan, auth/role/scope, sync/idempotensi, offline UX, Sales/Delivery/HRIS, media, roadmap MOB-00–06 dan gate penerimaan.
+**Diverifikasi:** konsistensi terhadap SCOPE/Playbook/spike existing, source main 69a7ef6 dan scan repo sebelumnya; JSON contoh dan whitespace diperiksa.
+**Belum diuji:** semua endpoint/model/policy/performance baru masih rancangan; runtime Odoo/mobile belum dijalankan. Ruff tidak tersedia pada runtime sesi lanjutan; tidak mengklaim lint ulang PASS.
+**Butir terbuka:** MOB-00 menutup transport API, akun/session minimal dan transaksi; budget offline/media/performance perlu bukti perangkat pilot. Personal HRIS slip/bukti potong menunggu modul domain tersedia.
+**Menunggu:** review rancangan oleh pemilik; tidak ada perubahan kode aplikasi, dataset, push atau deploy.
+
+## 2026-10-26 — codex agent — Deep scan kesiapan mobile
+**Basis:** main 69a7ef6; branch lokal agen/mobile-reconnaissance.
+**Berubah:** laporan `docs/reviews/MOBILE_SCAN_2026-10-26.md`, log codex; tanpa perubahan kode aplikasi/dataset.
+**Diverifikasi:** manifest dan Ruff PASS; CI main static/install-test/init-test success melalui GitHub API; PR #14/#15 masih open.
+**Belum diuji:** runtime Odoo lokal, device mobile, spike API, kandidat masalah judul form saat ui.isSmall.
+**Butir terbuka:** API/auth/role belum ada; kontrak idempotensi, incremental sync, privasi cache dan scope ownership perlu dikunci sebelum implementasi mobile.
+**Menunggu:** mandat implementasi berikutnya dari pemilik; scan ini tidak push, merge atau deploy.
+
 ## 2026-10-26 — codex agent — UI v7 siap review tanpa SQL wilayah
 **Basis:** main f130693 + perubahan UI/dokumentasi claude-design 388eff6.
 **Scope:** 20 SQL data/raw tidak dibawa; file asli tetap di agen/ui-cleanup-v7.
