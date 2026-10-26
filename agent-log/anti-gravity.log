@@ -375,3 +375,13 @@
 - Memperluas unit tests tests/test_canonical_loader_adapter.py menjadi 17 pengujian komprehensif (17/17 PASS, 89/89 tests total di repo PASS).
 - Mempertahankan dataset kanonikal utuh tanpa modifikasi generator; tidak merge ke main dan tidak mengakses production.
 - Task managed by antigravity at 2026-10-26T11:26:00+07:00
+
+[2026-10-26T12:06:00+07:00] [INFO] Penutupan Celah Supervisi PR #15: Verifikasi State Picking, Rekonsiliasi Ketat, Pemetaan Lot Sumber, dan Karantina Non-Duplikasi
+- Menutup temuan validasi picking wizard: mengimplementasikan helper _validate_picking_safely yang memproses action wizard konfirmasi Odoo dan memvalidasi ketat bahwa pick.state wajib 'done' (fail-fast RuntimeError jika tidak menjadi done).
+- Menutup temuan sukses palsu rekonsiliasi: mengimplementasikan verifikasi status rekonsiliasi eksplisit (reconciled == True atau residual float < 0.01) dengan helper _is_reconciled yang mencegah jebakan 'abs(False) < 0.01' di Python. Menolak commit jika rekonsiliasi adalah no-op.
+- Menutup temuan pemetaan lot: memetakan lot sumber kanonikal secara eksplisit dari CSV ke move_line_ids (dan stock.lot Odoo) via _assign_lots_to_picking pada inbound PO dan outgoing DO, serta menghapus automasi inject lot dari mock.
+- Menghilangkan risiko penggandaan stok karantina: saat stock.picking tersedia, pergerakan karantina ditangani murni via transfer internal Odoo tanpa pemanggilan manual StockQuant.create.
+- Menambah asersi sebelum commit: memastikan seluruh 967 AR dan 4 AP terbukti reconciled serta seluruh picking tervalidasi berstatus 'done'.
+- Menambah 3 unit test spesifik penutupan supervisi pada tests/test_canonical_loader_adapter.py (total 20/20 PASS, seluruh 92 tests repo PASS).
+- Mempertahankan dataset kanonikal utuh tanpa modifikasi generator; tidak merge ke main dan tidak mengakses production.
+- Task managed by antigravity at 2026-10-26T12:06:00+07:00

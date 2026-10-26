@@ -38,17 +38,27 @@ from scripts.load_canonical_perpetual import (  # noqa: E402
 
 
 class MockRecordList(list):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mock_noop_reconcile = False
+
     def filtered(self, func):
-        return MockRecordList([x for x in self if func(x)])
+        res = MockRecordList([x for x in self if func(x)])
+        res.mock_noop_reconcile = self.mock_noop_reconcile
+        return res
 
     def __or__(self, other):
         combined = list(self)
         for item in other:
             if item not in combined:
                 combined.append(item)
-        return MockRecordList(combined)
+        res = MockRecordList(combined)
+        res.mock_noop_reconcile = self.mock_noop_reconcile or getattr(other, "mock_noop_reconcile", False)
+        return res
 
     def reconcile(self):
+        if self.mock_noop_reconcile:
+            return
         for rec in self:
             rec.reconciled = True
 
@@ -64,6 +74,7 @@ class MockRecord:
         self.reconciled = False
         self._env = env
         self.scheduled_date = False
+        self.mock_wizard_mode = False
 
     def __getattr__(self, name):
         if name == "partner_id":
@@ -85,7 +96,7 @@ class MockRecord:
 
     def __setattr__(self, name, value):
         if name.startswith("_") or name in (
-            "id", "state", "picking_ids", "line_ids", "reconciled", "scheduled_date"
+            "id", "state", "picking_ids", "line_ids", "reconciled", "scheduled_date", "mock_wizard_mode"
         ):
             super().__setattr__(name, value)
         else:
@@ -97,11 +108,12 @@ class MockRecord:
             move_lines = []
             for item in self._vals.get("order_line", []):
                 line_data = item[2] if isinstance(item, (list, tuple)) and len(item) == 3 else {}
+                # Mock tidak meng-inject lot_id otomatis; lot harus dipetakan oleh adapter!
                 move_lines.append(MockRecord({
                     "product_id": line_data.get("product_id"),
-                    "lot_id": 1,
+                    "lot_id": False,
                     "quantity": line_data.get("product_uom_qty", 0.0),
-                    "qty_done": line_data.get("product_uom_qty", 0.0),
+                    "qty_done": 0.0,
                 }, "stock.move.line", len(move_lines) + 1, self._env))
 
             pick = self._env["stock.picking"].create({
@@ -118,11 +130,12 @@ class MockRecord:
             move_lines = []
             for item in self._vals.get("order_line", []):
                 line_data = item[2] if isinstance(item, (list, tuple)) and len(item) == 3 else {}
+                # Mock tidak meng-inject lot_id otomatis; lot harus dipetakan oleh adapter!
                 move_lines.append(MockRecord({
                     "product_id": line_data.get("product_id"),
-                    "lot_id": 1,
+                    "lot_id": False,
                     "quantity": line_data.get("product_qty", 0.0),
-                    "qty_done": line_data.get("product_qty", 0.0),
+                    "qty_done": 0.0,
                 }, "stock.move.line", len(move_lines) + 1, self._env))
 
             pick = self._env["stock.picking"].create({
@@ -134,7 +147,13 @@ class MockRecord:
             self.picking_ids = MockRecordList([pick])
 
     def button_validate(self):
+        if getattr(self, "mock_wizard_mode", False):
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "stock.immediate.transfer",
+            }
         self.state = "done"
+        return True
 
     def action_post(self):
         self.state = "posted"
@@ -562,7 +581,12 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertEqual(len(po_picks), 5)
         for pick in po_picks:
             self.assertEqual(pick.state, "done")
-            self.assertGreater(len(pick._vals.get("move_line_ids", [])), 0)
+            move_lines = pick._vals.get("move_line_ids", [])
+            self.assertGreater(len(move_lines), 0)
+            # Pastikan lot_id terpetakan nyata oleh adapter, bukan False
+            for ml in move_lines:
+                self.assertTrue(ml.lot_id, "Setiap move line inbound PO wajib memiliki lot_id nyata!")
+                self.assertGreater(ml.qty_done, 0.0)
 
         # Periksa picking DO
         so_picks = [
@@ -571,7 +595,80 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertEqual(len(so_picks), 5)
         for pick in so_picks:
             self.assertEqual(pick.state, "done")
-            self.assertGreater(len(pick._vals.get("move_line_ids", [])), 0)
+            move_lines = pick._vals.get("move_line_ids", [])
+            self.assertGreater(len(move_lines), 0)
+            # Pastikan lot_id terpetakan nyata oleh adapter, bukan False
+            for ml in move_lines:
+                self.assertTrue(ml.lot_id, "Setiap move line delivery DO wajib memiliki lot_id nyata!")
+                self.assertGreater(ml.qty_done, 0.0)
+
+    # -------------------------------------------------------------------------
+    # Temuan Supervisi: Validasi Wizard Tanpa State Done Wajib Fail-Fast
+    # -------------------------------------------------------------------------
+    def test_picking_validation_wizard_without_done_fails_fast(self):
+        """Jika picking mengembalikan wizard dan tidak menjadi done, adapter wajib melempar RuntimeError."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        # Modifikasi create stock.picking agar mengembalikan wizard mode
+        orig_create = mock_env["stock.picking"].create
+
+        def create_wizard_pick(vals):
+            rec = orig_create(vals)
+            rec.mock_wizard_mode = True
+            return rec
+
+        mock_env["stock.picking"].create = create_wizard_pick
+
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter.load_inbound_pos()
+        self.assertIn("Validasi picking", str(ctx.exception))
+        self.assertIn("gagal", str(ctx.exception))
+        self.assertEqual(adapter.stats["do_validated"], 0)
+
+    # -------------------------------------------------------------------------
+    # Temuan Supervisi: Rekonsiliasi No-Op Wajib Fail-Fast dan Tolak Commit
+    # -------------------------------------------------------------------------
+    def test_reconciliation_noop_fails_fast_and_refuses_commit(self):
+        """Jika reconcile() tidak menandai reconciled / residual nol, adapter wajib melempar RuntimeError."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        adapter.load_inbound_pos()
+        adapter.load_sales_deliveries_and_invoices(limit_orders=1)
+
+        # Pasang mock_noop_reconcile pada seluruh baris account.move.line
+        for m in mock_env["account.move"].store.values():
+            m.line_ids.mock_noop_reconcile = True
+
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter.load_payments(limit_orders=1)
+        self.assertIn("Rekonsiliasi AR gagal", str(ctx.exception))
+        self.assertEqual(adapter.stats["ar_reconciled"], 0)
+
+    # -------------------------------------------------------------------------
+    # Temuan Supervisi: Karantina Tidak Menduplikasi Quant Saat Picking Ada
+    # -------------------------------------------------------------------------
+    def test_quarantine_does_not_duplicate_quants_when_picking_exists(self):
+        """Validasi retur karantina via picking tidak boleh membuat quant manual duplikat."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        initial_quant_count = len(mock_env["stock.quant"].store)
+        adapter.load_rejections_quarantine()
+
+        # 9 picking transfer retur karantina dibuat dan divalidasi ke done
+        quar_picks = [
+            p for p in mock_env["stock.picking"].store.values()
+            if p.origin and "REJ-" in str(p.origin)
+        ]
+        self.assertEqual(len(quar_picks), 9)
+        for qp in quar_picks:
+            self.assertEqual(qp.state, "done")
+
+        # Quant manual TIDAK bertambah karena transfer dilakukan via stock.picking
+        post_quant_count = len(mock_env["stock.quant"].store)
+        self.assertEqual(post_quant_count, initial_quant_count)
 
     # -------------------------------------------------------------------------
     # Temuan 4: Rekonsiliasi pembayaran dan diskon pembayaran awal

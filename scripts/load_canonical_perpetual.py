@@ -338,6 +338,108 @@ class CanonicalPerpetualAdapter:
             )
         return u
 
+    def _assign_lots_to_picking(self, pick, lines_data):
+        """Memetakan lot sumber kanonikal dan kuantitas selesai ke stock.move.line pada picking."""
+        StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
+        StockMoveLine = self.env["stock.move.line"].sudo() if "stock.move.line" in self.env else None
+
+        for item in lines_data:
+            sku = item.get("sku_code")
+            prod = self.product_by_code.get(sku)
+            if not prod:
+                continue
+
+            lot_num = item.get("lot_number")
+            lot_obj = None
+            if StockLot and lot_num:
+                lot_obj = StockLot.search([("name", "=", lot_num), ("product_id", "=", prod.id)], limit=1)
+                if not lot_obj:
+                    lot_vals = {
+                        "name": lot_num,
+                        "product_id": prod.id,
+                        "company_id": self.company.id,
+                    }
+                    if item.get("expiry_date"):
+                        lot_vals["expiration_date"] = item["expiry_date"]
+                    lot_obj = StockLot.create(lot_vals)
+
+            qty_units = float(item["qty_cartons"]) * float(item["carton_qty"])
+
+            def _rec_id(val):
+                if hasattr(val, "id"):
+                    return val.id
+                if isinstance(val, int):
+                    return val
+                return False
+
+            # Cari matching stock.move jika ada
+            matching_move = None
+            if hasattr(pick, "move_ids") and pick.move_ids:
+                for m in pick.move_ids:
+                    if _rec_id(getattr(m, "product_id", None)) == prod.id:
+                        matching_move = m
+                        break
+
+            # Periksa dan update move_line yang ada
+            assigned = False
+            if hasattr(pick, "move_line_ids") and pick.move_line_ids:
+                for ml in pick.move_line_ids:
+                    if _rec_id(getattr(ml, "product_id", None)) == prod.id:
+                        ml_lot = _rec_id(getattr(ml, "lot_id", None))
+                        target_lot = lot_obj.id if lot_obj else False
+                        if not ml_lot or (target_lot and ml_lot == target_lot):
+                            if lot_obj and hasattr(ml, "lot_id"):
+                                ml.lot_id = lot_obj.id
+                            if hasattr(ml, "quantity"):
+                                ml.quantity = qty_units
+                            if hasattr(ml, "qty_done"):
+                                ml.qty_done = qty_units
+                            assigned = True
+                            break
+
+            # Jika belum ada move_line_ids atau belum ter-assign, buat baris move_line
+            if not assigned and StockMoveLine:
+                ml_vals = {
+                    "picking_id": pick.id,
+                    "move_id": matching_move.id if matching_move and hasattr(matching_move, "id") else False,
+                    "product_id": prod.id,
+                    "lot_id": lot_obj.id if lot_obj else False,
+                    "quantity": qty_units,
+                    "qty_done": qty_units,
+                    "location_id": _rec_id(getattr(pick, "location_id", None)),
+                    "location_dest_id": _rec_id(getattr(pick, "location_dest_id", None)),
+                }
+                new_ml = StockMoveLine.create(ml_vals)
+                if hasattr(pick, "move_line_ids") and hasattr(pick.move_line_ids, "append"):
+                    pick.move_line_ids.append(new_ml)
+
+    def _validate_picking_safely(self, pick):
+        """Memvalidasi stock picking hingga status 'done', menangani wizard Odoo, dan fail-fast jika gagal."""
+        if getattr(pick, "state", "") == "done":
+            return True
+
+        res = pick.button_validate() if hasattr(pick, "button_validate") else None
+
+        # Jika Odoo mengembalikan action/wizard konfirmasi (e.g. immediate transfer atau backorder confirmation)
+        if isinstance(res, dict) and res.get("res_model"):
+            wizard_model = res["res_model"]
+            wizard_ctx = res.get("context", {})
+            if wizard_model in self.env:
+                Wizard = self.env[wizard_model].sudo().with_context(**wizard_ctx)
+                wizard_record = Wizard.create({}) if hasattr(Wizard, "create") else None
+                if wizard_record and hasattr(wizard_record, "process"):
+                    wizard_record.process()
+                elif hasattr(Wizard, "process"):
+                    Wizard.process()
+
+        if getattr(pick, "state", "") != "done":
+            pick_id_label = getattr(pick, "name", getattr(pick, "origin", "DO"))
+            raise RuntimeError(
+                f"[canonical_loader] FATAL: Validasi picking '{pick_id_label}' gagal! "
+                f"Status picking tetap '{getattr(pick, 'state', 'unknown')}', bukan 'done'. Return value: {res}"
+            )
+        return True
+
     # 1. Opening Stock
     def load_opening_stock(self):
         """Memuat 150 SKU Opening Stock per 1 Juli 2026 ke lokasi internal gudang."""
@@ -458,7 +560,8 @@ class CanonicalPerpetualAdapter:
             if po.picking_ids:
                 for pick in po.picking_ids.filtered(lambda p: p.state not in ("done", "cancel")):
                     pick.scheduled_date = h.get("arrival_maumbi_date", h.get("eta_bitung"))
-                    pick.button_validate()
+                    self._assign_lots_to_picking(pick, lines_by_po.get(po_num, []))
+                    self._validate_picking_safely(pick)
                     self.stats["do_validated"] += 1
 
             # Vendor Bill
@@ -562,8 +665,9 @@ class CanonicalPerpetualAdapter:
                 sched_date = del_info["scheduled_delivery_date"]
                 for pick in so.picking_ids:
                     pick.scheduled_date = sched_date
-                    if sched_date <= self.cutoff_date and pick.state not in ("done", "cancel"):
-                        pick.button_validate()
+                    if sched_date <= self.cutoff_date and getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._assign_lots_to_picking(pick, lines_by_so.get(so_num, []))
+                        self._validate_picking_safely(pick)
                         self.stats["do_validated"] += 1
 
             # Faktur Penjualan Sah (Net of Rejections)
@@ -611,7 +715,7 @@ class CanonicalPerpetualAdapter:
 
     # 4. Retur Karantina
     def load_rejections_quarantine(self, limit_orders: int | None = None):
-        """Memuat 9 Retur Karantina ke lokasi karantina khusus dengan move lines dan lot lengkap."""
+        """Memuat 9 Retur Karantina ke lokasi karantina khusus via transfer picking internal tanpa duplikasi quant."""
         print(" -> [4/7] Memuat Retur Karantina Barang...")
         rows = self._read_csv("perpetual_order_rejections.csv")
         if limit_orders is not None:
@@ -630,9 +734,9 @@ class CanonicalPerpetualAdapter:
         if not StockLocation:
             return
 
+        internal_loc = StockLocation.search([("usage", "=", "internal")], limit=1)
         quarantine_loc = StockLocation.search([("name", "=", "Karantina FMCG Maumbi")], limit=1)
         if not quarantine_loc:
-            internal_loc = StockLocation.search([("usage", "=", "internal")], limit=1)
             quarantine_loc = StockLocation.create({
                 "name": "Karantina FMCG Maumbi",
                 "usage": "internal",
@@ -655,6 +759,7 @@ class CanonicalPerpetualAdapter:
                         "company_id": self.company.id,
                     })
 
+            # Jika stock.picking tersedia, gunakan transfer internal Odoo murni
             if StockPicking:
                 existing_pick = StockPicking.search([("origin", "=", rej_id)], limit=1)
                 if existing_pick:
@@ -663,6 +768,7 @@ class CanonicalPerpetualAdapter:
 
                 pick_vals = {
                     "origin": rej_id,
+                    "location_id": internal_loc.id if internal_loc else False,
                     "location_dest_id": quarantine_loc.id,
                     "note": f"Retur Karantina DO {p_data['do_number']}: {p_data['rejection_reason']}",
                     "move_line_ids": [
@@ -671,15 +777,24 @@ class CanonicalPerpetualAdapter:
                             "lot_id": lot_obj.id if lot_obj else False,
                             "qty_done": p_data["qty_units"],
                             "quantity": p_data["qty_units"],
+                            "location_id": internal_loc.id if internal_loc else False,
                             "location_dest_id": quarantine_loc.id,
                         })
                     ] if prod else [],
                 }
                 pick = StockPicking.create(pick_vals)
-                if hasattr(pick, "button_validate"):
-                    pick.button_validate()
+                self._validate_picking_safely(pick)
+            elif prod and StockQuant:
+                # Fallback HANYA jika StockPicking tidak tersedia dalam lingkungan modul
+                existing_quant = StockQuant.search([
+                    ("product_id", "=", prod.id),
+                    ("location_id", "=", quarantine_loc.id),
+                    ("lot_id", "=", lot_obj.id if lot_obj else False),
+                ], limit=1)
+                if existing_quant:
+                    self.stats["skipped_quarantine"] += 1
+                    continue
 
-            if prod and StockQuant:
                 quant_vals = {
                     "product_id": prod.id,
                     "location_id": quarantine_loc.id,
@@ -694,7 +809,7 @@ class CanonicalPerpetualAdapter:
 
     # 5. AR Collections & AP Payments
     def load_payments(self, limit_orders: int | None = None):
-        """Memuat 967 Pembayaran AR Pelanggan & 4 Pembayaran AP Prinsipal."""
+        """Memuat 967 Pembayaran AR Pelanggan & 4 Pembayaran AP Prinsipal dengan rekonsiliasi ketat."""
         if "account.payment" not in self.env:
             print("[canonical_loader] SKIP: Modul account.payment belum terpasang.")
             return
@@ -797,6 +912,27 @@ class CanonicalPerpetualAdapter:
                         )
                         if len(lines_to_rec) >= 2:
                             lines_to_rec.reconcile()
+
+                            def _is_reconciled(l_rec):
+                                if getattr(l_rec, "reconciled", False) is True:
+                                    return True
+                                r_val = getattr(l_rec, "amount_residual", None)
+                                if r_val is not None and not isinstance(r_val, bool):
+                                    try:
+                                        return abs(float(r_val)) < 0.01
+                                    except (ValueError, TypeError):
+                                        pass
+                                return False
+
+                            # Verifikasi tegas bahwa rekonsiliasi menghasilkan status reconciled atau residual nol
+                            reconciled_lines = [line_item for line_item in lines_to_rec if _is_reconciled(line_item)]
+                            if len(reconciled_lines) < 2:
+                                inv_ref = p_data["invoice_number"]
+                                raise RuntimeError(
+                                    f"[canonical_loader] FATAL: Rekonsiliasi AR gagal untuk payment '{pay_id}' "
+                                    f"dan invoice '{inv_ref}'! Baris belum berstatus reconciled "
+                                    f"(reconciled: {len(reconciled_lines)}/{len(lines_to_rec)})."
+                                )
                             self.stats["ar_reconciled"] += 1
 
         # AP Payments
@@ -843,6 +979,14 @@ class CanonicalPerpetualAdapter:
                         )
                         if len(lines_to_rec) >= 2:
                             lines_to_rec.reconcile()
+                            reconciled_lines = [line_item for line_item in lines_to_rec if _is_reconciled(line_item)]
+                            if len(reconciled_lines) < 2:
+                                po_ref = p_data["po_number"]
+                                raise RuntimeError(
+                                    f"[canonical_loader] FATAL: Rekonsiliasi AP gagal untuk payment '{pay_id}' "
+                                    f"dan bill '{po_ref}'! Baris belum berstatus reconciled "
+                                    f"(reconciled: {len(reconciled_lines)}/{len(lines_to_rec)})."
+                                )
                             self.stats["ap_reconciled"] += 1
 
     # 6. OPEX & Payroll
@@ -892,7 +1036,7 @@ class CanonicalPerpetualAdapter:
             self.load_payments(limit_orders=limit_orders)
             self.load_opex_payroll()
 
-            # Verifikasi integritas cakupan data SEBELUM self.cr.commit()
+            # Verifikasi integritas cakupan data dan hasil operasi SEBELUM self.cr.commit()
             if limit_orders is None:
                 total_so = self.stats["so_created"] + self.stats["skipped_so"]
                 assert total_so == 1324, f"Jumlah SO tidak lengkap! Expected 1324, got {total_so}"
@@ -914,13 +1058,39 @@ class CanonicalPerpetualAdapter:
 
                 total_quar = self.stats["quarantine_rejections"] + self.stats["skipped_quarantine"]
                 assert total_quar == 9, f"Jumlah Retur Karantina tidak lengkap! Expected 9, got {total_quar}"
+
+                # Asersi ketat rekonsiliasi pembayaran: seluruh baris pembayaran harus terbukti terekonsiliasi
+                total_ar_rec = self.stats["ar_reconciled"] + self.stats["skipped_ar"]
+                assert total_ar_rec == 967, f"Jumlah AR reconciled tidak lengkap! Expected 967, got {total_ar_rec}"
+
+                total_ap_rec = self.stats["ap_reconciled"] + self.stats["skipped_ap"]
+                assert total_ap_rec == 4, f"Jumlah AP reconciled tidak lengkap! Expected 4, got {total_ap_rec}"
             else:
                 total_small_so = self.stats["so_created"] + self.stats["skipped_so"]
                 assert total_small_so == limit_orders, (
                     f"Jumlah SO batch kecil tidak cocok! Expected {limit_orders}, got {total_small_so}"
                 )
+                # Pada rantai kecil: setidaknya 1 AR terekonsiliasi dan 4 AP terekonsiliasi
+                assert (self.stats["ar_reconciled"] + self.stats["skipped_ar"]) >= 1, (
+                    f"AR batch kecil harus ter-reconcile! Got {self.stats['ar_reconciled']}"
+                )
+                assert (self.stats["ap_reconciled"] + self.stats["skipped_ap"]) == 4, (
+                    f"AP batch kecil harus ter-reconcile! Got {self.stats['ap_reconciled']}"
+                )
 
-            # Commit HANYA jika seluruh asersi dan operasi berhasil
+            # Verifikasi bahwa tidak ada picking yang tertinggal dalam status unvalidated/draft/assigned
+            if "stock.picking" in self.env:
+                StockPicking = self.env["stock.picking"].sudo()
+                for p in StockPicking.search([]):
+                    if p.origin and ("PO-" in str(p.origin) or "SO-" in str(p.origin) or "REJ-" in str(p.origin)):
+                        sched = getattr(p, "scheduled_date", False)
+                        if sched and str(sched) <= self.cutoff_date:
+                            p_name = getattr(p, "name", p.origin)
+                            assert p.state == "done", (
+                                f"Picking '{p_name}' belum berstatus 'done'! State saat ini: {p.state}"
+                            )
+
+            # Commit HANYA jika seluruh asersi dan operasi terbukti valid
             self.cr.commit()
 
             print("[canonical_loader] SUCCESS: Seluruh transaksi perpetual kanonikal berhasil diproses.")

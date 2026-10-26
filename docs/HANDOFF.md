@@ -1,5 +1,47 @@
 # HANDOFF
 
+## 2026-10-26 — antigravity agent — Penutupan Celah Supervisi PR #15: Verifikasi State Picking, Rekonsiliasi Ketat, Pemetaan Lot Sumber, dan Karantina Non-Duplikasi
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6408384195](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6408384195)):**
+- Menindaklanjuti temuan sukses palsu dan celah validasi:
+  1. *Validasi picking mengembalikan wizard tanpa menjadi done*: klaim picking tervalidasi padahal belum selesai.
+  2. *Rekonsiliasi no-op tetap commit*: klaim 967 AR dan 4 AP direkonsiliasi padahal 0 baris pembayaran reconciled.
+  3. *Lot PO/SO dibuat otomatis oleh mock*: adapter belum memetakan lot sumber ke move lines.
+  4. *Karantina berisiko menggandakan stok*: setelah transfer divalidasi, adapter masih membuat quant tambahan.
+  5. *Simulasi rantai kecil di Odoo aktual*: adapter wajib fail-fast jika status picking bukan 'done' atau residual pembayaran tidak nol sebelum commit.
+- Mempertahankan dataset kanonikal utuh tanpa modifikasi generator; tidak merge ke `main` dan tidak mengakses production.
+
+**Implementasi Perbaikan:**
+1. **Penanganan Wizard & Asersi State Picking Done ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menambahkan helper `_validate_picking_safely(self, pick)` yang mengeksekusi action wizard konfirmasi Odoo (`res_model` seperti `stock.immediate.transfer` atau `stock.backorder.confirmation`).
+   - Memvalidasi secara tegas: jika `pick.state != 'done'`, loader langsung melempar `RuntimeError` fail-fast dan memicu rollback. Tidak ada picking yang dihitung sebagai `do_validated` jika belum berstatus `done`.
+   - Menambahkan asersi sebelum commit: seluruh picking PO, DO, dan Karantina yang telah dijadwalkan dipastikan berstatus `done`.
+2. **Verifikasi Residual & Asersi Rekonsiliasi Ketat ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menambahkan helper `_is_reconciled(line)` yang memeriksa secara aman `line.reconciled is True` atau `abs(float(line.amount_residual)) < 0.01` (mencegah evaluasi jebakan boolean Python `abs(False) < 0.01 == True`).
+   - Jika setelah `reconcile()`, jumlah baris yang terbukti berstatus `reconciled` kurang dari 2, loader melempar `RuntimeError` fail-fast.
+   - Menambahkan asersi sebelum commit: `ar_reconciled == 967` dan `ap_reconciled == 4` (atau `>= 1` dan `== 4` pada rantai transaksi kecil `limit_orders`).
+3. **Pemetaan Eksplisit Lot Sumber ke Move Lines ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menambahkan helper `_assign_lots_to_picking(self, pick, lines_data)` yang membaca `lot_number`, expiry date, dan kuantitas dari register sumber (`inbound_po_intransit_june_lines.csv` dan `perpetual_order_lines.csv`), lalu membuat/menghubungkan `stock.lot` ke `move_line_ids` pada transfer receipt PO dan delivery DO.
+   - Menghapus automasi mock yang meng-inject `lot_id: 1` di `action_confirm` dan `button_confirm` pada [tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py).
+4. **Pencegahan Penggandaan Stok Karantina ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Pada `load_rejections_quarantine()`, pergerakan 9 retur karantina diproses murni via internal transfer `stock.picking` dari lokasi internal gudang ke lokasi karantina khusus dengan `move_line_ids` dan `lot_id`.
+   - Menghapus pemanggilan manual `StockQuant.create(...)` saat picking transfer tersedia, sehingga quant tidak berlipat ganda.
+5. **Penambahan Suite Pengujian Supervisi ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
+   - `test_picking_validation_wizard_without_done_fails_fast`: membuktikan adapter menolak klaim validasi dan melempar `RuntimeError` jika picking mengembalikan wizard tanpa berpindah ke `done`.
+   - `test_reconciliation_noop_fails_fast_and_refuses_commit`: membuktikan adapter melempar `RuntimeError` dan membatalkan commit jika rekonsiliasi merupakan no-op.
+   - `test_quarantine_does_not_duplicate_quants_when_picking_exists`: membuktikan quant manual tidak bertambah saat transfer karantina via picking diproses.
+   - `test_stock_movements_and_lot_mapping`: membuktikan seluruh `move_line_ids` memiliki `lot_id` nyata yang sesuai dengan sumber kanonikal.
+
+**Hasil Pengujian & Verifikasi:**
+- `python -m unittest tests/test_canonical_loader_adapter.py -v`: **20/20 tests PASS** (43,38s).
+- `python -m unittest discover -s tests -p 'test_*.py' -v`: **92/92 tests PASS** (164,05s).
+- `python scripts/ops/verify_seed_invariants.py`: Status PASS (0 violations).
+- `python scripts/ops/verify_seed_acceptance.py`: Status PASS (0 violations).
+- `python -m ruff check .`: All checks passed!
+- `python scripts/check_manifests.py`: 4 addon ok.
+- Dataset kanonikal LF dipertahankan 100% utuh.
+
+---
+
 ## 2026-10-26 — antigravity agent — Penutupan 5 Temuan Supervisi Adapter Loader Kanonikal & Simulasi Rantai Transaksi Kecil
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6407976897](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6407976897)):**
 - Menindaklanjuti 5 temuan utama review supervisi:
