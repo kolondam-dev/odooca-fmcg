@@ -471,3 +471,17 @@
 - Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok, verify_seed_invariants.py PASS, verify_seed_acceptance.py PASS.
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T05:56:00+07:00
+
+[2026-10-27T06:30:00+07:00] [INFO] Eksperimen Seeding Historis Minimal Odoo 19 (SKU ULV-RNS-03), Metode Inventory Adjustment Native & Audit Quant Tanpa create()
+- Menindaklanjuti arahan review PR #15 (issuecomment-6429533010) terkait UserError: Quant's creation is restricted pada Odoo 19:
+  * Menginspeksi guardrail stock.quant Odoo 19 (_get_inventory_fields_create): field quantity dilarang pada create(vals).
+  * Mengubah load_opening_stock di scripts/load_canonical_perpetual.py: menggunakan inventory_quantity dan inventory_date, lalu memanggil native action_apply_inventory().
+  * Menjamin tanggal efektif bisnis historis (date pada stock.move dan stock.move.line) disesuaikan pasca-validasi tanpa memanipulasi metadata audit (create_date, write_date).
+  * Membangun scripts/ops/verify_historical_experiment.py: eksperimen minimal 1 SKU kanonikal ULV-RNS-03 dengan dependency closure lengkap (Opening, PO receipt, DO delivery, Retur karantina).
+  * Menghitung independent source-to-runtime oracle 5 cutoff (Cutoff 0 pre-opening s/d Cutoff 4 retur karantina) dan memvalidasi on-hand, reserved, lot, lokasi, dan GL entry.
+  * Membuktikan idempotensi Run 2: 0 move baru diciptakan dan zero drift saldo stok serta GL.
+  * Mengekspor laporan diagnostik ke historical_experiment_report.json dan mengintegrasikannya ke .github/workflows/ci.yml dengan upload-artifact@v4 (if: always()).
+- Menambahkan 2 unit test adapter di tests/test_canonical_loader_adapter.py (total 33/33 PASS, 105/105 repositori PASS).
+- Verifikasi ruff check All checks passed!, check_manifests.py 4 addon ok, verify_seed_invariants.py PASS, verify_seed_acceptance.py PASS.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T06:30:00+07:00

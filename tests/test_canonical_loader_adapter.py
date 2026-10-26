@@ -190,6 +190,13 @@ class MockRecord:
         self.state = "done"
         return True
 
+    def action_apply_inventory(self):
+        if self._model == "stock.quant":
+            qty = float(self._vals.get("inventory_quantity", self._vals.get("quantity", 0.0)))
+            self._vals["quantity"] = qty
+            self.quantity = qty
+        return True
+
     def action_post(self):
         self.state = "posted"
         if self._model == "account.move":
@@ -1147,6 +1154,43 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertIn("tidak memiliki baris piutang (asset_receivable)", str(ctx.exception))
         self.assertTrue(mock_env.cr.rollbacked)
         self.assertFalse(mock_env.cr.committed)
+
+    def test_opening_stock_quant_creation_uses_inventory_adjustment_mode(self):
+        """Memastikan pembukaan stok menggunakan mode inventory adjustment native (inventory_quantity)."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        adapter.load_opening_stock()
+        self.assertEqual(adapter.stats["opening_quants"], 150)
+
+        # Periksa salah satu quant: pastikan inventory_quantity terisi
+        quants = list(mock_env["stock.quant"].store.values())
+        self.assertEqual(len(quants), 150)
+        first_q = quants[0]
+        self.assertGreater(getattr(first_q, "quantity", 0.0), 0.0)
+        self.assertGreater(getattr(first_q, "inventory_quantity", 0.0), 0.0)
+
+    def test_opening_stock_idempotency_does_not_override_existing_quant_on_rerun(self):
+        """Memastikan rerun load_opening_stock tidak mereset kuantitas quant yang sudah terpakai."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        adapter.load_opening_stock()
+        quants = list(mock_env["stock.quant"].store.values())
+        first_q = quants[0]
+        original_qty = first_q.quantity
+
+        # Simulasikan stok berkurang karena pengiriman penjualan
+        first_q.quantity = original_qty - 5.0
+
+        # Jalankan rerun load_opening_stock
+        adapter_run2 = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+        adapter_run2.load_opening_stock()
+
+        self.assertEqual(adapter_run2.stats["opening_quants"], 0)
+        self.assertEqual(adapter_run2.stats["skipped_opening_quants"], 150)
+        # Saldo quant tidak boleh di-reset kembali ke original_qty
+        self.assertEqual(first_q.quantity, original_qty - 5.0)
 
 
 if __name__ == "__main__":

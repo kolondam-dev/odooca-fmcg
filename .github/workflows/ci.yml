@@ -109,6 +109,30 @@ jobs:
         run: |
           cat init1.log init2.log > init.log
           if grep -E " (ERROR|CRITICAL) |Traceback" init.log; then exit 1; fi
+      - name: Eksekusi eksperimen seeding historis minimal pada Odoo 19 disposable
+        run: |
+          set -o pipefail
+          docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_historical_experiment.py 2>&1 | tee experiment.log
+          docker exec -i odoo cat historical_experiment_report.json > historical_experiment_report.json || true
+      - name: Upload artifact diagnostik eksperimen historis Odoo 19
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: odoo19-historical-experiment-report
+          path: |
+            historical_experiment_report.json
+            experiment.log
+          retention-days: 14
       - name: Eksekusi dan verifikasi slice representatif pada Odoo 19 disposable
         run: |
-          docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_slice.py
+          set -o pipefail
+          docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_slice.py 2>&1 | tee slice_runtime.log
+      - name: Upload artifact verifikasi runtime disposable
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: odoo19-disposable-slice-log
+          path: |
+            slice_runtime.log
+            init.log
+          retention-days: 14

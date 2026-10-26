@@ -549,13 +549,23 @@ class CanonicalPerpetualAdapter:
                 self.stats["skipped_opening_quants"] += 1
                 continue
 
-            StockQuant.create({
+            quant_vals = {
                 "product_id": prod.id,
                 "location_id": warehouse_loc.id,
                 "lot_id": lot_id,
-                "quantity": qty_units,
                 "inventory_quantity": qty_units,
-            })
+            }
+            if hasattr(StockQuant, "_fields") and "inventory_date" in StockQuant._fields:
+                quant_vals["inventory_date"] = "2026-07-01 00:00:00"
+
+            quant = StockQuant.create(quant_vals)
+            if hasattr(quant, "action_apply_inventory"):
+                quant.action_apply_inventory()
+
+            # Pastikan kuantitas terisi pada quant record
+            if not getattr(quant, "quantity", None):
+                quant.quantity = qty_units
+
             self.stats["opening_quants"] += 1
 
     # 2. Inbound PO & Bills
