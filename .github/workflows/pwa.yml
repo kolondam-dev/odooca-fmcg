@@ -1,0 +1,75 @@
+name: PWA quality
+on:
+  pull_request:
+  push:
+    branches: [main, 'agen/mobile-*']
+permissions:
+  contents: read
+concurrency:
+  group: pwa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  pwa-quality:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: pwa
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: pwa/package-lock.json
+      - run: npm ci --no-fund
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run contracts:check
+      - run: npm test
+      - run: npm run build:demo
+      - run: npm run build
+      - run: npm run check:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pwa-builds
+          path: pwa/dist/
+          if-no-files-found: error
+          retention-days: 7
+  pwa-browser:
+    needs: pwa-quality
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: pwa
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: pwa/package-lock.json
+      - run: npm ci --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: pwa-builds
+          path: pwa/dist/
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pwa-browser-diagnostics
+          path: |
+            pwa/test-results/
+            pwa/playwright-report/
+          retention-days: 7
+  pwa-gate:
+    if: always()
+    needs: [pwa-quality, pwa-browser]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require both client gates
+        env:
+          QUALITY_RESULT: ${{ needs.pwa-quality.result }}
+          BROWSER_RESULT: ${{ needs.pwa-browser.result }}
+        run: test "$QUALITY_RESULT" = success && test "$BROWSER_RESULT" = success

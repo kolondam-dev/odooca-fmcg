@@ -9,3 +9,43 @@
 - First runtime:4systray browser regressions PASS; pager/classic/sidebar PASS; JS error check failed.
 - Artifact shows missing filestore attachments between containers. Preserve disposable filestore across install/fixture/server; print browser error stack. Do not suppress errors.
 - Task managed by codex agent at 2026-10-26T10:54:42+07:00
+
+[2026-10-26T19:50:07+07:00] [INFO] Deep scan dan kesiapan scope mobile
+- Basis main 69a7ef6; laporan docs/reviews/MOBILE_SCAN_2026-10-26.md.
+- Manifest dan Ruff PASS; CI main success melalui GitHub API. Runtime mobile belum diuji.
+- Tidak mengubah kode aplikasi, dataset atau production. Skrip main belum menerima identitas codex; log ditulis mengikuti format protokol.
+- Task managed by codex agent at 2026-10-26T19:50:07+07:00
+
+[2026-10-26T20:42:43+07:00] [INFO] Rancangan API backend dan PWA hybrid
+- Mandat pemilik: back-office Odoo web penuh, lapangan dan personal HRIS PWA sendiri.
+- Rancangan docs/blueprints/mobile_api_and_pwa_plan.md: kontrak, auth/role/scope, outbox, media, domain dan MOB-00–06.
+- Seluruh fitur baru masih rancangan; tidak mengubah runtime/dataset atau deploy.
+- Task managed by codex agent at 2026-10-26T20:42:43+07:00
+
+[2026-10-26T21:13:52+07:00] [INFO] Elaborasi plan mobile v0.2 sesuai 11 tambahan requirement pemilik
+- Binding akun/perangkat, sesi pagi, approval extra call/diskon/HPP, biaya DO/trip dan petty cash BBM H-1/insidentil.
+- Foto timestamp/geotag/pinpoint map, geofence 5–15m, location interval 5/15 menit, polling auto-sync/notifikasi dan bottom nav motion/haptic low-end.
+- Matriks R01–R11 dan gate ditambahkan; batas PWA background/spoofing dijelaskan dengan sumber teknis.
+- JSON/struktur/tabel dan diff whitespace diperiksa; semua fitur baru masih rancangan, tidak deploy/push atau ubah dataset.
+- Task managed by codex agent at 2026-10-26T21:13:52+07:00
+
+[2026-10-26T21:43:44+07:00] [INFO] Gap analysis kesiapan mobile dan visual plan v0.3
+- Membaca AGENTS, protokol, DEVELOPMENT, HANDOFF dan seluruh log agent main serta delta branch seed c435447.
+- Main 69a7ef6; dependency seed masih PR #15. Dua validator dan 98 unit tests PASS pada worktree audit; runtime Odoo belum dibuktikan.
+- Mencatat gap P1 truthiness model pada adapter/runner, identity fallback admin, kalender, UoM/HPP, PJP/geo, approval dan biaya lapangan.
+- Plan menambahkan Phosphor duotone, Inter Variable self-hosted, palette selaras web dan readiness gate. Tidak mengubah source/data worker, push atau deploy.
+- Task managed by codex agent at 2026-10-26T21:43:44+07:00
+
+[2026-10-26T21:53:04+07:00] [INFO] Plan v0.4: frontend-first dan scope mobile-only
+- Mandat pemilik: tidak mengambil pekerjaan agent lain; backend menjadi dependency/handoff.
+- Urutan PWA-01–06: UI, alur client, offline, kontrak formal, HTTP adapter, E2E live; interface minimum sejak awal dan mock eksplisit.
+- Satu plan mobile tetap di blueprints; gap menjadi snapshot audit, SCOPE/DEVELOPMENT cukup rujukan saat koordinasi. Tidak ada implementasi aplikasi atau perubahan dokumen domain agent lain.
+- Task managed by codex agent at 2026-10-26T21:53:04+07:00
+
+[2026-10-27T05:31:58+07:00] [INFO] PWA frontend awal, offline outbox dan CI additive
+- Branch agen/mobile-pwa-foundation dari main 69a7ef6 plus plan lokal; tidak mengubah addon backend, seed/loader atau deploy.
+- PWA Preact/TS/Vite, Phosphor/Inter, bottom nav, fixture/HTTP adapter, form Sales/Delivery/HRIS/petty cash, IndexedDB draft/outbox dan evidence lokal.
+- Build demo/live terpisah; live fail-closed. OpenAPI draft generated; workflow pwa-quality/pwa-browser/pwa-gate tanpa path filter atau secret.
+- Lokal: 14 unit/contract tests dan 12 browser tests PASS; format/typecheck/contracts/build budget PASS. Demo JS 36 KiB gzip, font 47.1 KiB; bukti map_pending tidak meluluskan absensi/POD.
+- Browser lokal menggunakan Chromium 153 terpisah setelah unduhan Playwright lokal gagal; CI tetap memakai installer Chromium resmi Playwright. API/ACL/runtime Odoo belum diuji.
+- Task managed by codex agent at 2026-10-27T05:31:58+07:00
