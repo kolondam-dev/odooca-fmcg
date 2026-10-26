@@ -351,3 +351,15 @@
 - Memperbarui deskripsi PR #15 di GitHub: mengoreksi klaim idempotensi master loader menjadi 'dirancang idempoten, belum dibuktikan untuk canonical seed ini pada runtime Odoo' dan mencatat kesiapan adapter loader.
 - Dataset snapshot tetap dipertahankan dan kedua validator (verify_seed_invariants & verify_seed_acceptance) tetap berstatus PASS 0 violations.
 - Task managed by antigravity at 2026-10-26T10:21:00+07:00
+
+[2026-10-26T10:58:00+07:00] [INFO] Perbaikan Adapter Loader Transaksi Kanonikal & Uji Idempotensi Sejati (Run 1 vs Run 2)
+- Memperbaiki adapter loader (scripts/load_canonical_perpetual.py) dengan builder payload murni dan resolusi referensi stabil (extract_ref) untuk 1.324 SO dan 967 AR.
+- Memperbaiki penanganan idempotensi saldo awal gudang (quantity dan inventory_quantity pada stock.quant), retur karantina (stock.picking origin tracking untuk multi-rejection SKU sama), dan delegator env pada scripts/load_historical_simulation.py.
+- Menulis ulang tests/test_canonical_loader_adapter.py dengan 10 unit test yang memanggil langsung fungsi dan alur kerja nyata adapter.
+- Membuktikan idempotensi sejati Run 1 vs Run 2 pada mock environment Odoo:
+  * Run 1: 1.324 SO created, 1.324 Faktur created, 967 AR created, 4 AP created, 30 OPEX created, 150 SKU quants created, 5 PO created, 9 Retur Karantina created.
+  * Run 2: 0 created, 100% skipped (1.324 SO, 1.324 Faktur, 967 AR, 4 AP, 30 OPEX, 150 SKU quants, 5 PO, 9 Retur Karantina).
+- 82 unit tests di seluruh repositori lulus 100%.
+- Kedua validator (verify_seed_invariants.py dan verify_seed_acceptance.py) berstatus PASS (0 violations).
+- Ruff check (All checks passed!) dan check_manifests.py (4 addon ok) lulus.
+- Task managed by antigravity at 2026-10-26T10:58:00+07:00

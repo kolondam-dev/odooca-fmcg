@@ -1,37 +1,45 @@
 # HANDOFF
 
-## 2026-10-26 — antigravity agent — Adapter Loader Canonical Dataset & Pengalihan Loader Transaksi ke Snapshot Registers
+## 2026-10-26 — antigravity agent — Perbaikan Adapter Loader Transaksi Kanonikal & Uji Idempotensi Sejati (Run 1 vs Run 2)
 **Konteks & Arahan Supervisi:**
-Menindaklanjuti temuan kesiapan runtime pada review PR #15: loader simulasi lama (`scripts/load_historical_simulation.py`) masih membaca `data/seed/*historical.csv` dan belum membaca register kanonikal (`data/registers/perpetual_*`) yang memuat 1.324 SO single-prinsipal, 1.324 DO, 1.324 Faktur, 9 Retur Karantina, AR/AP, dan 5.741 event ledger.
+Menindaklanjuti temuan review supervisi pada PR #15:
+- Tes unit adapter sebelumnya belum memanggil langsung implementasi adapter (mengulang pemeriksaan sendiri dan hanya mengisi dictionary lokal).
+- Memperbaiki adapter `scripts/load_canonical_perpetual.py` dan tes `tests/test_canonical_loader_adapter.py` agar benar-benar menguji implementasi loader.
+- Menguji idempotensi sejati dengan menjalankan adapter dua kali berturut-turut pada environment Odoo simulasi: Run 1 membuat seluruh dokumen baru, Run 2 menghasilkan 0 create dan 100% skipped.
+- Mempertahankan dataset kanonikal tanpa perubahan generator atau angka bisnis.
 
-**Implementasi & Perubahan:**
-1. **Adapter Loader Kanonikal ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
-   - Membaca secara eksklusif seluruh berkas register dari `data/registers/` (atau `/opt/data/registers/`).
-   - Menerapkan fail-fast (`FileNotFoundError`) jika berkas kanonikal hilang; **dilarang fallback diam-diam** ke CSV simulasi lama.
-   - Memverifikasi 15 checksum SHA-256 LF kanonikal terhadap `canonical_financial_reconciliation_july_2026.json` saat inisialisasi.
-   - Memetakan entitas kanonikal ke model Odoo 19:
-     * *Opening Stock (150 SKU):* `stock.quant` / `stock.lot` di lokasi internal gudang `WH/Stock`, bertanggal 1 Juli 2026.
-     * *Inbound PO & Penerimaan (5 PO Juni):* `purchase.order`, `purchase.order.line`, konfirmasi PO, penerimaan `stock.picking` kedatangan Maumbi, dan vendor bill `account.move` (`in_invoice`).
-     * *Sales Orders & Deliveries:* 1.324 SO single-prinsipal & 2.738 baris order (`sale.order`, `sale.order.line`), surat jalan DO (`stock.picking` outgoing). Pengiriman Juli divalidasi; 48 carry-forward Agustus dipertahankan reserved.
-     * *Retur Karantina:* 9 retur kualitatif dialokasikan ke lokasi karantina khusus `WH/Quarantine`.
-     * *Faktur Komersial:* 1.324 `account.move` (`out_invoice`), `invoice_date`, `due_date`, dan posting.
-     * *Pembayaran AR & AP:* 967 `account.payment` (inbound) dan 4 `account.payment` (outbound) terekonsiliasi faktur dan tagihan vendor.
-     * *Beban Operasional & Payroll:* 30 entri `account.move` (`in_invoice` / entry).
-   - Isolasi modul aman: mendeteksi ketersediaan modul secara dinamis (misal `stock.valuation.layer` di `stock_account` diisolasi jika modul belum terpasang).
-2. **Pengalihan Loader Historis ([scripts/load_historical_simulation.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_historical_simulation.py)):**
-   - Dialihkan menjadi delegator resmi ke `scripts/load_canonical_perpetual.py`, mencegah eksekusi terhadap dataset historis usang.
-3. **Pengujian Unit ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
-   - 5 unit tests baru menguji integritas 15 hash SHA-256 LF, fail-fast tanpa fallback, fideliitas jumlah baris 12 register perpetual, verifikasi angka rekonsiliasi finansial, dan simulasi idempotensi pemuatan ganda (Run 1: 1.324 create, Run 2: 0 create / 1.324 skip). Total pengujian unit di repo meningkat menjadi **77 tests**.
-4. **Koreksi Deskripsi PR #15 di GitHub:**
-   - Memperbarui body PR #15: mengoreksi klaim master loader menjadi *"dirancang idempoten, belum dibuktikan untuk canonical seed ini pada runtime Odoo"* dan mencatat kualifikasi CI `install-test`/`init-test` yang memvalidasi instalasi modul & restart, bukan transaksi kanonikal penuh.
+**Implementasi & Perbaikan:**
+1. **Perbaikan Adapter Loader ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
+   - Menerapkan helper `extract_ref()` untuk mengekstrak kode referensi stabil dari label komposit outlet (`CUST-MT-04 - FreshhMart Lifestyle Paniki` -> `CUST-MT-04`) dan salesman (`SLS-01 - Christian Wowor` -> `SLS-01`).
+   - Mengoreksi pemetaan field saldo awal gudang: membaca `qty_cartons_on_hand` (29.804 karton), `qty_units_on_hand`, `lot_number`, dan `expiry_date`. Idempotensi quant memeriksa dan mengisi `quantity` serta `inventory_quantity`.
+   - Mengoreksi pemetaan field pembayaran AR: menggunakan kolom aktual `net_cash_collected_total` (Rp 3.448.145.006,75 DPP).
+   - Melacak retur karantina dengan dokumen unik `stock.picking` (`origin = rejection_id`), menyelesaikan penanganan idempotensi multi-rejection untuk SKU yang sama (`ULV-LFB-06`).
+   - Menghapus silent swallow (`except Exception: pass`) pada alur data penting dan menambahkan verifikasi kelengkapan cakupan data pada akhir `run_all()`.
+2. **Perbaikan Delegator ([scripts/load_historical_simulation.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_historical_simulation.py)):**
+   - Mengoper objek `env` Odoo shell melalui `init_globals={"env": _env}` saat mengeksekusi `scripts/load_canonical_perpetual.py`.
+3. **Pengujian Unit Adapter yang Sejati ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
+   - Ditulis 10 pengujian unit yang memanggil implementasi nyata adapter secara langsung:
+     * `test_canonical_fingerprints_integrity`: Verifikasi 15 hash SHA-256 LF kanonikal via `verify_canonical_fingerprints()`.
+     * `test_fail_fast_on_missing_canonical_file`: Memanggil `verify_canonical_fingerprints()` pada temporary directory untuk membuktikan fail-fast `FileNotFoundError`.
+     * `test_fail_fast_on_incomplete_metadata_hashes`: Memanggil `verify_canonical_fingerprints()` untuk membuktikan fail-fast `ValueError` jika hash metadata tidak lengkap.
+     * `test_customer_and_salesman_ref_extraction_and_resolution`: Membuktikan 100% dari 1.324 SO dan 967 AR terekstraksi ke kode referensi valid tanpa gagal resolve.
+     * `test_opening_stock_payload_mapping`: Memverifikasi 150 SKU opening stock (29.804 karton).
+     * `test_order_line_payload_math_and_units`: Memverifikasi 2.738 order lines (Rp 6.065.892.600,00 DPP).
+     * `test_ar_collection_payload_and_field_names`: Memverifikasi 967 pembayaran AR.
+     * `test_ap_payment_payload`: Memverifikasi 4 pembayaran AP ke PO riil Juni (Rp 6.597.474.800,00 DPP).
+     * `test_rejection_payload_and_quarantine_asset`: Memverifikasi 9 retur karantina (9 karton, Rp 1.963.200,00 COGS).
+     * `test_adapter_idempotency_simulation_with_mock_environment`: Menjalankan adapter nyata dua kali berturut-turut pada mock environment Odoo (`adapter_run1.run_all()` dan `adapter_run2.run_all()`).
+       - Run 1: 1.324 SO created, 1.324 Invoices created, 967 AR created, 4 AP created, 30 OPEX created, 150 Opening Quants created, 5 PO created, 9 Retur Karantina created.
+       - Run 2: 0 created, 100% skipped (1.324 SO skipped, 1.324 Invoices skipped, 967 AR skipped, 4 AP skipped, 30 OPEX skipped, 150 Quants skipped, 5 PO skipped, 9 Retur Karantina skipped).
 
-**Hasil Verifikasi Lokal:**
-- `python -m unittest discover -s tests -p 'test_*.py' -v`: **77/77 tests PASS** (101,10s).
-- `python scripts/ops/verify_seed_invariants.py --report invariant-report.json`: Status PASS (0 violations).
-- `python scripts/ops/verify_seed_acceptance.py --report acceptance-report.json`: Status PASS (0 violations).
+**Hasil Verifikasi:**
+- `python -m unittest tests/test_canonical_loader_adapter.py`: **10/10 tests PASS** (14,95s).
+- `python -m unittest discover -s tests -p 'test_*.py' -v`: **82/82 tests PASS** (118,73s).
+- `python scripts/ops/verify_seed_invariants.py`: Status PASS (0 violations).
+- `python scripts/ops/verify_seed_acceptance.py`: Status PASS (0 violations).
 - `python -m ruff check .`: All checks passed!
 - `python scripts/check_manifests.py`: 4 addon ok.
-- Snapshot dataset kanonikal tetap dipertahankan utuh.
+- Snapshot dataset kanonikal dipertahankan utuh.
 
 ---
 

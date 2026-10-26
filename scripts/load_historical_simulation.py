@@ -22,5 +22,6 @@ if not _canonical_script.is_file():
     print(f"[hist_loader] FATAL: {_canonical_script} tidak ditemukan.", file=sys.stderr)
     sys.exit(1)
 
-# Delegasikan eksekusi langsung ke adapter canonical
-runpy.run_path(str(_canonical_script), run_name="__main__")
+# Delegasikan eksekusi langsung ke adapter canonical dengan membawa objek env Odoo
+_env = globals().get("env")
+runpy.run_path(str(_canonical_script), init_globals={"env": _env} if _env else None, run_name="__main__")

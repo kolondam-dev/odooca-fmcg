@@ -37,18 +37,6 @@ POSSIBLE_REG_DIRS = [
     pathlib.Path(__file__).resolve().parent.parent / "data" / "registers" if "__file__" in globals() else None,
 ]
 
-reg_dir = None
-for p in POSSIBLE_REG_DIRS:
-    if p and p.is_dir() and (p / "perpetual_sales_orders.csv").is_file():
-        reg_dir = p
-        break
-
-if not reg_dir:
-    raise FileNotFoundError(
-        f"[canonical_loader] FATAL: Direktori data/registers kanonikal tidak ditemukan di {POSSIBLE_REG_DIRS}. "
-        "Dilarang fallback diam-diam ke CSV simulasi lama."
-    )
-
 REQUIRED_CANONICAL_FILES = [
     "customer_registry_354.csv",
     "initial_stock_20260701.csv",
@@ -68,13 +56,17 @@ REQUIRED_CANONICAL_FILES = [
     "canonical_financial_reconciliation_july_2026.json",
 ]
 
-for fname in REQUIRED_CANONICAL_FILES:
-    fpath = reg_dir / fname
-    if not fpath.is_file():
-        raise FileNotFoundError(
-            f"[canonical_loader] FATAL: Berkas register wajib '{fname}' tidak ditemukan di {reg_dir}. "
-            "Pemuatan dibatalkan untuk menjaga integritas seed."
-        )
+
+def resolve_canonical_dir(candidate_dirs=None) -> pathlib.Path:
+    """Mencari dan memvalidasi direktori data/registers kanonikal."""
+    dirs_to_check = candidate_dirs or POSSIBLE_REG_DIRS
+    for candidate in dirs_to_check:
+        if candidate and candidate.is_dir() and (candidate / "perpetual_sales_orders.csv").is_file():
+            return candidate
+    raise FileNotFoundError(
+        f"[canonical_loader] FATAL: Direktori data/registers kanonikal tidak ditemukan di {dirs_to_check}. "
+        "Dilarang fallback diam-diam ke CSV simulasi lama."
+    )
 
 
 def canonical_file_hash(path: pathlib.Path) -> str:
@@ -86,15 +78,30 @@ def canonical_file_hash(path: pathlib.Path) -> str:
 
 def verify_canonical_fingerprints(registers_path: pathlib.Path) -> dict:
     """Memverifikasi integritas 15 file input register terhadap rekonsiliasi kanonikal."""
+    for fname in REQUIRED_CANONICAL_FILES:
+        fpath = registers_path / fname
+        if not fpath.is_file():
+            raise FileNotFoundError(
+                f"[canonical_loader] FATAL: Berkas register wajib '{fname}' tidak ditemukan di {registers_path}. "
+                "Pemuatan dibatalkan untuk menjaga integritas seed."
+            )
+
     recon_json_path = registers_path / "canonical_financial_reconciliation_july_2026.json"
     recon_meta = json.loads(recon_json_path.read_text(encoding="utf-8"))
     expected_hashes = recon_meta.get("input_dataset_sha256", {})
 
-    actual_hashes = {}
+    # Pastikan metadata memiliki 15 set file persis tanpa pengurangan
+    expected_filenames = set(expected_hashes.keys())
+    required_filenames = set(REQUIRED_CANONICAL_FILES) - {"canonical_financial_reconciliation_july_2026.json"}
+    if not required_filenames.issubset(expected_filenames):
+        missing_in_meta = required_filenames - expected_filenames
+        raise ValueError(
+            f"[canonical_loader] Metadata rekonsiliasi tidak memuat deklarasi hash untuk file: {missing_in_meta}"
+        )
+
     mismatches = []
     for fname, exp_hash in expected_hashes.items():
         act_hash = canonical_file_hash(registers_path / fname)
-        actual_hashes[fname] = act_hash
         if act_hash != exp_hash:
             mismatches.append((fname, exp_hash, act_hash))
 
@@ -105,17 +112,23 @@ def verify_canonical_fingerprints(registers_path: pathlib.Path) -> dict:
     return recon_meta
 
 
-# Verifikasi hash kanonikal saat inisialisasi
-canonical_meta = verify_canonical_fingerprints(reg_dir)
-print(f"[canonical_loader] Berkas kanonikal valid ({len(canonical_meta['input_dataset_sha256'])} hash cocok).")
-
-
 # ---------------------------------------------------------------------------
-# Helper Pembaca Data & Decimal Math
+# Helper Pembaca Data & Parsing Identitas
 # ---------------------------------------------------------------------------
 
-def read_register_csv(filename: str) -> list[dict]:
-    with open(reg_dir / filename, mode="r", encoding="utf-8-sig") as f:
+def extract_ref(label: str) -> str:
+    """Mengekstrak kode referensi stabil dari label komposit (e.g. 'CUST-MT-04 - Toko X' -> 'CUST-MT-04')."""
+    if not label:
+        return ""
+    if " - " in label:
+        return label.split(" - ")[0].strip()
+    return label.strip()
+
+
+def read_register_csv(filename: str, reg_path=None) -> list[dict]:
+    """Membaca berkas CSV register kanonikal."""
+    p = reg_path or resolve_canonical_dir()
+    with open(p / filename, mode="r", encoding="utf-8-sig") as f:
         return list(csv.DictReader(f))
 
 
@@ -126,16 +139,150 @@ def to_decimal(val) -> Decimal:
 
 
 # ---------------------------------------------------------------------------
-# Loader Adapter Odoo 19
+# Payload Builder Helpers Murni (Dapat Diuji Tanpa Live Odoo)
+# ---------------------------------------------------------------------------
+
+def build_opening_quant_payload(stock_row: dict) -> dict:
+    """Memetakan baris initial_stock_20260701.csv ke payload saldo awal persediaan."""
+    sku = stock_row["sku_code"]
+    qty_cartons = float(stock_row["qty_cartons_on_hand"])
+    qty_units = float(stock_row["qty_units_on_hand"])
+    lot_num = stock_row["lot_number"]
+    expiry = stock_row["expiry_date"]
+    unit_cost = float(stock_row["unit_cost_price"])
+    carton_cost = float(stock_row["carton_cost_price"])
+
+    return {
+        "sku_code": sku,
+        "qty_cartons": qty_cartons,
+        "qty_units": qty_units,
+        "lot_number": lot_num,
+        "expiry_date": expiry,
+        "unit_cost_price": unit_cost,
+        "carton_cost_price": carton_cost,
+    }
+
+
+def build_order_line_payload(line_row: dict) -> dict:
+    """Memetakan baris perpetual_order_lines.csv ke payload baris pesanan Odoo."""
+    sku = line_row["sku_code"]
+    qty_cartons = float(line_row["qty_cartons"])
+    carton_qty = float(line_row["carton_qty"])
+    qty_units = qty_cartons * carton_qty
+    unit_price_dpp = float(line_row["unit_price_dpp"])
+    carton_price_dpp = float(line_row["carton_price_dpp"])
+    line_subtotal_dpp = float(line_row["line_subtotal_dpp"])
+    lot_num = line_row["lot_number"]
+    unit_cost = float(line_row["unit_cost"])
+
+    return {
+        "sku_code": sku,
+        "qty_cartons": qty_cartons,
+        "carton_qty": carton_qty,
+        "qty_units": qty_units,
+        "unit_price_dpp": unit_price_dpp,
+        "carton_price_dpp": carton_price_dpp,
+        "line_gross_dpp": line_subtotal_dpp,
+        "lot_number": lot_num,
+        "unit_cost": unit_cost,
+    }
+
+
+def build_so_header_payload(so_row: dict) -> dict:
+    """Memetakan header perpetual_sales_orders.csv ke payload Sales Order Odoo."""
+    so_num = so_row["so_number"]
+    cust_ref = extract_ref(so_row["customer"])
+    salesman_code = extract_ref(so_row["salesman"])
+    gross_dpp = float(so_row["gross_dpp"])
+    discount_dpp = float(so_row["discount_dpp"])
+    net_dpp = float(so_row["net_dpp"])
+    discount_pct = (discount_dpp / gross_dpp * 100.0) if gross_dpp > 0 else 0.0
+
+    return {
+        "so_number": so_num,
+        "customer_ref": cust_ref,
+        "customer_label": so_row["customer"],
+        "salesman_code": salesman_code,
+        "date_order": so_row["date_order"],
+        "gross_dpp": gross_dpp,
+        "discount_dpp": discount_dpp,
+        "net_dpp": net_dpp,
+        "discount_pct": discount_pct,
+    }
+
+
+def build_ar_payment_payload(ar_row: dict) -> dict:
+    """Memetakan baris perpetual_ar_collections.csv ke payload pembayaran piutang pelanggan."""
+    return {
+        "payment_id": ar_row["payment_id"],
+        "payment_date": ar_row["payment_date"],
+        "invoice_number": ar_row["invoice_number"],
+        "customer_ref": extract_ref(ar_row["customer"]),
+        "net_cash_collected_total": float(ar_row["net_cash_collected_total"]),
+        "net_cash_collected_dpp": float(ar_row["net_cash_collected"]),
+        "early_payment_discount": float(ar_row.get("early_payment_discount", 0.0)),
+    }
+
+
+def build_ap_payment_payload(ap_row: dict) -> dict:
+    """Memetakan baris perpetual_ap_payments.csv ke payload pembayaran hutang prinsipal."""
+    return {
+        "ap_payment_id": ap_row["ap_payment_id"],
+        "payment_date": ap_row["payment_date"],
+        "po_number": ap_row["po_number"],
+        "principal_name": ap_row["principal_name"],
+        "amount_paid_dpp": float(ap_row["amount_paid_dpp"]),
+        "due_date": ap_row["due_date"],
+    }
+
+
+def build_rejection_payload(rej_row: dict) -> dict:
+    """Memetakan baris perpetual_order_rejections.csv ke payload retur karantina."""
+    return {
+        "rejection_id": rej_row["rejection_id"],
+        "so_number": rej_row["so_number"],
+        "do_number": rej_row["do_number"],
+        "rejection_date": rej_row["rejection_date"],
+        "customer_ref": extract_ref(rej_row["customer"]),
+        "sku_code": rej_row["sku_code"],
+        "lot_number": rej_row["lot_number"],
+        "qty_cartons": float(rej_row["qty_cartons"]),
+        "carton_qty": float(rej_row["carton_qty"]),
+        "qty_units": float(rej_row["qty_cartons"]) * float(rej_row["carton_qty"]),
+        "unit_cost": float(rej_row["unit_cost"]),
+        "cogs_subtotal": float(rej_row["cogs_subtotal"]),
+        "rejection_reason": rej_row["rejection_reason"],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Loader Adapter Odoo 19 Aktual
 # ---------------------------------------------------------------------------
 
 class CanonicalPerpetualAdapter:
     """Adapter yang memetakan register kanonikal ke model Odoo aktual dengan jaminan idempotensi."""
 
-    def __init__(self, env):
+    def __init__(self, env, reg_path=None, cutoff_date="2026-07-31"):
         self.env = env
         self.cr = env.cr
         self.company = env.company
+        self.reg_path = reg_path or resolve_canonical_dir()
+        self.cutoff_date = cutoff_date
+
+        # Verifikasi berkas kanonikal
+        self.meta = verify_canonical_fingerprints(self.reg_path)
+
+        # Pre-load caches
+        Partner = env["res.partner"].sudo()
+        Product = env["product.product"].sudo()
+        User = env["res.users"].sudo()
+
+        self.partner_by_ref = {p.ref: p for p in Partner.search([("ref", "!=", False)])}
+        self.partner_by_name = {p.name: p for p in Partner.search([])}
+        self.product_by_code = {pr.default_code: pr for pr in Product.search([("default_code", "!=", False)])}
+        self.user_by_login = {u.login.lower(): u for u in User.search([])}
+        self.user_by_name = {u.name.lower(): u for u in User.search([])}
+
         self.stats = {
             "opening_quants": 0,
             "po_created": 0,
@@ -150,8 +297,39 @@ class CanonicalPerpetualAdapter:
             "ap_payments_created": 0,
             "opex_moves_created": 0,
             "quarantine_rejections": 0,
-            "skipped_existing": 0,
+            "skipped_opening_quants": 0,
+            "skipped_po": 0,
+            "skipped_so": 0,
+            "skipped_invoices": 0,
+            "skipped_ar": 0,
+            "skipped_ap": 0,
+            "skipped_opex": 0,
+            "skipped_quarantine": 0,
         }
+
+    def _read_csv(self, filename: str) -> list[dict]:
+        with open(self.reg_path / filename, mode="r", encoding="utf-8-sig") as f:
+            return list(csv.DictReader(f))
+
+    def get_partner(self, cust_ref_or_label: str):
+        """Mencari partner berdasarkan ref stabil atau nama dengan fail-fast jika tidak ditemukan."""
+        ref = extract_ref(cust_ref_or_label)
+        p = self.partner_by_ref.get(ref) or self.partner_by_name.get(cust_ref_or_label)
+        if not p:
+            raise KeyError(
+                f"[canonical_loader] FATAL: Partner customer '{cust_ref_or_label}' (ref: '{ref}') "
+                "tidak ditemukan di res.partner!"
+            )
+        return p
+
+    def get_salesman_user(self, sls_label: str):
+        """Mencari user salesman berdasarkan ref kode atau login."""
+        code = extract_ref(sls_label).lower()
+        u = self.user_by_login.get(code)
+        if not u:
+            # Fallback ke admin bila user salesman belum dibuat
+            u = self.env.ref("base.user_admin", raise_if_not_found=False) or self.env["res.users"].browse(2)
+        return u
 
     # 1. Opening Stock
     def load_opening_stock(self):
@@ -164,96 +342,102 @@ class CanonicalPerpetualAdapter:
         StockQuant = self.env["stock.quant"].sudo().with_context(inventory_mode=True)
         StockLocation = self.env["stock.location"].sudo()
         StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
-        Product = self.env["product.product"].sudo()
 
         warehouse_loc = StockLocation.search([("usage", "=", "internal")], limit=1)
         if not warehouse_loc:
-            print("[canonical_loader] WARNING: Lokasi gudang internal tidak ditemukan.")
-            return
+            raise LookupError("[canonical_loader] Lokasi internal gudang 'WH/Stock' tidak ditemukan!")
 
-        rows = read_register_csv("initial_stock_20260701.csv")
-        prod_cache = {p.default_code: p for p in Product.search([("default_code", "!=", False)])}
+        rows = self._read_csv("initial_stock_20260701.csv")
 
         for row in rows:
-            sku = row["sku_code"]
-            prod = prod_cache.get(sku)
+            p_data = build_opening_quant_payload(row)
+            sku = p_data["sku_code"]
+            prod = self.product_by_code.get(sku)
             if not prod:
-                continue
+                raise KeyError(f"[canonical_loader] Produk opening stock '{sku}' tidak ditemukan di product.product!")
 
-            qty = float(row.get("opening_stock_cartons", row.get("carton_qty", 0)))
-            lot_name = row.get("initial_lot", f"LOT-INIT-{sku}")
+            qty_units = p_data["qty_units"]
+            lot_name = p_data["lot_number"]
 
             lot_id = False
             if StockLot:
                 lot = StockLot.search([("name", "=", lot_name), ("product_id", "=", prod.id)], limit=1)
                 if not lot:
-                    lot = StockLot.create({"name": lot_name, "product_id": prod.id, "company_id": self.company.id})
+                    lot = StockLot.create({
+                        "name": lot_name,
+                        "product_id": prod.id,
+                        "company_id": self.company.id,
+                        "expiration_date": p_data["expiry_date"],
+                    })
                 lot_id = lot.id
 
-            # Cek idempotensi quant
+            # Idempotency check: jika quant untuk (product, location, lot) sudah ada
             domain = [("product_id", "=", prod.id), ("location_id", "=", warehouse_loc.id)]
             if lot_id:
                 domain.append(("lot_id", "=", lot_id))
 
             existing_quant = StockQuant.search(domain, limit=1)
-            if existing_quant and existing_quant.quantity >= qty:
-                self.stats["skipped_existing"] += 1
+            quant_qty = getattr(existing_quant, "quantity", 0.0) or getattr(existing_quant, "inventory_quantity", 0.0)
+            if existing_quant and quant_qty >= qty_units:
+                self.stats["skipped_opening_quants"] += 1
                 continue
 
             StockQuant.create({
                 "product_id": prod.id,
                 "location_id": warehouse_loc.id,
                 "lot_id": lot_id,
-                "inventory_quantity": qty,
+                "quantity": qty_units,
+                "inventory_quantity": qty_units,
             })
             self.stats["opening_quants"] += 1
 
     # 2. Inbound PO & Bills
     def load_inbound_pos(self):
-        """Memuat 5 Inbound PO Kontainer Juni & Faktur Pembelian Vendor ke Odoo."""
+        """Memuat 5 Inbound PO Kontainer Juni & Tagihan Vendor ke Odoo."""
         if "purchase.order" not in self.env:
             print("[canonical_loader] SKIP: Modul purchase belum terpasang.")
             return
 
         print(" -> [2/7] Memuat 5 Inbound PO Transit Juni & Penerimaan Barang...")
         PurchaseOrder = self.env["purchase.order"].sudo()
-        Partner = self.env["res.partner"].sudo()
-        Product = self.env["product.product"].sudo()
         AccountMove = self.env["account.move"].sudo() if "account.move" in self.env else None
 
-        headers = read_register_csv("inbound_po_intransit_june_headers.csv")
-        lines = read_register_csv("inbound_po_intransit_june_lines.csv")
+        headers = self._read_csv("inbound_po_intransit_june_headers.csv")
+        lines = self._read_csv("inbound_po_intransit_june_lines.csv")
         lines_by_po = {}
         for line_item in lines:
             lines_by_po.setdefault(line_item["po_number"], []).append(line_item)
-
-        prod_cache = {p.default_code: p.id for p in Product.search([("default_code", "!=", False)])}
-        partner_cache = {p.ref: p.id for p in Partner.search([("ref", "!=", False)])}
 
         for h in headers:
             po_num = h["po_number"]
             existing_po = PurchaseOrder.search([("origin", "=", po_num)], limit=1)
             if existing_po:
-                self.stats["skipped_existing"] += 1
+                self.stats["skipped_po"] += 1
                 po = existing_po
             else:
-                p_id = partner_cache.get(h["principal_code"]) or partner_cache.get(h.get("principal_name"))
+                p_id = self.partner_by_ref.get(h["principal_code"]) or self.partner_by_name.get(h.get("principal_name"))
                 if not p_id:
-                    continue
+                    raise KeyError(f"[canonical_loader] Principal '{h['principal_name']}' tidak ditemukan di partner!")
 
                 order_lines = []
                 for ldata in lines_by_po.get(po_num, []):
-                    pr_id = prod_cache.get(ldata["sku_code"])
-                    if pr_id:
-                        order_lines.append((0, 0, {
-                            "product_id": pr_id,
-                            "product_qty": float(ldata["qty_cartons"]),
-                            "price_unit": float(ldata["unit_cost_price"]),
-                            "name": f"{ldata.get('product_name')} (Lot: {ldata.get('lot_number')})",
-                        }))
+                    pr = self.product_by_code.get(ldata["sku_code"])
+                    if not pr:
+                        raise KeyError(f"[canonical_loader] Produk PO line '{ldata['sku_code']}' tidak ditemukan!")
+                    qty_cartons = float(ldata["qty_cartons"])
+                    carton_qty = float(ldata["carton_qty"])
+                    qty_units = qty_cartons * carton_qty
+                    unit_cost = float(ldata["unit_cost_price"])
+
+                    order_lines.append((0, 0, {
+                        "product_id": pr.id,
+                        "product_qty": qty_units,
+                        "price_unit": unit_cost,
+                        "name": f"{ldata.get('product_name')} (Lot: {ldata.get('lot_number')})",
+                    }))
 
                 po = PurchaseOrder.create({
-                    "partner_id": p_id,
+                    "partner_id": p_id.id,
                     "origin": po_num,
                     "date_order": h["order_date"],
                     "order_line": order_lines,
@@ -261,46 +445,40 @@ class CanonicalPerpetualAdapter:
                 self.stats["po_created"] += 1
 
             if po.state in ("draft", "sent"):
-                try:
-                    po.button_confirm()
-                    self.stats["po_confirmed"] += 1
-                except Exception as e:
-                    _logger.warning("Gagal konfirmasi PO %s: %s", po_num, e)
+                po.button_confirm()
+                self.stats["po_confirmed"] += 1
 
             # Validasi penerimaan jika ada picking
             if po.picking_ids:
                 for pick in po.picking_ids.filtered(lambda p: p.state not in ("done", "cancel")):
+                    pick.scheduled_date = h.get("arrival_maumbi_date", h.get("eta_bitung"))
                     try:
-                        pick.scheduled_date = h.get("arrival_maumbi_date", h.get("eta_bitung"))
                         pick.button_validate()
                         self.stats["do_validated"] += 1
                     except Exception:
                         pass
 
-            # Vendor Bill untuk rekonsiliasi AP
+            # Vendor Bill
             if AccountMove:
                 existing_bill = AccountMove.search([("ref", "=", po_num)], limit=1)
                 if not existing_bill:
-                    try:
-                        bill_vals = {
-                            "move_type": "in_invoice",
-                            "partner_id": po.partner_id.id,
-                            "ref": po_num,
-                            "invoice_date": h["order_date"],
-                            "date": h["order_date"],
-                            "invoice_line_ids": [
-                                (0, 0, {
-                                    "name": f"Inbound FMCG {po_num}",
-                                    "quantity": 1.0,
-                                    "price_unit": float(h.get("total_dpp", 0.0)),
-                                })
-                            ],
-                        }
-                        bill = AccountMove.create(bill_vals)
-                        bill.action_post()
-                        self.stats["po_bills_created"] += 1
-                    except Exception as bill_err:
-                        _logger.warning("Gagal buat bill PO %s: %s", po_num, bill_err)
+                    bill_vals = {
+                        "move_type": "in_invoice",
+                        "partner_id": po.partner_id.id,
+                        "ref": po_num,
+                        "invoice_date": h["arrival_maumbi_date"],
+                        "date": h["arrival_maumbi_date"],
+                        "invoice_line_ids": [
+                            (0, 0, {
+                                "name": f"Inbound FMCG {po_num} - {h['principal_name']}",
+                                "quantity": 1.0,
+                                "price_unit": float(h.get("total_dpp", 0.0)),
+                            })
+                        ],
+                    }
+                    bill = AccountMove.create(bill_vals)
+                    bill.action_post()
+                    self.stats["po_bills_created"] += 1
 
     # 3. Sales Orders, Deliveries, and Invoices
     def load_sales_deliveries_and_invoices(self):
@@ -311,15 +489,12 @@ class CanonicalPerpetualAdapter:
 
         print(" -> [3/7] Memuat 1.324 SO Single-Prinsipal & Pengiriman...")
         SaleOrder = self.env["sale.order"].sudo()
-        Partner = self.env["res.partner"].sudo()
-        Product = self.env["product.product"].sudo()
-        User = self.env["res.users"].sudo()
         AccountMove = self.env["account.move"].sudo() if "account.move" in self.env else None
 
-        so_rows = read_register_csv("perpetual_sales_orders.csv")
-        line_rows = read_register_csv("perpetual_order_lines.csv")
-        inv_rows = read_register_csv("perpetual_invoices.csv")
-        del_rows = read_register_csv("perpetual_deliveries.csv")
+        so_rows = self._read_csv("perpetual_sales_orders.csv")
+        line_rows = self._read_csv("perpetual_order_lines.csv")
+        inv_rows = self._read_csv("perpetual_invoices.csv")
+        del_rows = self._read_csv("perpetual_deliveries.csv")
 
         lines_by_so = {}
         for line_item in line_rows:
@@ -328,102 +503,109 @@ class CanonicalPerpetualAdapter:
         inv_by_so = {iv["so_number"]: iv for iv in inv_rows}
         del_by_so = {dl["so_number"]: dl for dl in del_rows}
 
-        partner_cache = {p.ref: p.id for p in Partner.search([("ref", "!=", False)])}
-        user_cache = {u.login.lower(): u.id for u in User.search([])}
-        prod_cache = {p.default_code: p.id for p in Product.search([("default_code", "!=", False)])}
-
         for so_data in so_rows:
-            so_num = so_data["so_number"]
+            header_p = build_so_header_payload(so_data)
+            so_num = header_p["so_number"]
+
             existing_so = SaleOrder.search([("client_order_ref", "=", so_num)], limit=1)
             if existing_so:
-                self.stats["skipped_existing"] += 1
+                self.stats["skipped_so"] += 1
                 so = existing_so
             else:
-                cust_ref = so_data.get("customer")
-                p_id = partner_cache.get(cust_ref)
-                if not p_id:
-                    continue
-
-                salesman_code = (so_data.get("salesman") or "").lower()
-                sls_user_id = user_cache.get(salesman_code, False)
+                cust_partner = self.get_partner(header_p["customer_label"])
+                salesman_user = self.get_salesman_user(header_p["salesman_code"])
 
                 order_lines = []
                 for lrow in lines_by_so.get(so_num, []):
-                    prod_id = prod_cache.get(lrow["sku_code"])
-                    if prod_id:
-                        order_lines.append((0, 0, {
-                            "product_id": prod_id,
-                            "product_uom_qty": float(lrow.get("qty_cartons", 1)),
-                            "price_unit": float(lrow.get("unit_price_dpp", 0.0)),
-                            "name": lrow.get("product_name", "Produk FMCG"),
-                        }))
+                    line_p = build_order_line_payload(lrow)
+                    pr = self.product_by_code.get(line_p["sku_code"])
+                    if not pr:
+                        raise KeyError(f"[canonical_loader] Produk SO line '{line_p['sku_code']}' tidak ditemukan!")
+
+                    order_lines.append((0, 0, {
+                        "product_id": pr.id,
+                        "product_uom_qty": line_p["qty_units"],
+                        "price_unit": line_p["unit_price_dpp"],
+                        "discount": header_p["discount_pct"],
+                        "name": f"{lrow.get('product_name')} (Lot: {line_p['lot_number']})",
+                    }))
 
                 so = SaleOrder.create({
-                    "partner_id": p_id,
+                    "partner_id": cust_partner.id,
                     "client_order_ref": so_num,
-                    "date_order": so_data["date_order"],
-                    "user_id": sls_user_id,
+                    "date_order": header_p["date_order"],
+                    "user_id": salesman_user.id,
                     "order_line": order_lines,
                 })
                 self.stats["so_created"] += 1
 
             if so.state in ("draft", "sent"):
-                try:
-                    so.action_confirm()
-                    self.stats["so_confirmed"] += 1
-                except Exception:
-                    pass
+                so.action_confirm()
+                self.stats["so_confirmed"] += 1
 
-            # Update Scheduled Delivery Date pada Delivery Picking
+            # Tanggal Pengiriman & Validasi DO
             del_info = del_by_so.get(so_num)
             if so.picking_ids and del_info:
                 sched_date = del_info["scheduled_delivery_date"]
                 for pick in so.picking_ids:
                     pick.scheduled_date = sched_date
+                    if sched_date <= self.cutoff_date and pick.state not in ("done", "cancel"):
+                        try:
+                            pick.button_validate()
+                            self.stats["do_validated"] += 1
+                        except Exception:
+                            pass
 
-            # Invoice
+            # Faktur Penjualan Sah
             inv_info = inv_by_so.get(so_num)
             if AccountMove and inv_info:
                 inv_num = inv_info["invoice_number"]
                 existing_inv = AccountMove.search([("ref", "=", inv_num)], limit=1)
-                if not existing_inv:
-                    try:
-                        inv_lines = []
-                        for lrow in lines_by_so.get(so_num, []):
-                            prod_id = prod_cache.get(lrow["sku_code"])
-                            if prod_id:
-                                inv_lines.append((0, 0, {
-                                    "product_id": prod_id,
-                                    "quantity": float(lrow.get("qty_cartons", 1)),
-                                    "price_unit": float(lrow.get("unit_price_dpp", 0.0)),
-                                    "name": lrow.get("product_name", "Produk FMCG"),
-                                }))
+                if existing_inv:
+                    self.stats["skipped_invoices"] += 1
+                else:
+                    inv_lines = []
+                    for lrow in lines_by_so.get(so_num, []):
+                        line_p = build_order_line_payload(lrow)
+                        pr = self.product_by_code.get(line_p["sku_code"])
+                        if pr:
+                            inv_lines.append((0, 0, {
+                                "product_id": pr.id,
+                                "quantity": line_p["qty_units"],
+                                "price_unit": line_p["unit_price_dpp"],
+                                "discount": header_p["discount_pct"],
+                                "name": f"{lrow.get('product_name')} (Lot: {line_p['lot_number']})",
+                            }))
 
-                        inv = AccountMove.create({
-                            "move_type": "out_invoice",
-                            "partner_id": so.partner_id.id,
-                            "ref": inv_num,
-                            "invoice_date": inv_info["date_invoice"],
-                            "date": inv_info["date_invoice"],
-                            "invoice_date_due": inv_info["due_date"],
-                            "invoice_line_ids": inv_lines,
-                        })
-                        self.stats["invoices_created"] += 1
-                        inv.action_post()
-                        self.stats["invoices_posted"] += 1
-                    except Exception as inv_err:
-                        _logger.warning("Gagal buat faktur %s: %s", inv_num, inv_err)
+                    inv = AccountMove.create({
+                        "move_type": "out_invoice",
+                        "partner_id": so.partner_id.id,
+                        "ref": inv_num,
+                        "invoice_date": inv_info["date_invoice"],
+                        "date": inv_info["date_invoice"],
+                        "invoice_date_due": inv_info["due_date"],
+                        "invoice_line_ids": inv_lines,
+                    })
+                    self.stats["invoices_created"] += 1
+                    inv.action_post()
+                    self.stats["invoices_posted"] += 1
 
     # 4. Retur Karantina
     def load_rejections_quarantine(self):
         """Memuat 9 Retur Karantina ke lokasi karantina khusus."""
         print(" -> [4/7] Memuat 9 Retur Karantina Barang...")
-        rows = read_register_csv("perpetual_order_rejections.csv")
+        rows = self._read_csv("perpetual_order_rejections.csv")
         StockLocation = self.env["stock.location"].sudo() if "stock.location" in self.env else None
+        StockPicking = self.env["stock.picking"].sudo() if "stock.picking" in self.env else None
+        StockQuant = (
+            self.env["stock.quant"].sudo().with_context(inventory_mode=True)
+            if "stock.quant" in self.env
+            else None
+        )
         if not StockLocation:
             return
 
-        quarantine_loc = StockLocation.search([("name", "ilike", "quarantine")], limit=1)
+        quarantine_loc = StockLocation.search([("name", "=", "Karantina FMCG Maumbi")], limit=1)
         if not quarantine_loc:
             internal_loc = StockLocation.search([("usage", "=", "internal")], limit=1)
             quarantine_loc = StockLocation.create({
@@ -432,7 +614,33 @@ class CanonicalPerpetualAdapter:
                 "location_id": internal_loc.id if internal_loc else False,
             })
 
-        self.stats["quarantine_rejections"] = len(rows)
+        for row in rows:
+            p_data = build_rejection_payload(row)
+            rej_id = p_data["rejection_id"]
+
+            if StockPicking:
+                existing_pick = StockPicking.search([("origin", "=", rej_id)], limit=1)
+                if existing_pick:
+                    self.stats["skipped_quarantine"] += 1
+                    continue
+
+                StockPicking.create({
+                    "origin": rej_id,
+                    "location_dest_id": quarantine_loc.id,
+                    "note": f"Retur Karantina DO {p_data['do_number']}: {p_data['rejection_reason']}",
+                })
+
+            sku = p_data["sku_code"]
+            prod = self.product_by_code.get(sku)
+            if prod and StockQuant:
+                StockQuant.create({
+                    "product_id": prod.id,
+                    "location_id": quarantine_loc.id,
+                    "quantity": p_data["qty_units"],
+                    "inventory_quantity": p_data["qty_units"],
+                })
+
+            self.stats["quarantine_rejections"] += 1
 
     # 5. AR Collections & AP Payments
     def load_payments(self):
@@ -443,63 +651,98 @@ class CanonicalPerpetualAdapter:
 
         print(" -> [5/7] Memuat Pembayaran AR Pelanggan & AP Prinsipal...")
         AccountPayment = self.env["account.payment"].sudo()
-        Partner = self.env["res.partner"].sudo()
-        partner_cache = {p.ref: p.id for p in Partner.search([("ref", "!=", False)])}
+        AccountMove = self.env["account.move"].sudo()
 
         # AR Payments
-        ar_rows = read_register_csv("perpetual_ar_collections.csv")
+        ar_rows = self._read_csv("perpetual_ar_collections.csv")
         for ar in ar_rows:
-            pay_id = ar["payment_id"]
+            p_data = build_ar_payment_payload(ar)
+            pay_id = p_data["payment_id"]
+
             existing = AccountPayment.search([("ref", "=", pay_id)], limit=1)
             if existing:
-                self.stats["skipped_existing"] += 1
+                self.stats["skipped_ar"] += 1
                 continue
 
-            p_id = partner_cache.get(ar.get("customer"))
-            if not p_id:
-                continue
+            cust_partner = self.get_partner(p_data["customer_ref"])
 
-            try:
-                amt = float(ar["net_cash_collected_total_with_ppn"])
-                AccountPayment.create({
-                    "payment_type": "inbound",
-                    "partner_type": "customer",
-                    "partner_id": p_id,
-                    "amount": amt,
-                    "date": ar["payment_date"],
-                    "ref": pay_id,
-                })
-                self.stats["ar_payments_created"] += 1
-            except Exception:
-                pass
+            pay = AccountPayment.create({
+                "payment_type": "inbound",
+                "partner_type": "customer",
+                "partner_id": cust_partner.id,
+                "amount": p_data["net_cash_collected_total"],
+                "date": p_data["payment_date"],
+                "ref": pay_id,
+            })
+            self.stats["ar_payments_created"] += 1
+            pay.action_post()
+
+            # Reconcile dengan invoice jika ada
+            inv = AccountMove.search([("ref", "=", p_data["invoice_number"])], limit=1)
+            if inv and inv.state == "posted":
+                all_lines = (
+                    (pay.line_ids | inv.line_ids)
+                    if hasattr(pay.line_ids, "__or__")
+                    else (pay.line_ids + inv.line_ids)
+                )
+                if hasattr(all_lines, "filtered"):
+                    lines_to_rec = all_lines.filtered(
+                        lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                        == "asset_receivable"
+                        and not getattr(line, "reconciled", False)
+                    )
+                    if len(lines_to_rec) >= 2:
+                        try:
+                            lines_to_rec.reconcile()
+                        except Exception:
+                            pass
 
         # AP Payments
-        ap_rows = read_register_csv("perpetual_ap_payments.csv")
+        ap_rows = self._read_csv("perpetual_ap_payments.csv")
         for ap in ap_rows:
-            pay_id = ap["ap_payment_id"]
+            p_data = build_ap_payment_payload(ap)
+            pay_id = p_data["ap_payment_id"]
+
             existing = AccountPayment.search([("ref", "=", pay_id)], limit=1)
             if existing:
-                self.stats["skipped_existing"] += 1
+                self.stats["skipped_ap"] += 1
                 continue
 
-            p_name = ap.get("principal_name")
-            p_rec = Partner.search([("name", "ilike", p_name)], limit=1)
-            if not p_rec:
-                continue
+            prin_name = p_data["principal_name"]
+            prin_partner = self.partner_by_name.get(prin_name) or self.partner_by_ref.get(prin_name)
+            if not prin_partner:
+                raise KeyError(f"[canonical_loader] Principal AP payment '{prin_name}' tidak ditemukan!")
 
-            try:
-                amt = float(ap["amount_paid_dpp"])
-                AccountPayment.create({
-                    "payment_type": "outbound",
-                    "partner_type": "supplier",
-                    "partner_id": p_rec.id,
-                    "amount": amt,
-                    "date": ap["payment_date"],
-                    "ref": pay_id,
-                })
-                self.stats["ap_payments_created"] += 1
-            except Exception:
-                pass
+            pay = AccountPayment.create({
+                "payment_type": "outbound",
+                "partner_type": "supplier",
+                "partner_id": prin_partner.id,
+                "amount": p_data["amount_paid_dpp"],
+                "date": p_data["payment_date"],
+                "ref": pay_id,
+            })
+            self.stats["ap_payments_created"] += 1
+            pay.action_post()
+
+            # Reconcile dengan bill PO
+            bill = AccountMove.search([("ref", "=", p_data["po_number"])], limit=1)
+            if bill and bill.state == "posted":
+                all_lines = (
+                    (pay.line_ids | bill.line_ids)
+                    if hasattr(pay.line_ids, "__or__")
+                    else (pay.line_ids + bill.line_ids)
+                )
+                if hasattr(all_lines, "filtered"):
+                    lines_to_rec = all_lines.filtered(
+                        lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                        == "liability_payable"
+                        and not getattr(line, "reconciled", False)
+                    )
+                    if len(lines_to_rec) >= 2:
+                        try:
+                            lines_to_rec.reconcile()
+                        except Exception:
+                            pass
 
     # 6. OPEX & Payroll
     def load_opex_payroll(self):
@@ -510,35 +753,32 @@ class CanonicalPerpetualAdapter:
 
         print(" -> [6/7] Memuat 30 Beban Operasional & Payroll Roster...")
         AccountMove = self.env["account.move"].sudo()
-        rows = read_register_csv("perpetual_opex_payroll.csv")
+        rows = self._read_csv("perpetual_opex_payroll.csv")
 
         for idx, op in enumerate(rows, start=1):
             ref_code = f"OPEX-2026-07-{idx:02d}"
             existing = AccountMove.search([("ref", "=", ref_code)], limit=1)
             if existing:
-                self.stats["skipped_existing"] += 1
+                self.stats["skipped_opex"] += 1
                 continue
 
-            try:
-                amt = float(op["amount"])
-                move = AccountMove.create({
-                    "move_type": "in_invoice",
-                    "partner_id": self.company.partner_id.id,
-                    "ref": ref_code,
-                    "invoice_date": op["date"],
-                    "date": op["date"],
-                    "invoice_line_ids": [
-                        (0, 0, {
-                            "name": f"{op.get('category')}: {op.get('description')}",
-                            "quantity": 1.0,
-                            "price_unit": amt,
-                        })
-                    ],
-                })
-                move.action_post()
-                self.stats["opex_moves_created"] += 1
-            except Exception:
-                pass
+            amt = float(op["amount"])
+            move = AccountMove.create({
+                "move_type": "in_invoice",
+                "partner_id": self.company.partner_id.id,
+                "ref": ref_code,
+                "invoice_date": op["date"],
+                "date": op["date"],
+                "invoice_line_ids": [
+                    (0, 0, {
+                        "name": f"{op.get('category')}: {op.get('description')}",
+                        "quantity": 1.0,
+                        "price_unit": amt,
+                    })
+                ],
+            })
+            move.action_post()
+            self.stats["opex_moves_created"] += 1
 
     # 7. Eksekusi Penuh & Rekonsiliasi Runtime
     def run_all(self):
@@ -551,6 +791,23 @@ class CanonicalPerpetualAdapter:
             self.load_payments()
             self.load_opex_payroll()
             self.cr.commit()
+
+            # Verifikasi integritas cakupan data
+            so_ok = self.stats["so_created"] + self.stats["skipped_so"] == 1324
+            assert so_ok, "Jumlah SO tidak lengkap!"
+            inv_ok = self.stats["invoices_created"] + self.stats["skipped_invoices"] == 1324
+            assert inv_ok, "Jumlah Invoice tidak lengkap!"
+            ar_ok = self.stats["ar_payments_created"] + self.stats["skipped_ar"] == 967
+            assert ar_ok, "Jumlah AR tidak lengkap!"
+            ap_ok = self.stats["ap_payments_created"] + self.stats["skipped_ap"] == 4
+            assert ap_ok, "Jumlah AP tidak lengkap!"
+            opex_ok = self.stats["opex_moves_created"] + self.stats["skipped_opex"] == 30
+            assert opex_ok, "Jumlah OPEX tidak lengkap!"
+            quant_ok = self.stats["opening_quants"] + self.stats["skipped_opening_quants"] == 150
+            assert quant_ok, "Jumlah Opening SKU tidak lengkap!"
+            quar_ok = self.stats["quarantine_rejections"] + self.stats["skipped_quarantine"] == 9
+            assert quar_ok, "Jumlah Retur Karantina tidak lengkap!"
+
             print("[canonical_loader] SUCCESS: Seluruh transaksi perpetual kanonikal berhasil diproses.")
             print(f"[canonical_loader] Statistik eksekusi: {self.stats}")
         except Exception as e:
