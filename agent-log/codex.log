@@ -1,0 +1,6 @@
+
+[2026-10-26T10:46:05+07:00] [INFO] Supervisi UI v7 terisolasi dari SQL wilayah
+- Source UI 388eff6; base main f130693;20SQL tidak dibawa/dihapus pada source.
+- Perbaiki visibility systray, pager wajib dua record, integrasi Odoo UI/browser CI.
+- Verifikasi runtime menunggu CI; tanpa Railway/production.
+- Task managed by codex agent at 2026-10-26T10:46:05+07:00

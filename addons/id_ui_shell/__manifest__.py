@@ -19,6 +19,7 @@
             'id_ui_shell/static/src/shell/id_section_panel.xml',
             'id_ui_shell/static/src/shell/id_menu_search.js',
             'id_ui_shell/static/src/shell/id_menu_search.xml',
+            'id_ui_shell/static/src/shell/systray_dividers.js',
             'id_ui_shell/static/src/shell/navbar_patch.js',
             'id_ui_shell/static/src/shell/navbar_patch.xml',
             'id_ui_shell/static/src/shell/webclient_patch.js',

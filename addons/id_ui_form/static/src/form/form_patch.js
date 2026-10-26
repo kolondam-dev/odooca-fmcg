@@ -1,4 +1,4 @@
-import { onMounted, onPatched, onWillDestroy, useState, useSubEnv } from "@odoo/owl";
+import { onMounted, onPatched, onWillDestroy, useRef, useState, useSubEnv } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { Notebook } from "@web/core/notebook/notebook";
 import { useService } from "@web/core/utils/hooks";
@@ -34,32 +34,50 @@ patch(FormRenderer.prototype, {
         this.idChatterTab = tab;
         useSubEnv({ idChatterTab: tab });
 
-        const relocateTitle = () => {
-            if (this.idShellState?.mode !== "sidebar" || this.env.inDialog) {
+        // Judul form (.oe_title) dipindah ke statusbar. Syarat kompatibilitas: dibatasi ke akar
+        // renderer ini (bukan document), idempoten (tidak menyentuh DOM bila sudah di tempat),
+        // dan dikembalikan ke posisi semula bila tata letak berganti ke klasik.
+        const rootRef = useRef("compiled_view_root");
+        const origins = new WeakMap();
+        const syncTitle = () => {
+            const root = rootRef.el;
+            if (!root) {
                 return;
             }
-            const rendererEl = document.querySelector(".o_action_manager .o_form_renderer");
-            if (!rendererEl) return;
-            const statusbar = rendererEl.querySelector(".o_form_statusbar");
-            const title = rendererEl.querySelector(".o_form_sheet > .oe_title");
-            if (statusbar && title) {
-                title.classList.add("id_statusbar_title");
-                const status = statusbar.querySelector(".o_field_statusbar, .o_statusbar_status");
-                if (status) {
-                    statusbar.insertBefore(title, status);
-                } else {
-                    statusbar.appendChild(title);
+            const statusbar = root.querySelector(".o_form_statusbar");
+            const moved = statusbar?.querySelector(":scope > .id_statusbar_title");
+            if (this.idShellState?.mode !== "sidebar" || this.env.inDialog) {
+                const origin = moved && origins.get(moved);
+                if (origin && origin.parent.isConnected) {
+                    origin.parent.insertBefore(moved, origin.next?.parentNode === origin.parent ? origin.next : null);
+                    moved.classList.remove("id_statusbar_title");
                 }
+                return;
             }
+            if (moved || !statusbar) {
+                return;
+            }
+            const title = root.querySelector(".o_form_sheet > .oe_title");
+            if (!title) {
+                return;
+            }
+            origins.set(title, { parent: title.parentNode, next: title.nextSibling });
+            title.classList.add("id_statusbar_title");
+            // Sisipkan sebelum anak langsung statusbar yang memuat pipeline status (bila ada).
+            let ref = statusbar.querySelector(".o_field_statusbar, .o_statusbar_status");
+            while (ref && ref.parentNode !== statusbar) {
+                ref = ref.parentNode;
+            }
+            statusbar.insertBefore(title, ref || null);
         };
 
         onMounted(() => {
             if (this.idChatterTabEnabled && !tab.owner) {
                 this.idChatterFallback.value = true;
             }
-            relocateTitle();
+            syncTitle();
         });
-        onPatched(relocateTitle);
+        onPatched(syncTitle);
     },
 
     get idChatterTabEnabled() {
