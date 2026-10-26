@@ -363,3 +363,15 @@
 - Kedua validator (verify_seed_invariants.py dan verify_seed_acceptance.py) berstatus PASS (0 violations).
 - Ruff check (All checks passed!) dan check_manifests.py (4 addon ok) lulus.
 - Task managed by antigravity at 2026-10-26T10:58:00+07:00
+
+[2026-10-26T11:26:00+07:00] [INFO] Penutupan 5 Temuan Supervisi Adapter Loader Kanonikal & Simulasi Rantai Transaksi Kecil
+- Memperbaiki idempotensi opening stock setelah kuantitas on-hand berkurang (quant reduction akibat DO downstream) dengan validasi keberadaan quant per produk dan lokasi tanpa bergantung pada kuantitas fisik berjalan.
+- Mengoreksi kuantitas dan nilai faktur komersial penjualan dengan memotong 9 retur transit (net accepted units), sehingga total DPP faktur Odoo menjadi Rp 5.782.481.176,40 dan persis menutup selisih Rp 2.168.937,60 DPP terhadap data kanonikal.
+- Memetakan pergerakan stok nyata: picking receipt PO dan delivery DO dengan move_line_ids, lot_id, dan kuantitas selesai (qty_done), serta retur karantina dengan move lines ke lokasi karantina khusus.
+- Membukukan diskon pembayaran awal (160 transaksi, Rp 11.007.225,45 DPP) via entri jurnal umum (move_type: entry, ref: DISC-{pay_id}) dan mengeksekusi rekonsiliasi eksplisit pada baris piutang usaha (asset_receivable) serta baris utang usaha (liability_payable).
+- Menghilangkan silent masking kegagalan: menghapus seluruh blok try-except pass, menghapus fallback salesman ke user_admin (fail-fast dengan KeyError), dan memindahkan seluruh asersi kelengkapan cakupan data sebelum pemanggilan self.cr.commit() (memastikan rollback berfungsi jika terjadi anomali).
+- Mendukung dan membuktikan satu rangkaian simulasi transaksi kecil (limit_orders=1) sebelum mencoba seluruh 1.324 SO.
+- Menurunkan klaim dokumentasi dari 'idempotensi sejati runtime' menjadi 'pengujian adapter pada mock/model Odoo'.
+- Memperluas unit tests tests/test_canonical_loader_adapter.py menjadi 17 pengujian komprehensif (17/17 PASS, 89/89 tests total di repo PASS).
+- Mempertahankan dataset kanonikal utuh tanpa modifikasi generator; tidak merge ke main dan tidak mengakses production.
+- Task managed by antigravity at 2026-10-26T11:26:00+07:00

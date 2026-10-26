@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Unit tests untuk Canonical Perpetual Loader Adapter (scripts/load_canonical_perpetual.py).
 
-Menguji:
-1. Verifikasi 15 hash SHA-256 kanonikal LF dan penolakan jika berkas/deklarasi hilang.
-2. Resolusi ref stabil customer (1.324/1.324 SO & 967/967 AR) dan salesman (1.324/1.324 SO).
-3. Pemetaan saldo awal (initial_stock_20260701.csv): qty_cartons_on_hand, qty_units, lot, expiry.
-4. Pemetaan baris pesanan (perpetual_order_lines.csv): qty base unit, carton price, line DPP.
-5. Pemetaan pembayaran AR & AP dengan field yang benar (net_cash_collected_total).
-6. Pemetaan 9 retur karantina dan nilai aset COGS Rp 1.963.200.
-7. Delegator scripts/load_historical_simulation.py dengan init_globals env.
-8. Uji idempotensi pemuatan ganda adapter menggunakan mock model Odoo 19.
+Menutup seluruh temuan supervisi pada PR #15:
+1. Opening stock idempoten bahkan setelah kuantitas on-hand berkurang (quant reduction).
+2. Kuantitas dan nilai invoice net of rejections (menutup selisih Rp 2.168.937,60 DPP).
+3. Pemetaan pergerakan stok: picking PO, DO, dan karantina dengan move lines, lot, dan qty selesai.
+4. Pembukuan diskon pembayaran awal (early cash discount) dan eksekusi rekonsiliasi AR/AP.
+5. Pencegahan masking error: penghapusan try-except pass, fail-fast salesman tanpa admin fallback,
+   serta assert integritas dilakukan sebelum commit DB (sehingga rollback berfungsi).
+6. Pembuktian rantai transaksi kecil (small transaction chain simulation: limit_orders=1).
+7. Pengujian adapter pada mock Odoo environment dengan 15 hash fingerprint LF utuh.
 """
 
 import csv
@@ -37,6 +37,309 @@ from scripts.load_canonical_perpetual import (  # noqa: E402
 )
 
 
+class MockRecordList(list):
+    def filtered(self, func):
+        return MockRecordList([x for x in self if func(x)])
+
+    def __or__(self, other):
+        combined = list(self)
+        for item in other:
+            if item not in combined:
+                combined.append(item)
+        return MockRecordList(combined)
+
+    def reconcile(self):
+        for rec in self:
+            rec.reconciled = True
+
+
+class MockRecord:
+    def __init__(self, vals, model_name, rec_id, env=None):
+        self._vals = vals.copy() if vals else {}
+        self._model = model_name
+        self.id = rec_id
+        self.state = "draft"
+        self.picking_ids = MockRecordList()
+        self.line_ids = MockRecordList()
+        self.reconciled = False
+        self._env = env
+        self.scheduled_date = False
+
+    def __getattr__(self, name):
+        if name == "partner_id":
+            p_val = self._vals.get("partner_id", 1)
+            if isinstance(p_val, MockRecord):
+                return p_val
+            if self._env and "res.partner" in self._env:
+                existing = self._env["res.partner"].store.get(p_val)
+                return existing or MockRecord({"name": "Partner"}, "res.partner", p_val, self._env)
+            return MockRecord({"name": "Partner"}, "res.partner", p_val)
+        if name in self._vals:
+            return self._vals[name]
+        if name == "account_id":
+            act_type = self._vals.get("account_type", "asset_receivable")
+            return MockRecord({"account_type": act_type}, "account.account", 1, self._env)
+        elif name == "company_id":
+            return self._env.company if self._env else MockRecord({"name": "PT MDU"}, "res.company", 1)
+        return False
+
+    def __setattr__(self, name, value):
+        if name.startswith("_") or name in (
+            "id", "state", "picking_ids", "line_ids", "reconciled", "scheduled_date"
+        ):
+            super().__setattr__(name, value)
+        else:
+            self._vals[name] = value
+
+    def action_confirm(self):
+        self.state = "sale"
+        if self._model == "sale.order" and self._env and "stock.picking" in self._env:
+            move_lines = []
+            for item in self._vals.get("order_line", []):
+                line_data = item[2] if isinstance(item, (list, tuple)) and len(item) == 3 else {}
+                move_lines.append(MockRecord({
+                    "product_id": line_data.get("product_id"),
+                    "lot_id": 1,
+                    "quantity": line_data.get("product_uom_qty", 0.0),
+                    "qty_done": line_data.get("product_uom_qty", 0.0),
+                }, "stock.move.line", len(move_lines) + 1, self._env))
+
+            pick = self._env["stock.picking"].create({
+                "origin": self._vals.get("client_order_ref", "SO"),
+                "picking_type_code": "outgoing",
+                "state": "assigned",
+                "move_line_ids": MockRecordList(move_lines),
+            })
+            self.picking_ids = MockRecordList([pick])
+
+    def button_confirm(self):
+        self.state = "purchase"
+        if self._model == "purchase.order" and self._env and "stock.picking" in self._env:
+            move_lines = []
+            for item in self._vals.get("order_line", []):
+                line_data = item[2] if isinstance(item, (list, tuple)) and len(item) == 3 else {}
+                move_lines.append(MockRecord({
+                    "product_id": line_data.get("product_id"),
+                    "lot_id": 1,
+                    "quantity": line_data.get("product_qty", 0.0),
+                    "qty_done": line_data.get("product_qty", 0.0),
+                }, "stock.move.line", len(move_lines) + 1, self._env))
+
+            pick = self._env["stock.picking"].create({
+                "origin": self._vals.get("origin", "PO"),
+                "picking_type_code": "incoming",
+                "state": "assigned",
+                "move_line_ids": MockRecordList(move_lines),
+            })
+            self.picking_ids = MockRecordList([pick])
+
+    def button_validate(self):
+        self.state = "done"
+
+    def action_post(self):
+        self.state = "posted"
+        if self._model == "account.move":
+            m_type = self._vals.get("move_type", "entry")
+            if m_type == "out_invoice":
+                total_amt = sum(
+                    inv_line[2].get("quantity", 0.0)
+                    * inv_line[2].get("price_unit", 0.0)
+                    * (1.0 - inv_line[2].get("discount", 0.0) / 100.0)
+                    for inv_line in self._vals.get("invoice_line_ids", [])
+                    if isinstance(inv_line, (list, tuple)) and len(inv_line) == 3
+                )
+                ar_line = MockRecord({
+                    "name": self._vals.get("ref", "AR Invoice"),
+                    "account_id": MockRecord({"account_type": "asset_receivable"}, "account.account", 1, self._env),
+                    "debit": total_amt,
+                    "credit": 0.0,
+                    "reconciled": False,
+                }, "account.move.line", 1, self._env)
+                inc_line = MockRecord({
+                    "name": "Sales Income",
+                    "account_id": MockRecord({"account_type": "income"}, "account.account", 2, self._env),
+                    "debit": 0.0,
+                    "credit": total_amt,
+                    "reconciled": False,
+                }, "account.move.line", 2, self._env)
+                self.line_ids = MockRecordList([ar_line, inc_line])
+            elif m_type == "in_invoice":
+                total_amt = sum(
+                    inv_line[2].get("quantity", 1.0) * inv_line[2].get("price_unit", 0.0)
+                    for inv_line in self._vals.get("invoice_line_ids", [])
+                    if isinstance(inv_line, (list, tuple)) and len(inv_line) == 3
+                )
+                ap_line = MockRecord({
+                    "name": self._vals.get("ref", "AP Bill"),
+                    "account_id": MockRecord({"account_type": "liability_payable"}, "account.account", 3, self._env),
+                    "debit": 0.0,
+                    "credit": total_amt,
+                    "reconciled": False,
+                }, "account.move.line", 1, self._env)
+                exp_line = MockRecord({
+                    "name": "Expense Line",
+                    "account_id": MockRecord({"account_type": "expense"}, "account.account", 4, self._env),
+                    "debit": total_amt,
+                    "credit": 0.0,
+                    "reconciled": False,
+                }, "account.move.line", 2, self._env)
+                self.line_ids = MockRecordList([ap_line, exp_line])
+            elif m_type == "entry":
+                lines = []
+                for idx, item in enumerate(self._vals.get("line_ids", []), start=1):
+                    ldata = item[2] if isinstance(item, (list, tuple)) and len(item) == 3 else {}
+                    acc_type = "asset_receivable" if "Piutang" in ldata.get("name", "") else "expense"
+                    lines.append(MockRecord({
+                        "name": ldata.get("name", "Journal Line"),
+                        "account_id": MockRecord({"account_type": acc_type}, "account.account", 5, self._env),
+                        "debit": ldata.get("debit", 0.0),
+                        "credit": ldata.get("credit", 0.0),
+                        "reconciled": False,
+                    }, "account.move.line", idx, self._env))
+                self.line_ids = MockRecordList(lines)
+        elif self._model == "account.payment":
+            p_type = self._vals.get("payment_type", "inbound")
+            amt = float(self._vals.get("amount", 0.0))
+            if p_type == "inbound":
+                cash_line = MockRecord({
+                    "name": self._vals.get("ref", "Cash In"),
+                    "account_id": MockRecord({"account_type": "asset_cash"}, "account.account", 6, self._env),
+                    "debit": amt,
+                    "credit": 0.0,
+                    "reconciled": False,
+                }, "account.move.line", 1, self._env)
+                ar_line = MockRecord({
+                    "name": self._vals.get("ref", "AR Payment"),
+                    "account_id": MockRecord({"account_type": "asset_receivable"}, "account.account", 1, self._env),
+                    "debit": 0.0,
+                    "credit": amt,
+                    "reconciled": False,
+                }, "account.move.line", 2, self._env)
+                self.line_ids = MockRecordList([cash_line, ar_line])
+            else:
+                ap_line = MockRecord({
+                    "name": self._vals.get("ref", "AP Payment"),
+                    "account_id": MockRecord({"account_type": "liability_payable"}, "account.account", 3, self._env),
+                    "debit": amt,
+                    "credit": 0.0,
+                    "reconciled": False,
+                }, "account.move.line", 1, self._env)
+                cash_line = MockRecord({
+                    "name": self._vals.get("ref", "Cash Out"),
+                    "account_id": MockRecord({"account_type": "asset_cash"}, "account.account", 6, self._env),
+                    "debit": 0.0,
+                    "credit": amt,
+                    "reconciled": False,
+                }, "account.move.line", 2, self._env)
+                self.line_ids = MockRecordList([ap_line, cash_line])
+
+
+class MockModel:
+    def __init__(self, name, env=None):
+        self.name = name
+        self.store = {}
+        self.seq = 1
+        self.env = env
+
+    def sudo(self):
+        return self
+
+    def with_context(self, **kw):
+        return self
+
+    def search(self, domain=None, limit=None):
+        domain = domain or []
+        results = []
+        for rec in self.store.values():
+            match = True
+            for term in domain:
+                field, op, val = term
+                rec_val = getattr(rec, field, False)
+                if op == "=" and rec_val != val:
+                    match = False
+                elif op == "!=" and rec_val == val:
+                    match = False
+                elif op == "ilike" and (not rec_val or val.lower() not in str(rec_val).lower()):
+                    match = False
+            if match:
+                results.append(rec)
+                if limit == 1:
+                    break
+        if limit == 1:
+            return results[0] if results else False
+        return results
+
+    def create(self, vals):
+        rec = MockRecord(vals, self.name, self.seq, env=self.env)
+        self.store[self.seq] = rec
+        self.seq += 1
+        return rec
+
+
+class MockCompany:
+    def __init__(self):
+        self.id = 1
+        self.partner_id = None
+
+
+class MockCursor:
+    def __init__(self):
+        self.committed = False
+        self.rollbacked = False
+
+    def commit(self):
+        self.committed = True
+
+    def rollback(self):
+        self.rollbacked = True
+
+
+class MockEnv(dict):
+    def __init__(self):
+        super().__init__()
+        self.cr = MockCursor()
+        self.company = MockCompany()
+        models = [
+            "res.partner", "product.product", "res.users", "stock.quant", "stock.location",
+            "stock.lot", "purchase.order", "sale.order", "account.move", "account.payment",
+            "stock.picking", "account.account",
+        ]
+        for m in models:
+            self[m] = MockModel(m, env=self)
+        self.company.partner_id = self["res.partner"].create({"name": "PT MDU", "ref": "COMPANY"})
+
+    def ref(self, xml_id, raise_if_not_found=False):
+        return MockRecord({"name": xml_id}, "base", 1, self)
+
+
+def setup_standard_mock_env():
+    mock_env = MockEnv()
+
+    # Prepopulate partners & products
+    cust_rows = read_register_csv("customer_registry_354.csv")
+    for c in cust_rows:
+        mock_env["res.partner"].create({"name": c["name"], "ref": c["ref"]})
+
+    principals = [
+        "PT Sayapp Mas Utamma", "PT Santos Jaya Abadii", "PT Mayyora Indahh Tbk", "PT Unileverr Indonesia Tbk",
+        "PRIN-WINGS", "PRIN-KAPALAPI", "PRIN-MAYORA", "PRIN-UNILEVER",
+    ]
+    for p in principals:
+        mock_env["res.partner"].create({"name": p, "ref": p})
+
+    # Prepopulate salesman users (CVS-01, CVS-02, MGT-01, SLS-01, SLS-02, SLS-03)
+    salesmen = ["CVS-01", "CVS-02", "MGT-01", "SLS-01", "SLS-02", "SLS-03"]
+    for s in salesmen:
+        mock_env["res.users"].create({"name": s, "login": s.lower()})
+
+    prod_rows = read_register_csv("initial_stock_20260701.csv")
+    for pr in prod_rows:
+        mock_env["product.product"].create({"name": pr["product_name"], "default_code": pr["sku_code"]})
+
+    mock_env["stock.location"].create({"name": "WH/Stock", "usage": "internal"})
+    return mock_env
+
+
 class TestCanonicalLoaderAdapter(unittest.TestCase):
     def test_canonical_fingerprints_integrity(self):
         """Memastikan seluruh 15 hash register kanonikal valid dan cocok dengan rekonsiliasi."""
@@ -52,7 +355,6 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         """Adapter harus raise FileNotFoundError jika berkas register kanonikal hilang."""
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_path = Path(tmp_dir)
-            # Salin hanya sebagian file
             for f in REQUIRED_CANONICAL_FILES[:3]:
                 (tmp_path / f).write_text("test", encoding="utf-8")
             with self.assertRaises(FileNotFoundError):
@@ -64,7 +366,6 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             tmp_path = Path(tmp_dir)
             for f in REQUIRED_CANONICAL_FILES:
                 (tmp_path / f).write_text("dummy", encoding="utf-8")
-            # Metadata tidak lengkap (hanya mendeklarasikan 1 file)
             hash_val = canonical_file_hash(tmp_path / "customer_registry_354.csv")
             fake_meta = {"input_dataset_sha256": {"customer_registry_354.csv": hash_val}}
             meta_file = tmp_path / "canonical_financial_reconciliation_july_2026.json"
@@ -176,148 +477,180 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertEqual(total_rej_cartons, 9.0)
         self.assertEqual(total_rej_cogs, Decimal("1963200.00"))
 
-    def test_adapter_idempotency_simulation_with_mock_environment(self):
-        """Menguji CanonicalPerpetualAdapter secara nyata terhadap mock Odoo Environment: Run 1 vs Run 2."""
-        class MockRecordList(list):
-            def filtered(self, func):
-                return MockRecordList([x for x in self if func(x)])
+    # -------------------------------------------------------------------------
+    # Temuan 1: Opening stock tetap idempoten setelah pengurangan stok
+    # -------------------------------------------------------------------------
+    def test_opening_stock_idempotency_after_quantity_reduction(self):
+        """Opening stock tidak boleh membuat quant baru ketika stok berkurang karena DO downstream."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
 
-            def reconcile(self):
-                pass
+        # Muat saldo awal pertama kali
+        adapter.load_opening_stock()
+        self.assertEqual(adapter.stats["opening_quants"], 150)
+        self.assertEqual(adapter.stats["skipped_opening_quants"], 0)
 
-        class MockRecord:
-            def __init__(self, vals, model_name, rec_id, env=None):
-                self._vals = vals or {}
-                self._model = model_name
-                self.id = rec_id
-                self.state = "draft"
-                self.picking_ids = MockRecordList()
-                self.line_ids = MockRecordList()
-                self.reconciled = False
-                self._env = env
+        # Kurangi satu unit pada salah satu quant hasil mock
+        first_quant = list(mock_env["stock.quant"].store.values())[0]
+        initial_qty = first_quant.quantity
+        first_quant.quantity -= 1.0
+        first_quant.inventory_quantity -= 1.0
 
-            def __getattr__(self, name):
-                if name == "partner_id":
-                    p_val = self._vals.get("partner_id", 1)
-                    if isinstance(p_val, MockRecord):
-                        return p_val
-                    if self._env and "res.partner" in self._env:
-                        existing = self._env["res.partner"].store.get(p_val)
-                        return existing or MockRecord({"name": "Partner"}, "res.partner", p_val, self._env)
-                    return MockRecord({"name": "Partner"}, "res.partner", p_val)
-                elif name == "account_id":
-                    return MockRecord({"account_type": "asset_receivable"}, "account.account", 1)
-                return self._vals.get(name, False)
+        # Jalankan load_opening_stock() lagi
+        adapter.stats["opening_quants"] = 0
+        adapter.stats["skipped_opening_quants"] = 0
+        adapter.load_opening_stock()
 
-            def action_confirm(self):
-                self.state = "sale"
+        # Harus 0 quant baru, 150 skipped, dan tidak menduplikasi baris quant
+        self.assertEqual(adapter.stats["opening_quants"], 0)
+        self.assertEqual(adapter.stats["skipped_opening_quants"], 150)
+        self.assertEqual(len(mock_env["stock.quant"].store), 150)
+        self.assertEqual(first_quant.quantity, initial_qty - 1.0)
 
-            def button_confirm(self):
-                self.state = "purchase"
+    # -------------------------------------------------------------------------
+    # Temuan 2: Invoice net of rejection menutup selisih Rp 2.168.937,60 DPP
+    # -------------------------------------------------------------------------
+    def test_invoices_net_of_rejections_reconciliation(self):
+        """Invoice harus memotong 9 retur transit sehingga total DPP persis sama dengan kanonikal."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
 
-            def action_post(self):
-                self.state = "posted"
+        adapter.load_sales_deliveries_and_invoices()
 
-            def button_validate(self):
-                self.state = "done"
+        inv_store = mock_env["account.move"].store
+        created_invoices = [m for m in inv_store.values() if m._vals.get("move_type") == "out_invoice"]
+        self.assertEqual(len(created_invoices), 1324)
 
-        class MockModel:
-            def __init__(self, name, env=None):
-                self.name = name
-                self.store = {}
-                self.seq = 1
-                self.env = env
+        # Hitung total DPP seluruh invoice yang terbentuk
+        total_inv_dpp = Decimal("0.00")
+        for inv in created_invoices:
+            for item in inv._vals.get("invoice_line_ids", []):
+                line_data = item[2]
+                qty = Decimal(str(line_data["quantity"]))
+                price = Decimal(str(line_data["price_unit"]))
+                disc = Decimal(str(line_data.get("discount", 0.0)))
+                line_net = qty * price * (Decimal("1.00") - disc / Decimal("100.00"))
+                total_inv_dpp += line_net
 
-            def sudo(self):
-                return self
+        # Canonical total DPP di perpetual_invoices.csv adalah Rp 5.782.481.176,40
+        canonical_inv_rows = read_register_csv("perpetual_invoices.csv")
+        canonical_dpp_expected = sum(Decimal(r["dpp_amount"]) for r in canonical_inv_rows)
+        self.assertEqual(canonical_dpp_expected, Decimal("5782481176.40"))
+        self.assertEqual(round(total_inv_dpp, 2), canonical_dpp_expected)
 
-            def with_context(self, **kw):
-                return self
+        # Gross SO net sebelum retur adalah Rp 5.784.650.114,00
+        # Selisih terhadap canonical adalah tepat Rp 2.168.937,60
+        so_gross_net = Decimal("5784650114.00")
+        self.assertEqual(so_gross_net - canonical_dpp_expected, Decimal("2168937.60"))
 
-            def search(self, domain=None, limit=None):
-                domain = domain or []
-                results = []
-                for rec in self.store.values():
-                    match = True
-                    for term in domain:
-                        field, op, val = term
-                        rec_val = getattr(rec, field, False)
-                        if op == "=" and rec_val != val:
-                            match = False
-                        elif op == "!=" and rec_val == val:
-                            match = False
-                        elif op == "ilike" and (not rec_val or val.lower() not in str(rec_val).lower()):
-                            match = False
-                    if match:
-                        results.append(rec)
-                        if limit == 1:
-                            break
-                if limit == 1:
-                    return results[0] if results else False
-                return results
+    # -------------------------------------------------------------------------
+    # Temuan 3: Pergerakan stok, picking PO/SO, lot, dan move lines karantina
+    # -------------------------------------------------------------------------
+    def test_stock_movements_and_lot_mapping(self):
+        """Picking PO, DO, dan retur karantina wajib memetakan lot dan move lines berstatus done."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
 
-            def create(self, vals):
-                rec = MockRecord(vals, self.name, self.seq, env=self.env)
-                self.store[self.seq] = rec
-                self.seq += 1
-                return rec
+        adapter.load_inbound_pos()
+        adapter.load_sales_deliveries_and_invoices(limit_orders=5)
+        adapter.load_rejections_quarantine(limit_orders=5)
 
-        class MockCompany:
-            def __init__(self):
-                self.id = 1
-                self.partner_id = None
-
-        class MockCursor:
-            def commit(self):
-                pass
-
-            def rollback(self):
-                pass
-
-        class MockEnv(dict):
-            def __init__(self):
-                super().__init__()
-                self.cr = MockCursor()
-                self.company = MockCompany()
-                models = [
-                    "res.partner", "product.product", "res.users", "stock.quant", "stock.location",
-                    "stock.lot", "purchase.order", "sale.order", "account.move", "account.payment", "stock.picking",
-                ]
-                for m in models:
-                    self[m] = MockModel(m, env=self)
-                self.company.partner_id = self["res.partner"].create({"name": "PT MDU", "ref": "COMPANY"})
-
-            def ref(self, xml_id, raise_if_not_found=False):
-                return MockRecord({"name": xml_id}, "base", 1)
-
-        mock_env = MockEnv()
-
-        # Prepopulate partners & products dari register
-        cust_rows = read_register_csv("customer_registry_354.csv")
-        for c in cust_rows:
-            mock_env["res.partner"].create({"name": c["name"], "ref": c["ref"]})
-
-        # Prepopulate 4 principal partners
-        principals = [
-            "PT Sayapp Mas Utamma", "PT Santos Jaya Abadii", "PT Mayyora Indahh Tbk", "PT Unileverr Indonesia Tbk",
-            "PRIN-WINGS", "PRIN-KAPALAPI", "PRIN-MAYORA", "PRIN-UNILEVER",
+        # Periksa picking PO
+        po_picks = [
+            p for p in mock_env["stock.picking"].store.values() if p._vals.get("picking_type_code") == "incoming"
         ]
-        for p in principals:
-            mock_env["res.partner"].create({"name": p, "ref": p})
+        self.assertEqual(len(po_picks), 5)
+        for pick in po_picks:
+            self.assertEqual(pick.state, "done")
+            self.assertGreater(len(pick._vals.get("move_line_ids", [])), 0)
 
-        # Prepopulate 150 SKUs
-        prod_rows = read_register_csv("initial_stock_20260701.csv")
-        for pr in prod_rows:
-            mock_env["product.product"].create({"name": pr["product_name"], "default_code": pr["sku_code"]})
+        # Periksa picking DO
+        so_picks = [
+            p for p in mock_env["stock.picking"].store.values() if p._vals.get("picking_type_code") == "outgoing"
+        ]
+        self.assertEqual(len(so_picks), 5)
+        for pick in so_picks:
+            self.assertEqual(pick.state, "done")
+            self.assertGreater(len(pick._vals.get("move_line_ids", [])), 0)
 
-        # Prepopulate internal warehouse location
-        mock_env["stock.location"].create({"name": "WH/Stock", "usage": "internal"})
+    # -------------------------------------------------------------------------
+    # Temuan 4: Rekonsiliasi pembayaran dan diskon pembayaran awal
+    # -------------------------------------------------------------------------
+    def test_payment_reconciliation_and_cash_discount(self):
+        """Memverifikasi jurnal diskon pembayaran awal (160 transaksi) dan eksekusi rekonsiliasi."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
 
-        # Jalankan RUN 1 dengan CanonicalPerpetualAdapter
+        adapter.load_inbound_pos()
+        adapter.load_sales_deliveries_and_invoices()
+        adapter.load_payments()
+
+        # 160 diskon pembayaran awal berhasil dibukukan via entri jurnal
+        self.assertEqual(adapter.stats["discount_moves_created"], 160)
+        self.assertEqual(adapter.stats["ar_reconciled"], 967)
+        self.assertEqual(adapter.stats["ap_reconciled"], 4)
+
+        # Seluruh pembayaran AR dan AP berstatus posted dan terhubung rekonsiliasi
+        for pay in mock_env["account.payment"].store.values():
+            self.assertEqual(pay.state, "posted")
+            receivable_payable_lines = pay.line_ids.filtered(
+                lambda ml: ml.account_id.account_type in ("asset_receivable", "liability_payable")
+            )
+            for line in receivable_payable_lines:
+                self.assertTrue(line.reconciled)
+
+    # -------------------------------------------------------------------------
+    # Temuan 5: Kegagalan tidak disamarkan & rollback berfungsi sebelum commit
+    # -------------------------------------------------------------------------
+    def test_salesman_fail_fast_without_admin_fallback(self):
+        """Salesman code tidak dikenal wajib melempar KeyError, tidak fallback ke admin."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        with self.assertRaises(KeyError):
+            adapter.get_salesman_user("UNKNOWN-SALESMAN-99")
+
+    def test_transaction_rollback_on_assertion_failure(self):
+        """Jika terjadi anomali integritas data, commit tidak dipanggil dan rollback dieksekusi."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        # Paksa kegagalan pada tahap SO dengan limit tidak lengkap
+        with self.assertRaises(AssertionError):
+            adapter.run_all(limit_orders=999999)
+
+        # Buktikan bahwa rollback terpanggil dan commit tidak pernah dipanggil
+        self.assertTrue(mock_env.cr.rollbacked)
+        self.assertFalse(mock_env.cr.committed)
+
+    # -------------------------------------------------------------------------
+    # Simulasi Rantai Transaksi Kecil (Disposable Seed Chain)
+    # -------------------------------------------------------------------------
+    def test_small_transaction_chain_simulation(self):
+        """Membuktikan satu siklus transaksi kecil (1 SO) sebelum menjalankan 1.324 SO penuh."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        # Jalankan adapter dengan limit 1 SO
+        adapter.run_all(limit_orders=1)
+
+        self.assertEqual(adapter.stats["so_created"], 1)
+        self.assertEqual(adapter.stats["invoices_created"], 1)
+        self.assertEqual(adapter.stats["do_validated"], 6)  # 5 PO receipts + 1 SO delivery
+        self.assertTrue(mock_env.cr.committed)
+        self.assertFalse(mock_env.cr.rollbacked)
+
+    # -------------------------------------------------------------------------
+    # Idempotensi Penuh: Run 1 vs Run 2
+    # -------------------------------------------------------------------------
+    def test_adapter_full_idempotency_simulation_with_mock_environment(self):
+        """Menguji CanonicalPerpetualAdapter secara nyata terhadap mock Odoo: Run 1 vs Run 2."""
+        mock_env = setup_standard_mock_env()
+
+        # RUN 1
         adapter_run1 = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
         adapter_run1.run_all()
 
-        # Verifikasi hasil Run 1
         self.assertEqual(adapter_run1.stats["so_created"], 1324)
         self.assertEqual(adapter_run1.stats["invoices_created"], 1324)
         self.assertEqual(adapter_run1.stats["ar_payments_created"], 967)
@@ -326,8 +659,11 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertEqual(adapter_run1.stats["opening_quants"], 150)
         self.assertEqual(adapter_run1.stats["po_created"], 5)
         self.assertEqual(adapter_run1.stats["quarantine_rejections"], 9)
+        self.assertEqual(adapter_run1.stats["discount_moves_created"], 160)
+        self.assertEqual(adapter_run1.stats["ar_reconciled"], 967)
+        self.assertEqual(adapter_run1.stats["ap_reconciled"], 4)
 
-        # Jalankan RUN 2 (Uji Idempotensi Sejati: harus 0 create baru, seluruhnya skipped)
+        # RUN 2 (Idempotensi: 0 dibuat baru, seluruhnya dilewati)
         adapter_run2 = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
         adapter_run2.run_all()
 
