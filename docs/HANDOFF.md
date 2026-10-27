@@ -1,5 +1,35 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Resolusi Penuh 4 Temuan Audit Supervisi PR #15: Presisi Oracle Register, Uji Mutasi Aktif, Fail-Fast Date Rewrite, dan Proving Jurnal Stok
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6442809030](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6442809030)):**
+- Menindaklanjuti audit supervisi komprehensif pada HEAD `812ae66` yang mendapati 4 blocker kritis sebelum merge:
+  1. *Koreksi Konstanta & Pencocokan Dinamis Oracle Register Kanonikal*:
+     - Menghapus konstanta dummy / salah pada `verify_run1_against_canonical_oracle` di `scripts/ops/verify_disposable_slice.py`.
+     - Menggunakan `read_register_csv` untuk verifikasi terhadap register kanonikal aktual:
+       * 5 Inbound PO headers/lines: `PO-2026-06-01` s/d `PO-2026-06-05` bertanggal efektif Juli 2026 (bukan `PO-202607-0001..5`).
+       * Retur karantina `REJ-202607-001`: tepat 1 karton * 12 unit/karton = 12 unit `ULV-RNS-03` lot `LOT-VER-20260615-INIT-09` (bukan 120 unit).
+       * Faktur komersial: verifikasi nominal DPP, PPN 11%, total, dan amount_residual secara presisi untuk `INV-202607-0001` (lunas, residual 0.0), `INV-202607-0063`, dan `INV-202607-0317` (terbuka, residual Rp 3.750.325,92).
+       * Pelunasan kas AR: verifikasi `PAY-AR-00098` (net cash collected Rp 18.188.517,60 dan early payment discount Rp 165.350,16).
+  2. *Uji Mutasi Slice Aktif Berbasis Fault Rejection*:
+     - Memperbaiki `verify_slice_mutation_rejection`: mewajibkan `env` dan `reg_path` valid (fail-fast `ValueError` / `FileNotFoundError` jika dipanggil tanpa env atau register).
+     - Menjalankan mutasi negatif aktif terhadap `verify_run1_against_canonical_oracle` dalam `EnvironmentSavepoint` / rollback block terisolasi:
+       * Mutasi 1: Korupsi alokasi lot `SO-202607-0317` (kuantitas lot kedua dinolkan) -> terbukti ditolak `AssertionError` oleh oracle.
+       * Mutasi 2: Korupsi nominal DPP invoice `INV-202607-0317` menjadi 9,999,999.0 -> terbukti ditolak `AssertionError` oleh oracle.
+       * Mutasi 3: Korupsi tanggal dokumen menjadi runtime date -> terbukti ditolak `AssertionError` oleh oracle.
+  3. *Eliminasi Silent Exception Swallowing pada Sinkronisasi Tanggal Jurnal*:
+     - Menghapus blok `try...except Exception: pass` pada `_sync_native_stock_accounting` di `scripts/load_canonical_perpetual.py`.
+     - Menerapkan alur unpost (`button_draft()`) -> rewrite tanggal jurnal & baris jurnal -> repost (`action_post()`) jika penulisan langsung diblokir oleh lock date Odoo.
+     - Menambahkan assertion fail-fast `am.date == date_only` yang melempar `RuntimeError` jika penulisan tanggal ditolak atau tidak efektif.
+  4. *Konfigurasi Valuasi Akuntansi Stok Fail-Fast & Proving Jurnal*:
+     - Menghapus `try...except Exception as e: _logger.warning(...)` pada `_ensure_accounting_configuration`.
+     - Membuktikan keberadaan `stock_journal` (pencarian tipe `general`/`stock` atau kode `STJ`/`STK`, atau auto-create jurnal stok). Jika gagal dibuktikan, melempar `RuntimeError` fail-fast.
+- Verifikasi lokal:
+  * `ruff check .` (All checks passed! 0 error)
+  * `python scripts/check_manifests.py` (manifest ok: 4 addon)
+  * `python -m unittest tests/test_canonical_loader_adapter.py` (48 tests OK)
+  * `python -m unittest tests/test_generator_reproducibility.py tests/test_seed_acceptance.py tests/test_seed_invariants.py` (72 tests OK)
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke `main`.
+
 ## 2026-10-27 — antigravity agent — Resolusi 4 Blocker Supervisi PR #15: Sanity Native, Truthiness Lot Split, Paritas Historis, dan Oracle Kanonikal Slice
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6441014776](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6441014776)):**
 - Menindaklanjuti audit supervisi komprehensif pada HEAD `16fa541` yang menemukan bypass eksplisit dan celah false confidence:

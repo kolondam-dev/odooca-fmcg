@@ -771,5 +771,32 @@
 - Dataset 15 file CSV register kanonikal beku 100% tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T19:36:00+07:00
 
-
-
+2026-10-27T22:56:00+07:00 [INFO] Resolusi 4 Blocker Audit Supervisi PR #15: Koreksi Oracle Register Kanonikal, Uji Mutasi Negatif Aktif, Fail-Fast Date Rewrite, dan Proving Jurnal Stok
+- Menindaklanjuti audit supervisi komprehensif pada PR #15 (review comment 6442809030):
+  1. Koreksi Konstanta & Pembacaan Dinamis Oracle Register Kanonikal:
+     * Menghapus seluruh konstanta hardcoded yang salah pada verify_run1_against_canonical_oracle di scripts/ops/verify_disposable_slice.py.
+     * Menggunakan read_register_csv untuk membaca eksak dari CSV register kanonikal:
+       - 5 Inbound PO headers/lines: PO-2026-06-01 s/d PO-2026-06-05 bertanggal efektif Juli 2026 (bukan PO-202607-0001..5).
+       - Retur karantina REJ-202607-001: 1 karton * 12 unit/karton = 12 unit ULV-RNS-03 lot LOT-VER-20260615-INIT-09 (bukan 120 unit).
+       - Faktur komersial: verifikasi nilai DPP, PPN 11%, total, dan amount_residual secara presisi untuk INV-202607-0001 (paid, residual=0), INV-202607-0063, dan INV-202607-0317 (open, residual=3750325.92).
+       - Penerimaan kas AR: verifikasi PAY-AR-00098 (net cash collected Rp 18.188.517,60 dan early payment discount Rp 165.350,16).
+  2. Uji Mutasi Slice Aktif (Bukan Tiruan/Dummy):
+     * Memperbaiki verify_slice_mutation_rejection: mewajibkan env dan reg_path valid (fail-fast ValueError / FileNotFoundError jika dipanggil tanpa env atau dataset).
+     * Mengeksekusi mutasi aktif di dalam EnvironmentSavepoint / rollback block terhadap verify_run1_against_canonical_oracle:
+       - Mutasi 1: Korupsi split lot SO-0317 (kuantitas lot kedua dinolkan) -> terbukti ditolak AssertionError oleh oracle.
+       - Mutasi 2: Korupsi DPP invoice INV-0317 menjadi 9999999.0 -> terbukti ditolak AssertionError oleh oracle.
+       - Mutasi 3: Korupsi tanggal dokumen menjadi tanggal runtime sistem -> terbukti ditolak AssertionError oleh oracle.
+  3. Eliminasi Silent Exception Swallowing pada Sinkronisasi Tanggal Jurnal:
+     * Menghilangkan blok try...except pass pada _sync_native_stock_accounting di scripts/load_canonical_perpetual.py.
+     * Menerapkan mekanisme unpost (button_draft) -> rewrite date -> repost (action_post) jika penulisan langsung ditolak oleh constraint Odoo.
+     * Menambahkan verifikasi fail-fast am.date == date_only yang melempar RuntimeError jika tanggal jurnal gagal diselaraskan ke tanggal register.
+  4. Konfigurasi Valuasi Akuntansi Stok Fail-Fast & Proving Jurnal:
+     * Menghilangkan exception swallowing pada _ensure_accounting_configuration.
+     * Membuktikan keberadaan stock_journal (pencarian tipe 'general'/'stock' atau kode 'STJ'/'STK', atau auto-create jurnal stok). Jika gagal dibuktikan, melempar RuntimeError fail-fast.
+- Verifikasi lokal:
+  * ruff check . (All checks passed! 0 error)
+  * python scripts/check_manifests.py (manifest ok: 4 addon)
+  * python -m unittest tests/test_canonical_loader_adapter.py (48 tests OK)
+  * python -m unittest tests/test_generator_reproducibility.py tests/test_seed_acceptance.py tests/test_seed_invariants.py (72 tests OK)
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T22:56:00+07:00

@@ -128,6 +128,15 @@ class MockRecord:
                 if existing:
                     return existing
             return MockRecord({"name": "Location", "usage": "internal"}, "stock.location", l_val or 1, self._env)
+        if name == "lot_id":
+            l_val = self._vals.get("lot_id")
+            if isinstance(l_val, MockRecord):
+                return l_val
+            if self._env and "stock.lot" in self._env and l_val:
+                existing = self._env["stock.lot"].store.get(l_val)
+                if existing:
+                    return existing
+            return False
         if name in self._vals:
             return self._vals[name]
         if name == "account_id":
@@ -1735,98 +1744,122 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             adapter._validate_picking_safely(bogus_pick)
         self.assertIn("tidak ada dalam allowlist resmi", str(ctx.exception))
 
-    def test_verify_slice_mutation_rejection(self):
-        """Uji pembuktian active fault detection dari validator slice representatif."""
+    def test_verify_slice_mutation_rejection_requires_env_and_path(self):
+        """Uji fail-fast: uji mutasi dilarang dijalankan tanpa DB atau dengan path CSV tidak ada."""
         from scripts.ops.verify_disposable_slice import verify_slice_mutation_rejection
 
-        env = MockEnv()
+        with self.assertRaises(ValueError):
+            verify_slice_mutation_rejection(None, None, REG_DIR)
+
+        with self.assertRaises(FileNotFoundError):
+            verify_slice_mutation_rejection(MockEnv(), None, Path("/path/tidak/ada/perpetual"))
+
+    def test_verify_slice_mutation_rejection(self):
+        """Uji pembuktian active fault detection dari validator slice representatif terhadap record nyata."""
+        from scripts.ops.verify_disposable_slice import verify_slice_mutation_rejection
+
+        env = setup_standard_mock_env()
         adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
-        # verify_slice_mutation_rejection harus lulus karena berhasil menolak seluruh mutasi
-        verify_slice_mutation_rejection(env, adapter, REG_DIR)
+        target_sos = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
+        adapter.run_all(target_so_numbers=target_sos)
+
+        # verify_slice_mutation_rejection harus lulus karena aktif menolak seluruh 3 mutasi
+        verify_slice_mutation_rejection(env, adapter, REG_DIR, target_so_slice=target_sos)
 
     def test_slice_oracle_rejects_missing_second_lot_on_so317(self):
         """Oracle wajib menolak hasil jika SO-202607-0317 tidak memuat lot kedua (96 unit)."""
         from scripts.ops.verify_disposable_slice import verify_run1_against_canonical_oracle
 
-        env = MockEnv()
+        env = setup_standard_mock_env()
         adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
-
-        # Buat dummy picking SO-0001, SO-0063, dan SO-0317
-        class DummyLot:
-            def __init__(self, name):
-                self.name = name
-
-        class DummyLine:
-            def __init__(self, lot_name, qty):
-                self.lot_id = DummyLot(lot_name)
-                self.quantity = qty
-
-        class DummyPicking:
-            def __init__(self, origin, date_done, lines):
-                self.origin = origin
-                self.state = "done"
-                self.date_done = date_done
-                self.move_line_ids = lines
-
-        po_picks = [
-            DummyPicking(f"PO-202607-000{i}", "2026-07-04 10:00:00", [DummyLine(f"LOT-PO-{i}", 100.0)])
-            for i in range(1, 6)
-        ]
-        p1 = DummyPicking("SO-202607-0001", "2026-07-02 08:00:00", [DummyLine("L1", 10)])
-        p63 = DummyPicking("SO-202607-0063", "2026-07-02 08:00:00", [DummyLine("L2", 10)])
-        # Cacat: SO-0317 hanya memuat lot 1 (120 unit) tanpa lot 2 (96 unit)
-        p317_corrupt = DummyPicking("SO-202607-0317", "2026-07-09 08:00:00", [
-            DummyLine("LOT-VER-20260615-INIT-04", 120.0),
-        ])
-
-        all_picks = po_picks + [p1, p63, p317_corrupt]
-        env["stock.picking"].store = {idx: p for idx, p in enumerate(all_picks, start=1)}
         target_sos = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
+        adapter.run_all(target_so_numbers=target_sos)
+
+        # Cacat: ubah alokasi lot pada picking SO-0317 agar lot kedua hilang
+        pick317 = env["stock.picking"].search([("origin", "=", "SO-202607-0317")], limit=1)
+        self.assertIsNotNone(pick317)
+        for ml in pick317.move_line_ids:
+            lot_name = getattr(getattr(ml, "lot_id", None), "name", "")
+            if not lot_name and isinstance(getattr(ml, "lot_id", None), int) and "stock.lot" in env:
+                lot_name = getattr(env["stock.lot"].browse(ml.lot_id), "name", "")
+            if not lot_name:
+                lot_name = getattr(ml, "lot_name", "")
+            if lot_name == "LOT-VER-20260704-04":
+                ml.quantity = 0.0
+
         with self.assertRaises(AssertionError) as ctx:
             verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
-        self.assertIn("LOT-VER-20260704-04 tidak ditemukan", str(ctx.exception))
+        self.assertIn("Kuantitas Lot LOT-VER-20260704-04 salah", str(ctx.exception))
 
     def test_slice_oracle_rejects_wrong_lot_quantity_on_so317(self):
         """Oracle wajib menolak hasil jika kuantitas lot pada SO-317 tidak tepat 96 unit."""
         from scripts.ops.verify_disposable_slice import verify_run1_against_canonical_oracle
 
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        target_sos = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
+        adapter.run_all(target_so_numbers=target_sos)
+
+        # Cacat: ubah kuantitas lot 2 dari 96.0 menjadi 50.0
+        pick317 = env["stock.picking"].search([("origin", "=", "SO-202607-0317")], limit=1)
+        self.assertIsNotNone(pick317)
+        for ml in pick317.move_line_ids:
+            lot_name = getattr(getattr(ml, "lot_id", None), "name", "")
+            if not lot_name and isinstance(getattr(ml, "lot_id", None), int) and "stock.lot" in env:
+                lot_name = getattr(env["stock.lot"].browse(ml.lot_id), "name", "")
+            if not lot_name:
+                lot_name = getattr(ml, "lot_name", "")
+            if lot_name == "LOT-VER-20260704-04":
+                ml.quantity = 50.0
+
+        with self.assertRaises(AssertionError) as ctx:
+            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+        self.assertIn("Kuantitas Lot LOT-VER-20260704-04 salah", str(ctx.exception))
+
+    def test_ensure_accounting_configuration_fail_fast_on_missing_journal(self):
+        """Konfigurasi akuntansi wajib fail-fast jika jurnal stok tidak tersedia dan tidak dapat dibuat."""
+        env = MockEnv()
+        env["product.category"] = MockModel("product.category", env)
+        # Modifikasi mock journal agar search dan create mengembalikan None
+        class UncreatableJournal(MockModel):
+            def search(self, *args, **kwargs):
+                return None
+            def create(self, *args, **kwargs):
+                return None
+
+        env["account.journal"] = UncreatableJournal("account.journal", env)
+        with self.assertRaises(RuntimeError) as ctx:
+            CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        self.assertIn(
+            "Keberadaan jurnal stok (stock journal) yang diwajibkan tidak dapat dibuktikan",
+            str(ctx.exception),
+        )
+
+    def test_sync_native_stock_accounting_fail_fast_on_unverified_date(self):
+        """_sync_native_stock_accounting wajib fail-fast jika rewrite tanggal ditolak dan tanggal tetap runtime."""
         env = MockEnv()
         adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
 
-        class DummyLot:
-            def __init__(self, name):
-                self.name = name
+        class StubLockedMove:
+            def __init__(self):
+                self.id = 999
+                self.name = "STK/2026/0001"
+                self.state = "posted"
+                self.date = "2026-10-27"
+            def write(self, vals):
+                # Tolak perubahan tanggal (simulasi Odoo lock constraint)
+                pass
 
-        class DummyLine:
-            def __init__(self, lot_name, qty):
-                self.lot_id = DummyLot(lot_name)
-                self.quantity = qty
+        stub_am = StubLockedMove()
+        class StubStockMove:
+            def __init__(self):
+                self.id = 111
+                self.account_move_id = stub_am
 
-        class DummyPicking:
-            def __init__(self, origin, date_done, lines):
-                self.origin = origin
-                self.state = "done"
-                self.date_done = date_done
-                self.move_line_ids = lines
-
-        po_picks = [
-            DummyPicking(f"PO-202607-000{i}", "2026-07-04 10:00:00", [DummyLine(f"LOT-PO-{i}", 100.0)])
-            for i in range(1, 6)
-        ]
-        p1 = DummyPicking("SO-202607-0001", "2026-07-02 08:00:00", [DummyLine("L1", 10)])
-        p63 = DummyPicking("SO-202607-0063", "2026-07-02 08:00:00", [DummyLine("L2", 10)])
-        # Cacat: SO-0317 memuat lot 2 tapi hanya 50 unit bukan 96 unit
-        p317_wrong_qty = DummyPicking("SO-202607-0317", "2026-07-09 08:00:00", [
-            DummyLine("LOT-VER-20260615-INIT-04", 120.0),
-            DummyLine("LOT-VER-20260704-04", 50.0),
-        ])
-
-        all_picks = po_picks + [p1, p63, p317_wrong_qty]
-        env["stock.picking"].store = {idx: p for idx, p in enumerate(all_picks, start=1)}
-        target_sos = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
-        with self.assertRaises(AssertionError) as ctx:
-            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
-        self.assertIn("Kuantitas Lot 2 salah", str(ctx.exception))
+        sm = StubStockMove()
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._sync_native_stock_accounting(sm, "2026-07-01 00:00:00", "2026-07-01")
+        self.assertIn("gagal diselaraskan ke 2026-07-01", str(ctx.exception))
 
 
 if __name__ == "__main__":

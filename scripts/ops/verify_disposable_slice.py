@@ -42,7 +42,7 @@ REG_PATH = REPO_ROOT / "data" / "registers"
 if not REG_PATH.exists() and Path("/opt/data/registers").exists():
     REG_PATH = Path("/opt/data/registers")
 
-from scripts.load_canonical_perpetual import CanonicalPerpetualAdapter  # noqa: E402
+from scripts.load_canonical_perpetual import CanonicalPerpetualAdapter, read_register_csv  # noqa: E402
 
 
 def introspect_odoo19_schema(env):
@@ -91,12 +91,19 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
     """Memverifikasi hasil pemuatan Run 1 secara independen terhadap Oracle CSV Kanonikal.
 
     Menutup temuan supervisi:
-    1. Oracle sumber kanonikal lengkap (tidak hanya menguji stabilitas Run 1 vs Run 2).
-    2. Pembuktian multi-lot split nyata (SO-202607-0317: SKU ULV-SNL-04 5+4 karton = 120 + 96 unit).
-    3. Retur karantina REJ-202607-001 (120 unit ULV-SNL-06 di lokasi Karantina).
-    4. Nominal komersial persis: DPP, PPN, dan saldo AR/AP (open AR vs reconciled AR).
-    5. Penyelarasan tanggal historis: picking, move, move lines, dan account moves wajib di Juli 2026.
+    1. Oracle sumber kanonikal murni (membaca langsung dari file register CSV, bukan konstanta tiruan).
+    2. Inbound PO transit sesuai register: PO-2026-06-01 s/d PO-2026-06-05.
+    3. Multi-lot split nyata (SO-202607-0317: SKU ULV-SNL-04 5+4 karton = 120 + 96 unit).
+    4. Retur karantina REJ-202607-001 (1 karton * 12 = 12 unit ULV-RNS-03 di lokasi Karantina).
+    5. Nominal komersial persis dari CSV register: DPP, PPN, dan saldo AR/AP (open AR vs reconciled AR).
+    6. Penyelarasan tanggal historis: picking, move, move lines, dan account moves wajib di Juli 2026.
     """
+    if env is None:
+        raise ValueError("[canonical_oracle] env (Odoo environment) wajib disediakan!")
+    reg_path = Path(reg_path)
+    if not reg_path.is_dir():
+        raise FileNotFoundError(f"[canonical_oracle] Direktori register tidak ditemukan di: {reg_path}")
+
     print("\n" + "=" * 80)
     print("[canonical_oracle] MEMULAI VERIFIKASI RUN 1 TERHADAP ORACLE REGISTER KANONIKAL")
     print("=" * 80)
@@ -105,164 +112,194 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
     AccountMove = env["account.move"].sudo() if "account.move" in env else None
     AccountPayment = env["account.payment"].sudo() if "account.payment" in env else None
 
-    # --- 1. Verifikasi Inbound PO Transit (PO-202607-0001 s/d PO-202607-0005) ---
+    # --- 1. Verifikasi Inbound PO Transit (Sumber: inbound_po_intransit_june_headers.csv) ---
+    po_headers = read_register_csv("inbound_po_intransit_june_headers.csv", reg_path=reg_path)
     if StockPicking is not None:
-        for po_num in [f"PO-202607-000{i}" for i in range(1, 6)]:
+        for h in po_headers:
+            po_num = h["po_number"]
             po_pick = StockPicking.search([("origin", "=", po_num)], limit=1)
             assert po_pick, f"[canonical_oracle] Receipt picking untuk {po_num} tidak ditemukan!"
             assert po_pick.state == "done", f"[canonical_oracle] Receipt {po_num} belum done! State: {po_pick.state}"
-            pick_date = str(getattr(po_pick, "date_done", getattr(po_pick, "date", "")))
+            pick_date = str(getattr(po_pick, "date_done", getattr(po_pick, "scheduled_date", getattr(po_pick, "date", ""))))
             assert pick_date.startswith("2026-07-"), (
                 f"[canonical_oracle] Tanggal picking {po_num} ({pick_date}) tidak selaras dengan Juli 2026!"
             )
             for ml in getattr(po_pick, "move_line_ids", []):
                 qty = float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)))
                 assert qty > 0.0, f"[canonical_oracle] Kuantitas line receipt {po_num} harus positif! Got {qty}"
-        print(" -> [Oracle Inbound PO] 5 PO Receipts verified DONE dengan tanggal efektif Juli 2026.")
+        print(f" -> [Oracle Inbound PO] {len(po_headers)} PO Receipts verified DONE dengan tanggal efektif Juli 2026.")
 
     # --- 2. Verifikasi Outgoing SO Deliveries & Multi-Lot Split Nyata ---
+    deliveries_data = {
+        d["so_number"]: d
+        for d in read_register_csv("perpetual_deliveries.csv", reg_path=reg_path)
+        if d["so_number"] in target_so_slice
+    }
+    order_lines_data = [
+        ol for ol in read_register_csv("perpetual_order_lines.csv", reg_path=reg_path)
+        if ol["so_number"] in target_so_slice
+    ]
+
     if StockPicking is not None:
-        # A. SO-202607-0001 (Single Lot Lines)
-        p1 = StockPicking.search([("origin", "=", "SO-202607-0001")], limit=1)
-        assert p1 and p1.state == "done", "[canonical_oracle] Picking SO-202607-0001 belum done!"
-        p1_date = str(getattr(p1, "date_done", getattr(p1, "date", "")))
-        assert p1_date.startswith("2026-07-02"), (
-            f"[canonical_oracle] Tanggal SO-202607-0001 harus 2026-07-02! Got {p1_date}"
-        )
+        for so_num in target_so_slice:
+            p = StockPicking.search([("origin", "=", so_num)], limit=1)
+            if not p and "sale.order" in env:
+                so_rec = env["sale.order"].sudo().search([("client_order_ref", "=", so_num)], limit=1)
+                if so_rec and hasattr(so_rec, "picking_ids") and so_rec.picking_ids:
+                    p = so_rec.picking_ids[0]
+            assert p and p.state == "done", f"[canonical_oracle] Picking {so_num} belum done!"
 
-        # B. SO-202607-0063 (Dengan Partial Rejection)
-        p63 = StockPicking.search([("origin", "=", "SO-202607-0063")], limit=1)
-        assert p63 and p63.state == "done", "[canonical_oracle] Picking SO-202607-0063 belum done!"
-        p63_date = str(getattr(p63, "date_done", getattr(p63, "date", "")))
-        assert p63_date.startswith("2026-07-02"), (
-            f"[canonical_oracle] Tanggal SO-202607-0063 harus 2026-07-02! Got {p63_date}"
-        )
+            # Verifikasi tanggal sesuai deliverable CSV
+            expected_deliv = deliveries_data.get(so_num)
+            if expected_deliv:
+                exp_date = expected_deliv["scheduled_delivery_date"]
+                p_date = str(getattr(p, "date_done", getattr(p, "scheduled_date", getattr(p, "date", ""))))
+                assert p_date.startswith(exp_date), (
+                    f"[canonical_oracle] Tanggal {so_num} harus {exp_date}! Got {p_date}"
+                )
 
-        # C. SO-202607-0317 (BUKTI MULTI-LOT SPLIT NYATA: ULV-SNL-04 5+4 karton = 120 + 96 unit)
-        p317 = StockPicking.search([("origin", "=", "SO-202607-0317")], limit=1)
-        assert p317, "[canonical_oracle] Picking SO-202607-0317 tidak ditemukan!"
-        assert p317.state == "done", f"[canonical_oracle] Picking SO-202607-0317 belum done! State: {p317.state}"
-        p317_date = str(getattr(p317, "date_done", getattr(p317, "date", "")))
-        assert p317_date.startswith("2026-07-09"), (
-            f"[canonical_oracle] Tanggal SO-202607-0317 harus 2026-07-09! Got {p317_date}"
-        )
+            # Jika SO-202607-0317, buktikan multi-lot split secara matematis dan deterministik
+            if so_num == "SO-202607-0317":
+                lines_317 = [ol for ol in order_lines_data if ol["so_number"] == so_num]
+                expected_lots_317 = {}
+                for ol in lines_317:
+                    lot_n = ol["lot_number"]
+                    units = float(ol["qty_cartons"]) * float(ol["carton_qty"])
+                    expected_lots_317[lot_n] = expected_lots_317.get(lot_n, 0.0) + units
 
-        lot_allocations_317 = {}
-        for ml in getattr(p317, "move_line_ids", []):
-            lot_name = getattr(getattr(ml, "lot_id", None), "name", False)
-            qty = float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)))
-            lot_allocations_317[lot_name] = lot_allocations_317.get(lot_name, 0.0) + qty
+                lot_allocations_317 = {}
+                for ml in getattr(p, "move_line_ids", []):
+                    lot_name = getattr(getattr(ml, "lot_id", None), "name", False)
+                    if not lot_name and isinstance(getattr(ml, "lot_id", None), int) and "stock.lot" in env:
+                        lot_name = getattr(env["stock.lot"].browse(ml.lot_id), "name", False)
+                    if not lot_name:
+                        lot_name = getattr(ml, "lot_name", False)
+                    qty = float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)))
+                    lot_allocations_317[lot_name] = lot_allocations_317.get(lot_name, 0.0) + qty
 
-        print(f" -> [Oracle Multi-Lot] Alokasi Lot aktual SO-202607-0317: {lot_allocations_317}")
+                print(f" -> [Oracle Multi-Lot] Alokasi Lot aktual SO-202607-0317: {lot_allocations_317}")
+                for exp_lot, exp_qty in expected_lots_317.items():
+                    assert exp_lot in lot_allocations_317, (
+                        f"[canonical_oracle] FATAL: Lot {exp_lot} tidak ditemukan pada {so_num}!"
+                    )
+                    assert abs(lot_allocations_317[exp_lot] - exp_qty) < 0.001, (
+                        f"[canonical_oracle] Kuantitas Lot {exp_lot} salah! Expected {exp_qty}, got {lot_allocations_317[exp_lot]}"
+                    )
 
-        # Assert persis lot 1: LOT-VER-20260615-INIT-04 (5 karton * 24 = 120 unit)
-        assert "LOT-VER-20260615-INIT-04" in lot_allocations_317, (
-            "[canonical_oracle] FATAL: Lot LOT-VER-20260615-INIT-04 tidak ditemukan pada SO-202607-0317!"
-        )
-        assert abs(lot_allocations_317["LOT-VER-20260615-INIT-04"] - 120.0) < 0.001, (
-            f"[canonical_oracle] Kuantitas Lot 1 salah! Expected 120.0, got {lot_allocations_317['LOT-VER-20260615-INIT-04']}"
-        )
+                exp_total = sum(expected_lots_317.values())
+                actual_total = sum(lot_allocations_317.values())
+                assert abs(actual_total - exp_total) < 0.001, (
+                    f"[canonical_oracle] Total unit {so_num} salah! Expected {exp_total}, got {actual_total}"
+                )
+                print(f" -> [Oracle Multi-Lot] BUKTI LULUS: {so_num} teralokasi multi-lot eksak {expected_lots_317} = {exp_total} unit!")
 
-        # Assert persis lot 2: LOT-VER-20260704-04 (4 karton * 24 = 96 unit)
-        assert "LOT-VER-20260704-04" in lot_allocations_317, (
-            "[canonical_oracle] FATAL: Lot LOT-VER-20260704-04 tidak ditemukan pada SO-202607-0317!"
-        )
-        assert abs(lot_allocations_317["LOT-VER-20260704-04"] - 96.0) < 0.001, (
-            f"[canonical_oracle] Kuantitas Lot 2 salah! Expected 96.0, got {lot_allocations_317['LOT-VER-20260704-04']}"
-        )
-
-        total_units_317 = sum(lot_allocations_317.values())
-        assert abs(total_units_317 - 216.0) < 0.001, (
-            f"[canonical_oracle] Total unit SO-202607-0317 salah! Expected 216.0, got {total_units_317}"
-        )
-        print(" -> [Oracle Multi-Lot] BUKTI LULUS: SO-202607-0317 teralokasi eksak 120 unit + 96 unit = 216 unit!")
-
-    # --- 3. Verifikasi Retur Karantina REJ-202607-001 ---
+    # --- 3. Verifikasi Retur Karantina (Sumber: perpetual_order_rejections.csv) ---
+    rejections = [
+        r for r in read_register_csv("perpetual_order_rejections.csv", reg_path=reg_path)
+        if r["so_number"] in target_so_slice
+    ]
     if StockPicking is not None:
-        rej_pick = StockPicking.search([("origin", "=", "REJ-202607-001")], limit=1)
-        assert rej_pick, "[canonical_oracle] Picking retur karantina REJ-202607-001 tidak ditemukan!"
-        assert rej_pick.state == "done", f"[canonical_oracle] Picking karantina belum done! State: {rej_pick.state}"
-        loc_usage = getattr(getattr(rej_pick, "location_id", None), "usage", "")
-        assert loc_usage == "customer", (
-            f"[canonical_oracle] Transfer karantina harus bersumber dari usage='customer', got '{loc_usage}'!"
-        )
-        rej_date = str(getattr(rej_pick, "date_done", getattr(rej_pick, "date", "")))
-        assert rej_date.startswith("2026-07-03"), (
-            f"[canonical_oracle] Tanggal retur karantina harus 2026-07-03! Got {rej_date}"
-        )
-        rej_lines = getattr(rej_pick, "move_line_ids", [])
-        assert rej_lines, "[canonical_oracle] Move lines karantina kosong!"
-        rej_qty = float(getattr(rej_lines[0], "quantity", getattr(rej_lines[0], "qty_done", 0.0)))
-        assert abs(rej_qty - 120.0) < 0.001, f"[canonical_oracle] Kuantitas retur karantina harus 120.0! Got {rej_qty}"
-        print(" -> [Oracle Karantina] REJ-202607-001 verified 120 unit ULV-SNL-06 bertanggal 2026-07-03.")
+        for rej in rejections:
+            rej_id = rej["rejection_id"]
+            rej_pick = StockPicking.search([("origin", "=", rej_id)], limit=1)
+            assert rej_pick, f"[canonical_oracle] Picking retur karantina {rej_id} tidak ditemukan!"
+            assert rej_pick.state == "done", f"[canonical_oracle] Picking karantina {rej_id} belum done! State: {rej_pick.state}"
+            loc_usage = getattr(getattr(rej_pick, "location_id", None), "usage", "")
+            assert loc_usage == "customer", (
+                f"[canonical_oracle] Transfer karantina harus bersumber dari usage='customer', got '{loc_usage}'!"
+            )
+            rej_date = str(getattr(rej_pick, "date_done", getattr(rej_pick, "date", "")))
+            assert rej_date.startswith(rej["rejection_date"]), (
+                f"[canonical_oracle] Tanggal retur karantina {rej_id} harus {rej['rejection_date']}! Got {rej_date}"
+            )
+            rej_lines = getattr(rej_pick, "move_line_ids", [])
+            assert rej_lines, f"[canonical_oracle] Move lines karantina {rej_id} kosong!"
 
-    # --- 4. Verifikasi Nominal Invoice Komersial & Saldo AR ---
+            # Hitung kuantitas eksak: qty_cartons * carton_qty
+            expected_rej_qty = float(rej["qty_cartons"]) * float(rej["carton_qty"])
+            actual_rej_qty = sum(float(getattr(line_rec, "quantity", getattr(line_rec, "qty_done", 0.0))) for line_rec in rej_lines)
+            assert abs(actual_rej_qty - expected_rej_qty) < 0.001, (
+                f"[canonical_oracle] Kuantitas retur karantina {rej_id} salah! Expected {expected_rej_qty}, got {actual_rej_qty}"
+            )
+            print(f" -> [Oracle Karantina] {rej_id} verified {actual_rej_qty} unit {rej['sku_code']} bertanggal {rej['rejection_date']}.")
+
+    # --- 4. Verifikasi Nominal Invoice Komersial & Saldo AR (Sumber: perpetual_invoices.csv) ---
+    invoices_data = {
+        iv["so_number"]: iv
+        for iv in read_register_csv("perpetual_invoices.csv", reg_path=reg_path)
+        if iv["so_number"] in target_so_slice
+    }
     if AccountMove is not None:
-        # A. INV-202607-0001 (Lunas / Reconciled Penuh)
-        inv1 = AccountMove.search([("ref", "=", "INV-202607-0001")], limit=1)
-        assert inv1 and inv1.state == "posted", "[canonical_oracle] Invoice INV-202607-0001 belum posted!"
-        assert abs(float(inv1.amount_untaxed) - 17442000.0) < 0.01, (
-            f"[canonical_oracle] DPP INV-202607-0001 salah! Got {inv1.amount_untaxed}"
-        )
-        assert abs(float(inv1.amount_tax) - 1918620.0) < 0.01, (
-            f"[canonical_oracle] PPN INV-202607-0001 salah! Got {inv1.amount_tax}"
-        )
-        assert abs(float(getattr(inv1, "amount_residual", 0.0))) < 0.01, (
-            f"[canonical_oracle] INV-202607-0001 harus lunas! Residual: {inv1.amount_residual}"
-        )
+        for so_num, inv_row in invoices_data.items():
+            inv_num = inv_row["invoice_number"]
+            inv_rec = AccountMove.search([("ref", "=", inv_num)], limit=1)
+            assert inv_rec and inv_rec.state == "posted", f"[canonical_oracle] Invoice {inv_num} belum posted!"
 
-        # B. INV-202607-0063 (Net of Rejections)
-        inv63 = AccountMove.search([("ref", "=", "INV-202607-0063")], limit=1)
-        assert inv63 and inv63.state == "posted", "[canonical_oracle] Invoice INV-202607-0063 belum posted!"
-        assert abs(float(inv63.amount_untaxed) - 5096000.0) < 0.01, (
-            f"[canonical_oracle] DPP net INV-202607-0063 salah! Expected 5096000.0, got {inv63.amount_untaxed}"
-        )
-        assert abs(float(inv63.amount_tax) - 560560.0) < 0.01, (
-            f"[canonical_oracle] PPN net INV-202607-0063 salah! Expected 560560.0, got {inv63.amount_tax}"
-        )
+            exp_dpp = float(inv_row["dpp_amount"])
+            exp_ppn = float(inv_row["ppn_11_amount"])
+            exp_total = float(inv_row["total_invoice_with_ppn"])
 
-        # C. INV-202607-0317 (Open AR 30 Hari)
-        inv317 = AccountMove.search([("ref", "=", "INV-202607-0317")], limit=1)
-        assert inv317 and inv317.state == "posted", "[canonical_oracle] Invoice INV-202607-0317 belum posted!"
-        assert abs(float(inv317.amount_untaxed) - 3378672.0) < 0.01, (
-            f"[canonical_oracle] DPP INV-202607-0317 salah! Expected 3378672.0, got {inv317.amount_untaxed}"
-        )
-        assert abs(float(inv317.amount_tax) - 371653.92) < 0.01, (
-            f"[canonical_oracle] PPN INV-202607-0317 salah! Expected 371653.92, got {inv317.amount_tax}"
-        )
-        assert abs(float(getattr(inv317, "amount_residual", 0.0)) - 3750325.92) < 0.01, (
-            f"[canonical_oracle] Saldo piutang open INV-202607-0317 salah! Got {inv317.amount_residual}"
-        )
-        print(" -> [Oracle Invoice] Invoices verified: INV-0001 (reconciled), INV-0063 (net-rejection), INV-0317 (open AR).")
+            assert abs(float(inv_rec.amount_untaxed) - exp_dpp) < 0.01, (
+                f"[canonical_oracle] DPP {inv_num} salah! Expected {exp_dpp}, got {inv_rec.amount_untaxed}"
+            )
+            assert abs(float(inv_rec.amount_tax) - exp_ppn) < 0.01, (
+                f"[canonical_oracle] PPN {inv_num} salah! Expected {exp_ppn}, got {inv_rec.amount_tax}"
+            )
+            assert abs(float(inv_rec.amount_total) - exp_total) < 0.01, (
+                f"[canonical_oracle] Total {inv_num} salah! Expected {exp_total}, got {inv_rec.amount_total}"
+            )
 
-    # --- 5. Verifikasi Jurnal Diskon & Rekonsiliasi Pembayaran ---
+            # Saldo residual: jika INV-202607-0001 (ada pelunasan kas), residual = 0; jika INV-0317 (open AR), residual = exp_total
+            if inv_num == "INV-202607-0001":
+                assert abs(float(getattr(inv_rec, "amount_residual", 0.0))) < 0.01, (
+                    f"[canonical_oracle] {inv_num} harus lunas! Residual: {inv_rec.amount_residual}"
+                )
+            elif inv_num == "INV-202607-0317":
+                assert abs(float(getattr(inv_rec, "amount_residual", 0.0)) - exp_total) < 0.01, (
+                    f"[canonical_oracle] Saldo open AR {inv_num} salah! Expected {exp_total}, got {inv_rec.amount_residual}"
+                )
+        print(" -> [Oracle Invoice] Invoices verified net-rejection, DPP/PPN kanonikal, and residual balances.")
+
+    # --- 5. Verifikasi Jurnal Diskon & Rekonsiliasi Pembayaran (Sumber: perpetual_ar_collections.csv) ---
+    ar_collections = {
+        c["invoice_number"]: c
+        for c in read_register_csv("perpetual_ar_collections.csv", reg_path=reg_path)
+        if c.get("invoice_number") in [iv["invoice_number"] for iv in invoices_data.values()]
+    }
+
     if AccountMove is not None:
-        disc_move = AccountMove.search([("ref", "=", "DISC-PAY-AR-00098")], limit=1)
-        assert disc_move and disc_move.state == "posted", "[canonical_oracle] Jurnal diskon belum posted!"
-        disc_date = str(getattr(disc_move, "date", ""))
-        assert disc_date.startswith("2026-07-06"), f"[canonical_oracle] Tanggal jurnal diskon salah! Got {disc_date}"
-        disc_lines = getattr(disc_move, "line_ids", [])
-        ar_disc_line = [
-            line_item for line_item in disc_lines
-            if getattr(getattr(line_item, "account_id", None), "account_type", "") == "asset_receivable"
-        ]
-        assert ar_disc_line, "[canonical_oracle] Line piutang pada jurnal diskon tidak ditemukan!"
-        assert abs(float(getattr(ar_disc_line[0], "credit", 0.0)) - 165350.16) < 0.01, (
-            f"[canonical_oracle] Nominal kredit diskon salah! Expected 165350.16, got {ar_disc_line[0].credit}"
-        )
-        assert ar_disc_line, "[canonical_oracle] Line piutang pada jurnal diskon tidak ditemukan!"
-        assert abs(float(getattr(ar_disc_line[0], "credit", 0.0)) - 165350.16) < 0.01, (
-            f"[canonical_oracle] Nominal kredit diskon salah! Expected 165350.16, got {ar_disc_line[0].credit}"
-        )
+        for inv_num, ar_row in ar_collections.items():
+            disc_amt = float(ar_row.get("early_payment_discount", 0.0))
+            pay_id = ar_row["payment_id"]
+            if disc_amt > 0:
+                disc_ref = f"DISC-{pay_id}"
+                disc_move = AccountMove.search([("ref", "=", disc_ref)], limit=1)
+                assert disc_move and disc_move.state == "posted", f"[canonical_oracle] Jurnal diskon {disc_ref} belum posted!"
+                disc_date = str(getattr(disc_move, "date", ""))
+                assert disc_date.startswith(ar_row["payment_date"]), (
+                    f"[canonical_oracle] Tanggal jurnal diskon salah! Expected {ar_row['payment_date']}, got {disc_date}"
+                )
+                disc_lines = getattr(disc_move, "line_ids", [])
+                ar_disc_line = [
+                    line_item for line_item in disc_lines
+                    if getattr(getattr(line_item, "account_id", None), "account_type", "") == "asset_receivable"
+                ]
+                assert ar_disc_line, f"[canonical_oracle] Line piutang pada jurnal diskon {disc_ref} tidak ditemukan!"
+                assert abs(float(getattr(ar_disc_line[0], "credit", 0.0)) - disc_amt) < 0.01, (
+                    f"[canonical_oracle] Nominal kredit diskon {disc_ref} salah! Expected {disc_amt}, got {ar_disc_line[0].credit}"
+                )
 
     if AccountPayment is not None:
-        pay98 = AccountPayment.search([("memo", "=", "PAY-AR-00098")], limit=1)
-        if not pay98:
-            pay98 = AccountPayment.search([("ref", "=", "PAY-AR-00098")], limit=1)
-        assert pay98, "[canonical_oracle] Payment PAY-AR-00098 tidak ditemukan!"
-        assert abs(float(getattr(pay98, "amount", 0.0)) - 19195269.84) < 0.01, (
-            f"[canonical_oracle] Nominal payment PAY-AR-00098 salah! Got {pay98.amount}"
-        )
+        for inv_num, ar_row in ar_collections.items():
+            pay_id = ar_row["payment_id"]
+            exp_pay_amt = float(ar_row["net_cash_collected_total"])
+            pay_rec = AccountPayment.search([("memo", "=", pay_id)], limit=1)
+            if not pay_rec:
+                pay_rec = AccountPayment.search([("ref", "=", pay_id)], limit=1)
+            assert pay_rec, f"[canonical_oracle] Payment {pay_id} tidak ditemukan!"
+            assert abs(float(getattr(pay_rec, "amount", 0.0)) - exp_pay_amt) < 0.01, (
+                f"[canonical_oracle] Nominal payment {pay_id} salah! Expected {exp_pay_amt}, got {pay_rec.amount}"
+            )
 
     # --- 6. Verifikasi Penyelarasan Jurnal Valuasi Stok Native (FIFO/Real-Time) ---
     if AccountMove is not None:
@@ -280,56 +317,155 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
     print("=" * 80)
 
 
-def verify_slice_mutation_rejection(env, adapter, reg_path):
+def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None):
     """Membuktikan daya uji aktif (active fault detection) dari oracle.
 
     Menolak merge data salah meskipun dokumen berstatus done/posted:
-    - Mutasi 1: Kuantitas lot split dirusak (lot kedua hilang/0 unit).
-    - Mutasi 2: Nilai nominal DPP invoice dipalsukan.
-    - Mutasi 3: Tanggal efektif bocor ke tanggal runtime saat ini.
+    - Memvalidasi env dan reg_path tidak boleh kosong/dummy (fail-fast jika tanpa DB atau path fiktif).
+    - Menjalankan mutasi nyata dalam savepoint database:
+      * Mutasi 1: Kuantitas lot split dirusak (lot kedua hilang/0 unit pada SO-202607-0317).
+      * Mutasi 2: Nilai nominal DPP invoice dipalsukan (INV-202607-0317).
+      * Mutasi 3: Tanggal efektif bocor ke tanggal runtime saat ini (INV-202607-0001).
+    - Membuktikan bahwa verifikasi oracle produksi (verify_run1_against_canonical_oracle)
+      secara aktif menolak tiap mutasi cacat tersebut.
     """
+    if env is None:
+        raise ValueError("[mutation_rejection] FATAL: env (Odoo environment) wajib disediakan!")
+    reg_path = Path(reg_path)
+    if not reg_path.is_dir():
+        raise FileNotFoundError(f"[mutation_rejection] FATAL: Direktori register tidak valid: {reg_path}")
+
+    if target_so_slice is None:
+        target_so_slice = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
+
     print("\n" + "=" * 80)
-    print("[mutation_rejection] MENJALANKAN UJI MUTASI NEGATIF HASIL RUN 1")
+    print("[mutation_rejection] MENJALANKAN UJI MUTASI NEGATIF AKTIF TERHADAP ORACLE PRODUKSI")
     print("=" * 80)
 
-    # Mutasi 1: Uji Penolakan Lot Split Cacat (Kasus SO-317)
-    def oracle_check_lot_split(lot_allocations):
-        assert "LOT-VER-20260615-INIT-04" in lot_allocations, "Lot 1 missing"
-        assert abs(lot_allocations["LOT-VER-20260615-INIT-04"] - 120.0) < 0.001, "Lot 1 qty mismatch"
-        assert "LOT-VER-20260704-04" in lot_allocations, "Lot 2 missing"
-        assert abs(lot_allocations["LOT-VER-20260704-04"] - 96.0) < 0.001, "Lot 2 qty mismatch"
-        assert abs(sum(lot_allocations.values()) - 216.0) < 0.001, "Total qty mismatch"
+    class EnvironmentSavepoint:
+        def __init__(self, env):
+            self.env = env
+            self.sp = None
+            self.mock_store_backup = None
 
-    # Simulasi bug lama: lot kedua tidak terbentuk (hanya 120 unit)
-    mutated_lot_allocations = {"LOT-VER-20260615-INIT-04": 120.0}
-    try:
-        oracle_check_lot_split(mutated_lot_allocations)
-        raise RuntimeError("MUTATION 1 FAILED: Oracle meloloskan lot split cacat!")
-    except AssertionError as e:
-        print(f" -> [Mutation 1 PASSED] Oracle berhasil menolak alokasi lot split cacat: {e}")
+        def __enter__(self):
+            if hasattr(self.env, "cr") and hasattr(self.env.cr, "savepoint"):
+                self.sp = self.env.cr.savepoint()
+                return self.sp.__enter__()
+            # Fallback untuk mock environment: backup dictionary store
+            self.mock_store_backup = {}
+            for mname in ["stock.picking", "account.move", "account.payment", "stock.quant"]:
+                if mname in self.env and hasattr(self.env[mname], "store"):
+                    self.mock_store_backup[mname] = dict(self.env[mname].store)
+            return self
 
-    # Mutasi 2: Uji Penolakan Nominal Komersial Palsu
-    def oracle_check_invoice_dpp(inv_dpp, expected_dpp):
-        assert abs(float(inv_dpp) - float(expected_dpp)) < 0.01, f"DPP mismatch! Expected {expected_dpp}, got {inv_dpp}"
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if self.sp:
+                self.sp.__exit__(exc_type, exc_val, exc_tb)
+            elif self.mock_store_backup:
+                for mname, store_copy in self.mock_store_backup.items():
+                    self.env[mname].store = dict(store_copy)
 
-    try:
-        oracle_check_invoice_dpp(1234567.89, 3378672.0)
-        raise RuntimeError("MUTATION 2 FAILED: Oracle meloloskan nominal DPP palsu!")
-    except AssertionError as e:
-        print(f" -> [Mutation 2 PASSED] Oracle berhasil menolak DPP invoice palsu: {e}")
+    # --- Mutasi 1: Uji Penolakan Lot Split Cacat (Kasus SO-202607-0317) ---
+    with EnvironmentSavepoint(env):
+        StockPicking = env["stock.picking"].sudo() if "stock.picking" in env else None
+        if StockPicking is not None:
+            pick317 = StockPicking.search([("origin", "=", "SO-202607-0317")], limit=1)
+            assert pick317, "[mutation_rejection] Picking SO-202607-0317 harus tersedia untuk uji mutasi 1!"
 
-    # Mutasi 3: Uji Penolakan Tanggal Bocor ke Runtime
-    def oracle_check_historical_date(doc_date):
-        assert str(doc_date).startswith("2026-07-"), f"Bocor tanggal ke runtime: {doc_date}"
+            # Rusak kuantitas lot kedua LOT-VER-20260704-04 (ubah jadi 0 atau hapus)
+            mutated_ml = None
+            orig_qty = None
+            for ml in getattr(pick317, "move_line_ids", []):
+                lot_name = getattr(getattr(ml, "lot_id", None), "name", "")
+                if not lot_name and isinstance(getattr(ml, "lot_id", None), int) and "stock.lot" in env:
+                    lot_name = getattr(env["stock.lot"].browse(ml.lot_id), "name", "")
+                if not lot_name:
+                    lot_name = getattr(ml, "lot_name", "")
+                if lot_name == "LOT-VER-20260704-04":
+                    mutated_ml = ml
+                    orig_qty = getattr(ml, "quantity", 96.0)
+                    if callable(getattr(ml, "write", None)):
+                        ml.write({"quantity": 0.0})
+                    else:
+                        setattr(ml, "quantity", 0.0)
+                    break
+            assert mutated_ml is not None, "[mutation_rejection] Lot LOT-VER-20260704-04 tidak ditemukan pada SO-202607-0317!"
 
-    try:
-        oracle_check_historical_date("2026-10-27")
-        raise RuntimeError("MUTATION 3 FAILED: Oracle meloloskan tanggal bocor runtime!")
-    except AssertionError as e:
-        print(f" -> [Mutation 3 PASSED] Oracle berhasil menolak tanggal dokumen bocor runtime: {e}")
+            try:
+                verify_run1_against_canonical_oracle(env, adapter, reg_path, ["SO-202607-0317"])
+                raise RuntimeError("MUTATION 1 FAILED: Oracle meloloskan alokasi lot split cacat!")
+            except AssertionError as e:
+                print(f" -> [Mutation 1 PASSED] Oracle produksi berhasil mendeteksi dan menolak lot split cacat: {e}")
+            finally:
+                if mutated_ml is not None and orig_qty is not None:
+                    if callable(getattr(mutated_ml, "write", None)):
+                        mutated_ml.write({"quantity": orig_qty})
+                    else:
+                        setattr(mutated_ml, "quantity", orig_qty)
+
+    # --- Mutasi 2: Uji Penolakan Nominal Komersial Palsu (INV-202607-0317) ---
+    with EnvironmentSavepoint(env):
+        AccountMove = env["account.move"].sudo() if "account.move" in env else None
+        if AccountMove is not None:
+            inv317 = AccountMove.search([("ref", "=", "INV-202607-0317")], limit=1)
+            assert inv317, "[mutation_rejection] Invoice INV-202607-0317 harus tersedia untuk uji mutasi 2!"
+
+            orig_dpp = getattr(inv317, "amount_untaxed", None)
+            # Palsukan DPP
+            if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                env.cr.execute("UPDATE account_move SET amount_untaxed = 9999999.0 WHERE id = %s", (inv317.id,))
+                if hasattr(inv317, "invalidate_recordset"):
+                    inv317.invalidate_recordset()
+            else:
+                setattr(inv317, "amount_untaxed", 9999999.0)
+
+            try:
+                verify_run1_against_canonical_oracle(env, adapter, reg_path, ["SO-202607-0317"])
+                raise RuntimeError("MUTATION 2 FAILED: Oracle meloloskan nominal DPP palsu!")
+            except AssertionError as e:
+                print(f" -> [Mutation 2 PASSED] Oracle produksi berhasil mendeteksi dan menolak DPP invoice palsu: {e}")
+            finally:
+                if orig_dpp is not None:
+                    if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                        env.cr.execute("UPDATE account_move SET amount_untaxed = %s WHERE id = %s", (orig_dpp, inv317.id))
+                        if hasattr(inv317, "invalidate_recordset"):
+                            inv317.invalidate_recordset()
+                    else:
+                        setattr(inv317, "amount_untaxed", orig_dpp)
+
+    # --- Mutasi 3: Uji Penolakan Tanggal Bocor ke Runtime (INV-202607-0001) ---
+    with EnvironmentSavepoint(env):
+        AccountMove = env["account.move"].sudo() if "account.move" in env else None
+        if AccountMove is not None:
+            inv1 = AccountMove.search([("ref", "=", "INV-202607-0001")], limit=1)
+            assert inv1, "[mutation_rejection] Invoice INV-202607-0001 harus tersedia untuk uji mutasi 3!"
+
+            orig_date = getattr(inv1, "date", None)
+            # Bocorkan tanggal ke tanggal hari ini (runtime)
+            if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                env.cr.execute("UPDATE account_move SET date = '2026-10-27' WHERE id = %s", (inv1.id,))
+                if hasattr(inv1, "invalidate_recordset"):
+                    inv1.invalidate_recordset()
+            else:
+                setattr(inv1, "date", "2026-10-27")
+
+            try:
+                verify_run1_against_canonical_oracle(env, adapter, reg_path, ["SO-202607-0001"])
+                raise RuntimeError("MUTATION 3 FAILED: Oracle meloloskan tanggal bocor runtime!")
+            except AssertionError as e:
+                print(f" -> [Mutation 3 PASSED] Oracle produksi berhasil mendeteksi dan menolak tanggal dokumen bocor runtime: {e}")
+            finally:
+                if orig_date is not None:
+                    if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                        env.cr.execute("UPDATE account_move SET date = %s WHERE id = %s", (orig_date, inv1.id))
+                        if hasattr(inv1, "invalidate_recordset"):
+                            inv1.invalidate_recordset()
+                    else:
+                        setattr(inv1, "date", orig_date)
 
     print("=" * 80)
-    print("[mutation_rejection] SELURUH UJI MUTASI NEGATIF BERHASIL DITOLAK (ORACLE VALID)")
+    print("[mutation_rejection] SELURUH UJI MUTASI NEGATIF BERHASIL DITOLAK (ORACLE TERBUKTI AKTIF)")
     print("=" * 80)
 
 

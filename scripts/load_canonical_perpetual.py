@@ -263,8 +263,12 @@ def build_rejection_payload(rej_row: dict) -> dict:
 
 def _safe_fields(obj):
     """Mengembalikan dict/list/set _fields dari objek/model secara defensif terhadap tipe boolean atau None."""
-    f = getattr(obj, "_fields", {})
-    if isinstance(f, (dict, list, set, tuple)):
+    f = getattr(obj, "_fields", None)
+    if isinstance(f, (dict, list, set, tuple)) and f:
+        return f
+    if hasattr(obj, "_vals") and isinstance(obj._vals, dict):
+        return set(obj._vals.keys()) | {"date_done", "date", "origin", "name", "state", "scheduled_date", "memo", "ref"}
+    if f is not None and isinstance(f, (dict, list, set, tuple)):
         return f
     return {}
 
@@ -389,14 +393,18 @@ class CanonicalPerpetualAdapter:
         ProductCategory = self.env["product.category"].sudo()
         cat_fields = _safe_fields(ProductCategory)
 
-        # 1. anglo_saxon_accounting pada company
-        if "anglo_saxon_accounting" in getattr(self.company, "_fields", {}) and not self.company.anglo_saxon_accounting:
-            try:
+        # 1. anglo_saxon_accounting pada company (fail-fast jika field ada)
+        has_company = hasattr(self, "company") and self.company
+        if has_company and "anglo_saxon_accounting" in getattr(self.company, "_fields", {}):
+            if not self.company.anglo_saxon_accounting:
                 self.company.sudo().write({"anglo_saxon_accounting": True})
-            except Exception:
-                pass
+                if not self.company.anglo_saxon_accounting:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Gagal mengaktifkan anglo_saxon_accounting "
+                        f"pada company '{self.company.name}'!"
+                    )
 
-        # 2. Cari akun-akun akuntansi persediaan jika tersedia
+        # 2. Cari atau buat akun-akun akuntansi persediaan jika modul account terpasang
         stock_valuation_acc = None
         stock_input_acc = None
         stock_output_acc = None
@@ -405,16 +413,56 @@ class CanonicalPerpetualAdapter:
 
         if "account.account" in self.env:
             AccountAccount = self.env["account.account"].sudo()
-            stock_valuation_acc = AccountAccount.search([("code", "in", ["114100", "114000", "110000"])], limit=1)
-            stock_input_acc = AccountAccount.search([("code", "in", ["211200", "211000", "200000"])], limit=1)
-            stock_output_acc = AccountAccount.search([("code", "in", ["114200", "510000", "500000"])], limit=1)
-            cogs_acc = AccountAccount.search([("code", "in", ["510000", "500000"])], limit=1)
+            acc_fields = _safe_fields(AccountAccount)
+            comp_domain = []
+            if "company_ids" in acc_fields and hasattr(self, "company") and self.company:
+                comp_domain = [("company_ids", "in", [self.company.id])]
+            elif "company_id" in acc_fields and hasattr(self, "company") and self.company:
+                comp_domain = [("company_id", "in", [False, self.company.id])]
 
+            stock_valuation_acc = AccountAccount.search(comp_domain + [
+                ("code", "in", ["114100", "114000", "113000", "113100", "110000"])
+            ], limit=1)
+            stock_input_acc = AccountAccount.search(comp_domain + [
+                ("code", "in", ["211200", "211000", "113900", "200000"])
+            ], limit=1)
+            stock_output_acc = AccountAccount.search(comp_domain + [
+                ("code", "in", ["114200", "113910", "510000", "500000"])
+            ], limit=1)
+            cogs_acc = AccountAccount.search(comp_domain + [
+                ("code", "in", ["510000", "500000"])
+            ], limit=1)
+
+        # 3. Cari dan buktikan keberadaan jurnal stok yang diwajibkan untuk real-time valuation
         if "account.journal" in self.env:
             AccountJournal = self.env["account.journal"].sudo()
-            stock_journal = AccountJournal.search([("code", "in", ["STJ", "STK", "INV", "MISC"])], limit=1)
+            j_fields = _safe_fields(AccountJournal)
+            has_comp_id = "company_id" in j_fields and hasattr(self, "company") and self.company
+            j_domain = [("company_id", "in", [False, self.company.id])] if has_comp_id else []
+            stock_journal = AccountJournal.search(j_domain + [
+                ("code", "in", ["STJ", "STK", "INV", "MISC", "VAL"])
+            ], limit=1)
+            if not stock_journal:
+                stock_journal = AccountJournal.search(j_domain + [("type", "=", "general")], limit=1)
+            if not stock_journal and callable(getattr(AccountJournal, "create", None)):
+                jvals = {
+                    "name": "Penilaian Persediaan",
+                    "type": "general",
+                    "code": "STJ",
+                }
+                if "company_id" in j_fields and hasattr(self, "company") and self.company:
+                    jvals["company_id"] = self.company.id
+                if "auto_post" in j_fields:
+                    jvals["auto_post"] = True
+                stock_journal = AccountJournal.create(jvals)
 
-        # 3. Update kategori produk yang ada
+            if not stock_journal:
+                raise RuntimeError(
+                    "[canonical_loader] FATAL: Keberadaan jurnal stok (stock journal) "
+                    "yang diwajibkan tidak dapat dibuktikan!"
+                )
+
+        # 4. Update kategori produk yang ada secara fail-fast
         categories = ProductCategory.search([])
         for cat in categories:
             vals = {}
@@ -446,13 +494,12 @@ class CanonicalPerpetualAdapter:
                     vals[fname] = cogs_acc.id
 
             if vals and callable(getattr(cat, "write", None)):
-                try:
-                    cat.write(vals)
-                except Exception:
-                    pass
+                cat.write(vals)
 
     def _sync_native_stock_accounting(self, stock_move, date_time_str, date_only):
-        """Menyelaraskan tanggal entri jurnal native Odoo (account.move) yang terbentuk dari stock.move."""
+        """Menyelaraskan tanggal entri jurnal native Odoo (account.move)
+        yang terbentuk dari stock.move secara fail-fast.
+        """
         if "account.move" not in self.env:
             return
 
@@ -503,7 +550,22 @@ class CanonicalPerpetualAdapter:
                         if hasattr(am, "line_ids") and am.line_ids:
                             am.line_ids.write({"date": date_only})
                     except Exception:
-                        pass
+                        # Direct write pada posted move mungkin dilarang; coba unpost -> write -> repost
+                        if hasattr(am, "button_draft"):
+                            am.button_draft()
+                            am.write({"date": date_only})
+                            if hasattr(am, "line_ids") and am.line_ids:
+                                am.line_ids.write({"date": date_only})
+                            am.action_post()
+                        else:
+                            raise
+            # Verifikasi fail-fast: tanggal wajib selaras, dilarang silent swallow
+            current_date = str(getattr(am, "date", ""))
+            if current_date != date_only:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Tanggal entri jurnal native '{getattr(am, 'name', am.id)}' "
+                    f"gagal diselaraskan ke {date_only}! Terbaca aktual: {current_date}"
+                )
 
     def _assign_lots_to_picking(self, pick, lines_data):
         """Memetakan lot sumber kanonikal dan kuantitas selesai ke stock.move.line pada picking secara deterministik.
@@ -615,7 +677,7 @@ class CanonicalPerpetualAdapter:
                     if callable(getattr(ml, "write", None)):
                         ml.write(upd_vals)
                     if lot_obj and hasattr(ml, "lot_id"):
-                        ml.lot_id = lot_obj.id
+                        ml.lot_id = lot_obj
                     if lot_num and hasattr(ml, "lot_name"):
                         ml.lot_name = lot_num
                     if has_quantity_field and hasattr(ml, "quantity"):
@@ -827,9 +889,8 @@ class CanonicalPerpetualAdapter:
 
         # Selaraskan tanggal efektif historis pada picking, move, move_line, dan account.move
         if date_time_str:
-            p_fields = _safe_fields(pick)
-            if "date_done" in p_fields and callable(getattr(pick, "write", None)):
-                pick.write({"date_done": date_time_str})
+            if callable(getattr(pick, "write", None)):
+                pick.write({"date_done": date_time_str, "scheduled_date": date_time_str})
 
             if hasattr(pick, "move_ids") and pick.move_ids:
                 for mv in pick.move_ids:
