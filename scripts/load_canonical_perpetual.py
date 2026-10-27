@@ -997,11 +997,19 @@ class CanonicalPerpetualAdapter:
                 StockPickingType = (
                     self.env["stock.picking.type"].sudo() if "stock.picking.type" in self.env else None
                 )
-                internal_type = (
-                    StockPickingType.search([("code", "=", "internal")], limit=1)
-                    if StockPickingType is not None
-                    else None
-                )
+                internal_type = None
+                if StockPickingType is not None:
+                    internal_type = (
+                        StockPickingType.search([("code", "=", "internal")], limit=1)
+                        or StockPickingType.search([], limit=1)
+                    )
+                    if not internal_type:
+                        internal_type = StockPickingType.create({
+                            "name": "Internal Transfers",
+                            "code": "internal",
+                            "sequence_code": "INT",
+                            "company_id": self.company.id,
+                        })
 
                 sml_fields = (
                     getattr(self.env.get("stock.move.line"), "_fields", {}) if "stock.move.line" in self.env else {}

@@ -728,4 +728,11 @@
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T18:06:00+07:00
 
+[2026-10-27T18:13:00+07:00] [INFO] Resolusi Defensif picking_type_id pada load_rejections_quarantine
+- Menindaklanjuti kegagalan CI run 40493737180 (NotNullViolation: null value in column "picking_type_id" of relation "stock_picking"):
+  * Menjamin resolusi picking_type_id internal transfer tidak bernilai False/None dengan fallback berantai: search code='internal' -> search [] -> auto-create record stock.picking.type internal.
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), unit tests: OK.
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T18:13:00+07:00
+
 
