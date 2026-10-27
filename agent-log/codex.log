@@ -106,3 +106,9 @@
 - Shared semantic ledger validation sebelum submit; historical morning source, event-time GPS; invalid graph/descendants held, no fake receipt/deletion.
 - 102 unit, 1 hosting, 36 browser; legacy/next-day tests, format/typecheck/contracts/build/Ruff/manifests. CI setelah push, tanpa merge/deploy.
 - Task managed by codex agent at 2026-10-27T14:08:30+07:00
+
+[2026-10-27T15:46:59+07:00] [INFO] Pusat diagnosis sinkronisasi simulator
+- Basis main 302587e; branch agen/mobile-sync-diagnostics; plan terintegrasi sebelum implementasi.
+- Filter/detail UUID sesi dependency dan receipt; read-only snapshot, shared validator cached only per synchronous projection, fresh at send boundaries.
+- 111 unit, 1 hosting, 38 browser; no mutation/persona isolation, format/typecheck/contracts/build/Ruff/manifests PASS. CI setelah push, no backend/seed/Railway/merge/deploy.
+- Task managed by codex agent at 2026-10-27T15:46:59+07:00

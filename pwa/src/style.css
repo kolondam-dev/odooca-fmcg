@@ -1318,3 +1318,89 @@ textarea {
     display: grid;
     gap: 14px;
 }
+.sync-diagnostics {
+    display: grid;
+    gap: 12px;
+}
+.queue-filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 3px 1px 8px;
+}
+.queue-filter {
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--line, #dce3eb);
+    border-radius: 999px;
+    background: white;
+    color: inherit;
+    font: inherit;
+    font-size: 0.8rem;
+}
+.queue-filter[aria-pressed="true"] {
+    background: #142d4e;
+    border-color: #142d4e;
+    color: white;
+}
+.queue-filter span {
+    margin-left: 5px;
+    font-variant-numeric: tabular-nums;
+}
+.queue-item {
+    min-width: 0;
+    width: 100%;
+    overflow-wrap: anywhere;
+}
+.queue-details {
+    margin-top: 12px;
+    border-top: 1px solid #dce3eb;
+    padding-top: 10px;
+}
+.queue-details summary {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 44px;
+    cursor: pointer;
+    color: #24466c;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.queue-details summary::after {
+    content: "+";
+    margin-left: auto;
+    font-size: 1.2rem;
+}
+.queue-details[open] summary::after {
+    content: "−";
+}
+.queue-details h4 {
+    margin: 12px 0 6px;
+    font-size: 0.9rem;
+}
+.queue-details dl {
+    display: grid;
+    gap: 4px;
+    margin: 12px 0;
+    font-size: 0.8rem;
+}
+.queue-details dt {
+    color: #58677b;
+}
+.queue-details dd {
+    margin: 0 0 8px;
+    font-variant-numeric: tabular-nums;
+}
+.queue-details ul {
+    padding-left: 18px;
+    font-size: 0.8rem;
+}
+.queue-details li {
+    margin: 8px 0;
+}
+.queue-details li span {
+    display: block;
+    margin-top: 3px;
+}

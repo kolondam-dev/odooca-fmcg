@@ -1123,3 +1123,33 @@ Regresi mencakup corrupted check-in/order/checkout, accepted parent rusak,
 missing source/ledger, perubahan sebelum provider, dan positive replay next-day.
 Tetap integritas simulator, bukan authority/security client. Tidak ada backend,
 migrasi schema IndexedDB, perubahan wire DTO, merge atau deploy dari koreksi ini.
+
+### Pusat diagnosis sinkronisasi — implementasi simulator
+
+Basis main 302587e (PR #24 merged). Branch agen/mobile-sync-diagnostics.
+Prioritas PWA: menjelaskan antrean tertahan sebelum menambah proses lapangan baru.
+Layar Lainnya menampilkan filter semua/menunggu/perlu review/approval/diterima,
+detail UUID, waktu WITA, jenis command, sesi dan dependency receipt. Diagnosis
+memakai validator integritas visit serta dependency yang sama dengan sync;
+invalid state tidak dilabel siap atau disetujui. Receipt bisnis dipisahkan dari
+error transport; receipt accepted bukan posting Odoo atau pencairan.
+
+Pembacaan satu snapshot IndexedDB per refresh, tanpa request jaringan tambahan,
+tanpa polling baru atau ekspor payload/foto/token. Owner terisolasi; render tahan
+DTO invalid, respons lama tidak bocor setelah persona berganti. Detail dan filter
+hanya membaca data; retry tetap memakai engine/UUID lama. Tidak menyediakan edit,
+hapus, paksa kirim, login palsu, approve atau auto-recovery. Tes mencakup graf rusak,
+parent accepted invalid, receipt mismatch, offline/backoff/auth/approval/rejected,
+legacy, isolasi owner dan buka-detail/reload tanpa mutasi. CI existing diperluas
+oleh tes otomatis; live locked gate juga menolak kontrol diagnosis demo.
+
+Setelah ini: evidence foto + timestamp/GPS + pinpoint map, delivery/POD dan HRIS
+bertahap; server session/device/media/policy/idempotency tetap dependency terpisah.
+
+Implementasi memakai proyeksi allowlist dan validator graf bersama yang dievaluasi
+sekali per snapshot; wrapper sync membuat instance baru sebelum tiap submit agar
+cache diagnosis tidak dipakai sebagai otorisasi. Receipt lama yang cocok tetap
+ditampilkan sebagai riwayat, sementara graf visit berubah masuk Perlu review.
+Filter/detail tidak memutasi state dan tidak menambahkan command/endpoint/DTO wire.
+Tes browser snapshot IndexedDB sebelum/sesudah memastikan aktivitas baca tidak
+mengubah data, termasuk setelah pergantian persona. Tidak ada perubahan Railway.
