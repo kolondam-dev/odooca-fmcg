@@ -75,9 +75,10 @@ export function bindVisitContext(
     context: VisitContext,
     morning: ReturnType<typeof currentMorning>,
     owner: string,
+    date = fieldBusinessDate(),
 ) {
     if (
-        !morningReady(morning, owner) ||
+        !morningReady(morning, owner, date) ||
         morning.sessionId !== context.work_session_id ||
         morning.businessDate !== context.business_date ||
         morning.snapshot?.version !== context.snapshot_version
@@ -109,6 +110,7 @@ export function visitLedger(
     value: unknown,
     owner: string,
     rows: QueueItem[],
+    fallbackMorning?: unknown,
 ): VisitLedger {
     if (value === undefined) value = { version: 1, visits: [] };
     const parsed = VisitLedgerSchema.safeParse(value);
@@ -119,6 +121,12 @@ export function visitLedger(
     const ids = new Set<string>();
     for (const record of parsed.data.visits) {
         const c = record.context;
+        const source = MorningRecordSchema.parse(
+            record.morning_source ?? fallbackMorning,
+        );
+        bindVisitContext(c, source, owner, c.business_date);
+        if (source.openedAt !== record.session_opened_at)
+            throw new Error("Sumber sesi historis kunjungan tidak cocok.");
         if (
             record.owner !== owner ||
             ids.has(c.visit_uuid) ||
@@ -155,6 +163,7 @@ export function visitLedger(
             if (
                 !finish ||
                 finish.owner !== owner ||
+                finish.key !== `${owner}:${end.command_uuid}` ||
                 finish.command.type !== "sales.visit.check_out" ||
                 !CommandSchema.safeParse(finish.command).success ||
                 finish.command.occurred_at !== end.occurred_at ||
@@ -187,6 +196,23 @@ export function visitLedger(
     }
     for (const q of rows) {
         if (
+            q.command.type === "sales.order.submit" &&
+            !q.command.payload.visit_context &&
+            parsed.data.visits.some(
+                (v) =>
+                    v.check_out?.payload.order_uuids.includes(
+                        q.command.client_uuid,
+                    ) ||
+                    (q.command.type === "sales.order.submit" &&
+                        v.context.work_session_id ===
+                            q.command.payload.work_session_id &&
+                        v.context.outlet_id === q.command.payload.outlet_id),
+            )
+        )
+            throw new Error(
+                "Order kunjungan kehilangan konteks sumber; perlu review.",
+            );
+        if (
             q.command.type !== "sales.order.submit" ||
             !q.command.payload.visit_context
         )
@@ -198,6 +224,8 @@ export function visitLedger(
         if (
             !r ||
             q.owner !== owner ||
+            q.key !== `${owner}:${q.command.client_uuid}` ||
+            !CommandSchema.safeParse(q.command).success ||
             q.command.payload.outlet_id !== c.outlet_id ||
             q.command.payload.work_session_id !== c.work_session_id ||
             q.command.payload.snapshot_version !== c.snapshot_version ||
@@ -214,6 +242,17 @@ export function visitLedger(
         const body = VisitOrderSchema.parse(q.command.payload);
         if (body.morning_business_date !== c.business_date)
             throw new Error("Tanggal order/kunjungan tidak cocok.");
+        const source = MorningRecordSchema.parse(
+            r.morning_source ?? fallbackMorning,
+        );
+        const invalid = validateOrder(
+            body.lines.map((l) => ({
+                productId: l.product_id,
+                quantity: Number(l.qty),
+            })),
+            source.snapshot!,
+        );
+        if (invalid) throw new Error(invalid);
         requireVisitFix(c.fix, c.site, Date.parse(q.command.occurred_at));
     }
     for (const q of rows) {
@@ -242,8 +281,8 @@ export function validateVisitCommit(
     rows: QueueItem[],
 ) {
     const morning = currentMorning(morningRaw, item.owner),
-        before = visitLedger(old, item.owner, rows);
-    const after = visitLedger(value, item.owner, [...rows, item]);
+        before = visitLedger(old, item.owner, rows, morningRaw);
+    const after = visitLedger(value, item.owner, [...rows, item], morningRaw);
     const c = visitContextOf(
         item.command.type === "sales.order.submit"
             ? item.command.payload.visit_context
@@ -268,6 +307,7 @@ export function validateVisitCommit(
             owner: item.owner,
             context: c,
             session_opened_at: morning.openedAt!,
+            morning_source: morning,
             check_in_at: item.command.occurred_at,
             check_out: null,
         };
@@ -328,4 +368,52 @@ export function validateVisitCommit(
         } else throw new Error("Operasi kunjungan tidak diizinkan.");
     }
     return c;
+}
+
+// Legacy orders without visit context remain supported unless the ledger links
+// them to this visit. Never use today's readiness to authorize historical replay.
+export function validateVisitSync(
+    item: QueueItem,
+    owner: string,
+    ledger: unknown,
+    rows: QueueItem[],
+    morning: unknown,
+) {
+    const command = CommandSchema.parse(item.command);
+    const parsed = VisitLedgerSchema.safeParse(ledger);
+    const linked =
+        parsed.success &&
+        parsed.data.visits.some(
+            (v) =>
+                v.context.visit_uuid === command.client_uuid ||
+                v.check_out?.command_uuid === command.client_uuid ||
+                v.check_out?.payload.order_uuids.includes(
+                    command.client_uuid,
+                ) ||
+                (command.type === "sales.order.submit" &&
+                    v.context.work_session_id ===
+                        command.payload.work_session_id &&
+                    v.context.outlet_id === command.payload.outlet_id),
+        );
+    const related =
+        command.type === "sales.visit.check_in" ||
+        command.type === "sales.visit.check_out" ||
+        (command.type === "sales.order.submit" &&
+            Object.hasOwn(command.payload, "visit_context")) ||
+        linked;
+    if (!related) return;
+    if (
+        item.owner !== owner ||
+        item.key !== `${owner}:${command.client_uuid}` ||
+        !rows.some(
+            (q) =>
+                q.key === item.key &&
+                q.owner === owner &&
+                same(q.command, item.command),
+        )
+    )
+        throw new Error("Antrean kunjungan berubah atau owner tidak cocok.");
+    visitLedger(ledger, owner, rows, morning);
+    if (command.type === "sales.order.submit")
+        VisitContextSchema.parse(command.payload.visit_context);
 }

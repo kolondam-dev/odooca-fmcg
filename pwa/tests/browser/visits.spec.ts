@@ -133,3 +133,106 @@ test("denied GPS keeps visit closed", async ({ page }) => {
         page.getByRole("button", { name: "Mulai kunjungan demo", exact: true }),
     ).toBeDisabled();
 });
+
+test("corrupt offline check-in remains held after reload, reconnect and manual retry", async ({
+    page,
+    context,
+}) => {
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({
+        latitude: 1.465,
+        longitude: 124.833,
+        accuracy: 3,
+    });
+    await page.goto("./");
+    await page
+        .getByRole("button", {
+            name: "Simulasikan absensi diterima",
+            exact: true,
+        })
+        .click();
+    await page
+        .getByRole("button", {
+            name: "Sync pagi & buka sesi demo",
+            exact: true,
+        })
+        .click();
+    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await page
+        .getByRole("button", { name: "Buat order", exact: false })
+        .click();
+    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await page
+        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .click();
+    await expect(
+        page.getByText("Di dalam geofence", { exact: true }),
+    ).toBeVisible();
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await context.setOffline(true);
+    await page
+        .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
+        .click();
+    await expect(
+        page.getByText("Kunjungan lokal aktif", { exact: true }),
+    ).toBeVisible();
+    const before = await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+            r.onerror = () => reject(r.error);
+        });
+        const tx = db.transaction("outbox", "readwrite");
+        const r = tx.objectStore("outbox").getAll();
+        const result = await new Promise<unknown>((resolve, reject) => {
+            r.onsuccess = () => {
+                const row = r.result.find(
+                    (q) => q.command.type === "sales.visit.check_in",
+                );
+                row.command.payload.fix.latitude = 0;
+                tx.objectStore("outbox").put(row);
+                tx.oncomplete = () => resolve(row.command);
+            };
+            tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+        return result;
+    });
+    await page.reload();
+    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await context.setOffline(false);
+    // Reload online too: setOffline may fire before Preact's post-paint
+    // connectivity effect attaches during boot. Test the persisted sync guard.
+    await page.reload();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await expect(
+        page.getByText(
+            "Integritas antrean/sumber kunjungan tidak valid. Data tetap lokal; perlu review.",
+            { exact: true },
+        ),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Sinkronkan", exact: true }).click();
+    const after = (await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const rows = await new Promise<unknown[]>((resolve) => {
+            const r = db.transaction("outbox").objectStore("outbox").getAll();
+            r.onsuccess = () => resolve(r.result);
+        });
+        db.close();
+        return rows;
+    })) as {
+        command: unknown;
+        state: string;
+        receipt?: unknown;
+        attempts: number;
+    }[];
+    expect(after).toHaveLength(1);
+    expect(after[0].command).toEqual(before);
+    expect(after[0].state).toBe("queued");
+    expect(after[0].receipt).toBeUndefined();
+    expect(after[0].attempts).toBe(0);
+});

@@ -1,5 +1,13 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Tutup blocker sync PR #24
+**Basis:** PR #24 HEAD 1eea9f0; review issuecomment-6434268284 dibaca. Branch agen/mobile-sales-visits tetap.
+**Koreksi klaim sebelumnya:** restore memang menolak graf rusak, tetapi outbox hanya mengecek dependency dan tetap submit; 3 regresi reproduksi check-in/order/check-out gagal pada outbox lama. Kini shared visitLedger memvalidasi semantik sebelum sync, termasuk source, envelope/owner/key, relasi/konteks/geo/time/produk. Snapshot read-only ledger+morning+outbox konsisten; pemeriksaan diulang sesudah sending tepat sebelum provider. Parent invalid menahan descendants walau receipt accepted lama ada. Invalid visit graph konservatif menahan visit owner; draft/command tetap utuh, pesan review, tanpa receipt bisnis baru.
+**Historical replay:** check-in baru menyimpan morning_source penuh atomik. morningReady tanggal historis + event-time GPS mendukung antrean sah hari sebelumnya setelah paket pagi diganti. Legacy record tanpa source hanya memakai fallback paket tersimpan yang cocok session/date/version/site/openedAt; source hilang/tidak cocok ditahan tanpa auto-rekonstruksi. Command legacy unbound tetap berjalan; order yang dirujuk visit tidak boleh membuang konteks untuk bypass.
+**Diverifikasi lokal:** 102 unit + 1 hosting; 36 browser phone/tablet termasuk corrupt IndexedDB → reload → reconnect → retry. Mutasi check-in/order/check-out/parent accepted/session/outlet/geo/source/owner/time/envelope, missing source/ledger, dropped context, boundary before provider, next-day valid replay dan legacy compatibility. Format/typecheck/contracts/demo+live/budget/Ruff/4 manifest. CI diperiksa sesudah push.
+**Batas:** snapshot sumber/validasi client hanya integritas simulator, bukan keamanan/anti-mock GPS/otorisasi backend. Tidak mengubah wire DTO atau versi IndexedDB. Tidak menyentuh addon/backend/seed/loader/workflow/ruleset/Railway; live tetap terkunci, tidak merge/deploy.
+**Menunggu:** CI commit perbaikan dan review ulang supervisor sebelum merge pemilik.
+
 ## 2026-10-27 — codex agent — Kunjungan outlet dan dependency sync simulator
 **Basis:** main 955071a; branch agen/mobile-sales-visits, terisolasi dari pekerjaan seed.
 **Berubah:** pilih PJP → GPS/check-in → order → check-out hasil/catatan; konteks visit/session/date/version/outlet/geofence. GPS TTL 60 detik, future tolerance 1 detik, radius 5–15 m tanpa ekspansi (distance+accuracy <= radius). Order dan check-out mengambil GPS baru; stale/uncertain/outside/denied menahan aksi.

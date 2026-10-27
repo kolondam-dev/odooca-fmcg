@@ -41,6 +41,7 @@ export const VisitRecordSchema = z
         owner: z.string().min(1),
         context: VisitContextSchema,
         session_opened_at: z.iso.datetime(),
+        morning_source: z.unknown().optional(),
         check_in_at: z.iso.datetime(),
         check_out: z
             .object({

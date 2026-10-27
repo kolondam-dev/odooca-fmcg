@@ -74,6 +74,19 @@ export class FieldStore {
     async list(owner: string) {
         return (await this.db).getAllFromIndex("outbox", "owner", owner);
     }
+    async visitSyncState(owner: string) {
+        const tx = (await this.db).transaction(
+            ["outbox", "drafts"],
+            "readonly",
+        );
+        const [rows, ledger, morning] = await Promise.all([
+            tx.objectStore("outbox").index("owner").getAll(owner),
+            tx.objectStore("drafts").get(`${owner}:${VISITS_KEY}`),
+            tx.objectStore("drafts").get(`${owner}:${MORNING_KEY}`),
+        ]);
+        await tx.done;
+        return { rows, ledger: ledger?.value, morning: morning?.value };
+    }
     async put(item: QueueItem) {
         await (await this.db).put("outbox", item);
     }

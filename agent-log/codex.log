@@ -100,3 +100,9 @@
 - Visit GPS conservative 5-15m, TTL60s; order/check-out terikat sesi dan ledger CAS atomik; offline dependency receipt.
 - 81 unit, 1 hosting, 34 browser; typecheck/contracts/build budget/Ruff/4 manifests; CI setelah push, live locked.
 - Task managed by codex agent at 2026-10-27T11:47:53+07:00
+
+[2026-10-27T14:08:30+07:00] [INFO] Tutup blocker integrity sebelum sync PR #24
+- Review 6434268284: tiga regresi corrupt check-in/order/checkout terbukti gagal pada outbox lama.
+- Shared semantic ledger validation sebelum submit; historical morning source, event-time GPS; invalid graph/descendants held, no fake receipt/deletion.
+- 102 unit, 1 hosting, 36 browser; legacy/next-day tests, format/typecheck/contracts/build/Ruff/manifests. CI setelah push, tanpa merge/deploy.
+- Task managed by codex agent at 2026-10-27T14:08:30+07:00

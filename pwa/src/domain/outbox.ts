@@ -1,5 +1,5 @@
 import { visitDependenciesReady } from "./visit-dependencies";
-import type { VisitCommitGuard } from "./visit-validation";
+import { validateVisitSync, type VisitCommitGuard } from "./visit-validation";
 import {
     ApiError,
     CommandSchema,
@@ -98,11 +98,19 @@ export class Outbox {
                 )
                     continue;
                 try {
+                    const state = await this.store.visitSyncState(this.owner);
+                    validateVisitSync(
+                        item,
+                        this.owner,
+                        state.ledger,
+                        state.rows,
+                        state.morning,
+                    );
                     if (
                         !visitDependenciesReady(
                             item.command,
                             this.owner,
-                            await this.store.list(this.owner),
+                            state.rows,
                         )
                     ) {
                         const message =
@@ -116,7 +124,7 @@ export class Outbox {
                     }
                 } catch {
                     item.error =
-                        "Konteks dependency kunjungan tidak valid. Perlu review.";
+                        "Integritas antrean/sumber kunjungan tidak valid. Data tetap lokal; perlu review.";
                     await this.store.put(item);
                     this.changed();
                     continue;
@@ -126,6 +134,30 @@ export class Outbox {
                 await this.store.put(item);
                 this.changed();
                 try {
+                    try {
+                        const state = await this.store.visitSyncState(
+                            this.owner,
+                        );
+                        validateVisitSync(
+                            item,
+                            this.owner,
+                            state.ledger,
+                            state.rows,
+                            state.morning,
+                        );
+                        if (
+                            !visitDependenciesReady(
+                                item.command,
+                                this.owner,
+                                state.rows,
+                            )
+                        )
+                            throw new Error("Dependency berubah");
+                    } catch {
+                        throw new Error(
+                            "Integritas antrean/sumber kunjungan berubah sebelum kirim; perlu review.",
+                        );
+                    }
                     const receipt = ReceiptSchema.parse(
                         await this.provider.submit(item.command),
                     );

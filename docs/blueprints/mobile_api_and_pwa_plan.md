@@ -1105,3 +1105,21 @@ extra-call approved menjadi outlet visitable, approval harga/HPP dan recovery
 kunjungan tertahan. Delivery/POD dan tracking 5/15 menit tetap iterasi terpisah.
 Client simulation tidak membuktikan anti-titip atau anti-mock GPS; polling lokasi
 latar belakang belum tersedia. Railway tidak berubah dan live tetap terkunci.
+
+#### Koreksi sync — review PR #24 issuecomment-6434268284
+
+Validator restore/ledger kini dipanggil sebelum submit outbox, dengan snapshot
+readonly atomik ledger+morning+outbox, pemeriksaan envelope/owner/key/konteks,
+serta pengulangan sesudah state sending. Parent rusak tetap menahan descendants
+meski receipt lama accepted. Invalid graph visit menahan seluruh visit owner
+secara konservatif; antrean/draft tidak dihapus dan tidak dibuat receipt bisnis.
+Command legacy tak terikat visit tetap kompatibel.
+
+Paket pagi historis disimpan atomik bersama check-in baru. Geo dinilai terhadap
+occurred_at, sumber terhadap tanggal bisnis historis; sync besok tidak memerlukan
+sesi hari ini. Legacy record tanpa source memakai paket tersimpan hanya jika
+cocok persis sesi/date/version/site/openedAt, selain itu ditahan untuk review.
+Regresi mencakup corrupted check-in/order/checkout, accepted parent rusak,
+missing source/ledger, perubahan sebelum provider, dan positive replay next-day.
+Tetap integritas simulator, bukan authority/security client. Tidak ada backend,
+migrasi schema IndexedDB, perubahan wire DTO, merge atau deploy dari koreksi ini.

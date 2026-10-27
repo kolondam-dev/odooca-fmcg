@@ -290,3 +290,24 @@ sales.order.submit tetap kompatibel; jalur UI kunjungan menggunakan validasi pay
 VisitOrder strict. Seluruh penerimaan, sesi, harga dan state di sini hanya simulator;
 backend wajib mengecek ACL, device/session, idempotency, harga/approval, geofence,
 waktu dan evidence sendiri. Tidak menambah endpoint Odoo atau deploy Railway.
+
+### Koreksi review PR #24: validasi sebelum sync
+
+Restore dan pengiriman kini berbagi validator semantik ledger yang sama. Sebelum
+submit, outbox membaca satu snapshot IndexedDB (ledger, paket pagi dan seluruh
+antrean owner), memeriksa envelope/owner/key, relasi visit/order/check-out, sumber
+PJP/produk/sesi dan GPS pada waktu `occurred_at`. Pemeriksaan diulang sesudah
+penandaan sending, tepat sebelum provider dipanggil. Receipt accepted lama tidak
+mengesahkan parent atau konteks yang sudah rusak. Graf kunjungan invalid menahan
+pengiriman visit milik owner tersebut secara konservatif; command/draft tetap
+utuh, error meminta review, tanpa receipt bisnis palsu. Legacy command yang tidak
+terikat visit tetap didukung, tetapi order yang dirujuk ledger tidak boleh
+menghilangkan visit_context untuk melewati guard.
+
+Kunjungan baru menyimpan salinan paket pagi historis pada ledger dalam transaksi
+check-in. Replay tidak mewajibkan sesi hari ini: antrean sah dapat dikirim besok
+meski paket pagi sudah diganti; GPS dinilai terhadap waktu aksi, bukan waktu sync.
+Record lama tanpa salinan hanya memakai paket pagi tersimpan bila session/date/
+version/site/openedAt masih cocok. Sumber hilang/tidak cocok ditahan untuk review,
+tidak direkonstruksi atau dihapus otomatis. Penyimpanan sumber lokal ini tetap
+bukan bukti otorisasi server atau perlindungan terhadap manipulasi seluruh DB.

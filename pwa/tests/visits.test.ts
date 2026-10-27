@@ -328,3 +328,251 @@ it("quota/transaction failure leaves no orphan visit command or false active sta
     expect(await store.list(c.owner)).toHaveLength(0);
     expect((await c.service.restore(c.outlet.id)).active).toBeUndefined();
 });
+
+it.each([
+    "sales.visit.check_in",
+    "sales.order.submit",
+    "sales.visit.check_out",
+] as const)(
+    "holds corrupt persisted %s and descendants on reload, flush and retry without deleting data",
+    async (type) => {
+        const c = await setup();
+        await c.service.checkIn(c.outlet.id, c.fix);
+        await c.service.submitOrder(c.payload, c.fix);
+        await c.service.checkOut(c.outlet.id, c.fix, "order_requested", "");
+        const rows = await store.list(c.owner);
+        const broken = rows.find((q) => q.command.type === type)!;
+        const body = broken.command.payload as Record<string, unknown>;
+        const context = (
+            type === "sales.order.submit" ? body.visit_context : body
+        ) as { fix: VisitFix };
+        context.fix.latitude = 0;
+        await store.put(broken);
+        const before = await store.list(c.owner),
+            ledger = await store.draft(c.owner, VISITS_KEY);
+        await store.close();
+        store = new FieldStore(dbName);
+        const engine = new Outbox(store, c.owner, c.provider);
+        const restored = new SalesVisits(store, c.identity, c.provider, engine);
+        await expect(restored.restore(c.outlet.id)).rejects.toThrow();
+        const send = vi.spyOn(c.provider, "submit");
+        await engine.flush();
+        await engine.retry();
+        expect(send).not.toHaveBeenCalled();
+        const after = await store.list(c.owner);
+        expect(after.map((q) => q.command)).toEqual(
+            before.map((q) => q.command),
+        );
+        expect(
+            after.every(
+                (q) =>
+                    q.state === "queued" &&
+                    !q.receipt &&
+                    q.attempts === 0 &&
+                    q.error?.includes("review"),
+            ),
+        ).toBe(true);
+        expect(await store.draft(c.owner, VISITS_KEY)).toEqual(ledger);
+    },
+);
+it.each([
+    "parent-geo",
+    "parent-session",
+    "order-outlet",
+    "checkout-session",
+    "missing-ledger",
+    "missing-source",
+    "historical-source",
+    "owner",
+    "command-time",
+    "envelope",
+])(
+    "holds invalid graph %s even with accepted parent receipts",
+    async (mutation) => {
+        const c = await setup();
+        const first = await c.service.checkIn(c.outlet.id, c.fix);
+        await c.outbox.flush();
+        expect((await store.list(c.owner))[0].state).toBe("accepted");
+        const order = await c.service.submitOrder(c.payload, c.fix);
+        const end = await c.service.checkOut(
+            c.outlet.id,
+            c.fix,
+            "order_requested",
+            "",
+        );
+        const rows = await store.list(c.owner);
+        const parent = rows.find((q) => q.key === first.key)!;
+        if (
+            parent.command.type !== "sales.visit.check_in" ||
+            order.command.type !== "sales.order.submit" ||
+            end.command.type !== "sales.visit.check_out"
+        )
+            throw new Error("type");
+        const ledger = (await store.draft(c.owner, VISITS_KEY)) as VisitLedger;
+        switch (mutation) {
+            case "parent-geo":
+                parent.command.payload.fix.latitude = 0;
+                await store.put(parent);
+                break;
+            case "parent-session":
+                parent.command.payload.work_session_id = crypto.randomUUID();
+                await store.put(parent);
+                break;
+            case "order-outlet":
+                order.command.payload.outlet_id = "other";
+                await store.put(order);
+                break;
+            case "checkout-session":
+                end.command.payload.work_session_id = crypto.randomUUID();
+                await store.put(end);
+                break;
+            case "missing-ledger":
+                await store.draft(c.owner, VISITS_KEY, {
+                    version: 1,
+                    visits: [],
+                });
+                break;
+            case "missing-source":
+                delete ledger.visits[0].morning_source;
+                await store.draft(c.owner, VISITS_KEY, ledger);
+                await store.draft(c.owner, MORNING_KEY, {});
+                break;
+            case "historical-source":
+                ledger.visits[0].morning_source = {
+                    ...c.morning,
+                    snapshot: { ...c.morning.snapshot!, products: [] },
+                };
+                await store.draft(c.owner, VISITS_KEY, ledger);
+                break;
+            case "owner":
+                ledger.visits[0].owner = "other";
+                await store.draft(c.owner, VISITS_KEY, ledger);
+                break;
+            case "command-time":
+                order.command.occurred_at = "2026-10-26T00:00:00Z";
+                await store.put(order);
+                break;
+            case "envelope":
+                (order.command as { schema_version: number }).schema_version =
+                    99;
+                await store.put(order);
+                break;
+        }
+        const send = vi.spyOn(c.provider, "submit");
+        await expect(c.service.restore(c.outlet.id)).rejects.toThrow();
+        await c.outbox.flush();
+        await c.outbox.retry();
+        expect(send).not.toHaveBeenCalled();
+        expect(
+            (await store.list(c.owner)).filter((q) => q.state === "queued"),
+        ).toHaveLength(2);
+        expect(
+            (await store.list(c.owner)).find((q) => q.key === first.key)
+                ?.receipt?.status,
+        ).toBe("accepted");
+    },
+);
+it("replays valid historical visits after morning is replaced the next day using event-time GPS and original source", async () => {
+    const c = await setup();
+    await c.service.checkIn(c.outlet.id, c.fix);
+    await c.service.submitOrder(c.payload, c.fix);
+    await c.service.checkOut(c.outlet.id, c.fix, "order_requested", "");
+    vi.setSystemTime(new Date("2026-10-28T00:00:00Z"));
+    await c.morningService.acceptAttendance();
+    await c.morningService.open();
+    await store.close();
+    store = new FieldStore(dbName);
+    const send = vi.spyOn(c.provider, "submit");
+    await new Outbox(store, c.owner, c.provider).flush();
+    expect(send.mock.calls.map(([cmd]) => cmd.type)).toEqual([
+        "sales.visit.check_in",
+        "sales.order.submit",
+        "sales.visit.check_out",
+    ]);
+    expect(
+        (await store.list(c.owner)).every((q) => q.state === "accepted"),
+    ).toBe(true);
+});
+it("supports legacy unbound orders and a matching legacy visit source, but never guesses a missing historical source", async () => {
+    const c = await setup();
+    await c.service.checkIn(c.outlet.id, c.fix);
+    const ledger = (await store.draft(c.owner, VISITS_KEY)) as VisitLedger;
+    delete ledger.visits[0].morning_source;
+    await store.draft(c.owner, VISITS_KEY, ledger);
+    await c.outbox.flush();
+    expect((await store.list(c.owner))[0].state).toBe("accepted");
+    await c.outbox.enqueue(
+        "sales.order.submit",
+        { outlet_id: "legacy-outlet", lines: [] },
+        "Legacy order",
+    );
+    await store.draft(c.owner, VISITS_KEY, { version: 1, visits: [] });
+    const send = vi.spyOn(c.provider, "submit");
+    await c.outbox.flush();
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0][0].type).toBe("sales.order.submit");
+});
+it.each(["geo", "source", "stale-fix", "unknown-product", "dropped-context"])(
+    "shares semantic restore/send checks for consistent but invalid %s",
+    async (mutation) => {
+        const c = await setup();
+        await c.service.checkIn(c.outlet.id, c.fix);
+        const order = await c.service.submitOrder(c.payload, c.fix);
+        const ledger = (await store.draft(c.owner, VISITS_KEY)) as VisitLedger;
+        const first = (await store.list(c.owner)).find(
+            (q) => q.command.type === "sales.visit.check_in",
+        )!;
+        if (
+            first.command.type !== "sales.visit.check_in" ||
+            order.command.type !== "sales.order.submit"
+        )
+            throw new Error("type");
+        if (mutation === "geo") {
+            first.command.payload.fix.latitude = 0;
+            ledger.visits[0].context.fix.latitude = 0;
+            await store.put(first);
+        }
+        if (mutation === "source") {
+            first.command.payload.site.latitude = 0;
+            ledger.visits[0].context.site.latitude = 0;
+            await store.put(first);
+        }
+        if (mutation === "stale-fix") {
+            first.command.payload.fix.sampled_at = "2026-10-26T23:58:59Z";
+            ledger.visits[0].context.fix.sampled_at = "2026-10-26T23:58:59Z";
+            await store.put(first);
+        }
+        if (mutation === "unknown-product") {
+            order.command.payload.lines = [
+                { product_id: "unknown", qty: "1", uom: "carton" },
+            ];
+            await store.put(order);
+        }
+        if (mutation === "dropped-context") {
+            delete order.command.payload.visit_context;
+            await store.put(order);
+        }
+        await store.draft(c.owner, VISITS_KEY, ledger);
+        const send = vi.spyOn(c.provider, "submit");
+        await c.outbox.flush();
+        await c.outbox.retry();
+        expect(send).not.toHaveBeenCalled();
+    },
+);
+it("rechecks the persisted graph after marking sending and before the provider boundary", async () => {
+    const c = await setup();
+    await c.service.checkIn(c.outlet.id, c.fix);
+    const put = store.put.bind(store);
+    vi.spyOn(store, "put").mockImplementation(async (item) => {
+        await put(item);
+        if (item.state === "sending")
+            await store.draft(c.owner, VISITS_KEY, { version: 1, visits: [] });
+    });
+    const send = vi.spyOn(c.provider, "submit");
+    await c.outbox.flush();
+    expect(send).not.toHaveBeenCalled();
+    const [row] = await store.list(c.owner);
+    expect(row.state).toBe("queued");
+    expect(row.receipt).toBeUndefined();
+    expect(row.error).toContain("review");
+});

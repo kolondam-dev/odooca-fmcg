@@ -64,7 +64,7 @@ export class SalesVisits {
             morning = currentMorning(rawMorning, owner),
             raw = await this.store.draft(owner, VISITS_KEY),
             rows = await this.store.list(owner),
-            ledger = visitLedger(raw, owner, rows);
+            ledger = visitLedger(raw, owner, rows, rawMorning);
         return { owner, rawMorning, morning, raw, rows, ledger };
     }
     async restore(outletId: string) {
@@ -137,6 +137,7 @@ export class SalesVisits {
                             owner: s.owner,
                             context,
                             session_opened_at: s.morning.openedAt!,
+                            morning_source: s.morning,
                             check_in_at: at,
                             check_out: null,
                         },
