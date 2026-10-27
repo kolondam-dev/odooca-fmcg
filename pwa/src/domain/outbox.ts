@@ -5,7 +5,11 @@ import {
     type Command,
     type FieldProvider,
 } from "./contracts";
-import { FieldStore, type QueueItem } from "../storage/store";
+import {
+    FieldStore,
+    type QueueItem,
+    type ExpenseWriteGuards,
+} from "../storage/store";
 export class Outbox {
     private running?: Promise<void>;
     constructor(
@@ -19,8 +23,17 @@ export class Outbox {
         payload: Record<string, unknown>,
         label: string,
         uuid = crypto.randomUUID(),
-        draftWrite?: { key: string; value: unknown; expected: unknown },
+        draftWrite?: {
+            key: string;
+            value: unknown;
+            expected: unknown;
+            guards?: ExpenseWriteGuards;
+        },
     ) {
+        if (type === "field_expense.realization.submit" && !draftWrite?.guards)
+            throw new Error(
+                "Realisasi harus memakai transaksi sumber/struk dan advance.",
+            );
         const command = CommandSchema.parse({
             schema_version: 1,
             client_uuid: uuid,
@@ -47,6 +60,7 @@ export class Outbox {
                 draftWrite.key,
                 draftWrite.value,
                 draftWrite.expected,
+                draftWrite.guards,
             );
         else await this.store.put(item);
         this.changed();

@@ -45,7 +45,7 @@ simulator pada live. Belum ada publikasi web, integrasi auth nyata atau deploy.
 
 Ini menutup fondasi dan beberapa alur client PWA-01–04, **bukan seluruh roadmap**.
 English/i18n penuh, tracking perjalanan, geofence workflow lengkap, sesi pagi resmi (simulasi tersedia),
-settlement final/koreksi realisasi dan integrasi media, server notification/approval, snapshot peta, recovery
+settlement final, pembatalan transaksi belum terkonfirmasi dan integrasi media, server notification/approval, snapshot peta, recovery
 session/device, backend receipt/record aktual dan E2E production masih pekerjaan
 berikutnya. Jangan menilai status accepted simulator sebagai bukti Odoo menerima SO.
 
@@ -198,7 +198,7 @@ terposting. Foto masih `local_map_pending`: **submit hanya ke simulator**, recei
 realisasi tetap membutuhkan review dan bukan penerimaan bukti resmi.
 
 Command `field_expense.realization.submit` memakai payload strict yang menjadi
-cabang khusus di CommandSchema/OpenAPI draft 0.2; tidak bisa memakai generic
+cabang khusus di CommandSchema/OpenAPI draft 0.3; tidak bisa memakai generic
 payload fallback. Saat antre, payload dan referensi advance disimpan dalam satu
 transaksi IndexedDB dengan compare-and-set. Dua koneksi/tab untuk advance sama
 hanya bisa menghasilkan satu command. Retry mempertahankan UUID. Advance dibuat
@@ -210,17 +210,53 @@ membutuhkan review ulang; data sumber/pending tidak dihapus otomatis.
 Batas yang masih menunggu backend:
 
 - Pengembalian uang, approval variance, pembayaran tambahan, final settlement dan
-  posting; koreksi setelah submit/reject belum dibuka agar tidak membuat dua
-  realisasi aktif. Realisasi dikunci setelah masuk antrean, termasuk offline.
+  posting. Pembatalan/koreksi transaksi queued/sending/auth_required/needs_approval
+  dan penolakan transport tetap tertahan. Receipt penolakan bisnis yang valid dapat
+  dikoreksi pada simulator dengan UUID baru dan link audit; versi lama tetap utuh.
 - Secure identity/ACL, server-issued advance/revision dan policy bertanggal;
   fixture lokal bukan security boundary dan dapat dimanipulasi pengguna.
 - Map snapshot, media upload/hash asli, verifikasi konten struk/OCR dan duplikasi
   server. Pemeriksaan lokal hanya referensi foto dan penjual/nomor/tanggal struk,
-  bukan bukti foto berbeda atau anti-fraud global; concurrency beda advance/perangkat
-  tetap harus diperiksa server.
+  bukan bukti foto berbeda atau anti-fraud global. Dedup struk lintas advance dalam
+  satu owner/DB sekarang atomik; lintas akun, perangkat dan server tetap memerlukan
+  unique constraint/validasi authority backend.
 - Agregat limit per trip/periode, kapasitas BBM, multi-pengisian dan settlement
   multi-hari. Batas 10 komponen/Rp100 juta adalah batas input prototype, bukan limit
   approval bisnis.
 
 Tidak mengubah backend/seed/deploy/Railway atau membuka build live. Fixture/test
 foto memakai ikon aplikasi sebagai input tes, tanpa data operasional.
+
+## Konsistensi bukti, race guards dan koreksi realisasi
+
+Komponen biaya memiliki ID lokal stabil. Draft lama tanpa ID dimigrasikan saat
+restore dan disimpan kembali; ID tidak masuk payload transaksi. EvidenceCapture
+mengosongkan foto/preview/lokasi saat reference/owner berubah dari luar atau saat
+file pengganti dipilih, lalu memuat Blob yang cocok. Lookup gagal tidak meninggalkan
+foto lama; callback async lama diabaikan lewat generation guard dan Object URL
+selalu dicabut. Pergantian file/lokasi dari dalam komponen tetap bisa diselesaikan
+sebelum membuat evidence reference baru.
+
+Saat submit, source request, advance CAS, predecessor (untuk koreksi), cek struk
+owner yang sama dan insert outbox/link berada dalam satu transaksi read/write.
+Cek struk memakai merchant/nomor yang trim + NFKC + uppercase serta tanggal.
+Dua advance/tab pada owner dan database yang sama tidak bisa bersama-sama
+menggunakan struk yang sama. Scan juga mencakup antrean legacy, tanpa migrasi DB.
+Perubahan payload/status sumber selama await menolak commit tanpa orphan/link
+baru. Penolakan HTTP/transport tetap menahan klaim struk; hanya receipt penolakan
+bisnis yang valid dan cocok UUID yang melepaskannya. Ini local cooperative guard,
+bukan security boundary, dedup lintas akun/perangkat, atau pengganti server unique.
+
+Langkah dev berikutnya yang sudah tersedia adalah koreksi realisasi **ditolak
+bisnis oleh simulator**. Form menampilkan pesan penolakan, alasan koreksi wajib,
+serta riwayat. Payload baru memuat supersedes_uuid dan correction_reason; UUID lama,
+receipt dan payload lama tidak diedit/dihapus. Kedua field opsional untuk kompatibilitas
+payload lama, tetapi wajib berpasangan pada koreksi. State antre/sending/menunggu
+approval/auth_required dan rejected tanpa receipt bisnis cocok tidak membuka edit.
+
+Restore memvalidasi seluruh rantai revisi: source/advance/owner, urutan timestamp,
+parent ditolak bisnis, missing reference dan siklus. Commit koreksi memeriksa ulang
+predecessor atomik; status penolakan yang berubah selama submit membatalkan commit.
+Dua koreksi serentak menghasilkan satu successor aktif. Retry tetap memakai UUID
+koreksi yang sama, sedangkan koreksi berikutnya setelah penolakan baru membuat UUID
+baru lagi. Settlement/uang/jurnal resmi masih menunggu backend dan live tetap terkunci.

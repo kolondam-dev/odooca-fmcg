@@ -203,3 +203,197 @@ test("fuel validates paired local evidence, liter-price arithmetic and nondecrea
         }),
     ).toEqual({ distinct: 3, status: "local_map_pending" });
 });
+
+test("photo previews follow stable components after removal and clear when a replacement is invalid", async ({
+    page,
+    context,
+}) => {
+    await requestAdvance(page);
+    await details(page, 1, "50000", "PHOTO-A");
+    await photo(page, context, "Foto struk 1");
+    await page.getByRole("button", { name: "Tambah komponen biaya" }).click();
+    await details(page, 2, "60000", "PHOTO-B");
+    await photo(page, context, "Foto struk 2");
+    const secondSrc = await page
+        .getByRole("group", { name: "Foto struk 2", exact: true })
+        .getByAltText("Pratinjau foto bukti lokal")
+        .getAttribute("src");
+    await page
+        .getByRole("button", { name: "Hapus komponen 1", exact: true })
+        .click();
+    await expect(page.getByLabel("Nomor struk 1", { exact: true })).toHaveValue(
+        "PHOTO-B",
+    );
+    const remaining = page.getByRole("group", {
+        name: "Foto struk 1",
+        exact: true,
+    });
+    await expect(
+        remaining.getByAltText("Pratinjau foto bukti lokal"),
+    ).toHaveAttribute("src", secondSrc!);
+    await remaining.getByLabel("Foto bukti").setInputFiles({
+        name: "invalid.txt",
+        mimeType: "text/plain",
+        buffer: Buffer.from("invalid replacement"),
+    });
+    await expect(
+        remaining.getByText("Pilih JPEG", { exact: false }),
+    ).toBeVisible();
+    await expect(
+        remaining.getByAltText("Pratinjau foto bukti lokal"),
+    ).toHaveCount(0);
+    await expect(remaining.locator(".coordinates")).toHaveCount(0);
+    await page.getByRole("button", { name: "Tambah komponen biaya" }).click();
+    await expect(
+        page
+            .getByRole("group", { name: "Foto struk 2", exact: true })
+            .getByAltText("Pratinjau foto bukti lokal"),
+    ).toHaveCount(0);
+});
+test("missing persisted photo clears the preview and blocks realization without erasing the draft", async ({
+    page,
+    context,
+}) => {
+    await requestAdvance(page);
+    await details(page, 1, "100000", "MISSING-PHOTO");
+    await photo(page, context, "Foto struk 1");
+    await expect(
+        page.getByText("Draft tersimpan di perangkat.", { exact: true }),
+    ).toBeVisible();
+    await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const tx = db.transaction("evidence", "readwrite");
+        tx.objectStore("evidence").clear();
+        await new Promise<void>((resolve, reject) => {
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+    });
+    await page.reload();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await openExpenses(page);
+    const group = page.getByRole("group", {
+        name: "Foto struk 1",
+        exact: true,
+    });
+    await expect(
+        group.getByText("Foto lokal tidak dapat dipulihkan.", { exact: false }),
+    ).toBeVisible();
+    await expect(group.getByAltText("Pratinjau foto bukti lokal")).toHaveCount(
+        0,
+    );
+    await page
+        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .click();
+    await expect(page.getByRole("alert")).toContainText(
+        "Foto lokal tidak ditemukan",
+    );
+    await expect(page.getByLabel("Nomor struk 1", { exact: true })).toHaveValue(
+        "MISSING-PHOTO",
+    );
+});
+test("business rejection opens an auditable correction with a new UUID, leaving the rejected command unchanged", async ({
+    page,
+    context,
+}) => {
+    await requestAdvance(page);
+    await details(page, 1, "150000", "REVISION-001");
+    await photo(page, context, "Foto struk 1");
+    await page.getByRole("button", { name: "Kembali ke akun" }).click();
+    await page.getByLabel("Respons simulator").selectOption("rejected");
+    await openExpenses(page);
+    await page
+        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .click();
+    await expect(
+        page.getByRole("heading", { name: "Koreksi realisasi ditolak" }),
+    ).toBeVisible();
+    const previous = await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const rows = await new Promise<
+            {
+                command: {
+                    type: string;
+                    client_uuid: string;
+                    payload: unknown;
+                };
+            }[]
+        >((resolve) => {
+            const r = db.transaction("outbox").objectStore("outbox").getAll();
+            r.onsuccess = () => resolve(r.result);
+        });
+        db.close();
+        return rows.find(
+            (q) => q.command.type === "field_expense.realization.submit",
+        )!;
+    });
+    await page
+        .getByLabel("Nominal realisasi 1 (Rp)", { exact: true })
+        .fill("140000");
+    await page
+        .getByLabel("Alasan koreksi", { exact: true })
+        .fill("Perbaikan nominal sesuai struk");
+    await page.getByRole("button", { name: "Kembali ke akun" }).click();
+    await page.getByLabel("Respons simulator").selectOption("normal");
+    await openExpenses(page);
+    await expect(
+        page.getByLabel("Alasan koreksi", { exact: true }),
+    ).toHaveValue("Perbaikan nominal sesuai struk");
+    await page
+        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .click();
+    await expect(
+        page.locator(".realization-form > .notice[role=status]"),
+    ).toContainText("Menunggu approval");
+    await expect(
+        page.getByRole("region", { name: "Riwayat realisasi" }),
+    ).toContainText("koreksi");
+    const rows = await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const values = await new Promise<
+            {
+                command: {
+                    type: string;
+                    client_uuid: string;
+                    payload: {
+                        supersedes_uuid?: string;
+                        correction_reason?: string;
+                    };
+                };
+            }[]
+        >((resolve) => {
+            const r = db.transaction("outbox").objectStore("outbox").getAll();
+            r.onsuccess = () => resolve(r.result);
+        });
+        db.close();
+        return values.filter(
+            (q) => q.command.type === "field_expense.realization.submit",
+        );
+    });
+    expect(rows).toHaveLength(2);
+    expect(
+        rows.find(
+            (q) => q.command.client_uuid === previous.command.client_uuid,
+        ),
+    ).toEqual(previous);
+    expect(
+        rows.find((q) => q.command.client_uuid !== previous.command.client_uuid)
+            ?.command.payload,
+    ).toMatchObject({
+        supersedes_uuid: previous.command.client_uuid,
+        correction_reason: "Perbaikan nominal sesuai struk",
+    });
+    await expect(
+        page.getByLabel("Nominal realisasi 1 (Rp)", { exact: true }),
+    ).toBeDisabled();
+});

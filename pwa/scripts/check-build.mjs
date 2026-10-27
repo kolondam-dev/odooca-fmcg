@@ -50,6 +50,7 @@ for (const mode of ["demo", "live"]) {
             "Simulasikan approval & pencairan",
             "SIM-EXPENSE-POLICY-1",
             "SIM-ADV-",
+            "Koreksi realisasi ditolak",
         ])
             assert(
                 !code.includes(fixture),

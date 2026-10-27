@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FMCG Field client contract draft",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement."
   },
   "servers": [
@@ -171,6 +171,16 @@
               "payload": {
                 "type": "object",
                 "properties": {
+                  "supersedes_uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "correction_reason": {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 500
+                  },
                   "source_request_uuid": {
                     "type": "string",
                     "format": "uuid",
@@ -487,6 +497,16 @@
       "ExpenseRealization": {
         "type": "object",
         "properties": {
+          "supersedes_uuid": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "correction_reason": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 500
+          },
           "source_request_uuid": {
             "type": "string",
             "format": "uuid",

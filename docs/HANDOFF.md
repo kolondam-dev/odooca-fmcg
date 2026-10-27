@@ -1,5 +1,15 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Follow-up PR #22 dan koreksi realisasi simulator
+**Basis:** main 5088144; branch agen/mobile-expense-revisions; detail review issuecomment-6433199416 dibaca.
+**Tiga perbaikan:** ID komponen stabil (draft legacy tanpa ID dipulihkan dengan default baru), preview/file/location direconcile saat ref/owner berganti atau file gagal, async generation guard; dedup merchant/receipt/date lintas advance satu owner/DB dipindah ke transaksi outbox; sumber request dibandingkan ulang atomik setelah rangkaian await. Receipt transport tidak melepaskan klaim struk.
+**Dev berikutnya:** receipt penolakan bisnis cocok UUID membuka koreksi; UUID baru + supersedes_uuid/alasan, parent lama immutable, status belum terkonfirmasi/transport tidak membuka edit. Restore memvalidasi lineage/source/owner/urutan waktu/parent rejected/missing ref/cycle; CAS predecessor mencegah koreksi atas penolakan yang berubah dan dua successor aktif.
+**Kontrak/docs:** OpenAPI draft 0.3, revision fields opsional demi kompatibilitas payload lama; pasangan diwajibkan pada jalur koreksi. Tidak ada DB migration atau endpoint backend baru. README/plan memperbarui batas lama, bukan hanya menambah klaim baru.
+**Diverifikasi lokal:** 71 unit, 1 hosting, 30 browser phone/tablet PASS; barrier dua koneksi untuk dedup lintas advance/koreksi, source-change-during-submit (payload/status), transport/wrong receipt lock, lineage corruption, remove-line/replace-invalid/missingblob, browser rejected→correction→needsapproval dengan parent tetap utuh. Format/typecheck/contracts/demo+live builds/budget/Ruff/4 manifest PASS; demo JS ~45 KiB gzip, font 47,1 KiB. CI diperiksa setelah push.
+**Batas:** dedup hanya cooperative writer satu owner dan IndexedDB yang sama; lintas akun/perangkat/server tetap authority backend. Foto local_map_pending; revision state bukan security boundary. Settlement final, cancel pending, cash/GL/auth/media/geofence/tracking tetap dependency/roadmap.
+**Tidak disentuh:** backend/addon/seed/loader, workflow/ruleset, Railway/domain/deployment. Live terkunci.
+**Menunggu:** review PR dan CI; merge pemilik lalu deploy manual commit yang diterima.
+
 ## 2026-10-27 — codex agent — Realisasi biaya dan estimasi settlement simulator
 **Basis:** main b19240a (PR #21 merged); branch agen/mobile-expense-settlement.
 **Berubah:** layar Lainnya → Realisasi & saldo uang lapangan; receipt request dipisah dari approval/pencairan fiktif. Policy fixture contoh, komponen/struk, foto lokal, odometer/liter-harga BBM, draft offline, preview refund/variance dan tier total exposure. Pratinjau foto dipulihkan per owner setelah reload.

@@ -17,6 +17,8 @@ export const LocalExpenseEvidenceSchema = z
     .strict();
 export const ExpenseRealizationSchema = z
     .object({
+        supersedes_uuid: z.string().uuid().optional(),
+        correction_reason: z.string().trim().min(5).max(500).optional(),
         source_request_uuid: z.string().uuid(),
         advance_reference: z.string().min(1),
         lines: z
@@ -66,3 +68,15 @@ export const SimulatedAdvanceSchema = z
     })
     .strict();
 export type SimulatedAdvance = z.infer<typeof SimulatedAdvanceSchema>;
+
+export function receiptKey(line: {
+    merchant: string;
+    receipt_number: string;
+    expense_date: string;
+}): string {
+    return JSON.stringify([
+        line.merchant.trim().normalize("NFKC").toUpperCase(),
+        line.receipt_number.trim().normalize("NFKC").toUpperCase(),
+        line.expense_date,
+    ]);
+}

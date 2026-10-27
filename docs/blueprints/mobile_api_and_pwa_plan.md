@@ -1067,3 +1067,20 @@ resmi. Koreksi setelah submit/reject ditahan sampai cancellation/revision backen
 siap. Policy bertanggal/agregat, media hash/map/OCR, dedup server/perangkat,
 kapasitas BBM, multi-pengisian/multi-hari dan penerimaan finansial tetap dependency
 backend. Tidak ada perubahan addon/seed/server atau deploy Railway.
+
+### Follow-up review PR #22 dan iterasi koreksi realisasi
+
+Basis main 5088144, branch agen/mobile-expense-revisions. Ketiga catatan review
+6433199416 ditutup dalam scope client simulator: stable line IDs + reconcile preview,
+dedup receipt owner lintas advance di transaksi outbox, dan source comparison atomik
+setelah await. Source/predecessor/advance CAS/dedup/write berbagi transaksi yang
+sama; scan antrean legacy menghindari kebutuhan migrasi DB. Batas dedup tetap satu
+owner dan database, bukan lintas akun/perangkat atau authority server.
+
+Langkah dev lanjutan: koreksi hanya setelah receipt penolakan bisnis valid. UUID
+baru + supersedes_uuid/alasan, riwayat lama immutable, predecessor dicek ulang
+atomik, parent/cycle/missing reference/timestamp diverifikasi pada restore. Transport
+error dan transaksi belum terkonfirmasi tidak membuka koreksi. Kontrak draft 0.3
+kompatibel payload lama tanpa revision fields. Settlement final, cancel pending,
+auth/ACL/media/geofence/tracking dan server unique tetap dependency; Railway tidak
+dideploy dari iterasi ini dan live terkunci.
