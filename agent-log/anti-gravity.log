@@ -543,4 +543,13 @@
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T09:43:00+07:00
 
-
+[2026-10-27T10:25:00+07:00] [INFO] Audit Komprehensif Payload Schema Runtime Odoo 19, Perbaikan Invalid Field stock.move, dan Penelusuran Akuntansi Persediaan Native
+- Menutup temuan review PR #15 (issuecomment-6432793914):
+  * Audit Menyeluruh Seluruh Payload Model Odoo 19: Mengganti pembuatan payload statis stock.move dan stock.move.line dengan pemfilteran dinamis terhadap model._fields aktual. Menghapus ketergantungan field name pada stock.move yang telah dihapus/digantikan pada Odoo 19, sehingga tidak akan memicu ValueError: Invalid field 'name' in 'stock.move'.
+  * Siklus Hidup Move Odoo 19 yang Tangguh: Jika mv._action_assign() telah menghasilkan move lines, script memperbarui kuantitas, lot, dan tanggal pada line yang ada tanpa membuat record duplikat, serta menyetel mv.picked = True sebelum _action_done().
+  * Penelusuran Akuntansi Persediaan Native: Memetakan seluruh variasi alias field akun dan jurnal persediaan pada product.category secara company-dependent (with_company(company)), menyetel akun perantara pada lokasi inventory, supplier, dan customer, serta menyetel standard_price pada tingkat company dan auto-post pada jurnal.
+  * Pelacak Entri Jurnal Native (find_and_backdate_native_account_moves): Mencari entri jurnal native Odoo melalui relasi account_move_ids, stock_move_id, atau referensi origin, dan menyelaraskan tanggalnya ke tanggal historis transaksi secara murni tanpa membuat jurnal sintetis.
+  * Evaluasi Read-Only GL: Mengambil saldo GL akun persediaan 113000 dari entri posted yang terkait dengan pergerakan stok atau referensi transaksi kanonikal.
+- Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T10:25:00+07:00

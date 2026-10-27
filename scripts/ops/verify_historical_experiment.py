@@ -338,9 +338,22 @@ def main():
         cost_method_sel = [s[0] if isinstance(s, (list, tuple)) else s for s in getattr(cat_fields.get("property_cost_method"), "selection", [])] if has_cost_method else []
         valuation_sel = [s[0] if isinstance(s, (list, tuple)) else s for s in getattr(cat_fields.get("property_valuation"), "selection", [])] if has_valuation else []
 
+        # Audit schema runtime Odoo 19 komprehensif
+        sm_fields = env["stock.move"]._fields if "stock.move" in env else {}
+        sml_fields = env["stock.move.line"]._fields if "stock.move.line" in env else {}
+        sl_fields = env["stock.location"]._fields if "stock.location" in env else {}
+        am_fields = env["account.move"]._fields if "account.move" in env else {}
+
         print(f" -> Keberadaan 'stock.valuation.layer': {'ADA' if has_svl else 'TIDAK ADA'}")
         print(f" -> Field 'property_cost_method' pada product.category: {has_cost_method} (options: {cost_method_sel})")
         print(f" -> Field 'property_valuation' pada product.category: {has_valuation} (options: {valuation_sel})")
+        print(f" -> Audit stock.move fields: name={'name' in sm_fields}, desc={'description_picking' in sm_fields}, picked={'picked' in sm_fields}, price_unit={'price_unit' in sm_fields}, uom={'product_uom' in sm_fields}, uom_id={'product_uom_id' in sm_fields}, acc_moves={'account_move_ids' in sm_fields}")
+        print(f" -> Audit stock.move.line fields: quantity={'quantity' in sml_fields}, qty_done={'qty_done' in sml_fields}, lot_id={'lot_id' in sml_fields}")
+        print(f" -> Audit stock.location fields: val_in={'valuation_in_account_id' in sl_fields}, val_out={'valuation_out_account_id' in sl_fields}")
+        print(f" -> Audit account.move fields: stock_move_id={'stock_move_id' in am_fields}")
+
+        cat_acc_fields = [f for f in cat_fields if any(w in f for w in ["stock", "valuation", "account", "journal"])]
+        print(f" -> Field Akun/Jurnal pada product.category: {cat_acc_fields}")
 
         report["build_info"] = {
             "odoo_version": getattr(getattr(sys.modules.get("odoo"), "release", None), "version", "19.0"),
@@ -355,6 +368,9 @@ def main():
             "has_property_cost_method": has_cost_method,
             "property_cost_method_selection": cost_method_sel,
             "installed_modules_count": IrModule.search_count([("state", "=", "installed")]),
+            "stock_move_has_name": "name" in sm_fields,
+            "stock_move_has_desc": "description_picking" in sm_fields,
+            "stock_move_has_acc_moves": "account_move_ids" in sm_fields,
         }
 
         # 3. Bangun Oracle dari Register Kanonikal CSV
@@ -374,7 +390,6 @@ def main():
         ResPartner = env["res.partner"].sudo()
 
         # Akun & Jurnal untuk Real-Time Automated Valuation
-        # PERBAIKAN: Gunakan 'is not None' untuk memeriksa keberadaan model Odoo (karena recordset kosong mengevaluasi ke False)
         AccountAccount = env["account.account"].sudo() if "account.account" in env else None
         AccountJournal = env["account.journal"].sudo() if "account.journal" in env else None
 
@@ -475,39 +490,69 @@ def main():
                 }
                 if "company_id" in j_fields:
                     vals["company_id"] = company.id
+                if "auto_post" in j_fields:
+                    vals["auto_post"] = True
                 stock_journal = AccountJournal.create(vals)
 
         # Pastikan anglo_saxon_accounting aktif jika field tersedia pada res.company
         if "anglo_saxon_accounting" in company._fields and not company.anglo_saxon_accounting:
             company.sudo().write({"anglo_saxon_accounting": True})
 
-        # Kategori Produk dengan Automated Real-Time Valuation
+        # Konfigurasi Kategori Produk dengan Automated Real-Time Valuation secara tangguh
         categ = ProductCategory.search([("name", "=", "FMCG Perpetual Experiment")], limit=1)
         categ_vals = {}
         if has_cost_method and "fifo" in cost_method_sel:
             categ_vals["property_cost_method"] = "fifo"
         if has_valuation and "real_time" in valuation_sel:
             categ_vals["property_valuation"] = "real_time"
-        if "property_stock_valuation_account_id" in cat_fields and stock_valuation_acc:
-            categ_vals["property_stock_valuation_account_id"] = stock_valuation_acc.id
-        if "property_stock_journal" in cat_fields and stock_journal:
-            categ_vals["property_stock_journal"] = stock_journal.id
-        if "property_stock_account_input_categ_id" in cat_fields and stock_input_acc:
-            categ_vals["property_stock_account_input_categ_id"] = stock_input_acc.id
-        if "property_stock_account_output_categ_id" in cat_fields and stock_output_acc:
-            categ_vals["property_stock_account_output_categ_id"] = stock_output_acc.id
-        if "property_account_expense_categ_id" in cat_fields and cogs_acc:
-            categ_vals["property_account_expense_categ_id"] = cogs_acc.id
+
+        # Pemetaan alias akun persediaan pada kategori produk
+        for fname in ["property_stock_valuation_account_id", "stock_valuation_account_id", "account_stock_valuation_id"]:
+            if fname in cat_fields and stock_valuation_acc:
+                categ_vals[fname] = stock_valuation_acc.id
+        for fname in ["property_stock_journal", "stock_journal_id", "stock_journal"]:
+            if fname in cat_fields and stock_journal:
+                categ_vals[fname] = stock_journal.id
+        for fname in ["property_stock_account_input_categ_id", "property_stock_account_input_id", "account_stock_in_id", "stock_input_account_id"]:
+            if fname in cat_fields and stock_input_acc:
+                categ_vals[fname] = stock_input_acc.id
+        for fname in ["property_stock_account_output_categ_id", "property_stock_account_output_id", "account_stock_out_id", "stock_output_account_id"]:
+            if fname in cat_fields and stock_output_acc:
+                categ_vals[fname] = stock_output_acc.id
+        for fname in ["property_account_expense_categ_id", "property_account_expense_id", "account_expense_id"]:
+            if fname in cat_fields and cogs_acc:
+                categ_vals[fname] = cogs_acc.id
 
         if not categ:
             categ_vals["name"] = "FMCG Perpetual Experiment"
-            categ = ProductCategory.create(categ_vals)
+            categ = ProductCategory.with_company(company).create(categ_vals)
         else:
-            categ.write(categ_vals)
+            categ.with_company(company).write(categ_vals)
 
         print(f" -> Kategori '{categ.name}' dikonfigurasi: valuation={getattr(categ, 'property_valuation', 'N/A')}, cost_method={getattr(categ, 'property_cost_method', 'N/A')}")
         if stock_valuation_acc:
             print(f" -> Akun Valuasi Persediaan: {stock_valuation_acc.code} - {stock_valuation_acc.name}")
+
+        # Konfigurasi Akun di Tingkat Lokasi (Inventory, Supplier, Customer)
+        inv_locs = StockLocation.search([("usage", "=", "inventory")])
+        for iloc in inv_locs:
+            loc_vals = {}
+            if "valuation_out_account_id" in sl_fields and stock_input_acc:
+                loc_vals["valuation_out_account_id"] = stock_input_acc.id
+            if "valuation_in_account_id" in sl_fields and stock_output_acc:
+                loc_vals["valuation_in_account_id"] = stock_output_acc.id
+            if loc_vals:
+                iloc.write(loc_vals)
+
+        supp_locs = StockLocation.search([("usage", "=", "supplier")])
+        for sloc in supp_locs:
+            if "valuation_out_account_id" in sl_fields and stock_input_acc:
+                sloc.write({"valuation_out_account_id": stock_input_acc.id})
+
+        cust_locs = StockLocation.search([("usage", "=", "customer")])
+        for cloc in cust_locs:
+            if "valuation_in_account_id" in sl_fields and stock_output_acc:
+                cloc.write({"valuation_in_account_id": stock_output_acc.id})
 
         # Produk
         product = ProductProduct.search([("default_code", "=", oracle["sku"]), ("company_id", "in", [False, company.id])], limit=1)
@@ -515,19 +560,26 @@ def main():
             ProductTemplate = env["product.template"].sudo()
             tmpl = ProductTemplate.search([("default_code", "=", oracle["sku"])], limit=1)
             if not tmpl:
-                tmpl = ProductTemplate.create({
+                tmpl_vals = {
                     "name": oracle["product_name"],
                     "default_code": oracle["sku"],
-                    "is_storable": True,
                     "tracking": "lot",
                     "standard_price": oracle["unit_cost"],
                     "list_price": 21000.0,
                     "categ_id": categ.id,
                     "company_id": False,
-                })
+                }
+                if "is_storable" in ProductTemplate._fields:
+                    tmpl_vals["is_storable"] = True
+                elif "type" in ProductTemplate._fields:
+                    tmpl_vals["type"] = "consu"
+                tmpl = ProductTemplate.create(tmpl_vals)
             product = tmpl.product_variant_id
         else:
-            product.write({"categ_id": categ.id, "standard_price": oracle["unit_cost"]})
+            product.with_company(company).write({"categ_id": categ.id, "standard_price": oracle["unit_cost"]})
+
+        # Pastikan standard_price terekam pada tingkat company
+        product.with_company(company).write({"standard_price": oracle["unit_cost"]})
 
         # Lokasi
         wh_stock_loc = StockLocation.search([("complete_name", "ilike", "%WH/Stock%"), ("company_id", "in", [False, company.id])], limit=1)
@@ -575,6 +627,34 @@ def main():
                 "expiration_date": details["receipt"]["expiry"],
             })
 
+        # Helper: Pencari dan Pengelola Entri Akuntansi Odoo Native
+        def find_and_backdate_native_account_moves(stock_move, origin_ref, target_date_str):
+            """Mencari entri jurnal native Odoo yang terbentuk dari stock.move dan menyelaraskan tanggalnya."""
+            found_moves = env["account.move"].sudo()
+
+            # 1. Melalui field relasi account_move_ids jika tersedia pada stock.move
+            if hasattr(stock_move, "account_move_ids") and stock_move.account_move_ids:
+                found_moves |= stock_move.account_move_ids
+
+            # 2. Melalui field stock_move_id pada account.move jika tersedia
+            if "stock_move_id" in env["account.move"]._fields:
+                found_moves |= env["account.move"].sudo().search([("stock_move_id", "=", stock_move.id)])
+
+            # 3. Melalui ref atau stock.move.line
+            if not found_moves and origin_ref:
+                found_moves |= env["account.move"].sudo().search([
+                    ("company_id", "=", company.id),
+                    ("ref", "ilike", origin_ref),
+                ])
+
+            # Backdate entri jurnal native Odoo yang ditemukan
+            for am in found_moves:
+                am.write({"date": target_date_str[:10]})
+                if hasattr(am, "line_ids") and am.line_ids:
+                    am.line_ids.write({"date": target_date_str[:10]})
+
+            return found_moves
+
         # Helper 1: Eksekusi Opening Stock via Mekanisme Quant Adjustment Asli Odoo 19
         # (Loader murni: tidak merekayasa/mensintesis nilai atau jurnal buatan)
         def execute_opening_quant_adjustment(origin, loc_dest, qty, lot, move_date):
@@ -615,18 +695,13 @@ def main():
             if hasattr(adj_moves, "move_line_ids") and adj_moves.move_line_ids:
                 adj_moves.move_line_ids.write({"date": move_date})
 
-            # Backdate entri akuntansi Odoo native jika ada yang dihasilkan oleh Odoo stock_account
-            if hasattr(adj_moves, "account_move_ids") and adj_moves.account_move_ids:
-                for am in adj_moves.account_move_ids:
-                    am.write({"date": move_date[:10]})
-                    am.line_ids.write({"date": move_date[:10]})
-
-            native_am_count = len(getattr(adj_moves, "account_move_ids", []))
-            print(f" -> Opening adjustment move ID {adj_moves.id} (native Odoo account_moves: {native_am_count})")
+            # Selaraskan tanggal jurnal native Odoo
+            native_ams = find_and_backdate_native_account_moves(adj_moves, origin, move_date)
+            print(f" -> Opening adjustment move ID {adj_moves.id} (native Odoo account_moves: {len(native_ams)})")
             return adj_moves, True
 
         # Helper 2: Eksekusi Pergerakan Operasional Native Odoo 19 (Delivery, Retur, PO Receipt)
-        # (Loader murni: tidak merekayasa/mensintesis nilai atau jurnal buatan)
+        # (Loader murni: audit schema runtime menyeluruh tanpa ketergantungan field legacy)
         def execute_operational_movement(origin, loc_src, loc_dest, qty, lot, move_date):
             existing_mv = StockMove.search([
                 ("origin", "=", origin),
@@ -639,52 +714,71 @@ def main():
             if existing_mv:
                 return existing_mv, False
 
-            mv_vals = {
-                "name": f"{origin} - {product.name}",
+            # Payload stock.move diaudit terhadap schema runtime Odoo 19
+            candidate_mv = {
                 "origin": origin,
                 "product_id": product.id,
                 "product_uom": product.uom_id.id,
+                "product_uom_id": product.uom_id.id,
                 "product_uom_qty": qty,
+                "quantity": qty,
                 "location_id": loc_src.id,
                 "location_dest_id": loc_dest.id,
                 "company_id": company.id,
                 "is_inventory": False,
                 "date": move_date,
+                "name": f"{origin} - {product.name}",
+                "description_picking": f"{origin} - {product.name}",
+                "price_unit": oracle["unit_cost"],
             }
-            if "price_unit" in StockMove._fields:
-                mv_vals["price_unit"] = oracle["unit_cost"]
+            mv_vals = {k: v for k, v in candidate_mv.items() if k in StockMove._fields}
 
             mv = StockMove.create(mv_vals)
             mv._action_confirm()
             mv._action_assign()
 
-            line_vals = {
-                "move_id": mv.id,
-                "product_id": product.id,
-                "product_uom_id": product.uom_id.id,
-                "quantity": qty,
-                "location_id": loc_src.id,
-                "location_dest_id": loc_dest.id,
-                "company_id": company.id,
-                "lot_id": lot.id if lot else False,
-                "date": move_date,
-            }
-            StockMoveLine.create(line_vals)
+            # Sinkronisasi line_ids secara tangguh terhadap lifecycle Odoo 19
+            if mv.move_line_ids:
+                for ml in mv.move_line_ids:
+                    upd_vals = {}
+                    if lot and "lot_id" in StockMoveLine._fields:
+                        upd_vals["lot_id"] = lot.id
+                    if "quantity" in StockMoveLine._fields:
+                        upd_vals["quantity"] = qty
+                    elif "qty_done" in StockMoveLine._fields:
+                        upd_vals["qty_done"] = qty
+                    if "date" in StockMoveLine._fields:
+                        upd_vals["date"] = move_date
+                    if upd_vals:
+                        ml.write(upd_vals)
+            else:
+                candidate_sml = {
+                    "move_id": mv.id,
+                    "product_id": product.id,
+                    "product_uom_id": product.uom_id.id,
+                    "product_uom": product.uom_id.id,
+                    "quantity": qty,
+                    "qty_done": qty,
+                    "location_id": loc_src.id,
+                    "location_dest_id": loc_dest.id,
+                    "company_id": company.id,
+                    "lot_id": lot.id if lot else False,
+                    "date": move_date,
+                }
+                line_vals = {k: v for k, v in candidate_sml.items() if k in StockMoveLine._fields}
+                StockMoveLine.create(line_vals)
+
             if "picked" in StockMove._fields:
                 mv.picked = True
             mv._action_done()
 
             mv.write({"date": move_date})
-            mv.move_line_ids.write({"date": move_date})
+            if hasattr(mv, "move_line_ids") and mv.move_line_ids:
+                mv.move_line_ids.write({"date": move_date})
 
-            # Backdate entri akuntansi Odoo native jika ada yang dihasilkan oleh Odoo stock_account
-            if hasattr(mv, "account_move_ids") and mv.account_move_ids:
-                for am in mv.account_move_ids:
-                    am.write({"date": move_date[:10]})
-                    am.line_ids.write({"date": move_date[:10]})
-
-            native_am_count = len(getattr(mv, "account_move_ids", []))
-            print(f" -> Move {origin} ID {mv.id} (native Odoo account_moves: {native_am_count})")
+            # Selaraskan tanggal jurnal native Odoo
+            native_ams = find_and_backdate_native_account_moves(mv, origin, move_date)
+            print(f" -> Move {origin} ID {mv.id} (native Odoo account_moves: {len(native_ams)})")
             return mv, True
 
         # Validator Read-Only: Evaluasi Posisi Fisik & Akuntansi Native Odoo 19
@@ -701,15 +795,16 @@ def main():
             quarantine_units = 0.0
 
             for ml in lines:
+                ml_qty = getattr(ml, "quantity", getattr(ml, "qty_done", 0.0))
                 if ml.location_dest_id.id == wh_stock_loc.id:
-                    saleable_units += ml.quantity
+                    saleable_units += ml_qty
                 if ml.location_id.id == wh_stock_loc.id:
-                    saleable_units -= ml.quantity
+                    saleable_units -= ml_qty
 
                 if ml.location_dest_id.id == quarantine_loc.id:
-                    quarantine_units += ml.quantity
+                    quarantine_units += ml_qty
                 if ml.location_id.id == quarantine_loc.id:
-                    quarantine_units -= ml.quantity
+                    quarantine_units -= ml_qty
 
             saleable_cartons = round(saleable_units / oracle["carton_qty"], 4)
             quarantine_cartons = round(quarantine_units / oracle["carton_qty"], 4)
@@ -731,16 +826,17 @@ def main():
             if has_aml and stock_valuation_acc:
                 aml_domain = [
                     ("account_id", "=", stock_valuation_acc.id),
-                    ("move_id.state", "=", "posted"),
                     ("date", "<=", as_of_dt_str[:10]),
                 ]
                 if "company_id" in env["account.move.line"]._fields:
                     aml_domain.append(("company_id", "=", company.id))
                 amls = env["account.move.line"].sudo().search(aml_domain)
+                posted_amls = [a for a in amls if getattr(a.move_id, "state", "posted") == "posted"]
                 matching_amls = [
-                    a for a in amls
+                    a for a in posted_amls
                     if (getattr(a, "product_id", None) and a.product_id.id == product.id)
                     or any(ref in (a.move_id.ref or "") for ref in ["OPENING-20260701", "DO-202607-0063", "REJ-202607-001", "PO-2026-06-05"])
+                    or (getattr(a, "stock_move_id", None) and getattr(a.stock_move_id, "product_id", None) and a.stock_move_id.product_id.id == product.id)
                 ]
                 if matching_amls:
                     gl_balance = round(sum(a.debit - a.credit for a in matching_amls), 2)

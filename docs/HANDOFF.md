@@ -1,6 +1,29 @@
 # HANDOFF
 
-## 2026-10-27 — antigravity agent — Perbaikan Truthiness Model Odoo, Pemisahan Murni Loader vs Validator Read-Only, dan Mutation GL Berimbang
+## 2026-10-27 — antigravity agent — Audit Komprehensif Payload Schema Runtime Odoo 19, Perbaikan Invalid Field stock.move, dan Penelusuran Akuntansi Persediaan Native
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6432793914](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6432793914)):**
+- Menindaklanjuti review commit `a1a0784`:
+  1. *ValueError: Invalid field 'name' in 'stock.move'*: Terjadi saat pembuatan stock.move delivery di `execute_operational_movement()`. Di Odoo 19, field `name` bukan lagi field valid/langsung di `stock.move`. Supervisor meminta audit menyeluruh seluruh payload terhadap schema runtime Odoo 19 agar tidak terus memperbaiki satu traceback per push.
+  2. *Opening menghasilkan 0 jurnal native*: Log menunjukkan opening adjustment move ID 1 menghasilkan 0 account_moves. Perlu ditelusuri mekanisme akuntansi native Odoo 19 (`stock_account`), tanpa mengembalikan jurnal sintetis untuk mengejar kecocokan.
+  3. *Tujuan*: Memastikan kelanjutan alur transaksi ke delivery, retur, PO receipt, 5 cut-off readback, mutation tests, dan Run 2 zero-drift audit secara independen dan bersih.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Audit Menyeluruh Seluruh Payload Terhadap Schema Runtime Odoo 19 ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Mengganti konstruksi statis payload dengan pemfilteran dinamis terhadap `_fields` model Odoo 19 aktual:
+     * `StockMove`: Memfilter `candidate_mv` terhadap `StockMove._fields` (memasukkan `description_picking`, `origin`, `product_id`, `product_uom`/`product_uom_id`, `product_uom_qty`, `quantity`, `date`, `price_unit`, dan hanya memasukkan `name` bila field tersebut terdaftar di runtime).
+     * `StockMoveLine`: Memfilter `candidate_sml` terhadap `StockMoveLine._fields` (`quantity`, `qty_done`, `lot_id`, `move_id`, `date`).
+     * Menangani lifecycle pergerakan Odoo 19 secara elegan: jika `mv._action_assign()` telah menghasilkan move lines, perbarui lines yang ada alih-alih membuat baris duplikat; aktifkan `mv.picked = True` jika field `picked` tersedia sebelum `mv._action_done()`.
+2. **Penelusuran & Konfigurasi Lengkap Akuntansi Persediaan Native Odoo 19 (`stock_account`):**
+   - Memetakan alias field akun persediaan dan jurnal pada `product.category` (`property_stock_valuation_account_id`, `stock_valuation_account_id`, `account_stock_valuation_id`, `property_stock_journal`, `stock_journal_id`, `property_stock_account_input_categ_id`, `property_stock_account_output_categ_id`, `property_account_expense_categ_id`) dengan konteks `with_company(company)`.
+   - Mengonfigurasi akun perantara pada seluruh lokasi yang terlibat: lokasi virtual inventory (`usage == 'inventory'`), lokasi supplier (`usage == 'supplier'`), dan lokasi customer (`usage == 'customer'`) jika field `valuation_in_account_id` / `valuation_out_account_id` tersedia pada `stock.location`.
+   - Memastikan `standard_price` terekam pada level company (`product.with_company(company).write(...)`) dan jurnal `STJ` disetel `auto_post = True`.
+3. **Penemu & Penyelaras Entri Akuntansi Native Odoo (`find_and_backdate_native_account_moves`):**
+   - Menghubungkan pelacakan entri jurnal native Odoo baik melalui relasi `stock_move.account_move_ids` (jika tersedia), field `account.move.stock_move_id` (jika tersedia), maupun pencarian referensi dokumen bisnis `origin_ref`.
+   - Menyelaraskan tanggal transaksi buku besar secara murni pada entri native yang ditemukan tanpa merekayasa jurnal sintetis tiruan.
+4. **Pembacaan GL Read-Only yang Tangguh:**
+   - Menyempurnakan pembacaan saldo GL akun persediaan `113000` dengan memeriksa entri `posted` yang terkait dengan produk target atau referensi event historis secara read-only.
+
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6432038267](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6432038267)):**
 - Menindaklanjuti review commit `2062b97`:
   1. *Hash 15 file lulus*: CI membuktikan verifikasi hash dynamic LF sukses 100%.
