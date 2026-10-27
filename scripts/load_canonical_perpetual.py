@@ -404,7 +404,7 @@ class CanonicalPerpetualAdapter:
                         f"pada company '{self.company.name}'!"
                     )
 
-        # 2. Cari atau buat akun-akun akuntansi persediaan jika modul account terpasang
+        # 2. Cari atau buktikan akun-akun akuntansi persediaan jika modul account terpasang
         stock_valuation_acc = None
         stock_input_acc = None
         stock_output_acc = None
@@ -421,17 +421,31 @@ class CanonicalPerpetualAdapter:
                 comp_domain = [("company_id", "in", [False, self.company.id])]
 
             stock_valuation_acc = AccountAccount.search(comp_domain + [
-                ("code", "in", ["114100", "114000", "113000", "113100", "110000"])
+                ("code", "in", ["113000", "114100", "114000", "113100", "110000"])
             ], limit=1)
             stock_input_acc = AccountAccount.search(comp_domain + [
-                ("code", "in", ["211200", "211000", "113900", "200000"])
+                ("code", "in", ["113900", "211000", "211200", "200000"])
             ], limit=1)
             stock_output_acc = AccountAccount.search(comp_domain + [
-                ("code", "in", ["114200", "113910", "510000", "500000"])
+                ("code", "in", ["113910", "114200", "510000", "500000"])
             ], limit=1)
             cogs_acc = AccountAccount.search(comp_domain + [
                 ("code", "in", ["510000", "500000"])
             ], limit=1)
+
+            # Buktikan akun-akun wajib secara fail-fast
+            if not stock_valuation_acc:
+                raise RuntimeError(
+                    "[canonical_loader] FATAL: Akun valuasi persediaan (113000 / stock_valuation) tidak ditemukan!"
+                )
+            if not stock_input_acc:
+                raise RuntimeError(
+                    "[canonical_loader] FATAL: Akun perantara persediaan masuk (113900 / stock_input) tidak ditemukan!"
+                )
+            if not cogs_acc:
+                raise RuntimeError(
+                    "[canonical_loader] FATAL: Akun HPP (510000 / cogs) tidak ditemukan!"
+                )
 
         # 3. Cari dan buktikan keberadaan jurnal stok yang diwajibkan untuk real-time valuation
         if "account.journal" in self.env:
@@ -462,43 +476,101 @@ class CanonicalPerpetualAdapter:
                     "yang diwajibkan tidak dapat dibuktikan!"
                 )
 
-        # 4. Update kategori produk yang ada secara fail-fast
-        categories = ProductCategory.search([])
-        for cat in categories:
-            vals = {}
-            if "property_cost_method" in cat_fields:
-                vals["property_cost_method"] = "fifo"
-            if "property_valuation" in cat_fields:
-                vals["property_valuation"] = "real_time"
+            # Buktikan konfigurasi company.account_stock_journal_id jika didukung model company
+            if hasattr(self, "company") and self.company:
+                comp_fields = _safe_fields(self.company)
+                if "account_stock_journal_id" in comp_fields:
+                    self.company.sudo().write({"account_stock_journal_id": stock_journal.id})
 
-            for fname in [
-                "property_stock_valuation_account_id", "stock_valuation_account_id", "account_stock_valuation_id"
-            ]:
-                if fname in cat_fields and stock_valuation_acc and not getattr(cat, fname, None):
-                    vals[fname] = stock_valuation_acc.id
-            for fname in ["property_stock_journal", "stock_journal_id", "stock_journal"]:
-                if fname in cat_fields and stock_journal and not getattr(cat, fname, None):
-                    vals[fname] = stock_journal.id
-            for fname in [
-                "property_stock_account_input_categ_id", "property_stock_account_input_id", "account_stock_in_id"
-            ]:
-                if fname in cat_fields and stock_input_acc and not getattr(cat, fname, None):
-                    vals[fname] = stock_input_acc.id
-            for fname in [
-                "property_stock_account_output_categ_id", "property_stock_account_output_id", "account_stock_out_id"
-            ]:
-                if fname in cat_fields and (cogs_acc or stock_output_acc) and not getattr(cat, fname, None):
-                    vals[fname] = (cogs_acc or stock_output_acc).id
-            for fname in ["property_account_expense_categ_id", "property_account_expense_id", "account_expense_id"]:
-                if fname in cat_fields and cogs_acc and not getattr(cat, fname, None):
-                    vals[fname] = cogs_acc.id
+        # 4. Konfigurasi Predicate Lokasi (stock.location) Sesuai Jalur Eksperimen Terbukti
+        StockLocation = self.env["stock.location"].sudo() if "stock.location" in self.env else None
+        if StockLocation is not None:
+            sl_fields = _safe_fields(StockLocation)
+            if "valuation_account_id" in sl_fields:
+                # Lokasi internal (WH/Stock, Karantina) WAJIB False pada valuation_account_id
+                # agar akun persediaan diambil murni dari product.category (113000)
+                for inloc in StockLocation.search([("usage", "=", "internal")]):
+                    if getattr(inloc, "valuation_account_id", False):
+                        inloc.write({"valuation_account_id": False})
 
-            if vals and callable(getattr(cat, "write", None)):
-                cat.write(vals)
+                # Lokasi non-internal diberi mapping counterpart eksplisit
+                if stock_input_acc:
+                    for iloc in StockLocation.search([("usage", "in", ["inventory", "supplier", "production"])]):
+                        iloc.write({"valuation_account_id": stock_input_acc.id})
+                cust_acc = cogs_acc or stock_output_acc
+                if cust_acc:
+                    for cloc in StockLocation.search([("usage", "=", "customer")]):
+                        cloc.write({"valuation_account_id": cust_acc.id})
+
+        # 5. Update kategori produk HANYA untuk scope kategori FMCG seed (bukan seluruh kategori)
+        if "product.category" in self.env:
+            ProductCategory = self.env["product.category"].sudo()
+            cat_fields = _safe_fields(ProductCategory)
+
+            # Cari kategori produk khusus seed
+            seed_categories = []
+            seen_cat_ids = set()
+            for pr in getattr(self, "product_by_code", {}).values():
+                c_id = getattr(pr, "categ_id", None)
+                if c_id:
+                    cid_key = getattr(c_id, "id", c_id)
+                    if cid_key not in seen_cat_ids:
+                        seen_cat_ids.add(cid_key)
+                        seed_categories.append(c_id)
+            if not seed_categories:
+                fmcg_cats = ProductCategory.search([
+                    ("name", "in", ["FMCG", "All / FMCG", "FMCG Perpetual Experiment"])
+                ])
+                if fmcg_cats:
+                    for cat in (fmcg_cats if isinstance(fmcg_cats, (list, tuple)) else [fmcg_cats]):
+                        cid_key = getattr(cat, "id", cat)
+                        if cid_key not in seen_cat_ids:
+                            seen_cat_ids.add(cid_key)
+                            seed_categories.append(cat)
+            if not seed_categories:
+                fallback_cat = ProductCategory.search([], limit=1)
+                if fallback_cat:
+                    seed_categories = [fallback_cat]
+
+            for cat in seed_categories:
+                has_comp_ctx = callable(getattr(cat, "with_company", None)) and self.company
+                cat_target = cat.with_company(self.company) if has_comp_ctx else cat
+                vals = {}
+                if "property_cost_method" in cat_fields:
+                    vals["property_cost_method"] = "fifo"
+                if "property_valuation" in cat_fields:
+                    vals["property_valuation"] = "real_time"
+
+                for fname in [
+                    "property_stock_valuation_account_id", "stock_valuation_account_id", "account_stock_valuation_id"
+                ]:
+                    if fname in cat_fields and stock_valuation_acc and not getattr(cat_target, fname, None):
+                        vals[fname] = stock_valuation_acc.id
+                for fname in ["property_stock_journal", "stock_journal_id", "stock_journal"]:
+                    if fname in cat_fields and stock_journal and not getattr(cat_target, fname, None):
+                        vals[fname] = stock_journal.id
+                for fname in [
+                    "property_stock_account_input_categ_id", "property_stock_account_input_id", "account_stock_in_id"
+                ]:
+                    if fname in cat_fields and stock_input_acc and not getattr(cat_target, fname, None):
+                        vals[fname] = stock_input_acc.id
+                for fname in [
+                    "property_stock_account_output_categ_id", "property_stock_account_output_id", "account_stock_out_id"
+                ]:
+                    if fname in cat_fields and (cogs_acc or stock_output_acc) and not getattr(cat_target, fname, None):
+                        vals[fname] = (cogs_acc or stock_output_acc).id
+                for fname in [
+                    "property_account_expense_categ_id", "property_account_expense_id", "account_expense_id"
+                ]:
+                    if fname in cat_fields and cogs_acc and not getattr(cat_target, fname, None):
+                        vals[fname] = cogs_acc.id
+
+                if vals and callable(getattr(cat_target, "write", None)):
+                    cat_target.write(vals)
 
     def _sync_native_stock_accounting(self, stock_move, date_time_str, date_only):
-        """Menyelaraskan tanggal entri jurnal native Odoo (account.move)
-        yang terbentuk dari stock.move secara fail-fast.
+        """Memverifikasi tanggal entri jurnal native Odoo (account.move)
+        yang terbentuk dari stock.move secara fail-fast tanpa mereset status posted.
         """
         if "account.move" not in self.env:
             return
@@ -538,33 +610,48 @@ class CanonicalPerpetualAdapter:
                     found_ams.append(am)
 
         for am in found_ams:
-            if getattr(am, "state", "") == "draft":
+            am_state = getattr(am, "state", "")
+            if am_state == "draft":
                 am.write({"date": date_only})
                 if hasattr(am, "line_ids") and am.line_ids:
                     am.line_ids.write({"date": date_only})
                 am.action_post()
-            elif getattr(am, "state", "") == "posted":
-                if str(getattr(am, "date", "")) != date_only:
+            elif am_state == "posted":
+                current_date = str(getattr(am, "date", ""))
+                if current_date != date_only:
+                    # Mencoba direct write jika diizinkan konfigurasi internal
                     try:
                         am.write({"date": date_only})
                         if hasattr(am, "line_ids") and am.line_ids:
                             am.line_ids.write({"date": date_only})
                     except Exception:
-                        # Direct write pada posted move mungkin dilarang; coba unpost -> write -> repost
-                        if hasattr(am, "button_draft"):
-                            am.button_draft()
-                            am.write({"date": date_only})
-                            if hasattr(am, "line_ids") and am.line_ids:
-                                am.line_ids.write({"date": date_only})
-                            am.action_post()
-                        else:
-                            raise
-            # Verifikasi fail-fast: tanggal wajib selaras, dilarang silent swallow
-            current_date = str(getattr(am, "date", ""))
-            if current_date != date_only:
+                        pass
+                    final_date = str(getattr(am, "date", ""))
+                    if final_date != date_only:
+                        # DILARANG unpost / button_draft pada jurnal posted!
+                        # Kegagalan tanggal harus menghentikan run secara fail-fast.
+                        raise RuntimeError(
+                            f"[canonical_loader] FATAL: Entri jurnal posted '{getattr(am, 'name', am.id)}' "
+                            f"memiliki tanggal {final_date}, diharapkan {date_only}! "
+                            f"Tanggal native harus benar sejak posting awal."
+                        )
+            elif am_state == "cancel":
                 raise RuntimeError(
-                    f"[canonical_loader] FATAL: Tanggal entri jurnal native '{getattr(am, 'name', am.id)}' "
-                    f"gagal diselaraskan ke {date_only}! Terbaca aktual: {current_date}"
+                    f"[canonical_loader] FATAL: Entri jurnal '{getattr(am, 'name', am.id)}' berstatus 'cancel'!"
+                )
+
+            # Verifikasi akhir: state harus posted dan tanggal tepat date_only
+            final_state = getattr(am, "state", "")
+            if final_state != "posted":
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Entri jurnal '{getattr(am, 'name', am.id)}' "
+                    f"belum posted (state={final_state})!"
+                )
+            final_date = str(getattr(am, "date", ""))
+            if final_date != date_only:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Tanggal entri jurnal '{getattr(am, 'name', am.id)}' "
+                    f"gagal diselaraskan ke {date_only}! Terbaca aktual: {final_date}"
                 )
 
     def _assign_lots_to_picking(self, pick, lines_data):
@@ -821,11 +908,28 @@ class CanonicalPerpetualAdapter:
         else:
             date_time_str = str(date_str) if date_str else None
 
+        if date_time_str:
+            if hasattr(pick, "scheduled_date"):
+                pick.scheduled_date = date_time_str
+            if hasattr(pick, "date_done"):
+                pick.date_done = date_time_str
+            if hasattr(pick, "move_ids") and pick.move_ids:
+                for sm in pick.move_ids:
+                    if callable(getattr(sm, "write", None)):
+                        try:
+                            sm.write({"date": date_time_str})
+                        except Exception:
+                            pass
+
         val_ctx = {
             "skip_sms": True,
         }
         if date_only:
             val_ctx["force_period_date"] = date_only
+            val_ctx["date"] = date_only
+            val_ctx["accounting_date"] = date_only
+        if date_time_str:
+            val_ctx["date_done"] = date_time_str
 
         pick_target = pick.with_context(**val_ctx) if callable(getattr(pick, "with_context", None)) else pick
         res = pick_target.button_validate() if hasattr(pick_target, "button_validate") else None

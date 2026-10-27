@@ -1,5 +1,35 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Resolusi Tuntas Temuan Supervisi PR #15 (issuecomment-6447016004): Relasi Native PO->Receipt, Oracle Fail-Closed, Isolasi Mutasi, Tanggal Native Jurnal, dan Mapping Akuntansi
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6447016004](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6447016004)):**
+- Menindaklanjuti audit supervisi pada commit `30d9985` yang menemukan 4 blocker runtime pada `init-test`:
+  1. *Relasi Native PO -> Receipt*:
+     - Menghapus pencarian receipt via `picking.origin == po_num` (yang di native Odoo bernilai `po.name` seperti `P00001`, bukan `PO-2026-06-01`).
+     - Oracle kini mencari PO via `PurchaseOrder.search([("origin", "=", po_num)])` dan menavigasi langsung relasi native `po.picking_ids` (tepat 1 receipt per PO berstatus `done`).
+     - Memverifikasi tanggal penerimaan persis sama dengan `arrival_maumbi_date` dan move lines dicocokkan per SKU, lot, dan kuantitas terhadap `inbound_po_intransit_june_lines.csv`.
+  2. *Oracle & Isolasi Mutasi (Fail-Closed & Unconditional Rollback)*:
+     - Oracle dan mutasi kini fail-closed: mewajibkan seluruh model Odoo esensial tersedia (`stock.picking`, `sale.order`, `purchase.order`, `account.move`, `account.payment`, `stock.quant`). Jika diberikan env kosong `{}` atau mock tanpa model, oracle langsung melempar `RuntimeError` fail-fast (tidak ada false positive PASS).
+     - Phase 0: Baseline oracle diverifikasi 100% PASS sebelum mutasi dieksekusi.
+     - Isolasi mutasi savepoint memicu rollback unconditional via `RollbackSentinel` yang dilempar keluar blok savepoint.
+     - Untuk mock environment tanpa PostgreSQL savepoint, dilakukan backup menyeluruh terhadap `_vals` dan instance `__dict__` seluruh record dan nested lines (`move_line_ids`, `line_ids`), lalu dipulihkan secara bersih pada blok `finally`.
+     - Setiap mutasi memvalidasi `expected_error_substring` spesifik (bukan general error), dan memverifikasi bahwa baseline oracle kembali 100% PASS setelah rollback.
+  3. *Tanggal Native Jurnal Stok Sejak Posting Awal*:
+     - Menghapus mekanisme unpost (`button_draft()`) dan repost (`action_post()`) pada posted moves di `_sync_native_stock_accounting`.
+     - Tanggal native dipastikan benar sejak awal validasi picking via context `val_ctx` (`force_period_date`, `date`, `accounting_date`, `date_done`) serta setting tanggal pada `pick.scheduled_date`, `pick.date_done`, dan `move_ids.date`.
+     - Jika entri jurnal posted memiliki tanggal yang tidak sesuai dengan target register, loader melempar `RuntimeError` fail-fast tanpa bypass.
+  4. *Konfigurasi Akuntansi Ter-scope & Pembuktian Predikat Lokasi*:
+     - Konfigurasi kategori produk dibatasi HANYA untuk scope kategori FMCG seed (`with_company(self.company)`) tanpa mengubah kategori lain di database.
+     - Membuktikan konfigurasi predikat `stock.location`: lokasi internal memiliki `valuation_account_id = False`, sedangkan lokasi non-internal (transit, partner, customer) memiliki `valuation_account_id` terhubung ke akun input/COGS.
+     - Membuktikan `company.account_stock_journal_id` dan fail-fast jika akun valuasi (113000), input (113900), atau COGS (510000) tidak ditemukan.
+- Hasil verifikasi:
+  * `ruff check .`: All checks passed! (0 lint errors)
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python -m unittest tests/test_canonical_loader_adapter.py`: 47 tests OK
+  * `python -m unittest tests/test_generator_reproducibility.py tests/test_seed_acceptance.py tests/test_seed_invariants.py`: 72 tests OK
+  * Total 119 pengujian lokal lulus 100%.
+  * 15 file CSV register kanonikal di `data/registers/` 100% utuh tanpa perubahan.
+  * PR #15 tidak dimerge dan tidak dideploy ke Railway.
+
 ## 2026-10-27 — antigravity agent — Resolusi Penuh 4 Temuan Audit Supervisi PR #15: Presisi Oracle Register, Uji Mutasi Aktif, Fail-Fast Date Rewrite, dan Proving Jurnal Stok
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6442809030](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6442809030)):**
 - Menindaklanjuti audit supervisi komprehensif pada HEAD `812ae66` yang mendapati 4 blocker kritis sebelum merge:

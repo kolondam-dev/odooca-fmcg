@@ -800,3 +800,33 @@
   * python -m unittest tests/test_generator_reproducibility.py tests/test_seed_acceptance.py tests/test_seed_invariants.py (72 tests OK)
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T22:56:00+07:00
+
+[2026-10-27T23:45:00+07:00] [INFO] Resolusi Penuh Temuan Supervisi PR #15 (issuecomment-6447016004): Relasi Native PO->Receipt, Oracle Fail-Closed, Isolasi Mutasi, Tanggal Native Jurnal, dan Mapping Akuntansi
+- Menindaklanjuti audit supervisi pada commit 30d9985 (PR #15 review comment 6447016004):
+  1. Relasi Native PO -> Receipt:
+     * Menghapus pencarian receipt via picking.origin == po_num (karena di native Odoo bernilai po.name P00001).
+     * Oracle mencari PO via PurchaseOrder.search([("origin", "=", po_num)]) lalu menavigasi relasi native po.picking_ids (tepat 1 receipt per PO berstatus done).
+     * Memverifikasi tanggal receipt == arrival_maumbi_date dan move lines dicocokkan per SKU, lot, dan kuantitas terhadap inbound_po_intransit_june_lines.csv.
+  2. Oracle & Isolasi Mutasi (Fail-Closed & Unconditional Rollback):
+     * Oracle dan mutasi kini fail-closed: mewajibkan seluruh model Odoo esensial tersedia. Menghasilkan RuntimeError fail-fast jika dipanggil pada registry kosong {} atau mock tanpa model.
+     * Phase 0: Baseline oracle diverifikasi 100% PASS sebelum mutasi dieksekusi.
+     * Isolasi mutasi memicu rollback unconditional via RollbackSentinel yang dilempar keluar blok savepoint.
+     * Untuk mock environment tanpa PostgreSQL savepoint, backup mendalam terhadap _vals dan instance __dict__ seluruh record dan nested lines (move_line_ids, line_ids) dipulihkan secara bersih pada blok finally.
+     * Setiap mutasi memvalidasi expected_error_substring spesifik dan membuktikan baseline oracle kembali 100% PASS pasca-rollback.
+  3. Tanggal Native Jurnal Stok Sejak Posting Awal:
+     * Menghapus mekanisme unpost (button_draft) dan repost (action_post) pada posted moves di _sync_native_stock_accounting.
+     * Tanggal native dipastikan benar sejak awal validasi picking via context val_ctx (force_period_date, date, accounting_date, date_done) serta setting tanggal pada pick.scheduled_date, pick.date_done, dan move_ids.date.
+     * Ketidakcocokan tanggal pada posted entries langsung melempar RuntimeError fail-fast.
+  4. Konfigurasi Akuntansi Ter-scope & Pembuktian Predikat Lokasi:
+     * Konfigurasi kategori produk dibatasi HANYA untuk scope kategori FMCG seed (with_company(self.company)) tanpa mengubah kategori lain di database.
+     * Membuktikan konfigurasi predikat stock.location: lokasi internal memiliki valuation_account_id = False; lokasi non-internal (transit, customer, supplier) memiliki valuation_account_id terhubung ke akun input/COGS.
+     * Membuktikan company.account_stock_journal_id dan fail-fast jika akun valuasi (113000), input (113900), atau COGS (510000) tidak ditemukan.
+- Verifikasi lokal:
+  * ruff check . (All checks passed! 0 error)
+  * python scripts/check_manifests.py (manifest ok: 4 addon)
+  * python -m unittest tests/test_canonical_loader_adapter.py (47 tests OK)
+  * python -m unittest tests/test_generator_reproducibility.py tests/test_seed_acceptance.py tests/test_seed_invariants.py (72 tests OK)
+  * Total 119 pengujian lokal lulus 100%.
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T23:45:00+07:00
+

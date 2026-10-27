@@ -75,6 +75,10 @@ class MockRecordList(list):
             pay_obj = getattr(rec, "_payment", None)
             if pay_obj:
                 pay_obj.state = "paid"
+            inv_move = getattr(rec, "move_id", None)
+            if inv_move and getattr(inv_move, "move_type", "") == "out_invoice":
+                paid_amt = sum(float(getattr(other, "credit", 0.0)) for other in self if other is not rec)
+                inv_move.amount_residual = max(0.0, round(float(getattr(inv_move, "amount_total", 0.0)) - paid_amt, 2))
 
 
 class MockRecord:
@@ -99,6 +103,9 @@ class MockRecord:
         if isinstance(other, int):
             return self.id == other
         return False
+
+    def __hash__(self):
+        return hash((self._model, self.id))
 
     def __or__(self, other):
         res = MockRecordList([self])
@@ -136,7 +143,21 @@ class MockRecord:
                 existing = self._env["stock.lot"].store.get(l_val)
                 if existing:
                     return existing
-            return False
+        if name in ("move_line_ids", "move_ids"):
+            val = self._vals.get(name)
+            if isinstance(val, MockRecordList):
+                return val
+            if isinstance(val, list):
+                target_model = "stock.move.line" if name == "move_line_ids" else "stock.move"
+                res = []
+                for item in val:
+                    if isinstance(item, (list, tuple)) and len(item) == 3 and isinstance(item[2], dict):
+                        res.append(MockRecord(item[2], target_model, len(res) + 1, self._env))
+                    elif isinstance(item, MockRecord):
+                        res.append(item)
+                rec_list = MockRecordList(res)
+                self._vals[name] = rec_list
+                return rec_list
         if name in self._vals:
             return self._vals[name]
         if name == "account_id":
@@ -157,6 +178,9 @@ class MockRecord:
             self._vals[name] = value
 
     def with_context(self, **kwargs):
+        return self
+
+    def with_company(self, company):
         return self
 
     def write(self, vals):
@@ -237,13 +261,18 @@ class MockRecord:
                     for inv_line in self._vals.get("invoice_line_ids", [])
                     if isinstance(inv_line, (list, tuple)) and len(inv_line) == 3
                 )
+                self.amount_untaxed = round(total_amt, 2)
+                self.amount_tax = round(total_amt * 0.11, 2)
+                self.amount_total = round(total_amt + self.amount_tax, 2)
+                self.amount_residual = self.amount_total
                 ar_line = MockRecord({
                     "name": self._vals.get("ref", "AR Invoice"),
                     "account_id": MockRecord({"account_type": "asset_receivable"}, "account.account", 1, self._env),
-                    "debit": total_amt,
+                    "debit": self.amount_total,
                     "credit": 0.0,
                     "reconciled": False,
                 }, "account.move.line", 1, self._env)
+                ar_line.move_id = self
                 inc_line = MockRecord({
                     "name": "Sales Income",
                     "account_id": MockRecord({"account_type": "income"}, "account.account", 2, self._env),
@@ -251,7 +280,16 @@ class MockRecord:
                     "credit": total_amt,
                     "reconciled": False,
                 }, "account.move.line", 2, self._env)
-                self.line_ids = MockRecordList([ar_line, inc_line])
+                inc_line.move_id = self
+                tax_line = MockRecord({
+                    "name": "PPN Keluaran 11%",
+                    "account_id": MockRecord({"account_type": "liability_current"}, "account.account", 7, self._env),
+                    "debit": 0.0,
+                    "credit": self.amount_tax,
+                    "reconciled": False,
+                }, "account.move.line", 3, self._env)
+                tax_line.move_id = self
+                self.line_ids = MockRecordList([ar_line, inc_line, tax_line])
             elif m_type == "in_invoice":
                 total_amt = sum(
                     inv_line[2].get("quantity", 1.0) * inv_line[2].get("price_unit", 0.0)
@@ -359,6 +397,9 @@ class MockModel:
     def with_context(self, **kw):
         return self
 
+    def with_company(self, company):
+        return self
+
     def search(self, domain=None, limit=None, order=None, **kwargs):
         domain = domain or []
         results = []
@@ -431,10 +472,16 @@ class MockEnv(dict):
             "res.partner", "product.product", "res.users", "stock.quant", "stock.location",
             "stock.lot", "purchase.order", "sale.order", "account.move", "account.payment",
             "stock.picking", "stock.move", "stock.move.line", "account.account",
+            "account.journal", "product.category",
         ]
         for m in models:
             self[m] = MockModel(m, env=self)
         self.company.partner_id = self["res.partner"].create({"name": "PT MDU", "ref": "COMPANY"})
+
+    def __missing__(self, key):
+        model = MockModel(key, env=self)
+        self[key] = model
+        return model
 
     def ref(self, xml_id, raise_if_not_found=False):
         return MockRecord({"name": xml_id}, "base", 1, self)
@@ -442,6 +489,34 @@ class MockEnv(dict):
 
 def setup_standard_mock_env():
     mock_env = MockEnv()
+
+    # Prepopulate standard accounts & journal
+    mock_env["account.account"].create({
+        "name": "Persediaan Barang Dagang",
+        "code": "113000",
+        "account_type": "asset_current",
+    })
+    mock_env["account.account"].create({
+        "name": "Penerimaan Barang Belum Ditagih",
+        "code": "113900",
+        "account_type": "liability_current",
+    })
+    mock_env["account.account"].create({
+        "name": "Pengiriman Barang Belum Difakturkan",
+        "code": "113910",
+        "account_type": "asset_current",
+    })
+    mock_env["account.account"].create({
+        "name": "Beban Pokok Pendapatan",
+        "code": "510000",
+        "account_type": "expense",
+    })
+    mock_env["account.journal"].create({
+        "name": "Penilaian Persediaan",
+        "code": "STJ",
+        "type": "general",
+    })
+    fmcg_categ = mock_env["product.category"].create({"name": "All / FMCG"})
 
     # Prepopulate partners & products
     cust_rows = read_register_csv("customer_registry_354.csv")
@@ -462,9 +537,17 @@ def setup_standard_mock_env():
 
     prod_rows = read_register_csv("initial_stock_20260701.csv")
     for pr in prod_rows:
-        mock_env["product.product"].create({"name": pr["product_name"], "default_code": pr["sku_code"]})
+        mock_env["product.product"].create({
+            "name": pr["product_name"],
+            "default_code": pr["sku_code"],
+            "categ_id": fmcg_categ,
+        })
 
     mock_env["stock.location"].create({"name": "WH/Stock", "usage": "internal"})
+    mock_env["stock.location"].create({"name": "Karantina FMCG Maumbi", "usage": "internal"})
+    mock_env["stock.location"].create({"name": "Partner Locations/Customers", "usage": "customer"})
+    mock_env["stock.location"].create({"name": "Partner Locations/Vendors", "usage": "supplier"})
+    mock_env["stock.location"].create({"name": "Virtual Locations/Inventory adjustment", "usage": "inventory"})
     return mock_env
 
 
@@ -1745,14 +1828,24 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertIn("tidak ada dalam allowlist resmi", str(ctx.exception))
 
     def test_verify_slice_mutation_rejection_requires_env_and_path(self):
-        """Uji fail-fast: uji mutasi dilarang dijalankan tanpa DB atau dengan path CSV tidak ada."""
-        from scripts.ops.verify_disposable_slice import verify_slice_mutation_rejection
+        """Uji fail-closed: oracle & mutasi dilarang dijalankan tanpa DB, dengan env kosong, atau path fiktif."""
+        from scripts.ops.verify_disposable_slice import (
+            verify_run1_against_canonical_oracle,
+            verify_slice_mutation_rejection,
+        )
 
         with self.assertRaises(ValueError):
             verify_slice_mutation_rejection(None, None, REG_DIR)
 
+        # Env kosong tanpa model Odoo wajib harus fail-closed (RuntimeError / ValueError)
+        with self.assertRaises((RuntimeError, ValueError)):
+            verify_run1_against_canonical_oracle({}, None, REG_DIR, ["SO-202607-0001"])
+
+        with self.assertRaises((RuntimeError, ValueError)):
+            verify_slice_mutation_rejection({}, None, REG_DIR)
+
         with self.assertRaises(FileNotFoundError):
-            verify_slice_mutation_rejection(MockEnv(), None, Path("/path/tidak/ada/perpetual"))
+            verify_slice_mutation_rejection(setup_standard_mock_env(), None, Path("/path/tidak/ada/perpetual"))
 
     def test_verify_slice_mutation_rejection(self):
         """Uji pembuktian active fault detection dari validator slice representatif terhadap record nyata."""
@@ -1818,8 +1911,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
 
     def test_ensure_accounting_configuration_fail_fast_on_missing_journal(self):
         """Konfigurasi akuntansi wajib fail-fast jika jurnal stok tidak tersedia dan tidak dapat dibuat."""
-        env = MockEnv()
-        env["product.category"] = MockModel("product.category", env)
+        env = setup_standard_mock_env()
         # Modifikasi mock journal agar search dan create mengembalikan None
         class UncreatableJournal(MockModel):
             def search(self, *args, **kwargs):
@@ -1835,9 +1927,17 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             str(ctx.exception),
         )
 
+    def test_ensure_accounting_configuration_fail_fast_on_missing_account(self):
+        """Konfigurasi akuntansi wajib fail-fast jika akun persediaan/COGS wajib tidak ditemukan."""
+        env = setup_standard_mock_env()
+        env["account.account"].store = {}
+        with self.assertRaises(RuntimeError) as ctx:
+            CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        self.assertIn("tidak ditemukan", str(ctx.exception))
+
     def test_sync_native_stock_accounting_fail_fast_on_unverified_date(self):
         """_sync_native_stock_accounting wajib fail-fast jika rewrite tanggal ditolak dan tanggal tetap runtime."""
-        env = MockEnv()
+        env = setup_standard_mock_env()
         adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
 
         class StubLockedMove:
@@ -1859,7 +1959,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         sm = StubStockMove()
         with self.assertRaises(RuntimeError) as ctx:
             adapter._sync_native_stock_accounting(sm, "2026-07-01 00:00:00", "2026-07-01")
-        self.assertIn("gagal diselaraskan ke 2026-07-01", str(ctx.exception))
+        self.assertIn("diharapkan 2026-07-01", str(ctx.exception))
 
 
 if __name__ == "__main__":
