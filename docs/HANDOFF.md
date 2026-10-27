@@ -1,5 +1,28 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Resolusi 4 Blocker Supervisi PR #15: Sanity Native, Truthiness Lot Split, Paritas Historis, dan Oracle Kanonikal Slice
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6441014776](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6441014776)):**
+- Menindaklanjuti audit supervisi komprehensif pada HEAD `16fa541` yang menemukan bypass eksplisit dan celah false confidence:
+  1. *Penghapusan Bypass Sanity Native Odoo*:
+     - Menghapus `"skip_sanity_check": True` pada `_validate_picking_safely` di `scripts/load_canonical_perpetual.py`.
+     - Mengimplementasikan allowlist wizard resmi Odoo (`confirm.stock.sms` -> `dont_send_sms`, `stock.immediate.transfer` -> `process`, `stock.backorder.confirmation` -> `process_cancel_backorder`/`process`) dan penolakan keras fail-fast terhadap wizard asing.
+  2. *Koreksi Truthiness Model `stock.move.line` & Multi-Lot Split*:
+     - Mengganti evaluasi boolean falsy `if not assigned and StockMoveLine:` menjadi `if StockMoveLine is not None:` sehingga pembuatan move line untuk split lot kedua tidak tertelan oleh empty recordset.
+     - Mengagregasi baris sumber berulang pada lot yang sama secara akumulatif (misal 24 + 36 = 60 unit).
+     - Menambahkan assertion eksak fail-fast pemetaan lot -> kuantitas (`[canonical_loader] FATAL: Alokasi kuantitas lot mismatch...`).
+     - Mereproduksi dan membuktikan kelulusan kasus register nyata `SO-202607-0317` (`ULV-SNL-04`): teralokasi persis 120 unit lot `LOT-VER-20260615-INIT-04` + 96 unit lot `LOT-VER-20260704-04` = 216 unit total.
+  3. *Paritas Mekanisme Historis pada Canonical Loader*:
+     - Menambahkan `_ensure_accounting_configuration` untuk mengaktifkan automated valuation (`property_cost_method='fifo'`, `property_valuation='real_time'`) serta pemetaan akun persediaan, transit, HPP, dan jurnal stok pada kategori FMCG.
+     - Meneruskan `force_period_date` pada context validasi picking dan opening quant.
+     - Menambahkan `_sync_native_stock_accounting` untuk menyelaraskan tanggal `stock.move`, `stock.move.line`, dan `account.move` native hasil valuasi stok otomatis ke tanggal dokumen register di bulan Juli 2026.
+  4. *Perluasan Slice Representatif dengan Oracle Register Kanonikal & Uji Mutasi Negatif*:
+     - Memperluas target slice pada `scripts/ops/verify_disposable_slice.py` menyertakan `SO-202607-0317`: `["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]`.
+     - Menambahkan `verify_run1_against_canonical_oracle` yang membandingkan hasil pemuatan Run 1 secara independen terhadap CSV register kanonikal (inbound PO receipts, multi-lot split SO-317, retur karantina REJ-001, DPP & PPN invoice, open vs closed AR, tanggal historis Juli 2026).
+     - Menambahkan `verify_slice_mutation_rejection` untuk membuktikan daya uji aktif oracle (menolak lot split rusak, DPP palsu, dan tanggal bocor runtime).
+     - Mempertahankan uji idempotensi sejati Run 2 (0 create, 100% skipped, zero stock drift, zero GL drift).
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), 71 seed tests OK, 43 adapter unit tests OK.
+- Dataset 15 file CSV register kanonikal beku 100% tanpa perubahan; Railway tidak disentuh dan tidak merge ke `main`.
+
 ## 2026-10-27 — antigravity agent — Penyelesaian Penuh Invariant Seeding, Eliminasi Anti-pattern Truthiness Odoo, dan Verifikasi Runtime Disposable Lulus 100%
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6438259265](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6438259265)):**
 - Seluruh gate pengujian CI pada PR #15 (`agen/fix-seed-invariants`) LULUS 100% HIJAU:

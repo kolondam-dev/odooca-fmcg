@@ -350,7 +350,7 @@ class MockModel:
     def with_context(self, **kw):
         return self
 
-    def search(self, domain=None, limit=None):
+    def search(self, domain=None, limit=None, order=None, **kwargs):
         domain = domain or []
         results = []
         for rec in self.store.values():
@@ -421,7 +421,7 @@ class MockEnv(dict):
         models = [
             "res.partner", "product.product", "res.users", "stock.quant", "stock.location",
             "stock.lot", "purchase.order", "sale.order", "account.move", "account.payment",
-            "stock.picking", "account.account",
+            "stock.picking", "stock.move", "stock.move.line", "account.account",
         ]
         for m in models:
             self[m] = MockModel(m, env=self)
@@ -1543,6 +1543,293 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertTrue(sms_wizard_called["dont_send_sms"], "Wizard dont_send_sms() wajib terpanggil!")
         self.assertEqual(pick_instance.state, "done", "Picking wajib berhasil mencapai status 'done'!")
 
+    def test_assign_lots_multi_lot_split_so317_with_falsy_model(self):
+        """Memverifikasi kasus register nyata SO-202607-0317 (ULV-SNL-04: 5+4 karton = 216 unit)
+
+        membuktikan bahwa pemetaan multi-lot split berhasil 100% dan tidak hilang
+        meskipun model stock.move.line adalah falsy recordset (bool(Model) == False).
+        """
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        # Buat Falsy Model untuk stock.move.line: bool(MockFalsyMoveLineModel()) == False
+        class MockFalsyMoveLineModel:
+            def __init__(self, records=None):
+                self._records = records or []
+                self._fields = {
+                    "picking_id": True, "move_id": True, "product_id": True,
+                    "lot_id": True, "lot_name": True, "quantity": True,
+                    "qty_done": True, "picked": True, "product_uom_id": True,
+                }
+
+            def __bool__(self):
+                # Mensimulasikan empty recordset Odoo yang bernilai False
+                return False
+
+            def sudo(self):
+                return self
+
+            def create(self, vals):
+                from tests.test_canonical_loader_adapter import MockRecord
+                rec = MockRecord(vals, "stock.move.line", len(self._records) + 600)
+                self._records.append(rec)
+                return rec
+
+        falsy_sml_model = MockFalsyMoveLineModel()
+        mock_env["stock.move.line"] = falsy_sml_model
+
+        prod = adapter.product_by_code.get("ULV-SNL-04")
+        self.assertIsNotNone(prod, "Produk ULV-SNL-04 wajib ada di catalog!")
+
+        class MockMove:
+            def __init__(self, prod_id):
+                self.id = 101
+                self.product_id = prod_id
+                self._fields = {"picked": True}
+                self.picked = False
+
+            def write(self, vals):
+                if "picked" in vals:
+                    self.picked = vals["picked"]
+
+        class MockPicking:
+            def __init__(self, prod_id):
+                self.id = 999
+                self.name = "DO-202607-0317"
+                self.move_ids = [MockMove(prod_id)]
+                # Awalnya hanya ada 1 existing move line default tanpa lot
+                from tests.test_canonical_loader_adapter import MockRecord
+                init_sml = MockRecord(
+                    {
+                        "id": 501, "product_id": prod_id, "lot_id": False,
+                        "lot_name": False, "quantity": 0.0, "picked": False,
+                    },
+                    "stock.move.line",
+                    501,
+                )
+                self.move_line_ids = [init_sml]
+
+        pick = MockPicking(prod.id)
+
+        # Baris register nyata SO-202607-0317 dari perpetual_order_lines.csv
+        # 5 karton lot 1 (120 unit) + 4 karton lot 2 (96 unit) = 216 unit
+        lines_data = [
+            {
+                "sku_code": "ULV-SNL-04",
+                "qty_cartons": "5",
+                "carton_qty": "24",
+                "lot_number": "LOT-VER-20260615-INIT-04",
+                "expiry_date": "2028-06-15",
+            },
+            {
+                "sku_code": "ULV-SNL-04",
+                "qty_cartons": "4",
+                "carton_qty": "24",
+                "lot_number": "LOT-VER-20260704-04",
+                "expiry_date": "2028-07-04",
+            },
+        ]
+
+        adapter._assign_lots_to_picking(pick, lines_data)
+
+        # Verifikasi hasil alokasi:
+        # Wajib ada 2 move line
+        self.assertEqual(len(pick.move_line_ids), 2, "Wajib ada 2 baris move line untuk 2 lot berbeda!")
+        tot_qty = sum(getattr(ml, "quantity", 0.0) for ml in pick.move_line_ids)
+        self.assertEqual(tot_qty, 216.0, "Total kuantitas ULV-SNL-04 wajib persis 216 unit (120 + 96)!")
+
+        lot_map = {getattr(ml, "lot_name", None): getattr(ml, "quantity", 0.0) for ml in pick.move_line_ids}
+        self.assertEqual(lot_map.get("LOT-VER-20260615-INIT-04"), 120.0, "Lot 1 wajib 120 unit!")
+        self.assertEqual(lot_map.get("LOT-VER-20260704-04"), 96.0, "Lot 2 wajib 96 unit!")
+
+    def test_assign_lots_aggregates_repeated_source_lots(self):
+        """Memverifikasi bahwa baris sumber berulang pada lot yang sama teragregasi secara akumulatif.
+
+        Contoh: 24 unit + 36 unit = 60 unit total.
+        """
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        prod = adapter.product_by_code.get("ULV-SNL-04")
+        self.assertIsNotNone(prod)
+
+        class MockMove:
+            def __init__(self, prod_id):
+                self.id = 102
+                self.product_id = prod_id
+                self._fields = {"picked": True}
+                self.picked = False
+
+            def write(self, vals):
+                if "picked" in vals:
+                    self.picked = vals["picked"]
+
+        class MockPicking:
+            def __init__(self, prod_id):
+                self.id = 998
+                self.name = "DO-REPEATED-LOT"
+                self.move_ids = [MockMove(prod_id)]
+                self.move_line_ids = []
+
+        pick = MockPicking(prod.id)
+
+        # Baris berulang pada lot yang sama: 24 unit + 36 unit
+        lines_data = [
+            {"sku_code": "ULV-SNL-04", "qty_cartons": "1", "carton_qty": "24", "lot_number": "LOT-SAME-01"},
+            {"sku_code": "ULV-SNL-04", "qty_cartons": "1.5", "carton_qty": "24", "lot_number": "LOT-SAME-01"},
+        ]
+
+        adapter._assign_lots_to_picking(pick, lines_data)
+
+        self.assertEqual(len(pick.move_line_ids), 1, "Lot sama wajib diagregasikan ke dalam 1 baris move line!")
+        self.assertEqual(
+            pick.move_line_ids[0].quantity, 60.0, "Kuantitas akumulatif wajib 60 unit (bukan tertimpa 36)!"
+        )
+
+    def test_validate_picking_safely_no_skip_sanity_bypass_and_allowlist(self):
+        """Memverifikasi bahwa _validate_picking_safely TIDAK membypass sanity check dan menolak wizard asing."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        captured_ctx = {}
+
+        class MockPickingNormal:
+            def __init__(self):
+                self.id = 777
+                self.name = "DO-NORMAL"
+                self.state = "assigned"
+
+            def with_context(self, **kwargs):
+                captured_ctx.update(kwargs)
+                return self
+
+            def button_validate(self):
+                self.state = "done"
+                return True
+
+        pick = MockPickingNormal()
+        adapter._validate_picking_safely(pick, effective_date="2026-07-05")
+
+        self.assertNotIn("skip_sanity_check", captured_ctx, "Bypass skip_sanity_check DILARANG keras!")
+        self.assertEqual(captured_ctx.get("force_period_date"), "2026-07-05", "force_period_date wajib diteruskan!")
+        self.assertEqual(pick.state, "done")
+
+        # Uji Penolakan Wizard Asing (Fail-Fast)
+        class MockPickingUnknownWizard:
+            def __init__(self):
+                self.id = 778
+                self.name = "DO-BOGUS"
+                self.state = "assigned"
+
+            def with_context(self, **kwargs):
+                return self
+
+            def button_validate(self):
+                return {
+                    "type": "ir.actions.act_window",
+                    "res_model": "unknown.bogus.wizard",
+                }
+
+        bogus_pick = MockPickingUnknownWizard()
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._validate_picking_safely(bogus_pick)
+        self.assertIn("tidak ada dalam allowlist resmi", str(ctx.exception))
+
+    def test_verify_slice_mutation_rejection(self):
+        """Uji pembuktian active fault detection dari validator slice representatif."""
+        from scripts.ops.verify_disposable_slice import verify_slice_mutation_rejection
+
+        env = MockEnv()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        # verify_slice_mutation_rejection harus lulus karena berhasil menolak seluruh mutasi
+        verify_slice_mutation_rejection(env, adapter, REG_DIR)
+
+    def test_slice_oracle_rejects_missing_second_lot_on_so317(self):
+        """Oracle wajib menolak hasil jika SO-202607-0317 tidak memuat lot kedua (96 unit)."""
+        from scripts.ops.verify_disposable_slice import verify_run1_against_canonical_oracle
+
+        env = MockEnv()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+
+        # Buat dummy picking SO-0001, SO-0063, dan SO-0317
+        class DummyLot:
+            def __init__(self, name):
+                self.name = name
+
+        class DummyLine:
+            def __init__(self, lot_name, qty):
+                self.lot_id = DummyLot(lot_name)
+                self.quantity = qty
+
+        class DummyPicking:
+            def __init__(self, origin, date_done, lines):
+                self.origin = origin
+                self.state = "done"
+                self.date_done = date_done
+                self.move_line_ids = lines
+
+        po_picks = [
+            DummyPicking(f"PO-202607-000{i}", "2026-07-04 10:00:00", [DummyLine(f"LOT-PO-{i}", 100.0)])
+            for i in range(1, 6)
+        ]
+        p1 = DummyPicking("SO-202607-0001", "2026-07-02 08:00:00", [DummyLine("L1", 10)])
+        p63 = DummyPicking("SO-202607-0063", "2026-07-02 08:00:00", [DummyLine("L2", 10)])
+        # Cacat: SO-0317 hanya memuat lot 1 (120 unit) tanpa lot 2 (96 unit)
+        p317_corrupt = DummyPicking("SO-202607-0317", "2026-07-09 08:00:00", [
+            DummyLine("LOT-VER-20260615-INIT-04", 120.0),
+        ])
+
+        all_picks = po_picks + [p1, p63, p317_corrupt]
+        env["stock.picking"].store = {idx: p for idx, p in enumerate(all_picks, start=1)}
+        target_sos = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
+        with self.assertRaises(AssertionError) as ctx:
+            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+        self.assertIn("LOT-VER-20260704-04 tidak ditemukan", str(ctx.exception))
+
+    def test_slice_oracle_rejects_wrong_lot_quantity_on_so317(self):
+        """Oracle wajib menolak hasil jika kuantitas lot pada SO-317 tidak tepat 96 unit."""
+        from scripts.ops.verify_disposable_slice import verify_run1_against_canonical_oracle
+
+        env = MockEnv()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+
+        class DummyLot:
+            def __init__(self, name):
+                self.name = name
+
+        class DummyLine:
+            def __init__(self, lot_name, qty):
+                self.lot_id = DummyLot(lot_name)
+                self.quantity = qty
+
+        class DummyPicking:
+            def __init__(self, origin, date_done, lines):
+                self.origin = origin
+                self.state = "done"
+                self.date_done = date_done
+                self.move_line_ids = lines
+
+        po_picks = [
+            DummyPicking(f"PO-202607-000{i}", "2026-07-04 10:00:00", [DummyLine(f"LOT-PO-{i}", 100.0)])
+            for i in range(1, 6)
+        ]
+        p1 = DummyPicking("SO-202607-0001", "2026-07-02 08:00:00", [DummyLine("L1", 10)])
+        p63 = DummyPicking("SO-202607-0063", "2026-07-02 08:00:00", [DummyLine("L2", 10)])
+        # Cacat: SO-0317 memuat lot 2 tapi hanya 50 unit bukan 96 unit
+        p317_wrong_qty = DummyPicking("SO-202607-0317", "2026-07-09 08:00:00", [
+            DummyLine("LOT-VER-20260615-INIT-04", 120.0),
+            DummyLine("LOT-VER-20260704-04", 50.0),
+        ])
+
+        all_picks = po_picks + [p1, p63, p317_wrong_qty]
+        env["stock.picking"].store = {idx: p for idx, p in enumerate(all_picks, start=1)}
+        target_sos = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
+        with self.assertRaises(AssertionError) as ctx:
+            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+        self.assertIn("Kuantitas Lot 2 salah", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
+
+

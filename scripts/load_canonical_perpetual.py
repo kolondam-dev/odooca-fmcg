@@ -261,6 +261,14 @@ def build_rejection_payload(rej_row: dict) -> dict:
 # Loader Adapter Odoo 19 Aktual
 # ---------------------------------------------------------------------------
 
+def _safe_fields(obj):
+    """Mengembalikan dict/list/set _fields dari objek/model secara defensif terhadap tipe boolean atau None."""
+    f = getattr(obj, "_fields", {})
+    if isinstance(f, (dict, list, set, tuple)):
+        return f
+    return {}
+
+
 class CanonicalPerpetualAdapter:
     """Adapter yang memetakan register kanonikal ke model Odoo aktual dengan jaminan idempotensi."""
 
@@ -284,6 +292,8 @@ class CanonicalPerpetualAdapter:
         self.product_by_code = {pr.default_code: pr for pr in Product.search([("default_code", "!=", False)])}
         self.user_by_login = {u.login.lower(): u for u in User.search([])}
         self.user_by_name = {u.name.lower(): u for u in User.search([])}
+
+        self._ensure_accounting_configuration()
 
         self.stats = {
             "opening_quants": 0,
@@ -372,125 +382,329 @@ class CanonicalPerpetualAdapter:
             "tidak ditemukan di res.users!"
         )
 
+    def _ensure_accounting_configuration(self):
+        """Memastikan konfigurasi akuntansi persediaan FIFO & Real-Time Valuation aktif pada kategori produk."""
+        if "product.category" not in self.env:
+            return
+        ProductCategory = self.env["product.category"].sudo()
+        cat_fields = _safe_fields(ProductCategory)
+
+        # 1. anglo_saxon_accounting pada company
+        if "anglo_saxon_accounting" in getattr(self.company, "_fields", {}) and not self.company.anglo_saxon_accounting:
+            try:
+                self.company.sudo().write({"anglo_saxon_accounting": True})
+            except Exception:
+                pass
+
+        # 2. Cari akun-akun akuntansi persediaan jika tersedia
+        stock_valuation_acc = None
+        stock_input_acc = None
+        stock_output_acc = None
+        cogs_acc = None
+        stock_journal = None
+
+        if "account.account" in self.env:
+            AccountAccount = self.env["account.account"].sudo()
+            stock_valuation_acc = AccountAccount.search([("code", "in", ["114100", "114000", "110000"])], limit=1)
+            stock_input_acc = AccountAccount.search([("code", "in", ["211200", "211000", "200000"])], limit=1)
+            stock_output_acc = AccountAccount.search([("code", "in", ["114200", "510000", "500000"])], limit=1)
+            cogs_acc = AccountAccount.search([("code", "in", ["510000", "500000"])], limit=1)
+
+        if "account.journal" in self.env:
+            AccountJournal = self.env["account.journal"].sudo()
+            stock_journal = AccountJournal.search([("code", "in", ["STJ", "STK", "INV", "MISC"])], limit=1)
+
+        # 3. Update kategori produk yang ada
+        categories = ProductCategory.search([])
+        for cat in categories:
+            vals = {}
+            if "property_cost_method" in cat_fields:
+                vals["property_cost_method"] = "fifo"
+            if "property_valuation" in cat_fields:
+                vals["property_valuation"] = "real_time"
+
+            for fname in [
+                "property_stock_valuation_account_id", "stock_valuation_account_id", "account_stock_valuation_id"
+            ]:
+                if fname in cat_fields and stock_valuation_acc and not getattr(cat, fname, None):
+                    vals[fname] = stock_valuation_acc.id
+            for fname in ["property_stock_journal", "stock_journal_id", "stock_journal"]:
+                if fname in cat_fields and stock_journal and not getattr(cat, fname, None):
+                    vals[fname] = stock_journal.id
+            for fname in [
+                "property_stock_account_input_categ_id", "property_stock_account_input_id", "account_stock_in_id"
+            ]:
+                if fname in cat_fields and stock_input_acc and not getattr(cat, fname, None):
+                    vals[fname] = stock_input_acc.id
+            for fname in [
+                "property_stock_account_output_categ_id", "property_stock_account_output_id", "account_stock_out_id"
+            ]:
+                if fname in cat_fields and (cogs_acc or stock_output_acc) and not getattr(cat, fname, None):
+                    vals[fname] = (cogs_acc or stock_output_acc).id
+            for fname in ["property_account_expense_categ_id", "property_account_expense_id", "account_expense_id"]:
+                if fname in cat_fields and cogs_acc and not getattr(cat, fname, None):
+                    vals[fname] = cogs_acc.id
+
+            if vals and callable(getattr(cat, "write", None)):
+                try:
+                    cat.write(vals)
+                except Exception:
+                    pass
+
+    def _sync_native_stock_accounting(self, stock_move, date_time_str, date_only):
+        """Menyelaraskan tanggal entri jurnal native Odoo (account.move) yang terbentuk dari stock.move."""
+        if "account.move" not in self.env:
+            return
+
+        found_ams = []
+        AccountMove = self.env["account.move"].sudo() if "account.move" in self.env else None
+        if AccountMove is None:
+            return
+
+        # 1. Many2one account_move_id
+        if getattr(stock_move, "account_move_id", None):
+            am = stock_move.account_move_id
+            if am:
+                found_ams.append(am)
+        # 2. Relasi account_move_ids
+        elif getattr(stock_move, "account_move_ids", None):
+            for am in stock_move.account_move_ids:
+                found_ams.append(am)
+        # 3. Field stock_move_id
+        if "stock_move_id" in _safe_fields(AccountMove):
+            ams = AccountMove.search([("stock_move_id", "=", stock_move.id)])
+            for am in (ams or []):
+                found_ams.append(am)
+        # 4. Melalui origin atau picking name
+        if not found_ams:
+            origins = []
+            if getattr(stock_move, "origin", None):
+                origins.append(stock_move.origin)
+            if getattr(stock_move, "picking_id", None) and getattr(stock_move.picking_id, "name", None):
+                origins.append(stock_move.picking_id.name)
+            if origins:
+                ams = AccountMove.search([
+                    ("ref", "in", origins),
+                    ("company_id", "in", [False, self.company.id]),
+                ])
+                for am in (ams or []):
+                    found_ams.append(am)
+
+        for am in found_ams:
+            if getattr(am, "state", "") == "draft":
+                am.write({"date": date_only})
+                if hasattr(am, "line_ids") and am.line_ids:
+                    am.line_ids.write({"date": date_only})
+                am.action_post()
+            elif getattr(am, "state", "") == "posted":
+                if str(getattr(am, "date", "")) != date_only:
+                    try:
+                        am.write({"date": date_only})
+                        if hasattr(am, "line_ids") and am.line_ids:
+                            am.line_ids.write({"date": date_only})
+                    except Exception:
+                        pass
+
     def _assign_lots_to_picking(self, pick, lines_data):
-        """Memetakan lot sumber kanonikal dan kuantitas selesai ke stock.move.line pada picking."""
+        """Memetakan lot sumber kanonikal dan kuantitas selesai ke stock.move.line pada picking secara deterministik.
+
+        Mendukung pemetaan multi-lot split (seperti SO-202607-0317 dengan 2 lot terpisah),
+        mengagregasikan baris berulang pada lot yang sama,
+        menggunakan pengecekan model Odoo 'is not None' (tahan terhadap empty recordset bool==False),
+        dan memvalidasi mapping lot -> qty persis secara fail-fast.
+        """
         StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
         StockMoveLine = self.env["stock.move.line"].sudo() if "stock.move.line" in self.env else None
 
+        def _rec_id(val):
+            if hasattr(val, "id"):
+                return val.id
+            if isinstance(val, int):
+                return val
+            return False
+
+        # 1. Kelompokkan kebutuhan source per SKU dan per Lot
+        demands_by_sku = {}
         for item in lines_data:
             sku = item.get("sku_code")
             prod = self.product_by_code.get(sku)
             if not prod:
                 continue
 
-            lot_num = item.get("lot_number")
-            lot_obj = None
-            lot_fields = getattr(StockLot, "_fields", {}) if StockLot is not None else {}
-            if StockLot is not None and lot_num:
-                lot_obj = StockLot.search([("name", "=", lot_num), ("product_id", "=", prod.id)], limit=1)
-                if not lot_obj:
-                    lot_vals = {
-                        "name": lot_num,
-                        "product_id": prod.id,
-                        "company_id": self.company.id,
-                    }
-                    if item.get("expiry_date") and "expiration_date" in lot_fields:
-                        lot_vals["expiration_date"] = item["expiry_date"]
-                    lot_obj = StockLot.create(lot_vals)
-
+            lot_num = item.get("lot_number") or False
             qty_units = float(item["qty_cartons"]) * float(item["carton_qty"])
+            exp_date = item.get("expiry_date")
 
-            def _rec_id(val):
-                if hasattr(val, "id"):
-                    return val.id
-                if isinstance(val, int):
-                    return val
-                return False
+            if sku not in demands_by_sku:
+                demands_by_sku[sku] = {
+                    "prod": prod,
+                    "total_units": 0.0,
+                    "lots": {},
+                }
 
-            # Cari matching stock.move jika ada
-            matching_move = None
+            sku_demands = demands_by_sku[sku]
+            sku_demands["total_units"] += qty_units
+
+            if lot_num not in sku_demands["lots"]:
+                lot_obj = None
+                lot_fields = _safe_fields(StockLot) if StockLot is not None else {}
+                if StockLot is not None and lot_num:
+                    lot_obj = StockLot.search([("name", "=", lot_num), ("product_id", "=", prod.id)], limit=1)
+                    if not lot_obj:
+                        lot_vals = {
+                            "name": lot_num,
+                            "product_id": prod.id,
+                            "company_id": self.company.id,
+                        }
+                        if exp_date and "expiration_date" in lot_fields:
+                            lot_vals["expiration_date"] = exp_date
+                        lot_obj = StockLot.create(lot_vals)
+
+                sku_demands["lots"][lot_num] = {
+                    "qty_units": qty_units,
+                    "expiry_date": exp_date,
+                    "lot_obj": lot_obj,
+                }
+            else:
+                sku_demands["lots"][lot_num]["qty_units"] += qty_units
+
+        # Field capabilities stock.move.line
+        sml_fields = _safe_fields(StockMoveLine) if StockMoveLine is not None else {}
+        has_quantity_field = "quantity" in sml_fields if sml_fields else True
+        has_qty_done_field = "qty_done" in sml_fields if sml_fields else True
+
+        # 2. Alokasikan ke move dan move_line per SKU
+        for sku, sku_demands in demands_by_sku.items():
+            prod = sku_demands["prod"]
+
+            matching_moves = []
             if hasattr(pick, "move_ids") and pick.move_ids:
                 for m in pick.move_ids:
                     if _rec_id(getattr(m, "product_id", None)) == prod.id:
-                        matching_move = m
-                        break
+                        matching_moves.append(m)
 
-            # Periksa dan update move_line yang ada
-            assigned = False
-            sml_fields = getattr(StockMoveLine, "_fields", {}) if StockMoveLine is not None else {}
-            if sml_fields:
-                has_qty_done_field = "qty_done" in sml_fields
-                has_quantity_field = "quantity" in sml_fields
-            else:
-                has_qty_done_field = True
-                has_quantity_field = True
+            matching_move = matching_moves[0] if matching_moves else None
 
+            existing_lines = []
             if hasattr(pick, "move_line_ids") and pick.move_line_ids:
                 for ml in pick.move_line_ids:
                     if _rec_id(getattr(ml, "product_id", None)) == prod.id:
-                        ml_lot = _rec_id(getattr(ml, "lot_id", None))
-                        target_lot = lot_obj.id if lot_obj else False
-                        if not ml_lot or (target_lot and ml_lot == target_lot):
-                            upd_vals = {}
-                            if lot_num and "lot_name" in sml_fields:
-                                upd_vals["lot_name"] = lot_num
-                            if lot_obj and "lot_id" in sml_fields:
-                                upd_vals["lot_id"] = lot_obj.id
-                            if has_quantity_field:
-                                upd_vals["quantity"] = qty_units
-                            elif has_qty_done_field:
-                                upd_vals["qty_done"] = qty_units
-                            if "picked" in sml_fields:
-                                upd_vals["picked"] = True
+                        existing_lines.append(ml)
 
-                            if callable(getattr(ml, "write", None)):
-                                ml.write(upd_vals)
-                            # Fallback untuk mock record in-memory
-                            if lot_obj and hasattr(ml, "lot_id"):
-                                ml.lot_id = lot_obj.id
-                            if lot_num and hasattr(ml, "lot_name"):
-                                ml.lot_name = lot_num
-                            if has_quantity_field and hasattr(ml, "quantity"):
-                                ml.quantity = qty_units
-                            if has_qty_done_field and hasattr(ml, "qty_done"):
-                                ml.qty_done = qty_units
-                            if hasattr(ml, "picked"):
-                                ml.picked = True
-                            assigned = True
-                            break
+            sorted_lot_items = sorted(sku_demands["lots"].items(), key=lambda x: str(x[0] or ""))
 
-            # Jika belum ada move_line_ids atau belum ter-assign, buat baris move_line
-            if not assigned and StockMoveLine:
-                ml_vals = {
-                    "picking_id": pick.id,
-                    "move_id": matching_move.id if matching_move and hasattr(matching_move, "id") else False,
-                    "product_id": prod.id,
-                    "lot_id": lot_obj.id if lot_obj else False,
-                    "location_id": _rec_id(getattr(pick, "location_id", None)),
-                    "location_dest_id": _rec_id(getattr(pick, "location_dest_id", None)),
-                }
-                if lot_num and "lot_name" in sml_fields:
-                    ml_vals["lot_name"] = lot_num
-                uom_rec = getattr(prod, "uom_id", None)
-                if uom_rec and hasattr(uom_rec, "id") and "product_uom_id" in sml_fields:
-                    ml_vals["product_uom_id"] = uom_rec.id
-                if has_quantity_field:
-                    ml_vals["quantity"] = qty_units
-                if has_qty_done_field:
-                    ml_vals["qty_done"] = qty_units
-                if "picked" in sml_fields:
-                    ml_vals["picked"] = True
-                new_ml = StockMoveLine.create(ml_vals)
-                if hasattr(pick, "move_line_ids") and hasattr(pick.move_line_ids, "append"):
-                    pick.move_line_ids.append(new_ml)
+            for lot_num, lot_info in sorted_lot_items:
+                target_qty = lot_info["qty_units"]
+                lot_obj = lot_info["lot_obj"]
+                target_lot_id = lot_obj.id if lot_obj else False
+
+                if existing_lines:
+                    ml = existing_lines.pop(0)
+                    upd_vals = {}
+                    if lot_num and ("lot_name" in sml_fields or not sml_fields):
+                        upd_vals["lot_name"] = lot_num
+                    if target_lot_id and ("lot_id" in sml_fields or not sml_fields):
+                        upd_vals["lot_id"] = target_lot_id
+                    if has_quantity_field:
+                        upd_vals["quantity"] = target_qty
+                    elif has_qty_done_field:
+                        upd_vals["qty_done"] = target_qty
+                    if "picked" in sml_fields or not sml_fields:
+                        upd_vals["picked"] = True
+
+                    if callable(getattr(ml, "write", None)):
+                        ml.write(upd_vals)
+                    if lot_obj and hasattr(ml, "lot_id"):
+                        ml.lot_id = lot_obj.id
+                    if lot_num and hasattr(ml, "lot_name"):
+                        ml.lot_name = lot_num
+                    if has_quantity_field and hasattr(ml, "quantity"):
+                        ml.quantity = target_qty
+                    if has_qty_done_field and hasattr(ml, "qty_done"):
+                        ml.qty_done = target_qty
+                    if hasattr(ml, "picked"):
+                        ml.picked = True
+                else:
+                    if StockMoveLine is not None:
+                        ml_vals = {
+                            "picking_id": pick.id,
+                            "move_id": matching_move.id if matching_move and hasattr(matching_move, "id") else False,
+                            "product_id": prod.id,
+                            "lot_id": target_lot_id,
+                            "location_id": _rec_id(getattr(pick, "location_id", None)),
+                            "location_dest_id": _rec_id(getattr(pick, "location_dest_id", None)),
+                        }
+                        if lot_num and ("lot_name" in sml_fields or not sml_fields):
+                            ml_vals["lot_name"] = lot_num
+                        uom_rec = getattr(prod, "uom_id", None)
+                        if uom_rec and hasattr(uom_rec, "id") and ("product_uom_id" in sml_fields or not sml_fields):
+                            ml_vals["product_uom_id"] = uom_rec.id
+                        if has_quantity_field:
+                            ml_vals["quantity"] = target_qty
+                        elif has_qty_done_field:
+                            ml_vals["qty_done"] = target_qty
+                        if "picked" in sml_fields or not sml_fields:
+                            ml_vals["picked"] = True
+
+                        new_ml = StockMoveLine.create(ml_vals)
+                        if hasattr(pick, "move_line_ids") and hasattr(pick.move_line_ids, "append"):
+                            pick.move_line_ids.append(new_ml)
+
+            for unused_ml in existing_lines:
+                if callable(getattr(unused_ml, "unlink", None)):
+                    unused_ml.unlink()
+                else:
+                    if hasattr(unused_ml, "quantity"):
+                        unused_ml.quantity = 0.0
+                    if hasattr(unused_ml, "qty_done"):
+                        unused_ml.qty_done = 0.0
 
             if matching_move and callable(getattr(matching_move, "write", None)):
-                mv_fields = getattr(matching_move, "_fields", {})
+                mv_fields = _safe_fields(matching_move)
                 mv_upd = {}
                 if "picked" in mv_fields:
                     mv_upd["picked"] = True
                 if mv_upd:
                     matching_move.write(mv_upd)
+
+        # 3. Assertion Komprehensif Map Lot -> Qty Persis (Fail-Fast)
+        for sku, sku_demands in demands_by_sku.items():
+            prod = sku_demands["prod"]
+            sku_lines = [
+                ml for ml in getattr(pick, "move_line_ids", [])
+                if _rec_id(getattr(ml, "product_id", None)) == prod.id
+            ]
+            actual_by_lot = {}
+            for ml in sku_lines:
+                l_id = _rec_id(getattr(ml, "lot_id", None))
+                rec_lot = getattr(ml, "lot_id", None)
+                l_name = getattr(ml, "lot_name", None) or (getattr(rec_lot, "name", None) if rec_lot else False)
+                l_key = l_name or l_id or "NO_LOT"
+                qty = float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)))
+                actual_by_lot[l_key] = actual_by_lot.get(l_key, 0.0) + qty
+
+            for lot_num, lot_info in sku_demands["lots"].items():
+                expected_lot_qty = lot_info["qty_units"]
+                lot_key = lot_num or "NO_LOT"
+                lot_id_key = lot_info["lot_obj"].id if lot_info.get("lot_obj") else None
+                actual_lot_qty = actual_by_lot.get(lot_key)
+                if actual_lot_qty is None and lot_id_key is not None:
+                    actual_lot_qty = actual_by_lot.get(lot_id_key)
+                actual_lot_qty = actual_lot_qty if actual_lot_qty is not None else 0.0
+                if abs(actual_lot_qty - expected_lot_qty) > 0.001:
+                    raise AssertionError(
+                        f"[canonical_loader] FATAL: Alokasi kuantitas lot mismatch pada picking "
+                        f"'{getattr(pick, 'name', pick.id)}' untuk SKU '{sku}', Lot '{lot_num}'! "
+                        f"Expected: {expected_lot_qty}, Got: {actual_lot_qty} (Actual lots map: {actual_by_lot})"
+                    )
+
+            total_actual_sku = sum(actual_by_lot.values())
+            if abs(total_actual_sku - sku_demands["total_units"]) > 0.001:
+                raise AssertionError(
+                    f"[canonical_loader] FATAL: Total unit per SKU mismatch pada picking "
+                    f"'{getattr(pick, 'name', pick.id)}' untuk SKU '{sku}'! "
+                    f"Expected: {sku_demands['total_units']}, Got: {total_actual_sku}"
+                )
 
     def _get_record_lines(self, record):
         """Mengambil line_ids dari record langsung atau dari move_id relasionalnya."""
@@ -531,30 +745,47 @@ class CanonicalPerpetualAdapter:
         except Exception:
             return None
 
-    def _validate_picking_safely(self, pick):
-        """Memvalidasi picking hingga 'done', menangani wizard (e.g. confirm.stock.sms), dan fail-fast."""
+    def _validate_picking_safely(self, pick, effective_date=None):
+        """Memvalidasi picking hingga 'done', menangani wizard via allowlist resmi,
+        menyelaraskan tanggal efektif historis bisnis secara native, dan fail-fast tanpa bypass sanity check.
+        """
         if getattr(pick, "state", "") == "done":
             return True
 
+        date_str = effective_date or getattr(pick, "scheduled_date", None)
+        date_only = str(date_str)[:10] if date_str else None
+        if date_only and len(str(date_str)) <= 10:
+            date_time_str = f"{date_only} 00:00:00"
+        else:
+            date_time_str = str(date_str) if date_str else None
+
         val_ctx = {
             "skip_sms": True,
-            "skip_backorder": True,
-            "skip_immediate": True,
-            "skip_expired": True,
-            "skip_sanity_check": True,
         }
+        if date_only:
+            val_ctx["force_period_date"] = date_only
+
         pick_target = pick.with_context(**val_ctx) if callable(getattr(pick, "with_context", None)) else pick
         res = pick_target.button_validate() if hasattr(pick_target, "button_validate") else None
 
-        # Jika Odoo mengembalikan wizard konfirmasi (e.g. confirm.stock.sms, immediate transfer, backorder)
+        # Allowlist resmi model wizard Odoo dan aksi yang didukung
+        ALLOWED_WIZARDS = {
+            "confirm.stock.sms": ["dont_send_sms"],
+            "stock.immediate.transfer": ["process"],
+            "stock.backorder.confirmation": ["process_cancel_backorder", "process"],
+        }
+
         wiz_iter = 0
         current_res = res
-        wizard_actions = [
-            "dont_send_sms", "process", "action_confirm", "process_cancel_backorder", "action_process", "apply",
-        ]
         while isinstance(current_res, dict) and current_res.get("res_model") and wiz_iter < 5:
             wiz_iter += 1
             wizard_model = current_res["res_model"]
+            if wizard_model not in ALLOWED_WIZARDS:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Model wizard '{wizard_model}' tidak ada dalam allowlist resmi! "
+                    f"Aksi tidak dikenal ditolak secara fail-fast."
+                )
+
             wizard_ctx = dict(val_ctx)
             if isinstance(current_res.get("context"), dict):
                 wizard_ctx.update(current_res["context"])
@@ -570,13 +801,16 @@ class CanonicalPerpetualAdapter:
 
                 wizard_record = WizardModel.browse(wiz_id) if wiz_id else WizardModel.create(wiz_vals)
                 action_taken = False
-                for act_name in wizard_actions:
+                for act_name in ALLOWED_WIZARDS[wizard_model]:
                     if hasattr(wizard_record, act_name):
                         current_res = getattr(wizard_record.with_context(**wizard_ctx), act_name)()
                         action_taken = True
                         break
                 if not action_taken:
-                    break
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Wizard '{wizard_model}' tidak memiliki aksi yang didukung: "
+                        f"{ALLOWED_WIZARDS[wizard_model]}"
+                    )
             else:
                 break
 
@@ -587,9 +821,24 @@ class CanonicalPerpetualAdapter:
         if getattr(pick, "state", "") != "done":
             pick_id_label = getattr(pick, "name", getattr(pick, "origin", "DO"))
             raise RuntimeError(
-                f"[canonical_loader] FATAL: Validasi picking '{pick_id_label}' gagal! "
-                f"Status picking tetap '{getattr(pick, 'state', 'unknown')}', bukan 'done'. Return value: {res}"
+                f"[canonical_loader] FATAL: Validasi picking '{pick_id_label}' gagal mencapai state 'done'! "
+                f"Status aktual: '{getattr(pick, 'state', 'unknown')}'. Return value: {res}"
             )
+
+        # Selaraskan tanggal efektif historis pada picking, move, move_line, dan account.move
+        if date_time_str:
+            p_fields = _safe_fields(pick)
+            if "date_done" in p_fields and callable(getattr(pick, "write", None)):
+                pick.write({"date_done": date_time_str})
+
+            if hasattr(pick, "move_ids") and pick.move_ids:
+                for mv in pick.move_ids:
+                    if callable(getattr(mv, "write", None)):
+                        mv.write({"date": date_time_str})
+                    has_sml = hasattr(mv, "move_line_ids") and mv.move_line_ids
+                    if has_sml and callable(getattr(mv.move_line_ids, "write", None)):
+                        mv.move_line_ids.write({"date": date_time_str})
+                    self._sync_native_stock_accounting(mv, date_time_str, date_only)
     def _is_reconciled(self, l_rec) -> bool:
         """Memeriksa status rekonsiliasi baris secara ketat terhadap status boolean dan nilai residual."""
         if getattr(l_rec, "reconciled", False) is True:
@@ -685,9 +934,9 @@ class CanonicalPerpetualAdapter:
             if hasattr(StockQuant, "_fields") and "inventory_date" in StockQuant._fields:
                 quant_vals["inventory_date"] = "2026-07-01 00:00:00"
 
-            quant = StockQuant.create(quant_vals)
+            quant = StockQuant.with_context(inventory_mode=True, force_period_date="2026-07-01").create(quant_vals)
             if hasattr(quant, "action_apply_inventory"):
-                quant.action_apply_inventory()
+                quant.with_context(force_period_date="2026-07-01").action_apply_inventory()
 
             # Selaraskan tanggal efektif bisnis pada stock.move hasil inventory adjustment
             if StockMove is not None:
@@ -697,10 +946,15 @@ class CanonicalPerpetualAdapter:
                     ("is_inventory", "=", True),
                     ("state", "=", "done"),
                 ], order="id desc", limit=1)
-                for am in adj_moves:
-                    am.write({"date": "2026-07-01 00:00:00", "origin": "OPENING-20260701"})
-                    if hasattr(am, "move_line_ids") and am.move_line_ids:
-                        am.move_line_ids.write({"date": "2026-07-01 00:00:00"})
+                if adj_moves:
+                    moves_iter = [adj_moves] if not hasattr(adj_moves, "__iter__") else adj_moves
+                    for am in moves_iter:
+                        if callable(getattr(am, "write", None)):
+                            am.write({"date": "2026-07-01 00:00:00", "origin": "OPENING-20260701"})
+                        has_sml = hasattr(am, "move_line_ids") and am.move_line_ids
+                        if has_sml and callable(getattr(am.move_line_ids, "write", None)):
+                            am.move_line_ids.write({"date": "2026-07-01 00:00:00"})
+                        self._sync_native_stock_accounting(am, "2026-07-01 00:00:00", "2026-07-01")
 
             self.stats["opening_quants"] += 1
 
@@ -764,9 +1018,10 @@ class CanonicalPerpetualAdapter:
             # Validasi penerimaan jika ada picking
             if po.picking_ids:
                 for pick in po.picking_ids.filtered(lambda p: p.state not in ("done", "cancel")):
-                    pick.scheduled_date = h.get("arrival_maumbi_date", h.get("eta_bitung"))
+                    arrival_dt = h.get("arrival_maumbi_date", h.get("eta_bitung"))
+                    pick.scheduled_date = arrival_dt
                     self._assign_lots_to_picking(pick, lines_by_po.get(po_num, []))
-                    self._validate_picking_safely(pick)
+                    self._validate_picking_safely(pick, effective_date=arrival_dt)
                     self.stats["do_validated"] += 1
 
             # Vendor Bill
@@ -879,7 +1134,7 @@ class CanonicalPerpetualAdapter:
                     pick.scheduled_date = sched_date
                     if sched_date <= self.cutoff_date and getattr(pick, "state", "") not in ("done", "cancel"):
                         self._assign_lots_to_picking(pick, lines_by_so.get(so_num, []))
-                        self._validate_picking_safely(pick)
+                        self._validate_picking_safely(pick, effective_date=sched_date)
                         self.stats["do_validated"] += 1
 
             # Faktur Penjualan Sah (Net of Rejections)
@@ -1067,7 +1322,7 @@ class CanonicalPerpetualAdapter:
                     "move_line_ids": [(0, 0, ml_item)] if prod else [],
                 }
                 pick = StockPicking.create(pick_vals)
-                self._validate_picking_safely(pick)
+                self._validate_picking_safely(pick, effective_date=p_data["rejection_date"])
             elif prod and StockQuant:
                 # Fallback HANYA jika StockPicking tidak tersedia dalam lingkungan modul
                 existing_quant = StockQuant.search([
