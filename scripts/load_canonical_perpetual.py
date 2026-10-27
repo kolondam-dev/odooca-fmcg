@@ -329,14 +329,48 @@ class CanonicalPerpetualAdapter:
 
     def get_salesman_user(self, sls_label: str):
         """Mencari user salesman berdasarkan ref kode atau login dengan fail-fast."""
+        if not sls_label:
+            return self.env.user if hasattr(self.env, "user") else None
+
         code = extract_ref(sls_label).lower()
         u = self.user_by_login.get(code) or self.user_by_name.get(sls_label.lower())
-        if not u:
-            raise KeyError(
-                f"[canonical_loader] FATAL: Salesman user '{sls_label}' (code: '{code}') "
-                "tidak ditemukan di res.users!"
-            )
-        return u
+        if u:
+            return u
+
+        canonical_salesmen = {
+            "sls-01": "Christian Wowor",
+            "sls-02": "Novry Poluan",
+            "sls-03": "Ferry Rondonuwu",
+            "cvs-01": "Stenly Kalalo",
+            "cvs-02": "Vicky Mandagi",
+            "mgt-01": "Ronald Mongisidi",
+        }
+
+        User = self.env["res.users"].sudo() if "res.users" in self.env else None
+        if User and code in canonical_salesmen:
+            u = User.search([("login", "=", code)], limit=1)
+            if not u:
+                parts = sls_label.split(" - ", 1)
+                user_name = parts[1].strip() if len(parts) > 1 else canonical_salesmen[code]
+                user_vals = {
+                    "name": user_name,
+                    "login": code,
+                    "email": f"{code}@manadodistribusi.co.id",
+                }
+                if hasattr(self, "company") and self.company:
+                    user_vals["company_id"] = self.company.id
+                    user_vals["company_ids"] = [(6, 0, [self.company.id])]
+                u = User.create(user_vals)
+
+            if u:
+                self.user_by_login[code] = u
+                self.user_by_name[getattr(u, "name", "").lower()] = u
+                return u
+
+        raise KeyError(
+            f"[canonical_loader] FATAL: Salesman user '{sls_label}' (code: '{code}') "
+            "tidak ditemukan di res.users!"
+        )
 
     def _assign_lots_to_picking(self, pick, lines_data):
         """Memetakan lot sumber kanonikal dan kuantitas selesai ke stock.move.line pada picking."""

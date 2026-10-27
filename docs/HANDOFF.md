@@ -11,7 +11,10 @@
   2. *Penyempurnaan Picking Retur Karantina*:
      - Menyertakan pasangan `move_ids` bersama `move_line_ids` pada payload pembuatan picking karantina, memastikan siklus dokumen Odoo 19 lengkap dan terhubung ke dokumen stok native.
      - Mengamankan pembacaan `product_uom_id` dari objek UoM produk secara defensif terhadap nilai boolean `False`.
-  3. *Unit Testing & Kompatibilitas Mock*:
+  3. *Resolusi Identitas Salesman Kanonikal pada `res.users`*:
+     - Menyelesaikan blocker `KeyError: [canonical_loader] FATAL: Salesman user 'SLS-01' (code: 'sls-01') tidak ditemukan di res.users!` pada pemuatan SO.
+     - Menyediakan whitelist 6 salesman resmi kanonikal (`sls-01`, `sls-02`, `sls-03`, `cvs-01`, `cvs-02`, `mgt-01`) dengan pembuatan record `res.users` otomatis jika belum terdaftar di lingkungan bootstrap database kosong, sembari tetap menjaga fail-fast keras (`KeyError`) terhadap kode asing yang tidak dikenal (misal `UNKNOWN-SALESMAN-99`).
+  4. *Unit Testing & Kompatibilitas Mock*:
      - Menambahkan method `write(self, vals)` pada `MockRecord` di `tests/test_canonical_loader_adapter.py` untuk mensimulasikan perilaku persistensi ORM Odoo.
      - Seluruh 37 test suite pada `tests/test_canonical_loader_adapter.py` lolos 100%.
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke `main`.

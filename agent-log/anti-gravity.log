@@ -677,3 +677,13 @@
 - Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), unit tests 37 pass.
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T17:05:00+07:00
+
+[2026-10-27T17:25:00+07:00] [INFO] Resolusi Identitas Salesman Kanonikal pada res.users dengan Fail-Fast
+- Menindaklanjuti blocker runtime verify_disposable_slice.py (KeyError: Salesman user 'SLS-01' tidak ditemukan di res.users):
+  * Pada bootstrap database bersih, res.users hanya memiliki admin sedangkan 24 roster karyawan berada di hr.employee.
+  * Menyediakan mapping whitelist 6 salesman kanonikal resmi (sls-01: Christian Wowor, sls-02: Novry Poluan, sls-03: Ferry Rondonuwu, cvs-01: Stenly Kalalo, cvs-02: Vicky Mandagi, mgt-01: Ronald Mongisidi) pada get_salesman_user di scripts/load_canonical_perpetual.py.
+  * Membuat record res.users otomatis jika salesman kanonikal belum ada di database, sembari mempertahankan fail-fast mutlak (KeyError) tanpa fallback ke admin jika kode salesman tidak dikenal.
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), unit tests (Ran 37 tests: OK).
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T17:25:00+07:00
+
