@@ -1300,3 +1300,21 @@ textarea {
 .realization-fields:disabled {
     opacity: 0.72;
 }
+
+.visit-panel {
+    display: grid;
+    gap: 14px;
+    margin: 18px 0;
+}
+.geo-assessment {
+    background: #eef5fc;
+    border-radius: 12px;
+    padding: 14px;
+}
+.geo-assessment p {
+    margin: 6px 0;
+}
+.visit-close {
+    display: grid;
+    gap: 14px;
+}

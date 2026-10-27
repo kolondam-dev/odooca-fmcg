@@ -1,3 +1,5 @@
+import { visitDependenciesReady } from "./visit-dependencies";
+import type { VisitCommitGuard } from "./visit-validation";
 import {
     ApiError,
     CommandSchema,
@@ -28,17 +30,28 @@ export class Outbox {
             value: unknown;
             expected: unknown;
             guards?: ExpenseWriteGuards;
+            visitGuard?: VisitCommitGuard;
+            occurredAt?: string;
         },
     ) {
         if (type === "field_expense.realization.submit" && !draftWrite?.guards)
             throw new Error(
                 "Realisasi harus memakai transaksi sumber/struk dan advance.",
             );
+        if (
+            (type === "sales.visit.check_in" ||
+                type === "sales.visit.check_out" ||
+                (type === "sales.order.submit" && payload.visit_context)) &&
+            !draftWrite?.visitGuard
+        )
+            throw new Error(
+                "Kunjungan/order memerlukan transaksi sesi dan geofence.",
+            );
         const command = CommandSchema.parse({
             schema_version: 1,
             client_uuid: uuid,
             type,
-            occurred_at: new Date().toISOString(),
+            occurred_at: draftWrite?.occurredAt ?? new Date().toISOString(),
             payload,
         });
         const existing = (await this.store.list(this.owner)).find(
@@ -61,6 +74,7 @@ export class Outbox {
                 draftWrite.value,
                 draftWrite.expected,
                 draftWrite.guards,
+                draftWrite.visitGuard,
             );
         else await this.store.put(item);
         this.changed();
@@ -74,46 +88,78 @@ export class Outbox {
         return this.running;
     }
     private async send() {
-        for (const item of await this.store.list(this.owner)) {
-            if (
-                !["queued", "sending"].includes(item.state) ||
-                item.nextAttempt > Date.now()
-            )
-                continue;
-            item.state = "sending";
-            item.attempts++;
-            await this.store.put(item);
-            this.changed();
-            try {
-                const receipt = ReceiptSchema.parse(
-                    await this.provider.submit(item.command),
-                );
-                if (receipt.client_uuid !== item.command.client_uuid)
-                    throw new Error("Receipt UUID tidak cocok.");
-                item.receipt = receipt;
-                item.state = receipt.status;
-                delete item.error;
-            } catch (error) {
-                const status = error instanceof ApiError ? error.status : 0;
-                item.error =
-                    error instanceof Error
-                        ? error.message
-                        : "Sinkronisasi gagal.";
-                item.state =
-                    status === 401
-                        ? "auth_required"
-                        : status >= 400 &&
-                            status < 500 &&
-                            ![408, 429].includes(status)
-                          ? "rejected"
-                          : "queued";
-                item.nextAttempt =
-                    Date.now() +
-                    Math.min(120_000, 1000 * 2 ** Math.min(item.attempts, 7));
+        let progress = true;
+        while (progress) {
+            progress = false;
+            for (const item of await this.store.list(this.owner)) {
+                if (
+                    !["queued", "sending"].includes(item.state) ||
+                    item.nextAttempt > Date.now()
+                )
+                    continue;
+                try {
+                    if (
+                        !visitDependenciesReady(
+                            item.command,
+                            this.owner,
+                            await this.store.list(this.owner),
+                        )
+                    ) {
+                        const message =
+                            "Menunggu receipt check-in/order sebelumnya. Transaksi tetap lokal.";
+                        if (item.error !== message) {
+                            item.error = message;
+                            await this.store.put(item);
+                            this.changed();
+                        }
+                        continue;
+                    }
+                } catch {
+                    item.error =
+                        "Konteks dependency kunjungan tidak valid. Perlu review.";
+                    await this.store.put(item);
+                    this.changed();
+                    continue;
+                }
+                item.state = "sending";
+                item.attempts++;
+                await this.store.put(item);
+                this.changed();
+                try {
+                    const receipt = ReceiptSchema.parse(
+                        await this.provider.submit(item.command),
+                    );
+                    if (receipt.client_uuid !== item.command.client_uuid)
+                        throw new Error("Receipt UUID tidak cocok.");
+                    progress = true;
+                    item.receipt = receipt;
+                    item.state = receipt.status;
+                    delete item.error;
+                } catch (error) {
+                    const status = error instanceof ApiError ? error.status : 0;
+                    item.error =
+                        error instanceof Error
+                            ? error.message
+                            : "Sinkronisasi gagal.";
+                    item.state =
+                        status === 401
+                            ? "auth_required"
+                            : status >= 400 &&
+                                status < 500 &&
+                                ![408, 429].includes(status)
+                              ? "rejected"
+                              : "queued";
+                    item.nextAttempt =
+                        Date.now() +
+                        Math.min(
+                            120_000,
+                            1000 * 2 ** Math.min(item.attempts, 7),
+                        );
+                }
+                await this.store.put(item);
+                this.changed();
+                if (item.state === "auth_required") return;
             }
-            await this.store.put(item);
-            this.changed();
-            if (item.state === "auth_required") break;
         }
     }
     async retry() {

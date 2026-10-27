@@ -3,6 +3,12 @@ import {
     ExpenseRealizationSchema,
     receiptKey,
 } from "../domain/settlement-contracts";
+import {
+    VISITS_KEY,
+    validateVisitCommit,
+    type VisitCommitGuard,
+} from "../domain/visit-validation";
+import { MORNING_KEY } from "../domain/morning";
 import { businessRejected } from "../domain/outbox-state";
 import type { Command, Receipt } from "../domain/contracts";
 export type QueueState =
@@ -95,6 +101,7 @@ export class FieldStore {
         value: unknown,
         expected: unknown,
         guards?: ExpenseWriteGuards,
+        visitGuard?: VisitCommitGuard,
     ) {
         const tx = (await this.db).transaction(
             ["outbox", "drafts"],
@@ -108,6 +115,34 @@ export class FieldStore {
                 throw new Error(
                     "Data berubah di tab lain. Muat ulang sebelum mengirim.",
                 );
+            if (visitGuard) {
+                if (key !== VISITS_KEY)
+                    throw new Error(
+                        "Transaksi kunjungan memakai key yang salah.",
+                    );
+                const morning = (
+                    await tx
+                        .objectStore("drafts")
+                        .get(`${item.owner}:${MORNING_KEY}`)
+                )?.value;
+                if (
+                    JSON.stringify(morning) !==
+                    JSON.stringify(visitGuard.morning)
+                )
+                    throw new Error(
+                        "Sesi/paket pagi berubah saat menyimpan kunjungan. Muat ulang.",
+                    );
+                validateVisitCommit(
+                    item,
+                    old?.value,
+                    value,
+                    morning,
+                    await tx
+                        .objectStore("outbox")
+                        .index("owner")
+                        .getAll(item.owner),
+                );
+            }
             if (item.command.type === "field_expense.realization.submit") {
                 if (
                     !guards ||

@@ -12,6 +12,8 @@ import {
     type Snapshot,
 } from "./domain/contracts";
 import { validateExpense } from "./domain/expense";
+import { VisitPanel } from "./components/VisitPanel";
+import { SalesVisits, captureVisitLocation } from "./domain/visits";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
 import { MorningSession } from "./components/MorningSession";
@@ -179,6 +181,7 @@ function Workspace({
     const [scenario, setScenario] = useState<Scenario>("normal");
     const [filter, setFilter] = useState("");
     const owner = ownerKey(identity);
+    const [visitOutlet, setVisitOutlet] = useState<string>();
     const [morning, setMorning] = useState<MorningRecord>();
     const snapshot = morningReady(morning, owner)
         ? morning!.snapshot!
@@ -201,6 +204,18 @@ function Workspace({
             }),
         [owner, provider],
     );
+    const visits = useMemo(
+        () => new SalesVisits(store, identity, provider, engine),
+        [identity, provider, engine],
+    );
+    function openVisit(outlet: string) {
+        if (!morningReady(morning, owner)) {
+            openOrder(outlet);
+            return;
+        }
+        setVisitOutlet(outlet);
+        go("sales");
+    }
     async function refresh() {
         try {
             setQueue(await store.list(owner));
@@ -275,7 +290,13 @@ function Workspace({
                 snapshot_version: morning!.snapshot!.version,
             };
         }
-        const item = await engine.enqueue(type, payload, label);
+        const item =
+            type === "sales.order.submit"
+                ? await visits.submitOrder(
+                      payload,
+                      await captureVisitLocation(),
+                  )
+                : await engine.enqueue(type, payload, label);
         setDialog(undefined);
         setToast(
             "Tersimpan di perangkat. " +
@@ -500,7 +521,7 @@ function Workspace({
                         {identity.roles.includes("sales") ? (
                             <OutletCard
                                 outlet={snapshot.outlets[0]}
-                                open={() => openOrder(snapshot.outlets[0].id)}
+                                open={() => openVisit(snapshot.outlets[0].id)}
                             />
                         ) : (
                             <DeliveryCard
@@ -544,6 +565,29 @@ function Workspace({
                             Harga & stok di bawah adalah estimasi simulasi.
                             Extra call memerlukan approval supervisor.
                         </div>
+                        {visitOutlet &&
+                            morningReady(morning, owner) &&
+                            snapshot.outlets.some(
+                                (o) => o.id === visitOutlet,
+                            ) && (
+                                <VisitPanel
+                                    key={`${owner}:${morning?.sessionId}:${visitOutlet}`}
+                                    outlet={
+                                        snapshot.outlets.find(
+                                            (o) => o.id === visitOutlet,
+                                        )!
+                                    }
+                                    service={visits}
+                                    queue={queue}
+                                    changed={() => {
+                                        void refresh();
+                                        if (navigator.onLine)
+                                            void engine.flush();
+                                    }}
+                                    order={() => openOrder(visitOutlet)}
+                                    back={() => setVisitOutlet(undefined)}
+                                />
+                            )}
                         <label class="search">
                             <Icon name="store" size={20} />
                             <input
@@ -566,7 +610,7 @@ function Workspace({
                                     <OutletCard
                                         key={o.id}
                                         outlet={o}
-                                        open={() => openOrder(o.id)}
+                                        open={() => openVisit(o.id)}
                                     />
                                 ))}
                         </div>

@@ -2,6 +2,7 @@ import {
     ExpenseRealizationSchema,
     type ExpensePolicy,
 } from "./settlement-contracts.ts";
+import { VisitContextSchema, VisitCheckoutSchema } from "./visit-contracts.ts";
 import { z } from "zod";
 export const Role = z.enum(["sales", "delivery", "hris"]);
 export const IdentitySchema = z.object({
@@ -16,6 +17,8 @@ export const IdentitySchema = z.object({
 export type Identity = z.infer<typeof IdentitySchema>;
 export const CommandType = z.enum([
     "sales.order.submit",
+    "sales.visit.check_in",
+    "sales.visit.check_out",
     "sales.extra_call.request",
     "delivery.proof.submit",
     "hris.attendance.capture",
@@ -29,9 +32,27 @@ const CommandEnvelope = {
     occurred_at: z.string().datetime(),
 };
 export const CommandSchema = z.discriminatedUnion("type", [
+    z
+        .object({
+            ...CommandEnvelope,
+            type: z.literal("sales.visit.check_in"),
+            payload: VisitContextSchema,
+        })
+        .strict(),
+    z
+        .object({
+            ...CommandEnvelope,
+            type: z.literal("sales.visit.check_out"),
+            payload: VisitCheckoutSchema,
+        })
+        .strict(),
     z.object({
         ...CommandEnvelope,
-        type: CommandType.exclude(["field_expense.realization.submit"]),
+        type: CommandType.exclude([
+            "field_expense.realization.submit",
+            "sales.visit.check_in",
+            "sales.visit.check_out",
+        ]),
         payload: z.record(z.string(), z.unknown()),
     }),
     z

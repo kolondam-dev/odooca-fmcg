@@ -14,6 +14,52 @@ async function openMorning(page: Page) {
         .click();
     await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
 }
+async function visitOrder(page: Page, first = true) {
+    if (first) {
+        await page
+            .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+            .click();
+        await expect(
+            page.getByText("Di dalam geofence", { exact: true }),
+        ).toBeVisible();
+        await page
+            .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
+            .click();
+        await expect(
+            page.getByText("Kunjungan lokal aktif", { exact: true }),
+        ).toBeVisible();
+    } else {
+        await page
+            .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+            .click();
+    }
+    await page
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
+        .click();
+}
+async function demoGps(page: Page) {
+    await page.addInitScript(() => {
+        navigator.geolocation.getCurrentPosition = (success) =>
+            success({
+                coords: {
+                    latitude: 1.465,
+                    longitude: 124.833,
+                    accuracy: 3,
+                    altitude: null,
+                    altitudeAccuracy: null,
+                    heading: null,
+                    speed: null,
+                    toJSON() {
+                        return {};
+                    },
+                },
+                timestamp: Date.now(),
+                toJSON() {
+                    return {};
+                },
+            });
+    });
+}
 test("home is usable on phone/tablet with no overflow and local assets", async ({
     page,
 }) => {
@@ -76,12 +122,14 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     page,
     context,
 }) => {
+    await demoGps(page);
     await page.goto("./");
     await openMorning(page);
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await visitOrder(page);
     await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("2");
     await page.getByRole("button", { name: "Kembali", exact: true }).click();
     await page.reload();
@@ -89,6 +137,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await visitOrder(page, false);
     await expect(page.getByLabel("Kuantitas Biskuit Kelapa 300 g")).toHaveValue(
         "2",
     );
@@ -110,7 +159,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     ).toBeVisible();
     await context.setOffline(false);
     await expect(
-        page.getByText("Diterima simulator", { exact: true }),
+        page.getByText("Diterima simulator", { exact: true }).last(),
     ).toBeVisible({ timeout: 20000 });
     await page.getByLabel("Persona demo").selectOption("delivery");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
@@ -119,7 +168,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     ).toBeVisible();
     await page.getByLabel("Persona demo").selectOption("sales");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await expect(page.locator(".activity")).toHaveCount(1);
+    await expect(page.locator(".activity")).toHaveCount(2);
 });
 test("expense request is an approval request, not disbursement", async ({
     page,
@@ -323,18 +372,20 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
     context,
 }) => {
     await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
+    await demoGps(page);
     await page.goto("./");
     await openMorning(page);
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await visitOrder(page);
     await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("2");
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
     await page.getByRole("button", { name: "Simpan ke antrean demo" }).click();
-    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await visitOrder(page, false);
     await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("3");
     await page.getByRole("button", { name: "Kembali", exact: true }).click();
     const before = await page.evaluate(async () => {

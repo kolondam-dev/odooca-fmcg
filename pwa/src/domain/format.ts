@@ -39,7 +39,11 @@ export function distanceMeters(
             Math.sin(((lon2 - lon1) * rad) / 2) ** 2;
     return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
-export function geofence(distance: number, accuracy: number, radius: number) {
+export function geofence(
+    distance: number,
+    accuracy: number,
+    radius: number,
+): "inside" | "outside" | "uncertain" {
     if (
         ![distance, accuracy, radius].every(Number.isFinite) ||
         distance < 0 ||

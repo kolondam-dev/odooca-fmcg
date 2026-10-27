@@ -1084,3 +1084,24 @@ error dan transaksi belum terkonfirmasi tidak membuka koreksi. Kontrak draft 0.3
 kompatibel payload lama tanpa revision fields. Settlement final, cancel pending,
 auth/ACL/media/geofence/tracking dan server unique tetap dependency; Railway tidak
 dideploy dari iterasi ini dan live terkunci.
+
+### Kunjungan outlet — kelanjutan PWA sales
+
+Basis main 955071a; branch agen/mobile-sales-visits. UI mulai/tutup kunjungan,
+order terikat visit UUID + sesi/date/version + outlet/site, dan hasil tanpa order
+tersedia dalam simulator. Satu kunjungan per outlet/hari dan satu aktif/hari;
+riwayat lama tidak membuka transaksi baru. GPS konservatif radius paket 5–15 m,
+TTL 60 detik, toleransi future 1 detik, distance+accuracy <= radius. Lokasi order
+dan check-out diambil ulang; ketidakpastian tidak memperbesar radius.
+
+Ledger/outbox/sumber sesi berbagi transaksi CAS. Restore memvalidasi owner,
+referensi, waktu, isi sumber; urutan sync check-in → order → check-out mengikuti
+receipt bisnis, bukan urutan UUID. DTO strict visit dan VisitOrder diekspor pada
+OpenAPI draft 0.4; legacy generic order tetap kompatibel. Backend belum dibuat.
+
+Dependency berikutnya: kontrak/implementasi server session + device binding,
+media timestamp/location + pinpoint map, policy ACL/geofence/idempotency resmi,
+extra-call approved menjadi outlet visitable, approval harga/HPP dan recovery
+kunjungan tertahan. Delivery/POD dan tracking 5/15 menit tetap iterasi terpisah.
+Client simulation tidak membuktikan anti-titip atau anti-mock GPS; polling lokasi
+latar belakang belum tersedia. Railway tidak berubah dan live tetap terkunci.

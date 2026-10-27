@@ -260,3 +260,33 @@ predecessor atomik; status penolakan yang berubah selama submit membatalkan comm
 Dua koreksi serentak menghasilkan satu successor aktif. Retry tetap memakai UUID
 koreksi yang sama, sedangkan koreksi berikutnya setelah penolakan baru membuat UUID
 baru lagi. Settlement/uang/jurnal resmi masih menunggu backend dan live tetap terkunci.
+
+## Kunjungan sales — simulasi lokal
+
+Dari sesi pagi yang valid, pilih outlet PJP, ambil lokasi lalu mulai kunjungan.
+Order memerlukan kunjungan aktif dan pengambilan lokasi baru ketika submit.
+Check-out mengambil lokasi baru dan mencatat hasil; tanpa order, catatan minimal
+5 karakter wajib. Satu outlet hanya satu kunjungan per hari WITA dalam simulator,
+dan hanya satu kunjungan aktif pada hari yang sama. Kunjungan hari lama disimpan
+sebagai histori, tidak otomatis ditutup atau menjadi izin transaksi hari baru.
+
+Koordinat/radius 5–15 m berasal dari paket pagi fiktif. Fix maksimal 60 detik,
+toleransi waktu masa depan 1 detik, dan jarak + akurasi harus <= radius. Di luar,
+uncertain, stale, invalid atau izin GPS ditolak menahan transaksi; radius tidak
+diperbesar. Browser tidak menjamin anti-mock GPS atau lokasi hardware terpercaya.
+Belum ada peta pinpoint/foto kunjungan atau tracking latar belakang 5/15 menit.
+
+Ledger dan command ditulis atomik dengan CAS, termasuk pemeriksaan ulang sesi
+pagi dalam transaksi. Dua tab tidak dapat membuka kunjungan bersamaan atau
+menutup kunjungan sambil melewatkan order yang baru tersimpan. Restore memeriksa
+owner, konteks, timestamp dan referensi outbox tanpa menghapus data yang rusak.
+Sinkronisasi mengurutkan check-in → order → check-out walaupun urutan UUID berbeda.
+Order menunggu receipt check-in accepted; check-out menunggu receipt bisnis semua
+order (accepted/needs_approval/rejected). Error transport bukan receipt bisnis.
+Antrean tertahan tetap terlihat; tidak ada auto-cancel/recovery admin dalam scope ini.
+
+OpenAPI draft 0.4 menambahkan DTO check-in/check-out strict dan VisitOrder. Legacy
+sales.order.submit tetap kompatibel; jalur UI kunjungan menggunakan validasi payload
+VisitOrder strict. Seluruh penerimaan, sesi, harga dan state di sini hanya simulator;
+backend wajib mengecek ACL, device/session, idempotency, harga/approval, geofence,
+waktu dan evidence sendiri. Tidak menambah endpoint Odoo atau deploy Railway.
