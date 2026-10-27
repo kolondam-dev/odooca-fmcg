@@ -1028,9 +1028,10 @@ class CanonicalPerpetualAdapter:
                     ml_item["qty_done"] = p_data["qty_units"]
                 if "picked" in sml_fields:
                     ml_item["picked"] = True
+                if sml_fields:
+                    ml_item = {k: v for k, v in ml_item.items() if k in sml_fields}
 
                 move_item = {
-                    "name": f"Retur Karantina {rej_id} - {prod.display_name if prod else ''}",
                     "product_id": prod.id if prod else False,
                     "product_uom": uom_rec.id if uom_rec and hasattr(uom_rec, "id") else False,
                     "product_uom_qty": p_data["qty_units"],
@@ -1039,8 +1040,14 @@ class CanonicalPerpetualAdapter:
                     "company_id": self.company.id,
                 }
                 mv_fields = getattr(self.env.get("stock.move"), "_fields", {}) if "stock.move" in self.env else {}
+                if "name" in mv_fields:
+                    move_item["name"] = f"Retur Karantina {rej_id} - {prod.display_name if prod else ''}"
+                if "description_picking" in mv_fields:
+                    move_item["description_picking"] = f"Retur Karantina {rej_id} - {prod.display_name if prod else ''}"
                 if "picked" in mv_fields:
                     move_item["picked"] = True
+                if mv_fields:
+                    move_item = {k: v for k, v in move_item.items() if k in mv_fields}
 
                 pick_vals = {
                     "origin": rej_id,
