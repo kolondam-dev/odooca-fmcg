@@ -16,6 +16,7 @@ import {
     LocalExpenseEvidenceSchema,
     type SimulatedAdvance,
 } from "../domain/settlement-contracts";
+import { businessRejected } from "../domain/outbox-state";
 import { fieldBusinessDate } from "../domain/morning";
 import { money, queueLabels } from "../domain/format";
 import type { FieldStore, QueueItem } from "../storage/store";
@@ -35,6 +36,10 @@ const approvers = (roles: string[]) =>
         .join(" + ");
 const LineDraft = z
     .object({
+        id: z
+            .string()
+            .uuid()
+            .default(() => crypto.randomUUID()),
         description: z.string(),
         amount: z.string(),
         merchant: z.string(),
@@ -45,6 +50,7 @@ const LineDraft = z
     .strict();
 const DraftSchema = z
     .object({
+        correctionReason: z.string().max(500).default(""),
         lines: z.array(LineDraft).min(1).max(10),
         liters: z.string(),
         price: z.string(),
@@ -53,9 +59,11 @@ const DraftSchema = z
         before: LocalExpenseEvidenceSchema.optional(),
         after: LocalExpenseEvidenceSchema.optional(),
     })
-    .strict();
+    .strict()
+    .refine((d) => new Set(d.lines.map((l) => l.id)).size === d.lines.length);
 type Draft = z.infer<typeof DraftSchema>;
 const line = () => ({
+    id: crypto.randomUUID(),
     description: "",
     amount: "",
     merchant: "",
@@ -63,6 +71,7 @@ const line = () => ({
     expense_date: fieldBusinessDate(),
 });
 const blank = (): Draft => ({
+    correctionReason: "",
     lines: [line()],
     liters: "",
     price: "",
@@ -277,10 +286,11 @@ function RealizationEditor({
     const running = useRef(false);
     const request = ExpenseRequestSchema.parse(item.command.payload);
     const fuel = request.category.startsWith("fuel");
-    const locked = !!advance.realization_uuid;
     const receipt = queue.find(
         (q) => q.command.client_uuid === advance.realization_uuid,
     );
+    const correcting = !!advance.realization_uuid && businessRejected(receipt);
+    const locked = !!advance.realization_uuid && !correcting;
     const key = realizationKey(item.command.client_uuid);
     useEffect(() => {
         let active = true;
@@ -334,7 +344,16 @@ function RealizationEditor({
         return {
             source_request_uuid: item.command.client_uuid,
             advance_reference: advance.reference,
-            lines: draft.lines,
+            lines: draft.lines.map(({ id, ...value }) => {
+                void id;
+                return value;
+            }),
+            ...(correcting
+                ? {
+                      supersedes_uuid: advance.realization_uuid!,
+                      correction_reason: draft.correctionReason,
+                  }
+                : {}),
             fuel: fuel
                 ? {
                       liters: draft.liters,
@@ -388,7 +407,50 @@ function RealizationEditor({
         }));
     return (
         <form class="realization-form" onSubmit={send}>
-            <h2>Rincian realisasi</h2>
+            <h2>
+                {correcting ? "Koreksi realisasi ditolak" : "Rincian realisasi"}
+            </h2>
+            {correcting && (
+                <p class="notice">
+                    Receipt penolakan bisnis diterima. Koreksi memakai UUID
+                    baru; versi ditolak tetap tersimpan.{" "}
+                    {receipt?.receipt?.message}
+                </p>
+            )}
+            <div
+                class="revision-history"
+                role="region"
+                aria-label="Riwayat realisasi"
+            >
+                {queue
+                    .filter(
+                        (q) =>
+                            q.command.type ===
+                                "field_expense.realization.submit" &&
+                            q.command.payload.source_request_uuid ===
+                                item.command.client_uuid,
+                    )
+                    .map((q) => (
+                        <p key={q.key}>
+                            {q.command.client_uuid.slice(0, 8)} ·{" "}
+                            {queueLabels[q.state]}
+                            {q.command.type ===
+                                "field_expense.realization.submit" &&
+                            q.command.payload.supersedes_uuid
+                                ? ` · koreksi ${q.command.payload.supersedes_uuid.slice(0, 8)}`
+                                : ""}
+                            <small>{q.receipt?.message}</small>
+                            {q.command.type ===
+                                "field_expense.realization.submit" &&
+                                q.command.payload.correction_reason && (
+                                    <small>
+                                        Alasan koreksi:{" "}
+                                        {q.command.payload.correction_reason}
+                                    </small>
+                                )}
+                        </p>
+                    ))}
+            </div>
             <p class="footnote">
                 Bukti harus tersimpan lokal dengan waktu/lokasi. Map masih
                 pending; pengiriman berikut hanya ke simulator dan tidak
@@ -397,16 +459,35 @@ function RealizationEditor({
             {locked && (
                 <p class="notice" role="status">
                     {receipt ? queueLabels[receipt.state] : "Antrean tersimpan"}{" "}
-                    · Realisasi dikunci setelah antre. Review, koreksi dan
-                    settlement final menunggu backend; jangan membuat duplikat.
+                    · Realisasi dikunci setelah antre. Koreksi hanya untuk
+                    receipt penolakan bisnis; settlement final menunggu backend.
+                    Jangan membuat duplikat.
                 </p>
+            )}
+            {correcting && (
+                <label>
+                    Alasan koreksi
+                    <textarea
+                        required
+                        disabled={busy || !loaded}
+                        minLength={5}
+                        maxLength={500}
+                        value={draft.correctionReason}
+                        onInput={(e) =>
+                            setDraft((d) => ({
+                                ...d,
+                                correctionReason: e.currentTarget.value,
+                            }))
+                        }
+                    />
+                </label>
             )}
             <fieldset
                 disabled={!loaded || busy || locked}
                 class="realization-fields"
             >
                 {draft.lines.map((l, n) => (
-                    <fieldset key={n} class="expense-line">
+                    <fieldset key={l.id} class="expense-line">
                         <legend>Komponen biaya {n + 1}</legend>
                         <label>
                             Uraian biaya {n + 1}

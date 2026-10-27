@@ -10,10 +10,12 @@ import {
     ExpensePolicySchema,
     ExpenseRealizationSchema,
     SimulatedAdvanceSchema,
+    receiptKey,
     type ExpenseRealization,
     type SimulatedAdvance,
 } from "./settlement-contracts";
 import { FieldStore, type QueueItem } from "../storage/store";
+import { businessRejected } from "./outbox-state";
 import type { Outbox } from "./outbox";
 export const advanceKey = (uuid: string) => `expense-advance:${uuid}`;
 export const realizationKey = (uuid: string) => `expense-realization:${uuid}`;
@@ -128,6 +130,10 @@ export function validateRealization(
             "Lengkapi komponen biaya, nominal, tanggal, struk dan bukti odometer yang valid.",
         );
     const body = parsed.data;
+    if (!!body.supersedes_uuid !== !!body.correction_reason)
+        throw new Error(
+            "Koreksi memerlukan referensi realisasi ditolak dan alasan.",
+        );
     if (
         body.source_request_uuid !== item.command.client_uuid ||
         body.advance_reference !== advance.reference
@@ -144,7 +150,7 @@ export function validateRealization(
             throw new Error(
                 "Tanggal struk harus antara pencairan dan hari ini.",
             );
-        const key = `${line.merchant.trim().toUpperCase()}|${line.receipt_number.trim().toUpperCase()}|${line.expense_date}`;
+        const key = receiptKey(line);
         if (receipts.has(key))
             throw new Error("Struk yang sama tidak boleh dihitung dua kali.");
         receipts.add(key);
@@ -220,23 +226,43 @@ export class ExpenseSimulation {
         if (value === undefined) return undefined;
         const advance = validateAdvance(value, item, ownerKey(this.identity));
         if (advance.realization_uuid) {
-            const linked = (
-                await this.store.list(ownerKey(this.identity))
-            ).find(
-                (q) =>
-                    q.command.client_uuid === advance.realization_uuid &&
-                    q.command.type === "field_expense.realization.submit",
-            );
-            if (!linked)
-                throw new Error(
-                    "Referensi realisasi tidak ditemukan. Sesi biaya ditahan; data tidak dihapus.",
+            const rows = await this.store.list(ownerKey(this.identity));
+            let uuid: string | undefined = advance.realization_uuid;
+            const seen = new Set<string>();
+            let childTime = Infinity;
+            while (uuid) {
+                if (seen.has(uuid))
+                    throw new Error("Riwayat koreksi berulang/tidak valid.");
+                seen.add(uuid);
+                const linked = rows.find((q) => q.command.client_uuid === uuid);
+                if (
+                    !linked ||
+                    linked.owner !== advance.owner ||
+                    linked.key !== `${advance.owner}:${uuid}` ||
+                    linked.command.type !==
+                        "field_expense.realization.submit" ||
+                    !CommandSchema.safeParse(linked.command).success ||
+                    Date.parse(linked.command.occurred_at) > childTime ||
+                    Date.parse(linked.command.occurred_at) > Date.now() ||
+                    Date.parse(linked.command.occurred_at) <
+                        Date.parse(advance.disbursed_at)
+                )
+                    throw new Error(
+                        "Referensi/urutan realisasi tidak valid. Data tidak dihapus.",
+                    );
+                const body = validateRealization(
+                    linked.command.payload,
+                    item,
+                    advance,
+                    advance.owner,
                 );
-            validateRealization(
-                linked.command.payload,
-                item,
-                advance,
-                ownerKey(this.identity),
-            );
+                if (seen.size > 1 && !businessRejected(linked))
+                    throw new Error(
+                        "Riwayat koreksi harus merujuk penolakan bisnis.",
+                    );
+                childTime = Date.parse(linked.command.occurred_at);
+                uuid = body.supersedes_uuid;
+            }
         }
         return advance;
     }
@@ -303,9 +329,14 @@ export class ExpenseSimulation {
         const item = await this.source(uuid),
             advance = await this.load(uuid);
         if (!advance) throw new Error("Simulasikan approval/pencairan dahulu.");
-        if (advance.realization_uuid)
+        const predecessor = advance.realization_uuid
+            ? (await this.store.list(advance.owner)).find(
+                  (q) => q.command.client_uuid === advance.realization_uuid,
+              )
+            : undefined;
+        if (advance.realization_uuid && !businessRejected(predecessor))
             throw new Error(
-                "Realisasi sudah diantrekan. Koreksi/settlement resmi menunggu backend; tidak mengirim ulang.",
+                "Realisasi sudah diantrekan. Hanya receipt penolakan bisnis yang membuka koreksi.",
             );
         const body = validateRealization(
             value,
@@ -313,6 +344,14 @@ export class ExpenseSimulation {
             advance,
             ownerKey(this.identity),
         );
+        if (
+            (predecessor &&
+                body.supersedes_uuid !== predecessor.command.client_uuid) ||
+            (!predecessor && body.supersedes_uuid)
+        )
+            throw new Error(
+                "Referensi koreksi tidak cocok dengan realisasi ditolak.",
+            );
         const blobs = await this.store.listEvidence(ownerKey(this.identity));
         const refs = [
             ...body.lines.map((l) => l.evidence),
@@ -337,30 +376,6 @@ export class ExpenseSimulation {
                     "Foto lokal tidak ditemukan atau metadata bukti tidak cocok. Ambil ulang bukti.",
                 );
         }
-        for (const q of await this.store.list(ownerKey(this.identity))) {
-            if (
-                q.command.type !== "field_expense.realization.submit" ||
-                q.state === "rejected"
-            )
-                continue;
-            const old = ExpenseRealizationSchema.safeParse(q.command.payload);
-            if (
-                old.success &&
-                old.data.lines.some((l) =>
-                    body.lines.some(
-                        (n) =>
-                            l.merchant.toUpperCase() ===
-                                n.merchant.toUpperCase() &&
-                            l.receipt_number.toUpperCase() ===
-                                n.receipt_number.toUpperCase() &&
-                            l.expense_date === n.expense_date,
-                    ),
-                )
-            )
-                throw new Error(
-                    "Struk sudah dipakai realisasi lain pada perangkat ini.",
-                );
-        }
         const commandUuid = crypto.randomUUID();
         return this.outbox.enqueue(
             "field_expense.realization.submit",
@@ -371,6 +386,7 @@ export class ExpenseSimulation {
                 key: advanceKey(uuid),
                 value: { ...advance, realization_uuid: commandUuid },
                 expected: advance,
+                guards: { source: item, predecessor },
             },
         );
     }

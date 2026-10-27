@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { FieldStore } from "../storage/store";
 import { Icon } from "./Icon";
 export interface EvidenceRef {
@@ -32,6 +32,15 @@ async function compress(file: File): Promise<Blob> {
         );
     return blob;
 }
+const referenceKey = (owner: string, ref?: EvidenceRef) =>
+    JSON.stringify([
+        owner,
+        ref?.id,
+        ref?.latitude,
+        ref?.longitude,
+        ref?.accuracy,
+        ref?.capturedAt,
+    ]);
 export function EvidenceCapture({
     store,
     owner,
@@ -48,41 +57,87 @@ export function EvidenceCapture({
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [preview, setPreview] = useState("");
-    useEffect(() => {
+    const generation = useRef(0);
+    const selfChange = useRef<string | undefined>(undefined);
+    function report(ref?: EvidenceRef) {
+        selfChange.current = referenceKey(owner, ref);
+        onChange(ref);
+    }
+    const scope = referenceKey(owner, existingRef);
+    useLayoutEffect(() => {
+        if (selfChange.current === scope) {
+            selfChange.current = undefined;
+            return;
+        }
+        selfChange.current = undefined;
+        const ticket = ++generation.current;
+        setFile(undefined);
+        setLocation(undefined);
+        setPreview("");
+        setError("");
+        setBusy(false);
         if (!existingRef) return;
-        let active = true;
         void store
             .listEvidence(owner)
             .then((rows) => {
                 const found = rows.find(
-                    (row) =>
-                        row.key === `${owner}:${existingRef.id}` &&
-                        row.owner === owner,
+                    (e) =>
+                        e.owner === owner &&
+                        e.key === `${owner}:${existingRef.id}` &&
+                        e.capturedAt === existingRef.capturedAt &&
+                        e.latitude === existingRef.latitude &&
+                        e.longitude === existingRef.longitude &&
+                        e.accuracy === existingRef.accuracy,
                 );
                 if (!found || !(found.blob instanceof Blob) || !found.blob.size)
-                    throw new Error(
-                        "Foto lokal tidak ditemukan. Ambil ulang bukti sebelum pengiriman.",
-                    );
-                if (active) setFile(found.blob);
+                    throw new Error("missing");
+                if (generation.current === ticket) setFile(found.blob);
             })
             .catch(() => {
-                if (active)
+                if (generation.current === ticket)
                     setError(
                         "Foto lokal tidak dapat dipulihkan. Metadata saja bukan bukti lengkap.",
                     );
             });
-        return () => {
-            active = false;
-        };
-    }, [existingRef?.id, owner, store]);
+    }, [scope, store]);
+    useEffect(
+        () => () => {
+            generation.current++;
+        },
+        [],
+    );
     useEffect(() => {
-        if (!file) return;
+        if (!file) {
+            setPreview("");
+            return;
+        }
         const url = URL.createObjectURL(file);
         setPreview(url);
         return () => URL.revokeObjectURL(url);
     }, [file]);
-    const locate = () => {
-        onChange(undefined);
+    async function selectFile(f?: File) {
+        const ticket = ++generation.current;
+        report(undefined);
+        setFile(undefined);
+        setLocation(undefined);
+        setPreview("");
+        setError("");
+        setBusy(!!f);
+        if (!f) return;
+        try {
+            const blob = await compress(f);
+            if (generation.current === ticket) setFile(blob);
+        } catch (e) {
+            if (generation.current === ticket)
+                setError(e instanceof Error ? e.message : "Foto tidak valid.");
+        } finally {
+            if (generation.current === ticket) setBusy(false);
+        }
+    }
+    function locate() {
+        const ticket = ++generation.current;
+        report(undefined);
+        setLocation(undefined);
         setError("");
         setBusy(true);
         if (!navigator.geolocation) {
@@ -92,57 +147,67 @@ export function EvidenceCapture({
         }
         navigator.geolocation.getCurrentPosition(
             (p) => {
-                setLocation(p);
-                setBusy(false);
+                if (generation.current === ticket) {
+                    setLocation(p);
+                    setBusy(false);
+                }
             },
             (e) => {
-                setLocation(undefined);
-                setError(
-                    e.code === 1
-                        ? "Izin lokasi ditolak. Bukti belum lengkap."
-                        : "Lokasi belum diperoleh. Coba lagi di tempat aman.",
-                );
-                setBusy(false);
+                if (generation.current === ticket) {
+                    setError(
+                        e.code === 1
+                            ? "Izin lokasi ditolak. Bukti belum lengkap."
+                            : "Lokasi belum diperoleh. Coba lagi di tempat aman.",
+                    );
+                    setBusy(false);
+                }
             },
             { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 },
         );
-    };
-    const save = async () => {
-        if (!file || !location) return;
+    }
+    async function save() {
+        if (!file || !location || busy) return;
         if (Date.now() - location.timestamp > 60000) {
             setError("Lokasi sudah kedaluwarsa. Ambil lokasi baru.");
-            onChange(undefined);
+            report(undefined);
             return;
         }
-        const id = crypto.randomUUID();
-        const capturedAt = new Date().toISOString();
+        const ticket = ++generation.current;
+        setBusy(true);
+        const id = crypto.randomUUID(),
+            capturedAt = new Date().toISOString();
         try {
             await store.saveEvidence({
                 key: `${owner}:${id}`,
                 owner,
                 blob: file,
                 capturedAt,
-                ...location.coords,
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
                 accuracy: location.coords.accuracy,
                 mapStatus: "pending",
             });
-            onChange({
-                id,
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                accuracy: location.coords.accuracy,
-                capturedAt,
-            });
-            setError(
-                "Foto tersimpan lokal. Snapshot peta masih menunggu integrasi.",
-            );
+            if (generation.current === ticket) {
+                report({
+                    id,
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                    accuracy: location.coords.accuracy,
+                    capturedAt,
+                });
+                setError(
+                    "Foto tersimpan lokal. Snapshot peta masih menunggu integrasi.",
+                );
+            }
         } catch {
-            setError("Foto gagal disimpan. Periksa ruang penyimpanan.");
-            onChange(undefined);
+            if (generation.current === ticket) {
+                setError("Foto gagal disimpan. Periksa ruang penyimpanan.");
+                report(undefined);
+            }
+        } finally {
+            if (generation.current === ticket) setBusy(false);
         }
-    };
+    }
     return (
         <div class="evidence">
             <strong>Bukti foto & lokasi</strong>
@@ -157,18 +222,9 @@ export function EvidenceCapture({
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     capture="environment"
-                    onChange={async (e) => {
-                        onChange(undefined);
-                        setError("");
-                        const f = e.currentTarget.files?.[0];
-                        if (!f) return;
-                        try {
-                            setFile(await compress(f));
-                        } catch (x) {
-                            setFile(undefined);
-                            setError(String(x));
-                        }
-                    }}
+                    onChange={(e) =>
+                        void selectFile(e.currentTarget.files?.[0])
+                    }
                 />
             </label>
             {preview && (
@@ -185,7 +241,7 @@ export function EvidenceCapture({
                 disabled={busy}
             >
                 <Icon name="pin" size={18} />
-                {busy ? "Mencari lokasi…" : "Ambil lokasi sekarang"}
+                {busy ? "Memproses bukti…" : "Ambil lokasi sekarang"}
             </button>
             {!location && existingRef && (
                 <p class="coordinates">

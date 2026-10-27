@@ -87,3 +87,10 @@
 - Payload command strict/OpenAPI0.2, create-if-absent advance, CAS atomik outbox+link; restore memeriksa konteks dan pending tidak dihapus. Foto lokal dipulihkan per owner.
 - 60 unit + 1 hosting + 24 browser PASS; format/typecheck/contracts/build budget/Ruff/4manifest PASS. CI setelah push. Final settlement, media map dan approval/cash/GL resmi tetap dependency; live terkunci.
 - Task managed by codex agent at 2026-10-27T10:30:25+07:00
+
+[2026-10-27T11:17:21+07:00] [INFO] Follow-up PR22 dan koreksi realisasi simulator
+- Basis main 5088144; stable line IDs, reset/reconcile foto/location/preview dan async generation guard; dedup lintas advance owner sama serta source/predecessor check atomik dalam outbox transaction.
+- Dev lanjutan: koreksi hanya receipt penolakan bisnis cocok UUID, successor UUID baru + parent/alasan, history immutable, restore lineage/cycle guards; transport/pending tetap terkunci.
+- 71 unit + 1 hosting + 30 browser PASS, barrier dua koneksi dan race tests; format/typecheck/contracts/build budget/Ruff/4manifest PASS. Kontrak draft0.3 kompatibel payload lama.
+- Tetap simulator/live terkunci. Tidak mengubah backend/seed/loader/CI workflow/Railway; CI diperiksa sesudah push. Final settlement/cash/GL/global authority masih dependency.
+- Task managed by codex agent at 2026-10-27T11:17:21+07:00

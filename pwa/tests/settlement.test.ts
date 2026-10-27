@@ -428,3 +428,289 @@ it("enforces the realization payload on the shared command envelope, without a g
         }).success,
     ).toBe(false);
 });
+
+it("atomically prevents the same receipt on concurrent different advances/connections", async () => {
+    const first = await ready(),
+        second = await ready();
+    const db2 = new FieldStore(dbName);
+    const service2 = new ExpenseSimulation(
+        db2,
+        second.identity,
+        second.provider,
+        new Outbox(db2, second.owner, second.provider),
+    );
+    let waiting = 0;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+        release = resolve;
+    });
+    for (const db of [store, db2]) {
+        const original = db.listEvidence.bind(db);
+        vi.spyOn(db, "listEvidence").mockImplementation(async (owner) => {
+            const rows = await original(owner);
+            if (++waiting === 2) release();
+            await gate;
+            return rows;
+        });
+    }
+    const results = await Promise.allSettled([
+        first.service.submit(first.uuid, first.body),
+        service2.submit(second.uuid, second.body),
+    ]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((r) => r.status === "rejected")).toHaveLength(1);
+    expect(
+        (await store.list(first.owner)).filter(
+            (q) => q.command.type === "field_expense.realization.submit",
+        ),
+    ).toHaveLength(1);
+    await db2.close();
+});
+it.each(["payload", "receipt"])(
+    "rejects source %s changes during the awaits before atomic enqueue",
+    async (kind) => {
+        const c = await ready();
+        const db2 = new FieldStore(dbName);
+        const original = store.listEvidence.bind(store);
+        vi.spyOn(store, "listEvidence").mockImplementationOnce(
+            async (owner) => {
+                const rows = await original(owner);
+                await db2.put(
+                    kind === "payload"
+                        ? {
+                              ...c.source,
+                              command: {
+                                  ...c.source.command,
+                                  type: "field_expense.request",
+                                  payload: { ...c.request, amount: "200001" },
+                              },
+                          }
+                        : {
+                              ...c.source,
+                              state: "rejected",
+                              receipt: {
+                                  ...c.source.receipt!,
+                                  status: "rejected",
+                              },
+                          },
+                );
+                return rows;
+            },
+        );
+        await expect(c.service.submit(c.uuid, c.body)).rejects.toThrow(
+            "Pengajuan berubah",
+        );
+        expect(
+            (await store.list(c.owner)).filter(
+                (q) => q.command.type === "field_expense.realization.submit",
+            ),
+        ).toHaveLength(0);
+        expect(await store.draft(c.owner, advanceKey(c.uuid))).toEqual(
+            c.advance,
+        );
+        await db2.close();
+    },
+);
+it("keeps rejected business history immutable while a correction gets a new UUID and approval receipt", async () => {
+    const c = await ready();
+    const first = await c.service.submit(c.uuid, c.body);
+    c.provider.scenario = "rejected";
+    await c.outbox.flush();
+    const previous = structuredClone(
+        (await store.list(c.owner)).find((q) => q.key === first.key)!,
+    );
+    const corrected = {
+        ...c.body,
+        supersedes_uuid: first.command.client_uuid,
+        correction_reason: "Perbaiki nominal sesuai struk",
+        lines: [{ ...c.body.lines[0], amount: "140000" }],
+    };
+    await expect(
+        c.service.submit(c.uuid, {
+            ...corrected,
+            supersedes_uuid: crypto.randomUUID(),
+        }),
+    ).rejects.toThrow("Referensi koreksi");
+    await expect(
+        c.service.submit(c.uuid, {
+            ...corrected,
+            correction_reason: undefined,
+        }),
+    ).rejects.toThrow("Koreksi");
+    const next = await c.service.submit(c.uuid, corrected);
+    expect(next.command.client_uuid).not.toBe(first.command.client_uuid);
+    c.provider.scenario = "normal";
+    await c.outbox.flush();
+    expect(
+        (await store.list(c.owner)).find((q) => q.key === first.key),
+    ).toEqual(previous);
+    expect(
+        (await store.list(c.owner)).find((q) => q.key === next.key)?.state,
+    ).toBe("needs_approval");
+    expect((await c.service.load(c.uuid))?.realization_uuid).toBe(
+        next.command.client_uuid,
+    );
+    await expect(c.service.submit(c.uuid, corrected)).rejects.toThrow(
+        "sudah diantrekan",
+    );
+});
+it.each([403, 401])(
+    "does not treat transport %s as a business rejection or release its receipt",
+    async (status) => {
+        const c = await ready();
+        const first = await c.service.submit(c.uuid, c.body);
+        const failed = {
+            ...first,
+            state:
+                status === 401
+                    ? ("auth_required" as const)
+                    : ("rejected" as const),
+            error: "transport failure",
+        };
+        await store.put(failed);
+        await expect(
+            c.service.submit(c.uuid, {
+                ...c.body,
+                supersedes_uuid: first.command.client_uuid,
+                correction_reason: "Tidak boleh bypass transport",
+            }),
+        ).rejects.toThrow("sudah diantrekan");
+        const other = await ready();
+        await expect(
+            other.service.submit(other.uuid, other.body),
+        ).rejects.toThrow("Struk sudah dipakai");
+    },
+);
+it("restoration rejects broken revision chains without deleting any history", async () => {
+    const c = await ready();
+    const first = await c.service.submit(c.uuid, c.body);
+    c.provider.scenario = "rejected";
+    await c.outbox.flush();
+    const next = await c.service.submit(c.uuid, {
+        ...c.body,
+        supersedes_uuid: first.command.client_uuid,
+        correction_reason: "Koreksi data nominal",
+    });
+    if (next.command.type !== "field_expense.realization.submit")
+        throw new Error("unexpected type");
+    await store.put({
+        ...next,
+        command: {
+            ...next.command,
+            payload: {
+                ...next.command.payload,
+                supersedes_uuid: next.command.client_uuid,
+            },
+        },
+    });
+    const before = await store.list(c.owner);
+    await expect(c.service.load(c.uuid)).rejects.toThrow("berulang");
+    expect(await store.list(c.owner)).toEqual(before);
+});
+it("concurrent corrections retain a single active successor", async () => {
+    const c = await ready();
+    const first = await c.service.submit(c.uuid, c.body);
+    c.provider.scenario = "rejected";
+    await c.outbox.flush();
+    const second = new FieldStore(dbName),
+        service2 = new ExpenseSimulation(
+            second,
+            c.identity,
+            c.provider,
+            new Outbox(second, c.owner, c.provider),
+        );
+    let waiting = 0;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+        release = resolve;
+    });
+    for (const db of [store, second]) {
+        const original = db.listEvidence.bind(db);
+        vi.spyOn(db, "listEvidence").mockImplementation(async (owner) => {
+            const rows = await original(owner);
+            if (++waiting === 2) release();
+            await gate;
+            return rows;
+        });
+    }
+    const body = {
+        ...c.body,
+        supersedes_uuid: first.command.client_uuid,
+        correction_reason: "Koreksi serentak dua tab",
+    };
+    const result = await Promise.allSettled([
+        c.service.submit(c.uuid, body),
+        service2.submit(c.uuid, body),
+    ]);
+    expect(result.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(
+        (await store.list(c.owner)).filter(
+            (q) => q.command.type === "field_expense.realization.submit",
+        ),
+    ).toHaveLength(2);
+    await second.close();
+});
+
+it.each(["wrong UUID", "malformed receipt"])(
+    "does not unlock correction for %s",
+    async (kind) => {
+        const c = await ready();
+        const first = await c.service.submit(c.uuid, c.body);
+        c.provider.scenario = "rejected";
+        await c.outbox.flush();
+        const row = (await store.list(c.owner)).find(
+            (q) => q.key === first.key,
+        )!;
+        await store.put({
+            ...row,
+            receipt:
+                kind === "wrong UUID"
+                    ? { ...row.receipt!, client_uuid: crypto.randomUUID() }
+                    : ({
+                          ...row.receipt!,
+                          message: undefined,
+                      } as unknown as typeof row.receipt),
+        });
+        await expect(
+            c.service.submit(c.uuid, {
+                ...c.body,
+                supersedes_uuid: first.command.client_uuid,
+                correction_reason: "Harus tetap tertahan",
+            }),
+        ).rejects.toThrow("sudah diantrekan");
+    },
+);
+it("rechecks the rejection atomically when the predecessor changes during a correction", async () => {
+    const c = await ready();
+    const first = await c.service.submit(c.uuid, c.body);
+    c.provider.scenario = "rejected";
+    await c.outbox.flush();
+    const rejected = (await store.list(c.owner)).find(
+        (q) => q.key === first.key,
+    )!;
+    const original = store.listEvidence.bind(store);
+    vi.spyOn(store, "listEvidence").mockImplementationOnce(async (owner) => {
+        const rows = await original(owner);
+        await store.put({
+            ...rejected,
+            state: "needs_approval",
+            receipt: { ...rejected.receipt!, status: "needs_approval" },
+        });
+        return rows;
+    });
+    await expect(
+        c.service.submit(c.uuid, {
+            ...c.body,
+            supersedes_uuid: first.command.client_uuid,
+            correction_reason: "Status bisnis berubah saat submit",
+        }),
+    ).rejects.toThrow("Penolakan bisnis berubah");
+    expect(
+        (await store.list(c.owner)).filter(
+            (q) => q.command.type === "field_expense.realization.submit",
+        ),
+    ).toHaveLength(1);
+    expect((await c.service.load(c.uuid))?.realization_uuid).toBe(
+        first.command.client_uuid,
+    );
+});
