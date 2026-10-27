@@ -80,3 +80,10 @@
 - 17 kasus mutasi baru gagal terhadap kode lama; setelah fix 48 unit, 1 hosting, 20 browser PASS. Browser corrupt persisted bundle + reload offline membuktikan order/extra-call tertahan dan draft/outbox tidak berubah.
 - Format/typecheck/contracts/build budget/Ruff/manifest PASS; CI diperiksa setelah push. Tetap draft, tidak merge/deploy atau menyentuh backend/seed/Railway.
 - Task managed by codex agent at 2026-10-27T09:29:54+07:00
+
+[2026-10-27T10:30:25+07:00] [INFO] Realisasi biaya dan estimasi settlement simulator
+- Basis main b19240a, branch agen/mobile-expense-settlement; tidak mengubah backend/seed/loader/CI workflow/Railway.
+- Layar realisasi dengan approval/pencairan fixture terpisah dari receipt, komponen-struk, BBM odometer/liter-harga/bukti, draft offline, refund/variance preview dan tier total exposure.
+- Payload command strict/OpenAPI0.2, create-if-absent advance, CAS atomik outbox+link; restore memeriksa konteks dan pending tidak dihapus. Foto lokal dipulihkan per owner.
+- 60 unit + 1 hosting + 24 browser PASS; format/typecheck/contracts/build budget/Ruff/4manifest PASS. CI setelah push. Final settlement, media map dan approval/cash/GL resmi tetap dependency; live terkunci.
+- Task managed by codex agent at 2026-10-27T10:30:25+07:00

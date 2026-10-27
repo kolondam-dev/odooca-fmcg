@@ -62,6 +62,59 @@ export class FieldStore {
     async put(item: QueueItem) {
         await (await this.db).put("outbox", item);
     }
+    async createDraftIfAbsent(
+        owner: string,
+        key: string,
+        value: unknown,
+    ): Promise<unknown> {
+        const tx = (await this.db).transaction("drafts", "readwrite");
+        const done = tx.done;
+        try {
+            const id = `${owner}:${key}`;
+            const old = await tx.store.get(id);
+            if (!old) await tx.store.add({ key: id, owner, value });
+            await done;
+            return old ? old.value : value;
+        } catch (error) {
+            await done.catch(() => {});
+            throw error;
+        }
+    }
+    async putWithDraft(
+        item: QueueItem,
+        key: string,
+        value: unknown,
+        expected: unknown,
+    ) {
+        const tx = (await this.db).transaction(
+            ["outbox", "drafts"],
+            "readwrite",
+        );
+        const done = tx.done;
+        try {
+            const id = `${item.owner}:${key}`;
+            const old = await tx.objectStore("drafts").get(id);
+            if (JSON.stringify(old?.value) !== JSON.stringify(expected))
+                throw new Error(
+                    "Data berubah di tab lain. Muat ulang sebelum mengirim.",
+                );
+            await Promise.all([
+                tx.objectStore("outbox").add(item),
+                tx
+                    .objectStore("drafts")
+                    .put({ key: id, owner: item.owner, value }),
+                done,
+            ]);
+        } catch (error) {
+            try {
+                tx.abort();
+            } catch {
+                /* Transaction may already be aborted. */
+            }
+            await done.catch(() => {});
+            throw error;
+        }
+    }
     async draft(owner: string, key: string, value?: unknown): Promise<unknown> {
         const db = await this.db;
         const id = `${owner}:${key}`;

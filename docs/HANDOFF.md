@@ -1,5 +1,15 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Realisasi biaya dan estimasi settlement simulator
+**Basis:** main b19240a (PR #21 merged); branch agen/mobile-expense-settlement.
+**Berubah:** layar Lainnya → Realisasi & saldo uang lapangan; receipt request dipisah dari approval/pencairan fiktif. Policy fixture contoh, komponen/struk, foto lokal, odometer/liter-harga BBM, draft offline, preview refund/variance dan tier total exposure. Pratinjau foto dipulihkan per owner setelah reload.
+**Integritas client:** restore advance/submit memakai validator source fingerprint/owner/amount/approval/timestamp/link outbox; create-if-absent advance dan transaksi outbox+link dengan compare-and-set. Dua koneksi diuji agar satu advance tidak punya dua command realisasi; rollback/quota tidak membuat orphan. Request material berubah menahan advance lama.
+**Kontrak/CI:** CommandSchema discriminated union dengan payload realization strict, OpenAPI draft 0.2; tidak menambah endpoint backend. Gate build menolak fixture/kontrol pencairan pada live. Seluruh workflow CI existing dipertahankan; tes baru ditemukan otomatis.
+**Diverifikasi lokal:** 60 unit, 1 hosting, 24 browser phone/tablet PASS; format/typecheck/contracts/demo+live build/budget (demo JS ~43,8 KiB gzip, font 47,1 KiB), Ruff/4 manifest PASS. Screenshot realisasi/pratinjau bukti ditinjau; foto tes memakai icon app. CI diperiksa setelah push.
+**Batas:** estimasi settlement, bukan uang dikembalikan/top-up disetujui/dibayar/GL. Foto local_map_pending; submit hanya simulator dan receipt membutuhkan review. Limit Rp250.000 adalah fixture contoh, bukan policy perusahaan. Koreksi setelah antre/reject, final settlement, policy bertanggal/agregat, media hash/map/OCR/dedup server, multi-pengisian/multi-hari tetap dependency. Referensi foto terpisah tidak membuktikan konten foto berbeda; local state bukan security boundary.
+**Tidak disentuh:** addon/backend/seed/loader, workflow/ruleset, Railway/domain/deployment. Live terkunci.
+**Menunggu:** review PR dan CI, merge pemilik serta deploy manual commit yang diterima. Panduan dan batas lengkap di pwa/README.md.
+
 ## 2026-10-27 — codex agent — Tutup celah restore sesi PR #21
 **Basis:** PR #21 HEAD 8693b13; review issuecomment-6432082496, tetap branch agen/mobile-session-brand.
 **Koreksi:** klaim paket invalid tidak membuka sesi pada entri sebelumnya belum berlaku untuk restore. Celah direproduksi: 17 dari 19 kasus mutasi persisted state baru gagal pada implementasi lama.

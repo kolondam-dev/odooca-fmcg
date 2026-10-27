@@ -45,7 +45,7 @@ simulator pada live. Belum ada publikasi web, integrasi auth nyata atau deploy.
 
 Ini menutup fondasi dan beberapa alur client PWA-01–04, **bukan seluruh roadmap**.
 English/i18n penuh, tracking perjalanan, geofence workflow lengkap, sesi pagi resmi (simulasi tersedia),
-form realisasi/settlement rinci, server notification/approval, snapshot peta, recovery
+settlement final/koreksi realisasi dan integrasi media, server notification/approval, snapshot peta, recovery
 session/device, backend receipt/record aktual dan E2E production masih pekerjaan
 berikutnya. Jangan menilai status accepted simulator sebagai bukti Odoo menerima SO.
 
@@ -172,3 +172,55 @@ draft bisnis. Pengguna harus mengulang alur sesi pagi; command pending tetap
 tersimpan dengan konteks asal. Regresi diuji melalui mutasi record IndexedDB
 nyata pada unit dan corrupt bundle → browser reload offline → order/extra-call
 terkunci, dengan isi draft/outbox sebelum-sesudah tetap sama.
+
+## Realisasi dan estimasi settlement (simulasi)
+
+Akses dari **Lainnya → Realisasi & saldo uang lapangan**. Buat pengajuan biaya
+melalui form yang sudah ada, tunggu receipt Menunggu approval, lalu pilih pengajuan.
+Tombol laboratorium **Simulasikan approval & pencairan** tersedia hanya pada demo,
+online dan respons Normal. Penerimaan request tetap tidak berarti uang cair.
+Policy fixture `SIM-EXPENSE-POLICY-1` menggunakan limit contoh Rp250.000; angka ini
+bukan limit perusahaan, bukan rekomendasi policy dan tidak dikirim pada build live.
+BBM insidentil selalu menampilkan Supervisor + Branch Manager. Routing preview
+variance memakai max(advance, total realisasi), bukan hanya selisih kecil.
+
+Form mendukung hingga 10 komponen non-BBM (uraian, rupiah bulat, penjual, nomor
+struk, tanggal dan bukti per komponen), atau satu pengisian BBM per pengajuan.
+BBM mencatat liter (maksimal tiga desimal), harga/liter, KM sebelum/sesudah,
+foto struk serta dua foto odometer dengan referensi terpisah. Total BBM dihitung
+melalui mililiter integer lalu dibulatkan ke rupiah; KM nondecreasing terhadap
+pengajuan dan sebelum isi. Bukti harus berupa Blob lokal milik akun dengan
+metadata yang cocok. Draft dan pratinjau bukti dipulihkan offline.
+
+Estimasi menampilkan total, perlu pengembalian, dan perlu tambahan/variance. Tidak
+menganggap refund diterima, top-up disetujui/dibayar, settlement selesai atau GL
+terposting. Foto masih `local_map_pending`: **submit hanya ke simulator**, receipt
+realisasi tetap membutuhkan review dan bukan penerimaan bukti resmi.
+
+Command `field_expense.realization.submit` memakai payload strict yang menjadi
+cabang khusus di CommandSchema/OpenAPI draft 0.2; tidak bisa memakai generic
+payload fallback. Saat antre, payload dan referensi advance disimpan dalam satu
+transaksi IndexedDB dengan compare-and-set. Dua koneksi/tab untuk advance sama
+hanya bisa menghasilkan satu command. Retry mempertahankan UUID. Advance dibuat
+create-if-absent agar kontrol demo tidak menimpa link realisasi yang sudah ada.
+Restore dan submit memakai validator konteks yang sama (owner, request fingerprint,
+amount, tier approval, timestamp dan link outbox). Perubahan material request
+membutuhkan review ulang; data sumber/pending tidak dihapus otomatis.
+
+Batas yang masih menunggu backend:
+
+- Pengembalian uang, approval variance, pembayaran tambahan, final settlement dan
+  posting; koreksi setelah submit/reject belum dibuka agar tidak membuat dua
+  realisasi aktif. Realisasi dikunci setelah masuk antrean, termasuk offline.
+- Secure identity/ACL, server-issued advance/revision dan policy bertanggal;
+  fixture lokal bukan security boundary dan dapat dimanipulasi pengguna.
+- Map snapshot, media upload/hash asli, verifikasi konten struk/OCR dan duplikasi
+  server. Pemeriksaan lokal hanya referensi foto dan penjual/nomor/tanggal struk,
+  bukan bukti foto berbeda atau anti-fraud global; concurrency beda advance/perangkat
+  tetap harus diperiksa server.
+- Agregat limit per trip/periode, kapasitas BBM, multi-pengisian dan settlement
+  multi-hari. Batas 10 komponen/Rp100 juta adalah batas input prototype, bukan limit
+  approval bisnis.
+
+Tidak mengubah backend/seed/deploy/Railway atau membuka build live. Fixture/test
+foto memakai ikon aplikasi sebagai input tes, tanpa data operasional.

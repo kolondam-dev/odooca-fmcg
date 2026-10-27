@@ -7,6 +7,7 @@ import {
     type Scenario,
     type Snapshot,
 } from "../domain/contracts";
+import { ExpenseRealizationSchema } from "../domain/settlement-contracts";
 import { FieldStore } from "../storage/store";
 const actors: Record<string, Omit<Identity, "businessDate">> = {
     sales: {
@@ -134,6 +135,10 @@ export class MockProvider implements FieldProvider {
             ],
         };
     }
+    async expensePolicy() {
+        // Fixture only, never a company approval limit.
+        return { version: "SIM-EXPENSE-POLICY-1", supervisor_limit: "250000" };
+    }
     async submit(command: Command): Promise<Receipt> {
         if (!navigator.onLine)
             throw new ApiError(0, "Perangkat offline. Data tetap tersimpan.");
@@ -150,8 +155,17 @@ export class MockProvider implements FieldProvider {
                 throw new ApiError(409, "UUID sama dengan payload berbeda.");
             return existing.receipt;
         }
+        if (
+            command.type === "field_expense.realization.submit" &&
+            !ExpenseRealizationSchema.safeParse(command.payload).success
+        )
+            throw new ApiError(
+                422,
+                "Data realisasi tidak sesuai kontrak simulator.",
+            );
         const policyApproval = [
             "field_expense.request",
+            "field_expense.realization.submit",
             "sales.extra_call.request",
             "hris.leave.request",
         ].includes(command.type);
