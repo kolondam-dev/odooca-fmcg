@@ -558,8 +558,8 @@ def main():
             if fname in cat_fields and stock_input_acc:
                 categ_vals[fname] = stock_input_acc.id
         for fname in ["property_stock_account_output_categ_id", "property_stock_account_output_id", "account_stock_out_id", "stock_output_account_id"]:
-            if fname in cat_fields and stock_output_acc:
-                categ_vals[fname] = stock_output_acc.id
+            if fname in cat_fields and (cogs_acc or stock_output_acc):
+                categ_vals[fname] = (cogs_acc or stock_output_acc).id
         for fname in ["property_account_expense_categ_id", "property_account_expense_id", "account_expense_id"]:
             if fname in cat_fields and cogs_acc:
                 categ_vals[fname] = cogs_acc.id
@@ -574,31 +574,46 @@ def main():
         if stock_valuation_acc:
             print(f" -> Akun Valuasi Persediaan: {stock_valuation_acc.code} - {stock_valuation_acc.name}")
 
-        # Konfigurasi Akun di Tingkat Lokasi (Internal, Inventory, Supplier, Customer, Production)
-        # Berdasarkan schema runtime Odoo 19 aktual: predicate membaca location.valuation_account_id
+        # Konfigurasi Akun di Tingkat Lokasi (Non-Internal: Inventory, Supplier, Customer, Production)
+        # Catatan Kritis Arsitektur Odoo 19:
+        # Lokasi INTERNAL (WH/Stock, Karantina) WAJIB bernilai False pada valuation_account_id,
+        # agar Odoo mengambil akun persediaan murni dari product.category (113000).
+        # Jika lokasi internal diberi valuation_account_id, delivery akan menghasilkan debit-kredit
+        # persediaan ke akun yang sama alih-alih mendebit HPP (510000).
         if "valuation_account_id" in sl_fields:
-            if stock_valuation_acc:
-                for inloc in StockLocation.search([("usage", "=", "internal")]):
-                    inloc.write({"valuation_account_id": stock_valuation_acc.id})
+            # 1. Bersihkan seluruh lokasi internal agar valuation_account_id = False
+            for inloc in StockLocation.search([("usage", "=", "internal")]):
+                if inloc.valuation_account_id:
+                    inloc.write({"valuation_account_id": False})
+
+            # 2. Lokasi Inventory Adjustment: counterpart = stock_input_acc (113900)
             if stock_input_acc:
                 for iloc in StockLocation.search([("usage", "=", "inventory")]):
                     iloc.write({"valuation_account_id": stock_input_acc.id})
+
+            # 3. Lokasi Supplier: counterpart = stock_input_acc (113900)
+            if stock_input_acc:
                 for sloc in StockLocation.search([("usage", "=", "supplier")]):
                     sloc.write({"valuation_account_id": stock_input_acc.id})
-                for ploc in StockLocation.search([("usage", "=", "production")]):
-                    ploc.write({"valuation_account_id": stock_input_acc.id})
+
+            # 4. Lokasi Customer: counterpart = cogs_acc (510000)
             cust_acc = cogs_acc or stock_output_acc
             if cust_acc:
                 for cloc in StockLocation.search([("usage", "=", "customer")]):
                     cloc.write({"valuation_account_id": cust_acc.id})
 
+            # 5. Lokasi Production (jika ada): counterpart = stock_input_acc (113900)
+            if stock_input_acc:
+                for ploc in StockLocation.search([("usage", "=", "production")]):
+                    ploc.write({"valuation_account_id": stock_input_acc.id})
+
         # Kompatibilitas field legacy jika ada
         if "valuation_out_account_id" in sl_fields and stock_input_acc:
             for loc in StockLocation.search([("usage", "in", ["inventory", "supplier"])]):
                 loc.write({"valuation_out_account_id": stock_input_acc.id})
-        if "valuation_in_account_id" in sl_fields and stock_output_acc:
+        if "valuation_in_account_id" in sl_fields and (cogs_acc or stock_output_acc):
             for loc in StockLocation.search([("usage", "in", ["inventory", "customer"])]):
-                loc.write({"valuation_in_account_id": stock_output_acc.id})
+                loc.write({"valuation_in_account_id": (cogs_acc or stock_output_acc).id})
 
         # Produk
         product = ProductProduct.search([("default_code", "=", oracle["sku"]), ("company_id", "in", [False, company.id])], limit=1)
@@ -643,9 +658,11 @@ def main():
                 "location_id": wh_stock_loc.location_id.id if wh_stock_loc.location_id else False,
                 "company_id": company.id,
             })
-        if "valuation_account_id" in sl_fields and stock_valuation_acc:
-            wh_stock_loc.write({"valuation_account_id": stock_valuation_acc.id})
-            quarantine_loc.write({"valuation_account_id": stock_valuation_acc.id})
+        if "valuation_account_id" in sl_fields:
+            if wh_stock_loc.valuation_account_id:
+                wh_stock_loc.write({"valuation_account_id": False})
+            if quarantine_loc.valuation_account_id:
+                quarantine_loc.write({"valuation_account_id": False})
 
         # Partners
         details = oracle["details"]
@@ -700,18 +717,27 @@ def main():
                     ("ref", "ilike", origin_ref),
                 ])
 
-            # Backdate entri jurnal native Odoo yang ditemukan & pastikan posted
+            # Verifikasi entri jurnal native Odoo tanpa modifikasi ilegal pada entri posted
             for am in found_moves:
+                target_date = target_date_str[:10]
                 if am.state == "draft":
+                    # Jika masih draft, selaraskan tanggal sebelum posting
+                    am.write({"date": target_date})
+                    if hasattr(am, "line_ids") and am.line_ids:
+                        am.line_ids.write({"date": target_date})
                     try:
                         am.action_post()
                     except Exception as ex_post:
                         print(f" -> [Info ORM] action_post move {am.id}: {ex_post}")
-                am.write({"date": target_date_str[:10]})
-                if hasattr(am, "line_ids") and am.line_ids:
-                    am.line_ids.write({"date": target_date_str[:10]})
+                else:
+                    # Move sudah posted: verifikasi bahwa force_period_date telah mengisi tanggal native dengan benar
+                    if str(am.date) != target_date:
+                        print(f" -> [WARN] Move {am.id} posted date ({am.date}) berbeda dari target ({target_date})")
+
                 experiment_account_move_ids.add(am.id)
                 print(f" -> [Native Account Move] ID={am.id}, Ref={am.ref}, Date={am.date}, State={am.state}, Lines={len(am.line_ids)}")
+                for line in am.line_ids:
+                    print(f"     * Account: {line.account_id.code} ({line.account_id.name}) | Debit: {line.debit} | Credit: {line.credit}")
 
             return found_moves
 
@@ -793,9 +819,9 @@ def main():
             }
             mv_vals = {k: v for k, v in candidate_mv.items() if k in StockMove._fields}
 
-            mv = StockMove.create(mv_vals)
-            mv._action_confirm()
-            mv._action_assign()
+            mv = StockMove.with_context(force_period_date=move_date[:10]).create(mv_vals)
+            mv.with_context(force_period_date=move_date[:10])._action_confirm()
+            mv.with_context(force_period_date=move_date[:10])._action_assign()
 
             # Sinkronisasi line_ids secara tangguh terhadap lifecycle Odoo 19
             if mv.move_line_ids:

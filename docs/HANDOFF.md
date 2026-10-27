@@ -1,5 +1,29 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Eliminasi Rewrite Tanggal Jurnal Posted & Penyelarasan Mapping Counterpart Lokasi Non-Internal vs Internal
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6433723990](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6433723990)):**
+- Menindaklanjuti temuan review commit `d86341f`:
+  1. *Jurnal native terbentuk*: Odoo 19 membuktikan pembentukan jurnal native berhasil.
+  2. *Error rewrite tanggal posted*: Helper mencoba menulis ulang tanggal `am.write({"date": ...})` pada entri jurnal yang telah berstatus `posted`, memicu penolakan ORM Odoo. Context `force_period_date` telah mengisi tanggal dengan benar sebelum diposting; helper harus memverifikasi tanggal tersebut alih-alih mengubahnya.
+  3. *Mapping counterpart pergerakan*: Penyetelan `valuation_account_id` pada lokasi internal (`WH/Stock`, `Karantina`) berpotensi menyebabkan delivery mendebit dan mengkredit akun persediaan yang sama. Lokasi internal wajib bernilai `False` pada `valuation_account_id` agar akun persediaan diambil dari `product.category` (113000), dan akun lawan (counterpart) delivery didelegasikan ke lokasi customer / kategori (HPP 510000).
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Penghapusan Rewrite Tanggal pada Entri Jurnal Posted ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Merevisi `find_and_backdate_native_account_moves`: jika `am.state == 'draft'`, tanggal diselaraskan sebelum `action_post()`; jika `am.state == 'posted'`, helper hanya memverifikasi bahwa tanggal native cocok dengan target `force_period_date` tanpa memanggil `am.write()`.
+   - Menambahkan dump transparan setiap baris AML (Account Code, Account Name, Debit, Credit) untuk memverifikasi debit/kredit dan mapping akun per transaksi.
+2. **Penyelarasan Mapping Counterpart Lokasi Non-Internal vs Lokasi Internal:**
+   - Membersihkan seluruh lokasi internal (`usage == 'internal'`, termasuk `WH/Stock` dan `Karantina FMCG Maumbi`) agar `valuation_account_id = False`.
+   - Mengonfigurasi lokasi customer (`usage == 'customer'`) dengan `valuation_account_id = cogs_acc.id` (`510000` HPP).
+   - Memastikan `property_stock_account_output_categ_id` pada kategori produk FMCG Perpetual Experiment terpetakan ke HPP `510000`.
+   - Menjamin 4 pergerakan menghasilkan entri akuntansi berimbang yang sah:
+     * Opening: Debit Persediaan 113000, Kredit Penyesuaian/Interim 113900.
+     * Delivery: Debit HPP 510000, Kredit Persediaan 113000.
+     * Retur Karantina: Debit Persediaan 113000, Kredit HPP 510000.
+     * PO Receipt: Debit Persediaan 113000, Kredit Interim Penerimaan 113900.
+3. **Penyebaran Context `force_period_date` Sepanjang Lifecycle Move:**
+   - Menyertakan `with_context(force_period_date=move_date[:10])` saat create, confirm, assign, dan action_done pada `stock.move`.
+
 ## 2026-10-27 — antigravity agent — Konfigurasi location.valuation_account_id, Relasi account_move_id Tunggal, dan Eliminasi Loop Valuasi Coba-Coba Sesuai Diagnosis Introspeksi Odoo 19
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6433430357](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6433430357)):**
 - Menindaklanjuti diagnosis konkret dari log introspeksi review commit `2af5cf9`:

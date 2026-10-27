@@ -573,3 +573,12 @@
 - Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok.
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T11:18:00+07:00
+
+[2026-10-27T11:32:00+07:00] [INFO] Eliminasi Rewrite Tanggal Jurnal Posted & Penyelarasan Mapping Counterpart Lokasi Non-Internal vs Internal
+- Menutup temuan review PR #15 (issuecomment-6433723990):
+  * Eliminasi Rewrite Tanggal Posted: Menghapus am.write({"date": ...}) pada entri jurnal yang telah posted; helper find_and_backdate_native_account_moves memverifikasi tanggal native yang dihasilkan force_period_date tanpa memicu penolakan ORM Odoo. Menambahkan dump rincian baris AML (Account Code, Debit, Credit) per pergerakan.
+  * Penyelarasan Counterpart Lokasi Non-Internal vs Internal: Mengosongkan valuation_account_id pada seluruh lokasi internal (WH/Stock, Karantina FMCG Maumbi) agar akun persediaan diambil murni dari product.category (113000); menetapkan valuation_account_id lokasi customer ke HPP 510000; memetakan property_stock_account_output_categ_id pada kategori produk ke 510000 untuk menjamin delivery mendebit HPP 510000 dan mengkredit Persediaan 113000 tanpa percampuran akun.
+  * Penjalaran force_period_date: Meneruskan with_context(force_period_date=move_date[:10]) saat pembuatan, konfirmasi, assign, dan action_done pada stock.move.
+- Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T11:32:00+07:00
