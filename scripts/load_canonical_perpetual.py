@@ -385,8 +385,8 @@ class CanonicalPerpetualAdapter:
 
             lot_num = item.get("lot_number")
             lot_obj = None
-            lot_fields = getattr(StockLot, "_fields", {}) if StockLot else {}
-            if StockLot and lot_num:
+            lot_fields = getattr(StockLot, "_fields", {}) if StockLot is not None else {}
+            if StockLot is not None and lot_num:
                 lot_obj = StockLot.search([("name", "=", lot_num), ("product_id", "=", prod.id)], limit=1)
                 if not lot_obj:
                     lot_vals = {
@@ -417,7 +417,7 @@ class CanonicalPerpetualAdapter:
 
             # Periksa dan update move_line yang ada
             assigned = False
-            sml_fields = getattr(StockMoveLine, "_fields", {}) if StockMoveLine else {}
+            sml_fields = getattr(StockMoveLine, "_fields", {}) if StockMoveLine is not None else {}
             if sml_fields:
                 has_qty_done_field = "qty_done" in sml_fields
                 has_quantity_field = "quantity" in sml_fields
@@ -631,7 +631,7 @@ class CanonicalPerpetualAdapter:
             lot_name = p_data["lot_number"]
 
             lot_id = False
-            if StockLot:
+            if StockLot is not None:
                 lot = StockLot.search([("name", "=", lot_name), ("product_id", "=", prod.id)], limit=1)
                 if not lot:
                     lot_vals = {
@@ -761,7 +761,7 @@ class CanonicalPerpetualAdapter:
                     self.stats["do_validated"] += 1
 
             # Vendor Bill
-            if AccountMove:
+            if AccountMove is not None:
                 existing_bill = AccountMove.search([("ref", "=", po_num)], limit=1)
                 if not existing_bill:
                     bill_vals = {
@@ -875,7 +875,7 @@ class CanonicalPerpetualAdapter:
 
             # Faktur Penjualan Sah (Net of Rejections)
             inv_info = inv_by_so.get(so_num)
-            if AccountMove and inv_info:
+            if AccountMove is not None and inv_info:
                 inv_num = inv_info["invoice_number"]
                 existing_inv = AccountMove.search([("ref", "=", inv_num)], limit=1)
                 if existing_inv:
@@ -967,7 +967,7 @@ class CanonicalPerpetualAdapter:
             sku = p_data["sku_code"]
             prod = self.product_by_code.get(sku)
             lot_obj = None
-            if StockLot and prod:
+            if StockLot is not None and prod:
                 lot_obj = StockLot.search([("name", "=", p_data["lot_number"]), ("product_id", "=", prod.id)], limit=1)
                 if not lot_obj:
                     lot_obj = StockLot.create({
@@ -979,7 +979,7 @@ class CanonicalPerpetualAdapter:
             # Jika stock.picking tersedia, gunakan transfer internal Odoo murni
             # Lokasi asal adalah customer_loc (Partner Locations/Customers) karena barang ditolak saat pengiriman,
             # sehingga stok gudang utama (WH/Stock) tidak terpotong dua kali.
-            if StockPicking:
+            if StockPicking is not None:
                 existing_pick = StockPicking.search([("origin", "=", rej_id)], limit=1)
                 if existing_pick:
                     self.stats["skipped_quarantine"] += 1
@@ -989,7 +989,9 @@ class CanonicalPerpetualAdapter:
                     self.env["stock.picking.type"].sudo() if "stock.picking.type" in self.env else None
                 )
                 internal_type = (
-                    StockPickingType.search([("code", "=", "internal")], limit=1) if StockPickingType else None
+                    StockPickingType.search([("code", "=", "internal")], limit=1)
+                    if StockPickingType is not None
+                    else None
                 )
 
                 sml_fields = (
@@ -1127,7 +1129,11 @@ class CanonicalPerpetualAdapter:
                     ]
                 )
 
-                disc_move_check = AccountMove.search([("ref", "=", disc_ref)], limit=1) if AccountMove else None
+                disc_move_check = (
+                    AccountMove.search([("ref", "=", disc_ref)], limit=1)
+                    if AccountMove is not None
+                    else None
+                )
                 disc_lines = self._get_record_lines(disc_move_check) if disc_move_check else []
                 disc_rec_lines = (
                     disc_lines.filtered(
@@ -1175,7 +1181,7 @@ class CanonicalPerpetualAdapter:
 
             # Diskon Pembayaran Awal (Early Cash Discount)
             disc_move = None
-            if AccountMove and disc_amt > 0:
+            if AccountMove is not None and disc_amt > 0:
                 existing_disc = AccountMove.search([("ref", "=", disc_ref)], limit=1)
                 if not existing_disc:
                     AccountAccount = (
@@ -1183,7 +1189,7 @@ class CanonicalPerpetualAdapter:
                     )
                     disc_account = None
                     ar_account = None
-                    if AccountAccount:
+                    if AccountAccount is not None:
                         disc_account = AccountAccount.search([("account_type", "=", "expense")], limit=1)
                         ar_account = AccountAccount.search([("account_type", "=", "asset_receivable")], limit=1)
 
@@ -1215,7 +1221,7 @@ class CanonicalPerpetualAdapter:
                         disc_move.action_post()
 
             # Reconcile dengan invoice jika ada
-            if AccountMove:
+            if AccountMove is not None:
                 inv = AccountMove.search([("ref", "=", p_data["invoice_number"])], limit=1)
                 if inv and inv.state == "posted":
                     pay_l = self._get_record_lines(pay)
@@ -1322,7 +1328,7 @@ class CanonicalPerpetualAdapter:
                         pass
 
             # Reconcile dengan bill PO
-            if AccountMove:
+            if AccountMove is not None:
                 bill = AccountMove.search([("ref", "=", p_data["po_number"])], limit=1)
                 if bill and bill.state == "posted":
                     pay_l = self._get_record_lines(pay)
@@ -1632,7 +1638,7 @@ class CanonicalPerpetualAdapter:
                         )
 
                     # Verifikasi faktur pasangan komersial
-                    if AccountMove:
+                    if AccountMove is not None:
                         inv = AccountMove.search([("ref", "=", inv_num)], limit=1)
                         assert inv, f"Faktur pasangan '{inv_num}' untuk payment '{pay_id}' tidak ditemukan!"
                         assert inv.state == "posted", f"Faktur '{inv_num}' belum posted! State: {inv.state}"
@@ -1712,7 +1718,7 @@ class CanonicalPerpetualAdapter:
                             f"Baris pembayaran AP '{pay_id}' belum terekonsiliasi! Residual: {res_val}"
                         )
 
-                    if AccountMove:
+                    if AccountMove is not None:
                         bill = AccountMove.search([("ref", "=", po_num)], limit=1)
                         assert bill, f"Bill pasangan '{po_num}' untuk payment '{pay_id}' tidak ditemukan!"
                         assert bill.state == "posted", f"Bill '{po_num}' belum posted! State: {bill.state}"

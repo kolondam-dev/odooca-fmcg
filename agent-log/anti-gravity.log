@@ -695,4 +695,13 @@
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T17:30:00+07:00
 
+[2026-10-27T17:44:00+07:00] [INFO] Perbaikan Komprehensif Evaluasi Truthiness Model Recordset Odoo (is not None)
+- Menindaklanjuti kegagalan asersi rekonsiliasi AR pada CI run 40489056932:
+  * Di Odoo ORM, recordset kosong (misal model handle dari self.env['model.name']) selalu mengevaluasi bool(Model) ke False karena BaseModel.__bool__ memeriksa keberadaan _ids.
+  * Akibatnya seluruh evaluasi `if AccountMove:` dan `if StockLot:` di scripts/load_canonical_perpetual.py dan scripts/ops/verify_disposable_slice.py sebelumnya terlewat di runtime nyata Odoo (vendor bill tidak dibuat, faktur out_invoice tidak dibuat, jurnal diskon tidak dibuat, dan rekonsiliasi pembayaran AR/AP tidak dipanggil).
+  * Melakukan perbaikan komprehensif dengan mengganti seluruh pola `if Model:` menjadi `if Model is not None:` untuk AccountMove, AccountAccount, AccountPayment, AccountMoveLine, StockLot, StockPicking, StockQuant, dan StockPickingType pada loader kanonikal dan verifikator slice representatif.
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), unit tests (Ran 37 tests: OK).
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T17:44:00+07:00
+
 

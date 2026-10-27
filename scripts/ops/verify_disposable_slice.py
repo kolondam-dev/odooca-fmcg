@@ -107,7 +107,7 @@ def run_representative_slice(env):
     AccountMoveLine = env["account.move.line"].sudo() if "account.move.line" in env else None
 
     # 1. Verifikasi picking (PO receipt, SO deliveries, dan Karantina transfer)
-    if StockPicking:
+    if StockPicking is not None:
         picks = StockPicking.search([])
         for p in picks:
             assert p.state == "done", f"Picking '{p.name or p.origin}' belum done! State: {p.state}"
@@ -125,7 +125,7 @@ def run_representative_slice(env):
         )
 
     # 2. Verifikasi payments (AR dan AP)
-    if AccountPayment:
+    if AccountPayment is not None:
         pays = AccountPayment.search([])
         assert len(pays) >= 5, f"Expected minimal 5 payment, got {len(pays)}"
         for py in pays:
@@ -145,7 +145,7 @@ def run_representative_slice(env):
                     )
 
     # 3. Verifikasi account moves (invoices & exact discount moves)
-    if AccountMove:
+    if AccountMove is not None:
         # Verifikasi jurnal diskon persis DISC-PAY-AR-00098
         disc_move = AccountMove.search([("ref", "=", "DISC-PAY-AR-00098")], limit=1)
         assert disc_move, "Jurnal diskon persis 'DISC-PAY-AR-00098' tidak ditemukan!"
@@ -158,7 +158,7 @@ def run_representative_slice(env):
     # 4. Snapshot Saldo Stok & GL setelah Run 1
     quant_records_run1 = {}
     stock_totals_run1 = {}
-    if StockQuant:
+    if StockQuant is not None:
         for q in StockQuant.search([]):
             prod_code = getattr(getattr(q, "product_id", None), "default_code", getattr(q.product_id, "id", None))
             loc_name = getattr(getattr(q, "location_id", None), "name", getattr(q.location_id, "id", None))
@@ -174,7 +174,7 @@ def run_representative_slice(env):
             stock_totals_run1[key] = stock_totals_run1.get(key, 0.0) + qty
 
     gl_snapshot_run1 = {}
-    if AccountMoveLine:
+    if AccountMoveLine is not None:
         for line_rec in AccountMoveLine.search([]):
             acc_code = getattr(
                 getattr(line_rec, "account_id", None), "code", getattr(line_rec.account_id, "id", None)
@@ -200,7 +200,7 @@ def run_representative_slice(env):
     assert adapter_run2.stats["quarantine_rejections"] == 0, "Karantina tidak boleh dibuat ulang pada run 2!"
 
     # 6. Komparasi Saldo Stok Run 1 vs Run 2 (Audit Zero Stock Drift Tanpa Penimpaan)
-    if StockQuant:
+    if StockQuant is not None:
         quant_records_run2 = {}
         stock_totals_run2 = {}
         for q in StockQuant.search([]):
@@ -240,7 +240,7 @@ def run_representative_slice(env):
             )
 
     # 7. Komparasi Saldo GL Run 1 vs Run 2
-    if AccountMoveLine:
+    if AccountMoveLine is not None:
         gl_snapshot_run2 = {}
         for line_rec in AccountMoveLine.search([]):
             acc_code = getattr(

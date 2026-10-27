@@ -15,6 +15,7 @@
      - Menyelesaikan blocker `KeyError: [canonical_loader] FATAL: Salesman user 'SLS-01' (code: 'sls-01') tidak ditemukan di res.users!` pada pemuatan SO.
      - Menyediakan whitelist 6 salesman resmi kanonikal (`sls-01`, `sls-02`, `sls-03`, `cvs-01`, `cvs-02`, `mgt-01`) dengan pembuatan record `res.users` otomatis jika belum terdaftar di lingkungan bootstrap database kosong, sembari tetap menjaga fail-fast keras (`KeyError`) terhadap kode asing yang tidak dikenal (misal `UNKNOWN-SALESMAN-99`).
       - Memperbaiki evaluasi truthiness model Odoo: empty recordset `res.users()` bernilai `False` saat dievaluasi sebagai boolean, sehingga diubah menjadi `if User is not None and code in canonical_salesmen:`.
+      - Melakukan perbaikan komprehensif eliminasi pola evaluasi boolean model (`if Model:`) menjadi `if Model is not None:` untuk `AccountMove`, `AccountAccount`, `AccountPayment`, `AccountMoveLine`, `StockLot`, `StockPicking`, `StockQuant`, dan `StockPickingType` pada `load_canonical_perpetual.py` dan `verify_disposable_slice.py`, memastikan seluruh siklus vendor bill, faktur komersial, diskon, rekonsiliasi pembayaran AR/AP, dan assertion verifikasi runtime dieksekusi penuh pada Odoo nyata.
   4. *Unit Testing & Kompatibilitas Mock*:
      - Menambahkan method `write(self, vals)` pada `MockRecord` di `tests/test_canonical_loader_adapter.py` untuk mensimulasikan perilaku persistensi ORM Odoo.
      - Seluruh 37 test suite pada `tests/test_canonical_loader_adapter.py` lolos 100%.
