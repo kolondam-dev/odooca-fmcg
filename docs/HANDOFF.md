@@ -11,8 +11,9 @@
 - Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
 
 **Implementasi Perbaikan:**
-1. **Perbaikan Truthiness Model Odoo ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+1. **Perbaikan Truthiness Model Odoo & Skema Multi-Company Odoo 19 ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
    - Mengganti `if AccountAccount:` dan `if AccountJournal:` dengan `if AccountAccount is not None:` dan `if AccountJournal is not None:`.
+   - Mengatasi arsitektur baru Odoo 19 pada `account.account`: field `company_id` (Many2one) telah digantikan oleh `company_ids` (Many2many). Domain pencarian dan nilai pembuatan disesuaikan secara dinamis (`comp_domain = [('company_ids', 'in', [company.id])]`).
    - Menjamin seluruh akun persediaan (`113000`), akun interim input (`113900`), interim output (`113910`), HPP (`510000`), dan jurnal `STJ` terpasang pasti pada kategori produk `FMCG Perpetual Experiment`.
    - Mengaktifkan `anglo_saxon_accounting` pada perusahaan jika field tersedia di `res.company`.
 2. **Pemisahan Tegas Loader vs Validator Read-Only:**

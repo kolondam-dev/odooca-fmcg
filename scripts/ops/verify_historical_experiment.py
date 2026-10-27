@@ -385,86 +385,97 @@ def main():
         stock_journal = None
 
         if AccountAccount is not None:
+            # Bangun domain company tangguh Odoo 19 (company_ids Many2many) vs versi lama (company_id Many2one)
+            acc_fields = AccountAccount._fields
+            comp_domain = []
+            comp_vals = {}
+            if "company_ids" in acc_fields:
+                comp_domain = [("company_ids", "in", [company.id])]
+                comp_vals = {"company_ids": [(4, company.id)]}
+            elif "company_id" in acc_fields:
+                comp_domain = [("company_id", "in", [False, company.id])]
+                comp_vals = {"company_id": company.id}
+
             # 1. Stock Valuation Account (Persediaan 113000 / 113100)
-            stock_valuation_acc = AccountAccount.search([
-                ("company_id", "in", [False, company.id]),
+            stock_valuation_acc = AccountAccount.search(comp_domain + [
                 ("code", "in", ["113000", "113100"]),
             ], limit=1)
             if not stock_valuation_acc:
-                stock_valuation_acc = AccountAccount.search([
-                    ("company_id", "in", [False, company.id]),
+                stock_valuation_acc = AccountAccount.search(comp_domain + [
                     ("account_type", "=", "asset_current"),
                     ("name", "ilike", "Persediaan"),
                 ], limit=1)
             if not stock_valuation_acc:
-                stock_valuation_acc = AccountAccount.create({
+                vals = {
                     "code": "113000",
                     "name": "Persediaan Barang Dagang FMCG",
                     "account_type": "asset_current",
-                    "company_id": company.id,
-                })
+                }
+                vals.update(comp_vals)
+                stock_valuation_acc = AccountAccount.create(vals)
 
             # 2. Stock Interim Input Account (113900 / 211000)
-            stock_input_acc = AccountAccount.search([
-                ("company_id", "in", [False, company.id]),
+            stock_input_acc = AccountAccount.search(comp_domain + [
                 ("code", "in", ["113900", "211000"]),
             ], limit=1)
             if not stock_input_acc:
-                stock_input_acc = AccountAccount.create({
+                vals = {
                     "code": "113900",
                     "name": "Penerimaan Barang Sementara (Interim)",
                     "account_type": "asset_current",
-                    "company_id": company.id,
-                })
+                }
+                vals.update(comp_vals)
+                stock_input_acc = AccountAccount.create(vals)
 
             # 3. Stock Interim Output Account (113910)
-            stock_output_acc = AccountAccount.search([
-                ("company_id", "in", [False, company.id]),
+            stock_output_acc = AccountAccount.search(comp_domain + [
                 ("code", "=", "113910"),
             ], limit=1)
             if not stock_output_acc:
-                stock_output_acc = AccountAccount.create({
+                vals = {
                     "code": "113910",
                     "name": "Pengiriman Barang Sementara (Interim)",
                     "account_type": "asset_current",
-                    "company_id": company.id,
-                })
+                }
+                vals.update(comp_vals)
+                stock_output_acc = AccountAccount.create(vals)
 
             # 4. COGS / Expense Account (510000)
-            cogs_acc = AccountAccount.search([
-                ("company_id", "in", [False, company.id]),
+            cogs_acc = AccountAccount.search(comp_domain + [
                 ("code", "in", ["510000", "500000"]),
             ], limit=1)
             if not cogs_acc:
-                cogs_acc = AccountAccount.search([
-                    ("company_id", "in", [False, company.id]),
+                cogs_acc = AccountAccount.search(comp_domain + [
                     ("account_type", "in", ["expense_direct_cost", "expense"]),
                 ], limit=1)
             if not cogs_acc:
-                cogs_acc = AccountAccount.create({
+                vals = {
                     "code": "510000",
                     "name": "Harga Pokok Penjualan (HPP) FMCG",
                     "account_type": "expense_direct_cost",
-                    "company_id": company.id,
-                })
+                }
+                vals.update(comp_vals)
+                cogs_acc = AccountAccount.create(vals)
 
         if AccountJournal is not None:
-            stock_journal = AccountJournal.search([
-                ("company_id", "in", [False, company.id]),
+            j_fields = AccountJournal._fields
+            j_domain = [("company_id", "in", [False, company.id])] if "company_id" in j_fields else []
+            stock_journal = AccountJournal.search(j_domain + [
                 ("code", "in", ["STJ", "MISC", "VAL"]),
             ], limit=1)
             if not stock_journal:
-                stock_journal = AccountJournal.search([
-                    ("company_id", "in", [False, company.id]),
+                stock_journal = AccountJournal.search(j_domain + [
                     ("type", "=", "general"),
                 ], limit=1)
             if not stock_journal:
-                stock_journal = AccountJournal.create({
+                vals = {
                     "name": "Penilaian Persediaan",
                     "type": "general",
                     "code": "STJ",
-                    "company_id": company.id,
-                })
+                }
+                if "company_id" in j_fields:
+                    vals["company_id"] = company.id
+                stock_journal = AccountJournal.create(vals)
 
         # Pastikan anglo_saxon_accounting aktif jika field tersedia pada res.company
         if "anglo_saxon_accounting" in company._fields and not company.anglo_saxon_accounting:
@@ -719,11 +730,12 @@ def main():
             gl_balance = None
             if has_aml and stock_valuation_acc:
                 aml_domain = [
-                    ("company_id", "=", company.id),
                     ("account_id", "=", stock_valuation_acc.id),
                     ("move_id.state", "=", "posted"),
                     ("date", "<=", as_of_dt_str[:10]),
                 ]
+                if "company_id" in env["account.move.line"]._fields:
+                    aml_domain.append(("company_id", "=", company.id))
                 amls = env["account.move.line"].sudo().search(aml_domain)
                 matching_amls = [
                     a for a in amls
