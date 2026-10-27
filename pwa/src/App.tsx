@@ -571,6 +571,9 @@ function Workspace({
                                         )!
                                     }
                                     service={visits}
+                                    store={store}
+                                    owner={owner}
+                                    sessionId={morning!.sessionId!}
                                     queue={queue}
                                     changed={() => {
                                         void refresh();

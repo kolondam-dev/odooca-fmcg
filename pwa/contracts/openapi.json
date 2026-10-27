@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FMCG Field client contract draft",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "description": "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement."
   },
   "servers": [
@@ -205,6 +205,52 @@
                       "sampled_at"
                     ],
                     "additionalProperties": false
+                  },
+                  "evidence_version": {
+                    "type": "number",
+                    "const": 1
+                  },
+                  "evidence": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "packageHash": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      "latitude": {
+                        "type": "number",
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "longitude": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "accuracy": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "capturedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "packageHash",
+                      "latitude",
+                      "longitude",
+                      "accuracy",
+                      "capturedAt"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -216,7 +262,15 @@
                   "site",
                   "fix"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "dependentRequired": {
+                  "evidence_version": [
+                    "evidence"
+                  ],
+                  "evidence": [
+                    "evidence_version"
+                  ]
+                }
               }
             },
             "required": [
@@ -332,6 +386,52 @@
                     ],
                     "additionalProperties": false
                   },
+                  "evidence_version": {
+                    "type": "number",
+                    "const": 1
+                  },
+                  "evidence": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "packageHash": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      "latitude": {
+                        "type": "number",
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "longitude": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "accuracy": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "capturedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "packageHash",
+                      "latitude",
+                      "longitude",
+                      "accuracy",
+                      "capturedAt"
+                    ],
+                    "additionalProperties": false
+                  },
                   "outcome": {
                     "type": "string",
                     "enum": [
@@ -366,7 +466,15 @@
                   "notes",
                   "order_uuids"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "dependentRequired": {
+                  "evidence_version": [
+                    "evidence"
+                  ],
+                  "evidence": [
+                    "evidence_version"
+                  ]
+                }
               }
             },
             "required": [
@@ -779,6 +887,52 @@
               "sampled_at"
             ],
             "additionalProperties": false
+          },
+          "evidence_version": {
+            "type": "number",
+            "const": 1
+          },
+          "evidence": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "packageHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "latitude": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "longitude": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              },
+              "accuracy": {
+                "type": "number",
+                "minimum": 0
+              },
+              "capturedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              }
+            },
+            "required": [
+              "id",
+              "packageHash",
+              "latitude",
+              "longitude",
+              "accuracy",
+              "capturedAt"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -790,7 +944,15 @@
           "site",
           "fix"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "dependentRequired": {
+          "evidence_version": [
+            "evidence"
+          ],
+          "evidence": [
+            "evidence_version"
+          ]
+        }
       },
       "VisitCheckOut": {
         "type": "object",
@@ -875,6 +1037,52 @@
             ],
             "additionalProperties": false
           },
+          "evidence_version": {
+            "type": "number",
+            "const": 1
+          },
+          "evidence": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "packageHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "latitude": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "longitude": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              },
+              "accuracy": {
+                "type": "number",
+                "minimum": 0
+              },
+              "capturedAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              }
+            },
+            "required": [
+              "id",
+              "packageHash",
+              "latitude",
+              "longitude",
+              "accuracy",
+              "capturedAt"
+            ],
+            "additionalProperties": false
+          },
           "outcome": {
             "type": "string",
             "enum": [
@@ -909,7 +1117,15 @@
           "notes",
           "order_uuids"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "dependentRequired": {
+          "evidence_version": [
+            "evidence"
+          ],
+          "evidence": [
+            "evidence_version"
+          ]
+        }
       },
       "VisitOrder": {
         "type": "object",

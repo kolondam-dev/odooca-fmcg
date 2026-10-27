@@ -1,3 +1,4 @@
+import { validateVisitMedia, visitIdForMedia } from "./visit-evidence";
 import { z } from "zod";
 import { LocalExpenseEvidenceSchema } from "./settlement-contracts";
 import type { Evidence, FieldStore } from "../storage/store";
@@ -125,6 +126,14 @@ export async function validatePackagedCommandEvidence(
     store: FieldStore,
 ) {
     try {
+        const visitId = visitIdForMedia(command);
+        if (visitId)
+            await validateVisitMedia(
+                await store.list(owner),
+                owner,
+                store,
+                visitId,
+            );
         const candidates: unknown[] =
             command.type === "field_expense.realization.submit"
                 ? [

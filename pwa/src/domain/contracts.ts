@@ -2,7 +2,7 @@ import {
     ExpenseRealizationSchema,
     type ExpensePolicy,
 } from "./settlement-contracts.ts";
-import { VisitContextSchema, VisitCheckoutSchema } from "./visit-contracts.ts";
+import { VisitCheckInSchema, VisitCheckoutSchema } from "./visit-contracts.ts";
 import { z } from "zod";
 export const Role = z.enum(["sales", "delivery", "hris"]);
 export const IdentitySchema = z.object({
@@ -36,7 +36,7 @@ export const CommandSchema = z.discriminatedUnion("type", [
         .object({
             ...CommandEnvelope,
             type: z.literal("sales.visit.check_in"),
-            payload: VisitContextSchema,
+            payload: VisitCheckInSchema,
         })
         .strict(),
     z

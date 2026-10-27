@@ -1,3 +1,4 @@
+import { bindVisitEvidence } from "./visit-evidence";
 import { CommandSchema, validateOrder } from "./contracts";
 import {
     fieldBusinessDate,
@@ -119,6 +120,20 @@ export function visitLedger(
             "Riwayat kunjungan tidak valid. Data dipertahankan untuk review.",
         );
     const ids = new Set<string>();
+    const photoIds = new Set<string>();
+    const claimPhoto = (
+        ref: unknown,
+        c: VisitContext,
+        at: string,
+        notBefore: string,
+    ) => {
+        const photo = bindVisitEvidence(ref, c, at, notBefore);
+        if (photoIds.has(photo.id))
+            throw new Error(
+                "Foto sudah digunakan oleh aksi kunjungan lain. Ambil foto baru.",
+            );
+        photoIds.add(photo.id);
+    };
     for (const record of parsed.data.visits) {
         const c = record.context;
         const source = MorningRecordSchema.parse(
@@ -149,11 +164,33 @@ export function visitLedger(
             start.key !== `${owner}:${c.visit_uuid}` ||
             start.command.type !== "sales.visit.check_in" ||
             !CommandSchema.safeParse(start.command).success ||
-            !same(start.command.payload, c) ||
+            !same(start.command.payload, {
+                ...c,
+                ...(record.check_in_evidence
+                    ? {
+                          evidence_version: 1,
+                          evidence: record.check_in_evidence,
+                      }
+                    : {}),
+            }) ||
             start.command.occurred_at !== record.check_in_at
         )
             throw new Error(
                 "Referensi check-in hilang atau berubah. Data dipertahankan.",
+            );
+        if (
+            (record.photo_required && !record.check_in_evidence) ||
+            (record.check_in_evidence && !record.photo_required)
+        )
+            throw new Error(
+                "Sumber foto check-in hilang atau berubah; perlu review.",
+            );
+        if (record.check_in_evidence)
+            claimPhoto(
+                record.check_in_evidence,
+                c,
+                record.check_in_at,
+                record.session_opened_at,
             );
         if (record.check_out) {
             const end = record.check_out,
@@ -179,6 +216,17 @@ export function visitLedger(
                 c.site,
                 Date.parse(end.occurred_at),
             );
+            if (record.photo_required && !end.payload.evidence_version)
+                throw new Error(
+                    "Foto check-out wajib untuk kunjungan ini; perlu review.",
+                );
+            if (end.payload.evidence_version)
+                claimPhoto(
+                    end.payload.evidence,
+                    c,
+                    end.occurred_at,
+                    record.check_in_at,
+                );
             const orders = visitOrders(rows, c.visit_uuid)
                 .map((q) => q.command.client_uuid)
                 .sort();
@@ -302,6 +350,11 @@ export function validateVisitCommit(
             throw new Error(
                 "Kunjungan masih aktif atau outlet sudah dikunjungi pada sesi hari ini.",
             );
+        if (
+            item.command.type !== "sales.visit.check_in" ||
+            item.command.payload.evidence_version !== 1
+        )
+            throw new Error("Check-in baru wajib foto kunjungan.");
         const record = {
             mode: "simulation",
             owner: item.owner,
@@ -309,6 +362,8 @@ export function validateVisitCommit(
             session_opened_at: morning.openedAt!,
             morning_source: morning,
             check_in_at: item.command.occurred_at,
+            photo_required: true,
+            check_in_evidence: item.command.payload.evidence,
             check_out: null,
         };
         if (!same(after, { version: 1, visits: [...before.visits, record] }))
@@ -347,6 +402,8 @@ export function validateVisitCommit(
                     "Order tidak boleh mengubah riwayat kunjungan.",
                 );
         } else if (item.command.type === "sales.visit.check_out") {
+            if (item.command.payload.evidence_version !== 1)
+                throw new Error("Check-out baru wajib foto kunjungan.");
             if (
                 !same(after, {
                     version: 1,

@@ -1,4 +1,23 @@
 import { z } from "zod";
+import { LocalExpenseEvidenceSchema } from "./settlement-contracts.ts";
+export const VisitEvidenceSchema = LocalExpenseEvidenceSchema.extend({
+    packageHash: z.string().regex(/^[a-f0-9]{64}$/),
+});
+export type VisitEvidence = z.infer<typeof VisitEvidenceSchema>;
+const photoFields = {
+    evidence_version: z.literal(1).optional(),
+    evidence: VisitEvidenceSchema.optional(),
+};
+export function photoPair(
+    value: { evidence_version?: 1; evidence?: VisitEvidence },
+    ctx: z.RefinementCtx,
+) {
+    if ((value.evidence_version === 1) !== !!value.evidence)
+        ctx.addIssue({
+            code: "custom",
+            message: "Versi dan paket foto kunjungan wajib berpasangan",
+        });
+}
 export const VisitFixSchema = z
     .object({
         latitude: z.number().min(-90).max(90),
@@ -25,7 +44,10 @@ export const VisitContextSchema = z
         fix: VisitFixSchema,
     })
     .strict();
+export const VisitCheckInSchema =
+    VisitContextSchema.extend(photoFields).superRefine(photoPair);
 export const VisitCheckoutSchema = VisitContextSchema.extend({
+    ...photoFields,
     outcome: z.enum([
         "order_requested",
         "no_order",
@@ -34,7 +56,9 @@ export const VisitCheckoutSchema = VisitContextSchema.extend({
     ]),
     notes: z.string().trim().max(500),
     order_uuids: z.array(z.string().uuid()),
-}).strict();
+})
+    .strict()
+    .superRefine(photoPair);
 export const VisitRecordSchema = z
     .object({
         mode: z.literal("simulation"),
@@ -43,6 +67,8 @@ export const VisitRecordSchema = z
         session_opened_at: z.iso.datetime(),
         morning_source: z.unknown().optional(),
         check_in_at: z.iso.datetime(),
+        photo_required: z.literal(true).optional(),
+        check_in_evidence: VisitEvidenceSchema.optional(),
         check_out: z
             .object({
                 command_uuid: z.string().uuid(),

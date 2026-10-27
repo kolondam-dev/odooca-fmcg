@@ -52,6 +52,8 @@ for (const mode of ["demo", "live"]) {
             "SIM-ADV-",
             "Koreksi realisasi ditolak",
             "Mulai kunjungan demo",
+            "Foto check-in kunjungan",
+            "Foto check-out kunjungan",
             "PINPOINT SIMULASI - TANPA BASEMAP",
             "Diagnosis lokal · Data simulasi.",
         ])

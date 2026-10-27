@@ -4,7 +4,7 @@ import { MockProvider } from "../src/data/mock";
 import { Outbox } from "../src/domain/outbox";
 import { MorningSimulation, MORNING_KEY } from "../src/domain/morning";
 import { ownerKey } from "../src/domain/contracts";
-import { SalesVisits } from "../src/domain/visits";
+import { PhotoSalesVisits as SalesVisits } from "./visit-fixtures";
 import { assessVisitFix, VISITS_KEY } from "../src/domain/visit-validation";
 import type { VisitFix, VisitLedger } from "../src/domain/visit-contracts";
 let store: FieldStore, dbName: string;

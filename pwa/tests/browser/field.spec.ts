@@ -1,3 +1,4 @@
+import { saveVisitPhoto } from "./visit-helpers";
 import { expect, test, type Page } from "@playwright/test";
 async function openMorning(page: Page) {
     await page
@@ -22,6 +23,7 @@ async function visitOrder(page: Page, first = true) {
         await expect(
             page.getByText("Di dalam geofence", { exact: true }),
         ).toBeVisible();
+        await saveVisitPhoto(page, "check-in");
         await page
             .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
             .click();

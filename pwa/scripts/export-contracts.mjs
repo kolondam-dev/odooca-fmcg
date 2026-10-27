@@ -9,14 +9,25 @@ import {
 import { ExpenseRequestSchema } from "../src/domain/expense.ts";
 import { ExpenseRealizationSchema } from "../src/domain/settlement-contracts.ts";
 import {
-    VisitContextSchema,
+    VisitCheckInSchema,
     VisitCheckoutSchema,
     VisitOrderSchema,
 } from "../src/domain/visit-contracts.ts";
+// JSON Schema does not infer Zod superRefine: preserve the visit photo pair
+// in both standalone DTOs and Command payload branches, while allowing legacy.
+function photoPairDependencies(schema) {
+    if (!schema || typeof schema !== "object") return;
+    if (schema.properties?.evidence_version && schema.properties?.evidence)
+        schema.dependentRequired = {
+            evidence_version: ["evidence"],
+            evidence: ["evidence_version"],
+        };
+    Object.values(schema).forEach(photoPairDependencies);
+}
 const schemas = Object.fromEntries(
     Object.entries({
         Command: CommandSchema,
-        VisitCheckIn: VisitContextSchema,
+        VisitCheckIn: VisitCheckInSchema,
         VisitCheckOut: VisitCheckoutSchema,
         VisitOrder: VisitOrderSchema,
         ExpenseRequest: ExpenseRequestSchema,
@@ -27,6 +38,7 @@ const schemas = Object.fromEntries(
     }).map(([key, value]) => {
         const schema = z.toJSONSchema(value, { target: "draft-2020-12" });
         delete schema.$schema;
+        photoPairDependencies(schema);
         return [key, schema];
     }),
 );
@@ -42,7 +54,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.5.0",
+        version: "0.6.0",
         description:
             "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
     },

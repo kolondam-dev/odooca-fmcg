@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
     canOpen,
@@ -133,4 +134,28 @@ describe("contract boundaries", () => {
         });
         vi.unstubAllGlobals();
     });
+});
+
+it("exports paired visit photo fields for DTOs and command payloads while retaining legacy optional fields", () => {
+    const spec = JSON.parse(
+        readFileSync(
+            new URL("../contracts/openapi.json", import.meta.url),
+            "utf8",
+        ),
+    );
+    const schemas = spec.components.schemas;
+    const pair = {
+        evidence_version: ["evidence"],
+        evidence: ["evidence_version"],
+    };
+    for (const name of ["VisitCheckIn", "VisitCheckOut"]) {
+        expect(schemas[name].dependentRequired).toEqual(pair);
+        expect(schemas[name].required).not.toContain("evidence");
+    }
+    const photoBranches = schemas.Command.anyOf.filter(
+        (v: any) => v.properties.payload.properties?.evidence_version,
+    );
+    expect(photoBranches).toHaveLength(2);
+    for (const branch of photoBranches)
+        expect(branch.properties.payload.dependentRequired).toEqual(pair);
 });

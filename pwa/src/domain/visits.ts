@@ -1,3 +1,9 @@
+import {
+    bindVisitEvidence,
+    assertVisitEvidence,
+    validateVisitMedia,
+} from "./visit-evidence";
+import type { VisitEvidence } from "./visit-contracts";
 import { ownerKey, type FieldProvider, type Identity } from "./contracts";
 import { MORNING_KEY } from "./morning";
 import {
@@ -65,6 +71,7 @@ export class SalesVisits {
             raw = await this.store.draft(owner, VISITS_KEY),
             rows = await this.store.list(owner),
             ledger = visitLedger(raw, owner, rows, rawMorning);
+        await validateVisitMedia(rows, owner, this.store);
         return { owner, rawMorning, morning, raw, rows, ledger };
     }
     async restore(outletId: string) {
@@ -96,7 +103,7 @@ export class SalesVisits {
             history: s.ledger.visits,
         };
     }
-    async checkIn(outletId: string, fix: VisitFix) {
+    async checkIn(outletId: string, fix: VisitFix, evidence?: VisitEvidence) {
         const s = await this.state(),
             outlet = s.morning.snapshot!.outlets.find((o) => o.id === outletId);
         if (!outlet)
@@ -120,9 +127,16 @@ export class SalesVisits {
         requireVisitFix(fix, context.site);
         bindVisitContext(context, s.morning, s.owner);
         const at = new Date().toISOString();
+        const photo = bindVisitEvidence(
+            evidence,
+            context,
+            at,
+            s.morning.openedAt!,
+        );
+        await assertVisitEvidence(photo, context, at, s.owner, this.store);
         return this.outbox.enqueue(
             "sales.visit.check_in",
-            context,
+            { ...context, evidence_version: 1, evidence: photo },
             `Check-in kunjungan • ${outlet.name}`,
             id,
             {
@@ -133,6 +147,8 @@ export class SalesVisits {
                     visits: [
                         ...s.ledger.visits,
                         {
+                            photo_required: true,
+                            check_in_evidence: photo,
                             mode: "simulation",
                             owner: s.owner,
                             context,
@@ -186,6 +202,7 @@ export class SalesVisits {
         fix: VisitFix,
         outcome: VisitCheckout["outcome"],
         notes: string,
+        evidence?: VisitEvidence,
     ) {
         const s = await this.state(),
             active = s.ledger.visits.find(
@@ -195,7 +212,23 @@ export class SalesVisits {
                     v.context.outlet_id === outletId,
             );
         if (!active) throw new Error("Kunjungan outlet ini tidak aktif.");
+        const at = new Date().toISOString();
+        const photo = bindVisitEvidence(
+            evidence,
+            active.context,
+            at,
+            active.check_in_at,
+        );
+        await assertVisitEvidence(
+            photo,
+            active.context,
+            at,
+            s.owner,
+            this.store,
+        );
         const body = VisitCheckoutSchema.parse({
+            evidence_version: 1,
+            evidence: photo,
             ...active.context,
             fix,
             outcome,
@@ -206,8 +239,7 @@ export class SalesVisits {
         });
         bindVisitContext(body, s.morning, s.owner);
         requireVisitFix(fix, body.site);
-        const id = crypto.randomUUID(),
-            at = new Date().toISOString();
+        const id = crypto.randomUUID();
         return this.outbox.enqueue(
             "sales.visit.check_out",
             body,
