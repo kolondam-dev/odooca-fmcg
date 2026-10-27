@@ -1,3 +1,4 @@
+import { saveVisitPhoto } from "./visit-helpers";
 import { expect, test } from "@playwright/test";
 test("visit location guards, offline restore and checkout sync", async ({
     page,
@@ -56,6 +57,7 @@ test("visit location guards, offline restore and checkout sync", async ({
         accuracy: 3,
     });
     await locate.click();
+    await saveVisitPhoto(page, "check-in");
     await expect(start).toBeEnabled();
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
@@ -72,6 +74,7 @@ test("visit location guards, offline restore and checkout sync", async ({
     await expect(
         page.getByText("Kunjungan lokal aktif", { exact: true }),
     ).toBeVisible();
+    await saveVisitPhoto(page, "check-out");
     await page
         .getByLabel("Catatan kunjungan")
         .fill("Toko tutup untuk kunjungan simulasi");
@@ -171,6 +174,7 @@ test("corrupt offline check-in remains held after reload, reconnect and manual r
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
+    await saveVisitPhoto(page, "check-in");
     await page
         .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
         .click();

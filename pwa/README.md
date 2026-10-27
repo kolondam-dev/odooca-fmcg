@@ -274,7 +274,7 @@ Koordinat/radius 5–15 m berasal dari paket pagi fiktif. Fix maksimal 60 detik,
 toleransi waktu masa depan 1 detik, dan jarak + akurasi harus <= radius. Di luar,
 uncertain, stale, invalid atau izin GPS ditolak menahan transaksi; radius tidak
 diperbesar. Browser tidak menjamin anti-mock GPS atau lokasi hardware terpercaya.
-Belum ada peta pinpoint/foto kunjungan atau tracking latar belakang 5/15 menit.
+Foto check-in/check-out beserta pinpoint simulasi kini tersedia; peta resmi dan tracking latar belakang 5/15 menit belum tersedia.
 
 Ledger dan command ditulis atomik dengan CAS, termasuk pemeriksaan ulang sesi
 pagi dalam transaksi. Dua tab tidak dapat membuka kunjungan bersamaan atau
@@ -346,7 +346,7 @@ Pinpoint PNG berupa grid lokal, skala meter, arah utara dan lingkar akurasi;
 **SIMULASI TANPA BASEMAP**, bukan peta jalan atau snapshot peta resmi. Tidak ada
 permintaan tile/API/provider, tracking atau pengiriman koordinat ke pihak ketiga.
 Status `map_pending`/`local_map_pending` tetap berlaku; gate absensi/POD resmi
-belum dibuka. Kunjungan sales belum mendapat field foto pada iterasi ini.
+belum dibuka. Foto check-in/check-out sales menggunakan paket yang sama pada iterasi lanjutan di bawah.
 
 Input JPEG/PNG/WebP maksimal 12 MB/40 MP, diperkecil maksimal sisi 1600 px sebelum
 watermark (kanvas watermark minimal lebar 640 px, foto tidak diperbesar). Output
@@ -371,3 +371,41 @@ foto baru; pilih file lagi untuk mengganti bukti. Hash lokal mendeteksi perubaha
 biasa, tidak mencegah pemalsuan seluruh DB/rehash, titip akun, mock GPS atau kamera
 palsu. Server-authoritative media, maps berlisensi, signing/ACL, retention/GC,
 malware/OCR dan dedup konten lintas perangkat tetap dependency backend/native.
+
+
+## Foto check-in/check-out kunjungan sales
+
+Kunjungan baru wajib paket foto berbeda untuk setiap aksi. Pilih outlet PJP dari
+sesi pagi, ambil lokasi outlet, simpan foto check-in beserta GPS, lalu mulai
+kunjungan. Sebelum menutup, simpan foto check-out baru dan isi hasil/catatan.
+Foto dan lokasi asal paket harus masih segar (maksimal 60 detik) pada waktu aksi;
+jarak+accuracy harus <= radius outlet. Foto check-in tidak boleh mendahului sesi,
+foto check-out tidak boleh mendahului check-in. Tidak ada toleransi radius tambahan.
+
+Ref harus memiliki packageHash, owner cocok, foto/map/hash valid. Ref disalin ke
+command dan ledger secara atomik melalui CAS; satu ID foto hanya untuk satu aksi
+di ledger owner. Pergantian draft tidak mengubah ref pada transaksi yang sudah
+antre. Slot draft dipisah owner/sesi/outlet/fase/visit ID; reload offline memulihkan
+paket yang belum dikirim. Tombol aksi baru aktif setelah slot berhasil tersimpan;
+foto kedaluwarsa harus diganti. Riwayat foto tersimpan dibuka read-only.
+
+Restore memeriksa semantik dan hash seluruh sumber visit yang dibaca. Sebelum
+sync, media pada graf kunjungan terkait diperiksa termasuk parent ber-receipt
+accepted. Parent rusak menahan child tanpa membuat receipt palsu: parent bisa
+Perlu review sementara child tetap Menunggu dependency. Pengecekan graf/sesi
+sebelum provider tetap dilakukan setelah await hash. Foto historis dinilai pada
+waktu aksi, sehingga replay sah esok hari tetap berjalan.
+
+OpenAPI draft 0.6 menambah pasangan evidence_version=1 + evidence pada check-in/
+check-out. Keduanya opsional hanya untuk membaca/replay riwayat tanpa foto dari
+versi lama. Commit kunjungan baru tetap wajib foto di service dan validator atomik;
+jalur legacy DTO bukan izin membuat aksi baru tanpa bukti. Tidak ada auto-migrasi
+atau pengisian bukti lama secara sintetis. Tes lama memakai fixture foto eksplisit
+untuk mempertahankan regresi geo/sesi pada jalur baru; replay legacy dites terpisah.
+
+Foto berasal dari paket generik PR #26; hubungan visit/outlet/session/phase dicatat
+pada ledger/command dan slot draft, bukan tanda tangan server di dalam foto.
+Peta tetap grid pinpoint simulasi tanpa basemap. Tidak membuktikan kamera asli,
+anti-mock GPS atau anti-titip; koordinasi manipulasi seluruh DB tetap di luar
+integritas client. Otorisasi, binding perangkat, media/maps resmi, recovery visit
+tertahan dan retention/GC masih dependency backend/native. Live tetap terkunci.

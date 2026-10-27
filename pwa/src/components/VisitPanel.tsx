@@ -1,4 +1,8 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { VisitPhotoField } from "./VisitPhotoField";
+import { EvidenceCapture } from "./Evidence";
+import type { FieldStore } from "../storage/store";
+import type { VisitEvidence } from "../domain/visit-contracts";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
 import { assessVisitFix } from "../domain/visit-validation";
 import { captureVisitLocation, type SalesVisits } from "../domain/visits";
@@ -7,6 +11,9 @@ import type { QueueItem } from "../storage/store";
 import { Icon } from "./Icon";
 export function VisitPanel({
     outlet,
+    store,
+    owner,
+    sessionId,
     service,
     queue,
     changed,
@@ -14,6 +21,9 @@ export function VisitPanel({
     back,
 }: {
     outlet: Snapshot["outlets"][number];
+    store: FieldStore;
+    owner: string;
+    sessionId: string;
     service: SalesVisits;
     queue: QueueItem[];
     changed: () => void;
@@ -22,6 +32,12 @@ export function VisitPanel({
 }) {
     const [info, setInfo] =
         useState<Awaited<ReturnType<SalesVisits["restore"]>>>();
+    const [inPhoto, setInPhoto] = useState<VisitEvidence>();
+    const [outPhoto, setOutPhoto] = useState<VisitEvidence>();
+    const fresh = (photo?: VisitEvidence) =>
+        !!photo &&
+        Date.now() - Date.parse(photo.capturedAt) <= 60000 &&
+        Date.now() >= Date.parse(photo.capturedAt);
     const [fix, setFix] = useState<VisitFix>();
     const [now, setNow] = useState(Date.now());
     const [error, setError] = useState("");
@@ -55,7 +71,7 @@ export function VisitPanel({
             active = false;
         };
     }, [service, outlet.id, queue]);
-    useEffect(() => {
+    useLayoutEffect(() => {
         const id = setInterval(() => setNow(Date.now()), 5000);
         return () => {
             generation.current++;
@@ -105,17 +121,26 @@ export function VisitPanel({
         running.current = true;
         setBusy(true);
         setError("");
+        const ticket = generation.current;
         try {
-            await service.checkIn(outlet.id, fix);
-            setInfo(await service.restore(outlet.id));
+            await service.checkIn(outlet.id, fix, inPhoto);
+            if (ticket !== generation.current) return;
+            const restored = await service.restore(outlet.id);
+            if (ticket !== generation.current) return;
+            setInfo(restored);
             changed();
         } catch (e) {
-            setError(
-                e instanceof Error ? e.message : "Check-in belum tersimpan.",
-            );
+            if (ticket === generation.current)
+                setError(
+                    e instanceof Error
+                        ? e.message
+                        : "Check-in belum tersimpan.",
+                );
         } finally {
-            running.current = false;
-            setBusy(false);
+            if (ticket === generation.current) {
+                running.current = false;
+                setBusy(false);
+            }
         }
     }
     async function finish(e: SubmitEvent) {
@@ -130,8 +155,16 @@ export function VisitPanel({
             if (ticket !== generation.current) return;
             setFix(position);
             setNow(Date.now());
-            await service.checkOut(outlet.id, position, outcome, notes);
-            setInfo(await service.restore(outlet.id));
+            await service.checkOut(
+                outlet.id,
+                position,
+                outcome,
+                notes,
+                outPhoto,
+            );
+            const restored = await service.restore(outlet.id);
+            if (ticket !== generation.current) return;
+            setInfo(restored);
             changed();
         } catch (e) {
             if (ticket === generation.current)
@@ -203,13 +236,55 @@ export function VisitPanel({
                 </div>
             )}
             {!active && !closed && (
+                <VisitPhotoField
+                    key={`in:${sessionId}:${outlet.id}`}
+                    store={store}
+                    owner={owner}
+                    sessionId={sessionId}
+                    outletId={outlet.id}
+                    phase="check_in"
+                    ready={setInPhoto}
+                    disabled={busy}
+                />
+            )}
+            {info?.selected?.check_in_evidence && (
+                <details class="visit-photo-history">
+                    <summary>Bukti foto check-in tersimpan</summary>
+                    <EvidenceCapture
+                        store={store}
+                        owner={owner}
+                        existingRef={info.selected.check_in_evidence}
+                        onChange={() => {}}
+                        readOnly
+                    />
+                </details>
+            )}
+            {closed && info?.selected?.check_out?.payload.evidence && (
+                <details class="visit-photo-history">
+                    <summary>Bukti foto check-out tersimpan</summary>
+                    <EvidenceCapture
+                        store={store}
+                        owner={owner}
+                        existingRef={info.selected.check_out.payload.evidence}
+                        onChange={() => {}}
+                        readOnly
+                    />
+                </details>
+            )}
+            {!active && !closed && inPhoto && !fresh(inPhoto) && (
+                <p role="status" class="notice">
+                    Foto check-in sudah kedaluwarsa. Ambil foto dan lokasi baru.
+                </p>
+            )}
+            {!active && !closed && (
                 <button
                     class="primary full"
                     disabled={
                         !info ||
                         !!info.active ||
                         busy ||
-                        assessment?.status !== "inside"
+                        assessment?.status !== "inside" ||
+                        !fresh(inPhoto)
                     }
                     onClick={() => void start()}
                 >
@@ -225,6 +300,23 @@ export function VisitPanel({
                     >
                         <Icon name="bag" size={18} /> Buat order di outlet
                     </button>
+                    <VisitPhotoField
+                        key={`out:${info?.active?.context.visit_uuid}`}
+                        store={store}
+                        owner={owner}
+                        sessionId={sessionId}
+                        outletId={outlet.id}
+                        phase="check_out"
+                        visitId={info?.active?.context.visit_uuid}
+                        ready={setOutPhoto}
+                        disabled={busy}
+                    />
+                    {outPhoto && !fresh(outPhoto) && (
+                        <p role="status" class="notice">
+                            Foto check-out sudah kedaluwarsa. Ambil foto dan
+                            lokasi baru.
+                        </p>
+                    )}
                     <form class="visit-close" onSubmit={finish}>
                         <label>
                             Hasil kunjungan
@@ -272,7 +364,7 @@ export function VisitPanel({
                         <button
                             class="secondary full"
                             type="submit"
-                            disabled={busy}
+                            disabled={busy || !fresh(outPhoto)}
                         >
                             Tutup kunjungan demo
                         </button>

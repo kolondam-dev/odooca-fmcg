@@ -8,7 +8,7 @@ import { Outbox } from "../src/domain/outbox";
 import { MockProvider } from "../src/data/mock";
 import { ownerKey } from "../src/domain/contracts";
 import { MorningSimulation } from "../src/domain/morning";
-import { SalesVisits } from "../src/domain/visits";
+import { PhotoSalesVisits as SalesVisits } from "./visit-fixtures";
 import { VISITS_KEY } from "../src/domain/visit-validation";
 let store: FieldStore;
 beforeEach(() => {

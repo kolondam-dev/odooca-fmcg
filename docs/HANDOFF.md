@@ -1,5 +1,15 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Foto wajib pada aksi kunjungan sales
+**Basis:** main d1cd6e8 (PR #26 merged); branch agen/mobile-visit-evidence. Plan terintegrasi sebelum implementasi.
+**Berubah:** check-in/check-out baru wajib paket foto v1 berbeda per aksi; owner/ref/hash/foto/map cocok, geofence sumber PJP tetap konservatif, capturedAt sesudah pembukaan sesi/check-in dan foto/GPS asli paket TTL60s pada waktu aksi. Ref disalin atomik ke ledger+command dengan CAS dan keunikan ID foto per aksi ledger owner; draft berubah tidak mengubah transaksi tersimpan. DTO version/ref berpasangan; legacy photo-less hanya replay, commit baru tanpa foto ditolak di service dan validator atomik.
+**Offline/UI:** slot tuple owner/session/outlet/phase/visit menyimpan draft foto dan pulih offline; siap hanya setelah durable. Scope/generation guard mencegah callback lama mengisi scope baru. Tombol aksi menahan foto stale, bukti historis read-only. Kontrol bukti disembunyikan selama aksi sibuk. Kontrak OpenAPI draft0.6 mencerminkan dependentRequired untuk pasangan version/ref (DTO dan branch Command); schema command tetap1 dan schema IndexedDB tetap1.
+**Restore/sync:** validasi semantik+media termasuk parent accepted yang medianya rusak; hash sebelum provider diikuti recheck graf. Photo proof historis dinilai terhadap occurred_at, bukan hari sync. Parent media rusak bisa Perlu review sementara child Menunggu dependency; tidak ada receipt palsu/deletion/forced replay. Jalur legacy diuji terpisah tanpa mengubah UUID yang sudah diterima simulator.
+**Diverifikasi lokal:** 134 unit + 1 hosting + 44 browser phone/tablet PASS; wajib photo/commit guard, ref reuse, owner/site/time/session/hash/missing source, media parent accepted, source berubah selama await, replay next-day/legacy, draft reload offline, read-only history, corrupt media restore dan hold setelah reconnect. Fixture helper test memberi paket foto eksplisit pada regresi geo/sesi lama, bukan bypass service. Screenshot foto kunjungan ponsel ditinjau. Format/typecheck/contracts/demo+live/budget (demo JS56,5KiB gzip/font47,1KiB), Ruff/4 manifest PASS; CI setelah push.
+**Batas:** foto berasal dari paket generik PR #26; assignment visit/session/outlet/phase ada pada slot/ledger/command, bukan signature server di foto. Pinpoint tetap simulasi tanpa basemap; bukan anti-mock GPS/kamera asli/titip akun atau authority backend. Tidak ada retention/GC/recovery baru. Tidak menyentuh addon/backend/seed/loader/workflow/ruleset/Railway; tidak merge/deploy, live terkunci.
+**Berikutnya:** delivery/POD dengan bukti terikat DO/trip; maps/media/session/device server tetap dependency terpisah.
+**Menunggu:** CI dan review pemilik atas PR baru.
+
 ## 2026-10-27 — codex agent — Regresi kuota paket bukti PR #26
 **Basis:** PR #26 HEAD 1e0edf3; branch tetap agen/mobile-evidence-packages.
 **Tambahan:** injeksi QuotaExceededError pada IDBObjectStore.put membuktikan transaksi media rollback utuh: tidak ada record foto/map parsial. Tidak mengubah implementasi produksi.

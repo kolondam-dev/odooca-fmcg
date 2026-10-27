@@ -1178,3 +1178,30 @@ berdasarkan hasil pemeriksaan terakhir, tanpa membuat receipt bisnis palsu.
 Batas rinci dan alur pemulihan di pwa/README.md; tidak ada backend/deploy/field foto
 visit pada iterasi ini. Berikutnya integrasi paket bukti ke visit/delivery, lalu
 adapter maps/media server dengan authority yang terpisah dari representasi client.
+
+### Bukti check-in/check-out sales — implementasi simulator
+
+Basis main d1cd6e8; branch agen/mobile-visit-evidence. Kunjungan baru wajib paket
+foto pada check-in dan check-out, ref disalin atomik ke ledger+command dan tidak
+ikut berubah ketika draft foto diganti. Owner/session/outlet/phase membatasi slot
+draft; paket harus berada di geofence sumber PJP, capturedAt sesudah sesi dibuka
+(dan sesudah check-in untuk foto checkout), TTL foto/GPS 60 detik pada waktu aksi.
+Paket berbeda untuk tiap aksi; satu ref tidak boleh dipakai ulang di ledger owner.
+
+Restore dan sync berbagi pemeriksaan semantik dan hash media, termasuk parent
+accepted yang medianya rusak. Antrean valid semalam memakai waktu aksi dan sumber
+historis. DTO baru memakai evidence_version=1 + ref packageHash; field opsional
+hanya untuk replay riwayat lama, bukan izin membuat kunjungan baru tanpa foto.
+Draft foto yang belum dikirim pulih offline; callback async tidak boleh menulis
+ke owner/sesi/outlet/phase yang sudah berganti. Foto tersimpan bisa dilihat kembali
+secara read-only. Peta tetap pinpoint simulasi; tidak membuka backend/live.
+
+Implementasi: kontrak draft0.6 (marker evidence_version/ref berpasangan untuk
+photo path), legacy replay tanpa foto tetap eksplisit, commit baru mewajibkan
+foto pada validator atomik. Ref unik per aksi ledger owner, foto/map/hash dicek
+saat restore dan sebelum sync graf terkait termasuk parent accepted. Draft tuple
+JSON menghindari tabrakan namespace; status siap hanya setelah draft durable,
+callback lama tidak mengisi phase/owner baru. History foto read-only. Foto stale
+atau GPS di luar geofence menahan aksi tanpa menambah radius atau receipt palsu.
+Berikutnya: delivery/POD dengan bukti terikat DO/trip; maps/media/session/device
+server tetap dependency terpisah dan tidak masuk branch frontend ini.

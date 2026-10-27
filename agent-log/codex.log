@@ -123,3 +123,14 @@
 - Injeksi QuotaExceededError pada put evidence membuktikan rollback record foto+map; tidak ada perubahan produksi.
 - 123 unit PASS; existing 1 hosting/40 browser/build source produksi identik. CI commit baru setelah push, no merge/deploy.
 - Task managed by codex agent at 2026-10-27T17:16:11+07:00
+
+[2026-10-27T18:25:55+07:00] [INFO] Foto wajib pada check-in dan check-out sales
+- Basis main d1cd6e8; branch agen/mobile-visit-evidence, plan terintegrasi sebelum implementasi.
+- Foto v1 per aksi terikat slot/ledger/command; TTL60s geofence owner/hash, CAS ref uniqueness, media ancestor accepted diperiksa saat sync; legacy replay eksplisit.
+- 133 unit, 1 hosting, 44 browser; format/typecheck/contracts/build/Ruff/manifests PASS. CI setelah push; backend/seed/Railway tidak disentuh, no merge/deploy.
+- Task managed by codex agent at 2026-10-27T18:25:55+07:00
+
+[2026-10-27T18:28:05+07:00] [INFO] Kontrak pasangan foto kunjungan pada OpenAPI
+- DependentRequired mencerminkan pasangan evidence_version/evidence pada DTO dan branch Command; legacy tetap opsional, commit baru wajib foto.
+- Regresi kontrak baru; 134 unit PASS. Source produksi identik dengan hasil 1 hosting/44 browser/build sebelumnya; CI setelah push.
+- Task managed by codex agent at 2026-10-27T18:28:05+07:00

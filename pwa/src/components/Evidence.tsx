@@ -25,11 +25,13 @@ export function EvidenceCapture({
     owner,
     onChange,
     existingRef,
+    readOnly = false,
 }: {
     store: FieldStore;
     owner: string;
     onChange: (ref?: EvidenceRef) => void;
     existingRef?: EvidenceRef;
+    readOnly?: boolean;
 }) {
     const [file, setFile] = useState<Blob>();
     const [display, setDisplay] = useState<Blob>();
@@ -230,18 +232,20 @@ export function EvidenceCapture({
                 Capture browser belum membuktikan kamera asli atau bebas mock
                 GPS.
             </p>
-            <label class="upload">
-                <Icon name="camera" /> Ambil foto
-                <input
-                    aria-label="Foto bukti"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    capture="environment"
-                    onChange={(e) =>
-                        void selectFile(e.currentTarget.files?.[0])
-                    }
-                />
-            </label>
+            {!readOnly && (
+                <label class="upload">
+                    <Icon name="camera" /> Ambil foto
+                    <input
+                        aria-label="Foto bukti"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        capture="environment"
+                        onChange={(e) =>
+                            void selectFile(e.currentTarget.files?.[0])
+                        }
+                    />
+                </label>
+            )}
             {preview && (
                 <img
                     class="photo-preview"
@@ -261,15 +265,17 @@ export function EvidenceCapture({
                     </figcaption>
                 </figure>
             )}
-            <button
-                class="secondary"
-                type="button"
-                onClick={locate}
-                disabled={busy}
-            >
-                <Icon name="pin" size={18} />
-                {busy ? "Memproses bukti…" : "Ambil lokasi sekarang"}
-            </button>
+            {!readOnly && (
+                <button
+                    class="secondary"
+                    type="button"
+                    onClick={locate}
+                    disabled={busy}
+                >
+                    <Icon name="pin" size={18} />
+                    {busy ? "Memproses bukti…" : "Ambil lokasi sekarang"}
+                </button>
+            )}
             {!location && existingRef && (
                 <p class="coordinates">
                     Lokasi bukti tersimpan: {existingRef.latitude.toFixed(6)},{" "}
@@ -288,14 +294,16 @@ export function EvidenceCapture({
                     {Math.round(location.coords.accuracy)} m
                 </p>
             )}
-            <button
-                type="button"
-                class="secondary"
-                disabled={!file || !location || !selectedAt || busy}
-                onClick={() => void save()}
-            >
-                Simpan bukti lokal
-            </button>
+            {!readOnly && (
+                <button
+                    type="button"
+                    class="secondary"
+                    disabled={!file || !location || !selectedAt || busy}
+                    onClick={() => void save()}
+                >
+                    Simpan bukti lokal
+                </button>
+            )}
             {error && (
                 <p role="status" class="notice">
                     {error}
