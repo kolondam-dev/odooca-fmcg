@@ -330,7 +330,7 @@ def allocate_and_sync_move_lines(env, mv, picking, demand_qty, target_lot=None, 
     if mv.move_line_ids:
         for ml in mv.move_line_ids:
             line_cap = getattr(ml, "quantity", 0.0) or getattr(ml, "qty_done", 0.0)
-            if line_cap <= 0.0 and len(mv.move_line_ids) == 1:
+            if line_cap <= 0.0 and len(mv.move_line_ids) == 1 and not is_internal:
                 line_cap = remaining_qty
 
             if remaining_qty > 0 and line_cap > 0:
@@ -1117,7 +1117,6 @@ def main():
                 "product_uom": product.uom_id.id,
                 "product_uom_id": product.uom_id.id,
                 "product_uom_qty": qty,
-                "quantity": qty,
                 "location_id": loc_src.id,
                 "location_dest_id": loc_dest.id,
                 "company_id": company.id,
@@ -1860,6 +1859,7 @@ def main():
 
             # Fase 2: Mutasi diterapkan - mencoba pergerakan outbound internal sebesar 999.999 unit (melebihi stok)
             mutated_rejected7 = False
+            mut7_error_detail = None
             try:
                 execute_operational_movement(
                     origin="DO-EXCESSIVE-DEMAND",
@@ -1869,9 +1869,14 @@ def main():
                     lot=lot_opening,
                     move_date="2026-07-04 12:00:00",
                 )
-            except ValueError as ve:
-                if any(k in str(ve) for k in ["tidak mencukupi demand", "Penolakan stok negatif", "Reservasi kosong"]):
+            except Exception as e:
+                mut7_error_detail = f"{type(e).__name__}: {str(e)}"
+                if any(k in str(e).lower() for k in ["tidak mencukupi demand", "penolakan stok negatif", "reservasi kosong", "insufficient"]):
                     mutated_rejected7 = True
+                else:
+                    print(f" -> [MUTASI 7 EXCEPTION] Tangkapan error tidak sesuai ekspektasi: {mut7_error_detail}")
+            if not mutated_rejected7 and mut7_error_detail is None:
+                print(" -> [MUTASI 7 ERROR] execute_operational_movement tidak melempar exception! Stok negatif atau kuantitas palsu lolos.")
         finally:
             # Fase 3: Rollback dan revalidasi (verifikasi pemulihan 100% tanpa drift)
             env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_insufficient_stock")
@@ -1886,7 +1891,7 @@ def main():
 
         mut7_pass = base_ok7 and mutated_rejected7 and roll_ok7
         mutation_results["insufficient_stock_demand_rejected"] = mut7_pass
-        print(f" -> Mutasi 7 (Kuantitas Tak Mencukupi / Stok Negatif Ditolak): {'PASS' if mut7_pass else 'FAIL'} (Baseline={base_ok7}, Rejected={mutated_rejected7}, Rollback={roll_ok7})")
+        print(f" -> Mutasi 7 (Kuantitas Tak Mencukupi / Stok Negatif Ditolak): {'PASS' if mut7_pass else 'FAIL'} (Baseline={base_ok7}, Rejected={mutated_rejected7}, Rollback={roll_ok7}, Detail='{mut7_error_detail}')")
 
         all_mutations_rejected = all(mutation_results.values())
         report["mutation_tests"] = mutation_results

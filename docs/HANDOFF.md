@@ -1,5 +1,21 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Eliminasi Kuantitas Sebelum Reservasi, Penguatan Guard Penolakan Stok Mutasi 7, dan Detail Error Logging
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6438259265](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6438259265)):**
+- Menindaklanjuti review commit `538a51d`:
+  1. *Eliminasi Field `quantity` Sebelum Reservasi Native Odoo*:
+     - Menghapus `"quantity": qty` dari kamus pembuatan `stock.move` (`candidate_mv`) di `scripts/ops/verify_historical_experiment.py`.
+     - Hanya `"product_uom_qty": qty` yang diisi sebagai demand resmi dokumen. Hal ini mencegah ORM Odoo menginisialisasi `stock.move.line` secara semu dengan kuantitas penuh sebelum reservasi `_action_assign()` dijalankan, yang sebelumnya berisiko disalahartikan oleh guard sebagai bukti ketersediaan stok fisik.
+  2. *Pengetatan Guard Kapasitas Reservasi `allocate_and_sync_move_lines`*:
+     - Menolak secara mutlak fallback `line_cap = remaining_qty` pada pergerakan lokasi internal (`and not is_internal`), sehingga reservasi kosong atau tidak mencukupi tidak disamarkan menjadi stok terpenuhi.
+     - Memastikan guard `remaining_qty > 0` dan `total_reserved < demand_qty` secara konsisten melempar `ValueError: Penolakan stok negatif / over-delivery terpicu!` saat ketersediaan stok fisik gudang tidak mencukupi demand.
+  3. *Logging Rinci & Assertion Kegagalan Mutasi 7*:
+     - Menangkap tipe dan pesan exception mutasi secara rinci (`mut7_error_detail = f"{type(e).__name__}: {str(e)}"`) dan menampilkannya pada laporan evaluasi Mutasi 7.
+     - Menambahkan peringatan eksplisit jika `execute_operational_movement` dengan demand berlebih lolos tanpa melempar exception.
+  4. *Membuka Eksekusi Slice Adapter Aktual*:
+     - Kelulusan Mutasi 7 pada step eksperimen historis membuka eksekusi step berikutnya pada CI disposable (`scripts/ops/verify_disposable_slice.py`).
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke `main`.
+
 ## 2026-10-27 — antigravity agent — Penanganan Wizard confirm.stock.sms via dont_send_sms dan Penuntasan Lifecycle Picking Delivery
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6437326596](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6437326596)):**
 - Menindaklanjuti review commit `6673c62`:
