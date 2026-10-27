@@ -716,17 +716,17 @@ def main():
 
             # 1. Melalui field relasi account_move_id (Many2one tunggal Odoo 19) atau account_move_ids
             if getattr(stock_move, "account_move_id", None):
-                found_moves |= stock_move.account_move_id
+                found_moves = found_moves | stock_move.account_move_id
             elif getattr(stock_move, "account_move_ids", None):
-                found_moves |= stock_move.account_move_ids
+                found_moves = found_moves | stock_move.account_move_ids
 
             # 2. Melalui field stock_move_id pada account.move jika tersedia
             if "stock_move_id" in env["account.move"]._fields:
-                found_moves |= env["account.move"].sudo().search([("stock_move_id", "=", stock_move.id)])
+                found_moves = found_moves | env["account.move"].sudo().search([("stock_move_id", "=", stock_move.id)])
 
             # 3. Melalui ref jika belum ditemukan
             if not found_moves and origin_ref:
-                found_moves |= env["account.move"].sudo().search([
+                found_moves = found_moves | env["account.move"].sudo().search([
                     ("company_id", "=", company.id),
                     ("ref", "ilike", origin_ref),
                 ])
@@ -771,42 +771,101 @@ def main():
                 for line in am.line_ids:
                     print(f"     * Account: {line.account_id.code} ({line.account_id.name}) | Debit: {line.debit} | Credit: {line.credit}")
 
+            return found_moves
+
         # Helper: Audit Pasangan Akun Debit-Kredit Jurnal Native Odoo secara Formal
         def audit_event_account_pair(event_name, stock_move, expected_debit_code, expected_credit_code, expected_amount):
-            """Memverifikasi bahwa jurnal native mendebit dan mengkredit akun yang sesuai serta berimbang."""
+            """Memverifikasi bahwa jurnal native mendebit dan mengkredit akun yang sesuai serta berimbang tanpa substitusi/split fraud."""
             am = getattr(stock_move, "account_move_id", None)
+            if not am and getattr(stock_move, "account_move_ids", None):
+                am = stock_move.account_move_ids[:1]
             if not am and "stock_move_id" in env["account.move"]._fields:
                 am = env["account.move"].sudo().search([("stock_move_id", "=", stock_move.id)], limit=1)
             if not am and stock_move.origin:
-                am = env["account.move"].sudo().search([("ref", "ilike", stock_move.origin), ("company_id", "in", [False, company.id])], limit=1)
+                # Pencarian persis pada ref atau picking name untuk mencegah salah relasi
+                allowed_refs = [stock_move.origin]
+                if getattr(stock_move, "picking_id", None) and stock_move.picking_id.name:
+                    allowed_refs.append(stock_move.picking_id.name)
+                for r in allowed_refs:
+                    am = env["account.move"].sudo().search([
+                        ("ref", "=", r),
+                        ("company_id", "in", [False, company.id]),
+                    ], limit=1)
+                    if am:
+                        break
+                if not am:
+                    am = env["account.move"].sudo().search([
+                        ("ref", "ilike", stock_move.origin),
+                        ("company_id", "in", [False, company.id]),
+                    ], limit=1)
+
             if not am:
-                raise ValueError(f"[FAIL-FAST] Event '{event_name}' ({stock_move.origin}) tidak memiliki entri account.move native Odoo!")
+                raise ValueError(f"[FAIL-FAST] Event '{event_name}' ({stock_move.origin}) tidak memiliki entri account.move native Odoo yang valid!")
 
             if am.state != "posted":
                 raise ValueError(f"[FAIL-FAST] Jurnal {am.id} untuk event '{event_name}' belum posted (state: {am.state})!")
 
-            debit_lines = [line for line in am.line_ids if line.debit > 0]
-            credit_lines = [line for line in am.line_ids if line.credit > 0]
-            tot_debit = round(sum(line.debit for line in debit_lines), 2)
-            tot_credit = round(sum(line.credit for line in credit_lines), 2)
+            fin_lines = [line for line in am.line_ids if round(line.debit, 2) > 0 or round(line.credit, 2) > 0]
+            if not fin_lines:
+                raise ValueError(f"[FAIL-FAST] Jurnal {am.id} ({event_name}) tidak memiliki baris finansial (debit/kredit > 0)!")
+
+            debit_map = {}
+            credit_map = {}
+            for line in fin_lines:
+                code = str(line.account_id.code).strip()
+                d = round(line.debit, 2)
+                c = round(line.credit, 2)
+                if d > 0:
+                    debit_map[code] = round(debit_map.get(code, 0.0) + d, 2)
+                if c > 0:
+                    credit_map[code] = round(credit_map.get(code, 0.0) + c, 2)
+
+            tot_debit = round(sum(debit_map.values()), 2)
+            tot_credit = round(sum(credit_map.values()), 2)
 
             # 1. Keseimbangan Jurnal
             if abs(tot_debit - tot_credit) > 0.01:
                 raise ValueError(f"[FAIL-FAST] Jurnal {am.id} ({event_name}) tidak berimbang! Debit={tot_debit}, Credit={tot_credit}")
 
-            # 2. Akurasi Nominal Jurnal terhadap Ekspektasi
+            # 2. Akurasi Total Nominal Jurnal terhadap Ekspektasi
             if abs(tot_debit - expected_amount) > 0.01:
-                raise ValueError(f"[FAIL-FAST] Nominal jurnal {am.id} ({event_name}) sebesar {tot_debit} tidak cocok dengan expected {expected_amount}!")
+                raise ValueError(f"[FAIL-FAST] Nominal jurnal {am.id} ({event_name}) sebesar Rp{tot_debit:,.2f} tidak cocok dengan expected Rp{expected_amount:,.2f}!")
 
-            # 3. Akun Debit
-            debit_codes = [line.account_id.code for line in debit_lines]
-            if expected_debit_code not in debit_codes:
-                raise ValueError(f"[FAIL-FAST] Jurnal {am.id} ({event_name}) tidak mendebit akun {expected_debit_code}! Terdeteksi: {debit_codes}")
+            # 3. Verifikasi Eksak Akun Debit (Menolak Keras Split Fraud Rp1 HPP + Rp99 Akun Asing)
+            if expected_debit_code not in debit_map:
+                raise ValueError(f"[FAIL-FAST] Jurnal {am.id} ({event_name}) tidak mendebit akun yang diharapkan ({expected_debit_code})! Terdeteksi: {list(debit_map.keys())}")
 
-            # 4. Akun Kredit
-            credit_codes = [line.account_id.code for line in credit_lines]
-            if expected_credit_code not in credit_codes:
-                raise ValueError(f"[FAIL-FAST] Jurnal {am.id} ({event_name}) tidak mengkredit akun {expected_credit_code}! Terdeteksi: {credit_codes}")
+            actual_expected_debit = debit_map[expected_debit_code]
+            if abs(actual_expected_debit - expected_amount) > 0.01:
+                raise ValueError(
+                    f"[FAIL-FAST] Nominal debit pada akun {expected_debit_code} untuk jurnal {am.id} ({event_name}) "
+                    f"adalah Rp{actual_expected_debit:,.2f}, tidak cocok dengan expected Rp{expected_amount:,.2f}!"
+                )
+
+            unexpected_debits = {k: v for k, v in debit_map.items() if k != expected_debit_code}
+            if unexpected_debits:
+                raise ValueError(
+                    f"[FAIL-FAST] Jurnal {am.id} ({event_name}) memiliki baris debit tidak sah/ekstra: {unexpected_debits}! "
+                    f"Seluruh debit wajib tunggal pada akun {expected_debit_code}."
+                )
+
+            # 4. Verifikasi Eksak Akun Kredit (Menolak Substitusi Akun atau Kredit Ekstra)
+            if expected_credit_code not in credit_map:
+                raise ValueError(f"[FAIL-FAST] Jurnal {am.id} ({event_name}) tidak mengkredit akun yang diharapkan ({expected_credit_code})! Terdeteksi: {list(credit_map.keys())}")
+
+            actual_expected_credit = credit_map[expected_credit_code]
+            if abs(actual_expected_credit - expected_amount) > 0.01:
+                raise ValueError(
+                    f"[FAIL-FAST] Nominal kredit pada akun {expected_credit_code} untuk jurnal {am.id} ({event_name}) "
+                    f"adalah Rp{actual_expected_credit:,.2f}, tidak cocok dengan expected Rp{expected_amount:,.2f}!"
+                )
+
+            unexpected_credits = {k: v for k, v in credit_map.items() if k != expected_credit_code}
+            if unexpected_credits:
+                raise ValueError(
+                    f"[FAIL-FAST] Jurnal {am.id} ({event_name}) memiliki baris kredit tidak sah/ekstra: {unexpected_credits}! "
+                    f"Seluruh kredit wajib tunggal pada akun {expected_credit_code}."
+                )
 
             print(f" -> [Audit Pasangan Akun OK] Event '{event_name}' | Jurnal {am.id} ({am.ref or am.name}) | Debit: {expected_debit_code} (Rp{tot_debit:,.2f}) | Kredit: {expected_credit_code} (Rp{tot_credit:,.2f})")
             return {
@@ -816,6 +875,8 @@ def main():
                 "credit_account": expected_credit_code,
                 "amount": tot_debit,
                 "balanced": True,
+                "debit_map": debit_map,
+                "credit_map": credit_map,
             }
 
         # Helper 1: Eksekusi Opening Stock via Mekanisme Quant Adjustment Asli Odoo 19
@@ -860,6 +921,8 @@ def main():
 
             # Selaraskan tanggal jurnal native Odoo
             native_ams = find_and_backdate_native_account_moves(adj_moves, origin, move_date)
+            if not native_ams or len(native_ams) == 0:
+                raise ValueError(f"[FAIL-FAST] Opening adjustment {origin} wajib menghasilkan entri jurnal native Odoo!")
             print(f" -> Opening adjustment move ID {adj_moves.id} (native Odoo account_moves: {len(native_ams)})")
             return adj_moves, True
 
@@ -945,14 +1008,26 @@ def main():
             mv.with_context(force_period_date=move_date[:10])._action_confirm()
             mv.with_context(force_period_date=move_date[:10])._action_assign()
 
-            # Sinkronisasi line_ids secara tangguh: alokasi kuantitas presisi tanpa duplikasi
+            # Sinkronisasi line_ids secara tangguh: fidelitas reservasi multi-line & multi-lot native Odoo
             if mv.move_line_ids:
+                total_reserved = sum(getattr(ml, "quantity", 0.0) or getattr(ml, "qty_done", 0.0) for ml in mv.move_line_ids)
+                if loc_src.usage == "internal" and total_reserved < (qty - 0.0001):
+                    raise ValueError(
+                        f"[FAIL-FAST] Kuantitas reservasi ({total_reserved}) tidak mencukupi demand ({qty}) "
+                        f"untuk {origin} pada lokasi {loc_src.complete_name}! Penolakan stok negatif/kurang."
+                    )
+
                 remaining_qty = qty
                 for ml in mv.move_line_ids:
-                    if remaining_qty > 0:
-                        alloc = remaining_qty
+                    line_cap = getattr(ml, "quantity", 0.0) or getattr(ml, "qty_done", 0.0)
+                    if line_cap <= 0.0 and len(mv.move_line_ids) == 1:
+                        line_cap = remaining_qty
+
+                    if remaining_qty > 0 and line_cap > 0:
+                        alloc = min(remaining_qty, line_cap)
                         upd_vals = {}
-                        if lot and "lot_id" in StockMoveLine._fields:
+                        # Pertahankan lot native yang sudah di-reserve oleh Odoo; jangan timpa jika sudah ada
+                        if not ml.lot_id and lot and "lot_id" in StockMoveLine._fields:
                             upd_vals["lot_id"] = lot.id
                         if "quantity" in StockMoveLine._fields:
                             upd_vals["quantity"] = alloc
@@ -965,8 +1040,26 @@ def main():
                         ml.write(upd_vals)
                         remaining_qty -= alloc
                     else:
-                        # Baris reservasi tambahan di luar kebutuhan alokasi dihapus agar kuantitas tidak berlipat
+                        # Baris reservasi ekstra di luar kebutuhan alokasi dihapus agar kuantitas tidak berlipat
                         ml.unlink()
+
+                if remaining_qty > 0.0001:
+                    candidate_sml = {
+                        "move_id": mv.id,
+                        "picking_id": picking.id,
+                        "product_id": product.id,
+                        "product_uom_id": product.uom_id.id,
+                        "product_uom": product.uom_id.id,
+                        "quantity": remaining_qty,
+                        "qty_done": remaining_qty,
+                        "location_id": loc_src.id,
+                        "location_dest_id": loc_dest.id,
+                        "company_id": company.id,
+                        "lot_id": lot.id if lot else False,
+                        "date": move_date,
+                    }
+                    line_vals = {k: v for k, v in candidate_sml.items() if k in StockMoveLine._fields}
+                    StockMoveLine.create(line_vals)
             else:
                 candidate_sml = {
                     "move_id": mv.id,
@@ -1032,6 +1125,8 @@ def main():
 
             # Selaraskan tanggal jurnal native Odoo
             native_ams = find_and_backdate_native_account_moves(mv, origin, move_date)
+            if not native_ams or len(native_ams) == 0:
+                raise ValueError(f"[FAIL-FAST] Move {origin} ({mv.id}) wajib menghasilkan entri jurnal native Odoo!")
             print(f" -> Move {origin} ID {mv.id} (native Odoo account_moves: {len(native_ams)})")
             return mv, True
 
@@ -1514,8 +1609,183 @@ def main():
         mutation_results["future_receipt_leakage_rejected"] = mut3_pass
         print(f" -> Mutasi 3 (Kebocoran PO Receipt Ditolak): {'PASS' if mut3_pass else 'FAIL'} (Baseline={base_ok3}, Rejected={mutated_rejected3}, Rollback={roll_ok3})")
 
+        # Mutasi 4: Journal Date Only Distortion (Stok Tetap Benar, Tanggal Jurnal Bergeser Ditolak Gate EOD GL)
+        env.cr.execute("SAVEPOINT test_mutation_journal_date")
+        try:
+            # Fase 1: Baseline validasi
+            base_pos4 = get_historical_position("2026-07-04 23:59:59")
+            base_ok4 = (base_pos4["odoo_eod_gl_balance"] is not None and abs(base_pos4["odoo_eod_gl_balance"] - oracle["cutoffs"]["cutoff_4"]["expected_eod_gl"]) < 0.01)
+
+            # Fase 2: Mutasi diterapkan - hanya geser tanggal account.move native tanpa menyentuh stok fisik
+            am_po = getattr(mv_po, "account_move_id", None) or env["account.move"].sudo().search([("stock_move_id", "=", mv_po.id)], limit=1)
+            if not am_po:
+                am_po = env["account.move"].sudo().search([("ref", "ilike", "PO-2026-06-05"), ("company_id", "in", [False, company.id])], limit=1)
+            # Geser tanggal jurnal dari 4 Juli ke 10 Juli (di luar cut-off)
+            env.cr.execute("UPDATE account_move SET date = '2026-07-10' WHERE id = %s", [am_po.id])
+            env.cr.execute("UPDATE account_move_line SET date = '2026-07-10' WHERE move_id = %s", [am_po.id])
+            env.invalidate_all()
+
+            pos_mutated4 = get_historical_position("2026-07-04 23:59:59")
+            # Fisik tetap cocok tapi saldo EOD GL pada 4 Juli wajib berubah/salah
+            gl_mutated4 = pos_mutated4["odoo_eod_gl_balance"] or 0.0
+            mutated_rejected4 = (abs(gl_mutated4 - oracle["cutoffs"]["cutoff_4"]["expected_eod_gl"]) > 100.0)
+        finally:
+            # Fase 3: Rollback dan revalidasi
+            env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_journal_date")
+            env.invalidate_all()
+            roll_pos4 = get_historical_position("2026-07-04 23:59:59")
+            roll_ok4 = (roll_pos4["odoo_eod_gl_balance"] is not None and abs(roll_pos4["odoo_eod_gl_balance"] - oracle["cutoffs"]["cutoff_4"]["expected_eod_gl"]) < 0.01)
+
+        mut4_pass = base_ok4 and mutated_rejected4 and roll_ok4
+        mutation_results["journal_date_only_distortion_rejected"] = mut4_pass
+        print(f" -> Mutasi 4 (Tanggal Jurnal Saja Bergeser Ditolak EOD GL): {'PASS' if mut4_pass else 'FAIL'} (Baseline={base_ok4}, Rejected={mutated_rejected4}, Rollback={roll_ok4})")
+
+        # Mutasi 5: Split Fraud Akun Pasangan (Debit Rp1 HPP + Sisa Akun Asing Ditolak)
+        env.cr.execute("SAVEPOINT test_mutation_split_fraud")
+        try:
+            # Fase 1: Baseline validasi
+            base_audit5 = audit_event_account_pair(
+                "delivery", mv_do, details["delivery"]["expected_debit_acc"],
+                details["delivery"]["expected_credit_acc"], details["delivery"]["expected_amount"]
+            )
+            base_ok5 = base_audit5.get("balanced", False)
+
+            # Fase 2: Mutasi diterapkan - split debit Rp1 ke HPP 510000 + sisanya ke akun salah
+            am_do = getattr(mv_do, "account_move_id", None) or env["account.move"].sudo().search([("stock_move_id", "=", mv_do.id)], limit=1)
+            if not am_do:
+                am_do = env["account.move"].sudo().search([("ref", "ilike", "DO-202607-0063"), ("company_id", "in", [False, company.id])], limit=1)
+
+            debit_line = [line_rec for line_rec in am_do.line_ids if line_rec.debit > 0][0]
+            orig_debit = debit_line.debit
+            # Ubah line debit menjadi Rp 1.0
+            env.cr.execute("UPDATE account_move_line SET debit = 1.0 WHERE id = %s", [debit_line.id])
+            # Sisipkan baris debit palsu ke akun lain (stock_input_acc) sebesar orig_debit - 1.0
+            env.cr.execute(
+                """INSERT INTO account_move_line (move_id, account_id, debit, credit, date, name, company_id)
+                   VALUES (%s, %s, %s, 0.0, %s, %s, %s)""",
+                [am_do.id, stock_input_acc.id, orig_debit - 1.0, debit_line.date, "Fake Split Line", company.id]
+            )
+            env.invalidate_all()
+
+            mutated_rejected5 = False
+            try:
+                audit_event_account_pair(
+                    "delivery", mv_do, details["delivery"]["expected_debit_acc"],
+                    details["delivery"]["expected_credit_acc"], details["delivery"]["expected_amount"]
+                )
+            except ValueError as ve:
+                if "memiliki baris debit tidak sah/ekstra" in str(ve) or "tidak cocok dengan expected" in str(ve):
+                    mutated_rejected5 = True
+        finally:
+            # Fase 3: Rollback dan revalidasi
+            env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_split_fraud")
+            env.invalidate_all()
+            roll_audit5 = audit_event_account_pair(
+                "delivery", mv_do, details["delivery"]["expected_debit_acc"],
+                details["delivery"]["expected_credit_acc"], details["delivery"]["expected_amount"]
+            )
+            roll_ok5 = roll_audit5.get("balanced", False)
+
+        mut5_pass = base_ok5 and mutated_rejected5 and roll_ok5
+        mutation_results["account_pair_split_fraud_rejected"] = mut5_pass
+        print(f" -> Mutasi 5 (Split Fraud Rp1 HPP + Sisa Akun Asing Ditolak): {'PASS' if mut5_pass else 'FAIL'} (Baseline={base_ok5}, Rejected={mutated_rejected5}, Rollback={roll_ok5})")
+
+        # Mutasi 6: Akun Kredit Substitusi / Kredit Ekstra Ditolak
+        env.cr.execute("SAVEPOINT test_mutation_credit_sub")
+        try:
+            # Fase 1: Baseline validasi
+            base_audit6 = audit_event_account_pair(
+                "receipt", mv_po, details["receipt"]["expected_debit_acc"],
+                details["receipt"]["expected_credit_acc"], details["receipt"]["expected_amount"]
+            )
+            base_ok6 = base_audit6.get("balanced", False)
+
+            # Fase 2: Mutasi diterapkan - ganti akun kredit 211000 dengan akun beban/lain
+            am_po = getattr(mv_po, "account_move_id", None) or env["account.move"].sudo().search([("stock_move_id", "=", mv_po.id)], limit=1)
+            if not am_po:
+                am_po = env["account.move"].sudo().search([("ref", "ilike", "PO-2026-06-05"), ("company_id", "in", [False, company.id])], limit=1)
+            credit_line = [line_rec for line_rec in am_po.line_ids if line_rec.credit > 0][0]
+            env.cr.execute("UPDATE account_move_line SET account_id = %s WHERE id = %s", [cogs_acc.id, credit_line.id])
+            env.invalidate_all()
+
+            mutated_rejected6 = False
+            try:
+                audit_event_account_pair(
+                    "receipt", mv_po, details["receipt"]["expected_debit_acc"],
+                    details["receipt"]["expected_credit_acc"], details["receipt"]["expected_amount"]
+                )
+            except ValueError as ve:
+                if "tidak mengkredit akun yang diharapkan" in str(ve) or "baris kredit tidak sah" in str(ve):
+                    mutated_rejected6 = True
+        finally:
+            # Fase 3: Rollback dan revalidasi
+            env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_credit_sub")
+            env.invalidate_all()
+            roll_audit6 = audit_event_account_pair(
+                "receipt", mv_po, details["receipt"]["expected_debit_acc"],
+                details["receipt"]["expected_credit_acc"], details["receipt"]["expected_amount"]
+            )
+            roll_ok6 = roll_audit6.get("balanced", False)
+
+        mut6_pass = base_ok6 and mutated_rejected6 and roll_ok6
+        mutation_results["account_pair_credit_substitution_rejected"] = mut6_pass
+        print(f" -> Mutasi 6 (Substitusi Akun Kredit Ditolak): {'PASS' if mut6_pass else 'FAIL'} (Baseline={base_ok6}, Rejected={mutated_rejected6}, Rollback={roll_ok6})")
+
+        # Mutasi 7: Kuantitas Sumber Tak Mencukupi / Negative Stock Fail-Fast Ditolak
+        env.cr.execute("SAVEPOINT test_mutation_insufficient_stock")
+        try:
+            # Fase 1: Baseline validasi
+            base_ok7 = True
+
+            # Fase 2: Mutasi diterapkan - mencoba pergerakan outbound internal sebesar 999.999 unit (melebihi stok)
+            mutated_rejected7 = False
+            try:
+                execute_operational_movement(
+                    origin="DO-EXCESSIVE-DEMAND",
+                    loc_src=wh_stock_loc,
+                    loc_dest=customer_loc,
+                    qty=999999.0,
+                    lot=lot_opening,
+                    move_date="2026-07-04 12:00:00",
+                )
+            except ValueError as ve:
+                if "tidak mencukupi demand" in str(ve) or "Penolakan stok negatif" in str(ve):
+                    mutated_rejected7 = True
+        finally:
+            # Fase 3: Rollback dan revalidasi
+            env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_insufficient_stock")
+            env.invalidate_all()
+            roll_ok7 = True
+
+        mut7_pass = base_ok7 and mutated_rejected7 and roll_ok7
+        mutation_results["insufficient_stock_demand_rejected"] = mut7_pass
+        print(f" -> Mutasi 7 (Kuantitas Tak Mencukupi / Stok Negatif Ditolak): {'PASS' if mut7_pass else 'FAIL'} (Baseline={base_ok7}, Rejected={mutated_rejected7}, Rollback={roll_ok7})")
+
         all_mutations_rejected = all(mutation_results.values())
         report["mutation_tests"] = mutation_results
+
+        # 9. Verifikasi Readback Stateless via Environment & Cursor Baru Odoo 19
+        print("\n[Stateless Readback] Memverifikasi seluruh cut-off EOD GL via Cursor/Environment Baru...")
+        with env.registry.cursor() as new_cr:
+            new_env = env(cr=new_cr)
+            new_product = new_env["product.product"].browse(product.id)
+            new_company = new_env.company
+            for c_key, c_exp in oracle["cutoffs"].items():
+                eod_date = c_exp["as_of"][:10]
+                amls = new_env["account.move.line"].search([
+                    ("account_id.code", "=", "113000"),
+                    ("product_id", "=", new_product.id),
+                    ("parent_state", "=", "posted"),
+                    ("date", "<=", eod_date),
+                    ("company_id", "in", [False, new_company.id]),
+                ])
+                eod_balance = round(sum(a.debit - a.credit for a in amls), 2)
+                if abs(eod_balance - c_exp["expected_eod_gl"]) > 0.01:
+                    raise ValueError(
+                        f"[FAIL-FAST] Stateless readback gagal pada {c_key} ({eod_date})! "
+                        f"Aktual: Rp{eod_balance:,.2f}, Expected: Rp{c_exp['expected_eod_gl']:,.2f}"
+                    )
+        print(" -> [Stateless Readback OK] Seluruh 5 cut-off EOD GL terbukti 100% konsisten pada cursor independen!")
 
         # Evaluasi Akhir
         if all_cutoffs_match and zero_drift_pass and all_mutations_rejected:

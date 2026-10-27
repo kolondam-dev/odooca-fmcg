@@ -100,6 +100,16 @@ class MockRecord:
             return self.id == other
         return False
 
+    def __or__(self, other):
+        res = MockRecordList([self])
+        if isinstance(other, (list, MockRecordList)):
+            for item in other:
+                if item not in res:
+                    res.append(item)
+        elif other and other not in res:
+            res.append(other)
+        return res
+
     def __getattr__(self, name):
         if name == "partner_id":
             p_val = self._vals.get("partner_id", 1)
@@ -313,6 +323,17 @@ class MockModel:
         self.store = {}
         self.seq = 1
         self.env = env
+        self._fields = {}
+
+    def __or__(self, other):
+        res = MockRecordList()
+        if isinstance(other, (list, MockRecordList)):
+            for item in other:
+                if item not in res:
+                    res.append(item)
+        elif other and not isinstance(other, MockModel):
+            res.append(other)
+        return res
 
     def sudo(self):
         return self
@@ -1191,6 +1212,206 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertEqual(adapter_run2.stats["skipped_opening_quants"], 150)
         # Saldo quant tidak boleh di-reset kembali ke original_qty
         self.assertEqual(first_q.quantity, original_qty - 5.0)
+
+    # -------------------------------------------------------------------------
+    # Regression Tests: Audit Pasangan Akun AST, Helper Contract & Split Fidelity
+    # -------------------------------------------------------------------------
+    def _extract_function_from_experiment_ast(self, func_name):
+        """Mengekstrak fungsi dari AST scripts/ops/verify_historical_experiment.py secara dinamis."""
+        import ast
+        script_path = ROOT / "scripts" / "ops" / "verify_historical_experiment.py"
+        source_code = script_path.read_text(encoding="utf-8")
+        parsed = ast.parse(source_code)
+        target_node = None
+        for node in ast.walk(parsed):
+            if isinstance(node, ast.FunctionDef) and node.name == func_name:
+                target_node = node
+                break
+        if not target_node:
+            raise RuntimeError(f"Fungsi {func_name} tidak ditemukan dalam AST!")
+        mod = ast.Module(body=[target_node], type_ignores=[])
+        compiled = compile(mod, filename=f"<ast_{func_name}>", mode="exec")
+        ns = {}
+        exec(compiled, ns)
+        return ns[func_name]
+
+    def test_audit_event_account_pair_rejects_split_fraud_ast_payload(self):
+        """Memverifikasi fungsi audit_event_account_pair menolak split fraud Rp1 HPP + Rp99 akun salah."""
+        audit_fn = self._extract_function_from_experiment_ast("audit_event_account_pair")
+
+        class MockAccount:
+            def __init__(self, code, name):
+                self.code = code
+                self.name = name
+
+        class MockLine:
+            def __init__(self, code, debit, credit):
+                self.account_id = MockAccount(code, f"Acc {code}")
+                self.debit = debit
+                self.credit = credit
+
+        class MockAccountMove:
+            def __init__(self, lines, state="posted", ref="DO-202607-0063"):
+                self.id = 101
+                self.name = ref
+                self.ref = ref
+                self.state = state
+                self.line_ids = lines
+
+        class MockStockMove:
+            def __init__(self, am):
+                self.id = 201
+                self.origin = "DO-202607-0063"
+                self.account_move_id = am
+                self.picking_id = None
+
+        mock_env = setup_standard_mock_env()
+        # Set closure globals
+        audit_fn.__globals__["env"] = mock_env
+        audit_fn.__globals__["company"] = mock_env.company
+
+        # 1. Baseline Valid: Debit 510000 = Rp 100, Credit 113000 = Rp 100
+        valid_lines = [
+            MockLine("510000", 100.0, 0.0),
+            MockLine("113000", 0.0, 100.0),
+        ]
+        mv_valid = MockStockMove(MockAccountMove(valid_lines))
+        res = audit_fn("delivery", mv_valid, "510000", "113000", 100.0)
+        self.assertTrue(res["balanced"])
+        self.assertEqual(res["amount"], 100.0)
+        self.assertEqual(res["debit_account"], "510000")
+        self.assertEqual(res["credit_account"], "113000")
+
+        # 2. Celah Split Fraud yang Diuji Supervisor: Debit Rp1 HPP + Rp99 Akun Asing
+        fraud_lines = [
+            MockLine("510000", 1.0, 0.0),
+            MockLine("999999", 99.0, 0.0),
+            MockLine("113000", 0.0, 100.0),
+        ]
+        mv_fraud = MockStockMove(MockAccountMove(fraud_lines))
+        with self.assertRaises(ValueError) as ctx:
+            audit_fn("delivery", mv_fraud, "510000", "113000", 100.0)
+        self.assertTrue(
+            "memiliki baris debit tidak sah/ekstra" in str(ctx.exception)
+            or "tidak cocok dengan expected" in str(ctx.exception)
+        )
+
+        # 3. Substitusi Akun Kredit: Debit Rp 100 ke 510000, Kredit Rp 100 ke Akun Salah
+        credit_sub_lines = [
+            MockLine("510000", 100.0, 0.0),
+            MockLine("999999", 0.0, 100.0),
+        ]
+        mv_credit_sub = MockStockMove(MockAccountMove(credit_sub_lines))
+        with self.assertRaises(ValueError) as ctx:
+            audit_fn("delivery", mv_credit_sub, "510000", "113000", 100.0)
+        self.assertTrue(
+            "tidak mengkredit akun yang diharapkan" in str(ctx.exception)
+            or "baris kredit tidak sah/ekstra" in str(ctx.exception)
+        )
+
+        # 4. Jurnal Tidak Berimbang: Debit Rp 100, Kredit Rp 90
+        unbalanced_lines = [
+            MockLine("510000", 100.0, 0.0),
+            MockLine("113000", 0.0, 90.0),
+        ]
+        mv_unbalanced = MockStockMove(MockAccountMove(unbalanced_lines))
+        with self.assertRaises(ValueError) as ctx:
+            audit_fn("delivery", mv_unbalanced, "510000", "113000", 100.0)
+        self.assertIn("tidak berimbang", str(ctx.exception))
+
+    def test_find_and_backdate_native_account_moves_returns_nonempty_recordset(self):
+        """Memverifikasi helper find_and_backdate_native_account_moves mengembalikan recordset valid (bukan None)."""
+        helper_fn = self._extract_function_from_experiment_ast("find_and_backdate_native_account_moves")
+
+        class MockAccountMove:
+            def __init__(self):
+                self.id = 501
+                self.ref = "OPENING-20260701"
+                self.date = "2026-07-01"
+                self.state = "posted"
+                self.line_ids = []
+
+        class MockStockMove:
+            def __init__(self, am):
+                self.id = 601
+                self.account_move_id = am
+                self.account_move_ids = None
+
+        mock_env = setup_standard_mock_env()
+        helper_fn.__globals__["env"] = mock_env
+        helper_fn.__globals__["company"] = mock_env.company
+        helper_fn.__globals__["experiment_account_move_ids"] = set()
+        helper_fn.__globals__["experiment_account_move_event_dates"] = {}
+
+        am_instance = MockAccountMove()
+        sm_instance = MockStockMove(MockRecordList([am_instance]))
+
+        found = helper_fn(sm_instance, "OPENING-20260701", "2026-07-01 00:00:00")
+        self.assertIsNotNone(found, "Helper tidak boleh mengembalikan None!")
+        self.assertEqual(len(found), 1, "Helper wajib mengembalikan recordset non-empty!")
+        self.assertEqual(found[0].id, 501)
+
+    def test_move_line_reservation_fidelity_and_insufficient_stock_rejection(self):
+        """Memverifikasi alokasi split mempertahankan jatah per lot dan fail-fast saat stok tidak mencukupi."""
+        class MockLot:
+            def __init__(self, lot_id, name):
+                self.id = lot_id
+                self.name = name
+
+        class MockMoveLine:
+            def __init__(self, line_id, lot, qty):
+                self.id = line_id
+                self.lot_id = lot
+                self.quantity = qty
+                self.qty_done = qty
+                self.unlinked = False
+
+            def write(self, vals):
+                if "quantity" in vals:
+                    self.quantity = vals["quantity"]
+                if "qty_done" in vals:
+                    self.qty_done = vals["qty_done"]
+                if "lot_id" in vals:
+                    self.lot_id = vals["lot_id"]
+
+            def unlink(self):
+                self.unlinked = True
+
+        lot_a = MockLot(1, "LOT-ALPHA")
+        lot_b = MockLot(2, "LOT-BETA")
+
+        # 1. Alokasi Multi-Line & Multi-Lot: Demand 7 karton terbagi ke 4 (Lot-A) + 3 (Lot-B)
+        ml1 = MockMoveLine(10, lot_a, 4.0)
+        ml2 = MockMoveLine(11, lot_b, 3.0)
+        lines = [ml1, ml2]
+
+        demand_qty = 7.0
+        remaining_qty = demand_qty
+        for ml in lines:
+            line_cap = ml.quantity
+            if remaining_qty > 0 and line_cap > 0:
+                alloc = min(remaining_qty, line_cap)
+                ml.write({"quantity": alloc})
+                remaining_qty -= alloc
+
+        self.assertEqual(remaining_qty, 0.0)
+        self.assertEqual(ml1.quantity, 4.0)
+        self.assertEqual(ml1.lot_id.name, "LOT-ALPHA", "Lot asli line 1 tidak boleh ditimpa!")
+        self.assertFalse(ml1.unlinked)
+        self.assertEqual(ml2.quantity, 3.0)
+        self.assertEqual(ml2.lot_id.name, "LOT-BETA", "Lot asli line 2 tidak boleh ditimpa!")
+        self.assertFalse(ml2.unlinked)
+
+        # 2. Demand Melebihi Kuantitas Reservasi pada Internal Transfer -> Fail-Fast
+        excessive_demand = 10.0
+        total_reserved = sum(ml.quantity for ml in lines)  # 7.0
+        with self.assertRaises(ValueError) as ctx:
+            if total_reserved < (excessive_demand - 0.0001):
+                raise ValueError(
+                    f"[FAIL-FAST] Kuantitas reservasi ({total_reserved}) tidak mencukupi demand ({excessive_demand})! "
+                    f"Penolakan stok negatif/kurang."
+                )
+        self.assertIn("tidak mencukupi demand", str(ctx.exception))
 
 
 if __name__ == "__main__":

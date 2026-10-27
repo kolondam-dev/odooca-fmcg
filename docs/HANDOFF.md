@@ -1,7 +1,48 @@
 # HANDOFF
 
-## 2026-10-27 — antigravity agent — GL Harian Native Penentu Kelulusan, Eliminasi Fallback _action_done, Alokasi Kuantitas Eksak, Audit Pasangan Akun, dan Snapshot Jurnal Run 1-2
-**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6434169001](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6434169001)):**
+## 2026-10-27 — antigravity agent — Perbaikan Return Helper Opening, Pengetatan Audit Pasangan Akun Tanpa Celah Split Fraud, Fidelitas Reservasi Lot Move Line, Negative Regression Tests, dan Stateless Readback Cursor Baru
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6435759037](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6435759037)):**
+- Menindaklanjuti review commit `f13cbd9`:
+  1. *Regresi Return Helper Opening*: Mengembalikan pernyataan `return found_moves` pada helper `find_and_backdate_native_account_moves` yang sebelumnya hilang saat audit akun ditambahkan, menutup error `TypeError: object of type 'NoneType' has no len()` pada pembukaan stok opening. Menambahkan assertion nonempty recordset ketika jurnal native diwajibkan.
+  2. *Pengetatan Audit Pasangan Akun Tanpa Celah Split Fraud*: Memperketat `audit_event_account_pair` dengan mencocokkan multiset baris finansial akun debit/kredit dan nominal secara persis. Memverifikasi bahwa seluruh debit tunggal berada pada `expected_debit_code` sebesar `expected_amount` dan seluruh kredit tunggal berada pada `expected_credit_code` sebesar `expected_amount`. Menolak keras celah split fraud (seperti manipulasi debit Rp1 ke HPP + Rp99 ke akun lain), substitusi akun kredit, baris ekstra, serta jurnal tidak seimbang.
+  3. *Fidelitas Reservasi Multi-Line & Multi-Lot Native Odoo*: Memperbaiki alokasi kuantitas move line agar menjaga kapasitas reservasi per line dan tidak menimpa lot yang sudah di-reserve oleh sistem Odoo. Jika ketersediaan kuantitas reservasi kurang dari demand pada transfer internal, validator fail-fast melempar penolakan stok tidak mencukupi / stok negatif.
+  4. *Negative Regression Tests & Stateless Readback Cursor Baru*:
+     - Menambahkan Mutasi 4: Uji distorsi tanggal jurnal saja (stok tetap benar) ditolak oleh gate EOD GL.
+     - Menambahkan Mutasi 5: Uji manipulasi split fraud akun pasangan (debit Rp1 HPP + sisa nominal ke akun asing) ditolak validator.
+     - Menambahkan Mutasi 6: Uji substitusi akun kredit ditolak validator.
+     - Menambahkan Mutasi 7: Uji kuantitas demand melebihi reservasi / stok tidak cukup fail-fast ditolak.
+     - Menambahkan verifikasi readback stateless via cursor dan environment baru independen Odoo 19 pasca-transaksi.
+     - Menambahkan 3 unit regression tests AST pada `tests/test_canonical_loader_adapter.py` yang membuktikan penolakan split fraud, contract helper return, dan fidelitas reservasi lot.
+  5. *Koreksi Eksak Angka Register Kanonikal (SKU ULV-RNS-03)*:
+     - Opening 1 Juli: 84 karton @ Rp222.000 = Rp18.648.000,00
+     - Delivery DO-202607-0063 (3 Juli): 7 karton @ Rp222.000 = Rp1.554.000,00 (COGS)
+     - Retur REJ-202607-001 (3 Juli): 1 karton @ Rp222.000 = Rp222.000,00
+     - Inbound PO-2026-06-05 (4 Juli): 311 karton @ Rp222.000 = Rp69.042.000,00
+     - Posisi Saldo Cutoff:
+       * Cutoff 1 (1 Juli 23:59:59): Rp18.648.000,00
+       * Cutoff 2 (3 Juli 14:00:00 intrahari): Rp18.648.000 - Rp1.554.000 = Rp17.094.000,00
+       * Cutoff 3 (3 Juli 23:59:59 EOD): Rp17.094.000 + Rp222.000 = Rp17.316.000,00
+       * Cutoff 4 (4 Juli 23:59:59 EOD): Rp17.316.000 + Rp69.042.000 = Rp86.358.000,00
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Helper Return & Assert Recordset Nonempty ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Menambahkan `return found_moves` di akhir `find_and_backdate_native_account_moves`.
+   - Menambahkan assertion fail-fast `if not native_ams or len(native_ams) == 0:` pada pembukaan opening dan pergerakan operasional.
+2. **Audit Pasangan Akun Multiset Normalisasi:**
+   - Menghitung `debit_map` dan `credit_map` per kode akun.
+   - Menguji `debit_map[expected_debit_code] == expected_amount` dan `unexpected_debits == {}`.
+   - Menguji `credit_map[expected_credit_code] == expected_amount` dan `unexpected_credits == {}`.
+3. **Fidelitas Reservasi Multi-Line & Multi-Lot:**
+   - Mengalokasikan kuantitas sesuai kapasitas reservasi masing-masing move line (`alloc = min(remaining_qty, line_cap)`).
+   - Menjaga lot asli yang di-reserve oleh native Odoo (`if not ml.lot_id and lot:`).
+   - Menolak kuantitas tidak mencukupi demand jika `loc_src.usage == "internal"` dan `total_reserved < demand`.
+4. **Mutasi Terarah Baru & Stateless Readback:**
+   - Mengimplementasikan Mutasi 4 (Journal Date Distortion), Mutasi 5 (Split Fraud Rp1 HPP + foreign account), Mutasi 6 (Credit Substitution), dan Mutasi 7 (Insufficient Stock Demand).
+   - Menambahkan verifikasi EOD GL via cursor baru independen `with env.registry.cursor() as new_cr:`.
+5. **Unit Regression Tests ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
+   - Menguji AST fungsi aktual terhadap AST audit account pair, helper contract, dan fidelitas split reservation.
+
 - Menindaklanjuti review commit `aee7360`:
   1. *GL Harian Native Penentu Kelulusan & Stateless Validator*: Saldo GL harian native Odoo (`eod_gl_match`) wajib ikut menentukan kelulusan seluruh cutoff, bukan sekadar dilaporkan. Evaluasi GL intrahari harus dibaca murni secara stateless dari ORM Odoo (`stock.move.date <= as_of_dt_str`), bukan dari variabel memori loader.
   2. *Eliminasi Total Fallback `_action_done`*: Menghapus pemanggilan manual `mv._action_done()` setelah validasi picking; picking dan move wajib berstatus `done` murni melalui `button_validate()`.

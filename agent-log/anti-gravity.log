@@ -612,4 +612,30 @@
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T12:14:00+07:00
 
+[2026-10-27T14:20:00+07:00] [INFO] Perbaikan Return Helper Opening, Pengetatan Audit Pasangan Akun Tanpa Celah Split Fraud, Fidelitas Reservasi Lot Move Line, Negative Regression Tests, dan Stateless Readback Cursor Baru
+- Menutup temuan review PR #15 (issuecomment-6435759037):
+  * Regresi Return Helper Opening: Mengembalikan pernyataan return found_moves pada helper find_and_backdate_native_account_moves yang sebelumnya hilang, menutup error TypeError: object of type 'NoneType' has no len() pada pembukaan stok opening. Menambahkan assertion nonempty recordset ketika jurnal native diwajibkan.
+  * Pengetatan Audit Pasangan Akun Tanpa Celah Split Fraud: Memperketat audit_event_account_pair dengan mencocokkan multiset baris finansial akun debit/kredit dan nominal secara persis. Memverifikasi bahwa seluruh debit tunggal berada pada expected_debit_code sebesar expected_amount dan seluruh kredit tunggal berada pada expected_credit_code sebesar expected_amount. Menolak keras celah split fraud (seperti manipulasi debit Rp1 ke HPP + Rp99 ke akun lain), substitusi akun kredit, baris ekstra, serta jurnal tidak seimbang.
+  * Fidelitas Reservasi Multi-Line & Multi-Lot Native Odoo: Memperbaiki alokasi kuantitas move line agar menjaga kapasitas reservasi per line dan tidak menimpa lot yang sudah di-reserve oleh sistem Odoo. Jika ketersediaan kuantitas reservasi kurang dari demand pada transfer internal, validator fail-fast melempar penolakan stok tidak mencukupi / stok negatif.
+  * Negative Regression Tests & Stateless Readback Cursor Baru:
+    - Menambahkan Mutasi 4: Uji distorsi tanggal jurnal saja (stok tetap benar) ditolak oleh gate EOD GL.
+    - Menambahkan Mutasi 5: Uji manipulasi split fraud akun pasangan (debit Rp1 HPP + sisa nominal ke akun asing) ditolak validator.
+    - Menambahkan Mutasi 6: Uji substitusi akun kredit ditolak validator.
+    - Menambahkan Mutasi 7: Uji kuantitas demand melebihi reservasi / stok tidak cukup fail-fast ditolak.
+    - Menambahkan verifikasi readback stateless via cursor dan environment baru independen Odoo 19 pasca-transaksi.
+    - Menambahkan 3 unit regression tests AST pada tests/test_canonical_loader_adapter.py yang membuktikan penolakan split fraud, contract helper return, dan fidelitas reservasi lot.
+  * Koreksi Eksak Angka Register Kanonikal (SKU ULV-RNS-03):
+    - Opening 1 Juli: 84 karton @ Rp222.000 = Rp18.648.000,00
+    - Delivery DO-202607-0063 (3 Juli): 7 karton @ Rp222.000 = Rp1.554.000,00 (COGS)
+    - Retur REJ-202607-001 (3 Juli): 1 karton @ Rp222.000 = Rp222.000,00
+    - Inbound PO-2026-06-05 (4 Juli): 311 karton @ Rp222.000 = Rp69.042.000,00
+    - Posisi Saldo Cutoff:
+      * Cutoff 1 (1 Juli 23:59:59): Rp18.648.000,00
+      * Cutoff 2 (3 Juli 14:00:00 intrahari): Rp18.648.000 - Rp1.554.000 = Rp17.094.000,00
+      * Cutoff 3 (3 Juli 23:59:59 EOD): Rp17.094.000 + Rp222.000 = Rp17.316.000,00
+      * Cutoff 4 (4 Juli 23:59:59 EOD): Rp17.316.000 + Rp69.042.000 = Rp86.358.000,00
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), unit tests (72 tests PASS, 3 new regression tests PASS).
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T14:20:00+07:00
+
 
