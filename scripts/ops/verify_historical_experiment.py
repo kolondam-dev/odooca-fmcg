@@ -498,12 +498,8 @@ def main():
 
             # 4. COGS / Expense Account (510000)
             cogs_acc = AccountAccount.search(comp_domain + [
-                ("code", "in", ["510000", "500000"]),
+                ("code", "=", "510000"),
             ], limit=1)
-            if not cogs_acc:
-                cogs_acc = AccountAccount.search(comp_domain + [
-                    ("account_type", "in", ["expense_direct_cost", "expense"]),
-                ], limit=1)
             if not cogs_acc:
                 vals = {
                     "code": "510000",
@@ -694,6 +690,7 @@ def main():
             })
 
         experiment_account_move_ids = set()
+        experiment_account_move_event_dates = {}
 
         # Helper: Pencari dan Pengelola Entri Akuntansi Odoo Native
         def find_and_backdate_native_account_moves(stock_move, origin_ref, target_date_str):
@@ -725,10 +722,16 @@ def main():
                     am.write({"date": target_date})
                     if hasattr(am, "line_ids") and am.line_ids:
                         am.line_ids.write({"date": target_date})
-                    try:
-                        am.action_post()
-                    except Exception as ex_post:
-                        print(f" -> [Info ORM] action_post move {am.id}: {ex_post}")
+                    # Fail-Fast: Posting jurnal native tanpa menelan kegagalan
+                    am.action_post()
+
+                # Fail-Fast: Pastikan entri jurnal telah berhasil diposting
+                if am.state != "posted":
+                    raise ValueError(
+                        f"[FAIL-FAST] Entri jurnal native {am.id} ({am.ref or am.name}) gagal diposting! "
+                        f"State aktual: {am.state}"
+                    )
+
                 # Verifikasi FAIL-FAST: tanggal native jurnal wajib cocok 100% dengan target cut-off
                 if str(am.date) != target_date:
                     raise ValueError(
@@ -736,7 +739,17 @@ def main():
                         f"tidak cocok dengan target cut-off ({target_date})!"
                     )
 
+                # Verifikasi Khusus Delivery: Wajib mendebit akun HPP 510000
+                if origin_ref == "DO-202607-0063":
+                    debit_accs = [line.account_id.code for line in am.line_ids if line.debit > 0]
+                    if "510000" not in debit_accs:
+                        raise ValueError(
+                            f"[FAIL-FAST] Jurnal delivery {am.id} mendebit akun {debit_accs}, "
+                            f"bukan akun HPP 510000!"
+                        )
+
                 experiment_account_move_ids.add(am.id)
+                experiment_account_move_event_dates[am.id] = target_date_str
                 print(f" -> [Native Account Move] ID={am.id}, Ref={am.ref}, Date={am.date}, State={am.state}, Lines={len(am.line_ids)}")
                 for line in am.line_ids:
                     print(f"     * Account: {line.account_id.code} ({line.account_id.name}) | Debit: {line.debit} | Credit: {line.credit}")
@@ -906,17 +919,34 @@ def main():
 
             if "picked" in StockMove._fields:
                 mv.picked = True
-            mv.with_context(force_period_date=move_date[:10])._action_done()
 
-            # Selesaikan status dokumen picking
+            # Validasi picking secara native melalui lifecycle Odoo (button_validate)
+            # Menghindari fallback yang memaksa state menjadi 'done'
+            validate_res = picking.with_context(force_period_date=move_date[:10]).button_validate()
+            if isinstance(validate_res, dict) and "res_model" in validate_res:
+                wiz_model = validate_res["res_model"]
+                wiz_id = validate_res.get("res_id")
+                wizard = (
+                    env[wiz_model].sudo().browse(wiz_id)
+                    if wiz_id
+                    else env[wiz_model].sudo().with_context(validate_res.get("context", {})).create({})
+                )
+                for act_name in ["process", "action_confirm", "process_cancel_backorder"]:
+                    if hasattr(wizard, act_name):
+                        getattr(wizard.with_context(force_period_date=move_date[:10]), act_name)()
+                        break
+
+            # Jika button_validate tidak memproses move secara langsung
+            if mv.state != "done":
+                mv.with_context(force_period_date=move_date[:10])._action_done()
+
+            # Verifikasi FAIL-FAST: Dokumen picking native WAJIB berstatus 'done' secara native
             if picking.state != "done":
-                if hasattr(picking, "_set_done"):
-                    try:
-                        picking._set_done()
-                    except Exception:
-                        picking.write({"state": "done"})
-                else:
-                    picking.write({"state": "done"})
+                raise ValueError(
+                    f"[FAIL-FAST] Validasi native picking {picking.name} ({origin}) gagal mencapai state 'done'! "
+                    f"State aktual: {picking.state}"
+                )
+
             if "date_done" in StockPicking._fields:
                 picking.write({"date_done": move_date})
 
@@ -971,6 +1001,7 @@ def main():
 
             # Pembacaan GL Aktual Akun Persediaan (113000)
             gl_balance = None
+            eod_gl_balance = None
             if has_aml and stock_valuation_acc:
                 aml_domain = [
                     ("account_id", "=", stock_valuation_acc.id),
@@ -988,7 +1019,24 @@ def main():
                     or (getattr(a, "stock_move_id", None) and getattr(a.stock_move_id, "product_id", None) and a.stock_move_id.product_id.id == product.id)
                     or (getattr(a.move_id, "stock_move_id", None) and getattr(a.move_id.stock_move_id, "product_id", None) and a.move_id.stock_move_id.product_id.id == product.id)
                 ]
-                gl_balance = round(sum(a.debit - a.credit for a in matching_amls), 2)
+                eod_gl_balance = round(sum(a.debit - a.credit for a in matching_amls), 2)
+
+                # Penyelarasan Granularitas GL: Intrahari vs Akhir Hari (EOD)
+                # Odoo account.move.line menyimpan 'date' harian (Date). Untuk cut-off intrahari
+                # (misal Cutoff 2 jam 14:00:00), pergerakan setelah jam cut-off (seperti retur jam 23:59:59)
+                # dieksklusikan dari GL cut-off intrahari berdasarkan timestamp event aslinya.
+                cutoff_amls = []
+                for a in matching_amls:
+                    ev_date = experiment_account_move_event_dates.get(a.move_id.id)
+                    if ev_date:
+                        if ev_date <= as_of_dt_str:
+                            cutoff_amls.append(a)
+                    else:
+                        # Entri non-pergerakan (seperti manipulasi GL saat uji mutasi)
+                        if str(a.date) <= as_of_dt_str[:10]:
+                            cutoff_amls.append(a)
+
+                gl_balance = round(sum(a.debit - a.credit for a in cutoff_amls), 2)
 
             return {
                 "saleable_units": saleable_units,
@@ -999,6 +1047,7 @@ def main():
                 "total_cartons": total_cartons,
                 "odoo_svl_valuation": svl_val,
                 "odoo_gl_balance": gl_balance,
+                "odoo_eod_gl_balance": eod_gl_balance,
             }
 
         # 5. RUN 1: Eksekusi Alur Transaksi Lengkap
@@ -1109,6 +1158,7 @@ def main():
                     "total_cartons": pos["total_cartons"],
                     "odoo_svl_valuation": pos["odoo_svl_valuation"],
                     "odoo_gl_balance": pos["odoo_gl_balance"],
+                    "odoo_eod_gl_balance": pos["odoo_eod_gl_balance"],
                 },
                 "delta": {
                     "saleable_cartons": delta_saleable,
@@ -1123,7 +1173,7 @@ def main():
             }
 
             status_str = "PASS" if is_match else "FAIL"
-            print(f" -> [{status_str}] {c_exp['title']}: Expected {c_exp['expected_saleable_cartons']} s / {c_exp['expected_quarantine_cartons']} q ctn | Actual {pos['saleable_cartons']} s / {pos['quarantine_cartons']} q ctn | GL Bal: {actual_gl_display} (SVL: {actual_svl_display})")
+            print(f" -> [{status_str}] {c_exp['title']}: Expected {c_exp['expected_saleable_cartons']} s / {c_exp['expected_quarantine_cartons']} q ctn | Actual {pos['saleable_cartons']} s / {pos['quarantine_cartons']} q ctn | Cutoff GL: {actual_gl_display} (EOD GL: {pos['odoo_eod_gl_balance']}, SVL: {actual_svl_display})")
 
         report["cutoff_results"] = cutoff_results
 

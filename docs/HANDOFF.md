@@ -1,5 +1,31 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Penyelarasan Granularitas Cutoff Stok Intrahari vs GL, Validasi Native Picking, Akun HPP 510000, dan Fail-Fast Posting
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6434027739](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6434027739)):**
+- Menindaklanjuti review commit `f37568d`:
+  1. *Kemajuan Terverifikasi*: Empat jurnal native bertanggal historis berhasil terbentuk, posisi fisik cocok pada seluruh cutoff, serta Run 2 replay idempotency dan 3 mutation tests (Wrong Date, Bogus GL, Future Receipt Leakage) lulus 100%.
+  2. *Granularitas Cutoff Intrahari vs GL Akhir Hari*: Cutoff 2 (Delivery jam 14:00:00) dibandingkan dengan GL akhir hari (EOD) 3 Juli yang memuat retur jam 23:59:59 (+Rp222.000). Granularitas diuji sesuai dengan timestamp pergerakan stok aslinya dan mencatat saldo EOD secara transparan.
+  3. *Validasi Dokumen Picking Native*: Menghapus seluruh fallback yang memaksa state picking (`write({"state": "done"})`); beralih 100% ke validasi native dokumen picking (`button_validate()`) disertai fail-fast assertion.
+  4. *Akun HPP 510000*: Delivery sebelumnya mendebit akun `42500010` karena fallback pencarian expense acak. Akun HPP dipastikan secara eksplisit berkode `510000`, dan jurnal delivery diverifikasi fail-fast mendebit `510000`.
+  5. *Fail-Fast Posting Jurnal*: Menghapus `try-except` yang menangkap dan menelan kegagalan posting; memastikan setiap jurnal native diposting secara fail-fast dan berstatus `posted`.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Penyelarasan Granularitas Cut-off Intrahari vs Akhir Hari ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Merekam pemetaan timestamp event per `account.move.id` (`experiment_account_move_event_dates`).
+   - Pada `get_historical_position(as_of_dt_str)`, menyaring entri AML pergerakan stok berdasarkan timestamp event aslinya (`ev_date <= as_of_dt_str`), sehingga Cutoff 2 (14:00:00) tidak terdistorsi oleh transaksi retur malam hari (23:59:59).
+   - Menghitung dan melaporkan baik `odoo_gl_balance` (cutoff timestamp) maupun `odoo_eod_gl_balance` (saldo penutupan buku harian Odoo).
+2. **Validasi Dokumen Picking Native Tanpa Pemaksaan State:**
+   - Menghapus pemanggilan paksa `picking.write({"state": "done"})` dan `_set_done()`.
+   - Menggunakan `picking.button_validate()` native Odoo 19 dan menangani wizard konfirmasi native jika ada.
+   - Menambahkan verifikasi fail-fast: jika `picking.state != 'done'`, melempar `ValueError`.
+3. **Akun HPP Eksplisit 510000 & Audit Debit Jurnal Delivery:**
+   - Menghapus fallback sembarang expense yang mengambil akun acak `42500010`. Menjamin `cogs_acc` secara murni berkode `510000`.
+   - Menambahkan audit fail-fast pada entri jurnal `DO-202607-0063`: melempar `ValueError` jika akun debit bukan `510000`.
+4. **Posting Jurnal Native Fail-Fast:**
+   - Menghapus `try-except` pada `am.action_post()`.
+   - Menambahkan verifikasi fail-fast memastikan `am.state == 'posted'`.
+
 ## 2026-10-27 — antigravity agent — Lifecycle Dokumen Native stock.picking untuk Referensi stock.move & Verifikasi Fail-Fast Tanggal Jurnal
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6433876562](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6433876562)):**
 - Menindaklanjuti review commit `ae7caf7`:

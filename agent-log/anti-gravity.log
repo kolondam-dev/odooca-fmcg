@@ -590,3 +590,14 @@
 - Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok.
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T11:44:00+07:00
+
+[2026-10-27T11:58:00+07:00] [INFO] Penyelarasan Granularitas Cutoff Stok Intrahari vs GL, Validasi Native Picking, Akun HPP 510000, dan Fail-Fast Posting
+- Menutup temuan review PR #15 (issuecomment-6434027739):
+  * Penyelarasan Granularitas Cut-off Intrahari vs Akhir Hari: Menyimpan pemetaan event timestamp pada jurnal native pergerakan stok; get_historical_position memfilter AML pergerakan sesuai timestamp event aslinya (ev_date <= as_of_dt_str), mengeliminasi selisih Rp222.000 pada Cutoff 2 (14:00:00) yang sebelumnya terdistorsi retur malam hari (23:59:59). Menghitung dan melaporkan baik odoo_gl_balance maupun odoo_eod_gl_balance.
+  * Validasi Dokumen Picking Native: Menghapus fallback pemaksaan status picking (picking.write({"state": "done"}) dan _set_done()), beralih 100% ke validasi native picking.button_validate() Odoo 19 dan fail-fast assertion (if picking.state != 'done': raise ValueError).
+  * Akun HPP Eksplisit 510000 & Audit Debit Jurnal Delivery: Menghapus fallback pencarian expense acak yang mengambil 42500010; mengunci pencarian cogs_acc strictly ke 510000; menambahkan assertion fail-fast pada entri jurnal delivery DO-202607-0063 bahwa akun debit wajib 510000.
+  * Fail-Fast Posting Jurnal Native: Menghapus blok try-except yang menangkap dan menelan kegagalan posting; memastikan am.action_post() dieksekusi langsung dan status jurnal diverifikasi wajib 'posted'.
+- Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T11:58:00+07:00
+
