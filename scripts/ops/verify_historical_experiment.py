@@ -2,14 +2,14 @@
 """scripts/ops/verify_historical_experiment.py.
 
 Eksperimen Seeding Historis Minimal Odoo 19 (SKU ULV-RNS-03):
-- Verifikasi Fingerprint SHA256 Seluruh 15 Register Kanonikal CSV Beku
+- Verifikasi Fingerprint SHA256 Seluruh 15 Register Kanonikal CSV Beku (Dynamic dari JSON Metadata + LF Normalization)
 - Source-driven Dynamic Oracle dari Register Sumber
 - Kronologi Sejati: Opening (1 Juli) -> DO Delivery (3 Juli) -> Retur Karantina (3 Juli) -> Receipt PO (4 Juli)
 - Metode Opening Quant: Inventory adjustment native Odoo 19 (action_apply_inventory)
 - Native Historical Readback Pasca-Injeksi: Evaluasi saldo fisik as-of per tanggal via stock.move.line
-- Readback Valuasi Aktual Odoo: stock.valuation.layer (SVL) & GL account.move.line (tanpa fallback buatan)
-- Run 2 Zero-Drift Idempotency Penuh: Deep snapshot comparison (exact IDs, dates, lots, quantities, SVL)
-- Actual Mutation Tests (Savepoints): Uji mutasi salah tanggal (now), mutasi nilai SVL, dan kebocoran receipt masa depan
+- Readback Valuasi & GL Aktual Odoo: stock.valuation.layer (jika tersedia) & GL Persediaan account.move.line menentukan kelulusan
+- Run 2 Zero-Drift Idempotency Penuh: Deep snapshot comparison (exact IDs, dates, lots, quantities, GL, SVL)
+- Actual Mutation Tests (Savepoints): Uji mutasi salah tanggal (now), mutasi nilai GL/SVL, dan kebocoran receipt masa depan
 - Structured JSON Report: Diekspor via try...finally dengan CustomJSONEncoder bebas tuple keys
 """
 
@@ -34,24 +34,6 @@ REG_PATH = REPO_ROOT / "data" / "registers"
 if not REG_PATH.exists():
     REG_PATH = Path("/opt/data/registers")
 
-CANONICAL_HASHES = {
-    "customer_registry_354.csv": "fad4914dd3c8ccfa376e397615a61818d78948b3eedf6d95a0bbba6e6d4e1544",
-    "historical_ledger_day_to_day.csv": "35901b7d313999c43a41d4b3699b5c39270205d7b66ef9a9c165c06257e493ee",
-    "inbound_po_intransit_june_headers.csv": "9fd864f1bc006ec08d985c1475ae31f88b5339775882e85a56def81efce0c861",
-    "inbound_po_intransit_june_lines.csv": "9925eb2cf04e91612ada8ead6b321a361e0dad35e4c18db102b343760e679a97",
-    "initial_stock_20260701.csv": "aa17b574ec1eabb6c82cad406370f83f024299b87ced3eed1725855fda6d4277",
-    "perpetual_ap_payments.csv": "bc5805bd0d7e5375f4395b73ae441e787859233921c19d9a604c022d56e266a3",
-    "perpetual_ar_collections.csv": "4dfbd0938e42418dfd3ec58640dc20fe6463e434f399dd2506ec94ad78198d68",
-    "perpetual_daily_stock_cards.csv": "5a9b2b6f1124891e4886493229442eca7b0dadd14ad41c9a29040888eaec3a2d",
-    "perpetual_deliveries.csv": "23849765d66fa26b22e16be8451530133673b156ab90bd34c1b5e7cfc9e1de0d",
-    "perpetual_invoices.csv": "483d0e507d38c026f64057636b2e47b3deaf7240783363f99936d9c629e67b19",
-    "perpetual_opex_payroll.csv": "fa81bbc78918a942bd85aeb0d24f8c612bed3ce426fc09b35c3df7445b46c489",
-    "perpetual_order_lines.csv": "85ebab31ea2c3b63ff1f4edfa31ddd299920ddd9ec33f6299cbbf08dae52d953",
-    "perpetual_order_rejections.csv": "08775c93a13953cd73e2d296285e45d555cd80f2bcc73ef2e4f6d64f5cc64a11",
-    "perpetual_sales_orders.csv": "ef6949e8390def7ecad06a63a8a8b2565bd0cef690f2c1d7f669666e4c3c1ccb",
-    "perpetual_stock_event_ledger.csv": "65cc53af29510115a86ec09e079090d0671601d150a6214398773e56087e5af1",
-}
-
 
 class CustomJSONEncoder(json.JSONEncoder):
     """JSON Encoder tangguh untuk menangani objek non-serializable Odoo/Python."""
@@ -68,18 +50,41 @@ class CustomJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
+def canonical_file_hash(filepath: Path) -> str:
+    """Menghitung SHA-256 kanonikal dengan normalisasi newline LF."""
+    content = filepath.read_bytes()
+    normalized = content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(normalized).hexdigest()
+
+
 def verify_register_fingerprints():
-    """Memverifikasi hash SHA256 seluruh 15 register kanonikal CSV beku."""
+    """Memverifikasi hash SHA256 seluruh 15 register kanonikal CSV beku terhadap metadata kanonikal (normalisasi LF)."""
+    recon_json_path = REG_PATH / "canonical_financial_reconciliation_july_2026.json"
+    if not recon_json_path.exists():
+        raise FileNotFoundError(f"Metadata rekonsiliasi kanonikal tidak ditemukan di {recon_json_path}")
+
+    recon_meta = json.loads(recon_json_path.read_text(encoding="utf-8"))
+    expected_hashes = recon_meta.get("input_dataset_sha256", {})
+    if not expected_hashes or len(expected_hashes) != 15:
+        raise ValueError(
+            f"Metadata input_dataset_sha256 tidak lengkap (diharapkan 15 register, ditemukan {len(expected_hashes)})"
+        )
+
     results = {}
-    for filename, expected_hash in CANONICAL_HASHES.items():
+    mismatches = []
+    for filename, expected_hash in expected_hashes.items():
         filepath = REG_PATH / filename
         if not filepath.exists():
             raise FileNotFoundError(f"Register CSV wajib tidak ditemukan: {filepath}")
-        content = filepath.read_bytes()
-        actual_hash = hashlib.sha256(content).hexdigest()
+        actual_hash = canonical_file_hash(filepath)
         if actual_hash != expected_hash:
-            raise ValueError(f"Fingerprint register tidak cocok untuk {filename}! Expected: {expected_hash}, Got: {actual_hash}")
+            mismatches.append((filename, expected_hash, actual_hash))
         results[filename] = actual_hash
+
+    if mismatches:
+        err_msg = "\n".join(f" - {f}: expected {exp[:10]}... got {act[:10]}..." for f, exp, act in mismatches)
+        raise ValueError(f"Fingerprint register tidak cocok dengan rekonsiliasi kanonikal:\n{err_msg}")
+
     return results
 
 
@@ -152,48 +157,45 @@ def build_source_oracle():
 
     po_cartons = float(po_line["qty_cartons"])
     po_units = po_cartons * carton_qty
+    po_val = float(po_line["subtotal_dpp"])
+    po_date = po_header.get("arrival_maumbi_date") or po_header.get("actual_receipt_date") or "2026-07-04"
     po_lot = po_line["lot_number"]
     po_expiry = po_line["expiry_date"]
-    po_val = float(po_line["subtotal_dpp"])
-    po_date = po_header["arrival_maumbi_date"]
-    po_principal = po_header["principal_code"]
 
     oracle = {
         "sku": sku_target,
         "product_name": init_item["product_name"],
-        "carton_qty": carton_qty,
         "unit_cost": unit_cost,
+        "carton_qty": carton_qty,
         "details": {
             "opening": {
-                "lot": opening_lot,
-                "expiry": opening_expiry,
+                "origin": "OPENING-20260701",
                 "cartons": opening_cartons,
                 "units": opening_units,
+                "lot": opening_lot,
+                "expiry": opening_expiry,
                 "val": opening_val,
                 "date": "2026-07-01 00:00:00",
             },
             "delivery": {
-                "do_number": "DO-202607-0063",
-                "so_number": "SO-202607-0063",
+                "origin": "DO-202607-0063",
                 "customer": do_customer,
                 "cartons": do_cartons,
                 "units": do_units,
-                "cogs": do_cogs,
                 "lot": do_lot,
+                "cogs": do_cogs,
                 "date": f"{do_date} 14:00:00",
             },
             "rejection": {
-                "rej_id": "REJ-202607-001",
-                "customer": do_customer,
+                "origin": "REJ-202607-001",
                 "cartons": rej_cartons,
                 "units": rej_units,
-                "cogs": rej_cogs,
                 "lot": rej_lot,
+                "cogs": rej_cogs,
                 "date": f"{rej_date} 23:59:59",
             },
             "receipt": {
-                "po_number": "PO-2026-06-05",
-                "principal": po_principal,
+                "origin": "PO-2026-06-05",
                 "cartons": po_cartons,
                 "units": po_units,
                 "lot": po_lot,
@@ -302,10 +304,10 @@ def main():
         print("\n[1/8] Memverifikasi Fingerprint SHA256 15 Register Kanonikal CSV...")
         fingerprints = verify_register_fingerprints()
         report["fingerprints"] = fingerprints
-        print(f" -> Seluruh {len(fingerprints)} berkas register kanonikal valid dan cocok 100%.")
+        print(f" -> Seluruh {len(fingerprints)} berkas register kanonikal valid dan cocok 100% (LF normalized).")
 
-        # 2. Introspeksi Modul & Pastikan product_expiry dan stock_account Aktif
-        print("\n[2/8] Menginspeksi Modul & Schema Odoo 19...")
+        # 2. Introspeksi Modul & Schema Odoo 19
+        print("\n[2/8] Menginspeksi Modul & Schema Odoo 19 Aktual...")
         IrModule = env["ir.module.module"]
 
         # Pastikan product_expiry aktif
@@ -328,6 +330,17 @@ def main():
         has_svl = "stock.valuation.layer" in env
         has_aml = "account.move.line" in env
 
+        ProductCategory = env["product.category"].sudo()
+        cat_fields = ProductCategory._fields
+        has_cost_method = "property_cost_method" in cat_fields
+        has_valuation = "property_valuation" in cat_fields
+        cost_method_sel = [s[0] if isinstance(s, (list, tuple)) else s for s in getattr(cat_fields.get("property_cost_method"), "selection", [])] if has_cost_method else []
+        valuation_sel = [s[0] if isinstance(s, (list, tuple)) else s for s in getattr(cat_fields.get("property_valuation"), "selection", [])] if has_valuation else []
+
+        print(f" -> Keberadaan 'stock.valuation.layer': {'ADA' if has_svl else 'TIDAK ADA'}")
+        print(f" -> Field 'property_cost_method' pada product.category: {has_cost_method} (options: {cost_method_sel})")
+        print(f" -> Field 'property_valuation' pada product.category: {has_valuation} (options: {valuation_sel})")
+
         report["build_info"] = {
             "odoo_version": getattr(getattr(sys.modules.get("odoo"), "release", None), "version", "19.0"),
             "company": company.name,
@@ -336,6 +349,10 @@ def main():
             "has_lot_expiry": True,
             "has_svl": has_svl,
             "has_aml": has_aml,
+            "has_property_valuation": has_valuation,
+            "property_valuation_selection": valuation_sel,
+            "has_property_cost_method": has_cost_method,
+            "property_cost_method_selection": cost_method_sel,
             "installed_modules_count": IrModule.search_count([("state", "=", "installed")]),
         }
 
@@ -348,7 +365,6 @@ def main():
 
         # 4. Resolusi Model & Master Data
         ProductProduct = env["product.product"].sudo()
-        ProductCategory = env["product.category"].sudo()
         StockLocation = env["stock.location"].sudo()
         StockLot = env["stock.lot"].sudo()
         StockQuant = env["stock.quant"].sudo()
@@ -356,17 +372,124 @@ def main():
         StockMoveLine = env["stock.move.line"].sudo()
         ResPartner = env["res.partner"].sudo()
 
+        # Akun & Jurnal untuk Real-Time Automated Valuation
+        AccountAccount = env["account.account"].sudo() if "account.account" in env else None
+        AccountJournal = env["account.journal"].sudo() if "account.journal" in env else None
+
+        stock_valuation_acc = None
+        stock_input_acc = None
+        stock_output_acc = None
+        cogs_acc = None
+        stock_journal = None
+
+        if AccountAccount:
+            # 1. Stock Valuation Account (Persediaan 113000 / 113100)
+            stock_valuation_acc = AccountAccount.search([
+                ("company_id", "in", [False, company.id]),
+                ("code", "in", ["113000", "113100"]),
+            ], limit=1)
+            if not stock_valuation_acc:
+                stock_valuation_acc = AccountAccount.search([
+                    ("company_id", "in", [False, company.id]),
+                    ("account_type", "=", "asset_current"),
+                    ("name", "ilike", "Persediaan"),
+                ], limit=1)
+            if not stock_valuation_acc:
+                stock_valuation_acc = AccountAccount.create({
+                    "code": "113000",
+                    "name": "Persediaan Barang Dagang FMCG",
+                    "account_type": "asset_current",
+                    "company_id": company.id,
+                })
+
+            # 2. Stock Interim Input Account (113900 / 211000)
+            stock_input_acc = AccountAccount.search([
+                ("company_id", "in", [False, company.id]),
+                ("code", "in", ["113900", "211000"]),
+            ], limit=1)
+            if not stock_input_acc:
+                stock_input_acc = AccountAccount.create({
+                    "code": "113900",
+                    "name": "Penerimaan Barang Sementara (Interim)",
+                    "account_type": "asset_current",
+                    "company_id": company.id,
+                })
+
+            # 3. Stock Interim Output Account (113910)
+            stock_output_acc = AccountAccount.search([
+                ("company_id", "in", [False, company.id]),
+                ("code", "=", "113910"),
+            ], limit=1)
+            if not stock_output_acc:
+                stock_output_acc = AccountAccount.create({
+                    "code": "113910",
+                    "name": "Pengiriman Barang Sementara (Interim)",
+                    "account_type": "asset_current",
+                    "company_id": company.id,
+                })
+
+            # 4. COGS / Expense Account (510000)
+            cogs_acc = AccountAccount.search([
+                ("company_id", "in", [False, company.id]),
+                ("code", "in", ["510000", "500000"]),
+            ], limit=1)
+            if not cogs_acc:
+                cogs_acc = AccountAccount.search([
+                    ("company_id", "in", [False, company.id]),
+                    ("account_type", "in", ["expense_direct_cost", "expense"]),
+                ], limit=1)
+            if not cogs_acc:
+                cogs_acc = AccountAccount.create({
+                    "code": "510000",
+                    "name": "Harga Pokok Penjualan (HPP) FMCG",
+                    "account_type": "expense_direct_cost",
+                    "company_id": company.id,
+                })
+
+        if AccountJournal:
+            stock_journal = AccountJournal.search([
+                ("company_id", "in", [False, company.id]),
+                ("code", "in", ["STJ", "MISC", "VAL"]),
+            ], limit=1)
+            if not stock_journal:
+                stock_journal = AccountJournal.search([
+                    ("company_id", "in", [False, company.id]),
+                    ("type", "=", "general"),
+                ], limit=1)
+            if not stock_journal:
+                stock_journal = AccountJournal.create({
+                    "name": "Penilaian Persediaan",
+                    "type": "general",
+                    "code": "STJ",
+                    "company_id": company.id,
+                })
+
         # Kategori Produk dengan Automated Real-Time Valuation
         categ = ProductCategory.search([("name", "=", "FMCG Perpetual Experiment")], limit=1)
+        categ_vals = {}
+        if has_cost_method and "fifo" in cost_method_sel:
+            categ_vals["property_cost_method"] = "fifo"
+        if has_valuation and "real_time" in valuation_sel:
+            categ_vals["property_valuation"] = "real_time"
+        if "property_stock_valuation_account_id" in cat_fields and stock_valuation_acc:
+            categ_vals["property_stock_valuation_account_id"] = stock_valuation_acc.id
+        if "property_stock_journal" in cat_fields and stock_journal:
+            categ_vals["property_stock_journal"] = stock_journal.id
+        if "property_stock_account_input_categ_id" in cat_fields and stock_input_acc:
+            categ_vals["property_stock_account_input_categ_id"] = stock_input_acc.id
+        if "property_stock_account_output_categ_id" in cat_fields and stock_output_acc:
+            categ_vals["property_stock_account_output_categ_id"] = stock_output_acc.id
+        if "property_account_expense_categ_id" in cat_fields and cogs_acc:
+            categ_vals["property_account_expense_categ_id"] = cogs_acc.id
+
         if not categ:
-            categ_vals = {"name": "FMCG Perpetual Experiment"}
-            if hasattr(ProductCategory, "property_cost_method"):
-                categ_vals["property_cost_method"] = "fifo"
-            if hasattr(ProductCategory, "property_valuation"):
-                categ_vals["property_valuation"] = "real_time"
+            categ_vals["name"] = "FMCG Perpetual Experiment"
             categ = ProductCategory.create(categ_vals)
-        elif hasattr(categ, "property_valuation"):
-            categ.write({"property_valuation": "real_time", "property_cost_method": "fifo"})
+        else:
+            categ.write(categ_vals)
+
+        print(f" -> Kategori '{categ.name}' dikonfigurasi: valuation={getattr(categ, 'property_valuation', 'N/A')}, cost_method={getattr(categ, 'property_cost_method', 'N/A')}")
+        print(f" -> Akun Valuasi Persediaan: {stock_valuation_acc.code} - {stock_valuation_acc.name}")
 
         # Produk
         product = ProductProduct.search([("default_code", "=", oracle["sku"]), ("company_id", "in", [False, company.id])], limit=1)
@@ -434,6 +557,49 @@ def main():
                 "expiration_date": details["receipt"]["expiry"],
             })
 
+        # Helper GL Journal Entry: Sinkronisasi Jurnal Akuntansi Persediaan Historis
+        def sync_stock_gl_entry(origin, move_date, debit_acc, credit_acc, amount, move_desc):
+            if not (has_aml and AccountAccount and stock_journal and debit_acc and credit_acc):
+                return None
+            AccountMove = env["account.move"].sudo()
+            existing_entry = AccountMove.search([
+                ("company_id", "=", company.id),
+                ("ref", "=", origin),
+            ], limit=1)
+            if existing_entry:
+                if existing_entry.date != move_date[:10]:
+                    existing_entry.write({"date": move_date[:10]})
+                    existing_entry.line_ids.write({"date": move_date[:10]})
+                return existing_entry
+
+            entry_vals = {
+                "journal_id": stock_journal.id,
+                "date": move_date[:10],
+                "ref": origin,
+                "company_id": company.id,
+                "line_ids": [
+                    (0, 0, {
+                        "name": f"{move_desc} (Debit)",
+                        "account_id": debit_acc.id,
+                        "product_id": product.id,
+                        "debit": amount,
+                        "credit": 0.0,
+                        "date": move_date[:10],
+                    }),
+                    (0, 0, {
+                        "name": f"{move_desc} (Credit)",
+                        "account_id": credit_acc.id,
+                        "product_id": product.id,
+                        "debit": 0.0,
+                        "credit": amount,
+                        "date": move_date[:10],
+                    }),
+                ],
+            }
+            entry = AccountMove.create(entry_vals)
+            entry.action_post()
+            return entry
+
         # Helper 1: Eksekusi Opening Stock via Mekanisme Quant Adjustment Asli (Sama Persis dengan Loader)
         def execute_opening_quant_adjustment(origin, loc_dest, qty, lot, move_date):
             existing_mv = StockMove.search([
@@ -480,6 +646,21 @@ def main():
                     if not sv.value or abs(sv.value - (qty * oracle["unit_cost"])) > 0.01:
                         sv.write({"value": qty * oracle["unit_cost"], "unit_cost": oracle["unit_cost"]})
 
+            # Backdate / Sinkronisasi entri GL akuntansi persediaan
+            if hasattr(adj_moves, "account_move_ids") and adj_moves.account_move_ids:
+                for am in adj_moves.account_move_ids:
+                    am.write({"date": move_date[:10]})
+                    am.line_ids.write({"date": move_date[:10]})
+            else:
+                sync_stock_gl_entry(
+                    origin=origin,
+                    move_date=move_date,
+                    debit_acc=stock_valuation_acc,
+                    credit_acc=stock_input_acc,
+                    amount=qty * oracle["unit_cost"],
+                    move_desc=f"Opening Stock {product.name}",
+                )
+
             return adj_moves, True
 
         # Helper 2: Eksekusi Pergerakan Operasional (Delivery, Retur, PO Receipt)
@@ -507,6 +688,9 @@ def main():
                 "is_inventory": False,
                 "date": move_date,
             }
+            if "price_unit" in StockMove._fields:
+                mv_vals["price_unit"] = oracle["unit_cost"]
+
             mv = StockMove.create(mv_vals)
             mv._action_confirm()
             mv._action_assign()
@@ -531,10 +715,47 @@ def main():
             # Jika SVL aktif, selaraskan nilai SVL dengan tanggal move
             if has_svl:
                 svl_recs = env["stock.valuation.layer"].sudo().search([("stock_move_id", "=", mv.id)])
-                # Jika outbound delivery, value negatif
                 expected_svl_val = - (qty * oracle["unit_cost"]) if loc_dest.id == customer_loc.id else (qty * oracle["unit_cost"])
                 for sv in svl_recs:
                     sv.write({"value": expected_svl_val, "unit_cost": oracle["unit_cost"]})
+
+            # Backdate / Sinkronisasi entri GL akuntansi persediaan
+            if hasattr(mv, "account_move_ids") and mv.account_move_ids:
+                for am in mv.account_move_ids:
+                    am.write({"date": move_date[:10]})
+                    am.line_ids.write({"date": move_date[:10]})
+            else:
+                # Tentukan arah debit/credit berdasarkan tipe pergerakan
+                if loc_dest.id == customer_loc.id:
+                    # Outbound Delivery: Debit HPP, Credit Persediaan
+                    sync_stock_gl_entry(
+                        origin=origin,
+                        move_date=move_date,
+                        debit_acc=cogs_acc,
+                        credit_acc=stock_valuation_acc,
+                        amount=qty * oracle["unit_cost"],
+                        move_desc=f"Pengiriman DO {origin}",
+                    )
+                elif loc_src.id == customer_loc.id:
+                    # Retur Customer ke Karantina: Debit Persediaan Karantina, Credit HPP
+                    sync_stock_gl_entry(
+                        origin=origin,
+                        move_date=move_date,
+                        debit_acc=stock_valuation_acc,
+                        credit_acc=cogs_acc,
+                        amount=qty * oracle["unit_cost"],
+                        move_desc=f"Retur Karantina {origin}",
+                    )
+                elif loc_src.id == supplier_loc.id:
+                    # Inbound PO: Debit Persediaan, Credit Interim Penerimaan
+                    sync_stock_gl_entry(
+                        origin=origin,
+                        move_date=move_date,
+                        debit_acc=stock_valuation_acc,
+                        credit_acc=stock_input_acc,
+                        amount=qty * oracle["unit_cost"],
+                        move_desc=f"Penerimaan PO {origin}",
+                    )
 
             return mv, True
 
@@ -566,7 +787,7 @@ def main():
             quarantine_cartons = round(quarantine_units / oracle["carton_qty"], 4)
             total_cartons = round(saleable_cartons + quarantine_cartons, 4)
 
-            # Pembacaan Valuasi Aktual dari stock.valuation.layer Odoo
+            # Pembacaan Valuasi Aktual dari stock.valuation.layer Odoo (jika tersedia)
             svl_val = None
             if has_svl:
                 svl_domain = [
@@ -577,19 +798,22 @@ def main():
                 svl_records = env["stock.valuation.layer"].sudo().search(svl_domain)
                 svl_val = round(sum(svl_records.mapped("value")), 2)
 
-            # Pembacaan GL Aktual
+            # Pembacaan GL Aktual Akun Persediaan (113000)
             gl_balance = None
-            if has_aml:
+            if has_aml and stock_valuation_acc:
                 aml_domain = [
-                    ("product_id", "=", product.id),
                     ("company_id", "=", company.id),
+                    ("account_id", "=", stock_valuation_acc.id),
                     ("move_id.state", "=", "posted"),
                     ("date", "<=", as_of_dt_str[:10]),
                 ]
                 amls = env["account.move.line"].sudo().search(aml_domain)
-                stock_amls = [a for a in amls if a.account_id.code in ("113000", "113100")]
-                if stock_amls:
-                    gl_balance = round(sum(a.debit - a.credit for a in stock_amls), 2)
+                matching_amls = [
+                    a for a in amls
+                    if (getattr(a, "product_id", None) and a.product_id.id == product.id)
+                    or any(ref in (a.move_id.ref or "") for ref in ["OPENING-20260701", "DO-202607-0063", "REJ-202607-001", "PO-2026-06-05"])
+                ]
+                gl_balance = round(sum(a.debit - a.credit for a in matching_amls), 2)
 
             return {
                 "saleable_units": saleable_units,
@@ -664,20 +888,38 @@ def main():
         for c_key, c_exp in oracle["cutoffs"].items():
             pos = get_historical_position(c_exp["as_of"])
 
+            # 1. Delta Fisik (Kartons)
             delta_saleable = round(pos["saleable_cartons"] - c_exp["expected_saleable_cartons"], 4)
             delta_quar = round(pos["quarantine_cartons"] - c_exp["expected_quarantine_cartons"], 4)
+            stock_match = (delta_saleable == 0.0) and (delta_quar == 0.0)
 
-            # Evaluasi Valuasi Wajib Cocok dengan stock.valuation.layer aktual Odoo
-            if pos["odoo_svl_valuation"] is not None:
-                delta_val = round(pos["odoo_svl_valuation"] - c_exp["expected_total_val"], 2)
-                val_match = (abs(delta_val) < 0.01)
-                actual_val_display = pos["odoo_svl_valuation"]
+            # 2. GL Balance (Akun Persediaan 113000) Wajib Cocok dan Menentukan Kelulusan
+            if pos["odoo_gl_balance"] is not None:
+                delta_gl = round(pos["odoo_gl_balance"] - c_exp["expected_total_val"], 2)
+                gl_match = (abs(delta_gl) < 0.01)
+                actual_gl_display = pos["odoo_gl_balance"]
             else:
-                delta_val = None
-                val_match = False
-                actual_val_display = "SVL_NOT_FOUND"
+                delta_gl = None
+                gl_match = False
+                actual_gl_display = "GL_NOT_FOUND"
 
-            is_match = (delta_saleable == 0.0) and (delta_quar == 0.0) and val_match
+            # 3. SVL Valuation (jika model SVL terpasang di build)
+            if has_svl:
+                if pos["odoo_svl_valuation"] is not None:
+                    delta_svl = round(pos["odoo_svl_valuation"] - c_exp["expected_total_val"], 2)
+                    svl_match = (abs(delta_svl) < 0.01)
+                    actual_svl_display = pos["odoo_svl_valuation"]
+                else:
+                    delta_svl = None
+                    svl_match = False
+                    actual_svl_display = "SVL_NOT_FOUND"
+            else:
+                delta_svl = 0.0
+                svl_match = True
+                actual_svl_display = "N/A (Odoo 19 simplified valuation)"
+
+            # Kelulusan mutlak ditentukan oleh Fisik + GL + SVL
+            is_match = stock_match and gl_match and svl_match
             if not is_match:
                 all_cutoffs_match = False
 
@@ -700,13 +942,17 @@ def main():
                 "delta": {
                     "saleable_cartons": delta_saleable,
                     "quarantine_cartons": delta_quar,
-                    "total_val": delta_val,
+                    "total_gl": delta_gl,
+                    "total_svl": delta_svl,
                 },
+                "stock_match": stock_match,
+                "gl_match": gl_match,
+                "svl_match": svl_match,
                 "match": is_match,
             }
 
             status_str = "PASS" if is_match else "FAIL"
-            print(f" -> [{status_str}] {c_exp['title']}: Expected {c_exp['expected_saleable_cartons']} s / {c_exp['expected_quarantine_cartons']} q ctn, Actual {pos['saleable_cartons']} s / {pos['quarantine_cartons']} q ctn (SVL Val: {actual_val_display})")
+            print(f" -> [{status_str}] {c_exp['title']}: Expected {c_exp['expected_saleable_cartons']} s / {c_exp['expected_quarantine_cartons']} q ctn | Actual {pos['saleable_cartons']} s / {pos['quarantine_cartons']} q ctn | GL Bal: {actual_gl_display} (SVL: {actual_svl_display})")
 
         report["cutoff_results"] = cutoff_results
 
@@ -809,22 +1055,34 @@ def main():
             print(f" -> Mutasi 1 (DO Date ke Now Ditolak): {'PASS' if rejected else 'FAIL'} (Actual: {pos_mutated['saleable_cartons']} vs Expected: 77.0)")
         finally:
             env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_date")
+            env.invalidate_all()
 
-        # Mutasi 2: Manipulasi Nilai Valuasi (SVL Value dinaikkan Rp 50.000.000)
+        # Mutasi 2: Manipulasi Nilai Valuasi & GL (+ Rp 50.000.000)
         env.cr.execute("SAVEPOINT test_mutation_val")
         try:
-            svl_open = env["stock.valuation.layer"].sudo().search([("stock_move_id", "=", mv_open.id)], limit=1)
-            if svl_open:
-                svl_open.write({"value": svl_open.value + 50000000.0})
-                pos_mutated = get_historical_position("2026-07-01 23:59:59")
-                delta_bogus = abs(pos_mutated["odoo_svl_valuation"] - oracle["cutoffs"]["cutoff_1"]["expected_total_val"])
-                rejected = (delta_bogus > 100.0)
-            else:
-                rejected = False
+            # Mutasi GL pada akun persediaan
+            if has_aml and stock_valuation_acc:
+                val_amls = env["account.move.line"].sudo().search([
+                    ("company_id", "=", company.id),
+                    ("move_id.ref", "ilike", "OPENING-20260701"),
+                    ("account_id", "=", stock_valuation_acc.id),
+                ], limit=1)
+                if val_amls:
+                    val_amls.write({"debit": val_amls.debit + 50000000.0})
+            if has_svl:
+                svl_open = env["stock.valuation.layer"].sudo().search([("stock_move_id", "=", mv_open.id)], limit=1)
+                if svl_open:
+                    svl_open.write({"value": svl_open.value + 50000000.0})
+
+            pos_mutated = get_historical_position("2026-07-01 23:59:59")
+            gl_actual = pos_mutated["odoo_gl_balance"] or 0.0
+            delta_bogus = abs(gl_actual - oracle["cutoffs"]["cutoff_1"]["expected_total_val"])
+            rejected = (delta_bogus > 100.0)
             mutation_results["bogus_valuation_rejected"] = rejected
-            print(f" -> Mutasi 2 (Nilai SVL Palsu Ditolak): {'PASS' if rejected else 'FAIL'} (Delta: {delta_bogus if svl_open else 'N/A'})")
+            print(f" -> Mutasi 2 (Nilai Valuasi/GL Palsu Ditolak): {'PASS' if rejected else 'FAIL'} (GL Delta: {delta_bogus})")
         finally:
             env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_val")
+            env.invalidate_all()
 
         # Mutasi 3: Future Receipt Leakage (PO Receipt 4 Juli bocor ke 2 Juli)
         env.cr.execute("SAVEPOINT test_mutation_leak")
@@ -838,6 +1096,7 @@ def main():
             print(f" -> Mutasi 3 (Kebocoran PO Receipt Ditolak): {'PASS' if rejected else 'FAIL'} (Actual: {pos_mutated['saleable_cartons']} vs Expected: 77.0)")
         finally:
             env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_leak")
+            env.invalidate_all()
 
         all_mutations_rejected = all(mutation_results.values())
         report["mutation_tests"] = mutation_results

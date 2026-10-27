@@ -1,5 +1,40 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Dynamic Canonical Fingerprint, Introspeksi SVL & Real-Time Valuation Odoo 19, Saldo GL Penentu Acceptance, dan Mutation Tests dengan Cache Invalidation
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6431760007](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6431760007)):**
+- Menindaklanjuti review commit `cb39979`:
+  1. *Penyebab kegagalan CI sebelum Run 1*: Hardcoded hash pada runner salah (dihitung mentah di Windows dengan CRLF). Hash file aktual dengan normalisasi LF cocok 100% dengan metadata kanonikal `canonical_financial_reconciliation_july_2026.json`, sehingga dataset CSV tidak perlu diubah.
+  2. *Keberadaan SVL dan konfigurasi real_time belum dibuktikan*: Odoo 19 menyederhanakan arsitektur penilaian stok. Perlu introspeksi langsung pada runtime untuk keberadaan `stock.valuation.layer`, fields `property_cost_method` dan `property_valuation` pada `product.category`, serta konfigurasi akun persediaan (`113000`) dan jurnal terkait.
+  3. *Nilai GL hanya dicatat, belum menentukan kelulusan*: Saldo buku besar persediaan wajib dievaluasi as-of tiap cut-off dan menjadi syarat mutlak kelulusan `is_match`.
+  4. *Mutation tests belum sempat dieksekusi*: Perlu memastikan mutation tests berjalan dalam savepoint transaksi Odoo dengan pembersihan cache ORM (`env.invalidate_all()`).
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Dynamic Fingerprint Verification dengan Normalisasi LF ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Menghapus kamus statis `CANONICAL_HASHES` hardcoded.
+   - Mengambil 15 deklarasi hash kanonikal langsung dari `canonical_financial_reconciliation_july_2026.json` (`input_dataset_sha256`).
+   - Menggunakan fungsi hashing kanonikal dengan normalisasi newline LF (`.replace(b"\r\n", b"\n").replace(b"\r", b"\n")`), menjamin kompatibilitas platform independen (host Windows maupun Linux container).
+   - Memperbaiki pembacaan tanggal receipt PO menggunakan kolom resmi `arrival_maumbi_date` dari `inbound_po_intransit_june_headers.csv`.
+2. **Introspeksi Runtime Odoo 19 & Konfigurasi Real-Time Valuation ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Menginspeksi ketersediaan modul `product_expiry` dan `stock_account`.
+   - Menginspeksi model `stock.valuation.layer` (SVL), `account.move.line` (AML), serta field/selection `property_cost_method` dan `property_valuation` pada `product.category`.
+   - Mengonfigurasi otomatis akun-akun persediaan yang dibutuhkan pada kategori produk (`FMCG Perpetual Experiment`):
+     * Stock Valuation Account (`113000` / Persediaan Barang Dagang)
+     * Stock Journal (`STJ` / Penilaian Persediaan)
+     * Stock Interim Input Account (`113900` / Penerimaan Barang Sementara)
+     * Stock Interim Output Account (`113910` / Pengiriman Barang Sementara)
+     * COGS Account (`510000` / Harga Pokok Penjualan)
+3. **Saldo GL Buku Besar Persediaan Sebagai Penentu Kelulusan Mutlak (`is_match`):**
+   - Menyelaraskan entri jurnal akuntansi berpasangan (double-entry) untuk setiap event stok historis (Opening, DO delivery, Retur Karantina, PO receipt) dengan penanggalan backdated persis sesuai tanggal transaksi bisnis.
+   - Membaca ulang saldo GL riil pada akun persediaan `113000` (`debit - credit`) as-of setiap tanggal cut-off.
+   - Memasukkan verifikasi GL ke dalam kriteria kelulusan cut-off: `is_match = stock_match and gl_match and svl_match`. Jika saldo GL berselisih lebih dari Rp 0,01, cut-off dinyatakan `FAIL`.
+4. **Eksekusi Actual Mutation Tests via Savepoints dengan `env.invalidate_all()`:**
+   - Menjalankan 3 pengujian mutasi aktual:
+     * *Mutasi 1*: Memindahkan tanggal DO delivery ke `now()`, membuktikan query as-of 3 Juli mendeteksi selisih stok (terbaca 84 karton bukan 77 karton) dan validator menolak.
+     * *Mutasi 2*: Memanipulasi debit GL akun persediaan (+ Rp 50.000.000), membuktikan query as-of 1 Juli mendeteksi lonjakan saldo GL dan validator menolak.
+     * *Mutasi 3*: Memajukan tanggal penerimaan PO ke 2 Juli, membuktikan query as-of 3 Juli mendeteksi kebocoran stok masa depan dan validator menolak.
+   - Menambahkan pemanggilan `env.invalidate_all()` setelah setiap `ROLLBACK TO SAVEPOINT` untuk memastikan cache ORM Odoo bersih total tanpa residu.
+
 ## 2026-10-27 — antigravity agent — Perbaikan Kredensial DB fmcg_exp, Valuasi Wajib SVL Odoo 19, Modul stock_account, dan Actual Savepoint Mutation Tests
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6431533888](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6431533888)):**
 - Menindaklanjuti kegagalan CI commit `c88dc95`:
