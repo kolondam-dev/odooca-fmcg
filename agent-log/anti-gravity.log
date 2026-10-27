@@ -704,4 +704,12 @@
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T17:44:00+07:00
 
+[2026-10-27T17:51:00+07:00] [INFO] Eliminasi Query Un-stored lot_ids pada stock.move Opening Stock
+- Menindaklanjuti kegagalan CI run 40490849506 (ValueError: Cannot convert stock.move.lot_ids to SQL because it is not stored):
+  * Pada Odoo 19, field lot_ids di stock.move adalah compute field tanpa store=True, sehingga melempar error saat disertakan dalam search domain SQL.
+  * Mengubah search domain StockMove pada load_opening_stock hanya memakai stored fields (product_id, location_dest_id, origin, state), lalu melakukan pencocokan lot secara in-memory melalui move_line_ids.
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), unit tests (Ran 37 tests: OK, 43 invariant tests: OK, 28 acceptance tests: OK).
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T17:51:00+07:00
+
 

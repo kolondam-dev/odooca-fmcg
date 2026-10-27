@@ -654,9 +654,18 @@ class CanonicalPerpetualAdapter:
                     ("origin", "=", "OPENING-20260701"),
                     ("state", "=", "done"),
                 ]
-                if lot_id:
-                    mv_domain.append(("lot_ids", "in", [lot_id]))
-                opening_move_exists = bool(StockMove.search(mv_domain, limit=1))
+                opening_moves = StockMove.search(mv_domain)
+                if lot_id and opening_moves:
+                    moves_iter = opening_moves if hasattr(opening_moves, "__iter__") else [opening_moves]
+                    opening_move_exists = any(
+                        any(
+                            getattr(getattr(ml, "lot_id", None), "id", getattr(ml, "lot_id", None)) == lot_id
+                            for ml in getattr(m, "move_line_ids", [])
+                        )
+                        for m in moves_iter
+                    )
+                else:
+                    opening_move_exists = bool(opening_moves)
 
             domain = [("product_id", "=", prod.id), ("location_id", "=", warehouse_loc.id)]
             if lot_id:
