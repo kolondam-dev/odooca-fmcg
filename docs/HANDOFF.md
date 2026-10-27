@@ -1,5 +1,24 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Lifecycle Dokumen Native stock.picking untuk Referensi stock.move & Verifikasi Fail-Fast Tanggal Jurnal
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6433876562](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6433876562)):**
+- Menindaklanjuti review commit `ae7caf7`:
+  1. *Opening berhasil membentuk jurnal native posted bertanggal 1 Juli*: Mekanisme opening adjustment telah valid dan terbukti membentuk jurnal Odoo 19 native.
+  2. *TypeError saat delivery*: `TypeError: unsupported operand type(s) for +: 'bool' and 'str'`. Logika accounting Odoo 19 membaca `stock.move.reference` (yang dihitung dari `picking_id.name`). Move eksperimen sebelumnya dibuat telanjang tanpa dokumen `stock.picking`, menyebabkan `reference` bernilai boolean `False`. Supervisor menginstruksikan melengkapi lifecycle dokumen/picking native Odoo 19 secara elegan.
+  3. *Fail-Fast Tanggal Jurnal*: Verifikasi tanggal jurnal native yang tidak cocok tidak boleh hanya mencetak warning, melainkan harus fail-fast melempar exception jika ada perbedaan tanggal.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Dokumen Native `stock.picking` & Penyelarasan Referensi ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Melengkapi `execute_operational_movement` dengan pembuatan dan siklus hidup dokumen `stock.picking` native Odoo 19:
+     * Menentukan `stock.picking.type` yang sesuai (`outgoing` untuk delivery, `incoming` untuk receipt/return).
+     * Membuat `stock.picking` dengan `name = origin`, `partner_id`, dan `force_period_date`.
+     * Mengaitkan `mv.picking_id = picking.id`, `ml.picking_id = picking.id`, serta mengisi field `reference` secara resmi.
+     * Mengeliminasi `TypeError` saat `_create_account_move()` menyusun referensi jurnal akuntansi native.
+     * Menyelesaikan status picking ke `done` pasca move selesai.
+2. **Verifikasi Fail-Fast Tanggal Jurnal Native:**
+   - Memperbarui `find_and_backdate_native_account_moves`: jika tanggal jurnal native Odoo (`am.date`) berbeda dari target cut-off, sistem langsung melempar `ValueError` fail-fast, menjamin akurasi kronologis 100% tanpa kompromi.
+
 ## 2026-10-27 — antigravity agent — Eliminasi Rewrite Tanggal Jurnal Posted & Penyelarasan Mapping Counterpart Lokasi Non-Internal vs Internal
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6433723990](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6433723990)):**
 - Menindaklanjuti temuan review commit `d86341f`:

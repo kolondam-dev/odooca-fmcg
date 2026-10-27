@@ -347,7 +347,7 @@ def main():
         print(f" -> Keberadaan 'stock.valuation.layer': {'ADA' if has_svl else 'TIDAK ADA'}")
         print(f" -> Field 'property_cost_method' pada product.category: {has_cost_method} (options: {cost_method_sel})")
         print(f" -> Field 'property_valuation' pada product.category: {has_valuation} (options: {valuation_sel})")
-        print(f" -> Audit stock.move fields: name={'name' in sm_fields}, desc={'description_picking' in sm_fields}, picked={'picked' in sm_fields}, price_unit={'price_unit' in sm_fields}, uom={'product_uom' in sm_fields}, uom_id={'product_uom_id' in sm_fields}, acc_move={'account_move_id' in sm_fields}, acc_moves={'account_move_ids' in sm_fields}")
+        print(f" -> Audit stock.move fields: name={'name' in sm_fields}, desc={'description_picking' in sm_fields}, picked={'picked' in sm_fields}, price_unit={'price_unit' in sm_fields}, uom={'product_uom' in sm_fields}, uom_id={'product_uom_id' in sm_fields}, ref={'reference' in sm_fields}, pick={'picking_id' in sm_fields}, acc_move={'account_move_id' in sm_fields}, acc_moves={'account_move_ids' in sm_fields}")
         print(f" -> Audit stock.move.line fields: quantity={'quantity' in sml_fields}, qty_done={'qty_done' in sml_fields}, lot_id={'lot_id' in sml_fields}")
         print(f" -> Audit stock.location fields: val_acc={'valuation_account_id' in sl_fields}, val_in={'valuation_in_account_id' in sl_fields}, val_out={'valuation_out_account_id' in sl_fields}")
         print(f" -> Audit account.move fields: stock_move_id={'stock_move_id' in am_fields}")
@@ -729,10 +729,12 @@ def main():
                         am.action_post()
                     except Exception as ex_post:
                         print(f" -> [Info ORM] action_post move {am.id}: {ex_post}")
-                else:
-                    # Move sudah posted: verifikasi bahwa force_period_date telah mengisi tanggal native dengan benar
-                    if str(am.date) != target_date:
-                        print(f" -> [WARN] Move {am.id} posted date ({am.date}) berbeda dari target ({target_date})")
+                # Verifikasi FAIL-FAST: tanggal native jurnal wajib cocok 100% dengan target cut-off
+                if str(am.date) != target_date:
+                    raise ValueError(
+                        f"[FAIL-FAST] Tanggal entri jurnal native {am.id} ({am.date}) "
+                        f"tidak cocok dengan target cut-off ({target_date})!"
+                    )
 
                 experiment_account_move_ids.add(am.id)
                 print(f" -> [Native Account Move] ID={am.id}, Ref={am.ref}, Date={am.date}, State={am.state}, Lines={len(am.line_ids)}")
@@ -787,8 +789,8 @@ def main():
             return adj_moves, True
 
         # Helper 2: Eksekusi Pergerakan Operasional Native Odoo 19 (Delivery, Retur, PO Receipt)
-        # (Loader murni: audit schema runtime menyeluruh tanpa ketergantungan field legacy)
-        def execute_operational_movement(origin, loc_src, loc_dest, qty, lot, move_date):
+        # Dilengkapi dokumen/picking native Odoo 19 agar move.reference valid (string) dan lifecycle akuntansi lengkap
+        def execute_operational_movement(origin, loc_src, loc_dest, qty, lot, move_date, partner=None):
             existing_mv = StockMove.search([
                 ("origin", "=", origin),
                 ("product_id", "=", product.id),
@@ -800,9 +802,49 @@ def main():
             if existing_mv:
                 return existing_mv, False
 
+            # Dapatkan partner jika belum ditentukan
+            if not partner:
+                if loc_dest.usage == "customer" or loc_src.usage == "customer":
+                    partner = customer
+                elif loc_src.usage == "supplier":
+                    partner = vendor
+
+            # Dapatkan tipe operasi stock.picking.type native
+            StockPickingType = env["stock.picking.type"].sudo()
+            ptype = False
+            if loc_dest.usage == "customer":
+                ptype = StockPickingType.search([("code", "=", "outgoing"), ("company_id", "in", [False, company.id])], limit=1)
+            elif loc_src.usage == "supplier":
+                ptype = StockPickingType.search([("code", "=", "incoming"), ("company_id", "in", [False, company.id])], limit=1)
+            elif loc_src.usage == "customer":
+                ptype = StockPickingType.search([("code", "=", "incoming"), ("company_id", "in", [False, company.id])], limit=1)
+                if not ptype:
+                    ptype = StockPickingType.search([("code", "=", "internal"), ("company_id", "in", [False, company.id])], limit=1)
+            if not ptype:
+                ptype = StockPickingType.search([("company_id", "in", [False, company.id])], limit=1)
+
+            # Buat atau temukan stock.picking native
+            StockPicking = env["stock.picking"].sudo()
+            picking = StockPicking.search([("origin", "=", origin), ("company_id", "=", company.id)], limit=1)
+            if not picking:
+                candidate_pick = {
+                    "name": origin,
+                    "origin": origin,
+                    "partner_id": partner.id if partner else False,
+                    "picking_type_id": ptype.id if ptype else False,
+                    "location_id": loc_src.id,
+                    "location_dest_id": loc_dest.id,
+                    "company_id": company.id,
+                    "scheduled_date": move_date,
+                    "date": move_date,
+                }
+                pick_vals = {k: v for k, v in candidate_pick.items() if k in StockPicking._fields}
+                picking = StockPicking.with_context(force_period_date=move_date[:10]).create(pick_vals)
+
             # Payload stock.move diaudit terhadap schema runtime Odoo 19
             candidate_mv = {
                 "origin": origin,
+                "picking_id": picking.id,
                 "product_id": product.id,
                 "product_uom": product.uom_id.id,
                 "product_uom_id": product.uom_id.id,
@@ -817,6 +859,11 @@ def main():
                 "description_picking": f"{origin} - {product.name}",
                 "price_unit": oracle["unit_cost"],
             }
+            if "reference" in StockMove._fields:
+                candidate_mv["reference"] = origin
+            if "partner_id" in StockMove._fields and partner:
+                candidate_mv["partner_id"] = partner.id
+
             mv_vals = {k: v for k, v in candidate_mv.items() if k in StockMove._fields}
 
             mv = StockMove.with_context(force_period_date=move_date[:10]).create(mv_vals)
@@ -835,11 +882,14 @@ def main():
                         upd_vals["qty_done"] = qty
                     if "date" in StockMoveLine._fields:
                         upd_vals["date"] = move_date
+                    if "picking_id" in StockMoveLine._fields:
+                        upd_vals["picking_id"] = picking.id
                     if upd_vals:
                         ml.write(upd_vals)
             else:
                 candidate_sml = {
                     "move_id": mv.id,
+                    "picking_id": picking.id,
                     "product_id": product.id,
                     "product_uom_id": product.uom_id.id,
                     "product_uom": product.uom_id.id,
@@ -857,6 +907,18 @@ def main():
             if "picked" in StockMove._fields:
                 mv.picked = True
             mv.with_context(force_period_date=move_date[:10])._action_done()
+
+            # Selesaikan status dokumen picking
+            if picking.state != "done":
+                if hasattr(picking, "_set_done"):
+                    try:
+                        picking._set_done()
+                    except Exception:
+                        picking.write({"state": "done"})
+                else:
+                    picking.write({"state": "done"})
+            if "date_done" in StockPicking._fields:
+                picking.write({"date_done": move_date})
 
             mv.write({"date": move_date})
             if hasattr(mv, "move_line_ids") and mv.move_line_ids:
