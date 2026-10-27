@@ -148,3 +148,8 @@
 - Branch agen/mobile-pod-corrections basis 4459bcb, stacked PR28 belum merged. Receipt rejected cocok UUID, immutable parent, new UUID/photo, CAS snapshot receipt, validasi lineage/media.
 - 175 unit +1 hosting +50 browser; typecheck/format/contracts/build/budget/Ruff/4 manifest PASS. CI setelah push, live terkunci, tidak merge/deploy/backend/seed/Railway.
 - Task managed by codex agent at 2026-10-27T22:05:41+07:00
+
+[2026-10-27T23:01:37+07:00] [INFO] Collection simulator terikat tagihan DO/trip
+- Basis main08b0050, branch agen/mobile-collection; capability fixture, cash/transfer, sumber saldo bertimestamp, Rupiah BigInt, CAS/dedup dan validator snapshot/media.
+- 208 unit +1 hosting +56 browser, typecheck/format/contracts/build/budget/Ruff/4 manifest PASS; ulang 6 collection setelah guard UI. CI sesudah push. Live terkunci, backend/seed/Railway tidak disentuh, belum merge/deploy.
+- Task managed by codex agent at 2026-10-27T23:01:37+07:00

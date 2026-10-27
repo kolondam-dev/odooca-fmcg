@@ -23,6 +23,7 @@ const actors: Record<string, Omit<Identity, "businessDate">> = {
         name: "Novry",
         title: "Driver • Trip Maumbi",
         roles: ["delivery", "hris"],
+        capabilities: ["collection.capture"],
     },
     canvass: {
         id: "DEMO-STEVEN",
@@ -30,6 +31,7 @@ const actors: Record<string, Omit<Identity, "businessDate">> = {
         name: "Steven",
         title: "Canvasser • Manado",
         roles: ["sales", "delivery", "hris"],
+        capabilities: ["collection.capture"],
     },
 };
 export class MockProvider implements FieldProvider {
@@ -163,6 +165,17 @@ export class MockProvider implements FieldProvider {
             ],
         }));
     }
+    async collectionTasks() {
+        return (await this.deliveryTasks()).map((delivery, i) => ({
+            delivery,
+            receivable_reference: `SIM-TAGIHAN-${i + 1}`,
+            amount_due: "1000000",
+            currency: "IDR" as const,
+            version: "SIM-COLLECTION-1",
+            issued_at: new Date().toISOString(),
+            capture_allowed: true as const,
+        }));
+    }
     async expensePolicy() {
         // Fixture only, never a company approval limit.
         return { version: "SIM-EXPENSE-POLICY-1", supervisor_limit: "250000" };
@@ -193,6 +206,7 @@ export class MockProvider implements FieldProvider {
             );
         const policyApproval = [
             "delivery.pod.submit",
+            "collection.receipt.submit",
             "field_expense.request",
             "field_expense.realization.submit",
             "sales.extra_call.request",

@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+    CollectionTaskSchema,
+    CollectionReceiptSchema,
+} from "../src/domain/collection-contracts.ts";
 import { readFileSync, writeFileSync } from "node:fs";
 import {
     CommandSchema,
@@ -36,12 +40,25 @@ function photoPairDependencies(schema) {
             supersedes_uuid: ["correction_reason"],
             correction_reason: ["supersedes_uuid"],
         };
+    if (schema.properties?.collection_version)
+        schema.allOf = [
+            {
+                if: {
+                    properties: { method: { const: "transfer" } },
+                    required: ["method"],
+                },
+                then: { required: ["transfer_reference"] },
+                else: { not: { required: ["transfer_reference"] } },
+            },
+        ];
     Object.values(schema).forEach(photoPairDependencies);
 }
 const schemas = Object.fromEntries(
     Object.entries({
         DeliveryPod: DeliveryPodSchema,
         DeliveryTask: DeliveryTaskSchema,
+        CollectionTask: CollectionTaskSchema,
+        CollectionReceipt: CollectionReceiptSchema,
         Command: CommandSchema,
         VisitCheckIn: VisitCheckInSchema,
         VisitCheckOut: VisitCheckoutSchema,
@@ -70,7 +87,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.8.0",
+        version: "0.9.0",
         description:
             "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
     },

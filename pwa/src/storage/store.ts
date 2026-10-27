@@ -3,6 +3,11 @@ import {
     type VisualEvidence,
 } from "../domain/evidence-package";
 import { validatePodCommit, assertPodSource } from "../domain/delivery";
+import {
+    assertCollectionSource,
+    validateCollectionCommit,
+} from "../domain/collection";
+import { collectionSourceKey } from "../domain/collection-contracts";
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import {
     ExpenseRealizationSchema,
@@ -94,6 +99,19 @@ export class FieldStore {
         await tx.done;
         return { rows, ledger: ledger?.value, morning: morning?.value };
     }
+    async collectionSyncState(owner: string, key: string, sourceKey: string) {
+        const tx = (await this.db).transaction(
+            ["outbox", "drafts"],
+            "readonly",
+        );
+        const [rows, ledger, source] = await Promise.all([
+            tx.objectStore("outbox").index("owner").getAll(owner),
+            tx.objectStore("drafts").get(`${owner}:${key}`),
+            tx.objectStore("drafts").get(`${owner}:${sourceKey}`),
+        ]);
+        await tx.done;
+        return { rows, ledger: ledger?.value, source: source?.value };
+    }
     async put(item: QueueItem) {
         await (await this.db).put("outbox", item);
     }
@@ -179,6 +197,29 @@ export class FieldStore {
                         .index("owner")
                         .getAll(item.owner),
                     old?.value,
+                );
+            }
+            if (item.command.type === "collection.receipt.submit") {
+                assertCollectionSource(
+                    (
+                        await tx
+                            .objectStore("drafts")
+                            .get(
+                                `${item.owner}:${collectionSourceKey(item.command.payload.source)}`,
+                            )
+                    )?.value,
+                    item.command.payload.source,
+                );
+                if (old)
+                    throw new Error("Tagihan sudah dicatat; perlu review.");
+                validateCollectionCommit(
+                    item,
+                    key,
+                    value,
+                    await tx
+                        .objectStore("outbox")
+                        .index("owner")
+                        .getAll(item.owner),
                 );
             }
             if (visitGuard) {

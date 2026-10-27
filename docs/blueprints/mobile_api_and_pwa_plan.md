@@ -1247,3 +1247,29 @@ live/budget (demo60,0 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. Screenshot
 ponsel ditinjau, setelah perubahan presentasi 6 browser POD diulang PASS. CI
 setelah publish. Tidak menyentuh backend/seed/loader/workflow/ruleset/Railway.
 Live terkunci, belum merge/deploy; PR bertumpuk di atas PR #28 yang belum merged.
+
+
+### Collection simulator — rencana implementasi setelah PR #29
+Basis main08b0050; branch agen/mobile-collection. Capability collection.capture
+simulasi terpisah dari delivery; tagihan fixture mengikat DO/trip/outlet/owner,
+tanggal/versi/saldo bertimestamp. Cash/transfer: nominal Rupiah integer string,
+pembayar, nomor tanda terima dan referensi transfer, foto/geofence wajib.
+Draft manual offline; CAS source+ledger+queue atomik, dedup tagihan/nomor bukti/
+ref transfer/foto antar tab. Restore dan pre-sync validator shared+recheck source
+sesudah await. Receipt selalu review, bukan pembayaran posted atau AR lunas.
+Satu pencatatan per tagihan simulasi (boleh nominal sebagian); cicilan lanjutan,
+koreksi/cancel, allocation multi-invoice, bank verification dan kasir settlement
+menunggu authority/backend. Tidak mensyaratkan receipt POD sebagai izin tagih;
+capability/penugasan tagihan sendiri menjadi source simulator. Live terkunci.
+
+**Hasil [F]:** CollectionWorkspace cash/transfer, capability fixture terpisah,
+DTO strict/Rupiah string+BigInt dan OpenAPI0.9 (conditional transfer reference),
+source+ledger+queue atomik, dedup tagihan/ref/foto, draft manual dan readonly.
+Restore/pre-sync memakai snapshot IndexedDB konsisten dan recheck sesudah hash.
+208 unit +1 hosting +56 browser lokal PASS; typecheck/format/contracts/demo+live/
+budget/Ruff/4 manifest PASS, screenshot ponsel ditinjau. Sesudah guard source UI
+diperketat, 6 browser collection diulang. CI diperiksa sesudah publish.
+Batas: satu capture per tagihan, reserve termasuk rejected; tidak mengubah saldo
+AR, belum cicilan lanjutan/koreksi/cancel, verifikasi bank/settlement kasir/GL.
+Source/capability client dan dedup hanya simulator satu owner/perangkat. Tidak
+menyentuh backend/seed/loader/workflow/ruleset/Railway, live tetap terkunci.
