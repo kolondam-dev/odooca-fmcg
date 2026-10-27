@@ -347,8 +347,8 @@ class CanonicalPerpetualAdapter:
         }
 
         User = self.env["res.users"].sudo() if "res.users" in self.env else None
-        if User and code in canonical_salesmen:
-            u = User.search([("login", "=", code)], limit=1)
+        if User is not None and code in canonical_salesmen:
+            u = User.with_context(active_test=False).search([("login", "=", code)], limit=1)
             if not u:
                 parts = sls_label.split(" - ", 1)
                 user_name = parts[1].strip() if len(parts) > 1 else canonical_salesmen[code]
