@@ -1,3 +1,4 @@
+import { assertLocalEvidence } from "./evidence-package";
 import {
     CommandSchema,
     ownerKey,
@@ -357,25 +358,14 @@ export class ExpenseSimulation {
             ...body.lines.map((l) => l.evidence),
             ...(body.fuel ? [body.fuel.before, body.fuel.after] : []),
         ];
-        for (const ref of refs) {
-            if (
-                !blobs.some(
-                    (e) =>
-                        e.key === `${ownerKey(this.identity)}:${ref.id}` &&
-                        e.owner === ownerKey(this.identity) &&
-                        e.blob instanceof Blob &&
-                        e.blob.size > 0 &&
-                        e.capturedAt === ref.capturedAt &&
-                        e.latitude === ref.latitude &&
-                        e.longitude === ref.longitude &&
-                        e.accuracy === ref.accuracy &&
-                        e.mapStatus === "pending",
-                )
-            )
-                throw new Error(
-                    "Foto lokal tidak ditemukan atau metadata bukti tidak cocok. Ambil ulang bukti.",
-                );
-        }
+        for (const ref of refs)
+            await assertLocalEvidence(
+                blobs.find(
+                    (e) => e.key === `${ownerKey(this.identity)}:${ref.id}`,
+                ),
+                ref,
+                ownerKey(this.identity),
+            );
         const commandUuid = crypto.randomUUID();
         return this.outbox.enqueue(
             "field_expense.realization.submit",

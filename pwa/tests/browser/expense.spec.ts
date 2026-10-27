@@ -1,5 +1,23 @@
 import { expect, test, type Page, type BrowserContext } from "@playwright/test";
 async function requestAdvance(page: Page, category = "meal") {
+    await page.addInitScript(() => {
+        const original = navigator.geolocation.getCurrentPosition.bind(
+            navigator.geolocation,
+        );
+        navigator.geolocation.getCurrentPosition = (ok, fail, options) =>
+            original(
+                (p) =>
+                    ok({
+                        coords: p.coords,
+                        timestamp: Date.now(),
+                        toJSON() {
+                            return {};
+                        },
+                    }),
+                fail,
+                options,
+            );
+    });
     await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
     await page.goto("./");
     await page
@@ -396,4 +414,116 @@ test("business rejection opens an auditable correction with a new UUID, leaving 
     await expect(
         page.getByLabel("Nominal realisasi 1 (Rp)", { exact: true }),
     ).toBeDisabled();
+});
+
+test("visual evidence package restores offline and rejects changed photo bytes", async ({
+    page,
+    context,
+}) => {
+    await requestAdvance(page);
+    await details(page, 1, "100000", "VISUAL-1");
+    await photo(page, context, "Foto struk 1");
+    const group = page.getByRole("group", {
+        name: "Foto struk 1",
+        exact: true,
+    });
+    await expect(
+        group.getByAltText("Pinpoint simulasi tanpa basemap"),
+    ).toBeVisible();
+    const meta = await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const rows = await new Promise<any[]>((resolve) => {
+            const r = db
+                .transaction("evidence")
+                .objectStore("evidence")
+                .getAll();
+            r.onsuccess = () => resolve(r.result);
+        });
+        db.close();
+        const e = rows[0],
+            digest = async (b: Blob) =>
+                [
+                    ...new Uint8Array(
+                        await crypto.subtle.digest(
+                            "SHA-256",
+                            await b.arrayBuffer(),
+                        ),
+                    ),
+                ]
+                    .map((n) => n.toString(16).padStart(2, "0"))
+                    .join("");
+        return {
+            kind: e.visual.kind,
+            photoOk: (await digest(e.blob)) === e.visual.photoSha256,
+            mapOk: (await digest(e.visual.map)) === e.visual.mapSha256,
+            size: e.blob.size,
+            mapSize: e.visual.map.size,
+            status: e.mapStatus,
+        };
+    });
+    expect(meta).toMatchObject({
+        kind: "simulation_grid",
+        photoOk: true,
+        mapOk: true,
+        status: "pending",
+    });
+    expect(meta.size).toBeLessThan(1048576);
+    expect(meta.mapSize).toBeLessThan(131072);
+    await group.screenshot({
+        path: `test-results/evidence-package-${test.info().project.name}.png`,
+    });
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await context.setOffline(true);
+    await page.reload();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await openExpenses(page);
+    await expect(
+        group.getByAltText("Pinpoint simulasi tanpa basemap"),
+    ).toBeVisible();
+    await expect(
+        group.getByAltText("Pratinjau foto bukti lokal"),
+    ).toBeVisible();
+    await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const tx = db.transaction("evidence", "readwrite");
+        const r = tx.objectStore("evidence").getAll();
+        r.onsuccess = () => {
+            const e = r.result[0];
+            e.blob = new Blob(["changed photo bytes"], { type: "image/jpeg" });
+            tx.objectStore("evidence").put(e);
+        };
+        await new Promise<void>((resolve, reject) => {
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+    });
+    await page
+        .getByRole("button", { name: "Kembali ke akun", exact: true })
+        .click();
+    await openExpenses(page);
+    await expect(group.getByAltText("Pratinjau foto bukti lokal")).toHaveCount(
+        0,
+    );
+    await expect(
+        group.getByAltText("Pinpoint simulasi tanpa basemap"),
+    ).toHaveCount(0);
+    await expect(
+        group.getByText("Foto lokal tidak dapat dipulihkan.", { exact: false }),
+    ).toBeVisible();
+    await page
+        .getByRole("button", {
+            name: "Simpan realisasi ke antrean demo",
+            exact: true,
+        })
+        .click();
+    await expect(page.getByRole("alert")).toContainText(/berubah|review/);
 });

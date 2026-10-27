@@ -1,3 +1,7 @@
+import {
+    assertLocalEvidence,
+    type VisualEvidence,
+} from "../domain/evidence-package";
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import {
     ExpenseRealizationSchema,
@@ -19,6 +23,7 @@ export type QueueState =
     | "rejected"
     | "auth_required";
 export interface QueueItem {
+    evidenceHold?: true;
     key: string;
     owner: string;
     command: Command;
@@ -34,7 +39,8 @@ interface Value {
     owner: string;
     value: unknown;
 }
-interface Evidence {
+export interface Evidence {
+    visual?: VisualEvidence;
     key: string;
     owner: string;
     blob: Blob;
@@ -261,7 +267,40 @@ export class FieldStore {
         await (await this.db).delete("drafts", `${owner}:${key}`);
     }
     async saveEvidence(e: Evidence) {
-        await (await this.db).put("evidence", e);
+        if (e.visual)
+            await assertLocalEvidence(
+                e,
+                {
+                    id: e.key.slice(e.owner.length + 1),
+                    capturedAt: e.capturedAt,
+                    latitude: e.latitude!,
+                    longitude: e.longitude!,
+                    accuracy: e.accuracy!,
+                    packageHash: e.visual.bindingSha256,
+                },
+                e.owner,
+            );
+        const tx = (await this.db).transaction("evidence", "readwrite");
+        const done = tx.done;
+        try {
+            const prior = await tx.store.get(e.key);
+            if (prior?.visual || (e.visual && prior))
+                throw new Error(
+                    "Paket bukti tersimpan immutable. Buat bukti baru.",
+                );
+            await tx.store.put(e);
+            await done;
+        } catch (error) {
+            try {
+                tx.abort();
+            } catch {}
+            await done.catch(() => {});
+            throw error;
+        }
+    }
+    async getEvidence(owner: string, id: string) {
+        const value = await (await this.db).get("evidence", `${owner}:${id}`);
+        return value?.owner === owner ? value : undefined;
     }
     async listEvidence(owner: string) {
         return (await this.db).getAllFromIndex("evidence", "owner", owner);

@@ -1,3 +1,7 @@
+import {
+    validatePackagedCommandEvidence,
+    EvidenceIntegrityError,
+} from "./evidence-package";
 import { visitDependenciesReady } from "./visit-dependencies";
 import { validateVisitSync, type VisitCommitGuard } from "./visit-validation";
 import {
@@ -135,6 +139,12 @@ export class Outbox {
                 this.changed();
                 try {
                     try {
+                        await validatePackagedCommandEvidence(
+                            item.command,
+                            this.owner,
+                            this.store,
+                        );
+                        delete item.evidenceHold;
                         const state = await this.store.visitSyncState(
                             this.owner,
                         );
@@ -153,9 +163,11 @@ export class Outbox {
                             )
                         )
                             throw new Error("Dependency berubah");
-                    } catch {
+                    } catch (error) {
+                        if (error instanceof EvidenceIntegrityError)
+                            item.evidenceHold = true;
                         throw new Error(
-                            "Integritas antrean/sumber kunjungan berubah sebelum kirim; perlu review.",
+                            "Integritas transaksi/sumber berubah sebelum kirim; perlu review.",
                         );
                     }
                     const receipt = ReceiptSchema.parse(

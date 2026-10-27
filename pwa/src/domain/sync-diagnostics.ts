@@ -161,6 +161,8 @@ export function diagnoseSync(
                 )
                     throw new Error("Invalid envelope");
                 validateVisit(row);
+                if (row.evidenceHold && ["queued", "sending"].includes(state))
+                    throw new Error("Evidence held by last sync validation");
                 const c = command.data;
                 const context =
                     c.type === "sales.visit.check_in" ||
