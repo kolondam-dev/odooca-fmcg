@@ -6,6 +6,10 @@ import {
     IdentitySchema,
     SnapshotSchema,
 } from "../src/domain/contracts.ts";
+import {
+    DeliveryPodSchema,
+    DeliveryTaskSchema,
+} from "../src/domain/delivery-contracts.ts";
 import { ExpenseRequestSchema } from "../src/domain/expense.ts";
 import { ExpenseRealizationSchema } from "../src/domain/settlement-contracts.ts";
 import {
@@ -26,6 +30,8 @@ function photoPairDependencies(schema) {
 }
 const schemas = Object.fromEntries(
     Object.entries({
+        DeliveryPod: DeliveryPodSchema,
+        DeliveryTask: DeliveryTaskSchema,
         Command: CommandSchema,
         VisitCheckIn: VisitCheckInSchema,
         VisitCheckOut: VisitCheckoutSchema,
@@ -54,7 +60,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.6.0",
+        version: "0.7.0",
         description:
             "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
     },

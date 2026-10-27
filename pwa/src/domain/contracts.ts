@@ -4,6 +4,7 @@ import {
 } from "./settlement-contracts.ts";
 import { VisitCheckInSchema, VisitCheckoutSchema } from "./visit-contracts.ts";
 import { z } from "zod";
+import { DeliveryPodSchema } from "./delivery-contracts.ts";
 export const Role = z.enum(["sales", "delivery", "hris"]);
 export const IdentitySchema = z.object({
     id: z.string().min(1),
@@ -21,6 +22,7 @@ export const CommandType = z.enum([
     "sales.visit.check_out",
     "sales.extra_call.request",
     "delivery.proof.submit",
+    "delivery.pod.submit",
     "hris.attendance.capture",
     "hris.leave.request",
     "field_expense.request",
@@ -32,6 +34,13 @@ const CommandEnvelope = {
     occurred_at: z.string().datetime(),
 };
 export const CommandSchema = z.discriminatedUnion("type", [
+    z
+        .object({
+            ...CommandEnvelope,
+            type: z.literal("delivery.pod.submit"),
+            payload: DeliveryPodSchema,
+        })
+        .strict(),
     z
         .object({
             ...CommandEnvelope,
@@ -49,6 +58,7 @@ export const CommandSchema = z.discriminatedUnion("type", [
     z.object({
         ...CommandEnvelope,
         type: CommandType.exclude([
+            "delivery.pod.submit",
             "field_expense.realization.submit",
             "sales.visit.check_in",
             "sales.visit.check_out",
@@ -129,6 +139,7 @@ export interface FieldProvider {
     bootstrap(): Promise<Identity>;
     snapshot(): Promise<Snapshot>;
     submit(command: Command): Promise<Receipt>;
+    deliveryTasks?(): Promise<import("./delivery-contracts").DeliveryTask[]>;
     expensePolicy?(): Promise<ExpensePolicy>;
     scenario?: Scenario;
 }

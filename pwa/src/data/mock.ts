@@ -135,6 +135,34 @@ export class MockProvider implements FieldProvider {
             ],
         };
     }
+    async deliveryTasks() {
+        const owner = await this.bootstrap();
+        const snapshot = await this.snapshot();
+        return snapshot.deliveries.map((d, i) => ({
+            id: d.id,
+            trip: d.trip,
+            vehicle: d.vehicle,
+            outlet: d.outlet,
+            address: d.address,
+            owner: `${owner.companyId}:${owner.id}`,
+            business_date: owner.businessDate,
+            version: "SIM-MANIFEST-1",
+            outlet_id: snapshot.outlets[i].id,
+            site: {
+                latitude: snapshot.outlets[i].latitude,
+                longitude: snapshot.outlets[i].longitude,
+                radius: snapshot.outlets[i].radius,
+            },
+            lines: [
+                {
+                    id: `${d.id}-1`,
+                    name: "Biskuit Kelapa 300 g (contoh)",
+                    quantity: d.cartons,
+                    unit: "karton",
+                },
+            ],
+        }));
+    }
     async expensePolicy() {
         // Fixture only, never a company approval limit.
         return { version: "SIM-EXPENSE-POLICY-1", supervisor_limit: "250000" };
@@ -164,6 +192,7 @@ export class MockProvider implements FieldProvider {
                 "Data realisasi tidak sesuai kontrak simulator.",
             );
         const policyApproval = [
+            "delivery.pod.submit",
             "field_expense.request",
             "field_expense.realization.submit",
             "sales.extra_call.request",

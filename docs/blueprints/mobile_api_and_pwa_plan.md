@@ -1205,3 +1205,24 @@ callback lama tidak mengisi phase/owner baru. History foto read-only. Foto stale
 atau GPS di luar geofence menahan aksi tanpa menambah radius atau receipt palsu.
 Berikutnya: delivery/POD dengan bukti terikat DO/trip; maps/media/session/device
 server tetap dependency terpisah dan tidak masuk branch frontend ini.
+
+
+### Iterasi POD simulasi — rencana implementasi (2026-10-27)
+Basis main 6aa9cc3. Manifest terpisah per owner/DO/trip/versi/hari, item dan
+geofence. Command baru delivery.pod.submit menghindari reinterpretasi proof legacy.
+Penerima, hasil diterima/partial/reject, kuantitas per item, alasan dan paket foto
+wajib; draft offline, CAS atomik dan dedup DO serta foto. Restore dan flush memakai
+validator sama pada waktu kejadian; source immutable disimpan bersama command.
+Receipt selalu perlu review simulasi, tanpa posting picking/stok/GL. CI existing
+memuat regresi unit/browser dan gate fixture live. Maps resmi, authority assignment,
+retur fisik/lot, collection, koreksi POD dan closing trip masih dependency berikut.
+
+**Hasil implementasi [F]:** DTO/OpenAPI draft 0.7, DeliveryWorkspace, cache manifest,
+draft manual, penerima/hasil/item/alasan, foto/pinpoint, CAS dan dedup DO/foto,
+validasi restore+pre-sync dan receipt review. Pengujian lokal 154 unit +1 hosting
+dan 48 browser; regresi dua koneksi DB, source berubah saat media read, tamper
+media/manifest/ledger, replay next-day, draft offline+readonly. Format/typecheck/
+contracts/demo+live/budget/Ruff/4 manifest PASS. CI diperiksa setelah publish.
+Batas: manifest satu item fixture, bukan lot/picking/retur/collection/closing;
+draft harus disimpan eksplisit, koreksi POD/reassignment/revocation belum tersedia.
+Tidak menyentuh backend/seed/loader/workflow/ruleset/Railway; live terkunci.

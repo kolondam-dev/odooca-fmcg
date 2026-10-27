@@ -134,3 +134,12 @@
 - DependentRequired mencerminkan pasangan evidence_version/evidence pada DTO dan branch Command; legacy tetap opsional, commit baru wajib foto.
 - Regresi kontrak baru; 134 unit PASS. Source produksi identik dengan hasil 1 hosting/44 browser/build sebelumnya; CI setelah push.
 - Task managed by codex agent at 2026-10-27T18:28:05+07:00
+
+[2026-10-27T19:30:28+07:00] [INFO] POD simulator terikat DO/trip
+- Basis main 6aa9cc3; branch agen/mobile-delivery-pod; DTO dan cache manifest, mandatory photo, CAS/dedup, restore/pre-sync.
+- 154 unit +1 hosting +48 browser PASS; CI setelah push; live terkunci; tidak merge/deploy atau menyentuh backend/seed/Railway.
+- Task managed by codex agent at 2026-10-27T19:30:28+07:00
+
+[2026-10-27T19:33:55+07:00] [INFO] Koreksi typecheck fixture POD PR28
+- CI 4910b03 menemukan status fixture melebar string; klaim PASS lokal typecheck sebelumnya keliru karena exit terlewat. Literal const diperbaiki, gate tidak diubah; ulang typecheck dan CI.
+- Task managed by codex agent at 2026-10-27T19:33:55+07:00

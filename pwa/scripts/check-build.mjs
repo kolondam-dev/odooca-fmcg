@@ -50,6 +50,8 @@ for (const mode of ["demo", "live"]) {
             "Simulasikan approval & pencairan",
             "SIM-EXPENSE-POLICY-1",
             "SIM-ADV-",
+            "SIM-MANIFEST-1",
+            "Ajukan POD untuk review",
             "Koreksi realisasi ditolak",
             "Mulai kunjungan demo",
             "Foto check-in kunjungan",
