@@ -483,6 +483,7 @@
   * Mengekspor laporan diagnostik ke historical_experiment_report.json dan mengintegrasikannya ke .github/workflows/ci.yml dengan upload-artifact@v4 (if: always()).
 - Menambahkan 2 unit test adapter di tests/test_canonical_loader_adapter.py (total 33/33 PASS, 105/105 repositori PASS).
 - Verifikasi ruff check All checks passed!, check_manifests.py 4 addon ok, verify_seed_invariants.py PASS, verify_seed_acceptance.py PASS.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T06:30:00+07:00
 
 [2026-10-27T06:55:00+07:00] [INFO] Paket Perbaikan Komprehensif Seeding Historis Odoo 19: Source-Driven Oracle, Dependency Modul product_expiry, Kronologi Register Sejati, Native Readback & Replay Idempoten Penuh
@@ -496,5 +497,17 @@
   * Membuktikan Run 2 replay alur lengkap 4 operasi mempertahankan zero drift (0 move baru dibuat).
   * Mengamankan serialisasi JSON bebas tuple keys via CustomJSONEncoder dalam blok try...finally dan ekstraksi artifact report di CI secara fail-closed.
 - Verifikasi ruff check All checks passed!, check_manifests.py 4 addon ok, 33/33 unit test adapter PASS.
-- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T06:55:00+07:00
+
+[2026-10-27T08:20:00+07:00] [INFO] Perbaikan Valuasi Aktual Odoo 19, Isolasi DB fmcg_exp, Perbaikan Truthiness Model & Audit Zero Drift Lengkap
+- Menutup temuan review PR #15 (issuecomment-6430171326):
+  * Pembacaan valuasi aktual Odoo: menginspeksi stock.valuation.layer (SVL) dan GL account.move.line pada cutoff historis serta melaporkan odoo_svl_valuation, odoo_gl_balance, dan odoo_computed_valuation secara transparan.
+  * Mengisolasi database eksperimen: menambahkan pembuatan DB terpisah fmcg_exp dari template fmcg di CI workflow (.github/workflows/ci.yml) sehingga eksperimen tidak mengontaminasi database fmcg yang digunakan oleh loader kanonikal berikutnya.
+  * Memperbaiki truthiness model Odoo di scripts/load_canonical_perpetual.py: mengganti pola if self.env.get('stock.move') yang mengevaluasi empty recordset ke False dengan if 'stock.move' in self.env dan StockMove is not None.
+  * Audit zero-drift komprehensif Run 2: mencatat exact snapshot ID move, line, detail quant (location, lot, quantity, reserved), dan memverifikasi re-readback 5 cutoff pasca Run 2 identik (delta = 0).
+  * Validasi integritas 15 hash SHA256 register kanonikal di awal eksekusi eksperimen dan penambahan negative tests untuk mendeteksi penolakan query saat tanggal/nilai bermutasi.
+  * Memulihkan satu baris log lama yang sempat terhapus di agent-log/anti-gravity.log.
+- Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok, 33/33 unit test adapter PASS.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T08:20:00+07:00
+

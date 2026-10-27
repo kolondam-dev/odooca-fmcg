@@ -542,9 +542,9 @@ class CanonicalPerpetualAdapter:
                 lot_id = lot.id
 
             # Idempotency check: jika opening move atau quant untuk (product, location, lot) sudah pernah diproses
-            StockMove = self.env.get("stock.move")
+            StockMove = self.env["stock.move"].sudo() if "stock.move" in self.env else None
             opening_move_exists = False
-            if StockMove:
+            if StockMove is not None:
                 mv_domain = [
                     ("product_id", "=", prod.id),
                     ("location_dest_id", "=", warehouse_loc.id),
@@ -553,14 +553,14 @@ class CanonicalPerpetualAdapter:
                 ]
                 if lot_id:
                     mv_domain.append(("lot_ids", "in", [lot_id]))
-                opening_move_exists = bool(StockMove.sudo().search(mv_domain, limit=1))
+                opening_move_exists = bool(StockMove.search(mv_domain, limit=1))
 
             domain = [("product_id", "=", prod.id), ("location_id", "=", warehouse_loc.id)]
             if lot_id:
                 domain.append(("lot_id", "=", lot_id))
-
             existing_quant = StockQuant.search(domain, limit=1)
-            if opening_move_exists or (existing_quant and getattr(existing_quant, "quantity", 0) > 0):
+
+            if opening_move_exists or existing_quant:
                 self.stats["skipped_opening_quants"] += 1
                 continue
 
@@ -578,8 +578,8 @@ class CanonicalPerpetualAdapter:
                 quant.action_apply_inventory()
 
             # Selaraskan tanggal efektif bisnis pada stock.move hasil inventory adjustment
-            if StockMove:
-                adj_moves = StockMove.sudo().search([
+            if StockMove is not None:
+                adj_moves = StockMove.search([
                     ("product_id", "=", prod.id),
                     ("location_dest_id", "=", warehouse_loc.id),
                     ("is_inventory", "=", True),
@@ -587,7 +587,7 @@ class CanonicalPerpetualAdapter:
                 ], order="id desc", limit=1)
                 for am in adj_moves:
                     am.write({"date": "2026-07-01 00:00:00", "origin": "OPENING-20260701"})
-                    if hasattr(am, "move_line_ids"):
+                    if hasattr(am, "move_line_ids") and am.move_line_ids:
                         am.move_line_ids.write({"date": "2026-07-01 00:00:00"})
 
             self.stats["opening_quants"] += 1

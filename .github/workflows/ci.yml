@@ -109,14 +109,18 @@ jobs:
         run: |
           cat init1.log init2.log > init.log
           if grep -E " (ERROR|CRITICAL) |Traceback" init.log; then exit 1; fi
+      - name: Siapkan database terisolasi untuk eksperimen
+        run: |
+          docker exec odoo su -p -s /bin/bash odoo -c "dropdb -h localhost -U odoo_app --if-exists fmcg_exp && createdb -h localhost -U odoo_app -T fmcg fmcg_exp"
       - name: Eksekusi eksperimen seeding historis minimal pada Odoo 19 disposable
         run: |
           set -o pipefail
-          docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_historical_experiment.py 2>&1 | tee experiment.log
+          docker exec -i -e PGDATABASE=fmcg_exp odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_historical_experiment.py 2>&1 | tee experiment.log
       - name: Ekstraksi laporan eksperimen historis
         if: always()
         run: |
           docker exec odoo cat /tmp/historical_experiment_report.json > historical_experiment_report.json 2>/dev/null || docker exec odoo cat historical_experiment_report.json > historical_experiment_report.json 2>/dev/null || true
+          [ -s historical_experiment_report.json ] || echo "[WARN] Laporan eksperimen historis kosong"
       - name: Upload artifact diagnostik eksperimen historis Odoo 19
         if: always()
         uses: actions/upload-artifact@v4
