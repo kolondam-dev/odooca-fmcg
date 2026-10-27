@@ -1,5 +1,30 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — GL Harian Native Penentu Kelulusan, Eliminasi Fallback _action_done, Alokasi Kuantitas Eksak, Audit Pasangan Akun, dan Snapshot Jurnal Run 1-2
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6434169001](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6434169001)):**
+- Menindaklanjuti review commit `aee7360`:
+  1. *GL Harian Native Penentu Kelulusan & Stateless Validator*: Saldo GL harian native Odoo (`eod_gl_match`) wajib ikut menentukan kelulusan seluruh cutoff, bukan sekadar dilaporkan. Evaluasi GL intrahari harus dibaca murni secara stateless dari ORM Odoo (`stock.move.date <= as_of_dt_str`), bukan dari variabel memori loader.
+  2. *Eliminasi Total Fallback `_action_done`*: Menghapus pemanggilan manual `mv._action_done()` setelah validasi picking; picking dan move wajib berstatus `done` murni melalui `button_validate()`.
+  3. *Alokasi Kuantitas Eksak Tanpa Duplikasi*: Memastikan alokasi kuantitas demand pada `mv.move_line_ids` tidak berlipat ganda ketika reservasi Odoo menghasilkan beberapa move line (sisa kuantitas dialokasikan dan baris berlebih di-unlink, disertai assertion fail-fast).
+  4. *Audit Pasangan Akun Formal & Snapshot Jurnal Akuntansi Run 1–2*: Menambahkan helper formal `audit_event_account_pair` untuk memverifikasi debit, kredit, nominal, dan keseimbangan jurnal keempat event; serta menyertakan deep snapshot `account.move` dan `account.move.line` pada audit idempotency zero-drift Run 2.
+  5. *Klarifikasi Nilai Opening Register*: Mengonfirmasi nilai opening SKU target `ULV-RNS-03` pada register beku adalah 84 karton dengan subtotal DPP Rp18.648.000 (bukan kutipan narasi agen sebelumnya).
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **GL Harian Native Odoo Penentu Kelulusan & Evaluasi Stateless ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Menambahkan `expected_eod_gl` pada setiap cutoff oracle.
+   - Pada `get_historical_position`, membaca transaksi pergerakan secara stateless langsung via `StockMove.search([('product_id', '=', product.id), ('state', '=', 'done'), ('date', '<=', as_of_dt_str)])` di DB Odoo tanpa memori loader.
+   - Memasukkan `eod_gl_match` ke dalam kriteria kelulusan mutlak: `is_match = stock_match and gl_match and eod_gl_match and svl_match`.
+2. **Eliminasi Fallback `_action_done` pada Dokumen Picking:**
+   - Menghapus baris `if mv.state != "done": mv.with_context(...)._action_done()`.
+   - Menambahkan verifikasi fail-fast: jika `picking.state != "done"` atau `mv.state != "done"` pasca `button_validate()`, langsung melempar `ValueError`.
+3. **Alokasi Kuantitas Move Line Eksak:**
+   - Mengalokasikan `remaining_qty` secara presisi ke `move_line_ids` dan me-unlink baris reservasi berlebih.
+   - Menambahkan assertion fail-fast: `sum(line.quantity) == demand_qty`.
+4. **Audit Pasangan Akun & Snapshot Jurnal Run 1–2:**
+   - Mengimplementasikan `audit_event_account_pair` pasca-Run 1: Opening (113000/113900 Rp18.648.000), Delivery (510000/113000 Rp666.000), Retur (113000/510000 Rp222.000), PO Receipt (113000/113900 Rp4.440.000).
+   - Memasukkan `take_accounting_snapshot()` ke dalam `snapshot_pre` dan `snapshot_post`, membuktikan zero-drift pada `account.move` dan `account.move.line` di Run 2.
+
 ## 2026-10-27 — antigravity agent — Penyelarasan Granularitas Cutoff Stok Intrahari vs GL, Validasi Native Picking, Akun HPP 510000, dan Fail-Fast Posting
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6434027739](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6434027739)):**
 - Menindaklanjuti review commit `f37568d`:

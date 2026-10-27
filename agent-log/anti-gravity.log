@@ -601,3 +601,15 @@
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T11:58:00+07:00
 
+[2026-10-27T12:14:00+07:00] [INFO] GL Harian Native Penentu Kelulusan, Eliminasi Fallback _action_done, Alokasi Kuantitas Eksak, Audit Pasangan Akun, dan Snapshot Jurnal Run 1-2
+- Menutup temuan review PR #15 (issuecomment-6434169001):
+  * GL Harian Native Penentu Kelulusan & Stateless Validator: Menambahkan expected_eod_gl pada seluruh cutoff oracle; get_historical_position membaca transaksi pergerakan secara stateless langsung via StockMove.search([('product_id', '=', product.id), ('state', '=', 'done'), ('date', '<=', as_of_dt_str)]) di DB Odoo tanpa memori loader; memasukkan eod_gl_match ke kriteria kelulusan mutlak (is_match = stock_match and gl_match and eod_gl_match and svl_match).
+  * Eliminasi Total Fallback _action_done: Menghapus baris if mv.state != "done": mv.with_context(...)._action_done() pasca validasi picking; picking dan move wajib berstatus 'done' secara native murni via button_validate(), diverifikasi fail-fast.
+  * Alokasi Kuantitas Move Line Eksak: Mengalokasikan remaining_qty secara presisi ke move_line_ids dan me-unlink baris reservasi berlebih agar kuantitas tidak berlipat; menambahkan assertion fail-fast sum(line.quantity) == demand_qty.
+  * Audit Pasangan Akun Formal: Menambahkan helper audit_event_account_pair dan memvalidasi pasangan debit-kredit keempat event transaksi pasca-Run 1 (Opening 113000/113900 Rp18.648.000, DO 510000/113000 Rp666.000, Retur 113000/510000 Rp222.000, PO 113000/113900 Rp4.440.000).
+  * Deep Snapshot Jurnal Akuntansi Run 1-2: Menyertakan take_accounting_snapshot() pada snapshot_pre dan snapshot_post, memverifikasi accounting_identical (zero-drift pada account.move, account.move.line, dan saldo GL 113000) pada Run 2.
+- Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T12:14:00+07:00
+
+

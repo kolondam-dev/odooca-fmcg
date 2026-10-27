@@ -177,6 +177,9 @@ def build_source_oracle():
                 "expiry": opening_expiry,
                 "val": opening_val,
                 "date": "2026-07-01 00:00:00",
+                "expected_debit_acc": "113000",
+                "expected_credit_acc": "113900",
+                "expected_amount": opening_val,
             },
             "delivery": {
                 "origin": "DO-202607-0063",
@@ -186,6 +189,9 @@ def build_source_oracle():
                 "lot": do_lot,
                 "cogs": do_cogs,
                 "date": f"{do_date} 14:00:00",
+                "expected_debit_acc": "510000",
+                "expected_credit_acc": "113000",
+                "expected_amount": do_cogs,
             },
             "rejection": {
                 "origin": "REJ-202607-001",
@@ -194,6 +200,9 @@ def build_source_oracle():
                 "lot": rej_lot,
                 "cogs": rej_cogs,
                 "date": f"{rej_date} 23:59:59",
+                "expected_debit_acc": "113000",
+                "expected_credit_acc": "510000",
+                "expected_amount": rej_cogs,
             },
             "receipt": {
                 "origin": "PO-2026-06-05",
@@ -203,6 +212,9 @@ def build_source_oracle():
                 "expiry": po_expiry,
                 "val": po_val,
                 "date": f"{po_date} 23:59:59",
+                "expected_debit_acc": "113000",
+                "expected_credit_acc": "113900",
+                "expected_amount": po_val,
             },
         },
         "cutoffs": {
@@ -218,6 +230,7 @@ def build_source_oracle():
                 "expected_saleable_val": 0.0,
                 "expected_quarantine_val": 0.0,
                 "expected_total_val": 0.0,
+                "expected_eod_gl": 0.0,
             },
             "cutoff_1": {
                 "title": "Cutoff 1: Opening Stock Gudang Maumbi (1 Juli 2026)",
@@ -231,6 +244,7 @@ def build_source_oracle():
                 "expected_saleable_val": opening_val,
                 "expected_quarantine_val": 0.0,
                 "expected_total_val": opening_val,
+                "expected_eod_gl": opening_val,
             },
             "cutoff_2": {
                 "title": "Cutoff 2: Outbound Delivery DO-202607-0063 (3 Juli 2026 14:00:00)",
@@ -244,6 +258,7 @@ def build_source_oracle():
                 "expected_saleable_val": opening_val - do_cogs,
                 "expected_quarantine_val": 0.0,
                 "expected_total_val": opening_val - do_cogs,
+                "expected_eod_gl": (opening_val - do_cogs) + rej_cogs,
             },
             "cutoff_3": {
                 "title": "Cutoff 3: Retur Karantina REJ-202607-001 (3 Juli 2026 23:59:59)",
@@ -257,6 +272,7 @@ def build_source_oracle():
                 "expected_saleable_val": opening_val - do_cogs,
                 "expected_quarantine_val": rej_cogs,
                 "expected_total_val": (opening_val - do_cogs) + rej_cogs,
+                "expected_eod_gl": (opening_val - do_cogs) + rej_cogs,
             },
             "cutoff_4": {
                 "title": "Cutoff 4: Inbound PO-2026-06-05 Receipt (4 Juli 2026 23:59:59)",
@@ -270,6 +286,7 @@ def build_source_oracle():
                 "expected_saleable_val": (opening_val - do_cogs) + po_val,
                 "expected_quarantine_val": rej_cogs,
                 "expected_total_val": (opening_val - do_cogs) + po_val + rej_cogs,
+                "expected_eod_gl": (opening_val - do_cogs) + po_val + rej_cogs,
             },
         },
     }
@@ -754,7 +771,52 @@ def main():
                 for line in am.line_ids:
                     print(f"     * Account: {line.account_id.code} ({line.account_id.name}) | Debit: {line.debit} | Credit: {line.credit}")
 
-            return found_moves
+        # Helper: Audit Pasangan Akun Debit-Kredit Jurnal Native Odoo secara Formal
+        def audit_event_account_pair(event_name, stock_move, expected_debit_code, expected_credit_code, expected_amount):
+            """Memverifikasi bahwa jurnal native mendebit dan mengkredit akun yang sesuai serta berimbang."""
+            am = getattr(stock_move, "account_move_id", None)
+            if not am and "stock_move_id" in env["account.move"]._fields:
+                am = env["account.move"].sudo().search([("stock_move_id", "=", stock_move.id)], limit=1)
+            if not am and stock_move.origin:
+                am = env["account.move"].sudo().search([("ref", "ilike", stock_move.origin), ("company_id", "in", [False, company.id])], limit=1)
+            if not am:
+                raise ValueError(f"[FAIL-FAST] Event '{event_name}' ({stock_move.origin}) tidak memiliki entri account.move native Odoo!")
+
+            if am.state != "posted":
+                raise ValueError(f"[FAIL-FAST] Jurnal {am.id} untuk event '{event_name}' belum posted (state: {am.state})!")
+
+            debit_lines = [line for line in am.line_ids if line.debit > 0]
+            credit_lines = [line for line in am.line_ids if line.credit > 0]
+            tot_debit = round(sum(line.debit for line in debit_lines), 2)
+            tot_credit = round(sum(line.credit for line in credit_lines), 2)
+
+            # 1. Keseimbangan Jurnal
+            if abs(tot_debit - tot_credit) > 0.01:
+                raise ValueError(f"[FAIL-FAST] Jurnal {am.id} ({event_name}) tidak berimbang! Debit={tot_debit}, Credit={tot_credit}")
+
+            # 2. Akurasi Nominal Jurnal terhadap Ekspektasi
+            if abs(tot_debit - expected_amount) > 0.01:
+                raise ValueError(f"[FAIL-FAST] Nominal jurnal {am.id} ({event_name}) sebesar {tot_debit} tidak cocok dengan expected {expected_amount}!")
+
+            # 3. Akun Debit
+            debit_codes = [line.account_id.code for line in debit_lines]
+            if expected_debit_code not in debit_codes:
+                raise ValueError(f"[FAIL-FAST] Jurnal {am.id} ({event_name}) tidak mendebit akun {expected_debit_code}! Terdeteksi: {debit_codes}")
+
+            # 4. Akun Kredit
+            credit_codes = [line.account_id.code for line in credit_lines]
+            if expected_credit_code not in credit_codes:
+                raise ValueError(f"[FAIL-FAST] Jurnal {am.id} ({event_name}) tidak mengkredit akun {expected_credit_code}! Terdeteksi: {credit_codes}")
+
+            print(f" -> [Audit Pasangan Akun OK] Event '{event_name}' | Jurnal {am.id} ({am.ref or am.name}) | Debit: {expected_debit_code} (Rp{tot_debit:,.2f}) | Kredit: {expected_credit_code} (Rp{tot_credit:,.2f})")
+            return {
+                "account_move_id": am.id,
+                "ref": am.ref,
+                "debit_account": expected_debit_code,
+                "credit_account": expected_credit_code,
+                "amount": tot_debit,
+                "balanced": True,
+            }
 
         # Helper 1: Eksekusi Opening Stock via Mekanisme Quant Adjustment Asli Odoo 19
         # (Loader murni: tidak merekayasa/mensintesis nilai atau jurnal buatan)
@@ -883,22 +945,28 @@ def main():
             mv.with_context(force_period_date=move_date[:10])._action_confirm()
             mv.with_context(force_period_date=move_date[:10])._action_assign()
 
-            # Sinkronisasi line_ids secara tangguh terhadap lifecycle Odoo 19
+            # Sinkronisasi line_ids secara tangguh: alokasi kuantitas presisi tanpa duplikasi
             if mv.move_line_ids:
+                remaining_qty = qty
                 for ml in mv.move_line_ids:
-                    upd_vals = {}
-                    if lot and "lot_id" in StockMoveLine._fields:
-                        upd_vals["lot_id"] = lot.id
-                    if "quantity" in StockMoveLine._fields:
-                        upd_vals["quantity"] = qty
-                    elif "qty_done" in StockMoveLine._fields:
-                        upd_vals["qty_done"] = qty
-                    if "date" in StockMoveLine._fields:
-                        upd_vals["date"] = move_date
-                    if "picking_id" in StockMoveLine._fields:
-                        upd_vals["picking_id"] = picking.id
-                    if upd_vals:
+                    if remaining_qty > 0:
+                        alloc = remaining_qty
+                        upd_vals = {}
+                        if lot and "lot_id" in StockMoveLine._fields:
+                            upd_vals["lot_id"] = lot.id
+                        if "quantity" in StockMoveLine._fields:
+                            upd_vals["quantity"] = alloc
+                        elif "qty_done" in StockMoveLine._fields:
+                            upd_vals["qty_done"] = alloc
+                        if "date" in StockMoveLine._fields:
+                            upd_vals["date"] = move_date
+                        if "picking_id" in StockMoveLine._fields:
+                            upd_vals["picking_id"] = picking.id
                         ml.write(upd_vals)
+                        remaining_qty -= alloc
+                    else:
+                        # Baris reservasi tambahan di luar kebutuhan alokasi dihapus agar kuantitas tidak berlipat
+                        ml.unlink()
             else:
                 candidate_sml = {
                     "move_id": mv.id,
@@ -917,11 +985,18 @@ def main():
                 line_vals = {k: v for k, v in candidate_sml.items() if k in StockMoveLine._fields}
                 StockMoveLine.create(line_vals)
 
+            # Assertion Fail-Fast: Total kuantitas move lines WAJIB sama persis dengan demand
+            total_ml_qty = sum(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)) for ml in mv.move_line_ids)
+            if abs(total_ml_qty - qty) > 0.0001:
+                raise ValueError(
+                    f"[FAIL-FAST] Alokasi kuantitas move line ({total_ml_qty}) tidak cocok dengan demand ({qty}) untuk move {origin}!"
+                )
+
             if "picked" in StockMove._fields:
                 mv.picked = True
 
             # Validasi picking secara native melalui lifecycle Odoo (button_validate)
-            # Menghindari fallback yang memaksa state menjadi 'done'
+            # Tanpa fallback pemaksaan status atau _action_done manual
             validate_res = picking.with_context(force_period_date=move_date[:10]).button_validate()
             if isinstance(validate_res, dict) and "res_model" in validate_res:
                 wiz_model = validate_res["res_model"]
@@ -936,15 +1011,16 @@ def main():
                         getattr(wizard.with_context(force_period_date=move_date[:10]), act_name)()
                         break
 
-            # Jika button_validate tidak memproses move secara langsung
-            if mv.state != "done":
-                mv.with_context(force_period_date=move_date[:10])._action_done()
-
-            # Verifikasi FAIL-FAST: Dokumen picking native WAJIB berstatus 'done' secara native
+            # Verifikasi FAIL-FAST: Dokumen picking dan move WAJIB berstatus 'done' secara native
             if picking.state != "done":
                 raise ValueError(
                     f"[FAIL-FAST] Validasi native picking {picking.name} ({origin}) gagal mencapai state 'done'! "
                     f"State aktual: {picking.state}"
+                )
+            if mv.state != "done":
+                raise ValueError(
+                    f"[FAIL-FAST] Stock move {mv.id} ({origin}) belum berstatus 'done' pasca validasi native picking! "
+                    f"State aktual: {mv.state}"
                 )
 
             if "date_done" in StockPicking._fields:
@@ -1013,26 +1089,40 @@ def main():
                 posted_amls = [a for a in amls if getattr(a.move_id, "state", "posted") == "posted"]
                 matching_amls = [
                     a for a in posted_amls
-                    if a.move_id.id in experiment_account_move_ids
-                    or (getattr(a, "product_id", None) and a.product_id.id == product.id)
-                    or any(ref in (a.move_id.ref or "") for ref in ["OPENING-20260701", "DO-202607-0063", "REJ-202607-001", "PO-2026-06-05"])
+                    if (getattr(a, "product_id", None) and a.product_id.id == product.id)
                     or (getattr(a, "stock_move_id", None) and getattr(a.stock_move_id, "product_id", None) and a.stock_move_id.product_id.id == product.id)
                     or (getattr(a.move_id, "stock_move_id", None) and getattr(a.move_id.stock_move_id, "product_id", None) and a.move_id.stock_move_id.product_id.id == product.id)
+                    or any(ref in (a.move_id.ref or "") for ref in ["OPENING-20260701", "DO-202607-0063", "REJ-202607-001", "PO-2026-06-05"])
                 ]
+                # Saldo GL Harian Native Odoo (EOD GL Balance pada Akun Persediaan 113000)
                 eod_gl_balance = round(sum(a.debit - a.credit for a in matching_amls), 2)
 
-                # Penyelarasan Granularitas GL: Intrahari vs Akhir Hari (EOD)
-                # Odoo account.move.line menyimpan 'date' harian (Date). Untuk cut-off intrahari
-                # (misal Cutoff 2 jam 14:00:00), pergerakan setelah jam cut-off (seperti retur jam 23:59:59)
-                # dieksklusikan dari GL cut-off intrahari berdasarkan timestamp event aslinya.
+                # Evaluasi GL Pergerakan Historis Intrahari:
+                # Membaca murni dari tabel stock.move Odoo via ORM (stock_move.date <= as_of_dt_str),
+                # tanpa bergantung pada variabel memori loader.
+                moves_before_cutoff = StockMove.search([
+                    ("product_id", "=", product.id),
+                    ("state", "=", "done"),
+                    ("date", "<=", as_of_dt_str),
+                    ("company_id", "in", [False, company.id]),
+                ])
+                cutoff_move_ids = set()
+                for sm in moves_before_cutoff:
+                    if getattr(sm, "account_move_id", None):
+                        cutoff_move_ids.add(sm.account_move_id.id)
+                    if "stock_move_id" in env["account.move"]._fields:
+                        for am in env["account.move"].sudo().search([("stock_move_id", "=", sm.id)]):
+                            cutoff_move_ids.add(am.id)
+                    if sm.origin:
+                        for am in env["account.move"].sudo().search([("ref", "ilike", sm.origin), ("company_id", "in", [False, company.id])]):
+                            cutoff_move_ids.add(am.id)
+
                 cutoff_amls = []
                 for a in matching_amls:
-                    ev_date = experiment_account_move_event_dates.get(a.move_id.id)
-                    if ev_date:
-                        if ev_date <= as_of_dt_str:
-                            cutoff_amls.append(a)
-                    else:
-                        # Entri non-pergerakan (seperti manipulasi GL saat uji mutasi)
+                    if a.move_id.id in cutoff_move_ids:
+                        cutoff_amls.append(a)
+                    elif not any(ref in (a.move_id.ref or "") for ref in ["OPENING-20260701", "DO-202607-0063", "REJ-202607-001", "PO-2026-06-05"]):
+                        # Jurnal manual/mutasi yang dibuat langsung pada tanggal cutoff
                         if str(a.date) <= as_of_dt_str[:10]:
                             cutoff_amls.append(a)
 
@@ -1100,6 +1190,23 @@ def main():
         env.cr.commit()
         report["run1_summary"] = run1_events
 
+        # 5.1 Audit Formal Pasangan Akun Debit-Kredit Jurnal Native (Run 1)
+        print("\n[Audit Pasangan Akun] Memvalidasi kelengkapan pasangan debit-kredit akuntansi native Odoo...")
+        pair_audit_results = {}
+        for ev_key, ev_data in run1_events.items():
+            ev_spec = details[ev_key]
+            sm_record = StockMove.browse(ev_data["move_id"])
+            audit_res = audit_event_account_pair(
+                event_name=ev_key,
+                stock_move=sm_record,
+                expected_debit_code=ev_spec["expected_debit_acc"],
+                expected_credit_code=ev_spec["expected_credit_acc"],
+                expected_amount=ev_spec["expected_amount"],
+            )
+            pair_audit_results[ev_key] = audit_res
+
+        report["account_pair_audit"] = pair_audit_results
+
         # 6. Evaluasi 5 Cutoff Pasca-Injeksi Seluruh Data
         print("\n[5/8] Membaca Ulang Posisi Stok & Valuasi Historis Native (5 Cutoff)...")
         cutoff_results = {}
@@ -1113,7 +1220,7 @@ def main():
             delta_quar = round(pos["quarantine_cartons"] - c_exp["expected_quarantine_cartons"], 4)
             stock_match = (delta_saleable == 0.0) and (delta_quar == 0.0)
 
-            # 2. GL Balance (Akun Persediaan 113000)
+            # 2. GL Balance Pergerakan hingga Cutoff
             if pos["odoo_gl_balance"] is not None:
                 delta_gl = round(pos["odoo_gl_balance"] - c_exp["expected_total_val"], 2)
                 gl_match = (abs(delta_gl) < 0.01)
@@ -1123,7 +1230,17 @@ def main():
                 gl_match = False
                 actual_gl_display = "GL_NOT_FOUND"
 
-            # 3. SVL Valuation (jika model SVL terpasang di build)
+            # 3. GL Harian Native Odoo (EOD GL Balance pada Akun 113000) - Menentukan Kelulusan Mutlak
+            if pos["odoo_eod_gl_balance"] is not None and "expected_eod_gl" in c_exp:
+                delta_eod_gl = round(pos["odoo_eod_gl_balance"] - c_exp["expected_eod_gl"], 2)
+                eod_gl_match = (abs(delta_eod_gl) < 0.01)
+                actual_eod_gl_display = pos["odoo_eod_gl_balance"]
+            else:
+                delta_eod_gl = None
+                eod_gl_match = False
+                actual_eod_gl_display = "EOD_GL_NOT_FOUND"
+
+            # 4. SVL Valuation (jika model SVL terpasang di build)
             if has_svl:
                 if pos["odoo_svl_valuation"] is not None:
                     delta_svl = round(pos["odoo_svl_valuation"] - c_exp["expected_total_val"], 2)
@@ -1138,8 +1255,8 @@ def main():
                 svl_match = True
                 actual_svl_display = "N/A (Odoo 19 removed SVL)"
 
-            # Kelulusan mutlak ditentukan oleh Fisik + GL + SVL (tanpa manipulasi buatan)
-            is_match = stock_match and gl_match and svl_match
+            # Kelulusan mutlak ditentukan oleh Fisik + GL Intrahari/Cutoff + GL Harian Native EOD + SVL
+            is_match = stock_match and gl_match and eod_gl_match and svl_match
             if not is_match:
                 all_cutoffs_match = False
 
@@ -1151,6 +1268,7 @@ def main():
                     "quarantine_cartons": c_exp["expected_quarantine_cartons"],
                     "total_cartons": c_exp["expected_total_cartons"],
                     "total_val": c_exp["expected_total_val"],
+                    "eod_gl": c_exp.get("expected_eod_gl"),
                 },
                 "actual": {
                     "saleable_cartons": pos["saleable_cartons"],
@@ -1164,21 +1282,50 @@ def main():
                     "saleable_cartons": delta_saleable,
                     "quarantine_cartons": delta_quar,
                     "total_gl": delta_gl,
+                    "total_eod_gl": delta_eod_gl,
                     "total_svl": delta_svl,
                 },
                 "stock_match": stock_match,
                 "gl_match": gl_match,
+                "eod_gl_match": eod_gl_match,
                 "svl_match": svl_match,
                 "match": is_match,
             }
 
             status_str = "PASS" if is_match else "FAIL"
-            print(f" -> [{status_str}] {c_exp['title']}: Expected {c_exp['expected_saleable_cartons']} s / {c_exp['expected_quarantine_cartons']} q ctn | Actual {pos['saleable_cartons']} s / {pos['quarantine_cartons']} q ctn | Cutoff GL: {actual_gl_display} (EOD GL: {pos['odoo_eod_gl_balance']}, SVL: {actual_svl_display})")
+            print(f" -> [{status_str}] {c_exp['title']}: Expected {c_exp['expected_saleable_cartons']} s / {c_exp['expected_quarantine_cartons']} q ctn | Actual {pos['saleable_cartons']} s / {pos['quarantine_cartons']} q ctn | Cutoff GL: {actual_gl_display} | EOD GL: {actual_eod_gl_display} (SVL: {actual_svl_display})")
 
         report["cutoff_results"] = cutoff_results
 
         # 7. RUN 2: Replay Seluruh Alur & Audit Zero-Drift Penuh
         print("\n[6/8] Menjalankan RUN 2: Replay Seluruh Alur & Audit Zero Drift Penuh...")
+
+        # Helper Snapshot Jurnal Akuntansi Native
+        def take_accounting_snapshot():
+            acc_moves = env["account.move"].sudo().search([("company_id", "in", [False, company.id])])
+            acc_lines = env["account.move.line"].sudo().search([("company_id", "in", [False, company.id])])
+            return {
+                "moves": {
+                    m.id: {"name": m.name, "ref": m.ref, "date": str(m.date), "state": m.state}
+                    for m in acc_moves
+                },
+                "lines": {
+                    line.id: {
+                        "move_id": line.move_id.id,
+                        "account_id": line.account_id.id,
+                        "account_code": line.account_id.code,
+                        "debit": line.debit,
+                        "credit": line.credit,
+                        "date": str(line.date),
+                    }
+                    for line in acc_lines
+                },
+                "total_persediaan_gl": sum(
+                    line.debit - line.credit
+                    for line in acc_lines
+                    if line.account_id.id == stock_valuation_acc.id and line.move_id.state == "posted"
+                ),
+            }
 
         # Deep Snapshot Pre-Run 2
         moves_pre = StockMove.search([("product_id", "=", product.id), ("company_id", "=", company.id)])
@@ -1191,6 +1338,7 @@ def main():
             "lines": {ml.id: {"move_id": ml.move_id.id, "date": str(ml.date), "state": ml.state, "qty": ml.quantity, "lot_id": ml.lot_id.id} for ml in lines_pre},
             "quants": {q.id: {"location_id": q.location_id.id, "lot_id": q.lot_id.id, "qty": q.quantity, "reserved": getattr(q, "reserved_quantity", 0.0)} for q in quants_pre},
             "svls": {s.id: {"value": s.value, "qty": s.quantity, "cost": s.unit_cost} for s in svl_pre} if svl_pre else {},
+            "accounting": take_accounting_snapshot(),
             "cutoffs": {k: get_historical_position(v["as_of"]) for k, v in oracle["cutoffs"].items()},
         }
 
@@ -1225,6 +1373,7 @@ def main():
             "lines": {ml.id: {"move_id": ml.move_id.id, "date": str(ml.date), "state": ml.state, "qty": ml.quantity, "lot_id": ml.lot_id.id} for ml in lines_post},
             "quants": {q.id: {"location_id": q.location_id.id, "lot_id": q.lot_id.id, "qty": q.quantity, "reserved": getattr(q, "reserved_quantity", 0.0)} for q in quants_post},
             "svls": {s.id: {"value": s.value, "qty": s.quantity, "cost": s.unit_cost} for s in svl_post} if svl_post else {},
+            "accounting": take_accounting_snapshot(),
             "cutoffs": {k: get_historical_position(v["as_of"]) for k, v in oracle["cutoffs"].items()},
         }
 
@@ -1232,6 +1381,7 @@ def main():
         lines_identical = (snapshot_pre["lines"] == snapshot_post["lines"])
         quants_identical = (snapshot_pre["quants"] == snapshot_post["quants"])
         svls_identical = (snapshot_pre["svls"] == snapshot_post["svls"])
+        accounting_identical = (snapshot_pre["accounting"] == snapshot_post["accounting"])
         cutoffs_identical = (snapshot_pre["cutoffs"] == snapshot_post["cutoffs"])
         any_created_in_run2 = any(ev["created"] for ev in run2_events.values())
 
@@ -1240,6 +1390,7 @@ def main():
             and lines_identical
             and quants_identical
             and svls_identical
+            and accounting_identical
             and cutoffs_identical
             and (not any_created_in_run2)
         )
@@ -1249,6 +1400,7 @@ def main():
             "lines_identical": lines_identical,
             "quants_identical": quants_identical,
             "svls_identical": svls_identical,
+            "accounting_identical": accounting_identical,
             "cutoffs_identical": cutoffs_identical,
             "any_created_in_run2": any_created_in_run2,
             "zero_drift_pass": zero_drift_pass,
@@ -1258,6 +1410,7 @@ def main():
         print(f" -> Move Lines Identik: {lines_identical} (Pre={len(lines_pre)}, Post={len(lines_post)})")
         print(f" -> Quants Identik: {quants_identical}")
         print(f" -> SVLs Identik: {svls_identical}")
+        print(f" -> Jurnal Akuntansi Native Identik: {accounting_identical} (Moves Pre={len(snapshot_pre['accounting']['moves'])}, Post={len(snapshot_post['accounting']['moves'])})")
         print(f" -> 5 Cutoffs Re-Readback Identik: {cutoffs_identical}")
 
         # 8. Mutasi Terarah Aktual (Mutation Tests dengan Savepoint & Verifikasi 3-Fase: Baseline Valid -> Mutasi Ditolak -> Rollback Valid)
