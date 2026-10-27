@@ -12,6 +12,7 @@ import {
     type Snapshot,
 } from "./domain/contracts";
 import { validateExpense } from "./domain/expense";
+import { SyncDiagnostics } from "./components/SyncDiagnostics";
 import { VisitPanel } from "./components/VisitPanel";
 import { SalesVisits, captureVisitLocation } from "./domain/visits";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
@@ -19,7 +20,7 @@ import { Brand } from "./components/Brand";
 import { MorningSession } from "./components/MorningSession";
 import { morningReady, type MorningRecord } from "./domain/morning";
 import { Outbox } from "./domain/outbox";
-import { haptic, money, queueLabels, time } from "./domain/format";
+import { haptic, money, time } from "./domain/format";
 import { FieldStore, type QueueItem } from "./storage/store";
 import { Icon, type IconName } from "./components/Icon";
 import { EvidenceCapture, type EvidenceRef } from "./components/Evidence";
@@ -72,14 +73,6 @@ function Heading({
                 <p class="muted">{note}</p>
             </div>
             {action}
-        </div>
-    );
-}
-function Empty({ text }: { text: string }) {
-    return (
-        <div class="empty">
-            <Icon name="check" size={32} />
-            <p>{text}</p>
         </div>
     );
 }
@@ -847,45 +840,13 @@ function Workspace({
                             title="Aktivitas perangkat ini"
                             note="Terkirim berbeda dengan disetujui atau diposting."
                         />
-                        {!queue.length ? (
-                            <Empty text="Belum ada aktivitas. Mulai dari order atau pengajuan." />
-                        ) : (
-                            <div class="activity-list">
-                                {[...queue].reverse().map((q) => (
-                                    <article class="activity" key={q.key}>
-                                        <span
-                                            class={`activity-dot ${q.state}`}
-                                        />
-                                        <div>
-                                            <strong>{q.label}</strong>
-                                            <small>
-                                                {time(q.command.occurred_at)} ·{" "}
-                                                {q.command.client_uuid.slice(
-                                                    0,
-                                                    8,
-                                                )}
-                                            </small>
-                                            <p>
-                                                {q.receipt?.message ??
-                                                    q.error ??
-                                                    "Tersimpan lokal, belum diterima server."}
-                                            </p>
-                                            <Pill
-                                                tone={
-                                                    q.state === "accepted"
-                                                        ? "green"
-                                                        : q.state === "rejected"
-                                                          ? "red"
-                                                          : "amber"
-                                                }
-                                            >
-                                                {queueLabels[q.state]}
-                                            </Pill>
-                                        </div>
-                                    </article>
-                                ))}
-                            </div>
-                        )}
+                        <SyncDiagnostics
+                            key={owner}
+                            store={store}
+                            owner={owner}
+                            queue={queue}
+                            online={online}
+                        />
                         <p class="footnote">
                             Binding perangkat, approval resmi, notifikasi
                             backend dan pengiriman evidence menunggu integrasi

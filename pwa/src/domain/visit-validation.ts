@@ -379,41 +379,66 @@ export function validateVisitSync(
     rows: QueueItem[],
     morning: unknown,
 ) {
-    const command = CommandSchema.parse(item.command);
+    // New validator at each send boundary: never reuse a cached graph after await.
+    createVisitSyncValidator(owner, ledger, rows, morning)(item);
+}
+// Reuse only while projecting ONE immutable readonly snapshot, such as the
+// diagnosis list. Validate the shared graph once instead of once per row.
+export function createVisitSyncValidator(
+    owner: string,
+    ledger: unknown,
+    rows: QueueItem[],
+    morning: unknown,
+) {
     const parsed = VisitLedgerSchema.safeParse(ledger);
-    const linked =
-        parsed.success &&
-        parsed.data.visits.some(
-            (v) =>
-                v.context.visit_uuid === command.client_uuid ||
-                v.check_out?.command_uuid === command.client_uuid ||
-                v.check_out?.payload.order_uuids.includes(
-                    command.client_uuid,
-                ) ||
-                (command.type === "sales.order.submit" &&
-                    v.context.work_session_id ===
-                        command.payload.work_session_id &&
-                    v.context.outlet_id === command.payload.outlet_id),
-        );
-    const related =
-        command.type === "sales.visit.check_in" ||
-        command.type === "sales.visit.check_out" ||
-        (command.type === "sales.order.submit" &&
-            Object.hasOwn(command.payload, "visit_context")) ||
-        linked;
-    if (!related) return;
-    if (
-        item.owner !== owner ||
-        item.key !== `${owner}:${command.client_uuid}` ||
-        !rows.some(
-            (q) =>
-                q.key === item.key &&
-                q.owner === owner &&
-                same(q.command, item.command),
+    let checked = false;
+    let graphError: unknown;
+    return (item: QueueItem) => {
+        const command = CommandSchema.parse(item.command);
+        const linked =
+            parsed.success &&
+            parsed.data.visits.some(
+                (v) =>
+                    v.context.visit_uuid === command.client_uuid ||
+                    v.check_out?.command_uuid === command.client_uuid ||
+                    v.check_out?.payload.order_uuids.includes(
+                        command.client_uuid,
+                    ) ||
+                    (command.type === "sales.order.submit" &&
+                        v.context.work_session_id ===
+                            command.payload.work_session_id &&
+                        v.context.outlet_id === command.payload.outlet_id),
+            );
+        const related =
+            command.type === "sales.visit.check_in" ||
+            command.type === "sales.visit.check_out" ||
+            (command.type === "sales.order.submit" &&
+                Object.hasOwn(command.payload, "visit_context")) ||
+            linked;
+        if (!related) return;
+        if (
+            item.owner !== owner ||
+            item.key !== `${owner}:${command.client_uuid}` ||
+            !rows.some(
+                (q) =>
+                    q.key === item.key &&
+                    q.owner === owner &&
+                    same(q.command, item.command),
+            )
         )
-    )
-        throw new Error("Antrean kunjungan berubah atau owner tidak cocok.");
-    visitLedger(ledger, owner, rows, morning);
-    if (command.type === "sales.order.submit")
-        VisitContextSchema.parse(command.payload.visit_context);
+            throw new Error(
+                "Antrean kunjungan berubah atau owner tidak cocok.",
+            );
+        if (!checked) {
+            checked = true;
+            try {
+                visitLedger(ledger, owner, rows, morning);
+            } catch (error) {
+                graphError = error;
+            }
+        }
+        if (graphError) throw graphError;
+        if (command.type === "sales.order.submit")
+            VisitContextSchema.parse(command.payload.visit_context);
+    };
 }

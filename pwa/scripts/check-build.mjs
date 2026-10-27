@@ -52,6 +52,7 @@ for (const mode of ["demo", "live"]) {
             "SIM-ADV-",
             "Koreksi realisasi ditolak",
             "Mulai kunjungan demo",
+            "Diagnosis lokal · Data simulasi.",
         ])
             assert(
                 !code.includes(fixture),

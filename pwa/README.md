@@ -311,3 +311,28 @@ Record lama tanpa salinan hanya memakai paket pagi tersimpan bila session/date/
 version/site/openedAt masih cocok. Sumber hilang/tidak cocok ditahan untuk review,
 tidak direkonstruksi atau dihapus otomatis. Penyimpanan sumber lokal ini tetap
 bukan bukti otorisasi server atau perlindungan terhadap manipulasi seluruh DB.
+
+## Pusat diagnosis sinkronisasi
+
+Menu Lainnya → Aktivitas perangkat ini menyediakan filter Semua, Menunggu,
+Perlu review, Approval dan Diterima. Buka Detail sinkronisasi untuk UUID lengkap,
+waktu WITA, percobaan, jadwal retry, referensi receipt dan konteks/dependency
+kunjungan. Filter/accordion hanya membaca data; tidak mengubah antrean, draft,
+receipt atau UUID, dan tidak menjalankan submit. Tombol Sinkronkan existing
+memakai engine yang sama; terminal rejection/auth_required tetap terkunci.
+
+Diagnosis memisahkan offline/backoff/pengiriman belum terkonfirmasi, dependency,
+source/graph visit invalid, auth, receipt approval, penolakan bisnis dan penolakan
+transport. Receipt wajib cocok UUID/status. State historis accepted tetap terlihat
+jika datanya kemudian rusak, tetapi ditandai Integritas perlu review; receipt lama
+tidak menjadi izin mengirim ulang. Diterima simulator bukan approval/pencairan atau
+posting Odoo. Validasi finansial/media/otorisasi resmi tetap dependency backend.
+
+Snapshot ledger+morning+outbox dibaca atomik per refresh existing, tanpa request
+jaringan/polling tambahan. Validator graf bersama hanya dievaluasi sekali untuk
+satu proyeksi snapshot; sync tetap membuat validator baru di setiap boundary.
+Detail membatasi field yang ditampilkan, tidak menampilkan payload mentah/blob
+foto/token, tanpa fitur ekspor/hapus/edit/paksa kirim. Pesan receipt/error existing
+masih ditampilkan sebagai teks. Owner terisolasi dan async result lama dibuang
+saat komponen/persona berganti. Diagnosis berlaku pada snapshot terakhir yang
+berhasil dibaca; tidak mengklaim status backend terkini atau fitur pemulihan admin.
