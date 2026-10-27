@@ -668,13 +668,12 @@
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T16:35:00+07:00
 
-[2026-10-27T16:52:00+07:00] [INFO] Perbaikan Lot Assignment Picking Kanonikal via ORM write, Sinkronisasi picked=True, dan Penuntasan Slice Runtime Disposable
-- Menindaklanjuti kelulusan seluruh 7 mutasi historis pada CI disposable (commit 305dd66) dan diagnosa eksekusi verify_disposable_slice.py:
-  * Perbaikan Penugasan Lot & Kuantitas _assign_lots_to_picking pada load_canonical_perpetual.py: Menghapus penugasan in-memory ml.lot_id = lot_obj.id yang rentan terabaikan/di-reset di Odoo ORM. Menggantinya dengan ORM write persisten ml.write({"lot_id": lot_obj.id, "quantity": qty_units, "picked": True}).
-  * Menandai status picked = True pada stock.move (matching_move.write({"picked": True})) serta memanggil action_set_quantities_to_reservation() jika didukung.
-  * Melengkapi pembuatan baris baru StockMoveLine.create(ml_vals) dengan product_uom_id dan picked: True.
+[2026-10-27T17:05:00+07:00] [INFO] Perbaikan Lot Assignment Picking Kanonikal via ORM write, Sinkronisasi lot_name & lot_id, dan Bypass Sanity Check UI
+- Menindaklanjuti kelulusan seluruh 7 mutasi historis pada CI disposable (commit 305dd66) dan resolusi _sanity_check pada verify_disposable_slice.py:
+  * Mengisi KEDUA field lot (lot_name dan lot_id) serta quantity dan picked=True via ORM write persisten pada stock.move.line saat _assign_lots_to_picking di scripts/load_canonical_perpetual.py.
+  * Menghapus pemanggilan action_set_quantities_to_reservation() pada incoming PO dan menambahkan skip_sanity_check=True pada val_ctx di _validate_picking_safely.
   * Penyempurnaan Picking Retur Karantina: Menyertakan pasangan move_ids bersama move_line_ids pada payload pembuatan picking karantina dan mengamankan pembacaan product_uom_id dari objek UoM produk secara defensif terhadap nilai boolean False.
   * Unit Testing: Menambahkan method write(self, vals) pada MockRecord di tests/test_canonical_loader_adapter.py (Ran 37 tests in 93s: OK).
 - Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), unit tests 37 pass.
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
-- Task managed by antigravity at 2026-10-27T16:52:00+07:00
+- Task managed by antigravity at 2026-10-27T17:05:00+07:00

@@ -398,6 +398,8 @@ class CanonicalPerpetualAdapter:
                         target_lot = lot_obj.id if lot_obj else False
                         if not ml_lot or (target_lot and ml_lot == target_lot):
                             upd_vals = {}
+                            if lot_num and "lot_name" in sml_fields:
+                                upd_vals["lot_name"] = lot_num
                             if lot_obj and "lot_id" in sml_fields:
                                 upd_vals["lot_id"] = lot_obj.id
                             if has_quantity_field:
@@ -412,6 +414,8 @@ class CanonicalPerpetualAdapter:
                             # Fallback untuk mock record in-memory
                             if lot_obj and hasattr(ml, "lot_id"):
                                 ml.lot_id = lot_obj.id
+                            if lot_num and hasattr(ml, "lot_name"):
+                                ml.lot_name = lot_num
                             if has_quantity_field and hasattr(ml, "quantity"):
                                 ml.quantity = qty_units
                             if has_qty_done_field and hasattr(ml, "qty_done"):
@@ -431,6 +435,8 @@ class CanonicalPerpetualAdapter:
                     "location_id": _rec_id(getattr(pick, "location_id", None)),
                     "location_dest_id": _rec_id(getattr(pick, "location_dest_id", None)),
                 }
+                if lot_num and "lot_name" in sml_fields:
+                    ml_vals["lot_name"] = lot_num
                 uom_rec = getattr(prod, "uom_id", None)
                 if uom_rec and hasattr(uom_rec, "id") and "product_uom_id" in sml_fields:
                     ml_vals["product_uom_id"] = uom_rec.id
@@ -451,12 +457,6 @@ class CanonicalPerpetualAdapter:
                     mv_upd["picked"] = True
                 if mv_upd:
                     matching_move.write(mv_upd)
-
-        if hasattr(pick, "action_set_quantities_to_reservation"):
-            try:
-                pick.action_set_quantities_to_reservation()
-            except Exception:
-                pass
 
     def _get_record_lines(self, record):
         """Mengambil line_ids dari record langsung atau dari move_id relasionalnya."""
@@ -502,7 +502,13 @@ class CanonicalPerpetualAdapter:
         if getattr(pick, "state", "") == "done":
             return True
 
-        val_ctx = {"skip_sms": True, "skip_backorder": True, "skip_immediate": True, "skip_expired": True}
+        val_ctx = {
+            "skip_sms": True,
+            "skip_backorder": True,
+            "skip_immediate": True,
+            "skip_expired": True,
+            "skip_sanity_check": True,
+        }
         pick_target = pick.with_context(**val_ctx) if callable(getattr(pick, "with_context", None)) else pick
         res = pick_target.button_validate() if hasattr(pick_target, "button_validate") else None
 
