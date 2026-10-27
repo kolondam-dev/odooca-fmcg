@@ -15,6 +15,7 @@ import { validateExpense } from "./domain/expense";
 import { SyncDiagnostics } from "./components/SyncDiagnostics";
 import { VisitPanel } from "./components/VisitPanel";
 import { SalesVisits, captureVisitLocation } from "./domain/visits";
+import { DeliveryWorkspace } from "./components/DeliveryWorkspace";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
 import { MorningSession } from "./components/MorningSession";
@@ -517,15 +518,12 @@ function Workspace({
                                 open={() => openVisit(snapshot.outlets[0].id)}
                             />
                         ) : (
-                            <DeliveryCard
-                                task={snapshot.deliveries[0]}
-                                open={() =>
-                                    setDialog({
-                                        type: "proof",
-                                        delivery: snapshot.deliveries[0].id,
-                                    })
-                                }
-                            />
+                            <button
+                                class="outlet-card"
+                                onClick={() => go("delivery")}
+                            >
+                                Buka manifest pengiriman
+                            </button>
                         )}
                         <div class="tip">
                             <span class="quick-icon">
@@ -636,20 +634,14 @@ function Workspace({
                                 <p>2 pengiriman · 20 karton · DB • DEMO</p>
                             </div>
                         </section>
-                        <div class="list-stack">
-                            {snapshot.deliveries.map((d) => (
-                                <DeliveryCard
-                                    key={d.id}
-                                    task={d}
-                                    open={() =>
-                                        setDialog({
-                                            type: "proof",
-                                            delivery: d.id,
-                                        })
-                                    }
-                                />
-                            ))}
-                        </div>
+                        <DeliveryWorkspace
+                            key={owner}
+                            store={store}
+                            identity={identity}
+                            provider={provider}
+                            engine={engine}
+                            changed={() => void refresh()}
+                        />
                         <button
                             class="secondary full"
                             onClick={() =>
@@ -932,31 +924,6 @@ function OutletCard({
                     <span>·</span>
                     <Icon name="pin" size={14} />
                     {outlet.distance}
-                </small>
-            </div>
-            <Icon name="caret" size={18} />
-        </button>
-    );
-}
-function DeliveryCard({
-    task,
-    open,
-}: {
-    task: Snapshot["deliveries"][number];
-    open: () => void;
-}) {
-    return (
-        <button class="outlet-card" onClick={open}>
-            <span class="outlet-icon">
-                <Icon name="truck" size={28} />
-            </span>
-            <div>
-                <strong>{task.outlet}</strong>
-                <p>
-                    {task.id} · {task.address}
-                </p>
-                <small>
-                    {task.items} SKU · {task.cartons} karton
                 </small>
             </div>
             <Icon name="caret" size={18} />

@@ -1,3 +1,4 @@
+import { validatePodMedia } from "./delivery";
 import {
     validatePackagedCommandEvidence,
     EvidenceIntegrityError,
@@ -38,6 +39,8 @@ export class Outbox {
             occurredAt?: string;
         },
     ) {
+        if (type === "delivery.pod.submit" && !draftWrite)
+            throw new Error("POD wajib transaksi manifest atomik.");
         if (type === "field_expense.realization.submit" && !draftWrite?.guards)
             throw new Error(
                 "Realisasi harus memakai transaksi sumber/struk dan advance.",
@@ -139,6 +142,7 @@ export class Outbox {
                 this.changed();
                 try {
                     try {
+                        await validatePodMedia(item, this.owner, this.store);
                         await validatePackagedCommandEvidence(
                             item.command,
                             this.owner,
@@ -170,6 +174,7 @@ export class Outbox {
                             "Integritas transaksi/sumber berubah sebelum kirim; perlu review.",
                         );
                     }
+                    await validatePodMedia(item, this.owner, this.store);
                     const receipt = ReceiptSchema.parse(
                         await this.provider.submit(item.command),
                     );

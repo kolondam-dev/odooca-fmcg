@@ -2,6 +2,7 @@ import {
     assertLocalEvidence,
     type VisualEvidence,
 } from "../domain/evidence-package";
+import { validatePodCommit, assertPodSource } from "../domain/delivery";
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import {
     ExpenseRealizationSchema,
@@ -134,6 +135,27 @@ export class FieldStore {
                 throw new Error(
                     "Data berubah di tab lain. Muat ulang sebelum mengirim.",
                 );
+            if (item.command.type === "delivery.pod.submit") {
+                assertPodSource(
+                    (
+                        await tx
+                            .objectStore("drafts")
+                            .get(
+                                `${item.owner}:delivery-manifest-v1:${item.command.payload.source.business_date}`,
+                            )
+                    )?.value,
+                    item.command.payload.source,
+                );
+                validatePodCommit(
+                    item,
+                    key,
+                    value,
+                    await tx
+                        .objectStore("outbox")
+                        .index("owner")
+                        .getAll(item.owner),
+                );
+            }
             if (visitGuard) {
                 if (key !== VISITS_KEY)
                     throw new Error(

@@ -1,5 +1,14 @@
 # HANDOFF
 
+
+## 2026-10-27 — codex agent — POD terikat DO/trip simulator
+**Basis:** main 6aa9cc3 (PR #27 merged); branch agen/mobile-delivery-pod. Plan diperbarui sebelum kode.
+**Berubah:** manifest cache per owner/hari, DTO command baru delivery.pod.submit, penerima/hasil/kuantitas per item/alasan dan foto wajib dengan geofence 5–15m/TTL60s. Draft offline disimpan eksplisit, antrean+ledger CAS atomik; dedup DO/foto lintas tab. Restore dan pre-sync memvalidasi source/envelope/event time/media/hash, termasuk recheck sumber setelah await media. Replay next-day sah; kerusakan ditahan dan data dipertahankan. Bukti/data hasil read-only, receipt normal needs_approval, bukan picking done. OpenAPI draft0.7 dan fixture live gate additive, tidak mengubah workflow.
+**Diverifikasi lokal:** 154 unit +1 hosting +48 browser ponsel/tablet PASS; dua koneksi DB, source berubah saat await, media/manifest/ledger rusak, draft offline dan readonly. Screenshot ponsel ditinjau; format/typecheck/contracts/demo+live/budget (demo JS58,9 KiB gzip; font47,1 KiB), Ruff/4 manifest PASS. CI setelah push.
+**Batas:** fixture satu item/DO, bukan stock/lot, retur, collection, closing atau approval backend. Draft manual; koreksi POD/reassignment/revocation/recovery belum tersedia. Maps tetap pinpoint simulasi; auth/session/device/media/security dan dedup server dependency. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh; tidak merge/deploy, live terkunci.
+**Berikutnya:** koreksi POD berbasis receipt penolakan dan lineage immutable, kemudian collection/closing sesuai authority backend terpisah.
+**Menunggu:** CI dan review pemilik.
+
 ## 2026-10-27 — codex agent — Foto wajib pada aksi kunjungan sales
 **Basis:** main d1cd6e8 (PR #26 merged); branch agen/mobile-visit-evidence. Plan terintegrasi sebelum implementasi.
 **Berubah:** check-in/check-out baru wajib paket foto v1 berbeda per aksi; owner/ref/hash/foto/map cocok, geofence sumber PJP tetap konservatif, capturedAt sesudah pembukaan sesi/check-in dan foto/GPS asli paket TTL60s pada waktu aksi. Ref disalin atomik ke ledger+command dengan CAS dan keunikan ID foto per aksi ledger owner; draft berubah tidak mengubah transaksi tersimpan. DTO version/ref berpasangan; legacy photo-less hanya replay, commit baru tanpa foto ditolak di service dan validator atomik.

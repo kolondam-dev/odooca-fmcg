@@ -409,3 +409,28 @@ Peta tetap grid pinpoint simulasi tanpa basemap. Tidak membuktikan kamera asli,
 anti-mock GPS atau anti-titip; koordinasi manipulasi seluruh DB tetap di luar
 integritas client. Otorisasi, binding perangkat, media/maps resmi, recovery visit
 tertahan dan retention/GC masih dependency backend/native. Live tetap terkunci.
+
+
+### POD simulator (main setelah PR #27)
+
+Delivery memuat manifest contoh per petugas/hari dan menyimpannya offline.
+Buka DO, isi penerima, kuantitas diterima per item, hasil penuh/sebagian/ditolak
+serta alasan selisih. Foto/pinpoint simulasi wajib, GPS di geofence dan <=60 detik
+saat pengajuan. Tombol **Simpan draft POD** menyimpan form+referensi foto;
+pengisian form belum autosave. Setelah diajukan, data/foto menjadi read-only;
+status receipt terbaru ada di Lainnya. Pengajuan normal selalu membutuhkan review.
+
+Command baru `delivery.pod.submit` mempunyai DTO strict dan snapshot sumber
+owner/DO/trip/outlet/versi/hari/item. `delivery.proof.submit` lama tidak ditafsirkan
+ulang. CAS ledger+queue serta reservasi DO/foto atomik mencegah pengajuan ganda
+antar tab dalam IndexedDB owner yang sama. Restore dan sebelum submit memvalidasi
+manifest tersimpan, command, geofence saat kejadian, foto dan hash. Replay besok
+memakai waktu kejadian, bukan izin membuat POD hari lama. Data rusak ditahan untuk
+review, tanpa hapus/paksa-kirim/recovery otomatis.
+
+Fixture satu item/DO bukan manifest stok/lot nyata. Tidak menyelesaikan picking,
+retur, collection, closing trip atau approval resmi. Tidak ada koreksi POD ditolak
+pada iterasi ini; DO tetap terkunci untuk review. Manifest immutable contoh belum
+memiliki refresh/reassignment/revocation server. Hash/local storage bukan batas
+keamanan; media/maps resmi, auth/session/device/ACL dan dedup server tetap wajib
+sebelum live. Live tetap terkunci.
