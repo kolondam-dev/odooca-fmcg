@@ -1,5 +1,21 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Perbaikan Lot Assignment Picking Kanonikal via ORM write, Sinkronisasi picked=True, dan Penuntasan Slice Runtime Disposable
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6438259265](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6438259265)):**
+- Menindaklanjuti kelulusan seluruh 7 mutasi historis pada CI disposable (commit `305dd66`):
+  1. *Perbaikan Penugasan Lot & Kuantitas `_assign_lots_to_picking` pada `load_canonical_perpetual.py`*:
+     - Menyelesaikan blocker `odoo.exceptions.UserError: You need to supply a Lot/Serial Number for product:` pada penerimaan barang PO transit Juni di Odoo 19 nyata.
+     - Mengganti penugasan in-memory `ml.lot_id = lot_obj.id` yang rentan ter-reset/diabaikan oleh descriptor Odoo dengan pemanggilan ORM persisten `ml.write({"lot_id": lot_obj.id, "quantity": qty_units, "picked": True})`.
+     - Menandai `picked = True` pada record move (`matching_move.write({"picked": True})`) serta memanggil `pick.action_set_quantities_to_reservation()` jika didukung.
+     - Melengkapi pembuatan baris baru `StockMoveLine.create(ml_vals)` dengan `product_uom_id` dan `picked: True`.
+  2. *Penyempurnaan Picking Retur Karantina*:
+     - Menyertakan pasangan `move_ids` bersama `move_line_ids` pada payload pembuatan picking karantina, memastikan siklus dokumen Odoo 19 lengkap dan terhubung ke dokumen stok native.
+     - Mengamankan pembacaan `product_uom_id` dari objek UoM produk secara defensif terhadap nilai boolean `False`.
+  3. *Unit Testing & Kompatibilitas Mock*:
+     - Menambahkan method `write(self, vals)` pada `MockRecord` di `tests/test_canonical_loader_adapter.py` untuk mensimulasikan perilaku persistensi ORM Odoo.
+     - Seluruh 37 test suite pada `tests/test_canonical_loader_adapter.py` lolos 100%.
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke `main`.
+
 ## 2026-10-27 — antigravity agent — Eliminasi Kuantitas Sebelum Reservasi, Penguatan Guard Penolakan Stok Mutasi 7, dan Detail Error Logging
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6438259265](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6438259265)):**
 - Menindaklanjuti review commit `538a51d`:

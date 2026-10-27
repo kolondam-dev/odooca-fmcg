@@ -150,6 +150,12 @@ class MockRecord:
     def with_context(self, **kwargs):
         return self
 
+    def write(self, vals):
+        self._vals.update(vals)
+        for k, v in vals.items():
+            setattr(self, k, v)
+        return True
+
     def action_confirm(self):
         self.state = "sale"
         if self._model == "sale.order" and self._env and "stock.picking" in self._env:

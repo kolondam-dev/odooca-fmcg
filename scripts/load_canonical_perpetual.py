@@ -351,6 +351,7 @@ class CanonicalPerpetualAdapter:
 
             lot_num = item.get("lot_number")
             lot_obj = None
+            lot_fields = getattr(StockLot, "_fields", {}) if StockLot else {}
             if StockLot and lot_num:
                 lot_obj = StockLot.search([("name", "=", lot_num), ("product_id", "=", prod.id)], limit=1)
                 if not lot_obj:
@@ -359,7 +360,7 @@ class CanonicalPerpetualAdapter:
                         "product_id": prod.id,
                         "company_id": self.company.id,
                     }
-                    if item.get("expiry_date"):
+                    if item.get("expiry_date") and "expiration_date" in lot_fields:
                         lot_vals["expiration_date"] = item["expiry_date"]
                     lot_obj = StockLot.create(lot_vals)
 
@@ -396,12 +397,27 @@ class CanonicalPerpetualAdapter:
                         ml_lot = _rec_id(getattr(ml, "lot_id", None))
                         target_lot = lot_obj.id if lot_obj else False
                         if not ml_lot or (target_lot and ml_lot == target_lot):
+                            upd_vals = {}
+                            if lot_obj and "lot_id" in sml_fields:
+                                upd_vals["lot_id"] = lot_obj.id
+                            if has_quantity_field:
+                                upd_vals["quantity"] = qty_units
+                            elif has_qty_done_field:
+                                upd_vals["qty_done"] = qty_units
+                            if "picked" in sml_fields:
+                                upd_vals["picked"] = True
+
+                            if callable(getattr(ml, "write", None)):
+                                ml.write(upd_vals)
+                            # Fallback untuk mock record in-memory
                             if lot_obj and hasattr(ml, "lot_id"):
                                 ml.lot_id = lot_obj.id
                             if has_quantity_field and hasattr(ml, "quantity"):
                                 ml.quantity = qty_units
                             if has_qty_done_field and hasattr(ml, "qty_done"):
                                 ml.qty_done = qty_units
+                            if hasattr(ml, "picked"):
+                                ml.picked = True
                             assigned = True
                             break
 
@@ -415,13 +431,32 @@ class CanonicalPerpetualAdapter:
                     "location_id": _rec_id(getattr(pick, "location_id", None)),
                     "location_dest_id": _rec_id(getattr(pick, "location_dest_id", None)),
                 }
+                uom_rec = getattr(prod, "uom_id", None)
+                if uom_rec and hasattr(uom_rec, "id") and "product_uom_id" in sml_fields:
+                    ml_vals["product_uom_id"] = uom_rec.id
                 if has_quantity_field:
                     ml_vals["quantity"] = qty_units
                 if has_qty_done_field:
                     ml_vals["qty_done"] = qty_units
+                if "picked" in sml_fields:
+                    ml_vals["picked"] = True
                 new_ml = StockMoveLine.create(ml_vals)
                 if hasattr(pick, "move_line_ids") and hasattr(pick.move_line_ids, "append"):
                     pick.move_line_ids.append(new_ml)
+
+            if matching_move and callable(getattr(matching_move, "write", None)):
+                mv_fields = getattr(matching_move, "_fields", {})
+                mv_upd = {}
+                if "picked" in mv_fields:
+                    mv_upd["picked"] = True
+                if mv_upd:
+                    matching_move.write(mv_upd)
+
+        if hasattr(pick, "action_set_quantities_to_reservation"):
+            try:
+                pick.action_set_quantities_to_reservation()
+            except Exception:
+                pass
 
     def _get_record_lines(self, record):
         """Mengambil line_ids dari record langsung atau dari move_id relasionalnya."""
@@ -933,10 +968,28 @@ class CanonicalPerpetualAdapter:
                     "location_id": customer_loc.id,
                     "location_dest_id": quarantine_loc.id,
                 }
+                uom_rec = getattr(prod, "uom_id", None)
+                if uom_rec and hasattr(uom_rec, "id") and "product_uom_id" in sml_fields:
+                    ml_item["product_uom_id"] = uom_rec.id
                 if has_quantity_f:
                     ml_item["quantity"] = p_data["qty_units"]
                 if has_qty_done_f:
                     ml_item["qty_done"] = p_data["qty_units"]
+                if "picked" in sml_fields:
+                    ml_item["picked"] = True
+
+                move_item = {
+                    "name": f"Retur Karantina {rej_id} - {prod.display_name if prod else ''}",
+                    "product_id": prod.id if prod else False,
+                    "product_uom": uom_rec.id if uom_rec and hasattr(uom_rec, "id") else False,
+                    "product_uom_qty": p_data["qty_units"],
+                    "location_id": customer_loc.id,
+                    "location_dest_id": quarantine_loc.id,
+                    "company_id": self.company.id,
+                }
+                mv_fields = getattr(self.env.get("stock.move"), "_fields", {}) if "stock.move" in self.env else {}
+                if "picked" in mv_fields:
+                    move_item["picked"] = True
 
                 pick_vals = {
                     "origin": rej_id,
@@ -944,6 +997,7 @@ class CanonicalPerpetualAdapter:
                     "location_id": customer_loc.id,
                     "location_dest_id": quarantine_loc.id,
                     "note": f"Retur Karantina DO {p_data['do_number']}: {p_data['rejection_reason']}",
+                    "move_ids": [(0, 0, move_item)] if prod else [],
                     "move_line_ids": [(0, 0, ml_item)] if prod else [],
                 }
                 pick = StockPicking.create(pick_vals)
