@@ -8,8 +8,9 @@ Eksperimen Seeding Historis Minimal Odoo 19 (SKU ULV-RNS-03):
 - Metode Opening Quant: Inventory adjustment native Odoo 19 (action_apply_inventory)
 - Native Historical Readback Pasca-Injeksi: Evaluasi saldo fisik as-of per tanggal via stock.move.line
 - Readback Valuasi & GL Aktual Odoo: stock.valuation.layer (jika tersedia) & GL Persediaan account.move.line menentukan kelulusan
+- Pemisahan Tegas Loader vs Validator: Loader murni mengeksekusi Odoo native tanpa manipulasi nilai/jurnal sintetis; Validator read-only
 - Run 2 Zero-Drift Idempotency Penuh: Deep snapshot comparison (exact IDs, dates, lots, quantities, GL, SVL)
-- Actual Mutation Tests (Savepoints): Uji mutasi salah tanggal (now), mutasi nilai GL/SVL, dan kebocoran receipt masa depan
+- Actual Mutation Tests (Savepoints): Uji mutasi salah tanggal (now), mutasi nilai GL/SVL (balanced journal entry), dan kebocoran receipt masa depan
 - Structured JSON Report: Diekspor via try...finally dengan CustomJSONEncoder bebas tuple keys
 """
 
@@ -373,6 +374,7 @@ def main():
         ResPartner = env["res.partner"].sudo()
 
         # Akun & Jurnal untuk Real-Time Automated Valuation
+        # PERBAIKAN: Gunakan 'is not None' untuk memeriksa keberadaan model Odoo (karena recordset kosong mengevaluasi ke False)
         AccountAccount = env["account.account"].sudo() if "account.account" in env else None
         AccountJournal = env["account.journal"].sudo() if "account.journal" in env else None
 
@@ -382,7 +384,7 @@ def main():
         cogs_acc = None
         stock_journal = None
 
-        if AccountAccount:
+        if AccountAccount is not None:
             # 1. Stock Valuation Account (Persediaan 113000 / 113100)
             stock_valuation_acc = AccountAccount.search([
                 ("company_id", "in", [False, company.id]),
@@ -446,7 +448,7 @@ def main():
                     "company_id": company.id,
                 })
 
-        if AccountJournal:
+        if AccountJournal is not None:
             stock_journal = AccountJournal.search([
                 ("company_id", "in", [False, company.id]),
                 ("code", "in", ["STJ", "MISC", "VAL"]),
@@ -463,6 +465,10 @@ def main():
                     "code": "STJ",
                     "company_id": company.id,
                 })
+
+        # Pastikan anglo_saxon_accounting aktif jika field tersedia pada res.company
+        if "anglo_saxon_accounting" in company._fields and not company.anglo_saxon_accounting:
+            company.sudo().write({"anglo_saxon_accounting": True})
 
         # Kategori Produk dengan Automated Real-Time Valuation
         categ = ProductCategory.search([("name", "=", "FMCG Perpetual Experiment")], limit=1)
@@ -489,7 +495,8 @@ def main():
             categ.write(categ_vals)
 
         print(f" -> Kategori '{categ.name}' dikonfigurasi: valuation={getattr(categ, 'property_valuation', 'N/A')}, cost_method={getattr(categ, 'property_cost_method', 'N/A')}")
-        print(f" -> Akun Valuasi Persediaan: {stock_valuation_acc.code} - {stock_valuation_acc.name}")
+        if stock_valuation_acc:
+            print(f" -> Akun Valuasi Persediaan: {stock_valuation_acc.code} - {stock_valuation_acc.name}")
 
         # Produk
         product = ProductProduct.search([("default_code", "=", oracle["sku"]), ("company_id", "in", [False, company.id])], limit=1)
@@ -557,50 +564,8 @@ def main():
                 "expiration_date": details["receipt"]["expiry"],
             })
 
-        # Helper GL Journal Entry: Sinkronisasi Jurnal Akuntansi Persediaan Historis
-        def sync_stock_gl_entry(origin, move_date, debit_acc, credit_acc, amount, move_desc):
-            if not (has_aml and AccountAccount and stock_journal and debit_acc and credit_acc):
-                return None
-            AccountMove = env["account.move"].sudo()
-            existing_entry = AccountMove.search([
-                ("company_id", "=", company.id),
-                ("ref", "=", origin),
-            ], limit=1)
-            if existing_entry:
-                if existing_entry.date != move_date[:10]:
-                    existing_entry.write({"date": move_date[:10]})
-                    existing_entry.line_ids.write({"date": move_date[:10]})
-                return existing_entry
-
-            entry_vals = {
-                "journal_id": stock_journal.id,
-                "date": move_date[:10],
-                "ref": origin,
-                "company_id": company.id,
-                "line_ids": [
-                    (0, 0, {
-                        "name": f"{move_desc} (Debit)",
-                        "account_id": debit_acc.id,
-                        "product_id": product.id,
-                        "debit": amount,
-                        "credit": 0.0,
-                        "date": move_date[:10],
-                    }),
-                    (0, 0, {
-                        "name": f"{move_desc} (Credit)",
-                        "account_id": credit_acc.id,
-                        "product_id": product.id,
-                        "debit": 0.0,
-                        "credit": amount,
-                        "date": move_date[:10],
-                    }),
-                ],
-            }
-            entry = AccountMove.create(entry_vals)
-            entry.action_post()
-            return entry
-
-        # Helper 1: Eksekusi Opening Stock via Mekanisme Quant Adjustment Asli (Sama Persis dengan Loader)
+        # Helper 1: Eksekusi Opening Stock via Mekanisme Quant Adjustment Asli Odoo 19
+        # (Loader murni: tidak merekayasa/mensintesis nilai atau jurnal buatan)
         def execute_opening_quant_adjustment(origin, loc_dest, qty, lot, move_date):
             existing_mv = StockMove.search([
                 ("origin", "=", origin),
@@ -639,31 +604,18 @@ def main():
             if hasattr(adj_moves, "move_line_ids") and adj_moves.move_line_ids:
                 adj_moves.move_line_ids.write({"date": move_date})
 
-            # Jika SVL aktif, selaraskan valuasi opening
-            if has_svl:
-                svl_recs = env["stock.valuation.layer"].sudo().search([("stock_move_id", "in", adj_moves.ids)])
-                for sv in svl_recs:
-                    if not sv.value or abs(sv.value - (qty * oracle["unit_cost"])) > 0.01:
-                        sv.write({"value": qty * oracle["unit_cost"], "unit_cost": oracle["unit_cost"]})
-
-            # Backdate / Sinkronisasi entri GL akuntansi persediaan
+            # Backdate entri akuntansi Odoo native jika ada yang dihasilkan oleh Odoo stock_account
             if hasattr(adj_moves, "account_move_ids") and adj_moves.account_move_ids:
                 for am in adj_moves.account_move_ids:
                     am.write({"date": move_date[:10]})
                     am.line_ids.write({"date": move_date[:10]})
-            else:
-                sync_stock_gl_entry(
-                    origin=origin,
-                    move_date=move_date,
-                    debit_acc=stock_valuation_acc,
-                    credit_acc=stock_input_acc,
-                    amount=qty * oracle["unit_cost"],
-                    move_desc=f"Opening Stock {product.name}",
-                )
 
+            native_am_count = len(getattr(adj_moves, "account_move_ids", []))
+            print(f" -> Opening adjustment move ID {adj_moves.id} (native Odoo account_moves: {native_am_count})")
             return adj_moves, True
 
-        # Helper 2: Eksekusi Pergerakan Operasional (Delivery, Retur, PO Receipt)
+        # Helper 2: Eksekusi Pergerakan Operasional Native Odoo 19 (Delivery, Retur, PO Receipt)
+        # (Loader murni: tidak merekayasa/mensintesis nilai atau jurnal buatan)
         def execute_operational_movement(origin, loc_src, loc_dest, qty, lot, move_date):
             existing_mv = StockMove.search([
                 ("origin", "=", origin),
@@ -707,59 +659,24 @@ def main():
                 "date": move_date,
             }
             StockMoveLine.create(line_vals)
+            if "picked" in StockMove._fields:
+                mv.picked = True
             mv._action_done()
 
             mv.write({"date": move_date})
             mv.move_line_ids.write({"date": move_date})
 
-            # Jika SVL aktif, selaraskan nilai SVL dengan tanggal move
-            if has_svl:
-                svl_recs = env["stock.valuation.layer"].sudo().search([("stock_move_id", "=", mv.id)])
-                expected_svl_val = - (qty * oracle["unit_cost"]) if loc_dest.id == customer_loc.id else (qty * oracle["unit_cost"])
-                for sv in svl_recs:
-                    sv.write({"value": expected_svl_val, "unit_cost": oracle["unit_cost"]})
-
-            # Backdate / Sinkronisasi entri GL akuntansi persediaan
+            # Backdate entri akuntansi Odoo native jika ada yang dihasilkan oleh Odoo stock_account
             if hasattr(mv, "account_move_ids") and mv.account_move_ids:
                 for am in mv.account_move_ids:
                     am.write({"date": move_date[:10]})
                     am.line_ids.write({"date": move_date[:10]})
-            else:
-                # Tentukan arah debit/credit berdasarkan tipe pergerakan
-                if loc_dest.id == customer_loc.id:
-                    # Outbound Delivery: Debit HPP, Credit Persediaan
-                    sync_stock_gl_entry(
-                        origin=origin,
-                        move_date=move_date,
-                        debit_acc=cogs_acc,
-                        credit_acc=stock_valuation_acc,
-                        amount=qty * oracle["unit_cost"],
-                        move_desc=f"Pengiriman DO {origin}",
-                    )
-                elif loc_src.id == customer_loc.id:
-                    # Retur Customer ke Karantina: Debit Persediaan Karantina, Credit HPP
-                    sync_stock_gl_entry(
-                        origin=origin,
-                        move_date=move_date,
-                        debit_acc=stock_valuation_acc,
-                        credit_acc=cogs_acc,
-                        amount=qty * oracle["unit_cost"],
-                        move_desc=f"Retur Karantina {origin}",
-                    )
-                elif loc_src.id == supplier_loc.id:
-                    # Inbound PO: Debit Persediaan, Credit Interim Penerimaan
-                    sync_stock_gl_entry(
-                        origin=origin,
-                        move_date=move_date,
-                        debit_acc=stock_valuation_acc,
-                        credit_acc=stock_input_acc,
-                        amount=qty * oracle["unit_cost"],
-                        move_desc=f"Penerimaan PO {origin}",
-                    )
 
+            native_am_count = len(getattr(mv, "account_move_ids", []))
+            print(f" -> Move {origin} ID {mv.id} (native Odoo account_moves: {native_am_count})")
             return mv, True
 
-        # Helper Evaluasi Posisi & Valuasi Historis Native
+        # Validator Read-Only: Evaluasi Posisi Fisik & Akuntansi Native Odoo 19
         def get_historical_position(as_of_dt_str):
             domain = [
                 ("product_id", "=", product.id),
@@ -813,7 +730,8 @@ def main():
                     if (getattr(a, "product_id", None) and a.product_id.id == product.id)
                     or any(ref in (a.move_id.ref or "") for ref in ["OPENING-20260701", "DO-202607-0063", "REJ-202607-001", "PO-2026-06-05"])
                 ]
-                gl_balance = round(sum(a.debit - a.credit for a in matching_amls), 2)
+                if matching_amls:
+                    gl_balance = round(sum(a.debit - a.credit for a in matching_amls), 2)
 
             return {
                 "saleable_units": saleable_units,
@@ -839,7 +757,6 @@ def main():
             move_date=details["opening"]["date"],
         )
         run1_events["opening"] = {"move_id": mv_open.id, "created": cr_open}
-        print(f" -> [Run 1] Opening Stock (Quant Adjustment): Move ID {mv_open.id} (created={cr_open})")
 
         # 2. Delivery Outbound: 2026-07-03 14:00:00
         mv_do, cr_do = execute_operational_movement(
@@ -851,7 +768,6 @@ def main():
             move_date=details["delivery"]["date"],
         )
         run1_events["delivery"] = {"move_id": mv_do.id, "created": cr_do}
-        print(f" -> [Run 1] Delivery DO-202607-0063: Move ID {mv_do.id} (created={cr_do})")
 
         # 3. Retur Karantina: 2026-07-03 23:59:59
         mv_rej, cr_rej = execute_operational_movement(
@@ -863,7 +779,6 @@ def main():
             move_date=details["rejection"]["date"],
         )
         run1_events["rejection"] = {"move_id": mv_rej.id, "created": cr_rej}
-        print(f" -> [Run 1] Retur Karantina REJ-202607-001: Move ID {mv_rej.id} (created={cr_rej})")
 
         # 4. PO Inbound Receipt: 2026-07-04 23:59:59
         mv_po, cr_po = execute_operational_movement(
@@ -875,7 +790,6 @@ def main():
             move_date=details["receipt"]["date"],
         )
         run1_events["receipt"] = {"move_id": mv_po.id, "created": cr_po}
-        print(f" -> [Run 1] PO-2026-06-05 Receipt: Move ID {mv_po.id} (created={cr_po})")
 
         env.cr.commit()
         report["run1_summary"] = run1_events
@@ -893,7 +807,7 @@ def main():
             delta_quar = round(pos["quarantine_cartons"] - c_exp["expected_quarantine_cartons"], 4)
             stock_match = (delta_saleable == 0.0) and (delta_quar == 0.0)
 
-            # 2. GL Balance (Akun Persediaan 113000) Wajib Cocok dan Menentukan Kelulusan
+            # 2. GL Balance (Akun Persediaan 113000)
             if pos["odoo_gl_balance"] is not None:
                 delta_gl = round(pos["odoo_gl_balance"] - c_exp["expected_total_val"], 2)
                 gl_match = (abs(delta_gl) < 0.01)
@@ -916,9 +830,9 @@ def main():
             else:
                 delta_svl = 0.0
                 svl_match = True
-                actual_svl_display = "N/A (Odoo 19 simplified valuation)"
+                actual_svl_display = "N/A (Odoo 19 removed SVL)"
 
-            # Kelulusan mutlak ditentukan oleh Fisik + GL + SVL
+            # Kelulusan mutlak ditentukan oleh Fisik + GL + SVL (tanpa manipulasi buatan)
             is_match = stock_match and gl_match and svl_match
             if not is_match:
                 all_cutoffs_match = False
@@ -1060,23 +974,40 @@ def main():
         # Mutasi 2: Manipulasi Nilai Valuasi & GL (+ Rp 50.000.000)
         env.cr.execute("SAVEPOINT test_mutation_val")
         try:
-            # Mutasi GL pada akun persediaan
-            if has_aml and stock_valuation_acc:
-                val_amls = env["account.move.line"].sudo().search([
-                    ("company_id", "=", company.id),
-                    ("move_id.ref", "ilike", "OPENING-20260701"),
-                    ("account_id", "=", stock_valuation_acc.id),
-                ], limit=1)
-                if val_amls:
-                    val_amls.write({"debit": val_amls.debit + 50000000.0})
-            if has_svl:
-                svl_open = env["stock.valuation.layer"].sudo().search([("stock_move_id", "=", mv_open.id)], limit=1)
-                if svl_open:
-                    svl_open.write({"value": svl_open.value + 50000000.0})
+            # Buat entri mutasi yang sah dan seimbang secara akuntansi Odoo (debit=credit seimbang)
+            # agar tidak ditolak oleh constraint _check_balanced jurnal,
+            # tetapi memanipulasi saldo akun persediaan sehingga validator menolaknya.
+            AccountMove = env["account.move"].sudo()
+            mutated_move = AccountMove.create({
+                "journal_id": stock_journal.id,
+                "date": "2026-07-01",
+                "ref": "OPENING-20260701-MUTATION",
+                "company_id": company.id,
+                "line_ids": [
+                    (0, 0, {
+                        "name": "Mutasi GL Uji Penolakan (Debit Persediaan)",
+                        "account_id": stock_valuation_acc.id,
+                        "product_id": product.id,
+                        "debit": 50000000.0,
+                        "credit": 0.0,
+                        "date": "2026-07-01",
+                    }),
+                    (0, 0, {
+                        "name": "Mutasi GL Uji Penolakan (Credit Interim)",
+                        "account_id": stock_input_acc.id,
+                        "product_id": product.id,
+                        "debit": 0.0,
+                        "credit": 50000000.0,
+                        "date": "2026-07-01",
+                    }),
+                ],
+            })
+            mutated_move.action_post()
 
             pos_mutated = get_historical_position("2026-07-01 23:59:59")
             gl_actual = pos_mutated["odoo_gl_balance"] or 0.0
             delta_bogus = abs(gl_actual - oracle["cutoffs"]["cutoff_1"]["expected_total_val"])
+            # Saldo terbaca melonjak Rp 50.000.000 di atas expected, sehingga validator menolak
             rejected = (delta_bogus > 100.0)
             mutation_results["bogus_valuation_rejected"] = rejected
             print(f" -> Mutasi 2 (Nilai Valuasi/GL Palsu Ditolak): {'PASS' if rejected else 'FAIL'} (GL Delta: {delta_bogus})")

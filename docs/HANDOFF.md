@@ -1,5 +1,32 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Perbaikan Truthiness Model Odoo, Pemisahan Murni Loader vs Validator Read-Only, dan Mutation GL Berimbang
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6432038267](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6432038267)):**
+- Menindaklanjuti review commit `2062b97`:
+  1. *Hash 15 file lulus*: CI membuktikan verifikasi hash dynamic LF sukses 100%.
+  2. *AttributeError: 'NoneType' object has no attribute 'code'*: Pemeriksaan `if AccountAccount:` mengevaluasi empty recordset Odoo ke `False`, menyebabkan konfigurasi akun persediaan terlewati dan `stock_valuation_acc` bernilai `None`.
+  3. *SVL dipastikan tidak ada*: Introspeksi runtime membuktikan `stock.valuation.layer` memang telah dihapus pada build resmi Odoo 19 CE.
+  4. *Pemisahan Loader vs Validator*: Runner dilarang merekayasa entri jurnal sintetis (`sync_stock_gl_entry`) atau menimpa nilai dengan expected. Loader harus murni mengeksekusi operasi native Odoo, dan validator beroperasi secara read-only menginspeksi apa yang sebenarnya dihasilkan Odoo.
+  5. *Constraint Jurnal pada Mutasi GL*: Mutasi GL satu sisi berpotensi ditolak constraint `_check_balanced` Odoo sebelum validator membaca saldo. Mutasi harus berupa entri jurnal berimbang yang sah di Odoo namun memanipulasi saldo akun persediaan untuk menguji penolakan validator.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Perbaikan Truthiness Model Odoo ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Mengganti `if AccountAccount:` dan `if AccountJournal:` dengan `if AccountAccount is not None:` dan `if AccountJournal is not None:`.
+   - Menjamin seluruh akun persediaan (`113000`), akun interim input (`113900`), interim output (`113910`), HPP (`510000`), dan jurnal `STJ` terpasang pasti pada kategori produk `FMCG Perpetual Experiment`.
+   - Mengaktifkan `anglo_saxon_accounting` pada perusahaan jika field tersedia di `res.company`.
+2. **Pemisahan Tegas Loader vs Validator Read-Only:**
+   - Menghapus fungsi sintetis `sync_stock_gl_entry` dan manipulasi manual nilai valuasi (`sv.write(...)`).
+   - Loader murni mengeksekusi mekanisme native Odoo:
+     * Opening: `StockQuant.create(...)` + `quant.action_apply_inventory()`
+     * Operasional: `StockMove.create(...)` + `StockMoveLine.create(...)` + `mv._action_done()` (dengan `mv.picked = True`)
+     * Backdating hanya memperbarui tanggal transaksi pada record move, line, dan native `account_move_ids` yang dihasilkan Odoo.
+   - Validator beroperasi 100% read-only tanpa memodifikasi DB: membaca saldo fisik dari `stock.move.line` dan saldo GL dari `account.move.line` pada akun persediaan `113000`.
+3. **Mutasi GL Berimbang yang Sah Secara Akuntansi:**
+   - Merevisi Mutasi 2 (uji penolakan manipulasi valuasi/GL) dengan membuat entri jurnal berimbang (`mutated_move.line_ids` Debit Persediaan Rp 50.000.000, Credit Interim Rp 50.000.000) dan di-post.
+   - Entri lolos constraint `_check_balanced` jurnal Odoo, tetapi menyebabkan saldo akun persediaan membengkak Rp 50.000.000 di atas expected, sehingga validator menolak secara sah (`rejected = True`).
+   - Seluruh mutasi di-rollback seketika (`ROLLBACK TO SAVEPOINT`) diikuti `env.invalidate_all()`.
+
 ## 2026-10-27 — antigravity agent — Dynamic Canonical Fingerprint, Introspeksi SVL & Real-Time Valuation Odoo 19, Saldo GL Penentu Acceptance, dan Mutation Tests dengan Cache Invalidation
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6431760007](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6431760007)):**
 - Menindaklanjuti review commit `cb39979`:

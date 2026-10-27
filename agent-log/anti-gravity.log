@@ -534,4 +534,13 @@
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T09:05:00+07:00
 
+[2026-10-27T09:20:00+07:00] [INFO] Perbaikan Truthiness Model Odoo, Pemisahan Murni Loader vs Validator Read-Only, dan Mutation GL Berimbang
+- Menutup temuan review PR #15 (issuecomment-6432038267):
+  * Perbaikan Truthiness Model Odoo: mengganti if AccountAccount: dan if AccountJournal: yang mengevaluasi empty recordset ke False dengan if AccountAccount is not None: dan if AccountJournal is not None:, menjamin akun persediaan 113000, interim in 113900, interim out 113910, HPP 510000, dan jurnal STJ terpasang sempurna pada product.category.
+  * Pemisahan Murni Loader vs Validator Read-Only: menghapus fungsi rekayasa sync_stock_gl_entry dan manipulasi nilai manual (sv.write); loader murni mengeksekusi Odoo native (action_apply_inventory dan _action_done) hanya dengan backdating tanggal move/line/account_move; validator beroperasi 100% read-only tanpa memodifikasi DB.
+  * Mutasi GL Berimbang yang Sah: merevisi Mutasi 2 agar menghasilkan entri jurnal berimbang (debit persediaan = credit interim Rp 50.000.000) yang lolos constraint _check_balanced jurnal Odoo, namun terdeteksi dan ditolak oleh cut-off validator karena saldo persediaan melebihi ekspektasi.
+- Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok, 33/33 unit test adapter PASS.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T09:20:00+07:00
+
 
