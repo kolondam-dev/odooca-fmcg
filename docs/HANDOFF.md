@@ -1,5 +1,40 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Konfigurasi location.valuation_account_id, Relasi account_move_id Tunggal, dan Eliminasi Loop Valuasi Coba-Coba Sesuai Diagnosis Introspeksi Odoo 19
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6433430357](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6433430357)):**
+- Menindaklanjuti diagnosis konkret dari log introspeksi review commit `2af5cf9`:
+  1. *Predicate jurnal*: Membaca field `location.valuation_account_id` pada model `stock.location` (bukan field nama lain/legacy `valuation_in_account_id` atau `valuation_out_account_id`).
+  2. *Relasi jurnal move*: Relasi jurnal yang terdaftar pada `stock.move` di Odoo 19 adalah `account_move_id` (Many2one / tunggal), bukan `account_move_ids` (One2many).
+  3. *Otomasi jurnal native*: `stock.move._action_done()` secara native telah memanggil `_create_account_move()`. Memanggil ulang kandidat method valuasi secara coba-coba harus dihentikan.
+  4. *Mutation GL sah melaporkan FAIL*: Baseline GL belum valid pada run sebelumnya karena entri jurnal native Odoo belum terbentuk. Begitu konfigurasi jurnal lokasi dan akun diselaraskan, baseline GL akan valid.
+  5. *Langkah anti-gravity*:
+     - Perbaiki dan buktikan konfigurasi/jalur jurnal berdasarkan source aktual.
+     - Uji replay historis kecil dengan tanggal native atau jam Python virtual (`force_period_date`).
+     - Baca kembali stok, valuasi native, dan GL setelah seluruh event selesai—jangan hanya mencocokkan tanggal move.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Konfigurasi Menyeluruh `valuation_account_id` pada Tingkat Lokasi (`stock.location`) ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Menyelaraskan seluruh lokasi dengan field `valuation_account_id`:
+     * Lokasi Internal (`WH/Stock`, `Karantina FMCG Maumbi`): disetel ke `stock_valuation_acc` (113000).
+     * Lokasi Inventory Adjustment: disetel ke `stock_input_acc` (113900).
+     * Lokasi Supplier: disetel ke `stock_input_acc` (113900).
+     * Lokasi Customer: disetel ke `cogs_acc` (510000) / `stock_output_acc` (113910).
+     * Lokasi Production: disetel ke `stock_input_acc` (113900).
+   - Memastikan `wh_stock_loc` dan `quarantine_loc` secara eksplisit memiliki `valuation_account_id = stock_valuation_acc.id`.
+2. **Penyelarasan Relasi Jurnal Tunggal `account_move_id` Odoo 19:**
+   - Memperbarui `find_and_backdate_native_account_moves`: mengutamakan pembacaan Many2one `getattr(stock_move, "account_move_id", None)` sebagai relasi resmi Odoo 19, dengan fallback ke `account_move_ids` dan `stock_move_id`.
+   - Mengoleksi ID entri jurnal ke `experiment_account_move_ids` dan memastikan entri berstatus posted (`if am.state == "draft": am.action_post()`).
+   - Menyelaraskan tanggal `am.date` dan `am.line_ids.date` secara presisi.
+3. **Penghapusan Loop Valuasi Coba-Coba:**
+   - Menghapus perulangan coba-coba `for val_m in ["_create_account_moves", "_action_done_valuation", "_account_entry_move"]` pada `execute_opening_quant_adjustment` dan `execute_operational_movement`.
+   - Menginjeksi context `force_period_date=move_date[:10]` saat pemanggilan `quant.action_apply_inventory()` dan `mv._action_done()` untuk memastikan tanggal native Odoo teradopsi secara langsung.
+4. **Pembacaan Ulang GL Read-Only Pasca-Seluruh Event Selesai (`get_historical_position`):**
+   - Menghubungkan pembacaan AML akun persediaan 113000 dengan `experiment_account_move_ids`, produk, dan referensi transaksi kanonikal.
+   - Menghitung saldo GL kumulatif debit - kredit secara presisi per cut-off date (`as_of_dt_str[:10]`), memvalidasi bahwa GL bergerak sesuai register sumber tanpa perbaikan manual/sintetis.
+5. **Introspeksi Transparan `_create_account_move`:**
+   - Menambahkan ekstraksi kode sumber `stock.move._create_account_move` via `inspect.getsourcelines` ke log eksekusi CI untuk transparansi verifikasi.
+
 ## 2026-10-27 — antigravity agent — Introspeksi Sumber ORM Odoo 19, Context inventory_mode Quant, dan Verifikasi Mutasi 3-Fase (Baseline -> Mutasi -> Rollback)
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6433121740](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6433121740)):**
 - Menindaklanjuti review commit `e386ca3`:

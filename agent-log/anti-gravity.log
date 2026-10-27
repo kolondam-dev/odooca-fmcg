@@ -562,3 +562,14 @@
 - Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok.
 - Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T10:50:00+07:00
+
+[2026-10-27T11:18:00+07:00] [INFO] Konfigurasi location.valuation_account_id, Relasi account_move_id Tunggal, dan Eliminasi Loop Valuasi Coba-Coba Sesuai Diagnosis Introspeksi Odoo 19
+- Menutup temuan review PR #15 (issuecomment-6433430357):
+  * Konfigurasi location.valuation_account_id: Menyelaraskan seluruh lokasi internal (WH/Stock, Karantina FMCG Maumbi) ke akun persediaan 113000, lokasi inventory adjustment dan supplier ke akun interim input 113900, serta lokasi customer ke akun HPP 510000 / interim output 113910, sesuai predicate pembuatan jurnal Odoo 19 yang membaca location.valuation_account_id.
+  * Relasi Jurnal Many2one Tunggal Odoo 19 (account_move_id): Memperbarui find_and_backdate_native_account_moves agar mengutamakan stock_move.account_move_id, mencatat entri jurnal native Odoo yang terbentuk ke set experiment_account_move_ids, dan menyelaraskan tanggal transaksi buku besar secara presisi.
+  * Eliminasi Pemanggilan Coba-Coba Method Valuasi: Menghapus loop coba-coba _create_account_moves, _action_done_valuation, dll. karena stock.move._action_done() secara native mengeksekusi _create_account_move(). Menginjeksi context force_period_date pada saat quant.action_apply_inventory() dan move._action_done() dijalankan.
+  * Pembacaan Ulang GL Read-Only Pasca-Event: Menghubungkan pembacaan AML akun persediaan 113000 secara read-only dengan experiment_account_move_ids dan merekonsiliasi saldo GL kumulatif terhadap expected cut-off register sumber.
+  * Introspeksi Transparan: Menambahkan dump kode sumber _create_account_move via inspect.getsourcelines ke log CI.
+- Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T11:18:00+07:00
