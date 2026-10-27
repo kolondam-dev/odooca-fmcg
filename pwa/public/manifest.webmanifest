@@ -1,7 +1,7 @@
 {
   "id": "/field/",
-  "name": "FMCG Lapangan",
-  "short_name": "FMCG",
+  "name": "Odoo FMCG Mobile",
+  "short_name": "FMCG Mobile",
   "lang": "id",
   "start_url": "/field/",
   "scope": "/field/",
