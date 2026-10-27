@@ -16,7 +16,7 @@ beforeEach(() => {
         snapshot: vi.fn(),
         submit: vi.fn(async (c) => ({
             client_uuid: c.client_uuid,
-            status: "needs_approval",
+            status: "needs_approval" as const,
             reference: "SIM",
             message: "Review",
         })),

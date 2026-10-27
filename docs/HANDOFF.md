@@ -1,6 +1,11 @@
 # HANDOFF
 
 
+## 2026-10-27 — codex agent — Koreksi fixture typecheck PR #28
+**Temuan:** CI 4910b03 gagal typecheck karena fixture receipt status melebar menjadi string. Klaim typecheck lokal PASS pada entri POD sebelumnya keliru; exit typecheck terlewat dalam command sequence.
+**Perbaikan:** literal status needs_approval dibuat const pada fixture tes; tidak mengubah runtime/gate/workflow. Typecheck/format/unit/contracts diperiksa ulang secara eksplisit; CI commit baru diperiksa setelah push.
+**Batas:** seluruh batas simulasi/live lock tetap berlaku, belum merge/deploy.
+
 ## 2026-10-27 — codex agent — POD terikat DO/trip simulator
 **Basis:** main 6aa9cc3 (PR #27 merged); branch agen/mobile-delivery-pod. Plan diperbarui sebelum kode.
 **Berubah:** manifest cache per owner/hari, DTO command baru delivery.pod.submit, penerima/hasil/kuantitas per item/alasan dan foto wajib dengan geofence 5–15m/TTL60s. Draft offline disimpan eksplisit, antrean+ledger CAS atomik; dedup DO/foto lintas tab. Restore dan pre-sync memvalidasi source/envelope/event time/media/hash, termasuk recheck sumber setelah await media. Replay next-day sah; kerusakan ditahan dan data dipertahankan. Bukti/data hasil read-only, receipt normal needs_approval, bukan picking done. OpenAPI draft0.7 dan fixture live gate additive, tidak mengubah workflow.
