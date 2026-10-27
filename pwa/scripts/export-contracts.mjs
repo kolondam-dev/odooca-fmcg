@@ -26,6 +26,16 @@ function photoPairDependencies(schema) {
             evidence_version: ["evidence"],
             evidence: ["evidence_version"],
         };
+    if (
+        schema.properties?.pod_version &&
+        schema.properties?.supersedes_uuid &&
+        schema.properties?.correction_reason
+    )
+        schema.dependentRequired = {
+            ...schema.dependentRequired,
+            supersedes_uuid: ["correction_reason"],
+            correction_reason: ["supersedes_uuid"],
+        };
     Object.values(schema).forEach(photoPairDependencies);
 }
 const schemas = Object.fromEntries(
@@ -60,7 +70,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.7.0",
+        version: "0.8.0",
         description:
             "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
     },

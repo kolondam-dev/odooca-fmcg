@@ -1,6 +1,13 @@
 # HANDOFF
 
 
+## 2026-10-27 — codex agent — Koreksi POD ditolak simulator
+**Basis:** 4459bcb PR #28 direview layak merge tetapi belum merged; branch agen/mobile-pod-corrections, PR bertumpuk base agen/mobile-delivery-pod. Review issuecomment-6444798338 dibaca; seed agent terbaru 812ae66 tidak disentuh.
+**Berubah:** UUID baru/supersedes_uuid/alasan, source manifest identik, foto baru. Hanya receipt bisnis rejected cocok UUID membuka koreksi; transport/queued/needs_approval/accepted tetap terkunci. CAS pointer+snapshot receipt parent dalam transaksi sama, satu successor; parent/receipt/media immutable. Graph root/lineage/time/owner/DO/source/photo diperiksa pada commit/restore/pre-sync, termasuk media ancestor dan perubahan setelah await. JSON canonical schema untuk CAS pointer POD lama (urutan properti tidak bermakna); guard domain lain tetap. Draft koreksi terpisah per parent, pulih offline, histori readonly dan receipt normal needs_approval. Kontrak0.8 mencerminkan pasangan field.
+**Diverifikasi lokal:** 175 unit +1 hosting +50 browser PASS; race dua koneksi, receipt snapshot berubah saat commit/await media, multi-level correction dan root rusak, persisted cycle/missing parent/source/dropped ref, offline draft+UUID baru+parent utuh. Typecheck/format/contracts/demo+live/budget (demo60,0 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. Screenshot ponsel ditinjau; 6 browser POD diulang sesudah perubahan presentasi. CI setelah push.
+**Batas:** koreksi baru hanya hari manifest, replay antrean sah boleh besok. Tidak mengedit accepted/approval atau recovery data rusak. Maps tetap simulasi, bukan authority auth/session/device/media/approval/backend. Collection/closing/retur/lot/posting Odoo belum diintegrasikan; runtime Odoo lokal tidak dijalankan karena tidak ada addon/backend berubah. Backend/seed/loader/workflow/ruleset/Railway tidak disentuh, live terkunci, tidak merge/deploy.
+**Menunggu:** CI dan review pemilik; PR #28 harus merged sebelum PR lanjutan di-retarget ke main/merge.
+
 ## 2026-10-27 — codex agent — Koreksi fixture typecheck PR #28
 **Temuan:** CI 4910b03 gagal typecheck karena fixture receipt status melebar menjadi string. Klaim typecheck lokal PASS pada entri POD sebelumnya keliru; exit typecheck terlewat dalam command sequence.
 **Perbaikan:** literal status needs_approval dibuat const pada fixture tes; tidak mengubah runtime/gate/workflow. Typecheck/format/unit/contracts diperiksa ulang secara eksplisit; CI commit baru diperiksa setelah push.

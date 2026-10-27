@@ -1226,3 +1226,24 @@ contracts/demo+live/budget/Ruff/4 manifest PASS. CI diperiksa setelah publish.
 Batas: manifest satu item fixture, bukan lot/picking/retur/collection/closing;
 draft harus disimpan eksplisit, koreksi POD/reassignment/revocation belum tersedia.
 Tidak menyentuh backend/seed/loader/workflow/ruleset/Railway; live terkunci.
+
+
+### Koreksi POD simulasi — rencana iterasi lanjutan PR #28
+Basis 4459bcb, PR #28 belum merged. Branch lanjutan/PR bertumpuk, tanpa merge
+atau deploy. Koreksi hanya dari receipt bisnis rejected dengan UUID cocok.
+UUID baru, supersedes_uuid+alasan wajib, sumber manifest identik, foto baru,
+parent immutable dan satu successor atomik CAS. Restore/sync memeriksa seluruh
+lineage, parent receipt dan media; transport rejection/needs_approval/accepted
+tidak membuka koreksi. Draft koreksi terpisah per parent, histori read-only.
+Koreksi pada hari manifest saja; pengajuan lintas hari menunggu policy backend.
+
+**Hasil [F]:** koreksi UUID baru dengan pasangan supersedes_uuid/correction_reason;
+OpenAPI draft0.8 dependentRequired; receipt rejected cocok UUID, source sama,
+foto baru dan graph satu root/satu successor, CAS pointer+snapshot parent/receipt
+atomik. Restore dan sync memvalidasi ancestor/media dan recheck setelah await.
+UI draft koreksi per parent, histori readonly serta status terbaru dari queue
+existing. 175 unit +1 hosting +50 browser PASS; format/typecheck/contracts/demo+
+live/budget (demo60,0 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. Screenshot
+ponsel ditinjau, setelah perubahan presentasi 6 browser POD diulang PASS. CI
+setelah publish. Tidak menyentuh backend/seed/loader/workflow/ruleset/Railway.
+Live terkunci, belum merge/deploy; PR bertumpuk di atas PR #28 yang belum merged.

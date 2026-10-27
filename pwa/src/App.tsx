@@ -640,6 +640,7 @@ function Workspace({
                             identity={identity}
                             provider={provider}
                             engine={engine}
+                            queue={queue}
                             changed={() => void refresh()}
                         />
                         <button

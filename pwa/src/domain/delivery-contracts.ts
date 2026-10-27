@@ -30,6 +30,8 @@ export type DeliveryTask = z.infer<typeof DeliveryTaskSchema>;
 export const DeliveryPodSchema = z
     .object({
         pod_version: z.literal(1),
+        supersedes_uuid: z.string().uuid().optional(),
+        correction_reason: z.string().trim().min(3).max(500).optional(),
         source: DeliveryTaskSchema,
         recipient: z.string().trim().min(2).max(100),
         outcome: z.enum(["delivered", "partial", "rejected"]),
@@ -46,7 +48,14 @@ export const DeliveryPodSchema = z
             .min(1),
         evidence: VisitEvidenceSchema,
     })
-    .strict();
+    .strict()
+    .superRefine((p, ctx) => {
+        if (!!p.supersedes_uuid !== !!p.correction_reason)
+            ctx.addIssue({
+                code: "custom",
+                message: "Koreksi wajib referensi dan alasan berpasangan.",
+            });
+    });
 export type DeliveryPod = z.infer<typeof DeliveryPodSchema>;
 export const podKey = (s: DeliveryTask) =>
     `delivery-pod-v1:${JSON.stringify([s.trip, s.id])}`;

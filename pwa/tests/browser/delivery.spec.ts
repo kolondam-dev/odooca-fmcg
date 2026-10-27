@@ -142,3 +142,111 @@ test("corrupt offline POD media blocks restore and reconnect sync", async ({
             .getByText("Menunggu approval", { exact: true }),
     ).toHaveCount(0);
 });
+async function savePodPhoto(task: ReturnType<Page["locator"]>) {
+    await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
+    await expect(task.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
+    await task
+        .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
+        .click();
+    await task
+        .getByRole("button", { name: "Simpan bukti lokal", exact: true })
+        .click();
+    await expect(
+        task.getByText(
+            "Foto dan pinpoint simulasi tersimpan lokal. Peta resmi belum tersedia.",
+        ),
+    ).toBeVisible();
+}
+test("business rejection opens offline correction draft and preserves immutable parent", async ({
+    page,
+    context,
+}) => {
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({
+        latitude: 1.465,
+        longitude: 124.833,
+        accuracy: 3,
+    });
+    await page.goto("./");
+    await openDelivery(page);
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByLabel("Respons simulator").selectOption("rejected");
+    await page.getByRole("button", { name: "Delivery", exact: true }).click();
+    let task = page
+        .locator(".delivery-task")
+        .filter({ hasText: "DEMO-DO-001" });
+    await task.locator("summary").first().click();
+    await task.getByLabel("Penerima", { exact: true }).fill("Budi Lama");
+    await savePodPhoto(task);
+    await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
+    await expect(
+        task.getByRole("button", { name: "Koreksi POD ditolak" }),
+    ).toBeVisible();
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await context.setOffline(true);
+    await task.getByRole("button", { name: "Koreksi POD ditolak" }).click();
+    await expect(
+        task.getByRole("button", { name: "Ajukan POD untuk review" }),
+    ).toBeDisabled();
+    await task.getByLabel("Penerima", { exact: true }).fill("Siti Benar");
+    await task
+        .getByLabel("Alasan koreksi", { exact: true })
+        .fill("Nama penerima diperbaiki");
+    await savePodPhoto(task);
+    await task
+        .getByRole("button", { name: "Simpan draft POD", exact: true })
+        .click();
+    await expect(task.getByText(/Draft POD tersimpan offline/)).toBeVisible();
+    await page.reload();
+    task = await openDelivery(page);
+    await task.getByRole("button", { name: "Koreksi POD ditolak" }).click();
+    await expect(task.getByLabel("Penerima", { exact: true })).toHaveValue(
+        "Siti Benar",
+    );
+    await expect(
+        task.getByLabel("Alasan koreksi", { exact: true }),
+    ).toHaveValue("Nama penerima diperbaiki");
+    await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
+    await expect(
+        task.getByText("Riwayat POD (2)", { exact: true }),
+    ).toBeVisible();
+    await expect(
+        task.getByRole("button", { name: "Koreksi POD ditolak" }),
+    ).toHaveCount(0);
+    await expect(task.locator('input[type="file"]')).toHaveCount(0);
+    const rows = await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const rows = await new Promise<any[]>((resolve) => {
+            const r = db.transaction("outbox").objectStore("outbox").getAll();
+            r.onsuccess = () => resolve(r.result);
+        });
+        db.close();
+        return rows.filter((r) => r.command.type === "delivery.pod.submit");
+    });
+    const parent = rows.find((r) => !r.command.payload.supersedes_uuid),
+        child = rows.find((r) => r.command.payload.supersedes_uuid);
+    expect(parent.command.payload.recipient).toBe("Budi Lama");
+    expect(parent.state).toBe("rejected");
+    expect(child.command.payload.recipient).toBe("Siti Benar");
+    expect(child.command.payload.supersedes_uuid).toBe(
+        parent.command.client_uuid,
+    );
+    expect(child.command.payload.evidence.id).not.toBe(
+        parent.command.payload.evidence.id,
+    );
+    await page.screenshot({
+        path: `test-results/pod-correction-${test.info().project.name}.png`,
+        fullPage: true,
+    });
+    await context.setOffline(false);
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await expect(
+        page
+            .locator(".activity")
+            .getByText("Menunggu approval", { exact: true }),
+    ).toHaveCount(1);
+});
