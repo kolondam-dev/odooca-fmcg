@@ -120,6 +120,7 @@ test("expense request is an approval request, not disbursement", async ({
             "BBM insidentil: Supervisor + Branch Manager, berapa pun nominalnya.",
         ),
     ).toBeVisible();
+    await page.getByLabel("Referensi trip / perjalanan").fill("TRIP-DEMO-01");
     await page.getByLabel("Tanggal perjalanan").fill("2026-10-28");
     await page.getByLabel("Nominal pengajuan (Rp)").fill("100000");
     await page.getByLabel("KM / odometer awal").fill("15000");
@@ -155,4 +156,35 @@ test("live build is fail-closed with no simulation selector or data", async ({
     ).toBeVisible();
     await expect(page.getByLabel("Persona demo")).toHaveCount(0);
     await expect(page.getByText("Toko Sinar Pagi")).toHaveCount(0);
+});
+
+test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
+    page,
+}) => {
+    await page.goto("./");
+    await page
+        .getByRole("button", { name: "Uang lapangan", exact: false })
+        .click();
+    await page.getByLabel("Referensi trip / perjalanan").fill("TRIP-DEMO-01");
+    await page.getByLabel("Tanggal perjalanan").fill("2000-01-01");
+    await page.getByLabel("Nominal pengajuan (Rp)").fill("100000");
+    await page.getByLabel("KM / odometer awal").fill("15000");
+    await page.getByLabel("Tujuan / alasan").fill("Perjalanan demo");
+    await page.getByRole("button", { name: "Simpan ke antrean demo" }).click();
+    await expect(
+        page.getByText("BBM terencana wajib diajukan H-1.", { exact: false }),
+    ).toBeVisible();
+    await page.getByLabel("Kategori", { exact: true }).selectOption("meal");
+    await page.getByLabel("Lingkup biaya").selectOption("delivery");
+    await page.getByRole("button", { name: "Simpan ke antrean demo" }).click();
+    await expect(
+        page.getByText("Biaya per pengiriman wajib memiliki referensi DO."),
+    ).toBeVisible();
+    await page
+        .getByLabel("Referensi DO (untuk biaya per pengiriman)")
+        .fill("DEMO-DO-001");
+    await page.getByRole("button", { name: "Simpan ke antrean demo" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await expect(page.locator(".activity")).toHaveCount(1);
 });

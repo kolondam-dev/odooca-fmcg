@@ -27,13 +27,14 @@ export default defineConfig({
     ],
     webServer: [
         {
-            command: "npm run preview -- --outDir dist/demo",
+            command: "npm start",
+            env: { PORT: "4173", PWA_DIST: "dist/demo" },
             port: 4173,
             reuseExistingServer: !process.env.CI,
         },
         {
-            command:
-                "npx vite preview --host 127.0.0.1 --port 4174 --strictPort --outDir dist/live",
+            command: "npm start",
+            env: { PORT: "4174", PWA_DIST: "dist/live" },
             port: 4174,
             reuseExistingServer: !process.env.CI,
         },

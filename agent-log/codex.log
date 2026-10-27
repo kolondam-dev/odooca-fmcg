@@ -49,3 +49,21 @@
 - Lokal: 14 unit/contract tests dan 12 browser tests PASS; format/typecheck/contracts/build budget PASS. Demo JS 36 KiB gzip, font 47.1 KiB; bukti map_pending tidak meluluskan absensi/POD.
 - Browser lokal menggunakan Chromium 153 terpisah setelah unduhan Playwright lokal gagal; CI tetap memakai installer Chromium resmi Playwright. API/ACL/runtime Odoo belum diuji.
 - Task managed by codex agent at 2026-10-27T05:31:58+07:00
+
+[2026-10-27T06:53:35+07:00] [INFO] Lanjutan PWA: validasi biaya dan hosting Railway terisolasi
+- Basis main f636129; branch agen/mobile-expense-hosting; tidak mengubah backend/seed/deploy Odoo.
+- Request biaya memakai schema ketat, referensi trip/DO, satu scope, rupiah bulat, KM awal dan H-1 berdasarkan businessDate bootstrap; limit/approval/evidence resmi tetap dependency backend.
+- Server static Node24, Dockerfile live-locked default, pilihan demo eksplisit, Railway config/runbook; API belum tersambung mengembalikan 503.
+- 19 unit tests dan hosting test PASS; format/typecheck/contracts/build budget/Ruff/4 manifest PASS. Browser 14 kasus sedang diverifikasi ulang; Docker lokal tidak tersedia, gate container disiapkan di CI.
+- Task managed by codex agent at 2026-10-27T06:53:35+07:00
+
+[2026-10-27T06:54:01+07:00] [INFO] Verifikasi final biaya dan hosting PWA
+- 19 unit tests, 1 hosting test, 14 browser phone/tablet PASS; browser menguji server deployment static aktual dan validasi H-1/per-DO.
+- Regression test menemukan input referensi trip ter-reset pada rerender; diperbaiki dengan defaultValue. DO kosong dinormalisasi null agar pesan validasi spesifik.
+- Docker lokal tidak tersedia; build live/demo dan smoke container ditugaskan gate CI, belum mengklaim PASS atau deploy Railway.
+- Task managed by codex agent at 2026-10-27T06:54:01+07:00
+
+[2026-10-27T06:56:16+07:00] [INFO] Perbaiki retry smoke container saat startup
+- CI quality/browser PASS, image live build PASS; curl health mendapat connection reset sebelum listener siap.
+- Gunakan retry-all-errors dengan timeout per request dan retry terbatas; health/static/API tetap wajib sukses. Hasil run baru diperiksa setelah push.
+- Task managed by codex agent at 2026-10-27T06:56:16+07:00
