@@ -36,16 +36,45 @@ export function EvidenceCapture({
     store,
     owner,
     onChange,
+    existingRef,
 }: {
     store: FieldStore;
     owner: string;
     onChange: (ref?: EvidenceRef) => void;
+    existingRef?: EvidenceRef;
 }) {
     const [file, setFile] = useState<Blob>();
     const [location, setLocation] = useState<GeolocationPosition>();
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [preview, setPreview] = useState("");
+    useEffect(() => {
+        if (!existingRef) return;
+        let active = true;
+        void store
+            .listEvidence(owner)
+            .then((rows) => {
+                const found = rows.find(
+                    (row) =>
+                        row.key === `${owner}:${existingRef.id}` &&
+                        row.owner === owner,
+                );
+                if (!found || !(found.blob instanceof Blob) || !found.blob.size)
+                    throw new Error(
+                        "Foto lokal tidak ditemukan. Ambil ulang bukti sebelum pengiriman.",
+                    );
+                if (active) setFile(found.blob);
+            })
+            .catch(() => {
+                if (active)
+                    setError(
+                        "Foto lokal tidak dapat dipulihkan. Metadata saja bukan bukti lengkap.",
+                    );
+            });
+        return () => {
+            active = false;
+        };
+    }, [existingRef?.id, owner, store]);
     useEffect(() => {
         if (!file) return;
         const url = URL.createObjectURL(file);
@@ -158,6 +187,17 @@ export function EvidenceCapture({
                 <Icon name="pin" size={18} />
                 {busy ? "Mencari lokasi…" : "Ambil lokasi sekarang"}
             </button>
+            {!location && existingRef && (
+                <p class="coordinates">
+                    Lokasi bukti tersimpan: {existingRef.latitude.toFixed(6)},{" "}
+                    {existingRef.longitude.toFixed(6)} · ±
+                    {Math.round(existingRef.accuracy)} m ·{" "}
+                    {new Date(existingRef.capturedAt).toLocaleString("id-ID", {
+                        timeZone: "Asia/Makassar",
+                    })}{" "}
+                    WITA
+                </p>
+            )}
             {location && (
                 <p class="coordinates">
                     {location.coords.latitude.toFixed(6)},{" "}

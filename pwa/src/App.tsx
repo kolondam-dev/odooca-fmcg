@@ -12,6 +12,7 @@ import {
     type Snapshot,
 } from "./domain/contracts";
 import { validateExpense } from "./domain/expense";
+import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
 import { MorningSession } from "./components/MorningSession";
 import { morningReady, type MorningRecord } from "./domain/morning";
@@ -21,7 +22,7 @@ import { FieldStore, type QueueItem } from "./storage/store";
 import { Icon, type IconName } from "./components/Icon";
 import { EvidenceCapture, type EvidenceRef } from "./components/Evidence";
 
-type Page = "home" | "sales" | "delivery" | "hris" | "more";
+type Page = "home" | "sales" | "delivery" | "hris" | "more" | "expenses";
 type Dialog =
     | { type: "order"; outlet: string }
     | { type: "extra" }
@@ -695,6 +696,21 @@ function Workspace({
                         </section>
                     </>
                 )}
+                {page === "expenses" && (
+                    <ExpenseWorkspace
+                        identity={identity}
+                        provider={provider}
+                        store={store}
+                        engine={engine}
+                        queue={queue}
+                        create={() => setDialog({ type: "expense" })}
+                        back={() => go("more")}
+                        queued={() => {
+                            void refresh();
+                            if (navigator.onLine) void engine.flush();
+                        }}
+                    />
+                )}
                 {page === "more" && (
                     <>
                         <Heading
@@ -776,6 +792,13 @@ function Workspace({
                                 </label>
                             </section>
                         )}
+                        <button
+                            class="secondary full"
+                            onClick={() => go("expenses")}
+                        >
+                            <Icon name="wallet" size={20} /> Realisasi & saldo
+                            uang lapangan
+                        </button>
                         <Heading
                             title="Aktivitas perangkat ini"
                             note="Terkirim berbeda dengan disetujui atau diposting."
@@ -832,7 +855,12 @@ function Workspace({
                 {nav.map((p) => (
                     <button
                         key={p.id}
-                        class={page === p.id ? "active" : ""}
+                        class={
+                            page === p.id ||
+                            (page === "expenses" && p.id === "more")
+                                ? "active"
+                                : ""
+                        }
                         aria-current={page === p.id ? "page" : undefined}
                         onClick={() => go(p.id)}
                     >

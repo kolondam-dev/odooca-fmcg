@@ -1244,3 +1244,59 @@ textarea {
     gap: 10px;
     font-size: 13px;
 }
+
+.expense-requests {
+    margin: 20px 0;
+}
+.realization-form {
+    display: grid;
+    gap: 18px;
+}
+.realization-fields {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    display: grid;
+    gap: 16px;
+}
+.expense-line {
+    border: 1px solid #dce4ef;
+    border-radius: 12px;
+    padding: 14px;
+    margin: 0;
+    min-width: 0;
+    display: grid;
+    gap: 14px;
+}
+.expense-line legend,
+.evidence-group legend {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 0 5px;
+}
+.evidence-group {
+    border: 1px dashed #ccd8e8;
+    border-radius: 10px;
+    padding: 12px;
+    min-width: 0;
+    margin: 0;
+}
+.settlement-preview {
+    background: #eff6fc;
+    padding: 16px;
+    border-radius: 12px;
+}
+.settlement-preview dl {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    font-size: 13px;
+}
+.settlement-preview dd {
+    margin: 0;
+    font-weight: 700;
+}
+.realization-fields:disabled {
+    opacity: 0.72;
+}

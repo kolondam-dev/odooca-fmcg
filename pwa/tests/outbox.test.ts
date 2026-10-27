@@ -128,7 +128,11 @@ describe("durable outbox", () => {
             receipt,
         );
         await expect(
-            p.submit({ ...item.command, payload: { qty: "2" } }),
+            p.submit({
+                ...item.command,
+                type: "sales.order.submit",
+                payload: { qty: "2" },
+            }),
         ).rejects.toMatchObject({ status: 409 });
     });
     it("fails explicitly when local persistence fails", async () => {

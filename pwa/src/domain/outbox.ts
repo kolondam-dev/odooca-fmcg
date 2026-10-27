@@ -19,6 +19,7 @@ export class Outbox {
         payload: Record<string, unknown>,
         label: string,
         uuid = crypto.randomUUID(),
+        draftWrite?: { key: string; value: unknown; expected: unknown },
     ) {
         const command = CommandSchema.parse({
             schema_version: 1,
@@ -40,7 +41,14 @@ export class Outbox {
             attempts: 0,
             nextAttempt: 0,
         };
-        await this.store.put(item);
+        if (draftWrite)
+            await this.store.putWithDraft(
+                item,
+                draftWrite.key,
+                draftWrite.value,
+                draftWrite.expected,
+            );
+        else await this.store.put(item);
         this.changed();
         return item;
     }

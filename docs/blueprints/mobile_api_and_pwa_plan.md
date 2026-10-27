@@ -1046,3 +1046,24 @@ sebagai tahap belum ready; paket parsial/invalid tidak membuka order atau extra
 call setelah reload. Invalidasi sesi tidak menghapus pending command/draft bisnis.
 Tes mutasi persisted state dan browser reload menjadi gate regresi client; tetap
 bukan security boundary atau penerimaan sesi backend.
+
+### Realisasi biaya dan estimasi settlement — kelanjutan PWA-02/03/04
+
+Basis main b19240a; branch agen/mobile-expense-settlement. Layar realisasi pada
+menu Lainnya menghubungkan satu pengajuan dengan advance fiktif terpisah dari
+receipt. Policy fixture contoh (bukan policy perusahaan), tier kumulatif dan
+variance total exposure; form komponen/struk/odometer, validasi BBM serta draft
+per owner tersedia offline. Bukti lokal bisa dipratinjau setelah reload.
+
+Command realization strict ditambahkan pada kontrak draft 0.2 dan outbox. Link
+advance dan command disimpan atomik dengan compare-and-set, diuji dua koneksi.
+State restore memeriksa ulang owner/source fingerprint/amount/approval/timestamps
+serta link command. Create-if-absent menghindari overwrite advance demo.
+
+Hasil settlement masih estimasi (refund/variance/routing review), bukan final
+settlement, penerimaan pengembalian, approval top-up, pencairan atau GL. Seluruh
+foto map_pending; submit hanya ke simulator dan tidak meluluskan gate evidence
+resmi. Koreksi setelah submit/reject ditahan sampai cancellation/revision backend
+siap. Policy bertanggal/agregat, media hash/map/OCR, dedup server/perangkat,
+kapasitas BBM, multi-pengisian/multi-hari dan penerimaan finansial tetap dependency
+backend. Tidak ada perubahan addon/seed/server atau deploy Railway.

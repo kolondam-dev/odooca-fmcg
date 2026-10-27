@@ -1,3 +1,7 @@
+import {
+    ExpenseRealizationSchema,
+    type ExpensePolicy,
+} from "./settlement-contracts.ts";
 import { z } from "zod";
 export const Role = z.enum(["sales", "delivery", "hris"]);
 export const IdentitySchema = z.object({
@@ -17,14 +21,27 @@ export const CommandType = z.enum([
     "hris.attendance.capture",
     "hris.leave.request",
     "field_expense.request",
+    "field_expense.realization.submit",
 ]);
-export const CommandSchema = z.object({
+const CommandEnvelope = {
     schema_version: z.literal(1),
     client_uuid: z.string().uuid(),
-    type: CommandType,
     occurred_at: z.string().datetime(),
-    payload: z.record(z.string(), z.unknown()),
-});
+};
+export const CommandSchema = z.discriminatedUnion("type", [
+    z.object({
+        ...CommandEnvelope,
+        type: CommandType.exclude(["field_expense.realization.submit"]),
+        payload: z.record(z.string(), z.unknown()),
+    }),
+    z
+        .object({
+            ...CommandEnvelope,
+            type: z.literal("field_expense.realization.submit"),
+            payload: ExpenseRealizationSchema,
+        })
+        .strict(),
+]);
 export type Command = z.infer<typeof CommandSchema>;
 export const ReceiptSchema = z.object({
     client_uuid: z.string().uuid(),
@@ -91,6 +108,7 @@ export interface FieldProvider {
     bootstrap(): Promise<Identity>;
     snapshot(): Promise<Snapshot>;
     submit(command: Command): Promise<Receipt>;
+    expensePolicy?(): Promise<ExpensePolicy>;
     scenario?: Scenario;
 }
 export function ownerKey(identity: Identity): string {
