@@ -39,6 +39,12 @@ export class Outbox {
             occurredAt?: string;
         },
     ) {
+        if (
+            type === "delivery.pod.submit" &&
+            payload.supersedes_uuid &&
+            !draftWrite?.guards
+        )
+            throw new Error("Koreksi POD wajib snapshot parent receipt.");
         if (type === "delivery.pod.submit" && !draftWrite)
             throw new Error("POD wajib transaksi manifest atomik.");
         if (type === "field_expense.realization.submit" && !draftWrite?.guards)

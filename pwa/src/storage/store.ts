@@ -15,7 +15,7 @@ import {
 } from "../domain/visit-validation";
 import { MORNING_KEY } from "../domain/morning";
 import { businessRejected } from "../domain/outbox-state";
-import type { Command, Receipt } from "../domain/contracts";
+import { CommandSchema, type Command, type Receipt } from "../domain/contracts";
 export type QueueState =
     | "queued"
     | "sending"
@@ -131,11 +131,35 @@ export class FieldStore {
         try {
             const id = `${item.owner}:${key}`;
             const old = await tx.objectStore("drafts").get(id);
-            if (JSON.stringify(old?.value) !== JSON.stringify(expected))
+            const canonical = (value: unknown) =>
+                item.command.type === "delivery.pod.submit" &&
+                value !== undefined
+                    ? CommandSchema.parse(value)
+                    : value;
+            if (
+                JSON.stringify(canonical(old?.value)) !==
+                JSON.stringify(canonical(expected))
+            )
                 throw new Error(
                     "Data berubah di tab lain. Muat ulang sebelum mengirim.",
                 );
             if (item.command.type === "delivery.pod.submit") {
+                if (item.command.payload.supersedes_uuid) {
+                    if (
+                        !guards ||
+                        guards.source.command.client_uuid !==
+                            item.command.payload.supersedes_uuid ||
+                        guards.source.owner !== item.owner ||
+                        JSON.stringify(
+                            await tx
+                                .objectStore("outbox")
+                                .get(guards.source.key),
+                        ) !== JSON.stringify(guards.source)
+                    )
+                        throw new Error(
+                            "Parent/receipt POD berubah saat menyimpan koreksi.",
+                        );
+                }
                 assertPodSource(
                     (
                         await tx
@@ -154,6 +178,7 @@ export class FieldStore {
                         .objectStore("outbox")
                         .index("owner")
                         .getAll(item.owner),
+                    old?.value,
                 );
             }
             if (visitGuard) {

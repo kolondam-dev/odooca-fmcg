@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FMCG Field client contract draft",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement."
   },
   "servers": [
@@ -106,6 +106,16 @@
           "pod_version": {
             "type": "number",
             "const": 1
+          },
+          "supersedes_uuid": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "correction_reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
           },
           "source": {
             "type": "object",
@@ -313,7 +323,15 @@
           "lines",
           "evidence"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "dependentRequired": {
+          "supersedes_uuid": [
+            "correction_reason"
+          ],
+          "correction_reason": [
+            "supersedes_uuid"
+          ]
+        }
       },
       "DeliveryTask": {
         "type": "object",
@@ -458,6 +476,16 @@
                   "pod_version": {
                     "type": "number",
                     "const": 1
+                  },
+                  "supersedes_uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "correction_reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
                   },
                   "source": {
                     "type": "object",
@@ -665,7 +693,15 @@
                   "lines",
                   "evidence"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "dependentRequired": {
+                  "supersedes_uuid": [
+                    "correction_reason"
+                  ],
+                  "correction_reason": [
+                    "supersedes_uuid"
+                  ]
+                }
               }
             },
             "required": [

@@ -429,8 +429,29 @@ memakai waktu kejadian, bukan izin membuat POD hari lama. Data rusak ditahan unt
 review, tanpa hapus/paksa-kirim/recovery otomatis.
 
 Fixture satu item/DO bukan manifest stok/lot nyata. Tidak menyelesaikan picking,
-retur, collection, closing trip atau approval resmi. Tidak ada koreksi POD ditolak
-pada iterasi ini; DO tetap terkunci untuk review. Manifest immutable contoh belum
+retur, collection, closing trip atau approval resmi. Koreksi POD hanya dibuka untuk penolakan bisnis dengan receipt UUID cocok;
+lihat alur koreksi di bawah. Manifest immutable contoh belum
 memiliki refresh/reassignment/revocation server. Hash/local storage bukan batas
 keamanan; media/maps resmi, auth/session/device/ACL dan dedup server tetap wajib
 sebelum live. Live tetap terkunci.
+
+
+### Koreksi POD simulator (lanjutan PR #28)
+
+Tombol **Koreksi POD ditolak** hanya muncul untuk penolakan bisnis dengan receipt
+yang cocok. Perbaiki data, isi alasan koreksi dan ambil foto baru di geofence.
+Simpan draft secara eksplisit; draft koreksi terpisah per parent dan pulih offline.
+Pengajuan memakai UUID baru dan `supersedes_uuid`/`correction_reason`, tidak
+menimpa parent atau receipt. Histori data tetap read-only; receipt child normal
+masih needs_approval. Kegagalan transport, receipt salah UUID, queued, accepted
+dan needs_approval tidak membuka koreksi.
+
+CAS pointer command dan snapshot parent/receipt dicek di transaksi IndexedDB
+yang sama. Satu parent hanya boleh memiliki satu successor; foto tidak boleh
+dipakai ulang, manifest harus identik. Restore dan sync memvalidasi seluruh
+lineage serta media ancestor, memeriksa ulang perubahan setelah await.
+Koreksi pada hari manifest saja; antrean koreksi sah tetap dapat replay hari
+berikutnya, tetapi koreksi baru lintas hari/reassignment menunggu policy backend.
+Receipt/media hilang atau rusak tetap perlu review tanpa hapus/rekonstruksi
+otomatis. Maps/auth/device/server authority, collection, closing, retur dan posting
+Odoo tetap belum terintegrasi; build live terkunci.
