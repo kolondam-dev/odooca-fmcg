@@ -1,5 +1,11 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Regresi kuota paket bukti PR #26
+**Basis:** PR #26 HEAD 1e0edf3; branch tetap agen/mobile-evidence-packages.
+**Tambahan:** injeksi QuotaExceededError pada IDBObjectStore.put membuktikan transaksi media rollback utuh: tidak ada record foto/map parsial. Tidak mengubah implementasi produksi.
+**Diverifikasi:** seluruh 123 unit PASS (sebelumnya 122); format/typecheck dicek. Hasil 1 hosting + 40 browser/build/Ruff pada source produksi identik tetap berlaku; CI commit baru diperiksa setelah push.
+**Menunggu:** CI/review PR; live tetap terkunci, tidak merge/deploy.
+
 ## 2026-10-27 — codex agent — Paket bukti watermark/hash/pinpoint simulasi
 **Basis:** main d4cf21b (PR #25 merged); branch agen/mobile-evidence-packages. Rencana masuk plan sebelum implementasi.
 **Berubah:** komponen evidence bersama menghasilkan JPEG watermark waktu pencatatan WITA/koordinat/akurasi + PNG pinpoint SIMULASI TANPA BASEMAP (grid/skala/utara/akurasi). Tidak ada tile/provider/network baru. Waktu pilih file dipisah dari waktu pencatatan; waktu shutter/kamera asli tidak dibuktikan. Output foto <=1 MB, map <=128 KB; input <=12 MB/40 MP, sisi foto <=1600 px. Fix TTL60s/future1s/accuracy>0<=10km, pilih foto <=5menit sebelum save.

@@ -118,3 +118,8 @@
 - JPEG watermark WITA/GPS, PNG grid simulasi tanpa basemap, hashes/binding owner/time/location, immutable atomic evidence; restore/submit/send validation dan evidenceHold.
 - Kontrak draft0.5 optional packageHash, legacy explicit; 122 unit, 1 hosting, 40 browser, format/typecheck/contracts/build/Ruff/manifests PASS. CI setelah push, no merge/deploy.
 - Task managed by codex agent at 2026-10-27T17:12:19+07:00
+
+[2026-10-27T17:16:11+07:00] [INFO] Regresi kuota paket bukti PR #26
+- Injeksi QuotaExceededError pada put evidence membuktikan rollback record foto+map; tidak ada perubahan produksi.
+- 123 unit PASS; existing 1 hosting/40 browser/build source produksi identik. CI commit baru setelah push, no merge/deploy.
+- Task managed by codex agent at 2026-10-27T17:16:11+07:00

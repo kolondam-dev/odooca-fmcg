@@ -187,3 +187,17 @@ it("does not invent a new package for legacy refs and does not create partial ro
     await expect(store.saveEvidence(other.row)).rejects.toThrow();
     expect(await store.listEvidence(c.owner)).toHaveLength(1);
 });
+it("rolls back the whole photo/map record when IndexedDB quota is exceeded", async () => {
+    const c = await make();
+    const put = vi
+        .spyOn(IDBObjectStore.prototype, "put")
+        .mockImplementationOnce(() => {
+            throw new DOMException("full", "QuotaExceededError");
+        });
+    try {
+        await expect(store.saveEvidence(c.row)).rejects.toThrow("full");
+    } finally {
+        put.mockRestore();
+    }
+    expect(await store.listEvidence(c.owner)).toHaveLength(0);
+});
