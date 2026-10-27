@@ -1,5 +1,42 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Resolusi Picking Delivery Assigned, Ekstraksi Helper Allocator Produksi, Guard Empty Reservation & Lot Match, dan Penyelarasan Mutasi 5 & 7
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6436885128](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6436885128)):**
+- Menindaklanjuti review commit `a84f625`:
+  1. *Resolusi Picking Delivery Tertahan di State `assigned`*:
+     - Di Odoo 19, assignment in-memory `mv.picked = True` tidak disimpan ke database/cache ORM. Diperbaiki dengan menulis eksplisit `mv.write({"picked": True})` dan `ml.write({"picked": True})` pada seluruh move lines serta memanggil `picking.action_set_quantities_to_reservation()` jika tersedia.
+     - Melengkapi instrumentasi komprehensif pra dan pasca validasi (state, moves, move_lines, picked, quantity, qty_done, lot).
+     - Menambahkan penanganan iterative/recursive wizard dispatcher dengan konteks lengkap (`val_ctx`, `wiz_ctx`) tanpa fallback manual pemaksaan `_action_done`.
+  2. *Ekstraksi Helper Allocator Produksi & Pengujian AST Nyata*:
+     - Mengekstrak fungsi mandiri tingkat modul: `allocate_and_sync_move_lines(env, mv, picking, demand_qty, target_lot=None, move_date=None)`.
+     - Mengubah unit test `test_move_line_reservation_fidelity_and_insufficient_stock_rejection` di `tests/test_canonical_loader_adapter.py` untuk mengekstrak dan menguji fungsi produksi nyata via AST (bukan loop tiruan lokal). Jika allocator produksi dirusak, unit test terbukti fail-fast menolak.
+  3. *Guard Empty Reservation & Validasi Lot Kanonikal*:
+     - Menolak reservasi kosong pada lokasi internal: jika `is_internal and not mv.move_line_ids` atau `total_reserved < demand_qty`, langsung melempar `ValueError("[FAIL-FAST] Reservasi kosong ...")`.
+     - Memvalidasi kesesuaian lot: jika target lot register diberikan, setiap baris reservasi yang memiliki lot berbeda wajib ditolak fail-fast.
+  4. *Penyempurnaan Negative Tests & Hubungan Jurnal*:
+     - *Mutasi 5 (Split Fraud)*: Mengganti raw SQL `INSERT INTO account_move_line` yang tidak lengkap dengan ORM resmi Odoo (`env['account.move.line'].with_context(check_move_validity=False).create(...)` dan `.write(...)`).
+     - *Mutasi 7 (Insufficient Stock)*: Menghapus nilai `True` tetap; memvalidasi snapshot fisik & saldo EOD GL baseline sebelum mutasi serta memastikan pemulihan identik 100% pasca-rollback.
+     - *Audit Pasangan Akun*: Menghapus fallback longgar `ilike` dan slice `account_move_ids[:1]`. Wajibkan relasi dokumen unik dan pasti; jika ada > 1 kandidat ambigu atau 0, fail-fast ditolak.
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Helper Allocator Modul & Guard Reservasi ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Mendefinisikan fungsi tingkat modul `allocate_and_sync_move_lines` dengan guard `is_internal` fail-fast untuk reservasi kosong dan kuantitas kurang.
+   - Memeriksa kesesuaian `target_lot` register kanonikal terhadap `ml.lot_id` yang di-reserve.
+   - Menyelaraskan status `picked = True` pada move dan seluruh move lines via ORM `.write()`.
+2. **Lifecycle Validasi Picking Delivery Native:**
+   - Memanggil `picking.action_set_quantities_to_reservation()` jika didukung.
+   - Menambahkan instrumentasi detail pre/post validasi pada picking, moves, dan move lines.
+   - Menambahkan recursive/iterative wizard handler dengan passing context penuh (`val_ctx` dan `wiz_ctx`).
+3. **Audit Pasangan Akun Unik Tunggal:**
+   - Menghapus pencarian `ilike` dan `account_move_ids[:1]`.
+   - Mengharuskan relasi persis dan fail-fast jika `len(found_ams) == 0` atau `len(found_ams) > 1`.
+4. **Refinement Mutasi 5 & 7:**
+   - Mutasi 5 menggunakan ORM `env['account.move.line'].with_context(check_move_validity=False).create(...)`.
+   - Mutasi 7 membandingkan `base_pos7` vs `roll_pos7` (stok karton dan saldo EOD GL) tanpa nilai `True` tetap.
+5. **Unit Tests AST ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
+   - Memanggil langsung `allocate_and_sync_move_lines` dari AST runner produksi, membuktikan alokasi proporsional multi-line, penolakan reservasi kosong, penolakan demand kurang, dan penolakan lot mismatch.
+
 ## 2026-10-27 — antigravity agent — Perbaikan Return Helper Opening, Pengetatan Audit Pasangan Akun Tanpa Celah Split Fraud, Fidelitas Reservasi Lot Move Line, Negative Regression Tests, dan Stateless Readback Cursor Baru
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6435759037](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6435759037)):**
 - Menindaklanjuti review commit `f13cbd9`:

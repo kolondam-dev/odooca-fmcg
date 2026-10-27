@@ -638,4 +638,15 @@
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T14:20:00+07:00
 
+[2026-10-27T15:27:00+07:00] [INFO] Resolusi Picking Delivery Assigned, Ekstraksi Helper Allocator Produksi, Guard Empty Reservation & Lot Match, dan Penyelarasan Mutasi 5 & 7
+- Menutup temuan review PR #15 (issuecomment-6436885128):
+  * Resolusi Picking Delivery Tertahan di State 'assigned': Menuliskan eksplisit status picked pada move dan seluruh move lines via ORM .write({"picked": True}), memanggil action_set_quantities_to_reservation(), melengkapi instrumentasi pre/post validate, serta penanganan recursive/iterative wizard dispatcher dengan konteks lengkap tanpa fallback _action_done manual.
+  * Ekstraksi Helper Allocator Produksi & Pengujian AST Nyata: Mendefinisikan allocate_and_sync_move_lines pada tingkat modul runner dan memperbarui test_move_line_reservation_fidelity_and_insufficient_stock_rejection di tests/test_canonical_loader_adapter.py agar menguji langsung fungsi produksi nyata via AST (bukan loop tiruan lokal).
+  * Guard Empty Reservation & Validasi Lot Kanonikal: Mengamankan alokasi transfer internal agar menolak reservasi kosong fail-fast, menolak kuantitas kurang dari demand, serta menolak ketidakcocokan lot reservasi dengan target lot kanonikal register.
+  * Refinement Mutasi 5 & Mutasi 7: Mengganti raw SQL INSERT pada Mutasi 5 dengan mutasi ORM resmi Odoo; memperbarui Mutasi 7 dengan membandingkan snapshot fisik & EOD GL baseline vs rollback tanpa nilai True tetap.
+  * Audit Pasangan Akun Unik Tunggal: Menghapus fallback longgar ilike dan slice [:1], mewajibkan relasi dokumen unik dan pasti (fail-fast jika 0 atau > 1).
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), unit tests (Ran 36 tests in 109s: OK).
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T15:27:00+07:00
+
 

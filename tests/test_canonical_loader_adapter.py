@@ -1352,7 +1352,14 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertEqual(found[0].id, 501)
 
     def test_move_line_reservation_fidelity_and_insufficient_stock_rejection(self):
-        """Memverifikasi alokasi split mempertahankan jatah per lot dan fail-fast saat stok tidak mencukupi."""
+        """Memverifikasi fungsi produksi allocate_and_sync_move_lines (diekstrak via AST):
+        1. Alokasi multi-line proporsional menjaga batas kapasitas per line & lot.
+        2. Guard empty reservation pada internal location menolak reservasi kosong.
+        3. Guard insufficient reservation pada internal location menolak kuantitas kurang.
+        4. Guard lot mismatch menolak ketidakcocokan lot reservasi dengan target register kanonikal.
+        """
+        alloc_fn = self._extract_function_from_experiment_ast("allocate_and_sync_move_lines")
+
         class MockLot:
             def __init__(self, lot_id, name):
                 self.id = lot_id
@@ -1364,6 +1371,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
                 self.lot_id = lot
                 self.quantity = qty
                 self.qty_done = qty
+                self.picked = False
                 self.unlinked = False
 
             def write(self, vals):
@@ -1373,45 +1381,97 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
                     self.qty_done = vals["qty_done"]
                 if "lot_id" in vals:
                     self.lot_id = vals["lot_id"]
+                if "picked" in vals:
+                    self.picked = vals["picked"]
 
             def unlink(self):
                 self.unlinked = True
 
+        class MockLocation:
+            def __init__(self, usage="internal", name="WH/Stock"):
+                self.usage = usage
+                self.name = name
+                self.complete_name = f"WH/{name}"
+
+        class MockStockMove:
+            def __init__(self, lines, loc_usage="internal", origin="DO-202607-0063"):
+                self.id = 301
+                self.origin = origin
+                self.location_id = MockLocation(usage=loc_usage)
+                self.location_dest_id = MockLocation(usage="customer", name="Output")
+                self.move_line_ids = MockRecordList(lines)
+                self.company_id = MockRecord({"name": "PT MDU"}, "res.company", 1)
+                self.product_id = MockRecord({"name": "Rinso"}, "product.product", 1)
+                self.product_uom = MockRecord({"name": "Carton"}, "uom.uom", 1)
+                self.picked = False
+
+            def write(self, vals):
+                if "picked" in vals:
+                    self.picked = vals["picked"]
+
+        class MockStockMoveLineModel:
+            _fields = {
+                "quantity": True,
+                "qty_done": True,
+                "lot_id": True,
+                "picked": True,
+                "date": True,
+                "picking_id": True,
+            }
+
+            def sudo(self):
+                return self
+
+        class MockStockMoveModel:
+            _fields = {"picked": True}
+
+            def sudo(self):
+                return self
+
+        mock_env = {
+            "stock.move.line": MockStockMoveLineModel(),
+            "stock.move": MockStockMoveModel(),
+        }
+
         lot_a = MockLot(1, "LOT-ALPHA")
         lot_b = MockLot(2, "LOT-BETA")
 
-        # 1. Alokasi Multi-Line & Multi-Lot: Demand 7 karton terbagi ke 4 (Lot-A) + 3 (Lot-B)
+        # 1. Alokasi Multi-Line & Multi-Lot: Demand 7 karton terbagi ke 4 (Line 1, Lot-A) + 3 (Line 2, Lot-A)
         ml1 = MockMoveLine(10, lot_a, 4.0)
-        ml2 = MockMoveLine(11, lot_b, 3.0)
-        lines = [ml1, ml2]
+        ml2 = MockMoveLine(11, lot_a, 3.0)
+        mv = MockStockMove([ml1, ml2], loc_usage="internal")
+        mock_picking = MockRecord({"name": "DO-202607-0063"}, "stock.picking", 401)
 
-        demand_qty = 7.0
-        remaining_qty = demand_qty
-        for ml in lines:
-            line_cap = ml.quantity
-            if remaining_qty > 0 and line_cap > 0:
-                alloc = min(remaining_qty, line_cap)
-                ml.write({"quantity": alloc})
-                remaining_qty -= alloc
+        alloc_fn(mock_env, mv, mock_picking, 7.0, target_lot=lot_a, move_date="2026-07-03 14:00:00")
 
-        self.assertEqual(remaining_qty, 0.0)
-        self.assertEqual(ml1.quantity, 4.0)
-        self.assertEqual(ml1.lot_id.name, "LOT-ALPHA", "Lot asli line 1 tidak boleh ditimpa!")
+        self.assertEqual(ml1.quantity, 4.0, "Line 1 wajib teralokasi tepat 4.0 sesuai kapasitas!")
+        self.assertEqual(ml2.quantity, 3.0, "Line 2 wajib teralokasi tepat 3.0!")
+        self.assertTrue(ml1.picked, "Line 1 wajib berstatus picked=True!")
+        self.assertTrue(ml2.picked, "Line 2 wajib berstatus picked=True!")
+        self.assertTrue(mv.picked, "Move wajib berstatus picked=True!")
         self.assertFalse(ml1.unlinked)
-        self.assertEqual(ml2.quantity, 3.0)
-        self.assertEqual(ml2.lot_id.name, "LOT-BETA", "Lot asli line 2 tidak boleh ditimpa!")
         self.assertFalse(ml2.unlinked)
 
-        # 2. Demand Melebihi Kuantitas Reservasi pada Internal Transfer -> Fail-Fast
-        excessive_demand = 10.0
-        total_reserved = sum(ml.quantity for ml in lines)  # 7.0
-        with self.assertRaises(ValueError) as ctx:
-            if total_reserved < (excessive_demand - 0.0001):
-                raise ValueError(
-                    f"[FAIL-FAST] Kuantitas reservasi ({total_reserved}) tidak mencukupi demand ({excessive_demand})! "
-                    f"Penolakan stok negatif/kurang."
-                )
-        self.assertIn("tidak mencukupi demand", str(ctx.exception))
+        # 2. Guard Empty Reservation pada Lokasi Internal -> Wajib Ditolak Fail-Fast
+        mv_empty = MockStockMove([], loc_usage="internal")
+        with self.assertRaises(ValueError) as ctx_empty:
+            alloc_fn(mock_env, mv_empty, mock_picking, 7.0, target_lot=lot_a, move_date="2026-07-03 14:00:00")
+        self.assertIn("Reservasi kosong", str(ctx_empty.exception))
+        self.assertIn("Penolakan stok negatif", str(ctx_empty.exception))
+
+        # 3. Demand Melebihi Kuantitas Reservasi pada Internal Transfer -> Wajib Ditolak Fail-Fast
+        ml_short = MockMoveLine(12, lot_a, 4.0)
+        mv_short = MockStockMove([ml_short], loc_usage="internal")
+        with self.assertRaises(ValueError) as ctx_short:
+            alloc_fn(mock_env, mv_short, mock_picking, 10.0, target_lot=lot_a, move_date="2026-07-03 14:00:00")
+        self.assertIn("tidak mencukupi demand", str(ctx_short.exception))
+
+        # 4. Reserved Lot Mismatch terhadap Target Lot Register Kanonikal -> Wajib Ditolak Fail-Fast
+        ml_mismatch = MockMoveLine(13, lot_b, 4.0)  # Reservasi lot_b (id=2), target lot_a (id=1)
+        mv_mismatch = MockStockMove([ml_mismatch], loc_usage="internal")
+        with self.assertRaises(ValueError) as ctx_lot:
+            alloc_fn(mock_env, mv_mismatch, mock_picking, 4.0, target_lot=lot_a, move_date="2026-07-03 14:00:00")
+        self.assertIn("tidak cocok dengan lot target register", str(ctx_lot.exception))
 
 
 if __name__ == "__main__":

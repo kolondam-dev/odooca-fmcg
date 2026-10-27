@@ -293,6 +293,131 @@ def build_source_oracle():
     return oracle
 
 
+def allocate_and_sync_move_lines(env, mv, picking, demand_qty, target_lot=None, move_date=None):
+    """Mengalokasikan move lines dengan fidelitas reservasi lot, verifikasi kecocokan lot kanonikal,
+    guard penolakan stok negatif / reservasi kosong pada lokasi internal, dan sinkronisasi status picked."""
+    StockMoveLine = env["stock.move.line"].sudo()
+    StockMove = env["stock.move"].sudo()
+    is_internal = (mv.location_id.usage == "internal")
+
+    # 1. Guard Lokasi Internal: Tolak reservasi kosong & tolak kuantitas kurang
+    if is_internal:
+        if not mv.move_line_ids or len(mv.move_line_ids) == 0:
+            loc_name = getattr(mv.location_id, "complete_name", None) or getattr(mv.location_id, "name", "Internal")
+            raise ValueError(
+                f"[FAIL-FAST] Reservasi kosong pada lokasi internal {loc_name} "
+                f"untuk demand {demand_qty} (origin: {mv.origin})! Penolakan stok negatif/kurang."
+            )
+        total_reserved = sum(getattr(ml, "quantity", 0.0) or getattr(ml, "qty_done", 0.0) for ml in mv.move_line_ids)
+        if total_reserved < (demand_qty - 0.0001):
+            loc_name = getattr(mv.location_id, "complete_name", None) or getattr(mv.location_id, "name", "Internal")
+            raise ValueError(
+                f"[FAIL-FAST] Kuantitas reservasi ({total_reserved}) tidak mencukupi demand ({demand_qty}) "
+                f"untuk {mv.origin} pada lokasi {loc_name}! Penolakan stok negatif/kurang."
+            )
+
+    # 2. Verifikasi Kesesuaian Lot Target Register Kanonikal
+    if target_lot and mv.move_line_ids:
+        for ml in mv.move_line_ids:
+            if ml.lot_id and ml.lot_id.id != target_lot.id:
+                raise ValueError(
+                    f"[FAIL-FAST] Lot reservasi {ml.lot_id.name} (ID {ml.lot_id.id}) tidak cocok dengan lot target register "
+                    f"{target_lot.name} (ID {target_lot.id}) untuk {mv.origin}!"
+                )
+
+    # 3. Alokasi Proporsional Multi-Line & Multi-Lot
+    remaining_qty = demand_qty
+    if mv.move_line_ids:
+        for ml in mv.move_line_ids:
+            line_cap = getattr(ml, "quantity", 0.0) or getattr(ml, "qty_done", 0.0)
+            if line_cap <= 0.0 and len(mv.move_line_ids) == 1:
+                line_cap = remaining_qty
+
+            if remaining_qty > 0 and line_cap > 0:
+                alloc = min(remaining_qty, line_cap)
+                upd_vals = {}
+                if not ml.lot_id and target_lot and "lot_id" in StockMoveLine._fields:
+                    upd_vals["lot_id"] = target_lot.id
+                if "quantity" in StockMoveLine._fields:
+                    upd_vals["quantity"] = alloc
+                elif "qty_done" in StockMoveLine._fields:
+                    upd_vals["qty_done"] = alloc
+                if "picked" in StockMoveLine._fields:
+                    upd_vals["picked"] = True
+                if "date" in StockMoveLine._fields and move_date:
+                    upd_vals["date"] = move_date
+                if "picking_id" in StockMoveLine._fields and picking:
+                    upd_vals["picking_id"] = picking.id
+                ml.write(upd_vals)
+                remaining_qty -= alloc
+            else:
+                ml.unlink()
+
+        if remaining_qty > 0.0001:
+            if is_internal:
+                raise ValueError(
+                    f"[FAIL-FAST] Kuantitas reservasi tidak mencukupi demand ({demand_qty}) untuk {mv.origin}! Sisa tak teralokasi: {remaining_qty}"
+                )
+            candidate_sml = {
+                "move_id": mv.id,
+                "picking_id": picking.id if picking else False,
+                "product_id": mv.product_id.id,
+                "product_uom_id": mv.product_uom.id if hasattr(mv, "product_uom") and mv.product_uom else False,
+                "product_uom": mv.product_uom.id if hasattr(mv, "product_uom") and mv.product_uom else False,
+                "quantity": remaining_qty,
+                "qty_done": remaining_qty,
+                "location_id": mv.location_id.id,
+                "location_dest_id": mv.location_dest_id.id,
+                "company_id": mv.company_id.id if mv.company_id else False,
+                "lot_id": target_lot.id if target_lot else False,
+                "date": move_date,
+            }
+            if "picked" in StockMoveLine._fields:
+                candidate_sml["picked"] = True
+            line_vals = {k: v for k, v in candidate_sml.items() if k in StockMoveLine._fields}
+            StockMoveLine.create(line_vals)
+    else:
+        # Move lines kosong hanya diizinkan untuk pergerakan non-internal (e.g. Inbound PO dari vendor)
+        if is_internal:
+            raise ValueError(
+                f"[FAIL-FAST] Reservasi kosong pada lokasi internal untuk {mv.origin}! Penolakan stok negatif."
+            )
+        candidate_sml = {
+            "move_id": mv.id,
+            "picking_id": picking.id if picking else False,
+            "product_id": mv.product_id.id,
+            "product_uom_id": mv.product_uom.id if hasattr(mv, "product_uom") and mv.product_uom else False,
+            "product_uom": mv.product_uom.id if hasattr(mv, "product_uom") and mv.product_uom else False,
+            "quantity": demand_qty,
+            "qty_done": demand_qty,
+            "location_id": mv.location_id.id,
+            "location_dest_id": mv.location_dest_id.id,
+            "company_id": mv.company_id.id if mv.company_id else False,
+            "lot_id": target_lot.id if target_lot else False,
+            "date": move_date,
+        }
+        if "picked" in StockMoveLine._fields:
+            candidate_sml["picked"] = True
+        line_vals = {k: v for k, v in candidate_sml.items() if k in StockMoveLine._fields}
+        StockMoveLine.create(line_vals)
+
+    # 4. Assertion Fail-Fast: Total kuantitas move lines WAJIB sama persis dengan demand
+    total_ml_qty = sum(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)) for ml in mv.move_line_ids)
+    if abs(total_ml_qty - demand_qty) > 0.0001:
+        raise ValueError(
+            f"[FAIL-FAST] Alokasi kuantitas move line ({total_ml_qty}) tidak cocok dengan demand ({demand_qty}) untuk move {mv.origin}!"
+        )
+
+    # 5. Set status picked pada move dan move line
+    if "picked" in StockMove._fields:
+        mv.write({"picked": True})
+        mv.picked = True
+    for ml in mv.move_line_ids:
+        if "picked" in StockMoveLine._fields:
+            ml.write({"picked": True})
+            ml.picked = True
+
+
 def main():
     print("=" * 80)
     print("EKSPERIMEN SEEDING HISTORIS MINIMAL ODOO 19 — RUNTIME VERIFICATION")
@@ -776,31 +901,36 @@ def main():
         # Helper: Audit Pasangan Akun Debit-Kredit Jurnal Native Odoo secara Formal
         def audit_event_account_pair(event_name, stock_move, expected_debit_code, expected_credit_code, expected_amount):
             """Memverifikasi bahwa jurnal native mendebit dan mengkredit akun yang sesuai serta berimbang tanpa substitusi/split fraud."""
-            am = getattr(stock_move, "account_move_id", None)
-            if not am and getattr(stock_move, "account_move_ids", None):
-                am = stock_move.account_move_ids[:1]
-            if not am and "stock_move_id" in env["account.move"]._fields:
-                am = env["account.move"].sudo().search([("stock_move_id", "=", stock_move.id)], limit=1)
-            if not am and stock_move.origin:
-                # Pencarian persis pada ref atau picking name untuk mencegah salah relasi
-                allowed_refs = [stock_move.origin]
+            found_ams = env["account.move"].sudo()
+            # 1. Relasi langsung account_move_id (Many2one Odoo 19)
+            if getattr(stock_move, "account_move_id", None):
+                found_ams = found_ams | stock_move.account_move_id
+            # 2. Relasi account_move_ids
+            if getattr(stock_move, "account_move_ids", None):
+                found_ams = found_ams | stock_move.account_move_ids
+            # 3. Field stock_move_id pada account.move jika tersedia
+            if "stock_move_id" in env["account.move"]._fields:
+                found_ams = found_ams | env["account.move"].sudo().search([("stock_move_id", "=", stock_move.id)])
+            # 4. Pencarian referensi eksak (tanpa substring/ilike) pada origin atau picking name
+            if not found_ams and stock_move.origin:
+                exact_refs = [stock_move.origin]
                 if getattr(stock_move, "picking_id", None) and stock_move.picking_id.name:
-                    allowed_refs.append(stock_move.picking_id.name)
-                for r in allowed_refs:
-                    am = env["account.move"].sudo().search([
-                        ("ref", "=", r),
-                        ("company_id", "in", [False, company.id]),
-                    ], limit=1)
-                    if am:
-                        break
-                if not am:
-                    am = env["account.move"].sudo().search([
-                        ("ref", "ilike", stock_move.origin),
-                        ("company_id", "in", [False, company.id]),
-                    ], limit=1)
+                    exact_refs.append(stock_move.picking_id.name)
+                found_ams = env["account.move"].sudo().search([
+                    ("ref", "in", exact_refs),
+                    ("company_id", "in", [False, company.id]),
+                ])
 
-            if not am:
+            # Wajibkan relasi dokumen unik dan pasti (fail-fast jika 0 atau > 1)
+            if len(found_ams) == 0:
                 raise ValueError(f"[FAIL-FAST] Event '{event_name}' ({stock_move.origin}) tidak memiliki entri account.move native Odoo yang valid!")
+            if len(found_ams) > 1:
+                raise ValueError(
+                    f"[FAIL-FAST] Event '{event_name}' ({stock_move.origin}) memiliki lebih dari 1 entri account.move ({len(found_ams)} entri: {found_ams.ids})! "
+                    f"Wajib relasi dokumen unik dan pasti tanpa ambiguitas."
+                )
+
+            am = found_ams[0]
 
             if am.state != "posted":
                 raise ValueError(f"[FAIL-FAST] Jurnal {am.id} untuk event '{event_name}' belum posted (state: {am.state})!")
@@ -1008,101 +1138,62 @@ def main():
             mv.with_context(force_period_date=move_date[:10])._action_confirm()
             mv.with_context(force_period_date=move_date[:10])._action_assign()
 
-            # Sinkronisasi line_ids secara tangguh: fidelitas reservasi multi-line & multi-lot native Odoo
-            if mv.move_line_ids:
-                total_reserved = sum(getattr(ml, "quantity", 0.0) or getattr(ml, "qty_done", 0.0) for ml in mv.move_line_ids)
-                if loc_src.usage == "internal" and total_reserved < (qty - 0.0001):
-                    raise ValueError(
-                        f"[FAIL-FAST] Kuantitas reservasi ({total_reserved}) tidak mencukupi demand ({qty}) "
-                        f"untuk {origin} pada lokasi {loc_src.complete_name}! Penolakan stok negatif/kurang."
-                    )
+            # Delegasikan alokasi move lines ke helper modular dengan guard reservasi kosong, fidelitas lot, dan sinkronisasi picked
+            allocate_and_sync_move_lines(env, mv, picking, qty, target_lot=lot, move_date=move_date)
 
-                remaining_qty = qty
-                for ml in mv.move_line_ids:
-                    line_cap = getattr(ml, "quantity", 0.0) or getattr(ml, "qty_done", 0.0)
-                    if line_cap <= 0.0 and len(mv.move_line_ids) == 1:
-                        line_cap = remaining_qty
+            # Jika tersedia pada stock.picking (Odoo 17/18/19), set quantities sesuai reservasi
+            if hasattr(picking, "action_set_quantities_to_reservation"):
+                picking.action_set_quantities_to_reservation()
 
-                    if remaining_qty > 0 and line_cap > 0:
-                        alloc = min(remaining_qty, line_cap)
-                        upd_vals = {}
-                        # Pertahankan lot native yang sudah di-reserve oleh Odoo; jangan timpa jika sudah ada
-                        if not ml.lot_id and lot and "lot_id" in StockMoveLine._fields:
-                            upd_vals["lot_id"] = lot.id
-                        if "quantity" in StockMoveLine._fields:
-                            upd_vals["quantity"] = alloc
-                        elif "qty_done" in StockMoveLine._fields:
-                            upd_vals["qty_done"] = alloc
-                        if "date" in StockMoveLine._fields:
-                            upd_vals["date"] = move_date
-                        if "picking_id" in StockMoveLine._fields:
-                            upd_vals["picking_id"] = picking.id
-                        ml.write(upd_vals)
-                        remaining_qty -= alloc
-                    else:
-                        # Baris reservasi ekstra di luar kebutuhan alokasi dihapus agar kuantitas tidak berlipat
-                        ml.unlink()
+            if "picked" in StockPicking._fields:
+                picking.write({"picked": True})
 
-                if remaining_qty > 0.0001:
-                    candidate_sml = {
-                        "move_id": mv.id,
-                        "picking_id": picking.id,
-                        "product_id": product.id,
-                        "product_uom_id": product.uom_id.id,
-                        "product_uom": product.uom_id.id,
-                        "quantity": remaining_qty,
-                        "qty_done": remaining_qty,
-                        "location_id": loc_src.id,
-                        "location_dest_id": loc_dest.id,
-                        "company_id": company.id,
-                        "lot_id": lot.id if lot else False,
-                        "date": move_date,
-                    }
-                    line_vals = {k: v for k, v in candidate_sml.items() if k in StockMoveLine._fields}
-                    StockMoveLine.create(line_vals)
-            else:
-                candidate_sml = {
-                    "move_id": mv.id,
-                    "picking_id": picking.id,
-                    "product_id": product.id,
-                    "product_uom_id": product.uom_id.id,
-                    "product_uom": product.uom_id.id,
-                    "quantity": qty,
-                    "qty_done": qty,
-                    "location_id": loc_src.id,
-                    "location_dest_id": loc_dest.id,
-                    "company_id": company.id,
-                    "lot_id": lot.id if lot else False,
-                    "date": move_date,
-                }
-                line_vals = {k: v for k, v in candidate_sml.items() if k in StockMoveLine._fields}
-                StockMoveLine.create(line_vals)
-
-            # Assertion Fail-Fast: Total kuantitas move lines WAJIB sama persis dengan demand
-            total_ml_qty = sum(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)) for ml in mv.move_line_ids)
-            if abs(total_ml_qty - qty) > 0.0001:
-                raise ValueError(
-                    f"[FAIL-FAST] Alokasi kuantitas move line ({total_ml_qty}) tidak cocok dengan demand ({qty}) untuk move {origin}!"
-                )
-
-            if "picked" in StockMove._fields:
-                mv.picked = True
+            # Instrumentasi komprehensif pra-validasi native
+            print(f" -> [PRE-VALIDATE] Picking {picking.name} ({origin}): state={picking.state}")
+            for m in picking.move_ids:
+                print(f"    * Move {m.id}: state={m.state}, picked={getattr(m, 'picked', 'N/A')}, demand={getattr(m, 'product_uom_qty', 'N/A')}, qty={getattr(m, 'quantity', 'N/A')}")
+            for ml_rec in picking.move_line_ids:
+                print(f"    * MoveLine {ml_rec.id}: state={getattr(ml_rec, 'state', 'N/A')}, picked={getattr(ml_rec, 'picked', 'N/A')}, qty={getattr(ml_rec, 'quantity', 'N/A')}, qty_done={getattr(ml_rec, 'qty_done', 'N/A')}, lot={ml_rec.lot_id.name if ml_rec.lot_id else 'None'}")
 
             # Validasi picking secara native melalui lifecycle Odoo (button_validate)
             # Tanpa fallback pemaksaan status atau _action_done manual
-            validate_res = picking.with_context(force_period_date=move_date[:10]).button_validate()
-            if isinstance(validate_res, dict) and "res_model" in validate_res:
-                wiz_model = validate_res["res_model"]
-                wiz_id = validate_res.get("res_id")
+            val_ctx = {
+                "force_period_date": move_date[:10],
+                "skip_backorder": True,
+                "skip_immediate": True,
+                "skip_expired": True,
+            }
+            validate_res = picking.with_context(**val_ctx).button_validate()
+            print(f" -> [VALIDATE RES] Picking {picking.name} ({origin}): {validate_res}")
+
+            # Penanganan recursive/iterative wizard native Odoo 19
+            wiz_iter = 0
+            current_res = validate_res
+            while isinstance(current_res, dict) and "res_model" in current_res and wiz_iter < 5:
+                wiz_iter += 1
+                wiz_model = current_res["res_model"]
+                wiz_id = current_res.get("res_id")
+                wiz_ctx = dict(val_ctx)
+                if "context" in current_res and isinstance(current_res["context"], dict):
+                    wiz_ctx.update(current_res["context"])
+                print(f" -> [WIZARD RESOLVER {wiz_iter}] Resolving wizard {wiz_model} (id: {wiz_id}) with context: {list(wiz_ctx.keys())}")
                 wizard = (
-                    env[wiz_model].sudo().browse(wiz_id)
+                    env[wiz_model].sudo().with_context(**wiz_ctx).browse(wiz_id)
                     if wiz_id
-                    else env[wiz_model].sudo().with_context(validate_res.get("context", {})).create({})
+                    else env[wiz_model].sudo().with_context(**wiz_ctx).create({})
                 )
-                for act_name in ["process", "action_confirm", "process_cancel_backorder"]:
+                action_taken = False
+                for act_name in ["process", "action_confirm", "process_cancel_backorder", "action_process", "apply"]:
                     if hasattr(wizard, act_name):
-                        getattr(wizard.with_context(force_period_date=move_date[:10]), act_name)()
+                        current_res = getattr(wizard.with_context(**wiz_ctx), act_name)()
+                        action_taken = True
+                        print(f" -> [WIZARD ACTION] Executed {act_name}() on {wiz_model} -> res: {current_res}")
                         break
+                if not action_taken:
+                    print(f" -> [WIZARD WARNING] Tidak ditemukan action umum pada {wiz_model} (dir: {[m for m in dir(wizard) if not m.startswith('_')]})")
+                    break
+
+            print(f" -> [POST-VALIDATE] Picking {picking.name} ({origin}): state={picking.state}")
 
             # Verifikasi FAIL-FAST: Dokumen picking dan move WAJIB berstatus 'done' secara native
             if picking.state != "done":
@@ -1657,14 +1748,18 @@ def main():
 
             debit_line = [line_rec for line_rec in am_do.line_ids if line_rec.debit > 0][0]
             orig_debit = debit_line.debit
-            # Ubah line debit menjadi Rp 1.0
-            env.cr.execute("UPDATE account_move_line SET debit = 1.0 WHERE id = %s", [debit_line.id])
-            # Sisipkan baris debit palsu ke akun lain (stock_input_acc) sebesar orig_debit - 1.0
-            env.cr.execute(
-                """INSERT INTO account_move_line (move_id, account_id, debit, credit, date, name, company_id)
-                   VALUES (%s, %s, %s, 0.0, %s, %s, %s)""",
-                [am_do.id, stock_input_acc.id, orig_debit - 1.0, debit_line.date, "Fake Split Line", company.id]
-            )
+            # Mutasi via ORM resmi Odoo (with_context check_move_validity=False)
+            debit_line.with_context(check_move_validity=False).write({"debit": 1.0})
+            aml_vals = {
+                "move_id": am_do.id,
+                "account_id": stock_input_acc.id,
+                "debit": orig_debit - 1.0,
+                "credit": 0.0,
+                "date": debit_line.date,
+                "name": "Fake Split Line",
+                "company_id": company.id,
+            }
+            env["account.move.line"].with_context(check_move_validity=False).create(aml_vals)
             env.invalidate_all()
 
             mutated_rejected5 = False
@@ -1700,12 +1795,12 @@ def main():
             )
             base_ok6 = base_audit6.get("balanced", False)
 
-            # Fase 2: Mutasi diterapkan - ganti akun kredit 211000 dengan akun beban/lain
+            # Fase 2: Mutasi diterapkan - ganti akun kredit 211000 dengan akun beban/lain via ORM
             am_po = getattr(mv_po, "account_move_id", None) or env["account.move"].sudo().search([("stock_move_id", "=", mv_po.id)], limit=1)
             if not am_po:
                 am_po = env["account.move"].sudo().search([("ref", "ilike", "PO-2026-06-05"), ("company_id", "in", [False, company.id])], limit=1)
             credit_line = [line_rec for line_rec in am_po.line_ids if line_rec.credit > 0][0]
-            env.cr.execute("UPDATE account_move_line SET account_id = %s WHERE id = %s", [cogs_acc.id, credit_line.id])
+            credit_line.with_context(check_move_validity=False).write({"account_id": cogs_acc.id})
             env.invalidate_all()
 
             mutated_rejected6 = False
@@ -1734,8 +1829,14 @@ def main():
         # Mutasi 7: Kuantitas Sumber Tak Mencukupi / Negative Stock Fail-Fast Ditolak
         env.cr.execute("SAVEPOINT test_mutation_insufficient_stock")
         try:
-            # Fase 1: Baseline validasi
-            base_ok7 = True
+            # Fase 1: Baseline validasi (snapshot stok fisik dan saldo EOD GL sebelum mutasi)
+            base_pos7 = get_historical_position("2026-07-04 23:59:59")
+            base_ok7 = (
+                base_pos7["saleable_cartons"] == oracle["cutoffs"]["cutoff_4"]["expected_saleable_cartons"]
+                and base_pos7["quarantine_cartons"] == oracle["cutoffs"]["cutoff_4"]["expected_quarantine_cartons"]
+                and base_pos7["odoo_eod_gl_balance"] is not None
+                and abs(base_pos7["odoo_eod_gl_balance"] - oracle["cutoffs"]["cutoff_4"]["expected_eod_gl"]) < 0.01
+            )
 
             # Fase 2: Mutasi diterapkan - mencoba pergerakan outbound internal sebesar 999.999 unit (melebihi stok)
             mutated_rejected7 = False
@@ -1749,13 +1850,19 @@ def main():
                     move_date="2026-07-04 12:00:00",
                 )
             except ValueError as ve:
-                if "tidak mencukupi demand" in str(ve) or "Penolakan stok negatif" in str(ve):
+                if any(k in str(ve) for k in ["tidak mencukupi demand", "Penolakan stok negatif", "Reservasi kosong"]):
                     mutated_rejected7 = True
         finally:
-            # Fase 3: Rollback dan revalidasi
+            # Fase 3: Rollback dan revalidasi (verifikasi pemulihan 100% tanpa drift)
             env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_insufficient_stock")
             env.invalidate_all()
-            roll_ok7 = True
+            roll_pos7 = get_historical_position("2026-07-04 23:59:59")
+            roll_ok7 = (
+                roll_pos7["saleable_cartons"] == base_pos7["saleable_cartons"]
+                and roll_pos7["quarantine_cartons"] == base_pos7["quarantine_cartons"]
+                and roll_pos7["odoo_eod_gl_balance"] is not None
+                and abs(roll_pos7["odoo_eod_gl_balance"] - base_pos7["odoo_eod_gl_balance"]) < 0.01
+            )
 
         mut7_pass = base_ok7 and mutated_rejected7 and roll_ok7
         mutation_results["insufficient_stock_demand_rejected"] = mut7_pass
