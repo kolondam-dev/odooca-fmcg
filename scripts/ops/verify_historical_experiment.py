@@ -355,6 +355,36 @@ def main():
         cat_acc_fields = [f for f in cat_fields if any(w in f for w in ["stock", "valuation", "account", "journal"])]
         print(f" -> Field Akun/Jurnal pada product.category: {cat_acc_fields}")
 
+        # Introspeksi mendalam method ORM stock_account Odoo 19
+        print("\n" + "=" * 60)
+        print("[INTROSPEKSI SOURCE CODE ORM ODOO 19]")
+        try:
+            import inspect
+            print("--- [A] stock.move._action_done source snippet ---")
+            lines_ad = inspect.getsourcelines(env["stock.move"]._action_done)[0][:35]
+            print("".join(lines_ad))
+        except Exception as e_ad:
+            print(f"Gagal inspect _action_done: {e_ad}")
+
+        try:
+            import inspect
+            print("--- [B] stock.quant.action_apply_inventory source snippet ---")
+            lines_ai = inspect.getsourcelines(env["stock.quant"].action_apply_inventory)[0][:30]
+            print("".join(lines_ai))
+        except Exception as e_ai:
+            print(f"Gagal inspect action_apply_inventory: {e_ai}")
+
+        sm_val_methods = [m for m in dir(env["stock.move"]) if any(k in m.lower() for k in ["valuation", "account_move", "create_account", "account_entry"])]
+        print(f"--- [C] Method akuntansi di stock.move: {sm_val_methods} ---")
+        for vm in sm_val_methods[:5]:
+            try:
+                import inspect
+                src_vm = inspect.getsourcelines(getattr(env["stock.move"], vm))[0][:20]
+                print(f"  * {vm}:\n{''.join(src_vm)}")
+            except Exception:
+                pass
+        print("=" * 60 + "\n")
+
         report["build_info"] = {
             "odoo_version": getattr(getattr(sys.modules.get("odoo"), "release", None), "version", "19.0"),
             "company": company.name,
@@ -677,7 +707,7 @@ def main():
             if "inventory_date" in StockQuant._fields:
                 quant_vals["inventory_date"] = move_date
 
-            quant = StockQuant.create(quant_vals)
+            quant = StockQuant.with_context(inventory_mode=True).create(quant_vals)
             quant.action_apply_inventory()
 
             # Cari move hasil inventory adjustment Odoo
@@ -690,6 +720,14 @@ def main():
             ], order="id desc", limit=1)
             if not adj_moves:
                 raise ValueError(f"action_apply_inventory() gagal menghasilkan stock.move done untuk {product.name}!")
+
+            # Picu method valuasi persediaan Odoo native jika tersedia
+            for val_m in ["_create_account_moves", "_action_done_valuation", "_account_entry_move"]:
+                if hasattr(adj_moves, val_m):
+                    try:
+                        getattr(adj_moves, val_m)()
+                    except Exception as ex_vm:
+                        print(f" -> [Info ORM] Call {val_m} on adj move: {ex_vm}")
 
             adj_moves.write({"date": move_date, "origin": origin})
             if hasattr(adj_moves, "move_line_ids") and adj_moves.move_line_ids:
@@ -771,6 +809,14 @@ def main():
             if "picked" in StockMove._fields:
                 mv.picked = True
             mv._action_done()
+
+            # Picu method valuasi persediaan Odoo native jika tersedia
+            for val_m in ["_create_account_moves", "_action_done_valuation", "_account_entry_move"]:
+                if hasattr(mv, val_m):
+                    try:
+                        getattr(mv, val_m)()
+                    except Exception as ex_vm:
+                        print(f" -> [Info ORM] Call {val_m} on operational move {origin}: {ex_vm}")
 
             mv.write({"date": move_date})
             if hasattr(mv, "move_line_ids") and mv.move_line_ids:
@@ -1061,30 +1107,42 @@ def main():
         print(f" -> SVLs Identik: {svls_identical}")
         print(f" -> 5 Cutoffs Re-Readback Identik: {cutoffs_identical}")
 
-        # 8. Mutasi Terarah Aktual (Mutation Tests dengan Savepoint & Rejection Assertions)
+        # 8. Mutasi Terarah Aktual (Mutation Tests dengan Savepoint & Verifikasi 3-Fase: Baseline Valid -> Mutasi Ditolak -> Rollback Valid)
         print("\n[7/8] Menjalankan Mutasi Terarah Aktual (Mutation Tests via Savepoints)...")
         mutation_results = {}
 
         # Mutasi 1: Wrong Effective Date (DO Delivery bergeser ke now/hari ini)
         env.cr.execute("SAVEPOINT test_mutation_date")
         try:
+            # Fase 1: Baseline validasi
+            base_pos1 = get_historical_position("2026-07-03 14:00:00")
+            base_ok1 = (base_pos1["saleable_cartons"] == oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
+
+            # Fase 2: Mutasi diterapkan
             mv_do.write({"date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
             mv_do.move_line_ids.write({"date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
-            pos_mutated = get_historical_position("2026-07-03 14:00:00")
-            # Tanggal sekarang > 3 Juli, sehingga delivery 7 karton hilang dari as-of 3 Juli (stok terbaca 84 bukan 77)
-            rejected = (pos_mutated["saleable_cartons"] != oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
-            mutation_results["wrong_date_rejected"] = rejected
-            print(f" -> Mutasi 1 (DO Date ke Now Ditolak): {'PASS' if rejected else 'FAIL'} (Actual: {pos_mutated['saleable_cartons']} vs Expected: 77.0)")
+            pos_mutated1 = get_historical_position("2026-07-03 14:00:00")
+            mutated_rejected1 = (pos_mutated1["saleable_cartons"] != oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
         finally:
+            # Fase 3: Rollback dan revalidasi
             env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_date")
             env.invalidate_all()
+            roll_pos1 = get_historical_position("2026-07-03 14:00:00")
+            roll_ok1 = (roll_pos1["saleable_cartons"] == oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
+
+        mut1_pass = base_ok1 and mutated_rejected1 and roll_ok1
+        mutation_results["wrong_date_rejected"] = mut1_pass
+        print(f" -> Mutasi 1 (DO Date ke Now Ditolak): {'PASS' if mut1_pass else 'FAIL'} (Baseline={base_ok1}, Rejected={mutated_rejected1}, Rollback={roll_ok1})")
 
         # Mutasi 2: Manipulasi Nilai Valuasi & GL (+ Rp 50.000.000)
         env.cr.execute("SAVEPOINT test_mutation_val")
         try:
-            # Buat entri mutasi yang sah dan seimbang secara akuntansi Odoo (debit=credit seimbang)
-            # agar tidak ditolak oleh constraint _check_balanced jurnal,
-            # tetapi memanipulasi saldo akun persediaan sehingga validator menolaknya.
+            # Fase 1: Baseline validasi
+            base_pos2 = get_historical_position("2026-07-01 23:59:59")
+            base_gl2 = base_pos2["odoo_gl_balance"]
+            base_ok2 = (base_gl2 is not None and abs(base_gl2 - oracle["cutoffs"]["cutoff_1"]["expected_total_val"]) < 0.01)
+
+            # Fase 2: Mutasi diterapkan via jurnal berimbang sah yang mendistorsi akun persediaan
             AccountMove = env["account.move"].sudo()
             mutated_move = AccountMove.create({
                 "journal_id": stock_journal.id,
@@ -1101,7 +1159,7 @@ def main():
                         "date": "2026-07-01",
                     }),
                     (0, 0, {
-                        "name": "Mutasi GL Uji Penolakan (Credit Interim)",
+                        "name": "Mutasi GL Uji Penolakan (Credit Lawan)",
                         "account_id": stock_input_acc.id,
                         "product_id": product.id,
                         "debit": 0.0,
@@ -1112,30 +1170,43 @@ def main():
             })
             mutated_move.action_post()
 
-            pos_mutated = get_historical_position("2026-07-01 23:59:59")
-            gl_actual = pos_mutated["odoo_gl_balance"] or 0.0
-            delta_bogus = abs(gl_actual - oracle["cutoffs"]["cutoff_1"]["expected_total_val"])
-            # Saldo terbaca melonjak Rp 50.000.000 di atas expected, sehingga validator menolak
-            rejected = (delta_bogus > 100.0)
-            mutation_results["bogus_valuation_rejected"] = rejected
-            print(f" -> Mutasi 2 (Nilai Valuasi/GL Palsu Ditolak): {'PASS' if rejected else 'FAIL'} (GL Delta: {delta_bogus})")
+            pos_mutated2 = get_historical_position("2026-07-01 23:59:59")
+            gl_mutated2 = pos_mutated2["odoo_gl_balance"] or 0.0
+            mutated_rejected2 = (abs(gl_mutated2 - oracle["cutoffs"]["cutoff_1"]["expected_total_val"]) > 100.0)
         finally:
+            # Fase 3: Rollback dan revalidasi
             env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_val")
             env.invalidate_all()
+            roll_pos2 = get_historical_position("2026-07-01 23:59:59")
+            roll_gl2 = roll_pos2["odoo_gl_balance"]
+            roll_ok2 = (roll_gl2 is not None and abs(roll_gl2 - oracle["cutoffs"]["cutoff_1"]["expected_total_val"]) < 0.01)
+
+        mut2_pass = base_ok2 and mutated_rejected2 and roll_ok2
+        mutation_results["bogus_valuation_rejected"] = mut2_pass
+        print(f" -> Mutasi 2 (Nilai Valuasi/GL Palsu Ditolak): {'PASS' if mut2_pass else 'FAIL'} (Baseline={base_ok2}, Rejected={mutated_rejected2}, Rollback={roll_ok2})")
 
         # Mutasi 3: Future Receipt Leakage (PO Receipt 4 Juli bocor ke 2 Juli)
         env.cr.execute("SAVEPOINT test_mutation_leak")
         try:
+            # Fase 1: Baseline validasi
+            base_pos3 = get_historical_position("2026-07-03 14:00:00")
+            base_ok3 = (base_pos3["saleable_cartons"] == oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
+
+            # Fase 2: Mutasi diterapkan
             mv_po.write({"date": "2026-07-02 10:00:00"})
             mv_po.move_line_ids.write({"date": "2026-07-02 10:00:00"})
-            pos_mutated = get_historical_position("2026-07-03 14:00:00")
-            # 311 karton PO bocor ke 3 Juli, sehingga stok melonjak ke 388 bukan 77
-            rejected = (pos_mutated["saleable_cartons"] > oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
-            mutation_results["future_receipt_leakage_rejected"] = rejected
-            print(f" -> Mutasi 3 (Kebocoran PO Receipt Ditolak): {'PASS' if rejected else 'FAIL'} (Actual: {pos_mutated['saleable_cartons']} vs Expected: 77.0)")
+            pos_mutated3 = get_historical_position("2026-07-03 14:00:00")
+            mutated_rejected3 = (pos_mutated3["saleable_cartons"] > oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
         finally:
+            # Fase 3: Rollback dan revalidasi
             env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_leak")
             env.invalidate_all()
+            roll_pos3 = get_historical_position("2026-07-03 14:00:00")
+            roll_ok3 = (roll_pos3["saleable_cartons"] == oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
+
+        mut3_pass = base_ok3 and mutated_rejected3 and roll_ok3
+        mutation_results["future_receipt_leakage_rejected"] = mut3_pass
+        print(f" -> Mutasi 3 (Kebocoran PO Receipt Ditolak): {'PASS' if mut3_pass else 'FAIL'} (Baseline={base_ok3}, Rejected={mutated_rejected3}, Rollback={roll_ok3})")
 
         all_mutations_rejected = all(mutation_results.values())
         report["mutation_tests"] = mutation_results

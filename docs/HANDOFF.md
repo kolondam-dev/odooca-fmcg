@@ -1,6 +1,29 @@
 # HANDOFF
 
-## 2026-10-27 — antigravity agent — Audit Komprehensif Payload Schema Runtime Odoo 19, Perbaikan Invalid Field stock.move, dan Penelusuran Akuntansi Persediaan Native
+## 2026-10-27 — antigravity agent — Introspeksi Sumber ORM Odoo 19, Context inventory_mode Quant, dan Verifikasi Mutasi 3-Fase (Baseline -> Mutasi -> Rollback)
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6433121740](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6433121740)):**
+- Menindaklanjuti review commit `e386ca3`:
+  1. *Kemajuan runtime terbukti*: 4 pergerakan selesai, 5 cut-off fisik cocok 100% dengan sumber kanonikal, Run 2 zero-drift audit mempertahankan move, line, quant, dan saldo fisik secara idempoten.
+  2. *0 jurnal native pada seluruh event*: Menelusuri mekanisme valuasi Odoo 19 aktual (apakah stock.move membuat jurnal atau pergeseran Odoo 19 ke invoice-level perpetual valuation / review closing), bukan menambah tebakan field akun.
+  3. *Validitas Mutation GL*: Baseline harus valid sebelum dimutasi. Tes mutasi wajib membuktikan 3 fase: baseline lulus -> mutasi ditolak -> rollback kembali lulus.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Introspeksi Kode Sumber ORM Odoo 19 Native ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Menambahkan dump kode sumber runtime Python aktual via `inspect.getsourcelines` untuk:
+     * `stock.move._action_done`: memeriksa kondisi pemanggilan akuntansi/valuasi native pada Odoo 19.
+     * `stock.quant.action_apply_inventory`: memeriksa pembentukan move dan akuntansi pada inventory adjustment.
+     * Menginspeksi method akuntansi yang terdaftar pada `stock.move` (`_create_account_moves`, `_action_done_valuation`, `_account_entry_move`).
+2. **Penerapan Context `inventory_mode=True` pada Quant Adjustment:**
+   - Menyelaraskan pembuatan opening quant dengan context Odoo 19 standar: `StockQuant.with_context(inventory_mode=True).create(quant_vals)`.
+   - Menambahkan trigger pemanggilan method valuasi native Odoo 19 yang terdeteksi pada move hasil penyesuaian inventaris dan pergerakan operasional.
+3. **Verifikasi Mutasi 3-Fase yang Sah (Baseline -> Mutasi Ditolak -> Rollback Kembali Valid):**
+   - Mengubah struktur ketiga mutation tests (Wrong Date, Bogus GL Manipulation, Future Receipt Leakage) agar mengevaluasi secara eksplisit:
+     * Fase 1: Baseline harus valid (`baseline_ok == True`).
+     * Fase 2: Mutasi diterapkan -> validator harus menolak (`mutated_rejected == True`).
+     * Fase 3: Rollback savepoint dan `env.invalidate_all()` -> validator harus kembali valid (`rollback_ok == True`).
+   - Kelulusan mutasi mutlak mensyaratkan `base_ok and mutated_rejected and roll_ok`.
+
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6432793914](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6432793914)):**
 - Menindaklanjuti review commit `a1a0784`:
   1. *ValueError: Invalid field 'name' in 'stock.move'*: Terjadi saat pembuatan stock.move delivery di `execute_operational_movement()`. Di Odoo 19, field `name` bukan lagi field valid/langsung di `stock.move`. Supervisor meminta audit menyeluruh seluruh payload terhadap schema runtime Odoo 19 agar tidak terus memperbaiki satu traceback per push.
