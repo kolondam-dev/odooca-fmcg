@@ -950,7 +950,7 @@ class CanonicalPerpetualAdapter:
         )
         StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
 
-        if not StockLocation:
+        if StockLocation is None:
             return
 
         internal_loc = StockLocation.search([("usage", "=", "internal")], limit=1)

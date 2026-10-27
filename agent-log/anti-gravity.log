@@ -712,4 +712,12 @@
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T17:51:00+07:00
 
+[2026-10-27T17:59:00+07:00] [INFO] Perbaikan Evaluasi Truthiness StockLocation pada load_rejections_quarantine
+- Menindaklanjuti kegagalan asersi picking karantina pada CI run 40491827643:
+  * Pada load_rejections_quarantine, baris `if not StockLocation:` mengevaluasi empty recordset StockLocation ke True, menyebabkan method return sebelum memproses 9 retur karantina.
+  * Mengubahnya menjadi `if StockLocation is None:` sehingga retur karantina diproses penuh hingga terbentuk stock.picking transfer karantina REJ-202607-001 berstatus 'done'.
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), invariant & acceptance tests: OK.
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T17:59:00+07:00
+
 

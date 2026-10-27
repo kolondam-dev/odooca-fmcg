@@ -17,6 +17,7 @@
       - Memperbaiki evaluasi truthiness model Odoo: empty recordset `res.users()` bernilai `False` saat dievaluasi sebagai boolean, sehingga diubah menjadi `if User is not None and code in canonical_salesmen:`.
       - Melakukan perbaikan komprehensif eliminasi pola evaluasi boolean model (`if Model:`) menjadi `if Model is not None:` untuk `AccountMove`, `AccountAccount`, `AccountPayment`, `AccountMoveLine`, `StockLot`, `StockPicking`, `StockQuant`, dan `StockPickingType` pada `load_canonical_perpetual.py` dan `verify_disposable_slice.py`, memastikan seluruh siklus vendor bill, faktur komersial, diskon, rekonsiliasi pembayaran AR/AP, dan assertion verifikasi runtime dieksekusi penuh pada Odoo nyata.
       - Mengeliminasi query SQL pada un-stored field `lot_ids` di `stock.move` saat pengecekan opening stock (mencegah `ValueError: Cannot convert stock.move.lot_ids to SQL because it is not stored`), menggantinya dengan pencarian SQL stored fields murni dan pencocokan lot in-memory via `move_line_ids`.
+      - Mengoreksi evaluasi boolean `if not StockLocation:` pada `load_rejections_quarantine` menjadi `if StockLocation is None:`, memastikan retur karantina diproses penuh hingga terbentuk `stock.picking` transfer karantina `REJ-202607-001` berstatus 'done'.
   4. *Unit Testing & Kompatibilitas Mock*:
      - Menambahkan method `write(self, vals)` pada `MockRecord` di `tests/test_canonical_loader_adapter.py` untuk mensimulasikan perilaku persistensi ORM Odoo.
      - Seluruh 37 test suite pada `tests/test_canonical_loader_adapter.py` lolos 100%.
