@@ -1,5 +1,14 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Tutup celah restore sesi PR #21
+**Basis:** PR #21 HEAD 8693b13; review issuecomment-6432082496, tetap branch agen/mobile-session-brand.
+**Koreksi:** klaim paket invalid tidak membuka sesi pada entri sebelumnya belum berlaku untuk restore. Celah direproduksi: 17 dari 19 kasus mutasi persisted state baru gagal pada implementasi lama.
+**Berubah:** validator semantik shared untuk sync/open, restore dan morningReady. Memeriksa owner/businessDate, hari/urutan timestamp absensi–sesi–snapshot, masa depan, versi nonblank, products/outlets nonempty dan konsistensi attendance-only vs sesi lengkap. Restore invalid mengembalikan undefined tanpa menghapus pending outbox atau draft bisnis.
+**Diverifikasi lokal:** 48 unit, 1 hosting dan 20 browser phone/tablet PASS; regresi corrupt IndexedDB bundle lalu reload offline menahan order/extra-call dan mempertahankan seluruh draft/outbox. Paket valid lintas tanggal UTC dalam satu hari WITA tetap diterima. Format/typecheck/contracts, demo/live builds/budget, Ruff/4 manifest PASS. CI diperiksa setelah push.
+**Batas:** tetap simulator client; bukan auth/device/server security. Branding dan live lock dipertahankan.
+**Tidak disentuh:** backend/seed/loader/Railway, workflow atau ruleset. Tidak merge/deploy.
+**Menunggu:** reviewer memeriksa ulang commit perbaikan pada PR #21 setelah CI.
+
 ## 2026-10-27 — codex agent — Sesi pagi simulator dan branding Odoo FMCG Mobile
 **Basis:** main efd0373 (PR #20 merged), branch agen/mobile-session-brand. Deployment field-pwa dilaporkan pemilik SUCCESS/live terkunci; tidak diubah pada pekerjaan ini.
 **Berubah:** kartu sesi pagi Sales/Canvasser (absensi diterima simulator → sync online), paket snapshot PJP/stok/harga dan sesi atomik per company/persona; order/extra-call baru memerlukan sesi hari WITA yang sama. Reload offline memulihkan paket; error, tanggal/snapshot invalid atau quota gagal tidak membuka sesi.

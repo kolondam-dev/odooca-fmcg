@@ -23,20 +23,62 @@ export const MORNING_KEY = "morning-session-v1";
 export function fieldBusinessDate(now = new Date()): string {
     return now.toLocaleDateString("en-CA", { timeZone: "Asia/Makassar" });
 }
+// Structural DTO checks alone are insufficient for persisted bundles. All entry
+// points (sync, restore and readiness) share these semantic checks.
+function validMorningSnapshot(value: unknown, date: string): boolean {
+    const parsed = SnapshotSchema.safeParse(value);
+    if (!parsed.success) return false;
+    const snapshot = parsed.data;
+    return (
+        !!snapshot.version.trim() &&
+        z.iso.datetime().safeParse(snapshot.updatedAt).success &&
+        fieldBusinessDate(new Date(snapshot.updatedAt)) === date &&
+        Date.parse(snapshot.updatedAt) <= Date.now() &&
+        snapshot.outlets.length > 0 &&
+        snapshot.products.length > 0
+    );
+}
+function validMorningRecord(
+    value: unknown,
+    owner: string,
+    date: string,
+): MorningRecord | undefined {
+    const parsed = MorningRecordSchema.safeParse(value);
+    if (!parsed.success) return undefined;
+    const record = parsed.data;
+    if (
+        record.owner !== owner ||
+        record.businessDate !== date ||
+        fieldBusinessDate(new Date(record.attendanceAt)) !== date ||
+        Date.parse(record.attendanceAt) > Date.now()
+    )
+        return undefined;
+    // Attendance-only is a valid intermediate state, but never a ready session.
+    if (
+        record.sessionId === null &&
+        record.openedAt === null &&
+        record.snapshot === null
+    )
+        return record;
+    if (
+        !record.sessionId ||
+        !record.openedAt ||
+        !record.snapshot ||
+        fieldBusinessDate(new Date(record.openedAt)) !== date ||
+        Date.parse(record.openedAt) < Date.parse(record.attendanceAt) ||
+        Date.parse(record.openedAt) > Date.now() ||
+        !validMorningSnapshot(record.snapshot, date) ||
+        Date.parse(record.snapshot.updatedAt) > Date.parse(record.openedAt)
+    )
+        return undefined;
+    return record;
+}
 export function morningReady(
     record: MorningRecord | undefined,
     owner: string,
     date = fieldBusinessDate(),
 ): boolean {
-    return (
-        !!record &&
-        record.mode === "simulation" &&
-        record.owner === owner &&
-        record.businessDate === date &&
-        !!record.sessionId &&
-        !!record.openedAt &&
-        !!record.snapshot
-    );
+    return !!validMorningRecord(record, owner, date)?.sessionId;
 }
 export class MorningSimulation {
     constructor(
@@ -45,14 +87,11 @@ export class MorningSimulation {
         private provider: FieldProvider,
     ) {}
     async restore(): Promise<MorningRecord | undefined> {
-        const parsed = MorningRecordSchema.safeParse(
+        return validMorningRecord(
             await this.store.draft(ownerKey(this.identity), MORNING_KEY),
+            ownerKey(this.identity),
+            fieldBusinessDate(),
         );
-        return parsed.success &&
-            parsed.data.owner === ownerKey(this.identity) &&
-            parsed.data.businessDate === fieldBusinessDate()
-            ? parsed.data
-            : undefined;
     }
     private async checkConnection() {
         if (this.provider.mode !== "demo")
@@ -98,13 +137,7 @@ export class MorningSimulation {
         if (!attendance || attendance.businessDate !== date)
             throw new Error("Simulasikan absensi diterima sebelum sync pagi.");
         const snapshot = SnapshotSchema.parse(await this.provider.snapshot());
-        if (
-            !snapshot.version.trim() ||
-            !z.iso.datetime().safeParse(snapshot.updatedAt).success ||
-            fieldBusinessDate(new Date(snapshot.updatedAt)) !== date ||
-            !snapshot.outlets.length ||
-            !snapshot.products.length
-        )
+        if (!validMorningSnapshot(snapshot, date))
             throw new Error(
                 "Paket PJP, stok dan harga belum lengkap atau tanggalnya tidak sesuai. Sesi belum dibuka.",
             );
@@ -118,6 +151,8 @@ export class MorningSimulation {
             openedAt: new Date().toISOString(),
             snapshot,
         };
+        if (!morningReady(record, ownerKey(this.identity), date))
+            throw new Error("Paket sesi tidak valid. Sesi belum dibuka.");
         // One IndexedDB record: never publish ready before the complete bundle is durable.
         await this.store.draft(record.owner, MORNING_KEY, record);
         return record;

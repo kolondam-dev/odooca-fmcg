@@ -1036,3 +1036,13 @@ Branding pemilik: Odoo FMCG Mobile, wordmark Odoo + FMCG dengan Mobile di bawah,
 navy kontras, favicon/install icon oi-odoo besar + label ODOO FMCG/Mobile. Berlaku
 juga pada live locked shell. Outline lokal menggantikan icon font penuh; metadata,
 SVG dan PNG konsisten. Tidak mengubah deployment Railway secara otomatis.
+
+#### Koreksi invariant restore — review PR #21
+
+Validator paket semantik berlaku identik pada sync, restore dan readiness guard,
+termasuk owner/businessDate, tanggal/urutan timestamp sesi/absensi/snapshot,
+nonblank version dan PJP/products nonempty. Attendance-only boleh dipulihkan
+sebagai tahap belum ready; paket parsial/invalid tidak membuka order atau extra
+call setelah reload. Invalidasi sesi tidak menghapus pending command/draft bisnis.
+Tes mutasi persisted state dan browser reload menjadi gate regresi client; tetap
+bukan security boundary atau penerimaan sesi backend.

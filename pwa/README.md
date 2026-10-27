@@ -157,3 +157,18 @@ Ikon browser 16/32 px mengutamakan bentuk O; tulisan paling jelas pada icon inst
 Branding ini baru tersedia setelah merge dan deploy manual commit baru. Deployment
 Railway yang dilaporkan pemilik tetap live terkunci pada baseline PR #20; pekerjaan
 ini tidak mengubah service, mode build, domain atau kebijakan auto-deploy.
+
+### Koreksi restore paket (review PR #21)
+
+Sync, restore IndexedDB, dan guard readiness memakai validator semantik yang sama:
+owner/tanggal bisnis, tanggal dan urutan absensi–pembukaan sesi, timestamp bukan
+masa depan, versi snapshot nonblank, updatedAt valid/hari WITA yang sama/tidak
+melewati pembukaan sesi, serta products/outlets nonempty. State absensi saja
+(sessionId/openedAt/snapshot semuanya null) tetap valid sebagai tahap antara,
+bukan sesi ready. Kombinasi sesi parsial ditolak.
+
+Restore invalid menghasilkan sesi belum siap tanpa menghapus record, outbox atau
+draft bisnis. Pengguna harus mengulang alur sesi pagi; command pending tetap
+tersimpan dengan konteks asal. Regresi diuji melalui mutasi record IndexedDB
+nyata pada unit dan corrupt bundle → browser reload offline → order/extra-call
+terkunci, dengan isi draft/outbox sebelum-sesudah tetap sama.

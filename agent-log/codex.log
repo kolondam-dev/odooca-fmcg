@@ -74,3 +74,9 @@
 - Nama/logo/favicon/install icons diganti mengikuti referensi pemilik; wordmark dan glyph oi-odoo resmi, outline lokal, lisensi/atribusi dicatat. Log claude-design dibaca tanpa mengedit addon web.
 - 27 unit + 1 hosting + 18 browser phone/tablet PASS; format/typecheck/contracts/build budget/Ruff/manifest PASS. Live terkunci; CI sesudah push. Realisasi/settlement dan sesi resmi tetap dependency.
 - Task managed by codex agent at 2026-10-27T08:43:14+07:00
+
+[2026-10-27T09:29:54+07:00] [INFO] Tutup celah restore sesi PR21 dari review supervisor
+- Shared semantic validator dipakai open/restore/readiness: owner/hari, timestamp urut/nonfuture, version nonblank, products/outlets nonempty, state stage konsisten.
+- 17 kasus mutasi baru gagal terhadap kode lama; setelah fix 48 unit, 1 hosting, 20 browser PASS. Browser corrupt persisted bundle + reload offline membuktikan order/extra-call tertahan dan draft/outbox tidak berubah.
+- Format/typecheck/contracts/build budget/Ruff/manifest PASS; CI diperiksa setelah push. Tetap draft, tidak merge/deploy atau menyentuh backend/seed/Railway.
+- Task managed by codex agent at 2026-10-27T09:29:54+07:00

@@ -317,3 +317,102 @@ test("branding uses the same name, local logo and install icons in demo/live", a
         });
     }
 });
+
+test("corrupt restored bundle locks order and extra call without deleting pending orders/drafts", async ({
+    page,
+    context,
+}) => {
+    await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
+    await page.goto("./");
+    await openMorning(page);
+    await page
+        .getByRole("button", { name: "Buat order", exact: false })
+        .click();
+    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("2");
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await context.setOffline(true);
+    await page.getByRole("button", { name: "Simpan ke antrean demo" }).click();
+    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("3");
+    await page.getByRole("button", { name: "Kembali", exact: true }).click();
+    const before = await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+            r.onerror = () => reject(r.error);
+        });
+        const tx = db.transaction("drafts", "readwrite");
+        await new Promise<void>((resolve, reject) => {
+            const r = tx
+                .objectStore("drafts")
+                .get("demo-mdu:DEMO-ANDRE:morning-session-v1");
+            r.onsuccess = () => {
+                const row = r.result;
+                row.value.snapshot.products = [];
+                row.value.snapshot.updatedAt = "2020-01-01T00:00:00Z";
+                tx.objectStore("drafts").put(row);
+            };
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+        const read = db.transaction(["drafts", "outbox"], "readonly");
+        const value = await Promise.all(
+            ["drafts", "outbox"].map(
+                (name) =>
+                    new Promise((resolve) => {
+                        const r = read.objectStore(name).getAll();
+                        r.onsuccess = () => resolve(r.result);
+                    }),
+            ),
+        );
+        db.close();
+        return value;
+    });
+    await page.reload();
+    await expect(
+        page.getByRole("button", {
+            name: "Simulasikan absensi diterima",
+            exact: true,
+        }),
+    ).toBeVisible();
+    await expect(page.getByText("Sesi terbuka", { exact: true })).toHaveCount(
+        0,
+    );
+    await page
+        .getByRole("button", { name: "Buat order", exact: false })
+        .click();
+    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page
+        .getByRole("navigation")
+        .getByRole("button", { name: "Sales", exact: true })
+        .click();
+    await page.getByRole("button", { name: "Ajukan extra call" }).click();
+    await page.getByLabel("Nama outlet").fill("Outlet baru demo");
+    await page.getByLabel("Alasan extra call").fill("Kunjungan simulasi");
+    await page.getByRole("button", { name: "Simpan ke antrean demo" }).click();
+    await expect(page.getByRole("alert")).toContainText(
+        "Sesi pagi belum terbuka",
+    );
+    const after = await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const tx = db.transaction(["drafts", "outbox"], "readonly");
+        const value = await Promise.all(
+            ["drafts", "outbox"].map(
+                (name) =>
+                    new Promise((resolve) => {
+                        const r = tx.objectStore(name).getAll();
+                        r.onsuccess = () => resolve(r.result);
+                    }),
+            ),
+        );
+        db.close();
+        return value;
+    });
+    expect(after).toEqual(before);
+});
