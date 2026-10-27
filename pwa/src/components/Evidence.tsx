@@ -1,37 +1,15 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { FieldStore } from "../storage/store";
 import { Icon } from "./Icon";
-export interface EvidenceRef {
-    id: string;
-    latitude: number;
-    longitude: number;
-    accuracy: number;
-    capturedAt: string;
-}
-async function compress(file: File): Promise<Blob> {
-    if (
-        !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-        file.size > 12 * 1024 * 1024
-    )
-        throw new Error("Pilih JPEG/PNG/WebP maksimal 12 MB.");
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("Kamera tidak tersedia.");
-    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-    const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, "image/jpeg", 0.76),
-    );
-    if (!blob || blob.size > 1024 * 1024)
-        throw new Error(
-            "Foto masih terlalu besar. Ambil ulang dengan resolusi lebih kecil.",
-        );
-    return blob;
-}
+import {
+    assertLocalEvidence,
+    type EvidenceReference,
+} from "../domain/evidence-package";
+import {
+    compressEvidence,
+    renderEvidencePackage,
+} from "../domain/evidence-render";
+export type EvidenceRef = EvidenceReference;
 const referenceKey = (owner: string, ref?: EvidenceRef) =>
     JSON.stringify([
         owner,
@@ -40,6 +18,7 @@ const referenceKey = (owner: string, ref?: EvidenceRef) =>
         ref?.longitude,
         ref?.accuracy,
         ref?.capturedAt,
+        ref?.packageHash,
     ]);
 export function EvidenceCapture({
     store,
@@ -53,6 +32,10 @@ export function EvidenceCapture({
     existingRef?: EvidenceRef;
 }) {
     const [file, setFile] = useState<Blob>();
+    const [display, setDisplay] = useState<Blob>();
+    const [map, setMap] = useState<Blob>();
+    const [mapPreview, setMapPreview] = useState("");
+    const [selectedAt, setSelectedAt] = useState<string>();
     const [location, setLocation] = useState<GeolocationPosition>();
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
@@ -72,6 +55,9 @@ export function EvidenceCapture({
         selfChange.current = undefined;
         const ticket = ++generation.current;
         setFile(undefined);
+        setDisplay(undefined);
+        setMap(undefined);
+        setSelectedAt(undefined);
         setLocation(undefined);
         setPreview("");
         setError("");
@@ -79,7 +65,7 @@ export function EvidenceCapture({
         if (!existingRef) return;
         void store
             .listEvidence(owner)
-            .then((rows) => {
+            .then(async (rows) => {
                 const found = rows.find(
                     (e) =>
                         e.owner === owner &&
@@ -89,9 +75,11 @@ export function EvidenceCapture({
                         e.longitude === existingRef.longitude &&
                         e.accuracy === existingRef.accuracy,
                 );
-                if (!found || !(found.blob instanceof Blob) || !found.blob.size)
-                    throw new Error("missing");
-                if (generation.current === ticket) setFile(found.blob);
+                await assertLocalEvidence(found, existingRef, owner);
+                if (generation.current === ticket) {
+                    setDisplay(found!.blob);
+                    setMap(found!.visual?.map);
+                }
             })
             .catch(() => {
                 if (generation.current === ticket)
@@ -100,33 +88,50 @@ export function EvidenceCapture({
                     );
             });
     }, [scope, store]);
-    useEffect(
+    useLayoutEffect(
         () => () => {
             generation.current++;
         },
         [],
     );
     useEffect(() => {
-        if (!file) {
+        if (!display) {
             setPreview("");
             return;
         }
-        const url = URL.createObjectURL(file);
+        const url = URL.createObjectURL(display);
         setPreview(url);
         return () => URL.revokeObjectURL(url);
-    }, [file]);
+    }, [display]);
+    useEffect(() => {
+        if (!map) {
+            setMapPreview("");
+            return;
+        }
+        const url = URL.createObjectURL(map);
+        setMapPreview(url);
+        return () => URL.revokeObjectURL(url);
+    }, [map]);
     async function selectFile(f?: File) {
         const ticket = ++generation.current;
         report(undefined);
         setFile(undefined);
+        setDisplay(undefined);
+        setMap(undefined);
+        setSelectedAt(undefined);
         setLocation(undefined);
         setPreview("");
         setError("");
         setBusy(!!f);
         if (!f) return;
         try {
-            const blob = await compress(f);
-            if (generation.current === ticket) setFile(blob);
+            const at = new Date().toISOString();
+            const blob = await compressEvidence(f);
+            if (generation.current === ticket) {
+                setFile(blob);
+                setDisplay(blob);
+                setSelectedAt(at);
+            }
         } catch (e) {
             if (generation.current === ticket)
                 setError(e instanceof Error ? e.message : "Foto tidak valid.");
@@ -138,6 +143,8 @@ export function EvidenceCapture({
         const ticket = ++generation.current;
         report(undefined);
         setLocation(undefined);
+        setMap(undefined);
+        setDisplay(file);
         setError("");
         setBusy(true);
         if (!navigator.geolocation) {
@@ -166,7 +173,7 @@ export function EvidenceCapture({
         );
     }
     async function save() {
-        if (!file || !location || busy) return;
+        if (!file || !location || !selectedAt || busy) return;
         if (Date.now() - location.timestamp > 60000) {
             setError("Lokasi sudah kedaluwarsa. Ambil lokasi baru.");
             report(undefined);
@@ -177,31 +184,39 @@ export function EvidenceCapture({
         const id = crypto.randomUUID(),
             capturedAt = new Date().toISOString();
         try {
-            await store.saveEvidence({
-                key: `${owner}:${id}`,
-                owner,
-                blob: file,
-                capturedAt,
+            const ref = {
+                id,
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
                 accuracy: location.coords.accuracy,
-                mapStatus: "pending",
-            });
+                capturedAt,
+            };
+            if (!Number.isFinite(location.timestamp))
+                throw new Error("Waktu lokasi tidak valid. Ambil lokasi baru.");
+            const row = await renderEvidencePackage(
+                file,
+                owner,
+                ref,
+                selectedAt,
+                new Date(location.timestamp).toISOString(),
+            );
+            if (generation.current !== ticket) return;
+            await store.saveEvidence(row);
             if (generation.current === ticket) {
-                report({
-                    id,
-                    latitude: location.coords.latitude,
-                    longitude: location.coords.longitude,
-                    accuracy: location.coords.accuracy,
-                    capturedAt,
-                });
+                setDisplay(row.blob);
+                setMap(row.visual!.map);
+                report({ ...ref, packageHash: row.visual!.bindingSha256 });
                 setError(
-                    "Foto tersimpan lokal. Snapshot peta masih menunggu integrasi.",
+                    "Foto dan pinpoint simulasi tersimpan lokal. Peta resmi belum tersedia.",
                 );
             }
-        } catch {
+        } catch (error) {
             if (generation.current === ticket) {
-                setError("Foto gagal disimpan. Periksa ruang penyimpanan.");
+                setError(
+                    error instanceof Error
+                        ? error.message
+                        : "Foto gagal disimpan. Periksa ruang penyimpanan.",
+                );
                 report(undefined);
             }
         } finally {
@@ -234,6 +249,18 @@ export function EvidenceCapture({
                     alt="Pratinjau foto bukti lokal"
                 />
             )}
+            {mapPreview && (
+                <figure class="evidence-map">
+                    <img
+                        src={mapPreview}
+                        alt="Pinpoint simulasi tanpa basemap"
+                    />
+                    <figcaption>
+                        Grid koordinat simulasi · bukan peta jalan. Area biru
+                        menunjukkan akurasi lokasi.
+                    </figcaption>
+                </figure>
+            )}
             <button
                 class="secondary"
                 type="button"
@@ -264,7 +291,7 @@ export function EvidenceCapture({
             <button
                 type="button"
                 class="secondary"
-                disabled={!file || !location || busy}
+                disabled={!file || !location || !selectedAt || busy}
                 onClick={() => void save()}
             >
                 Simpan bukti lokal
@@ -274,8 +301,15 @@ export function EvidenceCapture({
                     {error}
                 </p>
             )}
+            {existingRef && !existingRef.packageHash && (
+                <small>
+                    Bukti lama belum memiliki paket watermark/hash/pinpoint.
+                    Pilih foto baru untuk membuat paket baru.
+                </small>
+            )}
             <small>
-                Map pending · bukti ini belum memenuhi gate foto berpeta resmi.
+                Map pending · foto baru memiliki watermark waktu pencatatan dan
+                koordinat. Pinpoint simulasi tidak memenuhi gate peta resmi.
             </small>
         </div>
     );

@@ -39,13 +39,13 @@ simulator pada live. Belum ada publikasi web, integrasi auth nyata atau deploy.
 | Personal HRIS | Form absensi/cuti, akun sendiri per persona, slip ditandai belum terintegrasi; tidak meng-cache slip personal |
 | Biaya | Request simulasi BBM/makan/nginap/darurat: schema ketat nominal/KM, referensi trip/DO, H-1 menurut tanggal bisnis bootstrap, narasi tier Supervisor/BM; tidak mencairkan uang atau menghitung limit resmi |
 | Outbox | IndexedDB per identity, command UUID tetap, single-engine flush lock, retry/backoff, otomatis saat online/resume, 15s timer saat aktif, terminal 4xx/401 tertahan |
-| Evidence | Foto terkompresi <=1 MB, koordinat/accuracy dan waktu lokal, Blob tersimpan per user, status map_pending; tidak mengklaim kamera asli/geofence sah |
+| Evidence | Foto <=1 MB dengan watermark waktu/koordinat, hash binding, pinpoint grid simulasi <=128 KB; paket per owner offline, map_pending resmi tetap; tidak mengklaim kamera asli/geofence sah |
 | API draft | Zod DTO + OpenAPI generated, HTTP adapter tanpa fallback; belum diaktifkan sebagai aplikasi live |
 | Offline shell | Manifest, icon SVG/PNG, asset precache hanya /field; tidak cache API; app update menunggu lifecycle service worker biasa tanpa memaksa reload input |
 
 Ini menutup fondasi dan beberapa alur client PWA-01–04, **bukan seluruh roadmap**.
 English/i18n penuh, tracking perjalanan, geofence workflow lengkap, sesi pagi resmi (simulasi tersedia),
-settlement final, pembatalan transaksi belum terkonfirmasi dan integrasi media, server notification/approval, snapshot peta, recovery
+settlement final, pembatalan transaksi belum terkonfirmasi dan integrasi media, server notification/approval, snapshot peta resmi, recovery
 session/device, backend receipt/record aktual dan E2E production masih pekerjaan
 berikutnya. Jangan menilai status accepted simulator sebagai bukti Odoo menerima SO.
 
@@ -215,8 +215,8 @@ Batas yang masih menunggu backend:
   dikoreksi pada simulator dengan UUID baru dan link audit; versi lama tetap utuh.
 - Secure identity/ACL, server-issued advance/revision dan policy bertanggal;
   fixture lokal bukan security boundary dan dapat dimanipulasi pengguna.
-- Map snapshot, media upload/hash asli, verifikasi konten struk/OCR dan duplikasi
-  server. Pemeriksaan lokal hanya referensi foto dan penjual/nomor/tanggal struk,
+- Map snapshot resmi, media upload/hash server, verifikasi konten struk/OCR dan duplikasi
+  server. Pemeriksaan lokal mencakup hash paket baru serta referensi foto/struk,
   bukan bukti foto berbeda atau anti-fraud global. Dedup struk lintas advance dalam
   satu owner/DB sekarang atomik; lintas akun, perangkat dan server tetap memerlukan
   unique constraint/validasi authority backend.
@@ -336,3 +336,38 @@ foto/token, tanpa fitur ekspor/hapus/edit/paksa kirim. Pesan receipt/error exist
 masih ditampilkan sebagai teks. Owner terisolasi dan async result lama dibuang
 saat komponen/persona berganti. Diagnosis berlaku pada snapshot terakhir yang
 berhasil dibaca; tidak mengklaim status backend terkini atau fitur pemulihan admin.
+
+## Paket bukti foto dan pinpoint simulasi
+
+Komponen bukti bersama (realisasi struk/odometer, form pengajuan, absensi/POD lokal)
+membuat foto JPEG ber-watermark waktu pencatatan perangkat WITA, koordinat dan
+akurasi. Waktu pilih file dicatat terpisah; waktu shutter/kamera asli tidak terbukti.
+Pinpoint PNG berupa grid lokal, skala meter, arah utara dan lingkar akurasi;
+**SIMULASI TANPA BASEMAP**, bukan peta jalan atau snapshot peta resmi. Tidak ada
+permintaan tile/API/provider, tracking atau pengiriman koordinat ke pihak ketiga.
+Status `map_pending`/`local_map_pending` tetap berlaku; gate absensi/POD resmi
+belum dibuka. Kunjungan sales belum mendapat field foto pada iterasi ini.
+
+Input JPEG/PNG/WebP maksimal 12 MB/40 MP, diperkecil maksimal sisi 1600 px sebelum
+watermark (kanvas watermark minimal lebar 640 px, foto tidak diperbesar). Output
+JPEG <=1 MB, pinpoint PNG <=128 KB. Pemilihan foto maksimal 5 menit sebelum save;
+fix GPS maksimal 60 detik, future tolerance 1 detik, accuracy >0 dan <=10 km.
+Ini validasi input bukti, bukan geofence atau jaminan lokasi sah.
+
+Satu record evidence berisi foto + snapshot + metadata + SHA-256 keduanya dan
+binding owner/key/koordinat/waktu. PackageHash opsional ditambahkan pada ref di
+OpenAPI draft 0.5; payload lama tetap valid. Paket baru immutable melalui store API,
+perubahan membuat ID bukti baru. Save gagal tidak meninggalkan record parsial;
+restore, submit realisasi dan send/retry memeriksa ulang hash/ref/owner/binding.
+Saat sync, kegagalan paket menahan command tanpa receipt bisnis palsu; anotasi
+lokal `evidenceHold` menempatkannya pada Perlu review di diagnosis. Anotasi berasal
+dari pemeriksaan sync terakhir, bukan pemeriksaan hash baru saat membuka diagnosis.
+
+Validasi waktu paket historis mengikuti capturedAt, bukan hari sync; bukti sah
+bisa direplay esok hari. Ref legacy tanpa hash hanya memakai pemeriksaan metadata/
+keberadaan Blob lama dan diberi label belum memiliki paket baru. Tidak ada migrasi
+otomatis atau rekonstruksi paket hilang. Foto yang dipulihkan tidak menjadi sumber
+foto baru; pilih file lagi untuk mengganti bukti. Hash lokal mendeteksi perubahan
+biasa, tidak mencegah pemalsuan seluruh DB/rehash, titip akun, mock GPS atau kamera
+palsu. Server-authoritative media, maps berlisensi, signing/ACL, retention/GC,
+malware/OCR dan dedup konten lintas perangkat tetap dependency backend/native.

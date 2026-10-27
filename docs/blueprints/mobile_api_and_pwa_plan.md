@@ -1153,3 +1153,28 @@ ditampilkan sebagai riwayat, sementara graf visit berubah masuk Perlu review.
 Filter/detail tidak memutasi state dan tidak menambahkan command/endpoint/DTO wire.
 Tes browser snapshot IndexedDB sebelum/sesudah memastikan aktivitas baca tidak
 mengubah data, termasuk setelah pergantian persona. Tidak ada perubahan Railway.
+
+### Paket bukti lokal — implementasi setelah PR #25
+
+Basis main d4cf21b; branch agen/mobile-evidence-packages. Komponen foto bersama
+mendapat watermark waktu pencatatan WITA/koordinat/akurasi, snapshot pinpoint
+SIMULASI tanpa basemap (grid koordinat, utara, skala, lingkar akurasi), serta hash
+foto/map dan binding metadata. Seluruhnya lokal, tanpa tile/API pihak ketiga.
+Peta jalan berlisensi/resmi dan upload server tetap dependency; map_pending tidak
+diubah menjadi bukti resmi. Waktu pilih file tidak dianggap waktu shutter kamera.
+
+Paket disimpan satu record IndexedDB, foto+snapshot+metadata atomik dan immutable
+melalui API store. Restore, submit realisasi dan sync memvalidasi hash/binding
+paket baru, owner/ref dan waktu GPS terhadap waktu aksi. Ref lama tetap kompatibel
+secara eksplisit; paket baru hilang/berubah ditahan, tidak direkonstruksi. Tidak
+ada klaim anti-mock/forensik/client security. Tes perubahan blob/map/metadata,
+legacy, replay besok, quota, pemulihan offline dan pergantian owner/file wajib.
+
+Komponen bersama kini menghasilkan paket watermark + pinpoint grid lokal; status
+map_pending tidak berubah. Store API menolak overwrite paket; ref baru memuat
+packageHash opsional pada kontrak draft 0.5. Source legacy tidak dimigrasi otomatis.
+Kegagalan hash sebelum sync memberi evidenceHold lokal, ditampilkan Perlu review
+berdasarkan hasil pemeriksaan terakhir, tanpa membuat receipt bisnis palsu.
+Batas rinci dan alur pemulihan di pwa/README.md; tidak ada backend/deploy/field foto
+visit pada iterasi ini. Berikutnya integrasi paket bukti ke visit/delivery, lalu
+adapter maps/media server dengan authority yang terpisah dari representasi client.

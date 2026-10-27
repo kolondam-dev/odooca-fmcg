@@ -9,6 +9,10 @@ export const ExpensePolicySchema = z
 export const LocalExpenseEvidenceSchema = z
     .object({
         id: z.string().uuid(),
+        packageHash: z
+            .string()
+            .regex(/^[a-f0-9]{64}$/)
+            .optional(),
         latitude: z.number().min(-90).max(90),
         longitude: z.number().min(-180).max(180),
         accuracy: z.number().nonnegative(),

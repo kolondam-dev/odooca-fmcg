@@ -1,5 +1,15 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Paket bukti watermark/hash/pinpoint simulasi
+**Basis:** main d4cf21b (PR #25 merged); branch agen/mobile-evidence-packages. Rencana masuk plan sebelum implementasi.
+**Berubah:** komponen evidence bersama menghasilkan JPEG watermark waktu pencatatan WITA/koordinat/akurasi + PNG pinpoint SIMULASI TANPA BASEMAP (grid/skala/utara/akurasi). Tidak ada tile/provider/network baru. Waktu pilih file dipisah dari waktu pencatatan; waktu shutter/kamera asli tidak dibuktikan. Output foto <=1 MB, map <=128 KB; input <=12 MB/40 MP, sisi foto <=1600 px. Fix TTL60s/future1s/accuracy>0<=10km, pilih foto <=5menit sebelum save.
+**Integritas:** satu record atomik foto+map+metadata/hashes/binding owner-key-time-location; immutable via store API. Shared assertLocalEvidence untuk restore/submit realisasi; sebelum provider hash paket baru dicek, lalu graf visit dicek ulang. Paket hilang/berubah ditahan tanpa receipt bisnis baru. evidenceHold lokal menampilkan Perlu review berdasarkan pemeriksaan sync terakhir. Generation guard/object URL cleanup berlaku saat ganti file/ref/owner/unmount. getEvidence memberi pembacaan keyed untuk sync. Tidak ada auto-rekonstruksi/GC.
+**Kontrak:** OpenAPI draft 0.5 dengan packageHash opsional pada evidence ref; schema command tetap v1, legacy tanpa hash tetap path metadata/Blob lama dan diberi label belum memiliki paket baru. Map_status/evidence_status tetap pending; absensi/POD resmi tetap terkunci, foto visit belum ditambahkan pada iterasi ini.
+**Diverifikasi:** 122 unit + 1 hosting + 40 browser phone/tablet PASS; perubahan byte foto/map/metadata/hash/source, missing/downgrade package, immutable write, historical replay, legacy, corrupt persisted foto restore/submit, offline reload map+foto, screenshot watermark/pinpoint ponsel ditinjau. Format/typecheck/contracts/demo+live/budget (demo JS54,6 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. CI diperiksa setelah push.
+**Batas:** grid pinpoint lokal bukan peta jalan/snapshot peta resmi; hash client tidak mencegah pemalsuan seluruh DB/rehash/mock GPS/kamera palsu/titip akun. Server media/signing/ACL/maps berlisensi/OCR/retention/GC/dedup lintas perangkat tetap dependency. Tidak menyentuh backend/addon/seed/loader/workflow/ruleset/Railway, tidak merge/deploy; live terkunci.
+**Berikutnya:** integrasi paket bukti ke visit/delivery secara bertahap; adapter media/maps server dengan authority terpisah dari representasi client.
+**Menunggu:** CI dan review pemilik pada PR baru.
+
 ## 2026-10-27 — codex agent — Pusat diagnosis sinkronisasi simulator
 **Basis:** main 302587e (PR #24 merged); branch agen/mobile-sync-diagnostics. Plan terintegrasi sebelum implementasi, tetap area PWA.
 **Berubah:** menu Lainnya kini menampilkan filter Semua/Menunggu/Perlu review/Approval/Diterima dan detail UUID, waktu WITA, percobaan, jadwal retry, referensi receipt, konteks sesi dan dependency. Bedakan offline/backoff/sending/auth, integritas visit, dependency, approval, penolakan bisnis vs transport. Receipt wajib cocok UUID/status. State accepted historis yang grafnya rusak tetap tersimpan tetapi ditandai perlu review.

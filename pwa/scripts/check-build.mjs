@@ -52,6 +52,7 @@ for (const mode of ["demo", "live"]) {
             "SIM-ADV-",
             "Koreksi realisasi ditolak",
             "Mulai kunjungan demo",
+            "PINPOINT SIMULASI - TANPA BASEMAP",
             "Diagnosis lokal · Data simulasi.",
         ])
             assert(
