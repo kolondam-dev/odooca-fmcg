@@ -147,6 +147,9 @@ class MockRecord:
         else:
             self._vals[name] = value
 
+    def with_context(self, **kwargs):
+        return self
+
     def action_confirm(self):
         self.state = "sale"
         if self._model == "sale.order" and self._env and "stock.picking" in self._env:
@@ -1472,6 +1475,67 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx_lot:
             alloc_fn(mock_env, mv_mismatch, mock_picking, 4.0, target_lot=lot_a, move_date="2026-07-03 14:00:00")
         self.assertIn("tidak cocok dengan lot target register", str(ctx_lot.exception))
+
+    def test_validate_picking_safely_handles_confirm_stock_sms_wizard(self):
+        """Memverifikasi dispatcher wizard _validate_picking_safely memproses jalur dont_send_sms() hingga selesai."""
+        mock_env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(mock_env, reg_path=REG_DIR)
+
+        sms_wizard_called = {"dont_send_sms": False}
+
+        class MockConfirmStockSms:
+            _fields = {"pick_ids": True}
+
+            def __init__(self, pick):
+                self.pick = pick
+
+            def sudo(self):
+                return self
+
+            def with_context(self, **kwargs):
+                return self
+
+            def browse(self, wiz_id):
+                return self
+
+            def create(self, vals):
+                return self
+
+            def dont_send_sms(self):
+                sms_wizard_called["dont_send_sms"] = True
+                self.pick.state = "done"
+                return True
+
+        class MockPickingWithSms:
+            def __init__(self):
+                self.id = 888
+                self.name = "DO-202607-0063"
+                self.state = "assigned"
+                self._ctx = {}
+                self._wizard_dispatched = False
+
+            def with_context(self, **kwargs):
+                self._ctx.update(kwargs)
+                return self
+
+            def button_validate(self):
+                if not self._wizard_dispatched:
+                    self._wizard_dispatched = True
+                    return {
+                        "type": "ir.actions.act_window",
+                        "res_model": "confirm.stock.sms",
+                        "context": {"default_pick_ids": [(4, self.id)]},
+                    }
+                self.state = "done"
+                return True
+
+        pick_instance = MockPickingWithSms()
+        mock_env["confirm.stock.sms"] = MockConfirmStockSms(pick_instance)
+
+        adapter._validate_picking_safely(pick_instance)
+
+        self.assertTrue(sms_wizard_called["dont_send_sms"], "Wizard dont_send_sms() wajib terpanggil!")
+        self.assertEqual(pick_instance.state, "done", "Picking wajib berhasil mencapai status 'done'!")
 
 
 if __name__ == "__main__":

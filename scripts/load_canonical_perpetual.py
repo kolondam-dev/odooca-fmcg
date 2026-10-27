@@ -463,23 +463,51 @@ class CanonicalPerpetualAdapter:
             return None
 
     def _validate_picking_safely(self, pick):
-        """Memvalidasi stock picking hingga status 'done', menangani wizard Odoo, dan fail-fast jika gagal."""
+        """Memvalidasi picking hingga 'done', menangani wizard (e.g. confirm.stock.sms), dan fail-fast."""
         if getattr(pick, "state", "") == "done":
             return True
 
-        res = pick.button_validate() if hasattr(pick, "button_validate") else None
+        val_ctx = {"skip_sms": True, "skip_backorder": True, "skip_immediate": True, "skip_expired": True}
+        pick_target = pick.with_context(**val_ctx) if callable(getattr(pick, "with_context", None)) else pick
+        res = pick_target.button_validate() if hasattr(pick_target, "button_validate") else None
 
-        # Jika Odoo mengembalikan action/wizard konfirmasi (e.g. immediate transfer atau backorder confirmation)
-        if isinstance(res, dict) and res.get("res_model"):
-            wizard_model = res["res_model"]
-            wizard_ctx = res.get("context", {})
+        # Jika Odoo mengembalikan wizard konfirmasi (e.g. confirm.stock.sms, immediate transfer, backorder)
+        wiz_iter = 0
+        current_res = res
+        wizard_actions = [
+            "dont_send_sms", "process", "action_confirm", "process_cancel_backorder", "action_process", "apply",
+        ]
+        while isinstance(current_res, dict) and current_res.get("res_model") and wiz_iter < 5:
+            wiz_iter += 1
+            wizard_model = current_res["res_model"]
+            wizard_ctx = dict(val_ctx)
+            if isinstance(current_res.get("context"), dict):
+                wizard_ctx.update(current_res["context"])
+
             if wizard_model in self.env:
-                Wizard = self.env[wizard_model].sudo().with_context(**wizard_ctx)
-                wizard_record = Wizard.create({}) if hasattr(Wizard, "create") else None
-                if wizard_record and hasattr(wizard_record, "process"):
-                    wizard_record.process()
-                elif hasattr(Wizard, "process"):
-                    Wizard.process()
+                WizardModel = self.env[wizard_model].sudo().with_context(**wizard_ctx)
+                wiz_id = current_res.get("res_id")
+                wiz_vals = {}
+                if "pick_ids" in WizardModel._fields:
+                    wiz_vals["pick_ids"] = [(6, 0, [pick.id])]
+                elif "picking_id" in WizardModel._fields:
+                    wiz_vals["picking_id"] = pick.id
+
+                wizard_record = WizardModel.browse(wiz_id) if wiz_id else WizardModel.create(wiz_vals)
+                action_taken = False
+                for act_name in wizard_actions:
+                    if hasattr(wizard_record, act_name):
+                        current_res = getattr(wizard_record.with_context(**wizard_ctx), act_name)()
+                        action_taken = True
+                        break
+                if not action_taken:
+                    break
+            else:
+                break
+
+        if getattr(pick, "state", "") != "done" and hasattr(pick, "button_validate"):
+            re_pick = pick.with_context(**val_ctx) if callable(getattr(pick, "with_context", None)) else pick
+            re_pick.button_validate()
 
         if getattr(pick, "state", "") != "done":
             pick_id_label = getattr(pick, "name", getattr(pick, "origin", "DO"))

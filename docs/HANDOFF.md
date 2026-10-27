@@ -1,5 +1,21 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Penanganan Wizard confirm.stock.sms via dont_send_sms dan Penuntasan Lifecycle Picking Delivery
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6437326596](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6437326596)):**
+- Menindaklanjuti review commit `6673c62`:
+  1. *Penanganan Wizard `confirm.stock.sms` via Jalur Native `dont_send_sms()`*:
+     - Pada Odoo 19 dengan modul `stock_sms` aktif, validasi dokumen pengiriman delivery mengembalikan wizard `confirm.stock.sms`.
+     - Wizard dispatcher sebelumnya belum mencakup method `dont_send_sms()`, sehingga wizard tidak dieksekusi dan picking tertahan pada state `assigned`.
+     - Memperbaiki dispatcher pada `scripts/ops/verify_historical_experiment.py` dan `scripts/load_canonical_perpetual.py`:
+       * Menambahkan `"skip_sms": True` pada konteks validasi picking (`val_ctx`).
+       * Menambahkan `"dont_send_sms"` sebagai aksi prioritas pada daftar method wizard.
+       * Mengisi parameter `pick_ids` secara otomatis saat menginisialisasi wizard transient dari context.
+       * Memastikan picking bertransisi penuh menjadi `state == 'done'` secara native tanpa fallback `_action_done`.
+  2. *Unit Test Baru Penanganan Wizard SMS*:
+     - Menambahkan unit test `test_validate_picking_safely_handles_confirm_stock_sms_wizard` di `tests/test_canonical_loader_adapter.py`.
+     - Membuktikan bahwa ketika Odoo mengembalikan wizard `confirm.stock.sms`, dispatcher secara otomatis memanggil `dont_send_sms()` dan picking diselesaikan ke state `done`.
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke `main`.
+
 ## 2026-10-27 — antigravity agent — Resolusi Picking Delivery Assigned, Ekstraksi Helper Allocator Produksi, Guard Empty Reservation & Lot Match, dan Penyelarasan Mutasi 5 & 7
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6436885128](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6436885128)):**
 - Menindaklanjuti review commit `a84f625`:

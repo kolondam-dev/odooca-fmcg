@@ -649,4 +649,14 @@
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T15:27:00+07:00
 
+[2026-10-27T15:50:00+07:00] [INFO] Penanganan Wizard confirm.stock.sms via dont_send_sms dan Penuntasan Lifecycle Picking Delivery
+- Menutup temuan review PR #15 (issuecomment-6437326596):
+  * Penanganan Wizard confirm.stock.sms via Jalur Native dont_send_sms(): Menambahkan 'dont_send_sms' sebagai aksi prioritas pada dispatcher wizard serta memasukkan skip_sms=True ke konteks validasi picking. Mengisi parameter pick_ids secara otomatis pada wizard transient agar eksekusi dont_send_sms() memvalidasi picking hingga tuntas berstatus 'done'.
+  * Memperbarui dispatcher di verify_historical_experiment.py dan load_canonical_perpetual.py.
+  * Unit Test Baru: Menambahkan test_validate_picking_safely_handles_confirm_stock_sms_wizard di tests/test_canonical_loader_adapter.py (Ran 37 tests in 112s: OK).
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py (4 addon ok), unit tests 37 pass.
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T15:50:00+07:00
+
+
 

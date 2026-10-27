@@ -1162,11 +1162,12 @@ def main():
                 "skip_backorder": True,
                 "skip_immediate": True,
                 "skip_expired": True,
+                "skip_sms": True,
             }
             validate_res = picking.with_context(**val_ctx).button_validate()
             print(f" -> [VALIDATE RES] Picking {picking.name} ({origin}): {validate_res}")
 
-            # Penanganan recursive/iterative wizard native Odoo 19
+            # Penanganan recursive/iterative wizard native Odoo 19 (e.g. confirm.stock.sms, immediate transfer, backorder)
             wiz_iter = 0
             current_res = validate_res
             while isinstance(current_res, dict) and "res_model" in current_res and wiz_iter < 5:
@@ -1177,13 +1178,26 @@ def main():
                 if "context" in current_res and isinstance(current_res["context"], dict):
                     wiz_ctx.update(current_res["context"])
                 print(f" -> [WIZARD RESOLVER {wiz_iter}] Resolving wizard {wiz_model} (id: {wiz_id}) with context: {list(wiz_ctx.keys())}")
-                wizard = (
-                    env[wiz_model].sudo().with_context(**wiz_ctx).browse(wiz_id)
-                    if wiz_id
-                    else env[wiz_model].sudo().with_context(**wiz_ctx).create({})
-                )
+
+                if wiz_model in env:
+                    WizModel = env[wiz_model].sudo().with_context(**wiz_ctx)
+                    wiz_vals = {}
+                    if "pick_ids" in WizModel._fields:
+                        wiz_vals["pick_ids"] = [(6, 0, [picking.id])]
+                    elif "picking_id" in WizModel._fields:
+                        wiz_vals["picking_id"] = picking.id
+
+                    wizard = (
+                        WizModel.browse(wiz_id)
+                        if wiz_id
+                        else WizModel.create(wiz_vals)
+                    )
+                else:
+                    print(f" -> [WIZARD WARNING] Model wizard '{wiz_model}' tidak terdaftar di env!")
+                    break
+
                 action_taken = False
-                for act_name in ["process", "action_confirm", "process_cancel_backorder", "action_process", "apply"]:
+                for act_name in ["dont_send_sms", "process", "action_confirm", "process_cancel_backorder", "action_process", "apply"]:
                     if hasattr(wizard, act_name):
                         current_res = getattr(wizard.with_context(**wiz_ctx), act_name)()
                         action_taken = True
@@ -1192,6 +1206,12 @@ def main():
                 if not action_taken:
                     print(f" -> [WIZARD WARNING] Tidak ditemukan action umum pada {wiz_model} (dir: {[m for m in dir(wizard) if not m.startswith('_')]})")
                     break
+
+            # Jika pasca-wizard picking belum berstatus 'done', validasi ulang dengan skip_sms
+            if picking.state != "done":
+                print(f" -> [RE-VALIDATE] Mencoba validasi ulang picking {picking.name} dengan context skip_sms...")
+                re_res = picking.with_context(**val_ctx).button_validate()
+                print(f" -> [RE-VALIDATE RES] {re_res}")
 
             print(f" -> [POST-VALIDATE] Picking {picking.name} ({origin}): state={picking.state}")
 
