@@ -8,9 +8,17 @@ import {
 } from "../src/domain/contracts.ts";
 import { ExpenseRequestSchema } from "../src/domain/expense.ts";
 import { ExpenseRealizationSchema } from "../src/domain/settlement-contracts.ts";
+import {
+    VisitContextSchema,
+    VisitCheckoutSchema,
+    VisitOrderSchema,
+} from "../src/domain/visit-contracts.ts";
 const schemas = Object.fromEntries(
     Object.entries({
         Command: CommandSchema,
+        VisitCheckIn: VisitContextSchema,
+        VisitCheckOut: VisitCheckoutSchema,
+        VisitOrder: VisitOrderSchema,
         ExpenseRequest: ExpenseRequestSchema,
         ExpenseRealization: ExpenseRealizationSchema,
         Receipt: ReceiptSchema,
@@ -34,7 +42,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.3.0",
+        version: "0.4.0",
         description:
             "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
     },

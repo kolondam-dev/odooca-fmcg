@@ -51,6 +51,7 @@ for (const mode of ["demo", "live"]) {
             "SIM-EXPENSE-POLICY-1",
             "SIM-ADV-",
             "Koreksi realisasi ditolak",
+            "Mulai kunjungan demo",
         ])
             assert(
                 !code.includes(fixture),

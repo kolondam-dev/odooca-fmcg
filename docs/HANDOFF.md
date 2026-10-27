@@ -1,5 +1,23 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Tutup blocker sync PR #24
+**Basis:** PR #24 HEAD 1eea9f0; review issuecomment-6434268284 dibaca. Branch agen/mobile-sales-visits tetap.
+**Koreksi klaim sebelumnya:** restore memang menolak graf rusak, tetapi outbox hanya mengecek dependency dan tetap submit; 3 regresi reproduksi check-in/order/check-out gagal pada outbox lama. Kini shared visitLedger memvalidasi semantik sebelum sync, termasuk source, envelope/owner/key, relasi/konteks/geo/time/produk. Snapshot read-only ledger+morning+outbox konsisten; pemeriksaan diulang sesudah sending tepat sebelum provider. Parent invalid menahan descendants walau receipt accepted lama ada. Invalid visit graph konservatif menahan visit owner; draft/command tetap utuh, pesan review, tanpa receipt bisnis baru.
+**Historical replay:** check-in baru menyimpan morning_source penuh atomik. morningReady tanggal historis + event-time GPS mendukung antrean sah hari sebelumnya setelah paket pagi diganti. Legacy record tanpa source hanya memakai fallback paket tersimpan yang cocok session/date/version/site/openedAt; source hilang/tidak cocok ditahan tanpa auto-rekonstruksi. Command legacy unbound tetap berjalan; order yang dirujuk visit tidak boleh membuang konteks untuk bypass.
+**Diverifikasi lokal:** 102 unit + 1 hosting; 36 browser phone/tablet termasuk corrupt IndexedDB → reload → reconnect → retry. Mutasi check-in/order/check-out/parent accepted/session/outlet/geo/source/owner/time/envelope, missing source/ledger, dropped context, boundary before provider, next-day valid replay dan legacy compatibility. Format/typecheck/contracts/demo+live/budget/Ruff/4 manifest. CI diperiksa sesudah push.
+**Batas:** snapshot sumber/validasi client hanya integritas simulator, bukan keamanan/anti-mock GPS/otorisasi backend. Tidak mengubah wire DTO atau versi IndexedDB. Tidak menyentuh addon/backend/seed/loader/workflow/ruleset/Railway; live tetap terkunci, tidak merge/deploy.
+**Menunggu:** CI commit perbaikan dan review ulang supervisor sebelum merge pemilik.
+
+## 2026-10-27 — codex agent — Kunjungan outlet dan dependency sync simulator
+**Basis:** main 955071a; branch agen/mobile-sales-visits, terisolasi dari pekerjaan seed.
+**Berubah:** pilih PJP → GPS/check-in → order → check-out hasil/catatan; konteks visit/session/date/version/outlet/geofence. GPS TTL 60 detik, future tolerance 1 detik, radius 5–15 m tanpa ekspansi (distance+accuracy <= radius). Order dan check-out mengambil GPS baru; stale/uncertain/outside/denied menahan aksi.
+**Offline/integritas:** ledger+outbox+sumber sesi ditulis atomik CAS; restore owner/time/ref/source memeriksa konteks. Sync bergantung receipt check-in accepted lalu semua receipt bisnis order sebelum check-out; urutan UUID tidak menentukan urutan submit. Transport error tidak menjadi receipt bisnis. Satu aktif/hari dan satu visit per outlet/hari simulasi; histori lama tidak menjadi izin hari berikutnya.
+**Kontrak/CI:** OpenAPI draft 0.4 menambahkan strict visit DTO/VisitOrder; legacy order generic tetap kompatibel. CI existing otomatis memuat tes baru; live fixture gate ditambah. README/plan terintegrasi.
+**Diverifikasi:** 81 unit + 1 hosting; 34 browser phone/tablet; format/typecheck/contracts/demo+live/budget (demo JS 49,7 KiB gzip; font 47,1 KiB), Ruff/4 manifest. CI diperiksa setelah push.
+**Batas:** hanya simulator; bukan ACL/auth/geofence authoritative atau anti-mock GPS. Belum pinpoint map/foto visit/tracking background/extra-call approved visit/recovery admin. Queue tertahan butuh review, tidak auto-cancel. Server session/device/media/policy/idempotency tetap dependency.
+**Tidak disentuh:** addon/backend/seed/loader, workflow/ruleset, Railway/domain/deployment. Live tetap terkunci; tidak merge/deploy.
+**Menunggu:** review PR, hasil CI, merge pemilik dan deploy manual commit diterima.
+
 ## 2026-10-27 — codex agent — Follow-up PR #22 dan koreksi realisasi simulator
 **Basis:** main 5088144; branch agen/mobile-expense-revisions; detail review issuecomment-6433199416 dibaca.
 **Tiga perbaikan:** ID komponen stabil (draft legacy tanpa ID dipulihkan dengan default baru), preview/file/location direconcile saat ref/owner berganti atau file gagal, async generation guard; dedup merchant/receipt/date lintas advance satu owner/DB dipindah ke transaksi outbox; sumber request dibandingkan ulang atomik setelah rangkaian await. Receipt transport tidak melepaskan klaim struk.
