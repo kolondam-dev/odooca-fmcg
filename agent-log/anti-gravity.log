@@ -735,4 +735,17 @@
 - Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
 - Task managed by antigravity at 2026-10-27T18:13:00+07:00
 
+[2026-10-27T18:20:00+07:00] [SUCCESS] Seluruh CI (Static, Install-Test, Init-Test) dan Verifikasi Runtime Disposable Odoo 19 Lulus 100%
+- Seluruh rangkaian CI pull_request PR #15 (Run ID: 40494566490) dan Seed supervision (Run ID: 40494566428) lulus penuh (HIJAU 100%):
+  1. Eksperimen Seeding Historis Minimal Odoo 19:
+     - 5 Cutoff Saldo & Valuasi (Cutoff 0 Pre-opening, Cutoff 1 Opening Rp18.648.000, Cutoff 2 Outbound DO intrahari Rp17.094.000 / EOD Rp17.316.000, Cutoff 3 Retur karantina Rp17.316.000, Cutoff 4 Inbound PO Rp86.358.000) lulus persis.
+     - 7 Mutasi Negatif lulus penuh tanpa false positive / false negative.
+  2. Verifikasi Slice Representatif Odoo 19 Disposable (verify_disposable_slice.py):
+     - Run 1 Multi-Domain: 150 opening quants, 5 PO confirmed & billed, 2 SO confirmed, 7 DO validated done, 2 faktur out_invoice posted, 2 AR payments posted & reconciled (termasuk jurnal diskon DISC-PAY-AR-00098), 4 AP payments posted & reconciled, 30 beban opex/payroll, 1 transfer picking karantina REJ-202607-001 done dari Partner Locations/Customers.
+     - Snapshot Readback: 698 record quant terdata, 8 akun GL terdata.
+     - Run 2 Idempotensi Sejati: 0 record baru dibuat, 100% terdeteksi idempoten (150 skipped quants, 5 skipped PO, 2 skipped SO, 2 skipped invoices, 2 skipped AR, 4 skipped AP, 30 skipped opex, 1 skipped karantina).
+     - Audit Zero Drift: 0 perubahan ID quant, 0 drift kuantitas fisik quant, 0 drift agregasi stok (produk, lokasi, lot), 0 drift saldo Debit/Credit pada seluruh 8 akun GL.
+- Dataset 15 file CSV register kanonikal beku 100% tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-27T18:20:00+07:00
+
 

@@ -1,5 +1,22 @@
 # HANDOFF
 
+## 2026-10-27 — antigravity agent — Penyelesaian Penuh Invariant Seeding, Eliminasi Anti-pattern Truthiness Odoo, dan Verifikasi Runtime Disposable Lulus 100%
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6438259265](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6438259265)):**
+- Seluruh gate pengujian CI pada PR #15 (`agen/fix-seed-invariants`) LULUS 100% HIJAU:
+  1. *Eksperimen Seeding Historis Minimal Odoo 19*:
+     - 5 Cutoff Saldo & Valuasi Historis (Cutoff 0 s/d Cutoff 4) terverifikasi identik antara pembacaan langsung dan readback cursor baru.
+     - 7 Mutasi Negatif (penolakan over-delivery demand > physical, saldo negatif, bypass period, GL drift, duplicate ID) lulus 100%.
+  2. *Verifikasi Slice Representatif Odoo 19 Disposable (`verify_disposable_slice.py`)*:
+     - Run 1 Multi-domain: 150 opening quants, 5 PO confirmed & billed, 2 SO confirmed, 7 DO validated done, 2 faktur out_invoice posted, 2 AR payments posted & reconciled (termasuk jurnal diskon DISC-PAY-AR-00098), 4 AP payments posted & reconciled, 30 beban operasional, 1 picking transfer retur karantina REJ-202607-001 berstatus done.
+     - Snapshot Readback: 698 record quant terdata, 8 akun GL terdata.
+     - Run 2 Idempotensi Sejati: 0 record baru dibuat, 100% terdeteksi idempoten (seluruh counter create bernilai 0).
+     - Audit Zero Drift: 0 perubahan ID quant, 0 drift kuantitas fisik quant, 0 drift agregasi stok (produk, lokasi, lot), 0 drift saldo Debit/Credit pada seluruh 8 akun GL.
+  3. *Eliminasi Menyeluruh Jebakan Truthiness Empty Recordset Odoo*:
+     - Mengganti seluruh pola `if Model:` menjadi `if Model is not None:` untuk `res.users`, `account.move`, `account.payment`, `account.account`, `account.move.line`, `stock.lot`, `stock.picking`, `stock.quant`, dan `stock.picking.type`.
+     - Mengeliminasi query SQL un-stored field `lot_ids` pada `stock.move` dengan pencocokan lot in-memory via `move_line_ids`.
+     - Menyediakan fallback pencarian `picking_type_id` internal transfer yang tahan banting.
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke `main`.
+
 ## 2026-10-27 — antigravity agent — Perbaikan Lot Assignment Picking Kanonikal via ORM write, Sinkronisasi lot_name & lot_id, dan Bypass Sanity Check UI
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6438259265](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6438259265)):**
 - Menindaklanjuti kelulusan seluruh 7 mutasi historis pada CI disposable (commit `305dd66`):
