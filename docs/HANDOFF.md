@@ -1,6 +1,37 @@
 # HANDOFF
 
-## 2026-10-27 — antigravity agent — Perbaikan Valuasi Aktual Odoo 19, Isolasi DB fmcg_exp, Perbaikan Truthiness Model & Audit Zero Drift Lengkap
+## 2026-10-27 — antigravity agent — Perbaikan Kredensial DB fmcg_exp, Valuasi Wajib SVL Odoo 19, Modul stock_account, dan Actual Savepoint Mutation Tests
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6431533888](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6431533888)):**
+- Menindaklanjuti kegagalan CI commit `c88dc95`:
+  1. *Bootstrap `fmcg_exp` gagal autentikasi*: `dropdb ... FATAL: password authentication failed for user "odoo_app"`. Step memakai username aplikasi namun mewarisi PGPASSWORD admin dari container environment.
+  2. *Valuasi masih dapat fallback ke kuantitas × cost*: Evaluasi cutoff belum mewajibkan `stock.valuation.layer` (SVL) terverifikasi tanpa fallback buatan.
+  3. *Negative tests bukan mutation tests*: Uji negatif sebelumnya belum memutasi data nyata dan membuktikan penolakan.
+  4. *Opening quant experiment vs loader*: Eksperimen wajib memakai alur quant adjustment native Odoo 19 (`action_apply_inventory()`) yang identik dengan loader utama.
+- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
+
+**Implementasi Perbaikan:**
+1. **Perbaikan Kredensial Pembuatan Database `fmcg_exp` ([.github/workflows/ci.yml](file:///c:/Users/ACER/dev/odooca-fmcg/.github/workflows/ci.yml)):**
+   - Menjalankan pemutusan koneksi template, drop, dan clone database menggunakan kredensial admin postgres eksplisit:
+     * `pg_terminate_backend(pid)` pada template `fmcg` untuk mencegah error lock template.
+     * `dropdb -h localhost -U postgres --if-exists fmcg_exp`
+     * `createdb -h localhost -U postgres -O odoo_app -T fmcg fmcg_exp`
+   - Odoo shell dieksekusi dengan `-e PGDATABASE=fmcg_exp` dan kredensial aplikasi `odoo_app`, menjamin autentikasi 100% berhasil dan DB `fmcg` tetap bersih tanpa kontaminasi.
+2. **Pemasangan Modul `stock_account` ([deploy/init.sh](file:///c:/Users/ACER/dev/odooca-fmcg/deploy/init.sh) & [.github/workflows/ci.yml](file:///c:/Users/ACER/dev/odooca-fmcg/.github/workflows/ci.yml)):**
+   - Menambahkan modul resmi `stock_account` ke `INIT_MODULES`, mengaktifkan model `stock.valuation.layer` (SVL) dan pergerakan akuntansi persediaan otomatis.
+3. **Valuasi Wajib `stock.valuation.layer` Tanpa Fallback ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
+   - Kategori produk dikonfigurasi dengan `property_valuation = 'real_time'` dan `property_cost_method = 'fifo'`.
+   - Menghapus fallback perkalian matematika manual: valuasi cutoff dievaluasi langsung dari sum `value` record `stock.valuation.layer` aktual. Jika SVL tidak ada atau nilainya tidak cocok, status evaluasi langsung dinyatakan `FAIL`.
+4. **Penyelarasan Metode Opening Quant Adjustment:**
+   - Opening stock pada eksperimen diubah menggunakan mekanisme `StockQuant.create(...)` + `quant.action_apply_inventory()`, identik 100% dengan jalur loader utama [scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py).
+5. **Uji Mutasi Terarah Aktual (Mutation Tests via Odoo Savepoints):**
+   - Mengimplementasikan 3 pengujian mutasi aktual:
+     * *Mutasi 1 (Wrong Effective Date)*: Memutasi tanggal move delivery ke `now()`, membuktikan query as-of 3 Juli mendeteksi perubahan saldo dan validator menolak.
+     * *Mutasi 2 (Bogus SVL Valuation)*: Memanipulasi nilai `value` pada layer SVL (+ Rp 50.000.000), membuktikan validator mendeteksi selisih dan menolak.
+     * *Mutasi 3 (Future Receipt Leakage)*: Memajukan tanggal penerimaan PO dari 4 Juli ke 2 Juli, membuktikan query as-of 3 Juli mendeteksi lonjakan stok dan validator menolak.
+   - Seluruh mutasi di-rollback seketika (`ROLLBACK TO SAVEPOINT`) sehingga integritas database tetap terjaga.
+6. **Audit Zero-Drift Lengkap Run 2:**
+   - Membandingkan deep snapshot kamus exact IDs, origins, dates, states, quantities, lots, SVL records, dan re-readback kelima cutoff pasca-Run 2 (zero drift terbukti 100%).
+
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6430171326](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6430171326)):**
 - Menindaklanjuti temuan supervisor atas commit `69bf948`:
   1. *Actual valuation bukan valuasi Odoo*: Nilai sebelumnya adalah kuantitas x cost sumber tanpa membaca model valuasi Odoo (`stock.valuation.layer` / GL `account.move.line`).

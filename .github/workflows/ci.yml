@@ -87,7 +87,7 @@ jobs:
             -e PGHOST=localhost -e PGUSER=postgres -e PGPASSWORD=ci-postgres -e PGDATABASE=fmcg \
             -e ODOO_DB_USER=odoo_app -e ODOO_DB_PASSWORD=ci-app -e ADMIN_PASSWD=ci-master \
             -e ADMIN_LOGIN_PASSWORD=ci-admin -e BASE_URL=http://ci.example.test \
-            -e INIT_MODULES=id_base,l10n_id,sale_management,stock,purchase,account,product_expiry fmcg-odoo:ci
+            -e INIT_MODULES=id_base,l10n_id,sale_management,stock,purchase,account,product_expiry,stock_account fmcg-odoo:ci
           for i in $(seq 1 120); do
             [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8069/web/login)" = "200" ] && break
             sleep 5
@@ -111,7 +111,9 @@ jobs:
           if grep -E " (ERROR|CRITICAL) |Traceback" init.log; then exit 1; fi
       - name: Siapkan database terisolasi untuk eksperimen
         run: |
-          docker exec odoo su -p -s /bin/bash odoo -c "dropdb -h localhost -U odoo_app --if-exists fmcg_exp && createdb -h localhost -U odoo_app -T fmcg fmcg_exp"
+          docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo psql -h localhost -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='fmcg' AND pid <> pg_backend_pid();"
+          docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo dropdb -h localhost -U postgres --if-exists fmcg_exp
+          docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo createdb -h localhost -U postgres -O odoo_app -T fmcg fmcg_exp
       - name: Eksekusi eksperimen seeding historis minimal pada Odoo 19 disposable
         run: |
           set -o pipefail

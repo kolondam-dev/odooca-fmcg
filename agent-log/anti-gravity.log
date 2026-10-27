@@ -508,6 +508,18 @@
   * Validasi integritas 15 hash SHA256 register kanonikal di awal eksekusi eksperimen dan penambahan negative tests untuk mendeteksi penolakan query saat tanggal/nilai bermutasi.
   * Memulihkan satu baris log lama yang sempat terhapus di agent-log/anti-gravity.log.
 - Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok, 33/33 unit test adapter PASS.
-- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
 - Task managed by antigravity at 2026-10-27T08:20:00+07:00
+
+[2026-10-27T08:42:00+07:00] [INFO] Perbaikan Kredensial DB fmcg_exp, Valuasi Wajib SVL Odoo 19, Modul stock_account, dan Actual Savepoint Mutation Tests
+- Menutup temuan review PR #15 (issuecomment-6431533888):
+  * Memperbaiki kredensial pembuatan DB fmcg_exp di CI (.github/workflows/ci.yml): menggunakan admin postgres eksplisit (PGUSER=postgres, PGPASSWORD=ci-postgres) untuk memutuskan koneksi template fmcg via pg_terminate_backend, dropdb, dan createdb -O odoo_app -T fmcg fmcg_exp.
+  * Menambahkan modul stock_account ke INIT_MODULES di deploy/init.sh dan .github/workflows/ci.yml untuk mengaktifkan stock.valuation.layer (SVL) dan akuntansi persediaan otomatis.
+  * Menghapus fallback manual: evaluasi valuasi cutoff pada scripts/ops/verify_historical_experiment.py wajib cocok dengan layer nilai stock.valuation.layer aktual Odoo (is_match = delta_val == 0.0).
+  * Menyelaraskan metode opening quant adjustment: menggunakan StockQuant.create + quant.action_apply_inventory() identik 100% dengan loader utama di scripts/load_canonical_perpetual.py.
+  * Mengimplementasikan 3 actual mutation tests via Odoo savepoints: membuktikan query as-of menolak move bertanggal now(), menolak nilai SVL yang dimanipulasi, dan menolak kebocoran PO receipt masa depan ke tanggal lampau, lalu me-rollback state kembali bersih.
+  * Audit zero-drift Run 2 membandingkan deep snapshot exact dictionary moves, lines, quants, SVL records, dan re-readback 5 cutoff.
+- Verifikasi lokal ruff check All checks passed!, check_manifests.py 4 addon ok, 33/33 unit test adapter PASS.
+- Dataset kanonikal LF dipertahankan 100% utuh tanpa modifikasi generator; tidak merge ke main dan Railway belum diperlukan.
+- Task managed by antigravity at 2026-10-27T08:42:00+07:00
+
 

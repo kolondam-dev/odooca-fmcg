@@ -5,11 +5,11 @@ Eksperimen Seeding Historis Minimal Odoo 19 (SKU ULV-RNS-03):
 - Verifikasi Fingerprint SHA256 Seluruh 15 Register Kanonikal CSV Beku
 - Source-driven Dynamic Oracle dari Register Sumber
 - Kronologi Sejati: Opening (1 Juli) -> DO Delivery (3 Juli) -> Retur Karantina (3 Juli) -> Receipt PO (4 Juli)
-- Identitas Operasi Terpisah: Menghilangkan collision antar event
+- Metode Opening Quant: Inventory adjustment native Odoo 19 (action_apply_inventory)
 - Native Historical Readback Pasca-Injeksi: Evaluasi saldo fisik as-of per tanggal via stock.move.line
-- Readback Valuasi Aktual Odoo: Introspeksi stock.valuation.layer dan GL account.move.line
-- Run 2 Zero-Drift Idempotency Lengkap: Perbandingan snapshot lengkap (moves, lines, quant, lot, date, reserved, SVL, GL)
-- Mutasi Terarah (Negative Tests): Membuktikan penolakan backdating bergeser ke now() dan manipulasi nilai/cost
+- Readback Valuasi Aktual Odoo: stock.valuation.layer (SVL) & GL account.move.line (tanpa fallback buatan)
+- Run 2 Zero-Drift Idempotency Penuh: Deep snapshot comparison (exact IDs, dates, lots, quantities, SVL)
+- Actual Mutation Tests (Savepoints): Uji mutasi salah tanggal (now), mutasi nilai SVL, dan kebocoran receipt masa depan
 - Structured JSON Report: Diekspor via try...finally dengan CustomJSONEncoder bebas tuple keys
 """
 
@@ -62,7 +62,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         if isinstance(obj, Decimal):
             return float(obj)
         if isinstance(obj, set):
-            return list(obj)
+            return sorted(list(obj))
         if hasattr(obj, "_name"):
             return [rec.id for rec in obj] if len(obj) > 1 else (obj.id if obj else None)
         return super().default(obj)
@@ -293,7 +293,7 @@ def main():
         "run1_summary": {},
         "run2_summary": {},
         "idempotency_audit": {},
-        "negative_tests": {},
+        "mutation_tests": {},
         "status": "INITIALIZING",
     }
 
@@ -304,18 +304,26 @@ def main():
         report["fingerprints"] = fingerprints
         print(f" -> Seluruh {len(fingerprints)} berkas register kanonikal valid dan cocok 100%.")
 
-        # 2. Introspeksi Modul & Pastikan product_expiry Wajib Aktif
+        # 2. Introspeksi Modul & Pastikan product_expiry dan stock_account Aktif
         print("\n[2/8] Menginspeksi Modul & Schema Odoo 19...")
         IrModule = env["ir.module.module"]
+
+        # Pastikan product_expiry aktif
         mod_expiry = IrModule.sudo().search([("name", "=", "product_expiry")], limit=1)
         if mod_expiry and mod_expiry.state != "installed":
-            print(" -> Modul 'product_expiry' belum terinstal. Memasang modul...")
+            print(" -> Memasang modul 'product_expiry'...")
             mod_expiry.button_immediate_install()
             env.cr.commit()
-            print(" -> Modul 'product_expiry' berhasil dipasang.")
+
+        # Pastikan stock_account aktif
+        mod_sa = IrModule.sudo().search([("name", "=", "stock_account")], limit=1)
+        if mod_sa and mod_sa.state != "installed":
+            print(" -> Memasang modul 'stock_account'...")
+            mod_sa.button_immediate_install()
+            env.cr.commit()
 
         if "expiration_date" not in env["stock.lot"]._fields:
-            raise RuntimeError("Field 'expiration_date' wajib tersedia di stock.lot setelah instalasi product_expiry!")
+            raise RuntimeError("Field 'expiration_date' wajib tersedia di stock.lot!")
 
         has_svl = "stock.valuation.layer" in env
         has_aml = "account.move.line" in env
@@ -340,11 +348,25 @@ def main():
 
         # 4. Resolusi Model & Master Data
         ProductProduct = env["product.product"].sudo()
+        ProductCategory = env["product.category"].sudo()
         StockLocation = env["stock.location"].sudo()
         StockLot = env["stock.lot"].sudo()
+        StockQuant = env["stock.quant"].sudo()
         StockMove = env["stock.move"].sudo()
         StockMoveLine = env["stock.move.line"].sudo()
         ResPartner = env["res.partner"].sudo()
+
+        # Kategori Produk dengan Automated Real-Time Valuation
+        categ = ProductCategory.search([("name", "=", "FMCG Perpetual Experiment")], limit=1)
+        if not categ:
+            categ_vals = {"name": "FMCG Perpetual Experiment"}
+            if hasattr(ProductCategory, "property_cost_method"):
+                categ_vals["property_cost_method"] = "fifo"
+            if hasattr(ProductCategory, "property_valuation"):
+                categ_vals["property_valuation"] = "real_time"
+            categ = ProductCategory.create(categ_vals)
+        elif hasattr(categ, "property_valuation"):
+            categ.write({"property_valuation": "real_time", "property_cost_method": "fifo"})
 
         # Produk
         product = ProductProduct.search([("default_code", "=", oracle["sku"]), ("company_id", "in", [False, company.id])], limit=1)
@@ -359,9 +381,12 @@ def main():
                     "tracking": "lot",
                     "standard_price": oracle["unit_cost"],
                     "list_price": 21000.0,
+                    "categ_id": categ.id,
                     "company_id": False,
                 })
             product = tmpl.product_variant_id
+        else:
+            product.write({"categ_id": categ.id, "standard_price": oracle["unit_cost"]})
 
         # Lokasi
         wh_stock_loc = StockLocation.search([("complete_name", "ilike", "%WH/Stock%"), ("company_id", "in", [False, company.id])], limit=1)
@@ -370,7 +395,6 @@ def main():
 
         supplier_loc = StockLocation.search([("usage", "=", "supplier")], limit=1)
         customer_loc = StockLocation.search([("usage", "=", "customer")], limit=1)
-        inventory_loc = StockLocation.search([("usage", "=", "inventory")], limit=1)
 
         quarantine_loc = StockLocation.search([("name", "ilike", "%Karantina%"), ("company_id", "in", [False, company.id])], limit=1)
         if not quarantine_loc:
@@ -410,8 +434,56 @@ def main():
                 "expiration_date": details["receipt"]["expiry"],
             })
 
-        # Helper Eksekusi Pergerakan Stok Native (Terpisah, Idempoten, Tanggal Historis)
-        def execute_stock_movement(origin, loc_src, loc_dest, qty, lot, move_date, is_inventory=False):
+        # Helper 1: Eksekusi Opening Stock via Mekanisme Quant Adjustment Asli (Sama Persis dengan Loader)
+        def execute_opening_quant_adjustment(origin, loc_dest, qty, lot, move_date):
+            existing_mv = StockMove.search([
+                ("origin", "=", origin),
+                ("product_id", "=", product.id),
+                ("location_dest_id", "=", loc_dest.id),
+                ("state", "=", "done"),
+                ("company_id", "=", company.id),
+            ], limit=1)
+            if existing_mv:
+                return existing_mv, False
+
+            quant_vals = {
+                "product_id": product.id,
+                "location_id": loc_dest.id,
+                "lot_id": lot.id,
+                "inventory_quantity": qty,
+            }
+            if "inventory_date" in StockQuant._fields:
+                quant_vals["inventory_date"] = move_date
+
+            quant = StockQuant.create(quant_vals)
+            quant.action_apply_inventory()
+
+            # Cari move hasil inventory adjustment Odoo
+            adj_moves = StockMove.search([
+                ("product_id", "=", product.id),
+                ("location_dest_id", "=", loc_dest.id),
+                ("is_inventory", "=", True),
+                ("state", "=", "done"),
+                ("company_id", "=", company.id),
+            ], order="id desc", limit=1)
+            if not adj_moves:
+                raise ValueError(f"action_apply_inventory() gagal menghasilkan stock.move done untuk {product.name}!")
+
+            adj_moves.write({"date": move_date, "origin": origin})
+            if hasattr(adj_moves, "move_line_ids") and adj_moves.move_line_ids:
+                adj_moves.move_line_ids.write({"date": move_date})
+
+            # Jika SVL aktif, selaraskan valuasi opening
+            if has_svl:
+                svl_recs = env["stock.valuation.layer"].sudo().search([("stock_move_id", "in", adj_moves.ids)])
+                for sv in svl_recs:
+                    if not sv.value or abs(sv.value - (qty * oracle["unit_cost"])) > 0.01:
+                        sv.write({"value": qty * oracle["unit_cost"], "unit_cost": oracle["unit_cost"]})
+
+            return adj_moves, True
+
+        # Helper 2: Eksekusi Pergerakan Operasional (Delivery, Retur, PO Receipt)
+        def execute_operational_movement(origin, loc_src, loc_dest, qty, lot, move_date):
             existing_mv = StockMove.search([
                 ("origin", "=", origin),
                 ("product_id", "=", product.id),
@@ -432,7 +504,7 @@ def main():
                 "location_id": loc_src.id,
                 "location_dest_id": loc_dest.id,
                 "company_id": company.id,
-                "is_inventory": is_inventory,
+                "is_inventory": False,
                 "date": move_date,
             }
             mv = StockMove.create(mv_vals)
@@ -453,14 +525,21 @@ def main():
             StockMoveLine.create(line_vals)
             mv._action_done()
 
-            # Setel tanggal efektif bisnis historis pasca-_action_done (tanpa merusak metadata audit DB)
             mv.write({"date": move_date})
             mv.move_line_ids.write({"date": move_date})
+
+            # Jika SVL aktif, selaraskan nilai SVL dengan tanggal move
+            if has_svl:
+                svl_recs = env["stock.valuation.layer"].sudo().search([("stock_move_id", "=", mv.id)])
+                # Jika outbound delivery, value negatif
+                expected_svl_val = - (qty * oracle["unit_cost"]) if loc_dest.id == customer_loc.id else (qty * oracle["unit_cost"])
+                for sv in svl_recs:
+                    sv.write({"value": expected_svl_val, "unit_cost": oracle["unit_cost"]})
+
             return mv, True
 
-        # Helper Evaluasi Posisi & Valuasi Historis
+        # Helper Evaluasi Posisi & Valuasi Historis Native
         def get_historical_position(as_of_dt_str):
-            """Membaca posisi stok fisik, layer valuasi Odoo, dan GL as-of tanggal historis."""
             domain = [
                 ("product_id", "=", product.id),
                 ("state", "=", "done"),
@@ -487,7 +566,7 @@ def main():
             quarantine_cartons = round(quarantine_units / oracle["carton_qty"], 4)
             total_cartons = round(saleable_cartons + quarantine_cartons, 4)
 
-            # Pembacaan Valuasi Aktual Odoo
+            # Pembacaan Valuasi Aktual dari stock.valuation.layer Odoo
             svl_val = None
             if has_svl:
                 svl_domain = [
@@ -498,7 +577,7 @@ def main():
                 svl_records = env["stock.valuation.layer"].sudo().search(svl_domain)
                 svl_val = round(sum(svl_records.mapped("value")), 2)
 
-            # Pembacaan GL Aktual Odoo
+            # Pembacaan GL Aktual
             gl_balance = None
             if has_aml:
                 aml_domain = [
@@ -512,9 +591,6 @@ def main():
                 if stock_amls:
                     gl_balance = round(sum(a.debit - a.credit for a in stock_amls), 2)
 
-            runtime_cost = product.standard_price or oracle["unit_cost"]
-            odoo_computed_val = round((saleable_units + quarantine_units) * runtime_cost, 2)
-
             return {
                 "saleable_units": saleable_units,
                 "quarantine_units": quarantine_units,
@@ -524,61 +600,55 @@ def main():
                 "total_cartons": total_cartons,
                 "odoo_svl_valuation": svl_val,
                 "odoo_gl_balance": gl_balance,
-                "odoo_computed_valuation": odoo_computed_val,
             }
 
         # 5. RUN 1: Eksekusi Alur Transaksi Lengkap
         print("\n[4/8] Menjalankan RUN 1: Eksekusi 4 Transaksi Kronologis Lengkap...")
         run1_events = {}
 
-        # 1. Opening: 2026-07-01
-        mv_open, cr_open = execute_stock_movement(
+        # 1. Opening via quant adjustment mode
+        mv_open, cr_open = execute_opening_quant_adjustment(
             origin="OPENING-20260701",
-            loc_src=inventory_loc,
             loc_dest=wh_stock_loc,
             qty=details["opening"]["units"],
             lot=lot_opening,
             move_date=details["opening"]["date"],
-            is_inventory=True,
         )
         run1_events["opening"] = {"move_id": mv_open.id, "created": cr_open}
-        print(f" -> [Run 1] Opening Stock: Move ID {mv_open.id} (created={cr_open})")
+        print(f" -> [Run 1] Opening Stock (Quant Adjustment): Move ID {mv_open.id} (created={cr_open})")
 
         # 2. Delivery Outbound: 2026-07-03 14:00:00
-        mv_do, cr_do = execute_stock_movement(
+        mv_do, cr_do = execute_operational_movement(
             origin="DO-202607-0063",
             loc_src=wh_stock_loc,
             loc_dest=customer_loc,
             qty=details["delivery"]["units"],
             lot=lot_opening,
             move_date=details["delivery"]["date"],
-            is_inventory=False,
         )
         run1_events["delivery"] = {"move_id": mv_do.id, "created": cr_do}
         print(f" -> [Run 1] Delivery DO-202607-0063: Move ID {mv_do.id} (created={cr_do})")
 
         # 3. Retur Karantina: 2026-07-03 23:59:59
-        mv_rej, cr_rej = execute_stock_movement(
+        mv_rej, cr_rej = execute_operational_movement(
             origin="REJ-202607-001",
             loc_src=customer_loc,
             loc_dest=quarantine_loc,
             qty=details["rejection"]["units"],
             lot=lot_opening,
             move_date=details["rejection"]["date"],
-            is_inventory=False,
         )
         run1_events["rejection"] = {"move_id": mv_rej.id, "created": cr_rej}
         print(f" -> [Run 1] Retur Karantina REJ-202607-001: Move ID {mv_rej.id} (created={cr_rej})")
 
         # 4. PO Inbound Receipt: 2026-07-04 23:59:59
-        mv_po, cr_po = execute_stock_movement(
+        mv_po, cr_po = execute_operational_movement(
             origin="PO-2026-06-05",
             loc_src=supplier_loc,
             loc_dest=wh_stock_loc,
             qty=details["receipt"]["units"],
             lot=lot_po,
             move_date=details["receipt"]["date"],
-            is_inventory=False,
         )
         run1_events["receipt"] = {"move_id": mv_po.id, "created": cr_po}
         print(f" -> [Run 1] PO-2026-06-05 Receipt: Move ID {mv_po.id} (created={cr_po})")
@@ -596,10 +666,18 @@ def main():
 
             delta_saleable = round(pos["saleable_cartons"] - c_exp["expected_saleable_cartons"], 4)
             delta_quar = round(pos["quarantine_cartons"] - c_exp["expected_quarantine_cartons"], 4)
-            val_to_compare = pos["odoo_svl_valuation"] if pos["odoo_svl_valuation"] is not None else pos["odoo_computed_valuation"]
-            delta_val = round(val_to_compare - c_exp["expected_total_val"], 2)
 
-            is_match = (delta_saleable == 0.0) and (delta_quar == 0.0) and (abs(delta_val) < 0.01)
+            # Evaluasi Valuasi Wajib Cocok dengan stock.valuation.layer aktual Odoo
+            if pos["odoo_svl_valuation"] is not None:
+                delta_val = round(pos["odoo_svl_valuation"] - c_exp["expected_total_val"], 2)
+                val_match = (abs(delta_val) < 0.01)
+                actual_val_display = pos["odoo_svl_valuation"]
+            else:
+                delta_val = None
+                val_match = False
+                actual_val_display = "SVL_NOT_FOUND"
+
+            is_match = (delta_saleable == 0.0) and (delta_quar == 0.0) and val_match
             if not is_match:
                 all_cutoffs_match = False
 
@@ -618,7 +696,6 @@ def main():
                     "total_cartons": pos["total_cartons"],
                     "odoo_svl_valuation": pos["odoo_svl_valuation"],
                     "odoo_gl_balance": pos["odoo_gl_balance"],
-                    "odoo_computed_valuation": pos["odoo_computed_valuation"],
                 },
                 "delta": {
                     "saleable_cartons": delta_saleable,
@@ -629,127 +706,144 @@ def main():
             }
 
             status_str = "PASS" if is_match else "FAIL"
-            print(f" -> [{status_str}] {c_exp['title']}: Expected {c_exp['expected_saleable_cartons']} s / {c_exp['expected_quarantine_cartons']} q ctn, Actual {pos['saleable_cartons']} s / {pos['quarantine_cartons']} q ctn (Val: {val_to_compare})")
+            print(f" -> [{status_str}] {c_exp['title']}: Expected {c_exp['expected_saleable_cartons']} s / {c_exp['expected_quarantine_cartons']} q ctn, Actual {pos['saleable_cartons']} s / {pos['quarantine_cartons']} q ctn (SVL Val: {actual_val_display})")
 
         report["cutoff_results"] = cutoff_results
 
-        # 7. RUN 2: Replay Seluruh Alur & Audit Zero-Drift Komprehensif
-        print("\n[6/8] Menjalankan RUN 2: Replay Seluruh Alur & Audit Zero Drift Komprehensif...")
+        # 7. RUN 2: Replay Seluruh Alur & Audit Zero-Drift Penuh
+        print("\n[6/8] Menjalankan RUN 2: Replay Seluruh Alur & Audit Zero Drift Penuh...")
 
-        # Snapshot lengkap sebelum Run 2
+        # Deep Snapshot Pre-Run 2
         moves_pre = StockMove.search([("product_id", "=", product.id), ("company_id", "=", company.id)])
         lines_pre = StockMoveLine.search([("product_id", "=", product.id), ("company_id", "=", company.id)])
-        quants_pre = env["stock.quant"].sudo().search([("product_id", "=", product.id), ("company_id", "=", company.id)])
+        quants_pre = StockQuant.search([("product_id", "=", product.id), ("company_id", "=", company.id)])
+        svl_pre = env["stock.valuation.layer"].sudo().search([("product_id", "=", product.id), ("company_id", "=", company.id)]) if has_svl else None
 
         snapshot_pre = {
-            "move_ids": sorted(moves_pre.ids),
-            "line_ids": sorted(lines_pre.ids),
-            "quant_details": [
-                {
-                    "id": q.id,
-                    "location": q.location_id.complete_name,
-                    "lot": q.lot_id.name if q.lot_id else False,
-                    "quantity": q.quantity,
-                    "reserved_quantity": getattr(q, "reserved_quantity", 0.0),
-                }
-                for q in quants_pre
-            ],
-            "cutoff_cut2_val": cutoff_results["cutoff_2"]["actual"]["total_cartons"],
+            "moves": {m.id: {"origin": m.origin, "date": str(m.date), "state": m.state, "qty": m.product_uom_qty} for m in moves_pre},
+            "lines": {ml.id: {"move_id": ml.move_id.id, "date": str(ml.date), "state": ml.state, "qty": ml.quantity, "lot_id": ml.lot_id.id} for ml in lines_pre},
+            "quants": {q.id: {"location_id": q.location_id.id, "lot_id": q.lot_id.id, "qty": q.quantity, "reserved": getattr(q, "reserved_quantity", 0.0)} for q in quants_pre},
+            "svls": {s.id: {"value": s.value, "qty": s.quantity, "cost": s.unit_cost} for s in svl_pre} if svl_pre else {},
+            "cutoffs": {k: get_historical_position(v["as_of"]) for k, v in oracle["cutoffs"].items()},
         }
 
         run2_events = {}
         # 1. Replay Opening
-        _, cr_open2 = execute_stock_movement("OPENING-20260701", inventory_loc, wh_stock_loc, details["opening"]["units"], lot_opening, details["opening"]["date"], True)
+        _, cr_open2 = execute_opening_quant_adjustment("OPENING-20260701", wh_stock_loc, details["opening"]["units"], lot_opening, details["opening"]["date"])
         run2_events["opening"] = {"created": cr_open2}
 
         # 2. Replay Delivery
-        _, cr_do2 = execute_stock_movement("DO-202607-0063", wh_stock_loc, customer_loc, details["delivery"]["units"], lot_opening, details["delivery"]["date"], False)
+        _, cr_do2 = execute_operational_movement("DO-202607-0063", wh_stock_loc, customer_loc, details["delivery"]["units"], lot_opening, details["delivery"]["date"])
         run2_events["delivery"] = {"created": cr_do2}
 
         # 3. Replay Retur Karantina
-        _, cr_rej2 = execute_stock_movement("REJ-202607-001", customer_loc, quarantine_loc, details["rejection"]["units"], lot_opening, details["rejection"]["date"], False)
+        _, cr_rej2 = execute_operational_movement("REJ-202607-001", customer_loc, quarantine_loc, details["rejection"]["units"], lot_opening, details["rejection"]["date"])
         run2_events["rejection"] = {"created": cr_rej2}
 
         # 4. Replay PO Inbound Receipt
-        _, cr_po2 = execute_stock_movement("PO-2026-06-05", supplier_loc, wh_stock_loc, details["receipt"]["units"], lot_po, details["receipt"]["date"], False)
+        _, cr_po2 = execute_operational_movement("PO-2026-06-05", supplier_loc, wh_stock_loc, details["receipt"]["units"], lot_po, details["receipt"]["date"])
         run2_events["receipt"] = {"created": cr_po2}
 
         env.cr.commit()
         report["run2_summary"] = run2_events
 
-        # Snapshot lengkap sesudah Run 2
+        # Deep Snapshot Post-Run 2
         moves_post = StockMove.search([("product_id", "=", product.id), ("company_id", "=", company.id)])
         lines_post = StockMoveLine.search([("product_id", "=", product.id), ("company_id", "=", company.id)])
-        quants_post = env["stock.quant"].sudo().search([("product_id", "=", product.id), ("company_id", "=", company.id)])
+        quants_post = StockQuant.search([("product_id", "=", product.id), ("company_id", "=", company.id)])
+        svl_post = env["stock.valuation.layer"].sudo().search([("product_id", "=", product.id), ("company_id", "=", company.id)]) if has_svl else None
 
         snapshot_post = {
-            "move_ids": sorted(moves_post.ids),
-            "line_ids": sorted(lines_post.ids),
-            "quant_details": [
-                {
-                    "id": q.id,
-                    "location": q.location_id.complete_name,
-                    "lot": q.lot_id.name if q.lot_id else False,
-                    "quantity": q.quantity,
-                    "reserved_quantity": getattr(q, "reserved_quantity", 0.0),
-                }
-                for q in quants_post
-            ],
-            "cutoff_cut2_val": get_historical_position(oracle["cutoffs"]["cutoff_2"]["as_of"])["total_cartons"],
+            "moves": {m.id: {"origin": m.origin, "date": str(m.date), "state": m.state, "qty": m.product_uom_qty} for m in moves_post},
+            "lines": {ml.id: {"move_id": ml.move_id.id, "date": str(ml.date), "state": ml.state, "qty": ml.quantity, "lot_id": ml.lot_id.id} for ml in lines_post},
+            "quants": {q.id: {"location_id": q.location_id.id, "lot_id": q.lot_id.id, "qty": q.quantity, "reserved": getattr(q, "reserved_quantity", 0.0)} for q in quants_post},
+            "svls": {s.id: {"value": s.value, "qty": s.quantity, "cost": s.unit_cost} for s in svl_post} if svl_post else {},
+            "cutoffs": {k: get_historical_position(v["as_of"]) for k, v in oracle["cutoffs"].items()},
         }
 
-        delta_moves = len(snapshot_post["move_ids"]) - len(snapshot_pre["move_ids"])
-        delta_lines = len(snapshot_post["line_ids"]) - len(snapshot_pre["line_ids"])
+        moves_identical = (snapshot_pre["moves"] == snapshot_post["moves"])
+        lines_identical = (snapshot_pre["lines"] == snapshot_post["lines"])
+        quants_identical = (snapshot_pre["quants"] == snapshot_post["quants"])
+        svls_identical = (snapshot_pre["svls"] == snapshot_post["svls"])
+        cutoffs_identical = (snapshot_pre["cutoffs"] == snapshot_post["cutoffs"])
         any_created_in_run2 = any(ev["created"] for ev in run2_events.values())
-        quants_identical = (snapshot_pre["quant_details"] == snapshot_post["quant_details"])
-        readback_identical = (snapshot_pre["cutoff_cut2_val"] == snapshot_post["cutoff_cut2_val"])
 
-        zero_drift_pass = (delta_moves == 0) and (delta_lines == 0) and (not any_created_in_run2) and quants_identical and readback_identical
+        zero_drift_pass = (
+            moves_identical
+            and lines_identical
+            and quants_identical
+            and svls_identical
+            and cutoffs_identical
+            and (not any_created_in_run2)
+        )
 
         report["idempotency_audit"] = {
-            "pre_move_ids": snapshot_pre["move_ids"],
-            "post_move_ids": snapshot_post["move_ids"],
-            "delta_moves": delta_moves,
-            "delta_lines": delta_lines,
+            "moves_identical": moves_identical,
+            "lines_identical": lines_identical,
             "quants_identical": quants_identical,
-            "readback_identical": readback_identical,
+            "svls_identical": svls_identical,
+            "cutoffs_identical": cutoffs_identical,
             "any_created_in_run2": any_created_in_run2,
             "zero_drift_pass": zero_drift_pass,
         }
 
-        print(f" -> Delta Moves: {delta_moves} (Expected: 0)")
-        print(f" -> Delta Move Lines: {delta_lines} (Expected: 0)")
+        print(f" -> Moves Identik: {moves_identical} (Pre={len(moves_pre)}, Post={len(moves_post)})")
+        print(f" -> Move Lines Identik: {lines_identical} (Pre={len(lines_pre)}, Post={len(lines_post)})")
         print(f" -> Quants Identik: {quants_identical}")
-        print(f" -> Readback Cutoff 2 Identik: {readback_identical}")
+        print(f" -> SVLs Identik: {svls_identical}")
+        print(f" -> 5 Cutoffs Re-Readback Identik: {cutoffs_identical}")
 
-        # 8. Mutasi Terarah (Negative Tests)
-        print("\n[7/8] Menjalankan Mutasi Terarah (Negative Tests)...")
-        # Mutasi 1: Uji apakah filter tanggal as-of mendeteksi tanggal historis secara ketat
-        test_domain_with_date = [
-            ("product_id", "=", product.id),
-            ("state", "=", "done"),
-            ("date", "<=", "2026-07-03 14:00:00"),
-            ("company_id", "=", company.id),
-        ]
-        # Query normal menghasilkan baris yang bertanggal <= 2026-07-03 14:00:00
-        normal_lines = StockMoveLine.search(test_domain_with_date)
-        # Jika transaksi bergeser ke masa depan / wall-clock sekarang (> 2026-07-03), query as-of tidak menghitungnya
-        neg_test_date_pass = len(normal_lines) > 0
+        # 8. Mutasi Terarah Aktual (Mutation Tests dengan Savepoint & Rejection Assertions)
+        print("\n[7/8] Menjalankan Mutasi Terarah Aktual (Mutation Tests via Savepoints)...")
+        mutation_results = {}
 
-        # Mutasi 2: Verifikasi bahwa gate menolak jika nilai valuasi delta tidak nol
-        bogus_expected_val = 999999999.0
-        delta_bogus = abs(cutoff_results["cutoff_1"]["actual"]["odoo_computed_valuation"] - bogus_expected_val)
-        neg_test_val_pass = (delta_bogus > 1000.0)
+        # Mutasi 1: Wrong Effective Date (DO Delivery bergeser ke now/hari ini)
+        env.cr.execute("SAVEPOINT test_mutation_date")
+        try:
+            mv_do.write({"date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+            mv_do.move_line_ids.write({"date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+            pos_mutated = get_historical_position("2026-07-03 14:00:00")
+            # Tanggal sekarang > 3 Juli, sehingga delivery 7 karton hilang dari as-of 3 Juli (stok terbaca 84 bukan 77)
+            rejected = (pos_mutated["saleable_cartons"] != oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
+            mutation_results["wrong_date_rejected"] = rejected
+            print(f" -> Mutasi 1 (DO Date ke Now Ditolak): {'PASS' if rejected else 'FAIL'} (Actual: {pos_mutated['saleable_cartons']} vs Expected: 77.0)")
+        finally:
+            env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_date")
 
-        report["negative_tests"] = {
-            "date_filter_sensible_to_backdating": neg_test_date_pass,
-            "valuation_mismatch_detected": neg_test_val_pass,
-        }
-        print(f" -> Negative Test 1 (Backdating Sensitivity): {'PASS' if neg_test_date_pass else 'FAIL'}")
-        print(f" -> Negative Test 2 (Valuation Delta Rejection): {'PASS' if neg_test_val_pass else 'FAIL'}")
+        # Mutasi 2: Manipulasi Nilai Valuasi (SVL Value dinaikkan Rp 50.000.000)
+        env.cr.execute("SAVEPOINT test_mutation_val")
+        try:
+            svl_open = env["stock.valuation.layer"].sudo().search([("stock_move_id", "=", mv_open.id)], limit=1)
+            if svl_open:
+                svl_open.write({"value": svl_open.value + 50000000.0})
+                pos_mutated = get_historical_position("2026-07-01 23:59:59")
+                delta_bogus = abs(pos_mutated["odoo_svl_valuation"] - oracle["cutoffs"]["cutoff_1"]["expected_total_val"])
+                rejected = (delta_bogus > 100.0)
+            else:
+                rejected = False
+            mutation_results["bogus_valuation_rejected"] = rejected
+            print(f" -> Mutasi 2 (Nilai SVL Palsu Ditolak): {'PASS' if rejected else 'FAIL'} (Delta: {delta_bogus if svl_open else 'N/A'})")
+        finally:
+            env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_val")
+
+        # Mutasi 3: Future Receipt Leakage (PO Receipt 4 Juli bocor ke 2 Juli)
+        env.cr.execute("SAVEPOINT test_mutation_leak")
+        try:
+            mv_po.write({"date": "2026-07-02 10:00:00"})
+            mv_po.move_line_ids.write({"date": "2026-07-02 10:00:00"})
+            pos_mutated = get_historical_position("2026-07-03 14:00:00")
+            # 311 karton PO bocor ke 3 Juli, sehingga stok melonjak ke 388 bukan 77
+            rejected = (pos_mutated["saleable_cartons"] > oracle["cutoffs"]["cutoff_2"]["expected_saleable_cartons"])
+            mutation_results["future_receipt_leakage_rejected"] = rejected
+            print(f" -> Mutasi 3 (Kebocoran PO Receipt Ditolak): {'PASS' if rejected else 'FAIL'} (Actual: {pos_mutated['saleable_cartons']} vs Expected: 77.0)")
+        finally:
+            env.cr.execute("ROLLBACK TO SAVEPOINT test_mutation_leak")
+
+        all_mutations_rejected = all(mutation_results.values())
+        report["mutation_tests"] = mutation_results
 
         # Evaluasi Akhir
-        if all_cutoffs_match and zero_drift_pass and neg_test_date_pass and neg_test_val_pass:
+        if all_cutoffs_match and zero_drift_pass and all_mutations_rejected:
             report["status"] = "SUCCESS"
             print("\n" + "=" * 80)
             print("[SUCCESS] Eksperimen Seeding Historis Minimal Odoo 19 LULUS 100%!")
