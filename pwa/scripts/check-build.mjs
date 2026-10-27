@@ -26,6 +26,16 @@ for (const mode of ["demo", "live"]) {
     const manifest = JSON.parse(
         readFileSync(`${dir}/manifest.webmanifest`, "utf8"),
     );
+    assert.equal(manifest.name, "Odoo FMCG Mobile");
+    for (const asset of [
+        "brand-logo.svg",
+        "icon.svg",
+        "icon-192.png",
+        "icon-512.png",
+        "favicon-32.png",
+        "apple-touch-icon.png",
+    ])
+        assert(files.includes(asset), `Missing brand asset ${asset}`);
     assert.equal(manifest.scope, "/field/");
     assert.equal(manifest.start_url, "/field/");
     const code = js.map((f) => readFileSync(`${dir}/${f}`, "utf8")).join("\n");
@@ -35,6 +45,8 @@ for (const mode of ["demo", "live"]) {
             "Toko Sinar Pagi",
             "demo-mdu",
             "demo-snapshot-1",
+            "Simulasikan absensi diterima",
+            "SIM-ATT-",
         ])
             assert(
                 !code.includes(fixture),

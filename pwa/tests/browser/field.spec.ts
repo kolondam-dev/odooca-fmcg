@@ -1,4 +1,19 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+async function openMorning(page: Page) {
+    await page
+        .getByRole("button", {
+            name: "Simulasikan absensi diterima",
+            exact: true,
+        })
+        .click();
+    await page
+        .getByRole("button", {
+            name: "Sync pagi & buka sesi demo",
+            exact: true,
+        })
+        .click();
+    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+}
 test("home is usable on phone/tablet with no overflow and local assets", async ({
     page,
 }) => {
@@ -62,6 +77,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     context,
 }) => {
     await page.goto("./");
+    await openMorning(page);
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
@@ -141,7 +157,7 @@ test("missing evidence is not accepted as attendance", async ({
 }) => {
     await context.clearPermissions();
     await page.goto("./");
-    await page.getByRole("button", { name: "Absensi", exact: false }).click();
+    await page.getByRole("button", { name: /^Absensi Foto/ }).click();
     await page.getByRole("button", { name: "Periksa kesiapan bukti" }).click();
     await expect(page.getByRole("alert")).toContainText(
         "Simpan foto dan lokasi dahulu.",
@@ -187,4 +203,117 @@ test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(page.locator(".activity")).toHaveCount(1);
+});
+
+test("morning gate requires online sync, persists per persona and expires next day WITA", async ({
+    page,
+    context,
+}) => {
+    await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
+    await page.goto("./");
+    await page
+        .getByRole("button", { name: "Buat order", exact: false })
+        .click();
+    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await page
+        .getByRole("button", {
+            name: "Simulasikan absensi diterima",
+            exact: true,
+        })
+        .click();
+    await context.setOffline(true);
+    await page
+        .getByRole("button", {
+            name: "Sync pagi & buka sesi demo",
+            exact: true,
+        })
+        .click();
+    await expect(page.getByRole("alert")).toContainText("wajib dibuka online");
+    await context.setOffline(false);
+    await page
+        .getByRole("button", {
+            name: "Sync pagi & buka sesi demo",
+            exact: true,
+        })
+        .click();
+    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByLabel("Persona demo").selectOption("canvass");
+    await expect(page.getByText("Sesi terbuka", { exact: true })).toHaveCount(
+        0,
+    );
+    await expect(
+        page.getByRole("button", {
+            name: "Simulasikan absensi diterima",
+            exact: true,
+        }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByLabel("Persona demo").selectOption("sales");
+    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await page.clock.setSystemTime(new Date("2026-10-27T16:00:01Z"));
+    await page.reload();
+    await expect(
+        page.getByRole("button", {
+            name: "Simulasikan absensi diterima",
+            exact: true,
+        }),
+    ).toBeVisible();
+    await expect(page.getByText("Sesi terbuka", { exact: true })).toHaveCount(
+        0,
+    );
+});
+
+test("branding uses the same name, local logo and install icons in demo/live", async ({
+    page,
+}) => {
+    for (const url of ["./", "http://127.0.0.1:4174/field/"]) {
+        await page.goto(url);
+        await expect(page).toHaveTitle("Odoo FMCG Mobile");
+        const logo = page.getByRole("img", {
+            name: "Odoo FMCG Mobile",
+            exact: true,
+        });
+        await expect(logo).toBeVisible();
+        expect(
+            await logo.evaluate(
+                (el: HTMLImageElement) => el.complete && el.naturalWidth > 0,
+            ),
+        ).toBe(true);
+        const result = await page.evaluate(async () => {
+            const manifest = await (
+                await fetch("/field/manifest.webmanifest")
+            ).json();
+            const sizes = await Promise.all(
+                [
+                    "icon-192.png",
+                    "icon-512.png",
+                    "apple-touch-icon.png",
+                    "favicon-32.png",
+                ].map(
+                    (src) =>
+                        new Promise((resolve) => {
+                            const img = new Image();
+                            img.onload = () =>
+                                resolve([img.naturalWidth, img.naturalHeight]);
+                            img.onerror = () => resolve(null);
+                            img.src = "/field/" + src;
+                        }),
+                ),
+            );
+            return { name: manifest.name, sizes };
+        });
+        expect(result).toEqual({
+            name: "Odoo FMCG Mobile",
+            sizes: [
+                [192, 192],
+                [512, 512],
+                [180, 180],
+                [32, 32],
+            ],
+        });
+    }
 });

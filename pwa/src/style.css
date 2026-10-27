@@ -152,24 +152,25 @@ small {
     width: 44px;
     height: 44px;
 }
-.brand-mark {
-    background: var(--navy);
-    color: #fff;
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
-    font-size: 40px;
-    font-weight: 700;
-    display: grid;
-    place-items: center;
-    letter-spacing: -0.1em;
+.app-brand {
+    display: block;
+    width: 172px;
+    height: auto;
 }
-.brand-mark.small {
-    width: 34px;
-    height: 34px;
-    font-size: 24px;
-    border-radius: 10px;
-    letter-spacing: -0.08em;
+.app-brand.large {
+    width: 280px;
+    max-width: 100%;
+}
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 .boot {
     max-width: 420px;
@@ -229,13 +230,6 @@ small {
     line-height: 1.2;
     font-weight: 700;
     letter-spacing: -0.045em;
-}
-.wordmark-sub {
-    display: block;
-    font-size: 8px;
-    letter-spacing: 0.2em;
-    font-weight: 500;
-    margin-top: 3px;
 }
 .top-actions {
     display: flex;
@@ -1215,4 +1209,38 @@ textarea {
     button:active {
         transform: none;
     }
+}
+
+.morning-card {
+    background: white;
+    border: 1px solid var(--line, #dce4ef);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 20px;
+}
+.morning-heading {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.morning-heading h2 {
+    font-size: 16px;
+    margin: 0;
+}
+.morning-heading p {
+    font-size: 10px;
+    color: var(--muted);
+    margin: 4px 0 0;
+}
+.morning-heading .pill {
+    margin-left: auto;
+    white-space: nowrap;
+}
+.morning-steps {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0;
+    display: grid;
+    gap: 10px;
+    font-size: 13px;
 }

@@ -1020,3 +1020,19 @@ terpisah dalam project Railway yang sama, tanpa database baru. Default build liv
 tetap terkunci. Gateway API belum disambungkan (503 eksplisit). Browser CI memakai
 server hosting yang sama; pwa-container ditambahkan ke aggregator pwa-gate. Detail
 setup dan alternatif reverse proxy ada di `pwa/hosting/README.md`. Belum deploy.
+
+### Sesi pagi simulator dan identitas Odoo FMCG Mobile
+
+Kelanjutan PWA-02/03 pada basis main efd0373: client Sales/Canvasser menahan
+order/extra-call baru sebelum langkah absensi diterima simulator dan sync online.
+Paket lengkap PJP + stok/harga tersimpan atomik dengan sesi per company/persona,
+berlaku satu hari WITA, dipulihkan saat reload offline. Snapshot yang tidak lengkap
+atau berbeda hari tidak membuka sesi; error koneksi/storage tidak menjadi ready.
+Kontrol absensi simulasi tidak menggunakan bukti foto lokal sebagai bukti sah.
+Driver, realisasi/settlement, sesi server, device binding dan evidence API tetap
+mengikuti dependency roadmap. Snapshot/absensi/sesi di simulator bukan security gate.
+
+Branding pemilik: Odoo FMCG Mobile, wordmark Odoo + FMCG dengan Mobile di bawah,
+navy kontras, favicon/install icon oi-odoo besar + label ODOO FMCG/Mobile. Berlaku
+juga pada live locked shell. Outline lokal menggantikan icon font penuh; metadata,
+SVG dan PNG konsisten. Tidak mengubah deployment Railway secara otomatis.

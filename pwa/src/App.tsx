@@ -12,6 +12,9 @@ import {
     type Snapshot,
 } from "./domain/contracts";
 import { validateExpense } from "./domain/expense";
+import { Brand } from "./components/Brand";
+import { MorningSession } from "./components/MorningSession";
+import { morningReady, type MorningRecord } from "./domain/morning";
 import { Outbox } from "./domain/outbox";
 import { haptic, money, queueLabels, time } from "./domain/format";
 import { FieldStore, type QueueItem } from "./storage/store";
@@ -81,8 +84,8 @@ export function App() {
     if (!__DEMO__)
         return (
             <main class="boot">
-                <div class="brand-mark">F</div>
-                <h1>FMCG Lapangan</h1>
+                <Brand large />
+                <h1 class="sr-only">Odoo FMCG Mobile</h1>
                 <p role="status">
                     Integrasi layanan perusahaan belum diaktifkan.
                 </p>
@@ -127,8 +130,8 @@ export function App() {
     if (!boot)
         return (
             <main class="boot">
-                <div class="brand-mark">F</div>
-                <h1>FMCG Lapangan</h1>
+                <Brand large />
+                <h1 class="sr-only">Odoo FMCG Mobile</h1>
                 <p role="status">{error || "Menyiapkan ruang kerja…"}</p>
                 {error && (
                     <>
@@ -155,7 +158,7 @@ export function App() {
 }
 function Workspace({
     identity,
-    snapshot,
+    snapshot: initialSnapshot,
     provider,
     actor,
     changeActor,
@@ -175,6 +178,21 @@ function Workspace({
     const [scenario, setScenario] = useState<Scenario>("normal");
     const [filter, setFilter] = useState("");
     const owner = ownerKey(identity);
+    const [morning, setMorning] = useState<MorningRecord>();
+    const snapshot = morningReady(morning, owner)
+        ? morning!.snapshot!
+        : initialSnapshot;
+    function openOrder(outlet: string) {
+        if (!morningReady(morning, owner)) {
+            setToast(
+                "Absensi simulasi dan sync pagi wajib selesai sebelum kunjungan/order.",
+            );
+            setPage("home");
+            window.scrollTo({ top: 0 });
+            return;
+        }
+        setDialog({ type: "order", outlet });
+    }
     const engine = useMemo(
         () =>
             new Outbox(store, owner, provider, () => {
@@ -244,6 +262,18 @@ function Workspace({
         payload: Record<string, unknown>,
         label: string,
     ) {
+        if (type.startsWith("sales.")) {
+            if (!morningReady(morning, owner))
+                throw new Error(
+                    "Sesi pagi belum terbuka atau sudah berganti hari. Sync pagi kembali.",
+                );
+            payload = {
+                ...payload,
+                work_session_id: morning!.sessionId,
+                morning_business_date: morning!.businessDate,
+                snapshot_version: morning!.snapshot!.version,
+            };
+        }
         const item = await engine.enqueue(type, payload, label);
         setDialog(undefined);
         setToast(
@@ -283,10 +313,7 @@ function Workspace({
                         go("home");
                     }}
                 >
-                    <span class="brand-mark small">F</span>
-                    <span>
-                        FMCG<span class="wordmark-sub">LAPANGAN</span>
-                    </span>
+                    <Brand />
                 </a>
                 <div class="top-actions">
                     <button
@@ -307,6 +334,15 @@ function Workspace({
                 </div>
             </header>
             <main id="main-content" class="content">
+                {identity.roles.includes("sales") &&
+                    (page === "home" || page === "sales") && (
+                        <MorningSession
+                            identity={identity}
+                            provider={provider}
+                            store={store}
+                            onChange={setMorning}
+                        />
+                    )}
                 {page === "home" && (
                     <>
                         <div class="greeting">
@@ -463,12 +499,7 @@ function Workspace({
                         {identity.roles.includes("sales") ? (
                             <OutletCard
                                 outlet={snapshot.outlets[0]}
-                                open={() =>
-                                    setDialog({
-                                        type: "order",
-                                        outlet: snapshot.outlets[0].id,
-                                    })
-                                }
+                                open={() => openOrder(snapshot.outlets[0].id)}
                             />
                         ) : (
                             <DeliveryCard
@@ -488,9 +519,10 @@ function Workspace({
                             <div>
                                 <strong>Sebelum memulai kunjungan</strong>
                                 <p>
-                                    Absensi, sync pagi dan sesi resmi akan
-                                    divalidasi server. Saat ini seluruh alur
-                                    masih simulasi.
+                                    Selesaikan dua langkah sesi pagi di atas.
+                                    Paket yang tersimpan berlaku sampai
+                                    pergantian hari WITA; otorisasi resmi tetap
+                                    menunggu backend.
                                 </p>
                             </div>
                         </div>
@@ -533,12 +565,7 @@ function Workspace({
                                     <OutletCard
                                         key={o.id}
                                         outlet={o}
-                                        open={() =>
-                                            setDialog({
-                                                type: "order",
-                                                outlet: o.id,
-                                            })
-                                        }
+                                        open={() => openOrder(o.id)}
                                     />
                                 ))}
                         </div>

@@ -1,5 +1,14 @@
 # HANDOFF
 
+## 2026-10-27 — codex agent — Sesi pagi simulator dan branding Odoo FMCG Mobile
+**Basis:** main efd0373 (PR #20 merged), branch agen/mobile-session-brand. Deployment field-pwa dilaporkan pemilik SUCCESS/live terkunci; tidak diubah pada pekerjaan ini.
+**Berubah:** kartu sesi pagi Sales/Canvasser (absensi diterima simulator → sync online), paket snapshot PJP/stok/harga dan sesi atomik per company/persona; order/extra-call baru memerlukan sesi hari WITA yang sama. Reload offline memulihkan paket; error, tanggal/snapshot invalid atau quota gagal tidak membuka sesi.
+**Branding:** nama Odoo FMCG Mobile pada title/manifest/boot/header; wordmark Odoo + badge FMCG, Mobile di bawah, navy kontras. Glyph oi-odoo resmi diekstrak menjadi SVG; icon PNG 192/512, apple-touch 180, favicon 32; atribusi/license lokal. Tidak menyentuh addon desain web; log claude-design dibaca untuk konsistensi.
+**Diverifikasi lokal:** 27 unit, 1 hosting, 18 browser phone/tablet; format/typecheck/OpenAPI drift, demo/live build/budget (demo JS ~38,2 KiB gzip; font 47,1 KiB), Ruff/4 manifest. Preview logo/icon dan screenshot home ditinjau. CI diperiksa setelah push.
+**Batas:** sesi ini simulator client, bukan server auth/security/device binding. Kontrol absensi demo terpisah dari bukti foto map_pending; tidak mengklaim absensi sah. Tanggal perangkat/storage dapat diubah. Backend tetap wajib menerbitkan sesi/tanggal/ACL/approval/evidence; driver tidak digate oleh sesi Sales. Realisasi/settlement belum dikerjakan.
+**Tidak disentuh:** backend/seed/loader, workflow Odoo, Railway/service/domain/mode deployment. Build live tetap terkunci; tombol sesi simulator tidak dikirim ke bundle live.
+**Menunggu:** review PR/CI, merge pemilik dan deploy manual commit yang disetujui agar branding muncul di domain aktif.
+
 ## 2026-10-27 — codex agent — Biaya client dan hosting PWA terisolasi
 **Basis:** main f636129 (PR #19 diterima sebagai fondasi simulasi); branch agen/mobile-expense-hosting.
 **Berubah:** validasi request biaya (H-1 menurut businessDate bootstrap, referensi trip/DO, rupiah bulat, KM BBM dan satu charging scope), schema ExpenseRequest OpenAPI; server hosting Node24, Dockerfile multi-stage live-locked default/demo eksplisit, railway.toml + runbook.

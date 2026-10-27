@@ -1,4 +1,4 @@
-# FMCG Lapangan — frontend-first
+# Odoo FMCG Mobile — frontend-first
 
 Implementasi awal client PWA untuk repo Odoo FMCG. Tidak mengubah backend, loader,
 seed atau deployment Odoo. Paket hosting PWA terisolasi tersedia; belum dideploy. Seluruh fixture independen dari data/seed dan hanya masuk
@@ -44,7 +44,7 @@ simulator pada live. Belum ada publikasi web, integrasi auth nyata atau deploy.
 | Offline shell | Manifest, icon SVG/PNG, asset precache hanya /field; tidak cache API; app update menunggu lifecycle service worker biasa tanpa memaksa reload input |
 
 Ini menutup fondasi dan beberapa alur client PWA-01–04, **bukan seluruh roadmap**.
-English/i18n penuh, tracking perjalanan, geofence workflow lengkap, sesi pagi nyata,
+English/i18n penuh, tracking perjalanan, geofence workflow lengkap, sesi pagi resmi (simulasi tersedia),
 form realisasi/settlement rinci, server notification/approval, snapshot peta, recovery
 session/device, backend receipt/record aktual dan E2E production masih pekerjaan
 berikutnya. Jangan menilai status accepted simulator sebagai bukti Odoo menerima SO.
@@ -121,3 +121,39 @@ limit rupiah, bukti odometer dan seluruh approval. Referensi pada simulasi masih
 input manual; schema dan UI bukan bukti bahwa trip/DO benar-benar ada. Permintaan
 tetap menunggu review simulator, bukan approved/disbursed. Foto masih lokal dan
 map_pending; realisasi/settlement serta limit resmi belum diimplementasi.
+
+## Sesi kerja pagi (simulasi)
+
+Sales dan Canvasser harus menyelesaikan dua langkah pada kartu Sesi kerja pagi:
+**Simulasikan absensi diterima** → **Sync pagi & buka sesi demo**. Kedua langkah
+memerlukan koneksi dan respons simulator Normal. Driver tetap memakai alur Delivery.
+Kontrol ini sengaja terpisah dari form foto absensi: tidak menjadikan foto lokal
+map_pending sebagai absensi sah.
+
+PJP, stok/harga, reference absensi, session UUID dan tanggal bisnis disimpan dalam
+satu record IndexedDB per perusahaan/persona. Ready hanya muncul setelah write
+berhasil. Paket harus lengkap dan bertanggal hari WITA yang sama. Order/extra call
+baru ditahan bila sesi belum siap atau sudah berganti hari. Daftar outlet masih
+bisa dilihat sebagai preview. Setelah sesi siap, paket yang sama dipulihkan saat
+reload offline; peralihan persona tidak memakai sesi persona lain. Outbox yang
+sudah dibuat hari sebelumnya tetap dikirim dengan UUID dan konteks asal.
+
+Ini client simulator, bukan kontrol keamanan: jam lokal/storage dapat dimanipulasi,
+provider demo bukan validator otorisasi, dan tidak ada identitas perangkat atau
+server session. Backend nantinya wajib menerbitkan sesi, menentukan tanggal bisnis,
+memverifikasi absensi/geofence/ACL dan snapshot authoritative. Command sales demo
+menambahkan work_session_id, morning_business_date, snapshot_version sebagai draft
+konteks client; tidak ada endpoint atau addon Odoo baru.
+
+## Branding
+
+Nama aplikasi **Odoo FMCG Mobile**, termasuk title browser, manifest dan layar live.
+Logo horizontal mengikuti referensi pemilik: Odoo + badge FMCG, Mobile pada baris
+kedua, latar navy kontras. Icon memakai glyph oi-odoo besar, label ODOO FMCG lalu
+Mobile. SVG menggunakan outline (termasuk teks), bukan font eksternal. PNG 192/512,
+apple-touch 180 dan favicon 32 tersedia. Sumber/atribusi: branding/UPSTREAM.md.
+Ikon browser 16/32 px mengutamakan bentuk O; tulisan paling jelas pada icon instalasi.
+
+Branding ini baru tersedia setelah merge dan deploy manual commit baru. Deployment
+Railway yang dilaporkan pemilik tetap live terkunci pada baseline PR #20; pekerjaan
+ini tidak mengubah service, mode build, domain atau kebijakan auto-deploy.

@@ -67,3 +67,10 @@
 - CI quality/browser PASS, image live build PASS; curl health mendapat connection reset sebelum listener siap.
 - Gunakan retry-all-errors dengan timeout per request dan retry terbatas; health/static/API tetap wajib sukses. Hasil run baru diperiksa setelah push.
 - Task managed by codex agent at 2026-10-27T06:56:16+07:00
+
+[2026-10-27T08:43:14+07:00] [INFO] Sesi pagi simulator dan branding Odoo FMCG Mobile
+- Basis efd0373, branch agen/mobile-session-brand; backend/seed/loader/deployment tidak diubah.
+- Sales/Canvasser membutuhkan absensi diterima simulator dan sync online; paket sesi/PJP/stok/harga atomik, per company/persona, satu hari WITA; offline restore dan submit guard.
+- Nama/logo/favicon/install icons diganti mengikuti referensi pemilik; wordmark dan glyph oi-odoo resmi, outline lokal, lisensi/atribusi dicatat. Log claude-design dibaca tanpa mengedit addon web.
+- 27 unit + 1 hosting + 18 browser phone/tablet PASS; format/typecheck/contracts/build budget/Ruff/manifest PASS. Live terkunci; CI sesudah push. Realisasi/settlement dan sesi resmi tetap dependency.
+- Task managed by codex agent at 2026-10-27T08:43:14+07:00
