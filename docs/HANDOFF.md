@@ -1,5 +1,32 @@
 # HANDOFF
 
+## 2026-10-28 — antigravity agent — Resolusi Tuntas 4 Temuan Supervisi PR #15 (issuecomment-6473770755): Presisi Singular HPP Proof, Eksak Seed Company Config Parameter, Real ORM Native COGS Verification, dan Deep Rollback Invalidation
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6473770755](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6473770755)):**
+- Menindaklanjuti audit supervisi pada commit `34002a6` yang mengidentifikasi 3 blocker P1 dan 1 temuan P2:
+  1. *[P1 Finding 1] Bukti HPP Wajib Eksak Singular `sm.account_move_id` & Pengetatan Validasi Jurnal (`addons/id_base/models/account_move.py`)*:
+     - Menghapus seluruh fallback pencarian jurnal HPP via `stock_valuation_layer_ids` dan `sm.account_move_ids`.
+     - Menegakkan asersi eksak singular `sm.account_move_id`: wajib ada dan berstatus `posted`, kode jurnal `'STJ'`, company move == invoice == STJ journal, arah pengiriman keluar ke pelanggan (`location_dest_id.usage != 'internal'`), tanggal bisnis jurnal cocok eksak dengan tanggal pergerakan fisik (`sm.date == cogs_am.date`), pasangan akun debit HPP (`510000`) dan kredit Persediaan (`113000`) seimbang, serta nilai valuasi HPP terekonsiliasi terhadap biaya pergerakan barang.
+  2. *[P1 Finding 2] Identitas Seed Company & Source Batch Persisten Eksak (`addons/id_base/models/account_move.py`, `scripts/load_canonical_perpetual.py`)*:
+     - Menolak pencocokan longgar via nama ("Salva") atau kode company ("MDU"/"FMCG").
+     - Mengikat company seed secara eksak via `ir.config_parameter` `fmcg.seed_company_id` atau XMLID `id_base.fmcg_seed_company`.
+     - Menambahkan field persisten `fmcg_seed_batch = fields.Char(string="FMCG Seed Source Batch", default=False, copy=False, index=True)` pada model `account.move`.
+     - Loader menyematkan `"fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL"` dan `invoice_origin` yang cocok dengan SO. Faktur tanpa penanda batch langsung mengalir ke alur native.
+     - Mendukung mixed recordset `(seed | ordinary)`: hanya faktur seed yang disupresi (`[]`), sedangkan faktur non-seed tetap mendelegasikan ke parent native Odoo ORM.
+  3. *[P1 Finding 3] Pembuktian Native COGS & Supresi Seed pada Real Odoo ORM (`addons/id_base/tests/test_account_move_cogs.py`, `scripts/ops/verify_disposable_slice.py`)*:
+     - Memutakhirkan TransactionCase `TestAccountMoveCogs` dengan negative tests lengkap terhadap counterexample supervisi (wrong journal date, wrong valuation amount, wrong product, wrong move company, missing singular account_move_id).
+     - Menambahkan fungsi `verify_native_cogs_and_seed_suppression_real_orm(env)` pada skrip CI disposable container: membuktikan faktur komersial biasa menghasilkan baris COGS native non-kosong, faktur seed mengembalikan `[]`, mixed recordset memisahkan supresi secara presisi, dan vendor bill / customer refund tidak tersupresi.
+  4. *[P2 Finding 4] Eliminasi Mock False-PASS & Pengujian Rollback Database PostgreSQL Nyata (`tests/test_canonical_loader_adapter.py`, `scripts/ops/verify_disposable_slice.py`)*:
+     - Memperbaiki `MockEnv._take_snapshot` dan `_restore_snapshot` pada `test_canonical_loader_adapter.py`: melakukan serialisasi nilai primitif dan deep attribute restoration tanpa cyclic object traversal, membuktikan mutasi in-place pada record existing dipulihkan ke nilai awal dan record baru terhapus.
+     - Menambahkan fungsi `verify_real_database_transaction_rollback(env, reg_path)` pada `verify_disposable_slice.py` di CI container: membuktikan rollback transaksi nyata pada level PostgreSQL melalui savepoint, cache invalidation (`env.invalidate_all()`), dan zero record leakage.
+- Hasil Verifikasi Lokal:
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python -m ruff check .`: All checks passed! (0 error)
+  * Unit tests: 63 adapter tests, 43 invariant tests, 28 acceptance tests, dan 1 reproducibility test lolos 100%
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * 15 file CSV register kanonikal di `data/registers/` 100% beku tanpa modifikasi.
+  * PR #15 tidak dimerge ke `main` dan tidak dideploy ke Railway.
+
 ## 2026-10-28 — antigravity agent — Resolusi Tuntas 3 Temuan Supervisi PR #15 (issuecomment-6470601432): Penanda Seed Persisten & Fail-Closed Hook COGS, Verifikasi Jurnal Valuasi Native Singular `sm.account_move_id`, Readback No-Op Tanggal & Uji Nyata Rollback Transaksi, dan Odoo TransactionCase
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6470601432](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6470601432)):**
 - Menindaklanjuti audit supervisi pada commit `85cbbb9` yang mengidentifikasi 2 blocker P1 dan 1 temuan P2:

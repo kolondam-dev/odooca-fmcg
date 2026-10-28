@@ -323,6 +323,14 @@ class CanonicalPerpetualAdapter:
         self.env = env
         self.cr = env.cr
         self.company = env.company
+        # Daftarkan explicit seed company ID ke ir.config_parameter untuk integritas fail-closed hook COGS
+        if hasattr(self.env, "__getitem__") and "ir.config_parameter" in self.env:
+            try:
+                self.env["ir.config_parameter"].sudo().set_param(
+                    "fmcg.seed_company_id", str(getattr(self.company, "id", 1))
+                )
+            except Exception:
+                pass
         self.reg_path = reg_path or resolve_canonical_dir()
         self.cutoff_date = cutoff_date
 
@@ -2133,6 +2141,8 @@ class CanonicalPerpetualAdapter:
                     }
                     if "is_fmcg_seed_invoice" in am_fields or not am_fields:
                         inv_vals["is_fmcg_seed_invoice"] = True
+                    if "fmcg_seed_batch" in am_fields or not am_fields:
+                        inv_vals["fmcg_seed_batch"] = "CANONICAL_JULY_2026_PERPETUAL"
                     if "invoice_origin" in am_fields or not am_fields:
                         inv_vals["invoice_origin"] = so_num
                     inv = AccountMove.create(inv_vals)

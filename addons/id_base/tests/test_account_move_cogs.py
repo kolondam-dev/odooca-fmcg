@@ -22,6 +22,9 @@ class TestAccountMoveCogs(TransactionCase):
                 "name": "PT Salva Inti Mandiri",
             })
 
+        # Daftarkan ID company seed secara eksak pada ir.config_parameter fmcg.seed_company_id
+        cls.env["ir.config_parameter"].sudo().set_param("fmcg.seed_company_id", str(cls.company_seed.id))
+
         # Foreign company yang mengandung "Salva" untuk menguji ketatnya batas company
         cls.company_foreign = cls.env["res.company"].search([("name", "=", "PT Salva Trading Indonesia")], limit=1)
         if not cls.company_foreign:
@@ -40,6 +43,11 @@ class TestAccountMoveCogs(TransactionCase):
             "name": "SKU FMCG Test",
             "standard_price": 25000.0,
             "list_price": 30000.0,
+        })
+        cls.product_alt = cls.env["product.product"].create({
+            "name": "SKU Foreign Test",
+            "standard_price": 50000.0,
+            "list_price": 60000.0,
         })
 
         # Seed company accounts & journals (distinct codes ending in 1)
@@ -134,7 +142,7 @@ class TestAccountMoveCogs(TransactionCase):
         MoveModel = self.env["account.move"]
         target_model = MoveModel.with_company(company) if hasattr(MoveModel, "with_company") else MoveModel
 
-        return target_model.create({
+        vals = {
             "move_type": move_type,
             "partner_id": partner.id,
             "company_id": company.id,
@@ -148,7 +156,53 @@ class TestAccountMoveCogs(TransactionCase):
                     "price_unit": 30000.0,
                 }),
             ],
-        })
+        }
+        if is_seed:
+            vals["fmcg_seed_batch"] = "CANONICAL_JULY_2026_PERPETUAL"
+            vals["invoice_origin"] = "SO-202607-0001"
+
+        return target_model.create(vals)
+
+    def _build_valid_stj_and_sm(self):
+        """Helper untuk membuat pasangan valid stock move dan STJ account.move."""
+        aml_debit = SimpleNamespace(
+            account_id=SimpleNamespace(code="510000"),
+            debit=250000.0,
+            credit=0.0,
+        )
+        aml_credit = SimpleNamespace(
+            account_id=SimpleNamespace(code="113000"),
+            debit=0.0,
+            credit=250000.0,
+        )
+        valid_stj_am = SimpleNamespace(
+            id=993,
+            name="STJ/2026/001",
+            state="posted",
+            date="2026-07-02",
+            company_id=self.company_seed,
+            journal_id=SimpleNamespace(code="STJ"),
+            line_ids=[aml_debit, aml_credit],
+        )
+        fake_sm = SimpleNamespace(
+            id=883,
+            name="OUT/TEST/03",
+            state="done",
+            date="2026-07-02",
+            quantity=10.0,
+            value=250000.0,
+            product_id=self.product,
+            company_id=self.company_seed,
+            location_dest_id=SimpleNamespace(usage="customer"),
+            location_id=SimpleNamespace(usage="internal"),
+            account_move_id=valid_stj_am,
+        )
+        fake_sol = SimpleNamespace(
+            name="SO Line 1",
+            order_id=SimpleNamespace(name="SO-202607-0001", company_id=self.company_seed),
+            move_ids=[fake_sm],
+        )
+        return fake_sol, fake_sm, valid_stj_am
 
     def test_non_seed_invoice_in_seed_company_calls_native(self):
         """Kasus 1: Invoice biasa tanpa penanda seed di seed company dilarang dianggap seed."""
@@ -183,7 +237,11 @@ class TestAccountMoveCogs(TransactionCase):
 
         # 3b: Dengan sale_line_ids tetapi tanpa pergerakan pengiriman (move_ids kosong)
         line = inv.invoice_line_ids[0]
-        fake_sol_empty = SimpleNamespace(move_ids=[])
+        fake_sol_empty = SimpleNamespace(
+            name="Empty SOL",
+            order_id=SimpleNamespace(name="SO-202607-0001", company_id=self.company_seed),
+            move_ids=[],
+        )
         with patch.object(type(line), "sale_line_ids", [fake_sol_empty], create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
@@ -194,7 +252,6 @@ class TestAccountMoveCogs(TransactionCase):
         inv = self._create_basic_invoice(self.company_seed, is_seed=True)
         line = inv.invoice_line_ids[0]
 
-        # Pasang mock pergerakan barang dengan jurnal valuasi draft
         bad_journal_am = SimpleNamespace(
             id=991,
             name="STJ/DRAFT/01",
@@ -208,8 +265,17 @@ class TestAccountMoveCogs(TransactionCase):
             name="OUT/TEST/01",
             state="done",
             account_move_id=bad_journal_am,
+            company_id=self.company_seed,
+            product_id=self.product,
+            location_dest_id=SimpleNamespace(usage="customer"),
+            location_id=SimpleNamespace(usage="internal"),
+            quantity=10.0,
+            date="2026-07-02",
         )
-        fake_sol = SimpleNamespace(move_ids=[fake_sm])
+        fake_sol = SimpleNamespace(
+            order_id=SimpleNamespace(name="SO-202607-0001", company_id=self.company_seed),
+            move_ids=[fake_sm],
+        )
 
         with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
             with self.assertRaises(UserError) as ctx:
@@ -234,8 +300,17 @@ class TestAccountMoveCogs(TransactionCase):
             name="OUT/TEST/02",
             state="done",
             account_move_id=wrong_journal_am,
+            company_id=self.company_seed,
+            product_id=self.product,
+            location_dest_id=SimpleNamespace(usage="customer"),
+            location_id=SimpleNamespace(usage="internal"),
+            quantity=10.0,
+            date="2026-07-02",
         )
-        fake_sol = SimpleNamespace(move_ids=[fake_sm])
+        fake_sol = SimpleNamespace(
+            order_id=SimpleNamespace(name="SO-202607-0001", company_id=self.company_seed),
+            move_ids=[fake_sm],
+        )
 
         with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
             with self.assertRaises(UserError) as ctx:
@@ -246,38 +321,112 @@ class TestAccountMoveCogs(TransactionCase):
         """Kasus 5: Invoice seed valid dengan bukti HPP lengkap singular account_move_id STJ mengembalikan []."""
         inv = self._create_basic_invoice(self.company_seed, is_seed=True)
         line = inv.invoice_line_ids[0]
-
-        aml_debit = SimpleNamespace(
-            account_id=SimpleNamespace(code="510000"),
-            debit=250000.0,
-            credit=0.0,
-        )
-        aml_credit = SimpleNamespace(
-            account_id=SimpleNamespace(code="113000"),
-            debit=0.0,
-            credit=250000.0,
-        )
-        valid_stj_am = SimpleNamespace(
-            id=993,
-            name="STJ/2026/001",
-            state="posted",
-            company_id=self.company_seed,
-            journal_id=SimpleNamespace(code="STJ"),
-            line_ids=[aml_debit, aml_credit],
-        )
-        fake_sm = SimpleNamespace(
-            id=883,
-            name="OUT/TEST/03",
-            state="done",
-            account_move_id=valid_stj_am,
-        )
-        fake_sol = SimpleNamespace(move_ids=[fake_sm])
+        fake_sol, _, _ = self._build_valid_stj_and_sm()
 
         with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
             self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
             # COGS duplikat disupresi (mengembalikan [])
             out_vals = inv._stock_account_prepare_realtime_out_lines_vals()
             self.assertEqual(out_vals, [])
+
+    def test_wrong_journal_date_rejected(self):
+        """Kasus P1: Jurnal STJ dengan tanggal beda (e.g. 1999-01-01) wajib ditolak fail-closed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        fake_sol, _, valid_stj_am = self._build_valid_stj_and_sm()
+        valid_stj_am.date = "1999-01-01"
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("Tanggal jurnal valuasi '1999-01-01' tidak cocok", str(ctx.exception))
+
+    def test_wrong_valuation_value_rejected(self):
+        """Kasus P1: Jurnal STJ dengan nilai tidak cocok (e.g. 1.0 vs 250000.0) wajib ditolak fail-closed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        fake_sol, _, valid_stj_am = self._build_valid_stj_and_sm()
+        # Modifikasi nilai debit/credit di STJ menjadi 1.0 padahal move.value = 250000.0
+        for aml in valid_stj_am.line_ids:
+            if aml.debit > 0:
+                aml.debit = 1.0
+            if aml.credit > 0:
+                aml.credit = 1.0
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("tidak sesuai dengan nilai valuasi pergerakan barang", str(ctx.exception))
+
+    def test_wrong_product_on_move_rejected(self):
+        """Kasus P1: Pergerakan stok produk beda dengan baris faktur wajib ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
+        fake_sm.product_id = self.product_alt
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("tidak cocok dengan produk baris faktur", str(ctx.exception))
+
+    def test_wrong_move_company_rejected(self):
+        """Kasus P1: Pergerakan stok dari company lain wajib ditolak fail-closed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
+        fake_sm.company_id = self.company_foreign
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("berasal dari company lain", str(ctx.exception))
+
+    def test_missing_seed_batch_rejected(self):
+        """Kasus P1: Invoice bertanda is_fmcg_seed_invoice tanpa batch persisten ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        inv.fmcg_seed_batch = False
+        with self.assertRaises(UserError) as ctx:
+            inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("tidak memiliki penanda fmcg_seed_batch", str(ctx.exception))
+
+    def test_missing_singular_account_move_id_rejected(self):
+        """Kasus P1: Stock move tanpa singular account_move_id wajib ditolak fail-closed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
+        fake_sm.account_move_id = False
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("account_move_id kosong", str(ctx.exception))
+
+    def test_mixed_recordset_suppresses_only_seed(self):
+        """Kasus P1: Recordset campuran (seed + ordinary) hanya mensupresi seed dan memanggil native untuk non-seed."""
+        inv_seed = self._create_basic_invoice(self.company_seed, is_seed=True)
+        inv_ordinary = self._create_basic_invoice(self.company_seed, is_seed=False)
+
+        line_seed = inv_seed.invoice_line_ids[0]
+        fake_sol, _, _ = self._build_valid_stj_and_sm()
+
+        mixed_moves = inv_seed | inv_ordinary
+
+        # Mock parent native call pada class AccountMove
+        with patch.object(type(line_seed), "sale_line_ids", [fake_sol], create=True):
+            # inv_seed adalah seed valid
+            self.assertTrue(inv_seed._is_seed_commercial_invoice_with_posted_delivery_cogs())
+            # inv_ordinary adalah non-seed
+            self.assertFalse(inv_ordinary._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+            patch_target = (
+                "odoo.addons.stock_account.models.account_move.AccountMove"
+                "._stock_account_prepare_realtime_out_lines_vals"
+            )
+            with patch(patch_target, return_value=[{"account_id": 510000, "debit": 99000.0}], create=True):
+                mixed_res = mixed_moves._stock_account_prepare_realtime_out_lines_vals()
+                # Hasil parent native HANYA dipanggil untuk non-seed moves
+                self.assertEqual(mixed_res, [{"account_id": 510000, "debit": 99000.0}])
 
     def test_vendor_bill_and_refund_call_native(self):
         """Kasus 6: Vendor bill dan refund pelanggan tidak pernah disupresi oleh hook seed."""
@@ -286,4 +435,3 @@ class TestAccountMoveCogs(TransactionCase):
 
         refund = self._create_basic_invoice(self.company_seed, is_seed=True, move_type="out_refund")
         self.assertFalse(refund._is_seed_commercial_invoice_with_posted_delivery_cogs())
-

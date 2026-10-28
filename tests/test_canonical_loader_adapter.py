@@ -278,6 +278,16 @@ class MockRecord:
     def with_company(self, company):
         return self
 
+    def get_param(self, key, default=False):
+        if not hasattr(self, "_params"):
+            self._params = {}
+        return self._params.get(key, default)
+
+    def set_param(self, key, value):
+        if not hasattr(self, "_params"):
+            self._params = {}
+        self._params[key] = str(value)
+
     def unlink(self):
         if self._env and self._model in self._env:
             self._env[self._model].store.pop(self.id, None)
@@ -803,6 +813,16 @@ class MockModel:
     def with_company(self, company):
         return self
 
+    def get_param(self, key, default=False):
+        if not hasattr(self, "_params"):
+            self._params = {}
+        return self._params.get(key, default)
+
+    def set_param(self, key, value):
+        if not hasattr(self, "_params"):
+            self._params = {}
+        self._params[key] = str(value)
+
     def search(self, domain=None, limit=None, order=None, **kwargs):
         domain = domain or []
         results = []
@@ -877,6 +897,38 @@ class MockCursor:
             self.env._restore_snapshot()
 
 
+def _serialize_val(val):
+    if isinstance(val, (int, float, str, bool, type(None))):
+        return val
+    elif hasattr(val, "id"):
+        return ("__rec__", getattr(val, "_model", ""), val.id)
+    elif isinstance(val, tuple):
+        return tuple(_serialize_val(x) for x in val)
+    elif isinstance(val, list):
+        return [_serialize_val(x) for x in val]
+    elif isinstance(val, dict):
+        return {k: _serialize_val(v) for k, v in val.items() if k not in ("_env", "_model")}
+    else:
+        return str(val)
+
+
+def _restore_val(val, env):
+    if isinstance(val, (int, float, str, bool, type(None))):
+        return val
+    elif isinstance(val, (list, tuple)):
+        if len(val) == 3 and val[0] == "__rec__":
+            m_name, rec_id = val[1], val[2]
+            if m_name and m_name in env and rec_id in env[m_name].store:
+                return env[m_name].store[rec_id]
+            return None
+        if isinstance(val, tuple):
+            return tuple(_restore_val(x, env) for x in val)
+        return [_restore_val(x, env) for x in val]
+    elif isinstance(val, dict):
+        return {k: _restore_val(v, env) for k, v in val.items()}
+    return val
+
+
 class MockEnv(dict):
     def __init__(self):
         super().__init__()
@@ -891,17 +943,46 @@ class MockEnv(dict):
         for m in models:
             self[m] = MockModel(m, env=self)
         self.company.partner_id = self["res.partner"].create({"name": "PT MDU", "ref": "COMPANY"})
+        self["ir.config_parameter"].set_param("fmcg.seed_company_id", str(self.company.id))
         self._initial_snapshot = None
 
     def _take_snapshot(self):
-        return {m: dict(self[m].store) for m in self}
+        snapshot = {}
+        for m in self:
+            snapshot[m] = {}
+            for rec_id, rec in self[m].store.items():
+                vals_copy = {
+                    k: _serialize_val(v)
+                    for k, v in getattr(rec, "_vals", {}).items()
+                    if k not in ("_env", "_model")
+                }
+                attrs_copy = {
+                    k: _serialize_val(v)
+                    for k, v in rec.__dict__.items()
+                    if k not in ("_env", "_model", "_vals")
+                }
+                snapshot[m][rec_id] = {
+                    "vals": vals_copy,
+                    "attrs": attrs_copy,
+                }
+        return snapshot
 
     def _restore_snapshot(self, snapshot=None):
         snap = snapshot or getattr(self, "_initial_snapshot", None)
         if snap:
-            for m, store_copy in snap.items():
+            for m, model_snap in snap.items():
                 if m in self:
-                    self[m].store = dict(store_copy)
+                    # Hapus record baru yang dibuat setelah snapshot
+                    for rec_id in list(self[m].store.keys()):
+                        if rec_id not in model_snap:
+                            del self[m].store[rec_id]
+                    # Pulihkan state record yang ada
+                    for rec_id, data in model_snap.items():
+                        if rec_id in self[m].store:
+                            rec = self[m].store[rec_id]
+                            rec._vals = {k: _restore_val(v, self) for k, v in data["vals"].items()}
+                            for k, v in data["attrs"].items():
+                                setattr(rec, k, _restore_val(v, self))
 
     def __missing__(self, key):
         model = MockModel(key, env=self)
@@ -3022,21 +3103,29 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertIn("no-op write terdeteksi", str(ctx.exception))
         self.assertEqual(spy_validate_calls, 0, "button_validate dilarang dipanggil bila tanggal tidak tersimpan!")
 
-    def test_transaction_failure_triggers_actual_rollback(self):
-        """Review 6470601432 P2: Kegagalan transaksi di run_all wajib memicu rollback dan snapshot DB identik."""
+    def test_run_all_failure_aborts_commit_and_invokes_rollback(self):
+        """Review 6473770755 Finding 4: Kegagalan transaksi di run_all wajib memicu rollback,
+        membatalkan commit, mengembalikan record existing yang dimutasi, dan menghapus record baru.
+        """
         env = setup_standard_mock_env()
         adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
 
-        # Simpan snapshot awal database sebelum transaksi dijalankan
+        # Buat record PO yang sudah ada sebelum transaksi
+        existing_po = env["purchase.order"].create({"name": "PO-EXISTING-BEFORE"})
+
+        # Simpan snapshot awal database (deep serialized values)
         initial_snapshot = env._take_snapshot()
         env._initial_snapshot = initial_snapshot
 
         # Injeksi kegagalan fatal pada tahap pemuatan purchase orders
         def faulty_load_inbound_pos():
-            # Lakukan mutasi parsial pada database untuk menguji rollback
+            # Mutasi record yang sudah ada
+            existing_po.write({"name": "PO-EXISTING-AFTER"})
+            # Buat record baru parsial yang seharusnya terhapus saat rollback
             env["purchase.order"].create({"name": "PO-LEAK-PARTIAL-001"})
             raise RuntimeError("Database trigger failure during PO loading!")
 
+        adapter.load_opening_stock = lambda: None
         adapter.load_inbound_pos = faulty_load_inbound_pos
 
         with self.assertRaises(RuntimeError) as ctx:
@@ -3046,11 +3135,14 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertTrue(env.cr.rollbacked, "Transaction rollback wajib dipanggil!")
         self.assertFalse(env.cr.committed, "Transaction commit dilarang dipanggil bila ada error!")
 
+        # Pastikan record yang sudah ada kembali ke nilai awal
+        self.assertEqual(existing_po.name, "PO-EXISTING-BEFORE", "Record existing wajib dipulihkan ke nilai awal!")
+        # Pastikan tidak ada record purchase.order bocor
+        self.assertEqual(len(env["purchase.order"].store), len(initial_snapshot.get("purchase.order", {})),
+                         "Tidak boleh ada record purchase.order bocor setelah rollback!")
         # Pastikan snapshot database setelah rollback identik dengan sebelum transaksi
         after_snapshot = env._take_snapshot()
         self.assertEqual(after_snapshot, initial_snapshot, "Database rollback wajib memulihkan snapshot tanpa leak!")
-        self.assertEqual(len(env["purchase.order"].store), len(initial_snapshot.get("purchase.order", {})),
-                         "Tidak boleh ada record purchase.order bocor setelah rollback!")
 
     def test_noop_location_write_rejected_by_readback(self):
         """Review 6469576922 Finding 2: No-op write (tidak raise tapi field tidak berubah) wajib ditolak readback."""
@@ -3143,19 +3235,35 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         cogs_am = MockRecord({
             "name": "STJ/2026/07/0001",
             "state": "posted",
+            "date": "2026-07-02",
             "company_id": env.company,
             "journal_id": stj_journal,
             "line_ids": MockRecordList([aml_debit, aml_credit]),
         }, "account.move", 801, env)
 
+        cust_loc = MockRecord({"usage": "customer"}, "stock.location", 99, env)
+        wh_loc = MockRecord({"usage": "internal"}, "stock.location", 1, env)
+
         sm_done = MockRecord({
             "name": "WH/OUT/0001",
             "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 10.0,
+            "date": "2026-07-02",
+            "value": 150000.0,
             "account_move_id": cogs_am,
         }, "stock.move", 101, env)
-        sol = MockRecord({"name": "SOL-001", "move_ids": MockRecordList([sm_done])}, "sale.order.line", 201, env)
+        sol = MockRecord({
+            "name": "SOL-001",
+            "order_id": MockRecord({"name": "SO-202607-0001", "company_id": env.company}, "sale.order", 1, env),
+            "move_ids": MockRecordList([sm_done]),
+        }, "sale.order.line", 201, env)
         inv_line = MockRecord({
             "product_id": prod,
+            "quantity": 10.0,
             "display_type": "product",
             "sale_line_ids": MockRecordList([sol]),
         }, "account.move.line", 301, env)
@@ -3163,6 +3271,8 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         seed_inv = MockAccountMoveModel({
             "move_type": "out_invoice",
             "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
             "company_id": env.company,
             "invoice_line_ids": MockRecordList([inv_line]),
         }, env)
@@ -3186,30 +3296,43 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         foreign_inv = MockAccountMoveModel({
             "move_type": "out_invoice",
             "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
             "company_id": foreign_co,
             "invoice_line_ids": MockRecordList([inv_line]),
         }, env)
         with self.assertRaises(UserError) as ctx:
             foreign_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
-        self.assertIn("bukan perusahaan seed FMCG", str(ctx.exception))
+        self.assertIn("bukan company seed resmi FMCG", str(ctx.exception))
 
         # 4. Ditandai seed tetapi delivery belum selesai (state != 'done') -> Fail-closed UserError
         sm_draft = MockRecord({
             "name": "WH/OUT/0002",
             "state": "confirmed",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 10.0,
+            "date": "2026-07-02",
             "account_move_id": cogs_am,
         }, "stock.move", 102, env)
+        so_seed = MockRecord({"name": "SO-202607-0001", "company_id": env.company}, "sale.order", 1, env)
         sol_undone = MockRecord(
-            {"name": "SOL-002", "move_ids": MockRecordList([sm_draft])}, "sale.order.line", 202, env
+            {"name": "SOL-002", "order_id": so_seed,
+             "move_ids": MockRecordList([sm_draft])}, "sale.order.line", 202, env
         )
         inv_line_undone = MockRecord({
             "product_id": prod,
+            "quantity": 10.0,
             "display_type": "product",
             "sale_line_ids": MockRecordList([sol_undone]),
         }, "account.move.line", 302, env)
         undone_inv = MockAccountMoveModel({
             "move_type": "out_invoice",
             "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
             "company_id": env.company,
             "invoice_line_ids": MockRecordList([inv_line_undone]),
         }, env)
@@ -3221,19 +3344,29 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         sm_no_hpp = MockRecord({
             "name": "WH/OUT/0003",
             "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 10.0,
+            "date": "2026-07-02",
             "account_move_id": False,
         }, "stock.move", 103, env)
         sol_no_hpp = MockRecord(
-            {"name": "SOL-003", "move_ids": MockRecordList([sm_no_hpp])}, "sale.order.line", 203, env
+            {"name": "SOL-003", "order_id": so_seed,
+             "move_ids": MockRecordList([sm_no_hpp])}, "sale.order.line", 203, env
         )
         inv_line_no_hpp = MockRecord({
             "product_id": prod,
+            "quantity": 10.0,
             "display_type": "product",
             "sale_line_ids": MockRecordList([sol_no_hpp]),
         }, "account.move.line", 303, env)
         no_hpp_inv = MockAccountMoveModel({
             "move_type": "out_invoice",
             "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
             "company_id": env.company,
             "invoice_line_ids": MockRecordList([inv_line_no_hpp]),
         }, env)
@@ -3245,6 +3378,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         cogs_unposted = MockRecord({
             "name": "STJ/2026/07/0002",
             "state": "draft",
+            "date": "2026-07-02",
             "company_id": env.company,
             "journal_id": stj_journal,
             "line_ids": MockRecordList([aml_debit, aml_credit]),
@@ -3252,19 +3386,30 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         sm_unposted = MockRecord({
             "name": "WH/OUT/0004",
             "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 10.0,
+            "date": "2026-07-02",
+            "value": 150000.0,
             "account_move_id": cogs_unposted,
         }, "stock.move", 104, env)
         sol_unposted = MockRecord(
-            {"name": "SOL-004", "move_ids": MockRecordList([sm_unposted])}, "sale.order.line", 204, env
+            {"name": "SOL-004", "order_id": so_seed,
+             "move_ids": MockRecordList([sm_unposted])}, "sale.order.line", 204, env
         )
         inv_line_unposted = MockRecord({
             "product_id": prod,
+            "quantity": 10.0,
             "display_type": "product",
             "sale_line_ids": MockRecordList([sol_unposted]),
         }, "account.move.line", 304, env)
         unposted_inv = MockAccountMoveModel({
             "move_type": "out_invoice",
             "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
             "company_id": env.company,
             "invoice_line_ids": MockRecordList([inv_line_unposted]),
         }, env)
@@ -3272,7 +3417,139 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             unposted_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
         self.assertIn("belum berstatus 'posted'", str(ctx.exception))
 
-        # 7. Vendor Bill (in_invoice) atau Refund (out_refund) -> Pengecualian dilarang (False, native)
+        # 7. Tanggal jurnal valuasi salah (1999-01-01) -> Fail-closed UserError (Review 6473770755 Finding 1)
+        cogs_wrong_date = MockRecord({
+            "name": "STJ/1999/01/0001",
+            "state": "posted",
+            "date": "1999-01-01",
+            "company_id": env.company,
+            "journal_id": stj_journal,
+            "line_ids": MockRecordList([aml_debit, aml_credit]),
+        }, "account.move", 803, env)
+        sm_wrong_date = MockRecord({
+            "name": "WH/OUT/0005",
+            "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 10.0,
+            "date": "2026-07-02",
+            "value": 150000.0,
+            "account_move_id": cogs_wrong_date,
+        }, "stock.move", 105, env)
+        sol_wrong_date = MockRecord(
+            {"name": "SOL-005", "order_id": so_seed,
+             "move_ids": MockRecordList([sm_wrong_date])}, "sale.order.line", 205, env
+        )
+        inv_line_wrong_date = MockRecord({
+            "product_id": prod,
+            "quantity": 10.0,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol_wrong_date]),
+        }, "account.move.line", 305, env)
+        wrong_date_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line_wrong_date]),
+        }, env)
+        with self.assertRaises(UserError) as ctx:
+            wrong_date_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("tidak cocok dengan tanggal pergerakan stok", str(ctx.exception))
+
+        # 8. Nilai valuasi tidak seimbang atau tidak sesuai (Rp 1 vs Rp 150.000) -> Fail-closed UserError
+        aml_debit_wrong_val = MockRecord({
+            "account_id": MockRecord({"code": "510000"}, "account.account", 1, env),
+            "debit": 1.0,
+            "credit": 0.0,
+        }, "account.move.line", 903, env)
+        aml_credit_wrong_val = MockRecord({
+            "account_id": MockRecord({"code": "113000"}, "account.account", 2, env),
+            "debit": 0.0,
+            "credit": 1.0,
+        }, "account.move.line", 904, env)
+        cogs_wrong_val = MockRecord({
+            "name": "STJ/2026/07/0003",
+            "state": "posted",
+            "date": "2026-07-02",
+            "company_id": env.company,
+            "journal_id": stj_journal,
+            "line_ids": MockRecordList([aml_debit_wrong_val, aml_credit_wrong_val]),
+        }, "account.move", 804, env)
+        sm_wrong_val = MockRecord({
+            "name": "WH/OUT/0006",
+            "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 10.0,
+            "date": "2026-07-02",
+            "value": 150000.0,
+            "account_move_id": cogs_wrong_val,
+        }, "stock.move", 106, env)
+        sol_wrong_val = MockRecord(
+            {"name": "SOL-006", "order_id": so_seed,
+             "move_ids": MockRecordList([sm_wrong_val])}, "sale.order.line", 206, env
+        )
+        inv_line_wrong_val = MockRecord({
+            "product_id": prod,
+            "quantity": 10.0,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol_wrong_val]),
+        }, "account.move.line", 306, env)
+        wrong_val_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line_wrong_val]),
+        }, env)
+        with self.assertRaises(UserError) as ctx:
+            wrong_val_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("tidak sesuai dengan nilai valuasi pergerakan barang", str(ctx.exception))
+
+        # 9. Stock move dari company berbeda (ID 777) -> Fail-closed UserError (Review 6473770755 Finding 1)
+        foreign_move_co = MockRecord({"name": "Foreign Stock Co", "id": 777}, "res.company", 777, env)
+        sm_foreign_comp = MockRecord({
+            "name": "WH/OUT/0007",
+            "state": "done",
+            "product_id": prod,
+            "company_id": foreign_move_co,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 10.0,
+            "date": "2026-07-02",
+            "value": 150000.0,
+            "account_move_id": cogs_am,
+        }, "stock.move", 107, env)
+        sol_foreign_move = MockRecord(
+            {"name": "SOL-007", "order_id": so_seed,
+             "move_ids": MockRecordList([sm_foreign_comp])}, "sale.order.line", 207, env
+        )
+        inv_line_foreign_move = MockRecord({
+            "product_id": prod,
+            "quantity": 10.0,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol_foreign_move]),
+        }, "account.move.line", 307, env)
+        foreign_move_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line_foreign_move]),
+        }, env)
+        with self.assertRaises(UserError) as ctx:
+            foreign_move_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("berasal dari company lain", str(ctx.exception))
+
+        # 10. Vendor Bill (in_invoice) atau Refund (out_refund) -> Pengecualian dilarang (False, native)
         bill = MockAccountMoveModel({
             "move_type": "in_invoice",
             "is_fmcg_seed_invoice": True,
