@@ -1,5 +1,33 @@
 # HANDOFF
 
+## 2026-10-28 — antigravity agent — Resolusi Tuntas 5 Blocker Audit Commit 182296f (PR #15 issuecomment-6466832055): Restorasi `product_id`/`UoM`/`sale_line_ids` Faktur Tanpa Double COGS, Isolasi 5 Lokasi & Kategori Seed, Verifikasi Lokasi/Tanggal `stock.move` & `stock.move.line`, Akun/Partner/Nominal OPEX, dan Keunikan Dokumen (20 Mutasi Negatif)
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6466832055](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6466832055)):**
+- Menindaklanjuti audit supervisi pada commit `182296f` yang mengidentifikasi 5 blocker P1 sebelum merge:
+  1. *Blocker 1 — [Regresi] `product_id` Dihapus dari Baris Faktur `out_invoice` (`scripts/load_canonical_perpetual.py`, `scripts/ops/verify_disposable_slice.py`)*:
+     - Mengembalikan `"product_id": pr.id`, `"product_uom_id": uom_rec.id`, `"sale_line_ids": [(6, 0, [matched_sol.id])]`, dan `"invoice_origin": so_num` pada `out_invoice.invoice_line_ids`.
+     - Mencegah COGS ganda di Odoo 19 tanpa menghapus `product_id`: mem-posting `out_invoice` dengan `inv.with_context(move_reverse_cancel=True).action_post()` (pada Odoo 19 `addons/stock_account/models/account_move.py:30-31`, konteks tersebut melewati pembuatan ulang baris `display_type == 'cogs'` saat posting faktur sambil menjalankan `super()._post(soft)` secara penuh, karena HPP real-time telah dibukukan di jurnal stok `STJ` saat delivery/retur).
+     - Memperketat oracle Seksi 5 untuk memverifikasi `product_id`, `product_uom_id`, `sale_line_ids`, kuantitas net, harga satuan DPP, diskon, serta ketiadaan baris `display_type == 'cogs'` pada `out_invoice`, ditambah **Mutasi 12** (penghapusan `product_id` pada baris `out_invoice`).
+  2. *Blocker 2 — Scope Konfigurasi Lokasi & Kategori Masih Meliputi Non-Seed dalam Company yang Sama / Shared (`scripts/load_canonical_perpetual.py`)*:
+     - Menghapus loop atas `StockLocation.search([("usage", "=", "internal")])` dan `StockLocation.search([("usage", "in", ...)])`.
+     - Me-resolve secara unik tepat 5 lokasi eksplisit milik company seed (`company_id = self.company.id`): `self.wh_stock_loc`, `self.quarantine_loc` (`Karantina FMCG Maumbi`), `self.seed_inventory_loc` (`Inventory Adjustment FMCG Maumbi`), `self.seed_supplier_loc` (`Suppliers FMCG Maumbi`), dan `self.seed_customer_loc` (`Customers FMCG Maumbi`), serta hanya menulis `valuation_account_id` pada kelima lokasi tersebut. Lokasi shared (`company_id=False`), lokasi bisnis lain dalam company yang sama (`WH Other Business`), dan lokasi company lain 100% tidak tersentuh.
+     - Mengisolasi setiap `product.category` yang dipakai bersama produk non-seed ke kategori khusus `"FMCG Seed Perpetual"` sebelum menulis konfigurasi valuasi kategori, serta mengeset `property_stock_inventory = self.seed_inventory_loc.id` pada 150 produk kanonikal.
+     - Melengkapi `stock.location._fields` dan `product.category._fields` pada `setup_standard_mock_env()` di `tests/test_canonical_loader_adapter.py`.
+  3. *Blocker 3 — Oracle Stok Masih Meloloskan Lokasi Salah dan Tanggal `stock.move` Salah (`scripts/ops/verify_disposable_slice.py`)*:
+     - Menghapus fallback `or "karantina" not in loc_name.lower()` pada verifikasi `StockQuant` Seksi 4; mewajibkan `loc_id == wh_loc.id` atau `loc_id == quar_loc.id` serta `company_id == seed_comp_id`.
+     - Memverifikasi `location_id`, `location_dest_id`, dan tanggal efektif (`date`) pada **setiap** `stock.move` **dan** `stock.move.line` di seluruh 4 fase pergerakan stok (Opening, Inbound PO, Delivery SO, Retur Karantina).
+     - Menambahkan **Mutasi 13** (lokasi gudang salah `WH Other Business` di company sama), **Mutasi 14** (lokasi milik company lain), **Mutasi 15** (`stock.move.date` saja diubah), dan **Mutasi 16** (`stock.move.line.date` saja diubah).
+  4. *Blocker 4 — OPEX Seimbang tetapi Salah Nominal/Akun/Partner Masih Diterima (`scripts/load_canonical_perpetual.py`, `scripts/ops/verify_disposable_slice.py`)*:
+     - Memetakan 4 kategori OPEX ke akun beban eksplisit (`610100` Logistik Rutin, `610200` Payroll Karyawan, `610300` Lembur Gudang & Logistik, `610400` Sewa & Utilitas) dan 3 `payment_type` ke partner operasional eksplisit (`OPEX-KASIR`, `OPEX-PAYROLL`, `OPEX-VENDOR-UTIL`, menolak keras `self.company.partner_id`).
+     - Memverifikasi keunikan, tanggal, partner operasional, kategori/deskripsi, akun debit beban & nominal, akun kredit payable & nominal per dokumen OPEX, serta saldo GL per akun beban dan total agregat `Rp 394.350.000,00`, ditambah **Mutasi 17** (OPEX seimbang salah nominal `+Rp 1.000.000`) dan **Mutasi 18** (OPEX salah akun beban `610100` -> `610400`).
+  5. *Blocker 5 — Exact-Set Identifier Belum Menjamin Dokumen Unik & Rekonsiliasi Eksak (`scripts/ops/verify_disposable_slice.py`, `scripts/load_canonical_perpetual.py`)*:
+     - Menegakkan keunikan kardinalitas penuh (`len(actual_list) == len(expected_set)` dan `_assert_unique_record()` tanpa `limit=1`) pada `PurchaseOrder`, `SaleOrder`, `StockPicking`, `out_invoice`, `in_invoice`, `DISC-%`, dan `AccountPayment`, serta verifikasi pasangan rekonsiliasi eksak (`_verify_exact_reconciliation_pair`), ditambah **Mutasi 19** (duplikasi `PurchaseOrder` `PO-2026-06-01`) dan **Mutasi 20** (duplikasi `SaleOrder` `SO-202607-0001`).
+- Hasil verifikasi lokal:
+  * `python -m ruff check .`: All checks passed! (0 lint errors)
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python -m unittest discover -s tests`: 126 tests OK (termasuk 20 mutasi negatif terisolasi dan unit test khusus Blocker 1–5)
+  * 15 file CSV register kanonikal di `data/registers/` 100% utuh tanpa perubahan.
+  * PR #15 tidak dimerge dan tidak dideploy ke Railway.
+
 ## 2026-10-28 — antigravity agent — Resolusi Tuntas 4 Blocker Audit Commit 5a9d216 (PR #15 issuecomment-6457571281): Exact-Set Oracle, Saldo Absolut Stok/GL & Jurnal Valuasi Native, Read-Only Posted Journal Guard, dan Isolasi Scope Multi-Company
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6457571281](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6457571281)):**
 - Menindaklanjuti audit supervisi pada commit `5a9d216` yang menemukan 4 celah P1 sebelum merge:

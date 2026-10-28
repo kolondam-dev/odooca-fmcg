@@ -70,14 +70,26 @@ class MockRecordList(list):
                 else:
                     rec.reconciled = False
             return
+        full_rec = MockRecord({"name": "FullReconcile"}, "account.full.reconcile", id(self))
+        peer_move_ids = [
+            getattr(getattr(r, "move_id", None), "id", None)
+            for r in self
+            if getattr(getattr(r, "move_id", None), "id", None)
+        ]
         for rec in self:
             rec.reconciled = True
+            rec.full_reconcile_id = full_rec
+            my_mid = getattr(getattr(rec, "move_id", None), "id", None)
+            rec._reconciled_peer_move_ids = [m for m in peer_move_ids if m != my_mid]
             pay_obj = getattr(rec, "_payment", None)
             if pay_obj:
                 pay_obj.state = "paid"
             inv_move = getattr(rec, "move_id", None)
             if inv_move and getattr(inv_move, "move_type", "") == "out_invoice":
                 paid_amt = sum(float(getattr(other, "credit", 0.0)) for other in self if other is not rec)
+                inv_move.amount_residual = max(0.0, round(float(getattr(inv_move, "amount_total", 0.0)) - paid_amt, 2))
+            elif inv_move and getattr(inv_move, "move_type", "") == "in_invoice":
+                paid_amt = sum(float(getattr(other, "debit", 0.0)) for other in self if other is not rec)
                 inv_move.amount_residual = max(0.0, round(float(getattr(inv_move, "amount_total", 0.0)) - paid_amt, 2))
 
 
@@ -175,6 +187,67 @@ class MockRecord:
             empty_list = MockRecordList([])
             self._vals[name] = empty_list
             return empty_list
+        if name == "order_line":
+            if "_order_line_records" in self.__dict__:
+                return self.__dict__["_order_line_records"]
+            val = self._vals.get("order_line", [])
+            if isinstance(val, MockRecordList):
+                return val
+            target_model = "sale.order.line" if self._model == "sale.order" else "purchase.order.line"
+            res = []
+            for item in val:
+                if isinstance(item, (list, tuple)) and len(item) == 3 and isinstance(item[2], dict):
+                    if self._env and target_model in self._env:
+                        res.append(self._env[target_model].create(item[2]))
+                    else:
+                        res.append(MockRecord(item[2], target_model, len(res) + 1, self._env))
+                elif isinstance(item, MockRecord):
+                    res.append(item)
+            rec_list = MockRecordList(res)
+            super().__setattr__("_order_line_records", rec_list)
+            return rec_list
+        if name == "sale_line_ids":
+            val = self._vals.get("sale_line_ids", [])
+            if isinstance(val, MockRecordList):
+                return val
+            res = []
+            for item in val:
+                if isinstance(item, (list, tuple)) and len(item) == 3 and item[0] == 6:
+                    for sid in item[2]:
+                        if self._env and "sale.order.line" in self._env:
+                            srec = self._env["sale.order.line"].store.get(sid)
+                            if srec:
+                                res.append(srec)
+                            else:
+                                res.append(MockRecord({}, "sale.order.line", sid, self._env))
+                        else:
+                            res.append(MockRecord({}, "sale.order.line", sid, self._env))
+                elif isinstance(item, MockRecord):
+                    res.append(item)
+            return MockRecordList(res)
+        if name == "product_uom_id":
+            u_val = self._vals.get("product_uom_id")
+            if isinstance(u_val, MockRecord):
+                return u_val
+            if isinstance(u_val, int) and u_val:
+                return MockRecord({"name": "Units"}, "uom.uom", u_val, self._env)
+            return u_val
+        if name == "uom_id" and self._model == "product.product":
+            u_val = self._vals.get("uom_id")
+            if isinstance(u_val, MockRecord):
+                return u_val
+            return MockRecord({"name": "Units"}, "uom.uom", u_val or 1, self._env)
+        if name == "company_id" and "company_id" in self._vals:
+            c_val = self._vals["company_id"]
+            if c_val is False or c_val is None:
+                return False
+            if isinstance(c_val, MockRecord):
+                return c_val
+            if isinstance(c_val, int):
+                if self._env and getattr(self._env.company, "id", None) == c_val:
+                    return self._env.company
+                return MockRecord({"name": f"Company {c_val}"}, "res.company", c_val, self._env)
+            return c_val
         if name in self._vals:
             return self._vals[name]
         if name == "account_id":
@@ -186,8 +259,9 @@ class MockRecord:
 
     def __setattr__(self, name, value):
         valid_attrs = (
-            "id", "state", "picking_ids", "line_ids", "reconciled",
+            "id", "state", "picking_ids", "line_ids", "invoice_line_ids", "reconciled",
             "scheduled_date", "mock_wizard_mode", "mock_partial_reconcile", "move_id",
+            "full_reconcile_id",
         )
         if name.startswith("_") or name in valid_attrs:
             super().__setattr__(name, value)
@@ -505,122 +579,138 @@ class MockRecord:
         self.state = "posted"
         if self._model == "account.move":
             m_type = self._vals.get("move_type", "entry")
+            eff_date = self._vals.get("date") or self._vals.get("invoice_date") or "2026-07-01"
             if m_type == "out_invoice":
-                total_amt = sum(
-                    inv_line[2].get("quantity", 0.0)
-                    * inv_line[2].get("price_unit", 0.0)
-                    * (1.0 - inv_line[2].get("discount", 0.0) / 100.0)
-                    for inv_line in self._vals.get("invoice_line_ids", [])
-                    if isinstance(inv_line, (list, tuple)) and len(inv_line) == 3
-                )
+                inv_line_records = []
+                total_amt = 0.0
+                for idx, inv_line in enumerate(self._vals.get("invoice_line_ids", []), start=10):
+                    if isinstance(inv_line, (list, tuple)) and len(inv_line) == 3:
+                        ldata = inv_line[2]
+                        l_qty = float(ldata.get("quantity", 0.0))
+                        l_price = float(ldata.get("price_unit", 0.0))
+                        l_disc = float(ldata.get("discount", 0.0))
+                        l_net = l_qty * l_price * (1.0 - l_disc / 100.0)
+                        total_amt += l_net
+                        il_rec = MockRecord({
+                            "name": ldata.get("name", "Sales Line"),
+                            "product_id": ldata.get("product_id"),
+                            "product_uom_id": ldata.get("product_uom_id"),
+                            "sale_line_ids": ldata.get("sale_line_ids", []),
+                            "quantity": l_qty,
+                            "price_unit": l_price,
+                            "discount": l_disc,
+                            "display_type": "product",
+                            "account_id": MockRecord(
+                                {"account_type": "income", "code": "410000"}, "account.account", 2, self._env
+                            ),
+                            "debit": 0.0,
+                            "credit": round(l_net, 2),
+                            "date": eff_date,
+                            "reconciled": False,
+                        }, "account.move.line", self.id * 100 + idx, self._env)
+                        il_rec.move_id = self
+                        inv_line_records.append(il_rec)
                 self.amount_untaxed = round(total_amt, 2)
                 self.amount_tax = round(total_amt * 0.11, 2)
                 self.amount_total = round(total_amt + self.amount_tax, 2)
                 self.amount_residual = self.amount_total
                 ar_line = MockRecord({
                     "name": self._vals.get("ref", "AR Invoice"),
-                    "account_id": MockRecord({"account_type": "asset_receivable"}, "account.account", 1, self._env),
+                    "account_id": MockRecord(
+                        {"account_type": "asset_receivable", "code": "112000"}, "account.account", 1, self._env
+                    ),
                     "debit": self.amount_total,
                     "credit": 0.0,
+                    "date": eff_date,
+                    "display_type": "payment_term",
                     "reconciled": False,
-                }, "account.move.line", 1, self._env)
+                }, "account.move.line", self.id * 100 + 1, self._env)
                 ar_line.move_id = self
-                inc_line = MockRecord({
-                    "name": "Sales Income",
-                    "account_id": MockRecord({"account_type": "income"}, "account.account", 2, self._env),
-                    "debit": 0.0,
-                    "credit": total_amt,
-                    "reconciled": False,
-                }, "account.move.line", 2, self._env)
-                inc_line.move_id = self
                 tax_line = MockRecord({
                     "name": "PPN Keluaran 11%",
-                    "account_id": MockRecord({"account_type": "liability_current"}, "account.account", 7, self._env),
+                    "account_id": MockRecord(
+                        {"account_type": "liability_current", "code": "212000"}, "account.account", 7, self._env
+                    ),
                     "debit": 0.0,
                     "credit": self.amount_tax,
+                    "date": eff_date,
+                    "display_type": "tax",
                     "reconciled": False,
-                }, "account.move.line", 3, self._env)
+                }, "account.move.line", self.id * 100 + 3, self._env)
                 tax_line.move_id = self
-                self.line_ids = MockRecordList([ar_line, inc_line, tax_line])
+                self.invoice_line_ids = MockRecordList(inv_line_records)
+                self.line_ids = MockRecordList([ar_line] + inv_line_records + [tax_line])
             elif m_type == "in_invoice":
-                total_amt = sum(
-                    inv_line[2].get("quantity", 1.0) * inv_line[2].get("price_unit", 0.0)
-                    for inv_line in self._vals.get("invoice_line_ids", [])
-                    if isinstance(inv_line, (list, tuple)) and len(inv_line) == 3
-                )
+                exp_lines = []
+                total_amt = 0.0
+                for idx, inv_line in enumerate(self._vals.get("invoice_line_ids", []), start=10):
+                    if isinstance(inv_line, (list, tuple)) and len(inv_line) == 3:
+                        ldata = inv_line[2]
+                        l_amt = float(ldata.get("quantity", 1.0)) * float(ldata.get("price_unit", 0.0))
+                        total_amt += l_amt
+                        acc_val = ldata.get("account_id")
+                        if isinstance(acc_val, MockRecord):
+                            exp_acc = acc_val
+                        elif isinstance(acc_val, int) and self._env and "account.account" in self._env:
+                            exp_acc = self._env["account.account"].browse(acc_val)
+                        else:
+                            exp_acc = MockRecord(
+                                {"account_type": "expense", "code": "610000"}, "account.account", 4, self._env
+                            )
+                        exp_ln = MockRecord({
+                            "name": ldata.get("name", "Expense Line"),
+                            "account_id": exp_acc,
+                            "debit": round(l_amt, 2),
+                            "credit": 0.0,
+                            "quantity": float(ldata.get("quantity", 1.0)),
+                            "price_unit": float(ldata.get("price_unit", 0.0)),
+                            "date": eff_date,
+                            "display_type": "product",
+                            "reconciled": False,
+                        }, "account.move.line", self.id * 100 + idx, self._env)
+                        exp_ln.move_id = self
+                        exp_lines.append(exp_ln)
+                self.amount_untaxed = round(total_amt, 2)
+                self.amount_total = round(total_amt, 2)
+                self.amount_residual = round(total_amt, 2)
                 ap_line = MockRecord({
                     "name": self._vals.get("ref", "AP Bill"),
-                    "account_id": MockRecord({"account_type": "liability_payable"}, "account.account", 3, self._env),
+                    "account_id": MockRecord(
+                        {"account_type": "liability_payable", "code": "211000"}, "account.account", 3, self._env
+                    ),
                     "debit": 0.0,
-                    "credit": total_amt,
+                    "credit": round(total_amt, 2),
+                    "date": eff_date,
+                    "display_type": "payment_term",
                     "reconciled": False,
-                }, "account.move.line", 1, self._env)
-                exp_line = MockRecord({
-                    "name": "Expense Line",
-                    "account_id": MockRecord({"account_type": "expense"}, "account.account", 4, self._env),
-                    "debit": total_amt,
-                    "credit": 0.0,
-                    "reconciled": False,
-                }, "account.move.line", 2, self._env)
-                self.line_ids = MockRecordList([ap_line, exp_line])
+                }, "account.move.line", self.id * 100 + 1, self._env)
+                ap_line.move_id = self
+                self.invoice_line_ids = MockRecordList(exp_lines)
+                self.line_ids = MockRecordList([ap_line] + exp_lines)
             elif m_type == "entry":
                 lines = []
                 for idx, item in enumerate(self._vals.get("line_ids", []), start=1):
                     ldata = item[2] if isinstance(item, (list, tuple)) and len(item) == 3 else {}
                     acc_type = "asset_receivable" if "Piutang" in ldata.get("name", "") else "expense"
-                    lines.append(MockRecord({
+                    acc_code = "112000" if acc_type == "asset_receivable" else "620000"
+                    ln_rec = MockRecord({
                         "name": ldata.get("name", "Journal Line"),
-                        "account_id": MockRecord({"account_type": acc_type}, "account.account", 5, self._env),
+                        "account_id": MockRecord(
+                            {"account_type": acc_type, "code": acc_code}, "account.account", 5, self._env
+                        ),
                         "debit": ldata.get("debit", 0.0),
                         "credit": ldata.get("credit", 0.0),
+                        "date": eff_date,
                         "reconciled": False,
-                    }, "account.move.line", idx, self._env))
+                    }, "account.move.line", self.id * 100 + idx, self._env)
+                    ln_rec.move_id = self
+                    lines.append(ln_rec)
                 self.line_ids = MockRecordList(lines)
         elif self._model == "account.payment":
             self.state = "in_process"
             p_type = self._vals.get("payment_type", "inbound")
             amt = float(self._vals.get("amount", 0.0))
             pay_ref = self._vals.get("ref", self._vals.get("memo", ""))
-            if p_type == "inbound":
-                cash_line = MockRecord({
-                    "name": pay_ref or "Cash In",
-                    "account_id": MockRecord({"account_type": "asset_cash"}, "account.account", 6, self._env),
-                    "debit": amt,
-                    "credit": 0.0,
-                    "reconciled": False,
-                }, "account.move.line", 1, self._env)
-                ar_line = MockRecord({
-                    "name": pay_ref or "AR Payment",
-                    "account_id": MockRecord({"account_type": "asset_receivable"}, "account.account", 1, self._env),
-                    "debit": 0.0,
-                    "credit": amt,
-                    "reconciled": False,
-                }, "account.move.line", 2, self._env)
-                ar_line._payment = self
-                self.line_ids = MockRecordList([cash_line, ar_line])
-                if getattr(self, "mock_partial_reconcile", False):
-                    self.line_ids.mock_partial_reconcile = True
-            else:
-                ap_line = MockRecord({
-                    "name": pay_ref or "AP Payment",
-                    "account_id": MockRecord({"account_type": "liability_payable"}, "account.account", 3, self._env),
-                    "debit": amt,
-                    "credit": 0.0,
-                    "reconciled": False,
-                }, "account.move.line", 1, self._env)
-                cash_line = MockRecord({
-                    "name": pay_ref or "Cash Out",
-                    "account_id": MockRecord({"account_type": "asset_cash"}, "account.account", 6, self._env),
-                    "debit": 0.0,
-                    "credit": amt,
-                    "reconciled": False,
-                }, "account.move.line", 2, self._env)
-                ap_line._payment = self
-                self.line_ids = MockRecordList([ap_line, cash_line])
-                if getattr(self, "mock_partial_reconcile", False):
-                    self.line_ids.mock_partial_reconcile = True
-
-            # Odoo 19: account.payment memiliki move_id relasional yang berstatus posted
             pay_date = self._vals.get("date", "2026-07-01")
             self.move_id = MockRecord(
                 {"state": "posted", "ref": pay_ref, "date": pay_date},
@@ -628,6 +718,61 @@ class MockRecord:
                 100000 + self.id,
                 self._env,
             )
+            if p_type == "inbound":
+                cash_line = MockRecord({
+                    "name": pay_ref or "Cash In",
+                    "account_id": MockRecord(
+                        {"account_type": "asset_cash", "code": "111000"}, "account.account", 6, self._env
+                    ),
+                    "debit": amt,
+                    "credit": 0.0,
+                    "date": pay_date,
+                    "reconciled": False,
+                }, "account.move.line", (100000 + self.id) * 10 + 1, self._env)
+                cash_line.move_id = self.move_id
+                ar_line = MockRecord({
+                    "name": pay_ref or "AR Payment",
+                    "account_id": MockRecord(
+                        {"account_type": "asset_receivable", "code": "112000"}, "account.account", 1, self._env
+                    ),
+                    "debit": 0.0,
+                    "credit": amt,
+                    "date": pay_date,
+                    "reconciled": False,
+                }, "account.move.line", (100000 + self.id) * 10 + 2, self._env)
+                ar_line.move_id = self.move_id
+                ar_line._payment = self
+                self.line_ids = MockRecordList([cash_line, ar_line])
+                if getattr(self, "mock_partial_reconcile", False):
+                    self.line_ids.mock_partial_reconcile = True
+            else:
+                ap_line = MockRecord({
+                    "name": pay_ref or "AP Payment",
+                    "account_id": MockRecord(
+                        {"account_type": "liability_payable", "code": "211000"}, "account.account", 3, self._env
+                    ),
+                    "debit": amt,
+                    "credit": 0.0,
+                    "date": pay_date,
+                    "reconciled": False,
+                }, "account.move.line", (100000 + self.id) * 10 + 1, self._env)
+                ap_line.move_id = self.move_id
+                cash_line = MockRecord({
+                    "name": pay_ref or "Cash Out",
+                    "account_id": MockRecord(
+                        {"account_type": "asset_cash", "code": "111000"}, "account.account", 6, self._env
+                    ),
+                    "debit": 0.0,
+                    "credit": amt,
+                    "date": pay_date,
+                    "reconciled": False,
+                }, "account.move.line", (100000 + self.id) * 10 + 2, self._env)
+                cash_line.move_id = self.move_id
+                ap_line._payment = self
+                self.line_ids = MockRecordList([ap_line, cash_line])
+                if getattr(self, "mock_partial_reconcile", False):
+                    self.line_ids.mock_partial_reconcile = True
+
             self.move_id.line_ids = self.line_ids
 
 
@@ -807,11 +952,60 @@ def setup_standard_mock_env():
             "categ_id": fmcg_categ,
         })
 
-    mock_env["stock.location"].create({"name": "WH/Stock", "usage": "internal"})
-    mock_env["stock.location"].create({"name": "Karantina FMCG Maumbi", "usage": "internal"})
-    mock_env["stock.location"].create({"name": "Partner Locations/Customers", "usage": "customer"})
-    mock_env["stock.location"].create({"name": "Partner Locations/Vendors", "usage": "supplier"})
-    mock_env["stock.location"].create({"name": "Virtual Locations/Inventory adjustment", "usage": "inventory"})
+    mock_env["product.category"]._fields = {
+        "name": True,
+        "property_cost_method": True,
+        "property_valuation": True,
+        "property_stock_valuation_account_id": True,
+        "property_stock_journal": True,
+        "property_stock_account_input_categ_id": True,
+        "property_stock_account_output_categ_id": True,
+        "property_account_expense_categ_id": True,
+    }
+    mock_env["stock.location"]._fields = {
+        "name": True,
+        "usage": True,
+        "location_id": True,
+        "valuation_account_id": True,
+        "company_id": True,
+    }
+    mock_env["product.product"]._fields = {
+        "name": True,
+        "default_code": True,
+        "categ_id": True,
+        "standard_price": True,
+        "company_id": True,
+        "property_stock_inventory": True,
+        "uom_id": True,
+    }
+    mock_env["account.move.line"]._fields = {
+        "name": True,
+        "account_id": True,
+        "debit": True,
+        "credit": True,
+        "date": True,
+        "reconciled": True,
+        "product_id": True,
+        "product_uom_id": True,
+        "sale_line_ids": True,
+        "quantity": True,
+        "price_unit": True,
+        "discount": True,
+        "display_type": True,
+    }
+    mock_env["stock.location"].create({"name": "WH/Stock", "usage": "internal", "company_id": mock_env.company.id})
+    mock_env["stock.location"].create({
+        "name": "Karantina FMCG Maumbi",
+        "usage": "internal",
+        "company_id": mock_env.company.id,
+    })
+    mock_env["stock.location"].create({"name": "Partner Locations/Customers", "usage": "customer", "company_id": False})
+    mock_env["stock.location"].create({"name": "Partner Locations/Vendors", "usage": "supplier", "company_id": False})
+    mock_env["stock.location"].create({
+        "name": "Virtual Locations/Inventory adjustment",
+        "usage": "inventory",
+        "company_id": False,
+    })
     return mock_env
 
 
@@ -2376,6 +2570,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             "quantity": 999.0,
             "location_id": pick317.location_id.id,
             "location_dest_id": pick317.location_dest_id.id,
+            "date": getattr(pick317.move_line_ids[0], "date", "2026-07-09 10:00:00"),
         })
         pick317.move_line_ids.append(extra_ml)
         with self.assertRaises(AssertionError) as ctx_extra:
@@ -2399,6 +2594,133 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
         self.assertIn("reserved_quantity menggantung", str(ctx_res.exception))
         q0.reserved_quantity = 0.0
+
+    def test_blocker1_out_invoice_retains_product_id_uom_and_sale_line_ids(self):
+        """Blocker 1 (Review 6466832055): out_invoice wajib mempertahankan product_id, UoM, dan sale_line_ids."""
+        from scripts.ops.verify_disposable_slice import verify_run1_against_canonical_oracle
+
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        target_sos = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
+        adapter.run_all(target_so_numbers=target_sos)
+
+        inv1 = env["account.move"].search([("ref", "=", "INV-202607-0001")], limit=1)
+        self.assertTrue(inv1)
+        self.assertEqual(getattr(inv1, "invoice_origin", ""), "SO-202607-0001")
+        self.assertTrue(getattr(inv1, "_ctx", {}).get("move_reverse_cancel"), "Post wajib mencegah double COGS!")
+        inv_lines = list(getattr(inv1, "invoice_line_ids", []))
+        self.assertGreater(len(inv_lines), 0)
+        for il in inv_lines:
+            self.assertTrue(getattr(il, "product_id", False), "product_id wajib terisi pada baris out_invoice!")
+            self.assertTrue(getattr(il, "product_uom_id", False), "product_uom_id wajib terisi pada baris out_invoice!")
+            self.assertGreater(len(getattr(il, "sale_line_ids", [])), 0, "sale_line_ids wajib terhubung ke SO line!")
+
+        # Mutasi: hapus product_id pada baris pertama INV-202607-0001 -> Oracle wajib menolak!
+        orig_prod = inv_lines[0].product_id
+        inv_lines[0].product_id = False
+        inv_lines[0]._vals["product_id"] = False
+        with self.assertRaises(AssertionError) as ctx_noprod:
+            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+        self.assertIn("Baris invoice INV-202607-0001 kehilangan product_id", str(ctx_noprod.exception))
+        inv_lines[0].product_id = orig_prod
+        inv_lines[0]._vals["product_id"] = orig_prod
+
+    def test_blocker2_location_and_shared_category_isolation_within_same_company(self):
+        """Blocker 2 (Review 6466832055): Lokasi non-seed, lokasi shared, dan kategori shared tidak disentuh."""
+        env = setup_standard_mock_env()
+        # Tambahkan lokasi internal bisnis lain di company yang sama (company_id = 1)
+        other_internal = env["stock.location"].create({
+            "name": "WH Other Business",
+            "usage": "internal",
+            "company_id": env.company.id,
+            "valuation_account_id": 7771,
+        })
+        # Pastikan lokasi shared (company_id=False) memiliki valuation_account_id awal yang tidak boleh diubah
+        shared_cust = env["stock.location"].search(
+            [("usage", "=", "customer"), ("company_id", "=", False)], limit=1
+        )
+        shared_cust.write({"valuation_account_id": 7772})
+        shared_supp = env["stock.location"].search(
+            [("usage", "=", "supplier"), ("company_id", "=", False)], limit=1
+        )
+        shared_supp.write({"valuation_account_id": 7773})
+        shared_inv = env["stock.location"].search(
+            [("usage", "=", "inventory"), ("company_id", "=", False)], limit=1
+        )
+        shared_inv.write({"valuation_account_id": 7774})
+
+        # Tambahkan produk non-seed dalam kategori yang sama ("All / FMCG")
+        shared_cat = env["product.category"].search([("name", "=", "All / FMCG")], limit=1)
+        shared_cat.write({
+            "property_valuation": "manual_periodic",
+            "property_cost_method": "standard",
+            "property_stock_valuation_account_id": 7775,
+        })
+        non_seed_prod = env["product.product"].create({
+            "name": "Produk Non-Seed Bisnis Lain",
+            "default_code": "NON-SEED-SKU-001",
+            "categ_id": shared_cat,
+            "company_id": env.company.id,
+        })
+
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+
+        # 1. Lokasi internal non-seed dalam company yang sama TIDAK berubah
+        self.assertEqual(other_internal.valuation_account_id, 7771)
+        # 2. Lokasi shared (company_id=False) TIDAK berubah; adapter membuat lokasi counterpart khusus company seed
+        self.assertEqual(shared_cust.valuation_account_id, 7772)
+        self.assertEqual(shared_supp.valuation_account_id, 7773)
+        self.assertEqual(shared_inv.valuation_account_id, 7774)
+        self.assertNotEqual(adapter.seed_customer_loc.id, shared_cust.id)
+        self.assertNotEqual(adapter.seed_supplier_loc.id, shared_supp.id)
+        self.assertNotEqual(adapter.seed_inventory_loc.id, shared_inv.id)
+        self.assertEqual(adapter.seed_customer_loc.company_id.id, env.company.id)
+        self.assertEqual(adapter.seed_supplier_loc.company_id.id, env.company.id)
+        self.assertEqual(adapter.seed_inventory_loc.company_id.id, env.company.id)
+        # 3. Kategori shared ("All / FMCG") dan produk non-seed TIDAK berubah; produk seed dipindah ke kategori khusus
+        self.assertEqual(shared_cat.property_valuation, "manual_periodic")
+        self.assertEqual(shared_cat.property_cost_method, "standard")
+        self.assertEqual(shared_cat.property_stock_valuation_account_id, 7775)
+        self.assertEqual(non_seed_prod.categ_id.id, shared_cat.id)
+        for pr in adapter.product_by_code.values():
+            self.assertNotEqual(pr.categ_id.id, shared_cat.id)
+            self.assertEqual(pr.categ_id.name, "FMCG Seed Perpetual")
+            self.assertEqual(pr.categ_id.property_valuation, "real_time")
+            self.assertEqual(pr.categ_id.property_cost_method, "fifo")
+
+    def test_blocker4_and_blocker5_opex_and_duplicate_document_rejection(self):
+        """Blocker 4 & 5 (Review 6466832055): OPEX salah nominal/akun/partner dan duplikasi dokumen ditolak."""
+        from scripts.ops.verify_disposable_slice import verify_run1_against_canonical_oracle
+
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        target_sos = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
+        adapter.run_all(target_so_numbers=target_sos)
+
+        # Verifikasi baseline lulus
+        verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+
+        # Uji Blocker 4: Ubah partner OPEX-2026-07-01 menjadi company.partner_id -> Wajib ditolak!
+        opex1 = env["account.move"].search([("ref", "=", "OPEX-2026-07-01")], limit=1)
+        orig_partner = opex1.partner_id
+        opex1.write({"partner_id": env.company.partner_id})
+        with self.assertRaises(AssertionError) as ctx_opex_p:
+            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+        self.assertIn("dilarang menggunakan partner company sendiri", str(ctx_opex_p.exception))
+        opex1.write({"partner_id": orig_partner})
+
+        # Uji Blocker 5: Rekonsiliasi faktur dipasangkan ke dokumen yang salah -> Wajib ditolak!
+        inv63 = env["account.move"].search([("ref", "=", "INV-202607-0063")], limit=1)
+        ar_lines = [
+            ln for ln in inv63.line_ids
+            if getattr(getattr(ln, "account_id", None), "account_type", "") == "asset_receivable"
+        ]
+        orig_peers = list(getattr(ar_lines[0], "_reconciled_peer_move_ids", []))
+        ar_lines[0]._reconciled_peer_move_ids = [999999]
+        with self.assertRaises(AssertionError) as ctx_rec_peer:
+            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+        self.assertIn("tidak cocok dengan ekspektasi", str(ctx_rec_peer.exception))
+        ar_lines[0]._reconciled_peer_move_ids = orig_peers
 
 
 if __name__ == "__main__":

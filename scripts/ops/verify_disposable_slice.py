@@ -48,7 +48,14 @@ REG_PATH = REPO_ROOT / "data" / "registers"
 if not REG_PATH.exists() and Path("/opt/data/registers").exists():
     REG_PATH = Path("/opt/data/registers")
 
-from scripts.load_canonical_perpetual import CanonicalPerpetualAdapter, read_register_csv  # noqa: E402
+from scripts.load_canonical_perpetual import (  # noqa: E402
+    OPEX_CATEGORY_ACCOUNT_MAP,
+    OPEX_PAYMENT_PARTNER_MAP,
+    CanonicalPerpetualAdapter,
+    build_order_line_payload,
+    build_so_header_payload,
+    read_register_csv,
+)
 
 
 def introspect_odoo19_schema(env):
@@ -126,6 +133,78 @@ def _iter_records(res) -> list:
     if hasattr(res, "__iter__"):
         return list(res)
     return [res]
+
+
+def _assert_unique_record(res, label: str):
+    """Memastikan hasil pencarian dokumen memiliki tepat 1 record (tanpa limit=1)."""
+    recs = _iter_records(res)
+    assert len(recs) == 1, (
+        f"[canonical_oracle] Duplikasi atau kehilangan dokumen {label}: "
+        f"expected tepat 1 record, got {len(recs)}!"
+    )
+    return recs[0]
+
+
+def _get_reconciled_peer_move_ids(line) -> set:
+    """Mengumpulkan move_id dari seluruh baris pasangan rekonsiliasi aktual pada account.move.line."""
+    peer_ids = set()
+    explicit_peers = getattr(line, "_reconciled_peer_move_ids", None)
+    if explicit_peers:
+        peer_ids.update(explicit_peers)
+
+    if callable(getattr(line, "_reconciled_lines", None)):
+        try:
+            for rl in _iter_records(line._reconciled_lines()):
+                mid = getattr(getattr(rl, "move_id", None), "id", getattr(rl, "move_id", None))
+                if mid:
+                    peer_ids.add(mid)
+        except Exception:
+            pass
+
+    full_rec = getattr(line, "full_reconcile_id", None)
+    if full_rec and hasattr(full_rec, "reconciled_line_ids"):
+        for rl in _iter_records(full_rec.reconciled_line_ids):
+            mid = getattr(getattr(rl, "move_id", None), "id", getattr(rl, "move_id", None))
+            if mid:
+                peer_ids.add(mid)
+
+    for field_name, side_attr in (("matched_debit_ids", "debit_move_id"), ("matched_credit_ids", "credit_move_id")):
+        partials = getattr(line, field_name, None)
+        if partials:
+            for pr in _iter_records(partials):
+                target_aml = getattr(pr, side_attr, None)
+                mid = getattr(getattr(target_aml, "move_id", None), "id", getattr(target_aml, "move_id", None))
+                if mid:
+                    peer_ids.add(mid)
+
+    return peer_ids
+
+
+def _verify_exact_reconciliation_pair(line_a, line_b, pair_label: str):
+    """Memastikan dua baris AR/AP benar-benar berpasangan rekonsiliasi satu sama lain."""
+    move_b_id = getattr(getattr(line_b, "move_id", None), "id", getattr(line_b, "move_id", None))
+    move_a_id = getattr(getattr(line_a, "move_id", None), "id", getattr(line_a, "move_id", None))
+
+    full_a = getattr(getattr(line_a, "full_reconcile_id", None), "id", getattr(line_a, "full_reconcile_id", None))
+    full_b = getattr(getattr(line_b, "full_reconcile_id", None), "id", getattr(line_b, "full_reconcile_id", None))
+    if full_a and full_b:
+        assert full_a == full_b, (
+            f"[canonical_oracle] Pasangan rekonsiliasi {pair_label} memiliki full_reconcile_id berbeda "
+            f"({full_a} vs {full_b})!"
+        )
+
+    peers_a = _get_reconciled_peer_move_ids(line_a) - ({move_a_id} if move_a_id else set())
+    peers_b = _get_reconciled_peer_move_ids(line_b) - ({move_b_id} if move_b_id else set())
+    if peers_a:
+        assert move_b_id in peers_a, (
+            f"[canonical_oracle] Pasangan rekonsiliasi {pair_label} tidak cocok dengan ekspektasi! "
+            f"move_b={move_b_id} tidak ditemukan pada peers_a={sorted(peers_a)}"
+        )
+    if peers_b:
+        assert move_a_id in peers_b, (
+            f"[canonical_oracle] Pasangan rekonsiliasi {pair_label} tidak cocok dengan ekspektasi! "
+            f"move_a={move_a_id} tidak ditemukan pada peers_b={sorted(peers_b)}"
+        )
 
 
 def _resolve_stock_move_account_moves(env, sm):
@@ -251,7 +330,6 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
     StockPicking = env["stock.picking"].sudo()
     StockMove = env["stock.move"].sudo()
     StockQuant = env["stock.quant"].sudo()
-    StockLocation = env["stock.location"].sudo()
     AccountMove = env["account.move"].sudo()
     AccountPayment = env["account.payment"].sudo()
 
@@ -259,6 +337,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
     init_rows = read_register_csv("initial_stock_20260701.csv", reg_path=reg_path)
     po_headers = read_register_csv("inbound_po_intransit_june_headers.csv", reg_path=reg_path)
     po_lines = read_register_csv("inbound_po_intransit_june_lines.csv", reg_path=reg_path)
+    so_header_rows = read_register_csv("perpetual_sales_orders.csv", reg_path=reg_path)
     deliv_rows = read_register_csv("perpetual_deliveries.csv", reg_path=reg_path)
     order_line_rows = read_register_csv("perpetual_order_lines.csv", reg_path=reg_path)
     rej_rows = read_register_csv("perpetual_order_rejections.csv", reg_path=reg_path)
@@ -271,6 +350,25 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
     assert po_headers and len(po_headers) == 5, "[canonical_oracle] inbound_po_intransit_june_headers.csv harus 5 PO!"
 
     unit_cost_by_sku = {r["sku_code"]: float(r["unit_cost_price"]) for r in init_rows}
+
+    seed_comp_id = (
+        getattr(getattr(adapter, "company", None), "id", None)
+        or getattr(getattr(env, "company", None), "id", None)
+    )
+    wh_loc = getattr(adapter, "wh_stock_loc", None)
+    quar_loc = getattr(adapter, "quarantine_loc", None)
+    assert wh_loc, "[canonical_oracle] Lokasi gudang utama WH/Stock (adapter.wh_stock_loc) wajib terdefinisi!"
+    assert quar_loc, "[canonical_oracle] Lokasi Karantina FMCG Maumbi (adapter.quarantine_loc) wajib terdefinisi!"
+    assert getattr(wh_loc, "id", None) != getattr(quar_loc, "id", None), (
+        "[canonical_oracle] Lokasi WH/Stock dan Karantina tidak boleh memiliki ID yang sama!"
+    )
+    for seed_loc_rec, seed_loc_lbl in ((wh_loc, "WH/Stock"), (quar_loc, "Karantina FMCG Maumbi")):
+        l_comp = getattr(seed_loc_rec, "company_id", None)
+        l_comp_id = getattr(l_comp, "id", l_comp) if l_comp else None
+        if seed_comp_id and l_comp_id and l_comp_id != seed_comp_id:
+            raise AssertionError(
+                f"[canonical_oracle] Lokasi '{seed_loc_lbl}' (company_id={l_comp_id}) bukan milik company seed ({seed_comp_id})!"
+            )
 
     # Ekspektasi saldo kuantitas fisik per (sku, lot) di WH/Stock dan Karantina
     expected_saleable_by_sku_lot = {}
@@ -311,6 +409,26 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         assert om_date == "2026-07-01", (
             f"[canonical_oracle] Tanggal stock.move opening {sku} harus 2026-07-01, got {om_date}!"
         )
+        om_src = _resolve_loc(env, getattr(om, "location_id", None))
+        om_dest = _resolve_loc(env, getattr(om, "location_dest_id", None))
+        if om_src and getattr(om_src, "usage", None):
+            assert om_src.usage == "inventory", (
+                f"[canonical_oracle] Lokasi asal stock.move opening {sku} harus 'inventory', got '{om_src.usage}'!"
+            )
+        assert getattr(om_dest, "id", getattr(om, "location_dest_id", None)) == wh_loc.id, (
+            f"[canonical_oracle] Lokasi tujuan stock.move opening {sku} harus WH/Stock (id={wh_loc.id}), "
+            f"got {getattr(om_dest, 'id', getattr(om, 'location_dest_id', None))}!"
+        )
+        for oml in _iter_records(getattr(om, "move_line_ids", None)):
+            oml_date = str(getattr(oml, "date", ""))[:10]
+            assert oml_date == "2026-07-01", (
+                f"[canonical_oracle] Tanggal stock.move.line opening {sku} harus 2026-07-01, got {oml_date}!"
+            )
+            oml_dest = _resolve_loc(env, getattr(oml, "location_dest_id", None))
+            if oml_dest is not None:
+                assert getattr(oml_dest, "id", getattr(oml, "location_dest_id", None)) == wh_loc.id, (
+                    f"[canonical_oracle] Lokasi tujuan stock.move.line opening {sku} harus WH/Stock (id={wh_loc.id})!"
+                )
         ams = _resolve_stock_move_account_moves(env, om)
         assert len(ams) == 1, (
             f"[canonical_oracle] Opening stock.move untuk SKU {sku} wajib memiliki tepat 1 jurnal valuasi native, "
@@ -326,7 +444,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         "[canonical_oracle] Himpunan SKU opening stock.move tidak sama persis dengan 150 SKU register!"
     )
 
-    # --- 1. Verifikasi Inbound PO Transit (Exact-Set & Multiset + Jurnal Valuasi Native) ---
+    # --- 1. Verifikasi Inbound PO Transit (Exact-Set, Multiplicity, Multiset, & Jurnal Valuasi Native) ---
     lines_by_po = {}
     for pline in po_lines:
         lines_by_po.setdefault(pline["po_number"], []).append(pline)
@@ -339,35 +457,39 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         f"[canonical_oracle] Himpunan Purchase Order di DB ({sorted(actual_po_nums)}) != "
         f"register ({sorted(expected_po_nums)})!"
     )
+    assert len(all_pos_list) == len(expected_po_nums), (
+        f"[canonical_oracle] Duplikasi PurchaseOrder terdeteksi di DB! "
+        f"Expected {len(expected_po_nums)} record unik, got {len(all_pos_list)}!"
+    )
 
     for h in po_headers:
         po_num = h["po_number"]
-        po = PurchaseOrder.search([("origin", "=", po_num)], limit=1)
-        if not po:
-            po = PurchaseOrder.search([("name", "=", po_num)], limit=1)
-        assert po, f"[canonical_oracle] Purchase Order {po_num} tidak ditemukan!"
+        po_matches = _iter_records(PurchaseOrder.search([("origin", "=", po_num)]))
+        if not po_matches:
+            po_matches = _iter_records(PurchaseOrder.search([("name", "=", po_num)]))
+        po = _assert_unique_record(po_matches, f"PurchaseOrder {po_num}")
         assert po.state in ("purchase", "done"), f"[canonical_oracle] PO {po_num} belum confirmed! State: {po.state}"
 
-        po_picks = [p for p in getattr(po, "picking_ids", []) if getattr(p, "state", "") != "cancel"]
-        if not po_picks:
-            po_picks = StockPicking.search([("origin", "in", [getattr(po, "name", ""), po_num])])
-            po_picks = [p for p in (po_picks or []) if getattr(p, "state", "") != "cancel"]
-        assert len(po_picks) == 1, (
-            f"[canonical_oracle] Expected exactly 1 receipt picking untuk {po_num}, got {len(po_picks)}"
+        po_picks_all = _iter_records(getattr(po, "picking_ids", None))
+        if not po_picks_all:
+            po_picks_all = _iter_records(StockPicking.search([("origin", "in", [getattr(po, "name", ""), po_num])]))
+        po_picks = [p for p in po_picks_all if getattr(p, "state", "") != "cancel"]
+        assert len(po_picks_all) == 1 and len(po_picks) == 1, (
+            f"[canonical_oracle] Expected exactly 1 receipt picking untuk {po_num}, "
+            f"got active={len(po_picks)}, total={len(po_picks_all)}"
         )
         po_pick = po_picks[0]
         assert po_pick.state == "done", f"[canonical_oracle] Receipt {po_num} belum done! State: {po_pick.state}"
 
         src_loc = _resolve_loc(env, getattr(po_pick, "location_id", None))
         dest_loc = _resolve_loc(env, getattr(po_pick, "location_dest_id", None))
-        if src_loc and getattr(src_loc, "usage", None):
-            assert src_loc.usage == "supplier", (
-                f"[canonical_oracle] Lokasi asal receipt {po_num} harus 'supplier', got '{src_loc.usage}'!"
-            )
-        if dest_loc and getattr(dest_loc, "usage", None):
-            assert dest_loc.usage == "internal", (
-                f"[canonical_oracle] Lokasi tujuan receipt {po_num} harus 'internal', got '{dest_loc.usage}'!"
-            )
+        assert src_loc and getattr(src_loc, "usage", None) == "supplier", (
+            f"[canonical_oracle] Lokasi asal receipt {po_num} harus 'supplier', got '{getattr(src_loc, 'usage', None)}'!"
+        )
+        assert dest_loc and getattr(dest_loc, "usage", None) == "internal" and getattr(dest_loc, "id", None) == wh_loc.id, (
+            f"[canonical_oracle] Lokasi tujuan receipt {po_num} harus WH/Stock (id={wh_loc.id}, usage='internal'), "
+            f"got id={getattr(dest_loc, 'id', None)} ('{getattr(dest_loc, 'name', '')}', usage='{getattr(dest_loc, 'usage', None)}')!"
+        )
 
         exact_arrival = h["arrival_maumbi_date"]
         pick_date = str(
@@ -404,6 +526,21 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
             lot_name = _resolve_ml_lot_name(env, ml)
             assert sku, f"[canonical_oracle] Baris move line pada receipt {po_num} tidak memiliki SKU (product_id)!"
             assert lot_name, f"[canonical_oracle] Baris move line SKU {sku} pada receipt {po_num} tidak memiliki lot!"
+            ml_date = str(getattr(ml, "date", ""))[:10]
+            assert ml_date == exact_arrival, (
+                f"[canonical_oracle] Tanggal stock.move.line receipt {po_num} ({ml_date}) != arrival_maumbi_date ({exact_arrival})!"
+            )
+            ml_src = _resolve_loc(env, getattr(ml, "location_id", None))
+            ml_dest = _resolve_loc(env, getattr(ml, "location_dest_id", None))
+            if ml_src is not None and getattr(ml_src, "usage", None):
+                assert ml_src.usage == "supplier", (
+                    f"[canonical_oracle] Lokasi asal stock.move.line receipt {po_num} harus 'supplier', got '{ml_src.usage}'!"
+                )
+            if ml_dest is not None:
+                assert getattr(ml_dest, "id", None) == wh_loc.id, (
+                    f"[canonical_oracle] Lokasi tujuan stock.move.line receipt {po_num} harus WH/Stock (id={wh_loc.id}), "
+                    f"got {getattr(ml_dest, 'id', None)}!"
+                )
             qty = float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)))
             assert qty > 0.0, f"[canonical_oracle] Kuantitas line receipt {po_num} harus positif! Got {qty}"
             key = (sku, lot_name)
@@ -424,7 +561,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
                 f"Expected {exp_qty}, got {act_qty}"
             )
 
-        # Verifikasi jurnal valuasi native untuk setiap stock.move pada PO receipt
+        # Verifikasi lokasi, tanggal efektif, dan jurnal valuasi native untuk setiap stock.move pada PO receipt
         po_moves = [
             mv for mv in getattr(po_pick, "move_ids", [])
             if getattr(mv, "state", "done") != "cancel"
@@ -439,6 +576,21 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
             assert mv_sku in expected_val_by_sku, (
                 f"[canonical_oracle] stock.move SKU '{mv_sku}' pada {po_num} tidak ada di register!"
             )
+            mv_date = str(getattr(mv, "date", ""))[:10]
+            assert mv_date == exact_arrival, (
+                f"[canonical_oracle] Tanggal stock.move receipt {po_num} ({mv_date}) != arrival_maumbi_date ({exact_arrival})!"
+            )
+            mv_src = _resolve_loc(env, getattr(mv, "location_id", None))
+            mv_dest = _resolve_loc(env, getattr(mv, "location_dest_id", None))
+            if mv_src is not None and getattr(mv_src, "usage", None):
+                assert mv_src.usage == "supplier", (
+                    f"[canonical_oracle] Lokasi asal stock.move receipt {po_num} harus 'supplier', got '{mv_src.usage}'!"
+                )
+            if mv_dest is not None:
+                assert getattr(mv_dest, "id", None) == wh_loc.id, (
+                    f"[canonical_oracle] Lokasi tujuan stock.move receipt {po_num} harus WH/Stock (id={wh_loc.id}), "
+                    f"got {getattr(mv_dest, 'id', None)}!"
+                )
             ams = _resolve_stock_move_account_moves(env, mv)
             assert len(ams) == 1, (
                 f"[canonical_oracle] stock.move receipt {po_num} SKU {mv_sku} wajib memiliki tepat 1 jurnal valuasi, "
@@ -463,11 +615,12 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
     print(
         f" -> [Oracle Inbound PO] {len(po_headers)} PO Receipts verified DONE "
-        f"(exact multiset lines & native valuation journals)."
+        f"(exact multiset lines, move/move_line dates & locations, & native valuation journals)."
     )
 
-    # --- 2. Verifikasi Outgoing SO Deliveries (Exact-Set & Multiset + Jurnal Valuasi Native) ---
+    # --- 2. Verifikasi Outgoing SO Deliveries (Exact-Set, Multiplicity, Multiset, & Jurnal Valuasi Native) ---
     deliv_by_so = {d["so_number"]: d for d in deliv_rows if d["so_number"] in target_so_set}
+    so_headers_by_num = {s["so_number"]: s for s in so_header_rows if s["so_number"] in target_so_set}
     lines_by_so = {}
     for ol in order_line_rows:
         if ol["so_number"] in target_so_set:
@@ -483,30 +636,37 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         f"[canonical_oracle] Himpunan Sale Order di DB ({sorted(actual_so_nums)}) != "
         f"target slice ({sorted(target_so_set)})!"
     )
+    assert len(all_sos_list) == len(target_so_set), (
+        f"[canonical_oracle] Duplikasi SaleOrder terdeteksi di DB! "
+        f"Expected {len(target_so_set)} record unik, got {len(all_sos_list)}!"
+    )
 
+    so_rec_by_num = {}
     for so_num in target_so_slice:
-        so = SaleOrder.search([("client_order_ref", "=", so_num)], limit=1)
-        if not so:
-            so = SaleOrder.search([("name", "=", so_num)], limit=1)
-        if not so:
-            so = SaleOrder.search([("origin", "=", so_num)], limit=1)
-        assert so, f"[canonical_oracle] Sale Order {so_num} tidak ditemukan!"
+        so_matches = _iter_records(SaleOrder.search([("client_order_ref", "=", so_num)]))
+        if not so_matches:
+            so_matches = _iter_records(SaleOrder.search([("name", "=", so_num)]))
+        if not so_matches:
+            so_matches = _iter_records(SaleOrder.search([("origin", "=", so_num)]))
+        so = _assert_unique_record(so_matches, f"SaleOrder {so_num}")
         assert so.state in ("sale", "done"), f"[canonical_oracle] Sale Order {so_num} belum confirmed!"
+        so_rec_by_num[so_num] = so
 
-        so_picks_rel = [p for p in getattr(so, "picking_ids", []) if getattr(p, "state", "") != "cancel"]
-        so_picks_origin = StockPicking.search([("origin", "in", [getattr(so, "name", ""), so_num])])
-        so_picks_origin = [p for p in (so_picks_origin or []) if getattr(p, "state", "") != "cancel"]
+        so_picks_rel = _iter_records(getattr(so, "picking_ids", None))
+        so_picks_origin = _iter_records(StockPicking.search([("origin", "in", [getattr(so, "name", ""), so_num])]))
 
         seen_pick_ids = set()
-        so_picks = []
+        so_picks_all = []
         for p in list(so_picks_rel) + list(so_picks_origin):
             pid = getattr(p, "id", id(p))
             if pid not in seen_pick_ids:
                 seen_pick_ids.add(pid)
-                so_picks.append(p)
+                so_picks_all.append(p)
+        so_picks = [p for p in so_picks_all if getattr(p, "state", "") != "cancel"]
 
-        assert len(so_picks) == 1, (
-            f"[canonical_oracle] Expected tepat 1 delivery picking untuk {so_num}, got {len(so_picks)}! "
+        assert len(so_picks) == 1 and len(so_picks_all) == 1, (
+            f"[canonical_oracle] Expected tepat 1 delivery picking untuk {so_num}, "
+            f"got active={len(so_picks)}, total={len(so_picks_all)}! "
             f"(Duplikasi atau kehilangan picking ditolak)."
         )
         deliv = so_picks[0]
@@ -516,14 +676,13 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
         src_loc = _resolve_loc(env, getattr(deliv, "location_id", None))
         dest_loc = _resolve_loc(env, getattr(deliv, "location_dest_id", None))
-        if src_loc and getattr(src_loc, "usage", None):
-            assert src_loc.usage == "internal", (
-                f"[canonical_oracle] Lokasi asal delivery {so_num} harus 'internal', got '{src_loc.usage}'!"
-            )
-        if dest_loc and getattr(dest_loc, "usage", None):
-            assert dest_loc.usage == "customer", (
-                f"[canonical_oracle] Lokasi tujuan delivery {so_num} harus 'customer', got '{dest_loc.usage}'!"
-            )
+        assert src_loc and getattr(src_loc, "usage", None) == "internal" and getattr(src_loc, "id", None) == wh_loc.id, (
+            f"[canonical_oracle] Lokasi asal delivery {so_num} harus WH/Stock (id={wh_loc.id}, usage='internal'), "
+            f"got id={getattr(src_loc, 'id', None)} ('{getattr(src_loc, 'name', '')}', usage='{getattr(src_loc, 'usage', None)}')!"
+        )
+        assert dest_loc and getattr(dest_loc, "usage", None) == "customer", (
+            f"[canonical_oracle] Lokasi tujuan delivery {so_num} harus 'customer', got '{getattr(dest_loc, 'usage', None)}'!"
+        )
 
         expected_deliv = deliv_by_so.get(so_num)
         assert expected_deliv, f"[canonical_oracle] SO {so_num} tidak ada di perpetual_deliveries.csv!"
@@ -556,6 +715,21 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
             lot_name = _resolve_ml_lot_name(env, ml)
             assert sku, f"[canonical_oracle] Baris move line pada delivery {so_num} tidak memiliki SKU!"
             assert lot_name, f"[canonical_oracle] Baris move line SKU {sku} pada delivery {so_num} tidak memiliki lot!"
+            ml_date = str(getattr(ml, "date", ""))[:10]
+            assert ml_date == exp_date, (
+                f"[canonical_oracle] Tanggal stock.move.line delivery {so_num} salah! Expected {exp_date}, got {ml_date}"
+            )
+            ml_src = _resolve_loc(env, getattr(ml, "location_id", None))
+            ml_dest = _resolve_loc(env, getattr(ml, "location_dest_id", None))
+            if ml_src is not None:
+                assert getattr(ml_src, "id", None) == wh_loc.id, (
+                    f"[canonical_oracle] Lokasi asal stock.move.line delivery {so_num} harus WH/Stock (id={wh_loc.id}), "
+                    f"got {getattr(ml_src, 'id', None)}!"
+                )
+            if ml_dest is not None and getattr(ml_dest, "usage", None):
+                assert ml_dest.usage == "customer", (
+                    f"[canonical_oracle] Lokasi tujuan stock.move.line delivery {so_num} harus 'customer', got '{ml_dest.usage}'!"
+                )
             qty = float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)))
             key = (sku, lot_name)
             actual_delivered[key] = actual_delivered.get(key, 0.0) + qty
@@ -578,7 +752,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
             f"Expected {len(expected_delivered)}, got {len(actual_mls)}"
         )
 
-        # Verifikasi jurnal valuasi HPP native untuk setiap stock.move aktif pada delivery SO
+        # Verifikasi lokasi, tanggal efektif, dan jurnal valuasi HPP native untuk setiap stock.move aktif pada delivery SO
         so_moves = [
             mv for mv in getattr(deliv, "move_ids", [])
             if getattr(mv, "state", "done") != "cancel"
@@ -598,6 +772,21 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
             assert mv_sku in expected_cogs_by_sku, (
                 f"[canonical_oracle] stock.move SKU '{mv_sku}' pada delivery {so_num} tidak dikenal!"
             )
+            mv_date = str(getattr(mv, "date", ""))[:10]
+            assert mv_date == exp_date, (
+                f"[canonical_oracle] Tanggal stock.move delivery {so_num} salah! Expected {exp_date}, got {mv_date}"
+            )
+            mv_src = _resolve_loc(env, getattr(mv, "location_id", None))
+            mv_dest = _resolve_loc(env, getattr(mv, "location_dest_id", None))
+            if mv_src is not None:
+                assert getattr(mv_src, "id", None) == wh_loc.id, (
+                    f"[canonical_oracle] Lokasi asal stock.move delivery {so_num} harus WH/Stock (id={wh_loc.id}), "
+                    f"got {getattr(mv_src, 'id', None)}!"
+                )
+            if mv_dest is not None and getattr(mv_dest, "usage", None):
+                assert mv_dest.usage == "customer", (
+                    f"[canonical_oracle] Lokasi tujuan stock.move delivery {so_num} harus 'customer', got '{mv_dest.usage}'!"
+                )
             seen_so_move_skus.add(mv_sku)
             ams = _resolve_stock_move_account_moves(env, mv)
             assert len(ams) == 1, (
@@ -633,37 +822,33 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
     print(
         f" -> [Oracle Delivery SO] {len(target_so_slice)} SO Deliveries verified DONE "
-        f"(exact multiset lines, lot split, & native HPP valuation journals)."
+        f"(exact multiset lines, lot split, move/move_line dates & locations, & native HPP valuation journals)."
     )
 
-    # --- 3. Verifikasi Retur Karantina (Exact-Set, Source/Dest Usage, SKU+Lot+Qty, & Jurnal Valuasi Native) ---
+    # --- 3. Verifikasi Retur Karantina (Exact-Set, Multiplicity, Source/Dest Usage, SKU+Lot+Qty, & Jurnal Valuasi Native) ---
     rejections = [r for r in rej_rows if r["so_number"] in target_so_set]
     expected_rej_ids = {r["rejection_id"] for r in rejections}
-    all_rej_picks = [
-        p for p in (StockPicking.search([("origin", "=like", "REJ-%")]) or [])
-        if getattr(p, "state", "") != "cancel"
-    ]
+    all_rej_picks_raw = _iter_records(StockPicking.search([("origin", "=like", "REJ-%")]))
+    all_rej_picks = [p for p in all_rej_picks_raw if getattr(p, "state", "") != "cancel"]
     actual_rej_ids = {getattr(p, "origin", "") for p in all_rej_picks}
     assert actual_rej_ids == expected_rej_ids, (
         f"[canonical_oracle] Himpunan picking retur karantina di DB ({sorted(actual_rej_ids)}) != "
         f"register ({sorted(expected_rej_ids)})!"
     )
+    assert len(all_rej_picks_raw) == len(expected_rej_ids), (
+        f"[canonical_oracle] Duplikasi picking retur karantina terdeteksi di DB! "
+        f"Expected {len(expected_rej_ids)} record unik, got {len(all_rej_picks_raw)}!"
+    )
 
     for rej in rejections:
         rej_id = rej["rejection_id"]
-        rej_picks = [
-            p for p in (StockPicking.search([("origin", "=", rej_id)]) or [])
-            if getattr(p, "state", "") != "cancel"
-        ]
-        assert len(rej_picks) == 1, (
-            f"[canonical_oracle] Expected tepat 1 picking retur karantina {rej_id}, got {len(rej_picks)}!"
-        )
-        rej_pick = rej_picks[0]
+        rej_picks_raw = _iter_records(StockPicking.search([("origin", "=", rej_id)]))
+        rej_pick = _assert_unique_record(rej_picks_raw, f"Picking Retur Karantina {rej_id}")
         assert rej_pick.state == "done", (
             f"[canonical_oracle] Picking karantina {rej_id} belum done! State: {rej_pick.state}"
         )
 
-        # Verifikasi ketat lokasi sumber (wajib usage='customer') dan tujuan (wajib 'Karantina FMCG Maumbi', usage='internal')
+        # Verifikasi ketat lokasi sumber (wajib usage='customer') dan tujuan (wajib quar_loc.id, 'Karantina FMCG Maumbi', usage='internal')
         src_loc = _resolve_loc(env, getattr(rej_pick, "location_id", None))
         dest_loc = _resolve_loc(env, getattr(rej_pick, "location_dest_id", None))
         src_usage = str(getattr(src_loc, "usage", ""))
@@ -673,9 +858,9 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         assert src_usage == "customer", (
             f"[canonical_oracle] Lokasi sumber retur karantina {rej_id} wajib usage='customer', got '{src_usage}'!"
         )
-        assert dest_usage == "internal" and dest_name == "Karantina FMCG Maumbi", (
-            f"[canonical_oracle] Lokasi tujuan retur karantina {rej_id} wajib 'Karantina FMCG Maumbi' (usage='internal'), "
-            f"got '{dest_name}' (usage='{dest_usage}')!"
+        assert dest_usage == "internal" and dest_name == "Karantina FMCG Maumbi" and getattr(dest_loc, "id", None) == quar_loc.id, (
+            f"[canonical_oracle] Lokasi tujuan retur karantina {rej_id} wajib 'Karantina FMCG Maumbi' (id={quar_loc.id}, usage='internal'), "
+            f"got '{dest_name}' (id={getattr(dest_loc, 'id', None)}, usage='{dest_usage}')!"
         )
 
         rej_date = str(
@@ -703,6 +888,21 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         act_rej_sku = _resolve_ml_sku(env, ml0)
         act_rej_lot = _resolve_ml_lot_name(env, ml0)
         act_rej_qty = float(getattr(ml0, "quantity", getattr(ml0, "qty_done", 0.0)))
+        ml0_date = str(getattr(ml0, "date", ""))[:10]
+        assert ml0_date == rej["rejection_date"], (
+            f"[canonical_oracle] Tanggal stock.move.line retur karantina {rej_id} harus {rej['rejection_date']}! Got {ml0_date}"
+        )
+        ml0_src = _resolve_loc(env, getattr(ml0, "location_id", None))
+        ml0_dest = _resolve_loc(env, getattr(ml0, "location_dest_id", None))
+        if ml0_src is not None and getattr(ml0_src, "usage", None):
+            assert ml0_src.usage == "customer", (
+                f"[canonical_oracle] Lokasi sumber stock.move.line retur karantina {rej_id} wajib usage='customer', got '{ml0_src.usage}'!"
+            )
+        if ml0_dest is not None:
+            assert getattr(ml0_dest, "id", None) == quar_loc.id, (
+                f"[canonical_oracle] Lokasi tujuan stock.move.line retur karantina {rej_id} wajib Karantina (id={quar_loc.id}), "
+                f"got {getattr(ml0_dest, 'id', None)}!"
+            )
 
         assert act_rej_sku == expected_rej_sku, (
             f"[canonical_oracle] SKU retur karantina {rej_id} salah! Expected '{expected_rej_sku}', got '{act_rej_sku}'"
@@ -718,7 +918,23 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         assert len(rej_moves) == 1, (
             f"[canonical_oracle] Picking karantina {rej_id} wajib memiliki tepat 1 stock.move, got {len(rej_moves)}!"
         )
-        rej_ams = _resolve_stock_move_account_moves(env, rej_moves[0])
+        rmv0 = rej_moves[0]
+        rmv0_date = str(getattr(rmv0, "date", ""))[:10]
+        assert rmv0_date == rej["rejection_date"], (
+            f"[canonical_oracle] Tanggal stock.move retur karantina {rej_id} harus {rej['rejection_date']}! Got {rmv0_date}"
+        )
+        rmv0_src = _resolve_loc(env, getattr(rmv0, "location_id", None))
+        rmv0_dest = _resolve_loc(env, getattr(rmv0, "location_dest_id", None))
+        if rmv0_src is not None and getattr(rmv0_src, "usage", None):
+            assert rmv0_src.usage == "customer", (
+                f"[canonical_oracle] Lokasi sumber stock.move retur karantina {rej_id} wajib usage='customer', got '{rmv0_src.usage}'!"
+            )
+        if rmv0_dest is not None:
+            assert getattr(rmv0_dest, "id", None) == quar_loc.id, (
+                f"[canonical_oracle] Lokasi tujuan stock.move retur karantina {rej_id} wajib Karantina (id={quar_loc.id}), "
+                f"got {getattr(rmv0_dest, 'id', None)}!"
+            )
+        rej_ams = _resolve_stock_move_account_moves(env, rmv0)
         assert len(rej_ams) == 1, (
             f"[canonical_oracle] Retur karantina {rej_id} wajib memiliki tepat 1 jurnal valuasi native, got {len(rej_ams)}!"
         )
@@ -730,16 +946,15 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
         print(f" -> [Oracle Karantina] {rej_id} verified {act_rej_qty} unit {act_rej_sku} di lokasi {dest_name}.")
 
-    # --- 4. Verifikasi Saldo Absolut Stok Fisik, Saleable, Reserved, & Karantina (StockQuant) ---
-    wh_loc = getattr(adapter, "wh_stock_loc", None) or StockLocation.search(
-        [("usage", "=", "internal"), ("name", "!=", "Karantina FMCG Maumbi")], limit=1
+    # Verifikasi total seluruh StockPicking di DB (5 PO + N SO + M REJ tanpa ekstra/duplikat)
+    all_picks_in_db = _iter_records(StockPicking.search([]))
+    expected_total_picks = len(po_headers) + len(target_so_slice) + len(expected_rej_ids)
+    assert len(all_picks_in_db) == expected_total_picks, (
+        f"[canonical_oracle] Jumlah total StockPicking di DB ({len(all_picks_in_db)}) != "
+        f"ekspektasi ({expected_total_picks})! Duplikasi atau picking ekstra terdeteksi."
     )
-    quar_loc = getattr(adapter, "quarantine_loc", None) or StockLocation.search(
-        [("name", "=", "Karantina FMCG Maumbi")], limit=1
-    )
-    assert wh_loc, "[canonical_oracle] Lokasi gudang utama WH/Stock tidak ditemukan!"
-    assert quar_loc, "[canonical_oracle] Lokasi Karantina FMCG Maumbi tidak ditemukan!"
 
+    # --- 4. Verifikasi Saldo Absolut Stok Fisik, Saleable, Reserved, & Karantina (StockQuant) ---
     actual_saleable_quants = {}
     actual_quarantine_quants = {}
     all_quants = StockQuant.search([])
@@ -753,6 +968,10 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
         loc_id = getattr(loc_rec, "id", getattr(q, "location_id", None))
         loc_name = str(getattr(loc_rec, "name", ""))
+        loc_comp = getattr(loc_rec, "company_id", None) if loc_rec else None
+        loc_comp_id = getattr(loc_comp, "id", loc_comp) if loc_comp else None
+        q_comp = getattr(q, "company_id", None)
+        q_comp_id = getattr(q_comp, "id", q_comp) if q_comp else loc_comp_id
         sku = _resolve_ml_sku(env, q)
         lot_name = _resolve_ml_lot_name(env, q)
         qty = float(getattr(q, "quantity", 0.0))
@@ -767,14 +986,24 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         if abs(qty) < 0.001:
             continue
 
+        if seed_comp_id and loc_comp_id and loc_comp_id != seed_comp_id:
+            raise AssertionError(
+                f"[canonical_oracle] Lokasi quant '{loc_name}' (company_id={loc_comp_id}) bukan milik company seed ({seed_comp_id})!"
+            )
+        if seed_comp_id and q_comp_id and q_comp_id != seed_comp_id:
+            raise AssertionError(
+                f"[canonical_oracle] Quant SKU {sku} Lot {lot_name} berada pada company_id={q_comp_id}, bukan milik company seed ({seed_comp_id})!"
+            )
+
         key = (sku, lot_name)
-        if loc_id == quar_loc.id or loc_name == "Karantina FMCG Maumbi":
+        if loc_id == quar_loc.id:
             actual_quarantine_quants[key] = actual_quarantine_quants.get(key, 0.0) + qty
-        elif loc_id == wh_loc.id or "karantina" not in loc_name.lower():
+        elif loc_id == wh_loc.id:
             actual_saleable_quants[key] = actual_saleable_quants.get(key, 0.0) + qty
         else:
             raise AssertionError(
-                f"[canonical_oracle] Ditemukan quant pada lokasi internal asing '{loc_name}' untuk {key}: {qty}"
+                f"[canonical_oracle] Ditemukan quant pada lokasi internal tidak sah '{loc_name}' "
+                f"(id={loc_id}, expected wh_loc={wh_loc.id} atau quar_loc={quar_loc.id}) untuk {key}: {qty}"
             )
 
     expected_nonzero_saleable = {k: v for k, v in expected_saleable_by_sku_lot.items() if abs(v) > 0.001}
@@ -816,7 +1045,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         f"{len(actual_quarantine_quants)} quarantine quants cocok 100% (Total Valuasi: Rp {expected_total_inv_val:,.2f})."
     )
 
-    # --- 5. Verifikasi Nominal Invoice Komersial & Saldo AR (Exact-Set) ---
+    # --- 5. Verifikasi Nominal & Baris Invoice Komersial (product_id, UoM, sale_line_ids, Net Qty, DPP, PPN) & Saldo AR ---
     invoices_data = {
         iv["so_number"]: iv
         for iv in inv_rows
@@ -826,6 +1055,11 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         f"[canonical_oracle] Himpunan invoice di CSV untuk target slice tidak lengkap: {set(invoices_data.keys())}!"
     )
 
+    rejections_by_so_line = {}
+    for r in rej_rows:
+        key = (r["so_number"], r["sku_code"], r.get("lot_number"))
+        rejections_by_so_line[key] = rejections_by_so_line.get(key, 0.0) + float(r["qty_cartons"])
+
     expected_out_inv_refs = {iv["invoice_number"] for iv in invoices_data.values()}
     all_out_invs = AccountMove.search([("move_type", "=", "out_invoice")])
     all_out_invs_list = _iter_records(all_out_invs)
@@ -834,18 +1068,116 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         f"[canonical_oracle] Himpunan faktur out_invoice di DB ({sorted(actual_out_inv_refs)}) != "
         f"target slice ({sorted(expected_out_inv_refs)})!"
     )
+    assert len(all_out_invs_list) == len(expected_out_inv_refs), (
+        f"[canonical_oracle] Duplikasi faktur out_invoice terdeteksi di DB! "
+        f"Expected {len(expected_out_inv_refs)} record unik, got {len(all_out_invs_list)}!"
+    )
 
+    inv_rec_by_num = {}
     for so_num, inv_row in invoices_data.items():
         inv_num = inv_row["invoice_number"]
-        inv_rec = AccountMove.search([("ref", "=", inv_num)], limit=1)
-        assert inv_rec, f"[canonical_oracle] Invoice {inv_num} tidak ditemukan di account.move!"
+        inv_rec = _assert_unique_record(
+            AccountMove.search([("ref", "=", inv_num), ("move_type", "=", "out_invoice")]),
+            f"out_invoice {inv_num}",
+        )
         assert inv_rec.state == "posted", f"[canonical_oracle] Invoice {inv_num} belum posted!"
+        inv_rec_by_num[inv_num] = inv_rec
 
         inv_date = str(getattr(inv_rec, "date", ""))[:10]
         assert inv_date == inv_row["date_invoice"], (
             f"[canonical_oracle] Tanggal faktur {inv_num} salah! Expected {inv_row['date_invoice']}, got {inv_date}"
         )
         expected_date_by_am_id[inv_rec.id] = inv_row["date_invoice"]
+
+        # Pastikan out_invoice TIDAK menduplikasi baris COGS (display_type='cogs' atau akun 510000/113000)
+        dup_cogs_lines = [
+            ln for ln in _iter_records(getattr(inv_rec, "line_ids", None))
+            if getattr(ln, "display_type", "") == "cogs"
+            or str(getattr(getattr(ln, "account_id", None), "code", "")).strip() in ("113000", "510000")
+        ]
+        assert not dup_cogs_lines, (
+            f"[canonical_oracle] Faktur {inv_num} memiliki baris COGS/persediaan duplikat pada jurnal faktur!"
+        )
+
+        # Verifikasi detail invoice_line_ids per SKU/produk, UoM, sale_line_ids, qty net of rejection, harga DPP, dan diskon
+        so_header_p = build_so_header_payload(so_headers_by_num[so_num])
+        exp_inv_line_specs = []
+        for lrow in lines_by_so.get(so_num, []):
+            line_p = build_order_line_payload(lrow)
+            key = (so_num, line_p["sku_code"], line_p["lot_number"])
+            rej_cartons = rejections_by_so_line.get(key, 0.0)
+            net_cartons = line_p["qty_cartons"] - rej_cartons
+            if net_cartons <= 0:
+                continue
+            net_units = net_cartons * line_p["carton_qty"]
+            exp_inv_line_specs.append({
+                "sku_code": line_p["sku_code"],
+                "lot_number": line_p["lot_number"],
+                "net_units": net_units,
+                "unit_price_dpp": line_p["unit_price_dpp"],
+                "discount_pct": so_header_p["discount_pct"],
+            })
+
+        actual_inv_lines = _iter_records(getattr(inv_rec, "invoice_line_ids", None))
+        assert len(actual_inv_lines) == len(exp_inv_line_specs), (
+            f"[canonical_oracle] Jumlah baris invoice_line_ids pada {inv_num} salah! "
+            f"Expected {len(exp_inv_line_specs)}, got {len(actual_inv_lines)}"
+        )
+
+        so_rec = so_rec_by_num.get(so_num)
+        so_order_line_ids = {
+            getattr(sol, "id", None)
+            for sol in _iter_records(getattr(so_rec, "order_line", None))
+            if getattr(sol, "id", None) is not None
+        }
+
+        unmatched_specs = list(exp_inv_line_specs)
+        for il in actual_inv_lines:
+            il_prod = getattr(il, "product_id", None)
+            il_sku = _resolve_ml_sku(env, il)
+            assert il_prod and il_sku, (
+                f"[canonical_oracle] Baris invoice {inv_num} kehilangan product_id / identitas SKU!"
+            )
+            exp_prod = adapter.product_by_code.get(il_sku)
+            assert exp_prod and getattr(il_prod, "id", il_prod) == exp_prod.id, (
+                f"[canonical_oracle] product_id baris invoice {inv_num} untuk SKU '{il_sku}' tidak cocok dengan katalog seed!"
+            )
+            il_uom = getattr(il, "product_uom_id", None) or getattr(il, "uom_id", None)
+            exp_uom = getattr(exp_prod, "uom_id", None)
+            if il_uom and exp_uom and getattr(exp_uom, "id", None):
+                assert getattr(il_uom, "id", il_uom) == exp_uom.id, (
+                    f"[canonical_oracle] UoM baris invoice {inv_num} SKU {il_sku} salah!"
+                )
+            il_sale_lines = _iter_records(getattr(il, "sale_line_ids", None))
+            if so_order_line_ids:
+                assert il_sale_lines, (
+                    f"[canonical_oracle] Baris invoice {inv_num} SKU {il_sku} tidak memiliki relasi sale_line_ids ke SO {so_num}!"
+                )
+                for sl_item in il_sale_lines:
+                    sl_id = getattr(sl_item, "id", sl_item)
+                    assert sl_id in so_order_line_ids, (
+                        f"[canonical_oracle] sale_line_ids ({sl_id}) pada baris invoice {inv_num} bukan milik SO {so_num}!"
+                    )
+
+            il_qty = float(getattr(il, "quantity", 0.0))
+            il_price = float(getattr(il, "price_unit", 0.0))
+            il_disc = float(getattr(il, "discount", 0.0) or 0.0)
+
+            matched_idx = None
+            for s_idx, spec in enumerate(unmatched_specs):
+                if (
+                    spec["sku_code"] == il_sku
+                    and abs(spec["net_units"] - il_qty) < 0.001
+                    and abs(spec["unit_price_dpp"] - il_price) < 0.01
+                    and abs(spec["discount_pct"] - il_disc) < 0.001
+                ):
+                    matched_idx = s_idx
+                    break
+            assert matched_idx is not None, (
+                f"[canonical_oracle] Baris invoice {inv_num} (SKU={il_sku}, qty={il_qty}, price={il_price}, disc={il_disc}) "
+                f"tidak cocok dengan spesifikasi register {unmatched_specs}!"
+            )
+            unmatched_specs.pop(matched_idx)
 
         exp_dpp = float(inv_row["dpp_amount"])
         exp_ppn = float(inv_row["ppn_11_amount"])
@@ -875,7 +1207,10 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         assert abs(actual_residual - expected_residual) < 0.01, (
             f"[canonical_oracle] Saldo residual {inv_num} salah! Expected {expected_residual}, got {actual_residual}"
         )
-    print(" -> [Oracle Invoice] Invoices verified exact set, tanggal, DPP, PPN, dan saldo residual dinamis.")
+    print(
+        " -> [Oracle Invoice] Invoices verified exact set, product_id, UoM, sale_line_ids, "
+        "tanggal, DPP, PPN, dan saldo residual dinamis."
+    )
 
     # --- 6. Verifikasi Jurnal Diskon, Rekonsiliasi AR, Tagihan PO, Pembayaran AP, & OPEX ---
     ar_collections = {
@@ -884,13 +1219,40 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         if c.get("invoice_number") in expected_out_inv_refs
     }
 
+    expected_ar_pay_ids = {c["payment_id"] for c in ar_collections.values()}
+    expected_ap_pay_ids = {r["ap_payment_id"] for r in ap_rows}
+    expected_all_pay_ids = expected_ar_pay_ids | expected_ap_pay_ids
+    all_payments_in_db = _iter_records(AccountPayment.search([]))
+    actual_all_pay_ids = {
+        str(getattr(p, "ref", None) or getattr(p, "memo", None) or "")
+        for p in all_payments_in_db
+    }
+    assert actual_all_pay_ids == expected_all_pay_ids, (
+        f"[canonical_oracle] Himpunan AccountPayment di DB ({sorted(actual_all_pay_ids)}) != "
+        f"register ({sorted(expected_all_pay_ids)})!"
+    )
+    assert len(all_payments_in_db) == len(expected_all_pay_ids), (
+        f"[canonical_oracle] Duplikasi AccountPayment terdeteksi di DB! "
+        f"Expected {len(expected_all_pay_ids)}, got {len(all_payments_in_db)}!"
+    )
+
     for inv_num, ar_row in ar_collections.items():
         disc_amt = float(ar_row.get("early_payment_discount", 0.0))
         pay_id = ar_row["payment_id"]
+        inv_rec = inv_rec_by_num[inv_num]
+        inv_ar_lines = [
+            ln for ln in _iter_records(getattr(inv_rec, "line_ids", None))
+            if getattr(getattr(ln, "account_id", None), "account_type", "") == "asset_receivable"
+        ]
+        assert inv_ar_lines, f"[canonical_oracle] Faktur {inv_num} tidak memiliki baris asset_receivable!"
+
         if disc_amt > 0:
             disc_ref = f"DISC-{pay_id}"
-            disc_move = AccountMove.search([("ref", "=", disc_ref)], limit=1)
-            assert disc_move and disc_move.state == "posted", (
+            disc_move = _assert_unique_record(
+                AccountMove.search([("ref", "=", disc_ref)]),
+                f"Jurnal Diskon {disc_ref}",
+            )
+            assert disc_move.state == "posted", (
                 f"[canonical_oracle] Jurnal diskon {disc_ref} belum posted!"
             )
             disc_date = str(getattr(disc_move, "date", ""))[:10]
@@ -909,12 +1271,13 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
                 f"[canonical_oracle] Nominal kredit diskon {disc_ref} salah! "
                 f"Expected {disc_amt}, got {ar_disc_line[0].credit}"
             )
+            _verify_exact_reconciliation_pair(inv_ar_lines[0], ar_disc_line[0], f"AR {inv_num} <-> {disc_ref}")
 
         exp_pay_amt = float(ar_row["net_cash_collected_total"])
-        pay_rec = AccountPayment.search([("memo", "=", pay_id)], limit=1)
-        if not pay_rec:
-            pay_rec = AccountPayment.search([("ref", "=", pay_id)], limit=1)
-        assert pay_rec, f"[canonical_oracle] Payment {pay_id} tidak ditemukan!"
+        pay_matches = _iter_records(AccountPayment.search([("memo", "=", pay_id)]))
+        if not pay_matches:
+            pay_matches = _iter_records(AccountPayment.search([("ref", "=", pay_id)]))
+        pay_rec = _assert_unique_record(pay_matches, f"AR Payment {pay_id}")
         assert getattr(pay_rec, "state", "") in ("posted", "in_process", "paid"), (
             f"[canonical_oracle] Payment {pay_id} state bukan posted/in_process/paid! Got: {getattr(pay_rec, 'state', '')}"
         )
@@ -923,6 +1286,12 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         )
         if getattr(pay_rec, "move_id", None):
             expected_date_by_am_id[pay_rec.move_id.id] = ar_row["payment_date"]
+            pay_ar_lines = [
+                ln for ln in _iter_records(getattr(pay_rec.move_id, "line_ids", None))
+                if getattr(getattr(ln, "account_id", None), "account_type", "") == "asset_receivable"
+            ]
+            assert pay_ar_lines, f"[canonical_oracle] Payment AR {pay_id} tidak memiliki baris asset_receivable!"
+            _verify_exact_reconciliation_pair(inv_ar_lines[0], pay_ar_lines[0], f"AR {inv_num} <-> {pay_id}")
 
     # Verifikasi 5 Vendor Bills PO + 30 OPEX Bills dan 4 Pembayaran AP + 1 Open AP (PO-2026-06-05)
     ap_paid_by_po = {r["po_number"]: r for r in ap_rows}
@@ -942,8 +1311,11 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
     for h in po_headers:
         po_num = h["po_number"]
-        bill = AccountMove.search([("ref", "=", po_num), ("move_type", "=", "in_invoice")], limit=1)
-        assert bill and bill.state == "posted", f"[canonical_oracle] Vendor Bill {po_num} tidak ditemukan/belum posted!"
+        bill = _assert_unique_record(
+            AccountMove.search([("ref", "=", po_num), ("move_type", "=", "in_invoice")]),
+            f"Vendor Bill {po_num}",
+        )
+        assert bill.state == "posted", f"[canonical_oracle] Vendor Bill {po_num} tidak ditemukan/belum posted!"
         bill_date = str(getattr(bill, "date", ""))[:10]
         assert bill_date == h["arrival_maumbi_date"], (
             f"[canonical_oracle] Tanggal Vendor Bill {po_num} salah! "
@@ -965,15 +1337,21 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         if po_num in ap_paid_by_po:
             ap_info = ap_paid_by_po[po_num]
             ap_id = ap_info["ap_payment_id"]
-            ap_rec = AccountPayment.search([("memo", "=", ap_id)], limit=1)
-            if not ap_rec:
-                ap_rec = AccountPayment.search([("ref", "=", ap_id)], limit=1)
-            assert ap_rec, f"[canonical_oracle] AP Payment {ap_id} tidak ditemukan!"
+            ap_matches = _iter_records(AccountPayment.search([("memo", "=", ap_id)]))
+            if not ap_matches:
+                ap_matches = _iter_records(AccountPayment.search([("ref", "=", ap_id)]))
+            ap_rec = _assert_unique_record(ap_matches, f"AP Payment {ap_id}")
             assert abs(float(getattr(ap_rec, "amount", 0.0)) - float(ap_info["amount_paid_dpp"])) < 0.01, (
                 f"[canonical_oracle] Nominal AP Payment {ap_id} salah!"
             )
             if getattr(ap_rec, "move_id", None):
                 expected_date_by_am_id[ap_rec.move_id.id] = ap_info["payment_date"]
+                ap_pay_lines = [
+                    ln for ln in _iter_records(getattr(ap_rec.move_id, "line_ids", None))
+                    if getattr(getattr(ln, "account_id", None), "account_type", "") == "liability_payable"
+                ]
+                assert ap_pay_lines, f"[canonical_oracle] Payment AP {ap_id} tidak memiliki baris liability_payable!"
+                _verify_exact_reconciliation_pair(bill_ap_lines[0], ap_pay_lines[0], f"AP {po_num} <-> {ap_id}")
             for ln in bill_ap_lines:
                 assert adapter._is_reconciled(ln), (
                     f"[canonical_oracle] Vendor Bill {po_num} wajib lunas terekonsiliasi dengan {ap_id}!"
@@ -985,13 +1363,74 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
                     f"[canonical_oracle] Vendor Bill {po_num} seharusnya masih Open AP (belum jatuh tempo di Juli 2026)!"
                 )
 
+    expected_opex_gl_by_code = {}
+    comp_partner_id = getattr(getattr(getattr(adapter, "company", None), "partner_id", None), "id", None)
     for idx, op in enumerate(opex_rows, start=1):
         ref_code = f"OPEX-2026-07-{idx:02d}"
-        op_move = AccountMove.search([("ref", "=", ref_code)], limit=1)
-        assert op_move and op_move.state == "posted", f"[canonical_oracle] OPEX move {ref_code} tidak ditemukan!"
+        op_move = _assert_unique_record(
+            AccountMove.search([("ref", "=", ref_code)]),
+            f"OPEX {ref_code}",
+        )
+        assert op_move.state == "posted", f"[canonical_oracle] OPEX move {ref_code} belum posted!"
+        op_date = str(getattr(op_move, "date", ""))[:10]
+        assert op_date == op["date"], (
+            f"[canonical_oracle] Tanggal OPEX {ref_code} salah! Expected {op['date']}, got {op_date}"
+        )
         expected_date_by_am_id[op_move.id] = op["date"]
 
-    # --- 7. Verifikasi Saldo Absolut GL As-Of (113000, 113900, 510000) & Tanggal Eksak Seluruh Jurnal ---
+        exp_cat = str(op["category"]).strip()
+        exp_desc = str(op["description"]).strip()
+        exp_pay_type = str(op["payment_type"]).strip()
+        exp_amt = float(op["amount"])
+        exp_acc_code, _ = OPEX_CATEGORY_ACCOUNT_MAP[exp_cat]
+        exp_p_ref, _ = OPEX_PAYMENT_PARTNER_MAP[exp_pay_type]
+        expected_opex_gl_by_code[exp_acc_code] = expected_opex_gl_by_code.get(exp_acc_code, 0.0) + exp_amt
+
+        op_partner = getattr(op_move, "partner_id", None)
+        op_partner_id = getattr(op_partner, "id", op_partner)
+        assert op_partner_id and op_partner_id != comp_partner_id, (
+            f"[canonical_oracle] OPEX {ref_code} dilarang menggunakan partner company sendiri!"
+        )
+        assert getattr(op_partner, "ref", None) == exp_p_ref, (
+            f"[canonical_oracle] Partner OPEX {ref_code} salah! Expected '{exp_p_ref}', got '{getattr(op_partner, 'ref', None)}'"
+        )
+
+        op_inv_lines = _iter_records(getattr(op_move, "invoice_line_ids", None))
+        if op_inv_lines:
+            line_name = str(getattr(op_inv_lines[0], "name", ""))
+            assert exp_cat in line_name and exp_desc in line_name, (
+                f"[canonical_oracle] Deskripsi baris OPEX {ref_code} ('{line_name}') tidak memuat '{exp_cat}: {exp_desc}'!"
+            )
+
+        op_jlines = _iter_records(getattr(op_move, "line_ids", None))
+        assert op_jlines, f"[canonical_oracle] OPEX {ref_code} tidak memiliki line_ids!"
+        op_debit_by_code = {}
+        op_credit_payable = 0.0
+        for jl in op_jlines:
+            acc = getattr(jl, "account_id", None)
+            code = str(getattr(acc, "code", "") or "").strip()
+            acc_type = str(getattr(acc, "account_type", "") or "").strip()
+            d = round(float(getattr(jl, "debit", 0.0)), 2)
+            c = round(float(getattr(jl, "credit", 0.0)), 2)
+            if d > 0:
+                op_debit_by_code[code] = round(op_debit_by_code.get(code, 0.0) + d, 2)
+            if c > 0:
+                assert acc_type == "liability_payable", (
+                    f"[canonical_oracle] Akun kredit lawan OPEX {ref_code} harus liability_payable, got '{acc_type}' (code='{code}')!"
+                )
+                op_credit_payable = round(op_credit_payable + c, 2)
+
+        tot_op_debit = round(sum(op_debit_by_code.values()), 2)
+        assert abs(tot_op_debit - exp_amt) < 0.01 and abs(op_credit_payable - exp_amt) < 0.01, (
+            f"[canonical_oracle] Nominal beban {ref_code} salah! "
+            f"Expected Rp {exp_amt:,.2f}, got debit=Rp {tot_op_debit:,.2f}, credit=Rp {op_credit_payable:,.2f}"
+        )
+        assert set(op_debit_by_code.keys()) == {exp_acc_code}, (
+            f"[canonical_oracle] Akun debit beban {ref_code} salah! "
+            f"Expected {{{exp_acc_code!r}}}, got {set(op_debit_by_code.keys())}"
+        )
+
+    # --- 7. Verifikasi Saldo Absolut GL As-Of (113000, 113900, 510000, & 610100-610400) & Tanggal Eksak Seluruh Jurnal ---
     all_moves = AccountMove.search([])
     all_moves_list = _iter_records(all_moves)
     assert len(all_moves_list) > 0, "[canonical_oracle] FATAL: Tidak ada entri jurnal yang terbentuk di GL!"
@@ -1052,6 +1491,19 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
     assert abs(act_gl_510000 - expected_gl_510000) < 1.0, (
         f"[canonical_oracle] Saldo absolut GL HPP (510000) salah! "
         f"Expected Rp {expected_gl_510000:,.2f}, got Rp {act_gl_510000:,.2f}"
+    )
+
+    total_actual_opex_gl = 0.0
+    for opex_code, exp_opex_total in sorted(expected_opex_gl_by_code.items()):
+        act_opex_val = gl_net_by_code.get(opex_code, 0.0)
+        total_actual_opex_gl += act_opex_val
+        assert abs(act_opex_val - exp_opex_total) < 1.0, (
+            f"[canonical_oracle] Saldo GL Beban OPEX ({opex_code}) salah! "
+            f"Expected Rp {exp_opex_total:,.2f}, got Rp {act_opex_val:,.2f}"
+        )
+    assert abs(total_actual_opex_gl - 394350000.0) < 1.0, (
+        f"[canonical_oracle] Total agregat GL Beban OPEX 30 entri salah! "
+        f"Expected Rp 394,350,000.00, got Rp {total_actual_opex_gl:,.2f}"
     )
 
     print(
@@ -1118,7 +1570,7 @@ def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None
             seen_ids.add(id(r))
             vals_cp = dict(getattr(r, "_vals", {})) if hasattr(r, "_vals") else None
             dict_cp = dict(r.__dict__)
-            for list_attr in ("move_line_ids", "move_ids", "line_ids", "picking_ids"):
+            for list_attr in ("move_line_ids", "move_ids", "line_ids", "invoice_line_ids", "picking_ids", "order_line"):
                 if list_attr in dict_cp and isinstance(dict_cp[list_attr], list):
                     lst_cls = type(dict_cp[list_attr])
                     dict_cp[list_attr] = lst_cls(dict_cp[list_attr])
@@ -1126,7 +1578,7 @@ def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None
                     lst_cls = type(vals_cp[list_attr])
                     vals_cp[list_attr] = lst_cls(vals_cp[list_attr])
             rec_backups.append((r, vals_cp, dict_cp))
-            for list_attr in ("move_line_ids", "move_ids", "line_ids", "picking_ids"):
+            for list_attr in ("move_line_ids", "move_ids", "line_ids", "invoice_line_ids", "picking_ids", "order_line"):
                 sub_list = getattr(r, list_attr, None)
                 if isinstance(sub_list, (list, tuple)):
                     for sub_r in sub_list:
@@ -1256,6 +1708,11 @@ def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None
             "company_id": env.company.id,
         })
         sml_fields = getattr(StockMoveLine, "_fields", {})
+        ref_ml_date = (
+            getattr(pick317.move_line_ids[0], "date", None)
+            if getattr(pick317, "move_line_ids", None)
+            else None
+        ) or "2026-07-09 10:00:00"
         ml_vals = {
             "picking_id": pick317.id,
             "product_id": bogus_prod.id,
@@ -1263,6 +1720,7 @@ def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None
             "quantity": 999.0,
             "location_id": getattr(pick317.location_id, "id", 1),
             "location_dest_id": getattr(pick317.location_dest_id, "id", 1),
+            "date": ref_ml_date,
         }
         if sml_fields and not isinstance(sml_fields, bool) and hasattr(sml_fields, "__contains__"):
             if "product_uom_id" in sml_fields and getattr(bogus_prod, "uom_id", None):
@@ -1455,8 +1913,237 @@ def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None
         "Mutation 11 (Kebocoran Tanggal Runtime)",
     )
 
+    # --- Mutasi 12: Penghapusan product_id pada Baris Faktur out_invoice ---
+    def mutate_remove_invoice_line_product():
+        AccountMove = env["account.move"].sudo()
+        inv1 = AccountMove.search([("ref", "=", "INV-202607-0001")], limit=1)
+        inv_lines = [
+            ln for ln in (getattr(inv1, "invoice_line_ids", None) or getattr(inv1, "line_ids", []))
+            if getattr(ln, "display_type", "product") in ("product", False, None)
+        ]
+        assert inv_lines, "[mutation_rejection] Baris produk INV-202607-0001 harus tersedia!"
+        il0 = inv_lines[0]
+        if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+            env.cr.execute("UPDATE account_move_line SET product_id = NULL WHERE id = %s", (il0.id,))
+            if hasattr(il0, "invalidate_recordset"):
+                il0.invalidate_recordset()
+            if hasattr(inv1, "invalidate_recordset"):
+                inv1.invalidate_recordset()
+        else:
+            setattr(il0, "product_id", False)
+            if hasattr(il0, "_vals"):
+                il0._vals["product_id"] = False
+
+    _execute_isolated_mutation(
+        mutate_remove_invoice_line_product,
+        "Baris invoice INV-202607-0001 kehilangan product_id",
+        "Mutation 12 (Penghapusan product_id pada Baris Faktur)",
+    )
+
+    # --- Mutasi 13: Lokasi Gudang Salah dalam Company yang Sama (WH Other Business) ---
+    def mutate_wrong_warehouse_location_same_company():
+        StockLocation = env["stock.location"].sudo()
+        StockQuant = env["stock.quant"].sudo()
+        sl_fields = getattr(StockLocation, "_fields", {})
+        loc_vals = {
+            "name": "WH Other Business",
+            "usage": "internal",
+            "company_id": env.company.id,
+        }
+        if sl_fields and not isinstance(sl_fields, bool) and hasattr(sl_fields, "__contains__"):
+            loc_vals = {k: v for k, v in loc_vals.items() if k in sl_fields}
+        other_wh_loc = StockLocation.create(loc_vals)
+        wh_loc = getattr(adapter, "wh_stock_loc", None)
+        q0 = StockQuant.search([("location_id", "=", wh_loc.id)], limit=1)
+        if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+            env.cr.execute("UPDATE stock_quant SET location_id = %s WHERE id = %s", (other_wh_loc.id, q0.id))
+            if hasattr(q0, "invalidate_recordset"):
+                q0.invalidate_recordset()
+        else:
+            q0.write({"location_id": other_wh_loc})
+
+    _execute_isolated_mutation(
+        mutate_wrong_warehouse_location_same_company,
+        "lokasi internal tidak sah 'WH Other Business'",
+        "Mutation 13 (Lokasi Gudang Salah dalam Company yang Sama)",
+    )
+
+    # --- Mutasi 14: Lokasi Milik Company Lain pada StockQuant ---
+    def mutate_location_other_company():
+        StockLocation = env["stock.location"].sudo()
+        StockQuant = env["stock.quant"].sudo()
+        if "res.company" in env:
+            other_comp = env["res.company"].sudo().create({"name": "PT Luar Seed Temporer"})
+        else:
+            class _ForeignCo:
+                id = 999
+                name = "PT Luar Seed Temporer"
+
+            other_comp = _ForeignCo()
+        sl_fields = getattr(StockLocation, "_fields", {})
+        loc_vals = {
+            "name": getattr(adapter.wh_stock_loc, "name", "Stock"),
+            "usage": "internal",
+            "company_id": other_comp.id,
+        }
+        if sl_fields and not isinstance(sl_fields, bool) and hasattr(sl_fields, "__contains__"):
+            loc_vals = {k: v for k, v in loc_vals.items() if k in sl_fields}
+        other_comp_loc = StockLocation.create(loc_vals)
+        wh_loc = getattr(adapter, "wh_stock_loc", None)
+        q0 = StockQuant.search([("location_id", "=", wh_loc.id)], limit=1)
+        if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+            env.cr.execute(
+                "UPDATE stock_quant SET location_id = %s, company_id = %s WHERE id = %s",
+                (other_comp_loc.id, other_comp.id, q0.id),
+            )
+            if hasattr(q0, "invalidate_recordset"):
+                q0.invalidate_recordset()
+        else:
+            q0.write({"location_id": other_comp_loc, "company_id": other_comp})
+
+    _execute_isolated_mutation(
+        mutate_location_other_company,
+        "bukan milik company seed",
+        "Mutation 14 (Lokasi Milik Company Lain pada StockQuant)",
+    )
+
+    # --- Mutasi 15: Tanggal stock.move Saja Bergeser (Tanpa Mengubah stock.move.line.date) ---
+    def mutate_stock_move_date_only():
+        pick1 = _find_so_picking("SO-202607-0001")
+        mv0 = pick1.move_ids[0]
+        if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+            env.cr.execute("UPDATE stock_move SET date = '2026-10-28 10:00:00' WHERE id = %s", (mv0.id,))
+            if hasattr(mv0, "invalidate_recordset"):
+                mv0.invalidate_recordset()
+        else:
+            mv0.write({"date": "2026-10-28 10:00:00"})
+
+    _execute_isolated_mutation(
+        mutate_stock_move_date_only,
+        "Tanggal stock.move delivery SO-202607-0001 salah! Expected 2026-07-02, got 2026-10-28",
+        "Mutation 15 (Pergeseran Tanggal stock.move Saja)",
+    )
+
+    # --- Mutasi 16: Tanggal stock.move.line Saja Bergeser (Tanpa Mengubah stock.move.date) ---
+    def mutate_stock_move_line_date_only():
+        pick1 = _find_so_picking("SO-202607-0001")
+        ml0 = pick1.move_line_ids[0]
+        if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+            env.cr.execute("UPDATE stock_move_line SET date = '2026-10-28 10:00:00' WHERE id = %s", (ml0.id,))
+            if hasattr(ml0, "invalidate_recordset"):
+                ml0.invalidate_recordset()
+        else:
+            ml0.write({"date": "2026-10-28 10:00:00"})
+
+    _execute_isolated_mutation(
+        mutate_stock_move_line_date_only,
+        "Tanggal stock.move.line delivery SO-202607-0001 salah! Expected 2026-07-02, got 2026-10-28",
+        "Mutation 16 (Pergeseran Tanggal stock.move.line Saja)",
+    )
+
+    # --- Mutasi 17: OPEX Seimbang tetapi Salah Nominal (+Rp 1.000.000) ---
+    def mutate_opex_balanced_wrong_amount():
+        AccountMove = env["account.move"].sudo()
+        opex1 = AccountMove.search([("ref", "=", "OPEX-2026-07-01")], limit=1)
+        if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+            env.cr.execute(
+                "UPDATE account_move SET amount_untaxed = amount_untaxed + 1000000.0, "
+                "amount_total = amount_total + 1000000.0 WHERE id = %s",
+                (opex1.id,),
+            )
+            if hasattr(opex1, "invalidate_recordset"):
+                opex1.invalidate_recordset()
+        else:
+            setattr(opex1, "amount_untaxed", float(getattr(opex1, "amount_untaxed", 0.0)) + 1000000.0)
+            setattr(opex1, "amount_total", float(getattr(opex1, "amount_total", 0.0)) + 1000000.0)
+        for ln in getattr(opex1, "line_ids", []):
+            if float(getattr(ln, "debit", 0.0)) > 0:
+                if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                    env.cr.execute("UPDATE account_move_line SET debit = debit + 1000000.0 WHERE id = %s", (ln.id,))
+                    if hasattr(ln, "invalidate_recordset"):
+                        ln.invalidate_recordset()
+                else:
+                    ln.write({"debit": float(ln.debit) + 1000000.0})
+            elif float(getattr(ln, "credit", 0.0)) > 0:
+                if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                    env.cr.execute("UPDATE account_move_line SET credit = credit + 1000000.0 WHERE id = %s", (ln.id,))
+                    if hasattr(ln, "invalidate_recordset"):
+                        ln.invalidate_recordset()
+                else:
+                    ln.write({"credit": float(ln.credit) + 1000000.0})
+
+    _execute_isolated_mutation(
+        mutate_opex_balanced_wrong_amount,
+        "Nominal beban OPEX-2026-07-01 salah",
+        "Mutation 17 (OPEX Seimbang tetapi Salah Nominal)",
+    )
+
+    # --- Mutasi 18: OPEX Salah Akun Beban (610100 -> 610400) ---
+    def mutate_opex_wrong_expense_account():
+        AccountMove = env["account.move"].sudo()
+        opex1 = AccountMove.search([("ref", "=", "OPEX-2026-07-01")], limit=1)
+        wrong_acc = getattr(adapter, "opex_accounts", {}).get("Sewa & Utilitas")
+        assert wrong_acc, "[mutation_rejection] Akun Sewa & Utilitas (610400) harus tersedia!"
+        for ln in getattr(opex1, "line_ids", []):
+            if float(getattr(ln, "debit", 0.0)) > 0:
+                if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                    env.cr.execute(
+                        "UPDATE account_move_line SET account_id = %s WHERE id = %s",
+                        (wrong_acc.id, ln.id),
+                    )
+                    if hasattr(ln, "invalidate_recordset"):
+                        ln.invalidate_recordset()
+                else:
+                    ln.write({"account_id": wrong_acc})
+
+    _execute_isolated_mutation(
+        mutate_opex_wrong_expense_account,
+        "Akun debit beban OPEX-2026-07-01 salah",
+        "Mutation 18 (OPEX Salah Akun Beban)",
+    )
+
+    # --- Mutasi 19: Duplikasi Dokumen PurchaseOrder dengan origin Sama ---
+    def mutate_duplicate_po():
+        PurchaseOrder = env["purchase.order"].sudo()
+        po1 = PurchaseOrder.search([("origin", "=", "PO-2026-06-01")], limit=1)
+        po_fields = getattr(PurchaseOrder, "_fields", {})
+        dup_vals = {
+            "origin": "PO-2026-06-01",
+            "partner_id": getattr(getattr(po1, "partner_id", None), "id", po1.partner_id),
+            "company_id": env.company.id,
+        }
+        if po_fields and not isinstance(po_fields, bool) and hasattr(po_fields, "__contains__"):
+            dup_vals = {k: v for k, v in dup_vals.items() if k in po_fields}
+        PurchaseOrder.create(dup_vals)
+
+    _execute_isolated_mutation(
+        mutate_duplicate_po,
+        "Duplikasi PurchaseOrder",
+        "Mutation 19 (Duplikasi PurchaseOrder)",
+    )
+
+    # --- Mutasi 20: Duplikasi Dokumen SaleOrder dengan client_order_ref Sama ---
+    def mutate_duplicate_so():
+        SaleOrder = env["sale.order"].sudo()
+        so1 = SaleOrder.search([("client_order_ref", "=", "SO-202607-0001")], limit=1)
+        so_fields = getattr(SaleOrder, "_fields", {})
+        dup_vals = {
+            "client_order_ref": "SO-202607-0001",
+            "partner_id": getattr(getattr(so1, "partner_id", None), "id", so1.partner_id),
+            "company_id": env.company.id,
+        }
+        if so_fields and not isinstance(so_fields, bool) and hasattr(so_fields, "__contains__"):
+            dup_vals = {k: v for k, v in dup_vals.items() if k in so_fields}
+        SaleOrder.create(dup_vals)
+
+    _execute_isolated_mutation(
+        mutate_duplicate_so,
+        "Duplikasi SaleOrder",
+        "Mutation 20 (Duplikasi SaleOrder)",
+    )
+
     print("\n" + "=" * 80)
-    print("[mutation_rejection] SELURUH 11 UJI MUTASI NEGATIF BERHASIL DITOLAK (ORACLE TERBUKTI AKTIF & TERISOLASI)")
+    print("[mutation_rejection] SELURUH 20 UJI MUTASI NEGATIF BERHASIL DITOLAK (ORACLE TERBUKTI AKTIF & TERISOLASI)")
     print("=" * 80)
 
 
