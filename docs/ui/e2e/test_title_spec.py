@@ -1,9 +1,4 @@
-"""Regression tests for the production readTitleSpec guard.
-
-Run with: python -m pytest docs/ui/e2e/test_title_spec.py
-The function body is extracted from form_patch.js so these cases exercise production logic,
-not a copied implementation. Chromium supplies the DOM implementation.
-"""
+"""Regression tests for production title guards and editor-input selection."""
 import re
 import unittest
 from pathlib import Path
@@ -14,10 +9,10 @@ from playwright.sync_api import sync_playwright
 SOURCE = Path(__file__).resolve().parents[3] / "addons/id_ui_form/static/src/form/form_patch.js"
 
 
-def _read_title_spec_source():
+def _production_function_source(name):
     source = SOURCE.read_text(encoding="utf-8")
-    match = re.search(r"export function readTitleSpec\(block\)\s*\{", source)
-    assert match, "production readTitleSpec function not found"
+    match = re.search(rf"export function {re.escape(name)}\(block\)\s*\{{", source)
+    assert match, f"production {name} function not found"
     start = match.start()
     brace = source.index("{", match.start())
     depth = 0
@@ -28,12 +23,12 @@ def _read_title_spec_source():
         if quote:
             if escaped:
                 escaped = False
-            elif char == "\\\\":
+            elif char == "\\":
                 escaped = True
             elif char == quote:
                 quote = None
             continue
-        if char in ("'", '"', "`"):
+        if char in ("'", '"', "\`"):
             quote = char
         elif char == "{":
             depth += 1
@@ -41,12 +36,13 @@ def _read_title_spec_source():
             depth -= 1
             if depth == 0:
                 return source[start:index + 1].replace("export function", "function", 1)
-    raise AssertionError("unbalanced readTitleSpec function")
+    raise AssertionError(f"unbalanced {name} function")
 
 
 class TestReadTitleSpec(unittest.TestCase):
-    def test_fails_closed_for_unsupported_controls(self):
-        function_source = _read_title_spec_source()
+    def test_fails_closed_and_focuses_the_same_validated_input(self):
+        spec_source = _production_function_source("readTitleSpec")
+        input_source = _production_function_source("getEditableTitleInput")
         fixtures = [
             ("readonly title", '<div class="oe_title"><h1>SO001</h1></div>', "readonly"),
             ("supported invoice draft", '<div class="oe_title"><label class="o_form_label">Customer Invoice</label><h1><input value="DRAFT-001"></h1></div>', "editable"),
@@ -59,23 +55,37 @@ class TestReadTitleSpec(unittest.TestCase):
             ("textarea control", '<div class="oe_title"><h1><textarea>Text</textarea></h1></div>', None),
             ("input outside heading", '<div class="oe_title"><h1>Vehicle</h1><input value="plate"></div>', None),
             ("number input", '<div class="oe_title"><h1><input type="number" value="123"></h1></div>', None),
+            ("hidden before supported input", '<div class="oe_title"><h1><input type="hidden" value="metadata"><input type="text" value="DRAFT"></h1></div>', "editable"),
+            ("hidden only with readonly text", '<div class="oe_title"><h1><input type="hidden" value="metadata">Vehicle</h1></div>', "readonly"),
+            ("hidden plus second visible input", '<div class="oe_title"><h1><input type="hidden" value="metadata"><input value="DRAFT"><input value="OTHER"></h1></div>', None),
         ]
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch()
             page = browser.new_page()
             results = page.evaluate(
-                """({ source, fixtures }) => {
-                    const readTitleSpec = new Function("return (" + source + ")")();
+                """({ specSource, inputSource, fixtures }) => {
+                    const getEditableTitleInput = new Function("return (" + inputSource + ")")();
+                    const readTitleSpec = new Function("getEditableTitleInput", "return (" + specSource + ")")(getEditableTitleInput);
                     return fixtures.map(([name, markup, expected]) => {
                         const wrapper = document.createElement("div");
                         wrapper.innerHTML = markup;
-                        const actual = readTitleSpec(wrapper.firstElementChild);
+                        const block = wrapper.firstElementChild;
+                        const actual = readTitleSpec(block);
+                        const editableInput = getEditableTitleInput(block);
                         const kind = actual === null ? null : actual.editable ? "editable" : "readonly";
+                        if (name === "hidden before supported input") {
+                            editableInput?.focus();
+                            const expectedInput = block.querySelector('input[type="text"]');
+                            return { name, expected, kind, pass: actual?.editable === true && editableInput === expectedInput && document.activeElement === expectedInput };
+                        }
+                        if (name === "hidden only with readonly text") {
+                            return { name, expected, kind, pass: actual?.editable === false && editableInput === null };
+                        }
                         return { name, expected, kind, pass: kind === expected };
                     });
                 }""",
-                {"source": function_source, "fixtures": fixtures},
+                {"specSource": spec_source, "inputSource": input_source, "fixtures": fixtures},
             )
             browser.close()
         failures = [item for item in results if not item["pass"]]
-        assert not failures, f"readTitleSpec regression failures: {failures}"
+        assert not failures, f"title guard/handler-input regression failures: {failures}"
