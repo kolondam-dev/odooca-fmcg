@@ -75,6 +75,9 @@ class TestReadTitleSpec(unittest.TestCase):
                         // fixture before running production guards/helpers, then always remove it.
                         document.body.append(wrapper);
                         try {
+                            if (!wrapper.isConnected) {
+                                throw new Error("title regression fixture must be connected to document");
+                            }
                             const block = wrapper.firstElementChild;
                             const actual = readTitleSpec(block);
                             const editableInput = getEditableTitleInput(block);
