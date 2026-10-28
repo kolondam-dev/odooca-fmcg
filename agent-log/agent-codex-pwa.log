@@ -27,3 +27,10 @@
 - 255 unit +1 hosting +94 browser resmi145.0.7632.6 PASS; 10 flow diulang setelah editor draft/quote diperbaiki. Typecheck/format/contracts/build/budget/Ruff/manifest/diff PASS; screenshot revisi SO ditinjau. CI setelah push/PR.
 - Backend menunggu seeding; tidak menyentuh addon/seed/loader/workflow/ruleset/Railway, tidak merge/deploy.
 - Task managed by agent-codex-pwa at 2026-10-28T23:20:03+07:00
+
+[2026-10-28T23:35:14+07:00] [INFO] Serialisasi reconnect setelah flaky CI PR34
+- CI9340f02: gate hijau tetapi93 passed+1 flaky; artefak menunjukkan false integrity hold akibat retry menulis antrean ketika hash/send aktif. Odoo SUCCESS.
+- Engine reservation sinkron, tunggu attempt aktif/error/backoff/media, reset queued lalu fresh pass; concurrent retry coalesced dan conditional cleanup. Tidak melemahkan hash/source atau mengubah worker/retry/timeout tes.
+- Dua regresi barrier FAIL pada engine lama, PASS pada fix;257 unit+1 hosting/typecheck/format/contracts/build/budget/Ruff/manifest/diff PASS. Hasil browser final/CI ditambahkan ke PR.
+- Backend menunggu seeding; live locked; tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-28T23:35:14+07:00

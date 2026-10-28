@@ -559,3 +559,53 @@ it("revision without a discount still requires a fresh approval", async () => {
         (await store.list(s.owner)).find((r) => r.key === child.key)!.state,
     ).toBe("accepted");
 });
+
+it("reconnect cannot mutate a queued row while revision media integrity reads its snapshot", async () => {
+    const s = await rejectedOrder(),
+        child = await submitRevision(
+            store,
+            s.owner,
+            s.root,
+            revised(s),
+            s.engine,
+        );
+    const unrelated = await s.engine.enqueue(
+        "field_expense.request",
+        {},
+        "Unrelated pending",
+    );
+    await store.put({ ...unrelated, nextAttempt: Date.now() + 60000 });
+    let release!: () => void,
+        entered!: () => void,
+        once = false;
+    const barrier = new Promise<void>((r) => {
+            release = r;
+        }),
+        started = new Promise<void>((r) => {
+            entered = r;
+        });
+    const original = store.getEvidence.bind(store);
+    vi.spyOn(store, "getEvidence").mockImplementation(async (owner, id) => {
+        if (!once) {
+            once = true;
+            entered();
+            await barrier;
+        }
+        return original(owner, id);
+    });
+    const sending = s.engine.flush();
+    await started;
+    const reconnect = s.engine.retry();
+    // No arbitrary delay: the retry reserves the engine synchronously and is
+    // blocked by the explicit media barrier, so its writes cannot have started.
+    expect(
+        (await store.list(s.owner)).find((r) => r.key === unrelated.key)!
+            .nextAttempt,
+    ).toBeGreaterThan(Date.now());
+    release();
+    await Promise.all([sending, reconnect]);
+    const after = (await store.list(s.owner)).find((r) => r.key === child.key)!;
+    expect(after.state).toBe("needs_approval");
+    expect(after.evidenceHold).toBeUndefined();
+    expect(after.error).toBeUndefined();
+});

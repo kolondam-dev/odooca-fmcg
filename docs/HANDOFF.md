@@ -1,5 +1,11 @@
 # HANDOFF
 
+## 2026-10-28 — agent-codex-pwa — Reconnect deterministik PR34
+**Temuan CI:** SHA9340f02 melewati gate tetapi log browser run40725326638 memuat 93 passed +1 flaky (tablet revisi SO offline→online). Artefak menunjukkan queued revision tertahan integritas saat checkout juga menulis backoff; hasil tersebut bukan browser bersih. CI Odoo run40725326738 SUCCESS.
+**Perbaikan:** retry mereservasi engine sebelum await, menunggu send aktif selesai termasuk hash media/error/backoff, baru reset queued backoff dan kirim satu pass baru. Retry serentak bergabung; finalizer send lama tidak menghapus reservasi baru. Tidak mengubah validasi hash/sumber, UUID, status terminal, timeout/retry/worker tes.
+**Regresi:** dua barrier terkontrol untuk reconnect saat offline send belum selesai dan saat media revision sedang dibaca; keduanya FAIL pada engine lama dan PASS setelah perbaikan. 257 unit +1 hosting, typecheck/format/contracts/demo+live/budget/Ruff/4 manifest/diff PASS. Browser final dicatat pada PR setelah selesai.
+**Batas/menunggu:** scope tetap simulator; backend menunggu seeding, resi serah-terima backlog, live locked. Menunggu CI/review commit follow-up PR34; tidak merge/deploy.
+
 ## 2026-10-28 — agent-codex-pwa — Revisi SO, approval delivery dan closing kantor
 **Basis:** main2444b2f (sudah memuat PR33 dan PR32), branch agen/pwa-order-revisions-delivery-policy. Mandat lima poin pemilik dirumuskan di plan§18 sebelum kode; SCOPE§15 dan README diperbarui.
 **Berubah:** SO rejected dapat direvisi dari daftar setelah visit closed/lintas hari dengan daily sync hari berjalan; UUID baru, root/parent/keputusan immutable, SKU/satuan/qty/diskon/catatan dan alasan editable, quote/current snapshot, draft per parent offline dan CAS satu successor. Revision tanpa diskon tetap approval ulang. Request pending hari kalender0–2 SPV, >=3 SPV+BM (tepat3 dipilih konservatif dan diinformasikan); cancel lima subreason pemilik wajib SPV. Keputusan simulator beralasan, berurutan, sekali/CAS, bukan picking/schedule resmi. Closing lokal saat tiba kantor memakai snapshot POD, menolak DO belum tercatat/sesi aktif/ganda; toleransi25m, fixture radius30m bukan kantor nyata. Serah-terima kasir di luar scope; upload resi uang/cek/faktur/retur backlog saja.
