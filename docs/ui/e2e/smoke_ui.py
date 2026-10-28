@@ -185,7 +185,14 @@ async def main():
         check("faktur: field Customer tetap di sheet", await page.locator(".o_form_sheet .o_field_widget[name=partner_id]").count() == 1)
 
         # Uji keyboard nyata: Enter dan Space membuka field OWL asli; blur memperbarui judul.
-        await title_button.focus()
+        action_buttons = page.locator(".o_form_statusbar .o_statusbar_buttons button")
+        if await action_buttons.count():
+            await action_buttons.last.focus()
+            await page.keyboard.press("Tab")
+            check("Tab memfokuskan tombol judul setelah tombol aksi",
+                  await title_button.evaluate("(el) => document.activeElement === el"))
+        else:
+            check("Tab memfokuskan tombol judul setelah tombol aksi", False)
         await page.keyboard.press("Enter")
         draft_input = page.locator(".o_form_sheet > .oe_title h1 input")
         await draft_input.wait_for(state="visible", timeout=5000)
@@ -207,9 +214,10 @@ async def main():
               await draft_input.evaluate("(el) => document.activeElement === el"))
         await draft_input.press("Escape")
         await page.wait_for_timeout(200)
-        check("Escape menutup editor tanpa menghilangkan judul",
+        check("Escape menutup editor, mengembalikan fokus, dan mempertahankan satu judul",
               await page.locator(".o_form_statusbar > .id_header_title").count() == 1
-              and await page.locator(".o_form_sheet > .oe_title").evaluate("(el) => getComputedStyle(el).display") != "none")
+              and await title_button.evaluate("(el) => document.activeElement === el")
+              and await page.locator(".o_form_sheet > .oe_title").evaluate("(el) => getComputedStyle(el).display") == "none")
         await page.goto(f"{BASE}/odoo/action-fleet.fleet_vehicle_action/new")
         await page.wait_for_selector(".o_form_sheet", timeout=30000)
         await page.wait_for_timeout(3000)
