@@ -967,3 +967,22 @@
 - Verifikasi lokal: ruff check (All checks passed!), check_manifests.py 4 addon ok, 15 CSV register kanonikal 100% beku.
 - Task managed by antigravity at 2026-10-28T23:46:00+07:00
 
+[2026-10-28T23:46:00+07:00] [INFO] Resolusi 4 Temuan Supervisi PR #15 (issuecomment-6473770755): Presisi Singular HPP Proof, Eksak Seed Company Config Parameter, Real ORM Native COGS Verification, dan Deep Rollback Invalidation
+- [P1 Finding 1 - Bukti HPP Eksak Singular sm.account_move_id]:
+  * Menghapus seluruh fallback SVL (stock_valuation_layer_ids) dan move.account_move_ids.
+  * Menegakkan asersi eksak singular sm.account_move_id: posted, kode STJ, company move == invoice == STJ journal, outbound customer delivery (location_dest_id.usage != 'internal'), tanggal jurnal cocok eksak dengan tanggal pergerakan fisik (sm.date == cogs_am.date), seimbang debit 510000 / kredit 113000, serta rekonsiliasi nominal HPP terhadap valuation cost pergerakan barang.
+- [P1 Finding 2 - Identitas Seed Persisten Eksak]:
+  * Menolak pencocokan longgar via nama ("Salva") atau kode company ("MDU"/"FMCG").
+  * Mengikat company seed secara eksak via ir.config_parameter fmcg.seed_company_id dan XMLID id_base.fmcg_seed_company.
+  * Menambahkan field fmcg_seed_batch = "CANONICAL_JULY_2026_PERPETUAL" pada account.move. Faktur tanpa penanda batch persisten langsung mengalir ke alur native.
+  * Mendukung mixed recordset (seed | ordinary) di mana faktur seed disupresi ([]), sedangkan faktur biasa tetap memanggil parent native Odoo ORM.
+- [P1 Finding 3 - Pembuktian Native COGS & Supresi Seed pada Real ORM]:
+  * Memutakhirkan TransactionCase id_base dengan negative tests lengkap terhadap counterexample supervisi (wrong journal date, wrong valuation amount, wrong product, wrong move company, missing singular account_move_id).
+  * Menambahkan verify_native_cogs_and_seed_suppression_real_orm(env) pada verify_disposable_slice.py untuk dieksekusi di CI container: membuktikan faktur biasa menghasilkan baris COGS native non-kosong, faktur seed mengembalikan [], mixed recordset memisahkan supresi dengan benar, dan bill/refund tidak tersupresi.
+- [P2 Finding 4 - Eliminasi Mock False-PASS & Pengujian Rollback Database PostgreSQL Nyata]:
+  * Memperbaiki MockEnv._take_snapshot dan _restore_snapshot pada test_canonical_loader_adapter.py: melakukan serialisasi nilai primitif dan deep attribute restoration tanpa cyclic object traversal, membuktikan mutasi in-place pada record existing dikembalikan ke nilai awal dan record baru terhapus.
+  * Menambahkan verify_real_database_transaction_rollback(env, reg_path) pada verify_disposable_slice.py: membuktikan rollback transaksi nyata pada level PostgreSQL melalui savepoint, cache invalidation (env.invalidate_all()), dan zero record leakage.
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py 4 addon ok, 15 CSV register kanonikal 100% beku.
+- Task managed by antigravity at 2026-10-28T23:46:00+07:00
+
+

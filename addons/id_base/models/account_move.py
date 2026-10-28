@@ -138,10 +138,11 @@ class AccountMove(models.Model):
                             f"dari company lain (ID {getattr(ord_comp, 'id', None)})!"
                         )
                     ord_name = getattr(order, "name", "")
-                    if ord_name and ord_name != inv_origin:
+                    ord_client_ref = getattr(order, "client_order_ref", "")
+                    if inv_origin not in (ord_name, ord_client_ref):
                         raise UserError(
                             f"[id_base] Baris faktur seed terhubung ke Sales Order '{ord_name}' "
-                            f"yang berbeda dari invoice_origin '{inv_origin}'!"
+                            f"(ref: '{ord_client_ref}') yang berbeda dari invoice_origin '{inv_origin}'!"
                         )
 
                 mvs = getattr(sol, "move_ids", None)

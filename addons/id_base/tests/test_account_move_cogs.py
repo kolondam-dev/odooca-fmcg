@@ -225,7 +225,7 @@ class TestAccountMoveCogs(TransactionCase):
         self.assertTrue(inv.is_fmcg_seed_invoice)
         with self.assertRaises(UserError) as ctx:
             inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
-        self.assertIn("bukan perusahaan seed FMCG", str(ctx.exception))
+        self.assertIn("bukan company seed resmi FMCG", str(ctx.exception))
 
     def test_marked_seed_without_delivery_moves_raises_user_error(self):
         """Kasus 3: Invoice bertanda seed tanpa link delivery move wajib ditolak fail-closed."""
@@ -388,7 +388,7 @@ class TestAccountMoveCogs(TransactionCase):
         inv.fmcg_seed_batch = False
         with self.assertRaises(UserError) as ctx:
             inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
-        self.assertIn("tidak memiliki penanda fmcg_seed_batch", str(ctx.exception))
+        self.assertIn("tidak memiliki batch identitas seed resmi", str(ctx.exception))
 
     def test_missing_singular_account_move_id_rejected(self):
         """Kasus P1: Stock move tanpa singular account_move_id wajib ditolak fail-closed."""
