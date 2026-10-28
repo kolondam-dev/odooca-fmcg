@@ -1,4 +1,4 @@
-"""Regression tests for production title guards and editor-input selection."""
+"""Regression tests for production title guards and editor activation."""
 import re
 import unittest
 from pathlib import Path
@@ -43,6 +43,7 @@ class TestReadTitleSpec(unittest.TestCase):
     def test_fails_closed_and_focuses_the_same_validated_input(self):
         spec_source = _production_function_source("readTitleSpec")
         input_source = _production_function_source("getEditableTitleInput")
+        focus_source = _production_function_source("focusEditableTitleInput")
         fixtures = [
             ("readonly title", '<div class="oe_title"><h1>SO001</h1></div>', "readonly"),
             ("supported invoice draft", '<div class="oe_title"><label class="o_form_label">Customer Invoice</label><h1><input value="DRAFT-001"></h1></div>', "editable"),
@@ -63,8 +64,9 @@ class TestReadTitleSpec(unittest.TestCase):
             browser = playwright.chromium.launch()
             page = browser.new_page()
             results = page.evaluate(
-                """({ specSource, inputSource, fixtures }) => {
+                """({ specSource, inputSource, focusSource, fixtures }) => {
                     const getEditableTitleInput = new Function("return (" + inputSource + ")")();
+                    const focusEditableTitleInput = new Function("getEditableTitleInput", "return (" + focusSource + ")")(getEditableTitleInput);
                     const readTitleSpec = new Function("getEditableTitleInput", "return (" + specSource + ")")(getEditableTitleInput);
                     return fixtures.map(([name, markup, expected]) => {
                         const wrapper = document.createElement("div");
@@ -74,18 +76,19 @@ class TestReadTitleSpec(unittest.TestCase):
                         const editableInput = getEditableTitleInput(block);
                         const kind = actual === null ? null : actual.editable ? "editable" : "readonly";
                         if (name === "hidden before supported input") {
-                            editableInput?.focus();
+                            const focusedInput = focusEditableTitleInput(block);
                             const expectedInput = block.querySelector('input[type="text"]');
-                            return { name, expected, kind, pass: actual?.editable === true && editableInput === expectedInput && document.activeElement === expectedInput };
+                            return { name, expected, kind, pass: actual?.editable === true && editableInput === expectedInput && focusedInput === expectedInput && document.activeElement === expectedInput && block.classList.contains("id_title_editing") };
                         }
                         if (name === "hidden only with readonly text") {
-                            return { name, expected, kind, pass: actual?.editable === false && editableInput === null };
+                            const focusedInput = focusEditableTitleInput(block);
+                            return { name, expected, kind, pass: actual?.editable === false && editableInput === null && focusedInput === null && !block.classList.contains("id_title_editing") };
                         }
                         return { name, expected, kind, pass: kind === expected };
                     });
                 }""",
-                {"specSource": spec_source, "inputSource": input_source, "fixtures": fixtures},
+                {"specSource": spec_source, "inputSource": input_source, "focusSource": focus_source, "fixtures": fixtures},
             )
             browser.close()
         failures = [item for item in results if not item["pass"]]
-        assert not failures, f"title guard/handler-input regression failures: {failures}"
+        assert not failures, f"title guard/editor activation regression failures: {failures}"
