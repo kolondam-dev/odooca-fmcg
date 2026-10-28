@@ -455,3 +455,38 @@ berikutnya, tetapi koreksi baru lintas hari/reassignment menunggu policy backend
 Receipt/media hilang atau rusak tetap perlu review tanpa hapus/rekonstruksi
 otomatis. Maps/auth/device/server authority, collection, closing, retur dan posting
 Odoo tetap belum terintegrasi; build live terkunci.
+
+
+### Collection simulator (setelah PR #28/#29 merged)
+
+Menu Delivery memuat bagian **Penerimaan uang · simulasi** hanya bagi persona
+dengan capability contoh `collection.capture` (Driver/Canvasser), terpisah dari
+role delivery. Penugasan tagihan contoh mengikat DO/trip/outlet/owner/hari/versi,
+saldo Rupiah dan waktu snapshot. Ini bukan invoice/saldo piutang resmi.
+
+Isi pembayar, tunai atau bukti transfer, nominal Rupiah bulat tanpa separator,
+nomor tanda terima dan catatan; transfer wajib referensi. Nominal positif maksimal
+saldo contoh, foto watermark/pinpoint wajib dengan GPS di geofence dan TTL60s
+saat pengajuan. **Simpan draft collection** menyimpan form+referensi foto secara
+eksplisit; belum autosave. Form hanya dapat disimpan jika field wajib lengkap.
+Reload offline memulihkan draft; setelah antre, data/bukti read-only dan receipt
+normal needs_approval. Status terbaru di Lainnya. Saldo contoh tidak dikurangi
+dan tidak ada klaim pembayaran posted, uang sudah diterima kasir atau AR lunas.
+
+Satu tagihan satu pencatatan (boleh nominal sebagian). CAS source+ledger+queue
+serta dedup tagihan/nomor tanda terima/ref transfer/foto atomik lintas tab dan
+koneksi dalam satu owner/IndexedDB. Normalisasi referensi mengabaikan case,
+spasi dan separator umum secara konservatif. Klaim tidak dilepas setelah
+transport maupun penolakan bisnis; koreksi/cancel/cicilan lanjutan belum tersedia.
+Draft/queue/Blob tetap utuh saat integritas gagal. Restore dan pre-sync membaca
+snapshot ledger+source+outbox konsisten lalu memeriksa ulang sesudah hashing.
+Pengajuan baru harus hari penugasan, replay antrean sah boleh hari berikutnya.
+Tagihan yang pernah dicatat dengan source berbeda terkunci untuk review.
+
+Kontrak `collection.receipt.submit` draft0.9 belum endpoint Odoo. Penugasan
+collection tidak mengambil izin dari receipt POD. Authority capability/session/
+device/idempotency/saldo dan dedup lintas user/perangkat tetap harus di server;
+hash client bukan anti-mock GPS/anti-titip atau bukti dua foto berbeda. Peta masih
+pinpoint simulasi, belum peta resmi. Bank verification, multi-invoice allocation,
+closing/settlement kasir, collection koreksi dan posting account.payment belum
+diimplementasikan. Live tetap terkunci, backend/Railway tidak diubah.

@@ -15,6 +15,7 @@ import { validateExpense } from "./domain/expense";
 import { SyncDiagnostics } from "./components/SyncDiagnostics";
 import { VisitPanel } from "./components/VisitPanel";
 import { SalesVisits, captureVisitLocation } from "./domain/visits";
+import { CollectionWorkspace } from "./components/CollectionWorkspace";
 import { DeliveryWorkspace } from "./components/DeliveryWorkspace";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
@@ -639,6 +640,15 @@ function Workspace({
                             store={store}
                             identity={identity}
                             provider={provider}
+                            engine={engine}
+                            queue={queue}
+                            changed={() => void refresh()}
+                        />
+                        <CollectionWorkspace
+                            key={owner}
+                            identity={identity}
+                            provider={provider}
+                            store={store}
                             engine={engine}
                             queue={queue}
                             changed={() => void refresh()}

@@ -1,3 +1,4 @@
+import { validateCollectionMedia } from "./collection";
 import { validatePodMedia } from "./delivery";
 import {
     validatePackagedCommandEvidence,
@@ -47,6 +48,8 @@ export class Outbox {
             throw new Error("Koreksi POD wajib snapshot parent receipt.");
         if (type === "delivery.pod.submit" && !draftWrite)
             throw new Error("POD wajib transaksi manifest atomik.");
+        if (type === "collection.receipt.submit" && !draftWrite)
+            throw new Error("Collection wajib transaksi tagihan atomik.");
         if (type === "field_expense.realization.submit" && !draftWrite?.guards)
             throw new Error(
                 "Realisasi harus memakai transaksi sumber/struk dan advance.",
@@ -148,6 +151,11 @@ export class Outbox {
                 this.changed();
                 try {
                     try {
+                        await validateCollectionMedia(
+                            item,
+                            this.owner,
+                            this.store,
+                        );
                         await validatePodMedia(item, this.owner, this.store);
                         await validatePackagedCommandEvidence(
                             item.command,
@@ -181,6 +189,7 @@ export class Outbox {
                         );
                     }
                     await validatePodMedia(item, this.owner, this.store);
+                    await validateCollectionMedia(item, this.owner, this.store);
                     const receipt = ReceiptSchema.parse(
                         await this.provider.submit(item.command),
                     );

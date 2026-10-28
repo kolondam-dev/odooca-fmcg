@@ -1431,28 +1431,28 @@ textarea {
     color: #24466c;
 }
 
-.delivery-task {
+:is(.delivery-task, .collection-task) {
     margin: 1rem 0;
     padding: 1rem;
     border: 1px solid var(--line, #dbe4f0);
     border-radius: 1rem;
     background: var(--surface, #fff);
 }
-.delivery-task > summary {
+:is(.delivery-task, .collection-task) > summary {
     cursor: pointer;
     font-weight: 650;
     min-height: 2.75rem;
 }
-.delivery-task > summary svg {
+:is(.delivery-task, .collection-task) > summary svg {
     vertical-align: middle;
     margin-right: 0.25rem;
 }
-.delivery-task > p {
+:is(.delivery-task, .collection-task) > p {
     margin: 0.5rem 0;
     font-size: 0.875rem;
     overflow-wrap: anywhere;
 }
-.delivery-task > fieldset {
+:is(.delivery-task, .collection-task) > fieldset {
     display: grid;
     gap: 1rem;
     border: 0;

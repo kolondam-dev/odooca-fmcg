@@ -4,6 +4,7 @@ import {
 } from "./settlement-contracts.ts";
 import { VisitCheckInSchema, VisitCheckoutSchema } from "./visit-contracts.ts";
 import { z } from "zod";
+import { CollectionReceiptSchema } from "./collection-contracts.ts";
 import { DeliveryPodSchema } from "./delivery-contracts.ts";
 export const Role = z.enum(["sales", "delivery", "hris"]);
 export const IdentitySchema = z.object({
@@ -12,6 +13,7 @@ export const IdentitySchema = z.object({
     name: z.string().min(1),
     title: z.string(),
     roles: z.array(Role),
+    capabilities: z.array(z.enum(["collection.capture"])).optional(),
     businessDate: z.string(),
     csrfToken: z.string().optional(),
 });
@@ -23,6 +25,7 @@ export const CommandType = z.enum([
     "sales.extra_call.request",
     "delivery.proof.submit",
     "delivery.pod.submit",
+    "collection.receipt.submit",
     "hris.attendance.capture",
     "hris.leave.request",
     "field_expense.request",
@@ -34,6 +37,13 @@ const CommandEnvelope = {
     occurred_at: z.string().datetime(),
 };
 export const CommandSchema = z.discriminatedUnion("type", [
+    z
+        .object({
+            ...CommandEnvelope,
+            type: z.literal("collection.receipt.submit"),
+            payload: CollectionReceiptSchema,
+        })
+        .strict(),
     z
         .object({
             ...CommandEnvelope,
@@ -59,6 +69,7 @@ export const CommandSchema = z.discriminatedUnion("type", [
         ...CommandEnvelope,
         type: CommandType.exclude([
             "delivery.pod.submit",
+            "collection.receipt.submit",
             "field_expense.realization.submit",
             "sales.visit.check_in",
             "sales.visit.check_out",
@@ -140,6 +151,9 @@ export interface FieldProvider {
     snapshot(): Promise<Snapshot>;
     submit(command: Command): Promise<Receipt>;
     deliveryTasks?(): Promise<import("./delivery-contracts").DeliveryTask[]>;
+    collectionTasks?(): Promise<
+        import("./collection-contracts").CollectionTask[]
+    >;
     expensePolicy?(): Promise<ExpensePolicy>;
     scenario?: Scenario;
 }
