@@ -922,3 +922,16 @@
 - Inisialisasi faktur pada TransactionCase Odoo dilengkapi dengan journal_id eksplisit dan line account_id untuk memenuhi constraint DB PostgreSQL account_move_line_check_accountable_required_fields.
 - Verifikasi ruff check . dan check_manifests.py 4 addon lolos bersih. 15 CSV register kanonikal 100% beku.
 - Task managed by antigravity at 2026-10-28T21:44:00+07:00
+
+[2026-10-28T22:25:00+07:00] [INFO] Kompatibilitas Odoo install-test Tanpa Modul sale pada TransactionCase id_base via patch.object
+- Mengatasi kegagalan install-test pada CI (odoo -i id_base --test-tags /id_base) di mana modul sale belum terpasang sehingga account.move.line tidak memiliki atribut ORM sale_line_ids:
+  * Menggunakan unittest.mock.patch.object(type(line), 'sale_line_ids', [fake_sol], create=True) pada skenario pengujian 3b, 4, 4b, dan 5 di addons/id_base/tests/test_account_move_cogs.py.
+  * Menghindari penetapan atribut langsung pada recordset ORM Odoo yang diblokir oleh BaseModel.__setattr__.
+  * Menjamin isolasi pengujian: patch aktif hanya selama konteks test method dan dibersihkan secara otomatis tanpa efek samping pada schema model runtime.
+- Verifikasi lokal:
+  * ruff check . (All checks passed! 0 error)
+  * python scripts/check_manifests.py (manifest ok: 4 addon)
+  * python -m unittest discover -s tests -p 'test_*.py' (135 tests OK)
+- Dataset 15 file CSV register kanonikal LF 100% beku tanpa perubahan; Railway tidak disentuh dan tidak merge ke main.
+- Task managed by antigravity at 2026-10-28T22:25:00+07:00
+

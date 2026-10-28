@@ -30,10 +30,11 @@
      - Menguji 6 skenario minimum secara formal:
        1. Non-seed invoice di seed company -> native COGS dipanggil.
        2. Foreign company bernama mengandung 'Salva' -> unmarked native, marked seed ditolak `UserError`.
-       3. Marked seed tanpa delivery move -> ditolak `UserError`.
+       3. Marked seed tanpa delivery move -> ditolak `UserError` (baik tanpa sale_line_ids maupun dengan move_ids kosong).
        4. Marked seed dengan jurnal unposted atau kode bukan STJ -> ditolak `UserError`.
        5. Positive seed dengan singular posted STJ `account_move_id` (510000/113000) -> supresi hanya duplikat COGS (`return []`), invoice dan baris utuh.
        6. Vendor bill (`in_invoice`) dan refund (`out_refund`) -> native behavior utuh.
+     - Kompatibilitas `install-test` Odoo: menggunakan `unittest.mock.patch.object(type(line), "sale_line_ids", ...)` untuk mengisolasi atribut `sale_line_ids` pada pengetesan modul `id_base` saat modul `sale` belum terpasang di database uji Odoo.
 - Hasil Verifikasi Lokal:
   * `python scripts/check_manifests.py`: manifest ok: 4 addon
   * `python -m ruff check .`: All checks passed! (0 error)

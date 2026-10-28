@@ -2,6 +2,7 @@
 """Odoo TransactionCase untuk ekstensi akuntansi perpetual FMCG account.move."""
 
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from odoo.exceptions import UserError
 from odoo.tests import TransactionCase, tagged
@@ -170,12 +171,18 @@ class TestAccountMoveCogs(TransactionCase):
     def test_marked_seed_without_delivery_moves_raises_user_error(self):
         """Kasus 3: Invoice bertanda seed tanpa link delivery move wajib ditolak fail-closed."""
         inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        # 3a: Tanpa relasi sale_line_ids
         with self.assertRaises(UserError) as ctx:
             inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
-        self.assertTrue(
-            "tidak memiliki relasi sale_line_ids" in str(ctx.exception)
-            or "tidak memiliki pergerakan pengiriman" in str(ctx.exception)
-        )
+        self.assertIn("tidak memiliki relasi sale_line_ids", str(ctx.exception))
+
+        # 3b: Dengan sale_line_ids tetapi tanpa pergerakan pengiriman (move_ids kosong)
+        line = inv.invoice_line_ids[0]
+        fake_sol_empty = SimpleNamespace(move_ids=[])
+        with patch.object(type(line), "sale_line_ids", [fake_sol_empty], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("tidak memiliki pergerakan pengiriman", str(ctx.exception))
 
     def test_marked_seed_with_unposted_cogs_journal_raises_user_error(self):
         """Kasus 4: Invoice bertanda seed dengan jurnal STJ belum posted wajib ditolak fail-closed."""
@@ -198,11 +205,11 @@ class TestAccountMoveCogs(TransactionCase):
             account_move_id=bad_journal_am,
         )
         fake_sol = SimpleNamespace(move_ids=[fake_sm])
-        line.sale_line_ids = [fake_sol]
 
-        with self.assertRaises(UserError) as ctx:
-            inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
-        self.assertIn("belum berstatus 'posted'", str(ctx.exception))
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("belum berstatus 'posted'", str(ctx.exception))
 
     def test_marked_seed_with_wrong_journal_raises_user_error(self):
         """Kasus 4b: Jurnal valuasi bukan STJ wajib ditolak fail-closed."""
@@ -224,11 +231,11 @@ class TestAccountMoveCogs(TransactionCase):
             account_move_id=wrong_journal_am,
         )
         fake_sol = SimpleNamespace(move_ids=[fake_sm])
-        line.sale_line_ids = [fake_sol]
 
-        with self.assertRaises(UserError) as ctx:
-            inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
-        self.assertIn("diharapkan 'STJ'", str(ctx.exception))
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("diharapkan 'STJ'", str(ctx.exception))
 
     def test_positive_seed_invoice_suppresses_duplicate_cogs(self):
         """Kasus 5: Invoice seed valid dengan bukti HPP lengkap singular account_move_id STJ mengembalikan []."""
@@ -260,12 +267,12 @@ class TestAccountMoveCogs(TransactionCase):
             account_move_id=valid_stj_am,
         )
         fake_sol = SimpleNamespace(move_ids=[fake_sm])
-        line.sale_line_ids = [fake_sol]
 
-        self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
-        # COGS duplikat disupresi (mengembalikan [])
-        out_vals = inv._stock_account_prepare_realtime_out_lines_vals()
-        self.assertEqual(out_vals, [])
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+            # COGS duplikat disupresi (mengembalikan [])
+            out_vals = inv._stock_account_prepare_realtime_out_lines_vals()
+            self.assertEqual(out_vals, [])
 
     def test_vendor_bill_and_refund_call_native(self):
         """Kasus 6: Vendor bill dan refund pelanggan tidak pernah disupresi oleh hook seed."""
