@@ -278,15 +278,6 @@ class MockRecord:
                 line_data = item[2] if isinstance(item, (list, tuple)) and len(item) == 3 else {}
                 p_id = line_data.get("product_id")
                 qty = float(line_data.get("product_uom_qty", 0.0))
-                ml = self._env["stock.move.line"].create({
-                    "product_id": p_id,
-                    "lot_id": False,
-                    "quantity": qty,
-                    "qty_done": 0.0,
-                    "location_id": wh_loc.id if wh_loc else 1,
-                    "location_dest_id": cust_loc.id if cust_loc else 2,
-                })
-                move_lines.append(ml)
                 mv = self._env["stock.move"].create({
                     "origin": self._vals.get("client_order_ref", "SO"),
                     "product_id": p_id,
@@ -296,6 +287,17 @@ class MockRecord:
                     "location_id": wh_loc.id if wh_loc else 1,
                     "location_dest_id": cust_loc.id if cust_loc else 2,
                 })
+                ml = self._env["stock.move.line"].create({
+                    "move_id": mv.id,
+                    "product_id": p_id,
+                    "lot_id": False,
+                    "quantity": qty,
+                    "qty_done": 0.0,
+                    "location_id": wh_loc.id if wh_loc else 1,
+                    "location_dest_id": cust_loc.id if cust_loc else 2,
+                })
+                mv.move_line_ids = MockRecordList([ml])
+                move_lines.append(ml)
                 moves.append(mv)
 
             pick = self._env["stock.picking"].create({
@@ -412,14 +414,29 @@ class MockRecord:
                             })
 
             # Create native valuation account.move for active stock.moves
-            for mv in list(getattr(self, "move_ids", [])):
-                if getattr(mv, "state", "") == "cancel":
-                    continue
+            active_moves = [
+                mv for mv in list(getattr(self, "move_ids", []))
+                if getattr(mv, "state", "") != "cancel"
+            ]
+            prod_move_counts = {}
+            for mv in active_moves:
                 p_rec = getattr(mv, "product_id", None)
                 p_id = getattr(p_rec, "id", p_rec)
-                mv_qty = qty_by_prod.get(
-                    p_id, float(getattr(mv, "quantity", getattr(mv, "product_uom_qty", 0.0)) or 0.0)
-                )
+                prod_move_counts[p_id] = prod_move_counts.get(p_id, 0) + 1
+
+            for mv in active_moves:
+                p_rec = getattr(mv, "product_id", None)
+                p_id = getattr(p_rec, "id", p_rec)
+                mv_mls = [
+                    ml for ml in list(getattr(self, "move_line_ids", []))
+                    if getattr(getattr(ml, "move_id", None), "id", getattr(ml, "move_id", None)) == mv.id
+                ]
+                if mv_mls:
+                    mv_qty = sum(float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)) or 0.0) for ml in mv_mls)
+                elif prod_move_counts.get(p_id, 0) == 1 and p_id in qty_by_prod:
+                    mv_qty = qty_by_prod[p_id]
+                else:
+                    mv_qty = float(getattr(mv, "quantity", getattr(mv, "product_uom_qty", 0.0)) or 0.0)
                 if mv_qty <= 0:
                     continue
                 mv.state = "done"

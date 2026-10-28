@@ -146,7 +146,13 @@ def _resolve_stock_move_account_moves(env, sm):
             _add(am)
 
     am_fields = getattr(AccountMove, "_fields", {})
-    if isinstance(am_fields, (dict, set, list, tuple)) and "stock_move_id" in am_fields:
+    has_sm_f = (
+        am_fields
+        and not isinstance(am_fields, bool)
+        and hasattr(am_fields, "__contains__")
+        and "stock_move_id" in am_fields
+    )
+    if has_sm_f:
         for am in (AccountMove.search([("stock_move_id", "=", sm.id)]) or []):
             _add(am)
 
@@ -581,24 +587,37 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
                 or getattr(mv, "move_line_ids", None)
             )
         ]
-        assert len(so_moves) == len(expected_cogs_by_sku), (
-            f"[canonical_oracle] Jumlah stock.move aktif pada delivery {so_num} harus {len(expected_cogs_by_sku)}, "
+        assert len(so_moves) >= len(expected_cogs_by_sku), (
+            f"[canonical_oracle] Jumlah stock.move aktif pada delivery {so_num} minimal {len(expected_cogs_by_sku)}, "
             f"got {len(so_moves)}!"
         )
         so_am_groups = {}
+        seen_so_move_skus = set()
         for mv in so_moves:
             mv_sku = _resolve_ml_sku(env, mv)
             assert mv_sku in expected_cogs_by_sku, (
                 f"[canonical_oracle] stock.move SKU '{mv_sku}' pada delivery {so_num} tidak dikenal!"
             )
+            seen_so_move_skus.add(mv_sku)
             ams = _resolve_stock_move_account_moves(env, mv)
             assert len(ams) == 1, (
                 f"[canonical_oracle] stock.move delivery {so_num} SKU {mv_sku} wajib memiliki tepat 1 jurnal valuasi HPP, "
                 f"got {len(ams)}!"
             )
+            mv_mls = getattr(mv, "move_line_ids", None)
+            if mv_mls:
+                mv_qty = sum(float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0))) for ml in mv_mls)
+            else:
+                mv_qty = float(getattr(mv, "quantity", getattr(mv, "product_uom_qty", 0.0)) or 0.0)
+            mv_expected_val = mv_qty * unit_cost_by_sku[mv_sku]
             am = ams[0]
             so_am_groups.setdefault(am.id, {"am": am, "expected_val": 0.0})
-            so_am_groups[am.id]["expected_val"] += expected_cogs_by_sku[mv_sku]
+            so_am_groups[am.id]["expected_val"] += mv_expected_val
+
+        assert seen_so_move_skus == set(expected_cogs_by_sku.keys()), (
+            f"[canonical_oracle] Himpunan SKU stock.move pada delivery {so_num} tidak cocok! "
+            f"Expected {sorted(expected_cogs_by_sku.keys())}, got {sorted(seen_so_move_skus)}"
+        )
 
         for am_id, grp in so_am_groups.items():
             _verify_valuation_account_move_lines(
@@ -1206,7 +1225,11 @@ def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None
         found = False
         for ml in getattr(pick317, "move_line_ids", []):
             if _resolve_ml_lot_name(env, ml) == "LOT-VER-20260704-04":
-                if callable(getattr(ml, "write", None)):
+                if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                    env.cr.execute("UPDATE stock_move_line SET quantity = 0.0 WHERE id = %s", (ml.id,))
+                    if hasattr(ml, "invalidate_recordset"):
+                        ml.invalidate_recordset()
+                elif callable(getattr(ml, "write", None)):
                     ml.write({"quantity": 0.0})
                 else:
                     setattr(ml, "quantity", 0.0)
@@ -1241,9 +1264,11 @@ def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None
             "location_id": getattr(pick317.location_id, "id", 1),
             "location_dest_id": getattr(pick317.location_dest_id, "id", 1),
         }
-        if isinstance(sml_fields, dict) and sml_fields:
+        if sml_fields and not isinstance(sml_fields, bool) and hasattr(sml_fields, "__contains__"):
             if "product_uom_id" in sml_fields and getattr(bogus_prod, "uom_id", None):
                 ml_vals["product_uom_id"] = bogus_prod.uom_id.id
+            if "company_id" in sml_fields and getattr(env, "company", None):
+                ml_vals["company_id"] = env.company.id
             ml_vals = {k: v for k, v in ml_vals.items() if k in sml_fields}
         extra_ml = StockMoveLine.create(ml_vals)
         if hasattr(pick317, "move_line_ids") and hasattr(pick317.move_line_ids, "append"):
@@ -1284,7 +1309,9 @@ def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None
             "location_dest_id": getattr(pick1.location_dest_id, "id", 1),
             "picking_type_id": getattr(getattr(pick1, "picking_type_id", None), "id", False),
         }
-        if isinstance(sp_fields, dict) and sp_fields:
+        if sp_fields and not isinstance(sp_fields, bool) and hasattr(sp_fields, "__contains__"):
+            if "company_id" in sp_fields and getattr(env, "company", None):
+                dup_vals["company_id"] = env.company.id
             dup_vals = {k: v for k, v in dup_vals.items() if k in sp_fields}
         dup_pick = StockPicking.create(dup_vals)
         SaleOrder = env["sale.order"].sudo()

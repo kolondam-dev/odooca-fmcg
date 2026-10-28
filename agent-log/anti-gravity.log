@@ -857,3 +857,10 @@
 [2026-10-28T06:33:18+00:00] [INFO] Perbaikan _iter_records untuk Recordset Odoo 19 pada Loader dan Oracle Disposable Slice
 - Menambahkan helper _iter_records(res) di scripts/load_canonical_perpetual.py dan scripts/ops/verify_disposable_slice.py untuk mengiterasi recordset Odoo (hasattr(res, '__iter__')) secara aman tanpa membungkus multi-recordset ke dalam [res] yang memicu Expected singleton pada init-test
 - Task managed by antigravity-agent at 2026-10-28T06:33:18+00:00
+
+[2026-10-28T07:17:49+00:00] [INFO] Fix _safe_fields mappingproxy compatibility and multi-move lot pairing for Odoo 19 native stock valuation
+- Fix _safe_fields() in load_canonical_perpetual.py and verify_disposable_slice.py to accept Odoo 19 mappingproxy Model._fields
+- Configure seed_categories before writing standard_price and is_storable on canonical products
+- Pair multi-line SO moves per lot without canceling valid split moves in _assign_lots_to_picking
+- Verified ruff check, check_manifests.py, and 123 unit tests pass
+- Task managed by antigravity-agent at 2026-10-28T07:17:49+00:00

@@ -262,13 +262,14 @@ def build_rejection_payload(rej_row: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 def _safe_fields(obj):
-    """Mengembalikan dict/list/set _fields dari objek/model secara defensif terhadap tipe boolean atau None."""
+    """Mengembalikan koleksi _fields dari objek/model secara defensif terhadap tipe boolean, mappingproxy, atau None."""
     f = getattr(obj, "_fields", None)
-    if isinstance(f, (dict, list, set, tuple)) and f:
-        return f
+    if f is not None and not isinstance(f, bool) and hasattr(f, "__contains__") and hasattr(f, "__iter__"):
+        if len(f) > 0:
+            return f
     if hasattr(obj, "_vals") and isinstance(obj._vals, dict):
         return set(obj._vals.keys()) | {"date_done", "date", "origin", "name", "state", "scheduled_date", "memo", "ref"}
-    if f is not None and isinstance(f, (dict, list, set, tuple)):
+    if f is not None and not isinstance(f, bool) and hasattr(f, "__contains__"):
         return f
     return {}
 
@@ -682,26 +683,7 @@ class CanonicalPerpetualAdapter:
             seed_categories = []
             seen_cat_ids = set()
             prod_model_fields = _safe_fields(self.env["product.product"]) if "product.product" in self.env else {}
-            for sku, pr in getattr(self, "product_by_code", {}).items():
-                # Pastikan standard_price produk terekam pada konteks company seed untuk valuasi real-time
-                u_cost = getattr(self, "canonical_unit_costs", {}).get(sku)
-                if u_cost is not None and callable(getattr(pr, "write", None)):
-                    pr_target = (
-                        pr.with_company(self.company)
-                        if callable(getattr(pr, "with_company", None)) and has_company
-                        else pr
-                    )
-                    p_upd = {}
-                    if "standard_price" in prod_model_fields or not prod_model_fields:
-                        p_upd["standard_price"] = u_cost
-                    if "is_storable" in prod_model_fields:
-                        p_upd["is_storable"] = True
-                    if p_upd:
-                        try:
-                            pr_target.write(p_upd)
-                        except Exception:
-                            pass
-
+            for pr in getattr(self, "product_by_code", {}).values():
                 c_id = getattr(pr, "categ_id", None)
                 if c_id:
                     cid_key = getattr(c_id, "id", c_id)
@@ -715,6 +697,7 @@ class CanonicalPerpetualAdapter:
                     "Penolakan fallback ke kategori acak."
                 )
 
+            # Konfigurasi kategori produk TERLEBIH DAHULU sebelum mengeset standard_price pada produk
             for cat in seed_categories:
                 has_comp_ctx = callable(getattr(cat, "with_company", None)) and has_company
                 cat_target = cat.with_company(self.company) if has_comp_ctx else cat
@@ -751,6 +734,27 @@ class CanonicalPerpetualAdapter:
 
                 if vals and callable(getattr(cat_target, "write", None)):
                     cat_target.write(vals)
+
+            # Pastikan standard_price & is_storable terekam pada konteks company seed setelah kategori FIFO/real_time
+            for sku, pr in getattr(self, "product_by_code", {}).items():
+                u_cost = getattr(self, "canonical_unit_costs", {}).get(sku)
+                if u_cost is not None and callable(getattr(pr, "write", None)):
+                    pr_target = (
+                        pr.with_company(self.company)
+                        if callable(getattr(pr, "with_company", None)) and has_company
+                        else pr
+                    )
+                    p_upd = {}
+                    if "standard_price" in prod_model_fields or not prod_model_fields:
+                        p_upd["standard_price"] = u_cost
+                    if "is_storable" in prod_model_fields:
+                        p_upd["is_storable"] = True
+                    if p_upd:
+                        try:
+                            pr_target.write(p_upd)
+                        except Exception:
+                            if "standard_price" in p_upd:
+                                pr_target.write({"standard_price": u_cost})
 
     def _sync_native_stock_accounting(self, stock_move, date_time_str, date_only):
         """Memverifikasi keberadaan, keseimbangan, dan tanggal entri jurnal native Odoo (account.move)
@@ -944,14 +948,40 @@ class CanonicalPerpetualAdapter:
                         existing_lines.append(ml)
 
             sorted_lot_items = sorted(sku_demands["lots"].items(), key=lambda x: str(x[0] or ""))
+            used_move_ids = set()
 
-            for lot_num, lot_info in sorted_lot_items:
+            for idx, (lot_num, lot_info) in enumerate(sorted_lot_items):
                 target_qty = lot_info["qty_units"]
                 lot_obj = lot_info["lot_obj"]
                 target_lot_id = lot_obj.id if lot_obj else False
 
+                target_move = matching_move
+                if len(matching_moves) > 1:
+                    matched_by_qty = None
+                    for cand_mv in matching_moves:
+                        cid = getattr(cand_mv, "id", id(cand_mv))
+                        if cid in used_move_ids:
+                            continue
+                        cand_qty = float(getattr(cand_mv, "product_uom_qty", 0.0) or 0.0)
+                        if abs(cand_qty - target_qty) < 0.001:
+                            matched_by_qty = cand_mv
+                            break
+                    if matched_by_qty is not None:
+                        target_move = matched_by_qty
+                    else:
+                        target_move = matching_moves[min(idx, len(matching_moves) - 1)]
+                    used_move_ids.add(getattr(target_move, "id", id(target_move)))
+
                 if existing_lines:
-                    ml = existing_lines.pop(0)
+                    ml = None
+                    if target_move is not None:
+                        target_mv_id = getattr(target_move, "id", None)
+                        for el_idx, el in enumerate(existing_lines):
+                            if _rec_id(getattr(el, "move_id", None)) == target_mv_id:
+                                ml = existing_lines.pop(el_idx)
+                                break
+                    if ml is None:
+                        ml = existing_lines.pop(0)
                     upd_vals = {}
                     if lot_num and ("lot_name" in sml_fields or not sml_fields):
                         upd_vals["lot_name"] = lot_num
@@ -980,7 +1010,7 @@ class CanonicalPerpetualAdapter:
                     if StockMoveLine is not None:
                         ml_vals = {
                             "picking_id": pick.id,
-                            "move_id": matching_move.id if matching_move and hasattr(matching_move, "id") else False,
+                            "move_id": target_move.id if target_move and hasattr(target_move, "id") else False,
                             "product_id": prod.id,
                             "lot_id": target_lot_id,
                             "location_id": _rec_id(getattr(pick, "location_id", None)),
@@ -1002,12 +1032,12 @@ class CanonicalPerpetualAdapter:
                         if hasattr(pick, "move_line_ids") and hasattr(pick.move_line_ids, "append"):
                             pick.move_line_ids.append(new_ml)
                         if (
-                            matching_move is not None
-                            and hasattr(matching_move, "move_line_ids")
-                            and hasattr(matching_move.move_line_ids, "append")
-                            and new_ml not in matching_move.move_line_ids
+                            target_move is not None
+                            and hasattr(target_move, "move_line_ids")
+                            and hasattr(target_move.move_line_ids, "append")
+                            and new_ml not in target_move.move_line_ids
                         ):
-                            matching_move.move_line_ids.append(new_ml)
+                            target_move.move_line_ids.append(new_ml)
 
             for unused_ml in existing_lines:
                 if callable(getattr(unused_ml, "unlink", None)):
@@ -1018,44 +1048,14 @@ class CanonicalPerpetualAdapter:
                     if hasattr(unused_ml, "qty_done"):
                         unused_ml.qty_done = 0.0
 
-            if matching_move and callable(getattr(matching_move, "write", None)):
-                mv_fields = _safe_fields(matching_move)
-                mv_upd = {}
-                if "picked" in mv_fields:
-                    mv_upd["picked"] = True
-                if mv_upd:
-                    matching_move.write(mv_upd)
-
-            # Jika sebuah SKU terpecah ke beberapa stock.move (mis. 2 baris order line SKU sama pada SO-202607-0317),
-            # gabungkan total demand ke matching_move pertama dan bersihkan move duplikat agar move_line_ids utuh.
-            if len(matching_moves) > 1 and matching_move is not None:
-                if callable(getattr(matching_move, "write", None)):
-                    mm_fields = _safe_fields(matching_move)
-                    if "product_uom_qty" in mm_fields or not mm_fields:
-                        try:
-                            matching_move.write({"product_uom_qty": sku_demands["total_units"]})
-                        except Exception:
-                            pass
-                for extra_mv in matching_moves[1:]:
-                    if callable(getattr(extra_mv, "_action_cancel", None)):
-                        try:
-                            extra_mv._action_cancel()
-                        except Exception:
-                            pass
-                    if callable(getattr(extra_mv, "unlink", None)):
-                        try:
-                            extra_mv.unlink()
-                            has_rm = hasattr(pick, "move_ids") and hasattr(pick.move_ids, "remove")
-                            if has_rm and extra_mv in pick.move_ids:
-                                pick.move_ids.remove(extra_mv)
-                            continue
-                        except Exception:
-                            pass
-                    if callable(getattr(extra_mv, "write", None)):
-                        try:
-                            extra_mv.write({"product_uom_qty": 0.0, "quantity": 0.0, "picked": False})
-                        except Exception:
-                            pass
+            for mv_rec in matching_moves:
+                if callable(getattr(mv_rec, "write", None)):
+                    mv_fields = _safe_fields(mv_rec)
+                    mv_upd = {}
+                    if "picked" in mv_fields or not mv_fields:
+                        mv_upd["picked"] = True
+                    if mv_upd:
+                        mv_rec.write(mv_upd)
 
         # 3. Assertion Komprehensif Map Lot -> Qty Persis (Fail-Fast)
         for sku, sku_demands in demands_by_sku.items():
@@ -1694,7 +1694,8 @@ class CanonicalPerpetualAdapter:
                 internal_type = None
                 if StockPickingType is not None:
                     internal_type = (
-                        StockPickingType.search([("code", "=", "internal")], limit=1)
+                        StockPickingType.search([("code", "=", "incoming")], limit=1)
+                        or StockPickingType.search([("code", "=", "internal")], limit=1)
                         or StockPickingType.search([], limit=1)
                     )
                     if not internal_type:
@@ -1705,34 +1706,7 @@ class CanonicalPerpetualAdapter:
                             "company_id": self.company.id,
                         })
 
-                sml_fields = (
-                    getattr(self.env.get("stock.move.line"), "_fields", {}) if "stock.move.line" in self.env else {}
-                )
-                if sml_fields:
-                    has_qty_done_f = "qty_done" in sml_fields
-                    has_quantity_f = "quantity" in sml_fields
-                else:
-                    has_qty_done_f = True
-                    has_quantity_f = True
-
-                ml_item = {
-                    "product_id": prod.id if prod else False,
-                    "lot_id": lot_obj.id if lot_obj else False,
-                    "location_id": customer_loc.id,
-                    "location_dest_id": quarantine_loc.id,
-                }
                 uom_rec = getattr(prod, "uom_id", None)
-                if uom_rec and hasattr(uom_rec, "id") and "product_uom_id" in sml_fields:
-                    ml_item["product_uom_id"] = uom_rec.id
-                if has_quantity_f:
-                    ml_item["quantity"] = p_data["qty_units"]
-                if has_qty_done_f:
-                    ml_item["qty_done"] = p_data["qty_units"]
-                if "picked" in sml_fields:
-                    ml_item["picked"] = True
-                if sml_fields:
-                    ml_item = {k: v for k, v in ml_item.items() if k in sml_fields}
-
                 move_item = {
                     "product_id": prod.id if prod else False,
                     "product_uom": uom_rec.id if uom_rec and hasattr(uom_rec, "id") else False,
@@ -1741,7 +1715,7 @@ class CanonicalPerpetualAdapter:
                     "location_dest_id": quarantine_loc.id,
                     "company_id": self.company.id,
                 }
-                mv_fields = getattr(self.env.get("stock.move"), "_fields", {}) if "stock.move" in self.env else {}
+                mv_fields = _safe_fields(self.env["stock.move"]) if "stock.move" in self.env else {}
                 if "name" in mv_fields:
                     move_item["name"] = f"Retur Karantina {rej_id} - {prod.display_name if prod else ''}"
                 if "description_picking" in mv_fields:
@@ -1764,6 +1738,15 @@ class CanonicalPerpetualAdapter:
                     "move_ids": [(0, 0, move_item)] if prod else [],
                 }
                 pick = StockPicking.create(pick_vals)
+                if callable(getattr(pick, "write", None)):
+                    pick.write({"location_id": customer_loc.id, "location_dest_id": quarantine_loc.id})
+                for r_mv in (getattr(pick, "move_ids", None) or []):
+                    if callable(getattr(r_mv, "write", None)):
+                        r_mv.write({
+                            "location_id": customer_loc.id,
+                            "location_dest_id": quarantine_loc.id,
+                            "price_unit": p_data["unit_cost"],
+                        })
                 if callable(getattr(pick, "action_confirm", None)) and getattr(pick, "state", "") == "draft":
                     pick.action_confirm()
                 self._assign_lots_to_picking(pick, [row])
