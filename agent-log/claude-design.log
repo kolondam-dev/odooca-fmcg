@@ -1,3 +1,11 @@
+[2026-10-28T21:00:00+07:00] [INFO] Implementer follow-up PR #32: keyboard-accessible title and fail-closed guard
+- Basis: supervisor's HOLD comment on checkpoint aa38722346ba88a1a8488f74f1befb21bc39cfcd. Stayed on branch agen/ui-form-title-v8; did not review/merge or deploy.
+- Production: readTitleSpec now accepts readonly plain heading text or exactly one optional text/search input inside h1. Rejects multiple controls, contenteditable, select/textarea, native/ARIA/Odoo required, disabled/readonly input, unsupported input type, and controls outside h1. Editable title uses native button, accessible edit label, visible focus, Enter/Space activation; Escape and blur close editor and sync title without moving OWL nodes.
+- Tests: added docs/ui/e2e/test_title_spec.py, extracting the actual production function and testing readonly, supported invoice draft, multiple inputs, contenteditable, required variants, select/textarea, outside-h1 and unsupported type in Chromium. Expanded smoke_ui.py for Tab focus, Enter/Space, original input focus, edit/blur reflected in header, Escape/focus restoration and unique title.
+- Docs: updated docs/ui/id_ui_form.md and prepended docs/HANDOFF.md entry.
+- Verification status: not run locally in this session; source edits committed through GitHub contents API. Must rely on new CI run and supervisor's review; do not claim green until confirmed.
+- Task managed by implementer at 2026-10-28T21:00:00+07:00
+
 [2026-10-24T19:10:33+07:00] [INFO] UI redesign v1: shell sidebar, topbar, chatter sebagai tab (addon id_ui, id_ui_shell, id_ui_form)
 - Mulai dari whats_new.sh (acuan = commit akar; belum ada commit bertanda tangan claude-design) dan membaca AGENTS.md, AGENT_PROTOCOL.md, DEVELOPMENT.md, HANDOFF.md, log claude-dev dan anti-gravity. Basis kerja dipindah dari cabang lokal lama ke origin/main (9b80505) lalu cabang agen/ui-design-v1.
 - Addon baru: id_ui (tema, urutan menu inti, istilah glosarium, aktivasi en_US+id_ID), id_ui_shell (sidebar, topbar, hotkey, mode per pengguna di res.users.settings), id_ui_form (chatter jadi tab terakhir). Sumber string English, terjemahan di i18n/id.po (sesuai AGENTS.md butir 8).
