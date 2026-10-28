@@ -26,6 +26,7 @@ import {
     DEMO_OFFICE,
 } from "../src/domain/trip-close-contracts";
 import {
+    tripPods,
     validateTripClose,
     validateTripCloseMedia,
 } from "../src/domain/trip-close";
@@ -411,6 +412,7 @@ it("closing in demo accepts location outside office, no cash settlement, is once
         }),
     ).rejects.toThrow("Trip sudah closed");
     vi.setSystemTime(new Date("2026-10-29T01:00:00Z"));
+    await setup("delivery"); // current morning must not reinterpret a historic closing
     await expect(
         validateTripCloseMedia(closed, s.owner, store),
     ).resolves.toBeUndefined();
@@ -649,5 +651,96 @@ for (const tamper of [false, true]) {
             await expect(
                 validatePodMedia(row, s.owner, store),
             ).resolves.toBeUndefined();
+    });
+}
+
+for (const mismatch of [
+    "day",
+    "trip",
+    "version",
+    "quantity",
+    "owner",
+] as const) {
+    it(`closing binds complete POD source to its daily manifest: ${mismatch}`, async () => {
+        const s = await pods();
+        const before = await store.list(s.owner);
+        let daily = structuredClone(s.daily);
+        if (mismatch === "day") {
+            vi.setSystemTime(new Date("2026-10-29T01:00:00Z"));
+            daily = (await setup("delivery")).daily;
+        } else {
+            for (const task of daily.deliveryManifest!) {
+                if (mismatch === "trip") task.trip += "-changed";
+                if (mismatch === "version") task.version += "-changed";
+                if (mismatch === "quantity") task.lines[0].quantity++;
+                if (mismatch === "owner") task.owner = "other-owner";
+            }
+            await store.draft(s.owner, "morning-session-v1", daily);
+        }
+        const payload = TripCloseSchema.parse({
+            trip_id: daily.deliveryManifest![0].trip,
+            business_date: daily.businessDate,
+            daily_source: daily,
+            office: DEMO_OFFICE,
+            fix: {
+                latitude: 10,
+                longitude: 100,
+                accuracy: 5000,
+                sampled_at: new Date().toISOString(),
+            },
+            pod_uuids: s.rows.map((r) => r.command.client_uuid).sort(),
+            demo_unrestricted: true,
+        });
+        const uuid = crypto.randomUUID(),
+            at = new Date().toISOString();
+        const command = {
+            schema_version: 1 as const,
+            client_uuid: uuid,
+            occurred_at: at,
+            type: "delivery.trip.close" as const,
+            payload,
+        };
+        const row = {
+            key: `${s.owner}:${uuid}`,
+            owner: s.owner,
+            label: "Bad close",
+            state: "queued" as const,
+            attempts: 0,
+            nextAttempt: 0,
+            command,
+        };
+        // Preview, atomic commit, and restore/pre-sync must share this guard.
+        expect(() =>
+            tripPods(before, s.owner, daily, payload.trip_id),
+        ).toThrow();
+        await expect(
+            s.engine.enqueue(
+                "delivery.trip.close",
+                payload,
+                "Bad close",
+                uuid,
+                {
+                    key: tripCloseKey(payload.trip_id, payload.business_date),
+                    expected: undefined,
+                    value: command,
+                    occurredAt: at,
+                },
+            ),
+        ).rejects.toThrow();
+        expect(await store.list(s.owner)).toEqual(before);
+        expect(
+            await store.draft(
+                s.owner,
+                tripCloseKey(payload.trip_id, payload.business_date),
+            ),
+        ).toBeUndefined();
+        await store.draft(
+            s.owner,
+            tripCloseKey(payload.trip_id, payload.business_date),
+            command,
+        );
+        await expect(
+            validateTripCloseMedia(row, s.owner, store),
+        ).rejects.toThrow("Closing/sumber trip");
     });
 }

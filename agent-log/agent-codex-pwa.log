@@ -41,3 +41,10 @@
 -259 unit PASS; deterministic transport regression FAIL sebelum fix, command tamper ditolak sebelum/sesudah. Typecheck/format/contracts/build/budget/diff PASS; hasil browser dan CI di PR.
 - Tidak merge/deploy; backend menunggu seeding, receipts backlog, live locked.
 - Task managed by agent-codex-pwa at 2026-10-28T23:38:44+07:00
+
+[2026-10-29T06:36:40+07:00] [INFO] Follow-up P1 binding closing trip PR34
+- Review6483277487: lookup ID DO saja menerima POD kemarin untuk closing hari baru. Basis dba0166; CI/Odoo lama SUCCESS sesuai reviewer.
+- Source lengkap canonical harus sama dengan manifest closing; owner/hari/ID ambiguity guard. UI restore Delivery/closing, atomic enqueue dan pre-sync menolak source berbeda. Reuse ID berbeda source ditahan review; history tidak dimigrasi/ditulis ulang.
+- Lima regresi domain/store FAIL sebelum fix dan PASS setelah;264 unit+1 hosting/typecheck/format/contracts/build/budget/Ruff/4 manifest/diff PASS. Empat browser targeted phone/tablet PASS; full96/CI akhir dicatat pada PR. Replay historical sesudah daily baru tetap sah.
+- Tidak mengubah timeout/retry/worker/backend/seed/addon/workflow/Railway; live locked, tidak merge/deploy. Menunggu review ulang PR34.
+- Task managed by agent-codex-pwa at 2026-10-29T06:36:40+07:00

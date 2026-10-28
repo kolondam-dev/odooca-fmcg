@@ -9,7 +9,7 @@ import {
     fieldBusinessDate,
 } from "./morning";
 import { CommandSchema } from "./contracts";
-import { podLineage, validatePodMedia } from "./delivery";
+import { assertPodTaskSource, podLineage, validatePodMedia } from "./delivery";
 import { distanceMeters } from "./format";
 import { EvidenceIntegrityError } from "./evidence-package";
 import type { FieldStore, QueueItem } from "../storage/store";
@@ -23,7 +23,20 @@ export function tripPods(
         tasks = source.deliveryManifest?.filter((t) => t.trip === trip);
     if (!tasks?.length)
         throw new Error("Trip tidak ada di manifest daily sync.");
-    return tasks.map((t) => podLineage(rows, owner, t.id).at(-1)!);
+    if (
+        !morningReady(source, owner, source.businessDate) ||
+        tasks.some(
+            (t) => t.owner !== owner || t.business_date !== source.businessDate,
+        ) ||
+        new Set(tasks.map((t) => t.id)).size !== tasks.length
+    )
+        throw new Error("Manifest trip/hari tidak valid; perlu review.");
+    return tasks.map((t) => {
+        // Reject ambiguous/reused IDs rather than rewriting historic lineage.
+        const leaf = podLineage(rows, owner, t.id).at(-1)!;
+        assertPodTaskSource(leaf, t, owner);
+        return leaf;
+    });
 }
 export function validateTripClose(
     item: QueueItem,

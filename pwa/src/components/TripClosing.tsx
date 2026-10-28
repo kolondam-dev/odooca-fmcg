@@ -4,7 +4,7 @@ import {
     DEMO_OFFICE,
     tripCloseKey,
 } from "../domain/trip-close-contracts";
-import { tripPods } from "../domain/trip-close";
+import { tripPods, validateTripCloseMedia } from "../domain/trip-close";
 import { validatePodMedia } from "../domain/delivery";
 import { captureVisitLocation } from "../domain/visits";
 import { distanceMeters } from "../domain/format";
@@ -13,7 +13,7 @@ import {
     morningReady,
     type MorningRecord,
 } from "../domain/morning";
-import { ownerKey, type Identity } from "../domain/contracts";
+import { CommandSchema, ownerKey, type Identity } from "../domain/contracts";
 import type { FieldStore, QueueItem } from "../storage/store";
 import type { Outbox } from "../domain/outbox";
 export function TripClosing({
@@ -41,25 +41,41 @@ export function TripClosing({
     useEffect(() => {
         let active = true;
         void Promise.all(
-            trips.map(
-                async (trip) =>
-                    [
-                        trip,
-                        !!(await store.draft(
-                            owner,
-                            tripCloseKey(trip, identity.businessDate),
-                        )),
-                    ] as const,
-            ),
+            trips.map(async (trip) => {
+                const saved = await store.draft(
+                    owner,
+                    tripCloseKey(trip, identity.businessDate),
+                );
+                if (saved === undefined) return [trip, false] as const;
+                const command = CommandSchema.parse(saved);
+                if (
+                    command.type !== "delivery.trip.close" ||
+                    command.payload.trip_id !== trip ||
+                    command.payload.business_date !== identity.businessDate
+                )
+                    throw new Error("Pointer closing berbeda trip/hari.");
+                const row = (await store.list(owner)).find(
+                    (r) => r.command.client_uuid === command.client_uuid,
+                );
+                if (
+                    !row ||
+                    JSON.stringify(row.command) !== JSON.stringify(command)
+                )
+                    throw new Error("Closing kehilangan antrean.");
+                await validateTripCloseMedia(row, owner, store);
+                return [trip, true] as const;
+            }),
         )
             .then((pairs) => {
                 if (active) setClosed(Object.fromEntries(pairs));
             })
             .catch(() => {
-                if (active)
+                if (active) {
+                    setClosed({});
                     setMessage(
-                        "Status closing tidak dapat dibaca; data dipertahankan.",
+                        "Status closing tidak valid; perlu review. Data dipertahankan.",
                     );
+                }
             });
         return () => {
             active = false;

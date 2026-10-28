@@ -284,3 +284,154 @@ test("closing trip at office uses recorded location, accepts demo outside office
         closing.getByRole("button", { name: "Tutup trip demo", exact: true }),
     ).toHaveCount(0);
 });
+
+test("new daily sync cannot close today's trip using yesterday's PODs with repeated DO IDs", async ({
+    page,
+}) => {
+    await page.clock.install({ time: new Date("2026-10-28T01:00:00Z") });
+    await delivery(page);
+    for (const id of ["DEMO-DO-001", "DEMO-DO-002"]) {
+        const task = await openDo(page, id);
+        await saveDeliveryPhoto(task);
+        await task
+            .getByRole("button", {
+                name: "Ajukan POD untuk review",
+                exact: true,
+            })
+            .click();
+        await expect(task.getByText(/Session closed/).first()).toBeVisible();
+    }
+    const closing = page
+        .getByRole("heading", {
+            name: "Closing trip · tiba di kantor",
+            exact: true,
+        })
+        .locator("..");
+    await closing
+        .getByRole("button", { name: "Tutup trip demo", exact: true })
+        .click();
+    await expect(closing.getByRole("status")).toContainText(
+        "Trip closed lokal",
+    );
+    const readLocal = () =>
+        page.evaluate(async () => {
+            const db = await new Promise<IDBDatabase>((resolve) => {
+                const request = indexedDB.open("fmcg-field-demo-v1");
+                request.onsuccess = () => resolve(request.result);
+            });
+            const tx = db.transaction(["outbox", "drafts"]);
+            const read = (name: string) =>
+                new Promise<any[]>((resolve) => {
+                    const request = tx.objectStore(name).getAll();
+                    request.onsuccess = () => resolve(request.result);
+                });
+            const [rows, drafts] = await Promise.all([
+                read("outbox"),
+                read("drafts"),
+            ]);
+            db.close();
+            return {
+                commands: rows.map((r) => r.command),
+                closings: drafts.filter(
+                    (r) => r.value?.type === "delivery.trip.close",
+                ),
+            };
+        });
+    const before = await readLocal();
+    await page.clock.setSystemTime(new Date("2026-10-29T01:00:00Z"));
+    await page.reload();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await switchPersona(page, "delivery");
+    await ensureDaily(page);
+    await page.getByRole("button", { name: "Delivery", exact: true }).click();
+    await expect(page.locator(".delivery-task")).toHaveCount(2);
+    for (const task of await page.locator(".delivery-task").all()) {
+        await expect(task.locator("summary")).toContainText("Belum dimulai");
+        await task.locator("summary").click();
+        await expect(task.getByRole("status")).toContainText(
+            "POD berbeda sumber manifest",
+        );
+        await expect(task.getByText(/Session closed/)).toHaveCount(0);
+    }
+    await closing
+        .getByRole("button", { name: "Tutup trip demo", exact: true })
+        .click();
+    await expect(closing.getByRole("status")).toContainText(
+        "POD berbeda sumber manifest",
+    );
+    expect(await readLocal()).toEqual(before);
+    await page.reload();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await switchPersona(page, "delivery");
+    await ensureDaily(page);
+    await page.getByRole("button", { name: "Delivery", exact: true }).click();
+    await closing
+        .getByRole("button", { name: "Tutup trip demo", exact: true })
+        .click();
+    await expect(closing.getByRole("status")).toContainText(
+        "POD berbeda sumber manifest",
+    );
+    expect(await readLocal()).toEqual(before);
+    // A forged/restored current-day closing pointer must pass the same source
+    // guard before the UI can display a closed trip. Historical data stays put.
+    await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const request = indexedDB.open("fmcg-field-demo-v1");
+            request.onsuccess = () => resolve(request.result);
+        });
+        const tx = db.transaction(["outbox", "drafts"], "readwrite"),
+            drafts = tx.objectStore("drafts");
+        const get = drafts.getAll();
+        get.onsuccess = () => {
+            const all = get.result,
+                owner = "demo-mdu:DEMO-NOVRY";
+            const daily = all.find(
+                (r) => r.key === `${owner}:morning-session-v1`,
+            ).value;
+            const old = all.find(
+                (r) =>
+                    r.owner === owner &&
+                    r.value?.type === "delivery.trip.close",
+            ).value;
+            const command = {
+                ...old,
+                client_uuid: crypto.randomUUID(),
+                occurred_at: new Date().toISOString(),
+                payload: {
+                    ...old.payload,
+                    business_date: daily.businessDate,
+                    daily_source: daily,
+                },
+            };
+            const key = `trip-close-v1:${JSON.stringify([command.payload.trip_id, daily.businessDate])}`;
+            drafts.put({ key: `${owner}:${key}`, owner, value: command });
+            tx.objectStore("outbox").put({
+                key: `${owner}:${command.client_uuid}`,
+                owner,
+                command,
+                state: "queued",
+                attempts: 0,
+                nextAttempt: 0,
+                label: "Invalid restored closing",
+            });
+        };
+        await new Promise<void>((resolve, reject) => {
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+        db.close();
+    });
+    const restored = await readLocal();
+    await page.reload();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await switchPersona(page, "delivery");
+    await ensureDaily(page);
+    await page.getByRole("button", { name: "Delivery", exact: true }).click();
+    await expect(closing.getByRole("status")).toContainText(
+        "Status closing tidak valid",
+    );
+    await expect(
+        closing.getByRole("button", { name: "Tutup trip demo", exact: true }),
+    ).toBeVisible();
+    expect(await readLocal()).toEqual(restored);
+});

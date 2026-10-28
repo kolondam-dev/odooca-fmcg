@@ -601,7 +601,11 @@ diubah atau diterbitkan ulang otomatis sampai backend siap.
 Closing trip dari Delivery → Closing trip · tiba di kantor. Semua DO harus
 mempunyai hasil POD dan tidak ada sesi delivery aktif; pending review boleh
 tercatat tanpa dianggap disetujui. Satu closing lokal per trip/hari, source/POD
-terikat dan dicek ulang, replay historis didukung. Setelah closing, pengajuan/
+terikat dan dicek ulang, replay historis didukung. Source POD lengkap harus cocok
+dengan task manifest closing (owner/hari/trip/versi/lines dan seluruh atribut),
+bukan hanya ID DO. Reuse ID/source berbeda atau lineage ambigu ditahan untuk
+review; data historis tidak ditulis ulang. Daftar baru tidak menampilkan POD lama
+sebagai Session closed. Replay sah memakai daily_source historis command. Setelah closing, pengajuan/
 koreksi POD baru pada trip itu ditahan untuk review (belum ada reopen otomatis).
 Fixture kantor SIM-OFFICE-MANADO memakai titik1.465/124.833 dan radius30m sebagai
 contoh, bukan koordinat/radius kantor nyata. Aturan strict: jarak+akurasi <=radius

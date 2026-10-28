@@ -260,6 +260,25 @@ export function podLineage(rows: QueueItem[], owner: string, doId: string) {
     return result;
 }
 
+// Canonical schema parsing normalizes object key order without dropping fields.
+// IDs can repeat across manifests; they do not identify a completed assignment.
+export function assertPodTaskSource(
+    item: QueueItem,
+    task: unknown,
+    owner: string,
+) {
+    const expected = DeliveryTaskSchema.parse(task),
+        command = CommandSchema.parse(item.command);
+    if (
+        item.owner !== owner ||
+        item.key !== `${owner}:${command.client_uuid}` ||
+        expected.owner !== owner ||
+        command.type !== "delivery.pod.submit" ||
+        JSON.stringify(command.payload.source) !== JSON.stringify(expected)
+    )
+        throw new Error("POD berbeda sumber manifest trip/hari; perlu review.");
+}
+
 async function checkPodMedia(
     item: QueueItem,
     owner: string,

@@ -1466,3 +1466,17 @@ Setelah penyempurnaan draft/estimasi editor, 10 alur baru diulang PASS pada brow
 resmi145.0.7632.6, worker default/tanpa retry. Format/typecheck/contracts/demo+live/
 budget/Ruff/4 manifest/diff PASS; screenshot revisi SO ponsel ditinjau. CI setelah
 publikasi PR; tidak merge/deploy.
+
+
+### 18.2 Binding closing ke manifest — follow-up review PR34 (2026-10-29)
+
+Closing menghitung POD hanya bila source lengkap yang telah diparse schema sama
+dengan task daily_source closing: owner, ID DO, trip, business date, version,
+workflow, outlet, site, vehicle, address dan seluruh lines (termasuk qty/satuan).
+UI restore tidak boleh menampilkan source hari/trip lain sebagai Session closed.
+Guard domain yang sama dipakai sebelum hashing UI, atomic commit, dan pre-sync.
+Source berbeda/ID ambigu ditahan untuk review, bukan dianggap task hari ini selesai.
+Saat ini reuse ID dengan source berbeda belum didukung untuk pengajuan baru;
+pointer/command/foto historis tidak dihapus atau ditulis ulang. Integrasi identitas
+assignment lintas hari tetap menunggu backend. Replay closing yang telah sah
+memakai daily_source historis milik command, meski daily sync hari baru sudah ada.

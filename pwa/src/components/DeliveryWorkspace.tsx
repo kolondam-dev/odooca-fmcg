@@ -25,7 +25,12 @@ import {
     type DeliveryTask,
 } from "../domain/delivery-contracts";
 import { businessRejected } from "../domain/outbox-state";
-import { validatePod, validatePodMedia, podLineage } from "../domain/delivery";
+import {
+    assertPodTaskSource,
+    validatePod,
+    validatePodMedia,
+    podLineage,
+} from "../domain/delivery";
 import { assertLocalEvidence } from "../domain/evidence-package";
 import { Icon } from "./Icon";
 import { EvidenceCapture, type EvidenceRef } from "./Evidence";
@@ -199,6 +204,7 @@ function PodForm({
                 );
                 if (!row)
                     throw new Error("POD kehilangan antrean. Perlu review.");
+                assertPodTaskSource(row, task, owner);
                 await validatePodMedia(row, owner, store);
                 if (active) {
                     setSaved(row);
