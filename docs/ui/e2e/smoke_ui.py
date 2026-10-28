@@ -177,7 +177,39 @@ async def main():
         inv = await page.evaluate(TITLE_STATE)
         check("faktur: label form kecil di atas nomor draft, di tengah header",
               inv["headers"] == 1 and bool(inv["caption"]) and bool(inv["main"]) and inv["centerOffset"] is not None and abs(inv["centerOffset"]) <= 2)
+        title_button = page.locator(".o_form_statusbar > button.id_header_title--editable")
+        check("faktur: judul editable adalah tombol native yang dapat ditab",
+              await title_button.count() == 1 and await title_button.get_attribute("type") == "button"
+              and int(await title_button.evaluate("(el) => el.tabIndex")) >= 0
+              and bool(await title_button.get_attribute("aria-label")))
         check("faktur: field Customer tetap di sheet", await page.locator(".o_form_sheet .o_field_widget[name=partner_id]").count() == 1)
+
+        # Uji keyboard nyata: Enter dan Space membuka field OWL asli; blur memperbarui judul.
+        await title_button.focus()
+        await page.keyboard.press("Enter")
+        draft_input = page.locator(".o_form_sheet > .oe_title h1 input")
+        await draft_input.wait_for(state="visible", timeout=5000)
+        check("Enter membuka dan memfokuskan input nomor asli",
+              await draft_input.evaluate("(el) => document.activeElement === el"))
+        await draft_input.fill("DRAFT-KEYBOARD-TEST")
+        await draft_input.press("Tab")
+        await page.wait_for_function(
+            "() => document.querySelector('.id_header_title__main')?.textContent.trim() === 'DRAFT-KEYBOARD-TEST'",
+            timeout=5000,
+        )
+        check("blur memperbarui header tanpa duplikasi",
+              (await page.locator(".o_form_statusbar > .id_header_title").count()) == 1
+              and (await page.locator(".id_header_title__main").inner_text()).strip() == "DRAFT-KEYBOARD-TEST")
+        await title_button.focus()
+        await page.keyboard.press("Space")
+        await draft_input.wait_for(state="visible", timeout=5000)
+        check("Space membuka dan memfokuskan input nomor asli",
+              await draft_input.evaluate("(el) => document.activeElement === el"))
+        await draft_input.press("Escape")
+        await page.wait_for_timeout(200)
+        check("Escape menutup editor tanpa menghilangkan judul",
+              await page.locator(".o_form_statusbar > .id_header_title").count() == 1
+              and await page.locator(".o_form_sheet > .oe_title").evaluate("(el) => getComputedStyle(el).display") != "none")
         await page.goto(f"{BASE}/odoo/action-fleet.fleet_vehicle_action/new")
         await page.wait_for_selector(".o_form_sheet", timeout=30000)
         await page.wait_for_timeout(3000)
