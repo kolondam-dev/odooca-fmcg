@@ -415,36 +415,97 @@ class CanonicalPerpetualAdapter:
             AccountAccount = self.env["account.account"].sudo()
             acc_fields = _safe_fields(AccountAccount)
             comp_domain = []
+            comp_vals = {}
             if "company_ids" in acc_fields and hasattr(self, "company") and self.company:
                 comp_domain = [("company_ids", "in", [self.company.id])]
+                comp_vals = {"company_ids": [(4, self.company.id)]}
             elif "company_id" in acc_fields and hasattr(self, "company") and self.company:
                 comp_domain = [("company_id", "in", [False, self.company.id])]
+                comp_vals = {"company_id": self.company.id}
 
             stock_valuation_acc = AccountAccount.search(comp_domain + [
-                ("code", "in", ["113000", "114100", "114000", "113100", "110000"])
+                ("code", "in", ["113000", "113100", "114100", "114000", "110000"])
             ], limit=1)
+            if not stock_valuation_acc:
+                stock_valuation_acc = AccountAccount.search(comp_domain + [
+                    ("account_type", "=", "asset_current"),
+                    ("name", "ilike", "Persediaan"),
+                ], limit=1)
+            if not stock_valuation_acc and callable(getattr(AccountAccount, "create", None)):
+                vals = {
+                    "code": "113000",
+                    "name": "Persediaan Barang Dagang FMCG",
+                    "account_type": "asset_current",
+                }
+                vals.update(comp_vals)
+                try:
+                    stock_valuation_acc = AccountAccount.create(vals)
+                except Exception:
+                    pass
+
             stock_input_acc = AccountAccount.search(comp_domain + [
                 ("code", "in", ["113900", "211000", "211200", "200000"])
             ], limit=1)
+            if not stock_input_acc and callable(getattr(AccountAccount, "create", None)):
+                vals = {
+                    "code": "113900",
+                    "name": "Penerimaan Barang Sementara (Interim)",
+                    "account_type": "asset_current",
+                }
+                vals.update(comp_vals)
+                try:
+                    stock_input_acc = AccountAccount.create(vals)
+                except Exception:
+                    pass
+
             stock_output_acc = AccountAccount.search(comp_domain + [
                 ("code", "in", ["113910", "114200", "510000", "500000"])
             ], limit=1)
+            if not stock_output_acc and callable(getattr(AccountAccount, "create", None)):
+                vals = {
+                    "code": "113910",
+                    "name": "Pengiriman Barang Sementara (Interim)",
+                    "account_type": "asset_current",
+                }
+                vals.update(comp_vals)
+                try:
+                    stock_output_acc = AccountAccount.create(vals)
+                except Exception:
+                    pass
+
             cogs_acc = AccountAccount.search(comp_domain + [
                 ("code", "in", ["510000", "500000"])
             ], limit=1)
+            if not cogs_acc and callable(getattr(AccountAccount, "create", None)):
+                vals = {
+                    "code": "510000",
+                    "name": "Harga Pokok Penjualan (HPP) FMCG",
+                    "account_type": "expense_direct_cost",
+                }
+                vals.update(comp_vals)
+                try:
+                    cogs_acc = AccountAccount.create(vals)
+                except Exception:
+                    vals["account_type"] = "expense"
+                    try:
+                        cogs_acc = AccountAccount.create(vals)
+                    except Exception:
+                        pass
 
             # Buktikan akun-akun wajib secara fail-fast
             if not stock_valuation_acc:
                 raise RuntimeError(
-                    "[canonical_loader] FATAL: Akun valuasi persediaan (113000 / stock_valuation) tidak ditemukan!"
+                    "[canonical_loader] FATAL: Akun valuasi persediaan (113000 / stock_valuation) "
+                    "tidak ditemukan atau gagal dibuat!"
                 )
             if not stock_input_acc:
                 raise RuntimeError(
-                    "[canonical_loader] FATAL: Akun perantara persediaan masuk (113900 / stock_input) tidak ditemukan!"
+                    "[canonical_loader] FATAL: Akun perantara persediaan masuk (113900 / stock_input) "
+                    "tidak ditemukan atau gagal dibuat!"
                 )
             if not cogs_acc:
                 raise RuntimeError(
-                    "[canonical_loader] FATAL: Akun HPP (510000 / cogs) tidak ditemukan!"
+                    "[canonical_loader] FATAL: Akun HPP (510000 / cogs) tidak ditemukan atau gagal dibuat!"
                 )
 
         # 3. Cari dan buktikan keberadaan jurnal stok yang diwajibkan untuk real-time valuation

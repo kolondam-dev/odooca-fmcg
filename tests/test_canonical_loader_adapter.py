@@ -1931,6 +1931,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         """Konfigurasi akuntansi wajib fail-fast jika akun persediaan/COGS wajib tidak ditemukan."""
         env = setup_standard_mock_env()
         env["account.account"].store = {}
+        env["account.account"].create = lambda vals: None
         with self.assertRaises(RuntimeError) as ctx:
             CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
         self.assertIn("tidak ditemukan", str(ctx.exception))

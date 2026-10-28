@@ -1,5 +1,29 @@
 # HANDOFF
 
+## 2026-10-28 — antigravity agent — Penyelesaian Akun Valuasi Persediaan & Jurnal Stok Otomatis pada Database Disposable CI (fmcg) dengan Jaminan Fail-Fast
+**Konteks & Arahan Supervisi:**
+- Mengatasi kegagalan `init-test` pada runner CI disposable database `fmcg` (`RuntimeError: Akun valuasi persediaan 113000 tidak ditemukan`):
+  1. *Resolusi & Auto-creation Akun Akuntansi FMCG*:
+     - Pada database Odoo disposable baru tanpa pre-seeded CoA, `AccountAccount.search` awal tidak menemukan akun 113000 / 113900 / 510000.
+     - `_ensure_accounting_configuration` kini secara tangguh mencari akun persediaan berdasarkan kode atau nama/tipe, dan jika belum ada di database, membuat akun:
+       * `113000` (`Persediaan Barang Dagang FMCG`, `asset_current`)
+       * `113900` (`Penerimaan Barang Sementara (Interim)`, `asset_current`)
+       * `113910` (`Pengiriman Barang Sementara (Interim)`, `asset_current`)
+       * `510000` (`Harga Pokok Penjualan (HPP) FMCG`, `expense_direct_cost` / `expense`)
+       * `STJ` (`Penilaian Persediaan`, `general`, `auto_post=True`)
+       dengan mapping company (`company_id` / `company_ids`) yang valid.
+  2. *Jaminan Fail-Fast Mutlak*:
+     - Jika lookup dan creation gagal atau diblokir, loader melempar `RuntimeError` fail-fast tanpa bypass.
+     - Unit test `test_ensure_accounting_configuration_fail_fast_on_missing_account` diperbarui untuk mensimulasikan kegagalan pembuatan akun (`create = lambda vals: None`), memvalidasi bahwa loader menolak secara fail-fast.
+- Hasil verifikasi lokal:
+  * `ruff check .`: All checks passed! (0 lint errors)
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python -m unittest tests/test_canonical_loader_adapter.py`: 47 tests OK
+  * `python -m unittest tests/test_generator_reproducibility.py tests/test_seed_acceptance.py tests/test_seed_invariants.py`: 72 tests OK
+  * Total 119 pengujian lokal lulus 100%.
+  * 15 file CSV register kanonikal di `data/registers/` 100% utuh tanpa perubahan.
+  * PR #15 tidak dimerge dan tidak dideploy ke Railway.
+
 ## 2026-10-27 — antigravity agent — Resolusi Tuntas Temuan Supervisi PR #15 (issuecomment-6447016004): Relasi Native PO->Receipt, Oracle Fail-Closed, Isolasi Mutasi, Tanggal Native Jurnal, dan Mapping Akuntansi
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6447016004](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6447016004)):**
 - Menindaklanjuti audit supervisi pada commit `30d9985` yang menemukan 4 blocker runtime pada `init-test`:
