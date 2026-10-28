@@ -118,6 +118,8 @@ class MockRecord:
         return res
 
     def __getattr__(self, name):
+        if name.startswith("__") and name.endswith("__"):
+            raise AttributeError(name)
         if name == "partner_id":
             p_val = self._vals.get("partner_id", 1)
             if isinstance(p_val, MockRecord):
@@ -135,6 +137,15 @@ class MockRecord:
                 if existing:
                     return existing
             return MockRecord({"name": "Location", "usage": "internal"}, "stock.location", l_val or 1, self._env)
+        if name == "product_id":
+            p_val = self._vals.get("product_id")
+            if isinstance(p_val, MockRecord):
+                return p_val
+            if self._env and "product.product" in self._env and p_val:
+                existing = self._env["product.product"].store.get(p_val)
+                if existing:
+                    return existing
+            return p_val
         if name == "lot_id":
             l_val = self._vals.get("lot_id")
             if isinstance(l_val, MockRecord):
@@ -152,12 +163,18 @@ class MockRecord:
                 res = []
                 for item in val:
                     if isinstance(item, (list, tuple)) and len(item) == 3 and isinstance(item[2], dict):
-                        res.append(MockRecord(item[2], target_model, len(res) + 1, self._env))
+                        if self._env and target_model in self._env:
+                            res.append(self._env[target_model].create(item[2]))
+                        else:
+                            res.append(MockRecord(item[2], target_model, len(res) + 1, self._env))
                     elif isinstance(item, MockRecord):
                         res.append(item)
                 rec_list = MockRecordList(res)
                 self._vals[name] = rec_list
                 return rec_list
+            empty_list = MockRecordList([])
+            self._vals[name] = empty_list
+            return empty_list
         if name in self._vals:
             return self._vals[name]
         if name == "account_id":
@@ -178,10 +195,19 @@ class MockRecord:
             self._vals[name] = value
 
     def with_context(self, **kwargs):
+        raw_ctx = self.__dict__.get("_ctx") or {}
+        ctx = dict(raw_ctx) if isinstance(raw_ctx, dict) else {}
+        ctx.update(kwargs)
+        self._ctx = ctx
         return self
 
     def with_company(self, company):
         return self
+
+    def unlink(self):
+        if self._env and self._model in self._env:
+            self._env[self._model].store.pop(self.id, None)
+        return True
 
     def write(self, vals):
         self._vals.update(vals)
@@ -189,24 +215,96 @@ class MockRecord:
             setattr(self, k, v)
         return True
 
+    def _find_or_create_acc(self, code: str, acc_type: str):
+        if self._env and "account.account" in self._env:
+            acc = self._env["account.account"].search([("code", "=", code)], limit=1)
+            if acc:
+                return acc
+        return MockRecord({"code": code, "account_type": acc_type}, "account.account", int(code), self._env)
+
+    def _create_valuation_move(self, ref_str: str, date_str: str, debit_code: str, credit_code: str, amount: float):
+        if not self._env or "account.move" not in self._env:
+            return None
+        debit_acc = self._find_or_create_acc(
+            debit_code, "expense" if debit_code.startswith("5") else "asset_current"
+        )
+        credit_acc = self._find_or_create_acc(
+            credit_code, "expense" if credit_code.startswith("5") else "asset_current"
+        )
+        AML = self._env["account.move.line"] if "account.move.line" in self._env else None
+        ln1_vals = {
+            "name": f"{ref_str} Dr",
+            "account_id": debit_acc,
+            "debit": round(amount, 2),
+            "credit": 0.0,
+            "date": date_str,
+            "reconciled": False,
+        }
+        ln2_vals = {
+            "name": f"{ref_str} Cr",
+            "account_id": credit_acc,
+            "debit": 0.0,
+            "credit": round(amount, 2),
+            "date": date_str,
+            "reconciled": False,
+        }
+        ln1 = AML.create(ln1_vals) if AML is not None else MockRecord(ln1_vals, "account.move.line", 1, self._env)
+        ln2 = AML.create(ln2_vals) if AML is not None else MockRecord(ln2_vals, "account.move.line", 2, self._env)
+        am = self._env["account.move"].create({
+            "move_type": "entry",
+            "ref": ref_str,
+            "name": f"STJ/{ref_str}",
+            "date": date_str,
+            "state": "posted",
+        })
+        ln1.move_id = am
+        ln2.move_id = am
+        am.line_ids = MockRecordList([ln1, ln2])
+        return am
+
     def action_confirm(self):
+        if self._model == "stock.picking":
+            self.state = "assigned"
+            return True
         self.state = "sale"
         if self._model == "sale.order" and self._env and "stock.picking" in self._env:
+            wh_loc = self._env["stock.location"].search(
+                [("usage", "=", "internal"), ("name", "!=", "Karantina FMCG Maumbi")], limit=1
+            )
+            cust_loc = self._env["stock.location"].search([("usage", "=", "customer")], limit=1)
             move_lines = []
+            moves = []
             for item in self._vals.get("order_line", []):
                 line_data = item[2] if isinstance(item, (list, tuple)) and len(item) == 3 else {}
-                # Mock tidak meng-inject lot_id otomatis; lot harus dipetakan oleh adapter!
-                move_lines.append(MockRecord({
-                    "product_id": line_data.get("product_id"),
+                p_id = line_data.get("product_id")
+                qty = float(line_data.get("product_uom_qty", 0.0))
+                ml = self._env["stock.move.line"].create({
+                    "product_id": p_id,
                     "lot_id": False,
-                    "quantity": line_data.get("product_uom_qty", 0.0),
+                    "quantity": qty,
                     "qty_done": 0.0,
-                }, "stock.move.line", len(move_lines) + 1, self._env))
+                    "location_id": wh_loc.id if wh_loc else 1,
+                    "location_dest_id": cust_loc.id if cust_loc else 2,
+                })
+                move_lines.append(ml)
+                mv = self._env["stock.move"].create({
+                    "origin": self._vals.get("client_order_ref", "SO"),
+                    "product_id": p_id,
+                    "product_uom_qty": qty,
+                    "quantity": qty,
+                    "state": "assigned",
+                    "location_id": wh_loc.id if wh_loc else 1,
+                    "location_dest_id": cust_loc.id if cust_loc else 2,
+                })
+                moves.append(mv)
 
             pick = self._env["stock.picking"].create({
                 "origin": self._vals.get("client_order_ref", "SO"),
                 "picking_type_code": "outgoing",
                 "state": "assigned",
+                "location_id": wh_loc.id if wh_loc else 1,
+                "location_dest_id": cust_loc.id if cust_loc else 2,
+                "move_ids": MockRecordList(moves),
                 "move_line_ids": MockRecordList(move_lines),
             })
             self.picking_ids = MockRecordList([pick])
@@ -214,21 +312,44 @@ class MockRecord:
     def button_confirm(self):
         self.state = "purchase"
         if self._model == "purchase.order" and self._env and "stock.picking" in self._env:
+            wh_loc = self._env["stock.location"].search(
+                [("usage", "=", "internal"), ("name", "!=", "Karantina FMCG Maumbi")], limit=1
+            )
+            sup_loc = self._env["stock.location"].search([("usage", "=", "supplier")], limit=1)
             move_lines = []
+            moves = []
             for item in self._vals.get("order_line", []):
                 line_data = item[2] if isinstance(item, (list, tuple)) and len(item) == 3 else {}
-                # Mock tidak meng-inject lot_id otomatis; lot harus dipetakan oleh adapter!
-                move_lines.append(MockRecord({
-                    "product_id": line_data.get("product_id"),
+                p_id = line_data.get("product_id")
+                qty = float(line_data.get("product_qty", 0.0))
+                ml = self._env["stock.move.line"].create({
+                    "product_id": p_id,
                     "lot_id": False,
-                    "quantity": line_data.get("product_qty", 0.0),
+                    "quantity": qty,
                     "qty_done": 0.0,
-                }, "stock.move.line", len(move_lines) + 1, self._env))
+                    "location_id": sup_loc.id if sup_loc else 3,
+                    "location_dest_id": wh_loc.id if wh_loc else 1,
+                })
+                move_lines.append(ml)
+                mv = self._env["stock.move"].create({
+                    "origin": self._vals.get("origin", "PO"),
+                    "product_id": p_id,
+                    "product_uom_qty": qty,
+                    "quantity": qty,
+                    "price_unit": float(line_data.get("price_unit", 0.0)),
+                    "state": "assigned",
+                    "location_id": sup_loc.id if sup_loc else 3,
+                    "location_dest_id": wh_loc.id if wh_loc else 1,
+                })
+                moves.append(mv)
 
             pick = self._env["stock.picking"].create({
                 "origin": self._vals.get("origin", "PO"),
                 "picking_type_code": "incoming",
                 "state": "assigned",
+                "location_id": sup_loc.id if sup_loc else 3,
+                "location_dest_id": wh_loc.id if wh_loc else 1,
+                "move_ids": MockRecordList(moves),
                 "move_line_ids": MockRecordList(move_lines),
             })
             self.picking_ids = MockRecordList([pick])
@@ -240,6 +361,84 @@ class MockRecord:
                 "res_model": "stock.immediate.transfer",
             }
         self.state = "done"
+        if self._model == "stock.picking" and self._env:
+            ctx = getattr(self, "_ctx", {})
+            eff_date = str(
+                ctx.get("force_period_date")
+                or ctx.get("date")
+                or getattr(self, "scheduled_date", "")
+                or "2026-07-01"
+            )[:10]
+            src_loc = self.location_id
+            dest_loc = self.location_dest_id
+            src_usage = getattr(src_loc, "usage", "")
+            dest_usage = getattr(dest_loc, "usage", "")
+            dest_name = str(getattr(dest_loc, "name", ""))
+
+            # Update quants per move_line
+            StockQuant = self._env["stock.quant"] if "stock.quant" in self._env else None
+            qty_by_prod = {}
+            for ml in list(getattr(self, "move_line_ids", [])):
+                p_rec = getattr(ml, "product_id", None)
+                p_id = getattr(p_rec, "id", p_rec)
+                l_rec = getattr(ml, "lot_id", None)
+                l_id = getattr(l_rec, "id", l_rec)
+                qty = float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)) or 0.0)
+                if qty <= 0 or not p_id:
+                    continue
+                qty_by_prod[p_id] = qty_by_prod.get(p_id, 0.0) + qty
+                if StockQuant is not None:
+                    if src_usage == "internal":
+                        q_src = StockQuant.search(
+                            [("product_id", "=", p_id), ("location_id", "=", src_loc.id), ("lot_id", "=", l_id)],
+                            limit=1,
+                        )
+                        if q_src:
+                            q_src.write({"quantity": float(getattr(q_src, "quantity", 0.0)) - qty})
+                    if dest_usage == "internal":
+                        q_dst = StockQuant.search(
+                            [("product_id", "=", p_id), ("location_id", "=", dest_loc.id), ("lot_id", "=", l_id)],
+                            limit=1,
+                        )
+                        if q_dst:
+                            q_dst.write({"quantity": float(getattr(q_dst, "quantity", 0.0)) + qty})
+                        else:
+                            StockQuant.create({
+                                "product_id": p_id,
+                                "location_id": dest_loc.id,
+                                "lot_id": l_id,
+                                "quantity": qty,
+                                "reserved_quantity": 0.0,
+                            })
+
+            # Create native valuation account.move for active stock.moves
+            for mv in list(getattr(self, "move_ids", [])):
+                if getattr(mv, "state", "") == "cancel":
+                    continue
+                p_rec = getattr(mv, "product_id", None)
+                p_id = getattr(p_rec, "id", p_rec)
+                mv_qty = qty_by_prod.get(
+                    p_id, float(getattr(mv, "quantity", getattr(mv, "product_uom_qty", 0.0)) or 0.0)
+                )
+                if mv_qty <= 0:
+                    continue
+                mv.state = "done"
+                mv.quantity = mv_qty
+                unit_cost = float(
+                    getattr(mv, "price_unit", 0.0) or getattr(p_rec, "standard_price", 0.0) or 1000.0
+                )
+                val = round(mv_qty * unit_cost, 2)
+                origin_str = str(getattr(self, "origin", None) or getattr(mv, "origin", "PICK"))
+                if src_usage == "supplier" and dest_usage == "internal":
+                    am = self._create_valuation_move(origin_str, eff_date, "113000", "113900", val)
+                elif src_usage == "internal" and dest_usage == "customer":
+                    am = self._create_valuation_move(origin_str, eff_date, "510000", "113000", val)
+                elif src_usage == "customer" and (dest_usage == "internal" or "karantina" in dest_name.lower()):
+                    am = self._create_valuation_move(origin_str, eff_date, "113000", "510000", val)
+                else:
+                    am = self._create_valuation_move(origin_str, eff_date, "113000", "113900", val)
+                if am:
+                    mv.account_move_id = am
         return True
 
     def action_apply_inventory(self):
@@ -247,6 +446,42 @@ class MockRecord:
             qty = float(self._vals.get("inventory_quantity", self._vals.get("quantity", 0.0)))
             self._vals["quantity"] = qty
             self.quantity = qty
+            self._vals["reserved_quantity"] = 0.0
+            if self._env and "stock.move" in self._env:
+                ctx = getattr(self, "_ctx", {})
+                eff_date = str(ctx.get("force_period_date") or "2026-07-01")[:10]
+                p_rec = self.product_id
+                p_id = getattr(p_rec, "id", p_rec)
+                loc_rec = self.location_id
+                loc_id = getattr(loc_rec, "id", loc_rec)
+                l_rec = self.lot_id
+                l_id = getattr(l_rec, "id", l_rec)
+                inv_loc = self._env["stock.location"].search([("usage", "=", "inventory")], limit=1)
+                ml = self._env["stock.move.line"].create({
+                    "product_id": p_id,
+                    "lot_id": l_id,
+                    "quantity": qty,
+                    "location_id": inv_loc.id if inv_loc else 5,
+                    "location_dest_id": loc_id,
+                    "date": f"{eff_date} 00:00:00",
+                })
+                mv = self._env["stock.move"].create({
+                    "origin": "OPENING-20260701",
+                    "product_id": p_id,
+                    "location_id": inv_loc.id if inv_loc else 5,
+                    "location_dest_id": loc_id,
+                    "product_uom_qty": qty,
+                    "quantity": qty,
+                    "is_inventory": True,
+                    "state": "done",
+                    "date": f"{eff_date} 00:00:00",
+                    "move_line_ids": MockRecordList([ml]),
+                })
+                unit_cost = float(getattr(p_rec, "standard_price", 0.0) or 1000.0)
+                val = round(qty * unit_cost, 2)
+                am = self._create_valuation_move("OPENING-20260701", eff_date, "113000", "113900", val)
+                if am:
+                    mv.account_move_id = am
         return True
 
     def action_post(self):
@@ -369,7 +604,13 @@ class MockRecord:
                     self.line_ids.mock_partial_reconcile = True
 
             # Odoo 19: account.payment memiliki move_id relasional yang berstatus posted
-            self.move_id = MockRecord({"state": "posted", "ref": pay_ref}, "account.move", self.id, self._env)
+            pay_date = self._vals.get("date", "2026-07-01")
+            self.move_id = MockRecord(
+                {"state": "posted", "ref": pay_ref, "date": pay_date},
+                "account.move",
+                100000 + self.id,
+                self._env,
+            )
             self.move_id.line_ids = self.line_ids
 
 
@@ -419,6 +660,12 @@ class MockModel:
                         match = False
                 elif op == "!=" and rec_val == val:
                     match = False
+                elif op == "in":
+                    val_set = val if isinstance(val, (list, tuple, set)) else [val]
+                    raw_rec_val = getattr(rec_val, "id", rec_val)
+                    norm_vals = [getattr(v, "id", v) for v in val_set]
+                    if rec_val not in val_set and raw_rec_val not in norm_vals:
+                        match = False
                 elif op == "ilike" and (not rec_val or val.lower() not in str(rec_val).lower()):
                     match = False
                 elif op in ("=like", "like"):
@@ -858,9 +1105,12 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         for qp in quar_picks:
             self.assertEqual(qp.state, "done")
 
-        # Quant manual TIDAK bertambah karena transfer dilakukan via stock.picking
+        # Quant di Karantina tepat 8 baris unik (sku, lot) untuk 9 retur (REJ-003 & REJ-005 berbagi lot sama),
+        # dengan total 320.0 unit (tidak terduplikasi menjadi 640.0 unit oleh fallback manual)
         post_quant_count = len(mock_env["stock.quant"].store)
-        self.assertEqual(post_quant_count, initial_quant_count)
+        self.assertEqual(post_quant_count - initial_quant_count, 8)
+        tot_quar_units = sum(float(getattr(q, "quantity", 0.0)) for q in mock_env["stock.quant"].store.values())
+        self.assertEqual(tot_quar_units, 320.0)
 
     # -------------------------------------------------------------------------
     # Temuan 4: Rekonsiliasi pembayaran dan diskon pembayaran awal
@@ -1961,6 +2211,177 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         with self.assertRaises(RuntimeError) as ctx:
             adapter._sync_native_stock_accounting(sm, "2026-07-01 00:00:00", "2026-07-01")
         self.assertIn("diharapkan 2026-07-01", str(ctx.exception))
+
+    def test_sync_native_stock_accounting_rejects_posted_wrong_date_without_rewrite(self):
+        """Blocker 3: Cabang posted wajib read-only fail-fast tanpa menulis ulang meskipun write() diizinkan."""
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+
+        class StubWritablePostedMove:
+            def __init__(self):
+                self.id = 1001
+                self.name = "STJ/2026/0999"
+                self.state = "posted"
+                self.date = "2026-10-28"
+                self.write_called = False
+
+            def write(self, vals):
+                # Jika helper mencoba rewrite jurnal posted, flag ini akan menjadi True dan tanggal berubah
+                self.write_called = True
+                if "date" in vals:
+                    self.date = vals["date"]
+                return True
+
+        stub_am = StubWritablePostedMove()
+
+        class StubStockMove:
+            def __init__(self):
+                self.id = 222
+                self.account_move_id = stub_am
+
+        sm = StubStockMove()
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._sync_native_stock_accounting(sm, "2026-07-01 00:00:00", "2026-07-01")
+
+        self.assertIn("dilarang rewrite jurnal posted", str(ctx.exception))
+        self.assertFalse(stub_am.write_called, "Helper DILARANG memanggil write() pada jurnal berstatus posted!")
+        self.assertEqual(stub_am.date, "2026-10-28", "Tanggal jurnal posted tidak boleh diubah diam-diam!")
+
+    def test_sync_native_stock_accounting_fails_fast_when_no_journal_created(self):
+        """Blocker 2: _sync_native_stock_accounting wajib menolak stock.move yang tidak menghasilkan jurnal native."""
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+
+        class StubStockMoveWithoutJournal:
+            def __init__(self):
+                self.id = 333
+                self.origin = "DO-NO-JOURNAL"
+                self.account_move_id = False
+                self.account_move_ids = []
+
+        sm = StubStockMoveWithoutJournal()
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._sync_native_stock_accounting(sm, "2026-07-03 10:00:00", "2026-07-03")
+        self.assertIn("tidak menghasilkan entri jurnal akuntansi native", str(ctx.exception))
+
+    def test_accounting_configuration_scope_isolation_multi_company_and_foreign_records(self):
+        """Blocker 4: Konfigurasi lokasi, kategori, dan produk terisolasi ketat pada scope kanonikal & company seed."""
+        env = setup_standard_mock_env()
+
+        # Buat Company 2, kategori asing, produk asing, dan lokasi milik Company 2
+        comp2 = MockRecord({"name": "PT Cabang Asing"}, "res.company", 2, env)
+        foreign_cat = env["product.category"].create({
+            "name": "Foreign Non-FMCG Category",
+            "property_valuation": "manual_periodic",
+            "property_cost_method": "standard",
+            "property_stock_valuation_account_id": 9991,
+        })
+        foreign_prod = env["product.product"].create({
+            "name": "Barang Asing Non-Seed",
+            "default_code": "FOREIGN-SKU-999",
+            "categ_id": foreign_cat,
+            "standard_price": 12345.0,
+            "company_id": comp2,
+        })
+        foreign_internal_loc = env["stock.location"].create({
+            "name": "WH2/Stock Asing",
+            "usage": "internal",
+            "company_id": comp2,
+            "valuation_account_id": 8881,
+        })
+        foreign_cust_loc = env["stock.location"].create({
+            "name": "Customers Company 2",
+            "usage": "customer",
+            "company_id": comp2,
+            "valuation_account_id": 8882,
+        })
+        foreign_supp_loc = env["stock.location"].create({
+            "name": "Vendors Company 2",
+            "usage": "supplier",
+            "company_id": comp2,
+            "valuation_account_id": 8883,
+        })
+
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+
+        # 1. Cache product_by_code hanya memuat tepat 150 SKU kanonikal, bukan produk asing
+        self.assertEqual(len(adapter.product_by_code), 150)
+        self.assertNotIn("FOREIGN-SKU-999", adapter.product_by_code)
+
+        # 2. Kategori asing, produk asing, dan lokasi Company 2 sama sekali TIDAK berubah
+        self.assertEqual(foreign_cat.property_valuation, "manual_periodic")
+        self.assertEqual(foreign_cat.property_cost_method, "standard")
+        self.assertEqual(foreign_cat.property_stock_valuation_account_id, 9991)
+        self.assertEqual(foreign_prod.standard_price, 12345.0)
+        self.assertEqual(foreign_internal_loc.valuation_account_id, 8881)
+        self.assertEqual(foreign_cust_loc.valuation_account_id, 8882)
+        self.assertEqual(foreign_supp_loc.valuation_account_id, 8883)
+
+        # 3. Jika sebuah SKU kanonikal hilang, inisialisasi wajib fail-fast (tanpa fallback global)
+        env_missing = setup_standard_mock_env()
+        first_pid = next(iter(env_missing["product.product"].store.keys()))
+        del env_missing["product.product"].store[first_pid]
+        with self.assertRaises(RuntimeError) as ctx_miss:
+            CanonicalPerpetualAdapter(env_missing, reg_path=REG_DIR)
+        self.assertIn("Scope produk kanonikal tidak lengkap", str(ctx_miss.exception))
+
+        # 4. Jika produk kanonikal tidak memiliki categ_id, wajib fail-fast (tanpa fallback ke kategori acak)
+        env_nocat = setup_standard_mock_env()
+        for pr in env_nocat["product.product"].store.values():
+            pr.categ_id = False
+            pr._vals["categ_id"] = False
+        with self.assertRaises(RuntimeError) as ctx_nocat:
+            CanonicalPerpetualAdapter(env_nocat, reg_path=REG_DIR)
+        self.assertIn("Tidak ada kategori produk (categ_id) pada scope produk kanonikal", str(ctx_nocat.exception))
+
+    def test_slice_oracle_rejects_extra_sku_line_999_units_and_quant_drift(self):
+        """Blocker 1 & 2: Oracle menolak penambahan baris 999 unit SKU asing dan perubahan quant +100.000 unit."""
+        from scripts.ops.verify_disposable_slice import (
+            run_representative_slice,
+            verify_run1_against_canonical_oracle,
+        )
+
+        env = setup_standard_mock_env()
+        # Jalankan full slice end-to-end (Run 1 + Oracle + 11 Mutasi + Run 2 + Deep Snapshot)
+        run_representative_slice(env)
+
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        target_sos = ["SO-202607-0001", "SO-202607-0063", "SO-202607-0317"]
+
+        # Uji 1: Tambah baris ekstra 999 unit SKU asing pada picking SO-202607-0317 -> Wajib ditolak!
+        pick317 = env["stock.picking"].search([("origin", "=", "SO-202607-0317")], limit=1)
+        bogus_prod = env["product.product"].create({"name": "Bogus", "default_code": "BOGUS-SKU-999"})
+        bogus_lot = env["stock.lot"].create({"name": "BOGUS-LOT-999", "product_id": bogus_prod.id})
+        extra_ml = env["stock.move.line"].create({
+            "picking_id": pick317.id,
+            "product_id": bogus_prod.id,
+            "lot_id": bogus_lot.id,
+            "quantity": 999.0,
+            "location_id": pick317.location_id.id,
+            "location_dest_id": pick317.location_dest_id.id,
+        })
+        pick317.move_line_ids.append(extra_ml)
+        with self.assertRaises(AssertionError) as ctx_extra:
+            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+        self.assertIn("Ditemukan baris ekstra/SKU asing", str(ctx_extra.exception))
+        pick317.move_line_ids.remove(extra_ml)
+        extra_ml.unlink()
+
+        # Uji 2: Ubah quant +100.000 unit -> Wajib ditolak!
+        q0 = next(iter(env["stock.quant"].store.values()))
+        orig_qty = q0.quantity
+        q0.quantity = orig_qty + 100000.0
+        with self.assertRaises(AssertionError) as ctx_quant:
+            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+        self.assertIn("Quant Drift terdeteksi", str(ctx_quant.exception))
+        q0.quantity = orig_qty
+
+        # Uji 3: Ubah reserved_quantity menjadi > 0 -> Wajib ditolak!
+        q0.reserved_quantity = 25.0
+        with self.assertRaises(AssertionError) as ctx_res:
+            verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
+        self.assertIn("reserved_quantity menggantung", str(ctx_res.exception))
+        q0.reserved_quantity = 0.0
 
 
 if __name__ == "__main__":

@@ -1,5 +1,39 @@
 # HANDOFF
 
+## 2026-10-28 — antigravity agent — Resolusi Tuntas 4 Blocker Audit Commit 5a9d216 (PR #15 issuecomment-6457571281): Exact-Set Oracle, Saldo Absolut Stok/GL & Jurnal Valuasi Native, Read-Only Posted Journal Guard, dan Isolasi Scope Multi-Company
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6457571281](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6457571281)):**
+- Menindaklanjuti audit supervisi pada commit `5a9d216` yang menemukan 4 celah P1 sebelum merge:
+  1. *Blocker 1 — Oracle Mengabaikan Data Tambahan & Identitas Salah (`scripts/ops/verify_disposable_slice.py`)*:
+     - Memperketat `verify_run1_against_canonical_oracle` menjadi *exact-set* & *exact-multiset* matching pada seluruh dokumen dan baris move line `(sku, lot) -> qty`:
+       * Menolak penambahan baris ekstra (mis. 999 unit `BOGUS-SKU-999`), substitusi SKU pada move line, atau duplikasi/kehilangan picking (`len(so_picks) == 1`).
+       * Memvalidasi retur karantina (`REJ-202607-001`) berdasarkan identitas penuh: `origin == 'REJ-202607-001'`, `location_id.usage == 'customer'`, `location_dest_id.name == 'Karantina FMCG Maumbi'` (`usage == 'internal'`), tepat 1 baris move line (`ULV-RNS-03`, `LOT-VER-20260615-INIT-09`, `12.0` unit), serta jurnal valuasi native (`Dr 113000 / Cr 510000`, `Rp 222.000,00`, tanggal `2026-07-03`).
+       * Memvalidasi kesamaan himpunan eksak untuk PO, SO, `out_invoice`, `in_invoice` (5 PO + 30 OPEX), pembayaran AR/AP, dan jurnal diskon `DISC-...`.
+  2. *Blocker 2 — Saldo Absolut Stok/GL & Pembuktian Jurnal Valuasi Native (`scripts/load_canonical_perpetual.py`, `scripts/ops/verify_disposable_slice.py`)*:
+     - Memperbaiki akar penyebab tidak terbentuknya jurnal valuasi persediaan native pada Odoo 19 (`l10n_id`):
+       * Menghapus syarat `and not getattr(cat_target, fname, None)` saat menulis akun valuasi (`113000`, `113900`, `510000`) dan jurnal stok (`STJ`) ke kategori produk kanonikal sehingga default bawaan `l10n_id` ditimpa secara deterministik dengan verifikasi *readback*.
+       * Menulis `standard_price = unit_cost` dan `is_storable = True` pada seluruh 150 produk kanonikal dalam konteks company seed sebelum transaksi berjalan.
+       * Menyiapkan lokasi `Karantina FMCG Maumbi` (`valuation_account_id = False`) di `_ensure_accounting_configuration()` sebelum transaksi berjalan dan meneruskan `price_unit` pada move retur karantina.
+       * Menambahkan *fallback search* `stock.move` pada `load_opening_stock()` ketika `is_inventory` tidak diset otomatis oleh Odoo 19, serta menggabungkan `stock.move` duplikat untuk SKU yang sama pada picking (mis. `SO-202607-0317`).
+       * Mewajibkan `_sync_native_stock_accounting()` *fail-fast* (`RuntimeError`) apabila `not found_ams` (pergerakan stok tanpa jurnal akuntansi native ditolak keras).
+     - Memverifikasi di oracle:
+       * Seluruh 150 jurnal opening (`Dr 113000 / Cr 113900`), 5 grup jurnal PO receipt (`Dr 113000 / Cr 113900`), 3 grup jurnal HPP delivery SO (`Dr 510000 / Cr 113000`), dan 1 jurnal retur karantina (`Dr 113000 / Cr 510000`) berstatus `posted`, *balanced*, bernominal eksak, dan bertanggal eksak sesuai event CSV.
+       * Saldo absolut stok fisik, *saleable* (`WH/Stock`), *reserved* (`0.0`), dan *quarantine* (`Karantina FMCG Maumbi`) per `(sku, lot)` di seluruh `stock.quant` lokasi internal cocok 100% dengan kalkulasi register kanonikal (menolak *quant drift* `+100.000` unit maupun *reserved drift*).
+       * Saldo absolut *General Ledger* (*as-of*) untuk akun `113000`, `113900`, dan `510000` cocok 100% dengan mutasi kanonikal.
+     - Memperluas `verify_slice_mutation_rejection()` menjadi 11 skenario mutasi terisolasi (termasuk baris ekstra 999 unit SKU asing, substitusi SKU, duplikasi picking, salah lokasi sumber karantina, hilangnya jurnal valuasi native, jurnal seimbang salah nilai, *quant drift* +100.000 unit, pergeseran tanggal intra-Juli, dan kebocoran tanggal runtime) serta memperdalam *deep snapshot* Run 1 vs Run 2.
+  3. *Blocker 3 — Jurnal Posted Wajib Read-Only Fail-Fast (`scripts/load_canonical_perpetual.py`)*:
+     - Menghapus `am.write({"date": date_only})` dari cabang `elif am_state == "posted":` di `_sync_native_stock_accounting()`.
+     - Setiap ketidakcocokan tanggal pada jurnal `posted` kini langsung melempar `RuntimeError` tanpa pernah memanggil `write()`.
+  4. *Blocker 4 — Isolasi Scope Konfigurasi ke Produk, Kategori, dan Lokasi Seed (`scripts/load_canonical_perpetual.py`)*:
+     - Membangun `self.canonical_skus` (150 SKU) langsung dari CSV register kanonikal dan membatasi `self.product_by_code` hanya pada `("default_code", "in", sorted(self.canonical_skus))` dalam scope company seed (*fail-fast* jika ada SKU hilang atau ambigu).
+     - Mengumpulkan `seed_categories` murni dari `self.product_by_code.values()` dan menghapus *fallback* `ProductCategory.search([], limit=1)` (*fail-fast* jika kosong).
+     - Membatasi konfigurasi `stock.location` hanya pada lokasi dalam scope warehouse/company seed (`_is_seed_scoped_location`) dengan `with_company(self.company)` pada lokasi virtual bersama, sehingga lokasi/kategori/produk milik company lain 100% tidak tersentuh.
+- Hasil verifikasi lokal:
+  * `ruff check .`: All checks passed! (0 lint errors)
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python -m unittest discover -s tests -v`: 123 tests OK (termasuk 4 unit test baru untuk Blocker 1–4 dan 11 skenario mutasi)
+  * 15 file CSV register kanonikal di `data/registers/` 100% utuh tanpa perubahan.
+  * PR #15 tidak dimerge dan tidak dideploy ke Railway.
+
 ## 2026-10-28 — antigravity agent — Penyelesaian Akun Valuasi Persediaan & Jurnal Stok Otomatis pada Database Disposable CI (fmcg) dengan Jaminan Fail-Fast
 **Konteks & Arahan Supervisi:**
 - Mengatasi kegagalan `init-test` pada runner CI disposable database `fmcg` (`RuntimeError: Akun valuasi persediaan 113000 tidak ditemukan`):
