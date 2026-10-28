@@ -42,21 +42,27 @@ class TestAccountMoveCogs(TransactionCase):
             "list_price": 30000.0,
         })
 
-        # Jurnal Penjualan
-        cls.journal_sale = cls.env["account.journal"].search([
-            ("type", "=", "sale"),
-            ("company_id", "=", cls.company_seed.id),
-        ], limit=1)
-        if not cls.journal_sale:
-            cls.journal_sale = cls.env["account.journal"].create({
-                "name": "Customer Invoices Test",
-                "code": "INVTEST",
-                "type": "sale",
-                "company_id": cls.company_seed.id,
-            })
+        # Seed company accounts & journals (distinct codes ending in 1)
+        cls.acc_rec_seed = cls._create_account(cls.company_seed, "112001", "AR Seed", "asset_receivable")
+        cls.acc_pay_seed = cls._create_account(cls.company_seed, "211001", "AP Seed", "liability_payable")
+        cls.acc_inc_seed = cls._create_account(cls.company_seed, "410001", "Inc Seed", "income")
+        cls.acc_exp_seed = cls._create_account(cls.company_seed, "610001", "Exp Seed", "expense")
+        cls.journal_sale_seed = cls._create_journal(cls.company_seed, "SJ1", "Sale Journal Seed", "sale")
+        cls.journal_purchase_seed = cls._create_journal(cls.company_seed, "PJ1", "Purchase Journal Seed", "purchase")
 
-    def _get_or_create_journal(self, company, j_type="sale"):
-        JournalModel = self.env["account.journal"]
+        # Foreign company accounts & journals (distinct codes ending in 2)
+        cls.acc_rec_foreign = cls._create_account(cls.company_foreign, "112002", "AR Foreign", "asset_receivable")
+        cls.acc_pay_foreign = cls._create_account(cls.company_foreign, "211002", "AP Foreign", "liability_payable")
+        cls.acc_inc_foreign = cls._create_account(cls.company_foreign, "410002", "Inc Foreign", "income")
+        cls.acc_exp_foreign = cls._create_account(cls.company_foreign, "610002", "Exp Foreign", "expense")
+        cls.journal_sale_foreign = cls._create_journal(cls.company_foreign, "SJ2", "Sale Journal Foreign", "sale")
+        cls.journal_purchase_foreign = cls._create_journal(
+            cls.company_foreign, "PJ2", "Purchase Journal Foreign", "purchase"
+        )
+
+    @classmethod
+    def _create_journal(cls, company, code, name, j_type):
+        JournalModel = cls.env["account.journal"]
         j_fields = JournalModel._fields if hasattr(JournalModel, "_fields") else {}
         domain = [("type", "=", j_type)]
         if "company_id" in j_fields:
@@ -66,10 +72,9 @@ class TestAccountMoveCogs(TransactionCase):
 
         journal = JournalModel.search(domain, limit=1)
         if not journal:
-            code = "INV" if j_type == "sale" else "BILL"
             vals = {
-                "name": f"{j_type.title()} Journal {company.id}",
-                "code": f"{code}{company.id}",
+                "name": name,
+                "code": code,
                 "type": j_type,
             }
             if "company_id" in j_fields:
@@ -79,36 +84,39 @@ class TestAccountMoveCogs(TransactionCase):
             journal = JournalModel.create(vals)
         return journal
 
-    def _get_or_create_account(self, company, acc_type="income", code="410000"):
-        AccountModel = self.env["account.account"]
+    @classmethod
+    def _create_account(cls, company, code, name, acc_type):
+        AccountModel = cls.env["account.account"]
         account = AccountModel.search([("code", "=", code)], limit=1)
-        if account:
-            if hasattr(account, "company_ids") and company.id not in account.company_ids.ids:
-                account.write({"company_ids": [(4, company.id)]})
-            return account
-
-        vals = {
-            "name": f"Account {code} {company.id}",
-            "code": code,
-            "account_type": acc_type,
-        }
-        acc_fields = AccountModel._fields if hasattr(AccountModel, "_fields") else {}
-        if "company_ids" in acc_fields:
-            vals["company_ids"] = [(6, 0, [company.id])]
-        elif "company_id" in acc_fields:
-            vals["company_id"] = company.id
-        return AccountModel.create(vals)
+        if not account:
+            vals = {
+                "name": name,
+                "code": code,
+                "account_type": acc_type,
+            }
+            acc_fields = AccountModel._fields if hasattr(AccountModel, "_fields") else {}
+            if "company_ids" in acc_fields:
+                vals["company_ids"] = [(6, 0, [company.id])]
+            elif "company_id" in acc_fields:
+                vals["company_id"] = company.id
+            account = AccountModel.create(vals)
+        return account
 
     def _create_basic_invoice(self, company, is_seed=False, move_type="out_invoice"):
         """Helper untuk membuat faktur pengujian."""
-        j_type = "purchase" if move_type in ("in_invoice", "in_refund") else "sale"
-        journal = self._get_or_create_journal(company, j_type=j_type)
-        acc_type = "expense" if j_type == "purchase" else "income"
-        acc_code = "610000" if j_type == "purchase" else "410000"
-        product_account = self._get_or_create_account(company, acc_type=acc_type, code=acc_code)
+        is_seed_comp = (company.id == self.company_seed.id)
+        is_purchase = move_type in ("in_invoice", "in_refund")
 
-        rec_account = self._get_or_create_account(company, acc_type="asset_receivable", code="112000")
-        pay_account = self._get_or_create_account(company, acc_type="liability_payable", code="211000")
+        if is_seed_comp:
+            journal = self.journal_purchase_seed if is_purchase else self.journal_sale_seed
+            product_account = self.acc_exp_seed if is_purchase else self.acc_inc_seed
+            rec_account = self.acc_rec_seed
+            pay_account = self.acc_pay_seed
+        else:
+            journal = self.journal_purchase_foreign if is_purchase else self.journal_sale_foreign
+            product_account = self.acc_exp_foreign if is_purchase else self.acc_inc_foreign
+            rec_account = self.acc_rec_foreign
+            pay_account = self.acc_pay_foreign
 
         PartnerModel = self.env["res.partner"]
         has_wc = hasattr(PartnerModel, "with_company")

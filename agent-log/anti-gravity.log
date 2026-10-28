@@ -942,3 +942,10 @@
 - Verifikasi ruff check . dan check_manifests.py 4 addon lolos bersih. 15 CSV register kanonikal 100% beku.
 - Task managed by antigravity at 2026-10-28T22:30:00+07:00
 
+[2026-10-28T22:36:00+07:00] [INFO] Alokasi Akun & Jurnal Pengujian di setUpClass dengan Kode Unik per Company
+- Menghilangkan pencarian dinamis dan mutasi akun/jurnal selama eksekusi test method pada TransactionCase:
+  * Menginisialisasi akun (AR, AP, Income, Expense) dan jurnal (Sale, Purchase) secara deklaratif di setUpClass untuk company_seed (akhiran kode 1) dan company_foreign (akhiran kode 2).
+  * Menjamin tidak ada benturan keunikan kode akun (_ensure_code_is_unique) dan tidak ada mutasi skema antar-transaksi.
+- Verifikasi lokal: ruff check (All checks passed!), check_manifests.py 4 addon ok. 15 CSV register kanonikal 100% beku.
+- Task managed by antigravity at 2026-10-28T22:36:00+07:00
+
