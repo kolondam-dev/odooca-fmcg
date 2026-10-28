@@ -27,7 +27,7 @@
      - Membangun `self.canonical_skus` (150 SKU) langsung dari CSV register kanonikal dan membatasi `self.product_by_code` hanya pada `("default_code", "in", sorted(self.canonical_skus))` dalam scope company seed (*fail-fast* jika ada SKU hilang atau ambigu).
      - Mengumpulkan `seed_categories` murni dari `self.product_by_code.values()` dan menghapus *fallback* `ProductCategory.search([], limit=1)` (*fail-fast* jika kosong).
      - Membatasi konfigurasi `stock.location` hanya pada lokasi dalam scope warehouse/company seed (`_is_seed_scoped_location`) dengan `with_company(self.company)` pada lokasi virtual bersama, sehingga lokasi/kategori/produk milik company lain 100% tidak tersentuh.
-     - Menambahkan helper `_iter_records()` pada `scripts/load_canonical_perpetual.py` dan `scripts/ops/verify_disposable_slice.py` untuk mengonversi recordset Odoo (`BaseModel` iterable yang bukan `list`/`tuple`) menjadi list singleton record serta mendukung mappingproxy pada _safe_fields() dan pemasangan lot multi-move tanpa membungkus multi-recordset menjadi `[recordset]`.
+     - Menambahkan helper `_iter_records()` pada `scripts/load_canonical_perpetual.py` dan `scripts/ops/verify_disposable_slice.py` untuk mengonversi recordset Odoo (`BaseModel` iterable yang bukan `list`/`tuple`) menjadi list singleton record serta mendukung mappingproxy pada _safe_fields(), pemasangan lot multi-move, dan pencegahan duplikasi baris COGS pada out_invoice di Odoo 19 tanpa membungkus multi-recordset menjadi `[recordset]`.
 - Hasil verifikasi lokal:
   * `ruff check .`: All checks passed! (0 lint errors)
   * `python scripts/check_manifests.py`: manifest ok: 4 addon

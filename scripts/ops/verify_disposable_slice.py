@@ -1267,6 +1267,8 @@ def verify_slice_mutation_rejection(env, adapter, reg_path, target_so_slice=None
         if sml_fields and not isinstance(sml_fields, bool) and hasattr(sml_fields, "__contains__"):
             if "product_uom_id" in sml_fields and getattr(bogus_prod, "uom_id", None):
                 ml_vals["product_uom_id"] = bogus_prod.uom_id.id
+            if "uom_id" in sml_fields and getattr(bogus_prod, "uom_id", None):
+                ml_vals["uom_id"] = bogus_prod.uom_id.id
             if "company_id" in sml_fields and getattr(env, "company", None):
                 ml_vals["company_id"] = env.company.id
             ml_vals = {k: v for k, v in ml_vals.items() if k in sml_fields}

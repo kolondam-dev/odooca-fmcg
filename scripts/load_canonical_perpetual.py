@@ -1583,13 +1583,48 @@ class CanonicalPerpetualAdapter:
                             continue
 
                         net_units = net_cartons * line_p["carton_qty"]
-                        inv_lines.append((0, 0, {
-                            "product_id": pr.id,
+                        pr_comp = (
+                            pr.with_company(self.company)
+                            if callable(getattr(pr, "with_company", None)) and hasattr(self, "company") and self.company
+                            else pr
+                        )
+                        # Catatan arsitektur Odoo 19 stock_account:
+                        # Karena lokasi Customer memiliki valuation_account_id = 510000 (HPP),
+                        # validasi stock.move pada DO dan retur karantina SUDAH memposting jurnal HPP
+                        # (Dr 510000 / Cr 113000) secara native di jurnal STJ pada tanggal pengiriman.
+                        # Baris out_invoice memetakan akun pendapatan & pajak PPN produk secara eksplisit
+                        # (selaras dengan in_invoice pada load_inbound_pos) agar AccountMove._post()
+                        # di Odoo 19 tidak menduplikasi jurnal COGS kedua kalinya di dalam faktur.
+                        inv_line_vals = {
                             "quantity": net_units,
                             "price_unit": line_p["unit_price_dpp"],
                             "discount": header_p["discount_pct"],
                             "name": f"{lrow.get('product_name')} (Lot: {line_p['lot_number']})",
-                        }))
+                        }
+                        if callable(getattr(pr_comp, "_get_product_accounts", None)):
+                            prod_accs = pr_comp._get_product_accounts()
+                            if isinstance(prod_accs, dict) and prod_accs.get("income"):
+                                inv_line_vals["account_id"] = prod_accs["income"].id
+
+                        taxes = getattr(pr_comp, "taxes_id", None)
+                        if taxes and hasattr(taxes, "filtered") and hasattr(self, "company") and self.company:
+                            taxes = taxes.filtered(
+                                lambda t: not getattr(t, "company_id", False) or t.company_id.id == self.company.id
+                            )
+                        if (not taxes or not getattr(taxes, "ids", None)) and "account.tax" in self.env:
+                            AccountTax = self.env["account.tax"].sudo()
+                            tax_domain = [("type_tax_use", "=", "sale"), ("amount", "=", 11.0)]
+                            if (
+                                "company_id" in _safe_fields(AccountTax)
+                                and hasattr(self, "company")
+                                and self.company
+                            ):
+                                tax_domain.append(("company_id", "=", self.company.id))
+                            taxes = AccountTax.search(tax_domain, limit=1)
+                        if taxes and getattr(taxes, "ids", None):
+                            inv_line_vals["tax_ids"] = [(6, 0, list(taxes.ids))]
+
+                        inv_lines.append((0, 0, inv_line_vals))
 
                     inv = AccountMove.create({
                         "move_type": "out_invoice",

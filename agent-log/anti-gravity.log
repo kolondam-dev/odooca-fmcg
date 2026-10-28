@@ -864,3 +864,9 @@
 - Pair multi-line SO moves per lot without canceling valid split moves in _assign_lots_to_picking
 - Verified ruff check, check_manifests.py, and 123 unit tests pass
 - Task managed by antigravity-agent at 2026-10-28T07:17:49+00:00
+
+[2026-10-28T07:36:36+00:00] [INFO] Prevent duplicate COGS lines on out_invoice in Odoo 19 when delivery stock.move already posts HPP valuation
+- Resolve income account and PPN 11% sale tax explicitly on out_invoice lines in load_sales_deliveries_and_invoices without re-triggering stock_account invoice COGS lines
+- Preserve exact GL balance on 113000 (Rp 13,948,969,200.00) and 510000 (Rp 23,910,800.00)
+- Verified ruff check, check_manifests.py, and unit tests pass
+- Task managed by antigravity-agent at 2026-10-28T07:36:36+00:00
