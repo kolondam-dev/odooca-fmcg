@@ -71,20 +71,27 @@ class TestReadTitleSpec(unittest.TestCase):
                     return fixtures.map(([name, markup, expected]) => {
                         const wrapper = document.createElement("div");
                         wrapper.innerHTML = markup;
-                        const block = wrapper.firstElementChild;
-                        const actual = readTitleSpec(block);
-                        const editableInput = getEditableTitleInput(block);
-                        const kind = actual === null ? null : actual.editable ? "editable" : "readonly";
-                        if (name === "hidden before supported input") {
-                            const focusedInput = focusEditableTitleInput(block);
-                            const expectedInput = block.querySelector('input[type="text"]');
-                            return { name, expected, kind, pass: actual?.editable === true && editableInput === expectedInput && focusedInput === expectedInput && document.activeElement === expectedInput && block.classList.contains("id_title_editing") };
+                        // Focus assertions only mean anything for connected DOM. Attach each
+                        // fixture before running production guards/helpers, then always remove it.
+                        document.body.append(wrapper);
+                        try {
+                            const block = wrapper.firstElementChild;
+                            const actual = readTitleSpec(block);
+                            const editableInput = getEditableTitleInput(block);
+                            const kind = actual === null ? null : actual.editable ? "editable" : "readonly";
+                            if (name === "hidden before supported input") {
+                                const focusedInput = focusEditableTitleInput(block);
+                                const expectedInput = block.querySelector('input[type="text"]');
+                                return { name, expected, kind, pass: actual?.editable === true && editableInput === expectedInput && focusedInput === expectedInput && document.activeElement === expectedInput && block.classList.contains("id_title_editing") };
+                            }
+                            if (name === "hidden only with readonly text") {
+                                const focusedInput = focusEditableTitleInput(block);
+                                return { name, expected, kind, pass: actual?.editable === false && editableInput === null && focusedInput === null && !block.classList.contains("id_title_editing") };
+                            }
+                            return { name, expected, kind, pass: kind === expected };
+                        } finally {
+                            wrapper.remove();
                         }
-                        if (name === "hidden only with readonly text") {
-                            const focusedInput = focusEditableTitleInput(block);
-                            return { name, expected, kind, pass: actual?.editable === false && editableInput === null && focusedInput === null && !block.classList.contains("id_title_editing") };
-                        }
-                        return { name, expected, kind, pass: kind === expected };
                     });
                 }""",
                 {"specSource": spec_source, "inputSource": input_source, "focusSource": focus_source, "fixtures": fixtures},
