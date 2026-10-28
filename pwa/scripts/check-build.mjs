@@ -53,6 +53,7 @@ for (const mode of ["demo", "live"]) {
             "SIM-MANIFEST-1",
             "Ajukan POD untuk review",
             "Koreksi POD ditolak",
+            "Koreksi collection ditolak",
             "SIM-COLLECTION-1",
             "Ajukan penerimaan untuk review",
             "Koreksi realisasi ditolak",

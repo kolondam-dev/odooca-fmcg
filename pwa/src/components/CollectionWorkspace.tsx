@@ -1,3 +1,4 @@
+import { businessRejected } from "../domain/outbox-state";
 import { useEffect, useState } from "preact/hooks";
 import { z } from "zod";
 import {
@@ -111,8 +112,10 @@ function CollectionForm({
     queue: QueueItem[];
     changed: () => void;
 }) {
-    const key = collectionKey(task),
-        draftKey = `${key}:form`;
+    const key = collectionKey(task);
+    const [revision, setRevision] = useState<QueueItem>();
+    const [correctionReason, setCorrectionReason] = useState("");
+    const draftKey = `${key}:form${revision ? `:${revision.command.client_uuid}` : ""}`;
     const [payer, setPayer] = useState(""),
         [amount, setAmount] = useState(""),
         [method, setMethod] = useState<"cash" | "transfer">("cash"),
@@ -182,12 +185,70 @@ function CollectionForm({
             if (row) setSaved(row);
         }
     }, [queue, saved?.key]);
+    async function startCorrection() {
+        if (!saved) return;
+        setBusy(true);
+        try {
+            const parent = (await store.list(owner)).find(
+                (r) => r.key === saved.key,
+            );
+            if (
+                !parent ||
+                !businessRejected(parent) ||
+                parent.command.type !== "collection.receipt.submit"
+            )
+                throw new Error("Belum ada penolakan bisnis yang cocok.");
+            await validateCollectionMedia(parent, owner, store);
+            let p = parent.command.payload;
+            const draft = await store.draft(
+                owner,
+                `${key}:form:${parent.command.client_uuid}`,
+            );
+            if (draft !== undefined) {
+                const d = CollectionReceiptSchema.parse(draft);
+                if (
+                    d.supersedes_uuid !== parent.command.client_uuid ||
+                    JSON.stringify(d.source) !== JSON.stringify(task)
+                )
+                    throw new Error("Draft koreksi tidak cocok.");
+                await assertLocalEvidence(
+                    await store.getEvidence(owner, d.evidence.id),
+                    d.evidence,
+                    owner,
+                );
+                p = d;
+            }
+            setPayer(p.payer);
+            setAmount(p.amount);
+            setMethod(p.method);
+            setReceipt(p.receipt_number);
+            setTransfer(p.transfer_reference ?? "");
+            setNotes(p.notes);
+            setPhoto(draft ? p.evidence : undefined);
+            setCorrectionReason(draft ? (p.correction_reason ?? "") : "");
+            setRevision(parent);
+            setReady(true);
+            setMessage("");
+        } catch (e) {
+            setMessage(
+                e instanceof Error ? e.message : "Koreksi gagal dibuka.",
+            );
+        } finally {
+            setBusy(false);
+        }
+    }
     async function action(send: boolean) {
         setBusy(true);
         setMessage("");
         try {
             const p = CollectionReceiptSchema.parse({
                 collection_version: 1,
+                ...(revision
+                    ? {
+                          supersedes_uuid: revision.command.client_uuid,
+                          correction_reason: correctionReason,
+                      }
+                    : {}),
                 source: task,
                 payer,
                 method,
@@ -199,6 +260,7 @@ function CollectionForm({
                 notes,
                 evidence: photo,
             });
+            if (revision) await validateCollectionMedia(revision, owner, store);
             await assertLocalEvidence(
                 await store.getEvidence(owner, p.evidence.id),
                 p.evidence,
@@ -215,7 +277,8 @@ function CollectionForm({
                     uuid,
                     {
                         key,
-                        expected: undefined,
+                        expected: revision?.command,
+                        ...(revision ? { guards: { source: revision } } : {}),
                         occurredAt: at,
                         value: {
                             schema_version: 1,
@@ -227,6 +290,7 @@ function CollectionForm({
                     },
                 );
                 setSaved(row);
+                setRevision(undefined);
                 changed();
                 void engine.flush();
                 setMessage(
@@ -272,13 +336,29 @@ function CollectionForm({
                 WITA
             </p>
             {message && <p role="status">{message}</p>}
-            {saved && value ? (
+            {saved && value && !revision ? (
                 <>
                     <p>
                         Pencatatan tersimpan ·{" "}
                         {saved.command.client_uuid.slice(0, 8)}. Status terbaru
                         di Lainnya; bukan AR lunas.
                     </p>
+                    {businessRejected(saved) && (
+                        <button
+                            class="secondary"
+                            disabled={busy}
+                            onClick={() => void startCorrection()}
+                        >
+                            Koreksi collection ditolak
+                        </button>
+                    )}
+                    {value.correction_reason && (
+                        <p>
+                            Alasan koreksi: {value.correction_reason} · atas{" "}
+                            {value.supersedes_uuid?.slice(0, 8)}. Parent tetap
+                            utuh di Lainnya.
+                        </p>
+                    )}
                     <p>
                         Pembayar: {value.payer} ·{" "}
                         {value.method === "cash"
@@ -303,6 +383,33 @@ function CollectionForm({
                 </>
             ) : ready ? (
                 <fieldset disabled={busy}>
+                    {revision && (
+                        <>
+                            <p>
+                                Koreksi atas{" "}
+                                {revision.command.client_uuid.slice(0, 8)}. Foto
+                                baru wajib; parent tetap utuh.
+                            </p>
+                            <label>
+                                Alasan koreksi collection
+                                <textarea
+                                    value={correctionReason}
+                                    maxLength={500}
+                                    onInput={(e) =>
+                                        setCorrectionReason(
+                                            e.currentTarget.value,
+                                        )
+                                    }
+                                />
+                            </label>
+                            <button
+                                class="secondary"
+                                onClick={() => setRevision(undefined)}
+                            >
+                                Kembali ke pencatatan tersimpan
+                            </button>
+                        </>
+                    )}
                     <label>
                         Pembayar
                         <input

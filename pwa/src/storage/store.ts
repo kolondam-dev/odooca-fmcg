@@ -150,8 +150,9 @@ export class FieldStore {
             const id = `${item.owner}:${key}`;
             const old = await tx.objectStore("drafts").get(id);
             const canonical = (value: unknown) =>
-                item.command.type === "delivery.pod.submit" &&
-                value !== undefined
+                ["delivery.pod.submit", "collection.receipt.submit"].includes(
+                    item.command.type,
+                ) && value !== undefined
                     ? CommandSchema.parse(value)
                     : value;
             if (
@@ -210,8 +211,20 @@ export class FieldStore {
                     )?.value,
                     item.command.payload.source,
                 );
-                if (old)
-                    throw new Error("Tagihan sudah dicatat; perlu review.");
+                if (item.command.payload.supersedes_uuid) {
+                    if (
+                        !guards ||
+                        guards.source.owner !== item.owner ||
+                        guards.source.command.client_uuid !==
+                            item.command.payload.supersedes_uuid ||
+                        JSON.stringify(
+                            await tx
+                                .objectStore("outbox")
+                                .get(guards.source.key),
+                        ) !== JSON.stringify(guards.source)
+                    )
+                        throw new Error("Parent/receipt collection berubah.");
+                }
                 validateCollectionCommit(
                     item,
                     key,
@@ -220,6 +233,7 @@ export class FieldStore {
                         .objectStore("outbox")
                         .index("owner")
                         .getAll(item.owner),
+                    old?.value,
                 );
             }
             if (visitGuard) {

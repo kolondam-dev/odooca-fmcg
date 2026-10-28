@@ -1,6 +1,13 @@
 # HANDOFF
 
 
+## 2026-10-28 — codex agent — Koreksi collection ditolak simulator
+**Basis:** main f99e117 (PR #30 merged), branch agen/mobile-collection-corrections; whats_new/protocol/development/handoff dibaca dan plan sebelum kode.
+**Berubah:** hanya receipt bisnis rejected cocok UUID membuka koreksi. UUID/alasan/foto baru, source identik, parent immutable. CAS pointer schema-canonical+snapshot receipt atomik, satu successor; nominal bukan saldo tambahan. Referensi/tanda terima dapat dipertahankan dalam lineage; semua klaim ancestor tetap reserved lintas tagihan, foto wajib berbeda. Restore/pre-sync memvalidasi root/parent/time/source/dedup/media semua ancestor dan recheck setelah await. Draft manual per parent pulih offline, hasil/bukti readonly, parent di Lainnya. Kontrak0.10 pasangan optional fields (legacy valid) dan fixture live gate additive; workflow tidak berubah.
+**Diverifikasi lokal:** 227 unit +1 hosting +58 browser PASS; race dua koneksi, receipt berubah saat commit/hash, multilevel/root media rusak, persisted cycle/missing parent/dropped ref, transport/approval/accepted lock, reserve ancestor serta draft koreksi offline+UUID/parent utuh. Typecheck/format/contracts/demo+live/budget (demo62,9 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. Screenshot ponsel ditinjau. CI setelah push.
+**Batas:** same-day correction/historical replay, local source/hash bukan auth/server authority. Cancel/cicilan lanjutan/closing/kasir/bank/payment/AR/GL belum terintegrasi. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh; runtime Odoo lokal tidak dijalankan karena addon tidak berubah. Tidak merge/deploy, live terkunci.
+**Menunggu:** CI dan review pemilik.
+
 ## 2026-10-27 — codex agent — Penerimaan uang delivery/collection simulator
 **Basis:** main08b0050, PR #28/#29 sudah merged; branch agen/mobile-collection. Protocol/development/handoff dan whats_new dibaca, plan terintegrasi sebelum kode.
 **Berubah:** capability fixture collection.capture terpisah, tagihan contoh bertimestamp mengikat DO/trip/outlet/owner/hari/versi/saldo. Cash/transfer, pembayar/nominal/nomor tanda terima/ref transfer/catatan, foto watermark+pinpoint/geofence wajib. Rupiah integer string+BigInt, >0 <=saldo. Draft manual pulih offline, hasil/bukti readonly. Receipt normal needs_approval, saldo tidak dikurangi dan bukan AR lunas/payment posted. Source+ledger+queue CAS atomik; dedup tagihan/nomor bukti/ref transfer/foto lintas tab/koneksi. Snapshot read-only source+ledger+outbox konsisten, restore/pre-sync recheck setelah hash. Source berbeda/queue/media rusak tertahan tanpa hapus/force. Kontrak0.9 conditional ref transfer dan gate fixture live additive; workflow tidak diubah.
