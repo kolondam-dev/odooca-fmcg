@@ -55,32 +55,50 @@ class TestAccountMoveCogs(TransactionCase):
             })
 
     def _get_or_create_journal(self, company, j_type="sale"):
-        journal = self.env["account.journal"].search([
-            ("company_id", "=", company.id),
-            ("type", "=", j_type),
-        ], limit=1)
+        JournalModel = self.env["account.journal"]
+        j_fields = JournalModel._fields if hasattr(JournalModel, "_fields") else {}
+        domain = [("type", "=", j_type)]
+        if "company_id" in j_fields:
+            domain.append(("company_id", "=", company.id))
+        elif "company_ids" in j_fields:
+            domain.append(("company_ids", "in", [company.id]))
+
+        journal = JournalModel.search(domain, limit=1)
         if not journal:
             code = "INV" if j_type == "sale" else "BILL"
-            journal = self.env["account.journal"].create({
+            vals = {
                 "name": f"{j_type.title()} Journal {company.id}",
                 "code": f"{code}{company.id}",
                 "type": j_type,
-                "company_id": company.id,
-            })
+            }
+            if "company_id" in j_fields:
+                vals["company_id"] = company.id
+            elif "company_ids" in j_fields:
+                vals["company_ids"] = [(6, 0, [company.id])]
+            journal = JournalModel.create(vals)
         return journal
 
     def _get_or_create_account(self, company, acc_type="income", code="410000"):
-        account = self.env["account.account"].search([
-            ("company_id", "=", company.id),
-            ("code", "=", code),
-        ], limit=1)
+        AccountModel = self.env["account.account"]
+        acc_fields = AccountModel._fields if hasattr(AccountModel, "_fields") else {}
+        domain = [("code", "=", code)]
+        if "company_ids" in acc_fields:
+            domain.append(("company_ids", "in", [company.id]))
+        elif "company_id" in acc_fields:
+            domain.append(("company_id", "in", [False, company.id]))
+
+        account = AccountModel.search(domain, limit=1)
         if not account:
-            account = self.env["account.account"].create({
+            vals = {
                 "name": f"Account {code} {company.id}",
                 "code": code,
                 "account_type": acc_type,
-                "company_id": company.id,
-            })
+            }
+            if "company_ids" in acc_fields:
+                vals["company_ids"] = [(6, 0, [company.id])]
+            elif "company_id" in acc_fields:
+                vals["company_id"] = company.id
+            account = AccountModel.create(vals)
         return account
 
     def _create_basic_invoice(self, company, is_seed=False, move_type="out_invoice"):
