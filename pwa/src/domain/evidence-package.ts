@@ -8,6 +8,7 @@ export const VisualEvidenceSchema = z
     .object({
         version: z.literal(1),
         kind: z.literal("simulation_grid"),
+        demo_unrestricted: z.literal(true).optional(),
         selectedAt: z.iso.datetime(),
         fixSampledAt: z.iso.datetime(),
         photoSha256: hash,
@@ -47,6 +48,7 @@ export function validateEvidenceTime(
     ref: EvidenceReference,
     selectedAt: string,
     fixSampledAt: string,
+    relaxed = false,
 ) {
     if (!LocalExpenseEvidenceSchema.safeParse(ref).success)
         throw new Error(
@@ -57,12 +59,13 @@ export function validateEvidenceTime(
         fix = Date.parse(fixSampledAt);
     if (
         ![saved, selected, fix].every(Number.isFinite) ||
-        ref.accuracy <= 0 ||
-        ref.accuracy > 10000 ||
-        saved - selected < 0 ||
-        saved - selected > 300000 ||
-        saved - fix > 60000 ||
-        fix - saved > 1000
+        (!(__DEMO__ && relaxed) &&
+            (ref.accuracy <= 0 ||
+                ref.accuracy > 10000 ||
+                saved - selected < 0 ||
+                saved - selected > 300000 ||
+                saved - fix > 60000 ||
+                fix - saved > 1000))
     )
         throw new Error(
             "Waktu/akurasi bukti tidak valid. Ambil ulang foto dan lokasi.",
@@ -96,7 +99,12 @@ export async function assertLocalEvidence(
     if (!parsed.success)
         throw new Error("Metadata paket bukti tidak valid; perlu review.");
     const visual = parsed.data;
-    validateEvidenceTime(ref, visual.selectedAt, visual.fixSampledAt);
+    validateEvidenceTime(
+        ref,
+        visual.selectedAt,
+        visual.fixSampledAt,
+        !!visual.demo_unrestricted,
+    );
     if (
         row.blob.type !== "image/jpeg" ||
         row.blob.size > 1024 * 1024 ||

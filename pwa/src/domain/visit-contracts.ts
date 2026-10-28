@@ -32,6 +32,7 @@ export const VisitSiteSchema = z
         latitude: z.number().min(-90).max(90),
         longitude: z.number().min(-180).max(180),
         radius: z.number().min(5).max(15),
+        demo_unrestricted: z.literal(true).optional(),
     })
     .strict();
 export const VisitContextSchema = z

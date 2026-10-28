@@ -19,3 +19,11 @@
 - Full Chrome resmi terhalang socket singleton lingkungan; official headless shell sesuai Playwright digunakan dengan sukses. Tidak mengubah dependency/workflow/backend/seed/Railway; live terkunci, HOLD menunggu review ulang, tidak merge/deploy.
 - CI SHA baru diperiksa setelah publikasi; hasil aktual dan URL disampaikan pada PR.
 - Task managed by agent-codex-pwa at 2026-10-28T22:12:23+07:00
+
+[2026-10-28T23:20:03+07:00] [INFO] Revisi SO, approval delivery dan closing kantor simulator
+- Basis main2444b2f; branch agen/pwa-order-revisions-delivery-policy. Rules lima mandat di plan§18 sebelum kode; SCOPE§15/README/HANDOFF diperbarui.
+- UUID revisi baru/parent immutable/draft offline/CAS satu successor, harga snapshot kini, approval ulang termasuk diskon0. Pending0–2 hari SPV, >=3 SPV+BM; cancel enum lima subreason+SPV.
+- Closing kantor+toleransi25m client, POD source/one-close guard; kasir di luar scope dan resi backlog. Demo terima lokasi/foto tanpa geofence/keaslian, tetap wajib stamp waktu/koordinat dan integritas owner/hash. Strict legacy tidak ditulis ulang; live locked.
+- 255 unit +1 hosting +94 browser resmi145.0.7632.6 PASS; 10 flow diulang setelah editor draft/quote diperbaiki. Typecheck/format/contracts/build/budget/Ruff/manifest/diff PASS; screenshot revisi SO ditinjau. CI setelah push/PR.
+- Backend menunggu seeding; tidak menyentuh addon/seed/loader/workflow/ruleset/Railway, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-28T23:20:03+07:00

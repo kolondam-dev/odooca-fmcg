@@ -1,3 +1,5 @@
+import { validateTripCloseMedia } from "./trip-close";
+import { validateRevisionMedia } from "./order-revisions";
 import { validateCollectionMedia } from "./collection";
 import { validatePodMedia } from "./delivery";
 import {
@@ -40,6 +42,10 @@ export class Outbox {
             occurredAt?: string;
         },
     ) {
+        if (type === "delivery.trip.close" && !draftWrite)
+            throw new Error("Closing wajib CAS trip.");
+        if (type === "sales.order.revise" && !draftWrite?.guards)
+            throw new Error("Revisi wajib snapshot parent dan CAS.");
         if (
             type === "delivery.pod.submit" &&
             payload.supersedes_uuid &&
@@ -163,6 +169,16 @@ export class Outbox {
                             this.store,
                         );
                         await validatePodMedia(item, this.owner, this.store);
+                        await validateRevisionMedia(
+                            item,
+                            this.owner,
+                            this.store,
+                        );
+                        await validateTripCloseMedia(
+                            item,
+                            this.owner,
+                            this.store,
+                        );
                         await validatePackagedCommandEvidence(
                             item.command,
                             this.owner,
@@ -196,6 +212,8 @@ export class Outbox {
                     }
                     await validatePodMedia(item, this.owner, this.store);
                     await validateCollectionMedia(item, this.owner, this.store);
+                    await validateRevisionMedia(item, this.owner, this.store);
+                    await validateTripCloseMedia(item, this.owner, this.store);
                     const receipt = ReceiptSchema.parse(
                         await this.provider.submit(item.command),
                     );

@@ -1,3 +1,9 @@
+import { tripCloseKey } from "../domain/trip-close-contracts";
+import { validateTripClose } from "../domain/trip-close";
+import { validateRevisionCommit } from "../domain/order-revisions";
+import { OrderRevisionSchema } from "../domain/order-revision-contracts";
+import { approvalTiers } from "../domain/delivery-approval";
+import { validatePod } from "../domain/delivery";
 import { requireVisitFix } from "../domain/visit-validation";
 import { VisitOrderSchema } from "../domain/visit-contracts";
 import {
@@ -179,6 +185,14 @@ export class FieldStore {
         try {
             const drafts = tx.objectStore("drafts"),
                 key = `${owner}:${DELIVERY_SESSION_KEY}`;
+            if (
+                await drafts.get(
+                    `${owner}:${tripCloseKey(source.trip, source.business_date)}`,
+                )
+            )
+                throw new Error(
+                    "Trip sudah closed lokal; pembukaan sesi membutuhkan review.",
+                );
             const prior = (await drafts.get(key))?.value as
                 | { closed?: string; session?: unknown }
                 | undefined;
@@ -270,8 +284,74 @@ export class FieldStore {
                 throw new Error(
                     "Data berubah di tab lain. Muat ulang sebelum mengirim.",
                 );
+            if (item.command.type === "delivery.trip.close") {
+                const p = validateTripClose(
+                    item,
+                    await tx
+                        .objectStore("outbox")
+                        .index("owner")
+                        .getAll(item.owner),
+                    item.owner,
+                );
+                const morning = (
+                    await tx
+                        .objectStore("drafts")
+                        .get(`${item.owner}:${MORNING_KEY}`)
+                )?.value;
+                const active = (
+                    await tx
+                        .objectStore("drafts")
+                        .get(`${item.owner}:${DELIVERY_SESSION_KEY}`)
+                )?.value as { closed?: string } | undefined;
+                if (
+                    key !== tripCloseKey(p.trip_id, p.business_date) ||
+                    old ||
+                    JSON.stringify(CommandSchema.parse(value)) !==
+                        JSON.stringify(item.command) ||
+                    JSON.stringify(morning) !==
+                        JSON.stringify(p.daily_source) ||
+                    !morningReady(morning, item.owner) ||
+                    (active && !active.closed)
+                )
+                    throw new Error(
+                        "Sesi aktif/sumber closing berubah; tidak dapat tutup trip.",
+                    );
+            }
+            if (item.command.type === "sales.order.revise") {
+                validateRevisionCommit(
+                    item,
+                    await tx
+                        .objectStore("outbox")
+                        .index("owner")
+                        .getAll(item.owner),
+                    key,
+                    value,
+                    old?.value,
+                    guards?.source,
+                    (
+                        await tx
+                            .objectStore("drafts")
+                            .get(`${item.owner}:${MORNING_KEY}`)
+                    )?.value,
+                    (
+                        await tx
+                            .objectStore("drafts")
+                            .get(`${item.owner}:${VISITS_KEY}`)
+                    )?.value,
+                );
+            }
             if (item.command.type === "delivery.pod.submit") {
                 const payload = item.command.payload;
+                if (
+                    await tx
+                        .objectStore("drafts")
+                        .get(
+                            `${item.owner}:${tripCloseKey(payload.source.trip, payload.source.business_date)}`,
+                        )
+                )
+                    throw new Error(
+                        "Trip sudah closed lokal; perubahan membutuhkan review.",
+                    );
                 if (payload.source.workflow_version === 2) {
                     const session = DeliverySessionSchema.parse(
                         payload.session,
@@ -553,6 +633,96 @@ export class FieldStore {
     async listEvidence(owner: string) {
         return (await this.db).getAllFromIndex("evidence", "owner", owner);
     }
+    async decideDemoDelivery(
+        owner: string,
+        expected: QueueItem,
+        role: "spv" | "branch_manager",
+        approved: boolean,
+        reason: string,
+    ) {
+        if (
+            !__DEMO__ ||
+            expected.owner !== owner ||
+            expected.command.type !== "delivery.pod.submit" ||
+            expected.state !== "needs_approval" ||
+            expected.receipt?.client_uuid !== expected.command.client_uuid ||
+            expected.receipt.status !== "needs_approval" ||
+            reason.trim().length < 3 ||
+            reason.length > 500
+        )
+            throw new Error("Approval delivery tidak valid.");
+        const p = validatePod(
+            expected.command.payload,
+            owner,
+            expected.command.occurred_at,
+        );
+        if (!p.request) throw new Error("Bukan request pending/cancel.");
+        const tiers = approvalTiers(p.request, p.source.business_date);
+        const tx = (await this.db).transaction(
+                ["outbox", "drafts", "receipts"],
+                "readwrite",
+            ),
+            done = tx.done;
+        try {
+            if (
+                JSON.stringify(
+                    await tx.objectStore("outbox").get(expected.key),
+                ) !== JSON.stringify(expected)
+            )
+                throw new Error("Receipt berubah; muat ulang.");
+            const key = `${owner}:delivery-approval-v1:${expected.command.client_uuid}`;
+            const prior = (await tx.objectStore("drafts").get(key))?.value as
+                | {
+                      role: string;
+                      approved: boolean;
+                      reason: string;
+                      at: string;
+                  }[]
+                | undefined;
+            const decisions = prior ?? [];
+            if (
+                decisions.some((d, i) => !d.approved || d.role !== tiers[i]) ||
+                tiers[decisions.length] !== role
+            )
+                throw new Error(
+                    "Urutan approval wajib SPV lalu Branch Manager.",
+                );
+            const next = [
+                ...decisions,
+                {
+                    role,
+                    approved,
+                    reason: reason.trim(),
+                    at: new Date().toISOString(),
+                },
+            ];
+            const status: Receipt["status"] = !approved
+                ? "rejected"
+                : next.length === tiers.length
+                  ? "accepted"
+                  : "needs_approval";
+            const receipt: Receipt = {
+                ...expected.receipt!,
+                status,
+                message: `SIMULASI ${p.request.kind === "cancel" ? `Cancel: ${p.request.sub_reason}` : `Kirim ulang: ${p.request.requested_date}`} · ${next.map((d) => `${d.role}: ${d.approved ? "disetujui" : "ditolak"} (${d.reason})`).join(" → ")}${status === "needs_approval" ? " · menunggu Branch Manager" : ""}. Bukan approval/posting Odoo.`,
+            };
+            await tx.objectStore("drafts").put({ key, owner, value: next });
+            await tx
+                .objectStore("outbox")
+                .put({ ...expected, state: status, receipt });
+            const cachedKey = `${owner.slice(owner.indexOf(":") + 1)}:delivery.pod.submit:${expected.command.client_uuid}`,
+                cached = await tx.objectStore("receipts").get(cachedKey);
+            if (cached)
+                await tx.objectStore("receipts").put({ ...cached, receipt });
+            await done;
+        } catch (error) {
+            try {
+                tx.abort();
+            } catch {}
+            await done.catch(() => {});
+            throw error;
+        }
+    }
     async decideDemoDiscount(
         owner: string,
         expected: QueueItem,
@@ -562,11 +732,17 @@ export class FieldStore {
         if (!__DEMO__) throw new Error("Simulator tidak tersedia di live.");
         if (reason.trim().length < 3 || reason.length > 500)
             throw new Error("Alasan keputusan wajib 3–500 karakter.");
-        const body = VisitOrderSchema.parse(expected.command.payload);
+        const body =
+            expected.command.type === "sales.order.revise"
+                ? OrderRevisionSchema.parse(expected.command.payload)
+                : VisitOrderSchema.parse(expected.command.payload);
         if (
             expected.owner !== owner ||
-            expected.command.type !== "sales.order.submit" ||
-            !body.discount_request ||
+            !["sales.order.submit", "sales.order.revise"].includes(
+                expected.command.type,
+            ) ||
+            (!body.discount_request &&
+                expected.command.type !== "sales.order.revise") ||
             expected.state !== "needs_approval" ||
             expected.receipt?.client_uuid !== expected.command.client_uuid ||
             expected.receipt.status !== "needs_approval"
@@ -587,12 +763,12 @@ export class FieldStore {
             const receipt: Receipt = {
                 ...expected.receipt!,
                 status: approved ? "accepted" : "rejected",
-                message: `SIMULASI diskon: diminta ${body.discount_request.percent}%, disetujui ${approved ? body.discount_request.percent : 0}%. ${approved ? `Total disetujui Rp ${body.observed_total}` : "Pengajuan ditolak; tidak ada total disetujui"}. ${reason.trim()}. Bukan keputusan Odoo.`,
+                message: `SIMULASI diskon: diminta ${body.discount_request?.percent ?? 0}%, disetujui ${approved ? (body.discount_request?.percent ?? 0) : 0}%. ${approved ? `Total disetujui Rp ${body.observed_total}` : "Pengajuan ditolak; tidak ada total disetujui"}. ${reason.trim()}. Bukan keputusan Odoo.`,
             };
             await tx
                 .objectStore("outbox")
                 .put({ ...expected, state: receipt.status, receipt });
-            const cachedKey = `${owner.slice(owner.indexOf(":") + 1)}:sales.order.submit:${expected.command.client_uuid}`;
+            const cachedKey = `${owner.slice(owner.indexOf(":") + 1)}:${expected.command.type}:${expected.command.client_uuid}`;
             const cached = await tx.objectStore("receipts").get(cachedKey);
             if (cached)
                 await tx.objectStore("receipts").put({ ...cached, receipt });

@@ -99,7 +99,9 @@ test("visit location guards, offline restore and checkout sync", async ({
         ),
     ).toBe(true);
 });
-test("denied GPS keeps visit closed", async ({ page }) => {
+test("denied GPS permits demo coordinates but photo is still mandatory", async ({
+    page,
+}) => {
     await page.addInitScript(() => {
         navigator.geolocation.getCurrentPosition = (_ok, fail) =>
             fail?.({
@@ -131,10 +133,38 @@ test("denied GPS keeps visit closed", async ({ page }) => {
     await page
         .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
         .click();
-    await expect(page.getByRole("alert")).toContainText(/lokasi/i);
+    await expect(
+        page.getByText(/Lokasi\/foto diterima tanpa validasi/),
+    ).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveCount(0);
     await expect(
         page.getByRole("button", { name: "Mulai kunjungan demo", exact: true }),
     ).toBeDisabled();
+    const photo = page.getByRole("group", {
+        name: "Foto check-in kunjungan",
+        exact: true,
+    });
+    await photo.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
+    await expect(
+        photo.getByAltText("Pratinjau foto bukti lokal"),
+    ).toBeVisible();
+    await photo
+        .getByRole("button", { name: "Gunakan lokasi demo", exact: true })
+        .click();
+    await photo
+        .getByRole("button", { name: "Simpan bukti lokal", exact: true })
+        .click();
+    await expect(
+        photo.getByText("Paket foto tersimpan untuk check-in outlet ini.", {
+            exact: true,
+        }),
+    ).toBeVisible();
+    await page
+        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .click();
+    await expect(
+        page.getByRole("button", { name: "Mulai kunjungan demo", exact: true }),
+    ).toBeEnabled();
 });
 
 test("corrupt offline check-in remains held after reload, reconnect and manual retry", async ({

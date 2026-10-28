@@ -1,5 +1,14 @@
 # HANDOFF
 
+## 2026-10-28 — agent-codex-pwa — Revisi SO, approval delivery dan closing kantor
+**Basis:** main2444b2f (sudah memuat PR33 dan PR32), branch agen/pwa-order-revisions-delivery-policy. Mandat lima poin pemilik dirumuskan di plan§18 sebelum kode; SCOPE§15 dan README diperbarui.
+**Berubah:** SO rejected dapat direvisi dari daftar setelah visit closed/lintas hari dengan daily sync hari berjalan; UUID baru, root/parent/keputusan immutable, SKU/satuan/qty/diskon/catatan dan alasan editable, quote/current snapshot, draft per parent offline dan CAS satu successor. Revision tanpa diskon tetap approval ulang. Request pending hari kalender0–2 SPV, >=3 SPV+BM (tepat3 dipilih konservatif dan diinformasikan); cancel lima subreason pemilik wajib SPV. Keputusan simulator beralasan, berurutan, sekali/CAS, bukan picking/schedule resmi. Closing lokal saat tiba kantor memakai snapshot POD, menolak DO belum tercatat/sesi aktif/ganda; toleransi25m, fixture radius30m bukan kantor nyata. Serah-terima kasir di luar scope; upload resi uang/cek/faktur/retur backlog saja.
+**Demo:** fixture UI baru menerima lokasi/foto tanpa gate geofence/akurasi/asli kamera; stamp WITA+koordinat/pinpoint tetap dihasilkan, pilihan lokasi demo dan fallback GPS contoh berlabel simulasi. Hash/format/owner/urutan/ref masih menjaga integritas data; kebijakan tersimpan pada site/visual evidence. Antrean strict lama dipertahankan; live tetap locked.
+**Diverifikasi:** 255 unit +1 hosting PASS; 94 browser resmi PASS (84 lama+10 baru, satu full run tanpa retry/default workers). Setelah draft editor/estimasi disempurnakan, 10 kasus alur baru diulang PASS. Official Chrome for Testing Headless Shell145.0.7632.6. Typecheck/format/contracts/demo+live/budget/Ruff/4 manifest/diff PASS. Screenshot SO revision ponsel ditinjau. Regresi: revisi setelah close/next-day, quote/principal/source, parent/receipt/cycle dan race dua koneksi, approval revision0, day0/1/2/3/4 ladder, BM sebelum SPV, cancel reject, closing sekali/historical/strict25m dan lokasi demo luar kantor, draft offline.
+**Batas:** DTO/OpenAPI0.12 client-owned; no new endpoint/backend. Seeding dependency belum diambil. Cashier handoff/upload resi tidak diimplementasi. Tidak ada revisi accepted/pending/recovery data rusak atau reopen trip; perubahan setelah closing butuh review. Approval/closing/map/hash/sesi client bukan auth/financial/server authority. Runtime Odoo lokal tidak diulang karena addon tidak berubah. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh.
+**Menunggu:** CI/review PR baru, tidak merge/deploy.
+
+
 ## 2026-10-28 — codex supervisor — Integrasi PR #32 dengan main
 **Mandat:** pemilik meminta merge setelah verdict layak merge pada 766a60e. Main sudah memuat PR #33 (d2a54bf).
 **Resolusi:** konflik hanya docs/HANDOFF.md; seluruh entri UI dan PWA dipertahankan. Runtime dan tes tetap persis hasil gabungan kedua branch. CI integrasi harus hijau sebelum merge PR #32.

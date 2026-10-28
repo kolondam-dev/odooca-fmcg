@@ -1,3 +1,4 @@
+import { approvalTiers } from "./delivery-approval";
 import { DeliverySessionSchema } from "./delivery-contracts";
 import { MorningRecordSchema, morningReady } from "./morning";
 export const DELIVERY_SESSION_KEY = "delivery-active-session-v2";
@@ -28,8 +29,10 @@ export function validateDeliverySession(
         Date.parse(session.opened_at) > Date.parse(at) ||
         Date.parse(session.opened_at) - Date.parse(session.opening.capturedAt) <
             0 ||
-        Date.parse(session.opened_at) - Date.parse(session.opening.capturedAt) >
-            60000
+        (!(__DEMO__ && source.site.demo_unrestricted) &&
+            Date.parse(session.opened_at) -
+                Date.parse(session.opening.capturedAt) >
+                60000)
     )
         throw new Error("Sesi delivery/daily sync/foto opening tidak valid.");
     requireVisitFix(
@@ -113,6 +116,25 @@ export function validatePod(
             )
                 throw new Error("Alasan wajib direkam pada item terkait.");
         }
+    }
+    if (s.site.demo_unrestricted) {
+        if (
+            p.outcome === "pending_requested" ||
+            p.outcome === "cancel_delivery"
+        ) {
+            if (
+                !p.request ||
+                p.request.kind !==
+                    (p.outcome === "pending_requested"
+                        ? "reschedule"
+                        : "cancel")
+            )
+                throw new Error(
+                    "Status wajib tanggal kirim ulang/subreason pembatalan.",
+                );
+            approvalTiers(p.request, s.business_date);
+        } else if (p.request)
+            throw new Error("Request hanya untuk pending/cancel.");
     }
     let total = 0,
         expected = 0;

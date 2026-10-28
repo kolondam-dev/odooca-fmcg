@@ -16,8 +16,9 @@ export function DiscountApproval({
     const [busy, setBusy] = useState(false);
     const rows = queue.filter(
         (q) =>
-            q.command?.type === "sales.order.submit" &&
-            q.command.payload?.discount_request &&
+            (q.command?.type === "sales.order.revise" ||
+                (q.command?.type === "sales.order.submit" &&
+                    q.command.payload?.discount_request)) &&
             q.state === "needs_approval",
     );
     async function decide(row: QueueItem, approved: boolean) {
@@ -40,7 +41,8 @@ export function DiscountApproval({
             <h3>Simulator approval diskon</h3>
             <p>
                 Kontrol pengujian, bukan kewenangan sales atau approval Odoo.
-                Keputusan berlaku pada pengajuan pending yang dipilih.
+                Keputusan berlaku pada pengajuan pending yang dipilih, termasuk
+                revisi SO tanpa diskon.
             </p>
             <label>
                 Alasan keputusan diskon

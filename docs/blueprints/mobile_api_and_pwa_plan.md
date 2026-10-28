@@ -1411,3 +1411,58 @@ final browser penuh, Chromium153 lokal. Typecheck/format/contracts/demo+live/
 budget/Ruff/4 manifest PASS; screenshot SO/POD ponsel ditinjau. CI remote setelah
 push/PR; Docker/runtime Odoo tidak dijalankan lokal. Semua authority server,
 media/maps resmi, stok/retur/payment/AR tetap dependency; live terkunci.
+
+
+## 18. Revisi SO, approval delivery dan closing kantor — mandat 2026-10-28
+
+[F requirement pemilik] Revisi SO ditolak: UUID baru, parent/root immutable, alasan
+koreksi, SKU/satuan/qty/diskon/catatan dapat diperbaiki, draft offline dan CAS
+mencegah successor ganda. [A implementasi] Koreksi administratif dari daftar
+pengajuan boleh setelah sesi toko ditutup/lintas hari dengan daily sync hari
+berjalan; outlet/principal dan lineage tetap, harga memakai snapshot hari koreksi.
+Tidak membuka ulang kunjungan lama atau menimpa receipt/keputusan sebelumnya.
+
+Pending Requested wajib tanggal kirim ulang dan alasan: selisih tanggal bisnis
+kurang dari 3 hari → SPV; 3 hari atau lebih → SPV lalu Branch Manager. Batas tepat
+3 hari diperlakukan sebagai tier BM secara konservatif karena instruksi menyebut
+under3 dan lebih. Cancel Delivery wajib SPV dan subreason: Toko Tutup, Kesalahan
+Order, Tidak bisa bayar, Toko tidak dapat diakses, Waktu pengiriman tidak cukup.
+Alasan umum tetap direkam per item; keputusan simulator tidak membatalkan picking.
+
+Integrasi backend ditunda sampai seeding siap; seluruh fitur tetap demo/live locked.
+Closing trip dilakukan setiba di kantor, geofence kantor + toleransi25m. Fixture
+kantor dan radius demo bukan koordinat/radius kantor operasional. Closing lokal
+bukan penyerahan kasir/settlement uang/AR. Serah-terima kasir di luar scope PWA.
+Backlog: upload resi uang/cek ke kasir, faktur ke admin, retur ke SPV gudang.
+
+Untuk demo terima lokasi dan foto tanpa verifikasi geofence, akurasi/keaslian atau
+kamera asli. Timestamp dan lokasi pada foto tetap wajib dihasilkan. Simpan
+label simulasi dan kebijakan pada snapshot/bukti baru; jangan mengubah makna
+riwayat strict lama. Pemeriksaan format gambar, integritas file/hash, owner dan
+keterkaitan dokumen tetap menjaga draft/outbox agar tidak rusak; bukan approval
+keaslian bukti. Aturan kantor25m disimpan untuk integrasi/pilot tetapi tidak
+memblokir demo sesuai mandat tanpa validasi lokasi.
+
+
+### 18.1 Hasil client simulator dan batas implementasi
+
+[F] Revisi SO administratif dari daftar, parent/root immutable, harga snapshot
+hari revisi dan approval ulang (termasuk diskon0) tersedia; draft per parent offline
+dan satu successor CAS. Pending kirim ulang memakai hari kalender0–2 SPV, >=3 SPV
+lalu BM; cancel memakai enum subreason pemilik dan approval SPV. Tanggal sebelum
+hari pengiriman ditolak. Keputusan simulator beralasan/berhistori tidak mengubah
+jadwal/picking resmi. Closing kantor mengikat seluruh POD trip, menolak sesi aktif
+dan closing ganda; setelah closed, POD baru/koreksi perlu review/reopen backend.
+Fixture office radius30m + tolerance25m hanya contoh. Kasir di luar scope dan
+resi uang/cek/faktur/retur tetap backlog, bukan pekerjaan yang sudah diimplementasi.
+
+Kebijakan tanpa validasi lokasi/foto berlaku pada fixture UI baru melalui flag
+site dan metadata bukti. Watermark timestamp/lokasi tetap wajib. Policy tidak
+menghapus hash/owner/sequence atau mengubah antrean strict lama. Geofence strict
++25m diuji terpisah; tidak mengaktifkan live. Backend tetap dependency seeding.
+
+Verifikasi: 255 unit +1 hosting, 94 browser resmi (84 existing+10 alur baru) PASS.
+Setelah penyempurnaan draft/estimasi editor, 10 alur baru diulang PASS pada browser
+resmi145.0.7632.6, worker default/tanpa retry. Format/typecheck/contracts/demo+live/
+budget/Ruff/4 manifest/diff PASS; screenshot revisi SO ponsel ditinjau. CI setelah
+publikasi PR; tidak merge/deploy.
