@@ -111,6 +111,7 @@ patch(FormRenderer.prototype, {
             }
             let header = current;
             let needsInsert = !current;
+            let needsListener = !current && spec.editable;
             if (!header || (spec.editable && header.tagName !== "BUTTON") || (!spec.editable && header.tagName === "BUTTON")) {
                 const replacement = document.createElement(spec.editable ? "button" : "div");
                 if (header) {
@@ -118,6 +119,7 @@ patch(FormRenderer.prototype, {
                 }
                 header = replacement;
                 needsInsert = !header.isConnected;
+                needsListener = spec.editable;
             }
             header.className = "id_header_title" + (spec.editable ? " id_header_title--editable" : "");
             header.dataset.idKey = key;
@@ -140,10 +142,10 @@ patch(FormRenderer.prototype, {
             main.textContent = spec.main;
             parts.push(main);
             header.replaceChildren(...parts);
+            if (needsListener) {
+                header.addEventListener("click", onTitleClick);
+            }
             if (needsInsert) {
-                if (spec.editable) {
-                    header.addEventListener("click", onTitleClick);
-                }
                 // Sisipkan sebelum anak langsung statusbar yang memuat pipeline status (bila ada).
                 let ref = statusbar.querySelector(".o_field_statusbar, .o_statusbar_status");
                 while (ref && ref.parentNode !== statusbar) {
