@@ -1266,6 +1266,107 @@ class CanonicalPerpetualAdapter:
         except Exception:
             return None
 
+    def _align_picking_locations(self, pick, expected_src_loc=None, expected_dest_loc=None):
+        """Menyelaraskan lokasi picking, stock.move, dan stock.move.line ke lokasi seed SEBELUM alokasi lot.
+
+        Harus dipanggil sebelum _assign_lots_to_picking(): perubahan lokasi setelah kuantitas dialokasikan
+        membatalkan reservasi Odoo 19 dan menghasilkan transfer berkuantitas nol.
+        Semua write diverifikasi dengan readback wajib; no-op write atau write failure langsung raise RuntimeError.
+        """
+        targets = {}
+        if expected_src_loc is not None and getattr(expected_src_loc, "id", None):
+            targets["location_id"] = expected_src_loc.id
+        if expected_dest_loc is not None and getattr(expected_dest_loc, "id", None):
+            targets["location_dest_id"] = expected_dest_loc.id
+
+        if not targets:
+            return
+
+        # 1. Update & verify picking
+        pick_name = getattr(pick, "name", getattr(pick, "id", "stock.picking"))
+        pick_upd = {
+            fname: target_id
+            for fname, target_id in targets.items()
+            if getattr(getattr(pick, fname, None), "id", getattr(pick, fname, None)) != target_id
+        }
+        if pick_upd:
+            if not callable(getattr(pick, "write", None)):
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Record stock.picking '{pick_name}' tidak memiliki method write()!"
+                )
+            try:
+                pick.write(pick_upd)
+            except Exception as e:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Gagal menulis lokasi stock.picking '{pick_name}': {e}"
+                ) from e
+
+        for fname, target_id in targets.items():
+            cur = getattr(getattr(pick, fname, None), "id", getattr(pick, fname, None))
+            if cur != target_id:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Readback lokasi stock.picking '{pick_name}' "
+                    f"gagal: {fname}={cur}, diharapkan {target_id}"
+                )
+
+        # 2. Update & verify stock.move
+        moves = list(_iter_records(getattr(pick, "move_ids", None)))
+        for sm in moves:
+            sm_name = getattr(sm, "name", getattr(sm, "id", "stock.move"))
+            sm_upd = {
+                fname: target_id
+                for fname, target_id in targets.items()
+                if getattr(getattr(sm, fname, None), "id", getattr(sm, fname, None)) != target_id
+            }
+            if sm_upd:
+                if not callable(getattr(sm, "write", None)):
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Record stock.move '{sm_name}' tidak memiliki method write()!"
+                    )
+                try:
+                    sm.write(sm_upd)
+                except Exception as e:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Gagal menulis lokasi stock.move '{sm_name}': {e}"
+                    ) from e
+
+            for fname, target_id in targets.items():
+                cur = getattr(getattr(sm, fname, None), "id", getattr(sm, fname, None))
+                if cur != target_id:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Readback lokasi stock.move '{sm_name}' "
+                        f"gagal: {fname}={cur}, diharapkan {target_id}"
+                    )
+
+        # 3. Update & verify stock.move.line
+        move_lines = list(_iter_records(getattr(pick, "move_line_ids", None)))
+        for sml in move_lines:
+            sml_name = getattr(sml, "id", "stock.move.line")
+            sml_upd = {
+                fname: target_id
+                for fname, target_id in targets.items()
+                if getattr(getattr(sml, fname, None), "id", getattr(sml, fname, None)) != target_id
+            }
+            if sml_upd:
+                if not callable(getattr(sml, "write", None)):
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Record stock.move.line '{sml_name}' tidak memiliki method write()!"
+                    )
+                try:
+                    sml.write(sml_upd)
+                except Exception as e:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Gagal menulis lokasi stock.move.line '{sml_name}': {e}"
+                    ) from e
+
+            for fname, target_id in targets.items():
+                cur = getattr(getattr(sml, fname, None), "id", getattr(sml, fname, None))
+                if cur != target_id:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Readback lokasi stock.move.line '{sml_name}' "
+                        f"gagal: {fname}={cur}, diharapkan {target_id}"
+                    )
+
     def _validate_picking_safely(
         self,
         pick,
@@ -1286,44 +1387,77 @@ class CanonicalPerpetualAdapter:
         else:
             date_time_str = str(date_str) if date_str else None
 
-        loc_upd = {}
-        if expected_src_loc is not None and getattr(expected_src_loc, "id", None):
-            cur_src = getattr(getattr(pick, "location_id", None), "id", getattr(pick, "location_id", None))
-            if cur_src != expected_src_loc.id:
-                loc_upd["location_id"] = expected_src_loc.id
-        if expected_dest_loc is not None and getattr(expected_dest_loc, "id", None):
-            cur_dest = getattr(getattr(pick, "location_dest_id", None), "id", getattr(pick, "location_dest_id", None))
-            if cur_dest != expected_dest_loc.id:
-                loc_upd["location_dest_id"] = expected_dest_loc.id
-        if loc_upd and callable(getattr(pick, "write", None)):
-            try:
-                pick.write(loc_upd)
-            except Exception:
-                pass
+        # Lokasi WAJIB sudah diselaraskan oleh _align_picking_locations() SEBELUM alokasi lot.
+        # Menulis ulang lokasi di sini akan membatalkan reservasi/kuantitas move line di Odoo 19
+        # (memicu "Validating a zero quantity transfer"), sehingga di sini hanya diverifikasi (fail-fast).
+        for exp_loc, fname in ((expected_src_loc, "location_id"), (expected_dest_loc, "location_dest_id")):
+            if exp_loc is None or not getattr(exp_loc, "id", None):
+                continue
+            exp_id = exp_loc.id
+            cur_val = getattr(getattr(pick, fname, None), "id", getattr(pick, fname, None))
+            if cur_val != exp_id:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: {fname} picking '{getattr(pick, 'name', getattr(pick, 'id', ''))}' "
+                    f"({cur_val}) tidak sama dengan lokasi seed '{getattr(exp_loc, 'name', exp_id)}' "
+                    f"({exp_id}) sebelum validasi!"
+                )
+            for sm in _iter_records(getattr(pick, "move_ids", None)):
+                cur_sm = getattr(getattr(sm, fname, None), "id", getattr(sm, fname, None))
+                if cur_sm != exp_id:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: {fname} move '{getattr(sm, 'name', getattr(sm, 'id', ''))}' "
+                        f"({cur_sm}) tidak sama dengan lokasi seed ({exp_id}) sebelum validasi!"
+                    )
+            for sml in _iter_records(getattr(pick, "move_line_ids", None)):
+                cur_sml = getattr(getattr(sml, fname, None), "id", getattr(sml, fname, None))
+                if cur_sml != exp_id:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: {fname} move_line '{getattr(sml, 'id', sml)}' "
+                        f"({cur_sml}) tidak sama dengan lokasi seed ({exp_id}) sebelum validasi!"
+                    )
 
         if date_time_str:
+            pick_name = getattr(pick, "name", getattr(pick, "id", "stock.picking"))
             if hasattr(pick, "scheduled_date"):
-                pick.scheduled_date = date_time_str
+                try:
+                    if callable(getattr(pick, "write", None)):
+                        pick.write({"scheduled_date": date_time_str})
+                    else:
+                        pick.scheduled_date = date_time_str
+                except Exception as e:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Gagal menulis scheduled_date picking '{pick_name}': {e}"
+                    ) from e
             if hasattr(pick, "date_done"):
-                pick.date_done = date_time_str
+                try:
+                    if callable(getattr(pick, "write", None)):
+                        pick.write({"date_done": date_time_str})
+                    else:
+                        pick.date_done = date_time_str
+                except Exception as e:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Gagal menulis date_done picking '{pick_name}': {e}"
+                    ) from e
             if hasattr(pick, "move_ids") and pick.move_ids:
                 for sm in pick.move_ids:
-                    sm_upd = {"date": date_time_str}
-                    sm_upd.update(loc_upd)
                     if callable(getattr(sm, "write", None)):
                         try:
-                            sm.write(sm_upd)
-                        except Exception:
-                            pass
+                            sm.write({"date": date_time_str})
+                        except Exception as e:
+                            sm_str = getattr(sm, "name", getattr(sm, "id", ""))
+                            raise RuntimeError(
+                                f"[canonical_loader] FATAL: Gagal menulis date stock.move '{sm_str}': {e}"
+                            ) from e
             if hasattr(pick, "move_line_ids") and pick.move_line_ids:
                 for sml in _iter_records(pick.move_line_ids):
-                    sml_upd = {"date": date_time_str}
-                    sml_upd.update(loc_upd)
                     if callable(getattr(sml, "write", None)):
                         try:
-                            sml.write(sml_upd)
-                        except Exception:
-                            pass
+                            sml.write({"date": date_time_str})
+                        except Exception as e:
+                            sml_str = getattr(sml, "id", sml)
+                            raise RuntimeError(
+                                f"[canonical_loader] FATAL: Gagal menulis date stock.move.line '{sml_str}': {e}"
+                            ) from e
 
         val_ctx = {
             "skip_sms": True,
@@ -1426,6 +1560,8 @@ class CanonicalPerpetualAdapter:
                                 if callable(getattr(sml, "write", None)):
                                     sml.write({"date": date_time_str})
                     self._sync_native_stock_accounting(mv, date_time_str, date_only)
+        return True
+
     def _is_reconciled(self, l_rec) -> bool:
         """Memeriksa status rekonsiliasi baris secara ketat terhadap status boolean dan nilai residual."""
         if getattr(l_rec, "reconciled", False) is True:
@@ -1637,6 +1773,11 @@ class CanonicalPerpetualAdapter:
                 for pick in po.picking_ids.filtered(lambda p: p.state not in ("done", "cancel")):
                     arrival_dt = h.get("arrival_maumbi_date", h.get("eta_bitung"))
                     pick.scheduled_date = arrival_dt
+                    self._align_picking_locations(
+                        pick,
+                        expected_src_loc=getattr(self, "seed_supplier_loc", None),
+                        expected_dest_loc=getattr(self, "wh_stock_loc", None),
+                    )
                     self._assign_lots_to_picking(pick, lines_by_po.get(po_num, []))
                     self._validate_picking_safely(
                         pick,
@@ -1772,6 +1913,11 @@ class CanonicalPerpetualAdapter:
                 for pick in so.picking_ids:
                     pick.scheduled_date = sched_date
                     if sched_date <= self.cutoff_date and getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._align_picking_locations(
+                            pick,
+                            expected_src_loc=getattr(self, "wh_stock_loc", None),
+                            expected_dest_loc=getattr(self, "seed_customer_loc", None),
+                        )
                         self._assign_lots_to_picking(pick, lines_by_so.get(so_num, []))
                         self._validate_picking_safely(
                             pick,
@@ -1891,19 +2037,11 @@ class CanonicalPerpetualAdapter:
                         inv_vals["invoice_origin"] = so_num
                     inv = AccountMove.create(inv_vals)
                     self.stats["invoices_created"] += 1
-                    # Di Odoo 19 addons/stock_account/models/account_move.py:30-31,
-                    # karena COGS real-time sudah diposting secara native oleh stock.move (DO & Retur)
-                    # ke jurnal STJ (melalui valuation_account_id=510000 pada lokasi pelanggan seed),
-                    # pemanggilan action_post() dengan context move_reverse_cancel=True mempertahankan
-                    # product_id, product_uom_id, dan sale_line_ids secara utuh pada invoice_line_ids
-                    # sekaligus melewati _stock_account_prepare_realtime_out_lines_vals() agar COGS
-                    # tidak tercatat dua kali.
-                    inv_post_target = (
-                        inv.with_context(move_reverse_cancel=True)
-                        if callable(getattr(inv, "with_context", None))
-                        else inv
-                    )
-                    inv_post_target.action_post()
+                    # Memanggil action_post() secara native tanpa reversal context (move_reverse_cancel).
+                    # Pencegahan duplikasi COGS ditangani secara sempit dan elegan melalui override model
+                    # account.move._stock_account_prepare_realtime_out_lines_vals() pada addon id_base
+                    # khusus untuk faktur komersial seed yang delivery-nya telah membukukan HPP native di STJ.
+                    inv.action_post()
                     self.stats["invoices_posted"] += 1
 
     # 4. Retur Karantina
@@ -2044,17 +2182,13 @@ class CanonicalPerpetualAdapter:
                     "move_ids": [(0, 0, move_item)] if prod else [],
                 }
                 pick = StockPicking.create(pick_vals)
-                if callable(getattr(pick, "write", None)):
-                    pick.write({"location_id": customer_loc.id, "location_dest_id": quarantine_loc.id})
-                for r_mv in (getattr(pick, "move_ids", None) or []):
-                    if callable(getattr(r_mv, "write", None)):
-                        r_mv.write({
-                            "location_id": customer_loc.id,
-                            "location_dest_id": quarantine_loc.id,
-                            "price_unit": p_data["unit_cost"],
-                        })
                 if callable(getattr(pick, "action_confirm", None)) and getattr(pick, "state", "") == "draft":
                     pick.action_confirm()
+                self._align_picking_locations(
+                    pick,
+                    expected_src_loc=customer_loc,
+                    expected_dest_loc=quarantine_loc,
+                )
                 self._assign_lots_to_picking(pick, [row])
                 self._validate_picking_safely(
                     pick,

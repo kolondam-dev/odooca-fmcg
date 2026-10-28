@@ -1,5 +1,43 @@
 # HANDOFF
 
+## 2026-10-28 — antigravity agent — Resolusi Tuntas 3 Temuan Supervisi PR #15 (issuecomment-6469576922): Ordering Relokasi Sebelum Alokasi Lot, Readback & Exception Semantics Fail-Closed, dan Hook Akuntansi Sempit id_base Pengganti Reversal Context
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6469576922](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6469576922)):**
+- Menindaklanjuti audit supervisi pada commit `06cbc6a` yang mengidentifikasi 3 temuan P1:
+  1. *Finding 1 — [P1] Lokasi Sumber Diubah Setelah Lot/Quantity Dialokasikan (`scripts/load_canonical_perpetual.py`)*:
+     - Pada Odoo 19 `stock_move.py:880-897`, pemanggilan `write({'location_id': ...})` pada move setelah move line ada memicu `ml.unlink()`, menyebabkan move line berkuantitas terhapus dan memicu `UserError: Validating a zero quantity transfer` pada CI run `40683082168`.
+     - Memisahkan persiapan lokasi dari validasi: membuat `_align_picking_locations()` yang dipanggil secara ketat **sebelum** `_assign_lots_to_picking()` pada PO receipt (`seed_supplier_loc → wh_stock_loc`), SO delivery (`wh_stock_loc → seed_customer_loc`), dan retur karantina (`customer_loc → quarantine_loc`).
+     - `_validate_picking_safely()` kini murni menegakkan asersi lokasi final (fail-fast jika lokasi picking/move/line belum cocok lokasi seed) dan penyesuaian tanggal efektif historis tanpa relokasi diam-diam.
+  2. *Finding 2 — [P1] Exception Write Ditelan & Inkonsistensi Lokasi/Tanggal Antar-Record (`scripts/load_canonical_perpetual.py`)*:
+     - Menghapus seluruh silent `except Exception: pass` di sekitar `pick.write()`, `sm.write()`, dan `sml.write()`.
+     - Mewajibkan *post-write readback assertion* atas field lokasi (`location_id`, `location_dest_id`) pada picking, setiap move, dan setiap line.
+     - Setiap kegagalan write atau *no-op write* (write berhasil tanpa raise tetapi nilai field di DB tidak berubah) langsung melempar `RuntimeError` dengan konteks model/record ID dan exception chaining (`raise ... from e`), menghentikan pemanggilan `button_validate()`, dan memicu rollback transaksi secara fail-closed.
+  3. *Finding 3 — [P1] `move_reverse_cancel=True` Adalah Bypass Terlalu Luas (`scripts/load_canonical_perpetual.py`, `addons/id_base/`)*:
+     - Pada Odoo 19 `addons/stock_account/models/account_move.py:29-46`, flag `move_reverse_cancel=True` tidak hanya melewati pembuatan baris COGS, tetapi juga melewati pemanggilan `_set_value()` pada `is_in`/`is_dropship` stock moves pasca-posting.
+     - Menghapus penggunaan `move_reverse_cancel=True` pada posting `out_invoice` di `scripts/load_canonical_perpetual.py`; memanggil `inv.action_post()` secara native tanpa bypass context.
+     - Menambahkan ekstensi akuntansi perpetual FMCG yang sempit di `addons/id_base/models/account_move.py` dengan meng-override `_stock_account_prepare_realtime_out_lines_vals(self)` pada `account.move`:
+       * Hanya mengecualikan pembuatan baris COGS (`return []`) jika faktur adalah faktur penjualan pelanggan komersial seed (`out_invoice`, company PT Salva Inti Mandiri, terhubung ke `sale_line_ids` yang pergerakan barang DO-nya telah `done` dan telah membukukan HPP native di jurnal `STJ`).
+       * Faktur non-seed, company lain, vendor bill (`in_invoice`), refund (`out_refund`), transaksi dengan pergerakan barang yang belum selesai, atau transaksi tanpa bukti pembukuan HPP delivery tetap menjalankan alur native `super()._stock_account_prepare_realtime_out_lines_vals()`.
+       * Mendokumentasikan kebijakan akuntansi FMCG seed (pengakuan HPP saat fisik barang keluar di Surat Jalan/DO, bukan saat invoice komersial).
+       * Memperbarui `addons/id_base/__manifest__.py` (menambahkan dependensi `stock_account`) dan `addons/id_base/models/__init__.py`.
+  4. *Pengujian Regresi & Penerimaan Baru*:
+     - Menambahkan 7 unit tests komprehensif di `tests/test_canonical_loader_adapter.py`:
+       * `test_relocation_precedes_lot_allocation`: membuktikan relokasi sebelum alokasi lot mempertahankan kuantitas dan alur Odoo 19, sedangkan relokasi setelah alokasi lot menghapus move lines.
+       * `test_picking_location_write_failure_aborts_before_validate`: membuktikan kegagalan write picking melempar `RuntimeError` dan mencegah validasi (`button_validate` call = 0).
+       * `test_move_location_write_failure_aborts_before_validate`: membuktikan kegagalan write move melempar `RuntimeError` dan mencegah validasi.
+       * `test_move_line_location_write_failure_aborts_before_validate`: membuktikan kegagalan write move line melempar `RuntimeError` dan mencegah validasi.
+       * `test_required_date_write_failure_rolls_back`: membuktikan kegagalan write tanggal move/line melempar `RuntimeError` dan mencegah validasi.
+       * `test_noop_location_write_rejected_by_readback`: membuktikan *no-op write* ditolak keras oleh readback assertion.
+       * `test_seed_invoice_cogs_exception_narrow_scope`: menguji cakupan sempit hook `AccountMove` (faktur seed tervalidasi mengecualikan COGS; company lain, delivery belum selesai, delivery tanpa HPP, dan vendor bill tetap native).
+     - Mengubah `test_blocker1_out_invoice_retains_product_id_uom_and_sale_line_ids`: memverifikasi `move_reverse_cancel` tidak digunakan dan alur posting native utuh.
+- Hasil verifikasi lokal:
+  * `python -m ruff check .`: All checks passed!
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon (id_base, id_ui, id_ui_form, id_ui_shell)
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * Unit tests: 7 tests baru PASS (0.75s), 72 tests repositori PASS (72.5s).
+  * 15 CSV register kanonikal di `data/registers/` 100% utuh tanpa perubahan.
+  * Tidak ada merge ke `main` dan tidak ada deploy ke Railway.
+
 ## 2026-10-28 — antigravity agent — Resolusi Tuntas 5 Blocker Audit Commit 182296f (PR #15 issuecomment-6466832055): Restorasi `product_id`/`UoM`/`sale_line_ids` Faktur Tanpa Double COGS, Isolasi 5 Lokasi & Kategori Seed, Verifikasi Lokasi/Tanggal `stock.move` & `stock.move.line`, Akun/Partner/Nominal OPEX, dan Keunikan Dokumen (20 Mutasi Negatif)
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6466832055](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6466832055)):**
 - Menindaklanjuti audit supervisi pada commit `182296f` yang mengidentifikasi 5 blocker P1 sebelum merge:

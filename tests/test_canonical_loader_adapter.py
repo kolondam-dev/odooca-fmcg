@@ -263,7 +263,7 @@ class MockRecord:
             "scheduled_date", "mock_wizard_mode", "mock_partial_reconcile", "move_id",
             "full_reconcile_id",
         )
-        if name.startswith("_") or name in valid_attrs:
+        if name.startswith("_") or name in valid_attrs or callable(value):
             super().__setattr__(name, value)
         else:
             self._vals[name] = value
@@ -2607,7 +2607,12 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         inv1 = env["account.move"].search([("ref", "=", "INV-202607-0001")], limit=1)
         self.assertTrue(inv1)
         self.assertEqual(getattr(inv1, "invoice_origin", ""), "SO-202607-0001")
-        self.assertTrue(getattr(inv1, "_ctx", {}).get("move_reverse_cancel"), "Post wajib mencegah double COGS!")
+        # Review 6469576922: Verifikasi move_reverse_cancel TIDAK digunakan saat posting faktur penjualan biasa
+        ctx = getattr(inv1, "_ctx", None)
+        self.assertFalse(
+            isinstance(ctx, dict) and ctx.get("move_reverse_cancel"),
+            "Post out_invoice native dilarang menggunakan bypass context move_reverse_cancel!"
+        )
         inv_lines = list(getattr(inv1, "invoice_line_ids", []))
         self.assertGreater(len(inv_lines), 0)
         for il in inv_lines:
@@ -2721,6 +2726,382 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             verify_run1_against_canonical_oracle(env, adapter, REG_DIR, target_sos)
         self.assertIn("tidak cocok dengan ekspektasi", str(ctx_rec_peer.exception))
         ar_lines[0]._reconciled_peer_move_ids = orig_peers
+
+    def test_relocation_precedes_lot_allocation(self):
+        """Review 6469576922 Finding 1: Relokasi wajib mendahului alokasi lot/kuantitas.
+
+        Di Odoo 19 stock_move.py:880-897, jika location_id diubah SETELAH move_line ada,
+        Odoo melakukan ml.unlink() yang menghasilkan 'Validating a zero quantity transfer'.
+        Tes ini membuktikan _align_picking_locations dipanggil SEBELUM alokasi lot sehingga kuantitas utuh.
+        """
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+
+        # Siapkan picking dengan move yang meniru perilaku Odoo 19:
+        # Jika write location_id dipanggil saat move_line_ids sudah ada, hapus move_lines (unlink).
+        cust_loc = env["stock.location"].search([("usage", "=", "customer")], limit=1)
+        wh_loc = env["stock.location"].search([("usage", "=", "internal")], limit=1)
+        other_loc = env["stock.location"].create({"name": "Wrong Loc", "usage": "customer", "company_id": 1})
+
+        pick = env["stock.picking"].create({
+            "name": "TEST-PICK-001",
+            "location_id": wh_loc.id,
+            "location_dest_id": other_loc.id,
+        })
+        sm = env["stock.move"].create({
+            "name": "TEST-MOVE-001",
+            "location_id": wh_loc.id,
+            "location_dest_id": other_loc.id,
+            "picking_id": pick,
+        })
+        pick.move_ids = MockRecordList([sm])
+
+        orig_sm_write = sm.write
+
+        def odoo19_sm_write(vals):
+            # Simulasi Odoo 19: jika location_dest_id diubah padahal move_line_ids sudah terisi, unlink lines!
+            if "location_dest_id" in vals and hasattr(sm, "move_line_ids") and sm.move_line_ids:
+                sm.move_line_ids = MockRecordList([])
+            return orig_sm_write(vals)
+
+        sm.write = odoo19_sm_write
+
+        # ALUR BENAR: 1) Align locations -> 2) Assign lots -> 3) Validate
+        adapter._align_picking_locations(pick, expected_src_loc=wh_loc, expected_dest_loc=cust_loc)
+        sml = env["stock.move.line"].create({
+            "picking_id": pick,
+            "move_id": sm,
+            "location_id": wh_loc.id,
+            "location_dest_id": cust_loc.id,
+            "quantity": 10.0,
+        })
+        sm.move_line_ids = MockRecordList([sml])
+        pick.move_line_ids = MockRecordList([sml])
+
+        res = adapter._validate_picking_safely(
+            pick,
+            effective_date="2026-07-02",
+            expected_src_loc=wh_loc,
+            expected_dest_loc=cust_loc,
+        )
+        self.assertTrue(res)
+        self.assertEqual(len(sm.move_line_ids), 1)
+        self.assertEqual(sm.move_line_ids[0].quantity, 10.0)
+
+        # PEMBUKTIAN ALUR SALAH (Relokasi setelah lot dialokasikan):
+        # Jika dipaksa align locations SETELAH move lines dibuat, lines akan ter-unlink menjadi 0 unit
+        adapter._align_picking_locations(pick, expected_src_loc=wh_loc, expected_dest_loc=other_loc)
+        self.assertEqual(len(sm.move_line_ids), 0, "Odoo 19 menghapus move lines bila relokasi dilakukan belakangan!")
+
+    def test_picking_location_write_failure_aborts_before_validate(self):
+        """Review 6469576922 Finding 2: Kegagalan write lokasi picking wajib abort transaksi sebelum validasi."""
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        wh_loc = env["stock.location"].search([("usage", "=", "internal")], limit=1)
+        cust_loc = env["stock.location"].search([("usage", "=", "customer")], limit=1)
+
+        pick = env["stock.picking"].create({
+            "name": "TEST-PICK-FAIL-1",
+            "location_id": wh_loc.id,
+            "location_dest_id": 9999,
+        })
+        spy_validate_calls = 0
+
+        def spy_validate():
+            nonlocal spy_validate_calls
+            spy_validate_calls += 1
+
+        pick.button_validate = spy_validate
+
+        def faulty_pick_write(vals):
+            if "location_dest_id" in vals:
+                raise RuntimeError("Disk IO Error saat write lokasi picking!")
+            return True
+
+        pick.write = faulty_pick_write
+
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._align_picking_locations(pick, expected_src_loc=wh_loc, expected_dest_loc=cust_loc)
+
+        self.assertIn("Gagal menulis lokasi stock.picking", str(ctx.exception))
+        self.assertEqual(spy_validate_calls, 0, "button_validate dilarang dipanggil bila alignment lokasi gagal!")
+
+    def test_move_location_write_failure_aborts_before_validate(self):
+        """Review 6469576922 Finding 2: Kegagalan write lokasi stock.move wajib abort transaksi sebelum validasi."""
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        wh_loc = env["stock.location"].search([("usage", "=", "internal")], limit=1)
+        cust_loc = env["stock.location"].search([("usage", "=", "customer")], limit=1)
+
+        pick = env["stock.picking"].create({
+            "name": "TEST-PICK-FAIL-2",
+            "location_id": wh_loc.id,
+            "location_dest_id": cust_loc.id,
+        })
+        sm = env["stock.move"].create({
+            "name": "TEST-MOVE-FAIL-2",
+            "location_id": wh_loc.id,
+            "location_dest_id": 9999,
+            "picking_id": pick,
+        })
+        pick.move_ids = MockRecordList([sm])
+        spy_validate_calls = 0
+
+        def spy_validate():
+            nonlocal spy_validate_calls
+            spy_validate_calls += 1
+
+        pick.button_validate = spy_validate
+
+        def faulty_sm_write(vals):
+            if "location_dest_id" in vals:
+                raise RuntimeError("DB Constraint Error saat write lokasi stock.move!")
+            return True
+
+        sm.write = faulty_sm_write
+
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._align_picking_locations(pick, expected_src_loc=wh_loc, expected_dest_loc=cust_loc)
+
+        self.assertIn("Gagal menulis lokasi stock.move", str(ctx.exception))
+        self.assertEqual(spy_validate_calls, 0, "button_validate dilarang dipanggil bila write stock.move gagal!")
+
+    def test_move_line_location_write_failure_aborts_before_validate(self):
+        """Review 6469576922 Finding 2: Kegagalan write lokasi move.line wajib abort transaksi sebelum validasi."""
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        wh_loc = env["stock.location"].search([("usage", "=", "internal")], limit=1)
+        cust_loc = env["stock.location"].search([("usage", "=", "customer")], limit=1)
+
+        pick = env["stock.picking"].create({
+            "name": "TEST-PICK-FAIL-3",
+            "location_id": wh_loc.id,
+            "location_dest_id": cust_loc.id,
+        })
+        sm = env["stock.move"].create({
+            "name": "TEST-MOVE-FAIL-3",
+            "location_id": wh_loc.id,
+            "location_dest_id": cust_loc.id,
+            "picking_id": pick,
+        })
+        sml = env["stock.move.line"].create({
+            "location_id": wh_loc.id,
+            "location_dest_id": 9999,
+            "move_id": sm,
+            "picking_id": pick,
+        })
+        pick.move_ids = MockRecordList([sm])
+        pick.move_line_ids = MockRecordList([sml])
+        spy_validate_calls = 0
+
+        def spy_validate():
+            nonlocal spy_validate_calls
+            spy_validate_calls += 1
+
+        pick.button_validate = spy_validate
+
+        def faulty_sml_write(vals):
+            if "location_dest_id" in vals:
+                raise RuntimeError("Deadlock pada record stock.move.line!")
+            return True
+
+        sml.write = faulty_sml_write
+
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._align_picking_locations(pick, expected_src_loc=wh_loc, expected_dest_loc=cust_loc)
+
+        self.assertIn("Gagal menulis lokasi stock.move.line", str(ctx.exception))
+        self.assertEqual(spy_validate_calls, 0, "button_validate dilarang dipanggil bila write line gagal!")
+
+    def test_required_date_write_failure_rolls_back(self):
+        """Review 6469576922 Finding 2: Kegagalan penulisan tanggal move/line wajib abort validasi."""
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        wh_loc = env["stock.location"].search([("usage", "=", "internal")], limit=1)
+        cust_loc = env["stock.location"].search([("usage", "=", "customer")], limit=1)
+
+        pick = env["stock.picking"].create({
+            "name": "TEST-PICK-DATE-FAIL",
+            "location_id": wh_loc.id,
+            "location_dest_id": cust_loc.id,
+        })
+        sm = env["stock.move"].create({
+            "name": "TEST-MOVE-DATE-FAIL",
+            "location_id": wh_loc.id,
+            "location_dest_id": cust_loc.id,
+            "picking_id": pick,
+        })
+        pick.move_ids = MockRecordList([sm])
+        spy_validate_calls = 0
+
+        def spy_validate():
+            nonlocal spy_validate_calls
+            spy_validate_calls += 1
+
+        pick.button_validate = spy_validate
+
+        def faulty_date_write(vals):
+            if "date" in vals:
+                raise RuntimeError("Write date blocked by trigger!")
+            return True
+
+        sm.write = faulty_date_write
+
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._validate_picking_safely(
+                pick,
+                effective_date="2026-07-03",
+                expected_src_loc=wh_loc,
+                expected_dest_loc=cust_loc,
+            )
+
+        self.assertIn("Gagal menulis date stock.move", str(ctx.exception))
+        self.assertEqual(spy_validate_calls, 0, "button_validate dilarang dipanggil bila penulisan tanggal gagal!")
+
+    def test_noop_location_write_rejected_by_readback(self):
+        """Review 6469576922 Finding 2: No-op write (tidak raise tapi field tidak berubah) wajib ditolak readback."""
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        wh_loc = env["stock.location"].search([("usage", "=", "internal")], limit=1)
+        cust_loc = env["stock.location"].search([("usage", "=", "customer")], limit=1)
+
+        pick = env["stock.picking"].create({
+            "name": "TEST-PICK-NOOP",
+            "location_id": wh_loc.id,
+            "location_dest_id": 9999,
+        })
+
+        # No-op write: mengembalikan True tetapi sengaja tidak mengupdate location_dest_id
+        def noop_pick_write(vals):
+            return True
+
+        pick.write = noop_pick_write
+
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._align_picking_locations(pick, expected_src_loc=wh_loc, expected_dest_loc=cust_loc)
+
+        self.assertIn("Readback lokasi stock.picking 'TEST-PICK-NOOP' gagal", str(ctx.exception))
+
+    def test_seed_invoice_cogs_exception_narrow_scope(self):
+        """Review 6469576922 Finding 3: Hook akuntansi _stock_account_prepare_realtime_out_lines_vals hanya
+
+        mengecualikan faktur komersial seed yang delivery-nya telah membukukan HPP native di STJ.
+        Faktur biasa, company lain, delivery belum selesai, atau transaksi tanpa HPP delivery wajib native.
+        """
+        import sys
+        from unittest.mock import MagicMock
+
+        if "odoo" not in sys.modules:
+            mock_odoo_models = MagicMock()
+            mock_odoo_models.Model = object
+            sys.modules["odoo"] = MagicMock(models=mock_odoo_models, fields=MagicMock(), api=MagicMock())
+            sys.modules["odoo.models"] = mock_odoo_models
+            sys.modules["odoo.fields"] = MagicMock()
+            sys.modules["odoo.api"] = MagicMock()
+
+        from addons.id_base.models.account_move import AccountMove
+
+        env = setup_standard_mock_env()
+
+        # Buat wrapper record yang meniru model AccountMove addon id_base
+        class MockAccountMoveModel(AccountMove):
+            def __init__(self, vals, env):
+                self._vals = dict(vals)
+                self.env = env
+                for k, v in vals.items():
+                    setattr(self, k, v)
+
+            def ensure_one(self):
+                return self
+
+            def __iter__(self):
+                yield self
+
+        # 1. Faktur Seed Terverifikasi: Delivery DONE & HPP tercatat di STJ -> Pengecualian aktif (return [])
+        prod = env["product.product"].search([], limit=1)
+        sm_done = MockRecord({
+            "name": "WH/OUT/0001",
+            "state": "done",
+            "stock_valuation_layer_ids": MockRecordList([
+                MockRecord({"value": -150000.0}, "stock.valuation.layer", 1)
+            ]),
+        }, "stock.move", 101, env)
+        sol = MockRecord({"name": "SOL-001", "move_ids": MockRecordList([sm_done])}, "sale.order.line", 201, env)
+        inv_line = MockRecord({
+            "product_id": prod,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol]),
+        }, "account.move.line", 301, env)
+
+        seed_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line]),
+        }, env)
+
+        self.assertTrue(seed_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+        self.assertEqual(seed_inv._stock_account_prepare_realtime_out_lines_vals(), [])
+
+        # 2. Perusahaan lain (non-seed) -> Pengecualian dilarang (False)
+        foreign_co = MockRecord({"name": "Foreign Co", "id": 999}, "res.company", 999, env)
+        foreign_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "company_id": foreign_co,
+            "invoice_line_ids": MockRecordList([inv_line]),
+        }, env)
+        self.assertFalse(foreign_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+        # 3. Delivery belum selesai (undone: state != 'done') -> Pengecualian dilarang (False)
+        sm_draft = MockRecord({
+            "name": "WH/OUT/0002",
+            "state": "confirmed",
+            "stock_valuation_layer_ids": MockRecordList([]),
+        }, "stock.move", 102, env)
+        sol_undone = MockRecord(
+            {"name": "SOL-002", "move_ids": MockRecordList([sm_draft])}, "sale.order.line", 202, env
+        )
+        inv_line_undone = MockRecord({
+            "product_id": prod,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol_undone]),
+        }, "account.move.line", 302, env)
+        undone_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line_undone]),
+        }, env)
+        self.assertFalse(undone_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+        # 4. Delivery selesai tapi tidak ada bukti jurnal HPP native -> Pengecualian dilarang (False)
+        sm_no_hpp = MockRecord({
+            "name": "WH/OUT/0003",
+            "state": "done",
+            "account_move_ids": MockRecordList([]),
+            "stock_valuation_layer_ids": MockRecordList([]),
+            "picking_id": False,
+        }, "stock.move", 103, env)
+        sol_no_hpp = MockRecord(
+            {"name": "SOL-003", "move_ids": MockRecordList([sm_no_hpp])}, "sale.order.line", 203, env
+        )
+        inv_line_no_hpp = MockRecord({
+            "product_id": prod,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol_no_hpp]),
+        }, "account.move.line", 303, env)
+        no_hpp_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line_no_hpp]),
+        }, env)
+        self.assertFalse(no_hpp_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+        # 5. Vendor Bill (in_invoice) atau Refund (out_refund) -> Pengecualian dilarang (False)
+        bill = MockAccountMoveModel({
+            "move_type": "in_invoice",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line]),
+        }, env)
+        self.assertFalse(bill._is_seed_commercial_invoice_with_posted_delivery_cogs())
 
 
 if __name__ == "__main__":
