@@ -46,4 +46,4 @@ footer sticky, divider systray (normal dan debug), pager, ganti tata letak, hotk
 
 
 ### Regresi guard judul
-`python -m pytest docs/ui/e2e/test_title_spec.py` menjalankan fungsi `readTitleSpec` yang diekstrak dari source produksi di Chromium terhadap fixture readonly, nomor draft invoice, multiple input, contenteditable, required/aria-required/Odoo modifier, select, textarea, input luar h1, dan tipe input tak didukung.
+`python -m unittest discover -s docs/ui/e2e -p 'test_*.py' -v` menjalankan fungsi `readTitleSpec` yang diekstrak dari source produksi di Chromium terhadap fixture readonly, nomor draft invoice, multiple input, contenteditable, required/aria-required/Odoo modifier, select, textarea, input luar h1, dan tipe input tak didukung.
