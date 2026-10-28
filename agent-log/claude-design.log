@@ -1,3 +1,10 @@
+[2026-10-28T22:00:00+07:00] [INFO] Implementer follow-up PR #32: hidden-input selection P2
+- Basis: supervisor review of 9abcd5f9a489f511fd6201cdcca753da97deac8a; HOLD one residual P2.
+- Source: introduced getEditableTitleInput(block) as the common validated selection used by readTitleSpec and onTitleClick. It ignores hidden inputs but requires exactly one supported visible control; click handler no longer picks the first arbitrary h1 input.
+- Regression: test_title_spec.py now covers hidden input preceding supported draft input and verifies the production helper returns/focuses the visible text input; hidden-only readonly and hidden plus second visible control cases are covered.
+- Handoff updated. Previous SHA CI was green; this new SHA needs its own CI and supervisor review. No merge/deploy.
+- Task managed by implementer at 2026-10-28T22:00:00+07:00
+
 [2026-10-28T21:00:00+07:00] [INFO] Implementer follow-up PR #32: keyboard-accessible title and fail-closed guard
 - Basis: supervisor's HOLD comment on checkpoint aa38722346ba88a1a8488f74f1befb21bc39cfcd. Stayed on branch agen/ui-form-title-v8; did not review/merge or deploy.
 - Production: readTitleSpec now accepts readonly plain heading text or exactly one optional text/search input inside h1. Rejects multiple controls, contenteditable, select/textarea, native/ARIA/Odoo required, disabled/readonly input, unsupported input type, and controls outside h1. Editable title uses native button, accessible edit label, visible focus, Enter/Space activation; Escape and blur close editor and sync title without moving OWL nodes.
