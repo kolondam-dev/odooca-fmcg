@@ -1,5 +1,12 @@
 # HANDOFF
 
+## 2026-10-28 — implementer — Perbaikan akses keyboard dan validasi judul form PR #32
+**Basis:** PR #32, checkpoint supervisor `aa38722346ba88a1a8488f74f1befb21bc39cfcd`; branch `agen/ui-form-title-v8`. Fokus hanya dua temuan P2, tidak mengubah seed/accounting atau deployment.
+**Berubah:** `readTitleSpec` fail-closed: judul readonly berbasis teks diterima; kontrol editable hanya satu input text/search non-required di `h1`. Multiple control, contenteditable, select/textarea, native/ARIA/Odoo required, disabled/readonly input, tipe lain, dan input di luar h1 ditolak sehingga blok asli tetap terlihat. Judul editable dirender sebagai tombol native dengan accessible label, Tab/Enter/Space, focus-visible, Escape, blur dan pembaruan nilai; node OWL tidak dipindah.
+**Tes ditambahkan:** `docs/ui/e2e/test_title_spec.py` mengeksekusi fungsi produksi yang diekstrak terhadap fixture DOM Chromium; `smoke_ui.py` menambah Tab → Enter/Space → input asli → ubah nilai → blur → Escape, fokus dipulihkan dan tidak ada duplikasi. Belum mengklaim tes dijalankan lokal karena lingkungan runtime repository tidak tersedia pada sesi ini; perlu CI untuk konfirmasi.
+**Batas:** belum merge, tidak deploy, tidak memutuskan review. Menunggu CI dan review supervisor pada SHA terbaru.
+
+
 ## 2026-10-28 — codex agent — Koreksi collection ditolak simulator
 **Basis:** main f99e117 (PR #30 merged), branch agen/mobile-collection-corrections; whats_new/protocol/development/handoff dibaca dan plan sebelum kode.
 **Berubah:** hanya receipt bisnis rejected cocok UUID membuka koreksi. UUID/alasan/foto baru, source identik, parent immutable. CAS pointer schema-canonical+snapshot receipt atomik, satu successor; nominal bukan saldo tambahan. Referensi/tanda terima dapat dipertahankan dalam lineage; semua klaim ancestor tetap reserved lintas tagihan, foto wajib berbeda. Restore/pre-sync memvalidasi root/parent/time/source/dedup/media semua ancestor dan recheck setelah await. Draft manual per parent pulih offline, hasil/bukti readonly, parent di Lainnya. Kontrak0.10 pasangan optional fields (legacy valid) dan fixture live gate additive; workflow tidak berubah.
