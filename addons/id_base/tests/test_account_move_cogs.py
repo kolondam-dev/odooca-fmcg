@@ -81,26 +81,23 @@ class TestAccountMoveCogs(TransactionCase):
 
     def _get_or_create_account(self, company, acc_type="income", code="410000"):
         AccountModel = self.env["account.account"]
-        acc_fields = AccountModel._fields if hasattr(AccountModel, "_fields") else {}
-        domain = [("code", "=", code)]
-        if "company_ids" in acc_fields:
-            domain.append(("company_ids", "in", [company.id]))
-        elif "company_id" in acc_fields:
-            domain.append(("company_id", "in", [False, company.id]))
+        account = AccountModel.search([("code", "=", code)], limit=1)
+        if account:
+            if hasattr(account, "company_ids") and company.id not in account.company_ids.ids:
+                account.write({"company_ids": [(4, company.id)]})
+            return account
 
-        account = AccountModel.search(domain, limit=1)
-        if not account:
-            vals = {
-                "name": f"Account {code} {company.id}",
-                "code": code,
-                "account_type": acc_type,
-            }
-            if "company_ids" in acc_fields:
-                vals["company_ids"] = [(6, 0, [company.id])]
-            elif "company_id" in acc_fields:
-                vals["company_id"] = company.id
-            account = AccountModel.create(vals)
-        return account
+        vals = {
+            "name": f"Account {code} {company.id}",
+            "code": code,
+            "account_type": acc_type,
+        }
+        acc_fields = AccountModel._fields if hasattr(AccountModel, "_fields") else {}
+        if "company_ids" in acc_fields:
+            vals["company_ids"] = [(6, 0, [company.id])]
+        elif "company_id" in acc_fields:
+            vals["company_id"] = company.id
+        return AccountModel.create(vals)
 
     def _create_basic_invoice(self, company, is_seed=False, move_type="out_invoice"):
         """Helper untuk membuat faktur pengujian."""

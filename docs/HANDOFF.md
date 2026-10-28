@@ -35,6 +35,7 @@
        5. Positive seed dengan singular posted STJ `account_move_id` (510000/113000) -> supresi hanya duplikat COGS (`return []`), invoice dan baris utuh.
        6. Vendor bill (`in_invoice`) dan refund (`out_refund`) -> native behavior utuh.
      - Kompatibilitas `install-test` Odoo: menggunakan `unittest.mock.patch.object(type(line), "sale_line_ids", ...)` untuk mengisolasi atribut `sale_line_ids` pada pengetesan modul `id_base` saat modul `sale` belum terpasang di database uji Odoo.
+     - Resolusi akun unik: `_get_or_create_account` mencari akun global berdasarkan kode terlebih dahulu untuk mencegah `ValidationError: Account codes must be unique` saat pembuatan multi-faktur (vendor bill & refund).
 - Hasil Verifikasi Lokal:
   * `python scripts/check_manifests.py`: manifest ok: 4 addon
   * `python -m ruff check .`: All checks passed! (0 error)
