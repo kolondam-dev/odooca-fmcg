@@ -18,20 +18,43 @@ import { IdChatterPage } from "./id_chatter_page";
  *    field untuk diisi pengguna (mis. kendaraan, produk) tetap di tempatnya.
  */
 /**
- * Membaca "judul murni" dari blok .oe_title: nomor/nama dokumen yang hanya ditampilkan
- * (mis. S00001, nomor draft faktur). Mengembalikan null bila blok memuat field yang harus
- * diisi pengguna, yaitu kontrol di luar <h1> atau kontrol wajib isi. Satu input nomor non-wajib
- * di dalam <h1> (nomor draft faktur) tetap dianggap judul. `caption` = label kecil di atas
- * judul (mis. "Customer Invoice").
+ * Membaca judul yang aman dipromosikan ke statusbar.
+ * Judul readonly boleh berupa teks biasa. Satu-satunya kontrol editable yang didukung
+ * adalah satu input teks non-wajib di dalam h1 (nomor draft faktur). Semua bentuk lain
+ * ditolak agar blok asli tetap terlihat dan field pengguna tidak pernah tersembunyi.
  */
 export function readTitleSpec(block) {
-    const controls = [...block.querySelectorAll("input:not([type=hidden]), select, textarea, [contenteditable=true]")];
-    if (controls.some((el) => !el.closest("h1") || el.closest(".o_required_modifier"))) {
+    if (!block) {
         return null;
     }
+    const controls = [...block.querySelectorAll(
+        'input:not([type="hidden"]), select, textarea, [contenteditable]:not([contenteditable="false"])'
+    )];
+    let input = null;
+    if (controls.length) {
+        if (controls.length !== 1) {
+            return null;
+        }
+        [input] = controls;
+        const type = (input.getAttribute("type") || "text").toLowerCase();
+        if (
+            input.tagName !== "INPUT" ||
+            !input.closest("h1") ||
+            !["text", "search"].includes(type) ||
+            input.required ||
+            input.getAttribute("aria-required") === "true" ||
+            input.closest(".o_required_modifier") ||
+            input.readOnly ||
+            input.disabled
+        ) {
+            return null;
+        }
+    }
     const h1 = block.querySelector("h1");
-    const input = h1?.querySelector("input, textarea");
-    const main = (input ? input.value || input.placeholder : h1?.textContent || "").trim();
+    if (!h1 || h1.querySelectorAll("h1").length) {
+        return null;
+    }
+    const main = (input ? input.value || input.placeholder : h1.textContent || "").trim();
     if (!main) {
         return null;
     }
@@ -86,9 +109,19 @@ patch(FormRenderer.prototype, {
             if (current?.dataset.idKey === key) {
                 return;
             }
-            const el = current || document.createElement("div");
-            el.className = "id_header_title" + (spec.editable ? " id_header_title--editable" : "");
-            el.dataset.idKey = key;
+            const el = current || document.createElement(spec.editable ? "button" : "div");
+            if (spec.editable && el.tagName !== "BUTTON") {
+                el.replaceWith(document.createElement("button"));
+            }
+            const header = statusbar.querySelector(":scope > .id_header_title") || el;
+            header.className = "id_header_title" + (spec.editable ? " id_header_title--editable" : "");
+            header.dataset.idKey = key;
+            if (spec.editable) {
+                header.type = "button";
+                header.setAttribute("aria-label", _t("Edit document number: %s", spec.main));
+            } else {
+                header.removeAttribute("aria-label");
+            }
             const parts = [];
             if (spec.caption) {
                 const caption = document.createElement("span");
@@ -100,26 +133,43 @@ patch(FormRenderer.prototype, {
             main.className = "id_header_title__main";
             main.textContent = spec.main;
             parts.push(main);
-            el.replaceChildren(...parts);
+            header.replaceChildren(...parts);
             if (!current) {
-                el.addEventListener("click", onTitleClick);
+                if (spec.editable) {
+                    header.addEventListener("click", onTitleClick);
+                }
                 // Sisipkan sebelum anak langsung statusbar yang memuat pipeline status (bila ada).
                 let ref = statusbar.querySelector(".o_field_statusbar, .o_statusbar_status");
                 while (ref && ref.parentNode !== statusbar) {
                     ref = ref.parentNode;
                 }
-                statusbar.insertBefore(el, ref || null);
+                statusbar.insertBefore(header, ref || null);
             }
         };
-        // Klik judul yang berasal dari input (nomor draft) membuka blok aslinya untuk diedit.
+        // Tombol native menyediakan Tab, Enter, Space, dan semantik aksesibilitas.
+        // Field OWL asli tetap berada di sheet; hanya dibuka sementara untuk diedit.
         const onTitleClick = () => {
             const block = rootRef.el?.querySelector(".o_form_sheet > .oe_title");
-            const input = block?.querySelector("h1 input, h1 textarea");
-            if (input) {
-                block.classList.add("id_title_editing");
-                input.focus();
-                input.addEventListener("blur", () => block.classList.remove("id_title_editing"), { once: true });
+            const input = block?.querySelector("h1 input");
+            if (!block || !input) {
+                return;
             }
+            block.classList.add("id_title_editing");
+            const closeEditor = () => {
+                block.classList.remove("id_title_editing");
+                input.removeEventListener("keydown", onEditorKeydown);
+                syncTitle();
+            };
+            const onEditorKeydown = (ev) => {
+                if (ev.key === "Escape") {
+                    ev.preventDefault();
+                    input.blur();
+                    rootRef.el?.querySelector(".o_form_statusbar > .id_header_title")?.focus();
+                }
+            };
+            input.addEventListener("blur", closeEditor, { once: true });
+            input.addEventListener("keydown", onEditorKeydown);
+            input.focus();
         };
         // Ketikan di input judul langsung tercermin di header.
         const onInput = (ev) => {
