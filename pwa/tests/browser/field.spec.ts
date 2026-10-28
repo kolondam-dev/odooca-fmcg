@@ -1,3 +1,4 @@
+import { switchPersona } from "./delivery-helpers";
 import { saveVisitPhoto } from "./visit-helpers";
 import { expect, test, type Page } from "@playwright/test";
 async function openMorning(page: Page) {
@@ -100,7 +101,7 @@ test("stacked roles and persona switch never show another persona queue", async 
 }) => {
     await page.goto("./");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("delivery");
+    await switchPersona(page, "delivery");
     await expect(page.getByRole("heading", { name: /Novry/ })).toBeVisible();
     await expect(
         page
@@ -108,7 +109,7 @@ test("stacked roles and persona switch never show another persona queue", async 
             .getByRole("button", { name: "Sales", exact: true }),
     ).toHaveCount(0);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("canvass");
+    await switchPersona(page, "canvass");
     await expect(
         page
             .getByRole("navigation")
@@ -163,12 +164,12 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await expect(
         page.getByText("Diterima simulator", { exact: true }).last(),
     ).toBeVisible({ timeout: 20000 });
-    await page.getByLabel("Persona demo").selectOption("delivery");
+    await switchPersona(page, "delivery");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(
         page.getByText("Belum ada aktivitas. Mulai dari order atau pengajuan."),
     ).toBeVisible();
-    await page.getByLabel("Persona demo").selectOption("sales");
+    await switchPersona(page, "sales");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(page.locator(".activity")).toHaveCount(2);
 });
@@ -265,7 +266,9 @@ test("morning gate requires online sync, persists per persona and expires next d
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
-    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await expect(
+        page.getByRole("button", { name: /Toko Sinar Pagi/ }),
+    ).toHaveCount(0);
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page
         .getByRole("button", {
@@ -292,7 +295,7 @@ test("morning gate requires online sync, persists per persona and expires next d
     await page.reload();
     await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("canvass");
+    await switchPersona(page, "canvass");
     await expect(page.getByText("Sesi terbuka", { exact: true })).toHaveCount(
         0,
     );
@@ -303,7 +306,7 @@ test("morning gate requires online sync, persists per persona and expires next d
         }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("sales");
+    await switchPersona(page, "sales");
     await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
     await page.clock.setSystemTime(new Date("2026-10-27T16:00:01Z"));
     await page.reload();
@@ -436,19 +439,20 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
-    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await expect(
+        page.getByRole("button", { name: /Toko Sinar Pagi/ }),
+    ).toHaveCount(0);
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page
         .getByRole("navigation")
         .getByRole("button", { name: "Sales", exact: true })
         .click();
-    await page.getByRole("button", { name: "Ajukan extra call" }).click();
-    await page.getByLabel("Nama outlet").fill("Outlet baru demo");
-    await page.getByLabel("Alasan extra call").fill("Kunjungan simulasi");
-    await page.getByRole("button", { name: "Simpan ke antrean demo" }).click();
-    await expect(page.getByRole("alert")).toContainText(
-        "Sesi pagi belum terbuka",
-    );
+    await expect(
+        page.getByText("Daily sync wajib sebelum membuka list Sales."),
+    ).toBeVisible();
+    await expect(
+        page.getByRole("button", { name: "Ajukan extra call" }),
+    ).toHaveCount(0);
     const after = await page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve) => {
             const r = indexedDB.open("fmcg-field-demo-v1");

@@ -42,6 +42,9 @@ for (const mode of ["demo", "live"]) {
     if (mode === "live") {
         for (const fixture of [
             "DEMO-ANDRE",
+            "Simulator approval diskon",
+            "Open sesi delivery",
+            "Set pinpoint delivery",
             "Toko Sinar Pagi",
             "demo-mdu",
             "demo-snapshot-1",

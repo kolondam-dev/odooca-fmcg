@@ -1,3 +1,60 @@
+import { DeliverySessionSchema } from "./delivery-contracts";
+import { MorningRecordSchema, morningReady } from "./morning";
+export const DELIVERY_SESSION_KEY = "delivery-active-session-v2";
+export const statusOutcome = {
+    "Fully Received": "delivered",
+    "Received Partial": "partial",
+    Rejected: "rejected",
+    "Cancel Delivery": "cancel_delivery",
+    "Pending Requested": "pending_requested",
+} as const;
+export function validateDeliverySession(
+    raw: unknown,
+    source: DeliveryPod["source"],
+    owner: string,
+    at: string,
+) {
+    const session = DeliverySessionSchema.parse(raw);
+    const daily = MorningRecordSchema.parse(session.daily_source);
+    if (
+        session.owner !== owner ||
+        session.task_id !== source.id ||
+        !morningReady(daily, owner, source.business_date) ||
+        !daily.deliveryManifest?.some(
+            (t) => JSON.stringify(t) === JSON.stringify(source),
+        ) ||
+        Date.parse(session.opening.capturedAt) < Date.parse(daily.openedAt!) ||
+        Date.parse(session.opened_at) < Date.parse(daily.openedAt!) ||
+        Date.parse(session.opened_at) > Date.parse(at) ||
+        Date.parse(session.opened_at) - Date.parse(session.opening.capturedAt) <
+            0 ||
+        Date.parse(session.opened_at) - Date.parse(session.opening.capturedAt) >
+            60000
+    )
+        throw new Error("Sesi delivery/daily sync/foto opening tidak valid.");
+    requireVisitFix(
+        session.pinpoint,
+        source.site,
+        Date.parse(session.opened_at),
+    );
+    if (
+        Date.parse(session.pinpoint_set_at) <
+            Date.parse(session.opening.capturedAt) ||
+        Date.parse(session.pinpoint_set_at) > Date.parse(session.opened_at)
+    )
+        throw new Error("Set pinpoint setelah foto toko.");
+    requireVisitFix(
+        {
+            latitude: session.opening.latitude,
+            longitude: session.opening.longitude,
+            accuracy: session.opening.accuracy,
+            sampled_at: session.opening.capturedAt,
+        },
+        source.site,
+        Date.parse(session.opened_at),
+    );
+    return session;
+}
 import {
     DeliveryPodSchema,
     DeliveryTaskSchema,
@@ -34,6 +91,29 @@ export function validatePod(
         new Set(p.lines.map((l) => l.id)).size !== p.lines.length
     )
         throw new Error("Item manifest tidak cocok.");
+    if (s.workflow_version === 2) {
+        const session = validateDeliverySession(p.session, s, owner, at);
+        if (
+            !p.delivery_status ||
+            statusOutcome[p.delivery_status] !== p.outcome ||
+            p.evidence.id === session.opening.id ||
+            Date.parse(p.evidence.capturedAt) < Date.parse(session.opened_at)
+        )
+            throw new Error("Status/foto closing sesi delivery tidak valid.");
+        if (p.outcome !== "partial" && p.reason.trim().length < 3)
+            throw new Error("Status wajib alasan minimal 3 karakter.");
+        for (const l of s.lines) {
+            const a = p.lines.find((a) => a.id === l.id);
+            if (
+                !a ||
+                (p.outcome === "partial"
+                    ? a.received < l.quantity &&
+                      (a.reason?.trim().length ?? 0) < 3
+                    : a.reason !== p.reason.trim())
+            )
+                throw new Error("Alasan wajib direkam pada item terkait.");
+        }
+    }
     let total = 0,
         expected = 0;
     for (const l of s.lines) {
@@ -46,10 +126,17 @@ export function validatePod(
     if (
         (p.outcome === "delivered" && total !== expected) ||
         (p.outcome === "partial" && !(total > 0 && total < expected)) ||
-        (p.outcome === "rejected" && total !== 0)
+        (["rejected", "cancel_delivery", "pending_requested"].includes(
+            p.outcome,
+        ) &&
+            total !== 0)
     )
         throw new Error("Hasil tidak sesuai kuantitas diterima.");
-    if (p.outcome !== "delivered" && p.reason.length < 3)
+    if (
+        s.workflow_version !== 2 &&
+        p.outcome !== "delivered" &&
+        p.reason.length < 3
+    )
         throw new Error("Selisih/penolakan wajib alasan.");
     requireVisitFix(
         {
@@ -110,8 +197,12 @@ export function podLineage(rows: QueueItem[], owner: string, doId: string) {
     });
     const group = parsed.filter((x) => x.c.payload.source.id === doId);
     if (!group.length) throw new Error("Lineage POD hilang.");
-    const ids = new Set(parsed.map((x) => x.c.payload.evidence.id));
-    if (ids.size !== parsed.length)
+    const mediaIds = parsed.flatMap((x) => [
+        x.c.payload.evidence.id,
+        ...(x.c.payload.session ? [x.c.payload.session.opening.id] : []),
+    ]);
+    const ids = new Set(mediaIds);
+    if (ids.size !== mediaIds.length)
         throw new Error("DO/foto sudah mempunyai POD. Perlu review.");
     const roots = group.filter((x) => !x.c.payload.supersedes_uuid);
     if (roots.length !== 1) throw new Error("DO mempunyai root ganda/hilang.");
@@ -178,6 +269,27 @@ async function checkPodMedia(
             ),
             p.source,
         );
+        if (p.source.workflow_version === 2) {
+            const session = validateDeliverySession(
+                p.session,
+                p.source,
+                owner,
+                node.command.occurred_at,
+            );
+            const opening = await store.getEvidence(owner, session.opening.id);
+            await assertLocalEvidence(opening, session.opening, owner);
+            if (!opening?.visual) throw new Error("Paket opening hilang.");
+            requireVisitFix(
+                {
+                    latitude: session.opening.latitude,
+                    longitude: session.opening.longitude,
+                    accuracy: session.opening.accuracy,
+                    sampled_at: opening.visual.fixSampledAt,
+                },
+                p.source.site,
+                Date.parse(session.opened_at),
+            );
+        }
         const media = await store.getEvidence(owner, p.evidence.id);
         await assertLocalEvidence(media, p.evidence, owner);
         if (!media?.visual) throw new Error("Paket foto POD wajib lengkap.");

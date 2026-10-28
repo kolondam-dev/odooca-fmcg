@@ -62,11 +62,17 @@ export function MorningSession({
         };
     }, [service]);
     const today = record?.businessDate === date ? record : undefined;
-    const ready = morningReady(
-        today,
-        `${identity.companyId}:${identity.id}`,
-        date,
-    );
+    const ready =
+        morningReady(today, `${identity.companyId}:${identity.id}`, date) &&
+        (!identity.roles.includes("delivery") ||
+            !!today?.deliveryManifest?.length);
+    useEffect(() => {
+        if (
+            record &&
+            !morningReady(record, `${identity.companyId}:${identity.id}`, date)
+        )
+            changed.current(undefined);
+    }, [date]);
     async function advance() {
         if (running.current) return;
         running.current = true;
@@ -90,7 +96,12 @@ export function MorningSession({
         }
     }
     return (
-        <section class="morning-card" aria-label="Sesi kerja pagi simulasi">
+        <section
+            class="morning-card"
+            aria-label="Sesi kerja pagi simulasi"
+            data-owner={`${identity.companyId}:${identity.id}`}
+            aria-busy={!loaded || busy}
+        >
             <div class="morning-heading">
                 <Icon name={ready ? "check" : "clock"} />
                 <div>
@@ -103,8 +114,11 @@ export function MorningSession({
             </div>
             <ol class="morning-steps">
                 <li>{today ? "✓" : "1."} Absensi diterima simulator</li>
-                <li>{ready ? "✓" : "2."} Sync online PJP, stok & harga</li>
-                <li>{ready ? "✓" : "3."} Kunjungan & order dapat diantrekan</li>
+                <li>
+                    {ready ? "✓" : "2."} Daily sync online PJP, stok, harga &
+                    manifest
+                </li>
+                <li>{ready ? "✓" : "3."} List Sales/Delivery dapat dibuka</li>
             </ol>
             <p class="footnote">
                 Kontrol demo ini menggantikan respons absensi untuk menguji

@@ -1,3 +1,4 @@
+import { validateOrderQuote } from "./order-pricing";
 import { bindVisitEvidence } from "./visit-evidence";
 import { CommandSchema, validateOrder } from "./contracts";
 import {
@@ -288,6 +289,11 @@ export function visitLedger(
         )
             throw new Error("Konteks order/kunjungan tidak valid.");
         const body = VisitOrderSchema.parse(q.command.payload);
+        validateOrderQuote(
+            body,
+            MorningRecordSchema.parse(r.morning_source ?? fallbackMorning)
+                .snapshot!,
+        );
         if (body.morning_business_date !== c.business_date)
             throw new Error("Tanggal order/kunjungan tidak cocok.");
         const source = MorningRecordSchema.parse(
@@ -387,6 +393,7 @@ export function validateVisitCommit(
             );
         if (item.command.type === "sales.order.submit") {
             const body = VisitOrderSchema.parse(item.command.payload);
+            validateOrderQuote(body, morning.snapshot!);
             const invalid = validateOrder(
                 body.lines.map((l) => ({
                     productId: l.product_id,

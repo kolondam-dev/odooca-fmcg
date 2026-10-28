@@ -92,8 +92,8 @@ export class MockProvider implements FieldProvider {
                     name: "Biskuit Kelapa 300 g",
                     brand: "MAYORA • BISKUIT",
                     principal: "mayora",
-                    unit: "karton / 24 pcs",
-                    price: 182400,
+                    unit: "karton 144 pcs / pack 12 pcs",
+                    price: 187200,
                     stock: 48,
                 },
                 {
@@ -101,8 +101,8 @@ export class MockProvider implements FieldProvider {
                     name: "Wafer Cokelat 24 g",
                     brand: "MAYORA • WAFER",
                     principal: "mayora",
-                    unit: "karton / 48 pcs",
-                    price: 156000,
+                    unit: "karton 144 pcs / pack 12 pcs",
+                    price: 158400,
                     stock: 32,
                 },
                 {
@@ -110,8 +110,8 @@ export class MockProvider implements FieldProvider {
                     name: "Kopi Bubuk 165 g",
                     brand: "SANTOS • KOPI",
                     principal: "santos",
-                    unit: "karton / 24 pcs",
-                    price: 264000,
+                    unit: "karton 144 pcs / pack 12 pcs",
+                    price: 273600,
                     stock: 21,
                 },
             ],
@@ -120,7 +120,7 @@ export class MockProvider implements FieldProvider {
                     id: "DEMO-DO-001",
                     outlet: "Toko Sinar Pagi",
                     address: "Sario, Manado",
-                    items: 4,
+                    items: 3,
                     cartons: 12,
                     trip: "TRIP-DEMO-01",
                     vehicle: "DB • DEMO",
@@ -141,6 +141,7 @@ export class MockProvider implements FieldProvider {
         const owner = await this.bootstrap();
         const snapshot = await this.snapshot();
         return snapshot.deliveries.map((d, i) => ({
+            workflow_version: 2 as const,
             id: d.id,
             trip: d.trip,
             vehicle: d.vehicle,
@@ -159,8 +160,20 @@ export class MockProvider implements FieldProvider {
                 {
                     id: `${d.id}-1`,
                     name: "Biskuit Kelapa 300 g (contoh)",
-                    quantity: d.cartons,
-                    unit: "karton",
+                    quantity: (d.cartons - 2) * 144,
+                    unit: "pcs",
+                },
+                {
+                    id: `${d.id}-2`,
+                    name: "Wafer Cokelat (contoh)",
+                    quantity: 144,
+                    unit: "pcs",
+                },
+                {
+                    id: `${d.id}-3`,
+                    name: "Kopi Bubuk (contoh)",
+                    quantity: 144,
+                    unit: "pcs",
                 },
             ],
         }));
@@ -204,6 +217,9 @@ export class MockProvider implements FieldProvider {
                 422,
                 "Data realisasi tidak sesuai kontrak simulator.",
             );
+        const discounted =
+            command.type === "sales.order.submit" &&
+            !!command.payload.discount_request;
         const policyApproval = [
             "delivery.pod.submit",
             "collection.receipt.submit",
@@ -215,7 +231,7 @@ export class MockProvider implements FieldProvider {
         const status =
             this.scenario === "rejected"
                 ? "rejected"
-                : this.scenario === "approval" || policyApproval
+                : this.scenario === "approval" || policyApproval || discounted
                   ? "needs_approval"
                   : "accepted";
         const receipt: Receipt = {
@@ -226,7 +242,9 @@ export class MockProvider implements FieldProvider {
                     ? "Simulasi: perlu koreksi. Buat pengajuan baru."
                     : status === "needs_approval"
                       ? "Simulasi: menunggu review supervisor; belum disetujui."
-                      : "Diterima simulator. Belum menjadi dokumen Odoo.",
+                      : discounted
+                        ? "SIMULASI: diskon diminta disetujui seluruhnya; total sesuai pengajuan. Bukan approval Odoo."
+                        : "Diterima simulator. Belum menjadi dokumen Odoo.",
             reference: `DEMO-${command.client_uuid.slice(0, 8).toUpperCase()}`,
         };
         await this.store.saveReceipt(key, receipt, payload);

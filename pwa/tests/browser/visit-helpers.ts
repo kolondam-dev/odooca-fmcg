@@ -22,4 +22,8 @@ export async function saveVisitPhoto(
             exact: true,
         }),
     ).toBeVisible();
+    if (phase === "check-in")
+        await page
+            .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+            .click();
 }

@@ -1,5 +1,9 @@
 # HANDOFF
 
+## 2026-10-28 — codex supervisor — Integrasi PR #32 dengan main
+**Mandat:** pemilik meminta merge setelah verdict layak merge pada 766a60e. Main sudah memuat PR #33 (d2a54bf).
+**Resolusi:** konflik hanya docs/HANDOFF.md; seluruh entri UI dan PWA dipertahankan. Runtime dan tes tetap persis hasil gabungan kedua branch. CI integrasi harus hijau sebelum merge PR #32.
+
 ## 2026-10-28 — implementer — Residual P2 hidden input pada PR #32
 **Basis:** review supervisor untuk SHA `9abcd5f9a489f511fd6201cdcca753da97deac8a`; verdict HOLD satu P2. Branch tetap `agen/ui-form-title-v8`; tidak melakukan review, merge, atau deploy.
 **Perbaikan:** menambahkan `getEditableTitleInput(block)` sebagai satu guard bersama untuk render spec dan aktivasi editor. Hidden input dikecualikan, sementara satu-satunya input visible yang lolos validasi (text/search non-required dalam h1) dipilih konsisten. Handler tidak lagi menggunakan `querySelector("h1 input")` yang dapat memilih hidden input.
@@ -12,6 +16,30 @@
 **Berubah:** `readTitleSpec` fail-closed: judul readonly berbasis teks diterima; kontrol editable hanya satu input text/search non-required di `h1`. Multiple control, contenteditable, select/textarea, native/ARIA/Odoo required, disabled/readonly input, tipe lain, dan input di luar h1 ditolak sehingga blok asli tetap terlihat. Judul editable dirender sebagai tombol native dengan accessible label, Tab/Enter/Space, focus-visible, Escape, blur dan pembaruan nilai; node OWL tidak dipindah.
 **Tes ditambahkan:** `docs/ui/e2e/test_title_spec.py` mengeksekusi fungsi produksi yang diekstrak terhadap fixture DOM Chromium; `smoke_ui.py` menambah Tab → Enter/Space → input asli → ubah nilai → blur → Escape, fokus dipulihkan dan tidak ada duplikasi. Belum mengklaim tes dijalankan lokal karena lingkungan runtime repository tidak tersedia pada sesi ini; perlu CI untuk konfirmasi.
 **Batas:** belum merge, tidak deploy, tidak memutuskan review. Menunggu CI dan review supervisor pada SHA terbaru.
+## 2026-10-28 — agent-codex-pwa — Follow-up HOLD PR33 c48bf5a
+**Review:** https://github.com/kolondam-dev/odooca-fmcg/pull/33#issuecomment-6472436334; basis c48bf5a pada branch agen/pwa-sales-delivery-rules. CI lama 40705244566 sudah FAILURE (7 failed, 5 flaky, 52 passed), bukan pending; CI Odoo lama 40705244625 SUCCESS. Log browser resmi dibaca: kegagalan menunggu readiness/klik absensi ada di ensureDaily, termasuk pemulihan setelah persona berganti.
+**P1 offline:** DeliveryWorkspace memvalidasi manifest daily sync (owner/hari/keunikan) sebelum materialisasi cache secara lokal tanpa pemeriksaan online/provider. Cache yang sudah ada tetap diparse/dibandingkan; cache berbeda/rusak tidak ditimpa. Regresi phone/tablet membuktikan daily sync online → offline sebelum first-open list → mulai sesi/simpan draft; juga reload offline sebelum first-open. Kontrol negatif tanpa daily sync, owner/hari manifest berbeda dan cache berbeda mempertahankan data sumber.
+**P1 gate:** ensureDaily membedakan ready/attendance-only; setelah klik absensi wajib menunggu tombol sync enabled (completion IndexedDB), lalu klik dan tunggu ready. switchPersona menunggu data-owner tujuan serta restore aria-busy=false; seluruh pergantian persona tes memakai helper ini. Gate completion write absensi dan success restore sengaja ditahan/dilepas lewat handshake test, tanpa sleep/kenaikan timeout/pengurangan worker/skip.
+**P2 audit:** riwayat POD menampilkan nama, received dan unit dari source command historis per SKU; tidak ada literal karton pada gabungan angka. Regresi root rejected → correction → riwayat multi-SKU pcs serta fixture legacy karton lulus.
+**Diverifikasi lokal:** 239 unit +1 hosting PASS; 84 browser phone/tablet PASS, seluruh 64 lama +20 regresi, satu run final tanpa retry dan worker default. Browser resmi Chrome for Testing Headless Shell145.0.7632.6 (versi Playwright1.58.2), bukan Chromium153 pengganti. Full Chrome resmi gagal launch karena socket singleton dibatasi lingkungan; verifikasi resmi memakai headless shell yang sesuai runner. Format/typecheck/contracts/demo+live/budget (demo67,1 KiB gzip/font47,1 KiB), Ruff/4 manifest dan diff check PASS.
+**Batas/menunggu:** CI remote pada SHA perbaikan diperiksa setelah publikasi dan URL/hasil dicatat pada PR. Docker/Odoo lokal tidak diulang; tidak ada perubahan backend/addon/seed/hosting/workflow/ruleset/Railway. Tetap simulator/live terkunci, HOLD menunggu review ulang; tidak merge/deploy.
+
+
+## 2026-10-28 — agent-codex-pwa — Implementasi rules Sales Order dan Delivery
+**Basis:** main 2feadf3; branch agen/pwa-sales-delivery-rules, sesuai mandat pemilik. Aturan §17 ditulis sebelum implementasi; protocol/development/handoff dan log codex dibaca.
+**Berubah:** list Sales/Delivery wajib daily sync; driver memakai sesi pagi dan manifest tersimpan bersama snapshot. SO demo mendukung karton144/pack12/pcs1, qty/SKU, estimasi harga dan diskon order dengan alasan. Pengajuan diskon Normal menunggu approval; kontrol simulator di Lainnya membuat keputusan approved/rejected beralasan dengan CAS satu kali dan command immutable. Delivery manifest v2 multi-SKU pcs, lima status sesuai label pemilik, alasan non-partial disalin ke semua baris dan partial wajib per item terdampak. Foto toko → set pinpoint → mulai sesi → penerimaan → foto closing berbeda → enqueue+closed atomik → summary/list updated → DO berikutnya; satu sesi delivery aktif per owner/DB, restore offline dan validasi media opening/closing/ancestor. Sesi Sales existing diperluas urutan foto/pinpoint dan status closed pada list.
+**Diverifikasi:** 239 unit +1 hosting PASS; 64 browser phone/tablet PASS dalam satu run final penuh (Chromium lokal153; CI tetap browser resmi Playwright). Termasuk draft partial offline, alasan wajib, iterasi DO kedua, approval accepted/rejected, legacy, corrupt media, race dua koneksi sesi/keputusan dan historical replay. Typecheck/format/contracts/demo+live/build budget, Ruff/4 manifest, git diff --check PASS; screenshot ponsel SO/POD ditinjau. Docker/Odoo runtime lokal tidak dijalankan karena addon/hosting tidak berubah. CI setelah publikasi PR.
+**Batas:** diskon demo persen integer pada total order, approve seluruh nilai diminta atau reject; limit/tier/per-line/promo belum ditetapkan. Cancel/pending hanya hasil simulator, bukan pembatalan picking/approval server. Same-day aksi/koreksi; sesi tertinggal lintas hari/rusak ditahan untuk review, belum recovery. Pinpoint tetap grid simulasi tanpa basemap; timestamp aksi set pin berbeda dari sampel GPS. Snapshot/receipt/hash client bukan authority backend. OpenAPI0.11 additive; riwayat lama dipertahankan, tanpa migrasi/destructive rewrite. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh; live terkunci.
+**Menunggu:** review PR dan CI remote; tidak merge/deploy.
+
+
+## 2026-10-28 — agent-codex-pwa — Rules SO, penerimaan dan sesi lapangan
+**Berubah:** SCOPE §14 merujuk blueprint mobile §17: lima status delivery, alasan per baris dengan input massal non-partial, tier SKU demo 144 pcs/karton dan 12 pcs/pack, simulasi approval diskon, daily sync sebelum list dan siklus sesi foto opening/pinpoint–intra–foto closing–update list pada Sales/Delivery.
+**Diverifikasi:** dokumentasi dan konsistensi requirement diperiksa; git diff --check.
+**Belum diuji:** tidak ada perubahan runtime; seluruh requirement baru masih pekerjaan implementasi.
+**Butir terbuka:** authority/transisi cancel-pending dan parameter approval diskon; backend tetap dependency, live terkunci.
+**Menunggu:** implementasi sesuai urutan §17.5; tidak deploy.
+
 
 
 ## 2026-10-28 — codex agent — Koreksi collection ditolak simulator

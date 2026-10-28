@@ -39,6 +39,7 @@ export function VisitPanel({
         Date.now() - Date.parse(photo.capturedAt) <= 60000 &&
         Date.now() >= Date.parse(photo.capturedAt);
     const [fix, setFix] = useState<VisitFix>();
+    const [pinpointSetAt, setPinpointSetAt] = useState(0);
     const [now, setNow] = useState(Date.now());
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
@@ -102,6 +103,7 @@ export function VisitPanel({
             const position = await captureVisitLocation();
             if (ticket === generation.current) {
                 setFix(position);
+                setPinpointSetAt(Date.now());
                 setNow(Date.now());
             }
         } catch (e) {
@@ -236,6 +238,12 @@ export function VisitPanel({
                 </div>
             )}
             {!active && !closed && (
+                <p>
+                    Opening: foto toko, set pinpoint dengan Ambil lokasi outlet,
+                    lalu mulai sesi.
+                </p>
+            )}
+            {!active && !closed && (
                 <VisitPhotoField
                     key={`in:${sessionId}:${outlet.id}`}
                     store={store}
@@ -284,7 +292,8 @@ export function VisitPanel({
                         !!info.active ||
                         busy ||
                         assessment?.status !== "inside" ||
-                        !fresh(inPhoto)
+                        !fresh(inPhoto) ||
+                        pinpointSetAt < Date.parse(inPhoto?.capturedAt ?? "")
                     }
                     onClick={() => void start()}
                 >
@@ -300,6 +309,10 @@ export function VisitPanel({
                     >
                         <Icon name="bag" size={18} /> Buat order di outlet
                     </button>
+                    <p>
+                        Foto closing wajib: serah-terima/ttd nota orderan manual
+                        atau serah-terima faktur/uang sesuai aktivitas.
+                    </p>
                     <VisitPhotoField
                         key={`out:${info?.active?.context.visit_uuid}`}
                         store={store}

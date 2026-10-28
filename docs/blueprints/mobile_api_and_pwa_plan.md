@@ -1288,3 +1288,126 @@ CAS pointer+receipt, lineage+dedup ancestor dan validasi semua media sebelum syn
 227 unit +1 hosting +58 browser lokal PASS, typecheck/format/contracts/demo+live/
 budget (demo62,9 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. Screenshot ponsel
 ditinjau. CI setelah push; backend/seed/loader/workflow/Railway tidak disentuh.
+
+
+## 17. Rules Sales Order dan Delivery — mandat pemilik 2026-10-28
+
+[F: requirement pemilik] Bagian ini menjadi acuan implementasi berikutnya dan
+menggantikan rancangan sebelumnya bila berbeda pada status penerimaan, satuan demo,
+approval diskon dan siklus sesi. Ini spesifikasi yang disetujui pemilik, bukan klaim
+fitur sudah selesai. Implementasi main 2feadf3 masih simulator dengan live terkunci.
+
+### 17.1 Status delivery dan alasan per item
+
+Label status harus dipertahankan persis berikut. Status ini adalah hasil/progres
+bisnis delivery, terpisah dari status outbox, receipt approval dan sesi.
+
+| Status | Pengisian alasan | Perekaman alasan |
+|---|---|---|
+| Fully Received | Wajib, cukup sekali untuk seluruh baris | Salin alasan ke setiap baris item |
+| Received Partial | Wajib pada setiap item ditolak atau diterima sebagian | Simpan alasan masing-masing pada baris item terkait |
+| Rejected | Wajib, cukup sekali untuk seluruh baris | Salin alasan ke setiap baris item |
+| Cancel Delivery | Wajib, cukup sekali untuk seluruh baris | Salin alasan ke setiap baris item |
+| Pending Requested | Wajib, cukup sekali untuk seluruh baris | Salin alasan ke setiap baris item |
+
+Pada Received Partial, item yang diterima penuh tidak wajib alasan. Satu alasan
+header tidak menggantikan alasan item yang ditolak/diterima sebagian. UI harus
+menampilkan qty dikirim, diterima dan ditolak per SKU; penolakan seluruh DO berbeda
+dari receipt POD yang ditolak reviewer. Cancel Delivery dan Pending Requested tidak
+boleh otomatis ditafsirkan sebagai pembatalan picking atau persetujuan penundaan Odoo.
+[BU: keputusan lanjutan] Transisi status, otoritas persetujuan pending/cancel dan
+pengaruh stok/retur ditetapkan bersama backend sebelum integrasi live.
+
+### 17.2 SKU dan tier satuan demo
+
+Gunakan beberapa SKU fiktif khusus fixture demo; tidak mengubah master/seed Odoo.
+Interpretasi tier karton, pack, pcs = 144,12,12: **1 karton = 144 pcs = 12 pack;
+1 pack = 12 pcs**. Angka 144 bukan jumlah pack per karton.
+
+| SKU demo | Nama contoh | Karton → pcs | Pack → pcs | Pack per karton |
+|---|---|---|---|---|
+| DEMO-SKU-001 | Biskuit demo A | 144 | 12 | 12 |
+| DEMO-SKU-002 | Kopi demo B | 144 | 12 | 12 |
+| DEMO-SKU-003 | Minuman demo C | 144 | 12 | 12 |
+
+Sales order mendukung pemilihan satuan dan qty per SKU. Konversi serta ringkasan
+SO/delivery konsisten ke satuan dasar pcs, sambil mempertahankan satuan input untuk
+ditampilkan dan diaudit. Contoh penerimaan: kirim 1 karton (144 pcs), terima 10 pack
+(120 pcs), tolak 24 pcs → Received Partial dan alasan wajib di baris tersebut.
+Angka konversi di atas hanya fixture demo, bukan konversi universal semua produk.
+
+### 17.3 Simulasi approval diskon
+
+Form SO harus mensimulasikan permintaan diskon dan approval: pengajuan dengan
+alasan → menunggu approval → disetujui atau ditolak dengan alasan keputusan.
+Tampilkan diskon diminta, diskon yang disetujui dan dampaknya pada total; pengajuan
+belum berarti diskon telah disetujui. Sediakan skenario demo approved dan rejected.
+Kontrol approver harus ditandai simulator, bukan kewenangan approval pengguna sales.
+[BU: keputusan lanjutan] Ambang, tier approver, diskon per item/footer, diskon
+berlapis, serta interaksi promo/HPP mengikuti aturan bisnis yang disepakati sebelum
+implementasi rinci; jangan mengarang nilai limit resmi. Backend tetap menghitung
+ulang harga/diskon/kredit dan menjadi authority approval saat live.
+
+### 17.4 Daily sync dan siklus sesi wajib Sales Order / Delivery
+
+Daily sync wajib berhasil sebelum membuka list pekerjaan, berlaku untuk Sales
+Order maupun Delivery. Daftar pekerjaan operasional tidak dibuka hanya karena
+cache tersedia tanpa daily sync yang valid untuk petugas/hari bisnis tersebut.
+Setelah daily sync, snapshot list dapat dipakai offline sesuai konteks hari/sesi.
+Gagal sync atau paket tidak valid tidak membuka list; draft/outbox lama tetap utuh.
+
+Urutan wajib untuk kedua alur:
+
+1. Daily sync → buka list pekerjaan.
+2. Pilih entry list yang sesuai (outlet/order untuk Sales; DO/toko untuk Delivery).
+3. Open sesi: foto toko → set pinpoint lokasi → mulai sesi.
+4. Proses intra sesi: input SO/SKU/satuan/qty/diskon atau checklist penerimaan dan
+   tolakan per item, serta serah-terima faktur/uang bila terkait.
+5. Close sesi dengan foto closing yang sesuai aktivitas: serah-terima/ttd nota
+   orderan manual, serah-terima faktur/uang, atau serah-terima barang.
+6. Session closed → list updated → pilih entry berikutnya → ulangi langkah 3–6.
+
+Foto toko, pinpoint dan foto closing wajib; tidak boleh memulai/mengakhiri sesi
+melalui tombol yang melewati bukti wajib. Bukti closing sesuai aktivitas, bukan
+mewajibkan semua jenis serah-terima pada setiap kunjungan. Foto ttd nota manual
+adalah bukti foto, bukan klaim tanda tangan elektronik tersertifikasi.
+Simpan keterkaitan sesi, entry pekerjaan, bukti opening/closing dan transaksi di
+antaranya. Setelah closed, list menampilkan hasil sesi dan status sync/approval
+secara terpisah: penutupan lokal tidak berarti SO/delivery/payment telah diposting.
+Aturan ini memperluas sesi pagi/visit sales existing dan menambahkan siklus yang
+sama untuk Delivery; implementasi existing belum memenuhi seluruh requirement ini.
+
+### 17.5 Urutan implementasi dan acceptance berikutnya
+
+1. Lengkapi taking order: SKU demo multi-item, satuan/qty/harga dan approval diskon.
+2. Lengkapi penerimaan per SKU dengan lima status dan aturan alasan §17.1.
+3. Terapkan daily sync serta sesi opening–intra–closing pada Sales dan Delivery.
+4. Integrasi kontrak/authority backend; collection closing trip mengikuti alur inti.
+
+Acceptance mencakup konversi 144/12/12, multi-SKU, alasan massal tersimpan per
+baris, partial tanpa alasan item ditahan, approval diskon approved/rejected, daily
+sync gagal/hari berganti, bukti opening/closing wajib, draft offline, isolasi
+petugas, list diperbarui setelah closed dan iterasi entry berikutnya. Semua masih
+[BU: belum diimplementasikan/diuji pada perubahan dokumentasi ini].
+
+
+### 17.6 Hasil implementasi client simulator — 2026-10-28
+
+[F] Requirement §17 kini diimplementasikan pada client demo di branch
+agen/pwa-sales-delivery-rules: daily list gate Sales/Delivery, SKU/satuan/qty
+144/12/1 dan diskon order dengan approval simulator; manifest multi-SKU pcs;
+lima status, alasan per baris; sesi delivery opening/pinpoint/intra/closing atomik
+dan iterasi DO berikutnya, serta status closed sesi Sales pada list.
+
+Diskon simulasi adalah persen integer pada total order; tanpa limit resmi/tier
+approver/per-line/promo yang belum diputuskan. Approval diminta tidak berarti
+disetujui: keputusan demo beralasan melalui Lainnya, command tetap immutable.
+Status cancel/pending tidak mengubah picking atau otoritas backend. Riwayat legacy
+tetap dibaca; OpenAPI0.11 additive, fixture manifest baru workflow_version2.
+Sesi tertinggal lintas hari/rusak membutuhkan review, belum ada recovery otomatis.
+
+Verifikasi lokal: 239 unit +1 hosting +64 browser phone/tablet PASS; satu run
+final browser penuh, Chromium153 lokal. Typecheck/format/contracts/demo+live/
+budget/Ruff/4 manifest PASS; screenshot SO/POD ponsel ditinjau. CI remote setelah
+push/PR; Docker/runtime Odoo tidak dijalankan lokal. Semua authority server,
+media/maps resmi, stok/retur/payment/AR tetap dependency; live terkunci.
