@@ -853,3 +853,7 @@
 - Blocker 3 [F]: Cabang posted pada _sync_native_stock_accounting dibuat murni read-only fail-fast tanpa memanggil am.write({'date': date_only})
 - Blocker 4 [F]: Scope product_by_code, seed_categories, dan stock.location dibatasi ketat pada 150 SKU kanonikal dan warehouse/company seed tanpa fallback global; diuji dengan 123 unit tests (0 error) dan 15 CSV kanonikal tetap 100% utuh
 - Task managed by antigravity-agent at 2026-10-28T06:22:41+00:00
+
+[2026-10-28T06:33:18+00:00] [INFO] Perbaikan _iter_records untuk Recordset Odoo 19 pada Loader dan Oracle Disposable Slice
+- Menambahkan helper _iter_records(res) di scripts/load_canonical_perpetual.py dan scripts/ops/verify_disposable_slice.py untuk mengiterasi recordset Odoo (hasattr(res, '__iter__')) secara aman tanpa membungkus multi-recordset ke dalam [res] yang memicu Expected singleton pada init-test
+- Task managed by antigravity-agent at 2026-10-28T06:33:18+00:00

@@ -273,6 +273,15 @@ def _safe_fields(obj):
     return {}
 
 
+def _iter_records(res) -> list:
+    """Mengonversi hasil search/recordset Odoo maupun MockRecord/list menjadi list singleton record."""
+    if not res:
+        return []
+    if hasattr(res, "__iter__"):
+        return list(res)
+    return [res]
+
+
 class CanonicalPerpetualAdapter:
     """Adapter yang memetakan register kanonikal ke model Odoo aktual dengan jaminan idempotensi."""
 
@@ -304,14 +313,7 @@ class CanonicalPerpetualAdapter:
         found_products = Product.search(prod_domain)
 
         self.product_by_code = {}
-        prod_iter = (
-            found_products
-            if isinstance(found_products, (list, tuple))
-            else [found_products]
-            if found_products
-            else []
-        )
-        for pr in prod_iter:
+        for pr in _iter_records(found_products):
             code = getattr(pr, "default_code", None)
             if not code or code not in self.canonical_skus:
                 continue
@@ -616,14 +618,7 @@ class CanonicalPerpetualAdapter:
 
             if not wh_stock_loc:
                 all_internal = StockLocation.search([("usage", "=", "internal")])
-                int_iter = (
-                    all_internal
-                    if isinstance(all_internal, (list, tuple))
-                    else [all_internal]
-                    if all_internal
-                    else []
-                )
-                for loc in int_iter:
+                for loc in _iter_records(all_internal):
                     if _is_seed_scoped_location(loc) and "karantina" not in str(getattr(loc, "name", "")).lower():
                         wh_stock_loc = loc
                         break
@@ -631,14 +626,7 @@ class CanonicalPerpetualAdapter:
             # Pastikan lokasi Karantina FMCG Maumbi tersedia dan terkonfigurasi SEBELUM transaksi berjalan
             quarantine_loc = None
             quar_candidates = StockLocation.search([("name", "=", "Karantina FMCG Maumbi")])
-            quar_iter = (
-                quar_candidates
-                if isinstance(quar_candidates, (list, tuple))
-                else [quar_candidates]
-                if quar_candidates
-                else []
-            )
-            for qloc in quar_iter:
+            for qloc in _iter_records(quar_candidates):
                 if _is_seed_scoped_location(qloc):
                     quarantine_loc = qloc
                     break
@@ -796,7 +784,7 @@ class CanonicalPerpetualAdapter:
         # 3. Field stock_move_id
         if "stock_move_id" in _safe_fields(AccountMove):
             ams = AccountMove.search([("stock_move_id", "=", stock_move.id)])
-            for am in (ams if isinstance(ams, (list, tuple)) else [ams] if ams else []):
+            for am in _iter_records(ams):
                 _add_am(am)
         # 4. Melalui origin atau picking name
         if not found_ams:
@@ -810,7 +798,7 @@ class CanonicalPerpetualAdapter:
                     ("ref", "in", origins),
                     ("company_id", "in", [False, self.company.id]),
                 ])
-                for am in (ams if isinstance(ams, (list, tuple)) else [ams] if ams else []):
+                for am in _iter_records(ams):
                     _add_am(am)
 
         # Fail-fast jika stock.move tidak menghasilkan jurnal akuntansi native sama sekali

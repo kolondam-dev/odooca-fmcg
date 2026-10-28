@@ -119,6 +119,15 @@ def _resolve_loc(env, loc_val):
     return None
 
 
+def _iter_records(res) -> list:
+    """Mengonversi hasil search/recordset Odoo maupun MockRecord/list menjadi list singleton record."""
+    if not res:
+        return []
+    if hasattr(res, "__iter__"):
+        return list(res)
+    return [res]
+
+
 def _resolve_stock_move_account_moves(env, sm):
     """Menemukan entri jurnal akuntansi native yang terhubung ke stock.move."""
     AccountMove = env["account.move"].sudo()
@@ -279,11 +288,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
     # --- 0. Verifikasi Opening Stock Moves & Jurnal Valuasi Native (150 SKU, 2026-07-01) ---
     opening_moves = StockMove.search([("origin", "=", "OPENING-20260701"), ("state", "=", "done")])
-    opening_moves_list = (
-        list(opening_moves)
-        if isinstance(opening_moves, (list, tuple))
-        else [opening_moves] if opening_moves else []
-    )
+    opening_moves_list = _iter_records(opening_moves)
     assert len(opening_moves_list) == 150, (
         f"[canonical_oracle] Jumlah stock.move OPENING-20260701 harus tepat 150, got {len(opening_moves_list)}!"
     )
@@ -322,7 +327,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
     expected_po_nums = {h["po_number"] for h in po_headers}
     all_pos = PurchaseOrder.search([])
-    all_pos_list = list(all_pos) if isinstance(all_pos, (list, tuple)) else [all_pos] if all_pos else []
+    all_pos_list = _iter_records(all_pos)
     actual_po_nums = {getattr(p, "origin", None) or getattr(p, "name", None) for p in all_pos_list}
     assert actual_po_nums == expected_po_nums, (
         f"[canonical_oracle] Himpunan Purchase Order di DB ({sorted(actual_po_nums)}) != "
@@ -463,7 +468,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
             lines_by_so.setdefault(ol["so_number"], []).append(ol)
 
     all_sos = SaleOrder.search([])
-    all_sos_list = list(all_sos) if isinstance(all_sos, (list, tuple)) else [all_sos] if all_sos else []
+    all_sos_list = _iter_records(all_sos)
     actual_so_nums = {
         getattr(s, "client_order_ref", None) or getattr(s, "origin", None) or getattr(s, "name", None)
         for s in all_sos_list
@@ -719,7 +724,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
     actual_saleable_quants = {}
     actual_quarantine_quants = {}
     all_quants = StockQuant.search([])
-    all_quants_list = list(all_quants) if isinstance(all_quants, (list, tuple)) else [all_quants] if all_quants else []
+    all_quants_list = _iter_records(all_quants)
 
     for q in all_quants_list:
         loc_rec = _resolve_loc(env, getattr(q, "location_id", None))
@@ -804,9 +809,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
     expected_out_inv_refs = {iv["invoice_number"] for iv in invoices_data.values()}
     all_out_invs = AccountMove.search([("move_type", "=", "out_invoice")])
-    all_out_invs_list = (
-        list(all_out_invs) if isinstance(all_out_invs, (list, tuple)) else [all_out_invs] if all_out_invs else []
-    )
+    all_out_invs_list = _iter_records(all_out_invs)
     actual_out_inv_refs = {getattr(m, "ref", None) for m in all_out_invs_list}
     assert actual_out_inv_refs == expected_out_inv_refs, (
         f"[canonical_oracle] Himpunan faktur out_invoice di DB ({sorted(actual_out_inv_refs)}) != "
@@ -907,13 +910,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
     expected_opex_refs = {f"OPEX-2026-07-{idx:02d}" for idx in range(1, len(opex_rows) + 1)}
     expected_in_invoice_refs = expected_po_nums | expected_opex_refs
     all_in_invoices = AccountMove.search([("move_type", "=", "in_invoice")])
-    all_in_list = (
-        list(all_in_invoices)
-        if isinstance(all_in_invoices, (list, tuple))
-        else [all_in_invoices]
-        if all_in_invoices
-        else []
-    )
+    all_in_list = _iter_records(all_in_invoices)
     actual_bill_refs = {str(getattr(m, "ref", "")) for m in all_in_list}
     assert actual_bill_refs == expected_in_invoice_refs, (
         f"[canonical_oracle] Set Vendor Bill (in_invoice) tidak persis sama dengan 5 PO + 30 OPEX kanonikal! "
@@ -977,7 +974,7 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
 
     # --- 7. Verifikasi Saldo Absolut GL As-Of (113000, 113900, 510000) & Tanggal Eksak Seluruh Jurnal ---
     all_moves = AccountMove.search([])
-    all_moves_list = list(all_moves) if isinstance(all_moves, (list, tuple)) else [all_moves] if all_moves else []
+    all_moves_list = _iter_records(all_moves)
     assert len(all_moves_list) > 0, "[canonical_oracle] FATAL: Tidak ada entri jurnal yang terbentuk di GL!"
 
     gl_net_by_code = {}
