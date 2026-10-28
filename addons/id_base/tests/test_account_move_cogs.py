@@ -54,16 +54,53 @@ class TestAccountMoveCogs(TransactionCase):
                 "company_id": cls.company_seed.id,
             })
 
+    def _get_or_create_journal(self, company, j_type="sale"):
+        journal = self.env["account.journal"].search([
+            ("company_id", "=", company.id),
+            ("type", "=", j_type),
+        ], limit=1)
+        if not journal:
+            code = "INV" if j_type == "sale" else "BILL"
+            journal = self.env["account.journal"].create({
+                "name": f"{j_type.title()} Journal {company.id}",
+                "code": f"{code}{company.id}",
+                "type": j_type,
+                "company_id": company.id,
+            })
+        return journal
+
+    def _get_or_create_account(self, company, acc_type="income", code="410000"):
+        account = self.env["account.account"].search([
+            ("company_id", "=", company.id),
+            ("code", "=", code),
+        ], limit=1)
+        if not account:
+            account = self.env["account.account"].create({
+                "name": f"Account {code} {company.id}",
+                "code": code,
+                "account_type": acc_type,
+                "company_id": company.id,
+            })
+        return account
+
     def _create_basic_invoice(self, company, is_seed=False, move_type="out_invoice"):
         """Helper untuk membuat faktur pengujian."""
+        j_type = "purchase" if move_type in ("in_invoice", "in_refund") else "sale"
+        journal = self._get_or_create_journal(company, j_type=j_type)
+        acc_type = "expense" if j_type == "purchase" else "income"
+        acc_code = "610000" if j_type == "purchase" else "410000"
+        account = self._get_or_create_account(company, acc_type=acc_type, code=acc_code)
+
         return self.env["account.move"].create({
             "move_type": move_type,
             "partner_id": self.partner.id,
             "company_id": company.id,
+            "journal_id": journal.id,
             "is_fmcg_seed_invoice": is_seed,
             "invoice_line_ids": [
                 (0, 0, {
                     "product_id": self.product.id,
+                    "account_id": account.id,
                     "quantity": 10.0,
                     "price_unit": 30000.0,
                 }),

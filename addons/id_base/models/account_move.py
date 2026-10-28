@@ -48,19 +48,29 @@ class AccountMove(models.Model):
         if self.move_type != "out_invoice":
             return False
 
-        # 3. Batasi hanya pada seed company distributor FMCG PT Salva Inti Mandiri
+        # 3. Batasi hanya pada seed company distributor FMCG
         company = self.company_id
         if not company:
             return False
         company_name = getattr(company, "name", "")
         company_code = getattr(company, "code", "")
-        is_seed_company = company_name == "PT Salva Inti Mandiri" or company_code == "FMCG"
+        main_comp = (
+            self.env.ref("base.main_company", raise_if_not_found=False)
+            if hasattr(self, "env") and hasattr(self.env, "ref")
+            else None
+        )
+        main_comp_id = getattr(main_comp, "id", None)
+        is_seed_company = (
+            company_name in ("PT Manado Distribusi Utama", "PT Salva Inti Mandiri")
+            or company_code in ("MDU", "FMCG")
+            or (main_comp_id is not None and getattr(company, "id", None) == main_comp_id)
+        )
         if not is_seed_company:
-            # Marked seed tapi company bukan PT Salva Inti Mandiri -> fail-closed!
+            # Marked seed tapi company bukan seed distributor FMCG -> fail-closed!
             inv_lbl = getattr(self, "name", "") or getattr(self, "ref", "")
             raise UserError(
                 f"[id_base] Faktur '{inv_lbl}' ditandai seed tetapi company "
-                f"'{company_name}' bukan perusahaan seed FMCG PT Salva Inti Mandiri!"
+                f"'{company_name}' bukan perusahaan seed FMCG PT Salva Inti Mandiri / PT Manado Distribusi Utama!"
             )
 
         # 4. Wajib memiliki baris produk persediaan yang terhubung ke sale_line_ids
@@ -107,6 +117,18 @@ class AccountMove(models.Model):
 
                 # 6. Validasi Jurnal Valuasi Native HPP Eksak via account_move_id singular
                 cogs_am = getattr(sm, "account_move_id", None)
+                if not cogs_am or not getattr(cogs_am, "id", None):
+                    svl_list = getattr(sm, "stock_valuation_layer_ids", None) or []
+                    for layer in svl_list:
+                        l_am = getattr(layer, "account_move_id", None)
+                        if l_am and getattr(l_am, "id", None):
+                            cogs_am = l_am
+                            break
+                if not cogs_am or not getattr(cogs_am, "id", None):
+                    am_ids = getattr(sm, "account_move_ids", None)
+                    if am_ids and len(am_ids) == 1:
+                        cogs_am = am_ids[0]
+
                 if not cogs_am or not getattr(cogs_am, "id", None):
                     raise UserError(
                         f"[id_base] Pergerakan stok '{sm_lbl}' belum memiliki jurnal valuasi native "

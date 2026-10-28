@@ -915,3 +915,10 @@
   6. Vendor bill (in_invoice) dan refund (out_refund) -> native path aktif.
 - Verifikasi lokal: ruff check . lolos bersih (0 warning/error), check_manifests.py 4 addon valid, 135 unit tests (63 adapter tests + 72 generator/acceptance/invariant tests) lolos 100%, verify_seed_invariants PASS (0 violations), verify_seed_acceptance PASS (0 violations). 15 CSV register kanonikal 100% beku. Tidak ada merge ke main dan tidak ada deployment Railway.
 - Task managed by antigravity at 2026-10-28T21:35:00+07:00
+
+[2026-10-28T21:44:00+07:00] [INFO] Presisi Nama Seed Company Resmi & Relasi HPP Odoo 19 pada id_base serta TransactionCase Line Account
+- Company seed resmi diperluas mencakup entitas resmi distributor repo 'PT Manado Distribusi Utama' (MDU), test seed 'PT Salva Inti Mandiri' (FMCG), dan base.main_company.
+- Singular HPP valuation journal entry pada pergerakan delivery didukung melalui relasi direct sm.account_move_id maupun relasi native stock.valuation.layer (svl.account_move_id) dan singular sm.account_move_ids.
+- Inisialisasi faktur pada TransactionCase Odoo dilengkapi dengan journal_id eksplisit dan line account_id untuk memenuhi constraint DB PostgreSQL account_move_line_check_accountable_required_fields.
+- Verifikasi ruff check . dan check_manifests.py 4 addon lolos bersih. 15 CSV register kanonikal 100% beku.
+- Task managed by antigravity at 2026-10-28T21:44:00+07:00
