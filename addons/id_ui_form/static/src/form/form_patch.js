@@ -214,7 +214,8 @@ patch(FormRenderer.prototype, {
             input.addEventListener("blur", closeEditor, { once: true });
             input.addEventListener("keydown", onEditorKeydown);
             // Revalidasi saat aktivasi; hidden input tak pernah dapat menerima fokus.
-            if (focusEditableTitleInput(block) !== input) {
+            if (focusEditableTitleInput(block) !== input || document.activeElement !== input) {
+                block.classList.remove("id_title_editing");
                 input.removeEventListener("blur", closeEditor);
                 input.removeEventListener("keydown", onEditorKeydown);
             }
