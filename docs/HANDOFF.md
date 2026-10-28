@@ -1,5 +1,21 @@
 # HANDOFF
 
+## 2026-10-28 — codex supervisor — Integrasi PR #32 dengan main
+**Mandat:** pemilik meminta merge setelah verdict layak merge pada 766a60e. Main sudah memuat PR #33 (d2a54bf).
+**Resolusi:** konflik hanya docs/HANDOFF.md; seluruh entri UI dan PWA dipertahankan. Runtime dan tes tetap persis hasil gabungan kedua branch. CI integrasi harus hijau sebelum merge PR #32.
+
+## 2026-10-28 — implementer — Residual P2 hidden input pada PR #32
+**Basis:** review supervisor untuk SHA `9abcd5f9a489f511fd6201cdcca753da97deac8a`; verdict HOLD satu P2. Branch tetap `agen/ui-form-title-v8`; tidak melakukan review, merge, atau deploy.
+**Perbaikan:** menambahkan `getEditableTitleInput(block)` sebagai satu guard bersama untuk render spec dan aktivasi editor. Hidden input dikecualikan, sementara satu-satunya input visible yang lolos validasi (text/search non-required dalam h1) dipilih konsisten. Handler tidak lagi menggunakan `querySelector("h1 input")` yang dapat memilih hidden input.
+**Regresi:** memperluas `docs/ui/e2e/test_title_spec.py` untuk hidden input sebelum input draft, hidden-only dengan judul readonly, dan hidden plus dua visible controls. Fixture hidden-before-visible memanggil helper produksi dan memastikan input text asli menjadi activeElement; unsupported second visible control tetap ditolak.
+**Verifikasi:** belum mengklaim tes lulus lokal. Perlu menunggu CI pada SHA baru dan review ulang supervisor. Status sebelumnya untuk SHA `9abcd5f` hijau, tetapi tidak mencakup residual P2 ini. Tidak merge/deploy.
+
+
+## 2026-10-28 — implementer — Perbaikan akses keyboard dan validasi judul form PR #32
+**Basis:** PR #32, checkpoint supervisor `aa38722346ba88a1a8488f74f1befb21bc39cfcd`; branch `agen/ui-form-title-v8`. Fokus hanya dua temuan P2, tidak mengubah seed/accounting atau deployment.
+**Berubah:** `readTitleSpec` fail-closed: judul readonly berbasis teks diterima; kontrol editable hanya satu input text/search non-required di `h1`. Multiple control, contenteditable, select/textarea, native/ARIA/Odoo required, disabled/readonly input, tipe lain, dan input di luar h1 ditolak sehingga blok asli tetap terlihat. Judul editable dirender sebagai tombol native dengan accessible label, Tab/Enter/Space, focus-visible, Escape, blur dan pembaruan nilai; node OWL tidak dipindah.
+**Tes ditambahkan:** `docs/ui/e2e/test_title_spec.py` mengeksekusi fungsi produksi yang diekstrak terhadap fixture DOM Chromium; `smoke_ui.py` menambah Tab → Enter/Space → input asli → ubah nilai → blur → Escape, fokus dipulihkan dan tidak ada duplikasi. Belum mengklaim tes dijalankan lokal karena lingkungan runtime repository tidak tersedia pada sesi ini; perlu CI untuk konfirmasi.
+**Batas:** belum merge, tidak deploy, tidak memutuskan review. Menunggu CI dan review supervisor pada SHA terbaru.
 ## 2026-10-28 — agent-codex-pwa — Follow-up HOLD PR33 c48bf5a
 **Review:** https://github.com/kolondam-dev/odooca-fmcg/pull/33#issuecomment-6472436334; basis c48bf5a pada branch agen/pwa-sales-delivery-rules. CI lama 40705244566 sudah FAILURE (7 failed, 5 flaky, 52 passed), bukan pending; CI Odoo lama 40705244625 SUCCESS. Log browser resmi dibaca: kegagalan menunggu readiness/klik absensi ada di ensureDaily, termasuk pemulihan setelah persona berganti.
 **P1 offline:** DeliveryWorkspace memvalidasi manifest daily sync (owner/hari/keunikan) sebelum materialisasi cache secara lokal tanpa pemeriksaan online/provider. Cache yang sudah ada tetap diparse/dibandingkan; cache berbeda/rusak tidak ditimpa. Regresi phone/tablet membuktikan daily sync online → offline sebelum first-open list → mulai sesi/simpan draft; juga reload offline sebelum first-open. Kontrol negatif tanpa daily sync, owner/hari manifest berbeda dan cache berbeda mempertahankan data sumber.
@@ -113,6 +129,13 @@
 **Batas:** hanya simulator; bukan ACL/auth/geofence authoritative atau anti-mock GPS. Belum pinpoint map/foto visit/tracking background/extra-call approved visit/recovery admin. Queue tertahan butuh review, tidak auto-cancel. Server session/device/media/policy/idempotency tetap dependency.
 **Tidak disentuh:** addon/backend/seed/loader, workflow/ruleset, Railway/domain/deployment. Live tetap terkunci; tidak merge/deploy.
 **Menunggu:** review PR, hasil CI, merge pemilik dan deploy manual commit diterima.
+## 2026-10-27 — claude-design agent (chat + sandbox) — UI v8: judul header form murni di tengah, field tidak dipindah
+**Berubah:** `id_ui_form`: (1) judul murni (nomor/nama dokumen) ditampilkan ulang oleh elemen `.id_header_title` milik kita di tengah antara tombol aksi dan pipeline status (selisih tengah terukur 0px); label kecil (mis. "Customer Invoice") jadi caption di atas nomor draft; (2) node OWL tidak lagi dipindah, blok asli di sheet hanya disembunyikan lewat CSS `:has()` bila judulnya sudah tampil di header; (3) blok `.oe_title` yang berisi field untuk diisi (kontrol di luar `<h1>` atau wajib isi; mis. kendaraan, produk, kontak, principal) TIDAK diangkat dan tetap di tempatnya; (4) klik judul yang berasal dari input (nomor draft faktur) membuka input aslinya; (5) syarat JS disamakan dengan CSS (layar kecil tanpa header buatan). `smoke_ui.py` diperbarui (+ faktur, kendaraan, layar kecil). `docs/ui/id_ui_form.md` diperbarui.
+**Latar:** kode `main` memindahkan semua blok `.oe_title` ke statusbar, termasuk form kendaraan yang blok judulnya berisi 3 input sehingga field ikut terangkat ke header; pada faktur label dan nomor draft berantakan.
+**Diverifikasi (bagaimana):** sandbox, Odoo `f4378f29`, `id_base` dari `main`, fixture CI `scripts/ui/smoke_fixture.py`: `smoke_ui.py` 42/42; smoke baru GAGAL terhadap `form_patch.js` lama (3 cek judul), jadi cek itu menangkap perilaku lama; `ruff` dan `check_manifests.py` lolos.
+**Belum diuji:** job CI di GitHub Actions; stack OCA penuh; `docker build`/Railway; browser selain Chromium; form dengan judul murni selain SO dan faktur (mis. PO, bill).
+**Butir terbuka:** (1) eksplorasi tampilan grafik dan kartu metrik dashboard baru tahap diskusi/simulasi, belum ada kode; (2) M1c dari review `claude-dev` belum dikerjakan; (3) catatan untuk pemilik `id_base`: Odoo 19 memberi peringatan `_sql_constraints` tidak lagi didukung (gunakan `models.Constraint`); bukan error sehingga tidak menggagalkan gerbang log CI.
+**Menunggu:** pemilik (terapkan patch, commit, push).
 
 ## 2026-10-27 — codex agent — Follow-up PR #22 dan koreksi realisasi simulator
 **Basis:** main 5088144; branch agen/mobile-expense-revisions; detail review issuecomment-6433199416 dibaca.
@@ -528,3 +551,13 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 **Menunggu:** pemilik repo (commit pertama dan menjalankan CI).
 
 <!-- Entri baru di atas entri lama. Templat ada di docs/DEVELOPMENT.md §10. -->
+
+
+## 2026-10-28 — PR #32: koreksi fixture regresi fokus judul
+
+- Supervisi pada SHA `6cb21f58a9639c5594fbab1deb25c1023f948990` memverifikasi perbaikan runtime hidden-input, tetapi CI install-test gagal karena fixture fokus tidak terhubung ke `document`.
+- Perbaikan test: setiap fixture kini di-append ke `document.body` sebelum guard/helper produksi dijalankan dan dihapus dalam blok `finally`. Assertion fokus tidak dilemahkan: tetap memeriksa input text yang tepat, `document.activeElement`, dan kelas `id_title_editing`. Cakupan hidden-only dan hidden + beberapa kontrol visible dipertahankan.
+- Batas klaim: regression ini mengeksekusi helper produksi `focusEditableTitleInput`; bukan pengujian langsung jalur cleanup `onTitleClick` saat fokus gagal. Probe handler penuh yang dilaporkan supervisor tetap menjadi bukti terpisah; tidak mengklaim cleanup handler tercakup oleh unit test ini.
+- SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai seluruh job selesai sebelum verdict. Hasil belum diklaim.
+- Scope tetap UI/tests/docs. PR #32 tetap draft; tidak merge dan tidak deploy.
+- Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:26:00+07:00

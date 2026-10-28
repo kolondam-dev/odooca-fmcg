@@ -17,6 +17,12 @@ body.id-shell-sidebar {
                 padding: 1rem 1.25rem 0;
             }
 
+            // Blok judul asli di sheet disembunyikan hanya bila judulnya sudah tampil di header
+            // (judul murni); kelas id_title_editing membukanya sementara untuk mengedit nomor draft.
+            &:has(> .o_form_statusbar > .id_header_title) .o_form_sheet > .oe_title:not(.id_title_editing) {
+                display: none;
+            }
+
             .o_form_statusbar {
                 display: flex;
                 align-items: center;
@@ -40,32 +46,60 @@ body.id-shell-sidebar {
                     gap: 0.35rem !important;
                 }
 
-                // Judul form dipindah ke tengah statusbar, sejajar align middle
-                .id_statusbar_title {
-                    flex: 1 1 auto;
+                // Judul murni (nomor/nama dokumen) di tengah statusbar, tepat di antara tombol aksi
+                // (kiri) dan pipeline status (kanan); sisa ruang dibagi rata lewat flex: 1 1 0.
+                .id_header_title {
+                    flex: 1 1 0;
+                    min-width: 0;
+                    align-self: center;
                     display: flex;
+                    flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    align-self: center;
-                    text-align: center;
-                    margin: 0;
                     padding: 0 1rem;
+                    text-align: center;
+                    line-height: 1.15;
 
-                    h1 {
-                        font-size: 1.35rem;
-                        font-weight: 700;
-                        margin: 0;
-                        padding: 0;
-                        color: #0b1f4d;
-                        line-height: 1;
-                        display: flex;
-                        align-items: center;
+                    .id_header_title__caption {
+                        max-width: 100%;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        font-size: 0.68rem;
+                        font-weight: 600;
+                        letter-spacing: 0.06em;
+                        text-transform: uppercase;
+                        color: #5b6b8c;
                     }
 
-                    .o_field_widget {
-                        display: inline-flex;
-                        align-items: center;
-                        margin: 0;
+                    .id_header_title__main {
+                        max-width: 100%;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        font-size: 1.2rem;
+                        font-weight: 700;
+                        color: #0b1f4d;
+                    }
+
+                    &.id_header_title--editable {
+                        appearance: none;
+                        border: 0;
+                        border-radius: 0;
+                        background: transparent;
+                        color: inherit;
+                        font: inherit;
+                        cursor: text;
+
+                        &:focus-visible {
+                            outline: 2px solid #714b67;
+                            outline-offset: -2px;
+                            border-radius: 2px;
+                        }
+                    }
+
+                    &.id_header_title--editable .id_header_title__main {
+                        cursor: text;
                     }
                 }
 

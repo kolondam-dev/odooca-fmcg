@@ -1,3 +1,24 @@
+[2026-10-28T22:15:00+07:00] [INFO] Test tightened: production focus helper
+- Refactored title activation to call focusEditableTitleInput(block), which revalidates the same input guard, marks the editor block, and focuses the validated visible input. onTitleClick calls this helper and checks it returns the same input before continuing.
+- test_title_spec.py now extracts and executes the production readTitleSpec, getEditableTitleInput, and focusEditableTitleInput functions. Hidden-before-visible fixture asserts the actual production focus helper sets activeElement to the visible text input; hidden-only asserts no editable focus path; hidden plus multiple visible controls remains rejected.
+- New head SHA d72c596ab10bf88e5913c5751f4f4345e64feea6. CI #159 and PWA #74 queued/pending at log time; no pass claim, merge, or deployment.
+- Task managed by implementer at 2026-10-28T22:15:00+07:00
+
+[2026-10-28T22:00:00+07:00] [INFO] Implementer follow-up PR #32: hidden-input selection P2
+- Basis: supervisor review of 9abcd5f9a489f511fd6201cdcca753da97deac8a; HOLD one residual P2.
+- Source: introduced getEditableTitleInput(block) as the common validated selection used by readTitleSpec and onTitleClick. It ignores hidden inputs but requires exactly one supported visible control; click handler no longer picks the first arbitrary h1 input.
+- Regression: test_title_spec.py now covers hidden input preceding supported draft input and verifies the production helper returns/focuses the visible text input; hidden-only readonly and hidden plus second visible control cases are covered.
+- Handoff updated. Previous SHA CI was green; this new SHA needs its own CI and supervisor review. No merge/deploy.
+- Task managed by implementer at 2026-10-28T22:00:00+07:00
+
+[2026-10-28T21:00:00+07:00] [INFO] Implementer follow-up PR #32: keyboard-accessible title and fail-closed guard
+- Basis: supervisor's HOLD comment on checkpoint aa38722346ba88a1a8488f74f1befb21bc39cfcd. Stayed on branch agen/ui-form-title-v8; did not review/merge or deploy.
+- Production: readTitleSpec now accepts readonly plain heading text or exactly one optional text/search input inside h1. Rejects multiple controls, contenteditable, select/textarea, native/ARIA/Odoo required, disabled/readonly input, unsupported input type, and controls outside h1. Editable title uses native button, accessible edit label, visible focus, Enter/Space activation; Escape and blur close editor and sync title without moving OWL nodes.
+- Tests: added docs/ui/e2e/test_title_spec.py, extracting the actual production function and testing readonly, supported invoice draft, multiple inputs, contenteditable, required variants, select/textarea, outside-h1 and unsupported type in Chromium. Expanded smoke_ui.py for Tab focus, Enter/Space, original input focus, edit/blur reflected in header, Escape/focus restoration and unique title.
+- Docs: updated docs/ui/id_ui_form.md and prepended docs/HANDOFF.md entry.
+- Verification status: not run locally in this session; source edits committed through GitHub contents API. Must rely on new CI run and supervisor's review; do not claim green until confirmed.
+- Task managed by implementer at 2026-10-28T21:00:00+07:00
+
 [2026-10-24T19:10:33+07:00] [INFO] UI redesign v1: shell sidebar, topbar, chatter sebagai tab (addon id_ui, id_ui_shell, id_ui_form)
 - Mulai dari whats_new.sh (acuan = commit akar; belum ada commit bertanda tangan claude-design) dan membaca AGENTS.md, AGENT_PROTOCOL.md, DEVELOPMENT.md, HANDOFF.md, log claude-dev dan anti-gravity. Basis kerja dipindah dari cabang lokal lama ke origin/main (9b80505) lalu cabang agen/ui-design-v1.
 - Addon baru: id_ui (tema, urutan menu inti, istilah glosarium, aktivasi en_US+id_ID), id_ui_shell (sidebar, topbar, hotkey, mode per pengguna di res.users.settings), id_ui_form (chatter jadi tab terakhir). Sumber string English, terjemahan di i18n/id.po (sesuai AGENTS.md butir 8).
@@ -62,3 +83,18 @@
 - Diverifikasi: snapshot gaya terhitung dan posisi 5 halaman/mode sebelum vs sesudah identik untuk halaman normal (selisih hanya mode debug: item ikon debug kini sejajar dan divider konsisten); smoke 32/32; smoke baru gagal terhadap SCSS lama (divider debug 5 item/3 divider); pemindahan DOM judul 1 kali saat mount, tetap 1 setelah 9 re-render tab; ruff dan check_manifests lolos.
 - Belum diuji: stack OCA penuh, docker build/Railway, CI, browser selain Chromium, mobile; footer sticky pada form selain order penjualan. Belum dikerjakan: M1c dari review claude-dev (menu referensi ke Configuration, dashboard contoh, kolom/filter/group-by).
 - Task managed by claude-design agent at 2026-10-25T23:23:43+07:00
+
+[2026-10-27T15:32:05+07:00] [INFO] UI v8: judul header form murni di tengah, field tidak dipindah
+- Berangkat dari whats_new.sh dan origin/main 69a7ef6 (v7 ter-merge lewat cabang ui-cleanup-v7-reviewed dengan perbaikan reviewer codex: divider systray via JS, job CI browser). Basis patch ini = origin/main, bukan cabang lokal saya.
+- Temuan: kode main memindahkan SEMUA blok .oe_title ke statusbar, termasuk form kendaraan yang blok judulnya berisi 3 input (field ikut terangkat ke header = keluhan pemilik); pada faktur label Customer Invoice dan nomor draft berantakan.
+- Perbaikan: judul murni (nomor/nama dokumen) ditampilkan ulang oleh elemen .id_header_title milik kita di tengah antara tombol aksi dan pipeline (flex 1 1 0, selisih tengah 0px), label kecil jadi caption; node OWL tidak lagi dipindah; blok asli disembunyikan via CSS :has() hanya bila judulnya tampil di header; blok berisi field wajib/di luar h1 tidak diangkat; klik judul dari input membuka input aslinya; syarat JS disamakan dengan CSS (layar kecil).
+- Diverifikasi di Odoo f4378f29 dengan fixture CI (scripts/ui/smoke_fixture.py) dan id_base main: smoke_ui.py 42/42 (baru: faktur caption+nomor di tengah, kendaraan tidak diangkat, layar kecil); smoke baru GAGAL terhadap form_patch.js main (3 cek judul); ruff dan check_manifests lolos.
+- Belum diuji: job CI di GitHub Actions, stack OCA penuh, docker build/Railway, browser selain Chromium, form dengan judul murni selain SO dan faktur (mis. PO, bill). Belum dikerjakan: eksplorasi tampilan grafik dan kartu metrik dashboard (hanya diskusi/simulasi, belum ada kode); M1c review claude-dev.
+- Task managed by claude-design agent at 2026-10-27T15:32:05+07:00
+
+[2026-10-28T11:27:00+07:00] [INFO] PR #32: fixture fokus hidden-input diperbaiki setelah CI gagal
+- Review supervisi pada SHA 6cb21f5 memverifikasi handler/runtime memfokuskan input text yang benar, tetapi install-test gagal karena fixture DOM tidak terhubung ke document; input detached tidak dapat menjadi document.activeElement.
+- Test diperbaiki pada commit 7b1b80967acd273c87516c874b424d5e82a99197: append wrapper ke document.body sebelum menjalankan guard/helper produksi; wrapper dibersihkan dalam finally. Assertion target input, activeElement, dan id_title_editing tetap ketat; kasus hidden-only serta hidden + dua kontrol visible tetap ada.
+- HANDOFF mencatat cakupan secara presisi: tes ini menguji helper produksi focusEditableTitleInput, bukan cleanup onTitleClick saat fokus gagal. Tidak mengklaim coverage yang tidak dijalankan.
+- CI belum diverifikasi selesai pada SHA final; tunggu seluruh job regression dan smoke Odoo, baik pass maupun fail. PR tetap draft; tidak merge/deploy.
+- Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:27:00+07:00
