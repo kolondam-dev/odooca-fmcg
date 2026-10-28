@@ -82,6 +82,22 @@ body.id-shell-sidebar {
                         color: #0b1f4d;
                     }
 
+                    &.id_header_title--editable {
+                        appearance: none;
+                        border: 0;
+                        border-radius: 0;
+                        background: transparent;
+                        color: inherit;
+                        font: inherit;
+                        cursor: text;
+
+                        &:focus-visible {
+                            outline: 2px solid #714b67;
+                            outline-offset: -2px;
+                            border-radius: 2px;
+                        }
+                    }
+
                     &.id_header_title--editable .id_header_title__main {
                         cursor: text;
                     }
