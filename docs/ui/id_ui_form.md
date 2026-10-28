@@ -9,13 +9,21 @@ pindah ke statusbar; footer total menempel di bawah (sticky).
   kompiler form mail) sehingga chatter bawaan tidak dirender, lalu menyediakan props Chatter.
 - `patch(Notebook.prototype).computePages()`: menambah satu halaman ke notebook terluar,
   yang merender `Chatter` bawaan mail dengan props yang sama seperti kompiler form.
-- **Judul di statusbar (memindahkan DOM milik OWL).** `syncTitle()` memindahkan `.o_form_sheet > .oe_title`
-  ke dalam `.o_form_statusbar`. Batasan yang dijaga: (1) dibatasi ke akar renderer ini lewat
-  `useRef("compiled_view_root")`, bukan `document`; (2) idempoten, tidak menyentuh DOM bila judul sudah
-  di statusbar; (3) bila tata letak berganti ke klasik atau form di dialog, judul dikembalikan ke posisi
-  semula dan kelas `id_statusbar_title` dilepas; (4) titik sisip dicari sebagai anak langsung statusbar
-  (tidak melempar `NotFoundError` bila pipeline status bersarang). Uji: pager, ketik, form baru,
-  batalkan, ganti tata letak (smoke_ui).
+- **Judul murni di tengah statusbar (tanpa memindahkan DOM).** Judul yang hanya ditampilkan (nomor/nama
+  dokumen: S00001, nomor draft faktur) ditampilkan ulang oleh elemen milik kita sendiri
+  (`.id_header_title`) yang disisipkan di statusbar, tepat di tengah antara tombol aksi dan pipeline
+  status (`flex: 1 1 0`, selisih tengah terukur 0px). Label kecil di atas judul (mis. "Customer Invoice")
+  menjadi caption. Node OWL tidak pernah dipindah; blok asli `.o_form_sheet > .oe_title` disembunyikan
+  lewat CSS `:has()` hanya bila judulnya sudah tampil di header.
+- **Aturan "judul murni" (`readTitleSpec`).** Blok judul diangkat hanya bila tidak memuat field untuk
+  diisi pengguna: tidak ada kontrol di luar `<h1>` dan tidak ada kontrol wajib isi. Satu input nomor
+  non-wajib di `<h1>` (nomor draft faktur) tetap dianggap judul; klik judul membuka input aslinya untuk
+  diedit (kelas `id_title_editing`). Blok yang berisi field (kendaraan, produk, kontak, principal)
+  tetap di sheet tanpa header. Field form tidak pernah berubah tempat.
+- Batasan lain: elemen dibatasi ke akar renderer (`useRef("compiled_view_root")`), idempoten (kunci teks
+  di `data-id-key`), dibuang bila tata letak klasik, layar kecil, atau form di dialog (syarat JS sama
+  dengan syarat CSS). Uji: pager, ketik, form baru, batalkan, ganti tata letak, layar kecil, faktur,
+  kendaraan (smoke_ui).
 - CSS (`id_form.scss`): lebar penuh, statusbar rata tengah, footer sticky untuk grup yang memuat
   `.oe_subtotal_footer` (selector `:has()`; hanya mengenai form dengan footer total, teruji pada order penjualan;
   form lain dengan `.oe_subtotal_footer` ikut terkena, belum diuji satu per satu). `!important` dipakai hanya pada empat properti yang melawan utilitas Bootstrap/Odoo
@@ -30,5 +38,5 @@ pindah ke statusbar; footer total menempel di bawah (sticky).
 
 ## Uji
 `docs/ui/e2e/smoke_ui.py` (Playwright): sidebar, tab chatter, tanpa chatter samping, tanpa scroll halaman,
-judul tepat satu di statusbar, footer sticky, divider systray (normal dan debug), pager, ganti tata letak
-dan pemulihan judul, hotkey.
+judul murni tepat di tengah (SO, faktur), blok berisi field tidak diangkat (kendaraan), layar kecil,
+footer sticky, divider systray (normal dan debug), pager, ganti tata letak, hotkey.

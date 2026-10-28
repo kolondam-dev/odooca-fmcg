@@ -1,6 +1,5 @@
 # HANDOFF
 
-
 ## 2026-10-28 — codex agent — Koreksi collection ditolak simulator
 **Basis:** main f99e117 (PR #30 merged), branch agen/mobile-collection-corrections; whats_new/protocol/development/handoff dibaca dan plan sebelum kode.
 **Berubah:** hanya receipt bisnis rejected cocok UUID membuka koreksi. UUID/alasan/foto baru, source identik, parent immutable. CAS pointer schema-canonical+snapshot receipt atomik, satu successor; nominal bukan saldo tambahan. Referensi/tanda terima dapat dipertahankan dalam lineage; semua klaim ancestor tetap reserved lintas tagihan, foto wajib berbeda. Restore/pre-sync memvalidasi root/parent/time/source/dedup/media semua ancestor dan recheck setelah await. Draft manual per parent pulih offline, hasil/bukti readonly, parent di Lainnya. Kontrak0.10 pasangan optional fields (legacy valid) dan fixture live gate additive; workflow tidak berubah.
@@ -88,6 +87,13 @@
 **Batas:** hanya simulator; bukan ACL/auth/geofence authoritative atau anti-mock GPS. Belum pinpoint map/foto visit/tracking background/extra-call approved visit/recovery admin. Queue tertahan butuh review, tidak auto-cancel. Server session/device/media/policy/idempotency tetap dependency.
 **Tidak disentuh:** addon/backend/seed/loader, workflow/ruleset, Railway/domain/deployment. Live tetap terkunci; tidak merge/deploy.
 **Menunggu:** review PR, hasil CI, merge pemilik dan deploy manual commit diterima.
+## 2026-10-27 — claude-design agent (chat + sandbox) — UI v8: judul header form murni di tengah, field tidak dipindah
+**Berubah:** `id_ui_form`: (1) judul murni (nomor/nama dokumen) ditampilkan ulang oleh elemen `.id_header_title` milik kita di tengah antara tombol aksi dan pipeline status (selisih tengah terukur 0px); label kecil (mis. "Customer Invoice") jadi caption di atas nomor draft; (2) node OWL tidak lagi dipindah, blok asli di sheet hanya disembunyikan lewat CSS `:has()` bila judulnya sudah tampil di header; (3) blok `.oe_title` yang berisi field untuk diisi (kontrol di luar `<h1>` atau wajib isi; mis. kendaraan, produk, kontak, principal) TIDAK diangkat dan tetap di tempatnya; (4) klik judul yang berasal dari input (nomor draft faktur) membuka input aslinya; (5) syarat JS disamakan dengan CSS (layar kecil tanpa header buatan). `smoke_ui.py` diperbarui (+ faktur, kendaraan, layar kecil). `docs/ui/id_ui_form.md` diperbarui.
+**Latar:** kode `main` memindahkan semua blok `.oe_title` ke statusbar, termasuk form kendaraan yang blok judulnya berisi 3 input sehingga field ikut terangkat ke header; pada faktur label dan nomor draft berantakan.
+**Diverifikasi (bagaimana):** sandbox, Odoo `f4378f29`, `id_base` dari `main`, fixture CI `scripts/ui/smoke_fixture.py`: `smoke_ui.py` 42/42; smoke baru GAGAL terhadap `form_patch.js` lama (3 cek judul), jadi cek itu menangkap perilaku lama; `ruff` dan `check_manifests.py` lolos.
+**Belum diuji:** job CI di GitHub Actions; stack OCA penuh; `docker build`/Railway; browser selain Chromium; form dengan judul murni selain SO dan faktur (mis. PO, bill).
+**Butir terbuka:** (1) eksplorasi tampilan grafik dan kartu metrik dashboard baru tahap diskusi/simulasi, belum ada kode; (2) M1c dari review `claude-dev` belum dikerjakan; (3) catatan untuk pemilik `id_base`: Odoo 19 memberi peringatan `_sql_constraints` tidak lagi didukung (gunakan `models.Constraint`); bukan error sehingga tidak menggagalkan gerbang log CI.
+**Menunggu:** pemilik (terapkan patch, commit, push).
 
 ## 2026-10-27 — codex agent — Follow-up PR #22 dan koreksi realisasi simulator
 **Basis:** main 5088144; branch agen/mobile-expense-revisions; detail review issuecomment-6433199416 dibaca.

@@ -15,6 +15,25 @@ BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8069"
 ORDER = sys.argv[2] if len(sys.argv) > 2 else "1"
 
 
+TITLE_STATE = """(() => {
+    const sb = document.querySelector('.o_form_statusbar');
+    const h = sb && sb.querySelector(':scope > .id_header_title');
+    const blk = document.querySelector('.o_form_sheet > .oe_title');
+    const left = sb && sb.querySelector('.o_statusbar_buttons');
+    const right = sb && sb.querySelector('.o_field_statusbar, .o_statusbar_status');
+    const r = (e) => e.getBoundingClientRect();
+    const off = h && left && right ? Math.round((r(h).left + r(h).right) / 2 - (r(left).right + r(right).left) / 2) : null;
+    return {
+        headers: sb ? sb.querySelectorAll(':scope > .id_header_title').length : 0,
+        main: h && h.querySelector('.id_header_title__main') ? h.querySelector('.id_header_title__main').textContent : null,
+        caption: h && h.querySelector('.id_header_title__caption') ? h.querySelector('.id_header_title__caption').textContent : null,
+        blockDisplay: blk ? getComputedStyle(blk).display : null,
+        blockControls: blk ? blk.querySelectorAll('input:not([type=hidden]), select, textarea').length : 0,
+        centerOffset: off,
+    };
+})()"""
+
+
 async def main():
     failures = []
 
@@ -83,10 +102,12 @@ async def main():
         check("Alt+B menciutkan", "id-shell-collapsed" in await page.evaluate("document.body.className"))
         await page.keyboard.press("Alt+b")
 
-        # --- Form: judul di statusbar (idempoten, tanpa sisa di sheet), footer sticky ---
+        # --- Form: judul murni di tengah statusbar (field tidak dipindah), footer sticky ---
         await page.keyboard.press("Escape")
-        t = await page.evaluate("({inBar: document.querySelectorAll('.o_form_statusbar > .id_statusbar_title').length, inSheet: document.querySelectorAll('.o_form_sheet > .oe_title').length})")
-        check("judul form tepat satu di statusbar, tidak tersisa di sheet", t["inBar"] == 1 and t["inSheet"] == 0)
+        t = await page.evaluate(TITLE_STATE)
+        check("judul murni tepat satu di header statusbar", t["headers"] == 1)
+        check("blok judul asli di sheet disembunyikan (tanpa duplikat)", t["blockDisplay"] == "none")
+        check("judul tepat di tengah antara tombol aksi dan pipeline", t["centerOffset"] is not None and abs(t["centerOffset"]) <= 2)
         check("footer total sticky", await page.evaluate("(() => { const f = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer)'); return !!f && getComputedStyle(f).position === 'sticky'; })()"))
 
         # --- Divider systray: jumlah = item tampil - 1 (normal dan mode debug) ---
@@ -107,14 +128,14 @@ async def main():
             await page.wait_for_timeout(2500)
         await page.locator(".o_data_row").first.click()
         await page.wait_for_timeout(3000)
-        title = page.locator(".o_form_statusbar > .id_statusbar_title")
+        title = page.locator(".o_form_statusbar > .id_header_title .id_header_title__main")
         first_title = (await title.inner_text()).strip()
         next_button = page.locator(".o_pager_next")
         if not await next_button.count() or not await next_button.is_enabled():
             raise AssertionError("Pager requires at least two accessible orders; navigation was not tested")
         await next_button.click()
         await page.wait_for_function(
-            "first => document.querySelector('.id_statusbar_title')?.textContent.trim() !== first",
+            "first => document.querySelector('.id_header_title__main')?.textContent.trim() !== first",
             arg=first_title,
         )
         second_title = (await title.inner_text()).strip()
@@ -122,11 +143,19 @@ async def main():
         check("judul tunggal pada record kedua", await title.count() == 1)
         await page.locator(".o_pager_previous").click()
         await page.wait_for_function(
-            "first => document.querySelector('.id_statusbar_title')?.textContent.trim() === first",
+            "first => document.querySelector('.id_header_title__main')?.textContent.trim() === first",
             arg=first_title,
         )
         check("pager kembali ke record pertama", (await title.inner_text()).strip() == first_title)
         check("judul tetap satu setelah pager", await title.count() == 1)
+
+        # --- Layar kecil memakai NavBar bawaan: tidak ada header judul buatan ---
+        await page.set_viewport_size({"width": 390, "height": 800})
+        await page.wait_for_timeout(2000)
+        check("layar kecil: tanpa header judul buatan", (await page.evaluate(TITLE_STATE))["headers"] == 0)
+        await page.set_viewport_size({"width": 1440, "height": 860})
+        await page.wait_for_timeout(2000)
+        check("layar besar lagi: header judul kembali", (await page.evaluate(TITLE_STATE))["headers"] == 1)
 
         # --- Ganti ke tata letak klasik: judul kembali ke sheet; lalu pulihkan ke sidebar ---
         async def switch_layout(label):
@@ -135,11 +164,26 @@ async def main():
             await page.wait_for_timeout(2500)
         try:
             await switch_layout("Layout: switch to Classic")
-            back = await page.evaluate("({inBar: document.querySelectorAll('.o_form_statusbar > .oe_title').length, inSheet: document.querySelectorAll('.o_form_sheet > .oe_title').length})")
-            check("mode klasik: judul kembali ke sheet", back["inBar"] == 0 and back["inSheet"] == 1)
+            back = await page.evaluate(TITLE_STATE)
+            check("mode klasik: header judul dibuang, blok judul tampil di sheet", back["headers"] == 0 and back["blockDisplay"] not in (None, "none"))
         finally:
             await switch_layout("Layout: switch to Sidebar")
-        check("kembali ke sidebar: judul di statusbar lagi", await page.locator(".o_form_statusbar > .id_statusbar_title").count() == 1)
+        check("kembali ke sidebar: judul murni di header lagi", (await page.evaluate(TITLE_STATE))["headers"] == 1)
+
+        # --- Judul murni vs blok berisi field (faktur draft vs kendaraan) ---
+        await page.goto(f"{BASE}/odoo/action-account.action_move_out_invoice_type/new")
+        await page.wait_for_selector(".o_form_statusbar", timeout=30000)
+        await page.wait_for_timeout(3000)
+        inv = await page.evaluate(TITLE_STATE)
+        check("faktur: label form kecil di atas nomor draft, di tengah header",
+              inv["headers"] == 1 and bool(inv["caption"]) and bool(inv["main"]) and inv["centerOffset"] is not None and abs(inv["centerOffset"]) <= 2)
+        check("faktur: field Customer tetap di sheet", await page.locator(".o_form_sheet .o_field_widget[name=partner_id]").count() == 1)
+        await page.goto(f"{BASE}/odoo/action-fleet.fleet_vehicle_action/new")
+        await page.wait_for_selector(".o_form_sheet", timeout=30000)
+        await page.wait_for_timeout(3000)
+        veh = await page.evaluate(TITLE_STATE)
+        check("kendaraan: blok judul berisi field tidak diangkat ke header",
+              veh["headers"] == 0 and veh["blockDisplay"] not in (None, "none") and veh["blockControls"] >= 2)
 
         if errors:
             await page.screenshot(path="ui-smoke-failure.png", full_page=True)

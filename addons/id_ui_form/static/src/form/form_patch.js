@@ -1,4 +1,4 @@
-import { onMounted, onPatched, onWillDestroy, useRef, useState, useSubEnv } from "@odoo/owl";
+import { onMounted, onPatched, onWillDestroy, onWillUnmount, useRef, useState, useSubEnv } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { Notebook } from "@web/core/notebook/notebook";
 import { useService } from "@web/core/utils/hooks";
@@ -13,8 +13,36 @@ import { IdChatterPage } from "./id_chatter_page";
  *    (nilai yang sudah dikenal kompiler form) dan dirender ulang di dalam tab;
  *  - bila form tidak punya notebook, ada pratinjau lampiran, atau notebook tak pernah
  *    muncul, tata letak chatter bawaan dipakai kembali.
- *  - judul form (.oe_title) dipindah ke tengah statusbar di antara tombol aksi dan pipeline.
+ *  - judul murni (nomor/nama dokumen) ditampilkan ulang di tengah statusbar, tepat di antara
+ *    tombol aksi dan pipeline status. Field tidak pernah dipindah: blok judul yang berisi
+ *    field untuk diisi pengguna (mis. kendaraan, produk) tetap di tempatnya.
  */
+/**
+ * Membaca "judul murni" dari blok .oe_title: nomor/nama dokumen yang hanya ditampilkan
+ * (mis. S00001, nomor draft faktur). Mengembalikan null bila blok memuat field yang harus
+ * diisi pengguna, yaitu kontrol di luar <h1> atau kontrol wajib isi. Satu input nomor non-wajib
+ * di dalam <h1> (nomor draft faktur) tetap dianggap judul. `caption` = label kecil di atas
+ * judul (mis. "Customer Invoice").
+ */
+export function readTitleSpec(block) {
+    const controls = [...block.querySelectorAll("input:not([type=hidden]), select, textarea, [contenteditable=true]")];
+    if (controls.some((el) => !el.closest("h1") || el.closest(".o_required_modifier"))) {
+        return null;
+    }
+    const h1 = block.querySelector("h1");
+    const input = h1?.querySelector("input, textarea");
+    const main = (input ? input.value || input.placeholder : h1?.textContent || "").trim();
+    if (!main) {
+        return null;
+    }
+    const caption = [...block.querySelectorAll(".o_form_label")]
+        .filter((el) => !el.closest("h1"))
+        .map((el) => el.textContent.trim())
+        .filter(Boolean)
+        .join(" ");
+    return { main, caption, editable: Boolean(input) };
+}
+
 patch(FormRenderer.prototype, {
     setup() {
         super.setup();
@@ -34,49 +62,80 @@ patch(FormRenderer.prototype, {
         this.idChatterTab = tab;
         useSubEnv({ idChatterTab: tab });
 
-        // Judul form (.oe_title) dipindah ke statusbar. Syarat kompatibilitas: dibatasi ke akar
-        // renderer ini (bukan document), idempoten (tidak menyentuh DOM bila sudah di tempat),
-        // dan dikembalikan ke posisi semula bila tata letak berganti ke klasik.
+        // Judul murni ditampilkan ulang di tengah statusbar lewat elemen milik kita sendiri
+        // (.id_header_title); node OWL tidak pernah dipindah. Dibatasi ke akar renderer ini,
+        // idempoten (tidak menyentuh DOM bila teks tidak berubah), dan dibuang bila tata letak
+        // klasik atau form di dialog. Blok asli di sheet disembunyikan lewat CSS (:has).
         const rootRef = useRef("compiled_view_root");
-        const origins = new WeakMap();
         const syncTitle = () => {
             const root = rootRef.el;
             if (!root) {
                 return;
             }
             const statusbar = root.querySelector(".o_form_statusbar");
-            const moved = statusbar?.querySelector(":scope > .id_statusbar_title");
-            if (this.idShellState?.mode !== "sidebar" || this.env.inDialog) {
-                const origin = moved && origins.get(moved);
-                if (origin && origin.parent.isConnected) {
-                    origin.parent.insertBefore(moved, origin.next?.parentNode === origin.parent ? origin.next : null);
-                    moved.classList.remove("id_statusbar_title");
+            const block = root.querySelector(".o_form_sheet > .oe_title");
+            const current = statusbar?.querySelector(":scope > .id_header_title");
+            // Syarat sama dengan CSS (body.id-shell-sidebar): sidebar aktif dan layar bukan kecil.
+            const active = this.idShellState?.mode === "sidebar" && !this.idUi?.isSmall && !this.env.inDialog;
+            const spec = active && statusbar && block ? readTitleSpec(block) : null;
+            if (!spec) {
+                current?.remove();
+                return;
+            }
+            const key = `${spec.caption}\u0000${spec.main}\u0000${spec.editable}`;
+            if (current?.dataset.idKey === key) {
+                return;
+            }
+            const el = current || document.createElement("div");
+            el.className = "id_header_title" + (spec.editable ? " id_header_title--editable" : "");
+            el.dataset.idKey = key;
+            const parts = [];
+            if (spec.caption) {
+                const caption = document.createElement("span");
+                caption.className = "id_header_title__caption";
+                caption.textContent = spec.caption;
+                parts.push(caption);
+            }
+            const main = document.createElement("span");
+            main.className = "id_header_title__main";
+            main.textContent = spec.main;
+            parts.push(main);
+            el.replaceChildren(...parts);
+            if (!current) {
+                el.addEventListener("click", onTitleClick);
+                // Sisipkan sebelum anak langsung statusbar yang memuat pipeline status (bila ada).
+                let ref = statusbar.querySelector(".o_field_statusbar, .o_statusbar_status");
+                while (ref && ref.parentNode !== statusbar) {
+                    ref = ref.parentNode;
                 }
-                return;
+                statusbar.insertBefore(el, ref || null);
             }
-            if (moved || !statusbar) {
-                return;
+        };
+        // Klik judul yang berasal dari input (nomor draft) membuka blok aslinya untuk diedit.
+        const onTitleClick = () => {
+            const block = rootRef.el?.querySelector(".o_form_sheet > .oe_title");
+            const input = block?.querySelector("h1 input, h1 textarea");
+            if (input) {
+                block.classList.add("id_title_editing");
+                input.focus();
+                input.addEventListener("blur", () => block.classList.remove("id_title_editing"), { once: true });
             }
-            const title = root.querySelector(".o_form_sheet > .oe_title");
-            if (!title) {
-                return;
+        };
+        // Ketikan di input judul langsung tercermin di header.
+        const onInput = (ev) => {
+            if (ev.target.closest?.(".o_form_sheet > .oe_title")) {
+                syncTitle();
             }
-            origins.set(title, { parent: title.parentNode, next: title.nextSibling });
-            title.classList.add("id_statusbar_title");
-            // Sisipkan sebelum anak langsung statusbar yang memuat pipeline status (bila ada).
-            let ref = statusbar.querySelector(".o_field_statusbar, .o_statusbar_status");
-            while (ref && ref.parentNode !== statusbar) {
-                ref = ref.parentNode;
-            }
-            statusbar.insertBefore(title, ref || null);
         };
 
         onMounted(() => {
             if (this.idChatterTabEnabled && !tab.owner) {
                 this.idChatterFallback.value = true;
             }
+            rootRef.el?.addEventListener("input", onInput);
             syncTitle();
         });
+        onWillUnmount(() => rootRef.el?.removeEventListener("input", onInput));
         onPatched(syncTitle);
     },
 
