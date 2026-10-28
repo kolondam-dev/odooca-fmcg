@@ -224,16 +224,17 @@ body.id-shell-sidebar .id_menu_search { display: flex; }
         &.is-current { background: var(--id-sidebar-pill-bg); color: var(--id-sidebar-pill-fg); }
         &:focus-visible { outline-offset: -3px; }
     }
-    // Ikon aplikasi tanpa latar: duo-tone saat diam, warna normal saat hover/fokus/terpilih (tanpa animasi dan tanpa glow).
+    // Ikon aplikasi full-color secara default dan saat selected; pembeda selected hanya background item.
+    // Elemen duotone dipertahankan untuk kompatibilitas template, tetapi selalu disembunyikan.
     .id_appwrap { position: relative; flex: none; width: 1.75rem; height: 1.75rem; }
     .id_appicon { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
-        transition: opacity .2s ease; }
-    // Filter duo-tone dipasang inline di template (url(#...) di SCSS ditulis ulang oleh pipeline aset).
-    .id_appicon--duo { opacity: 1; }
-    .id_appicon--color { opacity: 0; }
+        transition: none; }
+    .id_appicon--duo { opacity: 0; }
+    .id_appicon--color { opacity: 1; }
     .id_appicon--glyph { display: grid; place-items: center; font-size: 1.35rem; line-height: 1; }
-    .id_appicon--duo.id_appicon--glyph { color: #cfe0ff; filter: none; opacity: .85; }
+    .id_appicon--duo.id_appicon--glyph { color: #cfe0ff; filter: none; }
     .id_item:hover, .id_item:focus-visible, .id_item.is-current {
+        // Selected/hover state is conveyed by item background, not by changing icon color.
         .id_appicon--duo { opacity: 0; }
         .id_appicon--color { opacity: 1; }
     }

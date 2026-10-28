@@ -98,3 +98,11 @@
 - HANDOFF mencatat cakupan secara presisi: tes ini menguji helper produksi focusEditableTitleInput, bukan cleanup onTitleClick saat fokus gagal. Tidak mengklaim coverage yang tidak dijalankan.
 - CI belum diverifikasi selesai pada SHA final; tunggu seluruh job regression dan smoke Odoo, baik pass maupun fail. PR tetap draft; tidak merge/deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:27:00+07:00
+
+[2026-10-29T06:30:00+07:00] [INFO] Sidebar full-color dan roadmap dashboard/footer
+- Branch agen/ui-footer-dashboard-roadmap-v1 berbasis main 2444b2f.
+- Sidebar icon mode diubah agar full-color default dan selected; background item tetap satu-satunya penanda selected.
+- Dokumentasi footer 3 kolom menetapkan notes | footer discount 1+2 | subtotal/DPP/tax/grand total; implementasi layout menunggu audit model/XML dan browser scroll test.
+- Blueprint dashboard menempatkan native Odoo enhancement pertama, custom id_dashboard kedua, spreadsheet_dashboard terakhir.
+- Runtime Odoo/browser dan CI remote belum dijalankan dalam sesi ini; tidak merge/deploy.
+- Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T06:30:00+07:00

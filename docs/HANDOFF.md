@@ -1,3 +1,9 @@
+## 2026-10-29 — claude-design-takeoverby-codex — Ikon full-color, footer dan urutan dashboard
+**Mandat:** lanjutkan enhancement UI dari main setelah PR #32; urutan kerja: audit baseline → sidebar/footer → native dashboard → custom dashboard → evaluasi spreadsheet dashboard.
+**Perubahan kode pada branch `agen/ui-footer-dashboard-roadmap-v1`:** ikon aplikasi sidebar diatur full-color default dan selected; selected tetap dibedakan hanya oleh background item. Tidak mengubah warna ikon saat hover/fokus/selected.
+**Spesifikasi:** footer ditargetkan 3 kolom (notes | footer discount 1+2 | subtotal/DPP/tax/grand total), responsif dan dengan nilai berasal dari model; sticky harus diuji pada beberapa form/scroll container. Blueprint dashboard FMCG memprioritaskan native Odoo, kemudian `id_dashboard`, lalu `spreadsheet_dashboard` bila relevan.
+**Belum diverifikasi:** runtime Odoo/browser, CSS computed layout, scroll regression, model/field footer discount, CE spreadsheet dashboard capabilities, dan CI remote. Tidak merge/deploy.
+
 # HANDOFF
 
 ## 2026-10-28 — codex supervisor — Integrasi PR #32 dengan main

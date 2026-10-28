@@ -9,8 +9,8 @@ Berdampingan dengan tata letak klasik; dipilih per pengguna lewat menu pengguna
   ke panel/isi. Scrollbar selalu tersembunyi (tetap bisa di-scroll). Judul = saat terbuka tampil "Odoo FMCG"
   (wordmark resmi Odoo + kotak "FMCG" sudut tegas tanpa rounded, font tipis elegan). Saat ciut = ikon "O"
   (`oi-odoo`) besar tanpa background pill (putih saat diam, ungu Odoo `#714B67` dengan animasi & glow tipis saat hover/click).
-- **Ikon aplikasi**: ikon bawaan Odoo tanpa latar. Diam = duo-tone (biru transparan + putih); hover/fokus/terpilih =
-  berubah ke warna normal bawaan Odoo secara bersih tanpa animasi pembesaran dan tanpa glow.
+- **Ikon aplikasi**: ikon bawaan Odoo tanpa latar, full-color sejak awal dan tetap full-color saat selected.
+  Pembeda selected hanya background item; ikon tidak berganti tone, opacity, ukuran, atau glow.
 - **Topbar**: pencarian menu di kiri dengan sudut rounded diperkecil (4px); judul halaman aktif persis di tengah
   (align center) dengan tipografi seimbang; area kanan (systray) memakai divider tipis vertikal di antara item yang tampil, berapa pun jumlahnya
   (aturan generik: item pertama tanpa divider; item kosong dan pembungkus tombol menu mobile tidak dihitung;

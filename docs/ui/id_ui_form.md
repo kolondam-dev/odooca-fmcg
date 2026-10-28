@@ -47,3 +47,20 @@ footer sticky, divider systray (normal dan debug), pager, ganti tata letak, hotk
 
 ### Regresi guard judul
 `python -m unittest discover -s docs/ui/e2e -p 'test_*.py' -v` menjalankan fungsi `readTitleSpec` yang diekstrak dari source produksi di Chromium terhadap fixture readonly, nomor draft invoice, multiple input, contenteditable, required/aria-required/Odoo modifier, select, textarea, input luar h1, tipe input tak didukung, serta hidden input sebelum nomor draft untuk memastikan fokus selalu ke input yang tervalidasi.
+
+
+## Enhancement footer transaksi — spesifikasi penerimaan
+
+Target layout desktop pada sidebar layout adalah **tiga kolom** bila ruang dan struktur view memungkinkan:
+
+1. **Notes** — catatan transaksi.
+2. **Footer discount** — dua field/baris diskon dokumen (footer discount 1 dan 2).
+3. **Ringkasan nilai** — subtotal, DPP, tax, dan grand total.
+
+Kolom harus collapse menjadi layout bertumpuk pada viewport sempit; tidak boleh menyebabkan horizontal overflow atau menutupi baris transaksi. Grand total menjadi fokus visual utama; DPP/subtotal menjadi tingkat kedua. Warna mengikuti token UI konsisten, bukan warna status hardcoded pada nilai bisnis.
+
+**Perilaku scroll wajib diverifikasi:** footer tidak boleh ikut bergeser secara mengganggu saat scroll baris/form; jangan menyelesaikannya hanya dengan menambah `z-index`. Pastikan tidak ada nested scroll yang bersaing, konten terakhir tidak tertutup, footer tidak menutupi tombol/statusbar, serta keyboard dan zoom tetap bekerja. Uji quotation/SO, invoice/customer bill yang sesuai, dan form lain yang memiliki `.oe_subtotal_footer`.
+
+**Integritas nilai:** kedua footer discount harus terhubung ke field/model dan metode hitung yang sah. Tidak boleh membuat field visual palsu. Urutan hitung konsisten dengan Playbook: line discount lebih dahulu; footer discount pada basis yang dikonfigurasi (default playbook: setelah line discount dan sebelum PPN); tax dan grand total mengikuti konfigurasi pajak dokumen. Validasi terhadap model `id_discount` sebelum menambah/mengubah field. Sampai model tersebut ada, UI hanya menampilkan field yang benar-benar tersedia dan spesifikasi tetap berstatus belum terimplementasi.
+
+**Status:** spesifikasi disetujui; implementasi tiga kolom memerlukan audit struktur XML/form dan runtime browser sebelum CSS/layout dipilih. Sticky saat ini memakai `.o_form_sheet .o_group:has(.oe_subtotal_footer)` dan telah diuji pada order penjualan saja; cakupan lintas form belum dibuktikan.
