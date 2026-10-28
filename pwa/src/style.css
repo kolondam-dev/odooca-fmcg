@@ -1459,3 +1459,24 @@ textarea {
     padding: 0.75rem 0 0;
     min-width: 0;
 }
+
+/* Keep tier selection and quantity readable on narrow phones. */
+.product {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 64px;
+}
+.product > div {
+    grid-column: 2 / -1;
+    min-width: 0;
+}
+.product > label {
+    grid-column: 2;
+    min-width: 0;
+}
+.product > input {
+    grid-column: 3;
+}
+.product select {
+    width: 100%;
+    min-width: 0;
+}

@@ -58,7 +58,7 @@ it("blocks offline morning opening and never converts rejected/expired scenarios
         expect(await service.restore()).toBeUndefined();
     }
 });
-it("expires at WITA midnight and isolates company/persona; driver and live provider cannot open", async () => {
+it("expires at WITA midnight and isolates company/persona; driver daily sync is supported and live provider cannot open", async () => {
     const { identity, provider, service } = await setup();
     await service.acceptAttendance();
     const session = await service.open();
@@ -66,7 +66,10 @@ it("expires at WITA midnight and isolates company/persona; driver and live provi
     const other = await setup("canvass");
     expect(await other.service.restore()).toBeUndefined();
     const driver = await setup("delivery");
-    await expect(driver.service.acceptAttendance()).rejects.toThrow("Sales");
+    await driver.service.acceptAttendance();
+    expect(
+        (await driver.service.open()).deliveryManifest?.length,
+    ).toBeGreaterThan(0);
     const live = {
         ...provider,
         mode: "live" as const,

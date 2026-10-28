@@ -180,7 +180,7 @@ export function validateOrder(
             line.quantity < 1 ||
             line.quantity > 999
         )
-            return "Kuantitas harus 1–999 karton.";
+            return "Kuantitas harus 1–999 dalam satuan yang dipilih.";
         principals.add(product.principal);
     }
     return principals.size > 1

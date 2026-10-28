@@ -1,5 +1,21 @@
 # HANDOFF
 
+## 2026-10-28 — agent-codex-pwa — Implementasi rules Sales Order dan Delivery
+**Basis:** main 2feadf3; branch agen/pwa-sales-delivery-rules, sesuai mandat pemilik. Aturan §17 ditulis sebelum implementasi; protocol/development/handoff dan log codex dibaca.
+**Berubah:** list Sales/Delivery wajib daily sync; driver memakai sesi pagi dan manifest tersimpan bersama snapshot. SO demo mendukung karton144/pack12/pcs1, qty/SKU, estimasi harga dan diskon order dengan alasan. Pengajuan diskon Normal menunggu approval; kontrol simulator di Lainnya membuat keputusan approved/rejected beralasan dengan CAS satu kali dan command immutable. Delivery manifest v2 multi-SKU pcs, lima status sesuai label pemilik, alasan non-partial disalin ke semua baris dan partial wajib per item terdampak. Foto toko → set pinpoint → mulai sesi → penerimaan → foto closing berbeda → enqueue+closed atomik → summary/list updated → DO berikutnya; satu sesi delivery aktif per owner/DB, restore offline dan validasi media opening/closing/ancestor. Sesi Sales existing diperluas urutan foto/pinpoint dan status closed pada list.
+**Diverifikasi:** 239 unit +1 hosting PASS; 64 browser phone/tablet PASS dalam satu run final penuh (Chromium lokal153; CI tetap browser resmi Playwright). Termasuk draft partial offline, alasan wajib, iterasi DO kedua, approval accepted/rejected, legacy, corrupt media, race dua koneksi sesi/keputusan dan historical replay. Typecheck/format/contracts/demo+live/build budget, Ruff/4 manifest, git diff --check PASS; screenshot ponsel SO/POD ditinjau. Docker/Odoo runtime lokal tidak dijalankan karena addon/hosting tidak berubah. CI setelah publikasi PR.
+**Batas:** diskon demo persen integer pada total order, approve seluruh nilai diminta atau reject; limit/tier/per-line/promo belum ditetapkan. Cancel/pending hanya hasil simulator, bukan pembatalan picking/approval server. Same-day aksi/koreksi; sesi tertinggal lintas hari/rusak ditahan untuk review, belum recovery. Pinpoint tetap grid simulasi tanpa basemap; timestamp aksi set pin berbeda dari sampel GPS. Snapshot/receipt/hash client bukan authority backend. OpenAPI0.11 additive; riwayat lama dipertahankan, tanpa migrasi/destructive rewrite. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh; live terkunci.
+**Menunggu:** review PR dan CI remote; tidak merge/deploy.
+
+
+## 2026-10-28 — agent-codex-pwa — Rules SO, penerimaan dan sesi lapangan
+**Berubah:** SCOPE §14 merujuk blueprint mobile §17: lima status delivery, alasan per baris dengan input massal non-partial, tier SKU demo 144 pcs/karton dan 12 pcs/pack, simulasi approval diskon, daily sync sebelum list dan siklus sesi foto opening/pinpoint–intra–foto closing–update list pada Sales/Delivery.
+**Diverifikasi:** dokumentasi dan konsistensi requirement diperiksa; git diff --check.
+**Belum diuji:** tidak ada perubahan runtime; seluruh requirement baru masih pekerjaan implementasi.
+**Butir terbuka:** authority/transisi cancel-pending dan parameter approval diskon; backend tetap dependency, live terkunci.
+**Menunggu:** implementasi sesuai urutan §17.5; tidak deploy.
+
+
 
 ## 2026-10-28 — codex agent — Koreksi collection ditolak simulator
 **Basis:** main f99e117 (PR #30 merged), branch agen/mobile-collection-corrections; whats_new/protocol/development/handoff dibaca dan plan sebelum kode.

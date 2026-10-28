@@ -1,12 +1,18 @@
+import { ensureDaily, startDelivery } from "./delivery-helpers";
 import { expect, test, type Page } from "@playwright/test";
 async function openDelivery(page: Page) {
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await page.getByLabel("Persona demo").selectOption("delivery");
+    await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
     const task = page
         .locator("details")
         .filter({ has: page.locator("summary", { hasText: "DEMO-DO-001" }) });
     await task.locator("summary").click();
+    await expect(
+        task.getByText("Memulihkan data…", { exact: true }),
+    ).toHaveCount(0);
+    await startDelivery(task);
     return task;
 }
 test("POD draft restores offline and queues only for review, with read-only proof", async ({
@@ -176,6 +182,7 @@ test("business rejection opens offline correction draft and preserves immutable 
         .locator(".delivery-task")
         .filter({ hasText: "DEMO-DO-001" });
     await task.locator("summary").first().click();
+    await startDelivery(task);
     await task.getByLabel("Penerima", { exact: true }).fill("Budi Lama");
     await savePodPhoto(task);
     await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
@@ -186,6 +193,7 @@ test("business rejection opens offline correction draft and preserves immutable 
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
     await task.getByRole("button", { name: "Koreksi POD ditolak" }).click();
+    await startDelivery(task);
     await expect(
         task.getByRole("button", { name: "Ajukan POD untuk review" }),
     ).toBeDisabled();
@@ -201,6 +209,7 @@ test("business rejection opens offline correction draft and preserves immutable 
     await page.reload();
     task = await openDelivery(page);
     await task.getByRole("button", { name: "Koreksi POD ditolak" }).click();
+    await startDelivery(task);
     await expect(task.getByLabel("Penerima", { exact: true })).toHaveValue(
         "Siti Benar",
     );

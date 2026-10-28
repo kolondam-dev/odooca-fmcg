@@ -1,7 +1,9 @@
+import { ensureDaily } from "./delivery-helpers";
 import { expect, test, type Page, type Locator } from "@playwright/test";
 async function open(page: Page) {
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await page.getByLabel("Persona demo").selectOption("delivery");
+    await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
     const task = page
         .locator(".collection-task")

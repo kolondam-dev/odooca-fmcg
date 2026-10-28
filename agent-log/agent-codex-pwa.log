@@ -1,0 +1,13 @@
+[2026-10-28T20:29:39+07:00] [INFO] Dokumentasikan rules SO dan Delivery dari pemilik
+- Basis main 2feadf3; branch agen/pwa-sales-delivery-rules. Blueprint §17, SCOPE §14 dan handoff diperbarui.
+- Lima status/alasan per item, tier demo 144/12/12, approval diskon dan daily sync/sesi wajib; hanya dokumentasi, runtime belum diuji.
+- Skrip agen belum menerima agent-codex-pwa; whats_new dijalankan dengan --since 2feadf3 dan log mengikuti format protokol tanpa mengubah skrip.
+- Task managed by agent-codex-pwa at 2026-10-28T20:29:39+07:00
+
+[2026-10-28T21:20:49+07:00] [INFO] Implementasikan rules SO, diskon dan sesi Delivery
+- Branch agen/pwa-sales-delivery-rules dari main 2feadf3; dokumentasi requirement ikut commit.
+- Daily sync untuk list Sales/Delivery; SO tier144/12/1 dan approval diskon order simulasi; status/alasan per item; delivery session opening/pinpoint/closing atomik dan offline.
+- 239 unit +1 hosting +64 browser phone/tablet PASS; format/typecheck/contracts/demo+live/budget/Ruff/4 manifest/diff check PASS. Screenshot ponsel ditinjau. Browser lokal Chromium153, CI installer resmi Playwright.
+- Kontrak0.11 additive/legacy tetap; diskon order persen integer saja, authority/tier/promo/maps/recovery/server tetap dependency. Tidak mengubah backend/seed/workflow/Railway; live terkunci, tidak merge/deploy.
+- Git CLI tidak memiliki credential push; publikasi branch/commit/PR melalui koneksi GitHub yang tersedia. CI remote diperiksa setelah publikasi.
+- Task managed by agent-codex-pwa at 2026-10-28T21:20:49+07:00

@@ -265,7 +265,9 @@ test("morning gate requires online sync, persists per persona and expires next d
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
-    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await expect(
+        page.getByRole("button", { name: /Toko Sinar Pagi/ }),
+    ).toHaveCount(0);
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page
         .getByRole("button", {
@@ -436,19 +438,20 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
-    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await expect(
+        page.getByRole("button", { name: /Toko Sinar Pagi/ }),
+    ).toHaveCount(0);
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page
         .getByRole("navigation")
         .getByRole("button", { name: "Sales", exact: true })
         .click();
-    await page.getByRole("button", { name: "Ajukan extra call" }).click();
-    await page.getByLabel("Nama outlet").fill("Outlet baru demo");
-    await page.getByLabel("Alasan extra call").fill("Kunjungan simulasi");
-    await page.getByRole("button", { name: "Simpan ke antrean demo" }).click();
-    await expect(page.getByRole("alert")).toContainText(
-        "Sesi pagi belum terbuka",
-    );
+    await expect(
+        page.getByText("Daily sync wajib sebelum membuka list Sales."),
+    ).toBeVisible();
+    await expect(
+        page.getByRole("button", { name: "Ajukan extra call" }),
+    ).toHaveCount(0);
     const after = await page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve) => {
             const r = indexedDB.open("fmcg-field-demo-v1");
