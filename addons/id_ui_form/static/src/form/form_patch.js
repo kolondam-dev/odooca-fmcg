@@ -23,6 +23,45 @@ import { IdChatterPage } from "./id_chatter_page";
  * adalah satu input teks non-wajib di dalam h1 (nomor draft faktur). Semua bentuk lain
  * ditolak agar blok asli tetap terlihat dan field pengguna tidak pernah tersembunyi.
  */
+/**
+ * Mengembalikan satu-satunya input editable yang memang didukung untuk judul.
+ * Hidden input diabaikan; semua kontrol visible harus lolos guard yang sama untuk
+ * rendering dan aktivasi tombol agar keduanya tidak pernah memilih field berbeda.
+ */
+export function getEditableTitleInput(block) {
+    if (!block) {
+        return null;
+    }
+    const controls = [...block.querySelectorAll(
+        'input:not([type="hidden"]), select, textarea, [contenteditable]:not([contenteditable="false"])'
+    )];
+    if (controls.length !== 1) {
+        return null;
+    }
+    const [input] = controls;
+    const type = (input.getAttribute("type") || "text").toLowerCase();
+    if (
+        input.tagName !== "INPUT" ||
+        !input.closest("h1") ||
+        !["text", "search"].includes(type) ||
+        input.required ||
+        input.getAttribute("aria-required") === "true" ||
+        input.closest('[aria-required="true"]') ||
+        input.closest(".o_required_modifier") ||
+        input.readOnly ||
+        input.disabled
+    ) {
+        return null;
+    }
+    return input;
+}
+
+/**
+ * Membaca judul yang aman dipromosikan ke statusbar. Judul readonly boleh berupa teks
+ * biasa; kontrol editable hanya diterima jika getEditableTitleInput mengembalikan input
+ * teks/pencarian non-wajib yang tunggal. Jika ada kontrol visible tidak didukung, blok asli
+ * tetap terlihat.
+ */
 export function readTitleSpec(block) {
     if (!block) {
         return null;
@@ -30,26 +69,9 @@ export function readTitleSpec(block) {
     const controls = [...block.querySelectorAll(
         'input:not([type="hidden"]), select, textarea, [contenteditable]:not([contenteditable="false"])'
     )];
-    let input = null;
-    if (controls.length) {
-        if (controls.length !== 1) {
-            return null;
-        }
-        [input] = controls;
-        const type = (input.getAttribute("type") || "text").toLowerCase();
-        if (
-            input.tagName !== "INPUT" ||
-            !input.closest("h1") ||
-            !["text", "search"].includes(type) ||
-            input.required ||
-            input.getAttribute("aria-required") === "true" ||
-            input.closest('[aria-required="true"]') ||
-            input.closest(".o_required_modifier") ||
-            input.readOnly ||
-            input.disabled
-        ) {
-            return null;
-        }
+    const input = controls.length ? getEditableTitleInput(block) : null;
+    if (controls.length && !input) {
+        return null;
     }
     const h1 = block.querySelector("h1");
     if (!h1 || h1.querySelectorAll("h1").length) {
@@ -159,7 +181,7 @@ patch(FormRenderer.prototype, {
         // Field OWL asli tetap berada di sheet; hanya dibuka sementara untuk diedit.
         const onTitleClick = () => {
             const block = rootRef.el?.querySelector(".o_form_sheet > .oe_title");
-            const input = block?.querySelector("h1 input");
+            const input = getEditableTitleInput(block);
             if (!block || !input) {
                 return;
             }
