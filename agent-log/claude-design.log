@@ -1,3 +1,9 @@
+[2026-10-28T22:15:00+07:00] [INFO] Test tightened: production focus helper
+- Refactored title activation to call focusEditableTitleInput(block), which revalidates the same input guard, marks the editor block, and focuses the validated visible input. onTitleClick calls this helper and checks it returns the same input before continuing.
+- test_title_spec.py now extracts and executes the production readTitleSpec, getEditableTitleInput, and focusEditableTitleInput functions. Hidden-before-visible fixture asserts the actual production focus helper sets activeElement to the visible text input; hidden-only asserts no editable focus path; hidden plus multiple visible controls remains rejected.
+- New head SHA d72c596ab10bf88e5913c5751f4f4345e64feea6. CI #159 and PWA #74 queued/pending at log time; no pass claim, merge, or deployment.
+- Task managed by implementer at 2026-10-28T22:15:00+07:00
+
 [2026-10-28T22:00:00+07:00] [INFO] Implementer follow-up PR #32: hidden-input selection P2
 - Basis: supervisor review of 9abcd5f9a489f511fd6201cdcca753da97deac8a; HOLD one residual P2.
 - Source: introduced getEditableTitleInput(block) as the common validated selection used by readTitleSpec and onTitleClick. It ignores hidden inputs but requires exactly one supported visible control; click handler no longer picks the first arbitrary h1 input.
