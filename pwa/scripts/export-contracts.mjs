@@ -31,7 +31,8 @@ function photoPairDependencies(schema) {
             evidence: ["evidence_version"],
         };
     if (
-        schema.properties?.pod_version &&
+        (schema.properties?.pod_version ||
+            schema.properties?.collection_version) &&
         schema.properties?.supersedes_uuid &&
         schema.properties?.correction_reason
     )
@@ -87,7 +88,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.9.0",
+        version: "0.10.0",
         description:
             "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
     },

@@ -1273,3 +1273,18 @@ Batas: satu capture per tagihan, reserve termasuk rejected; tidak mengubah saldo
 AR, belum cicilan lanjutan/koreksi/cancel, verifikasi bank/settlement kasir/GL.
 Source/capability client dan dedup hanya simulator satu owner/perangkat. Tidak
 menyentuh backend/seed/loader/workflow/ruleset/Railway, live tetap terkunci.
+
+
+### Koreksi collection — rencana 2026-10-28
+Basis main f99e117. Hanya receipt bisnis rejected cocok UUID membuka koreksi.
+UUID/alasan/foto baru, source identik, satu successor dengan CAS pointer dan
+snapshot receipt parent; parent immutable. Seluruh ancestor/media divalidasi
+restore/pre-sync. Nomor bukti/ref boleh dipertahankan dalam lineage yang sama,
+tetapi semua klaim ancestor tetap reserved terhadap tagihan lain. Draft per parent
+pulih offline; same-day capture, historical replay, live terkunci.
+
+**Hasil [F]:** DTO/OpenAPI0.10 pasangan revision opsional, UI draft per parent,
+CAS pointer+receipt, lineage+dedup ancestor dan validasi semua media sebelum sync.
+227 unit +1 hosting +58 browser lokal PASS, typecheck/format/contracts/demo+live/
+budget (demo62,9 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. Screenshot ponsel
+ditinjau. CI setelah push; backend/seed/loader/workflow/Railway tidak disentuh.

@@ -153,3 +153,8 @@
 - Basis main08b0050, branch agen/mobile-collection; capability fixture, cash/transfer, sumber saldo bertimestamp, Rupiah BigInt, CAS/dedup dan validator snapshot/media.
 - 208 unit +1 hosting +56 browser, typecheck/format/contracts/build/budget/Ruff/4 manifest PASS; ulang 6 collection setelah guard UI. CI sesudah push. Live terkunci, backend/seed/Railway tidak disentuh, belum merge/deploy.
 - Task managed by codex agent at 2026-10-27T23:01:37+07:00
+
+[2026-10-28T10:08:23+07:00] [INFO] Koreksi collection dengan lineage immutable
+- Basis main f99e117; UUID/foto/alasan baru, receipt rejected cocok, CAS pointer+receipt, validasi ancestor dan dedup klaim historis.
+- 227 unit +1 hosting +58 browser lokal PASS; typecheck/format/contracts/build/budget/Ruff/4 manifest PASS, CI setelah push. Live terkunci, tidak merge/deploy/backend/seed/Railway.
+- Task managed by codex agent at 2026-10-28T10:08:23+07:00

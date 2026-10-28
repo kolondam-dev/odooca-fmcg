@@ -23,6 +23,8 @@ export type CollectionTask = z.infer<typeof CollectionTaskSchema>;
 export const CollectionReceiptSchema = z
     .object({
         collection_version: z.literal(1),
+        supersedes_uuid: z.string().uuid().optional(),
+        correction_reason: z.string().trim().min(3).max(500).optional(),
         source: CollectionTaskSchema,
         payer: z.string().trim().min(2).max(100),
         method: z.enum(["cash", "transfer"]),
@@ -34,6 +36,11 @@ export const CollectionReceiptSchema = z
     })
     .strict()
     .superRefine((p, ctx) => {
+        if (!!p.supersedes_uuid !== !!p.correction_reason)
+            ctx.addIssue({
+                code: "custom",
+                message: "Koreksi wajib referensi dan alasan berpasangan.",
+            });
         if ((p.method === "transfer") !== !!p.transfer_reference)
             ctx.addIssue({
                 code: "custom",

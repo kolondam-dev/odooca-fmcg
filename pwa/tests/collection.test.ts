@@ -81,12 +81,14 @@ async function fixture(): Promise<CollectionReceipt> {
 async function enqueue(
     p: CollectionReceipt,
     e = new Outbox(store, owner, provider),
+    parent?: import("../src/storage/store").QueueItem,
 ) {
     const uuid = crypto.randomUUID(),
         at = new Date().toISOString();
     return e.enqueue("collection.receipt.submit", p, "Collection", uuid, {
         key: collectionKey(p.source),
-        expected: undefined,
+        expected: parent?.command,
+        ...(parent ? { guards: { source: parent } } : {}),
         occurredAt: at,
         value: {
             schema_version: 1,
@@ -345,3 +347,185 @@ it("reference reservation survives transport or business rejection", async () =>
     await expect(enqueue(q)).rejects.toThrow();
     expect(await store.list(owner)).toHaveLength(1);
 });
+async function rejected() {
+    const p = await fixture(),
+        row = await enqueue(p);
+    row.state = "rejected";
+    row.receipt = {
+        client_uuid: row.command.client_uuid,
+        status: "rejected",
+        reference: "REJ",
+        message: "Perbaiki",
+    };
+    await store.put(row);
+    return { p, row };
+}
+async function revised(
+    p: CollectionReceipt,
+    parent: import("../src/storage/store").QueueItem,
+) {
+    return {
+        ...p,
+        payer: "Siti",
+        supersedes_uuid: parent.command.client_uuid,
+        correction_reason: "Pembayar diperbaiki",
+        evidence: await makeVisitPhoto(store, owner, {
+            latitude: 1.465,
+            longitude: 124.833,
+            accuracy: 3,
+            sampled_at: new Date().toISOString(),
+        }),
+    };
+}
+it("correction preserves parent and reuses receipt within lineage, then syncs only child", async () => {
+    const { p, row } = await rejected(),
+        before = structuredClone(row);
+    const child = await enqueue(await revised(p, row), undefined, row);
+    await validateCollectionMedia(child, owner, store);
+    await validateCollectionMedia(row, owner, store);
+    expect((await store.list(owner)).find((r) => r.key === row.key)).toEqual(
+        before,
+    );
+    await new Outbox(store, owner, provider).flush();
+    expect(provider.submit).toHaveBeenCalledTimes(1);
+});
+it.each(["queued", "needs_approval", "accepted", "transport", "wrong_uuid"])(
+    "does not open correction for %s",
+    async (kind) => {
+        const { p, row } = await rejected();
+        if (kind === "transport") delete row.receipt;
+        else if (kind === "wrong_uuid")
+            row.receipt!.client_uuid = crypto.randomUUID();
+        else row.state = kind as typeof row.state;
+        await store.put(row);
+        await expect(
+            enqueue(await revised(p, row), undefined, row),
+        ).rejects.toThrow();
+        expect(await store.list(owner)).toHaveLength(1);
+    },
+);
+it("two connections cannot fork rejected collection", async () => {
+    await store.close();
+    const name = `correction-${crypto.randomUUID()}`;
+    store = new FieldStore(name);
+    const other = new FieldStore(name);
+    try {
+        const { p, row } = await rejected();
+        const a = await revised(p, row),
+            b = await revised(p, row);
+        const result = await Promise.allSettled([
+            enqueue(a, undefined, row),
+            enqueue(b, new Outbox(other, owner, provider), row),
+        ]);
+        expect(result.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    } finally {
+        await other.close();
+    }
+});
+it("changed receipt snapshot rolls back correction", async () => {
+    const { p, row } = await rejected();
+    const next = await revised(p, row),
+        changed = structuredClone(row);
+    changed.receipt!.reference = "NEW";
+    await store.put(changed);
+    await expect(enqueue(next, undefined, row)).rejects.toThrow();
+    expect(await store.list(owner)).toHaveLength(1);
+});
+it("ancestor receipt number remains reserved after corrected receipt number changes", async () => {
+    const { p, row } = await rejected(),
+        next = await revised(p, row);
+    next.receipt_number = "KW-NEW";
+    await enqueue(next, undefined, row);
+    const q = await fixture();
+    q.source.receivable_reference = "INV-OTHER";
+    await store.draft(owner, collectionSourceKey(p.source), [
+        p.source,
+        q.source,
+    ]);
+    await expect(enqueue(q)).rejects.toThrow();
+});
+it.each(["cycle", "missing_parent", "source", "photo_reuse", "missing_reason"])(
+    "rejects corrupt correction %s",
+    async (kind) => {
+        const { p, row } = await rejected(),
+            next = await revised(p, row);
+        if (kind === "cycle") next.supersedes_uuid = crypto.randomUUID();
+        if (kind === "missing_parent")
+            next.supersedes_uuid = crypto.randomUUID();
+        if (kind === "source")
+            next.source = { ...next.source, amount_due: "900000" };
+        if (kind === "photo_reuse") next.evidence = p.evidence;
+        if (kind === "missing_reason") next.correction_reason = "";
+        await expect(enqueue(next, undefined, row)).rejects.toThrow();
+    },
+);
+it("parent receipt mutation during media read blocks child sync and retains both rows", async () => {
+    const { p, row } = await rejected();
+    const child = await enqueue(await revised(p, row), undefined, row);
+    const original = store.getEvidence.bind(store);
+    vi.spyOn(store, "getEvidence").mockImplementationOnce(async (o, id) => {
+        const media = await original(o, id);
+        row.receipt!.status = "accepted";
+        await store.put(row);
+        return media;
+    });
+    await new Outbox(store, owner, provider).flush();
+    expect(provider.submit).not.toHaveBeenCalled();
+    expect(await store.list(owner)).toHaveLength(2);
+    await expect(
+        validateCollectionMedia(child, owner, store),
+    ).rejects.toThrow();
+});
+it("multi-level corrections validate root media and hold sync when root is damaged", async () => {
+    const { p, row } = await rejected();
+    const child = await enqueue(await revised(p, row), undefined, row);
+    child.state = "rejected";
+    child.receipt = {
+        client_uuid: child.command.client_uuid,
+        status: "rejected",
+        reference: "REJ2",
+        message: "Review",
+    };
+    await store.put(child);
+    const latest = await enqueue(await revised(p, child), undefined, child);
+    await validateCollectionMedia(latest, owner, store);
+    const original = store.getEvidence.bind(store);
+    vi.spyOn(store, "getEvidence").mockImplementation(async (o, id) => {
+        const media = await original(o, id);
+        return media && id === p.evidence.id
+            ? { ...media, blob: new Blob(["bad"], { type: "image/jpeg" }) }
+            : media;
+    });
+    await new Outbox(store, owner, provider).flush();
+    expect(provider.submit).not.toHaveBeenCalled();
+    expect(await store.list(owner)).toHaveLength(3);
+});
+it.each(["cycle", "missing_parent", "dropped_reference"])(
+    "persisted %s cannot bypass restore or flush",
+    async (kind) => {
+        const { p, row } = await rejected();
+        const child = await enqueue(await revised(p, row), undefined, row);
+        if (
+            child.command.type !== "collection.receipt.submit" ||
+            row.command.type !== "collection.receipt.submit"
+        )
+            throw new Error("fixture");
+        if (kind === "cycle") {
+            row.command.payload.supersedes_uuid = child.command.client_uuid;
+            row.command.payload.correction_reason = "Cycle";
+            await store.put(row);
+        }
+        if (kind === "missing_parent")
+            child.command.payload.supersedes_uuid = crypto.randomUUID();
+        if (kind === "dropped_reference") {
+            delete child.command.payload.supersedes_uuid;
+            delete child.command.payload.correction_reason;
+        }
+        await store.put(child);
+        await expect(
+            validateCollectionMedia(child, owner, store),
+        ).rejects.toThrow();
+        await new Outbox(store, owner, provider).flush();
+        expect(provider.submit).not.toHaveBeenCalled();
+    },
+);

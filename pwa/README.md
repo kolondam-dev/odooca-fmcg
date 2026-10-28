@@ -477,7 +477,8 @@ Satu tagihan satu pencatatan (boleh nominal sebagian). CAS source+ledger+queue
 serta dedup tagihan/nomor tanda terima/ref transfer/foto atomik lintas tab dan
 koneksi dalam satu owner/IndexedDB. Normalisasi referensi mengabaikan case,
 spasi dan separator umum secara konservatif. Klaim tidak dilepas setelah
-transport maupun penolakan bisnis; koreksi/cancel/cicilan lanjutan belum tersedia.
+transport maupun penolakan bisnis; cancel/cicilan lanjutan belum tersedia.
+Koreksi setelah penolakan bisnis memakai alur di bawah.
 Draft/queue/Blob tetap utuh saat integritas gagal. Restore dan pre-sync membaca
 snapshot ledger+source+outbox konsisten lalu memeriksa ulang sesudah hashing.
 Pengajuan baru harus hari penugasan, replay antrean sah boleh hari berikutnya.
@@ -490,3 +491,16 @@ hash client bukan anti-mock GPS/anti-titip atau bukti dua foto berbeda. Peta mas
 pinpoint simulasi, belum peta resmi. Bank verification, multi-invoice allocation,
 closing/settlement kasir, collection koreksi dan posting account.payment belum
 diimplementasikan. Live tetap terkunci, backend/Railway tidak diubah.
+
+
+### Koreksi collection ditolak
+Receipt rejected cocok UUID membuka **Koreksi collection ditolak**. UUID baru,
+alasan dan foto baru wajib; source tagihan identik. Draft manual per parent
+pulih offline. Parent/receipt tetap utuh di Lainnya, hasil/bukti readonly.
+CAS pointer dan snapshot receipt atomik mencegah fork antar tab; hanya ujung
+lineage rejected dapat dikoreksi. Queued/approval/accepted/transport error tidak
+membuka edit. Restore dan sync memvalidasi seluruh ancestor dan media, lalu
+recheck setelah hashing. Referensi/tanda terima boleh sama dalam lineage, tetapi
+semua klaim ancestor tetap reserved terhadap tagihan lain. Foto tidak boleh
+dipakai ulang. Same-day capture/historical replay tetap berlaku. Tidak ada
+auto-recovery/cancel, bank verification, AR/payment posting; live terkunci.
