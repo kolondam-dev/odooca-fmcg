@@ -504,3 +504,68 @@ recheck setelah hashing. Referensi/tanda terima boleh sama dalam lineage, tetapi
 semua klaim ancestor tetap reserved terhadap tagihan lain. Foto tidak boleh
 dipakai ulang. Same-day capture/historical replay tetap berlaku. Tidak ada
 auto-recovery/cancel, bank verification, AR/payment posting; live terkunci.
+
+## Rules SO dan Delivery — iterasi 2026-10-28
+
+Acuan requirement: blueprint mobile §17 dan SCOPE §14. List Sales maupun Delivery
+terkunci sebelum absensi simulasi + daily sync berhasil. Driver kini menggunakan
+sesi pagi juga; daily sync menyimpan manifest bersama snapshot. Paket legacy
+Canvasser tanpa manifest harus sync ulang; draft/outbox lama tidak dihapus.
+
+SO demo: pilih SKU, qty dan satuan karton (144 pcs), pack (12 pcs) atau pcs.
+Harga yang ditampilkan adalah harga karton; estimasi dinormalisasi ke pcs lalu
+Rupiah dibulatkan pada total. Diskon demo adalah persentase integer 1–100% untuk
+seluruh order, dengan alasan; tidak ada limit approver atau promo resmi yang
+dianggap sudah disepakati. Normal menghasilkan needs_approval. Di **Lainnya →
+Simulator approval diskon**, isi alasan lalu setujui/tolak pengajuan pending.
+Persetujuan demo menerima seluruh persen diminta; penolakan bukan penerimaan SO
+pada harga tanpa diskon. Command tetap immutable, receipt/keputusan lokal berubah
+secara CAS sekali saja dan menampilkan persen/total yang disetujui. Ini bukan
+hak approval sales atau approval/posting Odoo. Simulasi tier approval berjenjang,
+diskon per baris/berlapis/promo dan harga aktual tetap pekerjaan lanjutan.
+
+Delivery baru memakai manifest v2 multi-SKU dalam satuan dasar pcs. Pilih DO dari
+list, simpan foto toko, **Set pinpoint delivery**, lalu **Mulai sesi delivery**.
+Opening tersimpan offline dan satu owner hanya dapat mempunyai satu sesi delivery
+aktif dalam IndexedDB yang sama. Proses intra sesi mencatat penerima, hasil dan
+qty per SKU. Fully Received, Rejected, Cancel Delivery, Pending Requested wajib
+alasan sekali yang disalin ke seluruh baris. Received Partial wajib alasan pada
+setiap baris yang diterima sebagian/ditolak. Cancel/pending tidak berarti Odoo
+membatalkan picking atau menyetujui penundaan. Foto closing serah-terima
+barang/faktur/uang wajib berbeda ID dari opening. **Ajukan POD untuk review**
+menyimpan closing dan antrean atomik; summary berubah menjadi Session closed.
+Pilih DO berikutnya untuk mengulang. Simpan draft secara eksplisit sebelum pindah
+layar; input yang belum disimpan dapat hilang. Foto kedaluwarsa harus diganti.
+
+Sales memakai sesi kunjungan existing: foto toko → set lokasi/pinpoint → mulai →
+order → foto closing serah-terima/ttd nota manual atau faktur/uang → tutup. List
+menampilkan sesi yang closed, terpisah dari status sync/approval. Closing lokal
+bukan bukti transaksi sudah diterima server. Geofence tetap berdasarkan koordinat
+penugasan; set pinpoint tidak menggeser radius/koordinat toko untuk meluluskan GPS.
+Waktu aksi set pinpoint dicatat terpisah dari timestamp sampel GPS.
+
+Kontrak draft0.11 additive: pricing_version/discount_request dan UoM pada VisitOrder;
+workflow_version=2 pada manifest; status, alasan baris dan paket session opening
+pada POD. V2 wajib sesi, status, alasan dan media; riwayat POD/order lama tetap
+terbaca tanpa migrasi atau rewrite. Closing/koreksi baru tetap same-day; replay
+antrean yang sah dapat lintas hari. Sesi aktif yang tertinggal lintas hari atau
+rusak ditahan untuk review, belum ada recovery/pembatalan otomatis. Bukti opening,
+closing dan seluruh ancestor koreksi diperiksa sebelum sync. Live tetap terkunci;
+media/maps/auth/device/authority server dan posting stok/retur/AR belum tersedia.
+
+
+### Follow-up review PR33 (c48bf5a)
+
+Delivery pertama kali dapat dibuka offline dari manifest yang sudah diterima daily
+sync, meskipun cache list belum pernah dibuat. Materialisasi lokal memvalidasi
+owner/hari/keunikan; cache berbeda/rusak ditahan, tidak ditimpa. Pembukaan list
+ini tidak meminta ulang manifest ke provider. Collection mempunyai cache sumber
+terpisah; status belum tersedianya tagihan offline bukan kegagalan list POD.
+
+Riwayat koreksi menampilkan setiap nama SKU, received dan unit source command
+historisnya (pcs pada manifest baru; karton tetap karton pada legacy).
+Helper browser menunggu completion absensi/tombol sync enabled serta owner dan
+restore persona tujuan. Regresi browser menahan completion IndexedDB dan restore
+secara deterministik; tanpa sleep, timeout lebih panjang, pengurangan worker atau
+skip. 239 unit +1 hosting +84 browser resmi145.0.7632.6 lokal lulus (64 lama+20
+regresi); hasil remote pada SHA perbaikan dicatat di PR setelah publikasi.

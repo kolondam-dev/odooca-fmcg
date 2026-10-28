@@ -1,3 +1,5 @@
+import { requireVisitFix } from "../domain/visit-validation";
+import { VisitOrderSchema } from "../domain/visit-contracts";
 import {
     assertLocalEvidence,
     type VisualEvidence,
@@ -18,6 +20,15 @@ import {
     validateVisitCommit,
     type VisitCommitGuard,
 } from "../domain/visit-validation";
+import { morningReady } from "../domain/morning";
+import {
+    DeliverySessionSchema,
+    type DeliveryTask,
+} from "../domain/delivery-contracts";
+import {
+    DELIVERY_SESSION_KEY,
+    validateDeliverySession,
+} from "../domain/delivery";
 import { MORNING_KEY } from "../domain/morning";
 import { businessRejected } from "../domain/outbox-state";
 import { CommandSchema, type Command, type Receipt } from "../domain/contracts";
@@ -133,6 +144,103 @@ export class FieldStore {
             throw error;
         }
     }
+    async openDeliverySession(
+        owner: string,
+        source: DeliveryTask,
+        raw: unknown,
+    ) {
+        const session = validateDeliverySession(
+            raw,
+            source,
+            owner,
+            new Date().toISOString(),
+        );
+        const openingMedia = await this.getEvidence(owner, session.opening.id);
+        await assertLocalEvidence(openingMedia, session.opening, owner);
+        if (!openingMedia?.visual)
+            throw new Error("Opening wajib paket foto lengkap.");
+        requireVisitFix(
+            {
+                latitude: session.opening.latitude,
+                longitude: session.opening.longitude,
+                accuracy: session.opening.accuracy,
+                sampled_at: openingMedia.visual.fixSampledAt,
+            },
+            source.site,
+            Date.parse(session.opened_at),
+        );
+        if (Date.now() - Date.parse(session.opened_at) > 60000)
+            throw new Error("Opening sesi kedaluwarsa; ambil bukti baru.");
+        const tx = (await this.db).transaction(
+                ["drafts", "outbox"],
+                "readwrite",
+            ),
+            done = tx.done;
+        try {
+            const drafts = tx.objectStore("drafts"),
+                key = `${owner}:${DELIVERY_SESSION_KEY}`;
+            const prior = (await drafts.get(key))?.value as
+                | { closed?: string; session?: unknown }
+                | undefined;
+            if (prior && !prior.closed)
+                throw new Error(
+                    "Masih ada sesi delivery aktif; tutup sesi sebelumnya.",
+                );
+            if (prior) {
+                const previous = DeliverySessionSchema.parse(prior.session);
+                const closed = await tx
+                    .objectStore("outbox")
+                    .get(`${owner}:${prior.closed}`);
+                if (
+                    !closed ||
+                    closed.owner !== owner ||
+                    closed.command.type !== "delivery.pod.submit" ||
+                    JSON.stringify(closed.command.payload.session) !==
+                        JSON.stringify(previous)
+                )
+                    throw new Error(
+                        "Riwayat sesi delivery rusak; perlu review.",
+                    );
+            }
+            const rows = await tx
+                .objectStore("outbox")
+                .index("owner")
+                .getAll(owner);
+            if (
+                rows.some(
+                    (r) =>
+                        r.command.type === "delivery.pod.submit" &&
+                        (r.command.payload.evidence.id === session.opening.id ||
+                            r.command.payload.session?.opening.id ===
+                                session.opening.id),
+                )
+            )
+                throw new Error("Foto opening sudah dipakai sesi lain.");
+            const morning = (await drafts.get(`${owner}:${MORNING_KEY}`))
+                ?.value;
+            if (
+                JSON.stringify(morning) !==
+                    JSON.stringify(session.daily_source) ||
+                !morningReady(morning, owner)
+            )
+                throw new Error("Daily sync berubah/kedaluwarsa.");
+            assertPodSource(
+                (
+                    await drafts.get(
+                        `${owner}:delivery-manifest-v1:${source.business_date}`,
+                    )
+                )?.value,
+                source,
+            );
+            await drafts.put({ key, owner, value: { session } });
+            await done;
+            return session;
+        } catch (error) {
+            tx.abort();
+            await done.catch(() => {});
+            throw error;
+        }
+    }
     async putWithDraft(
         item: QueueItem,
         key: string,
@@ -163,6 +271,44 @@ export class FieldStore {
                     "Data berubah di tab lain. Muat ulang sebelum mengirim.",
                 );
             if (item.command.type === "delivery.pod.submit") {
+                const payload = item.command.payload;
+                if (payload.source.workflow_version === 2) {
+                    const session = DeliverySessionSchema.parse(
+                        payload.session,
+                    );
+                    const current = (
+                        await tx
+                            .objectStore("drafts")
+                            .get(`${item.owner}:${DELIVERY_SESSION_KEY}`)
+                    )?.value as
+                        | { session?: unknown; closed?: string }
+                        | undefined;
+                    const morning = (
+                        await tx
+                            .objectStore("drafts")
+                            .get(`${item.owner}:${MORNING_KEY}`)
+                    )?.value;
+                    if (
+                        !current ||
+                        current.closed ||
+                        JSON.stringify(current.session) !==
+                            JSON.stringify(session) ||
+                        JSON.stringify(morning) !==
+                            JSON.stringify(session.daily_source) ||
+                        !morningReady(morning, item.owner)
+                    )
+                        throw new Error(
+                            "Sesi delivery/daily sync berubah sebelum closing.",
+                        );
+                    await tx.objectStore("drafts").put({
+                        key: `${item.owner}:${DELIVERY_SESSION_KEY}`,
+                        owner: item.owner,
+                        value: {
+                            session,
+                            closed: item.command.client_uuid,
+                        },
+                    });
+                }
                 if (item.command.payload.supersedes_uuid) {
                     if (
                         !guards ||
@@ -406,6 +552,56 @@ export class FieldStore {
     }
     async listEvidence(owner: string) {
         return (await this.db).getAllFromIndex("evidence", "owner", owner);
+    }
+    async decideDemoDiscount(
+        owner: string,
+        expected: QueueItem,
+        approved: boolean,
+        reason: string,
+    ) {
+        if (!__DEMO__) throw new Error("Simulator tidak tersedia di live.");
+        if (reason.trim().length < 3 || reason.length > 500)
+            throw new Error("Alasan keputusan wajib 3–500 karakter.");
+        const body = VisitOrderSchema.parse(expected.command.payload);
+        if (
+            expected.owner !== owner ||
+            expected.command.type !== "sales.order.submit" ||
+            !body.discount_request ||
+            expected.state !== "needs_approval" ||
+            expected.receipt?.client_uuid !== expected.command.client_uuid ||
+            expected.receipt.status !== "needs_approval"
+        )
+            throw new Error("Bukan pengajuan diskon pending yang cocok.");
+        const tx = (await this.db).transaction(
+                ["outbox", "receipts"],
+                "readwrite",
+            ),
+            done = tx.done;
+        try {
+            if (
+                JSON.stringify(
+                    await tx.objectStore("outbox").get(expected.key),
+                ) !== JSON.stringify(expected)
+            )
+                throw new Error("Receipt berubah di tab lain.");
+            const receipt: Receipt = {
+                ...expected.receipt!,
+                status: approved ? "accepted" : "rejected",
+                message: `SIMULASI diskon: diminta ${body.discount_request.percent}%, disetujui ${approved ? body.discount_request.percent : 0}%. ${approved ? `Total disetujui Rp ${body.observed_total}` : "Pengajuan ditolak; tidak ada total disetujui"}. ${reason.trim()}. Bukan keputusan Odoo.`,
+            };
+            await tx
+                .objectStore("outbox")
+                .put({ ...expected, state: receipt.status, receipt });
+            const cachedKey = `${owner.slice(owner.indexOf(":") + 1)}:sales.order.submit:${expected.command.client_uuid}`;
+            const cached = await tx.objectStore("receipts").get(cachedKey);
+            if (cached)
+                await tx.objectStore("receipts").put({ ...cached, receipt });
+            await done;
+        } catch (error) {
+            tx.abort();
+            await done.catch(() => {});
+            throw error;
+        }
     }
     async receipt(key: string) {
         return (await this.db).get("receipts", key);

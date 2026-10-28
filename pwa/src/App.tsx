@@ -1,3 +1,5 @@
+import { DiscountApproval } from "./components/DiscountApproval";
+import { orderQuote, type OrderUom } from "./domain/order-pricing";
 import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { createProvider } from "./data/provider";
@@ -178,11 +180,13 @@ function Workspace({
     const owner = ownerKey(identity);
     const [visitOutlet, setVisitOutlet] = useState<string>();
     const [morning, setMorning] = useState<MorningRecord>();
-    const snapshot = morningReady(morning, owner)
-        ? morning!.snapshot!
-        : initialSnapshot;
+    const dailyReady =
+        morningReady(morning, owner) &&
+        (!identity.roles.includes("delivery") ||
+            !!morning?.deliveryManifest?.length);
+    const snapshot = dailyReady ? morning!.snapshot! : initialSnapshot;
     function openOrder(outlet: string) {
-        if (!morningReady(morning, owner)) {
+        if (!dailyReady) {
             setToast(
                 "Absensi simulasi dan sync pagi wajib selesai sebelum kunjungan/order.",
             );
@@ -204,7 +208,7 @@ function Workspace({
         [identity, provider, engine],
     );
     function openVisit(outlet: string) {
-        if (!morningReady(morning, owner)) {
+        if (!dailyReady) {
             openOrder(outlet);
             return;
         }
@@ -274,7 +278,7 @@ function Workspace({
         label: string,
     ) {
         if (type.startsWith("sales.")) {
-            if (!morningReady(morning, owner))
+            if (!dailyReady)
                 throw new Error(
                     "Sesi pagi belum terbuka atau sudah berganti hari. Sync pagi kembali.",
                 );
@@ -351,15 +355,16 @@ function Workspace({
                 </div>
             </header>
             <main id="main-content" class="content">
-                {identity.roles.includes("sales") &&
-                    (page === "home" || page === "sales") && (
-                        <MorningSession
-                            identity={identity}
-                            provider={provider}
-                            store={store}
-                            onChange={setMorning}
-                        />
-                    )}
+                {identity.roles.some(
+                    (r) => r === "sales" || r === "delivery",
+                ) && (
+                    <MorningSession
+                        identity={identity}
+                        provider={provider}
+                        store={store}
+                        onChange={setMorning}
+                    />
+                )}
                 {page === "home" && (
                     <>
                         <div class="greeting">
@@ -513,7 +518,7 @@ function Workspace({
                                 </button>
                             }
                         />
-                        {identity.roles.includes("sales") ? (
+                        {identity.roles.includes("sales") && dailyReady ? (
                             <OutletCard
                                 outlet={snapshot.outlets[0]}
                                 open={() => openVisit(snapshot.outlets[0].id)}
@@ -547,7 +552,12 @@ function Workspace({
                         </p>
                     </>
                 )}
-                {page === "sales" && (
+                {page === "sales" && !dailyReady && (
+                    <p class="notice">
+                        Daily sync wajib sebelum membuka list Sales.
+                    </p>
+                )}
+                {page === "sales" && dailyReady && (
                     <>
                         <Heading
                             title="Sales & kunjungan"
@@ -558,7 +568,7 @@ function Workspace({
                             Extra call memerlukan approval supervisor.
                         </div>
                         {visitOutlet &&
-                            morningReady(morning, owner) &&
+                            dailyReady &&
                             snapshot.outlets.some(
                                 (o) => o.id === visitOutlet,
                             ) && (
@@ -605,6 +615,20 @@ function Workspace({
                                     <OutletCard
                                         key={o.id}
                                         outlet={o}
+                                        status={
+                                            queue.some(
+                                                (q) =>
+                                                    q.command.type ===
+                                                        "sales.visit.check_out" &&
+                                                    q.command.payload
+                                                        .outlet_id === o.id &&
+                                                    q.command.payload
+                                                        .business_date ===
+                                                        identity.businessDate,
+                                            )
+                                                ? "Session closed · hasil sync di Lainnya"
+                                                : "Belum ditutup"
+                                        }
                                         open={() => openVisit(o.id)}
                                     />
                                 ))}
@@ -622,7 +646,12 @@ function Workspace({
                         </p>
                     </>
                 )}
-                {page === "delivery" && (
+                {page === "delivery" && !dailyReady && (
+                    <p class="notice">
+                        Daily sync wajib sebelum membuka list Delivery.
+                    </p>
+                )}
+                {page === "delivery" && dailyReady && (
                     <>
                         <Heading
                             title="Delivery"
@@ -756,6 +785,12 @@ function Workspace({
                 )}
                 {page === "more" && (
                     <>
+                        <DiscountApproval
+                            store={store}
+                            owner={owner}
+                            queue={queue}
+                            changed={() => void refresh()}
+                        />
                         <Heading
                             title="Akun & sinkronisasi"
                             note={identity.title}
@@ -819,6 +854,7 @@ function Workspace({
                                         }
                                     >
                                         <option value="normal">Normal</option>
+
                                         <option value="approval">
                                             Menunggu approval
                                         </option>
@@ -914,7 +950,9 @@ function Workspace({
 function OutletCard({
     outlet,
     open,
+    status,
 }: {
+    status?: string;
     outlet: Snapshot["outlets"][number];
     open: () => void;
 }) {
@@ -929,6 +967,7 @@ function OutletCard({
                     <Pill>{outlet.channel}</Pill>
                 </div>
                 <p>{outlet.address}</p>
+                {status && <p>{status}</p>}
                 <small>
                     <Icon name="clock" size={14} />
                     {outlet.time}
@@ -964,6 +1003,9 @@ function FormDialog({
     const [busy, setBusy] = useState(false);
     const [qty, setQty] = useState<Record<string, number>>({});
     const [principal, setPrincipal] = useState("mayora");
+    const [units, setUnits] = useState<Record<string, OrderUom>>({});
+    const [discount, setDiscount] = useState(0);
+    const [discountReason, setDiscountReason] = useState("");
     const [evidence, setEvidence] = useState<EvidenceRef>();
     const [restored, setRestored] = useState(false);
     const [category, setCategory] = useState("fuel_planned");
@@ -983,9 +1025,15 @@ function FormDialog({
                     const v = value as {
                         quantities: Record<string, number>;
                         principal: string;
+                        units?: Record<string, OrderUom>;
+                        discount?: number;
+                        discountReason?: string;
                     };
                     setQty(v.quantities ?? {});
                     setPrincipal(v.principal ?? "mayora");
+                    setUnits(v.units ?? {});
+                    setDiscount(v.discount ?? 0);
+                    setDiscountReason(v.discountReason ?? "");
                 }
                 if (active) setRestored(true);
             })
@@ -999,11 +1047,17 @@ function FormDialog({
     useEffect(() => {
         if (restored && key)
             void store
-                .draft(owner, key, { quantities: qty, principal })
+                .draft(owner, key, {
+                    quantities: qty,
+                    principal,
+                    units,
+                    discount,
+                    discountReason,
+                })
                 .catch(() =>
                     setError("Draft gagal disimpan. Periksa penyimpanan."),
                 );
-    }, [qty, principal, restored]);
+    }, [qty, principal, units, discount, discountReason, restored]);
     useEffect(() => {
         const old = document.body.style.overflow;
         document.body.style.overflow = "hidden";
@@ -1049,7 +1103,12 @@ function FormDialog({
         };
     }, []);
     const total = snapshot.products.reduce(
-        (n, p) => n + p.price * (qty[p.id] || 0),
+        (n, p) =>
+            n +
+            (p.price *
+                (qty[p.id] || 0) *
+                { carton: 144, pack: 12, pcs: 1 }[units[p.id] ?? "carton"]) /
+                144,
         0,
     );
     const title = {
@@ -1083,10 +1142,31 @@ function FormDialog({
                     lines: lines.map((l) => ({
                         product_id: l.productId,
                         qty: String(l.quantity),
-                        uom: "carton",
+                        uom: units[l.productId] ?? "carton",
                     })),
+                    pricing_version: 1,
+                    ...(discount > 0
+                        ? {
+                              discount_request: {
+                                  percent: discount,
+                                  reason: discountReason,
+                              },
+                          }
+                        : {}),
                     note: String(f.get("note") ?? ""),
-                    observed_total: String(total),
+                    observed_total: String(
+                        orderQuote(
+                            lines.map((l) => ({
+                                product_id: l.productId,
+                                qty: String(l.quantity),
+                                uom: units[l.productId] ?? "carton",
+                            })),
+                            snapshot,
+                            discount > 0
+                                ? { percent: discount, reason: discountReason }
+                                : undefined,
+                        ).requestedTotal,
+                    ),
                 };
                 label = `Order • ${snapshot.outlets.find((o) => o.id === dialog.outlet)?.name}`;
             } else if (dialog.type === "extra") {
@@ -1227,6 +1307,57 @@ function FormDialog({
                                         <option value="santos">Santos</option>
                                     </select>
                                 </label>
+                                <label>
+                                    Diskon diminta (%) · simulasi
+                                    <input
+                                        aria-label="Diskon diminta (%)"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="1"
+                                        value={discount}
+                                        onInput={(e) =>
+                                            setDiscount(
+                                                Number(e.currentTarget.value),
+                                            )
+                                        }
+                                    />
+                                </label>
+                                {discount > 0 && (
+                                    <label>
+                                        Alasan permintaan diskon
+                                        <textarea
+                                            required
+                                            minLength={3}
+                                            maxLength={500}
+                                            value={discountReason}
+                                            onInput={(e) =>
+                                                setDiscountReason(
+                                                    e.currentTarget.value,
+                                                )
+                                            }
+                                        />
+                                    </label>
+                                )}
+                                <p>
+                                    Gross {money(Math.round(total))} · diskon
+                                    diminta{" "}
+                                    {money(
+                                        Math.round((total * discount) / 100),
+                                    )}{" "}
+                                    · estimasi setelah diskon{" "}
+                                    {money(
+                                        Math.round(total) -
+                                            Math.round(
+                                                (Math.round(total) * discount) /
+                                                    100,
+                                            ),
+                                    )}
+                                    . Diskon disetujui: belum ada keputusan.
+                                    Normal → menunggu approval. Buka Lainnya →
+                                    Simulator approval diskon untuk keputusan
+                                    disetujui/ditolak.
+                                </p>
                                 <div class="product-list">
                                     {snapshot.products
                                         .filter(
@@ -1242,7 +1373,7 @@ function FormDialog({
                                                 </span>
                                                 <div>
                                                     <small class="eyebrow">
-                                                        {p.brand}
+                                                        {p.brand} · SKU {p.id}
                                                     </small>
                                                     <strong>{p.name}</strong>
                                                     <small>
@@ -1251,6 +1382,34 @@ function FormDialog({
                                                     </small>
                                                     <b>{money(p.price)}</b>
                                                 </div>
+                                                <label>
+                                                    Satuan
+                                                    <select
+                                                        aria-label={`Satuan ${p.name}`}
+                                                        value={
+                                                            units[p.id] ??
+                                                            "carton"
+                                                        }
+                                                        onChange={(e) =>
+                                                            setUnits((v) => ({
+                                                                ...v,
+                                                                [p.id]: e
+                                                                    .currentTarget
+                                                                    .value as OrderUom,
+                                                            }))
+                                                        }
+                                                    >
+                                                        <option value="carton">
+                                                            Karton · 144 pcs
+                                                        </option>
+                                                        <option value="pack">
+                                                            Pack · 12 pcs
+                                                        </option>
+                                                        <option value="pcs">
+                                                            Pcs
+                                                        </option>
+                                                    </select>
+                                                </label>
                                                 <input
                                                     aria-label={`Kuantitas ${p.name}`}
                                                     type="number"
@@ -1281,7 +1440,16 @@ function FormDialog({
                                 </label>
                                 <div class="estimate">
                                     <span>Estimasi total</span>
-                                    <strong>{money(total)}</strong>
+                                    <strong>
+                                        {money(
+                                            Math.round(total) -
+                                                Math.round(
+                                                    (Math.round(total) *
+                                                        discount) /
+                                                        100,
+                                                ),
+                                        )}
+                                    </strong>
                                 </div>
                                 <p class="footnote">
                                     Harga akhir, kredit, extra discount dan

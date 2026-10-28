@@ -52,6 +52,22 @@ function photoPairDependencies(schema) {
                 else: { not: { required: ["transfer_reference"] } },
             },
         ];
+    if (schema.properties?.pod_version)
+        schema.allOf = [
+            ...(schema.allOf ?? []),
+            {
+                if: {
+                    properties: {
+                        source: {
+                            properties: { workflow_version: { const: 2 } },
+                            required: ["workflow_version"],
+                        },
+                    },
+                    required: ["source"],
+                },
+                then: { required: ["session", "delivery_status"] },
+            },
+        ];
     Object.values(schema).forEach(photoPairDependencies);
 }
 const schemas = Object.fromEntries(
@@ -88,7 +104,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.10.0",
+        version: "0.11.0",
         description:
             "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
     },

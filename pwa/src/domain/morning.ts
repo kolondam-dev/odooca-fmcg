@@ -1,3 +1,4 @@
+import { DeliveryTaskSchema } from "./delivery-contracts";
 import { z } from "zod";
 import {
     SnapshotSchema,
@@ -16,6 +17,7 @@ export const MorningRecordSchema = z
         sessionId: z.string().uuid().nullable(),
         openedAt: z.iso.datetime().nullable(),
         snapshot: SnapshotSchema.nullable(),
+        deliveryManifest: z.array(DeliveryTaskSchema).min(1).optional(),
     })
     .strict();
 export type MorningRecord = z.infer<typeof MorningRecordSchema>;
@@ -74,7 +76,7 @@ function validMorningRecord(
     return record;
 }
 export function morningReady(
-    record: MorningRecord | undefined,
+    record: unknown,
     owner: string,
     date = fieldBusinessDate(),
 ): boolean {
@@ -112,7 +114,7 @@ export class MorningSimulation {
             throw new Error(
                 "Identitas atau tanggal bisnis berubah. Muat ulang aplikasi.",
             );
-        if (!current.roles.includes("sales"))
+        if (!current.roles.some((r) => r === "sales" || r === "delivery"))
             throw new Error("Sesi kunjungan hanya untuk Sales/Canvasser.");
         return current.businessDate;
     }
@@ -137,6 +139,20 @@ export class MorningSimulation {
         if (!attendance || attendance.businessDate !== date)
             throw new Error("Simulasikan absensi diterima sebelum sync pagi.");
         const snapshot = SnapshotSchema.parse(await this.provider.snapshot());
+        const deliveryManifest = this.identity.roles.includes("delivery")
+            ? z
+                  .array(DeliveryTaskSchema)
+                  .min(1)
+                  .parse(await this.provider.deliveryTasks?.())
+            : undefined;
+        if (
+            deliveryManifest?.some(
+                (t) =>
+                    t.owner !== ownerKey(this.identity) ||
+                    t.business_date !== date,
+            )
+        )
+            throw new Error("Manifest daily sync tidak cocok.");
         if (!validMorningSnapshot(snapshot, date))
             throw new Error(
                 "Paket PJP, stok dan harga belum lengkap atau tanggalnya tidak sesuai. Sesi belum dibuka.",
@@ -150,6 +166,7 @@ export class MorningSimulation {
             sessionId: crypto.randomUUID(),
             openedAt: new Date().toISOString(),
             snapshot,
+            ...(deliveryManifest ? { deliveryManifest } : {}),
         };
         if (!morningReady(record, ownerKey(this.identity), date))
             throw new Error("Paket sesi tidak valid. Sesi belum dibuka.");
