@@ -21,3 +21,9 @@ msgstr ""
 #: code:addons/id_ui_form/static/src/form/form_patch.js:0
 msgid "Messages & Activities"
 msgstr "Pesan & Aktivitas"
+
+#. module: id_ui_form
+#. odoo-javascript
+#: code:addons/id_ui_form/static/src/form/form_patch.js:0
+msgid "Edit document number"
+msgstr "Edit nomor dokumen"
