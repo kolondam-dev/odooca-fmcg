@@ -328,7 +328,19 @@ async function checkPodMedia(
     }
     const after = await store.list(owner);
     const next = podLineage(after, owner, c.payload.source.id);
-    if (JSON.stringify(chain) !== JSON.stringify(next))
+    // Media binds immutable commands and the rejected ancestor decisions that
+    // authorize corrections. The leaf's transport/approval status may advance
+    // while closing hashes its media; that does not change the recorded POD.
+    const binding = (nodes: QueueItem[]) =>
+        nodes.map((r, index) => ({
+            key: r.key,
+            owner: r.owner,
+            command: r.command,
+            ...(index < nodes.length - 1
+                ? { state: r.state, receipt: r.receipt }
+                : {}),
+        }));
+    if (JSON.stringify(binding(chain)) !== JSON.stringify(binding(next)))
         throw new Error("Lineage berubah saat validasi media.");
     assertPodSource(
         await store.draft(

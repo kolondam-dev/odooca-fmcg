@@ -29,6 +29,7 @@ import {
     validateTripClose,
     validateTripCloseMedia,
 } from "../src/domain/trip-close";
+import { validatePodMedia } from "../src/domain/delivery";
 import { requireVisitFix } from "../src/domain/visit-validation";
 let store: FieldStore, name: string;
 beforeEach(() => {
@@ -609,3 +610,44 @@ it("reconnect cannot mutate a queued row while revision media integrity reads it
     expect(after.evidenceHold).toBeUndefined();
     expect(after.error).toBeUndefined();
 });
+
+for (const tamper of [false, true]) {
+    it(`POD evidence tolerates transport progress but detects command mutation during closing, tamper=${tamper}`, async () => {
+        const s = await pods(),
+            row = s.rows[0];
+        const original = store.getEvidence.bind(store);
+        let once = false;
+        vi.spyOn(store, "getEvidence").mockImplementation(async (owner, id) => {
+            if (!once) {
+                once = true;
+                const current = (await store.list(s.owner)).find(
+                    (r) => r.key === row.key,
+                )!;
+                await store.put({
+                    ...current,
+                    state: "sending",
+                    attempts: current.attempts + 1,
+                    ...(tamper
+                        ? {
+                              command: {
+                                  ...current.command,
+                                  occurred_at: new Date(
+                                      Date.now() + 1,
+                                  ).toISOString(),
+                              },
+                          }
+                        : {}),
+                });
+            }
+            return original(owner, id);
+        });
+        if (tamper)
+            await expect(validatePodMedia(row, s.owner, store)).rejects.toThrow(
+                "POD/manifest/foto",
+            );
+        else
+            await expect(
+                validatePodMedia(row, s.owner, store),
+            ).resolves.toBeUndefined();
+    });
+}

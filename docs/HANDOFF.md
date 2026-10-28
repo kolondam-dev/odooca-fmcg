@@ -1,5 +1,11 @@
 # HANDOFF
 
+## 2026-10-28 — agent-codex-pwa — Closing saat POD sedang sinkron
+**Temuan:** full browser setelah fix reconnect menghasilkan92 passed+2 failed pada closing phone/tablet. Hash POD membandingkan seluruh QueueItem sehingga kemajuan state/attempt/receipt leaf selama sync dianggap bukti berubah.
+**Perbaikan:** recheck membandingkan key/owner/command immutable seluruh lineage dan state/receipt ancestor yang mengizinkan koreksi. Leaf transport/approval dapat maju; lineage divalidasi ulang dan perubahan command/foto/pointer/manifest tetap ditolak. Closing tidak menyatakan approval/settlement.
+**Diverifikasi:**259 unit PASS; dua regresi deterministik membedakan kemajuan transport vs command tamper (kemajuan sah FAIL sebelum fix, tamper tetap ditolak). Typecheck/format/contracts/build demo+live/budget/diff PASS. Browser final dan CI dicatat pada PR34 setelah selesai. Tidak mengubah worker/retry/timeout tes.
+**Menunggu:** review PR34/CI; simulator saja, backend menunggu seeding, resi backlog; tidak merge/deploy.
+
 ## 2026-10-28 — agent-codex-pwa — Reconnect deterministik PR34
 **Temuan CI:** SHA9340f02 melewati gate tetapi log browser run40725326638 memuat 93 passed +1 flaky (tablet revisi SO offline→online). Artefak menunjukkan queued revision tertahan integritas saat checkout juga menulis backoff; hasil tersebut bukan browser bersih. CI Odoo run40725326738 SUCCESS.
 **Perbaikan:** retry mereservasi engine sebelum await, menunggu send aktif selesai termasuk hash media/error/backoff, baru reset queued backoff dan kirim satu pass baru. Retry serentak bergabung; finalizer send lama tidak menghapus reservasi baru. Tidak mengubah validasi hash/sumber, UUID, status terminal, timeout/retry/worker tes.
