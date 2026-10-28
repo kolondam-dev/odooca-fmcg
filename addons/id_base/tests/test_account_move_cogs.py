@@ -1,6 +1,7 @@
 # Part of odooca-fmcg. License LGPL-3.
 """Odoo TransactionCase untuk ekstensi akuntansi perpetual FMCG account.move."""
 
+import copy
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -169,11 +170,13 @@ class TestAccountMoveCogs(TransactionCase):
             account_id=SimpleNamespace(code="510000"),
             debit=250000.0,
             credit=0.0,
+            product_id=self.product,
         )
         aml_credit = SimpleNamespace(
             account_id=SimpleNamespace(code="113000"),
             debit=0.0,
             credit=250000.0,
+            product_id=self.product,
         )
         valid_stj_am = SimpleNamespace(
             id=993,
@@ -199,7 +202,11 @@ class TestAccountMoveCogs(TransactionCase):
         )
         fake_sol = SimpleNamespace(
             name="SO Line 1",
-            order_id=SimpleNamespace(name="SO-202607-0001", company_id=self.company_seed),
+            order_id=SimpleNamespace(
+                name="SO-202607-0001",
+                company_id=self.company_seed,
+                fmcg_seed_batch="CANONICAL_JULY_2026_PERPETUAL",
+            ),
             move_ids=[fake_sm],
         )
         return fake_sol, fake_sm, valid_stj_am
@@ -435,3 +442,123 @@ class TestAccountMoveCogs(TransactionCase):
 
         refund = self._create_basic_invoice(self.company_seed, is_seed=True, move_type="out_refund")
         self.assertFalse(refund._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+    def test_two_moves_sharing_single_aml_rejected(self):
+        """Review 6483144753: Dua stock move bernilai 500k dengan hanya 1 AML 250k wajib ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        line.quantity = 20.0
+        fake_sol, fake_sm, valid_stj_am = self._build_valid_stj_and_sm()
+        fake_sm2 = copy.copy(fake_sm)
+        fake_sm2.id = 884
+        fake_sol.move_ids = [fake_sm, fake_sm2]
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("tidak sesuai dengan total nilai valuasi", str(ctx.exception))
+
+    def test_two_moves_with_two_amls_accepted(self):
+        """Review 6483144753: Dua stock move dengan dua AML (500k vs 500k) wajib diterima."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        line.quantity = 20.0
+        fake_sol, fake_sm, valid_stj_am = self._build_valid_stj_and_sm()
+        fake_sm2 = copy.copy(fake_sm)
+        fake_sm2.id = 884
+        fake_sol.move_ids = [fake_sm, fake_sm2]
+
+        aml_debit2 = SimpleNamespace(
+            account_id=SimpleNamespace(code="510000"),
+            debit=250000.0,
+            credit=0.0,
+            product_id=self.product,
+        )
+        aml_credit2 = SimpleNamespace(
+            account_id=SimpleNamespace(code="113000"),
+            debit=0.0,
+            credit=250000.0,
+            product_id=self.product,
+        )
+        valid_stj_am.line_ids.extend([aml_debit2, aml_credit2])
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+    def test_direction_supplier_rejected(self):
+        """Review 6483144753: Stock move dengan tujuan supplier wajib ditolak fail-closed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
+        fake_sm.location_dest_id = SimpleNamespace(usage="supplier")
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("Arah pergerakan stok", str(ctx.exception))
+
+    def test_direction_source_customer_rejected(self):
+        """Review 6483144753: Outbound stock move dengan asal bukan internal wajib ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
+        fake_sm.location_id = SimpleNamespace(usage="customer")
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("Arah pergerakan stok", str(ctx.exception))
+
+    def test_order_without_seed_batch_rejected(self):
+        """Review 6483144753: SO tanpa fmcg_seed_batch resmi wajib ditolak fail-closed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        fake_sol, _, _ = self._build_valid_stj_and_sm()
+        fake_sol.order_id.fmcg_seed_batch = False
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("memiliki batch identitas", str(ctx.exception))
+
+    def test_uom_conversion_quantity_mismatch_rejected(self):
+        """Review 6483144753: Invoice 2 karton @144 unit vs delivery 10 unit wajib ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        line.quantity = 2.0
+        line.product_uom_id = SimpleNamespace(name="Karton", factor_inv=144.0, factor=1.0 / 144.0)
+        fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
+        fake_sm.quantity = 10.0
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("tidak cocok dengan kuantitas baris faktur", str(ctx.exception))
+
+    def test_partial_rejection_scenario_accepted(self):
+        """Review 6483144753: Rekonsiliasi eksplisit 84 dikirim - 12 retur = 72 ditagih."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        line.quantity = 72.0
+        fake_sol, fake_sm, valid_stj_am = self._build_valid_stj_and_sm()
+        fake_sm.quantity = 84.0
+        fake_sm.value = 84.0 * 25000.0
+
+        valid_stj_am.line_ids[0].debit = fake_sm.value
+        valid_stj_am.line_ids[1].credit = fake_sm.value
+
+        return_sm = SimpleNamespace(
+            id=885,
+            name="RET/TEST/01",
+            state="done",
+            date="2026-07-02",
+            quantity=12.0,
+            product_id=self.product,
+            company_id=self.company_seed,
+            location_id=SimpleNamespace(usage="customer"),
+            location_dest_id=SimpleNamespace(usage="internal"),
+        )
+        fake_sol.move_ids = [fake_sm, return_sm]
+
+        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+            self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())

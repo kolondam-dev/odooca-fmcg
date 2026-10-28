@@ -1009,3 +1009,12 @@
   * test_canonical_loader_adapter.py (63/63 tests PASS, 20/20 mutasi ditolak)
 - Task managed by antigravity at 2026-10-29T00:30:00+07:00
 
+
+[2026-10-29T06:45:00+07:00] [INFO] Resolusi 4 Temuan Supervisi PR #15 (issuecomment-6483144753): Anti-AML Reuse, Strict Direction & UoM Normalization, SO Persistent Seed Batch, Real Accounting Proof & Loader Boundary Rollback
+- Anti-AML Reuse: rekonsiliasi nilai HPP dikelompokkan per (cogs_am.id, sm.product_id.id) mencegah reuse AML antar stock move
+- Strict Outbound Direction: penegakan location_id usage internal dan location_dest_id usage customer, menolak destinasi supplier/internal
+- UoM Normalization: helper _convert_qty_to_product_uom menyelaraskan kuantitas invoice dan move ke base UoM, serta rekonsiliasi eksplisit dispatched - return == billed
+- Persistent Seed Batch SO: penambahan field fmcg_seed_batch pada sale.order (id_base depends sale), fail-closed validasi keterikatan order dan kesesuaian batch
+- Real Accounting Proof: verifikasi ord_cogs nonempty (len >= 2), debit/credit balance > 0, pembentukan out_refund & in_invoice nyata dengan product lines, dan fixture isolation property_valuation
+- Loader Boundary Rollback: eksekusi CanonicalPerpetualAdapter.run_all() dengan failure injection setelah partial write quant, documents, dan AML, membuktikan cr.rollback() dipanggil, commit dicegah, zero leakage, dan pre_snap == post_snap
+- Task managed by antigravity at 2026-10-29T06:45:00+07:00

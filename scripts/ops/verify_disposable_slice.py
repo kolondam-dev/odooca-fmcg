@@ -2179,14 +2179,20 @@ def verify_native_cogs_and_seed_suppression_real_orm(env):
     print(" -> [Seed Invoice INV-202607-0001]: Supresi HPP duplikat terbukti 100% (mengembalikan []).")
 
     # 2. Uji faktur non-seed dan mixed recordset dalam boundary terisolasi
+    class InjectedSavepointRollback(Exception):
+        pass
+
+    orig_val = None
+    created_records = []
     try:
         so1 = env["sale.order"].sudo().search([("client_order_ref", "=", "SO-202607-0001")], limit=1)
         assert so1 and so1.order_line, "[real_orm_cogs] SO-202607-0001 dan order_line wajib ada!"
         sol = so1.order_line[0]
         prod = sol.product_id
 
-        # Pastikan category produk menggunakan valuation automated jika ada
+        # Pastikan category produk menggunakan automated valuation dan simpan nilai asli untuk pemulihan fixture
         if hasattr(prod.categ_id, "property_valuation"):
+            orig_val = prod.categ_id.property_valuation
             prod.categ_id.property_valuation = "real_time"
 
         ord_inv_vals = {
@@ -2206,6 +2212,7 @@ def verify_native_cogs_and_seed_suppression_real_orm(env):
             ],
         }
         ord_inv = AccountMove.create(ord_inv_vals)
+        created_records.append(ord_inv)
 
         assert ord_inv.is_fmcg_seed_invoice is False
         assert ord_inv._is_seed_commercial_invoice_with_posted_delivery_cogs() is False, (
@@ -2218,6 +2225,24 @@ def verify_native_cogs_and_seed_suppression_real_orm(env):
             f" -> [Ordinary Non-Seed Invoice]: Panggilan native berhasil (tipe: {type(ord_cogs)}, "
             f"jumlah: {len(ord_cogs)} baris)."
         )
+        assert isinstance(ord_cogs, list) and len(ord_cogs) >= 2, (
+            f"[real_orm_cogs] Native COGS harus menghasilkan minimal 2 baris (debit & credit), got: {ord_cogs}"
+        )
+        total_debit = sum(float(ln.get("debit", 0.0) or 0.0) for ln in ord_cogs)
+        total_credit = sum(float(ln.get("credit", 0.0) or 0.0) for ln in ord_cogs)
+        assert total_debit > 0.0, f"[real_orm_cogs] Total debit COGS native harus > 0, got {total_debit}"
+        assert abs(total_debit - total_credit) < 0.01, (
+            f"[real_orm_cogs] Debit ({total_debit}) != Credit ({total_credit}) pada COGS native!"
+        )
+        for l_val in ord_cogs:
+            assert l_val.get("account_id"), f"[real_orm_cogs] Baris COGS native wajib memiliki account_id: {l_val}"
+            assert l_val.get("product_id") == prod.id, (
+                f"[real_orm_cogs] Baris COGS native harus terikat produk {prod.id}, got: {l_val.get('product_id')}"
+            )
+            assert l_val.get("company_id") == ord_inv.company_id.id, (
+                f"[real_orm_cogs] Baris COGS native harus terikat company {ord_inv.company_id.id}, "
+                f"got: {l_val.get('company_id')}"
+            )
 
         # 4. Mixed Recordset (seed | ordinary)
         mixed = seed_inv | ord_inv
@@ -2226,9 +2251,12 @@ def verify_native_cogs_and_seed_suppression_real_orm(env):
             f"[real_orm_cogs] Mixed recordset harus tepat menghasilkan baris non-seed! "
             f"(got {len(mixed_cogs)} vs {len(ord_cogs)})"
         )
+        assert len(mixed_cogs) == len(ord_cogs), (
+            f"[real_orm_cogs] Jumlah baris mixed ({len(mixed_cogs)}) != ordinary ({len(ord_cogs)})"
+        )
         print(" -> [Mixed Recordset (Seed | Non-Seed)]: Supresi selektif terbukti (hanya seed yang disupresi).")
 
-        # 5. Vendor Bill & Customer Refund
+        # 5. Vendor Bill & Customer Refund Nyata (dengan invoice_line_ids produk)
         bill = AccountMove.create({
             "move_type": "in_invoice",
             "partner_id": so1.partner_id.id,
@@ -2236,15 +2264,63 @@ def verify_native_cogs_and_seed_suppression_real_orm(env):
             "date": "2026-07-20",
             "is_fmcg_seed_invoice": True,
             "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_line_ids": [
+                (0, 0, {
+                    "product_id": prod.id,
+                    "quantity": 1.0,
+                    "price_unit": sol.price_unit,
+                })
+            ],
         })
+        created_records.append(bill)
         assert bill._is_seed_commercial_invoice_with_posted_delivery_cogs() is False, (
             "[real_orm_cogs] Vendor Bill dilarang disupresi oleh hook seed!"
         )
-        bill.unlink()
-        print(" -> [Vendor Bill & Refund]: Kebal dari supresi seed terbukti.")
 
-        ord_inv.unlink()
+        refund = AccountMove.create({
+            "move_type": "out_refund",
+            "partner_id": so1.partner_id.id,
+            "invoice_date": "2026-07-20",
+            "date": "2026-07-20",
+            "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_line_ids": [
+                (0, 0, {
+                    "product_id": prod.id,
+                    "quantity": 1.0,
+                    "price_unit": sol.price_unit,
+                })
+            ],
+        })
+        created_records.append(refund)
+        assert refund._is_seed_commercial_invoice_with_posted_delivery_cogs() is False, (
+            "[real_orm_cogs] Customer Refund dilarang disupresi oleh hook seed!"
+        )
+        refund_cogs = refund._stock_account_prepare_realtime_out_lines_vals()
+        print(
+            f" -> [Real Customer Refund & Vendor Bill]: Kebal dari supresi seed terbukti "
+            f"(Refund cogs: {type(refund_cogs)})."
+        )
+
+        # 6. Verifikasi posting native dalam savepoint terisolasi
+        if hasattr(env, "cr") and hasattr(env.cr, "savepoint"):
+            try:
+                with env.cr.savepoint():
+                    if hasattr(ord_inv, "action_post"):
+                        ord_inv.action_post()
+                        assert ord_inv.state == "posted", "[real_orm_cogs] Ord invoice gagal action_post!"
+                    raise InjectedSavepointRollback("Savepoint isolation unwind")
+            except InjectedSavepointRollback:
+                pass
     finally:
+        for rec in created_records:
+            if hasattr(rec, "exists") and rec.exists():
+                try:
+                    rec.unlink()
+                except Exception:
+                    pass
+        if orig_val is not None and hasattr(prod.categ_id, "property_valuation"):
+            prod.categ_id.property_valuation = orig_val
         if hasattr(env, "invalidate_all"):
             env.invalidate_all()
 
@@ -2321,6 +2397,179 @@ def verify_real_database_transaction_rollback(env, reg_path):
     print(" -> [Zero Leak Verification]: Record existing pulih, record baru 0, count tabel konsisten.")
     print("=" * 80)
     print("[real_db_rollback] VERIFIKASI ROLLBACK DATABASE POSTGRESQL SUKSES 100%")
+    print("=" * 80)
+
+    # 3. Verifikasi rollback transaksi pada loader boundary CanonicalPerpetualAdapter.run_all()
+    verify_loader_boundary_transaction_rollback(env, reg_path)
+
+
+def verify_loader_boundary_transaction_rollback(env, reg_path):
+    """Review 6483144753 Finding 4: Membuktikan rollback transaksi pada loader boundary CanonicalPerpetualAdapter.run_all()."""
+    has_cr = hasattr(env, "cr") and hasattr(env.cr, "rollback") and hasattr(env.cr, "commit")
+    if not has_cr:
+        print(" -> [loader_rollback] SKIP: Bukan database cursor PostgreSQL nyata.")
+        return
+
+    print("\n" + "=" * 80)
+    print("[loader_rollback] MEMULAI VERIFIKASI ROLLBACK TRANSAKSI LOADER BOUNDARY")
+    print("=" * 80)
+
+    class InjectedLoaderFailure(Exception):
+        pass
+
+    pre_snap = _capture_deep_snapshot(env)
+
+    adapter = CanonicalPerpetualAdapter(env, reg_path=reg_path)
+
+    orig_commit = env.cr.commit
+    orig_rollback = env.cr.rollback
+    commit_called = []
+    rollback_called = []
+
+    def spy_commit(*args, **kwargs):
+        commit_called.append(True)
+        return orig_commit(*args, **kwargs)
+
+    def spy_rollback(*args, **kwargs):
+        rollback_called.append(True)
+        return orig_rollback(*args, **kwargs)
+
+    env.cr.commit = spy_commit
+    env.cr.rollback = spy_rollback
+
+    partial_ids = {}
+    orig_run_step = adapter.load_returns_and_quarantine
+
+    def failing_step(*args, **kwargs):
+        prod = env["product.product"].sudo().search([], limit=1)
+        wh_loc = env.ref("stock.stock_location_stock", raise_if_not_found=False)
+        if not wh_loc:
+            wh_loc = env["stock.location"].sudo().search([("usage", "=", "internal")], limit=1)
+
+        quant = env["stock.quant"].sudo().create({
+            "product_id": prod.id,
+            "location_id": wh_loc.id,
+            "quantity": 888.0,
+            "inventory_quantity": 888.0,
+        })
+        partial_ids["quant_id"] = quant.id
+
+        partner = env["res.partner"].sudo().search([], limit=1)
+        po = env["purchase.order"].sudo().create({
+            "origin": "PO-FAIL-INJECTED-TEST",
+            "partner_id": partner.id,
+            "company_id": env.company.id,
+        })
+        partial_ids["po_id"] = po.id
+
+        picking_type = env["stock.picking.type"].sudo().search([("code", "=", "incoming")], limit=1)
+        supp_loc = env.ref("stock.stock_location_suppliers", raise_if_not_found=False)
+        if not supp_loc:
+            supp_loc = env["stock.location"].sudo().search([("usage", "=", "supplier")], limit=1)
+
+        picking = env["stock.picking"].sudo().create({
+            "picking_type_id": picking_type.id if picking_type else False,
+            "location_id": supp_loc.id if supp_loc else wh_loc.id,
+            "location_dest_id": wh_loc.id,
+            "origin": "PICK-FAIL-INJECTED-TEST",
+        })
+        partial_ids["picking_id"] = picking.id
+
+        journal = env["account.journal"].sudo().search([("type", "=", "general")], limit=1)
+        acc_debit = env["account.account"].sudo().search([("code", "=", "510000")], limit=1)
+        acc_credit = env["account.account"].sudo().search([("code", "=", "113000")], limit=1)
+        if not acc_debit or not acc_credit:
+            acc_debit = env["account.account"].sudo().search([], limit=1)
+            acc_credit = acc_debit
+
+        am = env["account.move"].sudo().create({
+            "journal_id": journal.id if journal else False,
+            "date": "2026-07-28",
+            "ref": "FAIL-AML-INJECTED-TEST",
+            "line_ids": [
+                (0, 0, {
+                    "name": "Partial debit write",
+                    "account_id": acc_debit.id,
+                    "debit": 555000.0,
+                    "credit": 0.0,
+                }),
+                (0, 0, {
+                    "name": "Partial credit write",
+                    "account_id": acc_credit.id,
+                    "debit": 0.0,
+                    "credit": 555000.0,
+                }),
+            ],
+        })
+        partial_ids["am_id"] = am.id
+        partial_ids["aml_ids"] = am.line_ids.ids
+
+        assert env["stock.quant"].sudo().search([("id", "=", quant.id)]), "Quant harus ada dalam transaksi aktif!"
+        assert env["purchase.order"].sudo().search([("id", "=", po.id)]), "PO harus ada dalam transaksi aktif!"
+        assert env["stock.picking"].sudo().search([("id", "=", picking.id)]), "Picking harus ada dalam transaksi aktif!"
+        assert env["account.move"].sudo().search([("id", "=", am.id)]), "AccountMove harus ada dalam transaksi aktif!"
+        assert len(am.line_ids) >= 2, "AML harus ada dalam transaksi aktif!"
+
+        raise InjectedLoaderFailure("Simulated unhandled exception during loader execution after partial writes")
+
+    adapter.load_returns_and_quarantine = failing_step
+
+    error_caught = False
+    try:
+        adapter.run_all(target_so_numbers=["SO-202607-0001"])
+    except InjectedLoaderFailure:
+        error_caught = True
+    finally:
+        adapter.load_returns_and_quarantine = orig_run_step
+        env.cr.commit = orig_commit
+        env.cr.rollback = orig_rollback
+
+    assert error_caught, "[loader_rollback] InjectedLoaderFailure wajib dilempar oleh adapter.run_all()!"
+
+    assert len(commit_called) == 0, (
+        f"[loader_rollback] Loader transaction DILARANG commit saat error! (commit_called: {commit_called})"
+    )
+    assert len(rollback_called) >= 1, (
+        "[loader_rollback] CanonicalPerpetualAdapter.run_all() WAJIB memanggil self.cr.rollback() saat error!"
+    )
+    print(" -> [Loader Transaction Boundary]: cr.commit() tidak dipanggil, self.cr.rollback() terbukti dipanggil.")
+
+    if hasattr(env, "invalidate_all"):
+        env.invalidate_all()
+
+    if "quant_id" in partial_ids:
+        q_cnt = env["stock.quant"].sudo().search_count([("id", "=", partial_ids["quant_id"])])
+        assert q_cnt == 0, f"[loader_rollback] Partial stock.quant bocor di database! (count: {q_cnt})"
+
+    if "po_id" in partial_ids:
+        po_cnt = env["purchase.order"].sudo().search_count([("id", "=", partial_ids["po_id"])])
+        assert po_cnt == 0, f"[loader_rollback] Partial purchase.order bocor di database! (count: {po_cnt})"
+
+    if "picking_id" in partial_ids:
+        pk_cnt = env["stock.picking"].sudo().search_count([("id", "=", partial_ids["picking_id"])])
+        assert pk_cnt == 0, f"[loader_rollback] Partial stock.picking bocor di database! (count: {pk_cnt})"
+
+    if "am_id" in partial_ids:
+        am_cnt = env["account.move"].sudo().search_count([("id", "=", partial_ids["am_id"])])
+        assert am_cnt == 0, f"[loader_rollback] Partial account.move bocor di database! (count: {am_cnt})"
+
+    if "aml_ids" in partial_ids:
+        aml_cnt = env["account.move.line"].sudo().search_count([("id", "in", partial_ids["aml_ids"])])
+        assert aml_cnt == 0, f"[loader_rollback] Partial account.move.line bocor di database! (count: {aml_cnt})"
+
+    print(" -> [Zero Record Leakage Across Models]: stock.quant, documents, dan AML 100% ter-rollback.")
+
+    post_snap = _capture_deep_snapshot(env)
+    assert pre_snap["quants"] == post_snap["quants"], "Drift quants setelah loader rollback!"
+    assert pre_snap["moves"] == post_snap["moves"], "Drift moves setelah loader rollback!"
+    assert pre_snap["move_lines"] == post_snap["move_lines"], "Drift move_lines setelah loader rollback!"
+    assert pre_snap["account_moves"] == post_snap["account_moves"], "Drift account_moves setelah loader rollback!"
+    assert pre_snap["aml_records"] == post_snap["aml_records"], "Drift aml_records setelah loader rollback!"
+    assert pre_snap["gl_by_acc"] == post_snap["gl_by_acc"], "Drift gl_by_acc setelah loader rollback!"
+
+    print(" -> [Deep Snapshot Identity]: pre_snap == post_snap 100% identik tanpa perubahan!")
+    print("=" * 80)
+    print("[loader_rollback] VERIFIKASI ROLLBACK TRANSAKSI LOADER BOUNDARY SUKSES 100%")
     print("=" * 80)
 
 

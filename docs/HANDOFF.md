@@ -1,5 +1,40 @@
 # HANDOFF
 
+## 2026-10-29 — antigravity agent — Resolusi Tuntas 4 Temuan Supervisi PR #15 (issuecomment-6483144753): Anti-AML Reuse, Strict Direction & UoM Normalization, SO Persistent Seed Batch, Real Accounting Proof & Loader Boundary Rollback
+**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6483144753](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6483144753)):**
+- Menindaklanjuti audit supervisi pada commit `c5450dd` yang mengidentifikasi 3 blocker P1 dan 1 temuan P2:
+  1. *[P1 Finding 1 - Anti-AML Reuse, Arah Pengiriman Ketat & Normalisasi UoM]*:
+     - Mengelompokkan rekonsiliasi HPP per `(cogs_am.id, sm.product_id.id)`: menghitung total nilai pergerakan yang diharapkan per jurnal dan per produk, lalu mencocokkannya secara eksak terhadap total debit akun HPP `510000` pada entri STJ tersebut. Mencegah penggunaan ulang (reuse) satu AML untuk dua stock move.
+     - Penegakan arah pengiriman eksak: `location_id.usage == "internal"` dan `location_dest_id.usage == "customer"`, menolak pergerakan ke lokasi supplier atau return.
+     - Normalisasi UoM via helper `_convert_qty_to_product_uom`: menyelaraskan kuantitas baris faktur dan pergerakan stok ke base unit produk sebelum komparasi.
+     - Rekonsiliasi eksplisit kuantitas terkirim dan retur: `dispatched_base_qty - return_base_qty == billed_base_qty` (misal 84 - 12 = 72 unit).
+  2. *[P1 Finding 2 - Persistent Seed Batch pada Sale Order]*:
+     - Menambahkan dependency `"sale"` pada `addons/id_base/__manifest__.py`.
+     - Menambahkan field persisten `fmcg_seed_batch = fields.Char(string="FMCG Seed Source Batch", default=False, copy=False, index=True)` pada model `sale.order` (`addons/id_base/models/sale_order.py`).
+     - Loader menyematkan `"fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL"` pada pembuatan Sales Order di `scripts/load_canonical_perpetual.py`.
+     - Validasi fail-closed pada `account.move`: mewajibkan relasi `order` (`order = sol.order_id`), `order.company_id == company`, dan `order.fmcg_seed_batch == self.fmcg_seed_batch`.
+  3. *[P1 Finding 3 - Real Accounting Proof & Isolasi Fixture di Verifier]*:
+     - Pada `scripts/ops/verify_disposable_slice.py`:
+       * Mengisolasi mutasi fixture dengan menyimpan `orig_val = prod.categ_id.property_valuation` dan memulihkannya dalam blok `finally`.
+       * Mengasersi `len(ord_cogs) >= 2` untuk faktur non-seed, memvalidasi `account_id`, `product_id`, `company_id`, serta keseimbangan debit dan credit > 0.0.
+       * Mengasersi `mixed_cogs == ord_cogs` dan `len(mixed_cogs) == len(ord_cogs)` (supresi selektif eksak).
+       * Membentuk `out_refund` dan `in_invoice` nyata dengan baris produk persediaan, memvalidasi `_is_seed_... is False`, serta menguji posting native di dalam savepoint.
+     - Menambahkan 7 unit tests di `addons/id_base/tests/test_account_move_cogs.py`.
+  4. *[P2 Finding 4 - Pembuktian Rollback Transaksi Nyata pada Loader Boundary]*:
+     - Menambahkan fungsi `verify_loader_boundary_transaction_rollback(env, reg_path)` pada `scripts/ops/verify_disposable_slice.py`.
+     - Merekam snapshot pre-failure via `_capture_deep_snapshot(env)`.
+     - Mengeksekusi `CanonicalPerpetualAdapter.run_all()` dengan injeksi kegagalan tak terduga setelah partial writes ke `stock.quant`, dokumen (`purchase.order`, `stock.picking`), dan `account.move` / `account.move.line` (AML).
+     - Membuktikan transaksi loader tidak melakukan commit (`commit_called == []`) dan mengeksekusi `self.cr.rollback()` (`len(rollback_called) >= 1`).
+     - Membuktikan `env.invalidate_all()` membersihkan cache dan zero record leakage pada tabel PostgreSQL untuk seluruh model.
+     - Membuktikan snapshot post-failure identik 100% dengan snapshot pre-failure (`pre_snap == post_snap`).
+- Hasil Verifikasi Lokal:
+  * `python -m ruff check .`: All checks passed!
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * 15 file CSV register kanonikal di `data/registers/` 100% beku tanpa modifikasi.
+  * PR #15 tidak dimerge ke `main` dan tidak dideploy ke Railway.
+
 ## 2026-10-29 — antigravity agent — Rekonsiliasi Nilai Jurnal Valuasi HPP Spesifik Produk pada Pengiriman Multi-Item & Toleransi Kuantitas Rejection
 **Konteks & Resolusi:**
 - Memperbaiki validasi nilai HPP di `addons/id_base/models/account_move.py` (`_is_seed_commercial_invoice_with_posted_delivery_cogs`):

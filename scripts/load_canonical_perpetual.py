@@ -1999,13 +1999,16 @@ class CanonicalPerpetualAdapter:
                         "name": f"{lrow.get('product_name')} (Lot: {line_p['lot_number']})",
                     }))
 
-                so = SaleOrder.create({
+                so_vals = {
                     "partner_id": cust_partner.id,
                     "client_order_ref": so_num,
                     "date_order": header_p["date_order"],
                     "user_id": salesman_user.id,
                     "order_line": order_lines,
-                })
+                }
+                if hasattr(SaleOrder, "_fields") and "fmcg_seed_batch" in SaleOrder._fields:
+                    so_vals["fmcg_seed_batch"] = "CANONICAL_JULY_2026_PERPETUAL"
+                so = SaleOrder.create(so_vals)
                 self.stats["so_created"] += 1
 
             if so.state in ("draft", "sent"):

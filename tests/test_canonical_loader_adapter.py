@@ -3258,7 +3258,11 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         }, "stock.move", 101, env)
         sol = MockRecord({
             "name": "SOL-001",
-            "order_id": MockRecord({"name": "SO-202607-0001", "company_id": env.company}, "sale.order", 1, env),
+            "order_id": MockRecord({
+                "name": "SO-202607-0001",
+                "company_id": env.company,
+                "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            }, "sale.order", 1, env),
             "move_ids": MockRecordList([sm_done]),
         }, "sale.order.line", 201, env)
         inv_line = MockRecord({
@@ -3317,7 +3321,11 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             "date": "2026-07-02",
             "account_move_id": cogs_am,
         }, "stock.move", 102, env)
-        so_seed = MockRecord({"name": "SO-202607-0001", "company_id": env.company}, "sale.order", 1, env)
+        so_seed = MockRecord({
+            "name": "SO-202607-0001",
+            "company_id": env.company,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+        }, "sale.order", 1, env)
         sol_undone = MockRecord(
             {"name": "SOL-002", "order_id": so_seed,
              "move_ids": MockRecordList([sm_draft])}, "sale.order.line", 202, env
