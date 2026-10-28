@@ -1,5 +1,21 @@
 # HANDOFF
 
+## 2026-10-29 — antigravity agent — Rekonsiliasi Nilai Jurnal Valuasi HPP Spesifik Produk pada Pengiriman Multi-Item (Multi-Move Picking)
+**Konteks & Resolusi:**
+- Memperbaiki validasi nilai HPP di `addons/id_base/models/account_move.py` (`_is_seed_commercial_invoice_with_posted_delivery_cogs`):
+  * Pada pengiriman multi-item dalam satu picking (seperti `SO-202607-0001` dan `SO-202607-0317`), Odoo ORM menggabungkan valuasi ke dalam satu entri jurnal STJ (`cogs_am`) untuk seluruh pergerakan barang.
+  * Memfilter baris debit `510000` berdasarkan `product_id` pergerakan barang (`sm.product_id`) sebelum membandingkan dengan nilai valuasi pergerakan barang (`expected_move_val`).
+  * Mendukung pencocokan baris spesifik (`has_exact_matching_line`) untuk menangani multi-lot split pada SKU yang sama dalam satu picking, serta pencocokan total agregat produk.
+  * Mempertahankan penolakan ketat fail-closed terhadap seluruh counterexample supervisi (fraud amount, salah produk, salah tanggal, company asing).
+- Hasil Verifikasi Lokal:
+  * `python -m ruff check .`: All checks passed!
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python -m unittest tests/test_canonical_loader_adapter.py`: 63/63 tests PASS, 20/20 mutasi ditolak
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * 15 file CSV register kanonikal di `data/registers/` 100% beku tanpa modifikasi.
+  * PR #15 tidak dimerge ke `main` dan tidak dideploy ke Railway.
+
 ## 2026-10-28 — antigravity agent — Resolusi Tuntas 4 Temuan Supervisi PR #15 (issuecomment-6473770755): Presisi Singular HPP Proof, Eksak Seed Company Config Parameter, Real ORM Native COGS Verification, dan Deep Rollback Invalidation
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6473770755](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6473770755)):**
 - Menindaklanjuti audit supervisi pada commit `34002a6` yang mengidentifikasi 3 blocker P1 dan 1 temuan P2:

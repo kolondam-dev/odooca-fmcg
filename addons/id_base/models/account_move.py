@@ -288,12 +288,45 @@ class AccountMove(models.Model):
                 ):
                     expected_move_val = round(float(sm.product_id.standard_price) * sm_move_qty, 2)
 
-                if expected_move_val is not None and expected_move_val > 0.0:
-                    if abs(total_debit_hpp - expected_move_val) > 0.01:
-                        raise UserError(
-                            f"[id_base] Nilai jurnal valuasi HPP (Rp {total_debit_hpp:.2f}) tidak sesuai "
-                            f"dengan nilai valuasi pergerakan barang (Rp {expected_move_val:.2f})!"
+                has_any_aml_prod = any(getattr(aml, "product_id", None) for aml in am_lines)
+                prod_aml_debits = [
+                    float(getattr(aml, "debit", 0.0) or 0.0)
+                    for aml in am_lines
+                    if getattr(getattr(aml, "account_id", None), "code", "") == "510000"
+                    and (
+                        (getattr(aml, "product_id", None) == sm.product_id)
+                        or (
+                            getattr(getattr(aml, "product_id", None), "id", None) is not None
+                            and getattr(getattr(aml, "product_id", None), "id", None)
+                            == getattr(sm.product_id, "id", None)
                         )
+                    )
+                ]
+                prod_debit_hpp = sum(prod_aml_debits)
+
+                if has_any_aml_prod:
+                    if prod_debit_hpp <= 0.0:
+                        raise UserError(
+                            f"[id_base] Jurnal valuasi stok '{cogs_lbl}' tidak memuat baris HPP untuk produk "
+                            f"'{getattr(sm.product_id, 'display_name', sm.product_id)}'!"
+                        )
+                    if expected_move_val is not None and expected_move_val > 0.0:
+                        has_exact_matching_line = any(abs(d - expected_move_val) <= 0.01 for d in prod_aml_debits)
+                        total_matches = abs(prod_debit_hpp - expected_move_val) <= 0.01
+                        if not (has_exact_matching_line or total_matches):
+                            prod_name = getattr(sm.product_id, "display_name", sm.product_id)
+                            raise UserError(
+                                f"[id_base] Nilai jurnal valuasi HPP produk '{prod_name}' "
+                                f"(Rp {prod_debit_hpp:.2f}) tidak sesuai "
+                                f"dengan nilai valuasi pergerakan barang (Rp {expected_move_val:.2f})!"
+                            )
+                else:
+                    if expected_move_val is not None and expected_move_val > 0.0:
+                        if abs(total_debit_hpp - expected_move_val) > 0.01:
+                            raise UserError(
+                                f"[id_base] Nilai jurnal valuasi HPP (Rp {total_debit_hpp:.2f}) tidak sesuai "
+                                f"dengan nilai valuasi pergerakan barang (Rp {expected_move_val:.2f})!"
+                            )
 
             # Kuantitas delivery moves wajib mencukupi kuantitas baris faktur
             if line_qty > 0.0 and abs(total_sm_qty - line_qty) > 0.001:

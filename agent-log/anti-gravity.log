@@ -986,3 +986,16 @@
 - Task managed by antigravity at 2026-10-28T23:46:00+07:00
 
 
+[2026-10-29T00:15:00+07:00] [INFO] Rekonsiliasi Nilai Jurnal Valuasi HPP Spesifik Produk pada Pengiriman Multi-Item (Multi-Move Picking)
+- Memperbaiki validasi nilai HPP di id_base account.move (_is_seed_commercial_invoice_with_posted_delivery_cogs):
+  * Pada pengiriman multi-item dalam satu picking (seperti SO-202607-0001 dan SO-202607-0317), Odoo menghasilkan satu entri jurnal STJ gabungan untuk seluruh pergerakan barang.
+  * Memfilter baris debit 510000 berdasarkan product_id pergerakan barang (sm.product_id) sebelum membandingkan dengan nilai valuasi pergerakan barang (expected_move_val).
+  * Mendukung pencocokan baris spesifik (has_exact_matching_line) untuk menangani multi-lot split pada SKU yang sama dalam satu picking, serta pencocokan total agregat produk.
+  * Mempertahankan penolakan ketat fail-closed terhadap seluruh counterexample supervisi (fraud amount, salah produk, salah tanggal, company asing).
+- Verifikasi lokal:
+  * ruff check . (All checks passed!)
+  * check_manifests.py (4 addon ok)
+  * test_canonical_loader_adapter.py (63/63 tests PASS, 20/20 mutasi ditolak)
+  * verify_seed_invariants.py & verify_seed_acceptance.py (PASS, 0 violations)
+- Task managed by antigravity at 2026-10-29T00:15:00+07:00
+
