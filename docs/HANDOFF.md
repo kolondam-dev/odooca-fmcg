@@ -1,5 +1,12 @@
 # HANDOFF
 
+## 2026-10-28 — implementer — Residual P2 hidden input pada PR #32
+**Basis:** review supervisor untuk SHA `9abcd5f9a489f511fd6201cdcca753da97deac8a`; verdict HOLD satu P2. Branch tetap `agen/ui-form-title-v8`; tidak melakukan review, merge, atau deploy.
+**Perbaikan:** menambahkan `getEditableTitleInput(block)` sebagai satu guard bersama untuk render spec dan aktivasi editor. Hidden input dikecualikan, sementara satu-satunya input visible yang lolos validasi (text/search non-required dalam h1) dipilih konsisten. Handler tidak lagi menggunakan `querySelector("h1 input")` yang dapat memilih hidden input.
+**Regresi:** memperluas `docs/ui/e2e/test_title_spec.py` untuk hidden input sebelum input draft, hidden-only dengan judul readonly, dan hidden plus dua visible controls. Fixture hidden-before-visible memanggil helper produksi dan memastikan input text asli menjadi activeElement; unsupported second visible control tetap ditolak.
+**Verifikasi:** belum mengklaim tes lulus lokal. Perlu menunggu CI pada SHA baru dan review ulang supervisor. Status sebelumnya untuk SHA `9abcd5f` hijau, tetapi tidak mencakup residual P2 ini. Tidak merge/deploy.
+
+
 ## 2026-10-28 — implementer — Perbaikan akses keyboard dan validasi judul form PR #32
 **Basis:** PR #32, checkpoint supervisor `aa38722346ba88a1a8488f74f1befb21bc39cfcd`; branch `agen/ui-form-title-v8`. Fokus hanya dua temuan P2, tidak mengubah seed/accounting atau deployment.
 **Berubah:** `readTitleSpec` fail-closed: judul readonly berbasis teks diterima; kontrol editable hanya satu input text/search non-required di `h1`. Multiple control, contenteditable, select/textarea, native/ARIA/Odoo required, disabled/readonly input, tipe lain, dan input di luar h1 ditolak sehingga blok asli tetap terlihat. Judul editable dirender sebagai tombol native dengan accessible label, Tab/Enter/Space, focus-visible, Escape, blur dan pembaruan nilai; node OWL tidak dipindah.
