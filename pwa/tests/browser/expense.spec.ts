@@ -1,3 +1,4 @@
+import { switchPersona } from "./delivery-helpers";
 import { expect, test, type Page, type BrowserContext } from "@playwright/test";
 async function requestAdvance(page: Page, category = "meal") {
     await page.addInitScript(() => {
@@ -138,7 +139,7 @@ test("component draft restores offline and queues realization separately from ap
         fullPage: true,
     });
     await page.getByRole("button", { name: "Kembali ke akun" }).click();
-    await page.getByLabel("Persona demo").selectOption("delivery");
+    await switchPersona(page, "delivery");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await page
         .getByRole("button", { name: "Realisasi & saldo uang lapangan" })

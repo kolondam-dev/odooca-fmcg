@@ -99,6 +99,7 @@ export function MorningSession({
         <section
             class="morning-card"
             aria-label="Sesi kerja pagi simulasi"
+            data-owner={`${identity.companyId}:${identity.id}`}
             aria-busy={!loaded || busy}
         >
             <div class="morning-heading">

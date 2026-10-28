@@ -1,3 +1,4 @@
+import { switchPersona } from "./delivery-helpers";
 import { expect, test } from "@playwright/test";
 test("diagnosis filters, safe detail and persona isolation preserve offline data", async ({
     page,
@@ -133,7 +134,7 @@ test("diagnosis filters, safe detail and persona isolation preserve offline data
         path: `test-results/diagnosis-${test.info().project.name}.png`,
         fullPage: true,
     });
-    await page.getByLabel("Persona demo").selectOption("delivery");
+    await switchPersona(page, "delivery");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(
         page.getByText(
@@ -144,7 +145,7 @@ test("diagnosis filters, safe detail and persona isolation preserve offline data
     await expect(
         page.getByText("Diagnostic fixture 4", { exact: true }),
     ).toHaveCount(0);
-    await page.getByLabel("Persona demo").selectOption("sales");
+    await switchPersona(page, "sales");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(region.locator(".activity")).toHaveCount(6);
     const after = await page.evaluate(async () => {

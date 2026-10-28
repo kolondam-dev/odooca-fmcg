@@ -552,3 +552,20 @@ antrean yang sah dapat lintas hari. Sesi aktif yang tertinggal lintas hari atau
 rusak ditahan untuk review, belum ada recovery/pembatalan otomatis. Bukti opening,
 closing dan seluruh ancestor koreksi diperiksa sebelum sync. Live tetap terkunci;
 media/maps/auth/device/authority server dan posting stok/retur/AR belum tersedia.
+
+
+### Follow-up review PR33 (c48bf5a)
+
+Delivery pertama kali dapat dibuka offline dari manifest yang sudah diterima daily
+sync, meskipun cache list belum pernah dibuat. Materialisasi lokal memvalidasi
+owner/hari/keunikan; cache berbeda/rusak ditahan, tidak ditimpa. Pembukaan list
+ini tidak meminta ulang manifest ke provider. Collection mempunyai cache sumber
+terpisah; status belum tersedianya tagihan offline bukan kegagalan list POD.
+
+Riwayat koreksi menampilkan setiap nama SKU, received dan unit source command
+historisnya (pcs pada manifest baru; karton tetap karton pada legacy).
+Helper browser menunggu completion absensi/tombol sync enabled serta owner dan
+restore persona tujuan. Regresi browser menahan completion IndexedDB dan restore
+secara deterministik; tanpa sleep, timeout lebih panjang, pengurangan worker atau
+skip. 239 unit +1 hosting +84 browser resmi145.0.7632.6 lokal lulus (64 lama+20
+regresi); hasil remote pada SHA perbaikan dicatat di PR setelah publikasi.

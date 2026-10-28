@@ -35,7 +35,6 @@ import { ownerKey } from "../domain/contracts";
 export function DeliveryWorkspace({
     store,
     identity,
-    provider,
     engine,
     changed,
     queue,
@@ -61,29 +60,29 @@ export function DeliveryWorkspace({
                 throw new Error(
                     "Daily sync manifest wajib sebelum list Delivery.",
                 );
-            let value = await store.draft(owner, cache);
-            if (value === undefined) {
-                if (!navigator.onLine || !provider.deliveryTasks)
-                    throw new Error(
-                        "Manifest belum tersedia. Hubungkan jaringan untuk memuat tugas.",
-                    );
-                value = await store.createDraftIfAbsent(
-                    owner,
-                    cache,
-                    morning.deliveryManifest,
-                );
-            }
-            const parsed = z.array(DeliveryTaskSchema).min(1).parse(value);
+            const manifest = z
+                .array(DeliveryTaskSchema)
+                .min(1)
+                .parse(morning.deliveryManifest);
             if (
-                JSON.stringify(parsed) !==
-                    JSON.stringify(morning.deliveryManifest) ||
-                parsed.some(
+                manifest.some(
                     (s) =>
                         s.owner !== owner ||
                         s.business_date !== identity.businessDate,
                 ) ||
-                new Set(parsed.map(podKey)).size !== parsed.length
+                new Set(manifest.map(podKey)).size !== manifest.length
             )
+                throw new Error(
+                    "Manifest tidak cocok dengan petugas/hari ini.",
+                );
+            let value = await store.draft(owner, cache);
+            if (value === undefined) {
+                // Daily sync already fetched this bundle. No network is needed to
+                // materialize the validated local projection for the first visit.
+                value = await store.createDraftIfAbsent(owner, cache, manifest);
+            }
+            const parsed = z.array(DeliveryTaskSchema).min(1).parse(value);
+            if (JSON.stringify(parsed) !== JSON.stringify(manifest))
                 throw new Error(
                     "Manifest tidak cocok dengan petugas/hari ini.",
                 );
@@ -449,7 +448,22 @@ function PodForm({
                                     }{" "}
                                     ·{" "}
                                     {h.command.type === "delivery.pod.submit"
-                                        ? `${h.command.payload.recipient} · ${{ delivered: "Fully Received", partial: "Received Partial", rejected: "Rejected", cancel_delivery: "Cancel Delivery", pending_requested: "Pending Requested" }[h.command.payload.outcome]} · ${h.command.payload.lines.map((l) => `${l.received}`).join(", ")} karton${h.command.payload.correction_reason ? ` · ${h.command.payload.correction_reason}` : ""}`
+                                        ? `${h.command.payload.recipient} · ${{ delivered: "Fully Received", partial: "Received Partial", rejected: "Rejected", cancel_delivery: "Cancel Delivery", pending_requested: "Pending Requested" }[h.command.payload.outcome]} · ${h.command.payload.lines
+                                              .map((l) => {
+                                                  const source =
+                                                      h.command.type ===
+                                                      "delivery.pod.submit"
+                                                          ? h.command.payload.source.lines.find(
+                                                                (s) =>
+                                                                    s.id ===
+                                                                    l.id,
+                                                            )
+                                                          : undefined;
+                                                  return `${source?.name ?? l.id}: ${l.received} ${source?.unit ?? "unit tidak tersedia"}`;
+                                              })
+                                              .join(
+                                                  "; ",
+                                              )}${h.command.payload.correction_reason ? ` · ${h.command.payload.correction_reason}` : ""}`
                                         : ""}
                                 </p>
                             ))}

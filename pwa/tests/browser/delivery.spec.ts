@@ -1,8 +1,9 @@
+import { switchPersona } from "./delivery-helpers";
 import { ensureDaily, startDelivery } from "./delivery-helpers";
 import { expect, test, type Page } from "@playwright/test";
 async function openDelivery(page: Page) {
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("delivery");
+    await switchPersona(page, "delivery");
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
     const task = page

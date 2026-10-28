@@ -1,22 +1,43 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+const owners = {
+    sales: "demo-mdu:DEMO-ANDRE",
+    delivery: "demo-mdu:DEMO-NOVRY",
+    canvass: "demo-mdu:DEMO-STEVEN",
+};
+export async function switchPersona(page: Page, actor: keyof typeof owners) {
+    await page.getByLabel("Persona demo").selectOption(actor);
+    const region = page.getByRole("region", {
+        name: "Sesi kerja pagi simulasi",
+        exact: true,
+    });
+    await expect(region).toHaveAttribute("data-owner", owners[actor]);
+    await expect(region).toHaveAttribute("aria-busy", "false");
+}
 export async function ensureDaily(page: Page) {
-    await expect(
-        page.getByRole("region", {
-            name: "Sesi kerja pagi simulasi",
-            exact: true,
-        }),
-    ).toHaveAttribute("aria-busy", "false");
-    const attendance = page.getByRole("button", {
+    const region = page.getByRole("region", {
+        name: "Sesi kerja pagi simulasi",
+        exact: true,
+    });
+    await expect(region).toHaveAttribute("aria-busy", "false");
+    const ready = region.getByText("Sesi terbuka", { exact: true });
+    if (await ready.isVisible()) return;
+    const attendance = region.getByRole("button", {
         name: "Simulasikan absensi diterima",
         exact: true,
     });
-    if (await attendance.isVisible()) await attendance.click();
-    const sync = page.getByRole("button", {
+    const sync = region.getByRole("button", {
         name: "Sync pagi & buka sesi demo",
         exact: true,
     });
-    if (await sync.isVisible()) await sync.click();
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    if (await attendance.isVisible()) {
+        await attendance.click();
+        // The IDB write must finish before the next action exists/enables.
+        await expect(sync).toBeEnabled();
+    }
+    await expect(sync).toBeEnabled();
+    await sync.click();
+    await expect(region).toHaveAttribute("aria-busy", "false");
+    await expect(ready).toBeVisible();
 }
 export async function saveDeliveryPhoto(task: Locator) {
     await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");

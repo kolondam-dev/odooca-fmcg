@@ -1,3 +1,4 @@
+import { switchPersona } from "./delivery-helpers";
 import { saveVisitPhoto } from "./visit-helpers";
 import { expect, test, type Page } from "@playwright/test";
 async function openMorning(page: Page) {
@@ -100,7 +101,7 @@ test("stacked roles and persona switch never show another persona queue", async 
 }) => {
     await page.goto("./");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("delivery");
+    await switchPersona(page, "delivery");
     await expect(page.getByRole("heading", { name: /Novry/ })).toBeVisible();
     await expect(
         page
@@ -108,7 +109,7 @@ test("stacked roles and persona switch never show another persona queue", async 
             .getByRole("button", { name: "Sales", exact: true }),
     ).toHaveCount(0);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("canvass");
+    await switchPersona(page, "canvass");
     await expect(
         page
             .getByRole("navigation")
@@ -163,12 +164,12 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await expect(
         page.getByText("Diterima simulator", { exact: true }).last(),
     ).toBeVisible({ timeout: 20000 });
-    await page.getByLabel("Persona demo").selectOption("delivery");
+    await switchPersona(page, "delivery");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(
         page.getByText("Belum ada aktivitas. Mulai dari order atau pengajuan."),
     ).toBeVisible();
-    await page.getByLabel("Persona demo").selectOption("sales");
+    await switchPersona(page, "sales");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(page.locator(".activity")).toHaveCount(2);
 });
@@ -294,7 +295,7 @@ test("morning gate requires online sync, persists per persona and expires next d
     await page.reload();
     await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("canvass");
+    await switchPersona(page, "canvass");
     await expect(page.getByText("Sesi terbuka", { exact: true })).toHaveCount(
         0,
     );
@@ -305,7 +306,7 @@ test("morning gate requires online sync, persists per persona and expires next d
         }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("sales");
+    await switchPersona(page, "sales");
     await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
     await page.clock.setSystemTime(new Date("2026-10-27T16:00:01Z"));
     await page.reload();

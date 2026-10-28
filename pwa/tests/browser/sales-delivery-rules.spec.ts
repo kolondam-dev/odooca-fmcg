@@ -1,3 +1,4 @@
+import { switchPersona } from "./delivery-helpers";
 import { expect, test } from "@playwright/test";
 import {
     ensureDaily,
@@ -98,7 +99,7 @@ test("multi-SKU partial requires line reasons, closes session offline and update
 }) => {
     await page.goto("./");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("delivery");
+    await switchPersona(page, "delivery");
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
     await expect(
         page.getByText("Daily sync wajib sebelum membuka list Delivery."),
@@ -142,7 +143,7 @@ test("multi-SKU partial requires line reasons, closes session offline and update
     await context.setOffline(true);
     await page.reload();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Persona demo").selectOption("delivery");
+    await switchPersona(page, "delivery");
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
     const restored = page
