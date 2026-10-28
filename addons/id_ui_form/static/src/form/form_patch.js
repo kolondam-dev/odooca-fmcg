@@ -43,6 +43,7 @@ export function readTitleSpec(block) {
             !["text", "search"].includes(type) ||
             input.required ||
             input.getAttribute("aria-required") === "true" ||
+            input.closest('[aria-required="true"]') ||
             input.closest(".o_required_modifier") ||
             input.readOnly ||
             input.disabled
@@ -125,7 +126,7 @@ patch(FormRenderer.prototype, {
             header.dataset.idKey = key;
             if (spec.editable) {
                 header.type = "button";
-                header.setAttribute("aria-label", _t("Edit document number: %s", spec.main));
+                header.setAttribute("aria-label", `${_t("Edit document number")}: ${spec.main}`);
             } else {
                 header.removeAttribute("type");
                 header.removeAttribute("aria-label");
