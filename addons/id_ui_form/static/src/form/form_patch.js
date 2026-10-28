@@ -57,6 +57,20 @@ export function getEditableTitleInput(block) {
 }
 
 /**
+ * Membuka editor hanya melalui input visible yang telah lolos guard.
+ * Fungsi ini dipakai langsung oleh handler dan diuji terhadap fixture DOM.
+ */
+export function focusEditableTitleInput(block) {
+    const input = getEditableTitleInput(block);
+    if (!block || !input) {
+        return null;
+    }
+    block.classList.add("id_title_editing");
+    input.focus();
+    return input;
+}
+
+/**
  * Membaca judul yang aman dipromosikan ke statusbar. Judul readonly boleh berupa teks
  * biasa; kontrol editable hanya diterima jika getEditableTitleInput mengembalikan input
  * teks/pencarian non-wajib yang tunggal. Jika ada kontrol visible tidak didukung, blok asli
@@ -185,7 +199,6 @@ patch(FormRenderer.prototype, {
             if (!block || !input) {
                 return;
             }
-            block.classList.add("id_title_editing");
             const closeEditor = () => {
                 block.classList.remove("id_title_editing");
                 input.removeEventListener("keydown", onEditorKeydown);
@@ -200,7 +213,11 @@ patch(FormRenderer.prototype, {
             };
             input.addEventListener("blur", closeEditor, { once: true });
             input.addEventListener("keydown", onEditorKeydown);
-            input.focus();
+            // Revalidasi saat aktivasi; hidden input tak pernah dapat menerima fokus.
+            if (focusEditableTitleInput(block) !== input) {
+                input.removeEventListener("blur", closeEditor);
+                input.removeEventListener("keydown", onEditorKeydown);
+            }
         };
         // Ketikan di input judul langsung tercermin di header.
         const onInput = (ev) => {
