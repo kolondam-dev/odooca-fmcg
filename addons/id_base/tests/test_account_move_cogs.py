@@ -107,18 +107,36 @@ class TestAccountMoveCogs(TransactionCase):
         journal = self._get_or_create_journal(company, j_type=j_type)
         acc_type = "expense" if j_type == "purchase" else "income"
         acc_code = "610000" if j_type == "purchase" else "410000"
-        account = self._get_or_create_account(company, acc_type=acc_type, code=acc_code)
+        product_account = self._get_or_create_account(company, acc_type=acc_type, code=acc_code)
 
-        return self.env["account.move"].create({
+        rec_account = self._get_or_create_account(company, acc_type="asset_receivable", code="112000")
+        pay_account = self._get_or_create_account(company, acc_type="liability_payable", code="211000")
+
+        partner = self.env["res.partner"].create({
+            "name": f"Partner Test {company.id}",
+            "company_id": False,
+            "property_account_receivable_id": rec_account.id,
+            "property_account_payable_id": pay_account.id,
+        })
+        if hasattr(partner, "with_company"):
+            partner.with_company(company).write({
+                "property_account_receivable_id": rec_account.id,
+                "property_account_payable_id": pay_account.id,
+            })
+
+        MoveModel = self.env["account.move"]
+        target_model = MoveModel.with_company(company) if hasattr(MoveModel, "with_company") else MoveModel
+
+        return target_model.create({
             "move_type": move_type,
-            "partner_id": self.partner.id,
+            "partner_id": partner.id,
             "company_id": company.id,
             "journal_id": journal.id,
             "is_fmcg_seed_invoice": is_seed,
             "invoice_line_ids": [
                 (0, 0, {
                     "product_id": self.product.id,
-                    "account_id": account.id,
+                    "account_id": product_account.id,
                     "quantity": 10.0,
                     "price_unit": 30000.0,
                 }),
