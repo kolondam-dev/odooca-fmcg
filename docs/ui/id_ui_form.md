@@ -19,7 +19,7 @@ pindah ke statusbar; footer total menempel di bawah (sticky).
   Satu-satunya kontrol editable yang dipromosikan adalah tepat satu `input` teks/pencarian non-wajib
   di dalam `<h1>` (nomor draft faktur). Multiple controls, `select`, `textarea`, `contenteditable`,
   input required/native `aria-required`, modifier wajib Odoo, input disabled/readonly, tipe input lain,
-  atau input di luar `<h1>` membuat fungsi mengembalikan `null`; blok asli tetap terlihat.
+  atau input di luar `<h1>` membuat fungsi mengembalikan `null`; hidden input diabaikan dan tidak pernah dipilih sebagai editor; blok asli tetap terlihat.
   Tombol native pada header mendukung Tab, Enter, Space, nama aksesibel dan focus-visible; aktivasi
   membuka serta memfokuskan input OWL asli. Escape/blur menutup editor tanpa memindahkan node OWL.
 - Batasan lain: elemen dibatasi ke akar renderer (`useRef("compiled_view_root")`), idempoten (kunci teks
@@ -46,4 +46,4 @@ footer sticky, divider systray (normal dan debug), pager, ganti tata letak, hotk
 
 
 ### Regresi guard judul
-`python -m unittest discover -s docs/ui/e2e -p 'test_*.py' -v` menjalankan fungsi `readTitleSpec` yang diekstrak dari source produksi di Chromium terhadap fixture readonly, nomor draft invoice, multiple input, contenteditable, required/aria-required/Odoo modifier, select, textarea, input luar h1, dan tipe input tak didukung.
+`python -m unittest discover -s docs/ui/e2e -p 'test_*.py' -v` menjalankan fungsi `readTitleSpec` yang diekstrak dari source produksi di Chromium terhadap fixture readonly, nomor draft invoice, multiple input, contenteditable, required/aria-required/Odoo modifier, select, textarea, input luar h1, tipe input tak didukung, serta hidden input sebelum nomor draft untuk memastikan fokus selalu ke input yang tervalidasi.
