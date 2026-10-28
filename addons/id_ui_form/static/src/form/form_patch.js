@@ -109,17 +109,23 @@ patch(FormRenderer.prototype, {
             if (current?.dataset.idKey === key) {
                 return;
             }
-            const el = current || document.createElement(spec.editable ? "button" : "div");
-            if (spec.editable && el.tagName !== "BUTTON") {
-                el.replaceWith(document.createElement("button"));
+            let header = current;
+            let needsInsert = !current;
+            if (!header || (spec.editable && header.tagName !== "BUTTON") || (!spec.editable && header.tagName === "BUTTON")) {
+                const replacement = document.createElement(spec.editable ? "button" : "div");
+                if (header) {
+                    header.replaceWith(replacement);
+                }
+                header = replacement;
+                needsInsert = !header.isConnected;
             }
-            const header = statusbar.querySelector(":scope > .id_header_title") || el;
             header.className = "id_header_title" + (spec.editable ? " id_header_title--editable" : "");
             header.dataset.idKey = key;
             if (spec.editable) {
                 header.type = "button";
                 header.setAttribute("aria-label", _t("Edit document number: %s", spec.main));
             } else {
+                header.removeAttribute("type");
                 header.removeAttribute("aria-label");
             }
             const parts = [];
@@ -134,7 +140,7 @@ patch(FormRenderer.prototype, {
             main.textContent = spec.main;
             parts.push(main);
             header.replaceChildren(...parts);
-            if (!current) {
+            if (needsInsert) {
                 if (spec.editable) {
                     header.addEventListener("click", onTitleClick);
                 }
