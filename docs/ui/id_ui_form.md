@@ -15,11 +15,13 @@ pindah ke statusbar; footer total menempel di bawah (sticky).
   status (`flex: 1 1 0`, selisih tengah terukur 0px). Label kecil di atas judul (mis. "Customer Invoice")
   menjadi caption. Node OWL tidak pernah dipindah; blok asli `.o_form_sheet > .oe_title` disembunyikan
   lewat CSS `:has()` hanya bila judulnya sudah tampil di header.
-- **Aturan "judul murni" (`readTitleSpec`).** Blok judul diangkat hanya bila tidak memuat field untuk
-  diisi pengguna: tidak ada kontrol di luar `<h1>` dan tidak ada kontrol wajib isi. Satu input nomor
-  non-wajib di `<h1>` (nomor draft faktur) tetap dianggap judul; klik judul membuka input aslinya untuk
-  diedit (kelas `id_title_editing`). Blok yang berisi field (kendaraan, produk, kontak, principal)
-  tetap di sheet tanpa header. Field form tidak pernah berubah tempat.
+- **Aturan fail-closed judul murni (`readTitleSpec`).** Judul readonly boleh berupa teks biasa.
+  Satu-satunya kontrol editable yang dipromosikan adalah tepat satu `input` teks/pencarian non-wajib
+  di dalam `<h1>` (nomor draft faktur). Multiple controls, `select`, `textarea`, `contenteditable`,
+  input required/native `aria-required`, modifier wajib Odoo, input disabled/readonly, tipe input lain,
+  atau input di luar `<h1>` membuat fungsi mengembalikan `null`; blok asli tetap terlihat.
+  Tombol native pada header mendukung Tab, Enter, Space, nama aksesibel dan focus-visible; aktivasi
+  membuka serta memfokuskan input OWL asli. Escape/blur menutup editor tanpa memindahkan node OWL.
 - Batasan lain: elemen dibatasi ke akar renderer (`useRef("compiled_view_root")`), idempoten (kunci teks
   di `data-id-key`), dibuang bila tata letak klasik, layar kecil, atau form di dialog (syarat JS sama
   dengan syarat CSS). Uji: pager, ketik, form baru, batalkan, ganti tata letak, layar kecil, faktur,
@@ -38,5 +40,10 @@ pindah ke statusbar; footer total menempel di bawah (sticky).
 
 ## Uji
 `docs/ui/e2e/smoke_ui.py` (Playwright): sidebar, tab chatter, tanpa chatter samping, tanpa scroll halaman,
-judul murni tepat di tengah (SO, faktur), blok berisi field tidak diangkat (kendaraan), layar kecil,
+judul murni tepat di tengah (SO, faktur), keyboard edit nomor draft (Enter/Space/blur/Escape),
+blok berisi field tidak diangkat (kendaraan), layar kecil,
 footer sticky, divider systray (normal dan debug), pager, ganti tata letak, hotkey.
+
+
+### Regresi guard judul
+`python -m pytest docs/ui/e2e/test_title_spec.py` menjalankan fungsi `readTitleSpec` yang diekstrak dari source produksi di Chromium terhadap fixture readonly, nomor draft invoice, multiple input, contenteditable, required/aria-required/Odoo modifier, select, textarea, input luar h1, dan tipe input tak didukung.
