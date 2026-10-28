@@ -112,17 +112,18 @@ class TestAccountMoveCogs(TransactionCase):
         rec_account = self._get_or_create_account(company, acc_type="asset_receivable", code="112000")
         pay_account = self._get_or_create_account(company, acc_type="liability_payable", code="211000")
 
-        partner = self.env["res.partner"].create({
+        PartnerModel = self.env["res.partner"]
+        has_wc = hasattr(PartnerModel, "with_company")
+        target_partner_model = PartnerModel.with_company(company) if has_wc else PartnerModel
+
+        partner = target_partner_model.create({
             "name": f"Partner Test {company.id}",
-            "company_id": False,
-            "property_account_receivable_id": rec_account.id,
-            "property_account_payable_id": pay_account.id,
+            "company_id": company.id,
         })
-        if hasattr(partner, "with_company"):
-            partner.with_company(company).write({
-                "property_account_receivable_id": rec_account.id,
-                "property_account_payable_id": pay_account.id,
-            })
+        if hasattr(partner, "property_account_receivable_id"):
+            partner.property_account_receivable_id = rec_account.id
+        if hasattr(partner, "property_account_payable_id"):
+            partner.property_account_payable_id = pay_account.id
 
         MoveModel = self.env["account.move"]
         target_model = MoveModel.with_company(company) if hasattr(MoveModel, "with_company") else MoveModel
