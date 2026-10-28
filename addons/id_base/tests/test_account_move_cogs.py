@@ -1,0 +1,203 @@
+# Part of odooca-fmcg. License LGPL-3.
+"""Odoo TransactionCase untuk ekstensi akuntansi perpetual FMCG account.move."""
+
+from types import SimpleNamespace
+
+from odoo.exceptions import UserError
+from odoo.tests import TransactionCase, tagged
+
+
+@tagged("post_install", "-at_install", "id_base")
+class TestAccountMoveCogs(TransactionCase):
+    """Pengujian integrasi Odoo ORM TransactionCase terhadap hook COGS dan predikat seed."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # Seed company PT Salva Inti Mandiri
+        cls.company_seed = cls.env["res.company"].search([("name", "=", "PT Salva Inti Mandiri")], limit=1)
+        if not cls.company_seed:
+            cls.company_seed = cls.env["res.company"].create({
+                "name": "PT Salva Inti Mandiri",
+            })
+
+        # Foreign company yang mengandung "Salva" untuk menguji ketatnya batas company
+        cls.company_foreign = cls.env["res.company"].search([("name", "=", "PT Salva Trading Indonesia")], limit=1)
+        if not cls.company_foreign:
+            cls.company_foreign = cls.env["res.company"].create({
+                "name": "PT Salva Trading Indonesia",
+            })
+
+        # Partner
+        cls.partner = cls.env["res.partner"].create({
+            "name": "Toko Retail Uji FMCG",
+            "company_id": cls.company_seed.id,
+        })
+
+        # Product
+        cls.product = cls.env["product.product"].create({
+            "name": "SKU FMCG Test",
+            "standard_price": 25000.0,
+            "list_price": 30000.0,
+        })
+
+        # Jurnal Penjualan
+        cls.journal_sale = cls.env["account.journal"].search([
+            ("type", "=", "sale"),
+            ("company_id", "=", cls.company_seed.id),
+        ], limit=1)
+        if not cls.journal_sale:
+            cls.journal_sale = cls.env["account.journal"].create({
+                "name": "Customer Invoices Test",
+                "code": "INVTEST",
+                "type": "sale",
+                "company_id": cls.company_seed.id,
+            })
+
+    def _create_basic_invoice(self, company, is_seed=False, move_type="out_invoice"):
+        """Helper untuk membuat faktur pengujian."""
+        return self.env["account.move"].create({
+            "move_type": move_type,
+            "partner_id": self.partner.id,
+            "company_id": company.id,
+            "is_fmcg_seed_invoice": is_seed,
+            "invoice_line_ids": [
+                (0, 0, {
+                    "product_id": self.product.id,
+                    "quantity": 10.0,
+                    "price_unit": 30000.0,
+                }),
+            ],
+        })
+
+    def test_non_seed_invoice_in_seed_company_calls_native(self):
+        """Kasus 1: Invoice biasa tanpa penanda seed di seed company dilarang dianggap seed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=False)
+        self.assertFalse(inv.is_fmcg_seed_invoice)
+        self.assertFalse(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+        # Native prepare out lines vals dapat dipanggil tanpa exception
+        vals = inv._stock_account_prepare_realtime_out_lines_vals()
+        self.assertIsInstance(vals, list)
+
+    def test_unmarked_invoice_in_foreign_company_calls_native(self):
+        """Kasus 2: Invoice biasa di company foreign bernama mirip tetap bernilai False."""
+        inv = self._create_basic_invoice(self.company_foreign, is_seed=False)
+        self.assertFalse(inv.is_fmcg_seed_invoice)
+        self.assertFalse(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+    def test_marked_seed_in_foreign_company_raises_user_error(self):
+        """Kasus 2b: Invoice yang ditandai seed tetapi pada foreign company wajib fail-closed."""
+        inv = self._create_basic_invoice(self.company_foreign, is_seed=True)
+        self.assertTrue(inv.is_fmcg_seed_invoice)
+        with self.assertRaises(UserError) as ctx:
+            inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("bukan perusahaan seed FMCG", str(ctx.exception))
+
+    def test_marked_seed_without_delivery_moves_raises_user_error(self):
+        """Kasus 3: Invoice bertanda seed tanpa link delivery move wajib ditolak fail-closed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        with self.assertRaises(UserError) as ctx:
+            inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertTrue(
+            "tidak memiliki relasi sale_line_ids" in str(ctx.exception)
+            or "tidak memiliki pergerakan pengiriman" in str(ctx.exception)
+        )
+
+    def test_marked_seed_with_unposted_cogs_journal_raises_user_error(self):
+        """Kasus 4: Invoice bertanda seed dengan jurnal STJ belum posted wajib ditolak fail-closed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+
+        # Pasang mock pergerakan barang dengan jurnal valuasi draft
+        bad_journal_am = SimpleNamespace(
+            id=991,
+            name="STJ/DRAFT/01",
+            state="draft",
+            company_id=self.company_seed,
+            journal_id=SimpleNamespace(code="STJ"),
+            line_ids=[],
+        )
+        fake_sm = SimpleNamespace(
+            id=881,
+            name="OUT/TEST/01",
+            state="done",
+            account_move_id=bad_journal_am,
+        )
+        fake_sol = SimpleNamespace(move_ids=[fake_sm])
+        line.sale_line_ids = [fake_sol]
+
+        with self.assertRaises(UserError) as ctx:
+            inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("belum berstatus 'posted'", str(ctx.exception))
+
+    def test_marked_seed_with_wrong_journal_raises_user_error(self):
+        """Kasus 4b: Jurnal valuasi bukan STJ wajib ditolak fail-closed."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+
+        wrong_journal_am = SimpleNamespace(
+            id=992,
+            name="MISC/2026/01",
+            state="posted",
+            company_id=self.company_seed,
+            journal_id=SimpleNamespace(code="MISC"),
+            line_ids=[],
+        )
+        fake_sm = SimpleNamespace(
+            id=882,
+            name="OUT/TEST/02",
+            state="done",
+            account_move_id=wrong_journal_am,
+        )
+        fake_sol = SimpleNamespace(move_ids=[fake_sm])
+        line.sale_line_ids = [fake_sol]
+
+        with self.assertRaises(UserError) as ctx:
+            inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("diharapkan 'STJ'", str(ctx.exception))
+
+    def test_positive_seed_invoice_suppresses_duplicate_cogs(self):
+        """Kasus 5: Invoice seed valid dengan bukti HPP lengkap singular account_move_id STJ mengembalikan []."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+
+        aml_debit = SimpleNamespace(
+            account_id=SimpleNamespace(code="510000"),
+            debit=250000.0,
+            credit=0.0,
+        )
+        aml_credit = SimpleNamespace(
+            account_id=SimpleNamespace(code="113000"),
+            debit=0.0,
+            credit=250000.0,
+        )
+        valid_stj_am = SimpleNamespace(
+            id=993,
+            name="STJ/2026/001",
+            state="posted",
+            company_id=self.company_seed,
+            journal_id=SimpleNamespace(code="STJ"),
+            line_ids=[aml_debit, aml_credit],
+        )
+        fake_sm = SimpleNamespace(
+            id=883,
+            name="OUT/TEST/03",
+            state="done",
+            account_move_id=valid_stj_am,
+        )
+        fake_sol = SimpleNamespace(move_ids=[fake_sm])
+        line.sale_line_ids = [fake_sol]
+
+        self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+        # COGS duplikat disupresi (mengembalikan [])
+        out_vals = inv._stock_account_prepare_realtime_out_lines_vals()
+        self.assertEqual(out_vals, [])
+
+    def test_vendor_bill_and_refund_call_native(self):
+        """Kasus 6: Vendor bill dan refund pelanggan tidak pernah disupresi oleh hook seed."""
+        bill = self._create_basic_invoice(self.company_seed, is_seed=True, move_type="in_invoice")
+        self.assertFalse(bill._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+        refund = self._create_basic_invoice(self.company_seed, is_seed=True, move_type="out_refund")
+        self.assertFalse(refund._is_seed_commercial_invoice_with_posted_delivery_cogs())
+

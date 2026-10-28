@@ -886,3 +886,32 @@
 - Finding 3 [F]: Menghapus penggunaan bypass reversal context move_reverse_cancel=True pada posting out_invoice di scripts/load_canonical_perpetual.py. Mengimplementasikan ekstensi sempit _stock_account_prepare_realtime_out_lines_vals() pada addon id_base (models/account_move.py) yang hanya mengecualikan pembukuan duplikat baris COGS jika terbukti sebagai faktur komersial seed (company PT Salva Inti Mandiri, invoice out_invoice terhubung ke sale_line_ids yang pergerakan barang pengirimannya done dan telah membukukan HPP valuasi native di STJ). Faktur biasa/non-seed, vendor bill, refund, dan delivery tanpa HPP tetap menjalankan native path secara penuh (termasuk kelanjutan hook _set_value pada _post).
 - Pengujian: Menambahkan 7 unit tests penerimaan di tests/test_canonical_loader_adapter.py (test_relocation_precedes_lot_allocation, test_picking_location_write_failure_aborts_before_validate, test_move_location_write_failure_aborts_before_validate, test_move_line_location_write_failure_aborts_before_validate, test_required_date_write_failure_rolls_back, test_noop_location_write_rejected_by_readback, test_seed_invoice_cogs_exception_narrow_scope). Seluruh 72 tests repositori OK, check_manifests.py 4 addon OK, ruff check . lolos bersih. 15 CSV register kanonikal 100% beku. Tidak ada merge ke main atau deploy Railway.
 - Task managed by antigravity at 2026-10-28T20:27:00+07:00
+
+[2026-10-28T21:35:00+07:00] [INFO] Resolusi 3 Blocker Audit Commit 85cbbb9 pada PR #15 (issuecomment-6470601432): Penanda Seed Persisten & Fail-Closed Hook COGS, Verifikasi Eksak Jurnal Valuasi HPP Singular sm.account_move_id, Readback No-Op Tanggal & Uji Nyata Rollback Transaksi, serta Odoo TransactionCase
+- Blocker 1 [F]: Menambahkan field persisten `is_fmcg_seed_invoice = fields.Boolean(default=False, copy=False, index=True)` pada model `account.move` di addon `id_base`. Memperketat `_is_seed_commercial_invoice_with_posted_delivery_cogs()`:
+  * Faktur non-seed biasa (is_fmcg_seed_invoice=False) langsung mengembalikan False secara instan (fail-safe).
+  * Validasi ketat batas company: wajib company_name == 'PT Salva Inti Mandiri' atau code == 'FMCG'. Jika ditandai seed tetapi pada company lain (termasuk company foreign yang mengandung nama 'Salva') langsung melempar UserError (fail-closed).
+  * Validasi baris produk persediaan dan relasi penjualan: SETIAP baris produk wajib terhubung ke sale_line_ids dan memiliki pergerakan pengiriman stock.move berstatus 'done'. Jika ada baris tanpa DO, langsung UserError.
+  * Faktur komersial yang dibuat oleh loader di `scripts/load_canonical_perpetual.py` secara eksplisit diset `is_fmcg_seed_invoice=True`.
+- Blocker 2 [F]: Menghapus fallback pencarian jurnal HPP via stock_valuation_layer_ids dan ref ilike. Menegakkan verifikasi eksak relasi native singular `sm.account_move_id` pada setiap stock.move pengiriman:
+  * account_move_id wajib ada dan terisi ID valid.
+  * State entri jurnal wajib 'posted'.
+  * Company jurnal wajib sama persis dengan company seed dan stock move.
+  * Kode jurnal wajib persis 'STJ' (bukan jurnal umum lain).
+  * Entri jurnal tidak boleh kosong (len(line_ids) > 0).
+  * Baris jurnal wajib memuat pasangan debit HPP (510000) dan kredit Persediaan Barang Dagang (113000).
+  * Menyelaraskan docstring ke akun 113000 (bukan 114100).
+- Blocker 3 [F]: Menambahkan readback asersi tanggal wajib (_is_matching_date) sebelum dan sesudah button_validate() di _validate_picking_safely pada scripts/load_canonical_perpetual.py:
+  * scheduled_date, date_done, stock.move.date, dan stock.move.line.date diverifikasi secara pasca-tulis.
+  * No-op write (write sukses mengembalikan True tetapi nilai tanggal di field tidak berubah) langsung ditolak dengan melempar RuntimeError sebelum button_validate dipanggil.
+  * Membedakan tes propagasi helper (test_required_date_write_failure_aborts_validation) dari tes rollback transaksi sebenarnya (test_transaction_failure_triggers_actual_rollback).
+  * test_transaction_failure_triggers_actual_rollback menguji integrasi transaksi penuh run_all(): mutasi parsial -> kegagalan diinjeksi -> env.cr.rollback() dipanggil -> env.cr.committed=False -> snapshot DB sebelum dan sesudah identik (0 record/quant/AML bocor).
+- Odoo TransactionCase [F]: Menambahkan `addons/id_base/tests/test_account_move_cogs.py` (diimpor di `addons/id_base/tests/__init__.py`) bertag `@tagged("post_install", "-at_install", "id_base")` mencakup:
+  1. Non-seed invoice di seed company -> is_fmcg_seed_invoice=False, native path aktif.
+  2. Foreign company bernama mengandung 'Salva' -> unmarked mengembalikan False, marked seed melempar UserError.
+  3. Marked seed tanpa delivery move -> UserError.
+  4. Marked seed dengan jurnal unposted atau kode bukan STJ -> UserError.
+  5. Positive seed dengan singular posted account_move_id STJ (510000/113000) -> COGS disupresi (mengembalikan []).
+  6. Vendor bill (in_invoice) dan refund (out_refund) -> native path aktif.
+- Verifikasi lokal: ruff check . lolos bersih (0 warning/error), check_manifests.py 4 addon valid, 135 unit tests (63 adapter tests + 72 generator/acceptance/invariant tests) lolos 100%, verify_seed_invariants PASS (0 violations), verify_seed_acceptance PASS (0 violations). 15 CSV register kanonikal 100% beku. Tidak ada merge ke main dan tidak ada deployment Railway.
+- Task managed by antigravity at 2026-10-28T21:35:00+07:00

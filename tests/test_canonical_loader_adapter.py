@@ -100,7 +100,7 @@ class MockRecord:
         self.id = rec_id
         self.state = self._vals.get("state", "draft")
         self.picking_ids = MockRecordList()
-        self.line_ids = MockRecordList()
+        self.line_ids = self._vals.get("line_ids") if "line_ids" in self._vals else MockRecordList()
         self.reconciled = False
         self._env = env
         self.scheduled_date = False
@@ -857,11 +857,14 @@ class MockModel:
 class MockCompany:
     def __init__(self):
         self.id = 1
+        self.name = "PT Salva Inti Mandiri"
+        self.code = "FMCG"
         self.partner_id = None
 
 
 class MockCursor:
-    def __init__(self):
+    def __init__(self, env=None):
+        self.env = env
         self.committed = False
         self.rollbacked = False
 
@@ -870,12 +873,14 @@ class MockCursor:
 
     def rollback(self):
         self.rollbacked = True
+        if self.env and hasattr(self.env, "_restore_snapshot"):
+            self.env._restore_snapshot()
 
 
 class MockEnv(dict):
     def __init__(self):
         super().__init__()
-        self.cr = MockCursor()
+        self.cr = MockCursor(env=self)
         self.company = MockCompany()
         models = [
             "res.partner", "product.product", "res.users", "stock.quant", "stock.location",
@@ -886,6 +891,17 @@ class MockEnv(dict):
         for m in models:
             self[m] = MockModel(m, env=self)
         self.company.partner_id = self["res.partner"].create({"name": "PT MDU", "ref": "COMPANY"})
+        self._initial_snapshot = None
+
+    def _take_snapshot(self):
+        return {m: dict(self[m].store) for m in self}
+
+    def _restore_snapshot(self, snapshot=None):
+        snap = snapshot or getattr(self, "_initial_snapshot", None)
+        if snap:
+            for m, store_copy in snap.items():
+                if m in self:
+                    self[m].store = dict(store_copy)
 
     def __missing__(self, key):
         model = MockModel(key, env=self)
@@ -2913,7 +2929,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertIn("Gagal menulis lokasi stock.move.line", str(ctx.exception))
         self.assertEqual(spy_validate_calls, 0, "button_validate dilarang dipanggil bila write line gagal!")
 
-    def test_required_date_write_failure_rolls_back(self):
+    def test_required_date_write_failure_aborts_validation(self):
         """Review 6469576922 Finding 2: Kegagalan penulisan tanggal move/line wajib abort validasi."""
         env = setup_standard_mock_env()
         adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
@@ -2958,6 +2974,84 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertIn("Gagal menulis date stock.move", str(ctx.exception))
         self.assertEqual(spy_validate_calls, 0, "button_validate dilarang dipanggil bila penulisan tanggal gagal!")
 
+    def test_noop_date_write_rejected_by_readback(self):
+        """Review 6470601432 P2: No-op date write (nilai tanggal tidak berubah) wajib ditolak readback."""
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+        wh_loc = env["stock.location"].search([("usage", "=", "internal")], limit=1)
+        cust_loc = env["stock.location"].search([("usage", "=", "customer")], limit=1)
+
+        pick = env["stock.picking"].create({
+            "name": "TEST-PICK-NOOP-DATE",
+            "location_id": wh_loc.id,
+            "location_dest_id": cust_loc.id,
+            "scheduled_date": "2026-10-28 00:00:00",
+            "date_done": "2026-10-28 00:00:00",
+        })
+        sm = env["stock.move"].create({
+            "name": "TEST-MOVE-NOOP-DATE",
+            "location_id": wh_loc.id,
+            "location_dest_id": cust_loc.id,
+            "date": "2026-10-28 00:00:00",
+            "picking_id": pick,
+        })
+        pick.move_ids = MockRecordList([sm])
+        spy_validate_calls = 0
+
+        def spy_validate():
+            nonlocal spy_validate_calls
+            spy_validate_calls += 1
+
+        pick.button_validate = spy_validate
+
+        # No-op write: mengembalikan True tetapi sengaja tidak mengupdate tanggal
+        def noop_pick_write(vals):
+            return True
+
+        pick.write = noop_pick_write
+        sm.write = noop_pick_write
+
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter._validate_picking_safely(
+                pick,
+                effective_date="2026-07-03",
+                expected_src_loc=wh_loc,
+                expected_dest_loc=cust_loc,
+            )
+
+        self.assertIn("no-op write terdeteksi", str(ctx.exception))
+        self.assertEqual(spy_validate_calls, 0, "button_validate dilarang dipanggil bila tanggal tidak tersimpan!")
+
+    def test_transaction_failure_triggers_actual_rollback(self):
+        """Review 6470601432 P2: Kegagalan transaksi di run_all wajib memicu rollback dan snapshot DB identik."""
+        env = setup_standard_mock_env()
+        adapter = CanonicalPerpetualAdapter(env, reg_path=REG_DIR)
+
+        # Simpan snapshot awal database sebelum transaksi dijalankan
+        initial_snapshot = env._take_snapshot()
+        env._initial_snapshot = initial_snapshot
+
+        # Injeksi kegagalan fatal pada tahap pemuatan purchase orders
+        def faulty_load_inbound_pos():
+            # Lakukan mutasi parsial pada database untuk menguji rollback
+            env["purchase.order"].create({"name": "PO-LEAK-PARTIAL-001"})
+            raise RuntimeError("Database trigger failure during PO loading!")
+
+        adapter.load_inbound_pos = faulty_load_inbound_pos
+
+        with self.assertRaises(RuntimeError) as ctx:
+            adapter.run_all()
+
+        self.assertIn("Database trigger failure during PO loading!", str(ctx.exception))
+        self.assertTrue(env.cr.rollbacked, "Transaction rollback wajib dipanggil!")
+        self.assertFalse(env.cr.committed, "Transaction commit dilarang dipanggil bila ada error!")
+
+        # Pastikan snapshot database setelah rollback identik dengan sebelum transaksi
+        after_snapshot = env._take_snapshot()
+        self.assertEqual(after_snapshot, initial_snapshot, "Database rollback wajib memulihkan snapshot tanpa leak!")
+        self.assertEqual(len(env["purchase.order"].store), len(initial_snapshot.get("purchase.order", {})),
+                         "Tidak boleh ada record purchase.order bocor setelah rollback!")
+
     def test_noop_location_write_rejected_by_readback(self):
         """Review 6469576922 Finding 2: No-op write (tidak raise tapi field tidak berubah) wajib ditolak readback."""
         env = setup_standard_mock_env()
@@ -2983,10 +3077,12 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertIn("Readback lokasi stock.picking 'TEST-PICK-NOOP' gagal", str(ctx.exception))
 
     def test_seed_invoice_cogs_exception_narrow_scope(self):
-        """Review 6469576922 Finding 3: Hook akuntansi _stock_account_prepare_realtime_out_lines_vals hanya
+        """Review 6470601432 Finding 1 & 2: Hook akuntansi _stock_account_prepare_realtime_out_lines_vals hanya
 
-        mengecualikan faktur komersial seed yang delivery-nya telah membukukan HPP native di STJ.
-        Faktur biasa, company lain, delivery belum selesai, atau transaksi tanpa HPP delivery wajib native.
+        mengecualikan faktur komersial seed yang terbukti persisten (is_fmcg_seed_invoice=True),
+        company PT Salva Inti Mandiri, delivery berstatus 'done', dan telah membukukan HPP native pada
+        singular account_move_id di STJ dengan akun 510000 / 113000.
+        Faktur biasa mengembalikan False (native); seed invoice tidak valid wajib fail-closed UserError.
         """
         import sys
         from unittest.mock import MagicMock
@@ -2994,11 +3090,24 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         if "odoo" not in sys.modules:
             mock_odoo_models = MagicMock()
             mock_odoo_models.Model = object
-            sys.modules["odoo"] = MagicMock(models=mock_odoo_models, fields=MagicMock(), api=MagicMock())
+            mock_exceptions = MagicMock()
+
+            class MockUserError(Exception):
+                pass
+
+            mock_exceptions.UserError = MockUserError
+            sys.modules["odoo"] = MagicMock(
+                models=mock_odoo_models,
+                fields=MagicMock(),
+                api=MagicMock(),
+                exceptions=mock_exceptions,
+            )
             sys.modules["odoo.models"] = mock_odoo_models
             sys.modules["odoo.fields"] = MagicMock()
             sys.modules["odoo.api"] = MagicMock()
+            sys.modules["odoo.exceptions"] = mock_exceptions
 
+        from odoo.exceptions import UserError
         from addons.id_base.models.account_move import AccountMove
 
         env = setup_standard_mock_env()
@@ -3017,14 +3126,32 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             def __iter__(self):
                 yield self
 
-        # 1. Faktur Seed Terverifikasi: Delivery DONE & HPP tercatat di STJ -> Pengecualian aktif (return [])
         prod = env["product.product"].search([], limit=1)
+
+        # 1. Faktur Seed Terverifikasi: Delivery DONE & singular account_move_id STJ posted (510000 / 113000)
+        aml_debit = MockRecord({
+            "account_id": MockRecord({"code": "510000"}, "account.account", 1, env),
+            "debit": 150000.0,
+            "credit": 0.0,
+        }, "account.move.line", 901, env)
+        aml_credit = MockRecord({
+            "account_id": MockRecord({"code": "113000"}, "account.account", 2, env),
+            "debit": 0.0,
+            "credit": 150000.0,
+        }, "account.move.line", 902, env)
+        stj_journal = MockRecord({"code": "STJ"}, "account.journal", 1, env)
+        cogs_am = MockRecord({
+            "name": "STJ/2026/07/0001",
+            "state": "posted",
+            "company_id": env.company,
+            "journal_id": stj_journal,
+            "line_ids": MockRecordList([aml_debit, aml_credit]),
+        }, "account.move", 801, env)
+
         sm_done = MockRecord({
             "name": "WH/OUT/0001",
             "state": "done",
-            "stock_valuation_layer_ids": MockRecordList([
-                MockRecord({"value": -150000.0}, "stock.valuation.layer", 1)
-            ]),
+            "account_move_id": cogs_am,
         }, "stock.move", 101, env)
         sol = MockRecord({"name": "SOL-001", "move_ids": MockRecordList([sm_done])}, "sale.order.line", 201, env)
         inv_line = MockRecord({
@@ -3035,6 +3162,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
 
         seed_inv = MockAccountMoveModel({
             "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
             "company_id": env.company,
             "invoice_line_ids": MockRecordList([inv_line]),
         }, env)
@@ -3042,20 +3170,34 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         self.assertTrue(seed_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
         self.assertEqual(seed_inv._stock_account_prepare_realtime_out_lines_vals(), [])
 
-        # 2. Perusahaan lain (non-seed) -> Pengecualian dilarang (False)
-        foreign_co = MockRecord({"name": "Foreign Co", "id": 999}, "res.company", 999, env)
+        # 2. Faktur Biasa (is_fmcg_seed_invoice=False) -> Pengecualian dilarang (False, native)
+        normal_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": False,
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line]),
+        }, env)
+        self.assertFalse(normal_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+        # 3. Ditandai seed tetapi pada perusahaan lain -> Fail-closed UserError
+        foreign_co = MockRecord(
+            {"name": "PT Salva Trading Indonesia", "code": "TRD", "id": 999}, "res.company", 999, env
+        )
         foreign_inv = MockAccountMoveModel({
             "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
             "company_id": foreign_co,
             "invoice_line_ids": MockRecordList([inv_line]),
         }, env)
-        self.assertFalse(foreign_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+        with self.assertRaises(UserError) as ctx:
+            foreign_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("bukan perusahaan seed FMCG", str(ctx.exception))
 
-        # 3. Delivery belum selesai (undone: state != 'done') -> Pengecualian dilarang (False)
+        # 4. Ditandai seed tetapi delivery belum selesai (state != 'done') -> Fail-closed UserError
         sm_draft = MockRecord({
             "name": "WH/OUT/0002",
             "state": "confirmed",
-            "stock_valuation_layer_ids": MockRecordList([]),
+            "account_move_id": cogs_am,
         }, "stock.move", 102, env)
         sol_undone = MockRecord(
             {"name": "SOL-002", "move_ids": MockRecordList([sm_draft])}, "sale.order.line", 202, env
@@ -3067,18 +3209,19 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         }, "account.move.line", 302, env)
         undone_inv = MockAccountMoveModel({
             "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
             "company_id": env.company,
             "invoice_line_ids": MockRecordList([inv_line_undone]),
         }, env)
-        self.assertFalse(undone_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+        with self.assertRaises(UserError) as ctx:
+            undone_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("belum selesai", str(ctx.exception))
 
-        # 4. Delivery selesai tapi tidak ada bukti jurnal HPP native -> Pengecualian dilarang (False)
+        # 5. Ditandai seed tetapi tidak ada bukti jurnal HPP native (account_move_id kosong) -> Fail-closed UserError
         sm_no_hpp = MockRecord({
             "name": "WH/OUT/0003",
             "state": "done",
-            "account_move_ids": MockRecordList([]),
-            "stock_valuation_layer_ids": MockRecordList([]),
-            "picking_id": False,
+            "account_move_id": False,
         }, "stock.move", 103, env)
         sol_no_hpp = MockRecord(
             {"name": "SOL-003", "move_ids": MockRecordList([sm_no_hpp])}, "sale.order.line", 203, env
@@ -3090,14 +3233,49 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         }, "account.move.line", 303, env)
         no_hpp_inv = MockAccountMoveModel({
             "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
             "company_id": env.company,
             "invoice_line_ids": MockRecordList([inv_line_no_hpp]),
         }, env)
-        self.assertFalse(no_hpp_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+        with self.assertRaises(UserError) as ctx:
+            no_hpp_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("account_move_id kosong", str(ctx.exception))
 
-        # 5. Vendor Bill (in_invoice) atau Refund (out_refund) -> Pengecualian dilarang (False)
+        # 6. Ditandai seed tetapi jurnal valuasi belum posted -> Fail-closed UserError
+        cogs_unposted = MockRecord({
+            "name": "STJ/2026/07/0002",
+            "state": "draft",
+            "company_id": env.company,
+            "journal_id": stj_journal,
+            "line_ids": MockRecordList([aml_debit, aml_credit]),
+        }, "account.move", 802, env)
+        sm_unposted = MockRecord({
+            "name": "WH/OUT/0004",
+            "state": "done",
+            "account_move_id": cogs_unposted,
+        }, "stock.move", 104, env)
+        sol_unposted = MockRecord(
+            {"name": "SOL-004", "move_ids": MockRecordList([sm_unposted])}, "sale.order.line", 204, env
+        )
+        inv_line_unposted = MockRecord({
+            "product_id": prod,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol_unposted]),
+        }, "account.move.line", 304, env)
+        unposted_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line_unposted]),
+        }, env)
+        with self.assertRaises(UserError) as ctx:
+            unposted_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("belum berstatus 'posted'", str(ctx.exception))
+
+        # 7. Vendor Bill (in_invoice) atau Refund (out_refund) -> Pengecualian dilarang (False, native)
         bill = MockAccountMoveModel({
             "move_type": "in_invoice",
+            "is_fmcg_seed_invoice": True,
             "company_id": env.company,
             "invoice_line_ids": MockRecordList([inv_line]),
         }, env)

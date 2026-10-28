@@ -138,6 +138,24 @@ def to_decimal(val) -> Decimal:
     return Decimal(str(val)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+def _is_matching_date(actual_val, expected_dt_str: str, expected_d_only: str) -> bool:
+    """Memeriksa apakah actual_val cocok dengan tanggal/waktu yang diharapkan.
+    Mendukung string, datetime.datetime, datetime.date, dan pemotongan format tanggal.
+    """
+    if actual_val is None or actual_val is False:
+        return False
+    act_str = str(actual_val).strip()
+    if not act_str:
+        return False
+    if expected_dt_str and act_str == str(expected_dt_str):
+        return True
+    if expected_d_only and act_str.startswith(str(expected_d_only)):
+        return True
+    if expected_dt_str and act_str.startswith(str(expected_dt_str)[:10]):
+        return True
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Payload Builder Helpers Murni (Dapat Diuji Tanpa Live Odoo)
 # ---------------------------------------------------------------------------
@@ -1428,6 +1446,12 @@ class CanonicalPerpetualAdapter:
                     raise RuntimeError(
                         f"[canonical_loader] FATAL: Gagal menulis scheduled_date picking '{pick_name}': {e}"
                     ) from e
+                cur_sch = getattr(pick, "scheduled_date", None)
+                if not _is_matching_date(cur_sch, date_time_str, date_only):
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Readback scheduled_date picking '{pick_name}' gagal pra-validasi "
+                        f"(no-op write terdeteksi: aktual={cur_sch}, diharapkan={date_time_str})!"
+                    )
             if hasattr(pick, "date_done"):
                 try:
                     if callable(getattr(pick, "write", None)):
@@ -1438,6 +1462,12 @@ class CanonicalPerpetualAdapter:
                     raise RuntimeError(
                         f"[canonical_loader] FATAL: Gagal menulis date_done picking '{pick_name}': {e}"
                     ) from e
+                cur_done = getattr(pick, "date_done", None)
+                if not _is_matching_date(cur_done, date_time_str, date_only):
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Readback date_done picking '{pick_name}' gagal pra-validasi "
+                        f"(no-op write terdeteksi: aktual={cur_done}, diharapkan={date_time_str})!"
+                    )
             if hasattr(pick, "move_ids") and pick.move_ids:
                 for sm in pick.move_ids:
                     if callable(getattr(sm, "write", None)):
@@ -1448,6 +1478,13 @@ class CanonicalPerpetualAdapter:
                             raise RuntimeError(
                                 f"[canonical_loader] FATAL: Gagal menulis date stock.move '{sm_str}': {e}"
                             ) from e
+                        cur_sm = getattr(sm, "date", None)
+                        if not _is_matching_date(cur_sm, date_time_str, date_only):
+                            sm_str = getattr(sm, "name", getattr(sm, "id", ""))
+                            raise RuntimeError(
+                                f"[canonical_loader] FATAL: Readback date stock.move '{sm_str}' gagal pra-validasi "
+                                f"(no-op write terdeteksi: aktual={cur_sm}, diharapkan={date_time_str})!"
+                            )
             if hasattr(pick, "move_line_ids") and pick.move_line_ids:
                 for sml in _iter_records(pick.move_line_ids):
                     if callable(getattr(sml, "write", None)):
@@ -1458,6 +1495,13 @@ class CanonicalPerpetualAdapter:
                             raise RuntimeError(
                                 f"[canonical_loader] FATAL: Gagal menulis date stock.move.line '{sml_str}': {e}"
                             ) from e
+                        cur_sml = getattr(sml, "date", None)
+                        if not _is_matching_date(cur_sml, date_time_str, date_only):
+                            sml_str = getattr(sml, "id", sml)
+                            raise RuntimeError(
+                                f"[canonical_loader] FATAL: Readback date move_line '{sml_str}' gagal pra-validasi "
+                                f"(no-op write: aktual={cur_sml}, target={date_time_str})!"
+                            )
 
         val_ctx = {
             "skip_sms": True,
@@ -1533,14 +1577,46 @@ class CanonicalPerpetualAdapter:
         if date_time_str:
             if callable(getattr(pick, "write", None)):
                 pick.write({"date_done": date_time_str, "scheduled_date": date_time_str})
+            elif hasattr(pick, "date_done"):
+                pick.date_done = date_time_str
+
+            if hasattr(pick, "date_done") or callable(getattr(pick, "write", None)):
+                cur_done = getattr(pick, "date_done", None)
+                if not _is_matching_date(cur_done, date_time_str, date_only):
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Readback date_done picking '{pick_name}' gagal pasca-validasi "
+                        f"(no-op write: aktual={cur_done}, target={date_time_str})!"
+                    )
+            if hasattr(pick, "scheduled_date") or callable(getattr(pick, "write", None)):
+                cur_sch = getattr(pick, "scheduled_date", None)
+                if not _is_matching_date(cur_sch, date_time_str, date_only):
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Readback scheduled_date picking '{pick_name}' gagal pasca-validasi "
+                        f"(no-op write: aktual={cur_sch}, target={date_time_str})!"
+                    )
 
             if hasattr(pick, "move_line_ids") and pick.move_line_ids:
                 if callable(getattr(pick.move_line_ids, "write", None)):
                     pick.move_line_ids.write({"date": date_time_str})
+                    for p_sml in _iter_records(pick.move_line_ids):
+                        cur_sml = getattr(p_sml, "date", None)
+                        if not _is_matching_date(cur_sml, date_time_str, date_only):
+                            sml_lbl = getattr(p_sml, "id", p_sml)
+                            raise RuntimeError(
+                                f"[canonical_loader] FATAL: Readback date move_line '{sml_lbl}' gagal pasca-validasi "
+                                f"(no-op write: aktual={cur_sml}, target={date_time_str})!"
+                            )
                 else:
                     for p_sml in _iter_records(pick.move_line_ids):
                         if callable(getattr(p_sml, "write", None)):
                             p_sml.write({"date": date_time_str})
+                            cur_sml = getattr(p_sml, "date", None)
+                            if not _is_matching_date(cur_sml, date_time_str, date_only):
+                                sml_lbl = getattr(p_sml, "id", p_sml)
+                                raise RuntimeError(
+                                    f"[canonical_loader] FATAL: Readback date move_line '{sml_lbl}' pasca-validasi "
+                                    f"(no-op write: aktual={cur_sml}, target={date_time_str})!"
+                                )
 
             if hasattr(pick, "move_ids") and pick.move_ids:
                 for mv in pick.move_ids:
@@ -1551,14 +1627,36 @@ class CanonicalPerpetualAdapter:
                         continue
                     if callable(getattr(mv, "write", None)):
                         mv.write({"date": date_time_str})
+                        cur_mv = getattr(mv, "date", None)
+                        if not _is_matching_date(cur_mv, date_time_str, date_only):
+                            mv_lbl = getattr(mv, "name", "")
+                            raise RuntimeError(
+                                f"[canonical_loader] FATAL: Readback date move '{mv_lbl}' gagal pasca-validasi "
+                                f"(no-op write: aktual={cur_mv}, target={date_time_str})!"
+                            )
                     has_sml = hasattr(mv, "move_line_ids") and mv.move_line_ids
                     if has_sml:
                         if callable(getattr(mv.move_line_ids, "write", None)):
                             mv.move_line_ids.write({"date": date_time_str})
+                            for sml in _iter_records(mv.move_line_ids):
+                                cur_sml = getattr(sml, "date", None)
+                                if not _is_matching_date(cur_sml, date_time_str, date_only):
+                                    sml_lbl = getattr(sml, "id", sml)
+                                    raise RuntimeError(
+                                        f"[canonical_loader] FATAL: Readback date move_line '{sml_lbl}' "
+                                        f"(no-op write: aktual={cur_sml}, target={date_time_str})!"
+                                    )
                         else:
                             for sml in _iter_records(mv.move_line_ids):
                                 if callable(getattr(sml, "write", None)):
                                     sml.write({"date": date_time_str})
+                                    cur_sml = getattr(sml, "date", None)
+                                    if not _is_matching_date(cur_sml, date_time_str, date_only):
+                                        sml_lbl = getattr(sml, "id", sml)
+                                        raise RuntimeError(
+                                            f"[canonical_loader] FATAL: Readback date move_line '{sml_lbl}' "
+                                            f"(no-op write: aktual={cur_sml}, target={date_time_str})!"
+                                        )
                     self._sync_native_stock_accounting(mv, date_time_str, date_only)
         return True
 
@@ -2033,6 +2131,8 @@ class CanonicalPerpetualAdapter:
                         "invoice_date_due": inv_info["due_date"],
                         "invoice_line_ids": inv_lines,
                     }
+                    if "is_fmcg_seed_invoice" in am_fields or not am_fields:
+                        inv_vals["is_fmcg_seed_invoice"] = True
                     if "invoice_origin" in am_fields or not am_fields:
                         inv_vals["invoice_origin"] = so_num
                     inv = AccountMove.create(inv_vals)
