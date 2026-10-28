@@ -999,3 +999,13 @@
   * verify_seed_invariants.py & verify_seed_acceptance.py (PASS, 0 violations)
 - Task managed by antigravity at 2026-10-29T00:15:00+07:00
 
+[2026-10-29T00:30:00+07:00] [INFO] Perbaikan Toleransi Partial Invoicing / Rejection pada Delivery Move Quantity
+- Memperbaiki validasi pemenuhan kuantitas delivery moves terhadap baris faktur di id_base account.move:
+  * Pada pesanan yang mengalami retur karantina / partial rejection (seperti SO-202607-0063 di mana 84 unit dikirim dan 12 unit diretur sehingga faktur komersial diterbitkan untuk 72 unit net), kuantitas delivery stock move (84.0) mencukupi kuantitas baris faktur (72.0).
+  * Menyelaraskan asersi dari perbandingan kaku (abs(total_sm_qty - line_qty) > 0.001) menjadi asersi kecukupan pemenuhan (total_sm_qty < line_qty - 0.001), menolak fail-closed hanya jika barang yang terkirim kurang dari kuantitas yang ditagih pada faktur.
+- Verifikasi lokal:
+  * ruff check . (All checks passed!)
+  * check_manifests.py (4 addon ok)
+  * test_canonical_loader_adapter.py (63/63 tests PASS, 20/20 mutasi ditolak)
+- Task managed by antigravity at 2026-10-29T00:30:00+07:00
+

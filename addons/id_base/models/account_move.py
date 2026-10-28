@@ -329,9 +329,9 @@ class AccountMove(models.Model):
                             )
 
             # Kuantitas delivery moves wajib mencukupi kuantitas baris faktur
-            if line_qty > 0.0 and abs(total_sm_qty - line_qty) > 0.001:
+            if line_qty > 0.0 and total_sm_qty < line_qty - 0.001:
                 raise UserError(
-                    f"[id_base] Total kuantitas pengiriman ({total_sm_qty}) tidak cocok dengan "
+                    f"[id_base] Total kuantitas pengiriman ({total_sm_qty}) tidak mencukupi "
                     f"kuantitas baris faktur '{getattr(line, 'name', '')}' ({line_qty})!"
                 )
 

@@ -1,11 +1,12 @@
 # HANDOFF
 
-## 2026-10-29 — antigravity agent — Rekonsiliasi Nilai Jurnal Valuasi HPP Spesifik Produk pada Pengiriman Multi-Item (Multi-Move Picking)
+## 2026-10-29 — antigravity agent — Rekonsiliasi Nilai Jurnal Valuasi HPP Spesifik Produk pada Pengiriman Multi-Item & Toleransi Kuantitas Rejection
 **Konteks & Resolusi:**
 - Memperbaiki validasi nilai HPP di `addons/id_base/models/account_move.py` (`_is_seed_commercial_invoice_with_posted_delivery_cogs`):
   * Pada pengiriman multi-item dalam satu picking (seperti `SO-202607-0001` dan `SO-202607-0317`), Odoo ORM menggabungkan valuasi ke dalam satu entri jurnal STJ (`cogs_am`) untuk seluruh pergerakan barang.
   * Memfilter baris debit `510000` berdasarkan `product_id` pergerakan barang (`sm.product_id`) sebelum membandingkan dengan nilai valuasi pergerakan barang (`expected_move_val`).
   * Mendukung pencocokan baris spesifik (`has_exact_matching_line`) untuk menangani multi-lot split pada SKU yang sama dalam satu picking, serta pencocokan total agregat produk.
+  * Memperbaiki validasi kuantitas pengiriman: pada pesanan dengan retur karantina / rejection sebagian (`SO-202607-0063`), kuantitas terkirim (84.0) mencukupi kuantitas ditagih (72.0). Asersi diselaraskan menjadi `total_sm_qty < line_qty - 0.001` (fail-closed jika pengiriman kurang).
   * Mempertahankan penolakan ketat fail-closed terhadap seluruh counterexample supervisi (fraud amount, salah produk, salah tanggal, company asing).
 - Hasil Verifikasi Lokal:
   * `python -m ruff check .`: All checks passed!
