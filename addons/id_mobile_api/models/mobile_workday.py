@@ -91,6 +91,8 @@ class MobileWorkday(models.Model):
             "name": user.name, "title": user.partner_id.function or "",
             "roles": ["sales"], "businessDate": day.isoformat(),
         }
+        if user.has_group("id_mobile_api.group_mobile_evidence"):
+            result["capabilities"] = ["evidence.capture"]
         assignment._assert_day(day)
         return result
 

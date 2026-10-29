@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { OfficialEvidence } from "./components/OfficialEvidence";
 import { Brand } from "./components/Brand";
 import { ReadSession, type ReadState } from "./data/read-session";
 import { money } from "./domain/format";
@@ -34,7 +35,11 @@ export function ReadApp() {
         <main class="read-shell">
             <header>
                 <Brand />
-                <span class="pill">STAGING · BACA SAJA</span>
+                <span class="pill">
+                    {state.identity?.capabilities?.includes("evidence.capture")
+                        ? "STAGING · BUKTI FOTO"
+                        : "STAGING · BACA SAJA"}
+                </span>
             </header>
             <h1>Data kerja Sales</h1>
             <p>
@@ -138,9 +143,23 @@ export function ReadApp() {
                             ))}
                         </section>
                     )}
+                    {state.identity?.capabilities?.includes(
+                        "evidence.capture",
+                    ) && (
+                        <OfficialEvidence
+                            key={`${state.identity.id}:${state.identity.companyId}:${state.snapshot.version}`}
+                            identity={state.identity}
+                            snapshot={state.snapshot}
+                            expired={() =>
+                                session.clear(
+                                    "Sesi/scope bukti berubah. Hubungkan sesi dan daily sync kembali.",
+                                )
+                            }
+                        />
+                    )}
                     <p>
-                        Manifest Delivery, SO, approval, foto, collection, dan
-                        closing belum terhubung pada tahap baca ini.
+                        Manifest Delivery, SO, approval, collection, dan closing
+                        belum terhubung pada tahap baca ini.
                     </p>
                 </>
             )}

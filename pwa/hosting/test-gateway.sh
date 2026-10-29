@@ -86,9 +86,22 @@ PY
     done
     test "$(curl "${curl_args[@]}" -s -b "$fixture_dir/cookies-$scheme" -H 'Origin: https://attacker.invalid' -o /dev/null -w '%{http_code}' "$base/$route")" = 400
   done
+  # Explicit multipart evidence path: POST crosses the proxy, other business writes do not.
+  test "$(curl "${curl_args[@]}" -s -X POST -b "$fixture_dir/cookies-$scheme" -H "Origin: $base" \
+    -H 'X-Forwarded-Host: attacker.invalid' -H "X-Forwarded-Proto: $spoof_proto" \
+    -F metadata='{}' "$base/api/v1/evidence" -o "$fixture_dir/evidence-payload" -w '%{http_code}')" = 200
+  python3 - "$fixture_dir/evidence-payload" "$base" <<'PYCODE'
+import json
+import sys
+with open(sys.argv[1]) as stream:
+    payload = json.load(stream)
+assert payload['effective']['origin'] == sys.argv[2]
+assert payload['raw']['forwarded_host'] == sys.argv[2].split('://')[1]
+PYCODE
+  test "$(curl "${curl_args[@]}" -s -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/evidence")" = 403
   for route in me/bootstrap sync/snapshot; do
     test "$(curl "${curl_args[@]}" -s -X POST -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/$route")" = 403
   done
   test "$(curl "${curl_args[@]}" -s -X POST -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/sync/commands")" = 404
-  echo "PASS: staging $scheme gateway trusted headers, effective origin/port, spoof rejection, cookie and read-only boundary (Werkzeug transport fixture)"
+  echo "PASS: staging $scheme gateway trusted headers, effective origin/port, spoof rejection, cookie, evidence upload and business-command boundary (Werkzeug transport fixture)"
 done
