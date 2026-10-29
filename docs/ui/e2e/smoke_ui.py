@@ -151,12 +151,13 @@ async def main():
             const containingBottomAtZero = containingRect.bottom;
             if (originalStyle === null) footer.removeAttribute('style');
             else footer.setAttribute('style', originalStyle);
-            const threshold = Math.max(0, Math.ceil(naturalFooterBottom - scrollportBottomAtZero));
-            // A bottom-sticky box can only remain pinned while the containing block
-            // still spans the scrollport bottom. Sample the actual intersection of
-            // that interval with the scroll range instead of assuming all late scroll
-            // positions are sticky.
-            const pinEnd = Math.min(maxScroll, Math.max(0, containingBottomAtZero - scrollportBottomAtZero));
+            const naturalFooterTop = naturalRect.top;
+            const stickyTopOffset = window.innerHeight - 300;
+            const stickyTopAtZero = ownerRect.top + owner.clientTop + stickyTopOffset;
+            const threshold = Math.max(0, Math.ceil(naturalFooterTop - stickyTopAtZero));
+            // A top-sticky box remains pinned only while the containing block can
+            // contain the whole footer at the sticky top offset.
+            const pinEnd = Math.min(maxScroll, Math.max(0, containingBottomAtZero - (stickyTopAtZero + naturalFooterHeight)));
             const pinStart = Math.min(maxScroll, threshold);
             const pinSpan = Math.max(0, pinEnd - pinStart);
             const samples = [...new Set([
@@ -171,15 +172,20 @@ async def main():
                 owner.scrollTop = y;
                 const fr = footer.getBoundingClientRect();
                 const or = owner.getBoundingClientRect();
+                const sampleStickyTop = or.top + owner.clientTop + stickyTopOffset;
                 const sampleScrollportBottom = or.top + owner.clientTop + owner.clientHeight;
                 const cr = containingBlock.getBoundingClientRect();
                 pinned.push({
                     scrollTop: owner.scrollTop,
+                    footerTop: fr.top,
+                    stickyTop: sampleStickyTop,
                     footerBottom: fr.bottom,
                     scrollportBottom: sampleScrollportBottom,
                     containingBlockBottom: cr.bottom,
-                    drift: Math.abs(fr.bottom - sampleScrollportBottom),
-                    insideContainingBlock: fr.bottom <= cr.bottom + 2
+                    drift: Math.abs(fr.top - sampleStickyTop),
+                    insideContainingBlock: fr.top >= or.top + owner.clientTop - 2
+                        && fr.bottom <= cr.bottom + 2
+                        && fr.bottom <= sampleScrollportBottom + 2
                 });
             }
             const overflowAncestors = [];
@@ -230,6 +236,9 @@ async def main():
                 rowCount: rows.length,
                 stickyGroupCount: stickyGroups.length,
                 naturalFooterBottom,
+                naturalFooterTop,
+                stickyTopOffset,
+                stickyTopAtZero,
                 naturalFooterHeight,
                 stickyThreshold: threshold,
                 stickyPinEnd: pinEnd,
@@ -300,13 +309,25 @@ async def main():
                         const footer = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer))');
                         const list = document.querySelector('.o_form_sheet [name="' + lineFieldName + '"]');
                         const row = list && list.querySelector('.o_data_row:last-child');
-                        let owner = footer && footer.parentElement;
+                        let owner = row && row.parentElement;
                         while (owner && owner !== document.body) {
                             const cs = getComputedStyle(owner);
                             if (owner.scrollHeight > owner.clientHeight + 4 && /(auto|scroll)/.test(cs.overflowY)) break;
                             owner = owner.parentElement;
                         }
-                        if (!footer || !row || !owner || owner === document.body) return { ok: false, reason: 'missing footer, row, or scroll owner after trial click' };
+                        if (!owner || owner === document.body) {
+                            const fallback = document.querySelector('.o_form_sheet_bg');
+                            if (fallback && fallback.scrollHeight > fallback.clientHeight + 4) owner = fallback;
+                        }
+                        if (!footer || !row || !owner || owner === document.body) return {
+                            ok: false, reason: 'missing footer, row, or scroll owner after trial click',
+                            footerFound: !!footer, rowFound: !!row,
+                            candidateScroll: owner && owner !== document.body ? {
+                                className: String(owner.className || ''),
+                                scrollHeight: owner.scrollHeight,
+                                clientHeight: owner.clientHeight
+                            } : null
+                        };
                         const fr = footer.getBoundingClientRect(), rr = row.getBoundingClientRect(), or = owner.getBoundingClientRect();
                         const top = or.top + owner.clientTop, bottom = top + owner.clientHeight;
                         return {
@@ -398,7 +419,7 @@ async def main():
         await audit_footer("SO mobile", "order_line")
         await page.set_viewport_size({"width": 1440, "height": 860})
         zoom_before_so = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
-        await page.keyboard.press("Control+Equal")
+        await page.keyboard.press("Control+Shift+Equal")
         await page.wait_for_timeout(700)
         zoom_after_so = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
         print("SO browser zoom metrics:", {"before": zoom_before_so, "after": zoom_after_so}, flush=True)
