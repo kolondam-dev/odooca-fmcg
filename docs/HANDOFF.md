@@ -631,3 +631,16 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - Commit implementasi tes: `887beebd64c0b3d6e3637abab28a044f3f43b90b`; log supervisi: `124aba30c8d1d49f35bad2709e88af39686abbe0`.
 - CI/status terbaru belum dapat diverifikasi melalui GitHub connector (workflow runs dan commit statuses kosong); ini bukan PASS atau FAIL. Regression test compile SCSS telah dimasukkan ke pola unittest discovery CI, tetapi tetap harus dibuktikan oleh run.
 - Belum selesai: populated invoice scroll test, resolved XML/model audit Odoo 19 CE, implementasi tiga kolom notes | discount | totals, serta penerimaan supervisor. PR #36 tetap draft/HOLD. Tidak merge/deploy.
+
+
+## 2026-10-29T15:50:00+07:00 — PR #36 follow-up: invoice fixture, scroll acceptance, runtime audit (verification pending)
+
+- Added a disposable confirmed Sales Order with 18 distinct lines and generated a real draft invoice; fixture now emits both record IDs. CI passes the invoice ID to Playwright instead of testing only an empty `account.move /new` form.
+- Shared browser geometry audit now scopes rows to `order_line` and `invoice_line_ids`, counts sticky footer ancestors, derives the expected sticky threshold from the natural footer bottom and scrollport, samples only after that threshold, and checks the footer remains pinned.
+- Last-row acceptance now scrolls the actual final row into view, checks it is within the usable scrollport above the footer, runs a Playwright trial click without force, and includes a negative counterexample for a row fully above the scrollport. Horizontal overflow is checked at document, form, scroll owner, and footer levels.
+- Added invoice runs at desktop, mobile width, and browser zoom; existing keyboard checks remain. CI workflow now installs the Sales, Accounting, Fleet and Indonesian localization modules required by the disposable runtime scenario, passes invoice ID to smoke, and preserves runtime diagnostics.
+- Fixture prints `UI_RUNTIME_AUDIT`: installed modules, actual model registry fields, resolved form XMLIDs/IDs, and resolved field/group mappings for `sale.order` and `account.move`. This is intended evidence from the same CI DB, not a claim that runtime has already passed.
+- **Verification:** latest HEAD CI workflow-runs and commit statuses currently return empty through the GitHub connector. Treat as unverified, not green or red. Do not claim the new fixture, browser tests, or resolved-view audit ran until a real Actions run/log exists.
+- **Business decision still open:** whether footer discount 1+2 means two document-level discounts or a summary of native discounts. No fields/formulas are being invented. PR #36 remains draft/HOLD; no merge/deploy.
+
+Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T15:50:00+07:00
