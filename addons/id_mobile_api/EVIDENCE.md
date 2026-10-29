@@ -26,9 +26,9 @@ Haversine dan memerlukan `distance + accuracy <= radius`. Outside/uncertain
 menghasilkan422 tanpa record. Radius assignment tetap5–15m; bukan radius kantor.
 Perubahan master/snapshot mengharuskan daily sync ulang409.
 
-Waktu GPS dibandingkan dengan clock server: umur0–60detik. Foto dipilih maksimal
+Waktu GPS dibandingkan dengan clock server: umur maksimal60detik (toleransi future1detik). Foto dipilih maksimal
 300detik sebelum penerimaan; pencatatan perangkat maksimal60detik sebelumnya
-(toleransi clock future5detik). Waktu pilih foto tidak boleh sesudah pencatatan.
+(toleransi clock future5detik untuk waktu pilih/pencatatan). Waktu pilih foto tidak boleh sesudah pencatatan.
 Ini pemeriksaan konsistensi/freshness, bukan bukti waktu shutter atau anti-mock GPS.
 Hari WITA diperiksa sebelum dan sesudah penyimpanan; rollover membatalkan record
 beserta attachment dalam savepoint. Tidak menurunkan geofence resmi menjadi demo.
@@ -46,7 +46,7 @@ pencatatan perangkat dan waktu penerimaan server secara terpisah dalam WITA,
 koordinat serta akurasi GPS, dan pernyataan keaslian GPS/shutter belum diverifikasi.
 Timestamp tidak disebut sebagai waktu asli kamera. Tidak ada basemap resmi baru.
 
-Receipt menyimpan SHA256 sumber, derivative, dan binding metadata; posisi/radius
+Receipt menyimpan owner/company/warehouse/assignment server, SHA256 sumber, derivative, dan binding metadata; posisi/radius
 master yang dipakai ikut disimpan. Model immutable: user tidak dapat create/write/
 unlink lewat ORM/RPC; controller memakai elevasi create yang terbatas sesudah
 semua validasi scope/media. Record rules membatasi owner dan company yang sah;

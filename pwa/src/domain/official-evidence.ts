@@ -21,6 +21,10 @@ export const OfficialEvidenceReceiptSchema =
     OfficialEvidenceMetadataSchema.omit({ snapshot_version: true })
         .extend({
             snapshot_version: z.string(),
+            user_id: z.string().min(1),
+            company_id: z.string().min(1),
+            warehouse_id: z.string().min(1),
+            assignment_id: z.string().min(1),
             received_at: z.iso.datetime(),
             master_latitude: z.number(),
             master_longitude: z.number(),

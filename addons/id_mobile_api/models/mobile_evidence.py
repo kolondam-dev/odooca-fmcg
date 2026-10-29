@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from PIL import Image, ImageDraw, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageDraw, ImageFont, ImageOps, UnidentifiedImageError
 from psycopg2 import IntegrityError
 
 from odoo import api, fields, models, _
@@ -96,8 +96,12 @@ def render_photo(source, metadata, received):
                     f"GPS {metadata['latitude']:.6f}, {metadata['longitude']:.6f} +/- {metadata['accuracy']:.1f} m",
                     "GPS/shutter authenticity not verified | evidence v1",
                 ]
+                try:
+                    font = ImageFont.load_default(size=16)
+                except TypeError:
+                    font = ImageFont.load_default()
                 for i, text in enumerate(rows):
-                    draw.text((12, photo.height + 10 + i * 25), text, fill="white")
+                    draw.text((12, photo.height + 10 + i * 25), text, fill="white", font=font)
                 result = io.BytesIO()
                 canvas.save(result, "JPEG", quality=85)
                 return result.getvalue()
@@ -109,6 +113,7 @@ class MobileEvidence(models.Model):
     _name = "id.mobile.evidence"
     _description = "Mobile Location and Photo Evidence"
     _order = "id desc"
+    _rec_name = "client_uuid"
 
     user_id = fields.Many2one("res.users", required=True, index=True, ondelete="restrict")
     company_id = fields.Many2one("res.company", required=True, index=True, ondelete="restrict")
@@ -161,8 +166,8 @@ class MobileEvidence(models.Model):
             raise AccessError(_("Outlet is not assigned to this user."))
         outlet.check_access("read")
         received = utc_now()
-        if (not 0 <= (received - times["fix_sampled_at"]).total_seconds() <= 60
-                or not 0 <= (received - times["photo_selected_at"]).total_seconds() <= 300
+        if (not -1 <= (received - times["fix_sampled_at"]).total_seconds() <= 60
+                or not -5 <= (received - times["photo_selected_at"]).total_seconds() <= 300
                 or not -5 <= (received - times["device_recorded_at"]).total_seconds() <= 60
                 or times["photo_selected_at"] > times["device_recorded_at"]):
             raise EvidenceRejected("stale_location_or_photo")
@@ -175,6 +180,8 @@ class MobileEvidence(models.Model):
         rendered = render_photo(source, metadata, received)
         receipt = {
             "client_uuid": metadata["client_uuid"], "outlet_id": str(outlet.id),
+            "user_id": str(user.id), "company_id": str(assignment.company_id.id),
+            "warehouse_id": str(assignment.warehouse_id.id), "assignment_id": str(assignment.id),
             "business_date": day.isoformat(), "snapshot_version": snapshot["version"],
             "received_at": iso(received), "device_recorded_at": iso(times["device_recorded_at"]),
             "photo_selected_at": iso(times["photo_selected_at"]), "fix_sampled_at": iso(times["fix_sampled_at"]),

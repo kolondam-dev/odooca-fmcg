@@ -10,6 +10,7 @@ export async function uploadOfficialEvidence(
     photo: File,
     csrf: string,
     signal: AbortSignal,
+    scope: { userId: string; companyId: string; warehouseId: string },
 ) {
     OfficialEvidenceMetadataSchema.parse(metadata);
     if (
@@ -63,6 +64,9 @@ export async function uploadOfficialEvidence(
     const receipt = parsed.data;
     const prefix = `/api/v1/evidence/${metadata.client_uuid}/`;
     if (
+        receipt.user_id !== scope.userId ||
+        receipt.company_id !== scope.companyId ||
+        receipt.warehouse_id !== scope.warehouseId ||
         receipt.client_uuid !== metadata.client_uuid ||
         receipt.outlet_id !== metadata.outlet_id ||
         receipt.business_date !== metadata.business_date ||

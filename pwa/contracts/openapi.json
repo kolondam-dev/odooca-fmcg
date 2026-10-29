@@ -334,6 +334,22 @@
           "snapshot_version": {
             "type": "string"
           },
+          "user_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "company_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "warehouse_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "assignment_id": {
+            "type": "string",
+            "minLength": 1
+          },
           "received_at": {
             "type": "string",
             "format": "date-time",
@@ -384,6 +400,10 @@
           "longitude",
           "accuracy",
           "snapshot_version",
+          "user_id",
+          "company_id",
+          "warehouse_id",
+          "assignment_id",
           "received_at",
           "master_latitude",
           "master_longitude",

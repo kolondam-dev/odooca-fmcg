@@ -113,6 +113,11 @@ export function OfficialEvidence({
                 photo,
                 identity.csrfToken ?? "",
                 controller.current.signal,
+                {
+                    userId: identity.id,
+                    companyId: identity.companyId,
+                    warehouseId: snapshot.scope!.warehouse_id,
+                },
             );
             if (generation.current !== ticket) return;
             setReceipt(result.receipt);

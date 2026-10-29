@@ -16,10 +16,15 @@ const metadata: OfficialEvidenceMetadata = {
     longitude: 124.833,
     accuracy: 1,
 };
+const scope = { userId: "1", companyId: "2", warehouseId: "3" };
 const photo = new File(["image"], "photo.png", { type: "image/png" });
 async function receipt() {
     return {
         ...metadata,
+        user_id: "1",
+        company_id: "2",
+        warehouse_id: "3",
+        assignment_id: "4",
         received_at: "2026-10-29T01:00:01Z",
         master_latitude: 1.465,
         master_longitude: 124.833,
@@ -46,6 +51,7 @@ it("sends native multipart CSRF, checks owner-bound receipt and verifies the der
         photo,
         "native-csrf",
         new AbortController().signal,
+        scope,
     );
     expect(result.receipt.client_uuid).toBe(metadata.client_uuid);
     const [path, options] = fetch.mock.calls[0];
@@ -61,6 +67,9 @@ it("sends native multipart CSRF, checks owner-bound receipt and verifies the der
     expect(options.headers).toBeUndefined();
 });
 it.each([
+    "user_id",
+    "company_id",
+    "warehouse_id",
     "client_uuid",
     "outlet_id",
     "snapshot_version",
@@ -92,6 +101,7 @@ it.each([
             photo,
             "csrf",
             new AbortController().signal,
+            scope,
         ),
     ).rejects.toMatchObject({ status: 422 });
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -112,6 +122,7 @@ it("rejects media content which does not match the server hash", async () => {
             photo,
             "csrf",
             new AbortController().signal,
+            scope,
         ),
     ).rejects.toMatchObject({ status: 422 });
 });
@@ -124,6 +135,7 @@ it("rejects missing CSRF and oversized files before network access", async () =>
             photo,
             "",
             new AbortController().signal,
+            scope,
         ),
     ).rejects.toMatchObject({ status: 422 });
     const huge = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "huge.png", {
@@ -135,6 +147,7 @@ it("rejects missing CSRF and oversized files before network access", async () =>
             huge,
             "csrf",
             new AbortController().signal,
+            scope,
         ),
     ).rejects.toMatchObject({ status: 422 });
     expect(fetch).not.toHaveBeenCalled();

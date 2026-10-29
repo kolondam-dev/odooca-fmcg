@@ -82,6 +82,10 @@ for (const denied of [false, true])
                     contentType: "application/json",
                     body: JSON.stringify({
                         ...metadata,
+                        user_id: "41",
+                        company_id: "7",
+                        warehouse_id: "9",
+                        assignment_id: "13",
                         received_at: "2026-10-29T01:00:01Z",
                         master_latitude: 1.465,
                         master_longitude: 124.833,
@@ -119,9 +123,11 @@ for (const denied of [false, true])
             })
             .click();
         if (denied) {
-            await expect(page.getByRole("status")).toContainText(
-                "Sesi/scope bukti berubah",
-            );
+            await expect(
+                page
+                    .getByRole("status")
+                    .filter({ hasText: "Sesi/scope bukti berubah" }),
+            ).toContainText("Sesi/scope bukti berubah");
             await expect(
                 page.getByText("Capture User", { exact: true }),
             ).toHaveCount(0);

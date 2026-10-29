@@ -12,6 +12,7 @@ from psycopg2 import IntegrityError
 from odoo import Command
 from odoo.exceptions import AccessError
 from odoo.tests import HttpCase, TransactionCase, tagged
+from odoo.tools import mute_logger
 
 from ..models.mobile_evidence import EvidenceRejected, MAX_PHOTO, utc_now
 from ..models.mobile_workday import MobileReadConflict
@@ -59,12 +60,22 @@ class TestEvidenceCapture(EvidenceFixture, TransactionCase):
         self.assertEqual(receipt["radius_m"], self.assignment.outlet_radius)
         self.assertEqual(receipt["master_latitude"], self.outlet.partner_latitude)
         self.assertAlmostEqual(receipt["distance_m"], 0)
+        attachment = self.env["ir.attachment"].sudo().search([
+            ("res_model", "=", "id.mobile.evidence"), ("res_id", "=", row.id), ("res_field", "=", "original"),
+        ])
+        self.assertEqual(len(attachment), 1)
+        self.assertFalse(attachment.public)
+        self.assertFalse(attachment.access_token)
+        with self.assertRaises(AccessError):
+            attachment.with_user(self.mobile).write({"datas": base64.b64encode(b"tampered")})
+        self.assertEqual(base64.b64decode(row.original), self.source)
+
         again, created = self.api()._capture(metadata, self.source)
         self.assertFalse(created)
         self.assertEqual(receipt, again)
         with self.assertRaises(MobileReadConflict):
             self.api()._capture({**metadata, "accuracy": 2}, self.source)
-        with self.assertRaises(IntegrityError), self.env.cr.savepoint():
+        with mute_logger("odoo.sql_db"), self.assertRaises(IntegrityError), self.env.cr.savepoint():
             self.env["id.mobile.evidence"].sudo().create({
                 "user_id": self.mobile.id, "company_id": self.company.id, "outlet_id": self.outlet.id,
                 "client_uuid": metadata["client_uuid"], "fingerprint": row.fingerprint,
@@ -119,6 +130,21 @@ class TestEvidenceCapture(EvidenceFixture, TransactionCase):
             with self.assertRaises(EvidenceRejected):
                 self.api()._capture(metadata, source)
         self.assertFalse(self.api().search([]))
+
+    def test_gps_time_boundaries_follow_server_clock(self):
+        now = utc_now()
+        for seconds, accepted in [(60, True), (60.001, False), (-1, True), (-1.001, False)]:
+            metadata = self.metadata()
+            metadata["fix_sampled_at"] = (now - timedelta(seconds=seconds)).isoformat()
+            with patch("odoo.addons.id_mobile_api.models.mobile_evidence.utc_now", return_value=now):
+                if accepted:
+                    receipt, created = self.api()._capture(metadata, self.source)
+                    self.assertTrue(created)
+                    self.assertEqual(receipt["user_id"], str(self.mobile.id))
+                    self.assertEqual(receipt["company_id"], str(self.company.id))
+                else:
+                    with self.assertRaises(EvidenceRejected):
+                        self.api()._capture(metadata, self.source)
 
     def test_midnight_rollover_rolls_back_evidence_and_attachments(self):
         metadata = self.metadata()
