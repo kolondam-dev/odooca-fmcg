@@ -1,3 +1,6 @@
+import { OrderRevisionSchema } from "../src/domain/order-revision-contracts.ts";
+import { TripCloseSchema } from "../src/domain/trip-close-contracts.ts";
+import { DeliveryRequestSchema } from "../src/domain/delivery-approval.ts";
 import { z } from "zod";
 import {
     CollectionTaskSchema,
@@ -72,6 +75,9 @@ function photoPairDependencies(schema) {
 }
 const schemas = Object.fromEntries(
     Object.entries({
+        OrderRevision: OrderRevisionSchema,
+        TripClose: TripCloseSchema,
+        DeliveryRequest: DeliveryRequestSchema,
         DeliveryPod: DeliveryPodSchema,
         DeliveryTask: DeliveryTaskSchema,
         CollectionTask: CollectionTaskSchema,
@@ -104,7 +110,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.11.0",
+        version: "0.12.0",
         description:
             "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
     },

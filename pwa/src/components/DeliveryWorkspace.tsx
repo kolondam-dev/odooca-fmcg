@@ -1,3 +1,4 @@
+import { CancelReasonSchema } from "../domain/delivery-approval";
 import {
     MORNING_KEY,
     morningReady,
@@ -24,7 +25,12 @@ import {
     type DeliveryTask,
 } from "../domain/delivery-contracts";
 import { businessRejected } from "../domain/outbox-state";
-import { validatePod, validatePodMedia, podLineage } from "../domain/delivery";
+import {
+    assertPodTaskSource,
+    validatePod,
+    validatePodMedia,
+    podLineage,
+} from "../domain/delivery";
 import { assertLocalEvidence } from "../domain/evidence-package";
 import { Icon } from "./Icon";
 import { EvidenceCapture, type EvidenceRef } from "./Evidence";
@@ -131,6 +137,8 @@ function PodForm({
     const [opening, setOpening] = useState<EvidenceRef>();
     const [pinpoint, setPinpoint] = useState<VisitFix>();
     const [pinpointSetAt, setPinpointSetAt] = useState<string>();
+    const [requestedDate, setRequestedDate] = useState("");
+    const [cancelReason, setCancelReason] = useState("Toko Tutup");
     const [revision, setRevision] = useState<QueueItem>();
     const [correctionReason, setCorrectionReason] = useState("");
     const [history, setHistory] = useState<QueueItem[]>([]);
@@ -196,6 +204,7 @@ function PodForm({
                 );
                 if (!row)
                     throw new Error("POD kehilangan antrean. Perlu review.");
+                assertPodTaskSource(row, task, owner);
                 await validatePodMedia(row, owner, store);
                 if (active) {
                     setSaved(row);
@@ -219,6 +228,16 @@ function PodForm({
                         setRecipient(p.recipient);
                         setOutcome(p.outcome);
                         setReason(p.reason);
+                        setRequestedDate(
+                            p.request?.kind === "reschedule"
+                                ? p.request.requested_date
+                                : "",
+                        );
+                        setCancelReason(
+                            p.request?.kind === "cancel"
+                                ? p.request.sub_reason
+                                : "Toko Tutup",
+                        );
                         setLines(
                             p.lines.map((l) => ({
                                 ...l,
@@ -283,6 +302,16 @@ function PodForm({
             setOutcome(p.outcome);
             setLines(p.lines.map((l) => ({ ...l, reason: l.reason ?? "" })));
             setReason(p.reason);
+            setRequestedDate(
+                p.request?.kind === "reschedule"
+                    ? p.request.requested_date
+                    : "",
+            );
+            setCancelReason(
+                p.request?.kind === "cancel"
+                    ? p.request.sub_reason
+                    : "Toko Tutup",
+            );
             setPhoto(draft ? p.evidence : undefined);
             setCorrectionReason(draft ? (p.correction_reason ?? "") : "");
             const activeSession = (await store.draft(
@@ -323,6 +352,23 @@ function PodForm({
                       }
                     : {}),
                 source: task,
+                ...(task.site.demo_unrestricted &&
+                outcome === "pending_requested"
+                    ? {
+                          request: {
+                              kind: "reschedule",
+                              requested_date: requestedDate,
+                          },
+                      }
+                    : task.site.demo_unrestricted &&
+                        outcome === "cancel_delivery"
+                      ? {
+                            request: {
+                                kind: "cancel",
+                                sub_reason: cancelReason,
+                            },
+                        }
+                      : {}),
                 recipient,
                 outcome,
                 reason: reason.trim(),
@@ -709,6 +755,46 @@ function PodForm({
                                     </option>
                                 </select>
                             </label>
+                            {outcome === "pending_requested" && (
+                                <label>
+                                    Tanggal kirim ulang
+                                    <input
+                                        aria-label="Tanggal kirim ulang"
+                                        type="date"
+                                        value={requestedDate}
+                                        onInput={(e) =>
+                                            setRequestedDate(
+                                                e.currentTarget.value,
+                                            )
+                                        }
+                                    />
+                                    <small>
+                                        Kurang dari3 hari: SPV; 3 hari atau
+                                        lebih: SPV + Branch Manager.
+                                    </small>
+                                </label>
+                            )}
+                            {outcome === "cancel_delivery" && (
+                                <label>
+                                    Subreason cancel delivery
+                                    <select
+                                        aria-label="Subreason cancel delivery"
+                                        value={cancelReason}
+                                        onChange={(e) =>
+                                            setCancelReason(
+                                                e.currentTarget.value,
+                                            )
+                                        }
+                                    >
+                                        {CancelReasonSchema.options.map((r) => (
+                                            <option key={r} value={r}>
+                                                {r}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <small>Wajib approval SPV.</small>
+                                </label>
+                            )}
                             {task.lines.map((l, i) => (
                                 <label key={l.id}>
                                     {l.name} · dikirim {l.quantity} {l.unit}

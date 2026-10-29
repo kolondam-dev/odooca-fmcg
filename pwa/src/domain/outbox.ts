@@ -1,3 +1,5 @@
+import { validateTripCloseMedia } from "./trip-close";
+import { validateRevisionMedia } from "./order-revisions";
 import { validateCollectionMedia } from "./collection";
 import { validatePodMedia } from "./delivery";
 import {
@@ -20,6 +22,7 @@ import {
 } from "../storage/store";
 export class Outbox {
     private running?: Promise<void>;
+    private retryRunning?: Promise<void>;
     constructor(
         private store: FieldStore,
         private owner: string,
@@ -40,6 +43,10 @@ export class Outbox {
             occurredAt?: string;
         },
     ) {
+        if (type === "delivery.trip.close" && !draftWrite)
+            throw new Error("Closing wajib CAS trip.");
+        if (type === "sales.order.revise" && !draftWrite?.guards)
+            throw new Error("Revisi wajib snapshot parent dan CAS.");
         if (
             type === "delivery.pod.submit" &&
             payload.supersedes_uuid &&
@@ -104,10 +111,11 @@ export class Outbox {
     }
     flush() {
         if (this.running) return this.running;
-        this.running = this.send().finally(() => {
-            this.running = undefined;
+        const task = this.send().finally(() => {
+            if (this.running === task) this.running = undefined;
         });
-        return this.running;
+        this.running = task;
+        return task;
     }
     private async send() {
         let progress = true;
@@ -163,6 +171,16 @@ export class Outbox {
                             this.store,
                         );
                         await validatePodMedia(item, this.owner, this.store);
+                        await validateRevisionMedia(
+                            item,
+                            this.owner,
+                            this.store,
+                        );
+                        await validateTripCloseMedia(
+                            item,
+                            this.owner,
+                            this.store,
+                        );
                         await validatePackagedCommandEvidence(
                             item.command,
                             this.owner,
@@ -196,6 +214,8 @@ export class Outbox {
                     }
                     await validatePodMedia(item, this.owner, this.store);
                     await validateCollectionMedia(item, this.owner, this.store);
+                    await validateRevisionMedia(item, this.owner, this.store);
+                    await validateTripCloseMedia(item, this.owner, this.store);
                     const receipt = ReceiptSchema.parse(
                         await this.provider.submit(item.command),
                     );
@@ -232,14 +252,28 @@ export class Outbox {
             }
         }
     }
-    async retry() {
-        for (const item of await this.store.list(this.owner)) {
-            // Terminal business rejections need a new corrected command, never a blind replay.
-            if (item.state === "queued") {
-                item.nextAttempt = 0;
-                await this.store.put(item);
+    retry() {
+        if (this.retryRunning) return this.retryRunning;
+        const previous = this.running;
+        // Reserve the engine before any IDB await. Reconnect must wait for the
+        // in-flight attempt (including error/backoff writes and media hashes),
+        // then clear backoff and start one fresh pass. Concurrent flush/retry
+        // callers join this task instead of modifying its source snapshot.
+        const task = (async () => {
+            if (previous) await previous;
+            for (const item of await this.store.list(this.owner)) {
+                if (item.state === "queued") {
+                    item.nextAttempt = 0;
+                    await this.store.put(item);
+                }
             }
-        }
-        await this.flush();
+            await this.send();
+        })().finally(() => {
+            if (this.running === task) this.running = undefined;
+            if (this.retryRunning === task) this.retryRunning = undefined;
+        });
+        this.running = task;
+        this.retryRunning = task;
+        return task;
     }
 }

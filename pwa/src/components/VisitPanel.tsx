@@ -36,8 +36,9 @@ export function VisitPanel({
     const [outPhoto, setOutPhoto] = useState<VisitEvidence>();
     const fresh = (photo?: VisitEvidence) =>
         !!photo &&
-        Date.now() - Date.parse(photo.capturedAt) <= 60000 &&
-        Date.now() >= Date.parse(photo.capturedAt);
+        (outlet.demo_unrestricted ||
+            (Date.now() - Date.parse(photo.capturedAt) <= 60000 &&
+                Date.now() >= Date.parse(photo.capturedAt)));
     const [fix, setFix] = useState<VisitFix>();
     const [pinpointSetAt, setPinpointSetAt] = useState(0);
     const [now, setNow] = useState(Date.now());
@@ -198,8 +199,9 @@ export function VisitPanel({
             <h2>{outlet.name}</h2>
             <p>{outlet.address}</p>
             <p class="notice">
-                SIMULASI · Radius {outlet.radius} m dari paket PJP pagi. Jarak +
-                akurasi harus tetap di dalam radius.
+                {outlet.demo_unrestricted
+                    ? "DEMO · Lokasi/foto diterima tanpa validasi geofence atau keaslian; timestamp dan lokasi foto tetap wajib."
+                    : `SIMULASI · Radius ${outlet.radius} m dari paket PJP pagi. Jarak + akurasi harus tetap di dalam radius.`}
             </p>
             <p role="status">
                 {closed
@@ -291,7 +293,8 @@ export function VisitPanel({
                         !info ||
                         !!info.active ||
                         busy ||
-                        assessment?.status !== "inside" ||
+                        (!outlet.demo_unrestricted &&
+                            assessment?.status !== "inside") ||
                         !fresh(inPhoto) ||
                         pinpointSetAt < Date.parse(inPhoto?.capturedAt ?? "")
                     }
@@ -304,7 +307,11 @@ export function VisitPanel({
                 <>
                     <button
                         class="primary full"
-                        disabled={busy || assessment?.status !== "inside"}
+                        disabled={
+                            busy ||
+                            (!outlet.demo_unrestricted &&
+                                assessment?.status !== "inside")
+                        }
                         onClick={order}
                     >
                         <Icon name="bag" size={18} /> Buat order di outlet

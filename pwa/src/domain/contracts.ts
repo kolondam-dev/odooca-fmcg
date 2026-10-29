@@ -1,3 +1,5 @@
+import { TripCloseSchema } from "./trip-close-contracts.ts";
+import { OrderRevisionSchema } from "./order-revision-contracts.ts";
 import {
     ExpenseRealizationSchema,
     type ExpensePolicy,
@@ -20,6 +22,8 @@ export const IdentitySchema = z.object({
 export type Identity = z.infer<typeof IdentitySchema>;
 export const CommandType = z.enum([
     "sales.order.submit",
+    "sales.order.revise",
+    "delivery.trip.close",
     "sales.visit.check_in",
     "sales.visit.check_out",
     "sales.extra_call.request",
@@ -37,6 +41,20 @@ const CommandEnvelope = {
     occurred_at: z.string().datetime(),
 };
 export const CommandSchema = z.discriminatedUnion("type", [
+    z
+        .object({
+            ...CommandEnvelope,
+            type: z.literal("delivery.trip.close"),
+            payload: TripCloseSchema,
+        })
+        .strict(),
+    z
+        .object({
+            ...CommandEnvelope,
+            type: z.literal("sales.order.revise"),
+            payload: OrderRevisionSchema,
+        })
+        .strict(),
     z
         .object({
             ...CommandEnvelope,
@@ -68,6 +86,8 @@ export const CommandSchema = z.discriminatedUnion("type", [
     z.object({
         ...CommandEnvelope,
         type: CommandType.exclude([
+            "delivery.trip.close",
+            "sales.order.revise",
             "delivery.pod.submit",
             "collection.receipt.submit",
             "field_expense.realization.submit",
@@ -106,6 +126,7 @@ export const SnapshotSchema = z.object({
             latitude: z.number(),
             longitude: z.number(),
             radius: z.number().min(5).max(15),
+            demo_unrestricted: z.literal(true).optional(),
         }),
     ),
     products: z.array(

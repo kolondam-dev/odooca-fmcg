@@ -148,3 +148,44 @@ describe("durable outbox", () => {
         ).rejects.toThrow("QuotaExceededError");
     });
 });
+
+it("reconnect waits for an in-flight failed send before clearing its newly-written backoff", async () => {
+    let release!: () => void, entered!: () => void;
+    const barrier = new Promise<void>((r) => {
+            release = r;
+        }),
+        started = new Promise<void>((r) => {
+            entered = r;
+        });
+    const p = provider();
+    let calls = 0;
+    p.submit = vi.fn(async (c) => {
+        calls++;
+        if (calls === 1) {
+            entered();
+            await barrier;
+            throw new ApiError(0, "offline during send");
+        }
+        return {
+            client_uuid: c.client_uuid,
+            status: "accepted" as const,
+            reference: "SIM",
+            message: "accepted",
+        };
+    });
+    const engine = new Outbox(store, "a", p),
+        row = await engine.enqueue("field_expense.request", {}, "test");
+    const first = engine.flush();
+    await started;
+    const retry = engine.retry(),
+        coalesced = engine.retry();
+    release();
+    await Promise.all([first, retry, coalesced]);
+    expect(coalesced).toBe(retry);
+    expect(calls).toBe(2);
+    expect(
+        (await store.list("a")).find((r) => r.key === row.key),
+    ).toMatchObject({ state: "accepted", attempts: 2 });
+    await engine.flush();
+    expect(calls).toBe(2);
+});

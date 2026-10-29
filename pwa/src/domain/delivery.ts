@@ -1,3 +1,4 @@
+import { approvalTiers } from "./delivery-approval";
 import { DeliverySessionSchema } from "./delivery-contracts";
 import { MorningRecordSchema, morningReady } from "./morning";
 export const DELIVERY_SESSION_KEY = "delivery-active-session-v2";
@@ -28,8 +29,10 @@ export function validateDeliverySession(
         Date.parse(session.opened_at) > Date.parse(at) ||
         Date.parse(session.opened_at) - Date.parse(session.opening.capturedAt) <
             0 ||
-        Date.parse(session.opened_at) - Date.parse(session.opening.capturedAt) >
-            60000
+        (!(__DEMO__ && source.site.demo_unrestricted) &&
+            Date.parse(session.opened_at) -
+                Date.parse(session.opening.capturedAt) >
+                60000)
     )
         throw new Error("Sesi delivery/daily sync/foto opening tidak valid.");
     requireVisitFix(
@@ -113,6 +116,25 @@ export function validatePod(
             )
                 throw new Error("Alasan wajib direkam pada item terkait.");
         }
+    }
+    if (s.site.demo_unrestricted) {
+        if (
+            p.outcome === "pending_requested" ||
+            p.outcome === "cancel_delivery"
+        ) {
+            if (
+                !p.request ||
+                p.request.kind !==
+                    (p.outcome === "pending_requested"
+                        ? "reschedule"
+                        : "cancel")
+            )
+                throw new Error(
+                    "Status wajib tanggal kirim ulang/subreason pembatalan.",
+                );
+            approvalTiers(p.request, s.business_date);
+        } else if (p.request)
+            throw new Error("Request hanya untuk pending/cancel.");
     }
     let total = 0,
         expected = 0;
@@ -238,6 +260,25 @@ export function podLineage(rows: QueueItem[], owner: string, doId: string) {
     return result;
 }
 
+// Canonical schema parsing normalizes object key order without dropping fields.
+// IDs can repeat across manifests; they do not identify a completed assignment.
+export function assertPodTaskSource(
+    item: QueueItem,
+    task: unknown,
+    owner: string,
+) {
+    const expected = DeliveryTaskSchema.parse(task),
+        command = CommandSchema.parse(item.command);
+    if (
+        item.owner !== owner ||
+        item.key !== `${owner}:${command.client_uuid}` ||
+        expected.owner !== owner ||
+        command.type !== "delivery.pod.submit" ||
+        JSON.stringify(command.payload.source) !== JSON.stringify(expected)
+    )
+        throw new Error("POD berbeda sumber manifest trip/hari; perlu review.");
+}
+
 async function checkPodMedia(
     item: QueueItem,
     owner: string,
@@ -306,7 +347,19 @@ async function checkPodMedia(
     }
     const after = await store.list(owner);
     const next = podLineage(after, owner, c.payload.source.id);
-    if (JSON.stringify(chain) !== JSON.stringify(next))
+    // Media binds immutable commands and the rejected ancestor decisions that
+    // authorize corrections. The leaf's transport/approval status may advance
+    // while closing hashes its media; that does not change the recorded POD.
+    const binding = (nodes: QueueItem[]) =>
+        nodes.map((r, index) => ({
+            key: r.key,
+            owner: r.owner,
+            command: r.command,
+            ...(index < nodes.length - 1
+                ? { state: r.state, receipt: r.receipt }
+                : {}),
+        }));
+    if (JSON.stringify(binding(chain)) !== JSON.stringify(binding(next)))
         throw new Error("Lineage berubah saat validasi media.");
     assertPodSource(
         await store.draft(

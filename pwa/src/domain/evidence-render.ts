@@ -54,8 +54,9 @@ export async function renderEvidencePackage(
     ref: EvidenceReference,
     selectedAt: string,
     fixSampledAt: string,
+    relaxed = false,
 ): Promise<Evidence> {
-    validateEvidenceTime(ref, selectedAt, fixSampledAt);
+    validateEvidenceTime(ref, selectedAt, fixSampledAt, relaxed);
     const bitmap = await createImageBitmap(photo);
     const width = Math.max(640, bitmap.width),
         height = bitmap.height;
@@ -144,6 +145,7 @@ export async function renderEvidencePackage(
     const source = {
         version: 1 as const,
         kind: "simulation_grid" as const,
+        ...(__DEMO__ && relaxed ? { demo_unrestricted: true as const } : {}),
         selectedAt,
         fixSampledAt,
         photoSha256: await sha256(blob),

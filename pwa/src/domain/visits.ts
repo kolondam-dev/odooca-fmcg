@@ -24,6 +24,15 @@ import type { FieldStore } from "../storage/store";
 import type { Outbox } from "./outbox";
 export function captureVisitLocation(): Promise<VisitFix> {
     return new Promise((resolve, reject) => {
+        if (!navigator.geolocation && __DEMO__) {
+            resolve({
+                latitude: 1.465,
+                longitude: 124.833,
+                accuracy: 1,
+                sampled_at: new Date().toISOString(),
+            });
+            return;
+        }
         if (!navigator.geolocation) {
             reject(new Error("Geolocation tidak tersedia pada perangkat ini."));
             return;
@@ -37,15 +46,22 @@ export function captureVisitLocation(): Promise<VisitFix> {
                     sampled_at: new Date(p.timestamp).toISOString(),
                 }),
             (e) =>
-                reject(
-                    new Error(
-                        e.code === 1
-                            ? "Izin lokasi ditolak. Aktifkan izin lokasi untuk kunjungan."
-                            : e.code === 3
-                              ? "Pengambilan lokasi timeout. Coba lagi di tempat aman."
-                              : "Lokasi belum tersedia. Coba lagi.",
-                    ),
-                ),
+                __DEMO__
+                    ? resolve({
+                          latitude: 1.465,
+                          longitude: 124.833,
+                          accuracy: 1,
+                          sampled_at: new Date().toISOString(),
+                      })
+                    : reject(
+                          new Error(
+                              e.code === 1
+                                  ? "Izin lokasi ditolak. Aktifkan izin lokasi untuk kunjungan."
+                                  : e.code === 3
+                                    ? "Pengambilan lokasi timeout. Coba lagi di tempat aman."
+                                    : "Lokasi belum tersedia. Coba lagi.",
+                          ),
+                      ),
             { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 },
         );
     });
@@ -121,6 +137,9 @@ export class SalesVisits {
                     latitude: outlet.latitude,
                     longitude: outlet.longitude,
                     radius: outlet.radius,
+                    ...(outlet.demo_unrestricted
+                        ? { demo_unrestricted: true as const }
+                        : {}),
                 },
                 fix,
             };

@@ -38,7 +38,10 @@ export class MockProvider implements FieldProvider {
     readonly mode = "demo" as const;
     scenario: Scenario = "normal";
     private store = new FieldStore();
-    constructor(private actor: string) {}
+    constructor(
+        private actor: string,
+        private relaxedLocation = false,
+    ) {}
     async bootstrap() {
         return {
             ...(actors[this.actor] ?? actors.sales),
@@ -62,6 +65,9 @@ export class MockProvider implements FieldProvider {
                     latitude: 1.465,
                     longitude: 124.833,
                     radius: 15,
+                    ...(this.relaxedLocation
+                        ? { demo_unrestricted: true as const }
+                        : {}),
                 },
                 {
                     id: "demo-outlet-2",
@@ -73,6 +79,9 @@ export class MockProvider implements FieldProvider {
                     latitude: 1.447,
                     longitude: 124.825,
                     radius: 15,
+                    ...(this.relaxedLocation
+                        ? { demo_unrestricted: true as const }
+                        : {}),
                 },
                 {
                     id: "demo-outlet-3",
@@ -84,6 +93,9 @@ export class MockProvider implements FieldProvider {
                     latitude: 1.456,
                     longitude: 124.84,
                     radius: 10,
+                    ...(this.relaxedLocation
+                        ? { demo_unrestricted: true as const }
+                        : {}),
                 },
             ],
             products: [
@@ -155,6 +167,9 @@ export class MockProvider implements FieldProvider {
                 latitude: snapshot.outlets[i].latitude,
                 longitude: snapshot.outlets[i].longitude,
                 radius: snapshot.outlets[i].radius,
+                ...(snapshot.outlets[i].demo_unrestricted
+                    ? { demo_unrestricted: true as const }
+                    : {}),
             },
             lines: [
                 {
@@ -218,9 +233,11 @@ export class MockProvider implements FieldProvider {
                 "Data realisasi tidak sesuai kontrak simulator.",
             );
         const discounted =
-            command.type === "sales.order.submit" &&
+            (command.type === "sales.order.submit" ||
+                command.type === "sales.order.revise") &&
             !!command.payload.discount_request;
         const policyApproval = [
+            "sales.order.revise",
             "delivery.pod.submit",
             "collection.receipt.submit",
             "field_expense.request",

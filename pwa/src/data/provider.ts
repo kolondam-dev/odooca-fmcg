@@ -55,7 +55,7 @@ export class HttpProvider implements FieldProvider {
 export async function createProvider(actor: string): Promise<FieldProvider> {
     if (__DEMO__) {
         const { MockProvider } = await import("./mock");
-        return new MockProvider(actor);
+        return new MockProvider(actor, true);
     }
     return new HttpProvider();
 }

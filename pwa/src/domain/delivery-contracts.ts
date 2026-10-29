@@ -1,3 +1,4 @@
+import { DeliveryRequestSchema } from "./delivery-approval.ts";
 import { z } from "zod";
 import {
     VisitEvidenceSchema,
@@ -68,6 +69,7 @@ export const DeliveryPodSchema = z
         delivery_status: DeliveryStatusSchema.optional(),
         session: DeliverySessionSchema.optional(),
         reason: z.string().trim().max(500),
+        request: DeliveryRequestSchema.optional(),
         lines: z
             .array(
                 z
