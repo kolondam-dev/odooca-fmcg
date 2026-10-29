@@ -129,3 +129,13 @@ Reviewer menemukan `max-width: min(100%, 32rem)` gagal pada smoke UI karena libs
 ## 2026-10-29T14:13:00+07:00 — iterasi supervisor: koreksi metrik sticky scroll PR #36
 Review mandiri terhadap regression smoke menemukan metrik awal salah arah: sticky yang benar justru harus stabil saat scroll, bukan diwajibkan bergerak. Assertion diganti menjadi drift posisi footer antara 75% dan 100% scroll; posisi natural di awal form tidak dibandingkan karena footer memang boleh bergerak sebelum mencapai sticky threshold. Diagnostik scroll dicetak agar artifact CI menjelaskan maxScroll, jumlah baris, drift, posisi footer, dan overlap. Perubahan commit 887beebd64c0b3d6e3637abab28a044f3f43b90b. CI/status untuk HEAD ini masih belum dikembalikan oleh konektor GitHub; jangan menyebut tes lulus sampai ada run atau eksekusi aktual. Invoice populated-scroll, resolved model/view audit, dan tiga kolom masih terbuka. PR tetap draft/HOLD; tidak merge/deploy.
 Commit signature: Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T14:13:00+07:00
+
+
+## 2026-10-29T15:50:00+07:00 — implementer clarification and PR #36 acceptance iteration
+
+- **Role-label clarification (append-only):** the earlier heading “codex supervisor — PR #36 blocker P1 libsass” described supervisor feedback, but this log is maintained by the implementer. It is not a supervisor-authored log entry; the independent review evidence is the linked PR comment. Historical text is retained for traceability.
+- Fixture now creates a confirmed 18-line Sales Order and a populated draft invoice; emits `UI_RUNTIME_AUDIT` with installed modules, model fields, resolved view IDs/XMLIDs, and field/group mappings for Sales Order and invoice.
+- Shared Playwright audit derives the sticky threshold geometrically, checks the footer only after the expected threshold, checks exactly one sticky ancestor, measures overflow at document/form/scroll owner/footer, scrolls the last line into view, uses a non-forced trial click, and asserts a negative hidden-row counterexample is rejected.
+- Invoice acceptance is run at desktop, mobile viewport, and browser zoom. CI installs the Sales/Accounting/Fleet/Indonesian localization modules used by the runtime scenario and passes both fixture IDs to smoke.
+- Latest implementation HEAD before this log update: `759f62fbe05159f0b749c9226f7d155cf1155273`; current changes are not verified until fresh Actions jobs and runtime artifacts are available. The connector still reports no workflow runs or commit statuses; this is not PASS/FAIL. PR #36 remains draft/HOLD; no merge/deploy.
+- Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T15:50:00+07:00
