@@ -1128,3 +1128,9 @@
 - [P1-7] Pengujian Komprehensif: tests/test_full_dataset_cutoff_and_upgrade.py kini mencakup 8 pengujian unit dan penerimaan (oracle expectations dinamis, rekonsiliasi 14 kunjungan -> 48 pesanan, simulasi dua fase cut-off & idempotensi Run 2, mutasi negatif nyata stok/AML/relasi, immutabilitas nilai jurnal Juli, sensitivitas snapshot mendalam, safety guard forbidden substrings, dan resilience failure reporting) seluruhnya 100% LULUS (8/8 PASS).
 - Integritas Baseline: 15 CSV register kanonikal di data/registers/ 100% beku. ruff check PASS, check_manifests PASS (4 addon), test_canonical_loader_adapter PASS (termasuk 20 uji mutasi negatif).
 - Task managed by antigravity at 2026-10-29T17:00:00+07:00
+
+
+[2026-10-29T17:08:00+07:00] [INFO] Resolusi Penentuan REPO_ROOT Tangguh Stdin Odoo Shell pada verify_disposable_full.py
+- [P1-1] Resolusi __file__ NameError pada Odoo Shell: Menangani ketiadaan variabel global __file__ saat skrip verify_disposable_full.py dieksekusi melalui pipe stdin di Odoo shell (odoo shell --no-http < verify_disposable_full.py) dengan mekanisme deteksi bertingkat (try __file__ except NameError dengan fallback ke /opt/scripts atau cwd).
+- Integritas Baseline: 15 CSV register kanonikal di data/registers/ 100% beku. ruff check PASS, check_manifests PASS (4 addon).
+- Task managed by antigravity at 2026-10-29T17:08:00+07:00

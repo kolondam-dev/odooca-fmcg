@@ -1,5 +1,9 @@
 # HANDOFF
 
+## 2026-10-29T17:08:00+07:00 — antigravity agent — Resolusi Penentuan REPO_ROOT Tangguh Stdin Odoo Shell pada verify_disposable_full.py
+- Mengatasi `NameError: name '__file__' is not defined` saat skrip `scripts/ops/verify_disposable_full.py` dipiping ke stdin `odoo shell --no-http`.
+- Menyelaraskan deteksi path bertingkat (`try ... except NameError` dengan fallback ke `/opt/scripts` dan `/opt/data/registers`) konsisten dengan `verify_disposable_slice.py`.
+
 ## 2026-10-29T17:00:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 2 (issuecomment-6492070609): PostgreSQL Bootstrap, Dynamic Stock Reservation, Immutable July AML Multiset, Singular Account Move ID, dan Resilient Failure Reporting
 **Konteks Review Supervisor ([issuecomment-6492070609](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6492070609)):**
 - Status PR #39: HOLD / changes required.

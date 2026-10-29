@@ -21,11 +21,22 @@ import sys
 import time
 import traceback
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-REG_PATH = REPO_ROOT / "data" / "registers"
+try:
+    REPO_ROOT = Path(__file__).resolve().parents[2]
+except NameError:
+    if Path("/opt/scripts/load_canonical_perpetual.py").exists():
+        REPO_ROOT = Path("/opt")
+    elif Path("scripts/load_canonical_perpetual.py").exists():
+        REPO_ROOT = Path.cwd()
+    else:
+        REPO_ROOT = Path(os.environ.get("REPO_ROOT", "/opt"))
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+
+REG_PATH = REPO_ROOT / "data" / "registers"
+if not REG_PATH.exists() and Path("/opt/data/registers").exists():
+    REG_PATH = Path("/opt/data/registers")
 
 from scripts.load_canonical_perpetual import (  # noqa: E402
     CanonicalPerpetualAdapter,
