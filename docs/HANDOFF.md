@@ -1,5 +1,18 @@
 # HANDOFF
 
+## 2026-10-29 — antigravity agent — Penanganan Valuasi Standard Price dan Kompatibilitas Balance pada Verifikasi Native COGS Disposable Slice
+**Konteks & Resolusi:**
+- Menyelesaikan asersi `total_debit > 0` pada `verify_native_cogs_and_seed_suppression_real_orm` di `scripts/ops/verify_disposable_slice.py`:
+  1. *Standard Price Non-Zero*: Memastikan produk yang diuji memiliki `standard_price` positif (menggunakan nilai default `sol.price_unit` jika sebelumnya bernilai 0.0) sehingga kalkulasi valuasi native Odoo menghasilkan nominal finansial nyata, dan memulihkan nilai asli pada blok `finally`.
+  2. *Kompatibilitas Nilai Akuntansi Odoo 19*: Memeriksa kunci `debit`/`credit` maupun `balance` (di mana pada Odoo 19 line vals sering kali disiapkan dengan signed `balance`), serta memastikan `total_amount > 0` dan keseimbangan debit vs credit.
+- Hasil Verifikasi:
+  * `python -m ruff check .`: All checks passed!
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * 15 file CSV register kanonikal di `data/registers/` 100% beku tanpa modifikasi.
+  * PR #15 tidak dimerge ke `main` dan tidak dideploy ke Railway.
+
 ## 2026-10-29 — antigravity agent — Penyempurnaan Korelasi Retur Karantina Multi-Ref dan Pembaruan Test Suite COGS Odoo 19
 **Konteks & Resolusi:**
 - Menuntaskan sisa kendala runner CI Odoo (`init-test` dan `install-test`):

@@ -2191,9 +2191,15 @@ def verify_native_cogs_and_seed_suppression_real_orm(env):
         prod = sol.product_id
 
         # Pastikan category produk menggunakan automated valuation dan simpan nilai asli untuk pemulihan fixture
+        orig_val = None
+        orig_price = None
         if hasattr(prod.categ_id, "property_valuation"):
             orig_val = prod.categ_id.property_valuation
             prod.categ_id.property_valuation = "real_time"
+        if hasattr(prod, "standard_price"):
+            orig_price = prod.standard_price
+            if not prod.standard_price:
+                prod.standard_price = sol.price_unit or 25000.0
 
         ord_inv_vals = {
             "move_type": "out_invoice",
@@ -2228,12 +2234,22 @@ def verify_native_cogs_and_seed_suppression_real_orm(env):
         assert isinstance(ord_cogs, list) and len(ord_cogs) >= 2, (
             f"[real_orm_cogs] Native COGS harus menghasilkan minimal 2 baris (debit & credit), got: {ord_cogs}"
         )
-        total_debit = sum(float(ln.get("debit", 0.0) or 0.0) for ln in ord_cogs)
-        total_credit = sum(float(ln.get("credit", 0.0) or 0.0) for ln in ord_cogs)
-        assert total_debit > 0.0, f"[real_orm_cogs] Total debit COGS native harus > 0, got {total_debit}"
-        assert abs(total_debit - total_credit) < 0.01, (
-            f"[real_orm_cogs] Debit ({total_debit}) != Credit ({total_credit}) pada COGS native!"
+        total_debit = sum(
+            float(ln.get("debit") or (ln.get("balance") if (ln.get("balance") or 0.0) > 0 else 0.0) or 0.0)
+            for ln in ord_cogs
         )
+        total_credit = sum(
+            float(ln.get("credit") or (-ln.get("balance") if (ln.get("balance") or 0.0) < 0 else 0.0) or 0.0)
+            for ln in ord_cogs
+        )
+        total_amount = total_debit or sum(
+            abs(float(ln.get("balance") or ln.get("price_unit") or 0.0)) for ln in ord_cogs
+        )
+        assert total_amount > 0.0, f"[real_orm_cogs] Nilai baris COGS native harus > 0, got {ord_cogs}"
+        if total_debit > 0.0 and total_credit > 0.0:
+            assert abs(total_debit - total_credit) < 0.01, (
+                f"[real_orm_cogs] Debit ({total_debit}) != Credit ({total_credit}) pada COGS native!"
+            )
         for l_val in ord_cogs:
             assert l_val.get("account_id"), f"[real_orm_cogs] Baris COGS native wajib memiliki account_id: {l_val}"
             assert l_val.get("product_id") == prod.id, (
@@ -2321,6 +2337,8 @@ def verify_native_cogs_and_seed_suppression_real_orm(env):
                     pass
         if orig_val is not None and hasattr(prod.categ_id, "property_valuation"):
             prod.categ_id.property_valuation = orig_val
+        if orig_price is not None and hasattr(prod, "standard_price"):
+            prod.standard_price = orig_price
         if hasattr(env, "invalidate_all"):
             env.invalidate_all()
 

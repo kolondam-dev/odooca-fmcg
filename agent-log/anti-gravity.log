@@ -1032,3 +1032,10 @@
 - Pembaruan Test Suite COGS: Memperbarui fake_sol pada test_marked_seed_with_unposted_cogs_journal_raises_user_error dan test_marked_seed_with_wrong_journal_raises_user_error dengan fmcg_seed_batch dan incoterm_location, serta mem-patch product_uom_id pada level class di test_uom_conversion_quantity_mismatch_rejected untuk menghindari ValueError assignment langsung ke field relational ORM Odoo.
 - Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), verify_seed_invariants PASS, verify_seed_acceptance PASS.
 - Task managed by antigravity at 2026-10-29T07:20:00+07:00
+
+
+[2026-10-29T07:28:00+07:00] [INFO] Penanganan Valuasi Standard Price dan Kompatibilitas Balance pada Verifikasi Native COGS Disposable Slice
+- Fixture Isolation Standard Price: Pada verify_disposable_slice.py (verify_native_cogs_and_seed_suppression_real_orm), memastikan prod.standard_price bernilai positif jika sebelumnya 0.0 agar Odoo native stock_account menghasilkan valuasi COGS non-zero untuk faktur non-seed, dan memulihkan nilai asli pada blok finally.
+- Kompatibilitas Balance & Debit/Credit Odoo 19: Membaca nilai akuntansi dari line dictionaries dengan memeriksa 'debit'/'credit' maupun 'balance' (karena Odoo 19 mendefinisikan debit/credit sebagai computed field di atas balance) serta mengonfirmasi total_amount > 0.
+- Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), verify_seed_invariants PASS, verify_seed_acceptance PASS.
+- Task managed by antigravity at 2026-10-29T07:28:00+07:00
