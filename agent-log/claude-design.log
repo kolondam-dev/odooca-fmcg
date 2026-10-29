@@ -124,3 +124,8 @@ Reviewer menemukan `max-width: min(100%, 32rem)` gagal pada smoke UI karena libs
 - Updated docs/ui/id_ui_form.md and HANDOFF. Latest changes are unverified until fresh CI runs finish; do not claim these tests pass yet.
 - Still open: invoice scroll test with populated lines, Odoo 19 CE runtime resolved model/view audit, three-column layout, cross-form sticky stability. PR #36 remains HOLD/draft; no merge/deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T13:07:00+07:00
+
+
+## 2026-10-29T14:13:00+07:00 — iterasi supervisor: koreksi metrik sticky scroll PR #36
+Review mandiri terhadap regression smoke menemukan metrik awal salah arah: sticky yang benar justru harus stabil saat scroll, bukan diwajibkan bergerak. Assertion diganti menjadi drift posisi footer antara 75% dan 100% scroll; posisi natural di awal form tidak dibandingkan karena footer memang boleh bergerak sebelum mencapai sticky threshold. Diagnostik scroll dicetak agar artifact CI menjelaskan maxScroll, jumlah baris, drift, posisi footer, dan overlap. Perubahan commit 887beebd64c0b3d6e3637abab28a044f3f43b90b. CI/status untuk HEAD ini masih belum dikembalikan oleh konektor GitHub; jangan menyebut tes lulus sampai ada run atau eksekusi aktual. Invoice populated-scroll, resolved model/view audit, dan tiga kolom masih terbuka. PR tetap draft/HOLD; tidak merge/deploy.
+Commit signature: Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T14:13:00+07:00
