@@ -1,3 +1,11 @@
+## 2026-10-29T16:28:00+07:00 — sinkronisasi aman PR #36 dan keputusan diskon native
+
+PR #36: pemilik memilih opsi B — gunakan ringkasan diskon native Odoo yang benar-benar tersedia; tidak membuat field diskon dokumen atau formula agregat baru. Rule engine diskon/promo, management, dashboard, konfigurasi, dan approval workflow berada di luar scope demo. Semantik diskon/promo bukan lagi blocker UI.
+
+Sinkronisasi dilakukan berbasis main terbaru agar riwayat HANDOFF dari agen lain tetap utuh. Perubahan yang dibawa khusus untuk UI PR #36: SCSS footer, fixture SO+invoice, smoke scroll/footer, regression compile test, dokumentasi/log dan CI yang diperlukan. PR tetap draft/HOLD; CI/runtime/browser perlu bukti aktual; tidak merge/deploy.
+
+Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T16:28:00+07:00
+
 # HANDOFF
 
 ## 2026-10-29 — agent-codex-pwa — Generation guard bootstrap PR38
