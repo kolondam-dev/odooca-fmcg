@@ -140,7 +140,8 @@ body.id-shell-sidebar {
         // Tidak memindahkan field/model dan tidak mengasumsikan adanya field diskon.
         .o_form_sheet .oe_subtotal_footer {
             box-sizing: border-box;
-            max-width: min(100%, 32rem);
+            width: 32rem;
+            max-width: 100%;
             margin-inline-start: auto;
             padding: 0.75rem 1rem;
             border: 1px solid #e3e8f0;
