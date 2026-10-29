@@ -138,7 +138,9 @@ async def main():
                 ok: true,
                 maxScroll,
                 rowCount: rows.length,
-                movedDuringScroll: Math.abs(topY - middleY) > 1 || Math.abs(middleY - footerRect.top) > 1,
+                // A sticky footer should remain stable relative to the scrollport,
+                // not move with the document as the scroll position changes.
+                footerTopDrift: Math.max(topY, middleY, footerRect.top) - Math.min(topY, middleY, footerRect.top),
                 footerInScrollport: footerRect.top >= ownerRect.top - 2 && footerRect.bottom <= ownerRect.bottom + 2,
                 lastRowNotCovered: !!lastRowRect && lastRowRect.bottom <= footerRect.top + 2,
                 horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
@@ -146,9 +148,11 @@ async def main():
             owner.scrollTop = top;
             return result;
         })()""")
+        print("SO footer scroll diagnostics:", footer_scroll, flush=True)
         check("SO: scroll test uses a real overflowing container and multiple lines",
-              footer_scroll.get("ok") and footer_scroll.get("maxScroll", 0) >= 40 and footer_scroll.get("rowCount", 0) >= 10
-              and footer_scroll.get("movedDuringScroll"))
+              footer_scroll.get("ok") and footer_scroll.get("maxScroll", 0) >= 40 and footer_scroll.get("rowCount", 0) >= 10)
+        check("SO: sticky footer remains stable through top/middle/bottom scrolling",
+              footer_scroll.get("ok") and footer_scroll.get("footerTopDrift", 999) <= 3)
         check("SO: sticky footer remains inside the scrollport at bottom",
               footer_scroll.get("ok") and footer_scroll.get("footerInScrollport"))
         check("SO: last transaction row is not covered by footer",
