@@ -39,7 +39,7 @@ pindah ke statusbar; footer total menempel di bawah (sticky).
   dan `.o_form_statusbar`, serta kelas `.oe_subtotal_footer`.
 
 ## Uji
-`docs/ui/e2e/smoke_ui.py` (Playwright): sidebar, tab chatter, tanpa chatter samping, tanpa scroll halaman,
+`docs/ui/e2e/test_form_scss_compile.py` mengompilasi SCSS produksi `id_form.scss` menggunakan libsass yang dipasang CI (`libsass==0.23.0`); kegagalan kompilasi membuat regression test gagal. `docs/ui/e2e/smoke_ui.py` (Playwright) juga menggulir SO fixture dengan 18 baris transaksi dan memeriksa scroll owner, posisi footer di scrollport, keterjangkauan baris terakhir, serta overflow horizontal. Cakupan invoice lintas-scroll dan validasi model/resolved view masih perlu diuji pada runtime Odoo 19 CE. Smoke mencakup sidebar, tab chatter, tanpa chatter samping, tanpa scroll halaman,
 judul murni tepat di tengah (SO, faktur), keyboard edit nomor draft (Enter/Space/blur/Escape),
 blok berisi field tidak diangkat (kendaraan), layar kecil,
 footer sticky, divider systray (normal dan debug), pager, ganti tata letak, hotkey.
