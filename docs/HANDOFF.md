@@ -1,5 +1,27 @@
 # HANDOFF
 
+## 2026-10-29T10:40:00+07:00 — antigravity agent — Persiapan PR Integrasi Draft ke Main (PR #37), Resolusi Konflik Dokumentasi, dan Verifikasi CI Gabungan
+**Konteks & Arahan Supervisor:**
+- Merespons arahan supervisor ([issuecomment-6486565581](https://github.com/kolondam-dev/odooca-fmcg/pull/14#issuecomment-6486565581)) untuk menyiapkan integrasi bertahap dari PR #14 (yang telah dinyatakan layak merge ke base agen/transaksi-historis-perpetual) ke main terbaru (f7b1ab0).
+- Branch persiapan agen/integrasi-seed-main dibuat dari HEAD PR #14 (3387ad8), lalu mengintegrasikan origin/main (f7b1ab0).
+- Resolusi konflik tekstual: seluruh kode produksi, addon manifest, dan workflows tergabung bersih. Konflik append-only pada docs/HANDOFF.md dan agent-log/codex.log diselesaikan dengan mempertahankan kedua riwayat secara penuh dan kronologis.
+
+**Hasil Verifikasi Lokal (Merged Tree):**
+- ruff check .: PASS (0 errors/warnings).
+- python scripts/check_manifests.py: PASS (4 addon: id_base, id_ui, id_ui_form, id_ui_shell).
+- python scripts/ops/verify_seed_invariants.py: PASS (0 violations).
+- python scripts/ops/verify_seed_acceptance.py: PASS (0 violations).
+- python -m unittest discover -s tests -p 'test_*.py' -v: 135 tes lulus (63 adapter, 43 invariant, 28 acceptance, 1 reproducibility, termasuk 20 mutasi negatif & Run 2 zero-drift).
+- 15 file CSV register kanonikal di data/registers/ 100% beku.
+
+**Pembukaan Draft PR #37 & Status CI Gabungan:**
+- Draft PR #37 dibuka: ci(seed): integrasi supervisi invariant gates dan loader kanonikal ke main targeting main.
+- Seluruh 11 jobs GitHub Actions CI terbukti 100% HIJAU (PASS): static (10s), seed-invariants (13s), invariant-tests (1m43s), install-test (4m23s), init-test (4m34s), pwa-quality (26s), pwa-container (20s), pwa-browser (2m47s), pwa-gate (3s).
+
+**Rencana Terpisah Full Dataset & Cut-Off:**
+- Menyusun proposal arsitektur disposable staging runner untuk 1.324 SO / 1.281 DO / 1.324 Faktur / 967 AR (chunking 200 orders, boundary savepoints, pre-warmed dictionary cache) dan pengujian cut-off 14 transaksi lintas periode Agustus 2026.
+- Tidak ada klaim penyelesaian penuh sebelum runner dieksekusi secara nyata. Tidak ada merge langsung ke main, tidak ada modifikasi ruleset, dan tidak ada deployment ke Railway.
+
 ## 2026-10-29T09:24:05+07:00 — codex supervisor — Sinkronisasi integrasi PR35
 Main ea20ed0 diintegrasikan untuk required checks strict sebelum merge yang diminta pemilik. Tidak ada konflik; scope ikon sidebar/roadmap tetap sama. Menunggu CI integrasi.
 

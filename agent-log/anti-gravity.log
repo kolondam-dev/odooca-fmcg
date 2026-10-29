@@ -1069,3 +1069,13 @@
 - Penyesuaian Test Suite: Mengoreksi atribut company_foreign pada test_bound_return_wrong_company_rejected dan menyelaraskan asersi UserError arah rute pada test_bound_return_wrong_destination_rejected.
 - Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), test_canonical_loader_adapter.py PASS (20/20 mutasi ditolak), verify_seed_invariants PASS, verify_seed_acceptance PASS.
 - Task managed by antigravity at 2026-10-29T08:38:00+07:00
+
+
+[2026-10-29T10:40:00+07:00] [INFO] Persiapan PR Integrasi Draft ke Main (PR #37), Resolusi Konflik Dokumentasi, dan Verifikasi CI Gabungan
+- Topologi & Integrasi: Mengintegrasikan main terbaru (f7b1ab0) ke dalam branch persiapan agen/integrasi-seed-main yang dibangun dari HEAD PR #14 (3387ad8).
+- Resolusi Konflik Bersih: Menyelesaikan konflik tekstual append-only pada docs/HANDOFF.md dan agent-log/codex.log secara kronologis tanpa menghapus riwayat supervisor maupun agen lain. Seluruh kode produksi, manifest, dan workflow tergabung tanpa konflik.
+- Verifikasi Lokal: ruff check PASS, check_manifests PASS (4 addon), verify_seed_invariants PASS (0 pelanggaran), verify_seed_acceptance PASS (0 pelanggaran), unittest discover PASS (135 tes mencakup 20 mutasi negatif & Run 2 zero-drift).
+- Pembukaan Draft PR #37: Membuat draft PR #37 (ci(seed): integrasi supervisi invariant gates dan loader kanonikal ke main) targeting main.
+- CI Gabungan Hijau: Seluruh 11 jobs GitHub Actions (static, install-test, init-test, invariant-tests, seed-invariants, pwa-quality, pwa-container, pwa-browser, pwa-gate) terbukti 100% HIJAU (PASS).
+- Desain Runner Terpisah: Menyusun proposal teknis disposable staging runner untuk full dataset (1.324 SO/1.281 DO/1.324 Faktur/967 AR) dan rencana uji cut-off Agustus 2026 tanpa mengklaim penyelesaian penuh sebelum dieksekusi secara nyata.
+- Task managed by antigravity at 2026-10-29T10:40:00+07:00
