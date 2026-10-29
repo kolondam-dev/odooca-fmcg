@@ -128,7 +128,7 @@ async def main():
                 owner = owner.parentElement;
             }
             if (!owner || owner === document.body) return { ok: false, reason: 'no overflowing scroll owner' };
-            const list = document.querySelector(`.o_form_sheet [name="${lineFieldName}"]`);
+            const list = document.querySelector('.o_form_sheet [name="' + lineFieldName + '"]');
             if (!list) return { ok: false, reason: 'transaction line field missing', lineFieldName };
             const rows = [...list.querySelectorAll('.o_data_row')];
             if (rows.length < 10) return { ok: false, reason: 'populated line list required', rowCount: rows.length };
