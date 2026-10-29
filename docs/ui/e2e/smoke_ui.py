@@ -364,6 +364,28 @@ async def main():
             await switch_layout("Layout: switch to Sidebar")
         check("kembali ke sidebar: judul murni di header lagi", (await page.evaluate(TITLE_STATE))["headers"] == 1)
 
+        # --- SO footer: desktop, mobile, and verified browser zoom ---
+        await page.goto(f"{BASE}/odoo/action-sale.action_quotations_with_onboarding/{ORDER}")
+        await page.wait_for_selector(".o_form_sheet", timeout=30000)
+        await page.wait_for_timeout(2500)
+        await audit_footer("SO desktop", "order_line")
+        await page.set_viewport_size({"width": 390, "height": 800})
+        await page.wait_for_timeout(500)
+        await audit_footer("SO mobile", "order_line")
+        await page.set_viewport_size({"width": 1440, "height": 860})
+        const zoomBeforeSO = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        await page.keyboard.press("Control+Equal")
+        await page.wait_for_timeout(700)
+        const zoomAfterSO = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        print("SO browser zoom metrics:", {"before": zoomBeforeSO, "after": zoomAfterSO}, flush=True)
+        check("SO browser zoom actually changes effective browser metrics",
+              zoomBeforeSO.innerWidth !== zoomAfterSO.innerWidth
+              or zoomBeforeSO.dpr !== zoomAfterSO.dpr
+              or zoomBeforeSO.scale !== zoomAfterSO.scale)
+        await audit_footer("SO browser zoom", "order_line")
+        await page.keyboard.press("Control+0")
+        await page.wait_for_timeout(300)
+
         # --- Judul murni vs blok berisi field (faktur draft vs kendaraan) ---
         await page.goto(f"{BASE}/odoo/action-account.action_move_out_invoice_type/{INVOICE}")
         await page.wait_for_selector(".o_form_statusbar", timeout=30000)
@@ -419,8 +441,15 @@ async def main():
         await page.wait_for_timeout(500)
         await audit_footer("Invoice mobile", "invoice_line_ids")
         await page.set_viewport_size({"width": 1440, "height": 860})
+        const zoomBeforeInvoice = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
         await page.keyboard.press("Control+Equal")
-        await page.wait_for_timeout(500)
+        await page.wait_for_timeout(700)
+        const zoomAfterInvoice = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        print("Invoice browser zoom metrics:", {"before": zoomBeforeInvoice, "after": zoomAfterInvoice}, flush=True)
+        check("Invoice browser zoom actually changes effective browser metrics",
+              zoomBeforeInvoice.innerWidth !== zoomAfterInvoice.innerWidth
+              or zoomBeforeInvoice.dpr !== zoomAfterInvoice.dpr
+              or zoomBeforeInvoice.scale !== zoomAfterInvoice.scale)
         await audit_footer("Invoice browser zoom", "invoice_line_ids")
         await page.keyboard.press("Control+0")
         await page.wait_for_timeout(300)
