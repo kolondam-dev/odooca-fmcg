@@ -1,5 +1,24 @@
 # HANDOFF
 
+## 2026-10-29T12:35:00+07:00 — antigravity agent — Audit Integrasi PR #37 Supervisor Lolos (PASS Kode, HOLD Merge) & Koreksi Dokumentasi
+**Konteks & Verdict Supervisor ([issuecomment-6488463026](https://github.com/kolondam-dev/odooca-fmcg/pull/37#issuecomment-6488463026)):**
+- Snapshot yang diperiksa: commit 5e9a182, base main f7b1ab0.
+- Audit integrasi kode dinyatakan PASS:
+  * Ancestry memuat acecbd6, 3387ad8, dan f7b1ab0. Kode addon id_base, loader kanonikal, verifier disposable, tests, dan register identik dengan checkpoint PR #14. Kode UI/PWA dan browser tests identik dengan main.
+  * Seluruh baris kedua versi docs/HANDOFF.md dan agent-log/codex.log terbukti dipertahankan. 15 CSV register kanonikal beku (diff kosong sejak fae5835).
+  * CI gabungan (run 40813555533, 40813555521, 40813555551): static, install-test, init-test, invariant-tests, seed-invariants, pwa-quality, pwa-container, pwa-browser (100 browser tests), pwa-gate seluruhnya SUCCESS.
+  * Pengujian ulang lokal supervisor: 135 tests PASS, kedua validator PASS, manifest 4 addon PASS.
+- Status merge: HOLD (belum dimerge).
+
+**Tindak Lanjut & Koreksi Dokumentasi:**
+- Deskripsi PR #37 telah diperbarui:
+  * Field batch seed diselaraskan ke penamaan aktual fmcg_seed_batch (bukan x_fmcg_seed_batch).
+  * Klarifikasi jumlah job CI: PR workflow suite terdiri dari 9 job unik (3 CI + 2 Seed + 4 PWA). Angka 11 berasal dari 9 job PR suite ditambah 2 job push paralel (invariant-tests & seed-invariants) pada push event cabang agen/integrasi-seed-main.
+- Prasyarat terbuka sebelum merge integrasi final:
+  1. Eksekusi merge PR #14 ke base agen/transaksi-historis-perpetual oleh pemilik/supervisor sesuai jalur bertahap.
+  2. Penambahan invariant-tests dan seed-invariants sebagai required checks pada ruleset main-quality-gate (ID 25827644) oleh admin repository.
+- Batasan tegas dipertahankan: PR #37 tetap berstatus DRAFT, tidak dimerge ke main, tidak ada modifikasi ruleset langsung, dan tidak ada deployment ke Railway. Full dataset (1.324 SO/1.281 DO/1.324 Faktur/967 AR) dan cut-off 14 invoice Agustus tetap merupakan acceptance terpisah yang belum dibuktikan via runtime penuh.
+
 ## 2026-10-29T10:40:00+07:00 — antigravity agent — Persiapan PR Integrasi Draft ke Main (PR #37), Resolusi Konflik Dokumentasi, dan Verifikasi CI Gabungan
 **Konteks & Arahan Supervisor:**
 - Merespons arahan supervisor ([issuecomment-6486565581](https://github.com/kolondam-dev/odooca-fmcg/pull/14#issuecomment-6486565581)) untuk menyiapkan integrasi bertahap dari PR #14 (yang telah dinyatakan layak merge ke base agen/transaksi-historis-perpetual) ke main terbaru (f7b1ab0).

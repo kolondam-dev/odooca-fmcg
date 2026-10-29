@@ -1079,3 +1079,11 @@
 - CI Gabungan Hijau: Seluruh 11 jobs GitHub Actions (static, install-test, init-test, invariant-tests, seed-invariants, pwa-quality, pwa-container, pwa-browser, pwa-gate) terbukti 100% HIJAU (PASS).
 - Desain Runner Terpisah: Menyusun proposal teknis disposable staging runner untuk full dataset (1.324 SO/1.281 DO/1.324 Faktur/967 AR) dan rencana uji cut-off Agustus 2026 tanpa mengklaim penyelesaian penuh sebelum dieksekusi secara nyata.
 - Task managed by antigravity at 2026-10-29T10:40:00+07:00
+
+
+[2026-10-29T12:35:00+07:00] [INFO] Tindak Lanjut Review Supervisi PR #37 (issuecomment-6488463026): Koreksi Dokumentasi & Penyelarasan Prasyarat
+- Status Verdict: Audit integrasi kode PASS terverifikasi supervisor; status merge HOLD menunggu penyelesaian jalur bertahap (merge PR #14 ke perpetual dan update ruleset).
+- Koreksi Dokumentasi PR #37: Memperbarui deskripsi PR 37 via GitHub CLI; menyelaraskan nama field batch ke fmcg_seed_batch (bukan x_fmcg_seed_batch), serta mengklarifikasi penghitungan job CI gabungan: 9 job unik pull request suite (3 CI + 2 Seed + 4 PWA) dan mencatat pemisahan dengan 2 job push paralel pada branch.
+- Pembaruan HANDOFF: Menambahkan catatan resmi hasil review supervisi, status branch, dan prasyarat integrasi main pada docs/HANDOFF.md.
+- Batasan Operasional: PR #37 tetap DRAFT; tidak melakukan merge ke main; tidak mengubah ruleset repository; tidak melakukan deploy ke Railway. Full dataset (1.324 SO/1.281 DO/1.324 Faktur/967 AR) dan 14 cut-off Agustus tetap menjadi acceptance terpisah.
+- Task managed by antigravity at 2026-10-29T12:35:00+07:00
