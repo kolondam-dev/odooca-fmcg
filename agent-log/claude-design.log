@@ -106,3 +106,10 @@
 - Blueprint dashboard menempatkan native Odoo enhancement pertama, custom id_dashboard kedua, spreadsheet_dashboard terakhir.
 - Runtime Odoo/browser dan CI remote belum dijalankan dalam sesi ini; tidak merge/deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T06:30:00+07:00
+
+
+## 2026-10-29T09:52:00+07:00 — footer transaction visual pass
+- Branch `agen/ui-footer-transaction-layout-v1` dari main setelah PR #35 merge.
+- SCSS: panel `.oe_subtotal_footer` dibuat lebih jelas dan responsif; angka tabular; strip sticky diisolasi dari stacking context luar.
+- Tidak menyentuh model, view XML, data, atau formula.
+- Belum selesai: target 3 kolom, field footer discount 1/2, dan sticky scroll behavior. Perlu runtime Odoo 19 CE/resolved view inspection sebelum lanjut. Tidak merge/deploy.
