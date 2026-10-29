@@ -1142,7 +1142,6 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
                 inv_vals = {
                     "name": "INV/ILLEGAL/2026/08",
                     "move_type": "out_invoice",
-                    "state": "posted",
                     "date": "2026-08-01",
                     "invoice_date": "2026-08-01",
                     "amount_untaxed": 1000000.0,

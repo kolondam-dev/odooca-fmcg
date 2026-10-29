@@ -11,8 +11,8 @@
    - Pada PostgreSQL nyata di dalam savepoint, perubahan nilai (+Rp 500.000 debit 510000 & +Rp 500.000 credit 113000) dieksekusi via direct SQL UPDATE account_move_line, lalu diikuti env.invalidate_all() untuk membersihkan cache ORM.
    - Terbukti ditolak secara deterministik oleh audit_database_against_oracle_july dengan AssertionError: Audit COGS Nominal Juli Mismatch!, membuktikan audit saldo GL dan nominal COGS aktif dan non-vacuous.
 3. **Penajaman Probe 6 (Cross-Cutoff Invoice Injection):**
-   - Menambahkan binding partner_id dan journal_id sah pada kreasi faktur out_invoice bertanggal 2026-08-01 di database penutupan Juli.
-   - Terbukti ditolak secara deterministik oleh audit jumlah faktur dan batas tanggal cut-off dengan AssertionError.
+   - Menambahkan binding partner_id dan journal_id sah serta meniadakan state: 'posted' pada create dictionary (mematuhi UserError Odoo 19 yang melarang membuat move langsung dalam status posted).
+   - Terbukti dibuat sebagai draft out_invoice di dalam savepoint dan ditolak secara deterministik oleh asersi cut-off dan invoice count audit produksi (Audit Faktur Juli Gagal! Expected 1276, got 1277).
 4. **Hasil Verifikasi Penuh:**
    - python -m ruff check .: PASS (0 errors).
    - python scripts/check_manifests.py: PASS (5 addon).
