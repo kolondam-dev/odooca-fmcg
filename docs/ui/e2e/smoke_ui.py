@@ -168,10 +168,18 @@ async def main():
             const rowRect = lastRow.getBoundingClientRect();
             const footerAfterRowScroll = footer.getBoundingClientRect();
             const visibleTop = Math.max(scrollportTop, footerAfterRowScroll.top);
-            const lastRowVisible = rowRect.top >= scrollportTop - 2
-                && rowRect.bottom <= footerAfterRowScroll.top + 2
-                && rowRect.bottom <= scrollportBottom + 2
-                && rowRect.top < footerAfterRowScroll.top;
+            const isRowVisibleAndUncovered = (rect, top, bottom, footerTop) =>
+                rect.top >= top - 2 && rect.bottom <= footerTop + 2
+                && rect.bottom <= bottom + 2 && rect.top < footerTop;
+            const lastRowVisible = isRowVisibleAndUncovered(
+                rowRect, scrollportTop, scrollportBottom, footerAfterRowScroll.top
+            );
+            // Negative control: a row fully above the scrollport must never pass.
+            const hiddenRowRejected = !isRowVisibleAndUncovered(
+                { top: scrollportTop - 50, bottom: scrollportTop - 10 },
+                scrollportTop, scrollportBottom, footerAfterRowScroll.top
+            );
+            const form = document.querySelector('.o_form_sheet');
             const lastCell = lastRow.querySelector('td:not(.o_list_record_selector)');
             const result = {
                 ok: true,
@@ -186,9 +194,11 @@ async def main():
                 stickyPinned: pinned.length >= 2 && pinned.every(p => p.drift <= 3),
                 footerInScrollport: footerAfterRowScroll.top >= scrollportTop - 2 && footerAfterRowScroll.bottom <= scrollportBottom + 2,
                 lastRowVisibleAndUncovered: lastRowVisible,
+                hiddenRowCounterexampleRejected: hiddenRowRejected,
                 horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
                     || owner.scrollWidth > owner.clientWidth + 1
-                    || footer.scrollWidth > footer.clientWidth + 1,
+                    || footer.scrollWidth > footer.clientWidth + 1
+                    || (!!form && form.scrollWidth > form.clientWidth + 1),
                 lastCellPresent: !!lastCell,
             };
             owner.scrollTop = initialScroll;
