@@ -42,5 +42,36 @@ invoice_order.action_confirm()
 invoices = invoice_order._create_invoices()
 if len(invoices) != 1 or len(invoices.invoice_line_ids) < 10:
     raise RuntimeError('UI smoke fixture must create one invoice with at least 10 invoice lines')
+# Capture evidence from the installed registry and resolved form architectures.
+# This is runtime evidence from the same disposable CI DB used by browser smoke.
+from lxml import etree
+audit = {'installed_modules': env['ir.module.module'].search([('state', '=', 'installed')]).mapped('name')}  # noqa: F821
+for model_name, view_xmlid, wanted in (
+    ('sale.order', 'sale.view_order_form', [
+        'note', 'amount_untaxed', 'amount_tax', 'amount_total', 'tax_totals',
+        'discount', 'discount_amount', 'footer_discount_1', 'footer_discount_2',
+    ]),
+    ('account.move', 'account.view_move_form', [
+        'narration', 'amount_untaxed', 'amount_tax', 'amount_total', 'tax_totals',
+        'discount', 'discount_amount', 'footer_discount_1', 'footer_discount_2',
+    ]),
+):
+    model = env[model_name]
+    view = env.ref(view_xmlid)
+    resolved = model.get_view(view_id=view.id, view_type='form')
+    root = etree.fromstring(resolved['arch'].encode())
+    audit[model_name] = {
+        'view_xmlid': view_xmlid,
+        'view_id': view.id,
+        'view_model': view.model,
+        'fields_present_in_registry': sorted(set(wanted) & set(model._fields)),
+        'resolved_view_field_names': sorted({node.get('name') for node in root.xpath('.//field[@name]') if node.get('name')}),
+        'resolved_groups': [
+            {'name': node.get('name'), 'class': node.get('class'),
+             'field_names': [field.get('name') for field in node.xpath('.//field[@name]')]}
+            for node in root.xpath('.//group[.//field[@name="tax_totals"] or .//field[@name="note"] or .//field[@name="narration"]]')
+        ],
+    }
+print('UI_RUNTIME_AUDIT=' + json.dumps(audit, sort_keys=True))
 env.cr.commit()  # noqa: F821
 print('UI_FIXTURE=' + json.dumps({'order': orders[0].id, 'invoice': invoices[0].id}))
