@@ -68,3 +68,9 @@ Kolom harus collapse menjadi layout bertumpuk pada viewport sempit; tidak boleh 
 
 ### Catatan audit implementasi lanjutan (2026-10-29)
 Audit branch menemukan hanya addon kustom `id_base`, `id_ui`, `id_ui_shell`, dan `id_ui_form`; tidak ditemukan addon kustom `id_discount` atau field eksplisit untuk dua footer discount. Source penuh addon Odoo/OCA eksternal tidak disimpan dalam direktori `addons/` repo ini, sehingga perlu inspeksi registry/model dan resolved form architecture pada runtime Odoo 19 CE sebelum menetapkan field yang tersedia. Karena itu, layout tiga kolom dan penggantian perilaku sticky belum diklaim terimplementasi. Jangan memindahkan elemen atau menambahkan field hanya lewat CSS tanpa mengetahui parent XML dan sumber nilai. Uji sticky yang ada terbatas pada Sales Order menurut catatan sebelumnya; uji lintas-form dan scroll-container masih terbuka.
+
+
+### Implementasi awal footer — 2026-10-29
+Pada branch `agen/ui-footer-transaction-layout-v1`, SCSS memberi panel ringkasan `.oe_subtotal_footer` latar netral, border halus, lebar maksimum responsif, alignment ke kanan dan angka tabular. Strip sticky diberi isolasi stacking dan bayangan yang lebih jelas; breakpoint mobile mengurangi padding dan mengizinkan panel memakai lebar penuh. Ini hanya enhancement visual pada markup yang sudah ada: tidak memindahkan field, tidak mengubah perhitungan, dan tidak menambahkan diskon.
+
+**Belum selesai / belum terverifikasi:** tiga kolom notes | dua footer discount | subtotal/DPP/tax/grand total; stabilitas sticky saat scroll nyata; overflow, zoom, keyboard, serta form selain SO. Runtime Odoo tidak tersedia dalam sesi ini, dan struktur resolved view/model untuk notes/discount belum diperiksa. Sebelum mengklaim selesai, jalankan browser E2E di Odoo 19 CE dan inspeksi parent XML serta model yang benar-benar terpasang. Jika model tidak memiliki dua footer discount, buat keputusan model bisnis terpisah; jangan menambah UI-only fields.
