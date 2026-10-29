@@ -636,3 +636,17 @@ tetap terkunci dan tidak menggunakan kebijakan permissive.
 OpenAPI draft0.12 menambah sales.order.revise, delivery.trip.close dan DTO request
 pending/cancel. Bukan endpoint Odoo yang sudah tersedia. Integrasi backend menunggu
 kesiapan seeding sesuai mandat; tidak menyentuh addon/seed/deployment/ruleset.
+
+
+## Tahap1 integrasi: katalog dan satuan per SKU
+
+[Kontrak katalog v2](contracts/catalog-v2.md) menambahkan scope company/user/warehouse/
+hari, kode SKU dan packaging per produk. Harga/stok eksplisit per karton; unit pada
+order/koreksi dan estimasi menggunakan rasio SKU. Tiga SKU lama tetap144/12, SKU demo
+Biskuit Mini memakai24/6. Historical demo snapshot tanpa metadata tetap memakai
+rasio aslinya144/12 dan tidak ditulis ulang; HTTP/v2 tidak mempunyai fallback rasio.
+HTTP snapshot memerlukan bootstrap, catalog v2 dan scope yang cocok; perubahan sesi
+saat request ditolak. `data/catalog.ts` memetakan read-model sanitasi backend, bukan
+raw ORM, dan belum terhubung endpoint Odoo. Kontrak OpenAPI draft0.13 diekspor dari
+schema. Aplikasi live tetap terkunci; endpoint baca/auth/ACL dan integrasi transaksi
+adalah tahap berikutnya. Harga/pajak/stok final tetap tanggung jawab server.

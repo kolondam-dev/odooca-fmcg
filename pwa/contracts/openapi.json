@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FMCG Field client contract draft",
-    "version": "0.12.0",
+    "version": "0.13.0",
     "description": "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement."
   },
   "servers": [
@@ -100,6 +100,117 @@
   },
   "components": {
     "schemas": {
+      "Packaging": {
+        "type": "object",
+        "properties": {
+          "carton": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 1000000
+          },
+          "pack": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 1000000
+          },
+          "pcs": {
+            "type": "number",
+            "const": 1
+          }
+        },
+        "required": [
+          "carton",
+          "pack",
+          "pcs"
+        ],
+        "additionalProperties": false,
+        "x-invariant": "carton >= pack; carton % pack = 0; quantities in pcs"
+      },
+      "SnapshotScope": {
+        "type": "object",
+        "properties": {
+          "company_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "user_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "warehouse_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "business_date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+          }
+        },
+        "required": [
+          "company_id",
+          "user_id",
+          "warehouse_id",
+          "business_date"
+        ],
+        "additionalProperties": false
+      },
+      "CatalogRow": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "default_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "principal_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "brand_name": {
+            "type": "string"
+          },
+          "carton_qty": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "inner_qty": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "price_per_carton": {
+            "type": "number",
+            "minimum": 0
+          },
+          "stock_cartons": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "product_id",
+          "default_code",
+          "name",
+          "principal_id",
+          "brand_name",
+          "carton_qty",
+          "inner_qty",
+          "price_per_carton",
+          "stock_cartons"
+        ],
+        "additionalProperties": false
+      },
       "OrderRevision": {
         "type": "object",
         "properties": {
@@ -4144,6 +4255,39 @@
       "Snapshot": {
         "type": "object",
         "properties": {
+          "catalog_version": {
+            "type": "number",
+            "const": 2
+          },
+          "scope": {
+            "type": "object",
+            "properties": {
+              "company_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "user_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "warehouse_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "business_date": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              }
+            },
+            "required": [
+              "company_id",
+              "user_id",
+              "warehouse_id",
+              "business_date"
+            ],
+            "additionalProperties": false
+          },
           "version": {
             "type": "string"
           },
@@ -4230,6 +4374,43 @@
                 "stock": {
                   "type": "number",
                   "minimum": 0
+                },
+                "sku_code": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "packaging": {
+                  "type": "object",
+                  "properties": {
+                    "carton": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000000
+                    },
+                    "pack": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1000000
+                    },
+                    "pcs": {
+                      "type": "number",
+                      "const": 1
+                    }
+                  },
+                  "required": [
+                    "carton",
+                    "pack",
+                    "pcs"
+                  ],
+                  "additionalProperties": false
+                },
+                "price_basis": {
+                  "type": "string",
+                  "const": "carton"
+                },
+                "stock_basis": {
+                  "type": "string",
+                  "const": "carton"
                 }
               },
               "required": [
@@ -4291,7 +4472,48 @@
           "products",
           "deliveries"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "catalog_version": {
+                  "const": 2
+                }
+              },
+              "required": [
+                "catalog_version"
+              ]
+            },
+            "then": {
+              "required": [
+                "scope"
+              ],
+              "properties": {
+                "version": {
+                  "minLength": 1
+                },
+                "updatedAt": {
+                  "format": "date-time"
+                },
+                "products": {
+                  "items": {
+                    "required": [
+                      "sku_code",
+                      "packaging",
+                      "price_basis",
+                      "stock_basis"
+                    ]
+                  },
+                  "x-unique": [
+                    "id",
+                    "sku_code"
+                  ]
+                }
+              }
+            }
+          }
+        ]
       }
     }
   },

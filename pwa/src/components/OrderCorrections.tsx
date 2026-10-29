@@ -12,6 +12,7 @@ import {
     type OrderRevision,
 } from "../domain/order-revision-contracts";
 import { VisitOrderSchema } from "../domain/visit-contracts";
+import { productPackaging } from "../domain/product-units";
 import { orderQuote, type OrderUom } from "../domain/order-pricing";
 import {
     MorningRecordSchema,
@@ -339,8 +340,26 @@ export function OrderCorrections({
                                         }))
                                     }
                                 >
-                                    <option value="carton">Karton144pcs</option>
-                                    <option value="pack">Pack12pcs</option>
+                                    <option value="carton">
+                                        Karton
+                                        {
+                                            productPackaging(
+                                                p,
+                                                snapshot.catalog_version,
+                                            ).carton
+                                        }
+                                        pcs
+                                    </option>
+                                    <option value="pack">
+                                        Pack
+                                        {
+                                            productPackaging(
+                                                p,
+                                                snapshot.catalog_version,
+                                            ).pack
+                                        }
+                                        pcs
+                                    </option>
                                     <option value="pcs">Pcs</option>
                                 </select>
                             </label>
