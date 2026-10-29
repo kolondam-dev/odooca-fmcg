@@ -683,7 +683,7 @@ class TestAccountMoveCogs(TransactionCase):
             date="2026-07-02",
             quantity=12.0,
             product_id=self.product,
-            company_id=self.company_other,
+            company_id=self.company_foreign,
             location_id=SimpleNamespace(usage="customer"),
             location_dest_id=SimpleNamespace(usage="internal"),
             origin_returned_move_id=fake_sm,
@@ -725,4 +725,4 @@ class TestAccountMoveCogs(TransactionCase):
         with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
-            self.assertIn("Arah pergerakan retur", str(ctx.exception))
+            self.assertIn("tidak sah", str(ctx.exception))

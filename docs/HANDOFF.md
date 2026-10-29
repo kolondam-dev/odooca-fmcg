@@ -1,5 +1,20 @@
 # HANDOFF
 
+## 2026-10-29 — antigravity agent — Pemurnian Relasi origin_returned_move_id Retur Karantina & Penyesuaian Asersi Test Suite COGS
+**Konteks & Resolusi:**
+- Menyempurnakan binding retur karantina pada Odoo runtime disposable dan CI test runner:
+  1. *Isolasi SO Picking*: Pada `scripts/load_canonical_perpetual.py` (`load_rejections_quarantine`), menghapus assignment `sale_line_id` pada move retur karantina agar picking karantina tidak dihitung ke dalam `so.picking_ids` oleh Odoo `sale_stock`, sambil tetap mempertahankan pengikatan relasional eksak `origin_returned_move_id = out_sm.id` ke pergerakan outbound delivery.
+  2. *Koreksi Atribut Test*: Memperbarui `company_foreign` (sebelumnya `company_other`) pada `test_bound_return_wrong_company_rejected` di `addons/id_base/tests/test_account_move_cogs.py`.
+  3. *Penyelarasan String Asersi*: Menyelaraskan asersi pesan error pada `test_bound_return_wrong_destination_rejected` agar memeriksa substring `tidak sah` yang konsisten dengan validasi rute move line.
+- Hasil Verifikasi:
+  * `python -m ruff check .`: All checks passed!
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python tests/test_canonical_loader_adapter.py`: 63/63 PASS (termasuk 20/20 mutasi aktif ditolak)
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * 15 file CSV register kanonikal di `data/registers/` 100% beku tanpa modifikasi.
+  * PR #15 tidak dimerge ke `main` dan tidak dideploy ke Railway.
+
 ## 2026-10-29 — antigravity agent — Resolusi P1 Review Supervisi PR #15: Relasi Persisten origin_returned_move_id & Eliminasi Teks Bebas Retur
 **Konteks & Resolusi:**
 - Mengatasi temuan P1 terakhir dari review supervisi PR #15 ([issuecomment-6484894956](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6484894956)):

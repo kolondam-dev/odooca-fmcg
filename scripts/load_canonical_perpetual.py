@@ -2340,8 +2340,7 @@ class CanonicalPerpetualAdapter:
                 mv_fields = _safe_fields(self.env["stock.move"]) if "stock.move" in self.env else {}
                 if out_sm and ("origin_returned_move_id" in mv_fields or not mv_fields):
                     move_item["origin_returned_move_id"] = out_sm.id
-                if target_sol and ("sale_line_id" in mv_fields or not mv_fields):
-                    move_item["sale_line_id"] = target_sol.id
+# sale_line_id omitted to prevent picking_ids contamination
                 if "name" in mv_fields:
                     move_item["name"] = f"Retur Karantina {rej_id} - {prod.display_name if prod else ''}"
                 if "description_picking" in mv_fields:
@@ -2386,9 +2385,7 @@ class CanonicalPerpetualAdapter:
                     if out_sm and getattr(ret_mv, "origin_returned_move_id", None) != out_sm:
                         if "origin_returned_move_id" in _safe_fields(ret_mv) or not _safe_fields(ret_mv):
                             w_vals["origin_returned_move_id"] = out_sm.id
-                    if target_sol and getattr(ret_mv, "sale_line_id", None) != target_sol:
-                        if "sale_line_id" in _safe_fields(ret_mv) or not _safe_fields(ret_mv):
-                            w_vals["sale_line_id"] = target_sol.id
+# sale_line_id omitted to prevent picking_ids contamination
                     if w_vals:
                         ret_mv.write(w_vals)
             elif prod and StockQuant:
