@@ -260,15 +260,48 @@ class AccountMove(models.Model):
                         ("state", "=", "done"),
                         ("location_id.usage", "=", "customer"),
                     ])
+                    candidate_refs = set()
+                    if inv_origin:
+                        candidate_refs.add(inv_origin)
+                        if inv_origin.startswith("SO-"):
+                            candidate_refs.add("DO-" + inv_origin[3:])
+                            candidate_refs.add(inv_origin[3:])
+                    for m in line_outbound_moves:
+                        m_orig = getattr(m, "origin", "") or ""
+                        if m_orig:
+                            candidate_refs.add(m_orig)
+                            if m_orig.startswith("SO-"):
+                                candidate_refs.add("DO-" + m_orig[3:])
+                                candidate_refs.add(m_orig[3:])
+                        m_pick = getattr(m, "picking_id", None)
+                        if m_pick:
+                            p_name = getattr(m_pick, "name", "") or ""
+                            if p_name:
+                                candidate_refs.add(p_name)
+                            p_orig = getattr(m_pick, "origin", "") or ""
+                            if p_orig:
+                                candidate_refs.add(p_orig)
+                    for sol in sol_list:
+                        ord_obj = getattr(sol, "order_id", None)
+                        if ord_obj:
+                            o_name = getattr(ord_obj, "name", "") or ""
+                            if o_name:
+                                candidate_refs.add(o_name)
+                                if o_name.startswith("SO-"):
+                                    candidate_refs.add("DO-" + o_name[3:])
+                                    candidate_refs.add(o_name[3:])
+                            o_ref = getattr(ord_obj, "client_order_ref", "") or ""
+                            if o_ref:
+                                candidate_refs.add(o_ref)
+                                if o_ref.startswith("SO-"):
+                                    candidate_refs.add("DO-" + o_ref[3:])
+                                    candidate_refs.add(o_ref[3:])
+
                     for ret_sm in matching_returns:
                         ret_note = str(getattr(getattr(ret_sm, "picking_id", None), "note", "") or "")
                         ret_orig = str(getattr(ret_sm, "origin", "") or "")
-                        has_matching_m_origin = any(
-                            getattr(m, "origin", "") in ret_note
-                            for m in line_outbound_moves
-                            if getattr(m, "origin", "")
-                        )
-                        if inv_origin in ret_note or inv_origin in ret_orig or has_matching_m_origin:
+                        ret_text = f"{ret_note} {ret_orig}"
+                        if any(c_ref and c_ref in ret_text for c_ref in candidate_refs):
                             return_base_qty += _convert_qty_to_product_uom(
                                 float(getattr(ret_sm, "quantity", getattr(ret_sm, "product_uom_qty", 0.0)) or 0.0),
                                 getattr(ret_sm, "product_uom", getattr(ret_sm, "product_uom_id", None)),

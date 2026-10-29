@@ -1025,3 +1025,10 @@
 - Kompatibilitas Mock Recordset: Mengimplementasikan MockRecordSet(list) pada test_account_move_cogs.py yang mendukung relasi bertingkat (.order_id dan .mapped('incoterm_location')) untuk mencegah AttributeError saat modul sale_stock terinstal.
 - Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), test_canonical_loader_adapter.py (63/63 PASS, 20/20 mutasi ditolak), verify_seed_invariants PASS, verify_seed_acceptance PASS.
 - Task managed by antigravity at 2026-10-29T07:10:00+07:00
+
+
+[2026-10-29T07:20:00+07:00] [INFO] Penyempurnaan Korelasi Retur Karantina Multi-Ref dan Pembaruan Test Suite COGS Odoo 19
+- Korelasi Retur Karantina: Memperluas identifikasi referensi dokumen retur pada account.move (_is_seed_commercial_invoice_with_posted_delivery_cogs) mencakup SO origin, DO origin, picking name, dan invoice origin (candidate_refs) serta menyertakan nomor SO eksplisit pada note dan move origin retur karantina di load_canonical_perpetual.py. Memastikan retur karantina (12 unit) pada pesanan partial rejection (SO-0063) terekonsiliasi sempurna dengan pengiriman outbound (84 - 12 == 72).
+- Pembaruan Test Suite COGS: Memperbarui fake_sol pada test_marked_seed_with_unposted_cogs_journal_raises_user_error dan test_marked_seed_with_wrong_journal_raises_user_error dengan fmcg_seed_batch dan incoterm_location, serta mem-patch product_uom_id pada level class di test_uom_conversion_quantity_mismatch_rejected untuk menghindari ValueError assignment langsung ke field relational ORM Odoo.
+- Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), verify_seed_invariants PASS, verify_seed_acceptance PASS.
+- Task managed by antigravity at 2026-10-29T07:20:00+07:00

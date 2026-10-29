@@ -1,5 +1,23 @@
 # HANDOFF
 
+## 2026-10-29 — antigravity agent — Penyempurnaan Korelasi Retur Karantina Multi-Ref dan Pembaruan Test Suite COGS Odoo 19
+**Konteks & Resolusi:**
+- Menuntaskan sisa kendala runner CI Odoo (`init-test` dan `install-test`):
+  1. *Korelasi Retur Karantina Multi-Ref*:
+     - Pada `addons/id_base/models/account_move.py`, pencarian retur yang cocok diperluas dari pengecekan literal `inv_origin` menjadi himpunan referensi terelasi `candidate_refs` (mencakup `SO-`, `DO-`, nomor picking delivery, dan SO client order ref).
+     - Pada `scripts/load_canonical_perpetual.py`, nomor SO disematkan ke note picking retur karantina dan move origin (`REJ-... (SO-...)`).
+     - Memastikan pesanan dengan retur karantina fisik (`SO-202607-0063`: 84 terkirim - 12 retur = 72 ditagih) terekonsiliasi 100% saat faktur diposting di DB Odoo.
+  2. *Pembaruan Test Suite COGS Odoo 19*:
+     - Menyematkan `fmcg_seed_batch` dan `incoterm_location` pada `fake_sol.order_id` di `test_marked_seed_with_unposted_cogs_journal_raises_user_error` dan `test_marked_seed_with_wrong_journal_raises_user_error`.
+     - Mem-patch `product_uom_id` pada level kelas line di `test_uom_conversion_quantity_mismatch_rejected` untuk menghindari `ValueError` saat assignment langsung objek non-recordset ke Many2one ORM.
+- Hasil Verifikasi:
+  * `python -m ruff check .`: All checks passed!
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * 15 file CSV register kanonikal di `data/registers/` 100% beku tanpa modifikasi.
+  * PR #15 tidak dimerge ke `main` dan tidak dideploy ke Railway.
+
 ## 2026-10-29 — antigravity agent — Penyelarasan Urutan Pemuatan Retur Karantina Fisik Mendahului Faktur Komersial & Kompatibilitas Mock Recordset sale_stock
 **Konteks & Resolusi:**
 - Memperbaiki kegagalan `init-test` dan `install-test` pada runner Odoo CI:

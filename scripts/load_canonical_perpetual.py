@@ -2292,7 +2292,7 @@ class CanonicalPerpetualAdapter:
                 if "price_unit" in mv_fields or not mv_fields:
                     move_item["price_unit"] = p_data["unit_cost"]
                 if "origin" in mv_fields or not mv_fields:
-                    move_item["origin"] = rej_id
+                    move_item["origin"] = f"{rej_id} ({p_data['so_number']})"
                 if "picked" in mv_fields:
                     move_item["picked"] = True
                 if mv_fields:
@@ -2303,7 +2303,10 @@ class CanonicalPerpetualAdapter:
                     "picking_type_id": internal_type.id if internal_type else False,
                     "location_id": customer_loc.id,
                     "location_dest_id": quarantine_loc.id,
-                    "note": f"Retur Karantina DO {p_data['do_number']}: {p_data['rejection_reason']}",
+                    "note": (
+                        f"Retur Karantina {p_data['so_number']} DO {p_data['do_number']}: "
+                        f"{p_data['rejection_reason']}"
+                    ),
                     "move_ids": [(0, 0, move_item)] if prod else [],
                 }
                 pick = StockPicking.create(pick_vals)

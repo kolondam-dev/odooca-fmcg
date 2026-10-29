@@ -305,7 +305,12 @@ class TestAccountMoveCogs(TransactionCase):
             date="2026-07-02",
         )
         fake_sol = SimpleNamespace(
-            order_id=SimpleNamespace(name="SO-202607-0001", company_id=self.company_seed),
+            order_id=SimpleNamespace(
+                name="SO-202607-0001",
+                company_id=self.company_seed,
+                fmcg_seed_batch="CANONICAL_JULY_2026_PERPETUAL",
+                incoterm_location=False,
+            ),
             move_ids=[fake_sm],
         )
 
@@ -340,7 +345,12 @@ class TestAccountMoveCogs(TransactionCase):
             date="2026-07-02",
         )
         fake_sol = SimpleNamespace(
-            order_id=SimpleNamespace(name="SO-202607-0001", company_id=self.company_seed),
+            order_id=SimpleNamespace(
+                name="SO-202607-0001",
+                company_id=self.company_seed,
+                fmcg_seed_batch="CANONICAL_JULY_2026_PERPETUAL",
+                incoterm_location=False,
+            ),
             move_ids=[fake_sm],
         )
 
@@ -551,11 +561,13 @@ class TestAccountMoveCogs(TransactionCase):
         inv = self._create_basic_invoice(self.company_seed, is_seed=True)
         line = inv.invoice_line_ids[0]
         line.quantity = 2.0
-        line.product_uom_id = SimpleNamespace(name="Karton", factor_inv=144.0, factor=1.0 / 144.0)
+        karton_uom = SimpleNamespace(name="Karton", factor_inv=144.0, factor=1.0 / 144.0)
         fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
         fake_sm.quantity = 10.0
 
-        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
+        with patch.object(type(line), "product_uom_id", karton_uom), patch.object(
+            type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True
+        ):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("tidak cocok dengan kuantitas baris faktur", str(ctx.exception))
