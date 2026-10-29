@@ -1,3 +1,7 @@
+## 2026-10-29T13:06:00+07:00 — regression guard SCSS dan scroll footer PR #36
+Branch `agen/ui-footer-transaction-layout-v1`, PR #36 tetap HOLD/draft; tidak merge/deploy. Ditambahkan `docs/ui/e2e/test_form_scss_compile.py` untuk mengompilasi SCSS produksi dengan libsass yang dipasang CI (0.23.0), fixture SO kini berisi 18 baris berbeda, dan browser smoke menggulir scroll owner aktual lalu memeriksa footer tetap dalam scrollport, baris terakhir tidak tertutup, serta tidak ada overflow horizontal. CI baru dan runtime Odoo belum dijalankan/dikonfirmasi untuk commit ini. Cakupan invoice dengan baris transaksi, resolved view/model, layout tiga kolom, dan kestabilan scroll lintas form tetap terbuka. Jangan menganggap regression test yang baru ditambahkan sebagai bukti lulus sebelum job CI benar-benar selesai.
+Commit signature: Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T13:06:00+07:00
+
 ## 2026-10-29T12:26:00+07:00 — koreksi blocker SCSS PR #36
 PR #36 ditahan setelah smoke UI gagal dikompilasi oleh libsass pada `max-width: min(100%, 32rem)` (error incompatible units). Diganti menjadi `width: 32rem; max-width: 100%;`, sesuai kandidat yang lolos uji kompilasi pembanding. Commit: `a172bb77d5f107ae9e816b8be0ad88284164cbc7`. Perubahan ini hanya memperbaiki kompatibilitas SCSS; hasil layout tetap perlu diverifikasi di Odoo runtime. CI ulang untuk SHA baru belum dikonfirmasi. PR tetap draft/HOLD; tidak merge/deploy. Tiga kolom dan stabilitas sticky masih belum selesai.
 
