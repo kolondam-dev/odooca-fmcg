@@ -31,8 +31,9 @@ def validate(root, sizes=(354, 150)):
 
     def read(path):
         data = (root / path).read_bytes()
-        inputs[path] = hashlib.sha256(data).hexdigest()
-        rows = list(csv.DictReader(data.decode("utf-8-sig").splitlines()))
+        normalized = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        inputs[path] = hashlib.sha256(normalized).hexdigest()
+        rows = list(csv.DictReader(normalized.decode("utf-8-sig").splitlines()))
         if not rows:
             raise ValueError(f"empty required dataset: {path}")
         return rows
@@ -67,9 +68,10 @@ def validate(root, sizes=(354, 150)):
 
     geo_path = "addons/id_base/data/id_district_data.xml"
     data = (root / geo_path).read_bytes()
-    inputs[geo_path] = hashlib.sha256(data).hexdigest()
+    normalized_geo = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    inputs[geo_path] = hashlib.sha256(normalized_geo).hexdigest()
     districts, villages = {}, {}
-    for record in ET.fromstring(data).findall("record"):
+    for record in ET.fromstring(normalized_geo).findall("record"):
         fields = {f.get("name"): f.get("ref") or f.text for f in record.findall("field")}
         if record.get("model") == "id.district":
             districts[fields["code"]] = record.get("id")
@@ -100,6 +102,7 @@ def validate(root, sizes=(354, 150)):
     invoices = index(read("data/registers/perpetual_invoices.csv"), "invoice_number", "TX-IDENTITY")
     cards = read("data/registers/perpetual_daily_stock_cards.csv")
     calendar = index(cards, "date", "TX-IDENTITY")
+    order_principals = collections.defaultdict(set)
     subtotals = collections.defaultdict(Decimal)
     events = []
     lot_expiry = {}
@@ -131,6 +134,11 @@ def validate(root, sizes=(354, 150)):
         if not order or not product:
             fail("TX-FK", key, "order or product missing")
             continue
+        principal = (product.get("principal_code") or "").strip()
+        if not principal:
+            fail("SO-PRINCIPAL", key, f"SKU {row['sku_code']} has no principal in product master")
+        else:
+            order_principals[key].add(principal)
         qty = number(row["qty_cartons"])
         if qty <= 0:
             fail("LINE-MATH", key, "quantity must be positive")
@@ -140,6 +148,9 @@ def validate(root, sizes=(354, 150)):
         subtotals[key] += number(row["line_subtotal_dpp"])
         events.append((order["date_order"], 1, row["sku_code"], row["lot_number"], -qty, key))
     for key, order in orders.items():
+        principals = order_principals[key]
+        if len(principals) != 1:
+            fail("SO-PRINCIPAL", key, f"expected exactly one product-master principal; observed {sorted(principals)}")
         equal("HEADER-MATH", key, order["gross_dpp"], subtotals[key])
         equal("HEADER-MATH", key, order["net_dpp"], number(order["gross_dpp"]) - number(order["discount_dpp"]))
         ref = order["customer"].split(" - ")[0]
@@ -161,21 +172,146 @@ def validate(root, sizes=(354, 150)):
             fail("EVENT-ORDER", key, "delivery before order or missing order")
         if date.weekday() == 6:
             fail("CALENDAR", key, "Sunday delivery")
+        deliv_day = calendar.get(delivery["scheduled_delivery_date"])
+        if deliv_day and str(deliv_day["is_working_day"]).lower() != "true":
+            fail("CALENDAR", key, f"delivery on non-working date: {delivery['scheduled_delivery_date']}")
+
+    order_lot_qtys = collections.defaultdict(lambda: collections.defaultdict(Decimal))
+    for row in lines:
+        order_lot_qtys[row["so_number"]][(row["sku_code"], row["lot_number"])] += number(row["qty_cartons"])
+
     for key, invoice in invoices.items():
         delivery = deliveries.get(invoice["do_number"])
         if not delivery or delivery["so_number"] != invoice["so_number"] or invoice["so_number"] not in orders:
             fail("TX-FK", key, "invoice/order/delivery link invalid")
+        order = orders.get(invoice["so_number"])
+        ref = order["customer"].split(" - ")[0] if order else ""
+        customer = customers.get(ref)
+        if not customer:
+            fail("TX-FK", key, f"unknown customer for invoice: {ref}")
+            continue
+
+        top_master = int(customer.get("payment_term_days", 0))
+        top_inv = int(invoice.get("payment_term_days", -1))
+        if top_inv != top_master:
+            fail("MASTER-TOP", key, f"payment term mismatch: invoice={top_inv} vs master={top_master}")
+
+        inv_date = dt.date.fromisoformat(invoice["date_invoice"])
+        expected_due = (inv_date + dt.timedelta(days=top_master)).isoformat()
+        if invoice["due_date"] != expected_due:
+            fail("EVENT-ORDER", key, f"due date mismatch: expected {expected_due}, observed {invoice['due_date']}")
+
+        if delivery and delivery["scheduled_delivery_date"] != invoice["date_invoice"]:
+            fail("PERIOD-CUTOFF", key, f"delivery date {delivery['scheduled_delivery_date']} != invoice date {invoice['date_invoice']}")
+
         if invoice["due_date"] < invoice["date_invoice"]:
             fail("EVENT-ORDER", key, "due date before invoice")
+
+        if order and delivery:
+            gross_order = number(order["gross_dpp"])
+            deliv_dpp = number(delivery["do_delivered_dpp"])
+            disc_rate = (number(order["discount_dpp"]) / gross_order) if gross_order > 0 else Decimal("0.0")
+            expected_inv_disc = (deliv_dpp * disc_rate).quantize(Decimal("0.01"))
+            expected_inv_dpp = deliv_dpp - expected_inv_disc
+            equal("INVOICE-MATH", key, invoice["dpp_amount"], expected_inv_dpp)
+            expected_ppn = (number(invoice["dpp_amount"]) * Decimal("0.11")).quantize(Decimal("0.01"))
+            equal("INVOICE-MATH", key, invoice["ppn_11_amount"], expected_ppn)
+
         equal("INVOICE-MATH", key, invoice["total_invoice_with_ppn"],
               number(invoice["dpp_amount"]) + number(invoice["ppn_11_amount"]))
+
+    rejections_raw = read("data/registers/perpetual_order_rejections.csv")
+    rejection_dpp_totals = collections.defaultdict(Decimal)
+    rejection_ids = set()
+
+    for row in rejections_raw:
+        rej_id = row["rejection_id"]
+        if rej_id in rejection_ids:
+            fail("TX-IDENTITY", rej_id, "duplicate rejection ID")
+        rejection_ids.add(rej_id)
+
+        so_num = row["so_number"]
+        do_num = row["do_number"]
+        delivery = deliveries.get(do_num)
+        order = orders.get(so_num)
+
+        if not order or not delivery or delivery["so_number"] != so_num:
+            fail("TX-FK", rej_id, "rejection SO or DO link invalid")
+            continue
+
+        sku = row["sku_code"]
+        lot = row["lot_number"]
+        product = product_map.get(sku)
+        if not product:
+            fail("TX-FK", rej_id, "rejection SKU unknown")
+            continue
+
+        delivered_lot_qty = order_lot_qtys[so_num].get((sku, lot), Decimal("0.0"))
+        if delivered_lot_qty <= Decimal("0.0"):
+            fail("RETURN-RECON", rej_id, f"rejected SKU/lot ({sku}/{lot}) was not in order {so_num}")
+
+        qty = number(row["qty_cartons"])
+        if qty <= 0:
+            fail("LINE-MATH", rej_id, "rejection quantity must be positive")
+        if qty > delivered_lot_qty:
+            fail("RETURN-RECON", rej_id, f"rejected quantity {qty} exceeds delivered line quantity {delivered_lot_qty}")
+
+        if row["rejection_date"] < order["date_order"] or row["rejection_date"] != delivery["scheduled_delivery_date"]:
+            fail("EVENT-ORDER", rej_id, f"rejection date {row['rejection_date']} mismatch with delivery {delivery['scheduled_delivery_date']}")
+
+        equal("LINE-MATH", rej_id, row["carton_qty"], product["carton_qty"])
+        equal("LINE-MATH", rej_id, row["line_subtotal_dpp"],
+              qty * number(row["carton_qty"]) * number(row["unit_price_dpp"]))
+        rejection_dpp_totals[do_num] += number(row["line_subtotal_dpp"])
+
+    for do_num, delivery in deliveries.items():
+        rej_total = rejection_dpp_totals.get(do_num, Decimal("0.00"))
+        equal("RETURN-RECON", do_num, delivery["rejection_dpp"], rej_total)
+        order = orders.get(delivery["so_number"])
+        if order:
+            equal("RETURN-RECON", do_num, delivery["do_delivered_dpp"], number(order["gross_dpp"]) - rej_total)
+
     for row in read("data/registers/perpetual_ar_collections.csv"):
         invoice = invoices.get(row["invoice_number"])
-        if not invoice or row["payment_date"] < invoice["date_invoice"]:
-            fail("COLLECTION", row["payment_id"], "unknown invoice or payment before invoice")
-        equal("COLLECTION", row["payment_id"], row["net_cash_collected"],
+        if not invoice:
+            fail("COLLECTION", row["payment_id"], "unknown invoice in collection")
+            continue
+        if row["payment_date"] < invoice["date_invoice"]:
+            fail("COLLECTION", row["payment_id"], "payment before invoice date")
+        equal("COLLECTION-MATH", row["payment_id"], row["invoice_dpp"], invoice["dpp_amount"])
+        equal("COLLECTION-MATH", row["payment_id"], row["net_cash_collected"],
               number(row["invoice_dpp"]) - number(row["early_payment_discount"]))
 
+    # 1. Validasi Pembayaran Hutang Usaha (AP Invariants)
+    ap_rows = read("data/registers/perpetual_ap_payments.csv")
+    ap_paid_total = Decimal("0.00")
+    for row in ap_rows:
+        pid = row["ap_payment_id"]
+        po_num = row["po_number"]
+        header = po.get(po_num)
+        if not header:
+            fail("AP-FK", pid, f"PO header not found in June intransit: {po_num}")
+            continue
+        if row["principal_name"] != header["principal_name"]:
+            fail("AP-FK", pid, f"principal mismatch: {row['principal_name']} vs {header['principal_name']}")
+        paid_dpp = number(row["amount_paid_dpp"])
+        header_dpp = number(header["total_dpp"])
+        if paid_dpp > header_dpp:
+            fail("AP-RECON", pid, f"AP payment {paid_dpp} exceeds PO total DPP {header_dpp}")
+        if row["payment_date"] < header["order_date"]:
+            fail("EVENT-ORDER", pid, f"payment date {row['payment_date']} before PO order date {header['order_date']}")
+        ap_paid_total += paid_dpp
+
+    # Source-derived per-PO schedule and cumulative coverage are enforced by
+    # verify_seed_acceptance.py in the same required CI job; no fixed AP total.
+
+    # 2. Validasi Beban Operasional & Penggajian (OPEX Invariants)
+    opex_rows = read("data/registers/perpetual_opex_payroll.csv")
+    total_opex = sum(number(o["amount"]) for o in opex_rows)
+    if sizes == (354, 150):
+        equal("OPEX-MATH", "TOTAL_OPEX", total_opex, "394350000.00")
+
+    # 3. Validasi FEFO & Lot Balances
     balances = collections.defaultdict(Decimal)
     for date, kind, sku, lot, quantity, ref in sorted(events):
         if kind == 1:
@@ -188,6 +324,80 @@ def validate(root, sizes=(354, 150)):
             fail("LOT-BALANCE", ref, f"allocation exceeds received lot quantity: {sku}/{lot}")
         if kind == 1 and lot_expiry.get((sku, lot), "0000-01-01") < date:
             fail("LOT-EXPIRY", ref, f"unknown or expired lot: {sku}/{lot}")
+
+    # 4. Validasi Ledger Event Replay (Granular Multi-Level Stock State Replay)
+    ledger_rows = read("data/registers/perpetual_stock_event_ledger.csv")
+    lot_phys = collections.defaultdict(Decimal)
+    lot_res = collections.defaultdict(Decimal)
+    lot_quar = collections.defaultdict(Decimal)
+
+    ledger_events_by_date = collections.defaultdict(list)
+    for row in ledger_rows:
+        ledger_events_by_date[row["date"]].append(row)
+
+    for d_str in sorted(calendar.keys()):
+        for r in ledger_events_by_date[d_str]:
+            eid = r["event_id"]
+            sku = r["sku_code"]
+            lot = r["lot_number"]
+            p_imp = number(r["physical_impact"])
+            r_imp = number(r["reserved_impact"])
+            q_imp = number(r["quarantine_impact"])
+
+            lot_phys[(sku, lot)] += p_imp
+            lot_res[(sku, lot)] += r_imp
+            lot_quar[(sku, lot)] += q_imp
+
+            if lot_phys[(sku, lot)] < 0:
+                fail("LEDGER-REPLAY", eid, f"negative physical balance for {sku}/{lot}: {lot_phys[(sku, lot)]}")
+            if lot_res[(sku, lot)] < 0:
+                fail("LEDGER-REPLAY", eid, f"negative reserved balance for {sku}/{lot}: {lot_res[(sku, lot)]}")
+            if lot_quar[(sku, lot)] < 0:
+                fail("LEDGER-REPLAY", eid, f"negative quarantine balance for {sku}/{lot}: {lot_quar[(sku, lot)]}")
+            if lot_res[(sku, lot)] > lot_phys[(sku, lot)]:
+                fail("LEDGER-REPLAY", eid, f"reserved ({lot_res[(sku, lot)]}) exceeds physical ({lot_phys[(sku, lot)]}) for {sku}/{lot}")
+
+        # Verifikasi saldo penutupan harian terhadap kartu stok harian
+        card = calendar[d_str]
+        tot_phys_eod = sum(lot_phys.values())
+        tot_res_eod = sum(lot_res.values())
+        tot_quar_eod = sum(lot_quar.values())
+
+        equal("LEDGER-REPLAY", f"DAILY-PHYSICAL-{d_str}", tot_phys_eod, card["physical_stock_cartons"])
+        equal("LEDGER-REPLAY", f"DAILY-RESERVED-{d_str}", tot_res_eod, card["reserved_stock_cartons"])
+        equal("LEDGER-REPLAY", f"DAILY-QUARANTINE-{d_str}", tot_quar_eod, card["quarantine_stock_cartons"])
+
+    # 5. Validasi Laporan Rekonsiliasi Finansial Kanonikal (Provenance Checksum & Aggregates)
+    report_rel_path = "data/registers/canonical_financial_reconciliation_july_2026.json"
+    report_file = root / report_rel_path
+    if not report_file.exists():
+        fail("REPORT-RECON", "canonical_report", f"file missing: {report_rel_path}")
+    else:
+        report_bytes = report_file.read_bytes()
+        norm_report = report_bytes.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        inputs[report_rel_path] = hashlib.sha256(norm_report).hexdigest()
+        report_data = json.loads(norm_report.decode("utf-8"))
+
+        # a. Verifikasi 15 Checksum Input Dataset di Laporan
+        for filename, expected_hash in report_data.get("input_dataset_sha256", {}).items():
+            actual_hash = inputs.get(f"data/registers/{filename}")
+            if actual_hash != expected_hash:
+                fail("REPORT-RECON", filename, f"checksum mismatch: expected {expected_hash}, observed {actual_hash}")
+
+        # b. Verifikasi Kesesuaian Agregat Finansial & Persediaan
+        equal("REPORT-RECON", "SO_GROSS_DPP", report_data["sales_orders_booked_july"]["gross_dpp"],
+              sum(number(o["gross_dpp"]) for o in orders.values()))
+        equal("REPORT-RECON", "SO_NET_DPP", report_data["sales_orders_booked_july"]["net_dpp"],
+              sum(number(o["net_dpp"]) for o in orders.values()))
+        equal("REPORT-RECON", "INV_JULY_DPP", report_data["period_cutoff_july_invoiced"]["invoiced_dpp"],
+              sum(number(i["dpp_amount"]) for i in invoices.values() if i["date_invoice"] <= "2026-07-31"))
+        equal("REPORT-RECON", "AP_PAID_JULY_DPP", report_data["accounts_payable_reconciliation"]["ap_payments_july_dpp"],
+              ap_paid_total)
+        equal("REPORT-RECON", "CLOSING_PHYSICAL", report_data["inventory_warehouse_reconciliation"]["physical_on_hand_cartons"],
+              cards[-1]["physical_stock_cartons"])
+        equal("REPORT-RECON", "CLOSING_QUARANTINE", report_data["inventory_warehouse_reconciliation"]["quarantine_bad_stock_cartons"],
+              cards[-1]["quarantine_stock_cartons"])
+
     return violations, inputs
 
 

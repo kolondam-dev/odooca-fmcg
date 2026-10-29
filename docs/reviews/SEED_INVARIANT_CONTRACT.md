@@ -29,6 +29,7 @@ kapasitas gudang dari jawaban agen belum otomatis menjadi ketetapan pemilik.
 | MASTER-SYNC | register dan seed mempunyai key serta nilai field bersama yang sama | Turn 3 |
 | MASTER-GEO | kode kecamatan/kelurahan resolve ke pasangan XML yang dipakai loader | Turn 3/9 |
 | COHORT-PJP/SO | kunjungan dan order tidak sebelum tanggal aktif customer | narasi coverage bertahap |
+| SO-PRINCIPAL | Setiap SO hanya berisi SKU dari tepat satu principal_code pada master produk; principal kosong/hilang dan campuran prinsipal menggagalkan gate. Banyak SKU/brand/lot dari prinsipal sama diperbolehkan. | Instruksi langsung pemilik 2026-10-26 |
 | PJP-SO | order mempunyai visit customer/salesman/tanggal yang cocok | Turn 8 |
 | CALENDAR | Minggu tanpa call/delivery; SO hanya pada hari kerja kartu stok | Turn 2/8 |
 | LINE/HEADER/PO/STOCK-MATH | perkalian dan jumlah antar-artefak konsisten (Decimal, toleransi Rp0,01) | Turn 8/9 |
@@ -89,3 +90,39 @@ EVENT-ORDER 331, LOT-BALANCE 770. Angka adalah jumlah kejadian, bukan unique def
 Laporan JSON CI menjadi daftar kerja worker. Belum ada perbaikan data bisnis atau
 injeksi Odoo oleh supervisor. Draft PR gate tetap merah sampai dataset dibenahi;
 merah ini tidak boleh diganti klaim selesai melalui dokumen.
+
+## Penutupan gate supervisor (2026-10-26)
+Job wajib `seed-invariants` menjalankan **dua** pemeriksa independen:
+`verify_seed_invariants.py` dan `verify_seed_acceptance.py`. Keduanya harus PASS;
+artifact memuat `invariant-report.json` dan `acceptance-report.json`, masing-masing
+terikat commit dan SHA-256 input LF kanonikal. Pemeriksa kedua tidak mengimpor atau
+menjalankan generator transaksi/laporan. Jalankan lokal:
+
+```bash
+python scripts/ops/verify_seed_acceptance.py --report /tmp/acceptance-report.json
+```
+
+- AP: expected payment per PO diturunkan dari `ap_payment_date`, `due_date`,
+  `total_dpp` dan principal pada header sumber, bukan total bulanan konstan.
+  Alokasi pembayaran boleh beberapa baris pada tanggal yang dijadwalkan, dengan
+  ID unik dan jumlah kumulatif tepat. Perubahan jadwal harus eksplisit di sumber.
+- Ledger: multiset event harus identik dengan opening/receipt/SO/DO/rejection
+  sumber pada tingkat tanggal, jenis, referensi, SKU, lot, qty dan tiga impact.
+  Event hilang/berlebih, ID duplikat, referensi fiktif dan impact salah ditolak.
+  Replay memeriksa physical/reserved/quarantine, available, cost dan volume harian.
+- Report: seluruh field numerik tujuh bagian laporan, persentase dan tanggal
+  closing diperiksa ulang. Identitas set 15 fingerprint wajib lengkap.
+  Accepted COGS berasal dari biaya lot sumber dikurangi quarantine; cash + discount
+  + open AR direkonsiliasi pada DPP dan total faktur, serta AP paid + open AP.
+- Kontrak saat ini: periode 1–31 Juli 2026; dokumen Agustus merupakan carry-forward,
+  bukan event fisik Juli. AR mendukung satu pelunasan penuh per invoice. Pembayaran
+  parsial AR memerlukan perluasan schema, aturan dan tes, bukan bypass validator.
+  Nilai pajak tetap berasal dari dataset dan pemeriksa dasar; perubahan konfigurasi
+  pajak harus disertai bukti sumber dan pengujian sendiri.
+- Tes `test_seed_acceptance.py` memakai salinan snapshot repo yang terisolasi;
+  hash diperbarui setelah mutasi sumber untuk membuktikan gate memeriksa kausalitas,
+  bukan sekadar menemukan checksum usang. CI `test_*.py` menjalankan seluruh tes.
+
+PASS artefak lokal tidak membuktikan loader, backdating, upgrade, GL atau runtime
+Odoo. Checklist runtime terdahulu tetap berlaku. Perluasan periode/schema wajib
+mengubah kontrak dan tes secara eksplisit; jangan menambah allowlist baseline.

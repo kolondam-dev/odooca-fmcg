@@ -5,7 +5,7 @@
     "category": "Distribution",
     "license": "LGPL-3",
     "author": "kolondam-dev",
-    "depends": ["base", "contacts", "product", "fleet", "hr", "uom", "base_geolocalize"],
+    "depends": ["base", "contacts", "product", "fleet", "hr", "uom", "base_geolocalize", "stock_account", "sale"],
     "data": [
         "security/ir.model.access.csv",
         "data/id_channel_data.xml",

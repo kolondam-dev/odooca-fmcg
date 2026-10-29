@@ -19,8 +19,12 @@ import csv
 import datetime as dt
 import json
 import pathlib
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from scripts.ops.fmcg_calendar import get_next_working_day, is_working_day  # noqa: E402
+
 REG_DIR = ROOT / "data" / "registers"
 REG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -46,12 +50,7 @@ SALESMEN = [
 ]
 
 
-def get_delivery_date(call_date: dt.date) -> dt.date:
-    """Menghitung tanggal delivery H+1 kerja berikutnya (Sabtu -> Senin, Minggu libur)."""
-    curr = call_date + dt.timedelta(days=1)
-    while curr.weekday() == 6:  # Lewati hari Minggu
-        curr += dt.timedelta(days=1)
-    return curr
+get_delivery_date = get_next_working_day
 
 
 def determine_week_of_month(d: dt.date) -> int:
@@ -97,15 +96,14 @@ def main():
     while curr_date <= end_date:
         w_idx = curr_date.weekday()
         day_name = DAY_NAMES[w_idx]
-        is_sunday = w_idx == 6
+        is_work = is_working_day(curr_date)
         week_num = determine_week_of_month(curr_date)
         date_str = curr_date.strftime("%Y-%m-%d")
 
-        for sls_code, sls_name, sls_role in SALESMEN:
-            salesman_label = f"{sls_code} - {sls_name}"
-
-            if is_sunday:
-                # Hari Minggu: Seluruh armada libur operasional
+        if not is_work:
+            reason = "LIBUR OPERASIONAL (MINGGU)" if w_idx == 6 else "LIBUR OPERASIONAL (TAHUN BARU ISLAM 1448 H)"
+            for sls_code, sls_name, sls_role in SALESMEN:
+                salesman_label = f"{sls_code} - {sls_name}"
                 matrix_rows.append(
                     {
                         "salesman": salesman_label,
@@ -116,15 +114,18 @@ def main():
                         "channel": "-",
                         "area": "-",
                         "district": "-",
-                        "customer": "LIBUR OPERASIONAL (MINGGU)",
+                        "customer": reason,
                         "latitude": "-",
                         "longitude": "-",
                         "delivery_date": "-",
                         "delivery_vehicle": "-",
                     }
                 )
-                continue
+            curr_date += dt.timedelta(days=1)
+            continue
 
+        for sls_code, sls_name, sls_role in SALESMEN:
+            salesman_label = f"{sls_code} - {sls_name}"
             # Ambil seluruh outlet kandidat untuk hari ini
             day_candidates = cust_map.get(sls_code, {}).get(day_name, [])
 
@@ -134,6 +135,8 @@ def main():
             # F4: Muncul 1 bulan sekali (pada week_num yang sesuai)
             scheduled_calls = []
             for idx, c in enumerate(day_candidates):
+                if c.get("cohort_date") and date_str < c["cohort_date"]:
+                    continue
                 freq = c["pjp_frequency"]
                 include = False
 

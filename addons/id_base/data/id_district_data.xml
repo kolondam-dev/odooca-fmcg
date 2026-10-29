@@ -253,4 +253,49 @@
         <field name="latitude">1.1850</field>
         <field name="longitude">124.5680</field>
     </record>
+
+    <record id="subdistrict_wane_pakowa" model="id.subdistrict">
+        <field name="name">Pakowa</field>
+        <field name="code">KEL-MND-PKW</field>
+        <field name="district_id" ref="district_mnd_wane"/>
+        <field name="postal_code">95119</field>
+        <field name="latitude">1.4650</field>
+        <field name="longitude">124.8450</field>
+    </record>
+
+    <record id="subdistrict_singkil_karame" model="id.subdistrict">
+        <field name="name">Karame</field>
+        <field name="code">KEL-MND-KRM</field>
+        <field name="district_id" ref="district_mnd_singkil"/>
+        <field name="postal_code">95231</field>
+        <field name="latitude">1.5020</field>
+        <field name="longitude">124.8550</field>
+    </record>
+
+    <record id="subdistrict_madidir_ure" model="id.subdistrict">
+        <field name="name">Madidir Ure</field>
+        <field name="code">KEL-BTG-MDU</field>
+        <field name="district_id" ref="district_btg_madidir"/>
+        <field name="postal_code">95531</field>
+        <field name="latitude">1.4480</field>
+        <field name="longitude">125.1620</field>
+    </record>
+
+    <record id="subdistrict_girian_weru" model="id.subdistrict">
+        <field name="name">Girian Weru</field>
+        <field name="code">KEL-BTG-GRW</field>
+        <field name="district_id" ref="district_btg_girian"/>
+        <field name="postal_code">95541</field>
+        <field name="latitude">1.4450</field>
+        <field name="longitude">125.1350</field>
+    </record>
+
+    <record id="subdistrict_aertembaga_satu" model="id.subdistrict">
+        <field name="name">Aertembaga Satu</field>
+        <field name="code">KEL-BTG-ATB</field>
+        <field name="district_id" ref="district_btg_aertembaga"/>
+        <field name="postal_code">95524</field>
+        <field name="latitude">1.4550</field>
+        <field name="longitude">125.2050</field>
+    </record>
 </odoo>
