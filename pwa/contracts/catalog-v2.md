@@ -11,7 +11,11 @@ warehouse_id dan business_date (WITA), versi snapshot tidak kosong dan updatedAt
 ISO datetime. Scope company/user/hari harus cocok dengan bootstrap. Scope warehouse
 harus dipilih dan diotorisasi server; client tidak membuktikan ACL warehouse.
 HTTP adapter wajib bootstrap dahulu, mengosongkan sesi lama saat bootstrap ulang,
-dan menolak respons yang datang dari bootstrap lama. Snapshot HTTP tanpa v2 ditolak.
+dan menolak respons yang datang dari bootstrap lama. Setiap bootstrap menaikkan
+generation sebelum request dimulai; hanya generation terbaru boleh mengadopsi
+identity/CSRF. Pemanggil usang ditolak409 baik respons sukses maupun error, tanpa
+mengubah state terbaru. Jika bootstrap terbaru gagal, sukses lama tidak boleh
+memulihkan sesi yang sudah dikosongkan. Snapshot HTTP tanpa v2 ditolak.
 Daily bundle v2 lokal juga diikat kembali ke owner/hari pada restore.
 
 Endpoint berikut masih draft: GET /api/v1/me/bootstrap dan GET /api/v1/sync/snapshot.

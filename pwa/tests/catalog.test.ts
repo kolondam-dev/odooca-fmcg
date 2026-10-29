@@ -321,3 +321,130 @@ it("a response from an older bootstrap cannot be adopted by a new session", asyn
     release(Response.json(catalog()));
     await expect(pending).rejects.toMatchObject({ status: 409 });
 });
+
+const bootstrapIdentity = (id: string) => ({
+    id,
+    companyId: "c",
+    name: "User",
+    title: "",
+    roles: ["sales"],
+    businessDate: "2026-10-29",
+    csrfToken: `${id}-token`,
+});
+function delayedResponse() {
+    let resolve!: (response: Response) => void;
+    let reject!: (error: Error) => void;
+    const promise = new Promise<Response>((res, rej) => {
+        resolve = res;
+        reject = rej;
+    });
+    return { promise, resolve, reject };
+}
+const harmlessCommand = () => ({
+    schema_version: 1 as const,
+    client_uuid: crypto.randomUUID(),
+    occurred_at: new Date().toISOString(),
+    type: "hris.leave.request" as const,
+    payload: {},
+});
+it("bootstrap generation A pending, B succeeds, A succeeds: only B scope and CSRF survive", async () => {
+    const a = delayedResponse(),
+        snapshot = catalog(),
+        command = harmlessCommand();
+    const fetch = vi
+        .fn()
+        .mockReturnValueOnce(a.promise)
+        .mockResolvedValueOnce(Response.json(bootstrapIdentity("new")))
+        .mockResolvedValueOnce(
+            Response.json({
+                ...snapshot,
+                scope: { ...snapshot.scope, user_id: "new" },
+            }),
+        )
+        .mockResolvedValueOnce(
+            Response.json({
+                ...snapshot,
+                scope: { ...snapshot.scope, user_id: "old" },
+            }),
+        )
+        .mockResolvedValueOnce(
+            Response.json({
+                client_uuid: command.client_uuid,
+                status: "accepted",
+                reference: "test",
+                message: "test",
+            }),
+        );
+    vi.stubGlobal("fetch", fetch);
+    const provider = new HttpProvider(),
+        older = provider.bootstrap();
+    const stale = expect(older).rejects.toMatchObject({ status: 409 });
+    expect((await provider.bootstrap()).id).toBe("new");
+    a.resolve(Response.json(bootstrapIdentity("old")));
+    await stale;
+    expect((await provider.snapshot()).scope?.user_id).toBe("new");
+    await expect(provider.snapshot()).rejects.toMatchObject({ status: 422 });
+    await provider.submit(command);
+    expect(fetch.mock.calls.at(-1)![1]).toMatchObject({
+        headers: { "X-CSRF-Token": "new-token" },
+    });
+});
+it("bootstrap generation A pending, B fails401, A succeeds: the cleared session cannot be resurrected", async () => {
+    const a = delayedResponse(),
+        fetch = vi
+            .fn()
+            .mockReturnValueOnce(a.promise)
+            .mockResolvedValueOnce(new Response("{}", { status: 401 }));
+    vi.stubGlobal("fetch", fetch);
+    const provider = new HttpProvider(),
+        older = provider.bootstrap();
+    const stale = expect(older).rejects.toMatchObject({ status: 409 });
+    await expect(provider.bootstrap()).rejects.toMatchObject({ status: 401 });
+    a.resolve(Response.json(bootstrapIdentity("old")));
+    await stale;
+    await expect(provider.snapshot()).rejects.toMatchObject({ status: 401 });
+    await expect(provider.submit(harmlessCommand())).rejects.toMatchObject({
+        status: 401,
+    });
+    expect(fetch).toHaveBeenCalledTimes(2);
+});
+it.each(["401", "network", "malformed"] as const)(
+    "bootstrap generation A pending, B succeeds, A fails %s: B is preserved",
+    async (failure) => {
+        const a = delayedResponse(),
+            snapshot = catalog(),
+            command = harmlessCommand();
+        const fetch = vi
+            .fn()
+            .mockReturnValueOnce(a.promise)
+            .mockResolvedValueOnce(Response.json(bootstrapIdentity("new")))
+            .mockResolvedValueOnce(
+                Response.json({
+                    ...snapshot,
+                    scope: { ...snapshot.scope, user_id: "new" },
+                }),
+            )
+            .mockResolvedValueOnce(
+                Response.json({
+                    client_uuid: command.client_uuid,
+                    status: "accepted",
+                    reference: "test",
+                    message: "test",
+                }),
+            );
+        vi.stubGlobal("fetch", fetch);
+        const provider = new HttpProvider(),
+            older = provider.bootstrap();
+        const stale = expect(older).rejects.toMatchObject({ status: 409 });
+        await provider.bootstrap();
+        if (failure === "401") a.resolve(new Response("{}", { status: 401 }));
+        else if (failure === "network") a.reject(new Error("network failure"));
+        else a.resolve(Response.json({ id: "invalid" }));
+        await stale;
+        expect((await provider.snapshot()).scope?.user_id).toBe("new");
+        await provider.submit(command);
+        expect(fetch.mock.calls.at(-1)![1]).toMatchObject({
+            headers: { "X-CSRF-Token": "new-token" },
+        });
+    },
+);
