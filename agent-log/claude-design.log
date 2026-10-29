@@ -113,3 +113,7 @@
 - SCSS: panel `.oe_subtotal_footer` dibuat lebih jelas dan responsif; angka tabular; strip sticky diisolasi dari stacking context luar.
 - Tidak menyentuh model, view XML, data, atau formula.
 - Belum selesai: target 3 kolom, field footer discount 1/2, dan sticky scroll behavior. Perlu runtime Odoo 19 CE/resolved view inspection sebelum lanjut. Tidak merge/deploy.
+
+
+## 2026-10-29T12:26:00+07:00 — codex supervisor — PR #36 blocker P1 libsass
+Reviewer menemukan `max-width: min(100%, 32rem)` gagal pada smoke UI karena libsass menolak unit campuran di fungsi `min()`. Diganti dengan `width: 32rem; max-width: 100%;` pada `id_form.scss` (commit `a172bb77d5f107ae9e816b8be0ad88284164cbc7`). Dokumentasi handoff dan id_ui_form mencatat sebab, perbaikan, dan status verifikasi. Menunggu CI ulang SHA branch terbaru; tidak menyatakan layout browser selesai. PR #36 tetap draft/HOLD, tidak merge/deploy. Tiga kolom dan stabilitas sticky masih belum selesai.
