@@ -16,7 +16,9 @@ body.id-shell-sidebar {
                 border-radius: 0;
                 // Reserve a viewport of containing-block space after the totals so
                 // the sticky footer can remain pinned while transaction rows scroll.
-                padding: 1rem 1.25rem calc(100vh - 12rem);
+                padding: 1rem 1.25rem 0 !important;
+                // Keep the sticky containing block alive after the totals while scrolling.
+                padding-bottom: calc(100vh + 12rem) !important;
             }
 
             // Blok judul asli di sheet disembunyikan hanya bila judulnya sudah tampil di header
@@ -154,7 +156,7 @@ body.id-shell-sidebar {
             color: #0b1f4d;
         }
 
-        .o_account_move_form_view .o_form_sheet .oe_subtotal_footer.col-lg-6 {
+        .o_form_sheet .oe_subtotal_footer.col-lg-6 {
             flex: 0 0 100%;
             max-width: 100%;
             min-width: 0;
@@ -164,8 +166,9 @@ body.id-shell-sidebar {
         // Odoo wraps invoice lines and totals in an overflow-hidden group. That
         // ancestor captures sticky positioning; the list renderer keeps its own
         // horizontal scrolling, so the wrapper itself can remain visible.
-        .o_account_move_form_view .o_form_sheet .oe_invoice_lines_tab {
+        .o_form_sheet .oe_invoice_lines_tab.overflow-hidden {
             overflow: visible !important;
+            min-width: 0;
         }
 
         .o_form_sheet .oe_subtotal_footer .o_field_widget,
