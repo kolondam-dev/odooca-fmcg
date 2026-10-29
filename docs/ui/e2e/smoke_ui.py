@@ -135,28 +135,70 @@ async def main():
             const maxScroll = Math.max(0, owner.scrollHeight - owner.clientHeight);
             if (maxScroll < 40) return { ok: false, reason: 'form did not produce meaningful vertical overflow', maxScroll };
             const initialScroll = owner.scrollTop;
-            const ownerRect = owner.getBoundingClientRect();
-            const innerBottom = ownerRect.top + owner.clientTop + owner.clientHeight;
             owner.scrollTop = 0;
+            const ownerRect = owner.getBoundingClientRect();
+            const scrollportBottom = ownerRect.top + owner.clientTop + owner.clientHeight;
+            // Measure the footer's true normal-flow geometry: disable sticky only for
+            // this measurement, then restore the exact inline style before assertions.
+            const originalStyle = footer.getAttribute('style');
+            footer.style.setProperty('position', 'static', 'important');
+            footer.style.setProperty('bottom', 'auto', 'important');
             const naturalRect = footer.getBoundingClientRect();
-            const footerHeight = footer.getBoundingClientRect().height;
-            const naturalBottom = naturalRect.bottom;
-            const stickyBottom = innerBottom;
-            const threshold = Math.max(0, Math.ceil(naturalBottom - stickyBottom));
+            const naturalFooterBottom = naturalRect.bottom;
+            const naturalFooterHeight = naturalRect.height;
+            const containingBlock = footer.parentElement;
+            const containingRect = containingBlock.getBoundingClientRect();
+            const containingBottomAtZero = containingRect.bottom;
+            if (originalStyle === null) footer.removeAttribute('style');
+            else footer.setAttribute('style', originalStyle);
+            const threshold = Math.max(0, Math.ceil(naturalFooterBottom - scrollportBottom));
+            // A bottom-sticky box can only remain pinned while the containing block
+            // still spans the scrollport bottom. Sample the actual intersection of
+            // that interval with the scroll range instead of assuming all late scroll
+            // positions are sticky.
+            const pinEnd = Math.min(maxScroll, Math.max(0, containingBottomAtZero - scrollportBottom));
+            const pinStart = Math.min(maxScroll, threshold);
+            const pinSpan = Math.max(0, pinEnd - pinStart);
             const samples = [...new Set([
-                Math.min(maxScroll, Math.max(0, threshold - 12)),
-                Math.min(maxScroll, threshold + 8),
-                Math.min(maxScroll, threshold + 40),
-                Math.min(Math.max(0, maxScroll - 10), threshold + 80)
-            ])].sort((a,b) => a-b);
-            const lateSamples = samples.filter(y => y >= threshold + 5);
+                Math.max(0, pinStart - 12),
+                pinStart + Math.min(8, pinSpan / 4),
+                pinStart + pinSpan / 2,
+                pinEnd - Math.min(8, pinSpan / 4),
+                maxScroll
+            ].map(y => Math.max(0, Math.min(maxScroll, Math.round(y))))].sort((a,b) => a-b);
             const pinned = [];
-            for (const y of lateSamples) {
+            for (const y of samples.filter(y => y >= pinStart && y <= pinEnd && pinSpan >= 12)) {
                 owner.scrollTop = y;
                 const fr = footer.getBoundingClientRect();
                 const or = owner.getBoundingClientRect();
-                const scrollportBottom = or.top + owner.clientTop + owner.clientHeight;
-                pinned.push({ scrollTop: y, footerBottom: fr.bottom, scrollportBottom, drift: Math.abs(fr.bottom - scrollportBottom) });
+                const sampleScrollportBottom = or.top + owner.clientTop + owner.clientHeight;
+                const cr = containingBlock.getBoundingClientRect();
+                pinned.push({
+                    scrollTop: owner.scrollTop,
+                    footerBottom: fr.bottom,
+                    scrollportBottom: sampleScrollportBottom,
+                    containingBlockBottom: cr.bottom,
+                    drift: Math.abs(fr.bottom - sampleScrollportBottom),
+                    insideContainingBlock: fr.bottom <= cr.bottom + 2
+                });
+            }
+            const overflowAncestors = [];
+            let ancestor = footer.parentElement;
+            while (ancestor && ancestor !== document.body) {
+                const cs = getComputedStyle(ancestor);
+                if (/(auto|scroll|hidden|clip)/.test(cs.overflowX + ' ' + cs.overflowY)) {
+                    overflowAncestors.push({
+                        tag: ancestor.tagName,
+                        className: String(ancestor.className || '').slice(0, 160),
+                        overflowX: cs.overflowX,
+                        overflowY: cs.overflowY,
+                        clientWidth: ancestor.clientWidth,
+                        scrollWidth: ancestor.scrollWidth,
+                        clientHeight: ancestor.clientHeight,
+                        scrollHeight: ancestor.scrollHeight
+                    });
+                }
+                ancestor = ancestor.parentElement;
             }
             owner.scrollTop = maxScroll;
             const footerRect = footer.getBoundingClientRect();
@@ -187,11 +229,16 @@ async def main():
                 maxScroll,
                 rowCount: rows.length,
                 stickyGroupCount: stickyGroups.length,
-                naturalFooterBottom: naturalBottom,
+                naturalFooterBottom,
+                naturalFooterHeight,
                 stickyThreshold: threshold,
+                stickyPinEnd: pinEnd,
+                containingBlockBottomAtZero: containingBottomAtZero,
+                computedSticky: { position: getComputedStyle(footer).position, bottom: getComputedStyle(footer).bottom, marginTop: getComputedStyle(footer).marginTop, marginBottom: getComputedStyle(footer).marginBottom },
+                overflowAncestors,
                 stickySamples: pinned,
-                stickyEngagedAtLeastTwice: pinned.length >= 2,
-                stickyPinned: pinned.length >= 2 && pinned.every(p => p.drift <= 3),
+                stickyEngagedAtLeastTwice: pinSpan >= 12 && pinned.length >= 2,
+                stickyPinned: pinSpan >= 12 && pinned.length >= 2 && pinned.every(p => p.drift <= 3 && p.insideContainingBlock),
                 footerInScrollport: footerAfterRowScroll.top >= scrollportTop - 2 && footerAfterRowScroll.bottom <= scrollportBottom + 2,
                 lastRowVisibleAndUncovered: lastRowVisible,
                 hiddenRowCounterexampleRejected: hiddenRowRejected,
@@ -205,6 +252,24 @@ async def main():
                     form: form ? { client: form.clientWidth, scroll: form.scrollWidth } : null,
                     footer: { client: footer.clientWidth, scroll: footer.scrollWidth },
                     footerBox: { left: footer.getBoundingClientRect().left, right: footer.getBoundingClientRect().right },
+                    culpritNodes: [...document.querySelectorAll('body *')].map(el => {
+                        const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+                        return {
+                            tag: el.tagName,
+                            id: el.id || '',
+                            className: String(el.className || '').slice(0, 140),
+                            left: Math.round(r.left * 100) / 100,
+                            right: Math.round(r.right * 100) / 100,
+                            width: Math.round(r.width * 100) / 100,
+                            clientWidth: el.clientWidth,
+                            scrollWidth: el.scrollWidth,
+                            minWidth: cs.minWidth,
+                            computedWidth: cs.width,
+                            overflowX: cs.overflowX
+                        };
+                    }).filter(x => x.scrollWidth > x.clientWidth + 2 || x.right > document.documentElement.clientWidth + 2 || x.left < -2)
+                      .sort((a,b) => Math.max(b.scrollWidth-b.clientWidth, b.right-document.documentElement.clientWidth, -b.left) - Math.max(a.scrollWidth-a.clientWidth, a.right-document.documentElement.clientWidth, -a.left))
+                      .slice(0, 12)
                 },
                 lastCellPresent: !!lastCell,
             };
