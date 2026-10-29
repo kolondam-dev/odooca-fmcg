@@ -78,3 +78,10 @@ Pada branch `agen/ui-footer-transaction-layout-v1`, SCSS memberi panel ringkasan
 
 ### Koreksi kompatibilitas libsass — 2026-10-29
 Smoke UI pada PR #36 mengungkap bahwa `max-width: min(100%, 32rem)` gagal dikompilasi oleh libsass CI (`Incompatible units: 'rem' and '%'`). Deklarasi diganti menjadi `width: 32rem; max-width: 100%;`, yang kompatibel pada uji kompilasi pembanding. Ini menghilangkan fungsi CSS `min()` yang tidak didukung pada jalur kompilasi ini; lebar tetap dibatasi kontainer. Tetap wajib memeriksa computed layout pada Odoo 19 CE. CI untuk commit koreksi belum diverifikasi. PR #36 tetap HOLD sampai smoke UI lulus; layout tiga kolom dan stabilitas sticky masih terbuka.
+
+
+### Follow-up regression coverage — 2026-10-29
+
+The CI fixture now creates a populated draft invoice from a confirmed 18-line order and prints runtime evidence for the installed modules, registry fields, XMLIDs, and resolved Sales Order/invoice form architecture. Playwright uses one geometry audit for `order_line` and `invoice_line_ids`: it calculates the sticky threshold from the natural footer position and scrollport geometry, checks multiple samples after engagement, requires exactly one sticky footer group, and tests the last row's visibility/uncovered area plus trial-click actionability. A hidden-row negative control rejects a row entirely above the scrollport. Overflow is measured at page, form, scroll owner, and footer levels. Invoice checks run at desktop, mobile viewport, and browser zoom.
+
+**Not yet verified:** these checks and runtime audit require a fresh successful GitHub Actions run; the latest SHA currently has no run/check evidence exposed by the connector. The fixture changes the CI install set to include `sale_management`, `account`, `fleet`, and `l10n_id` because the smoke uses Sales, invoice, and vehicle forms. The three-column discount layout remains blocked on the owner's explicit business semantics decision. No merge/deploy.
