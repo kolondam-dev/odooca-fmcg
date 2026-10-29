@@ -1,0 +1,58 @@
+[2026-10-28T20:29:39+07:00] [INFO] Dokumentasikan rules SO dan Delivery dari pemilik
+- Basis main 2feadf3; branch agen/pwa-sales-delivery-rules. Blueprint §17, SCOPE §14 dan handoff diperbarui.
+- Lima status/alasan per item, tier demo 144/12/12, approval diskon dan daily sync/sesi wajib; hanya dokumentasi, runtime belum diuji.
+- Skrip agen belum menerima agent-codex-pwa; whats_new dijalankan dengan --since 2feadf3 dan log mengikuti format protokol tanpa mengubah skrip.
+- Task managed by agent-codex-pwa at 2026-10-28T20:29:39+07:00
+
+[2026-10-28T21:20:49+07:00] [INFO] Implementasikan rules SO, diskon dan sesi Delivery
+- Branch agen/pwa-sales-delivery-rules dari main 2feadf3; dokumentasi requirement ikut commit.
+- Daily sync untuk list Sales/Delivery; SO tier144/12/1 dan approval diskon order simulasi; status/alasan per item; delivery session opening/pinpoint/closing atomik dan offline.
+- 239 unit +1 hosting +64 browser phone/tablet PASS; format/typecheck/contracts/demo+live/budget/Ruff/4 manifest/diff check PASS. Screenshot ponsel ditinjau. Browser lokal Chromium153, CI installer resmi Playwright.
+- Kontrak0.11 additive/legacy tetap; diskon order persen integer saja, authority/tier/promo/maps/recovery/server tetap dependency. Tidak mengubah backend/seed/workflow/Railway; live terkunci, tidak merge/deploy.
+- Git CLI tidak memiliki credential push; publikasi branch/commit/PR melalui koneksi GitHub yang tersedia. CI remote diperiksa setelah publikasi.
+- Task managed by agent-codex-pwa at 2026-10-28T21:20:49+07:00
+
+[2026-10-28T22:12:23+07:00] [INFO] Follow-up tiga temuan HOLD PR33 c48bf5a
+- Review issuecomment-6472436334 dan log CI40705244566 dibaca; old browser/gate FAILURE (7 failed/5 flaky/52 passed), old Odoo40705244625 SUCCESS.
+- P1: first-open Delivery offline dari daily manifest tervalidasi; cache berbeda tidak ditimpa. P1 gate: wait completion absensi/tombol sync dan owner+restore persona. P2: history SKU/received/unit dari source historis, termasuk legacy karton.
+- 239 unit +1 hosting +84 browser resmi145.0.7632.6 PASS (64 existing+20 regresi; satu run final tanpa retry, worker default). Gate write absensi/restore ditahan dan dilepas deterministik; tidak menambah sleep/timeout/skip atau mengurangi worker. Format/typecheck/contracts/build/budget/Ruff/manifest/diff PASS.
+- Full Chrome resmi terhalang socket singleton lingkungan; official headless shell sesuai Playwright digunakan dengan sukses. Tidak mengubah dependency/workflow/backend/seed/Railway; live terkunci, HOLD menunggu review ulang, tidak merge/deploy.
+- CI SHA baru diperiksa setelah publikasi; hasil aktual dan URL disampaikan pada PR.
+- Task managed by agent-codex-pwa at 2026-10-28T22:12:23+07:00
+
+[2026-10-28T23:20:03+07:00] [INFO] Revisi SO, approval delivery dan closing kantor simulator
+- Basis main2444b2f; branch agen/pwa-order-revisions-delivery-policy. Rules lima mandat di plan§18 sebelum kode; SCOPE§15/README/HANDOFF diperbarui.
+- UUID revisi baru/parent immutable/draft offline/CAS satu successor, harga snapshot kini, approval ulang termasuk diskon0. Pending0–2 hari SPV, >=3 SPV+BM; cancel enum lima subreason+SPV.
+- Closing kantor+toleransi25m client, POD source/one-close guard; kasir di luar scope dan resi backlog. Demo terima lokasi/foto tanpa geofence/keaslian, tetap wajib stamp waktu/koordinat dan integritas owner/hash. Strict legacy tidak ditulis ulang; live locked.
+- 255 unit +1 hosting +94 browser resmi145.0.7632.6 PASS; 10 flow diulang setelah editor draft/quote diperbaiki. Typecheck/format/contracts/build/budget/Ruff/manifest/diff PASS; screenshot revisi SO ditinjau. CI setelah push/PR.
+- Backend menunggu seeding; tidak menyentuh addon/seed/loader/workflow/ruleset/Railway, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-28T23:20:03+07:00
+
+[2026-10-28T23:35:14+07:00] [INFO] Serialisasi reconnect setelah flaky CI PR34
+- CI9340f02: gate hijau tetapi93 passed+1 flaky; artefak menunjukkan false integrity hold akibat retry menulis antrean ketika hash/send aktif. Odoo SUCCESS.
+- Engine reservation sinkron, tunggu attempt aktif/error/backoff/media, reset queued lalu fresh pass; concurrent retry coalesced dan conditional cleanup. Tidak melemahkan hash/source atau mengubah worker/retry/timeout tes.
+- Dua regresi barrier FAIL pada engine lama, PASS pada fix;257 unit+1 hosting/typecheck/format/contracts/build/budget/Ruff/manifest/diff PASS. Hasil browser final/CI ditambahkan ke PR.
+- Backend menunggu seeding; live locked; tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-28T23:35:14+07:00
+
+[2026-10-28T23:38:44+07:00] [INFO] Closing bersamaan POD transport progress
+- Full browser follow-up92 passed+2 closing failed; POD media membandingkan seluruh row sehingga sync state/attempt/leaf receipt sah tertahan.
+- Bandingkan binding immutable seluruh lineage+ancestor rejection decision; leaf transport/approval boleh maju. Reparse lineage, hash foto, source/pointer tetap ketat.
+-259 unit PASS; deterministic transport regression FAIL sebelum fix, command tamper ditolak sebelum/sesudah. Typecheck/format/contracts/build/budget/diff PASS; hasil browser dan CI di PR.
+- Tidak merge/deploy; backend menunggu seeding, receipts backlog, live locked.
+- Task managed by agent-codex-pwa at 2026-10-28T23:38:44+07:00
+
+[2026-10-29T06:36:40+07:00] [INFO] Follow-up P1 binding closing trip PR34
+- Review6483277487: lookup ID DO saja menerima POD kemarin untuk closing hari baru. Basis dba0166; CI/Odoo lama SUCCESS sesuai reviewer.
+- Source lengkap canonical harus sama dengan manifest closing; owner/hari/ID ambiguity guard. UI restore Delivery/closing, atomic enqueue dan pre-sync menolak source berbeda. Reuse ID berbeda source ditahan review; history tidak dimigrasi/ditulis ulang.
+- Lima regresi domain/store FAIL sebelum fix dan PASS setelah;264 unit+1 hosting/typecheck/format/contracts/build/budget/Ruff/4 manifest/diff PASS. Empat browser targeted phone/tablet PASS; full96/CI akhir dicatat pada PR. Replay historical sesudah daily baru tetap sah.
+- Tidak mengubah timeout/retry/worker/backend/seed/addon/workflow/Railway; live locked, tidak merge/deploy. Menunggu review ulang PR34.
+- Task managed by agent-codex-pwa at 2026-10-29T06:36:40+07:00
+
+[2026-10-29T08:03:45+07:00] [INFO] Root-day deadline SO follow-up HOLD PR34
+- Review6484752634; basis cb91ecc. Closing resmi CLOSED dan CI lama termasuk Odoo SUCCESS. Policy koreksi lintas hari diganti mandat pemilik: koreksi dan approval harus selesai hari root SO dalam WITA.
+- Root-source/day guard pada lineage, submit/CAS dan keputusan baru sebelum/sesudah write; midnight abort mempertahankan command/pointer/receipt/cache. Daily baru/parent terakhir/backdate tidak memperpanjang deadline. Replay valid/keputusan sah tetap didukung.
+- UI expired readonly draft dan pending/history terlihat, approval nonaktif; salesman wajib follow-up/push manager manual. Tidak auto-accept/reject/reopen atau mengirim pesan. Rules/SCOPE/README/HANDOFF disesuaikan.
+-271 unit+1 hosting/typecheck/format/contracts/build/budget/Ruff/4 manifest/diff PASS. Tiga requirement tests FAIL sebelum fix. Regresi midnight/two-connection/CAS rollback/parent-date/replay;6 targeted browser PASS. Full100 dan CI final dilaporkan pada PR.
+- Backend/live/seed/addon/workflow/Railway tidak diubah, tidak merge/deploy; menunggu review ulang.
+- Task managed by agent-codex-pwa at 2026-10-29T08:03:45+07:00

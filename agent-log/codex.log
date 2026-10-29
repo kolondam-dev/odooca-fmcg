@@ -14,3 +14,163 @@
 - Validator independen kedua diwajibkan CI; AP source-derived dan report full-field checks.
 - 72 tests serta dua validator lulus lokal; tidak mengklaim runtime Odoo.
 - Task managed by codex agent at 2026-10-26T04:27:20+07:00
+
+[2026-10-26T10:46:05+07:00] [INFO] Supervisi UI v7 terisolasi dari SQL wilayah
+- Source UI 388eff6; base main f130693;20SQL tidak dibawa/dihapus pada source.
+- Perbaiki visibility systray, pager wajib dua record, integrasi Odoo UI/browser CI.
+- Verifikasi runtime menunggu CI; tanpa Railway/production.
+- Task managed by codex agent at 2026-10-26T10:46:05+07:00
+
+[2026-10-26T10:54:42+07:00] [INFO] UI CI diagnostic correction
+- First runtime:4systray browser regressions PASS; pager/classic/sidebar PASS; JS error check failed.
+- Artifact shows missing filestore attachments between containers. Preserve disposable filestore across install/fixture/server; print browser error stack. Do not suppress errors.
+- Task managed by codex agent at 2026-10-26T10:54:42+07:00
+
+[2026-10-26T19:50:07+07:00] [INFO] Deep scan dan kesiapan scope mobile
+- Basis main 69a7ef6; laporan docs/reviews/MOBILE_SCAN_2026-10-26.md.
+- Manifest dan Ruff PASS; CI main success melalui GitHub API. Runtime mobile belum diuji.
+- Tidak mengubah kode aplikasi, dataset atau production. Skrip main belum menerima identitas codex; log ditulis mengikuti format protokol.
+- Task managed by codex agent at 2026-10-26T19:50:07+07:00
+
+[2026-10-26T20:42:43+07:00] [INFO] Rancangan API backend dan PWA hybrid
+- Mandat pemilik: back-office Odoo web penuh, lapangan dan personal HRIS PWA sendiri.
+- Rancangan docs/blueprints/mobile_api_and_pwa_plan.md: kontrak, auth/role/scope, outbox, media, domain dan MOB-00–06.
+- Seluruh fitur baru masih rancangan; tidak mengubah runtime/dataset atau deploy.
+- Task managed by codex agent at 2026-10-26T20:42:43+07:00
+
+[2026-10-26T21:13:52+07:00] [INFO] Elaborasi plan mobile v0.2 sesuai 11 tambahan requirement pemilik
+- Binding akun/perangkat, sesi pagi, approval extra call/diskon/HPP, biaya DO/trip dan petty cash BBM H-1/insidentil.
+- Foto timestamp/geotag/pinpoint map, geofence 5–15m, location interval 5/15 menit, polling auto-sync/notifikasi dan bottom nav motion/haptic low-end.
+- Matriks R01–R11 dan gate ditambahkan; batas PWA background/spoofing dijelaskan dengan sumber teknis.
+- JSON/struktur/tabel dan diff whitespace diperiksa; semua fitur baru masih rancangan, tidak deploy/push atau ubah dataset.
+- Task managed by codex agent at 2026-10-26T21:13:52+07:00
+
+[2026-10-26T21:43:44+07:00] [INFO] Gap analysis kesiapan mobile dan visual plan v0.3
+- Membaca AGENTS, protokol, DEVELOPMENT, HANDOFF dan seluruh log agent main serta delta branch seed c435447.
+- Main 69a7ef6; dependency seed masih PR #15. Dua validator dan 98 unit tests PASS pada worktree audit; runtime Odoo belum dibuktikan.
+- Mencatat gap P1 truthiness model pada adapter/runner, identity fallback admin, kalender, UoM/HPP, PJP/geo, approval dan biaya lapangan.
+- Plan menambahkan Phosphor duotone, Inter Variable self-hosted, palette selaras web dan readiness gate. Tidak mengubah source/data worker, push atau deploy.
+- Task managed by codex agent at 2026-10-26T21:43:44+07:00
+
+[2026-10-26T21:53:04+07:00] [INFO] Plan v0.4: frontend-first dan scope mobile-only
+- Mandat pemilik: tidak mengambil pekerjaan agent lain; backend menjadi dependency/handoff.
+- Urutan PWA-01–06: UI, alur client, offline, kontrak formal, HTTP adapter, E2E live; interface minimum sejak awal dan mock eksplisit.
+- Satu plan mobile tetap di blueprints; gap menjadi snapshot audit, SCOPE/DEVELOPMENT cukup rujukan saat koordinasi. Tidak ada implementasi aplikasi atau perubahan dokumen domain agent lain.
+- Task managed by codex agent at 2026-10-26T21:53:04+07:00
+
+[2026-10-27T05:31:58+07:00] [INFO] PWA frontend awal, offline outbox dan CI additive
+- Branch agen/mobile-pwa-foundation dari main 69a7ef6 plus plan lokal; tidak mengubah addon backend, seed/loader atau deploy.
+- PWA Preact/TS/Vite, Phosphor/Inter, bottom nav, fixture/HTTP adapter, form Sales/Delivery/HRIS/petty cash, IndexedDB draft/outbox dan evidence lokal.
+- Build demo/live terpisah; live fail-closed. OpenAPI draft generated; workflow pwa-quality/pwa-browser/pwa-gate tanpa path filter atau secret.
+- Lokal: 14 unit/contract tests dan 12 browser tests PASS; format/typecheck/contracts/build budget PASS. Demo JS 36 KiB gzip, font 47.1 KiB; bukti map_pending tidak meluluskan absensi/POD.
+- Browser lokal menggunakan Chromium 153 terpisah setelah unduhan Playwright lokal gagal; CI tetap memakai installer Chromium resmi Playwright. API/ACL/runtime Odoo belum diuji.
+- Task managed by codex agent at 2026-10-27T05:31:58+07:00
+
+[2026-10-27T06:53:35+07:00] [INFO] Lanjutan PWA: validasi biaya dan hosting Railway terisolasi
+- Basis main f636129; branch agen/mobile-expense-hosting; tidak mengubah backend/seed/deploy Odoo.
+- Request biaya memakai schema ketat, referensi trip/DO, satu scope, rupiah bulat, KM awal dan H-1 berdasarkan businessDate bootstrap; limit/approval/evidence resmi tetap dependency backend.
+- Server static Node24, Dockerfile live-locked default, pilihan demo eksplisit, Railway config/runbook; API belum tersambung mengembalikan 503.
+- 19 unit tests dan hosting test PASS; format/typecheck/contracts/build budget/Ruff/4 manifest PASS. Browser 14 kasus sedang diverifikasi ulang; Docker lokal tidak tersedia, gate container disiapkan di CI.
+- Task managed by codex agent at 2026-10-27T06:53:35+07:00
+
+[2026-10-27T06:54:01+07:00] [INFO] Verifikasi final biaya dan hosting PWA
+- 19 unit tests, 1 hosting test, 14 browser phone/tablet PASS; browser menguji server deployment static aktual dan validasi H-1/per-DO.
+- Regression test menemukan input referensi trip ter-reset pada rerender; diperbaiki dengan defaultValue. DO kosong dinormalisasi null agar pesan validasi spesifik.
+- Docker lokal tidak tersedia; build live/demo dan smoke container ditugaskan gate CI, belum mengklaim PASS atau deploy Railway.
+- Task managed by codex agent at 2026-10-27T06:54:01+07:00
+
+[2026-10-27T06:56:16+07:00] [INFO] Perbaiki retry smoke container saat startup
+- CI quality/browser PASS, image live build PASS; curl health mendapat connection reset sebelum listener siap.
+- Gunakan retry-all-errors dengan timeout per request dan retry terbatas; health/static/API tetap wajib sukses. Hasil run baru diperiksa setelah push.
+- Task managed by codex agent at 2026-10-27T06:56:16+07:00
+
+[2026-10-27T08:43:14+07:00] [INFO] Sesi pagi simulator dan branding Odoo FMCG Mobile
+- Basis efd0373, branch agen/mobile-session-brand; backend/seed/loader/deployment tidak diubah.
+- Sales/Canvasser membutuhkan absensi diterima simulator dan sync online; paket sesi/PJP/stok/harga atomik, per company/persona, satu hari WITA; offline restore dan submit guard.
+- Nama/logo/favicon/install icons diganti mengikuti referensi pemilik; wordmark dan glyph oi-odoo resmi, outline lokal, lisensi/atribusi dicatat. Log claude-design dibaca tanpa mengedit addon web.
+- 27 unit + 1 hosting + 18 browser phone/tablet PASS; format/typecheck/contracts/build budget/Ruff/manifest PASS. Live terkunci; CI sesudah push. Realisasi/settlement dan sesi resmi tetap dependency.
+- Task managed by codex agent at 2026-10-27T08:43:14+07:00
+
+[2026-10-27T09:29:54+07:00] [INFO] Tutup celah restore sesi PR21 dari review supervisor
+- Shared semantic validator dipakai open/restore/readiness: owner/hari, timestamp urut/nonfuture, version nonblank, products/outlets nonempty, state stage konsisten.
+- 17 kasus mutasi baru gagal terhadap kode lama; setelah fix 48 unit, 1 hosting, 20 browser PASS. Browser corrupt persisted bundle + reload offline membuktikan order/extra-call tertahan dan draft/outbox tidak berubah.
+- Format/typecheck/contracts/build budget/Ruff/manifest PASS; CI diperiksa setelah push. Tetap draft, tidak merge/deploy atau menyentuh backend/seed/Railway.
+- Task managed by codex agent at 2026-10-27T09:29:54+07:00
+
+[2026-10-27T10:30:25+07:00] [INFO] Realisasi biaya dan estimasi settlement simulator
+- Basis main b19240a, branch agen/mobile-expense-settlement; tidak mengubah backend/seed/loader/CI workflow/Railway.
+- Layar realisasi dengan approval/pencairan fixture terpisah dari receipt, komponen-struk, BBM odometer/liter-harga/bukti, draft offline, refund/variance preview dan tier total exposure.
+- Payload command strict/OpenAPI0.2, create-if-absent advance, CAS atomik outbox+link; restore memeriksa konteks dan pending tidak dihapus. Foto lokal dipulihkan per owner.
+- 60 unit + 1 hosting + 24 browser PASS; format/typecheck/contracts/build budget/Ruff/4manifest PASS. CI setelah push. Final settlement, media map dan approval/cash/GL resmi tetap dependency; live terkunci.
+- Task managed by codex agent at 2026-10-27T10:30:25+07:00
+
+[2026-10-27T11:17:21+07:00] [INFO] Follow-up PR22 dan koreksi realisasi simulator
+- Basis main 5088144; stable line IDs, reset/reconcile foto/location/preview dan async generation guard; dedup lintas advance owner sama serta source/predecessor check atomik dalam outbox transaction.
+- Dev lanjutan: koreksi hanya receipt penolakan bisnis cocok UUID, successor UUID baru + parent/alasan, history immutable, restore lineage/cycle guards; transport/pending tetap terkunci.
+- 71 unit + 1 hosting + 30 browser PASS, barrier dua koneksi dan race tests; format/typecheck/contracts/build budget/Ruff/4manifest PASS. Kontrak draft0.3 kompatibel payload lama.
+- Tetap simulator/live terkunci. Tidak mengubah backend/seed/loader/CI workflow/Railway; CI diperiksa sesudah push. Final settlement/cash/GL/global authority masih dependency.
+- Task managed by codex agent at 2026-10-27T11:17:21+07:00
+
+[2026-10-27T11:47:53+07:00] [INFO] Kunjungan outlet dan urutan sync simulator
+- Basis main 955071a; branch agen/mobile-sales-visits; backend/seed/Railway tidak disentuh.
+- Visit GPS conservative 5-15m, TTL60s; order/check-out terikat sesi dan ledger CAS atomik; offline dependency receipt.
+- 81 unit, 1 hosting, 34 browser; typecheck/contracts/build budget/Ruff/4 manifests; CI setelah push, live locked.
+- Task managed by codex agent at 2026-10-27T11:47:53+07:00
+
+[2026-10-27T14:08:30+07:00] [INFO] Tutup blocker integrity sebelum sync PR #24
+- Review 6434268284: tiga regresi corrupt check-in/order/checkout terbukti gagal pada outbox lama.
+- Shared semantic ledger validation sebelum submit; historical morning source, event-time GPS; invalid graph/descendants held, no fake receipt/deletion.
+- 102 unit, 1 hosting, 36 browser; legacy/next-day tests, format/typecheck/contracts/build/Ruff/manifests. CI setelah push, tanpa merge/deploy.
+- Task managed by codex agent at 2026-10-27T14:08:30+07:00
+
+[2026-10-27T15:46:59+07:00] [INFO] Pusat diagnosis sinkronisasi simulator
+- Basis main 302587e; branch agen/mobile-sync-diagnostics; plan terintegrasi sebelum implementasi.
+- Filter/detail UUID sesi dependency dan receipt; read-only snapshot, shared validator cached only per synchronous projection, fresh at send boundaries.
+- 111 unit, 1 hosting, 38 browser; no mutation/persona isolation, format/typecheck/contracts/build/Ruff/manifests PASS. CI setelah push, no backend/seed/Railway/merge/deploy.
+- Task managed by codex agent at 2026-10-27T15:46:59+07:00
+
+[2026-10-27T17:12:19+07:00] [INFO] Paket bukti watermark hash dan pinpoint simulasi
+- Basis main d4cf21b; branch agen/mobile-evidence-packages. Plan sebelum implementasi; backend/seed/Railway terisolasi.
+- JPEG watermark WITA/GPS, PNG grid simulasi tanpa basemap, hashes/binding owner/time/location, immutable atomic evidence; restore/submit/send validation dan evidenceHold.
+- Kontrak draft0.5 optional packageHash, legacy explicit; 122 unit, 1 hosting, 40 browser, format/typecheck/contracts/build/Ruff/manifests PASS. CI setelah push, no merge/deploy.
+- Task managed by codex agent at 2026-10-27T17:12:19+07:00
+
+[2026-10-27T17:16:11+07:00] [INFO] Regresi kuota paket bukti PR #26
+- Injeksi QuotaExceededError pada put evidence membuktikan rollback record foto+map; tidak ada perubahan produksi.
+- 123 unit PASS; existing 1 hosting/40 browser/build source produksi identik. CI commit baru setelah push, no merge/deploy.
+- Task managed by codex agent at 2026-10-27T17:16:11+07:00
+
+[2026-10-27T18:25:55+07:00] [INFO] Foto wajib pada check-in dan check-out sales
+- Basis main d1cd6e8; branch agen/mobile-visit-evidence, plan terintegrasi sebelum implementasi.
+- Foto v1 per aksi terikat slot/ledger/command; TTL60s geofence owner/hash, CAS ref uniqueness, media ancestor accepted diperiksa saat sync; legacy replay eksplisit.
+- 133 unit, 1 hosting, 44 browser; format/typecheck/contracts/build/Ruff/manifests PASS. CI setelah push; backend/seed/Railway tidak disentuh, no merge/deploy.
+- Task managed by codex agent at 2026-10-27T18:25:55+07:00
+
+[2026-10-27T18:28:05+07:00] [INFO] Kontrak pasangan foto kunjungan pada OpenAPI
+- DependentRequired mencerminkan pasangan evidence_version/evidence pada DTO dan branch Command; legacy tetap opsional, commit baru wajib foto.
+- Regresi kontrak baru; 134 unit PASS. Source produksi identik dengan hasil 1 hosting/44 browser/build sebelumnya; CI setelah push.
+- Task managed by codex agent at 2026-10-27T18:28:05+07:00
+
+[2026-10-27T19:30:28+07:00] [INFO] POD simulator terikat DO/trip
+- Basis main 6aa9cc3; branch agen/mobile-delivery-pod; DTO dan cache manifest, mandatory photo, CAS/dedup, restore/pre-sync.
+- 154 unit +1 hosting +48 browser PASS; CI setelah push; live terkunci; tidak merge/deploy atau menyentuh backend/seed/Railway.
+- Task managed by codex agent at 2026-10-27T19:30:28+07:00
+
+[2026-10-27T19:33:55+07:00] [INFO] Koreksi typecheck fixture POD PR28
+- CI 4910b03 menemukan status fixture melebar string; klaim PASS lokal typecheck sebelumnya keliru karena exit terlewat. Literal const diperbaiki, gate tidak diubah; ulang typecheck dan CI.
+- Task managed by codex agent at 2026-10-27T19:33:55+07:00
+
+[2026-10-27T22:05:41+07:00] [INFO] Koreksi POD simulator setelah PR28
+- Branch agen/mobile-pod-corrections basis 4459bcb, stacked PR28 belum merged. Receipt rejected cocok UUID, immutable parent, new UUID/photo, CAS snapshot receipt, validasi lineage/media.
+- 175 unit +1 hosting +50 browser; typecheck/format/contracts/build/budget/Ruff/4 manifest PASS. CI setelah push, live terkunci, tidak merge/deploy/backend/seed/Railway.
+- Task managed by codex agent at 2026-10-27T22:05:41+07:00
+
+[2026-10-27T23:01:37+07:00] [INFO] Collection simulator terikat tagihan DO/trip
+- Basis main08b0050, branch agen/mobile-collection; capability fixture, cash/transfer, sumber saldo bertimestamp, Rupiah BigInt, CAS/dedup dan validator snapshot/media.
+- 208 unit +1 hosting +56 browser, typecheck/format/contracts/build/budget/Ruff/4 manifest PASS; ulang 6 collection setelah guard UI. CI sesudah push. Live terkunci, backend/seed/Railway tidak disentuh, belum merge/deploy.
+- Task managed by codex agent at 2026-10-27T23:01:37+07:00
+
+[2026-10-28T10:08:23+07:00] [INFO] Koreksi collection dengan lineage immutable
+- Basis main f99e117; UUID/foto/alasan baru, receipt rejected cocok, CAS pointer+receipt, validasi ancestor dan dedup klaim historis.
+- 227 unit +1 hosting +58 browser lokal PASS; typecheck/format/contracts/build/budget/Ruff/4 manifest PASS, CI setelah push. Live terkunci, tidak merge/deploy/backend/seed/Railway.
+- Task managed by codex agent at 2026-10-28T10:08:23+07:00

@@ -1,5 +1,22 @@
 # HANDOFF
 
+## 2026-10-29T09:24:05+07:00 — codex supervisor — Sinkronisasi integrasi PR35
+Main ea20ed0 diintegrasikan untuk required checks strict sebelum merge yang diminta pemilik. Tidak ada konflik; scope ikon sidebar/roadmap tetap sama. Menunggu CI integrasi.
+
+## 2026-10-29T08:05:00+07:00 — keputusan prioritas UI/dashboard dan audit baseline
+**Sumber keputusan:** percakapan pemilik pada 2026-10-29 setelah permintaan deep-scan backlog aktual, eksplorasi dashboard default Odoo, dashboard FMCG berdasarkan business playbook/brainstorming, serta enhancement UI.
+**Urutan disetujui pemilik:** (1) audit baseline/backlog dan selesaikan footer transaksi; (2) tingkatkan dashboard native Odoo; (3) bangun custom dashboard FMCG; (4) evaluasi `spreadsheet_dashboard` paling akhir dan hanya bila tetap relevan/kompatibel Odoo 19 Community.
+**Detail yang disetujui:** ikon aplikasi sidebar full-color secara default dan saat selected; pembeda selected hanya background (dipertahankan). Footer target tiga kolom: `notes | footer discount 1 + footer discount 2 | subtotal, DPP, tax, grand total`; jangan buat field diskon palsu. Dashboard native harus dimanfaatkan dulu, custom dashboard hanya untuk kebutuhan lintas-modul yang belum tercukupi.
+**Audit aktual branch/repo:** addon kustom yang ada mencakup `id_base`, `id_ui`, `id_ui_shell`, `id_ui_form`; belum ditemukan addon kustom `id_discount` atau field `footer_discount_1/2`. Repository tidak menyertakan seluruh source addon Odoo/OCA yang menjadi dependency, jadi ini bukan bukti bahwa field tidak ada pada instalasi runtime. Implementasi footer harus memeriksa view/model Odoo 19 CE aktual sebelum mengubah XML atau menghitung nilai. Selector sticky saat ini hanya tercatat diuji pada Sales Order; sticky scroll container dan form lain belum diverifikasi.
+**Langkah berikut:** audit resolved views/models di runtime Odoo dan addon path; tentukan sumber notes/discount/totals; implementasi footer dengan test regresi browser; lalu native dashboard action/filter/graph/pivot berbasis model nyata. Belum melakukan merge atau deploy.
+**Commit signature:** Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T08:05:00+07:00
+
+## 2026-10-29 — claude-design-takeoverby-codex — Ikon full-color, footer dan urutan dashboard
+**Mandat:** lanjutkan enhancement UI dari main setelah PR #32; urutan kerja: audit baseline → sidebar/footer → native dashboard → custom dashboard → evaluasi spreadsheet dashboard.
+**Perubahan kode pada branch `agen/ui-footer-dashboard-roadmap-v1`:** ikon aplikasi sidebar diatur full-color default dan selected; selected tetap dibedakan hanya oleh background item. Tidak mengubah warna ikon saat hover/fokus/selected.
+**Spesifikasi:** footer ditargetkan 3 kolom (notes | footer discount 1+2 | subtotal/DPP/tax/grand total), responsif dan dengan nilai berasal dari model; sticky harus diuji pada beberapa form/scroll container. Blueprint dashboard FMCG memprioritaskan native Odoo, kemudian `id_dashboard`, lalu `spreadsheet_dashboard` bila relevan.
+**Belum diverifikasi:** runtime Odoo/browser, CSS computed layout, scroll regression, model/field footer discount, CE spreadsheet dashboard capabilities, dan CI remote. Tidak merge/deploy.
+
 ## 2026-10-29 — antigravity agent — Pemurnian Relasi origin_returned_move_id Retur Karantina & Penyesuaian Asersi Test Suite COGS
 **Konteks & Resolusi:**
 - Menyempurnakan binding retur karantina pada Odoo runtime disposable dan CI test runner:
@@ -1699,6 +1716,296 @@ mengaktifkan required checks setelah nama check tersedia dari run GitHub.
 **Menunggu / Langkah Berikutnya:**
 - Melaksanakan Task 1: Audit model native, eliminasi custom fields yang tidak perlu, dan perancangan UoM resmi FMCG serta akun user salesman.
 
+## 2026-10-29 — agent-codex-pwa — Deadline koreksi dan approval root SO PR34
+**Review:** https://github.com/kolondam-dev/odooca-fmcg/pull/34#issuecomment-6484752634. Basis cb91ecc; blocker closing CLOSED, seluruh CI sebelumnya SUCCESS termasuk Odoo. Asumsi lama revisi lintas hari diganti aturan pemilik ini, bukan dipertahankan.
+**Berubah:** hari root SO diperiksa konsisten antara occurred_at/morning_business_date/visit_context.business_date dalam Asia/Makassar (WITA). Revisi baru dan approval/rejection manager baru hanya pada hari root, tidak mengikuti parent terakhir atau daily sync baru. Validasi lineage historis mensyaratkan hari revisi sama dengan root; CAS revisi dan keputusan memeriksa root+waktu sebelum/sesudah writes dan abort jika rollover. Command/pointer/receipt/cache tetap utuh pada penolakan. Keputusan diskon awal memakai deadline root yang sama.
+**UI/policy:** hari diperbarui pada tick/focus; edit draft dan tombol keputusan lewat hari nonaktif. Draft dapat dibaca offline tanpa menulis ulang, history/pending tetap terlihat dengan tanda lewat batas hari/perlu tindak lanjut. Salesman wajib follow-up/push approval ke manager secara manual. Tidak ada pesan otomatis, auto-accept/reject/backdate/reopen. Policy penyelesaian pending lewat hari belum ditentukan. Rules plan§18/18.3, SCOPE§15 dan README disesuaikan; entri log/handoff lama adalah arsip, bukan policy aktif.
+**Replay:** command valid hari D dapat terkirim kemudian menjadi pending; receipt keputusan sah hari D tetap dapat direplay D+1. Tidak membuat keputusan bisnis baru setelah deadline.
+**Regresi:** tiga negative requirement FAIL pada kode lama dan PASS setelah fix. 271 unit +1 hosting PASS, typecheck/format/contracts/build demo+live/budget/Ruff/4 manifest/diff PASS. Tepat23:59:59.999 WITA lolos, tepat00:00 ditolak; fresh daily D+1, parent berbeda tanggal/backdate, dua koneksi, rollover di tengah atomic writes, replay cached accepted dan offline queued→pending diuji. Fixture provider memakai receipt store terisolasi yang sama. Enam browser targeted phone/tablet PASS (same-day, expired-draft readonly, expired-pending offline/reload/daily baru tanpa perubahan data). Full100 browser dan CI SHA baru dicatat di PR setelah selesai; tidak mengubah worker/retry/timeout.
+**Batas/menunggu:** tetap simulator/live locked; backend menunggu seeding, resi backlog. Tidak mengubah addon/seed/loader/workflow/Railway. HOLD menunggu review ulang PR34; tidak merge/deploy.
+
+## 2026-10-29 — agent-codex-pwa — Blocker P1 closing source PR34
+**Review:** https://github.com/kolondam-dev/odooca-fmcg/pull/34#issuecomment-6483277487; basis dba0166 pada branch agen/pwa-order-revisions-delivery-policy. Hasil CI dba0166 memang seluruhnya SUCCESS termasuk Odoo, sesuai koreksi reviewer; bukan masih berjalan.
+**Berubah:** tripPods hanya menghitung leaf POD dengan source lengkap/kanonikal sama dengan task daily_source closing: owner/ID/trip/hari/versi/workflow/outlet/site/vehicle/address/lines. Manifest owner/hari dan ID ganda divalidasi. Guard dipakai UI sebelum hash, atomic enqueue, dan restore/pre-sync. Restore Delivery tidak menampilkan source lama sebagai Session closed. Restore closing memeriksa pointer/envelope, task hari/trip dan media; pointer tidak valid ditahan untuk review. Data historis tidak dihapus/ditulis ulang. Reuse ID/source berbeda atau lineage ambigu ditolak eksplisit; belum mendukung penerbitan assignment baru dengan ID identik.
+**Regresi:** lima kasus hari/trip/versi/qty/owner FAIL pada kode lama, PASS setelah fix. Domain/store asli membuktikan closing baru ditolak tanpa row/pointer tercipta dan tidak mengubah POD lama; forged restore ditolak. Closing source benar dan replay sah setelah daily sync baru tetap PASS. Browser phone/tablet membuat POD+closing kemarin, daily sync baru dengan ID sama, menolak closing baru sebelum/sesudah reload; injected current-day closing dengan POD lama tidak tampil closed dan seluruh data dipertahankan.
+**Verifikasi:**264 unit +1 hosting PASS, typecheck/format/contracts/build demo+live/budget/Ruff/4 manifest/diff PASS. Empat browser targeted (closing valid dan lintas hari, phone/tablet) PASS tanpa retry. Full96 browser/CI akhir dicatat pada PR setelah selesai. Tidak menaikkan timeout/retry atau menurunkan worker. Official Headless Shell145.0.7632.6.
+**Batas/menunggu:** HOLD menunggu review ulang PR34 dan CI SHA baru; backend menunggu seeding, live locked, resi backlog. Tidak mengubah addon/seed/loader/workflow/Railway. Tidak merge/deploy.
+
+## 2026-10-28 — agent-codex-pwa — Closing saat POD sedang sinkron
+**Temuan:** full browser setelah fix reconnect menghasilkan92 passed+2 failed pada closing phone/tablet. Hash POD membandingkan seluruh QueueItem sehingga kemajuan state/attempt/receipt leaf selama sync dianggap bukti berubah.
+**Perbaikan:** recheck membandingkan key/owner/command immutable seluruh lineage dan state/receipt ancestor yang mengizinkan koreksi. Leaf transport/approval dapat maju; lineage divalidasi ulang dan perubahan command/foto/pointer/manifest tetap ditolak. Closing tidak menyatakan approval/settlement.
+**Diverifikasi:**259 unit PASS; dua regresi deterministik membedakan kemajuan transport vs command tamper (kemajuan sah FAIL sebelum fix, tamper tetap ditolak). Typecheck/format/contracts/build demo+live/budget/diff PASS. Browser final dan CI dicatat pada PR34 setelah selesai. Tidak mengubah worker/retry/timeout tes.
+**Menunggu:** review PR34/CI; simulator saja, backend menunggu seeding, resi backlog; tidak merge/deploy.
+
+## 2026-10-28 — agent-codex-pwa — Reconnect deterministik PR34
+**Temuan CI:** SHA9340f02 melewati gate tetapi log browser run40725326638 memuat 93 passed +1 flaky (tablet revisi SO offline→online). Artefak menunjukkan queued revision tertahan integritas saat checkout juga menulis backoff; hasil tersebut bukan browser bersih. CI Odoo run40725326738 SUCCESS.
+**Perbaikan:** retry mereservasi engine sebelum await, menunggu send aktif selesai termasuk hash media/error/backoff, baru reset queued backoff dan kirim satu pass baru. Retry serentak bergabung; finalizer send lama tidak menghapus reservasi baru. Tidak mengubah validasi hash/sumber, UUID, status terminal, timeout/retry/worker tes.
+**Regresi:** dua barrier terkontrol untuk reconnect saat offline send belum selesai dan saat media revision sedang dibaca; keduanya FAIL pada engine lama dan PASS setelah perbaikan. 257 unit +1 hosting, typecheck/format/contracts/demo+live/budget/Ruff/4 manifest/diff PASS. Browser final dicatat pada PR setelah selesai.
+**Batas/menunggu:** scope tetap simulator; backend menunggu seeding, resi serah-terima backlog, live locked. Menunggu CI/review commit follow-up PR34; tidak merge/deploy.
+
+## 2026-10-28 — agent-codex-pwa — Revisi SO, approval delivery dan closing kantor
+**Basis:** main2444b2f (sudah memuat PR33 dan PR32), branch agen/pwa-order-revisions-delivery-policy. Mandat lima poin pemilik dirumuskan di plan§18 sebelum kode; SCOPE§15 dan README diperbarui.
+**Berubah:** SO rejected dapat direvisi dari daftar setelah visit closed/lintas hari dengan daily sync hari berjalan; UUID baru, root/parent/keputusan immutable, SKU/satuan/qty/diskon/catatan dan alasan editable, quote/current snapshot, draft per parent offline dan CAS satu successor. Revision tanpa diskon tetap approval ulang. Request pending hari kalender0–2 SPV, >=3 SPV+BM (tepat3 dipilih konservatif dan diinformasikan); cancel lima subreason pemilik wajib SPV. Keputusan simulator beralasan, berurutan, sekali/CAS, bukan picking/schedule resmi. Closing lokal saat tiba kantor memakai snapshot POD, menolak DO belum tercatat/sesi aktif/ganda; toleransi25m, fixture radius30m bukan kantor nyata. Serah-terima kasir di luar scope; upload resi uang/cek/faktur/retur backlog saja.
+**Demo:** fixture UI baru menerima lokasi/foto tanpa gate geofence/akurasi/asli kamera; stamp WITA+koordinat/pinpoint tetap dihasilkan, pilihan lokasi demo dan fallback GPS contoh berlabel simulasi. Hash/format/owner/urutan/ref masih menjaga integritas data; kebijakan tersimpan pada site/visual evidence. Antrean strict lama dipertahankan; live tetap locked.
+**Diverifikasi:** 255 unit +1 hosting PASS; 94 browser resmi PASS (84 lama+10 baru, satu full run tanpa retry/default workers). Setelah draft editor/estimasi disempurnakan, 10 kasus alur baru diulang PASS. Official Chrome for Testing Headless Shell145.0.7632.6. Typecheck/format/contracts/demo+live/budget/Ruff/4 manifest/diff PASS. Screenshot SO revision ponsel ditinjau. Regresi: revisi setelah close/next-day, quote/principal/source, parent/receipt/cycle dan race dua koneksi, approval revision0, day0/1/2/3/4 ladder, BM sebelum SPV, cancel reject, closing sekali/historical/strict25m dan lokasi demo luar kantor, draft offline.
+**Batas:** DTO/OpenAPI0.12 client-owned; no new endpoint/backend. Seeding dependency belum diambil. Cashier handoff/upload resi tidak diimplementasi. Tidak ada revisi accepted/pending/recovery data rusak atau reopen trip; perubahan setelah closing butuh review. Approval/closing/map/hash/sesi client bukan auth/financial/server authority. Runtime Odoo lokal tidak diulang karena addon tidak berubah. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh.
+**Menunggu:** CI/review PR baru, tidak merge/deploy.
+
+
+## 2026-10-28 — codex supervisor — Integrasi PR #32 dengan main
+**Mandat:** pemilik meminta merge setelah verdict layak merge pada 766a60e. Main sudah memuat PR #33 (d2a54bf).
+**Resolusi:** konflik hanya docs/HANDOFF.md; seluruh entri UI dan PWA dipertahankan. Runtime dan tes tetap persis hasil gabungan kedua branch. CI integrasi harus hijau sebelum merge PR #32.
+
+## 2026-10-28 — implementer — Residual P2 hidden input pada PR #32
+**Basis:** review supervisor untuk SHA `9abcd5f9a489f511fd6201cdcca753da97deac8a`; verdict HOLD satu P2. Branch tetap `agen/ui-form-title-v8`; tidak melakukan review, merge, atau deploy.
+**Perbaikan:** menambahkan `getEditableTitleInput(block)` sebagai satu guard bersama untuk render spec dan aktivasi editor. Hidden input dikecualikan, sementara satu-satunya input visible yang lolos validasi (text/search non-required dalam h1) dipilih konsisten. Handler tidak lagi menggunakan `querySelector("h1 input")` yang dapat memilih hidden input.
+**Regresi:** memperluas `docs/ui/e2e/test_title_spec.py` untuk hidden input sebelum input draft, hidden-only dengan judul readonly, dan hidden plus dua visible controls. Fixture hidden-before-visible memanggil helper produksi dan memastikan input text asli menjadi activeElement; unsupported second visible control tetap ditolak.
+**Verifikasi:** belum mengklaim tes lulus lokal. Perlu menunggu CI pada SHA baru dan review ulang supervisor. Status sebelumnya untuk SHA `9abcd5f` hijau, tetapi tidak mencakup residual P2 ini. Tidak merge/deploy.
+
+
+## 2026-10-28 — implementer — Perbaikan akses keyboard dan validasi judul form PR #32
+**Basis:** PR #32, checkpoint supervisor `aa38722346ba88a1a8488f74f1befb21bc39cfcd`; branch `agen/ui-form-title-v8`. Fokus hanya dua temuan P2, tidak mengubah seed/accounting atau deployment.
+**Berubah:** `readTitleSpec` fail-closed: judul readonly berbasis teks diterima; kontrol editable hanya satu input text/search non-required di `h1`. Multiple control, contenteditable, select/textarea, native/ARIA/Odoo required, disabled/readonly input, tipe lain, dan input di luar h1 ditolak sehingga blok asli tetap terlihat. Judul editable dirender sebagai tombol native dengan accessible label, Tab/Enter/Space, focus-visible, Escape, blur dan pembaruan nilai; node OWL tidak dipindah.
+**Tes ditambahkan:** `docs/ui/e2e/test_title_spec.py` mengeksekusi fungsi produksi yang diekstrak terhadap fixture DOM Chromium; `smoke_ui.py` menambah Tab → Enter/Space → input asli → ubah nilai → blur → Escape, fokus dipulihkan dan tidak ada duplikasi. Belum mengklaim tes dijalankan lokal karena lingkungan runtime repository tidak tersedia pada sesi ini; perlu CI untuk konfirmasi.
+**Batas:** belum merge, tidak deploy, tidak memutuskan review. Menunggu CI dan review supervisor pada SHA terbaru.
+## 2026-10-28 — agent-codex-pwa — Follow-up HOLD PR33 c48bf5a
+**Review:** https://github.com/kolondam-dev/odooca-fmcg/pull/33#issuecomment-6472436334; basis c48bf5a pada branch agen/pwa-sales-delivery-rules. CI lama 40705244566 sudah FAILURE (7 failed, 5 flaky, 52 passed), bukan pending; CI Odoo lama 40705244625 SUCCESS. Log browser resmi dibaca: kegagalan menunggu readiness/klik absensi ada di ensureDaily, termasuk pemulihan setelah persona berganti.
+**P1 offline:** DeliveryWorkspace memvalidasi manifest daily sync (owner/hari/keunikan) sebelum materialisasi cache secara lokal tanpa pemeriksaan online/provider. Cache yang sudah ada tetap diparse/dibandingkan; cache berbeda/rusak tidak ditimpa. Regresi phone/tablet membuktikan daily sync online → offline sebelum first-open list → mulai sesi/simpan draft; juga reload offline sebelum first-open. Kontrol negatif tanpa daily sync, owner/hari manifest berbeda dan cache berbeda mempertahankan data sumber.
+**P1 gate:** ensureDaily membedakan ready/attendance-only; setelah klik absensi wajib menunggu tombol sync enabled (completion IndexedDB), lalu klik dan tunggu ready. switchPersona menunggu data-owner tujuan serta restore aria-busy=false; seluruh pergantian persona tes memakai helper ini. Gate completion write absensi dan success restore sengaja ditahan/dilepas lewat handshake test, tanpa sleep/kenaikan timeout/pengurangan worker/skip.
+**P2 audit:** riwayat POD menampilkan nama, received dan unit dari source command historis per SKU; tidak ada literal karton pada gabungan angka. Regresi root rejected → correction → riwayat multi-SKU pcs serta fixture legacy karton lulus.
+**Diverifikasi lokal:** 239 unit +1 hosting PASS; 84 browser phone/tablet PASS, seluruh 64 lama +20 regresi, satu run final tanpa retry dan worker default. Browser resmi Chrome for Testing Headless Shell145.0.7632.6 (versi Playwright1.58.2), bukan Chromium153 pengganti. Full Chrome resmi gagal launch karena socket singleton dibatasi lingkungan; verifikasi resmi memakai headless shell yang sesuai runner. Format/typecheck/contracts/demo+live/budget (demo67,1 KiB gzip/font47,1 KiB), Ruff/4 manifest dan diff check PASS.
+**Batas/menunggu:** CI remote pada SHA perbaikan diperiksa setelah publikasi dan URL/hasil dicatat pada PR. Docker/Odoo lokal tidak diulang; tidak ada perubahan backend/addon/seed/hosting/workflow/ruleset/Railway. Tetap simulator/live terkunci, HOLD menunggu review ulang; tidak merge/deploy.
+
+
+## 2026-10-28 — agent-codex-pwa — Implementasi rules Sales Order dan Delivery
+**Basis:** main 2feadf3; branch agen/pwa-sales-delivery-rules, sesuai mandat pemilik. Aturan §17 ditulis sebelum implementasi; protocol/development/handoff dan log codex dibaca.
+**Berubah:** list Sales/Delivery wajib daily sync; driver memakai sesi pagi dan manifest tersimpan bersama snapshot. SO demo mendukung karton144/pack12/pcs1, qty/SKU, estimasi harga dan diskon order dengan alasan. Pengajuan diskon Normal menunggu approval; kontrol simulator di Lainnya membuat keputusan approved/rejected beralasan dengan CAS satu kali dan command immutable. Delivery manifest v2 multi-SKU pcs, lima status sesuai label pemilik, alasan non-partial disalin ke semua baris dan partial wajib per item terdampak. Foto toko → set pinpoint → mulai sesi → penerimaan → foto closing berbeda → enqueue+closed atomik → summary/list updated → DO berikutnya; satu sesi delivery aktif per owner/DB, restore offline dan validasi media opening/closing/ancestor. Sesi Sales existing diperluas urutan foto/pinpoint dan status closed pada list.
+**Diverifikasi:** 239 unit +1 hosting PASS; 64 browser phone/tablet PASS dalam satu run final penuh (Chromium lokal153; CI tetap browser resmi Playwright). Termasuk draft partial offline, alasan wajib, iterasi DO kedua, approval accepted/rejected, legacy, corrupt media, race dua koneksi sesi/keputusan dan historical replay. Typecheck/format/contracts/demo+live/build budget, Ruff/4 manifest, git diff --check PASS; screenshot ponsel SO/POD ditinjau. Docker/Odoo runtime lokal tidak dijalankan karena addon/hosting tidak berubah. CI setelah publikasi PR.
+**Batas:** diskon demo persen integer pada total order, approve seluruh nilai diminta atau reject; limit/tier/per-line/promo belum ditetapkan. Cancel/pending hanya hasil simulator, bukan pembatalan picking/approval server. Same-day aksi/koreksi; sesi tertinggal lintas hari/rusak ditahan untuk review, belum recovery. Pinpoint tetap grid simulasi tanpa basemap; timestamp aksi set pin berbeda dari sampel GPS. Snapshot/receipt/hash client bukan authority backend. OpenAPI0.11 additive; riwayat lama dipertahankan, tanpa migrasi/destructive rewrite. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh; live terkunci.
+**Menunggu:** review PR dan CI remote; tidak merge/deploy.
+
+
+## 2026-10-28 — agent-codex-pwa — Rules SO, penerimaan dan sesi lapangan
+**Berubah:** SCOPE §14 merujuk blueprint mobile §17: lima status delivery, alasan per baris dengan input massal non-partial, tier SKU demo 144 pcs/karton dan 12 pcs/pack, simulasi approval diskon, daily sync sebelum list dan siklus sesi foto opening/pinpoint–intra–foto closing–update list pada Sales/Delivery.
+**Diverifikasi:** dokumentasi dan konsistensi requirement diperiksa; git diff --check.
+**Belum diuji:** tidak ada perubahan runtime; seluruh requirement baru masih pekerjaan implementasi.
+**Butir terbuka:** authority/transisi cancel-pending dan parameter approval diskon; backend tetap dependency, live terkunci.
+**Menunggu:** implementasi sesuai urutan §17.5; tidak deploy.
+
+
+
+## 2026-10-28 — codex agent — Koreksi collection ditolak simulator
+**Basis:** main f99e117 (PR #30 merged), branch agen/mobile-collection-corrections; whats_new/protocol/development/handoff dibaca dan plan sebelum kode.
+**Berubah:** hanya receipt bisnis rejected cocok UUID membuka koreksi. UUID/alasan/foto baru, source identik, parent immutable. CAS pointer schema-canonical+snapshot receipt atomik, satu successor; nominal bukan saldo tambahan. Referensi/tanda terima dapat dipertahankan dalam lineage; semua klaim ancestor tetap reserved lintas tagihan, foto wajib berbeda. Restore/pre-sync memvalidasi root/parent/time/source/dedup/media semua ancestor dan recheck setelah await. Draft manual per parent pulih offline, hasil/bukti readonly, parent di Lainnya. Kontrak0.10 pasangan optional fields (legacy valid) dan fixture live gate additive; workflow tidak berubah.
+**Diverifikasi lokal:** 227 unit +1 hosting +58 browser PASS; race dua koneksi, receipt berubah saat commit/hash, multilevel/root media rusak, persisted cycle/missing parent/dropped ref, transport/approval/accepted lock, reserve ancestor serta draft koreksi offline+UUID/parent utuh. Typecheck/format/contracts/demo+live/budget (demo62,9 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. Screenshot ponsel ditinjau. CI setelah push.
+**Batas:** same-day correction/historical replay, local source/hash bukan auth/server authority. Cancel/cicilan lanjutan/closing/kasir/bank/payment/AR/GL belum terintegrasi. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh; runtime Odoo lokal tidak dijalankan karena addon tidak berubah. Tidak merge/deploy, live terkunci.
+**Menunggu:** CI dan review pemilik.
+
+## 2026-10-27 — codex agent — Penerimaan uang delivery/collection simulator
+**Basis:** main08b0050, PR #28/#29 sudah merged; branch agen/mobile-collection. Protocol/development/handoff dan whats_new dibaca, plan terintegrasi sebelum kode.
+**Berubah:** capability fixture collection.capture terpisah, tagihan contoh bertimestamp mengikat DO/trip/outlet/owner/hari/versi/saldo. Cash/transfer, pembayar/nominal/nomor tanda terima/ref transfer/catatan, foto watermark+pinpoint/geofence wajib. Rupiah integer string+BigInt, >0 <=saldo. Draft manual pulih offline, hasil/bukti readonly. Receipt normal needs_approval, saldo tidak dikurangi dan bukan AR lunas/payment posted. Source+ledger+queue CAS atomik; dedup tagihan/nomor bukti/ref transfer/foto lintas tab/koneksi. Snapshot read-only source+ledger+outbox konsisten, restore/pre-sync recheck setelah hash. Source berbeda/queue/media rusak tertahan tanpa hapus/force. Kontrak0.9 conditional ref transfer dan gate fixture live additive; workflow tidak diubah.
+**Diverifikasi lokal:** 208 unit +1 hosting +56 browser PASS; race dua koneksi tagihan/ref transfer, source berubah saat media read, corrupt source/ledger/queue/foto, nominal/geo/owner/day/capability, next-day replay, transfer wajib ref/overamount/dedup dan draft offline/readonly. Typecheck/format/contracts/demo+live/budget (demo62,4 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. Screenshot ponsel ditinjau; 6 browser collection diulang setelah guard snapshot berbeda diperketat. CI sesudah publish.
+**Batas:** satu pencatatan per tagihan (boleh sebagian); reserve tetap pada rejected/transport, cicilan lanjutan/koreksi/cancel belum tersedia. Capture pada hari penugasan, replay historis sah boleh besok. Capability/source/local hash bukan security authority, dedup hanya satu owner/DB; peta tetap simulasi. Bank verification/multi-invoice/closing/settlement kasir/account.payment/GL belum terintegrasi. Tidak menyentuh addon/backend/seed/loader/workflow/ruleset/Railway; runtime Odoo lokal tidak dijalankan karena addon tidak berubah. Live terkunci, tidak merge/deploy.
+**Berikutnya:** koreksi collection berbasis receipt penolakan dan lineage, lalu closing/settlement dengan authority backend.
+**Menunggu:** CI dan review pemilik pada PR baru.
+
+## 2026-10-27 — codex agent — Koreksi POD ditolak simulator
+**Basis:** 4459bcb PR #28 direview layak merge tetapi belum merged; branch agen/mobile-pod-corrections, PR bertumpuk base agen/mobile-delivery-pod. Review issuecomment-6444798338 dibaca; seed agent terbaru 812ae66 tidak disentuh.
+**Berubah:** UUID baru/supersedes_uuid/alasan, source manifest identik, foto baru. Hanya receipt bisnis rejected cocok UUID membuka koreksi; transport/queued/needs_approval/accepted tetap terkunci. CAS pointer+snapshot receipt parent dalam transaksi sama, satu successor; parent/receipt/media immutable. Graph root/lineage/time/owner/DO/source/photo diperiksa pada commit/restore/pre-sync, termasuk media ancestor dan perubahan setelah await. JSON canonical schema untuk CAS pointer POD lama (urutan properti tidak bermakna); guard domain lain tetap. Draft koreksi terpisah per parent, pulih offline, histori readonly dan receipt normal needs_approval. Kontrak0.8 mencerminkan pasangan field.
+**Diverifikasi lokal:** 175 unit +1 hosting +50 browser PASS; race dua koneksi, receipt snapshot berubah saat commit/await media, multi-level correction dan root rusak, persisted cycle/missing parent/source/dropped ref, offline draft+UUID baru+parent utuh. Typecheck/format/contracts/demo+live/budget (demo60,0 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. Screenshot ponsel ditinjau; 6 browser POD diulang sesudah perubahan presentasi. CI setelah push.
+**Batas:** koreksi baru hanya hari manifest, replay antrean sah boleh besok. Tidak mengedit accepted/approval atau recovery data rusak. Maps tetap simulasi, bukan authority auth/session/device/media/approval/backend. Collection/closing/retur/lot/posting Odoo belum diintegrasikan; runtime Odoo lokal tidak dijalankan karena tidak ada addon/backend berubah. Backend/seed/loader/workflow/ruleset/Railway tidak disentuh, live terkunci, tidak merge/deploy.
+**Menunggu:** CI dan review pemilik; PR #28 harus merged sebelum PR lanjutan di-retarget ke main/merge.
+
+## 2026-10-27 — codex agent — Koreksi fixture typecheck PR #28
+**Temuan:** CI 4910b03 gagal typecheck karena fixture receipt status melebar menjadi string. Klaim typecheck lokal PASS pada entri POD sebelumnya keliru; exit typecheck terlewat dalam command sequence.
+**Perbaikan:** literal status needs_approval dibuat const pada fixture tes; tidak mengubah runtime/gate/workflow. Typecheck/format/unit/contracts diperiksa ulang secara eksplisit; CI commit baru diperiksa setelah push.
+**Batas:** seluruh batas simulasi/live lock tetap berlaku, belum merge/deploy.
+
+## 2026-10-27 — codex agent — POD terikat DO/trip simulator
+**Basis:** main 6aa9cc3 (PR #27 merged); branch agen/mobile-delivery-pod. Plan diperbarui sebelum kode.
+**Berubah:** manifest cache per owner/hari, DTO command baru delivery.pod.submit, penerima/hasil/kuantitas per item/alasan dan foto wajib dengan geofence 5–15m/TTL60s. Draft offline disimpan eksplisit, antrean+ledger CAS atomik; dedup DO/foto lintas tab. Restore dan pre-sync memvalidasi source/envelope/event time/media/hash, termasuk recheck sumber setelah await media. Replay next-day sah; kerusakan ditahan dan data dipertahankan. Bukti/data hasil read-only, receipt normal needs_approval, bukan picking done. OpenAPI draft0.7 dan fixture live gate additive, tidak mengubah workflow.
+**Diverifikasi lokal:** 154 unit +1 hosting +48 browser ponsel/tablet PASS; dua koneksi DB, source berubah saat await, media/manifest/ledger rusak, draft offline dan readonly. Screenshot ponsel ditinjau; format/typecheck/contracts/demo+live/budget (demo JS58,9 KiB gzip; font47,1 KiB), Ruff/4 manifest PASS. CI setelah push.
+**Batas:** fixture satu item/DO, bukan stock/lot, retur, collection, closing atau approval backend. Draft manual; koreksi POD/reassignment/revocation/recovery belum tersedia. Maps tetap pinpoint simulasi; auth/session/device/media/security dan dedup server dependency. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh; tidak merge/deploy, live terkunci.
+**Berikutnya:** koreksi POD berbasis receipt penolakan dan lineage immutable, kemudian collection/closing sesuai authority backend terpisah.
+**Menunggu:** CI dan review pemilik.
+
+## 2026-10-27 — codex agent — Foto wajib pada aksi kunjungan sales
+**Basis:** main d1cd6e8 (PR #26 merged); branch agen/mobile-visit-evidence. Plan terintegrasi sebelum implementasi.
+**Berubah:** check-in/check-out baru wajib paket foto v1 berbeda per aksi; owner/ref/hash/foto/map cocok, geofence sumber PJP tetap konservatif, capturedAt sesudah pembukaan sesi/check-in dan foto/GPS asli paket TTL60s pada waktu aksi. Ref disalin atomik ke ledger+command dengan CAS dan keunikan ID foto per aksi ledger owner; draft berubah tidak mengubah transaksi tersimpan. DTO version/ref berpasangan; legacy photo-less hanya replay, commit baru tanpa foto ditolak di service dan validator atomik.
+**Offline/UI:** slot tuple owner/session/outlet/phase/visit menyimpan draft foto dan pulih offline; siap hanya setelah durable. Scope/generation guard mencegah callback lama mengisi scope baru. Tombol aksi menahan foto stale, bukti historis read-only. Kontrol bukti disembunyikan selama aksi sibuk. Kontrak OpenAPI draft0.6 mencerminkan dependentRequired untuk pasangan version/ref (DTO dan branch Command); schema command tetap1 dan schema IndexedDB tetap1.
+**Restore/sync:** validasi semantik+media termasuk parent accepted yang medianya rusak; hash sebelum provider diikuti recheck graf. Photo proof historis dinilai terhadap occurred_at, bukan hari sync. Parent media rusak bisa Perlu review sementara child Menunggu dependency; tidak ada receipt palsu/deletion/forced replay. Jalur legacy diuji terpisah tanpa mengubah UUID yang sudah diterima simulator.
+**Diverifikasi lokal:** 134 unit + 1 hosting + 44 browser phone/tablet PASS; wajib photo/commit guard, ref reuse, owner/site/time/session/hash/missing source, media parent accepted, source berubah selama await, replay next-day/legacy, draft reload offline, read-only history, corrupt media restore dan hold setelah reconnect. Fixture helper test memberi paket foto eksplisit pada regresi geo/sesi lama, bukan bypass service. Screenshot foto kunjungan ponsel ditinjau. Format/typecheck/contracts/demo+live/budget (demo JS56,5KiB gzip/font47,1KiB), Ruff/4 manifest PASS; CI setelah push.
+**Batas:** foto berasal dari paket generik PR #26; assignment visit/session/outlet/phase ada pada slot/ledger/command, bukan signature server di foto. Pinpoint tetap simulasi tanpa basemap; bukan anti-mock GPS/kamera asli/titip akun atau authority backend. Tidak ada retention/GC/recovery baru. Tidak menyentuh addon/backend/seed/loader/workflow/ruleset/Railway; tidak merge/deploy, live terkunci.
+**Berikutnya:** delivery/POD dengan bukti terikat DO/trip; maps/media/session/device server tetap dependency terpisah.
+**Menunggu:** CI dan review pemilik atas PR baru.
+
+## 2026-10-27 — codex agent — Regresi kuota paket bukti PR #26
+**Basis:** PR #26 HEAD 1e0edf3; branch tetap agen/mobile-evidence-packages.
+**Tambahan:** injeksi QuotaExceededError pada IDBObjectStore.put membuktikan transaksi media rollback utuh: tidak ada record foto/map parsial. Tidak mengubah implementasi produksi.
+**Diverifikasi:** seluruh 123 unit PASS (sebelumnya 122); format/typecheck dicek. Hasil 1 hosting + 40 browser/build/Ruff pada source produksi identik tetap berlaku; CI commit baru diperiksa setelah push.
+**Menunggu:** CI/review PR; live tetap terkunci, tidak merge/deploy.
+
+## 2026-10-27 — codex agent — Paket bukti watermark/hash/pinpoint simulasi
+**Basis:** main d4cf21b (PR #25 merged); branch agen/mobile-evidence-packages. Rencana masuk plan sebelum implementasi.
+**Berubah:** komponen evidence bersama menghasilkan JPEG watermark waktu pencatatan WITA/koordinat/akurasi + PNG pinpoint SIMULASI TANPA BASEMAP (grid/skala/utara/akurasi). Tidak ada tile/provider/network baru. Waktu pilih file dipisah dari waktu pencatatan; waktu shutter/kamera asli tidak dibuktikan. Output foto <=1 MB, map <=128 KB; input <=12 MB/40 MP, sisi foto <=1600 px. Fix TTL60s/future1s/accuracy>0<=10km, pilih foto <=5menit sebelum save.
+**Integritas:** satu record atomik foto+map+metadata/hashes/binding owner-key-time-location; immutable via store API. Shared assertLocalEvidence untuk restore/submit realisasi; sebelum provider hash paket baru dicek, lalu graf visit dicek ulang. Paket hilang/berubah ditahan tanpa receipt bisnis baru. evidenceHold lokal menampilkan Perlu review berdasarkan pemeriksaan sync terakhir. Generation guard/object URL cleanup berlaku saat ganti file/ref/owner/unmount. getEvidence memberi pembacaan keyed untuk sync. Tidak ada auto-rekonstruksi/GC.
+**Kontrak:** OpenAPI draft 0.5 dengan packageHash opsional pada evidence ref; schema command tetap v1, legacy tanpa hash tetap path metadata/Blob lama dan diberi label belum memiliki paket baru. Map_status/evidence_status tetap pending; absensi/POD resmi tetap terkunci, foto visit belum ditambahkan pada iterasi ini.
+**Diverifikasi:** 122 unit + 1 hosting + 40 browser phone/tablet PASS; perubahan byte foto/map/metadata/hash/source, missing/downgrade package, immutable write, historical replay, legacy, corrupt persisted foto restore/submit, offline reload map+foto, screenshot watermark/pinpoint ponsel ditinjau. Format/typecheck/contracts/demo+live/budget (demo JS54,6 KiB gzip/font47,1 KiB), Ruff/4 manifest PASS. CI diperiksa setelah push.
+**Batas:** grid pinpoint lokal bukan peta jalan/snapshot peta resmi; hash client tidak mencegah pemalsuan seluruh DB/rehash/mock GPS/kamera palsu/titip akun. Server media/signing/ACL/maps berlisensi/OCR/retention/GC/dedup lintas perangkat tetap dependency. Tidak menyentuh backend/addon/seed/loader/workflow/ruleset/Railway, tidak merge/deploy; live terkunci.
+**Berikutnya:** integrasi paket bukti ke visit/delivery secara bertahap; adapter media/maps server dengan authority terpisah dari representasi client.
+**Menunggu:** CI dan review pemilik pada PR baru.
+
+## 2026-10-27 — codex agent — Pusat diagnosis sinkronisasi simulator
+**Basis:** main 302587e (PR #24 merged); branch agen/mobile-sync-diagnostics. Plan terintegrasi sebelum implementasi, tetap area PWA.
+**Berubah:** menu Lainnya kini menampilkan filter Semua/Menunggu/Perlu review/Approval/Diterima dan detail UUID, waktu WITA, percobaan, jadwal retry, referensi receipt, konteks sesi dan dependency. Bedakan offline/backoff/sending/auth, integritas visit, dependency, approval, penolakan bisnis vs transport. Receipt wajib cocok UUID/status. State accepted historis yang grafnya rusak tetap tersimpan tetapi ditandai perlu review.
+**Integritas/performa:** proyeksi read-only satu snapshot ledger/morning/outbox, field terbatas tanpa payload mentah/foto/token atau ekspor. Refactor createVisitSyncValidator membagi validator; graf sekali per proyeksi snapshot, sedangkan validateVisitSync di engine selalu instance baru per boundary. Tidak mengubah retry, state, receipt, UUID, source atau API wire. UI aman pada DTO invalid, async hasil lama dibuang saat unmount/owner berganti. Tidak ada polling/request baru.
+**Diverifikasi lokal:** 111 unit + 1 hosting + 38 browser phone/tablet PASS; diagnosis parent accepted tapi rusak, receipt mismatch, DTO/time/state/retry invalid, offline/backoff/auth/approval/rejected, legacy/next-day, isolasi owner, no raw payload, snapshot IndexedDB identik sesudah filter/detail/persona. Screenshot ponsel ditinjau, tanpa overflow; format/typecheck/contracts/demo+live/budget (demo JS 52,5 KiB gzip; font 47,1 KiB), Ruff/4 manifest PASS. CI diperiksa setelah push.
+**Batas:** status pada snapshot lokal terakhir, bukan backend authority; validasi finansial/media/approval/otorisasi resmi belum tersedia. Tidak ada edit/hapus/paksa kirim/approve/auto-recovery/login; tombol Sinkronkan existing tetap memakai engine lama. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh; live terkunci, belum merge/deploy.
+**Berikutnya:** evidence foto timestamp/GPS + pinpoint map; delivery/POD/HRIS bertahap, server session/device/media/policy/idempotency tetap dependency terpisah.
+**Menunggu:** CI dan review pemilik atas PR baru sebelum merge/deploy manual.
+
+## 2026-10-27 — codex agent — Tutup blocker sync PR #24
+**Basis:** PR #24 HEAD 1eea9f0; review issuecomment-6434268284 dibaca. Branch agen/mobile-sales-visits tetap.
+**Koreksi klaim sebelumnya:** restore memang menolak graf rusak, tetapi outbox hanya mengecek dependency dan tetap submit; 3 regresi reproduksi check-in/order/check-out gagal pada outbox lama. Kini shared visitLedger memvalidasi semantik sebelum sync, termasuk source, envelope/owner/key, relasi/konteks/geo/time/produk. Snapshot read-only ledger+morning+outbox konsisten; pemeriksaan diulang sesudah sending tepat sebelum provider. Parent invalid menahan descendants walau receipt accepted lama ada. Invalid visit graph konservatif menahan visit owner; draft/command tetap utuh, pesan review, tanpa receipt bisnis baru.
+**Historical replay:** check-in baru menyimpan morning_source penuh atomik. morningReady tanggal historis + event-time GPS mendukung antrean sah hari sebelumnya setelah paket pagi diganti. Legacy record tanpa source hanya memakai fallback paket tersimpan yang cocok session/date/version/site/openedAt; source hilang/tidak cocok ditahan tanpa auto-rekonstruksi. Command legacy unbound tetap berjalan; order yang dirujuk visit tidak boleh membuang konteks untuk bypass.
+**Diverifikasi lokal:** 102 unit + 1 hosting; 36 browser phone/tablet termasuk corrupt IndexedDB → reload → reconnect → retry. Mutasi check-in/order/check-out/parent accepted/session/outlet/geo/source/owner/time/envelope, missing source/ledger, dropped context, boundary before provider, next-day valid replay dan legacy compatibility. Format/typecheck/contracts/demo+live/budget/Ruff/4 manifest. CI diperiksa sesudah push.
+**Batas:** snapshot sumber/validasi client hanya integritas simulator, bukan keamanan/anti-mock GPS/otorisasi backend. Tidak mengubah wire DTO atau versi IndexedDB. Tidak menyentuh addon/backend/seed/loader/workflow/ruleset/Railway; live tetap terkunci, tidak merge/deploy.
+**Menunggu:** CI commit perbaikan dan review ulang supervisor sebelum merge pemilik.
+
+## 2026-10-27 — codex agent — Kunjungan outlet dan dependency sync simulator
+**Basis:** main 955071a; branch agen/mobile-sales-visits, terisolasi dari pekerjaan seed.
+**Berubah:** pilih PJP → GPS/check-in → order → check-out hasil/catatan; konteks visit/session/date/version/outlet/geofence. GPS TTL 60 detik, future tolerance 1 detik, radius 5–15 m tanpa ekspansi (distance+accuracy <= radius). Order dan check-out mengambil GPS baru; stale/uncertain/outside/denied menahan aksi.
+**Offline/integritas:** ledger+outbox+sumber sesi ditulis atomik CAS; restore owner/time/ref/source memeriksa konteks. Sync bergantung receipt check-in accepted lalu semua receipt bisnis order sebelum check-out; urutan UUID tidak menentukan urutan submit. Transport error tidak menjadi receipt bisnis. Satu aktif/hari dan satu visit per outlet/hari simulasi; histori lama tidak menjadi izin hari berikutnya.
+**Kontrak/CI:** OpenAPI draft 0.4 menambahkan strict visit DTO/VisitOrder; legacy order generic tetap kompatibel. CI existing otomatis memuat tes baru; live fixture gate ditambah. README/plan terintegrasi.
+**Diverifikasi:** 81 unit + 1 hosting; 34 browser phone/tablet; format/typecheck/contracts/demo+live/budget (demo JS 49,7 KiB gzip; font 47,1 KiB), Ruff/4 manifest. CI diperiksa setelah push.
+**Batas:** hanya simulator; bukan ACL/auth/geofence authoritative atau anti-mock GPS. Belum pinpoint map/foto visit/tracking background/extra-call approved visit/recovery admin. Queue tertahan butuh review, tidak auto-cancel. Server session/device/media/policy/idempotency tetap dependency.
+**Tidak disentuh:** addon/backend/seed/loader, workflow/ruleset, Railway/domain/deployment. Live tetap terkunci; tidak merge/deploy.
+**Menunggu:** review PR, hasil CI, merge pemilik dan deploy manual commit diterima.
+## 2026-10-27 — claude-design agent (chat + sandbox) — UI v8: judul header form murni di tengah, field tidak dipindah
+**Berubah:** `id_ui_form`: (1) judul murni (nomor/nama dokumen) ditampilkan ulang oleh elemen `.id_header_title` milik kita di tengah antara tombol aksi dan pipeline status (selisih tengah terukur 0px); label kecil (mis. "Customer Invoice") jadi caption di atas nomor draft; (2) node OWL tidak lagi dipindah, blok asli di sheet hanya disembunyikan lewat CSS `:has()` bila judulnya sudah tampil di header; (3) blok `.oe_title` yang berisi field untuk diisi (kontrol di luar `<h1>` atau wajib isi; mis. kendaraan, produk, kontak, principal) TIDAK diangkat dan tetap di tempatnya; (4) klik judul yang berasal dari input (nomor draft faktur) membuka input aslinya; (5) syarat JS disamakan dengan CSS (layar kecil tanpa header buatan). `smoke_ui.py` diperbarui (+ faktur, kendaraan, layar kecil). `docs/ui/id_ui_form.md` diperbarui.
+**Latar:** kode `main` memindahkan semua blok `.oe_title` ke statusbar, termasuk form kendaraan yang blok judulnya berisi 3 input sehingga field ikut terangkat ke header; pada faktur label dan nomor draft berantakan.
+**Diverifikasi (bagaimana):** sandbox, Odoo `f4378f29`, `id_base` dari `main`, fixture CI `scripts/ui/smoke_fixture.py`: `smoke_ui.py` 42/42; smoke baru GAGAL terhadap `form_patch.js` lama (3 cek judul), jadi cek itu menangkap perilaku lama; `ruff` dan `check_manifests.py` lolos.
+**Belum diuji:** job CI di GitHub Actions; stack OCA penuh; `docker build`/Railway; browser selain Chromium; form dengan judul murni selain SO dan faktur (mis. PO, bill).
+**Butir terbuka:** (1) eksplorasi tampilan grafik dan kartu metrik dashboard baru tahap diskusi/simulasi, belum ada kode; (2) M1c dari review `claude-dev` belum dikerjakan; (3) catatan untuk pemilik `id_base`: Odoo 19 memberi peringatan `_sql_constraints` tidak lagi didukung (gunakan `models.Constraint`); bukan error sehingga tidak menggagalkan gerbang log CI.
+**Menunggu:** pemilik (terapkan patch, commit, push).
+
+## 2026-10-27 — codex agent — Follow-up PR #22 dan koreksi realisasi simulator
+**Basis:** main 5088144; branch agen/mobile-expense-revisions; detail review issuecomment-6433199416 dibaca.
+**Tiga perbaikan:** ID komponen stabil (draft legacy tanpa ID dipulihkan dengan default baru), preview/file/location direconcile saat ref/owner berganti atau file gagal, async generation guard; dedup merchant/receipt/date lintas advance satu owner/DB dipindah ke transaksi outbox; sumber request dibandingkan ulang atomik setelah rangkaian await. Receipt transport tidak melepaskan klaim struk.
+**Dev berikutnya:** receipt penolakan bisnis cocok UUID membuka koreksi; UUID baru + supersedes_uuid/alasan, parent lama immutable, status belum terkonfirmasi/transport tidak membuka edit. Restore memvalidasi lineage/source/owner/urutan waktu/parent rejected/missing ref/cycle; CAS predecessor mencegah koreksi atas penolakan yang berubah dan dua successor aktif.
+**Kontrak/docs:** OpenAPI draft 0.3, revision fields opsional demi kompatibilitas payload lama; pasangan diwajibkan pada jalur koreksi. Tidak ada DB migration atau endpoint backend baru. README/plan memperbarui batas lama, bukan hanya menambah klaim baru.
+**Diverifikasi lokal:** 71 unit, 1 hosting, 30 browser phone/tablet PASS; barrier dua koneksi untuk dedup lintas advance/koreksi, source-change-during-submit (payload/status), transport/wrong receipt lock, lineage corruption, remove-line/replace-invalid/missingblob, browser rejected→correction→needsapproval dengan parent tetap utuh. Format/typecheck/contracts/demo+live builds/budget/Ruff/4 manifest PASS; demo JS ~45 KiB gzip, font 47,1 KiB. CI diperiksa setelah push.
+**Batas:** dedup hanya cooperative writer satu owner dan IndexedDB yang sama; lintas akun/perangkat/server tetap authority backend. Foto local_map_pending; revision state bukan security boundary. Settlement final, cancel pending, cash/GL/auth/media/geofence/tracking tetap dependency/roadmap.
+**Tidak disentuh:** backend/addon/seed/loader, workflow/ruleset, Railway/domain/deployment. Live terkunci.
+**Menunggu:** review PR dan CI; merge pemilik lalu deploy manual commit yang diterima.
+
+## 2026-10-27 — codex agent — Realisasi biaya dan estimasi settlement simulator
+**Basis:** main b19240a (PR #21 merged); branch agen/mobile-expense-settlement.
+**Berubah:** layar Lainnya → Realisasi & saldo uang lapangan; receipt request dipisah dari approval/pencairan fiktif. Policy fixture contoh, komponen/struk, foto lokal, odometer/liter-harga BBM, draft offline, preview refund/variance dan tier total exposure. Pratinjau foto dipulihkan per owner setelah reload.
+**Integritas client:** restore advance/submit memakai validator source fingerprint/owner/amount/approval/timestamp/link outbox; create-if-absent advance dan transaksi outbox+link dengan compare-and-set. Dua koneksi diuji agar satu advance tidak punya dua command realisasi; rollback/quota tidak membuat orphan. Request material berubah menahan advance lama.
+**Kontrak/CI:** CommandSchema discriminated union dengan payload realization strict, OpenAPI draft 0.2; tidak menambah endpoint backend. Gate build menolak fixture/kontrol pencairan pada live. Seluruh workflow CI existing dipertahankan; tes baru ditemukan otomatis.
+**Diverifikasi lokal:** 60 unit, 1 hosting, 24 browser phone/tablet PASS; format/typecheck/contracts/demo+live build/budget (demo JS ~43,8 KiB gzip, font 47,1 KiB), Ruff/4 manifest PASS. Screenshot realisasi/pratinjau bukti ditinjau; foto tes memakai icon app. CI diperiksa setelah push.
+**Batas:** estimasi settlement, bukan uang dikembalikan/top-up disetujui/dibayar/GL. Foto local_map_pending; submit hanya simulator dan receipt membutuhkan review. Limit Rp250.000 adalah fixture contoh, bukan policy perusahaan. Koreksi setelah antre/reject, final settlement, policy bertanggal/agregat, media hash/map/OCR/dedup server, multi-pengisian/multi-hari tetap dependency. Referensi foto terpisah tidak membuktikan konten foto berbeda; local state bukan security boundary.
+**Tidak disentuh:** addon/backend/seed/loader, workflow/ruleset, Railway/domain/deployment. Live terkunci.
+**Menunggu:** review PR dan CI, merge pemilik serta deploy manual commit yang diterima. Panduan dan batas lengkap di pwa/README.md.
+
+## 2026-10-27 — codex agent — Tutup celah restore sesi PR #21
+**Basis:** PR #21 HEAD 8693b13; review issuecomment-6432082496, tetap branch agen/mobile-session-brand.
+**Koreksi:** klaim paket invalid tidak membuka sesi pada entri sebelumnya belum berlaku untuk restore. Celah direproduksi: 17 dari 19 kasus mutasi persisted state baru gagal pada implementasi lama.
+**Berubah:** validator semantik shared untuk sync/open, restore dan morningReady. Memeriksa owner/businessDate, hari/urutan timestamp absensi–sesi–snapshot, masa depan, versi nonblank, products/outlets nonempty dan konsistensi attendance-only vs sesi lengkap. Restore invalid mengembalikan undefined tanpa menghapus pending outbox atau draft bisnis.
+**Diverifikasi lokal:** 48 unit, 1 hosting dan 20 browser phone/tablet PASS; regresi corrupt IndexedDB bundle lalu reload offline menahan order/extra-call dan mempertahankan seluruh draft/outbox. Paket valid lintas tanggal UTC dalam satu hari WITA tetap diterima. Format/typecheck/contracts, demo/live builds/budget, Ruff/4 manifest PASS. CI diperiksa setelah push.
+**Batas:** tetap simulator client; bukan auth/device/server security. Branding dan live lock dipertahankan.
+**Tidak disentuh:** backend/seed/loader/Railway, workflow atau ruleset. Tidak merge/deploy.
+**Menunggu:** reviewer memeriksa ulang commit perbaikan pada PR #21 setelah CI.
+
+## 2026-10-27 — codex agent — Sesi pagi simulator dan branding Odoo FMCG Mobile
+**Basis:** main efd0373 (PR #20 merged), branch agen/mobile-session-brand. Deployment field-pwa dilaporkan pemilik SUCCESS/live terkunci; tidak diubah pada pekerjaan ini.
+**Berubah:** kartu sesi pagi Sales/Canvasser (absensi diterima simulator → sync online), paket snapshot PJP/stok/harga dan sesi atomik per company/persona; order/extra-call baru memerlukan sesi hari WITA yang sama. Reload offline memulihkan paket; error, tanggal/snapshot invalid atau quota gagal tidak membuka sesi.
+**Branding:** nama Odoo FMCG Mobile pada title/manifest/boot/header; wordmark Odoo + badge FMCG, Mobile di bawah, navy kontras. Glyph oi-odoo resmi diekstrak menjadi SVG; icon PNG 192/512, apple-touch 180, favicon 32; atribusi/license lokal. Tidak menyentuh addon desain web; log claude-design dibaca untuk konsistensi.
+**Diverifikasi lokal:** 27 unit, 1 hosting, 18 browser phone/tablet; format/typecheck/OpenAPI drift, demo/live build/budget (demo JS ~38,2 KiB gzip; font 47,1 KiB), Ruff/4 manifest. Preview logo/icon dan screenshot home ditinjau. CI diperiksa setelah push.
+**Batas:** sesi ini simulator client, bukan server auth/security/device binding. Kontrol absensi demo terpisah dari bukti foto map_pending; tidak mengklaim absensi sah. Tanggal perangkat/storage dapat diubah. Backend tetap wajib menerbitkan sesi/tanggal/ACL/approval/evidence; driver tidak digate oleh sesi Sales. Realisasi/settlement belum dikerjakan.
+**Tidak disentuh:** backend/seed/loader, workflow Odoo, Railway/service/domain/mode deployment. Build live tetap terkunci; tombol sesi simulator tidak dikirim ke bundle live.
+**Menunggu:** review PR/CI, merge pemilik dan deploy manual commit yang disetujui agar branding muncul di domain aktif.
+
+## 2026-10-27 — codex agent — Biaya client dan hosting PWA terisolasi
+**Basis:** main f636129 (PR #19 diterima sebagai fondasi simulasi); branch agen/mobile-expense-hosting.
+**Berubah:** validasi request biaya (H-1 menurut businessDate bootstrap, referensi trip/DO, rupiah bulat, KM BBM dan satu charging scope), schema ExpenseRequest OpenAPI; server hosting Node24, Dockerfile multi-stage live-locked default/demo eksplisit, railway.toml + runbook.
+**CI:** browser memakai server hosting yang sama; test:hosting dan pwa-container additive, aggregator pwa-gate memerlukan quality/browser/container. Tidak mengubah ruleset atau workflow Odoo.
+**Diverifikasi:** 19 unit + 1 hosting test + 14 browser phone/tablet PASS, format/typecheck/contracts/build budget, Ruff/4 manifest PASS. CI diperiksa setelah push.
+**CI awal:** quality/browser PASS; image live berhasil dibangun. Smoke health request terkena connection reset saat startup; retry diperluas untuk reset selain refused. Run baru diperiksa setelah fix. Docker lokal tidak tersedia. Railway belum dibuat/dideploy, API route mengembalikan 503 eksplisit.
+**Batas:** businessDate bootstrap bisa stale; server wajib validasi ulang tanggal/cutoff, referensi/ACL, limit, bukti dan approval. Input referensi manual simulasi belum membuktikan DO/trip ada. Absensi/POD, auth/device, peta, realisasi/settlement dan posting backend tetap dependency; live terkunci.
+**Menunggu:** review pemilik; setup service/deploy oleh pemilik/agent deploy setelah review. Backend/seed/loader dan service Odoo tidak disentuh.
+
+## 2026-10-27 — codex agent — Frontend PWA awal dan CI additive
+**Basis:** origin/main 69a7ef6 + plan lokal, branch agen/mobile-pwa-foundation.
+**Berubah:** folder pwa (Preact/TS/Vite, Phosphor, Inter, navy/blue, bottom nav, role fixture, form lapangan/personal HRIS/petty cash, local evidence, draft/outbox, provider contract); .github/workflows/pwa.yml; plan §16.
+**Diverifikasi lokal:** format/typecheck/contract drift, 14 unit/contract/storage tests, 12 browser tests phone/tablet; demo/live builds dan budget PASS (demo JS ~36 KiB gzip, font 47,1 KiB). Visual screenshot ditinjau; SVG sizing dan offline cache Vary diperbaiki, ditangkap gate browser.
+**CI baru:** pwa-quality, pwa-browser, pwa-gate aggregator. Tidak mengubah workflow Odoo, ruleset atau deployment. Hasil GitHub CI ditinjau setelah push.
+**Batas:** build live terkunci, fixture hanya demo; accepted bukan SO Odoo. Capture foto/lokasi lokal masih map_pending sehingga absensi/POD tidak dinyatakan sah. I18n English penuh, tracking, realisasi/settlement rinci dan integrasi API/domain masih mengikuti roadmap; README mencatat status per paket.
+**Tidak disentuh:** addon backend/seed/loader, server production dan branch agent lain.
+**Menunggu:** review PR dan CI; backend menjadi dependency/handoff sesuai mandat mobile-only.
+
+## 2026-10-26 — codex agent — Plan v0.4: frontend-first, mandat mobile-only
+**Arahan pemilik:** tidak mengambil pekerjaan agent lain; siapkan mobile/PWA meski backend belum siap.
+**Berubah:** plan mobile §1.1/1.2 dan §7.1/7.2: UI/alur client dengan provider interface dan mock terisolasi, kontrak bertahap, HTTP adapter saat API siap. PWA-01–06 menjadi urutan kerja aktif; MOB existing tetap peta dependency sistem.
+**Batas:** harga/kredit/HPP/approval/auth/posting tetap keputusan backend. Mock berlabel Simulation, tidak fallback diam-diam di produksi. Agent mobile tidak mengoreksi seed/loader atau membangun id_api/id_app tanpa mandat baru.
+**Dokumentasi:** plan satu sumber teknis di blueprints; audit gap snapshot terpisah; integrasi SCOPE/DEVELOPMENT berupa tautan/ringkasan saat koordinasi, bukan duplikasi seluruh desain.
+**Diverifikasi:** contoh JSON, sequence paket dan whitespace; perubahan docs-only, belum ada implementasi/runtime test baru.
+**Menunggu:** eksekusi PWA sesuai urutan frontend-first; tidak ada push, merge atau deploy.
+
+## 2026-10-26 — codex agent — Gap analysis pra-implementasi mobile dan visual plan v0.3
+**Basis:** origin/main 69a7ef6; dependency seed PR #15 head c435447; branch lokal agen/mobile-reconnaissance.
+**Berubah:** `docs/reviews/MOBILE_READINESS_GAP_2026-10-26.md` (G01–G17, inventaris data, workflow/commit, acceptance gates); plan mobile v0.3 (Phosphor duotone, Inter Variable, palette navy/blue, readiness dependency).
+**Diverifikasi:** handoff/log empat agent dan delta branch seed dibaca; PR/checks diperiksa lewat GitHub; dua validator serta 98 tests PASS pada worktree c435447 (26,752s), manifest empat addon PASS; struktur dokumen dan rasio kontras diperiksa.
+**Temuan P1:** truthiness model recordset kosong dipakai adapter/runner sehingga lot/invoice/discount/readback dapat terlewat; guard bukan bukti model tidak terpasang. Runner limit_orders=1 tidak memilih SO rejection yang disebut. Bukti actual runtime Odoo dan snapshot Run1/Run2 lengkap tetap diperlukan.
+**Gap lain:** fallback admin pada master salesman, employee stable code/user/app role belum dipetakan, kalender HR 5 hari vs PJP 6 hari, UoM Units/packaging, geo simulasi bukan presisi geofence, domain approval/expense/trip/API/PWA belum ada.
+**Belum diuji:** DB/image aktual, staging/production, perangkat mobile, Phosphor/font build dan screenshot UI. Tidak mengubah kode/data worker atau menjalankan loader production.
+**Menunggu:** worker seed/backend menutup gap dependency dan runtime; koordinasi agent desain untuk token visual; pemilik menentukan integrasi PR. Rekomendasi handoff belum dikirim sebagai pesan ke agent lain.
+
+## 2026-10-26 — codex agent — Mobile plan v0.2: kontrol operasional dan biaya lapangan
+**Mandat:** 11 tambahan requirement pemilik dimasukkan ke `docs/blueprints/mobile_api_and_pwa_plan.md` (§9–14, traceability R01–R11).
+**Berubah:** binding akun/perangkat dan sesi kerja; petty cash/BBM H-1/insidentil/biaya DO-trip/settlement; extra call dan approval diskon sampai Owner untuk below-cost; seluruh foto berpeta; geofence 5–15m; tracking 5/15 menit; polling/outbox/notifikasi; bottom nav, liquid motion/haptic dengan budget low-end.
+**Diverifikasi:** main tetap 69a7ef6 setelah fetch; sumber W3C/Chrome/MDN untuk batas PWA; contoh JSON, struktur heading/tabel, coverage R01–R11 dan whitespace diperiksa. Manifest validator dijalankan; tidak ada kode runtime baru.
+**Belum diuji:** seluruh kontrol dan angka baseline masih rancangan; tidak menjanjikan background tracking/polling selalu hidup atau anti-spoof mutlak di PWA/native.
+**Butir terbuka:** limit rupiah, cutoff H-1, metode HPP, provider map, kebijakan luar kota/retensi dan hasil spike akun/perangkat. MOB-01 mencakup absensi minimum agar sesi pagi tidak menunggu MOB-05.
+**Menunggu:** paket MOB-00 setelah finalisasi rancangan; tidak ada push, merge atau deploy.
+
+## 2026-10-26 — codex agent — Rancangan dua jalur API backend dan PWA
+**Mandat:** pemilik menegaskan hybrid: Odoo web penuh untuk back-office, PWA sendiri untuk lapangan/personal HRIS.
+**Berubah:** `docs/blueprints/mobile_api_and_pwa_plan.md` v0.1 menjadi rancangan bersama API/PWA; mencakup modul, endpoint usulan, auth/role/scope, sync/idempotensi, offline UX, Sales/Delivery/HRIS, media, roadmap MOB-00–06 dan gate penerimaan.
+**Diverifikasi:** konsistensi terhadap SCOPE/Playbook/spike existing, source main 69a7ef6 dan scan repo sebelumnya; JSON contoh dan whitespace diperiksa.
+**Belum diuji:** semua endpoint/model/policy/performance baru masih rancangan; runtime Odoo/mobile belum dijalankan. Ruff tidak tersedia pada runtime sesi lanjutan; tidak mengklaim lint ulang PASS.
+**Butir terbuka:** MOB-00 menutup transport API, akun/session minimal dan transaksi; budget offline/media/performance perlu bukti perangkat pilot. Personal HRIS slip/bukti potong menunggu modul domain tersedia.
+**Menunggu:** review rancangan oleh pemilik; tidak ada perubahan kode aplikasi, dataset, push atau deploy.
+
+## 2026-10-26 — codex agent — Deep scan kesiapan mobile
+**Basis:** main 69a7ef6; branch lokal agen/mobile-reconnaissance.
+**Berubah:** laporan `docs/reviews/MOBILE_SCAN_2026-10-26.md`, log codex; tanpa perubahan kode aplikasi/dataset.
+**Diverifikasi:** manifest dan Ruff PASS; CI main static/install-test/init-test success melalui GitHub API; PR #14/#15 masih open.
+**Belum diuji:** runtime Odoo lokal, device mobile, spike API, kandidat masalah judul form saat ui.isSmall.
+**Butir terbuka:** API/auth/role belum ada; kontrak idempotensi, incremental sync, privasi cache dan scope ownership perlu dikunci sebelum implementasi mobile.
+**Menunggu:** mandat implementasi berikutnya dari pemilik; scan ini tidak push, merge atau deploy.
+
+## 2026-10-26 — codex agent — UI v7 siap review tanpa SQL wilayah
+**Basis:** main f130693 + perubahan UI/dokumentasi claude-design 388eff6.
+**Scope:** 20 SQL data/raw tidak dibawa; file asli tetap di agen/ui-cleanup-v7.
+**Perbaikan:** divider memakai computed visibility observer scoped ke systray,
+tanpa display override, cleanup saat unmount; pager smoke wajib dua record,
+memastikan judul berubah lalu pulih. Empat regression tests Chromium memakai
+SCSS/helper asli (hidden, responsive, dynamic item, observer cleanup).
+**CI:** install-test memasang id_ui_form beserta dependency, menjalankan tests
+id_base/id_ui/id_ui_shell, fixture dua quotation, Odoo server dan browser smoke.
+Tidak memakai Railway/production atau data seed transaksi.
+**Verifikasi lokal:** Ruff dan manifest/syntax checks; browser lokal belum tersedia,
+penerimaan runtime menunggu hasil CI branch ini. Tidak ada klaim merge main.
+
+## 2026-10-25 — claude-design agent (chat + sandbox) — UI cleanup v7: handoff dirapikan, judul statusbar dikokohkan, divider generik, !important dikurangi
+**Berubah:** (1) Entri HANDOFF v2/v3/v4 dilipat ke berkas ini dan `docs/ui/_handoff_v2/_v3/_v4.md` dihapus; mulai sekarang entri ditulis langsung di `HANDOFF.md`, tanpa berkas sementara. (2) `id_ui_form`: `syncTitle` idempoten, dibatasi ke akar renderer (`useRef("compiled_view_root")`), dikembalikan ke sheet bila tata letak klasik atau form di dialog, titik sisip aman. (3) `id_ui_shell`: divider systray generik (item tampil - 1; item kosong dan pembungkus tombol menu mobile tidak dihitung) sehingga benar juga di mode debug (5 item). (4) `!important` turun dari 27 ke 3 (shell) dan dari 60 ke 4 (form), semuanya melawan utilitas Bootstrap/Odoo dan diberi komentar alasan. (5) `smoke_ui.py` 25 -> 32 cek (judul tunggal di statusbar, footer sticky, divider normal/debug, pager, ganti tata letak dan pemulihan judul). (6) `docs/ui/id_ui_form.md` dan `id_ui_shell.md` diperbarui (pemindahan DOM, kebijakan `!important`).
+**Diverifikasi (bagaimana):** sandbox, Odoo `f4378f29`, DB kosong: 0 failed dari 7 uji; smoke 32/32; snapshot gaya terhitung + posisi elemen kunci di 4 halaman (form, form debug, daftar, dashboard) sebelum vs sesudah identik untuk halaman normal (selisih hanya mode debug: ikon debug kini sejajar, divider konsisten); smoke baru GAGAL terhadap SCSS lama (debug: 5 item, 3 divider), jadi cek itu memang menangkap bug; pemindahan DOM judul 1 kali saat mount dan tetap 1 setelah 9 re-render tab; `ruff` dan `check_manifests.py` lolos.
+**Belum diuji:** stack OCA penuh, `docker build`/Railway, CI, browser selain Chromium, mobile; footer sticky pada form selain order penjualan.
+**Butir terbuka:** (1) dua sesi memakai tanda tangan `claude-design agent` sehingga acuan `whats_new.sh` ambigu; usul untuk pemilik/`claude-dev`: bedakan per sesi (mis. akhiran sesi) di `AGENT_PROTOCOL.md` dan wajibkan `log_entry.sh` agar tanda tangan commit sama dengan entri log (log v4 memakai UTC dan tanda tangan v4-v6 berbeda dengan stempel entri log). (2) M1c dari review `claude-dev` (menu referensi ke Configuration, dashboard contoh, kolom/filter/group-by) belum dikerjakan. (3) Panel ganda di aplikasi Dashboards masih terbuka. (4) Koreksi dari saya: entri v2 menyebut fase `-u` berjalan setiap boot; yang benar berbasis penanda (`upgrade_modules_vN`). Aturan kapan perlu `-u` ada di `docs/ui/id_ui.md`. (5) Menu `FMCG Distribution` (id_base, sequence 25) belum punya terjemahan `id_ID` sehingga tampil Inggris di sidebar Indonesia; terjemahan sebaiknya di `id_base/i18n` atau lewat glosarium (istilah baru). (6) CI `install-test` masih hanya memasang `id_base`; permintaan menambah `-i id_ui_form` dan `--test-tags /id_ui,/id_ui_shell` belum terpenuhi (diuji manual bersama id_base terbaru: 0 failed dari 8, log bersih).
+**Menunggu:** pemilik (terapkan patch, commit, push); `claude-dev` (putuskan aturan penamaan sesi di protokol).
+
 ## 2026-10-25 — antigravity agent (Live Railway & Playwright Verification: Database Schema Synchronization & Browse Error Resolution)
 **Berubah:**
 - `deploy/init.sh`:
@@ -1834,6 +2141,30 @@ mengaktifkan required checks setelah nama check tersedia dari run GitHub.
 **Belum diuji:**
 - Browser Firefox/Safari (hanya diuji Chromium/Edge).
 - Layar mobile (akan fallback ke tampilan responsif bawaan).
+
+## 2026-10-25 — claude-design agent (chat + sandbox) — UI refinement v4: logo O tanpa pill, FMCG sudut tegas, topbar rata tengah, divider systray
+**Berubah:** `id_ui_shell`:
+- Logo O: background pill dihilangkan. Saat terbuka hanya tampil "Odoo FMCG"; saat ciut tampil ikon "O" (`oi-odoo`) besar putih tanpa background yang berubah menjadi ungu Odoo (`#714B67`) dengan animasi halus dan glow tipis saat di-hover atau di-klik.
+- FMCG brandbox: sudut tegas tanpa rounded (`border-radius: 0`), font tipis elegan (`font-weight: 300`, `letter-spacing: .12em`).
+- Ikon menu sidebar: berubah ke warna normal Odoo saat di-hover/aktif tanpa animasi scale dan tanpa glow.
+- Search box topbar: sudut rounded diperkecil (4px).
+- Judul topbar: diposisikan persis di tengah (`align center`) dengan tipografi seimbang (`font-weight: 600`).
+- Systray topbar: divider tipis vertikal disematkan di antara item (dari discuss hingga avatar profil).
+Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/claude-design.log` diperbarui.
+
+## 2026-10-25 — claude-design agent (chat + sandbox) — UI refinement v3: ikon duo-tone, wordmark Odoo FMCG, panel seksi tenang
+**Berubah:** `id_ui_shell`: scrollbar sidebar/panel selalu tersembunyi (lebar menu tidak menyusut saat hover, latar item terpilih penuh); ikon aplikasi tanpa latar, duo-tone saat diam (filter SVG `feColorMatrix` inline, tanpa aset tambahan) dan warna asli Odoo saat hover/fokus/terpilih (crossfade halus, glow putih tipis); judul sidebar = wordmark resmi Odoo (`/web/static/img/odoo_logo.svg`, dirujuk bukan disalin) + kotak "FMCG"; panel seksi: menu aktif cukup tebal tanpa latar, font lebih kecil, lebar 208px; topbar: pencarian di kiri, judul di kanan. Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; `id.po/pot` diperbarui.
+**Diverifikasi (bagaimana):** sandbox, Odoo `f4378f29`, DB kosong: 0 failed dari 7 uji; `ruff` dan `check_manifests.py` lolos; smoke Playwright 24/24 (duo-tone, lebar menu saat hover, urutan cari/judul, menu panel aktif tebal tanpa latar, serta cek v2). Selama uji ditemukan: pipeline aset menulis ulang `url(#id)` di SCSS menjadi alamat absolut, jadi filter dipasang inline di template.
+**Belum diuji:** stack OCA penuh, `docker build`/Railway, CI, browser selain Chromium, mobile.
+**Butir terbuka:** wordmark Odoo berwarna bawaan (ungu/abu) di atas navy kurang kontras; varian putih `odoo_logo_dark.svg` tersedia bila disetujui. Arti "ketika sidebar dibuka" untuk ikon berwarna masih diasumsikan = hover/fokus/terpilih (**[A]**).
+**Menunggu:** pemilik (unzip, commit, push); tidak ada permintaan baru ke agen lain.
+
+## 2026-10-24 — claude-design agent (chat + sandbox) — UI refinement v2: panel seksi, topbar polos, alur Tab
+**Berubah:** `id_ui_shell`: seksi aplikasi pindah dari tab navbar ke panel seksi di kiri isi (`IdSectionPanel`; seksi > sub-seksi > sub, bisa diciutkan, `Alt+P`); sidebar hanya aplikasi, item aktif persegi selebar sidebar, scrollbar disamarkan; topbar tanpa garis bawah dan pencarian menu 34px rata tengah; logo `oi-odoo` dengan glow dan gerak tipis saat hover; alur Tab: halaman dirender -> pencarian menu -> sidebar -> isi (field pertama form atau kolom cari); pengelola fokus ada di service `id_shell`. `id_ui`: hanya warna navbar klasik. Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui.
+**Diverifikasi (bagaimana):** sandbox, Odoo `f4378f29`, DB kosong: 0 failed dari 7 uji; `ruff` dan `check_manifests.py` lolos; smoke Playwright 19/19 (fokus awal, alur Tab, panel, posisi/tinggi pencarian, tanpa garis navbar, item aktif persegi, chatter tab, hotkey); terjemahan `id.po` diperbarui.
+**Belum diuji:** sama seperti v1 (stack OCA penuh, `docker build`/Railway, CI, browser selain Chromium, mobile). Tab di dalam isi belum diatur.
+**Butir terbuka:** halaman Dashboards kini punya dua panel kiri (panel seksi + panel milik halaman dashboard); belum diputuskan apakah panel seksi disembunyikan untuk aplikasi itu. Titik rawan antar-versi Odoo bertambah: event `ACTION_MANAGER:UI-UPDATED`, `action.currentController`, selector fokus (`.o_form_sheet`, `.o_searchview_input`). Daftar di `docs/ui/id_ui_shell.md`.
+**Menunggu:** pemilik (unzip, commit, push); tidak ada permintaan baru ke agen lain.
 
 ## 2026-10-25 — claude-dev agent (sandbox) — Review codebase main fa68c23 (PR #1–#5) + skrip snapshot instance
 **Berubah:** `docs/reviews/REVIEW_2026-10-24_main-fa68c23.md` (temuan P0/P1/P2 + rencana M1a–M2 + pemilik area), `scripts/ops/odoo_snapshot.py` (diagnosis read-only via XML-RPC), `scripts/sandbox/sandbox_up.sh` (menyalin `data/` dan `scripts/` seperti Dockerfile), `pyproject.toml` (E501 diabaikan untuk `scripts/ops`), `docs/DEVELOPMENT.md` (catatan snapshot), `agent-log/claude-dev.log`. **Tidak ada perubahan pada kode agen lain.**
@@ -1972,3 +2303,13 @@ mengaktifkan required checks setelah nama check tersedia dari run GitHub.
 **Menunggu:** pemilik repo (commit pertama dan menjalankan CI).
 
 <!-- Entri baru di atas entri lama. Templat ada di docs/DEVELOPMENT.md §10. -->
+
+
+## 2026-10-28 — PR #32: koreksi fixture regresi fokus judul
+
+- Supervisi pada SHA `6cb21f58a9639c5594fbab1deb25c1023f948990` memverifikasi perbaikan runtime hidden-input, tetapi CI install-test gagal karena fixture fokus tidak terhubung ke `document`.
+- Perbaikan test: setiap fixture kini di-append ke `document.body` sebelum guard/helper produksi dijalankan dan dihapus dalam blok `finally`. Assertion fokus tidak dilemahkan: tetap memeriksa input text yang tepat, `document.activeElement`, dan kelas `id_title_editing`. Cakupan hidden-only dan hidden + beberapa kontrol visible dipertahankan.
+- Batas klaim: regression ini mengeksekusi helper produksi `focusEditableTitleInput`; bukan pengujian langsung jalur cleanup `onTitleClick` saat fokus gagal. Probe handler penuh yang dilaporkan supervisor tetap menjadi bukti terpisah; tidak mengklaim cleanup handler tercakup oleh unit test ini.
+- SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai seluruh job selesai sebelum verdict. Hasil belum diklaim.
+- Scope tetap UI/tests/docs. PR #32 tetap draft; tidak merge dan tidak deploy.
+- Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:26:00+07:00

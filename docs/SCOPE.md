@@ -225,3 +225,31 @@ M0 kerangka repo + CI + image + spike API/offline-sync · M1 base+COA+master+wil
 2. **Ekspor ke legacy DMS:** cukup template generik XLSX/CSV pada demo?
 3. Tinjau `GLOSSARY.md` (istilah dipertahankan vs diterjemahkan).
 4. Konfirmasi lisensi LGPL-3 untuk addon `id_*`, dan siapa pemegang hak cipta pada header (nama Anda/organisasi).
+
+
+## 14. Rules lapangan Sales Order dan Delivery (2026-10-28)
+
+[F: requirement pemilik] Acuan rinci wajib: [plan mobile §17](blueprints/mobile_api_and_pwa_plan.md#17-rules-sales-order-dan-delivery--mandat-pemilik-2026-10-28).
+Mencakup Fully Received, Received Partial, Rejected, Cancel Delivery, Pending Requested;
+alasan wajib direkam per item (input sekali untuk non-partial, per item terdampak
+untuk partial); beberapa SKU demo bertier 1 karton = 144 pcs = 12 pack, 1 pack = 12 pcs;
+simulasi approval diskon; daily sync sebelum list serta sesi foto toko → pinpoint →
+mulai → proses → foto closing → closed → update list → entry berikutnya pada Sales
+dan Delivery. Ini requirement implementasi, belum klaim fitur tersedia.
+
+
+## 15. Revisi SO, approval pending/cancel dan closing kantor (2026-10-28)
+
+[F requirement pemilik] Acuan: [plan mobile §18](blueprints/mobile_api_and_pwa_plan.md#18-revisi-so-approval-delivery-dan-closing-kantor--mandat-2026-10-28).
+Revisi SO ditolak menggunakan UUID baru dan approval ulang. Koreksi beserta
+approval manager wajib pada hari root SO dalam WITA; salesman follow-up/push
+approval ke manager secara manual. Lewat hari, draft/pending/history tetap
+tersimpan dan terlihat untuk tindak lanjut, tanpa keputusan/reopen otomatis.
+Daily sync baru tidak memperpanjang deadline. Replay sah dibedakan dari keputusan
+bisnis baru. Pending kirim ulang
+0–2 hari kalender memerlukan SPV, >=3 hari SPV lalu Branch Manager. Cancel Delivery
+wajib SPV dengan lima subreason yang ditentukan pemilik. Backend menunggu seeding.
+Closing trip saat tiba di kantor, geofence + toleransi25m; cashier handoff di luar
+scope PWA, upload resi uang/cek/faktur/retur dicatat backlog. Pada demo, lokasi dan
+foto diterima tanpa validasi geofence/akurasi/keaslian, tetapi watermark timestamp
+dan koordinat tetap wajib. File/integritas/owner tetap diperiksa demi penyimpanan.
