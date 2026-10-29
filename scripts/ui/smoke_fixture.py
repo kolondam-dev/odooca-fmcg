@@ -1,6 +1,8 @@
 """Disposable CI database only: two long quotations, one populated invoice, and sidebar user."""
 import json
 
+from lxml import etree
+
 admin = env.ref('base.user_admin')  # noqa: F821
 admin.write({'login': 'admin', 'password': 'ci-ui'})
 env['res.users.settings']._find_or_create_for_user(admin).set_res_users_settings(  # noqa: F821
@@ -44,7 +46,6 @@ if len(invoices) != 1 or len(invoices.invoice_line_ids) < 10:
     raise RuntimeError('UI smoke fixture must create one invoice with at least 10 invoice lines')
 # Capture evidence from the installed registry and resolved form architectures.
 # This is runtime evidence from the same disposable CI DB used by browser smoke.
-from lxml import etree
 audit = {'installed_modules': env['ir.module.module'].search([('state', '=', 'installed')]).mapped('name')}  # noqa: F821
 for model_name, view_xmlid, wanted in (
     ('sale.order', 'sale.view_order_form', [
@@ -56,8 +57,8 @@ for model_name, view_xmlid, wanted in (
         'discount', 'discount_amount', 'footer_discount_1', 'footer_discount_2',
     ]),
 ):
-    model = env[model_name]
-    view = env.ref(view_xmlid)
+    model = env[model_name]  # noqa: F821
+    view = env.ref(view_xmlid)  # noqa: F821
     resolved = model.get_view(view_id=view.id, view_type='form')
     root = etree.fromstring(resolved['arch'].encode())
     audit[model_name] = {
