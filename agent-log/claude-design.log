@@ -117,3 +117,10 @@
 
 ## 2026-10-29T12:26:00+07:00 — codex supervisor — PR #36 blocker P1 libsass
 Reviewer menemukan `max-width: min(100%, 32rem)` gagal pada smoke UI karena libsass menolak unit campuran di fungsi `min()`. Diganti dengan `width: 32rem; max-width: 100%;` pada `id_form.scss` (commit `a172bb77d5f107ae9e816b8be0ad88284164cbc7`). Dokumentasi handoff dan id_ui_form mencatat sebab, perbaikan, dan status verifikasi. Menunggu CI ulang SHA branch terbaru; tidak menyatakan layout browser selesai. PR #36 tetap draft/HOLD, tidak merge/deploy. Tiga kolom dan stabilitas sticky masih belum selesai.
+
+[2026-10-29T13:07:00+07:00] [INFO] PR #36: regression guards added, verification pending
+- Added test_form_scss_compile.py to compile the production id_form.scss using CI's pinned libsass 0.23.0 and assert the responsive footer sizing declarations remain in compiled CSS.
+- Expanded disposable SO fixture to 18 distinct lines and strengthened Playwright smoke: scroll actual overflow owner, verify the footer remains inside the scrollport, last line is not covered, and horizontal page overflow is absent.
+- Updated docs/ui/id_ui_form.md and HANDOFF. Latest changes are unverified until fresh CI runs finish; do not claim these tests pass yet.
+- Still open: invoice scroll test with populated lines, Odoo 19 CE runtime resolved model/view audit, three-column layout, cross-form sticky stability. PR #36 remains HOLD/draft; no merge/deploy.
+- Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T13:07:00+07:00
