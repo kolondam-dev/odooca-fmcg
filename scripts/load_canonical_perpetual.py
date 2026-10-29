@@ -319,7 +319,7 @@ def _iter_records(res) -> list:
 class CanonicalPerpetualAdapter:
     """Adapter yang memetakan register kanonikal ke model Odoo aktual dengan jaminan idempotensi."""
 
-    def __init__(self, env, reg_path=None, cutoff_date="2026-07-31"):
+    def __init__(self, env, reg_path=None, cutoff_date="2026-07-31", enforce_invoice_cutoff=False):
         self.env = env
         self.cr = env.cr
         self.company = env.company
@@ -333,6 +333,7 @@ class CanonicalPerpetualAdapter:
                 pass
         self.reg_path = reg_path or resolve_canonical_dir()
         self.cutoff_date = cutoff_date
+        self.enforce_invoice_cutoff = enforce_invoice_cutoff
 
         # Verifikasi berkas kanonikal
         self.meta = verify_canonical_fingerprints(self.reg_path)
@@ -2051,6 +2052,9 @@ class CanonicalPerpetualAdapter:
             # Faktur Penjualan Sah (Net of Rejections) dengan product_id & sale_line_ids lengkap
             inv_info = inv_by_so.get(so_num)
             if AccountMove is not None and inv_info:
+                inv_date = inv_info.get("date_invoice", "")
+                if getattr(self, "enforce_invoice_cutoff", False) and self.cutoff_date and inv_date > self.cutoff_date:
+                    continue
                 inv_num = inv_info["invoice_number"]
                 existing_invs = _iter_records(AccountMove.search([("ref", "=", inv_num)]))
                 if len(existing_invs) > 1:
@@ -2826,7 +2830,15 @@ class CanonicalPerpetualAdapter:
                 assert total_so == 1324, f"Jumlah SO tidak lengkap! Expected 1324, got {total_so}"
 
                 total_inv = self.stats["invoices_created"] + self.stats["skipped_invoices"]
-                assert total_inv == 1324, f"Jumlah Invoice tidak lengkap! Expected 1324, got {total_inv}"
+                is_july_cutoff = (
+                    getattr(self, "enforce_invoice_cutoff", False)
+                    and self.cutoff_date
+                    and self.cutoff_date <= "2026-07-31"
+                )
+                if is_july_cutoff:
+                    assert total_inv == 1276, f"Jumlah Invoice cut-off Juli tidak cocok! Expected 1276, got {total_inv}"
+                else:
+                    assert total_inv == 1324, f"Jumlah Invoice tidak lengkap! Expected 1324, got {total_inv}"
 
                 total_ar = self.stats["ar_payments_created"] + self.stats["skipped_ar"]
                 assert total_ar == 967, f"Jumlah AR tidak lengkap! Expected 967, got {total_ar}"

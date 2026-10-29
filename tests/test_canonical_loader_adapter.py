@@ -842,6 +842,20 @@ class MockModel:
                         match = False
                 elif op == "!=" and rec_val == val:
                     match = False
+                elif op in (">", ">=", "<", "<="):
+                    r_comp = str(rec_val) if hasattr(rec_val, "strftime") else rec_val
+                    v_comp = str(val) if hasattr(val, "strftime") else val
+                    try:
+                        if op == ">" and not (r_comp > v_comp):
+                            match = False
+                        elif op == ">=" and not (r_comp >= v_comp):
+                            match = False
+                        elif op == "<" and not (r_comp < v_comp):
+                            match = False
+                        elif op == "<=" and not (r_comp <= v_comp):
+                            match = False
+                    except TypeError:
+                        match = False
                 elif op == "in":
                     val_set = val if isinstance(val, (list, tuple, set)) else [val]
                     raw_rec_val = getattr(rec_val, "id", rec_val)

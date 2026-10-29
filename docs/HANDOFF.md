@@ -1,5 +1,30 @@
 # HANDOFF
 
+## 2026-10-29T13:55:00+07:00 — antigravity agent — Runner Full Dataset Disposable, Two-Phase Cut-Off, & Rekonsiliasi 14 Kunjungan Menjadi 48 Order
+**Konteks & Audit Awal:**
+- Memenuhi arahan pemilik untuk merancang runner full dataset disposable yang dapat diaudit, membuktikan penutupan Juli dan carry-forward Agustus, serta menyusun proposal cut-off runner menggantikan dokumen lama yang tidak ditemukan di git history.
+- Mengaudit matematis perubahan format order pasca-fae5835 (single-principal enforcement): 14 kunjungan outlet pada 31 Juli 2026 menghasilkan tepat 48 SO, 48 DO, dan 48 Faktur single-prinsipal bertanggal 1 Agustus 2026 dengan 1.038 karton reservasi dan DPP Rp 187.858.691,40.
+
+**Implementasi & Deliverables:**
+1. `docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md`: Proposal komprehensif audit pelacakan dokumen lama, rekonsiliasi matematis 14 kunjungan -> 48 order, definisi batas waktu bisnis Asia/Makassar (WITA, UTC+8) dengan konversi UTC eksplisit, arsitektur runner dua fase, dan strategi verifikasi upgrade.
+2. `scripts/ops/verify_disposable_full.py`: Production runner dengan safety guard `assert_disposable_database`, introspeksi metadata lengkap lingkungan runtime (commit SHA, image digest, modul terinstal, timezone, 15 hash SHA256 register kanonikal), `FullDatasetCanonicalOracle`, eksekusi sekuensial Fase 1 (Closing 31 Juli) -> Fase 2 (Opening 1 Agustus Carry-Forward) -> Fase 3 (Idempotensi Run 2 Zero-Drift), pembanding snapshot state mendalam (quants, moves, move_lines, account_moves, aml_records, gl_balances seimbang), asersi anti-fallback salesperson, serta output laporan machine-readable JSON dan ringkasan Markdown.
+3. `.github/workflows/full-dataset-runtime.yml`: Workflow GitHub Actions mandiri (workflow_dispatch & push branch agen/full-dataset*) dengan container postgres:16 dan fmcg-odoo:ci pada database `fmcg_full_disposable`, timeout 45 menit, dan otomatis mengunggah artifact laporan eksekusi tanpa credential.
+4. `scripts/load_canonical_perpetual.py`: Menambahkan parameter `enforce_invoice_cutoff` pada `CanonicalPerpetualAdapter` untuk menahan faktur komersial Agustus pada penutupan Juli dengan preservasi 100% backward-compatibility.
+5. `tests/test_full_dataset_cutoff_and_upgrade.py`: 5 pengujian unit dan penerimaan baru (oracle expectations, pembuktian matematis 14 outlet visits -> 48 pesanan, simulasi dua fase cut-off & idempotensi Run 2 zero-drift, penolakan mutasi negatif kebocoran lintas periode, dan asersi anti-fallback salesperson) terbukti 100% LULUS (5/5 PASS).
+
+**Hasil Verifikasi Lokal:**
+- `ruff check .`: PASS (0 errors/warnings).
+- `python scripts/check_manifests.py`: PASS (4 addon).
+- `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations).
+- `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations).
+- `python -m unittest tests/test_full_dataset_cutoff_and_upgrade.py`: PASS (5/5 tests in 435s).
+- 15 CSV register kanonikal di `data/registers/` 100% beku.
+
+**Status PR & Batasan Operasional:**
+- Branch: `agen/full-dataset-disposable-runner`.
+- Draft PR dibuka targeting `main` untuk peninjauan supervisor `codex`.
+- Proteksi repository dipertahankan: tidak melakukan merge ke `main`, tidak mengubah ruleset main-quality-gate (ID `25827644`), tidak melakukan deployment ke Railway, dan tidak menyentuh database operasional.
+
 ## 2026-10-29T12:39:00+07:00 — antigravity agent — Konfirmasi CI Selesai pada HEAD 3dc93bd (9/9 PASS) & Update Tabel PR #37
 **Status Verifikasi CI HEAD Terbaru (3dc93bd):**
 - Seluruh 9 job unik PR suite pada commit 3dc93bd telah selesai dan terbukti 100% HIJAU (PASS):
