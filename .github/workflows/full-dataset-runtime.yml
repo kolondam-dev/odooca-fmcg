@@ -100,12 +100,12 @@ jobs:
       - name: Ekstraksi Laporan & Ringkasan Runtime
         if: always()
         run: |
-          docker exec odoo cat /opt/full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || \
           docker exec odoo cat /tmp/full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || \
+          docker exec odoo cat /opt/full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || \
           docker exec odoo cat full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || true
 
-          docker exec odoo cat /opt/full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || \
           docker exec odoo cat /tmp/full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || \
+          docker exec odoo cat /opt/full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || \
           docker exec odoo cat full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || true
 
           docker logs odoo > odoo_container.log 2>&1 || true

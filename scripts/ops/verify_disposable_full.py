@@ -769,7 +769,14 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
 
 def run_full_disposable_verification(env, output_dir=None):
     """Fungsi utama eksekusi pembuktian runtime penuh pada Odoo 19 disposable."""
-    output_dir = Path(output_dir or REPO_ROOT)
+    if output_dir:
+        output_dir = Path(output_dir)
+    else:
+        # Utamakan /tmp jika berada di lingkungan Linux container (/opt biasanya non-writable untuk user odoo)
+        if Path("/tmp").is_dir() and os.access("/tmp", os.W_OK):
+            output_dir = Path("/tmp")
+        else:
+            output_dir = Path(REPO_ROOT)
     t0_global = time.time()
     cr = getattr(env, "cr", None)
     db_name = getattr(cr, "dbname", "unknown") if cr else "unknown"
@@ -788,8 +795,6 @@ def run_full_disposable_verification(env, output_dir=None):
         "phases": {},
         "status": "INITIALIZING",
     }
-    json_path = output_dir / "full_dataset_runtime_report.json"
-    md_path = output_dir / "full_dataset_runtime_summary.md"
 
     try:
         print("=" * 80)
@@ -956,21 +961,27 @@ def run_full_disposable_verification(env, output_dir=None):
         raise
 
     finally:
-        # Tulis berkas JSON machine-readable
-        try:
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(report, f, indent=2, default=str)
-            print(f"\n[Laporan JSON] Disimpan di: {json_path}")
-            # Salin ke /tmp jika berbeda direktori untuk kemudahan ekstraksi CI
-            tmp_json = Path("/tmp/full_dataset_runtime_report.json")
-            if json_path != tmp_json and Path("/tmp").is_dir():
-                try:
-                    with open(tmp_json, "w", encoding="utf-8") as f:
-                        json.dump(report, f, indent=2, default=str)
-                except Exception:
-                    pass
-        except Exception as e:
-            print(f"[WARN] Gagal menulis laporan JSON: {e}", file=sys.stderr)
+        # Tulis berkas JSON machine-readable ke direktori yang writable
+        written_json = False
+        candidate_dirs = [output_dir]
+        if Path("/tmp") not in candidate_dirs:
+            candidate_dirs.append(Path("/tmp"))
+        if Path(REPO_ROOT) not in candidate_dirs:
+            candidate_dirs.append(Path(REPO_ROOT))
+
+        for c_dir in candidate_dirs:
+            if not c_dir.is_dir():
+                continue
+            t_json = c_dir / "full_dataset_runtime_report.json"
+            try:
+                with open(t_json, "w", encoding="utf-8") as f:
+                    json.dump(report, f, indent=2, default=str)
+                print(f"\n[Laporan JSON] Disimpan di: {t_json}")
+                written_json = True
+            except Exception as e:
+                print(f"[WARN] Gagal menulis laporan JSON ke {t_json}: {e}", file=sys.stderr)
+        if not written_json:
+            print("[FATAL] Tidak ada direktori writable untuk menyimpan laporan JSON!", file=sys.stderr)
 
         # Tulis ringkasan Markdown dengan asersi status yang tepat
         try:
@@ -1006,16 +1017,16 @@ def run_full_disposable_verification(env, output_dir=None):
             if not is_success and "error" in report:
                 md_summary += f"\n## 3. Detail Kegagalan\n- **Error:** `{report['error']}`\n```\n{report.get('traceback', '')}\n```\n"
 
-            with open(md_path, "w", encoding="utf-8") as f:
-                f.write(md_summary)
-            print(f"[Ringkasan MD] Disimpan di: {md_path}")
-            tmp_md = Path("/tmp/full_dataset_runtime_summary.md")
-            if md_path != tmp_md and Path("/tmp").is_dir():
+            for c_dir in candidate_dirs:
+                if not c_dir.is_dir():
+                    continue
+                t_md = c_dir / "full_dataset_runtime_summary.md"
                 try:
-                    with open(tmp_md, "w", encoding="utf-8") as f:
+                    with open(t_md, "w", encoding="utf-8") as f:
                         f.write(md_summary)
-                except Exception:
-                    pass
+                    print(f"[Ringkasan MD] Disimpan di: {t_md}")
+                except Exception as e:
+                    print(f"[WARN] Gagal menulis ringkasan MD ke {t_md}: {e}", file=sys.stderr)
         except Exception as e:
             print(f"[WARN] Gagal menulis ringkasan Markdown: {e}", file=sys.stderr)
 
