@@ -624,3 +624,10 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai seluruh job selesai sebelum verdict. Hasil belum diklaim.
 - Scope tetap UI/tests/docs. PR #32 tetap draft; tidak merge dan tidak deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:26:00+07:00
+
+
+## Update supervisi PR #36 — 2026-10-29 14:14 +07
+- Regression smoke diperbaiki: assertion sebelumnya mensyaratkan footer bergerak saat scroll, padahal perilaku sticky yang benar adalah stabil setelah sticky threshold. Kini mengukur drift posisi pada 75% dan 100% scroll dan mencetak diagnostik.
+- Commit implementasi tes: `887beebd64c0b3d6e3637abab28a044f3f43b90b`; log supervisi: `124aba30c8d1d49f35bad2709e88af39686abbe0`.
+- CI/status terbaru belum dapat diverifikasi melalui GitHub connector (workflow runs dan commit statuses kosong); ini bukan PASS atau FAIL. Regression test compile SCSS telah dimasukkan ke pola unittest discovery CI, tetapi tetap harus dibuktikan oleh run.
+- Belum selesai: populated invoice scroll test, resolved XML/model audit Odoo 19 CE, implementasi tiga kolom notes | discount | totals, serta penerimaan supervisor. PR #36 tetap draft/HOLD. Tidak merge/deploy.
