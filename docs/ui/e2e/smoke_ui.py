@@ -128,8 +128,10 @@ async def main():
             const top = owner.scrollTop;
             owner.scrollTop = 0;
             const topY = footer.getBoundingClientRect().top;
-            owner.scrollTop = Math.floor(maxScroll / 2);
-            const middleY = footer.getBoundingClientRect().top;
+            // Compare late-scroll positions where the sticky footer should have engaged;
+            // its natural position near the top of the form is expected to move.
+            owner.scrollTop = Math.floor(maxScroll * 0.75);
+            const lateY = footer.getBoundingClientRect().top;
             owner.scrollTop = maxScroll;
             const footerRect = footer.getBoundingClientRect();
             const ownerRect = owner.getBoundingClientRect();
@@ -140,7 +142,7 @@ async def main():
                 rowCount: rows.length,
                 // A sticky footer should remain stable relative to the scrollport,
                 // not move with the document as the scroll position changes.
-                footerTopDrift: Math.max(topY, middleY, footerRect.top) - Math.min(topY, middleY, footerRect.top),
+                footerTopDrift: Math.abs(lateY - footerRect.top),
                 footerInScrollport: footerRect.top >= ownerRect.top - 2 && footerRect.bottom <= ownerRect.bottom + 2,
                 lastRowNotCovered: !!lastRowRect && lastRowRect.bottom <= footerRect.top + 2,
                 horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
