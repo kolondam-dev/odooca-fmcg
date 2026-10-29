@@ -660,3 +660,11 @@ Pemasangan/ORM/HttpCase diuji pada CI; tidak melakukan deployment. UI live dan
 hosting /api/ tetap terkunci, endpoint commands/evidence/assignment delivery belum
 ada. Batas sumber harga/stok, native ACL/record rules dan provisioning dijelaskan
 pada README addon. Kontrak write tetap draft dan authority server belum diaktifkan.
+
+## Build staging baca resmi (tahap3)
+
+`npm run build:staging` menyiapkan UI khusus baca sesi Odoo, daily sync, outlet
+dan katalog. Login memakai halaman Odoo di origin yang sama; static server
+standalone tetap menolak API. Live default tetap terkunci. Panduan gateway,
+provisioning, batas volatile/offline dan acceptance staging nyata tersedia di
+[hosting/STAGING_READ.md](hosting/STAGING_READ.md). Tidak ada deployment oleh PR.
