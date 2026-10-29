@@ -1,3 +1,6 @@
+## 2026-10-29T09:52:00+07:00 — implementasi awal visual footer transaksi
+Branch: `agen/ui-footer-transaction-layout-v1`, berbasis `main` setelah merge PR #35. Perubahan SCSS memberi `.oe_subtotal_footer` panel ringkasan responsif (latar netral, border, alignment kanan, angka tabular) dan memperjelas strip sticky tanpa mengubah model/perhitungan. Belum memenuhi tiga kolom; belum membuktikan pergerakan sticky teratasi. Perlu runtime Odoo 19 CE untuk inspect resolved XML/model dan browser scroll regression. Jangan menambah footer discount palsu. Tidak merge/deploy.
+
 ## 2026-10-29T09:24:05+07:00 — codex supervisor — Sinkronisasi integrasi PR35
 Main ea20ed0 diintegrasikan untuk required checks strict sebelum merge yang diminta pemilik. Tidak ada konflik; scope ikon sidebar/roadmap tetap sama. Menunggu CI integrasi.
 
