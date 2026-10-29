@@ -373,15 +373,15 @@ async def main():
         await page.wait_for_timeout(500)
         await audit_footer("SO mobile", "order_line")
         await page.set_viewport_size({"width": 1440, "height": 860})
-        const zoomBeforeSO = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        zoom_before_so = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
         await page.keyboard.press("Control+Equal")
         await page.wait_for_timeout(700)
-        const zoomAfterSO = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
-        print("SO browser zoom metrics:", {"before": zoomBeforeSO, "after": zoomAfterSO}, flush=True)
+        zoom_after_so = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        print("SO browser zoom metrics:", {"before": zoom_before_so, "after": zoom_after_so}, flush=True)
         check("SO browser zoom actually changes effective browser metrics",
-              zoomBeforeSO.innerWidth !== zoomAfterSO.innerWidth
-              or zoomBeforeSO.dpr !== zoomAfterSO.dpr
-              or zoomBeforeSO.scale !== zoomAfterSO.scale)
+              zoom_before_so["innerWidth"] != zoom_after_so["innerWidth"]
+              or zoom_before_so["dpr"] != zoom_after_so["dpr"]
+              or zoom_before_so["scale"] != zoom_after_so["scale"])
         await audit_footer("SO browser zoom", "order_line")
         await page.keyboard.press("Control+0")
         await page.wait_for_timeout(300)
@@ -441,15 +441,15 @@ async def main():
         await page.wait_for_timeout(500)
         await audit_footer("Invoice mobile", "invoice_line_ids")
         await page.set_viewport_size({"width": 1440, "height": 860})
-        const zoomBeforeInvoice = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        zoom_before_invoice = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
         await page.keyboard.press("Control+Equal")
         await page.wait_for_timeout(700)
-        const zoomAfterInvoice = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
-        print("Invoice browser zoom metrics:", {"before": zoomBeforeInvoice, "after": zoomAfterInvoice}, flush=True)
+        zoom_after_invoice = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        print("Invoice browser zoom metrics:", {"before": zoom_before_invoice, "after": zoom_after_invoice}, flush=True)
         check("Invoice browser zoom actually changes effective browser metrics",
-              zoomBeforeInvoice.innerWidth !== zoomAfterInvoice.innerWidth
-              or zoomBeforeInvoice.dpr !== zoomAfterInvoice.dpr
-              or zoomBeforeInvoice.scale !== zoomAfterInvoice.scale)
+              zoom_before_invoice["innerWidth"] != zoom_after_invoice["innerWidth"]
+              or zoom_before_invoice["dpr"] != zoom_after_invoice["dpr"]
+              or zoom_before_invoice["scale"] != zoom_after_invoice["scale"])
         await audit_footer("Invoice browser zoom", "invoice_line_ids")
         await page.keyboard.press("Control+0")
         await page.wait_for_timeout(300)
