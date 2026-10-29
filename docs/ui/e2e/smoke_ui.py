@@ -137,7 +137,7 @@ async def main():
             const initialScroll = owner.scrollTop;
             owner.scrollTop = 0;
             const ownerRect = owner.getBoundingClientRect();
-            const scrollportBottom = ownerRect.top + owner.clientTop + owner.clientHeight;
+            const scrollportBottomAtZero = ownerRect.top + owner.clientTop + owner.clientHeight;
             // Measure the footer's true normal-flow geometry: disable sticky only for
             // this measurement, then restore the exact inline style before assertions.
             const originalStyle = footer.getAttribute('style');
@@ -151,7 +151,7 @@ async def main():
             const containingBottomAtZero = containingRect.bottom;
             if (originalStyle === null) footer.removeAttribute('style');
             else footer.setAttribute('style', originalStyle);
-            const threshold = Math.max(0, Math.ceil(naturalFooterBottom - scrollportBottom));
+            const threshold = Math.max(0, Math.ceil(naturalFooterBottom - scrollportBottomAtZero));
             // A bottom-sticky box can only remain pinned while the containing block
             // still spans the scrollport bottom. Sample the actual intersection of
             // that interval with the scroll range instead of assuming all late scroll
@@ -165,7 +165,7 @@ async def main():
                 pinStart + pinSpan / 2,
                 pinEnd - Math.min(8, pinSpan / 4),
                 maxScroll
-            ].map(y => Math.max(0, Math.min(maxScroll, Math.round(y))))].sort((a,b) => a-b);
+            ].map(y => Math.max(0, Math.min(maxScroll, Math.round(y)))))].sort((a,b) => a-b);
             const pinned = [];
             for (const y of samples.filter(y => y >= pinStart && y <= pinEnd && pinSpan >= 12)) {
                 owner.scrollTop = y;
