@@ -573,7 +573,7 @@ class TestAccountMoveCogs(TransactionCase):
             self.assertIn("tidak cocok dengan kuantitas baris faktur", str(ctx.exception))
 
     def test_partial_rejection_scenario_accepted(self):
-        """Review 6483144753: Rekonsiliasi eksplisit 84 dikirim - 12 retur = 72 ditagih."""
+        """Review 6483144753 & 6484894956: Rekonsiliasi eksplisit 84 dikirim - 12 retur terikat = 72 ditagih."""
         inv = self._create_basic_invoice(self.company_seed, is_seed=True)
         line = inv.invoice_line_ids[0]
         line.quantity = 72.0
@@ -594,8 +594,135 @@ class TestAccountMoveCogs(TransactionCase):
             company_id=self.company_seed,
             location_id=SimpleNamespace(usage="customer"),
             location_dest_id=SimpleNamespace(usage="internal"),
+            origin_returned_move_id=fake_sm,
+            sale_line_id=fake_sol,
         )
         fake_sol.move_ids = [fake_sm, return_sm]
 
         with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+    def test_unrelated_return_with_similar_prefix_rejected(self):
+        """Review 6484894956: Retur transaksi lain dengan prefix serupa (DO-...010) wajib ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        line.quantity = 8.0
+        fake_sol, fake_sm, valid_stj_am = self._build_valid_stj_and_sm()
+        fake_sm.quantity = 10.0
+        fake_sm.value = 10.0 * 25000.0
+        valid_stj_am.line_ids[0].debit = fake_sm.value
+        valid_stj_am.line_ids[1].credit = fake_sm.value
+
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("tidak cocok dengan kuantitas baris faktur", str(ctx.exception))
+
+    def test_unrelated_return_with_so_in_note_rejected(self):
+        """Review 6484894956: Retur transaksi lain yang menyebut SO di catatan wajib ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        line.quantity = 8.0
+        fake_sol, fake_sm, valid_stj_am = self._build_valid_stj_and_sm()
+        fake_sm.quantity = 10.0
+        fake_sm.value = 10.0 * 25000.0
+        valid_stj_am.line_ids[0].debit = fake_sm.value
+        valid_stj_am.line_ids[1].credit = fake_sm.value
+
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("tidak cocok dengan kuantitas baris faktur", str(ctx.exception))
+
+    def test_unbound_return_in_sol_rejected(self):
+        """Review 6484894956: Retur di sol.move_ids tanpa binding persisten ke outbound/SOL wajib ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        line.quantity = 8.0
+        fake_sol, fake_sm, valid_stj_am = self._build_valid_stj_and_sm()
+        fake_sm.quantity = 10.0
+        fake_sm.value = 10.0 * 25000.0
+        valid_stj_am.line_ids[0].debit = fake_sm.value
+        valid_stj_am.line_ids[1].credit = fake_sm.value
+
+        unbound_return = SimpleNamespace(
+            id=997,
+            name="RET/UNBOUND/01",
+            state="done",
+            date="2026-07-02",
+            quantity=2.0,
+            product_id=self.product,
+            company_id=self.company_seed,
+            location_id=SimpleNamespace(usage="customer"),
+            location_dest_id=SimpleNamespace(usage="internal"),
+            origin_returned_move_id=False,
+            sale_line_id=False,
+        )
+        fake_sol.move_ids = [fake_sm, unbound_return]
+
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("tidak terikat secara relasional persisten", str(ctx.exception))
+
+    def test_bound_return_wrong_company_rejected(self):
+        """Review 6484894956: Retur terikat tetapi dari company lain wajib ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        line.quantity = 72.0
+        fake_sol, fake_sm, valid_stj_am = self._build_valid_stj_and_sm()
+        fake_sm.quantity = 84.0
+        fake_sm.value = 84.0 * 25000.0
+        valid_stj_am.line_ids[0].debit = fake_sm.value
+        valid_stj_am.line_ids[1].credit = fake_sm.value
+
+        return_sm = SimpleNamespace(
+            id=885,
+            name="RET/TEST/01",
+            state="done",
+            date="2026-07-02",
+            quantity=12.0,
+            product_id=self.product,
+            company_id=self.company_other,
+            location_id=SimpleNamespace(usage="customer"),
+            location_dest_id=SimpleNamespace(usage="internal"),
+            origin_returned_move_id=fake_sm,
+            sale_line_id=fake_sol,
+        )
+        fake_sol.move_ids = [fake_sm, return_sm]
+
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("berasal dari company lain", str(ctx.exception))
+
+    def test_bound_return_wrong_destination_rejected(self):
+        """Review 6484894956: Retur terikat dengan destinasi supplier wajib ditolak."""
+        inv = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = inv.invoice_line_ids[0]
+        line.quantity = 72.0
+        fake_sol, fake_sm, valid_stj_am = self._build_valid_stj_and_sm()
+        fake_sm.quantity = 84.0
+        fake_sm.value = 84.0 * 25000.0
+        valid_stj_am.line_ids[0].debit = fake_sm.value
+        valid_stj_am.line_ids[1].credit = fake_sm.value
+
+        return_sm = SimpleNamespace(
+            id=885,
+            name="RET/TEST/01",
+            state="done",
+            date="2026-07-02",
+            quantity=12.0,
+            product_id=self.product,
+            company_id=self.company_seed,
+            location_id=SimpleNamespace(usage="customer"),
+            location_dest_id=SimpleNamespace(usage="supplier"),
+            origin_returned_move_id=fake_sm,
+            sale_line_id=fake_sol,
+        )
+        fake_sol.move_ids = [fake_sm, return_sm]
+
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
+            with self.assertRaises(UserError) as ctx:
+                inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+            self.assertIn("Arah pergerakan retur", str(ctx.exception))

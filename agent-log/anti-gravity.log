@@ -1051,3 +1051,14 @@
 - Pada verify_disposable_slice.py (verify_loader_boundary_transaction_rollback): Menyelaraskan nama method adapter yang di-mock untuk injeksi kegagalan dari load_returns_and_quarantine menjadi load_rejections_quarantine sesuai nama fungsi resmi CanonicalPerpetualAdapter.
 - Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), verify_seed_invariants PASS, verify_seed_acceptance PASS.
 - Task managed by antigravity at 2026-10-29T07:42:00+07:00
+
+
+[2026-10-29T08:30:00+07:00] [INFO] Resolusi P1 Review Supervisi PR #15 (issuecomment-6484894956): Relasi Persisten origin_returned_move_id & Eliminasi Teks Bebas Retur
+- Eliminasi Total Teks Bebas / Substring: Menghapus candidate_refs dan parsing teks ret_text/note/origin pada account.move._is_seed_commercial_invoice_with_posted_delivery_cogs.
+- Binding Relasional Persisten: Retur karantina dikumpulkan dan divalidasi strictly melalui sol.move_ids, out_m.returned_move_ids, dan origin_returned_move_id in outbound_move_ids pada stock.move.
+- Validasi Ketat Retur: Memastikan state done, company_id cocok, product_id cocok, arah customer -> internal/inventory, dan wajib terikat persisten ke outbound move atau SOL faktur ini (unbound return atau return transaksi lain memicu UserError).
+- Pembaruan Canonical Loader: load_rejections_quarantine mengikat origin_returned_move_id ke outbound move delivery dan sale_line_id ke baris pesanan SO kanonikal.
+- Regression Tests COGS: Menambahkan 5 tes spesifik menangkal counterexample supervisi (prefix serupa DO-...010 ditolak, SO di note ditolak, unbound return ditolak, wrong company ditolak, wrong destination ditolak).
+- Verifikasi Oracle Kanonikal: Menambahkan asersi binding persisten origin_returned_move_id pada verify_run1_against_canonical_oracle.
+- Hasil Verifikasi: ruff check PASS, check_manifests PASS (4 addon), test_canonical_loader_adapter.py PASS (20/20 mutasi ditolak), verify_seed_invariants PASS, verify_seed_acceptance PASS. 15 CSV register kanonikal 100% beku. PR #15 tidak dimerge dan tidak dideploy.
+- Task managed by antigravity at 2026-10-29T08:30:00+07:00

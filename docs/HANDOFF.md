@@ -1,5 +1,23 @@
 # HANDOFF
 
+## 2026-10-29 — antigravity agent — Resolusi P1 Review Supervisi PR #15: Relasi Persisten origin_returned_move_id & Eliminasi Teks Bebas Retur
+**Konteks & Resolusi:**
+- Mengatasi temuan P1 terakhir dari review supervisi PR #15 ([issuecomment-6484894956](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6484894956)):
+  1. *Eliminasi Total Fuzzy Text/Substring Matching*: Menghapus `candidate_refs` dan evaluasi string pada `ret_text = f"{ret_note} {ret_orig}"` di `addons/id_base/models/account_move.py`.
+  2. *Relasi Persisten Eksak Odoo*: Mengumpulkan pergerakan retur hanya melalui relasi ORM yang sah (`sol.move_ids` berarah customer -> internal/inventory, `out_m.returned_move_ids`, dan pencarian `stock.move` dengan `origin_returned_move_id in outbound_move_ids`).
+  3. *Validasi Ketat Retur*: Memeriksa status `done`, kesesuaian `company_id`, kesesuaian `product_id`, validitas arah rute (customer -> internal/inventory), serta mengonfirmasi bahwa setiap move retur terikat secara relasional persisten ke `line_outbound_moves` atau `sol_list`. Retur tanpa relasi persisten atau retur dari transaksi lain memicu `UserError`.
+  4. *Pembaruan Loader Kanonikal*: Pada `scripts/load_canonical_perpetual.py` (`load_rejections_quarantine`), mengaitkan move retur karantina secara persisten ke outbound move pengiriman customer terkait (`origin_returned_move_id = out_sm.id`) dan baris pesanan penjualan (`sale_line_id = target_sol.id`).
+  5. *Regression Tests*: Menambahkan 5 kasus uji negatif baru di `addons/id_base/tests/test_account_move_cogs.py` yang mereproduksi skenario counterexample supervisi (prefix serupa ditolak, SO di note ditolak, retur tanpa binding ditolak, retur beda company ditolak, retur tujuan non-internal ditolak).
+  6. *Oracle Verifikasi*: Menambahkan asersi verifikasi keterikatan relasional persisten `origin_returned_move_id` pada `scripts/ops/verify_disposable_slice.py`.
+- Hasil Verifikasi:
+  * `python -m ruff check .`: All checks passed!
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python tests/test_canonical_loader_adapter.py`: 63/63 PASS (termasuk 20/20 mutasi aktif ditolak)
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * 15 file CSV register kanonikal di `data/registers/` 100% beku tanpa modifikasi.
+  * PR #15 tidak dimerge ke `main` dan tidak dideploy ke Railway.
+
 ## 2026-10-29 — antigravity agent — Koreksi Penamaan Method Step Karantina pada Injeksi Kegagalan Rollback Loader Boundary
 **Konteks & Resolusi:**
 - Pada `scripts/ops/verify_disposable_slice.py` (`verify_loader_boundary_transaction_rollback`), menyelaraskan penamaan step yang di-mock untuk injeksi kegagalan tak terduga:

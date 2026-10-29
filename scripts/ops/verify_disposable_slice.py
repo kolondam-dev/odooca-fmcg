@@ -944,6 +944,20 @@ def verify_run1_against_canonical_oracle(env, adapter, reg_path, target_so_slice
         verified_valuation_am_ids.add(rej_ams[0].id)
         expected_date_by_am_id[rej_ams[0].id] = rej["rejection_date"]
 
+        if hasattr(rmv0, "origin_returned_move_id") and rmv0.origin_returned_move_id:
+            orig_m = rmv0.origin_returned_move_id
+            if isinstance(orig_m, int) and "stock.move" in env:
+                orig_m = env["stock.move"].browse(orig_m)
+            assert orig_m.product_id == rmv0.product_id, (
+                "[canonical_oracle] Produk origin_returned_move_id retur karantina tidak cocok!"
+            )
+            assert getattr(getattr(orig_m, "location_dest_id", None), "usage", "") == "customer", (
+                "[canonical_oracle] Asal outbound origin_returned_move_id bukan customer delivery!"
+            )
+            print(
+                f" -> [Oracle Karantina Binding] {rej_id} terbukti terikat relasional persisten ke "
+                f"outbound move {getattr(orig_m, 'id', orig_m)}."
+            )
         print(f" -> [Oracle Karantina] {rej_id} verified {act_rej_qty} unit {act_rej_sku} di lokasi {dest_name}.")
 
     # Verifikasi total seluruh StockPicking di DB (5 PO + N SO + M REJ tanpa ekstra/duplikat)

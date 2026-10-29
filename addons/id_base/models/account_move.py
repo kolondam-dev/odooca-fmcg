@@ -242,71 +242,105 @@ class AccountMove(models.Model):
                 for sm in line_outbound_moves
             )
 
+            # Relasi persisten eksak ke outbound move / SOL untuk retur (Review 6484894956)
+            outbound_move_ids = [m.id for m in line_outbound_moves if hasattr(m, "id") and m.id]
+            sol_ids = [s.id for s in sol_list if hasattr(s, "id") and s.id]
+            seen_return_ids = set()
+            bound_return_moves = []
+
+            # 1. Kumpulkan retur dari sol.move_ids (line_return_moves)
+            for ret_sm in line_return_moves:
+                r_id = getattr(ret_sm, "id", None)
+                if r_id and r_id in seen_return_ids:
+                    continue
+                if r_id:
+                    seen_return_ids.add(r_id)
+                bound_return_moves.append(ret_sm)
+
+            # 2. Kumpulkan retur dari sm.returned_move_ids pada pergerakan outbound
+            for out_m in line_outbound_moves:
+                for ret_sm in getattr(out_m, "returned_move_ids", None) or []:
+                    r_id = getattr(ret_sm, "id", None)
+                    if r_id and r_id in seen_return_ids:
+                        continue
+                    if r_id:
+                        seen_return_ids.add(r_id)
+                    bound_return_moves.append(ret_sm)
+
+            # 3. Kumpulkan retur dari database via relasi persisten origin_returned_move_id
+            if hasattr(self, "env") and "stock.move" in self.env and outbound_move_ids:
+                StockMove = self.env["stock.move"].sudo()
+                db_returns = StockMove.search([
+                    ("origin_returned_move_id", "in", outbound_move_ids),
+                    ("company_id", "=", company.id),
+                    ("product_id", "=", line_prod.id),
+                    ("state", "=", "done"),
+                    ("location_id.usage", "=", "customer"),
+                ])
+                for ret_sm in db_returns:
+                    if ret_sm.id not in seen_return_ids:
+                        seen_return_ids.add(ret_sm.id)
+                        bound_return_moves.append(ret_sm)
+
+            # 4. Validasi ketat SETIAP pergerakan retur yang terikat
+            validated_return_moves = []
+            for ret_sm in bound_return_moves:
+                if getattr(ret_sm, "state", "") != "done":
+                    raise UserError(
+                        f"[id_base] Pergerakan retur '{getattr(ret_sm, 'name', ret_sm.id)}' belum berstatus 'done'!"
+                    )
+                ret_comp = getattr(ret_sm, "company_id", None)
+                if ret_comp and getattr(ret_comp, "id", None) != company.id:
+                    raise UserError(
+                        f"[id_base] Pergerakan retur '{getattr(ret_sm, 'name', ret_sm.id)}' berasal dari company lain!"
+                    )
+                ret_prod = getattr(ret_sm, "product_id", None)
+                if ret_prod and getattr(ret_prod, "id", None) != getattr(line_prod, "id", None):
+                    raise UserError(
+                        f"[id_base] Produk retur '{getattr(ret_prod, 'display_name', ret_prod)}' "
+                        f"tidak cocok dengan produk faktur!"
+                    )
+                ret_src = getattr(getattr(ret_sm, "location_id", None), "usage", "")
+                ret_dest = getattr(getattr(ret_sm, "location_dest_id", None), "usage", "")
+                if ret_src != "customer" or ret_dest not in ("internal", "inventory"):
+                    raise UserError(
+                        f"[id_base] Arah pergerakan retur '{getattr(ret_sm, 'name', ret_sm.id)}' tidak sah "
+                        f"(asal: '{ret_src}', tujuan: '{ret_dest}')!"
+                    )
+
+                # Relasi persisten WAJIB mengikat ke outbound move milik SOL faktur ini atau SOL faktur ini
+                orig_m = getattr(ret_sm, "origin_returned_move_id", None)
+                ret_sol = getattr(ret_sm, "sale_line_id", None)
+                is_bound_to_outbound = (
+                    orig_m and (
+                        orig_m in line_outbound_moves
+                        or (hasattr(orig_m, "id") and orig_m.id in outbound_move_ids)
+                        or (isinstance(orig_m, int) and orig_m in outbound_move_ids)
+                    )
+                )
+                is_bound_to_sol = (
+                    ret_sol and (
+                        ret_sol in sol_list
+                        or (hasattr(ret_sol, "id") and ret_sol.id in sol_ids)
+                        or (isinstance(ret_sol, int) and ret_sol in sol_ids)
+                    )
+                )
+                if not is_bound_to_outbound and not is_bound_to_sol:
+                    raise UserError(
+                        f"[id_base] Pergerakan retur '{getattr(ret_sm, 'name', ret_sm.id)}' tidak terikat "
+                        f"secara relasional persisten pada pengiriman outbound faktur ini!"
+                    )
+
+                validated_return_moves.append(ret_sm)
+
             return_base_qty = sum(
                 _convert_qty_to_product_uom(
                     float(getattr(sm, "quantity", getattr(sm, "product_uom_qty", 0.0)) or 0.0),
                     getattr(sm, "product_uom", getattr(sm, "product_uom_id", None)),
                     line_prod,
                 )
-                for sm in line_return_moves
+                for sm in validated_return_moves
             )
-
-            if abs(dispatched_base_qty - line_base_qty) > 0.001 and return_base_qty == 0.0:
-                if hasattr(self, "env") and "stock.move" in self.env:
-                    StockMove = self.env["stock.move"].sudo()
-                    matching_returns = StockMove.search([
-                        ("product_id", "=", line_prod.id),
-                        ("company_id", "=", company.id),
-                        ("state", "=", "done"),
-                        ("location_id.usage", "=", "customer"),
-                    ])
-                    candidate_refs = set()
-                    if inv_origin:
-                        candidate_refs.add(inv_origin)
-                        if inv_origin.startswith("SO-"):
-                            candidate_refs.add("DO-" + inv_origin[3:])
-                            candidate_refs.add(inv_origin[3:])
-                    for m in line_outbound_moves:
-                        m_orig = getattr(m, "origin", "") or ""
-                        if m_orig:
-                            candidate_refs.add(m_orig)
-                            if m_orig.startswith("SO-"):
-                                candidate_refs.add("DO-" + m_orig[3:])
-                                candidate_refs.add(m_orig[3:])
-                        m_pick = getattr(m, "picking_id", None)
-                        if m_pick:
-                            p_name = getattr(m_pick, "name", "") or ""
-                            if p_name:
-                                candidate_refs.add(p_name)
-                            p_orig = getattr(m_pick, "origin", "") or ""
-                            if p_orig:
-                                candidate_refs.add(p_orig)
-                    for sol in sol_list:
-                        ord_obj = getattr(sol, "order_id", None)
-                        if ord_obj:
-                            o_name = getattr(ord_obj, "name", "") or ""
-                            if o_name:
-                                candidate_refs.add(o_name)
-                                if o_name.startswith("SO-"):
-                                    candidate_refs.add("DO-" + o_name[3:])
-                                    candidate_refs.add(o_name[3:])
-                            o_ref = getattr(ord_obj, "client_order_ref", "") or ""
-                            if o_ref:
-                                candidate_refs.add(o_ref)
-                                if o_ref.startswith("SO-"):
-                                    candidate_refs.add("DO-" + o_ref[3:])
-                                    candidate_refs.add(o_ref[3:])
-
-                    for ret_sm in matching_returns:
-                        ret_note = str(getattr(getattr(ret_sm, "picking_id", None), "note", "") or "")
-                        ret_orig = str(getattr(ret_sm, "origin", "") or "")
-                        ret_text = f"{ret_note} {ret_orig}"
-                        if any(c_ref and c_ref in ret_text for c_ref in candidate_refs):
-                            return_base_qty += _convert_qty_to_product_uom(
-                                float(getattr(ret_sm, "quantity", getattr(ret_sm, "product_uom_qty", 0.0)) or 0.0),
-                                getattr(ret_sm, "product_uom", getattr(ret_sm, "product_uom_id", None)),
-                                line_prod,
-                            )
 
             net_delivered_base_qty = dispatched_base_qty - return_base_qty
             if abs(net_delivered_base_qty - line_base_qty) > 0.001:

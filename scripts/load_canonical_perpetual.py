@@ -2275,6 +2275,59 @@ class CanonicalPerpetualAdapter:
                             "company_id": self.company.id,
                         })
 
+                # Temukan outbound move dan sale.order.line terkait untuk persistent binding
+                out_sm = None
+                target_sol = None
+                SaleOrder = self.env["sale.order"].sudo() if "sale.order" in self.env else None
+                if SaleOrder is not None:
+                    matching_sos = _iter_records(SaleOrder.search([("client_order_ref", "=", p_data["so_number"])]))
+                    if matching_sos:
+                        so_rec = matching_sos[0]
+                        for s_line in getattr(so_rec, "order_line", []):
+                            s_prod_id = getattr(getattr(s_line, "product_id", None), "id", None)
+                            if s_prod_id == (prod.id if prod else None):
+                                target_sol = s_line
+                                for m in getattr(s_line, "move_ids", []):
+                                    m_dest = getattr(getattr(m, "location_dest_id", None), "usage", "")
+                                    m_prod_id = getattr(getattr(m, "product_id", None), "id", None)
+                                    if (
+                                        getattr(m, "state", "") == "done"
+                                        and m_dest == "customer"
+                                        and m_prod_id == (prod.id if prod else None)
+                                    ):
+                                        out_sm = m
+                                        break
+                                if out_sm:
+                                    break
+                        if not out_sm:
+                            for p in getattr(so_rec, "picking_ids", []):
+                                for m in getattr(p, "move_ids", []):
+                                    m_dest = getattr(getattr(m, "location_dest_id", None), "usage", "")
+                                    m_prod_id = getattr(getattr(m, "product_id", None), "id", None)
+                                    if (
+                                        getattr(m, "state", "") == "done"
+                                        and m_dest == "customer"
+                                        and m_prod_id == (prod.id if prod else None)
+                                    ):
+                                        out_sm = m
+                                        if not target_sol and getattr(m, "sale_line_id", None):
+                                            target_sol = m.sale_line_id
+                                        break
+                                if out_sm:
+                                    break
+                if not out_sm and "stock.move" in self.env and prod:
+                    StockMove = self.env["stock.move"].sudo()
+                    cand_moves = StockMove.search([
+                        ("origin", "=", p_data["so_number"]),
+                        ("product_id", "=", prod.id),
+                        ("state", "=", "done"),
+                        ("location_dest_id.usage", "=", "customer"),
+                    ], limit=1)
+                    if cand_moves:
+                        out_sm = cand_moves[0]
+                        if not target_sol and getattr(out_sm, "sale_line_id", None):
+                            target_sol = out_sm.sale_line_id
+
                 uom_rec = getattr(prod, "uom_id", None)
                 move_item = {
                     "product_id": prod.id if prod else False,
@@ -2285,6 +2338,10 @@ class CanonicalPerpetualAdapter:
                     "company_id": self.company.id,
                 }
                 mv_fields = _safe_fields(self.env["stock.move"]) if "stock.move" in self.env else {}
+                if out_sm and ("origin_returned_move_id" in mv_fields or not mv_fields):
+                    move_item["origin_returned_move_id"] = out_sm.id
+                if target_sol and ("sale_line_id" in mv_fields or not mv_fields):
+                    move_item["sale_line_id"] = target_sol.id
                 if "name" in mv_fields:
                     move_item["name"] = f"Retur Karantina {rej_id} - {prod.display_name if prod else ''}"
                 if "description_picking" in mv_fields:
@@ -2324,6 +2381,16 @@ class CanonicalPerpetualAdapter:
                     expected_src_loc=customer_loc,
                     expected_dest_loc=quarantine_loc,
                 )
+                for ret_mv in getattr(pick, "move_ids", []):
+                    w_vals = {}
+                    if out_sm and getattr(ret_mv, "origin_returned_move_id", None) != out_sm:
+                        if "origin_returned_move_id" in _safe_fields(ret_mv) or not _safe_fields(ret_mv):
+                            w_vals["origin_returned_move_id"] = out_sm.id
+                    if target_sol and getattr(ret_mv, "sale_line_id", None) != target_sol:
+                        if "sale_line_id" in _safe_fields(ret_mv) or not _safe_fields(ret_mv):
+                            w_vals["sale_line_id"] = target_sol.id
+                    if w_vals:
+                        ret_mv.write(w_vals)
             elif prod and StockQuant:
                 # Fallback HANYA jika StockPicking tidak tersedia dalam lingkungan modul
                 existing_quant = StockQuant.search([
