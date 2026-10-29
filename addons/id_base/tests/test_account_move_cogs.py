@@ -9,6 +9,25 @@ from odoo.exceptions import UserError
 from odoo.tests import TransactionCase, tagged
 
 
+class MockRecordSet(list):
+    """Mock recordset yang mendukung traversal Many2one/Many2many untuk kompatibilitas sale_stock."""
+    def __getattr__(self, name):
+        vals = [getattr(x, name, None) for x in self if getattr(x, name, None) is not None]
+        flat = []
+        for v in vals:
+            if isinstance(v, list):
+                flat.extend(v)
+            else:
+                flat.append(v)
+        return MockRecordSet(flat)
+
+    def mapped(self, field_name):
+        return [getattr(x, field_name, False) for x in self]
+
+    def filtered(self, func):
+        return MockRecordSet([x for x in self if func(x)])
+
+
 @tagged("post_install", "-at_install", "id_base")
 class TestAccountMoveCogs(TransactionCase):
     """Pengujian integrasi Odoo ORM TransactionCase terhadap hook COGS dan predikat seed."""
@@ -206,6 +225,7 @@ class TestAccountMoveCogs(TransactionCase):
                 name="SO-202607-0001",
                 company_id=self.company_seed,
                 fmcg_seed_batch="CANONICAL_JULY_2026_PERPETUAL",
+                incoterm_location=False,
             ),
             move_ids=[fake_sm],
         )
@@ -246,10 +266,15 @@ class TestAccountMoveCogs(TransactionCase):
         line = inv.invoice_line_ids[0]
         fake_sol_empty = SimpleNamespace(
             name="Empty SOL",
-            order_id=SimpleNamespace(name="SO-202607-0001", company_id=self.company_seed),
+            order_id=SimpleNamespace(
+                name="SO-202607-0001",
+                company_id=self.company_seed,
+                fmcg_seed_batch="CANONICAL_JULY_2026_PERPETUAL",
+                incoterm_location=False,
+            ),
             move_ids=[],
         )
-        with patch.object(type(line), "sale_line_ids", [fake_sol_empty], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol_empty]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("tidak memiliki pergerakan pengiriman", str(ctx.exception))
@@ -284,7 +309,7 @@ class TestAccountMoveCogs(TransactionCase):
             move_ids=[fake_sm],
         )
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("belum berstatus 'posted'", str(ctx.exception))
@@ -319,7 +344,7 @@ class TestAccountMoveCogs(TransactionCase):
             move_ids=[fake_sm],
         )
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("diharapkan 'STJ'", str(ctx.exception))
@@ -330,7 +355,7 @@ class TestAccountMoveCogs(TransactionCase):
         line = inv.invoice_line_ids[0]
         fake_sol, _, _ = self._build_valid_stj_and_sm()
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
             # COGS duplikat disupresi (mengembalikan [])
             out_vals = inv._stock_account_prepare_realtime_out_lines_vals()
@@ -343,7 +368,7 @@ class TestAccountMoveCogs(TransactionCase):
         fake_sol, _, valid_stj_am = self._build_valid_stj_and_sm()
         valid_stj_am.date = "1999-01-01"
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("Tanggal jurnal valuasi '1999-01-01' tidak cocok", str(ctx.exception))
@@ -360,7 +385,7 @@ class TestAccountMoveCogs(TransactionCase):
             if aml.credit > 0:
                 aml.credit = 1.0
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("tidak sesuai dengan nilai valuasi pergerakan barang", str(ctx.exception))
@@ -372,7 +397,7 @@ class TestAccountMoveCogs(TransactionCase):
         fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
         fake_sm.product_id = self.product_alt
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("tidak cocok dengan produk baris faktur", str(ctx.exception))
@@ -384,7 +409,7 @@ class TestAccountMoveCogs(TransactionCase):
         fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
         fake_sm.company_id = self.company_foreign
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("berasal dari company lain", str(ctx.exception))
@@ -404,7 +429,7 @@ class TestAccountMoveCogs(TransactionCase):
         fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
         fake_sm.account_move_id = False
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("account_move_id kosong", str(ctx.exception))
@@ -420,7 +445,7 @@ class TestAccountMoveCogs(TransactionCase):
         mixed_moves = inv_seed | inv_ordinary
 
         # Mock parent native call pada class AccountMove
-        with patch.object(type(line_seed), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line_seed), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             # inv_seed adalah seed valid
             self.assertTrue(inv_seed._is_seed_commercial_invoice_with_posted_delivery_cogs())
             # inv_ordinary adalah non-seed
@@ -453,10 +478,10 @@ class TestAccountMoveCogs(TransactionCase):
         fake_sm2.id = 884
         fake_sol.move_ids = [fake_sm, fake_sm2]
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
-            self.assertIn("tidak sesuai dengan total nilai valuasi", str(ctx.exception))
+            self.assertIn("tidak sesuai dengan nilai valuasi pergerakan barang", str(ctx.exception))
 
     def test_two_moves_with_two_amls_accepted(self):
         """Review 6483144753: Dua stock move dengan dua AML (500k vs 500k) wajib diterima."""
@@ -482,7 +507,7 @@ class TestAccountMoveCogs(TransactionCase):
         )
         valid_stj_am.line_ids.extend([aml_debit2, aml_credit2])
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
 
     def test_direction_supplier_rejected(self):
@@ -492,7 +517,7 @@ class TestAccountMoveCogs(TransactionCase):
         fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
         fake_sm.location_dest_id = SimpleNamespace(usage="supplier")
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("Arah pergerakan stok", str(ctx.exception))
@@ -504,7 +529,7 @@ class TestAccountMoveCogs(TransactionCase):
         fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
         fake_sm.location_id = SimpleNamespace(usage="customer")
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("Arah pergerakan stok", str(ctx.exception))
@@ -516,7 +541,7 @@ class TestAccountMoveCogs(TransactionCase):
         fake_sol, _, _ = self._build_valid_stj_and_sm()
         fake_sol.order_id.fmcg_seed_batch = False
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("memiliki batch identitas", str(ctx.exception))
@@ -530,7 +555,7 @@ class TestAccountMoveCogs(TransactionCase):
         fake_sol, fake_sm, _ = self._build_valid_stj_and_sm()
         fake_sm.quantity = 10.0
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             with self.assertRaises(UserError) as ctx:
                 inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
             self.assertIn("tidak cocok dengan kuantitas baris faktur", str(ctx.exception))
@@ -560,5 +585,5 @@ class TestAccountMoveCogs(TransactionCase):
         )
         fake_sol.move_ids = [fake_sm, return_sm]
 
-        with patch.object(type(line), "sale_line_ids", [fake_sol], create=True):
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([fake_sol]), create=True):
             self.assertTrue(inv._is_seed_commercial_invoice_with_posted_delivery_cogs())

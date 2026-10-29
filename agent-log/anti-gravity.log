@@ -1018,3 +1018,10 @@
 - Real Accounting Proof: verifikasi ord_cogs nonempty (len >= 2), debit/credit balance > 0, pembentukan out_refund & in_invoice nyata dengan product lines, dan fixture isolation property_valuation
 - Loader Boundary Rollback: eksekusi CanonicalPerpetualAdapter.run_all() dengan failure injection setelah partial write quant, documents, dan AML, membuktikan cr.rollback() dipanggil, commit dicegah, zero leakage, dan pre_snap == post_snap
 - Task managed by antigravity at 2026-10-29T06:45:00+07:00
+
+
+[2026-10-29T07:10:00+07:00] [INFO] Perbaikan Urutan Pengiriman-Karantina-Faktur dan Kompatibilitas Mock Recordset sale_stock
+- Urutan Loader Canonical: Memisahkan pembuatan SO & validasi pengiriman DO, eksekusi pemuatan retur karantina fisik, baru kemudian penerbitan & posting faktur komersial. Memastikan formula 'dispatched - return == billed' (mis. 84 - 12 == 72) terpenuhi saat faktur di-posting di database Odoo riil.
+- Kompatibilitas Mock Recordset: Mengimplementasikan MockRecordSet(list) pada test_account_move_cogs.py yang mendukung relasi bertingkat (.order_id dan .mapped('incoterm_location')) untuk mencegah AttributeError saat modul sale_stock terinstal.
+- Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), test_canonical_loader_adapter.py (63/63 PASS, 20/20 mutasi ditolak), verify_seed_invariants PASS, verify_seed_acceptance PASS.
+- Task managed by antigravity at 2026-10-29T07:10:00+07:00

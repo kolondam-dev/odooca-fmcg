@@ -1,5 +1,25 @@
 # HANDOFF
 
+## 2026-10-29 — antigravity agent — Penyelarasan Urutan Pemuatan Retur Karantina Fisik Mendahului Faktur Komersial & Kompatibilitas Mock Recordset sale_stock
+**Konteks & Resolusi:**
+- Memperbaiki kegagalan `init-test` dan `install-test` pada runner Odoo CI:
+  1. *Urutan Pemuatan Loader Canonical*:
+     - Pada `scripts/load_canonical_perpetual.py`, loop `load_sales_deliveries_and_invoices` sebelumnya langsung membuat dan mem-posting faktur komersial sebelum retur karantina fisik diproses di `load_rejections_quarantine`.
+     - Akibatnya, pada pesanan yang mengalami retur karantina (`SO-202607-0063`, 84 unit dikirim dan 12 unit diretur karantina, faktur 72 unit), validasi rekonsiliasi pengiriman bersih `dispatched_base_qty - return_base_qty == billed_base_qty` gagal karena retur karantina belum ada di database saat posting faktur.
+     - Memisahkan alur menjadi dua fase: (1) Konfirmasi SO dan validasi DO pengiriman fisik, (2) Eksekusi `self.load_rejections_quarantine(...)` untuk memindahkan barang retur ke gudang karantina, (3) Pembuatan dan posting faktur komersial sah setelah pengiriman fisik bersih tercatat lengkap.
+  2. *Kompatibilitas Mock Recordset dengan sale_stock*:
+     - Pada `addons/id_base/tests/test_account_move_cogs.py`, saat modul `sale_stock` diinstal, Odoo memanggil `move.line_ids.sale_line_ids.order_id` dan `sale_line_ids.mapped('incoterm_location')`.
+     - Patching `sale_line_ids` sebelumnya menggunakan list Python biasa yang melempar `AttributeError: 'list' object has no attribute 'order_id'`.
+     - Mengimplementasikan `MockRecordSet(list)` dengan `__getattr__`, `mapped()`, dan `filtered()` untuk mendukung traversal Many2one/Many2many Odoo recordset.
+- Hasil Verifikasi:
+  * `python -m ruff check .`: All checks passed!
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python -m unittest tests/test_canonical_loader_adapter.py`: 63/63 tests PASS, 20/20 mutasi ditolak
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * 15 file CSV register kanonikal di `data/registers/` 100% beku tanpa modifikasi.
+  * PR #15 tidak dimerge ke `main` dan tidak dideploy ke Railway.
+
 ## 2026-10-29 — antigravity agent — Resolusi Tuntas 4 Temuan Supervisi PR #15 (issuecomment-6483144753): Anti-AML Reuse, Strict Direction & UoM Normalization, SO Persistent Seed Batch, Real Accounting Proof & Loader Boundary Rollback
 **Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6483144753](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6483144753)):**
 - Menindaklanjuti audit supervisi pada commit `c5450dd` yang mengidentifikasi 3 blocker P1 dan 1 temuan P2:

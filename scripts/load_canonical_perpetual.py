@@ -1966,6 +1966,7 @@ class CanonicalPerpetualAdapter:
         inv_by_so = {iv["so_number"]: iv for iv in inv_rows}
         del_by_so = {dl["so_number"]: dl for dl in del_rows}
 
+        sos_by_num = {}
         for so_data in so_rows:
             header_p = build_so_header_payload(so_data)
             so_num = header_p["so_number"]
@@ -2035,6 +2036,17 @@ class CanonicalPerpetualAdapter:
                             expected_dest_loc=getattr(self, "seed_customer_loc", None),
                         )
                         self.stats["do_validated"] += 1
+
+            sos_by_num[so_num] = so
+
+        # Muat retur karantina terkait sebelum faktur komersial dibuat dan di-posting,
+        # agar rekonsiliasi pengiriman bersih (dispatched - return == billed) terpenuhi secara fisik
+        self.load_rejections_quarantine(limit_orders=limit_orders, target_so_numbers=target_so_numbers)
+
+        for so_data in so_rows:
+            header_p = build_so_header_payload(so_data)
+            so_num = header_p["so_number"]
+            so = sos_by_num.get(so_num)
 
             # Faktur Penjualan Sah (Net of Rejections) dengan product_id & sale_line_ids lengkap
             inv_info = inv_by_so.get(so_num)
@@ -2709,9 +2721,10 @@ class CanonicalPerpetualAdapter:
             self.load_sales_deliveries_and_invoices(
                 limit_orders=limit_orders, target_so_numbers=target_so_numbers
             )
-            self.load_rejections_quarantine(
-                limit_orders=limit_orders, target_so_numbers=target_so_numbers
-            )
+            if not self.stats["quarantine_rejections"] and not self.stats["skipped_quarantine"]:
+                self.load_rejections_quarantine(
+                    limit_orders=limit_orders, target_so_numbers=target_so_numbers
+                )
             self.load_payments(
                 limit_orders=limit_orders, target_so_numbers=target_so_numbers
             )
