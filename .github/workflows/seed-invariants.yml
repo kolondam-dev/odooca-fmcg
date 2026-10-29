@@ -1,0 +1,43 @@
+name: Seed supervision
+on:
+  pull_request:
+  push:
+    branches: [main, 'agen/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: seed-supervision-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  invariant-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -p 'test_*.py' -v
+  seed-invariants:
+    needs: invariant-tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate committed artifacts independently
+        run: python scripts/ops/verify_seed_invariants.py --report invariant-report.json
+      - name: Validate source acceptance independently
+        if: always()
+        run: python scripts/ops/verify_seed_acceptance.py --report acceptance-report.json
+      - name: Publish diagnostics on success or failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seed-invariant-report-${{ github.sha }}
+          path: |
+            invariant-report.json
+            acceptance-report.json
+          if-no-files-found: error
+          retention-days: 30

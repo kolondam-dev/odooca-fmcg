@@ -25,11 +25,11 @@ if [ "$(id -u)" = "0" ]; then
   elif command -v runuser >/dev/null 2>&1; then
     exec runuser -u odoo -- "$0" "$@"
   else
-    exec su -s /bin/bash odoo -c "exec '$0' \"\$@\"" -- "$@"
+    exec su -p -s /bin/bash odoo -c "exec '$0' \"\$@\"" -- "$@"
   fi
 fi
 
-INIT_MODULES="${INIT_MODULES:-id_base,id_ui,id_ui_shell,id_ui_form,l10n_id,fleet,hr,uom}"
+INIT_MODULES="${INIT_MODULES:-id_base,id_ui,id_ui_shell,id_ui_form,l10n_id,fleet,hr,uom,product_expiry,stock_account}"
 export PGHOST PGPORT PGUSER PGPASSWORD PGDATABASE
 case "$ODOO_DB_USER" in postgres) log "ODOO_DB_USER tidak boleh 'postgres'"; exit 1;; esac
 case "$ODOO_DB_USER$ODOO_DB_PASSWORD$PGDATABASE" in *\'*|*\"*|*\\*) log "kutip/backslash tidak diizinkan pada user, password, atau nama DB"; exit 1;; esac
@@ -62,7 +62,26 @@ q "CREATE SCHEMA IF NOT EXISTS id_meta;
 
 # 2. Konfigurasi Odoo (admin_passwd hanya bisa lewat berkas konfigurasi; tidak disimpan di repo)
 umask 077
-printf '[options]\nadmin_passwd = %s\n' "$ADMIN_PASSWD" > /tmp/odoo.conf
+ADDONS_PATH="$(/opt/deploy/addons_path.sh)"
+cat <<EOF > /tmp/odoo.conf
+[options]
+admin_passwd = ${ADMIN_PASSWD}
+addons_path = ${ADDONS_PATH}
+data_dir = ${DATA_DIR}
+without_demo = True
+db_host = ${PGHOST}
+db_port = ${PGPORT}
+db_user = ${ODOO_DB_USER}
+db_password = ${ODOO_DB_PASSWORD}
+EOF
+
+# Subperintah shell: jika dipanggil langsung (mis. oleh CI atau operator untuk skrip/repl)
+if [ "${1:-}" = "shell" ]; then
+  shift
+  log "menjalankan Odoo shell dengan konfigurasi penuh"
+  odoo_run shell "$@"
+  exit $?
+fi
 
 # 3. Reset terkontrol: token harus BARU (tercatat di id_meta.reset_log); token lama diabaikan
 if [ -n "${RESET_DB:-}" ]; then

@@ -99,3 +99,8 @@ Urutan `deploy/init.sh` (diuji 5 skenario di sandbox, `docs/SANDBOX.md`): tunggu
 **Butir terbuka:** 1. ...
 **Menunggu:** <siapa>
 ```
+
+## 11. Gate supervisi seed
+Kontrak dan checklist bukti: `docs/reviews/SEED_INVARIANT_CONTRACT.md`. Jalankan
+validator independen sebelum mengajukan integrasi dataset; output merah adalah
+pekerjaan terbuka. Validasi lokal tidak menggantikan rekonsiliasi runtime Odoo.

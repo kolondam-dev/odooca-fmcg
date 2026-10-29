@@ -10,3 +10,6 @@
 6. **Penandaan:** [F] fakta bersumber · [A] asumsi · [BU] belum diuji/diverifikasi.
 7. **Verifikasi sebelum PR:** `ruff check . && python scripts/check_manifests.py`; CI hijau; modul baru terinstal di DB kosong.
 8. Addon baru berawalan `id_`, `license: LGPL-3`, versi `19.0.x`; string sumber English, terjemahan di `i18n/id.po`; istilah FMCG mengikuti `docs/GLOSSARY.md`.
+
+9. Gate seed wajib mengikuti `docs/reviews/SEED_INVARIANT_CONTRACT.md`; CI hijau
+   dasar bukan penerimaan seed. Supervisor `codex` memakai `agent-log/codex.log`.

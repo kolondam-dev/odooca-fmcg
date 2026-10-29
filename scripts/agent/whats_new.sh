@@ -3,18 +3,18 @@
 #  1) fetch semua cabang  2) titik acuan = commit terakhir agen (dari tanda tangan di pesan commit)
 #  3) commit sejak acuan di SEMUA cabang + tanda tangan agen  4) berkas berubah per ujung cabang
 #  5) entri BARU di agent-log/*.log sejak acuan  6) rekomendasi basis kerja
-# Pakai: scripts/agent/whats_new.sh [claude-dev|antigravity|claude-design] [--since <ref>]
+# Pakai: scripts/agent/whats_new.sh [claude-dev|antigravity|claude-design|codex] [--since <ref>]
 set -uo pipefail
 agent="claude-dev"; since=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --since) since="${2:?--since butuh ref}"; shift 2 ;;
-    claude-dev|antigravity|claude-design) agent="$1"; shift ;;
+    claude-dev|antigravity|claude-design|codex) agent="$1"; shift ;;
     *) echo "argumen tidak dikenal: $1" >&2; exit 2 ;;
   esac
 done
 case "$agent" in
-  claude-dev) pat="claude-dev agent" ;; antigravity) pat="antigravity-agent" ;; claude-design) pat="claude-design agent" ;;
+  claude-dev) pat="claude-dev agent" ;; antigravity) pat="antigravity-agent" ;; claude-design) pat="claude-design agent" ;; codex) pat="codex agent" ;;
 esac
 git fetch --all --prune -q 2>/dev/null || echo "(PERINGATAN: git fetch gagal; data bisa usang)"
 if [ -n "$since" ]; then last="$(git rev-parse "$since")"; how="--since $since"
