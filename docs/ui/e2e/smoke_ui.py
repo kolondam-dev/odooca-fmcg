@@ -110,6 +110,52 @@ async def main():
         check("judul tepat di tengah antara tombol aksi dan pipeline", t["centerOffset"] is not None and abs(t["centerOffset"]) <= 2)
         check("footer total sticky", await page.evaluate("(() => { const f = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer)'); return !!f && getComputedStyle(f).position === 'sticky'; })()"))
 
+        # Exercise the actual scroll container with a long CI quotation. A CSS declaration
+        # alone is not sufficient: the last order line must remain reachable and uncovered.
+        footer_scroll = await page.evaluate("""(() => {
+            const footer = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer)');
+            if (!footer) return { ok: false, reason: 'missing sticky footer group' };
+            let owner = footer.parentElement;
+            while (owner && owner !== document.body) {
+                const style = getComputedStyle(owner);
+                if (owner.scrollHeight > owner.clientHeight + 4 && /(auto|scroll)/.test(style.overflowY)) break;
+                owner = owner.parentElement;
+            }
+            if (!owner || owner === document.body) return { ok: false, reason: 'no overflowing scroll owner' };
+            const rows = [...document.querySelectorAll('.o_field_x2many_list .o_data_row, .o_field_one2many .o_data_row')];
+            const maxScroll = Math.max(0, owner.scrollHeight - owner.clientHeight);
+            if (maxScroll < 40) return { ok: false, reason: 'form did not produce meaningful vertical overflow', maxScroll };
+            const top = owner.scrollTop;
+            owner.scrollTop = 0;
+            const topY = footer.getBoundingClientRect().top;
+            owner.scrollTop = Math.floor(maxScroll / 2);
+            const middleY = footer.getBoundingClientRect().top;
+            owner.scrollTop = maxScroll;
+            const footerRect = footer.getBoundingClientRect();
+            const ownerRect = owner.getBoundingClientRect();
+            const lastRowRect = rows.length ? rows[rows.length - 1].getBoundingClientRect() : null;
+            const result = {
+                ok: true,
+                maxScroll,
+                rowCount: rows.length,
+                movedDuringScroll: Math.abs(topY - middleY) > 1 || Math.abs(middleY - footerRect.top) > 1,
+                footerInScrollport: footerRect.top >= ownerRect.top - 2 && footerRect.bottom <= ownerRect.bottom + 2,
+                lastRowNotCovered: !!lastRowRect && lastRowRect.bottom <= footerRect.top + 2,
+                horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+            };
+            owner.scrollTop = top;
+            return result;
+        })()""")
+        check("SO: scroll test uses a real overflowing container and multiple lines",
+              footer_scroll.get("ok") and footer_scroll.get("maxScroll", 0) >= 40 and footer_scroll.get("rowCount", 0) >= 10
+              and footer_scroll.get("movedDuringScroll"))
+        check("SO: sticky footer remains inside the scrollport at bottom",
+              footer_scroll.get("ok") and footer_scroll.get("footerInScrollport"))
+        check("SO: last transaction row is not covered by footer",
+              footer_scroll.get("ok") and footer_scroll.get("lastRowNotCovered"))
+        check("SO: no horizontal page overflow after scrolling",
+              footer_scroll.get("ok") and not footer_scroll.get("horizontalOverflow"))
+
         # --- Divider systray: jumlah = item tampil - 1 (normal dan mode debug) ---
         COUNT = """(() => { const k = [...document.querySelector('.o_menu_systray').children].filter(e => e.offsetWidth > 0 && !e.querySelector(':scope > .o_mobile_menu_toggle')); const d = k.filter(e => getComputedStyle(e, '::before').content === '\"\"').length; return [k.length, d]; })()"""
         n, d = await page.evaluate(COUNT)
