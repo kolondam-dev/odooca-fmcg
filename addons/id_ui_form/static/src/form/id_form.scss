@@ -121,7 +121,7 @@ body.id-shell-sidebar {
 
         // Footer form sticky (total & terms). Sticky harus tetap di dalam scroll owner Odoo;
         // jangan memakai fixed karena dapat menutupi line terakhir, statusbar atau action buttons.
-        .o_form_sheet .o_group:has(.oe_subtotal_footer) {
+        .o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer)) {
             position: sticky;
             bottom: 0;
             z-index: 4;
@@ -156,7 +156,7 @@ body.id-shell-sidebar {
         }
 
         @media (max-width: 767.98px) {
-            .o_form_sheet .o_group:has(.oe_subtotal_footer) {
+            .o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer)) {
                 padding: 0.5rem 0.75rem;
                 margin-inline: -0.75rem;
             }
