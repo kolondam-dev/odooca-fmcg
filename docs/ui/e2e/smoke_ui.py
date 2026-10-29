@@ -342,6 +342,17 @@ async def main():
               and await page.locator(".o_form_sheet > .oe_title").evaluate("(el) => getComputedStyle(el).display") == "none")
         await audit_footer("Invoice", "invoice_line_ids")
 
+        # Re-run the populated invoice scroll contract at mobile width and browser zoom.
+        await page.set_viewport_size({"width": 390, "height": 800})
+        await page.wait_for_timeout(500)
+        await audit_footer("Invoice mobile", "invoice_line_ids")
+        await page.set_viewport_size({"width": 1440, "height": 860})
+        await page.keyboard.press("Control+Equal")
+        await page.wait_for_timeout(500)
+        await audit_footer("Invoice browser zoom", "invoice_line_ids")
+        await page.keyboard.press("Control+0")
+        await page.wait_for_timeout(300)
+
         await page.goto(f"{BASE}/odoo/action-fleet.fleet_vehicle_action/new")
         await page.wait_for_selector(".o_form_sheet", timeout=30000)
         await page.wait_for_timeout(3000)
