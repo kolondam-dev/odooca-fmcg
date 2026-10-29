@@ -569,3 +569,70 @@ restore persona tujuan. Regresi browser menahan completion IndexedDB dan restore
 secara deterministik; tanpa sleep, timeout lebih panjang, pengurangan worker atau
 skip. 239 unit +1 hosting +84 browser resmi145.0.7632.6 lokal lulus (64 lama+20
 regresi); hasil remote pada SHA perbaikan dicatat di PR setelah publikasi.
+
+
+## Revisi SO, pending/cancel dan closing kantor — mandat 2026-10-28
+
+Rules terbaru ada di plan §18 dan SCOPE §15, menggantikan batas demo sebelumnya.
+Di Lainnya → Koreksi Sales Order, buka pengajuan dengan penolakan bisnis/receipt
+UUID cocok lalu pilih Koreksi SO ditolak. Edit SKU/satuan/qty/diskon/catatan dan
+alasan koreksi; simpan draft eksplisit untuk reload offline. Revisi memakai UUID
+baru dan parent/root tetap immutable; satu successor per parent, termasuk dua tab.
+Outlet/principal tetap sama; harga/estimasi memakai daily snapshot saat revisi.
+Koreksi administratif boleh setelah sesi toko closed, tetapi koreksi **dan approval
+manager wajib selesai pada hari root SO dalam WITA (Asia/Makassar)**. Daily sync
+baru atau tanggal parent terakhir tidak memperpanjang deadline. Salesman wajib
+follow-up/push approval ke manager **secara manual**; tidak ada notifikasi otomatis.
+Lewat hari, draft tersimpan dapat dibaca tanpa diedit, pending/history tetap
+terlihat dengan penanda lewat batas hari/perlu tindak lanjut. Tidak ada auto-accept,
+auto-reject, backdate, atau reopen; kebijakan penyelesaian pending belum ditentukan.
+CAS revisi dan keputusan manager baru mengecek root+waktu saat write, termasuk
+rollover tengah malam. Replay transport/receipt keputusan sah pada hari root boleh
+berlangsung kemudian tanpa menciptakan keputusan bisnis baru.
+Semua revisi memerlukan approval ulang, termasuk saat diskon0%. Kontrol Simulator
+approval diskon di Lainnya juga menangani revisi tanpa diskon. Queued/accepted/
+needs_approval atau penolakan transport tidak membuka koreksi. Root/cycle/sumber/
+receipt/bukti rusak ditahan tanpa penghapusan atau receipt palsu.
+
+Pada Pending Requested isi tanggal kirim ulang (hari kalender, boleh hari yang
+sama; tidak boleh sebelum hari pengiriman). Selisih0/1/2 hari membutuhkan SPV;
+selisih>=3 hari membutuhkan SPV lalu Branch Manager. Batas tepat3 hari masuk tier
+BM secara konservatif sesuai keputusan implementasi yang disampaikan ke pemilik.
+Cancel Delivery wajib SPV dan subreason Toko Tutup / Kesalahan Order / Tidak bisa
+bayar / Toko tidak dapat diakses / Waktu pengiriman tidak cukup. Alasan umum tetap
+direkam pada seluruh item. Simulator approval pending/cancel di Lainnya meminta
+alasan keputusan dan menolak BM yang mendahului SPV, keputusan ganda atau snapshot
+receipt berubah. Keputusan/history per UUID tersimpan; jadwal/picking resmi belum
+diubah atau diterbitkan ulang otomatis sampai backend siap.
+
+Closing trip dari Delivery → Closing trip · tiba di kantor. Semua DO harus
+mempunyai hasil POD dan tidak ada sesi delivery aktif; pending review boleh
+tercatat tanpa dianggap disetujui. Satu closing lokal per trip/hari, source/POD
+terikat dan dicek ulang, replay historis didukung. Source POD lengkap harus cocok
+dengan task manifest closing (owner/hari/trip/versi/lines dan seluruh atribut),
+bukan hanya ID DO. Reuse ID/source berbeda atau lineage ambigu ditahan untuk
+review; data historis tidak ditulis ulang. Daftar baru tidak menampilkan POD lama
+sebagai Session closed. Replay sah memakai daily_source historis command. Setelah closing, pengajuan/
+koreksi POD baru pada trip itu ditahan untuk review (belum ada reopen otomatis).
+Fixture kantor SIM-OFFICE-MANADO memakai titik1.465/124.833 dan radius30m sebagai
+contoh, bukan koordinat/radius kantor nyata. Aturan strict: jarak+akurasi <=radius
+kantor+25m. Pada demo baru, lokasi di luar kantor tetap diterima dan diberi label
+tanpa validasi. Closing bukan settlement kasir, uang/cek belum dianggap diserahkan,
+AR/payment/GL tidak berubah. Cashier handoff di luar scope. Backlog saja: upload
+resi uang/cek ke kasir, faktur ke admin, retur ke SPV gudang.
+
+Fixture UI baru memakai site.demo_unrestricted, dibawa dalam sumber/kontrak. Demo
+menerima koordinat dan gambar tanpa geofence/akurasi atau pemeriksaan keaslian/
+EXIF/kamera. GPS dapat dipakai, atau Gunakan lokasi demo pada foto; capture sesi
+memakai titik contoh bila GPS tidak tersedia/ditolak. Seluruhnya berlabel simulasi.
+Watermark waktu pencatatan WITA dan koordinat serta pinpoint grid tetap dihasilkan.
+Format/ukuran gambar untuk rendering, hash/keberadaan file, owner, urutan aksi dan
+binding referensi tidak dihapus: ini integritas penyimpanan, bukan validasi foto
+sebagai bukti sah. Foto yang sama boleh diunggah ulang menjadi paket/ID baru.
+Bukti baru menyimpan kebijakan demo dalam metadata hash; antrean/snapshot strict
+lama tidak ditulis ulang atau dimigrasi. Gate strict tetap diuji di unit; live
+tetap terkunci dan tidak menggunakan kebijakan permissive.
+
+OpenAPI draft0.12 menambah sales.order.revise, delivery.trip.close dan DTO request
+pending/cancel. Bukan endpoint Odoo yang sudah tersedia. Integrasi backend menunggu
+kesiapan seeding sesuai mandat; tidak menyentuh addon/seed/deployment/ruleset.

@@ -39,6 +39,11 @@ export function assessVisitFix(value: unknown, site: unknown, at = Date.now()) {
     };
 }
 export function requireVisitFix(fix: VisitFix, site: unknown, at = Date.now()) {
+    const parsedSite = VisitSiteSchema.parse(site);
+    if (__DEMO__ && parsedSite.demo_unrestricted) {
+        VisitFixSchema.parse(fix);
+        return;
+    }
     const result = assessVisitFix(fix, site, at);
     if (result.status !== "inside")
         throw new Error(
@@ -95,6 +100,9 @@ export function bindVisitContext(
             latitude: outlet.latitude,
             longitude: outlet.longitude,
             radius: outlet.radius,
+            ...(outlet.demo_unrestricted
+                ? { demo_unrestricted: true as const }
+                : {}),
         })
     )
         throw new Error("Outlet/geofence tidak sesuai paket PJP pagi.");

@@ -1,3 +1,6 @@
+import { TripClosing } from "./components/TripClosing";
+import { OrderCorrections } from "./components/OrderCorrections";
+import { DeliveryApproval } from "./components/DeliveryApproval";
 import { DiscountApproval } from "./components/DiscountApproval";
 import { orderQuote, type OrderUom } from "./domain/order-pricing";
 import type { ComponentChildren } from "preact";
@@ -673,6 +676,14 @@ function Workspace({
                             queue={queue}
                             changed={() => void refresh()}
                         />
+                        <TripClosing
+                            store={store}
+                            identity={identity}
+                            morning={morning}
+                            queue={queue}
+                            engine={engine}
+                            changed={() => void refresh()}
+                        />
                         <CollectionWorkspace
                             key={owner}
                             identity={identity}
@@ -785,6 +796,20 @@ function Workspace({
                 )}
                 {page === "more" && (
                     <>
+                        <OrderCorrections
+                            store={store}
+                            owner={owner}
+                            morning={morning}
+                            queue={queue}
+                            engine={engine}
+                            changed={() => void refresh()}
+                        />
+                        <DeliveryApproval
+                            store={store}
+                            owner={owner}
+                            queue={queue}
+                            changed={() => void refresh()}
+                        />
                         <DiscountApproval
                             store={store}
                             owner={owner}

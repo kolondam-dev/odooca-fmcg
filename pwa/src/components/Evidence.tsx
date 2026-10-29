@@ -176,7 +176,7 @@ export function EvidenceCapture({
     }
     async function save() {
         if (!file || !location || !selectedAt || busy) return;
-        if (Date.now() - location.timestamp > 60000) {
+        if (!__DEMO__ && Date.now() - location.timestamp > 60000) {
             setError("Lokasi sudah kedaluwarsa. Ambil lokasi baru.");
             report(undefined);
             return;
@@ -201,6 +201,7 @@ export function EvidenceCapture({
                 ref,
                 selectedAt,
                 new Date(location.timestamp).toISOString(),
+                __DEMO__,
             );
             if (generation.current !== ticket) return;
             await store.saveEvidence(row);
@@ -232,6 +233,30 @@ export function EvidenceCapture({
                 Capture browser belum membuktikan kamera asli atau bebas mock
                 GPS.
             </p>
+            {!readOnly && __DEMO__ && (
+                <button
+                    class="secondary"
+                    onClick={() => {
+                        setLocation({
+                            coords: {
+                                latitude: 1.465,
+                                longitude: 124.833,
+                                accuracy: 1,
+                                altitude: null,
+                                altitudeAccuracy: null,
+                                heading: null,
+                                speed: null,
+                            },
+                            timestamp: Date.now(),
+                        } as GeolocationPosition);
+                        setError(
+                            "Lokasi DEMO dipilih; bukan lokasi terverifikasi.",
+                        );
+                    }}
+                >
+                    Gunakan lokasi demo
+                </button>
+            )}
             {!readOnly && (
                 <label class="upload">
                     <Icon name="camera" /> Ambil foto
