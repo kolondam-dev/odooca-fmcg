@@ -70,7 +70,6 @@ jobs:
           ' < scripts/ui/smoke_fixture.py | tee fixture.log
           python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["order"])' > ui-order.txt
           python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["invoice"])' > ui-invoice.txt
-          python -c 'import json; print(json.loads(next(x.split("UI_RUNTIME_AUDIT=",1)[1] for x in open("fixture.log") if x.startswith("UI_RUNTIME_AUDIT=")))["sale.order"]["view_xmlid"])'
       - name: Start Odoo for browser smoke
         run: |
           docker run -d --name ui-smoke -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
