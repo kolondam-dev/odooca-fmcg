@@ -50,6 +50,8 @@ async function setup(actor = "sales", relaxed = true) {
         identity = await provider.bootstrap(),
         owner = ownerKey(identity),
         morningService = new MorningSimulation(store, identity, provider);
+    // Use the same isolated receipt database as the domain/store under test.
+    Object.defineProperty(provider, "store", { value: store });
     await morningService.acceptAttendance();
     const daily = await morningService.open(),
         engine = new Outbox(store, owner, provider);
@@ -158,7 +160,7 @@ it("revises a rejected SO after visit closed, new UUID and receipt, immutable so
         validateRevisionMedia(latest, s.owner, store),
     ).resolves.toBeUndefined();
 });
-it("correction on next business day requires current daily snapshot; stale daily and principal switch blocked", async () => {
+it("correction on next business day stays blocked even with a fresh daily sync", async () => {
     const s = await rejectedOrder();
     vi.setSystemTime(new Date("2026-10-29T01:00:00Z"));
     await expect(
@@ -167,8 +169,14 @@ it("correction on next business day requires current daily snapshot; stale daily
     await s.morningService.acceptAttendance();
     const daily = await s.morningService.open(),
         p = revised(s, daily);
-    await submitRevision(store, s.owner, s.root, p, s.engine);
-    expect(await store.draft(s.owner, revisionKey(p.root_uuid))).toBeDefined();
+    const before = await store.list(s.owner);
+    await expect(
+        submitRevision(store, s.owner, s.root, p, s.engine),
+    ).rejects.toThrow("batas hari");
+    expect(await store.list(s.owner)).toEqual(before);
+    expect(
+        await store.draft(s.owner, revisionKey(p.root_uuid)),
+    ).toBeUndefined();
 });
 it("two connections cannot fork revisions; accepted/pending/transport source and bad totals are locked", async () => {
     const s = await rejectedOrder(),
@@ -744,3 +752,270 @@ for (const mismatch of [
         ).rejects.toThrow("Closing/sumber trip");
     });
 }
+
+it.each([true, false])(
+    "new revision decision after midnight WITA is blocked without changing pending/cached receipt, approve=%s",
+    async (approve) => {
+        const s = await rejectedOrder();
+        const child = await submitRevision(
+            store,
+            s.owner,
+            s.root,
+            revised(s),
+            s.engine,
+        );
+        await s.engine.flush();
+        const pending = (await store.list(s.owner)).find(
+            (r) => r.key === child.key,
+        )!;
+        vi.setSystemTime(new Date("2026-10-28T16:00:00Z"));
+        const before = await store.list(s.owner),
+            cached = await store.receipt(
+                `DEMO-ANDRE:sales.order.revise:${child.command.client_uuid}`,
+            );
+        await expect(
+            store.decideDemoDiscount(
+                s.owner,
+                pending,
+                approve,
+                "Keputusan terlambat",
+            ),
+        ).rejects.toThrow("batas hari");
+        const other = new FieldStore(name);
+        try {
+            const attempts = await Promise.allSettled([
+                store.decideDemoDiscount(
+                    s.owner,
+                    pending,
+                    approve,
+                    "Tab pertama lewat batas",
+                ),
+                other.decideDemoDiscount(
+                    s.owner,
+                    pending,
+                    approve,
+                    "Tab kedua lewat batas",
+                ),
+            ]);
+            expect(
+                attempts.every(
+                    (result) =>
+                        result.status === "rejected" &&
+                        String(result.reason).includes("batas hari"),
+                ),
+            ).toBe(true);
+        } finally {
+            await other.close();
+        }
+        expect(await store.list(s.owner)).toEqual(before);
+        expect(
+            await store.receipt(
+                `DEMO-ANDRE:sales.order.revise:${child.command.client_uuid}`,
+            ),
+        ).toEqual(cached);
+    },
+);
+
+it("revision and manager decision at 23:59:59.999 WITA succeed; replay of the cached decision next day is not a new approval", async () => {
+    const s = await rejectedOrder();
+    vi.setSystemTime(new Date("2026-10-28T15:59:59.999Z"));
+    const child = await submitRevision(
+        store,
+        s.owner,
+        s.root,
+        revised(s),
+        s.engine,
+    );
+    await s.engine.flush();
+    const pending = (await store.list(s.owner)).find(
+        (r) => r.key === child.key,
+    )!;
+    await store.decideDemoDiscount(
+        s.owner,
+        pending,
+        true,
+        "Disetujui sebelum batas",
+    );
+    const accepted = (await store.list(s.owner)).find(
+        (r) => r.key === child.key,
+    )!;
+    vi.setSystemTime(new Date("2026-10-28T16:00:00Z"));
+    await setup();
+    await expect(
+        validateRevisionMedia(accepted, s.owner, store),
+    ).resolves.toBeUndefined();
+    expect(await s.provider.submit(accepted.command)).toEqual(accepted.receipt);
+    expect(
+        (await store.list(s.owner)).find((r) => r.key === child.key),
+    ).toEqual(accepted);
+});
+it("a valid offline revision sent next day stays pending; no automatic business decision", async () => {
+    const s = await rejectedOrder();
+    const child = await submitRevision(
+        store,
+        s.owner,
+        s.root,
+        revised(s),
+        s.engine,
+    );
+    vi.setSystemTime(new Date("2026-10-28T16:00:00Z"));
+    await setup();
+    await s.engine.retry();
+    const pending = (await store.list(s.owner)).find(
+        (r) => r.key === child.key,
+    )!;
+    expect(pending.state).toBe("needs_approval");
+    await expect(
+        store.decideDemoDiscount(
+            s.owner,
+            pending,
+            true,
+            "Khair setelah lewat hari",
+        ),
+    ).rejects.toThrow("batas hari");
+    expect(
+        (await store.list(s.owner)).find((r) => r.key === child.key),
+    ).toEqual(pending);
+});
+it.each(["revision", "decision"] as const)(
+    "midnight during atomic %s writes rolls back all outbox/pointer/receipt changes",
+    async (kind) => {
+        const s = await rejectedOrder(),
+            p = revised(s);
+        let pending: typeof s.root | undefined;
+        if (kind === "decision") {
+            const child = await submitRevision(
+                store,
+                s.owner,
+                s.root,
+                p,
+                s.engine,
+            );
+            await s.engine.flush();
+            pending = (await store.list(s.owner)).find(
+                (r) => r.key === child.key,
+            )!;
+        }
+        const before = await store.list(s.owner),
+            pointer = await store.draft(s.owner, revisionKey(p.root_uuid));
+        const receiptKey = pending
+            ? `DEMO-ANDRE:sales.order.revise:${pending.command.client_uuid}`
+            : "unused";
+        const cache = await store.receipt(receiptKey);
+        vi.setSystemTime(new Date("2026-10-28T15:59:59.999Z"));
+        const method = kind === "revision" ? "add" : "put";
+        const original = IDBObjectStore.prototype[method];
+        let crossed = false;
+        const spy = vi
+            .spyOn(IDBObjectStore.prototype, method)
+            .mockImplementation(function (
+                this: IDBObjectStore,
+                value: any,
+                key?: IDBValidKey,
+            ) {
+                const request = original.call(this, value, key);
+                if (
+                    !crossed &&
+                    this.name === "outbox" &&
+                    value.command?.type === "sales.order.revise"
+                ) {
+                    crossed = true;
+                    vi.setSystemTime(new Date("2026-10-28T16:00:00Z"));
+                }
+                return request;
+            });
+        try {
+            if (pending)
+                await expect(
+                    store.decideDemoDiscount(
+                        s.owner,
+                        pending,
+                        true,
+                        "Aksi bersamaan midnight",
+                    ),
+                ).rejects.toThrow("batas hari");
+            else
+                await expect(
+                    submitRevision(store, s.owner, s.root, p, s.engine),
+                ).rejects.toThrow("batas hari");
+            expect(crossed).toBe(true);
+        } finally {
+            spy.mockRestore();
+        }
+        expect(await store.list(s.owner)).toEqual(before);
+        expect(await store.draft(s.owner, revisionKey(p.root_uuid))).toEqual(
+            pointer,
+        );
+        expect(await store.receipt(receiptKey)).toEqual(cache);
+    },
+);
+it("backdating a new command or changing the last parent's date does not extend the root deadline", async () => {
+    const s = await rejectedOrder(),
+        p = revised(s);
+    const child = await submitRevision(store, s.owner, s.root, p, s.engine);
+    await s.engine.flush();
+    const pending = (await store.list(s.owner)).find(
+        (r) => r.key === child.key,
+    )!;
+    await store.decideDemoDiscount(
+        s.owner,
+        pending,
+        false,
+        "Perlu koreksi lain",
+    );
+    vi.setSystemTime(new Date("2026-10-29T01:00:00Z"));
+    const daily = (await setup()).daily;
+    const parent = (await store.list(s.owner)).find(
+        (r) => r.key === child.key,
+    )!;
+    const next = {
+        ...revised(s, daily),
+        supersedes_uuid: child.command.client_uuid,
+    };
+    const uuid = crypto.randomUUID(),
+        at = "2026-10-28T15:59:59.999Z";
+    const before = await store.list(s.owner),
+        pointer = await store.draft(s.owner, revisionKey(p.root_uuid));
+    await expect(
+        s.engine.enqueue("sales.order.revise", next, "Backdated", uuid, {
+            key: revisionKey(p.root_uuid),
+            expected: parent.command,
+            guards: { source: parent },
+            occurredAt: at,
+            value: {
+                schema_version: 1,
+                client_uuid: uuid,
+                occurred_at: at,
+                type: "sales.order.revise",
+                payload: next,
+            },
+        }),
+    ).rejects.toThrow("batas hari");
+    expect(await store.list(s.owner)).toEqual(before);
+    expect(await store.draft(s.owner, revisionKey(p.root_uuid))).toEqual(
+        pointer,
+    );
+    const forged = {
+        ...pending,
+        command: {
+            ...pending.command,
+            occurred_at: new Date().toISOString(),
+            payload: {
+                ...pending.command.payload,
+                business_date: daily.businessDate,
+                daily_source: daily,
+            },
+        },
+    };
+    await store.put(forged as typeof pending);
+    const saved = await store.list(s.owner);
+    await expect(
+        store.decideDemoDiscount(
+            s.owner,
+            forged as typeof pending,
+            true,
+            "Tanggal parent baru",
+        ),
+    ).rejects.toThrow();
+    expect(await store.list(s.owner)).toEqual(saved);
+});

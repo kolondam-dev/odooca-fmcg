@@ -16,6 +16,54 @@ import { validateVisitSync } from "./visit-validation";
 import { validateVisitMedia } from "./visit-evidence";
 import { EvidenceIntegrityError } from "./evidence-package";
 import type { FieldStore, QueueItem } from "../storage/store";
+export const ORDER_DAY_CLOSED =
+    "Lewat batas hari root SO (WITA); perlu tindak lanjut. Salesman wajib follow-up/push approval ke manager secara manual. Draft/pending tetap tersimpan.";
+export function rootOrderDate(root: QueueItem, owner: string) {
+    const c = CommandSchema.parse(root.command);
+    if (
+        root.owner !== owner ||
+        root.key !== `${owner}:${c.client_uuid}` ||
+        c.type !== "sales.order.submit"
+    )
+        throw new Error("Root SO tidak valid; perlu review.");
+    const p = VisitOrderSchema.parse(c.payload),
+        day = p.morning_business_date;
+    if (
+        day !== p.visit_context.business_date ||
+        day !== fieldBusinessDate(new Date(c.occurred_at))
+    )
+        throw new Error("Hari root SO tidak valid; perlu review.");
+    return day;
+}
+export function assertRootOrderDay(
+    root: QueueItem,
+    owner: string,
+    now = new Date(),
+) {
+    if (rootOrderDate(root, owner) !== fieldBusinessDate(now))
+        throw new Error(ORDER_DAY_CLOSED);
+}
+export function approvalRoot(
+    rows: QueueItem[],
+    owner: string,
+    item: QueueItem,
+) {
+    const rootId =
+        item.command.type === "sales.order.revise"
+            ? item.command.payload.root_uuid
+            : item.command.client_uuid;
+    const chain = revisionChain(rows, owner, rootId);
+    if (
+        !chain.some(
+            (r) =>
+                r.key === item.key &&
+                JSON.stringify(r.command) === JSON.stringify(item.command),
+        )
+    )
+        throw new Error("Sumber approval SO tidak valid; perlu review.");
+    return chain[0];
+}
+
 export function revisionChain(
     rows: QueueItem[],
     owner: string,
@@ -28,7 +76,8 @@ export function revisionChain(
     );
     if (!root || root.owner !== owner || root.key !== `${owner}:${rootId}`)
         throw new Error("Order sumber hilang/owner berbeda.");
-    const source = VisitOrderSchema.parse(root.command.payload);
+    const source = VisitOrderSchema.parse(root.command.payload),
+        rootDay = rootOrderDate(root, owner);
     const children = rows.filter(
         (r) =>
             r.command.type === "sales.order.revise" &&
@@ -59,6 +108,7 @@ export function revisionChain(
         const p = c.payload,
             daily = MorningRecordSchema.parse(p.daily_source);
         if (
+            p.business_date !== rootDay ||
             p.outlet_id !== source.outlet_id ||
             !morningReady(daily, owner, p.business_date) ||
             fieldBusinessDate(new Date(c.occurred_at)) !== p.business_date ||
@@ -143,10 +193,12 @@ export function validateRevisionCommit(
     )
         throw new Error("Revisi bukan ujung lineage.");
     const root = before[0];
+    assertRootOrderDay(root, item.owner);
     validateVisitSync(root, item.owner, ledger, rows, morning);
     assertPrincipals([...before, item], ledger);
 
     revisionChain([...rows, item], item.owner, p.root_uuid);
+    return root;
 }
 export async function validateRevisionMedia(
     item: QueueItem,
@@ -220,6 +272,7 @@ export async function submitRevision(
 ) {
     const rows = await store.list(owner),
         chain = revisionChain(rows, owner, p.root_uuid);
+    assertRootOrderDay(chain[0], owner);
     if (chain.at(-1)?.key !== parent.key)
         throw new Error("Parent revisi berubah.");
     if (parent.command.type === "sales.order.revise")

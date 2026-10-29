@@ -1,6 +1,10 @@
 import { tripCloseKey } from "../domain/trip-close-contracts";
 import { validateTripClose } from "../domain/trip-close";
-import { validateRevisionCommit } from "../domain/order-revisions";
+import {
+    assertRootOrderDay,
+    approvalRoot,
+    validateRevisionCommit,
+} from "../domain/order-revisions";
 import { OrderRevisionSchema } from "../domain/order-revision-contracts";
 import { approvalTiers } from "../domain/delivery-approval";
 import { validatePod } from "../domain/delivery";
@@ -268,6 +272,7 @@ export class FieldStore {
             "readwrite",
         );
         const done = tx.done;
+        let revisionRoot: QueueItem | undefined;
         try {
             const id = `${item.owner}:${key}`;
             const old = await tx.objectStore("drafts").get(id);
@@ -318,7 +323,7 @@ export class FieldStore {
                     );
             }
             if (item.command.type === "sales.order.revise") {
-                validateRevisionCommit(
+                revisionRoot = validateRevisionCommit(
                     item,
                     await tx
                         .objectStore("outbox")
@@ -565,13 +570,15 @@ export class FieldStore {
                         );
                 }
             }
+            if (revisionRoot) assertRootOrderDay(revisionRoot, item.owner);
             await Promise.all([
                 tx.objectStore("outbox").add(item),
                 tx
                     .objectStore("drafts")
                     .put({ key: id, owner: item.owner, value }),
-                done,
             ]);
+            if (revisionRoot) assertRootOrderDay(revisionRoot, item.owner);
+            await done;
         } catch (error) {
             try {
                 tx.abort();
@@ -760,6 +767,12 @@ export class FieldStore {
                 ) !== JSON.stringify(expected)
             )
                 throw new Error("Receipt berubah di tab lain.");
+            const rows = await tx
+                .objectStore("outbox")
+                .index("owner")
+                .getAll(owner);
+            const root = approvalRoot(rows, owner, expected);
+            assertRootOrderDay(root, owner);
             const receipt: Receipt = {
                 ...expected.receipt!,
                 status: approved ? "accepted" : "rejected",
@@ -772,6 +785,7 @@ export class FieldStore {
             const cached = await tx.objectStore("receipts").get(cachedKey);
             if (cached)
                 await tx.objectStore("receipts").put({ ...cached, receipt });
+            assertRootOrderDay(root, owner);
             await done;
         } catch (error) {
             tx.abort();

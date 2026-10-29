@@ -579,9 +579,16 @@ UUID cocok lalu pilih Koreksi SO ditolak. Edit SKU/satuan/qty/diskon/catatan dan
 alasan koreksi; simpan draft eksplisit untuk reload offline. Revisi memakai UUID
 baru dan parent/root tetap immutable; satu successor per parent, termasuk dua tab.
 Outlet/principal tetap sama; harga/estimasi memakai daily snapshot saat revisi.
-Koreksi administratif boleh setelah sesi toko closed atau lintas hari dengan
-daily sync hari berjalan, tanpa membuka ulang sesi lama. Draft per parent dapat
-dibaca setelah daily sync baru; estimasi dihitung ulang sebelum pengajuan.
+Koreksi administratif boleh setelah sesi toko closed, tetapi koreksi **dan approval
+manager wajib selesai pada hari root SO dalam WITA (Asia/Makassar)**. Daily sync
+baru atau tanggal parent terakhir tidak memperpanjang deadline. Salesman wajib
+follow-up/push approval ke manager **secara manual**; tidak ada notifikasi otomatis.
+Lewat hari, draft tersimpan dapat dibaca tanpa diedit, pending/history tetap
+terlihat dengan penanda lewat batas hari/perlu tindak lanjut. Tidak ada auto-accept,
+auto-reject, backdate, atau reopen; kebijakan penyelesaian pending belum ditentukan.
+CAS revisi dan keputusan manager baru mengecek root+waktu saat write, termasuk
+rollover tengah malam. Replay transport/receipt keputusan sah pada hari root boleh
+berlangsung kemudian tanpa menciptakan keputusan bisnis baru.
 Semua revisi memerlukan approval ulang, termasuk saat diskon0%. Kontrol Simulator
 approval diskon di Lainnya juga menangani revisi tanpa diskon. Queued/accepted/
 needs_approval atau penolakan transport tidak membuka koreksi. Root/cycle/sumber/

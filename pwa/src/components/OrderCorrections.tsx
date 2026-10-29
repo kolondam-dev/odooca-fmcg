@@ -1,15 +1,27 @@
 import { useEffect, useState } from "preact/hooks";
 import { businessRejected } from "../domain/outbox-state";
-import { revisionChain, submitRevision } from "../domain/order-revisions";
+import {
+    assertRootOrderDay,
+    rootOrderDate,
+    ORDER_DAY_CLOSED,
+    revisionChain,
+    submitRevision,
+} from "../domain/order-revisions";
 import {
     OrderRevisionSchema,
     type OrderRevision,
 } from "../domain/order-revision-contracts";
 import { VisitOrderSchema } from "../domain/visit-contracts";
 import { orderQuote, type OrderUom } from "../domain/order-pricing";
-import { morningReady, type MorningRecord } from "../domain/morning";
+import {
+    MorningRecordSchema,
+    morningReady,
+    type MorningRecord,
+} from "../domain/morning";
 import type { FieldStore, QueueItem } from "../storage/store";
 import type { Outbox } from "../domain/outbox";
+import { useBusinessDate } from "./useBusinessDate";
+import type { Snapshot } from "../domain/contracts";
 import { money } from "../domain/format";
 function orderBody(row: QueueItem) {
     return row.command.type === "sales.order.revise"
@@ -47,14 +59,23 @@ export function OrderCorrections({
     const [loaded, setLoaded] = useState(false),
         [busy, setBusy] = useState(false),
         [message, setMessage] = useState("");
-    const snapshot = morning?.snapshot;
-    const key =
-        parent && morning
-            ? `sales-revision-form:${parent.command.client_uuid}:v1`
-            : undefined;
+    const today = useBusinessDate();
+    const [draftSnapshot, setDraftSnapshot] = useState<Snapshot>();
+    const snapshot = morning?.snapshot ?? draftSnapshot;
+    const selectedRoot = roots.find((r) => r.command.client_uuid === root);
+    let editorClosed = !!parent;
+    try {
+        if (selectedRoot)
+            editorClosed = rootOrderDate(selectedRoot, owner) !== today;
+    } catch {
+        /* Read-only until source is reviewed. */
+    }
+    const key = parent
+        ? `sales-revision-form:${parent.command.client_uuid}:v1`
+        : undefined;
     let preview: ReturnType<typeof orderQuote> | undefined;
     try {
-        if (snapshot)
+        if (snapshot && !editorClosed)
             preview = orderQuote(
                 Object.entries(qty)
                     .filter(([, q]) => q > 0)
@@ -87,6 +108,12 @@ export function OrderCorrections({
             )
                 throw new Error("Draft koreksi berbeda parent.");
             if (active) {
+                if (saved || parent.command.type === "sales.order.revise")
+                    setDraftSnapshot(
+                        MorningRecordSchema.parse(
+                            (body as OrderRevision).daily_source,
+                        ).snapshot ?? undefined,
+                    );
                 setQty(
                     Object.fromEntries(
                         body.lines.map((l) => [l.product_id, Number(l.qty)]),
@@ -114,10 +141,16 @@ export function OrderCorrections({
     }, [owner, key, morning?.sessionId]);
     function open(leaf: QueueItem, rootId: string) {
         setMessage("");
-        if (!morningReady(morning, owner)) {
+        const source = roots.find((r) => r.command.client_uuid === rootId);
+        if (!source) return;
+        if (
+            rootOrderDate(source, owner) === today &&
+            !morningReady(morning, owner)
+        ) {
             setMessage("Daily sync hari ini wajib sebelum koreksi.");
             return;
         }
+        setDraftSnapshot(undefined);
         setRoot(rootId);
         setParent(leaf);
     }
@@ -126,6 +159,8 @@ export function OrderCorrections({
         setBusy(true);
         setMessage("");
         try {
+            if (!selectedRoot) throw new Error("Root SO hilang; perlu review.");
+            assertRootOrderDay(selectedRoot, owner);
             const lines = Object.entries(qty)
                 .filter(([, q]) => q > 0)
                 .map(([product_id, q]) => ({
@@ -177,9 +212,11 @@ export function OrderCorrections({
         <section class="paper-card">
             <h3>Koreksi Sales Order</h3>
             <p>
-                Koreksi administratif dari pengajuan ditolak, termasuk setelah
-                sesi toko ditutup. Daily sync hari ini wajib; bukan membuka
-                ulang kunjungan atau mengubah order diterima.
+                Koreksi dan approval wajib selesai pada hari root SO dalam WITA,
+                termasuk bila sesi toko sudah ditutup. Salesman wajib
+                follow-up/push approval ke manager secara manual. Daily sync
+                wajib. Lewat hari, draft/pending tetap tersimpan untuk tindak
+                lanjut, tanpa keputusan otomatis.
             </p>
             {roots.map((r) => {
                 let chain: QueueItem[];
@@ -193,12 +230,14 @@ export function OrderCorrections({
                         </p>
                     );
                 }
-                const leaf = chain.at(-1)!;
+                const leaf = chain.at(-1)!,
+                    expired = rootOrderDate(r, owner) !== today;
                 return (
                     <details key={r.key}>
                         <summary>
                             Riwayat SO · {r.label} · {chain.length} pengajuan
                         </summary>
+                        {expired && <p>{ORDER_DAY_CLOSED}</p>}
                         {chain.map((h) => (
                             <article key={h.key}>
                                 <p>
@@ -241,18 +280,21 @@ export function OrderCorrections({
                                     open(leaf, r.command.client_uuid)
                                 }
                             >
-                                Koreksi SO ditolak
+                                {expired
+                                    ? "Lihat draft koreksi lewat hari"
+                                    : "Koreksi SO ditolak"}
                             </button>
                         )}
                     </details>
                 );
             })}
             {parent && snapshot && (
-                <fieldset disabled={busy || !loaded}>
+                <fieldset disabled={busy || !loaded || editorClosed}>
                     <h4>
                         Revisi atas {parent.command.client_uuid.slice(0, 8)}
                     </h4>
                     <p>{parent.receipt?.message}</p>
+                    {editorClosed && <p role="status">{ORDER_DAY_CLOSED}</p>}
                     <label>
                         Alasan koreksi SO
                         <textarea
@@ -349,13 +391,12 @@ export function OrderCorrections({
                     <button class="primary" onClick={() => void save(true)}>
                         Ajukan revisi SO
                     </button>
-                    <button
-                        class="secondary"
-                        onClick={() => setParent(undefined)}
-                    >
-                        Tutup editor koreksi
-                    </button>
                 </fieldset>
+            )}
+            {parent && (
+                <button class="secondary" onClick={() => setParent(undefined)}>
+                    Tutup editor koreksi
+                </button>
             )}
             {message && <p role="status">{message}</p>}
         </section>

@@ -1417,9 +1417,15 @@ media/maps resmi, stok/retur/payment/AR tetap dependency; live terkunci.
 
 [F requirement pemilik] Revisi SO ditolak: UUID baru, parent/root immutable, alasan
 koreksi, SKU/satuan/qty/diskon/catatan dapat diperbaiki, draft offline dan CAS
-mencegah successor ganda. [A implementasi] Koreksi administratif dari daftar
-pengajuan boleh setelah sesi toko ditutup/lintas hari dengan daily sync hari
-berjalan; outlet/principal dan lineage tetap, harga memakai snapshot hari koreksi.
+mencegah successor ganda. [F tambahan pemilik 2026-10-29] Koreksi beserta approval
+manager wajib selesai pada hari root SO dalam WITA (Asia/Makassar), bukan hari
+parent terakhir atau daily sync baru. Boleh setelah sesi toko ditutup pada hari
+root yang sama; outlet/principal dan lineage tetap. Salesman wajib follow-up/push
+approval ke manager secara manual; tidak ada pesan/notifikasi otomatis. Setelah
+lewat hari, draft/pending/history tetap terlihat dan tersimpan untuk tindak lanjut,
+tanpa auto-accept/reject/backdate/reopen. CAS penulisan dan keputusan baru diperiksa
+ulang terhadap root dan waktu saat ini. Replay command/keputusan sah pada hari
+root tetap dapat disinkronkan kemudian; replay bukan keputusan bisnis baru.
 Tidak membuka ulang kunjungan lama atau menimpa receipt/keputusan sebelumnya.
 
 Pending Requested wajib tanggal kirim ulang dan alasan: selisih tanggal bisnis
@@ -1480,3 +1486,14 @@ Saat ini reuse ID dengan source berbeda belum didukung untuk pengajuan baru;
 pointer/command/foto historis tidak dihapus atau ditulis ulang. Integrasi identitas
 assignment lintas hari tetap menunggu backend. Replay closing yang telah sah
 memakai daily_source historis milik command, meski daily sync hari baru sudah ada.
+
+
+### 18.3 Deadline koreksi dan approval SO (follow-up review6484752634)
+
+Pengajuan revisi baru/approval baru pada D+1 ditolak walaupun daily sync baru
+tersedia atau caller memalsukan occurred_at. Seluruh revisi yang sah harus punya
+business_date dan occurred_at di hari root. Penulisan CAS memeriksa waktu sebelum
+dan sesudah write; transaksi abort mempertahankan command/pointer/receipt lama.
+UI menonaktifkan edit/keputusan lewat hari, menyediakan baca draft historis offline,
+serta menampilkan kewajiban follow-up manual. Pending lewat hari belum mempunyai
+policy penyelesaian/reopen; tidak diubah menjadi status bisnis lain otomatis.

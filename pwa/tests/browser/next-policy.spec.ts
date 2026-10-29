@@ -14,6 +14,39 @@ test.beforeEach(async ({ context }) => {
         accuracy: 500,
     });
 });
+async function readSoState(page: Page) {
+    return page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const tx = db.transaction(["outbox", "drafts", "receipts"]);
+        const read = (name: string) =>
+            new Promise<any[]>((resolve) => {
+                const r = tx.objectStore(name).getAll();
+                r.onsuccess = () => resolve(r.result);
+            });
+        const [queue, drafts, receipts] = await Promise.all([
+            read("outbox"),
+            read("drafts"),
+            read("receipts"),
+        ]);
+        db.close();
+        return {
+            queue: queue.filter((r) =>
+                ["sales.order.submit", "sales.order.revise"].includes(
+                    r.command?.type,
+                ),
+            ),
+            drafts: drafts.filter(
+                (r) =>
+                    r.key.includes("sales-revision-form:") ||
+                    r.key.includes("sales-order-revision-v1:"),
+            ),
+            receipts: receipts.filter((r) => r.key.includes("sales.order.")),
+        };
+    });
+}
 async function delivery(page: Page) {
     await page.goto("./");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
@@ -28,112 +61,237 @@ async function openDo(page: Page, id = "DEMO-DO-001") {
     await task.getByLabel("Penerima", { exact: true }).fill("Toko Demo");
     return task;
 }
-test("rejected SO is corrected after visit closed, offline draft restores and parent remains immutable", async ({
-    page,
-    context,
-}) => {
-    await page.goto("./");
-    await ensureDaily(page);
-    await page
-        .getByRole("navigation")
-        .getByRole("button", { name: "Sales", exact: true })
-        .click();
-    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
-    await saveVisitPhoto(page, "check-in");
-    await page
-        .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
-        .click();
-    await expect(
-        page.getByText("Kunjungan lokal aktif", { exact: true }),
-    ).toBeVisible();
-    await page
-        .getByRole("button", { name: "Buat order di outlet", exact: true })
-        .click();
-    await page
-        .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
-        .fill("1");
-    await page.getByLabel("Diskon diminta (%)", { exact: true }).fill("5");
-    await page
-        .getByLabel("Alasan permintaan diskon", { exact: true })
-        .fill("Promo pertama");
-    await page
-        .getByRole("button", { name: "Simpan ke antrean demo", exact: true })
-        .click();
-    await saveVisitPhoto(page, "check-out");
-    await page
-        .getByRole("button", { name: "Tutup kunjungan demo", exact: true })
-        .click();
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page
-        .getByLabel("Alasan keputusan diskon", { exact: true })
-        .fill("Diskon terlalu besar");
-    await page
-        .getByRole("button", { name: "Simulasikan tolak diskon", exact: true })
-        .click();
-    await page.getByText(/Riwayat SO ·/).click();
-    await page
-        .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
-        .click();
-    await page
-        .getByLabel("Alasan koreksi SO", { exact: true })
-        .fill("Ganti SKU dan diskon");
-    await page
-        .getByLabel("Qty revisi Biskuit Kelapa 300 g", { exact: true })
-        .fill("0");
-    await page
-        .getByLabel("Qty revisi Wafer Cokelat 24 g", { exact: true })
-        .fill("3");
-    await page
-        .getByLabel("Satuan revisi Wafer Cokelat 24 g", { exact: true })
-        .selectOption("pcs");
-    await page.getByLabel("Diskon revisi (%)", { exact: true }).fill("2");
-    await page
-        .getByLabel("Alasan diskon revisi", { exact: true })
-        .fill("Promo revisi");
-    await page.evaluate(() => navigator.serviceWorker.ready);
-    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-    await context.setOffline(true);
-    await page
-        .getByRole("button", { name: "Simpan draft koreksi SO", exact: true })
-        .click();
-    await expect(
-        page.getByText("Draft koreksi SO tersimpan offline.", { exact: true }),
-    ).toBeVisible();
-    await page.reload();
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByText(/Riwayat SO ·/).click();
-    await page
-        .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
-        .click();
-    await expect(
-        page.getByLabel("Qty revisi Wafer Cokelat 24 g", { exact: true }),
-    ).toHaveValue("3");
-    await page
-        .getByRole("button", { name: "Ajukan revisi SO", exact: true })
-        .click();
-    await expect(page.getByText(/Revisi baru masuk antrean/)).toBeVisible();
-    await context.setOffline(false);
-    await expect(
-        page.getByRole("heading", {
-            name: "Simulator approval diskon",
-            exact: true,
-        }),
-    ).toBeVisible();
-    await page
-        .getByLabel("Alasan keputusan diskon", { exact: true })
-        .fill("Revisi disetujui");
-    await page
-        .getByRole("button", {
-            name: "Simulasikan setujui diskon",
-            exact: true,
-        })
-        .click();
-    await expect(page.getByText(/Riwayat SO ·.*2 pengajuan/)).toBeVisible();
-    await page.screenshot({
-        path: `test-results/so-revision-${test.info().project.name}.png`,
-        fullPage: true,
+for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
+    test(`rejected SO after visit closed, offline draft and root-day rule: ${flow}`, async ({
+        page,
+        context,
+    }) => {
+        await page.clock.install({ time: new Date("2026-10-28T15:50:00Z") });
+        await page.goto("./");
+        await ensureDaily(page);
+        await page
+            .getByRole("navigation")
+            .getByRole("button", { name: "Sales", exact: true })
+            .click();
+        await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+        await saveVisitPhoto(page, "check-in");
+        await page
+            .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
+            .click();
+        await expect(
+            page.getByText("Kunjungan lokal aktif", { exact: true }),
+        ).toBeVisible();
+        await page
+            .getByRole("button", { name: "Buat order di outlet", exact: true })
+            .click();
+        await page
+            .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
+            .fill("1");
+        await page.getByLabel("Diskon diminta (%)", { exact: true }).fill("5");
+        await page
+            .getByLabel("Alasan permintaan diskon", { exact: true })
+            .fill("Promo pertama");
+        await page
+            .getByRole("button", {
+                name: "Simpan ke antrean demo",
+                exact: true,
+            })
+            .click();
+        await saveVisitPhoto(page, "check-out");
+        await page
+            .getByRole("button", { name: "Tutup kunjungan demo", exact: true })
+            .click();
+        await page
+            .getByRole("button", { name: "Lainnya", exact: true })
+            .click();
+        await page
+            .getByLabel("Alasan keputusan diskon", { exact: true })
+            .fill("Diskon terlalu besar");
+        await page
+            .getByRole("button", {
+                name: "Simulasikan tolak diskon",
+                exact: true,
+            })
+            .click();
+        await page.getByText(/Riwayat SO ·/).click();
+        await page
+            .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
+            .click();
+        await page
+            .getByLabel("Alasan koreksi SO", { exact: true })
+            .fill("Ganti SKU dan diskon");
+        await page
+            .getByLabel("Qty revisi Biskuit Kelapa 300 g", { exact: true })
+            .fill("0");
+        await page
+            .getByLabel("Qty revisi Wafer Cokelat 24 g", { exact: true })
+            .fill("3");
+        await page
+            .getByLabel("Satuan revisi Wafer Cokelat 24 g", { exact: true })
+            .selectOption("pcs");
+        await page.getByLabel("Diskon revisi (%)", { exact: true }).fill("2");
+        await page
+            .getByLabel("Alasan diskon revisi", { exact: true })
+            .fill("Promo revisi");
+        await page.evaluate(() => navigator.serviceWorker.ready);
+        await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+        await context.setOffline(true);
+        await page
+            .getByRole("button", {
+                name: "Simpan draft koreksi SO",
+                exact: true,
+            })
+            .click();
+        await expect(
+            page.getByText("Draft koreksi SO tersimpan offline.", {
+                exact: true,
+            }),
+        ).toBeVisible();
+        await page.reload();
+        await page
+            .getByRole("button", { name: "Lainnya", exact: true })
+            .click();
+        await page.getByText(/Riwayat SO ·/).click();
+        await page
+            .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
+            .click();
+        await expect(
+            page.getByLabel("Qty revisi Wafer Cokelat 24 g", { exact: true }),
+        ).toHaveValue("3");
+        if (flow === "expired-draft") {
+            const before = await readSoState(page);
+            await page.clock.setSystemTime(new Date("2026-10-28T16:00:00Z"));
+            await page.clock.runFor(1000);
+            await expect(
+                page.getByRole("button", {
+                    name: "Ajukan revisi SO",
+                    exact: true,
+                }),
+            ).toBeDisabled();
+            await page.reload();
+            await page
+                .getByRole("button", { name: "Lainnya", exact: true })
+                .click();
+            await page.getByText(/Riwayat SO ·/).click();
+            await page
+                .getByRole("button", {
+                    name: "Lihat draft koreksi lewat hari",
+                    exact: true,
+                })
+                .click();
+            await expect(
+                page.getByLabel("Qty revisi Wafer Cokelat 24 g", {
+                    exact: true,
+                }),
+            ).toHaveValue("3");
+            await expect(
+                page.getByLabel("Qty revisi Wafer Cokelat 24 g", {
+                    exact: true,
+                }),
+            ).toBeDisabled();
+            await expect(
+                page
+                    .getByRole("status")
+                    .filter({ hasText: /Lewat batas hari root SO/ })
+                    .first(),
+            ).toBeVisible();
+            expect(await readSoState(page)).toEqual(before);
+            await context.setOffline(false);
+            await ensureDaily(page);
+            await expect(
+                page.getByRole("button", {
+                    name: "Ajukan revisi SO",
+                    exact: true,
+                }),
+            ).toBeDisabled();
+            await expect(
+                page
+                    .getByText(
+                        /follow-up\/push approval ke manager secara manual/,
+                    )
+                    .first(),
+            ).toBeVisible();
+            expect(await readSoState(page)).toEqual(before);
+            return;
+        }
+        await page
+            .getByRole("button", { name: "Ajukan revisi SO", exact: true })
+            .click();
+        await expect(page.getByText(/Revisi baru masuk antrean/)).toBeVisible();
+        await context.setOffline(false);
+        await expect(
+            page.getByRole("heading", {
+                name: "Simulator approval diskon",
+                exact: true,
+            }),
+        ).toBeVisible();
+        if (flow === "expired-pending") {
+            const before = await readSoState(page);
+            await page.clock.setSystemTime(new Date("2026-10-28T16:00:00Z"));
+            await page.clock.runFor(1000);
+            await expect(
+                page.getByRole("button", {
+                    name: "Simulasikan setujui diskon",
+                    exact: true,
+                }),
+            ).toBeDisabled();
+            await expect(
+                page.getByRole("button", {
+                    name: "Simulasikan tolak diskon",
+                    exact: true,
+                }),
+            ).toBeDisabled();
+            await context.setOffline(true);
+            await page.reload();
+            await page
+                .getByRole("button", { name: "Lainnya", exact: true })
+                .click();
+            await expect(
+                page.getByRole("button", {
+                    name: "Simulasikan setujui diskon",
+                    exact: true,
+                }),
+            ).toBeDisabled();
+            await expect(
+                page
+                    .getByRole("status")
+                    .filter({ hasText: /Lewat batas hari root SO/ })
+                    .first(),
+            ).toBeVisible();
+            expect(await readSoState(page)).toEqual(before);
+            await context.setOffline(false);
+            await ensureDaily(page);
+            await expect(
+                page.getByRole("button", {
+                    name: "Simulasikan setujui diskon",
+                    exact: true,
+                }),
+            ).toBeDisabled();
+            await expect(
+                page
+                    .getByText(
+                        /follow-up\/push approval ke manager secara manual/,
+                    )
+                    .first(),
+            ).toBeVisible();
+            expect(await readSoState(page)).toEqual(before);
+            return;
+        }
+        await page
+            .getByLabel("Alasan keputusan diskon", { exact: true })
+            .fill("Revisi disetujui");
+        await page
+            .getByRole("button", {
+                name: "Simulasikan setujui diskon",
+                exact: true,
+            })
+            .click();
+        await expect(page.getByText(/Riwayat SO ·.*2 pengajuan/)).toBeVisible();
+        await page.screenshot({
+            path: `test-results/so-revision-${test.info().project.name}.png`,
+            fullPage: true,
+        });
     });
-});
 for (const days of [2, 3])
     test(`Pending Requested +${days} days enforces the approval ladder`, async ({
         page,
