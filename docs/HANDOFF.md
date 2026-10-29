@@ -1,5 +1,11 @@
 # HANDOFF
 
+## 2026-10-29T18:01:00+07:00 — antigravity agent — Optimasi Konteks ORM Odoo, Logging Periodik, dan Penyesuaian Timeout Runner GitHub Actions
+- [P1-1] Optimasi Konteks Mass Data Odoo ORM: Menambahkan context `tracking_disable=True, mail_create_nolog=True, mail_create_nosubscribe=True, mail_notrack=True, no_reset_password=True` pada `CanonicalPerpetualAdapter.__init__()` saat berjalan di real Odoo Environment untuk meniadakan ratusan ribu operasi chatter database yang memicu bottleneck.
+- [P1-2] Transparansi Logging Periodik: Menambahkan progress printout periodik setiap 100 order, 100 faktur, dan 100 pembayaran AR dengan `sys.stdout.flush()` pada `load_canonical_perpetual.py`. Menambahkan `-e PYTHONUNBUFFERED=1` pada docker exec workflow untuk mencegah stdout buffering.
+- [P1-3] Penyesuaian Timeout Runner GitHub Actions: Meningkatkan `timeout-minutes` dari 45 menit menjadi 180 menit pada `full-dataset-runtime.yml` agar pemuatan dataset penuh (1.324 SO, 1.281 DO, 1.276 faktur, 967 AR, audit multiset, dan replay Run 2) memiliki batas waktu yang realistis dan terukur sesuai panduan proyek.
+- [P1-4] Resilient Artifact Extraction: Menambahkan pembacaan fallback laporan dan ringkasan dari `/opt/` dan `/tmp/` pada step ekstraksi container.
+
 ## 2026-10-29T17:08:00+07:00 — antigravity agent — Resolusi Penentuan REPO_ROOT Tangguh Stdin Odoo Shell pada verify_disposable_full.py
 - Mengatasi `NameError: name '__file__' is not defined` saat skrip `scripts/ops/verify_disposable_full.py` dipiping ke stdin `odoo shell --no-http`.
 - Menyelaraskan deteksi path bertingkat (`try ... except NameError` dengan fallback ke `/opt/scripts` dan `/opt/data/registers`) konsisten dengan `verify_disposable_slice.py`.

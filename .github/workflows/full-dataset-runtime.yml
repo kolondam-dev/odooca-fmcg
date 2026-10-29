@@ -22,7 +22,7 @@ jobs:
   full-runtime-proof:
     name: Full Dataset Disposable Runtime Proof
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 180
 
     services:
       postgres:
@@ -94,13 +94,20 @@ jobs:
             -e GITHUB_SHA=${{ github.sha }} \
             -e ODOO_IMAGE_DIGEST="${{ env.ODOO_IMAGE_DIGEST }}" \
             -e GITHUB_RUN_ID=${{ github.run_id }} \
+            -e PYTHONUNBUFFERED=1 \
             odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_full.py 2>&1 | tee full_dataset_runtime.log
 
       - name: Ekstraksi Laporan & Ringkasan Runtime
         if: always()
         run: |
+          docker exec odoo cat /opt/full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || \
+          docker exec odoo cat /tmp/full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || \
           docker exec odoo cat full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || true
+
+          docker exec odoo cat /opt/full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || \
+          docker exec odoo cat /tmp/full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || \
           docker exec odoo cat full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || true
+
           docker logs odoo > odoo_container.log 2>&1 || true
 
       - name: Upload Artifact Diagnostik Full Runtime

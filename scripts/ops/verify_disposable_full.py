@@ -961,6 +961,14 @@ def run_full_disposable_verification(env, output_dir=None):
             with open(json_path, "w", encoding="utf-8") as f:
                 json.dump(report, f, indent=2, default=str)
             print(f"\n[Laporan JSON] Disimpan di: {json_path}")
+            # Salin ke /tmp jika berbeda direktori untuk kemudahan ekstraksi CI
+            tmp_json = Path("/tmp/full_dataset_runtime_report.json")
+            if json_path != tmp_json and Path("/tmp").is_dir():
+                try:
+                    with open(tmp_json, "w", encoding="utf-8") as f:
+                        json.dump(report, f, indent=2, default=str)
+                except Exception:
+                    pass
         except Exception as e:
             print(f"[WARN] Gagal menulis laporan JSON: {e}", file=sys.stderr)
 
@@ -1001,6 +1009,13 @@ def run_full_disposable_verification(env, output_dir=None):
             with open(md_path, "w", encoding="utf-8") as f:
                 f.write(md_summary)
             print(f"[Ringkasan MD] Disimpan di: {md_path}")
+            tmp_md = Path("/tmp/full_dataset_runtime_summary.md")
+            if md_path != tmp_md and Path("/tmp").is_dir():
+                try:
+                    with open(tmp_md, "w", encoding="utf-8") as f:
+                        f.write(md_summary)
+                except Exception:
+                    pass
         except Exception as e:
             print(f"[WARN] Gagal menulis ringkasan Markdown: {e}", file=sys.stderr)
 

@@ -23,6 +23,7 @@ from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 import json
 import logging
+import sys
 import pathlib
 
 _logger = logging.getLogger("canonical_perpetual_loader")
@@ -320,7 +321,18 @@ class CanonicalPerpetualAdapter:
     """Adapter yang memetakan register kanonikal ke model Odoo aktual dengan jaminan idempotensi."""
 
     def __init__(self, env, reg_path=None, cutoff_date="2026-07-31", enforce_invoice_cutoff=False):
-        self.env = env
+        # Optimasi performa Odoo ORM saat pemuatan seed massal (meniadakan overhead chatter dan mail tracking)
+        if callable(getattr(env, "__call__", None)) and hasattr(env, "context"):
+            self.env = env(context=dict(
+                env.context,
+                tracking_disable=True,
+                mail_create_nolog=True,
+                mail_create_nosubscribe=True,
+                mail_notrack=True,
+                no_reset_password=True,
+            ))
+        else:
+            self.env = env
         self.cr = env.cr
         self.company = env.company
         # Daftarkan explicit seed company ID ke ir.config_parameter untuk integritas fail-closed hook COGS
@@ -1968,7 +1980,11 @@ class CanonicalPerpetualAdapter:
         del_by_so = {dl["so_number"]: dl for dl in del_rows}
 
         sos_by_num = {}
-        for so_data in so_rows:
+        total_so_count = len(so_rows)
+        for idx, so_data in enumerate(so_rows, 1):
+            if idx % 100 == 0 or idx == total_so_count:
+                print(f"    [SO & DO Progress] {idx}/{total_so_count} diproses...")
+                sys.stdout.flush()
             header_p = build_so_header_payload(so_data)
             so_num = header_p["so_number"]
 
@@ -2046,7 +2062,11 @@ class CanonicalPerpetualAdapter:
         # agar rekonsiliasi pengiriman bersih (dispatched - return == billed) terpenuhi secara fisik
         self.load_rejections_quarantine(limit_orders=limit_orders, target_so_numbers=target_so_numbers)
 
-        for so_data in so_rows:
+        total_inv_count = len(so_rows)
+        for idx, so_data in enumerate(so_rows, 1):
+            if idx % 100 == 0 or idx == total_inv_count:
+                print(f"    [Invoice Progress] {idx}/{total_inv_count} diproses...")
+                sys.stdout.flush()
             header_p = build_so_header_payload(so_data)
             so_num = header_p["so_number"]
             so = sos_by_num.get(so_num)
@@ -2451,7 +2471,11 @@ class CanonicalPerpetualAdapter:
             }
             ar_rows = [ar for ar in ar_rows if ar["invoice_number"] in inv_sample]
 
-        for ar in ar_rows:
+        total_ar_count = len(ar_rows)
+        for idx, ar in enumerate(ar_rows, 1):
+            if idx % 100 == 0 or idx == total_ar_count:
+                print(f"    [AR Payment Progress] {idx}/{total_ar_count} diproses...")
+                sys.stdout.flush()
             p_data = build_ar_payment_payload(ar)
             pay_id = p_data["payment_id"]
             cust_partner = self.get_partner(p_data["customer_ref"])
