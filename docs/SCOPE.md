@@ -263,3 +263,13 @@ metadata lengkap dan scope user/company/hari sesuai bootstrap. Kontrak/adaptor
 read-model murni dijelaskan di [catalog-v2](../pwa/contracts/catalog-v2.md).
 Endpoint backend/auth/ACL/PJP/manifest dan transaksi resmi belum diimplementasikan
 pada tahap ini; live tetap terkunci. Full dataset/cut-off adalah acceptance terpisah.
+
+
+## 17. Tahap2 endpoint baca mobile (2026-10-29)
+
+Candidate addon id_mobile_api membatasi dua GET bootstrap/snapshot pada session
+internal mobile user dan penugasan harian admin. Company default akun, warehouse,
+pricelist, SKU dan outlet eksplisit; native ACL/record rules tanpa sudo. Stok hanya
+primary stock location terpilih, harga estimasi1karton/tax-excluded native. Delivery
+masih kosong; tidak ada command/evidence/write atau activation UI live. Runtime
+acceptance melalui install+ORM/HttpCase CI, lalu staging terpisah. Tidak deploy.

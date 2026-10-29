@@ -1520,3 +1520,24 @@ SO dengan idempotensi, approval/deadline root WITA dan kalkulasi server, lalu PO
 closing/evidence. Live tetap terkunci sampai masing-masing acceptance terpenuhi.
 Tahap1 tidak menambahkan endpoint/controller, memodifikasi seed/loader, menjalankan
 full-dataset runtime, atau mem-posting transaksi ke Odoo.
+
+
+## 20. Tahap2 baca: sesi Odoo dan penugasan eksplisit (2026-10-29)
+
+Addon id_mobile_api menyediakan dua GET JSON bootstrap/snapshot dengan cookie
+sesi Odoo dan group read-only mobile. Scope harian tersimpan pada id.mobile.workday,
+dikelola admin, own-user/company record rules; scope HTTP tidak dapat dipilih
+melalui URL. Company default akun, warehouse dan pricelist IDR serta whitelists
+SKU/outlet harus tersedia. Native ACL/record rules dipertahankan tanpa sudo.
+Harga mengacu1karton pada pricelist/hari assignment, tax-excluded lewat native
+compute_all; server command nanti tetap menghitung ulang harga/fiscal position.
+Stok hanya exact warehouse.lot_stock_id, mengecualikan reserved/consignment dan
+warehouse/company lain. Bukan seluruh child-bin/ledger warehouse. Delivery masih
+array kosong; belum ada mapping picking/PJP CSV otomatis, command, evidence atau
+activation live. Detail setup/batas: [addon read API](../../addons/id_mobile_api/README.md).
+
+Acceptance tahap ini adalah instal addon dan ORM/HttpCase nyata, session/role/
+company/warehouse/own-assignment ACL, no-store, scope tampering, invalid config dan
+read tanpa business writes. CI install-test wajib memasang dan menguji addon baru.
+Tidak mengubah seed/loader/register atau melakukan deployment. PWA live dan hosting
+API tetap terkunci sampai acceptance integrasi UI/proxy dan server write terpisah.

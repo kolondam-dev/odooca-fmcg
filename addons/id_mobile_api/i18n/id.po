@@ -1,0 +1,59 @@
+# Translation of FMCG Mobile Read API.
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo 19.0\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: id_mobile_api
+#: model:res.groups,name:id_mobile_api.group_mobile_sales
+msgid "FMCG Mobile Sales Read"
+msgstr "Akses Baca Sales Mobile FMCG"
+
+#. module: id_mobile_api
+#: model:ir.actions.act_window,name:id_mobile_api.action_mobile_workday
+msgid "Mobile Read Assignments"
+msgstr "Penugasan Baca Mobile"
+
+#. module: id_mobile_api
+#: model:ir.model.fields,field_description:id_mobile_api.field_id_mobile_workday__outlet_ids
+msgid "Scheduled Outlets"
+msgstr "Outlet Terjadwal"
+
+#. module: id_mobile_api
+#: model:ir.model.fields,field_description:id_mobile_api.field_id_mobile_workday__product_ids
+msgid "Allowed Products"
+msgstr "Produk yang Diizinkan"
+
+#. module: id_mobile_api
+#: model:ir.model.fields,field_description:id_mobile_api.field_id_mobile_workday__outlet_radius
+msgid "Outlet Geofence Radius (m)"
+msgstr "Radius Geofence Outlet (m)"
+
+#. module: id_mobile_api
+#: model_terms:ir.ui.view,arch_db:id_mobile_api.view_mobile_workday_form
+msgid "Explicit read scope"
+msgstr "Cakupan baca eksplisit"
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_workday.py:0
+msgid "Mobile read access is not enabled."
+msgstr "Akses baca mobile belum diaktifkan."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_workday.py:0
+msgid "An active assignment for today is required."
+msgstr "Penugasan aktif untuk hari ini wajib tersedia."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_workday.py:0
+msgid "The business day changed; bootstrap again."
+msgstr "Hari bisnis berubah; lakukan bootstrap ulang."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_workday.py:0
+msgid "Assign at least one product and scheduled outlet before enabling mobile reads."
+msgstr "Tetapkan minimal satu produk dan outlet terjadwal sebelum mengaktifkan akses baca mobile."
