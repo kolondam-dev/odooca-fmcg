@@ -1497,3 +1497,26 @@ dan sesudah write; transaksi abort mempertahankan command/pointer/receipt lama.
 UI menonaktifkan edit/keputusan lewat hari, menyediakan baca draft historis offline,
 serta menampilkan kewajiban follow-up manual. Pending lewat hari belum mempunyai
 policy penyelesaian/reopen; tidak diubah menjadi status bisnis lain otomatis.
+
+
+## 19. Integrasi bertahap setelah main b957e02 (2026-10-29)
+
+Mandat pemilik: mulai bertahap dari mapping/satuan per SKU dan kontrak snapshot,
+kemudian bootstrap/snapshot backend, SO, dan delivery. Fondasi seed kanonikal sudah
+ada di main; full-dataset runtime dan cut-off tetap acceptance antigravity terpisah.
+
+Tahap1 client: catalog v2 dengan scope user/company/warehouse/hari, SKU stabil,
+rasio carton/pack/pcs per produk dan basis harga/stok eksplisit karton. Adapter
+read-model Odoo terotorisasi diuji tanpa menyalin harga/stok ORM secara buta.
+HTTP adapter menolak katalog tanpa metadata/scope yang cocok. UI order/koreksi,
+quote dan validasi menggunakan rasio snapshot asal. Legacy demo tanpa metadata
+mempertahankan144/12/1, tidak dimigrasi diam-diam. Tiga SKU demo lama tetap144/12,
+tambahan SKU24/6 membuktikan rasio campuran. Kontrak draft0.13:
+[pwa/contracts/catalog-v2.md](../../pwa/contracts/catalog-v2.md).
+
+Tahap2 berikutnya: endpoint baca resmi dan acceptance auth/ACL/mapping user-company-
+warehouse, PJP/outlet, pricelist/stok, identitas assignment/manifest. Tahap3: command
+SO dengan idempotensi, approval/deadline root WITA dan kalkulasi server, lalu POD/
+closing/evidence. Live tetap terkunci sampai masing-masing acceptance terpenuhi.
+Tahap1 tidak menambahkan endpoint/controller, memodifikasi seed/loader, menjalankan
+full-dataset runtime, atau mem-posting transaksi ke Odoo.

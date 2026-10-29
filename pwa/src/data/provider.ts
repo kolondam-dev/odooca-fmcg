@@ -5,10 +5,12 @@ import {
     SnapshotSchema,
     type Command,
     type FieldProvider,
+    type Identity,
 } from "../domain/contracts";
 export class HttpProvider implements FieldProvider {
     readonly mode = "live" as const;
     private csrf?: string;
+    private identity?: Identity;
     private async request(path: string, body?: unknown) {
         const response = await fetch(`/api/v1/${path}`, {
             credentials: "same-origin",
@@ -36,14 +38,36 @@ export class HttpProvider implements FieldProvider {
         return response.json();
     }
     async bootstrap() {
+        this.identity = undefined;
+        this.csrf = undefined;
         const identity = IdentitySchema.parse(
             await this.request("me/bootstrap"),
         );
         this.csrf = identity.csrfToken;
+        this.identity = identity;
         return identity;
     }
     async snapshot() {
-        return SnapshotSchema.parse(await this.request("sync/snapshot"));
+        if (!this.identity)
+            throw new ApiError(401, "Bootstrap wajib sebelum snapshot.");
+        const identity = this.identity;
+        const snapshot = SnapshotSchema.parse(
+            await this.request("sync/snapshot"),
+        );
+        if (this.identity !== identity)
+            throw new ApiError(409, "Sesi berubah saat snapshot dibaca.");
+        if (
+            snapshot.catalog_version !== 2 ||
+            !snapshot.scope ||
+            snapshot.scope.company_id !== identity.companyId ||
+            snapshot.scope.user_id !== identity.id ||
+            snapshot.scope.business_date !== identity.businessDate
+        )
+            throw new ApiError(
+                422,
+                "Scope/satuan snapshot tidak cocok dengan sesi bootstrap.",
+            );
+        return snapshot;
     }
     async submit(command: Command) {
         if (!this.csrf) throw new ApiError(401, "CSRF/session belum tersedia.");

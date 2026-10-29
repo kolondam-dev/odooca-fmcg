@@ -179,3 +179,127 @@ test("multi-SKU partial requires line reasons, closes session offline and update
     await startDelivery(next);
     await expect(next.getByText(/Sesi delivery aktif/)).toBeVisible();
 });
+
+test("SKU packaging drives new order and offline correction prices independently", async ({
+    page,
+    context,
+}) => {
+    await page.goto("./");
+    await ensureDaily(page);
+    await page
+        .getByRole("navigation")
+        .getByRole("button", { name: "Sales", exact: true })
+        .click();
+    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    await saveVisitPhoto(page, "check-in");
+    await page
+        .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
+        .click();
+    await page
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
+        .click();
+    const units = page.getByLabel("Satuan Biskuit Mini 24 pcs", {
+        exact: true,
+    });
+    await expect(units.locator('option[value="carton"]')).toHaveText(
+        "Karton · 24 pcs",
+    );
+    await expect(units.locator('option[value="pack"]')).toHaveText(
+        "Pack · 6 pcs",
+    );
+    await units.selectOption("pack");
+    await page
+        .getByLabel("Kuantitas Biskuit Mini 24 pcs", { exact: true })
+        .fill("2");
+    await page
+        .getByLabel("Satuan Biskuit Kelapa 300 g", { exact: true })
+        .selectOption("pack");
+    await page
+        .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
+        .fill("1");
+    await page.getByLabel("Diskon diminta (%)", { exact: true }).fill("5");
+    await page
+        .getByLabel("Alasan permintaan diskon", { exact: true })
+        .fill("Promo kemasan SKU");
+    await page
+        .getByRole("button", { name: "Simpan ke antrean demo", exact: true })
+        .click();
+    await saveVisitPhoto(page, "check-out");
+    await page
+        .getByRole("button", { name: "Tutup kunjungan demo", exact: true })
+        .click();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page
+        .getByLabel("Alasan keputusan diskon", { exact: true })
+        .fill("Revisi jumlah pack");
+    await page
+        .getByRole("button", { name: "Simulasikan tolak diskon", exact: true })
+        .click();
+    await page.getByText(/Riwayat SO ·/).click();
+    await page
+        .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
+        .click();
+    await expect(
+        page
+            .getByLabel("Satuan revisi Biskuit Mini 24 pcs", { exact: true })
+            .locator('option[value="pack"]'),
+    ).toHaveText("Pack6pcs");
+    await page
+        .getByLabel("Qty revisi Biskuit Kelapa 300 g", { exact: true })
+        .fill("0");
+    await page
+        .getByLabel("Qty revisi Biskuit Mini 24 pcs", { exact: true })
+        .fill("1");
+    await page.getByLabel("Diskon revisi (%)", { exact: true }).fill("0");
+    await page
+        .getByLabel("Alasan koreksi SO", { exact: true })
+        .fill("Satu pack enam pcs");
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await context.setOffline(true);
+    await page
+        .getByRole("button", { name: "Simpan draft koreksi SO", exact: true })
+        .click();
+    await expect(
+        page.getByText("Draft koreksi SO tersimpan offline.", { exact: true }),
+    ).toBeVisible();
+    await page.reload();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByText(/Riwayat SO ·/).click();
+    await page
+        .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
+        .click();
+    await expect(
+        page.getByLabel("Satuan revisi Biskuit Mini 24 pcs", { exact: true }),
+    ).toHaveValue("pack");
+    await page
+        .getByRole("button", { name: "Ajukan revisi SO", exact: true })
+        .click();
+    await expect(page.getByText(/Revisi baru masuk antrean/)).toBeVisible();
+    const commands = await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const rows = await new Promise<any[]>((resolve) => {
+            const r = db.transaction("outbox").objectStore("outbox").getAll();
+            r.onsuccess = () => resolve(r.result);
+        });
+        db.close();
+        return rows
+            .map((r) => r.command)
+            .filter(
+                (c) =>
+                    c.type === "sales.order.submit" ||
+                    c.type === "sales.order.revise",
+            );
+    });
+    expect(
+        commands.find((c) => c.type === "sales.order.submit").payload
+            .observed_total,
+    ).toBe("26220");
+    expect(
+        commands.find((c) => c.type === "sales.order.revise").payload
+            .observed_total,
+    ).toBe("6000");
+});

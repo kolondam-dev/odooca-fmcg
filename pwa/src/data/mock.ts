@@ -51,7 +51,15 @@ export class MockProvider implements FieldProvider {
         };
     }
     async snapshot(): Promise<Snapshot> {
+        const identity = await this.bootstrap();
         return {
+            catalog_version: 2,
+            scope: {
+                company_id: identity.companyId,
+                user_id: identity.id,
+                business_date: identity.businessDate,
+                warehouse_id: "SIM-WH-MAUMBI",
+            },
             version: "demo-snapshot-1",
             updatedAt: new Date().toISOString(),
             outlets: [
@@ -107,6 +115,10 @@ export class MockProvider implements FieldProvider {
                     unit: "karton 144 pcs / pack 12 pcs",
                     price: 187200,
                     stock: 48,
+                    sku_code: "SIM-SKU-1",
+                    price_basis: "carton",
+                    stock_basis: "carton",
+                    packaging: { carton: 144, pack: 12, pcs: 1 },
                 },
                 {
                     id: "demo-product-2",
@@ -116,6 +128,10 @@ export class MockProvider implements FieldProvider {
                     unit: "karton 144 pcs / pack 12 pcs",
                     price: 158400,
                     stock: 32,
+                    sku_code: "SIM-SKU-2",
+                    price_basis: "carton",
+                    stock_basis: "carton",
+                    packaging: { carton: 144, pack: 12, pcs: 1 },
                 },
                 {
                     id: "demo-product-3",
@@ -125,6 +141,23 @@ export class MockProvider implements FieldProvider {
                     unit: "karton 144 pcs / pack 12 pcs",
                     price: 273600,
                     stock: 21,
+                    sku_code: "SIM-SKU-3",
+                    price_basis: "carton",
+                    stock_basis: "carton",
+                    packaging: { carton: 144, pack: 12, pcs: 1 },
+                },
+                {
+                    id: "demo-product-4",
+                    sku_code: "SIM-SKU-4",
+                    name: "Biskuit Mini 24 pcs",
+                    brand: "MAYORA • DEMO",
+                    principal: "mayora",
+                    unit: "karton 24 pcs / pack 6 pcs",
+                    price_basis: "carton",
+                    stock_basis: "carton",
+                    packaging: { carton: 24, pack: 6, pcs: 1 },
+                    price: 24000,
+                    stock: 40,
                 },
             ],
             deliveries: [

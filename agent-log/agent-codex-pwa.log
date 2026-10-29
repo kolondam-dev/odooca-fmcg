@@ -56,3 +56,11 @@
 -271 unit+1 hosting/typecheck/format/contracts/build/budget/Ruff/4 manifest/diff PASS. Tiga requirement tests FAIL sebelum fix. Regresi midnight/two-connection/CAS rollback/parent-date/replay;6 targeted browser PASS. Full100 dan CI final dilaporkan pada PR.
 - Backend/live/seed/addon/workflow/Railway tidak diubah, tidak merge/deploy; menunggu review ulang.
 - Task managed by agent-codex-pwa at 2026-10-29T08:03:45+07:00
+
+[2026-10-29T13:33:20+07:00] [INFO] Tahap1 catalog v2 dan rasio satuan SKU
+- Basis main b957e02; branch agen/pwa-sku-units-snapshot. Mandat implementasi bertahap mulai mapping kontrak/satuan sebelum endpoint/transactions.
+- Scope v2 company/user/warehouse/hari, SKU identity, packaging/basis harga-stok karton; adapter sanitasi read-model. HTTP bootstrap/scope guard dan stale-session response rejection; daily restore scope. Quote/form order+koreksi per-SKU; legacy demo144/12 tetap, demo tambahan24/6. OpenAPI0.13/rules/docs diperbarui.
+-291 unit+1 hosting+102 browser resmi PASS (default workers,tanpa retry/failed);2 targeted baru PASS. Metadata/rasio/identity/scope/session race, legacy JSON/quote, mixedSKU/offline correction diuji. Typecheck/format/contracts/build/budget/Ruff/4 manifest/diff PASS.
+- Endpoint/auth/ACL/PJP/manifest resmi dan backend write/live belum diimplementasi; full dataset/cut-off acceptance terpisah. Tidak menyentuh seed/register/master/addon/loader/deploy/workflow/Railway; tidak merge/deploy.
+- Menunggu CI/review tahap1, dilanjutkan endpoint baca resmi.
+- Task managed by agent-codex-pwa at 2026-10-29T13:33:20+07:00

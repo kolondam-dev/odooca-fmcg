@@ -70,6 +70,11 @@ function validMorningRecord(
         Date.parse(record.openedAt) < Date.parse(record.attendanceAt) ||
         Date.parse(record.openedAt) > Date.now() ||
         !validMorningSnapshot(record.snapshot, date) ||
+        (record.snapshot.catalog_version === 2 &&
+            (!record.snapshot.scope ||
+                `${record.snapshot.scope.company_id}:${record.snapshot.scope.user_id}` !==
+                    owner ||
+                record.snapshot.scope.business_date !== date)) ||
         Date.parse(record.snapshot.updatedAt) > Date.parse(record.openedAt)
     )
         return undefined;

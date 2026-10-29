@@ -1,3 +1,8 @@
+import {
+    PackagingSchema,
+    SnapshotScopeSchema,
+} from "../src/domain/product-units.ts";
+import { CatalogRowSchema } from "../src/data/catalog.ts";
 import { OrderRevisionSchema } from "../src/domain/order-revision-contracts.ts";
 import { TripCloseSchema } from "../src/domain/trip-close-contracts.ts";
 import { DeliveryRequestSchema } from "../src/domain/delivery-approval.ts";
@@ -75,6 +80,9 @@ function photoPairDependencies(schema) {
 }
 const schemas = Object.fromEntries(
     Object.entries({
+        Packaging: PackagingSchema,
+        SnapshotScope: SnapshotScopeSchema,
+        CatalogRow: CatalogRowSchema,
         OrderRevision: OrderRevisionSchema,
         TripClose: TripCloseSchema,
         DeliveryRequest: DeliveryRequestSchema,
@@ -95,6 +103,36 @@ const schemas = Object.fromEntries(
         const schema = z.toJSONSchema(value, { target: "draft-2020-12" });
         delete schema.$schema;
         photoPairDependencies(schema);
+        if (key === "Packaging")
+            schema["x-invariant"] =
+                "carton >= pack; carton % pack = 0; quantities in pcs";
+        if (key === "Snapshot")
+            schema.allOf = [
+                {
+                    if: {
+                        properties: { catalog_version: { const: 2 } },
+                        required: ["catalog_version"],
+                    },
+                    then: {
+                        required: ["scope"],
+                        properties: {
+                            version: { minLength: 1 },
+                            updatedAt: { format: "date-time" },
+                            products: {
+                                items: {
+                                    required: [
+                                        "sku_code",
+                                        "packaging",
+                                        "price_basis",
+                                        "stock_basis",
+                                    ],
+                                },
+                                "x-unique": ["id", "sku_code"],
+                            },
+                        },
+                    },
+                },
+            ];
         return [key, schema];
     }),
 );
@@ -110,7 +148,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.12.0",
+        version: "0.13.0",
         description:
             "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
     },

@@ -1,5 +1,13 @@
 # HANDOFF
 
+## 2026-10-29 — agent-codex-pwa — Tahap1 katalog dan satuan SKU
+**Mandat/basis:** pemilik meminta mulai implementasi bertahap setelah audit main b957e02 (merge PR37). Branch agen/pwa-sku-units-snapshot dari main tersebut, mempertahankan PWA db33cdd. Tahap1 dibatasi client+kontrak/read-model; endpoint baca resmi adalah tahap berikutnya.
+**Berubah:** katalog v2 membawa scope company/user/warehouse/hari, kode variant/SKU, packaging carton/pack/pcs, basis harga/stok karton. Adapter murni mapCatalogProducts memetakan read-model sanitasi/terotorisasi; harga/stok tidak diambil buta dari list_price/qty_available. Source field pada model/master aktual dipetakan di pwa/contracts/catalog-v2.md. HTTP provider memerlukan bootstrap/v2/scope company-user-hari cocok; bootstrap gagal mengosongkan identity/CSRF, respons dari bootstrap lama ditolak. Daily restore v2 mengecek owner/hari scope.
+**Satuan/UI:** quote/validasi dan form order/koreksi memakai rasio produk; label price/stock per karton. Tiga SKU demo lama144/12 dipertahankan, SKU demo tambahan24/6 menguji campuran. Snapshot demo lama tanpa metadata memakai144/12/1 seperti asalnya; metadata optional tanpa default tidak menulis ulang data lama. HTTP/live dan v2 tidak mempunyai fallback rasio. OpenAPI draft0.13 diekspor; constraint pembagian/uniqueness wajib direplikasi backend. Rules plan§19/SCOPE§16/README/contracts diperbarui.
+**Diverifikasi:**291 unit +1 hosting PASS,102 browser resmi PASS tanpa failed/retry/default workers (100 existing+2 baru) dan2 targeted baru PASS. Browser membuktikan mixed-SKU order gross27600/net26220 dan koreksi offline1pack24/6=6000 setelah reload. Unit menguji ekuivalensi unit per SKU, metadata/rasio tidak valid, duplicate IDs/codes, legacy quote/JSON, scope berbeda/expired dan bootstrap race. Typecheck/format/contracts/build demo+live/budget/Ruff/4 manifest/diff PASS. Official Headless Shell145.0.7632.6.
+**Batas:** tidak ada controller/auth/ACL resmi, PJP/outlet/manifest mapper resmi, upload evidence/backend write atau live activation. Full dataset/cut-off tetap acceptance antigravity terpisah. Harga/pajak/stok/akses warehouse final di backend; mapping hanya read-model. Data/register/master/addon/loader/deploy/workflow/ruleset/Railway tidak diubah. Tidak merge/deploy.
+**Menunggu:** CI/review PR tahap1; berikutnya endpoint bootstrap/snapshot terotorisasi dan acceptance mapping sebelum SO/delivery.
+
 ## 2026-10-29T12:39:00+07:00 — antigravity agent — Konfirmasi CI Selesai pada HEAD 3dc93bd (9/9 PASS) & Update Tabel PR #37
 **Status Verifikasi CI HEAD Terbaru (3dc93bd):**
 - Seluruh 9 job unik PR suite pada commit 3dc93bd telah selesai dan terbukti 100% HIJAU (PASS):

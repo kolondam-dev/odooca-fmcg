@@ -1,3 +1,4 @@
+import { PackagingSchema, SnapshotScopeSchema } from "./product-units.ts";
 import { TripCloseSchema } from "./trip-close-contracts.ts";
 import { OrderRevisionSchema } from "./order-revision-contracts.ts";
 import {
@@ -112,46 +113,86 @@ export const ReceiptSchema = z.object({
     reference: z.string(),
 });
 export type Receipt = z.infer<typeof ReceiptSchema>;
-export const SnapshotSchema = z.object({
-    version: z.string(),
-    updatedAt: z.string(),
-    outlets: z.array(
-        z.object({
-            id: z.string(),
-            name: z.string(),
-            channel: z.string(),
-            address: z.string(),
-            distance: z.string(),
-            time: z.string(),
-            latitude: z.number(),
-            longitude: z.number(),
-            radius: z.number().min(5).max(15),
-            demo_unrestricted: z.literal(true).optional(),
-        }),
-    ),
-    products: z.array(
-        z.object({
-            id: z.string(),
-            name: z.string(),
-            brand: z.string(),
-            principal: z.string(),
-            unit: z.string(),
-            price: z.number().nonnegative(),
-            stock: z.number().nonnegative(),
-        }),
-    ),
-    deliveries: z.array(
-        z.object({
-            id: z.string(),
-            outlet: z.string(),
-            address: z.string(),
-            items: z.number(),
-            cartons: z.number(),
-            trip: z.string(),
-            vehicle: z.string(),
-        }),
-    ),
-});
+export const SnapshotSchema = z
+    .object({
+        catalog_version: z.literal(2).optional(),
+        scope: SnapshotScopeSchema.optional(),
+        version: z.string(),
+        updatedAt: z.string(),
+        outlets: z.array(
+            z.object({
+                id: z.string(),
+                name: z.string(),
+                channel: z.string(),
+                address: z.string(),
+                distance: z.string(),
+                time: z.string(),
+                latitude: z.number(),
+                longitude: z.number(),
+                radius: z.number().min(5).max(15),
+                demo_unrestricted: z.literal(true).optional(),
+            }),
+        ),
+        products: z.array(
+            z.object({
+                id: z.string(),
+                name: z.string(),
+                brand: z.string(),
+                principal: z.string(),
+                unit: z.string(),
+                price: z.number().nonnegative(),
+                stock: z.number().nonnegative(),
+                sku_code: z.string().trim().min(1).optional(),
+                packaging: PackagingSchema.optional(),
+                price_basis: z.literal("carton").optional(),
+                stock_basis: z.literal("carton").optional(),
+            }),
+        ),
+        deliveries: z.array(
+            z.object({
+                id: z.string(),
+                outlet: z.string(),
+                address: z.string(),
+                items: z.number(),
+                cartons: z.number(),
+                trip: z.string(),
+                vehicle: z.string(),
+            }),
+        ),
+    })
+    .superRefine((snapshot, ctx) => {
+        if (snapshot.catalog_version === 2) {
+            if (
+                !snapshot.scope ||
+                !snapshot.version.trim() ||
+                !z.iso.datetime().safeParse(snapshot.updatedAt).success ||
+                snapshot.products.some(
+                    (p) =>
+                        !p.packaging ||
+                        !p.sku_code ||
+                        !p.id.trim() ||
+                        !p.principal.trim() ||
+                        p.price_basis !== "carton" ||
+                        p.stock_basis !== "carton",
+                )
+            )
+                ctx.addIssue({
+                    code: "custom",
+                    message:
+                        "Catalog v2 wajib scope, versi, timestamp, kode SKU dan rasio satuan lengkap.",
+                });
+            if (
+                new Set(snapshot.products.map((p) => p.id)).size !==
+                    snapshot.products.length ||
+                new Set(snapshot.products.map((p) => p.sku_code)).size !==
+                    snapshot.products.length
+            )
+                ctx.addIssue({
+                    code: "custom",
+                    message: "Identitas/kode SKU ganda.",
+                });
+        }
+    });
 export type Snapshot = z.infer<typeof SnapshotSchema>;
 export type Scenario =
     | "normal"
