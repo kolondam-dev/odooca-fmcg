@@ -1,5 +1,10 @@
 # HANDOFF
 
+## 2026-10-29 — agent-codex-pwa — Fix metadata PO tahap2
+**Temuan CI8045e9d:** install-test run40846565244 job123355489852 gagal memuat registry saat id_ui mengaktifkan id_ID: PoFileReader membutuhkan comment module dan source occurrence per entry pada id_mobile_api/i18n/id.po. Ini kegagalan sebelum tes API, bukan hasil runtime PASS.
+**Perbaikan:** seluruh10 entry PO diberi metadata module dan occurrence model/model_terms/code sesuai parser Odoo19 resmi. Tidak menonaktifkan bahasa/terjemahan atau mengubah security scope. Local polib memverifikasi metadata10 entry; Ruff/5 manifest/diff PASS. Menunggu instalasi+tes nyata pada CI SHA follow-up.
+**Batas:** kandidat PR40 tetap HOLD runtime/CI/review; tidak merge/deploy.
+
 ## 2026-10-29 — agent-codex-pwa — Tahap2 endpoint baca sesi Odoo
 **Mandat/basis:** lanjut tahap kedua setelah PR38 merged; main8d15083, branch agen/pwa-read-api. Scope read-only backend/bootstrap/snapshot; tidak mengaktifkan live atau endpoint command.
 **Berubah:** addon id_mobile_api (LGPL3/19.0), group read mobile hanya mengimplikasikan internal user (tidak memberi write Sales/Stock), model id.mobile.workday dengan unique user-company-hari dan ACL admin CRUD/own-user read-only plus company record rule. Penugasan admin menetapkan warehouse/pricelist IDR/SKU/outlet/radius untuk hari WITA; tidak mengimpor PJP/seed otomatis. Dua route GET session-cookie/readonly mengembalikan JSON401/403/400/409/422 sesuai boundary, no-store/private/Vary Cookie, tanpa CORS wildcard. Tidak menerima scope selector HTTP.

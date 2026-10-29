@@ -78,3 +78,8 @@
 - ORM/HttpCase tests nyata ditambahkan dan CI install-test memasang/tag addon baru. Local296 unit PWA/typecheck/contracts/Ruff/5 manifest/compile/diff/validators PASS; runtime lokal belum: Postgres setup terhalang setgroups/setuid. Hasil runtime CI di PR; tidak memakai stub sebagai bukti.
 - Tidak menyentuh seed/register/master/loader/deploy/Railway; tidak merge/deploy. HOLD runtime/CI/review. Tahap write/delivery/evidence/full dataset tetap terpisah.
 - Task managed by agent-codex-pwa at 2026-10-29T16:00:22+07:00
+
+[2026-10-29T16:09:14+07:00] [INFO] PO metadata follow-up tahap2 PR40
+- CI8045e9d install-test gagal sebelum API tests: Odoo PoFileReader memerlukan module comment dan source occurrences.
+- Metadata10 entry diperbaiki sesuai parser resmi; tidak bypass language/security atau mengubah tes API. Polib metadata check/Ruff/5 manifest/diff PASS. Runtime menunggu CI baru; HOLD, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T16:09:14+07:00
