@@ -1,5 +1,10 @@
 # HANDOFF
 
+## 2026-10-29 — agent-codex-pwa — Fixture/read-rule regression tahap2
+**Bukti CI0eff187:** registry/PO berhasil dimuat; HTTP bootstrap200/snapshot200 (stok1.5) serta anonymous401/portal403/role403/query400/POST405/origin400/commands404 PASS. Install-test run40847527292 job123358675002 masih FAILURE:0 failed/2 errors. Fixture product.product.copy menghasilkan ID False saat di-link; record-rule mengosongkan relation M2M sehingga empty-scope UserError muncul lebih awal daripada AccessError yang diasumsikan tes.
+**Perbaikan:** fixture duplikat kini product.product.create nyata dengan assertion persisted ID. Tes hidden product memastikan search tidak menemukan produk, env tidak sudo dan empty snapshot ditolak dengan error konfigurasi yang benar. Ditambah regresi partially hidden catalog: hanya produk visible yang dikembalikan, SKU hidden tidak muncul. Tidak mengubah service/ACL/record rule atau melemahkan pengujian menjadi stub/allowlist.
+**Verifikasi:** Ruff/5 manifest/diff PASS.13 tes endpoint ORM/HTTP ditargetkan pada CI baru; tidak mengklaim runtime hijau sebelum selesai. README memperjelas native M2M filtering/empty422/authorized subset. HOLD review/CI; tidak merge/deploy.
+
 ## 2026-10-29 — agent-codex-pwa — Fix metadata PO tahap2
 **Temuan CI8045e9d:** install-test run40846565244 job123355489852 gagal memuat registry saat id_ui mengaktifkan id_ID: PoFileReader membutuhkan comment module dan source occurrence per entry pada id_mobile_api/i18n/id.po. Ini kegagalan sebelum tes API, bukan hasil runtime PASS.
 **Perbaikan:** seluruh10 entry PO diberi metadata module dan occurrence model/model_terms/code sesuai parser Odoo19 resmi. Tidak menonaktifkan bahasa/terjemahan atau mengubah security scope. Local polib memverifikasi metadata10 entry; Ruff/5 manifest/diff PASS. Menunggu instalasi+tes nyata pada CI SHA follow-up.

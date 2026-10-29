@@ -75,6 +75,24 @@ class TestMobileRead(MobileFixture, TransactionCase):
         actor = user or self.mobile
         return self.env["id.mobile.workday"].with_user(actor).with_context(allowed_company_ids=actor.company_ids.ids)
 
+    def extra_product(self, code):
+        # Create a persisted second variant explicitly. product.product.copy()
+        # can return an empty variant record in Odoo19's template copy flow.
+        product = self.env["product.product"].create({
+            "name": "Extra API Product", "default_code": code, "principal_id": self.principal.id,
+            "company_id": False, "uom_id": self.product.uom_id.id, "list_price": 1000,
+            "carton_qty": 24, "inner_qty": 6, "type": "consu", "is_storable": True,
+            "taxes_id": [Command.clear()],
+        })
+        self.assertTrue(product.id)
+        return product
+
+    def hide_product_rule(self):
+        self.env["ir.rule"].create({
+            "name": "Hide assigned test product", "model_id": self.env.ref("product.model_product_product").id,
+            "domain_force": "[('id', '!=', %s)]" % self.product.id,
+        })
+
     def test_bootstrap_and_catalog_are_scoped_and_tax_excluded(self):
         bootstrap = self.service()._bootstrap_payload()
         self.assertEqual(bootstrap["id"], str(self.mobile.id))
@@ -139,18 +157,28 @@ class TestMobileRead(MobileFixture, TransactionCase):
         with self.assertRaises(UserError):
             self.service()._snapshot_payload()
         self.product.inner_qty = 6
-        duplicate = self.product.copy({"name": "Duplicate Code", "default_code": self.product.default_code})
+        duplicate = self.extra_product(self.product.default_code)
         self.assignment.product_ids = [Command.link(duplicate.id)]
         with self.assertRaises(UserError):
             self.service()._snapshot_payload()
 
     def test_product_record_rule_is_not_bypassed(self):
-        self.env["ir.rule"].create({
-            "name": "Hide assigned test product", "model_id": self.env.ref("product.model_product_product").id,
-            "domain_force": "[('id', '!=', %s)]" % self.product.id,
-        })
-        with self.assertRaises(AccessError):
+        self.hide_product_rule()
+        visible = self.env["product.product"].with_user(self.mobile).search([("id", "=", self.product.id)])
+        self.assertFalse(visible)
+        self.assertFalse(self.service().env.su)
+        # Odoo filters hidden records from the assignment's M2M relation. An
+        # entirely hidden catalog becomes empty and must not return a snapshot.
+        with self.assertRaisesRegex(UserError, "Assign at least one product"):
             self.service()._snapshot_payload()
+
+    def test_partially_hidden_catalog_contains_only_authorized_products(self):
+        visible = self.extra_product("API-VISIBLE")
+        self.assignment.product_ids = [Command.link(visible.id)]
+        self.hide_product_rule()
+        snapshot = self.service()._snapshot_payload()
+        self.assertEqual([p["id"] for p in snapshot["products"]], [str(visible.id)])
+        self.assertNotIn(self.product.default_code, str(snapshot))
 
     def test_day_rollover_is_conflict_not_a_new_scope(self):
         with patch("odoo.addons.id_mobile_api.models.mobile_workday.business_date", side_effect=[
