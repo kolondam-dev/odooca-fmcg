@@ -93,3 +93,45 @@
 - CIe39824d:0 failed/1 error pada ekspektasi partial response. Explicit check_access sudah menolak recordset terlarang; perilaku aman dipertahankan.
 - Regresi menguji visible search lalu AccessError pada snapshot; doc partial-response sebelumnya dikoreksi. Tidak mengubah service/ACL/sudo atau menghilangkan negative test. Ruff/5 manifest/diff PASS; runtime final menunggu. HOLD, tidak merge/deploy.
 - Task managed by agent-codex-pwa at 2026-10-29T16:26:42+07:00
+
+[2026-10-29T18:08:22+07:00] [INFO] Tahap3 sesi resmi dan UI baca staging
+- Basis main d06fbc6; staging explicit native Odoo login/bootstrap/daily snapshot. No demo/business outbox or persistence; readonly submit blocked before network.
+- Generation/day/session/offline/hidden invalidation; retire old field shell cache. Gateway template and disposable transport smoke added to CI.
+- Local307 unit+hosting/typecheck/contracts/format/Ruff5manifest/seed validators PASS; browser final and CI pending at this checkpoint. Root-cwd fixture failure rerun from pwa without loosening tests.
+- Actual staging E2E/TLS/cookie acceptance pending deployment owner; live locked, no merge/deploy. Demo documentation publication authorized by owner on PR40.
+- Task managed by agent-codex-pwa at 2026-10-29T18:08:22+07:00
+
+[2026-10-29T18:09:45+07:00] [INFO] Verifikasi final tahap3
+- Suite lengkap116 browser resmi PASS tanpa failed/retry;307 unit PASS. Preview ponsel diperiksa. Native gateway runtime menunggu CI, actual staging E2E belum dilakukan.
+- Task managed by agent-codex-pwa at 2026-10-29T18:09:45+07:00
+
+[2026-10-29T18:10:35+07:00] [INFO] Koreksi visual tombol staging
+- Preview ponsel menemukan teks tombol putih pada latar putih dari style global; warna teks di-scope ke read-actions. Regresi staging14 diulang setelah rebuild.
+- Task managed by agent-codex-pwa at 2026-10-29T18:10:35+07:00
+
+[2026-10-29T18:20:03+07:00] [INFO] PR41 debc68e CI final
+- Seluruh9 job CI hijau: PWA40863723493 (116 browser passed tanpa failed/flaky, gateway smoke PASS), Odoo40863723621 dan Seed40863723575.
+- Historical HANDOFF/log publication still blocked by automatic approval review after verifying owner authorization comment6494672354; code and scoped stage documentation published. Exact pending diff prepared separately. No merge/deploy; actual staging E2E pending.
+- Task managed by agent-codex-pwa at 2026-10-29T18:20:03+07:00
+
+[2026-10-29T18:54:00+07:00] [INFO] PR41 trusted proxy P2
+- Owner publication authorization reaffirmed explicitly in user request and PR41 comment6495639404; pending stage handoff/log additions included, append-only.
+- X-Forwarded-Host overwritten from gateway authority on both Odoo paths and static; strip alternative proxy headers. Real Werkzeug conditional fixture, disposable verified HTTPS/nondefault port and spoofed header regressions.
+-307 unit+1 hosting+3 fixture probes and local static/build gates PASS. Docker/Nginx TLS runtime and CI final pending. HOLD review, no merge/deploy, no actual staging E2E claim.
+- Task managed by agent-codex-pwa at 2026-10-29T18:54:00+07:00
+
+[2026-10-29T18:58:08+07:00] [INFO] Trusted proxy regression native runtime
+- Local Nginx1.24 + same committed curl assertions and Python/Werkzeug fixture: old debc68e template FAIL, fixed template HTTP and verified HTTPS PASS including spoofed forwarded headers, correct origin/nondefault port, secure cookie, denied invalid origin and commands.
+- Native runner uses isolated temp ports/cert/key, removed after checks; no staging deployment. Docker variant and all remote gates pending final SHA.
+- Task managed by agent-codex-pwa at 2026-10-29T18:58:08+07:00
+
+[2026-10-29T19:49:49+07:00] [INFO] Tahap4 official GPS/photo evidence
+- Owner requested implementation after PR41 merge; base ab2ccb5. Explicit capture capability, native multipart CSRF, master/assignment/day/geofence server authority, immutable private source+watermarked attachments and idempotent UUID receipt.
+- Staging form uses real GPS/no fallback, no local persistence, verifies receipt/source/derivative hashes; business commands/live remain locked. Gateway upload route + HTTPS transport smoke included.
+- Local316 unit+hosting+4 browser fixture cases/static/build/seed PASS; native Nginx HTTP/HTTPS smoke PASS. New native ORM/HttpCase await CI, no stub runtime claim. No merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T19:49:49+07:00
+
+[2026-10-29T20:00:33+07:00] [INFO] Evidence runtime follow-up
+- Candidate79e0706 actual Odoo54 tests0 failed0 errors; clean-log gate caught expected UUID uniqueness SQL error. Mute only that negative assertion; no weakening of constraint/production logging.
+- Fix ambiguous browser locator, add explicit receipt owner/company/warehouse/assignment validation and server clock boundary coverage. Watermark font/renderer checked. Local319 unit and12 capture repeats PASS without retries; final120 browser and new CI pending. No merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T20:00:33+07:00

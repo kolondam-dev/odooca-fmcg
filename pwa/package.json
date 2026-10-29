@@ -19,7 +19,8 @@
     "contracts:check": "node scripts/export-contracts.mjs --check",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"scripts/*.mjs\" \"hosting/*.mjs\" \"*.ts\" package.json",
     "test:hosting": "node --test hosting/server.test.mjs",
-    "start": "node hosting/server.mjs"
+    "start": "node hosting/server.mjs",
+    "build:staging": "vite build --mode staging"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.2.8",

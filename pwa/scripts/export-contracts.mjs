@@ -1,4 +1,8 @@
 import {
+    OfficialEvidenceMetadataSchema,
+    OfficialEvidenceReceiptSchema,
+} from "../src/domain/official-evidence.ts";
+import {
     PackagingSchema,
     SnapshotScopeSchema,
 } from "../src/domain/product-units.ts";
@@ -80,6 +84,8 @@ function photoPairDependencies(schema) {
 }
 const schemas = Object.fromEntries(
     Object.entries({
+        OfficialEvidenceMetadata: OfficialEvidenceMetadataSchema,
+        OfficialEvidenceReceipt: OfficialEvidenceReceiptSchema,
         Packaging: PackagingSchema,
         SnapshotScope: SnapshotScopeSchema,
         CatalogRow: CatalogRowSchema,
@@ -148,9 +154,9 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.13.0",
+        version: "0.14.0",
         description:
-            "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement.",
+            "Bootstrap/snapshot and explicit evidence routes are implemented by id_mobile_api. Business command routes remain draft and unavailable on staging.",
     },
     servers: [{ url: "/api/v1" }],
     paths: {
@@ -163,6 +169,85 @@ const spec = {
             },
         },
         "/sync/snapshot": { get: { responses: { 200: response("Snapshot") } } },
+        "/evidence": {
+            post: {
+                description:
+                    "Explicit evidence capability; native Odoo multipart csrf_token. Stores evidence only, not a business command.",
+                requestBody: {
+                    required: true,
+                    content: {
+                        "multipart/form-data": {
+                            schema: {
+                                type: "object",
+                                required: ["metadata", "photo", "csrf_token"],
+                                additionalProperties: false,
+                                properties: {
+                                    metadata: {
+                                        type: "string",
+                                        description:
+                                            "JSON OfficialEvidenceMetadata",
+                                    },
+                                    photo: { type: "string", format: "binary" },
+                                    csrf_token: { type: "string" },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    201: response("OfficialEvidenceReceipt"),
+                    200: response("OfficialEvidenceReceipt"),
+                    400: { description: "Invalid native CSRF or request" },
+                    403: { description: "Evidence capability or scope denied" },
+                    409: { description: "UUID/scope/day conflict" },
+                    413: { description: "Upload limit" },
+                    422: {
+                        description:
+                            "Invalid photo, stale fix or geofence not inside",
+                    },
+                },
+            },
+        },
+        "/evidence/{client_uuid}/{variant}": {
+            get: {
+                parameters: [
+                    {
+                        name: "client_uuid",
+                        in: "path",
+                        required: true,
+                        schema: { type: "string", format: "uuid" },
+                    },
+                    {
+                        name: "variant",
+                        in: "path",
+                        required: true,
+                        schema: {
+                            type: "string",
+                            enum: ["original", "watermarked"],
+                        },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description:
+                            "Private owner/company-scoped image; no-store",
+                        content: {
+                            "image/jpeg": {
+                                schema: { type: "string", format: "binary" },
+                            },
+                            "image/png": {
+                                schema: { type: "string", format: "binary" },
+                            },
+                        },
+                    },
+                    403: { description: "Evidence role/scope denied" },
+                    404: {
+                        description:
+                            "Image not found in current owner/company scope",
+                    },
+                },
+            },
+        },
         "/sync/commands": {
             post: {
                 parameters: [
@@ -196,7 +281,7 @@ const spec = {
         },
     },
     components: { schemas },
-    "x-status": "draft-client-only",
+    "x-status": "read-and-evidence-implemented-business-commands-draft",
     "x-auth": "same-origin cookie; no shared privileged API key",
 };
 const content = JSON.stringify(spec, null, 2) + "\n";

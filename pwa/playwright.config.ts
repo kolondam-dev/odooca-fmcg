@@ -38,5 +38,11 @@ export default defineConfig({
             port: 4174,
             reuseExistingServer: !process.env.CI,
         },
+        {
+            command: "npm start",
+            env: { PORT: "4175", PWA_DIST: "dist/staging" },
+            port: 4175,
+            reuseExistingServer: !process.env.CI,
+        },
     ],
 });

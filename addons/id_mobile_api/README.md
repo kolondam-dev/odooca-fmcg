@@ -77,3 +77,11 @@ Sandbox sesi ini tidak dapat memasang/menjalankan PostgreSQL (setgroups/setuid
 container dibatasi); runtime acceptance dinyatakan hanya setelah CI nyata lulus.
 Full dataset/cut-off seed tetap acceptance antigravity terpisah, tidak dimuat oleh
 API. Source/model/ACL yang diverifikasi harus diuji kembali di staging sebelum live.
+
+## Extension bukti resmi (tahap4)
+
+Hak `FMCG Mobile Evidence Capture` adalah opt-in terpisah. Endpoint multipart
+foto/GPS dengan native CSRF, server geofence dan source/derivative privat tersedia
+untuk staging. Ini tidak menambah business command. Detail dan batas acceptance
+terkini: [EVIDENCE.md](EVIDENCE.md); bagian read-only di atas menjelaskan dua route
+GET tahap2 dan tetap berlaku bagi user yang hanya memiliki role baca.
