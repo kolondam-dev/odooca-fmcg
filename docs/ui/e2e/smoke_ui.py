@@ -308,7 +308,8 @@ async def main():
                     post_actionability = await page.evaluate("""(lineFieldName) => {
                         const footer = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer))');
                         const list = document.querySelector('.o_form_sheet [name="' + lineFieldName + '"]');
-                        const row = list && list.querySelector('.o_data_row:last-child');
+                        const rows = list ? [...list.querySelectorAll('.o_data_row')] : [];
+                        const row = rows.length ? rows[rows.length - 1] : null;
                         let owner = row && row.parentElement;
                         while (owner && owner !== document.body) {
                             const cs = getComputedStyle(owner);
