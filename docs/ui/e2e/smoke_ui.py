@@ -156,7 +156,7 @@ async def main():
             // still spans the scrollport bottom. Sample the actual intersection of
             // that interval with the scroll range instead of assuming all late scroll
             // positions are sticky.
-            const pinEnd = Math.min(maxScroll, Math.max(0, containingBottomAtZero - scrollportBottom));
+            const pinEnd = Math.min(maxScroll, Math.max(0, containingBottomAtZero - scrollportBottomAtZero));
             const pinStart = Math.min(maxScroll, threshold);
             const pinSpan = Math.max(0, pinEnd - pinStart);
             const samples = [...new Set([
