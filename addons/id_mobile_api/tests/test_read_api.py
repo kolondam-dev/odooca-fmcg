@@ -172,13 +172,18 @@ class TestMobileRead(MobileFixture, TransactionCase):
         with self.assertRaisesRegex(UserError, "Assign at least one product"):
             self.service()._snapshot_payload()
 
-    def test_partially_hidden_catalog_contains_only_authorized_products(self):
+    def test_partially_hidden_catalog_is_held_by_explicit_access_check(self):
         visible = self.extra_product("API-VISIBLE")
         self.assignment.product_ids = [Command.link(visible.id)]
         self.hide_product_rule()
-        snapshot = self.service()._snapshot_payload()
-        self.assertEqual([p["id"] for p in snapshot["products"]], [str(visible.id)])
-        self.assertNotIn(self.product.default_code, str(snapshot))
+        # The remaining relation recordset must pass check_access as a whole.
+        # Do not bypass that check (or use sudo) just to return a partial result.
+        with self.assertRaises(AccessError):
+            self.service()._snapshot_payload()
+        allowed = self.env["product.product"].with_user(self.mobile).search([
+            ("id", "in", (self.product | visible).ids),
+        ])
+        self.assertEqual(allowed.ids, visible.ids)
 
     def test_day_rollover_is_conflict_not_a_new_scope(self):
         with patch("odoo.addons.id_mobile_api.models.mobile_workday.business_date", side_effect=[

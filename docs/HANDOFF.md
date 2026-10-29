@@ -1,5 +1,9 @@
 # HANDOFF
 
+## 2026-10-29 — agent-codex-pwa — Partial recordset fail-closed regression
+**CIe39824d:** fixture duplikat sudah valid, HTTP dan test lainnya berjalan; install-test40848748880/job123362722228 masih0 failed/1 error dari regresi partial catalog baru yang mengasumsikan snapshot parsial boleh dikembalikan. Bukti runtime menunjukkan explicit products.check_access menolak recordset yang masih mengandung produk tersembunyi. Ini fail-closed yang dipertahankan.
+**Perubahan:** tes sekarang membuktikan hanya SKU visible yang dapat di-search, lalu snapshot ditolak AccessError tanpa menghapus check_access/memakai sudo. README mengklarifikasi filtering M2M kosong422 dan pemeriksaan seluruh remaining recordset403. Klaim subset response pada entri sebelumnya dikoreksi oleh bukti ini. Tidak mengubah service/ACL atau tes negatif lainnya. Ruff/5 manifest/diff PASS;13 targeted endpoint tests menunggu CI final. HOLD, tidak merge/deploy.
+
 ## 2026-10-29 — agent-codex-pwa — Fixture/read-rule regression tahap2
 **Bukti CI0eff187:** registry/PO berhasil dimuat; HTTP bootstrap200/snapshot200 (stok1.5) serta anonymous401/portal403/role403/query400/POST405/origin400/commands404 PASS. Install-test run40847527292 job123358675002 masih FAILURE:0 failed/2 errors. Fixture product.product.copy menghasilkan ID False saat di-link; record-rule mengosongkan relation M2M sehingga empty-scope UserError muncul lebih awal daripada AccessError yang diasumsikan tes.
 **Perbaikan:** fixture duplikat kini product.product.create nyata dengan assertion persisted ID. Tes hidden product memastikan search tidak menemukan produk, env tidak sudo dan empty snapshot ditolak dengan error konfigurasi yang benar. Ditambah regresi partially hidden catalog: hanya produk visible yang dikembalikan, SKU hidden tidak muncul. Tidak mengubah service/ACL/record rule atau melemahkan pengujian menjadi stub/allowlist.
