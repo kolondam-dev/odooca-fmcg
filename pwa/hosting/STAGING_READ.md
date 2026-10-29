@@ -90,3 +90,13 @@ CORS wildcard; simpan bukti teredaksi tanpa token/cookie/credential.
 
 Belum ada klaim E2E staging nyata, deployment, atau kesiapan live. SO/approval dan
 Delivery/POD tetap tahap berikutnya setelah acceptance read staging selesai.
+
+## Extension evidence opt-in
+
+Akun dengan capability `evidence.capture` dapat memakai form foto/GPS sesudah
+sync. Gateway sekarang mengizinkan POST tepat `/api/v1/evidence` (body6MiB) dan
+GET dua variant foto ber-UUID; business command lain tetap404. Hak upload,
+native CSRF, batas file5MiB, server geofence, retensi source/derivative dan perilaku
+retry dijelaskan dalam `addons/id_mobile_api/EVIDENCE.md` di root repo. Form tidak
+membuat check-in/POD, tidak memakai koordinat fallback dan tidak menyimpan draft
+upload offline. Mode default/read-only serta demo tetap terpisah.

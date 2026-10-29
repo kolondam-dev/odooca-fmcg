@@ -20,4 +20,25 @@
         <field name="groups" eval="[(4, ref('base.group_system'))]"/>
         <field name="domain_force">[(1, '=', 1)]</field>
     </record>
+    <record id="group_mobile_evidence" model="res.groups">
+        <field name="name">FMCG Mobile Evidence Capture</field>
+        <field name="implied_ids" eval="[(4, ref('group_mobile_sales'))]"/>
+    </record>
+    <record id="evidence_company_rule" model="ir.rule">
+        <field name="name">Mobile evidence company isolation</field>
+        <field name="model_id" ref="model_id_mobile_evidence"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="evidence_own_rule" model="ir.rule">
+        <field name="name">Mobile users read only their evidence</field>
+        <field name="model_id" ref="model_id_mobile_evidence"/>
+        <field name="groups" eval="[(4, ref('group_mobile_evidence'))]"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+    </record>
+    <record id="evidence_admin_rule" model="ir.rule">
+        <field name="name">Administrators audit mobile evidence</field>
+        <field name="model_id" ref="model_id_mobile_evidence"/>
+        <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
 </odoo>

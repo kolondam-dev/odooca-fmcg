@@ -20,12 +20,14 @@ def serve(request):
         response = Response(status=302, headers={"Location": "/field/", "X-Fixture-Origin": origin})
         response.set_cookie("session_id", "gateway-test", httponly=True, samesite="Lax", secure=request.is_secure)
         return response
-    if request.path not in ("/api/v1/me/bootstrap", "/api/v1/sync/snapshot", "/web/proxy-probe"):
+    if request.path not in ("/api/v1/me/bootstrap", "/api/v1/sync/snapshot", "/web/proxy-probe", "/api/v1/evidence"):
         return Response(status=404)
     if request.cookies.get("session_id") != "gateway-test":
         return Response('{"error":"not_authenticated"}', status=401, content_type="application/json")
     if request.headers.get("Origin") and request.headers["Origin"] != origin:
         return Response('{"error":"invalid_origin"}', status=400, content_type="application/json")
+    if request.path == "/api/v1/evidence":
+        request.get_data(cache=False)  # consume disposable upload for transport smoke
     return Response(json.dumps({
         "fixture": True,
         "path": request.path,

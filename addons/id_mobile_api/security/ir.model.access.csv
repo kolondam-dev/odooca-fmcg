@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_mobile_workday_admin,Mobile workday administration,model_id_mobile_workday,base.group_system,1,1,1,1
 access_mobile_workday_user,Mobile workday own read,model_id_mobile_workday,group_mobile_sales,1,0,0,0
+access_mobile_evidence_user,Mobile evidence own read,model_id_mobile_evidence,group_mobile_evidence,1,0,0,0
+access_mobile_evidence_admin,Mobile evidence audit and retention,model_id_mobile_evidence,base.group_system,1,0,0,1

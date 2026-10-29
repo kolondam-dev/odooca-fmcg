@@ -16,7 +16,9 @@ export const IdentitySchema = z.object({
     name: z.string().min(1),
     title: z.string(),
     roles: z.array(Role),
-    capabilities: z.array(z.enum(["collection.capture"])).optional(),
+    capabilities: z
+        .array(z.enum(["collection.capture", "evidence.capture"]))
+        .optional(),
     businessDate: z.string(),
     csrfToken: z.string().optional(),
 });

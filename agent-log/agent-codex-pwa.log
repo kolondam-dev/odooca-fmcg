@@ -124,3 +124,14 @@
 - Local Nginx1.24 + same committed curl assertions and Python/Werkzeug fixture: old debc68e template FAIL, fixed template HTTP and verified HTTPS PASS including spoofed forwarded headers, correct origin/nondefault port, secure cookie, denied invalid origin and commands.
 - Native runner uses isolated temp ports/cert/key, removed after checks; no staging deployment. Docker variant and all remote gates pending final SHA.
 - Task managed by agent-codex-pwa at 2026-10-29T18:58:08+07:00
+
+[2026-10-29T19:49:49+07:00] [INFO] Tahap4 official GPS/photo evidence
+- Owner requested implementation after PR41 merge; base ab2ccb5. Explicit capture capability, native multipart CSRF, master/assignment/day/geofence server authority, immutable private source+watermarked attachments and idempotent UUID receipt.
+- Staging form uses real GPS/no fallback, no local persistence, verifies receipt/source/derivative hashes; business commands/live remain locked. Gateway upload route + HTTPS transport smoke included.
+- Local316 unit+hosting+4 browser fixture cases/static/build/seed PASS; native Nginx HTTP/HTTPS smoke PASS. New native ORM/HttpCase await CI, no stub runtime claim. No merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T19:49:49+07:00
+
+[2026-10-29T20:00:33+07:00] [INFO] Evidence runtime follow-up
+- Candidate79e0706 actual Odoo54 tests0 failed0 errors; clean-log gate caught expected UUID uniqueness SQL error. Mute only that negative assertion; no weakening of constraint/production logging.
+- Fix ambiguous browser locator, add explicit receipt owner/company/warehouse/assignment validation and server clock boundary coverage. Watermark font/renderer checked. Local319 unit and12 capture repeats PASS without retries; final120 browser and new CI pending. No merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T20:00:33+07:00
