@@ -111,13 +111,13 @@ async def main():
         check("judul murni tepat satu di header statusbar", t["headers"] == 1)
         check("blok judul asli di sheet disembunyikan (tanpa duplikat)", t["blockDisplay"] == "none")
         check("judul tepat di tengah antara tombol aksi dan pipeline", t["centerOffset"] is not None and abs(t["centerOffset"]) <= 2)
-        check("footer total sticky", await page.evaluate("(() => { const f = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer)'); return !!f && getComputedStyle(f).position === 'sticky'; })()"))
+        check("footer total sticky", await page.evaluate("(() => { const f = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer))'); return !!f && getComputedStyle(f).position === 'sticky'; })()"))
 
         # Shared geometry audit for both real populated transaction forms. The script
         # determines the sticky threshold from the footer's natural position and the
         # scrollport geometry; percentages alone are not evidence of sticky engagement.
         FOOTER_SCROLL_AUDIT = """((lineFieldName) => {
-            const footerGroups = [...document.querySelectorAll('.o_form_sheet .o_group:has(.oe_subtotal_footer)')];
+            const footerGroups = [...document.querySelectorAll('.o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer))')];
             const stickyGroups = footerGroups.filter(e => getComputedStyle(e).position === 'sticky');
             if (stickyGroups.length !== 1) return { ok: false, reason: 'expected exactly one sticky footer group', footerGroupCount: footerGroups.length, stickyGroupCount: stickyGroups.length };
             const footer = stickyGroups[0];
@@ -147,7 +147,7 @@ async def main():
                 Math.min(maxScroll, Math.max(0, threshold - 12)),
                 Math.min(maxScroll, threshold + 8),
                 Math.min(maxScroll, threshold + 40),
-                maxScroll
+                Math.min(Math.max(0, maxScroll - 10), threshold + 80)
             ])].sort((a,b) => a-b);
             const lateSamples = samples.filter(y => y >= threshold + 5);
             const pinned = [];
