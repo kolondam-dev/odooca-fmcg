@@ -13,6 +13,9 @@ from playwright.async_api import async_playwright
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8069"
 ORDER = sys.argv[2] if len(sys.argv) > 2 else "1"
+INVOICE = sys.argv[3] if len(sys.argv) > 3 else os.environ.get("UI_TEST_INVOICE")
+if not INVOICE:
+    raise SystemExit("UI smoke requires the populated invoice id from UI_FIXTURE as argument 3")
 
 
 TITLE_STATE = """(() => {
@@ -108,7 +111,198 @@ async def main():
         check("judul murni tepat satu di header statusbar", t["headers"] == 1)
         check("blok judul asli di sheet disembunyikan (tanpa duplikat)", t["blockDisplay"] == "none")
         check("judul tepat di tengah antara tombol aksi dan pipeline", t["centerOffset"] is not None and abs(t["centerOffset"]) <= 2)
-        check("footer total sticky", await page.evaluate("(() => { const f = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer)'); return !!f && getComputedStyle(f).position === 'sticky'; })()"))
+        check("footer total sticky", await page.evaluate("(() => { const f = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer))'); return !!f && getComputedStyle(f).position === 'sticky'; })()"))
+
+        # Shared geometry audit for both real populated transaction forms. The script
+        # determines the sticky threshold from the footer's natural position and the
+        # scrollport geometry; percentages alone are not evidence of sticky engagement.
+        FOOTER_SCROLL_AUDIT = """((lineFieldName) => {
+            const footerGroups = [...document.querySelectorAll('.o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer))')];
+            const stickyGroups = footerGroups.filter(e => getComputedStyle(e).position === 'sticky');
+            if (stickyGroups.length !== 1) return { ok: false, reason: 'expected exactly one sticky footer group', footerGroupCount: footerGroups.length, stickyGroupCount: stickyGroups.length };
+            const footer = stickyGroups[0];
+            let owner = footer.parentElement;
+            while (owner && owner !== document.body) {
+                const style = getComputedStyle(owner);
+                if (owner.scrollHeight > owner.clientHeight + 4 && /(auto|scroll)/.test(style.overflowY)) break;
+                owner = owner.parentElement;
+            }
+            if (!owner || owner === document.body) return { ok: false, reason: 'no overflowing scroll owner' };
+            const list = document.querySelector('.o_form_sheet [name="' + lineFieldName + '"]');
+            if (!list) return { ok: false, reason: 'transaction line field missing', lineFieldName };
+            const rows = [...list.querySelectorAll('.o_data_row')];
+            if (rows.length < 10) return { ok: false, reason: 'populated line list required', rowCount: rows.length };
+            const maxScroll = Math.max(0, owner.scrollHeight - owner.clientHeight);
+            if (maxScroll < 40) return { ok: false, reason: 'form did not produce meaningful vertical overflow', maxScroll };
+            const initialScroll = owner.scrollTop;
+            owner.scrollTop = 0;
+            const ownerRect = owner.getBoundingClientRect();
+            const scrollportBottom = ownerRect.top + owner.clientTop + owner.clientHeight;
+            // Measure the footer's true normal-flow geometry: disable sticky only for
+            // this measurement, then restore the exact inline style before assertions.
+            const originalStyle = footer.getAttribute('style');
+            footer.style.setProperty('position', 'static', 'important');
+            footer.style.setProperty('bottom', 'auto', 'important');
+            const naturalRect = footer.getBoundingClientRect();
+            const naturalFooterBottom = naturalRect.bottom;
+            const naturalFooterHeight = naturalRect.height;
+            const containingBlock = footer.parentElement;
+            const containingRect = containingBlock.getBoundingClientRect();
+            const containingBottomAtZero = containingRect.bottom;
+            if (originalStyle === null) footer.removeAttribute('style');
+            else footer.setAttribute('style', originalStyle);
+            const threshold = Math.max(0, Math.ceil(naturalFooterBottom - scrollportBottom));
+            // A bottom-sticky box can only remain pinned while the containing block
+            // still spans the scrollport bottom. Sample the actual intersection of
+            // that interval with the scroll range instead of assuming all late scroll
+            // positions are sticky.
+            const pinEnd = Math.min(maxScroll, Math.max(0, containingBottomAtZero - scrollportBottom));
+            const pinStart = Math.min(maxScroll, threshold);
+            const pinSpan = Math.max(0, pinEnd - pinStart);
+            const samples = [...new Set([
+                Math.max(0, pinStart - 12),
+                pinStart + Math.min(8, pinSpan / 4),
+                pinStart + pinSpan / 2,
+                pinEnd - Math.min(8, pinSpan / 4),
+                maxScroll
+            ].map(y => Math.max(0, Math.min(maxScroll, Math.round(y))))].sort((a,b) => a-b);
+            const pinned = [];
+            for (const y of samples.filter(y => y >= pinStart && y <= pinEnd && pinSpan >= 12)) {
+                owner.scrollTop = y;
+                const fr = footer.getBoundingClientRect();
+                const or = owner.getBoundingClientRect();
+                const sampleScrollportBottom = or.top + owner.clientTop + owner.clientHeight;
+                const cr = containingBlock.getBoundingClientRect();
+                pinned.push({
+                    scrollTop: owner.scrollTop,
+                    footerBottom: fr.bottom,
+                    scrollportBottom: sampleScrollportBottom,
+                    containingBlockBottom: cr.bottom,
+                    drift: Math.abs(fr.bottom - sampleScrollportBottom),
+                    insideContainingBlock: fr.bottom <= cr.bottom + 2
+                });
+            }
+            const overflowAncestors = [];
+            let ancestor = footer.parentElement;
+            while (ancestor && ancestor !== document.body) {
+                const cs = getComputedStyle(ancestor);
+                if (/(auto|scroll|hidden|clip)/.test(cs.overflowX + ' ' + cs.overflowY)) {
+                    overflowAncestors.push({
+                        tag: ancestor.tagName,
+                        className: String(ancestor.className || '').slice(0, 160),
+                        overflowX: cs.overflowX,
+                        overflowY: cs.overflowY,
+                        clientWidth: ancestor.clientWidth,
+                        scrollWidth: ancestor.scrollWidth,
+                        clientHeight: ancestor.clientHeight,
+                        scrollHeight: ancestor.scrollHeight
+                    });
+                }
+                ancestor = ancestor.parentElement;
+            }
+            owner.scrollTop = maxScroll;
+            const footerRect = footer.getBoundingClientRect();
+            const scrollport = owner.getBoundingClientRect();
+            const scrollportTop = scrollport.top + owner.clientTop;
+            const scrollportBottom = scrollport.top + owner.clientTop + owner.clientHeight;
+            const lastRow = rows[rows.length - 1];
+            lastRow.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            const rowRect = lastRow.getBoundingClientRect();
+            const footerAfterRowScroll = footer.getBoundingClientRect();
+            const visibleTop = Math.max(scrollportTop, footerAfterRowScroll.top);
+            const isRowVisibleAndUncovered = (rect, top, bottom, footerTop) =>
+                rect.top >= top - 2 && rect.bottom <= footerTop + 2
+                && rect.bottom <= bottom + 2 && rect.top < footerTop;
+            const lastRowVisible = isRowVisibleAndUncovered(
+                rowRect, scrollportTop, scrollportBottom, footerAfterRowScroll.top
+            );
+            // Negative control: a row fully above the scrollport must never pass.
+            const hiddenRowRejected = !isRowVisibleAndUncovered(
+                { top: scrollportTop - 50, bottom: scrollportTop - 10 },
+                scrollportTop, scrollportBottom, footerAfterRowScroll.top
+            );
+            const form = document.querySelector('.o_form_sheet');
+            const lastCell = lastRow.querySelector('td:not(.o_list_record_selector)');
+            const result = {
+                ok: true,
+                lineFieldName,
+                maxScroll,
+                rowCount: rows.length,
+                stickyGroupCount: stickyGroups.length,
+                naturalFooterBottom,
+                naturalFooterHeight,
+                stickyThreshold: threshold,
+                stickyPinEnd: pinEnd,
+                containingBlockBottomAtZero: containingBottomAtZero,
+                computedSticky: { position: getComputedStyle(footer).position, bottom: getComputedStyle(footer).bottom, marginTop: getComputedStyle(footer).marginTop, marginBottom: getComputedStyle(footer).marginBottom },
+                overflowAncestors,
+                stickySamples: pinned,
+                stickyEngagedAtLeastTwice: pinSpan >= 12 && pinned.length >= 2,
+                stickyPinned: pinSpan >= 12 && pinned.length >= 2 && pinned.every(p => p.drift <= 3 && p.insideContainingBlock),
+                footerInScrollport: footerAfterRowScroll.top >= scrollportTop - 2 && footerAfterRowScroll.bottom <= scrollportBottom + 2,
+                lastRowVisibleAndUncovered: lastRowVisible,
+                hiddenRowCounterexampleRejected: hiddenRowRejected,
+                horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
+                    || owner.scrollWidth > owner.clientWidth + 1
+                    || footer.scrollWidth > footer.clientWidth + 1
+                    || (!!form && form.scrollWidth > form.clientWidth + 1),
+                horizontalMetrics: {
+                    viewport: { client: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth },
+                    owner: { client: owner.clientWidth, scroll: owner.scrollWidth },
+                    form: form ? { client: form.clientWidth, scroll: form.scrollWidth } : null,
+                    footer: { client: footer.clientWidth, scroll: footer.scrollWidth },
+                    footerBox: { left: footer.getBoundingClientRect().left, right: footer.getBoundingClientRect().right },
+                    culpritNodes: [...document.querySelectorAll('body *')].map(el => {
+                        const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+                        return {
+                            tag: el.tagName,
+                            id: el.id || '',
+                            className: String(el.className || '').slice(0, 140),
+                            left: Math.round(r.left * 100) / 100,
+                            right: Math.round(r.right * 100) / 100,
+                            width: Math.round(r.width * 100) / 100,
+                            clientWidth: el.clientWidth,
+                            scrollWidth: el.scrollWidth,
+                            minWidth: cs.minWidth,
+                            computedWidth: cs.width,
+                            overflowX: cs.overflowX
+                        };
+                    }).filter(x => x.scrollWidth > x.clientWidth + 2 || x.right > document.documentElement.clientWidth + 2 || x.left < -2)
+                      .sort((a,b) => Math.max(b.scrollWidth-b.clientWidth, b.right-document.documentElement.clientWidth, -b.left) - Math.max(a.scrollWidth-a.clientWidth, a.right-document.documentElement.clientWidth, -a.left))
+                      .slice(0, 12)
+                },
+                lastCellPresent: !!lastCell,
+            };
+            owner.scrollTop = initialScroll;
+            return result;
+        })""";
+        async def audit_footer(form_label, line_field):
+            result = await page.evaluate(f"({FOOTER_SCROLL_AUDIT})({line_field!r})")
+            print(f"{form_label} footer scroll diagnostics:", result, flush=True)
+            check(f"{form_label}: real scroll owner and populated transaction rows",
+                  result.get("ok") and result.get("maxScroll", 0) >= 40 and result.get("rowCount", 0) >= 10)
+            check(f"{form_label}: sticky threshold derived from geometry and sampled after engagement",
+                  result.get("ok") and result.get("stickyEngagedAtLeastTwice"))
+            check(f"{form_label}: footer remains pinned to scrollport in sticky phase",
+                  result.get("ok") and result.get("stickyPinned"))
+            check(f"{form_label}: footer stays inside scrollport",
+                  result.get("ok") and result.get("footerInScrollport"))
+            check(f"{form_label}: last transaction row is visible and uncovered",
+                  result.get("ok") and result.get("lastRowVisibleAndUncovered"))
+            check(f"{form_label}: no horizontal overflow in page, scroll owner, or footer",
+                  result.get("ok") and not result.get("horizontalOverflow"))
+            if result.get("ok") and result.get("lastCellPresent"):
+                cell = page.locator(f'.o_form_sheet [name="{line_field}"] .o_data_row').last.locator("td:not(.o_list_record_selector)").first
+                try:
+                    await cell.click(trial=True, timeout=3000)
+                    check(f"{form_label}: last transaction row passes Playwright actionability", True)
+                except Exception as exc:
+                    print(f"{form_label} last-row actionability:", str(exc), flush=True)
+                    check(f"{form_label}: last transaction row passes Playwright actionability", False)
+            else:
+                check(f"{form_label}: last transaction row passes Playwright actionability", False)
+
+        await audit_footer("SO", "order_line")
 
         # --- Divider systray: jumlah = item tampil - 1 (normal dan mode debug) ---
         COUNT = """(() => { const k = [...document.querySelector('.o_menu_systray').children].filter(e => e.offsetWidth > 0 && !e.querySelector(':scope > .o_mobile_menu_toggle')); const d = k.filter(e => getComputedStyle(e, '::before').content === '\"\"').length; return [k.length, d]; })()"""
@@ -170,8 +364,30 @@ async def main():
             await switch_layout("Layout: switch to Sidebar")
         check("kembali ke sidebar: judul murni di header lagi", (await page.evaluate(TITLE_STATE))["headers"] == 1)
 
+        # --- SO footer: desktop, mobile, and verified browser zoom ---
+        await page.goto(f"{BASE}/odoo/action-sale.action_quotations_with_onboarding/{ORDER}")
+        await page.wait_for_selector(".o_form_sheet", timeout=30000)
+        await page.wait_for_timeout(2500)
+        await audit_footer("SO desktop", "order_line")
+        await page.set_viewport_size({"width": 390, "height": 800})
+        await page.wait_for_timeout(500)
+        await audit_footer("SO mobile", "order_line")
+        await page.set_viewport_size({"width": 1440, "height": 860})
+        zoom_before_so = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        await page.keyboard.press("Control+Equal")
+        await page.wait_for_timeout(700)
+        zoom_after_so = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        print("SO browser zoom metrics:", {"before": zoom_before_so, "after": zoom_after_so}, flush=True)
+        check("SO browser zoom actually changes effective browser metrics",
+              zoom_before_so["innerWidth"] != zoom_after_so["innerWidth"]
+              or zoom_before_so["dpr"] != zoom_after_so["dpr"]
+              or zoom_before_so["scale"] != zoom_after_so["scale"])
+        await audit_footer("SO browser zoom", "order_line")
+        await page.keyboard.press("Control+0")
+        await page.wait_for_timeout(300)
+
         # --- Judul murni vs blok berisi field (faktur draft vs kendaraan) ---
-        await page.goto(f"{BASE}/odoo/action-account.action_move_out_invoice_type/new")
+        await page.goto(f"{BASE}/odoo/action-account.action_move_out_invoice_type/{INVOICE}")
         await page.wait_for_selector(".o_form_statusbar", timeout=30000)
         await page.wait_for_timeout(3000)
         inv = await page.evaluate(TITLE_STATE)
@@ -218,6 +434,26 @@ async def main():
               await page.locator(".o_form_statusbar > .id_header_title").count() == 1
               and await title_button.evaluate("(el) => document.activeElement === el")
               and await page.locator(".o_form_sheet > .oe_title").evaluate("(el) => getComputedStyle(el).display") == "none")
+        await audit_footer("Invoice", "invoice_line_ids")
+
+        # Re-run the populated invoice scroll contract at mobile width and browser zoom.
+        await page.set_viewport_size({"width": 390, "height": 800})
+        await page.wait_for_timeout(500)
+        await audit_footer("Invoice mobile", "invoice_line_ids")
+        await page.set_viewport_size({"width": 1440, "height": 860})
+        zoom_before_invoice = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        await page.keyboard.press("Control+Equal")
+        await page.wait_for_timeout(700)
+        zoom_after_invoice = await page.evaluate("({ innerWidth, outerWidth, dpr: devicePixelRatio, scale: visualViewport?.scale ?? null })")
+        print("Invoice browser zoom metrics:", {"before": zoom_before_invoice, "after": zoom_after_invoice}, flush=True)
+        check("Invoice browser zoom actually changes effective browser metrics",
+              zoom_before_invoice["innerWidth"] != zoom_after_invoice["innerWidth"]
+              or zoom_before_invoice["dpr"] != zoom_after_invoice["dpr"]
+              or zoom_before_invoice["scale"] != zoom_after_invoice["scale"])
+        await audit_footer("Invoice browser zoom", "invoice_line_ids")
+        await page.keyboard.press("Control+0")
+        await page.wait_for_timeout(300)
+
         await page.goto(f"{BASE}/odoo/action-fleet.fleet_vehicle_action/new")
         await page.wait_for_selector(".o_form_sheet", timeout=30000)
         await page.wait_for_timeout(3000)

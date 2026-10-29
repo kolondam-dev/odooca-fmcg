@@ -106,3 +106,12 @@
 - Blueprint dashboard menempatkan native Odoo enhancement pertama, custom id_dashboard kedua, spreadsheet_dashboard terakhir.
 - Runtime Odoo/browser dan CI remote belum dijalankan dalam sesi ini; tidak merge/deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T06:30:00+07:00
+
+
+[2026-10-29T18:55:00+07:00] [IMPLEMENTATION] PR #36 — koreksi review sticky, overflow, dan sinkronisasi main
+- Pengukuran natural-flow menonaktifkan sticky sementara hanya saat membaca geometri lalu memulihkan style sebelum assertions; sampel pinned dibatasi interval yang masih berada di dalam containing block.
+- Browser diagnostics menambahkan computed sticky values, ancestor overflow termasuk hidden/clip, geometri containing block, dan kandidat DOM penyebab horizontal overflow.
+- SO dan invoice diuji desktop/mobile serta browser zoom yang harus terbukti mengubah metrik browser. Fixture invoice tetap populated.
+- CI menggabungkan fixture SO/invoice dengan instalasi dan test tag id_mobile_api dari main (PR #40); API tests tetap disertakan.
+- CI/browser hasil sinkronisasi masih menunggu; tidak mengklaim lulus sebelum run terbaru selesai.
+Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:00

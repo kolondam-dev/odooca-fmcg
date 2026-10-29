@@ -54,7 +54,7 @@ jobs:
           docker run --rm -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             odoo -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
               --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
-              -i id_base,id_ui_form,id_mobile_api --test-tags /id_base,/id_ui,/id_ui_shell,/id_mobile_api --stop-after-init --log-level=test
+              -i id_base,id_ui_form,id_mobile_api,sale_management,account,fleet,l10n_id --test-tags /id_base,/id_ui,/id_ui_shell,/id_mobile_api --stop-after-init --log-level=test
           ' 2>&1 | tee odoo.log
       - name: Log harus bersih
         run: |
@@ -68,7 +68,8 @@ jobs:
             odoo shell -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
               --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
           ' < scripts/ui/smoke_fixture.py | tee fixture.log
-          python -c 'import json; print(json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE=")))["order"])' > ui-order.txt
+          python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["order"])' > ui-order.txt
+          python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["invoice"])' > ui-invoice.txt
       - name: Start Odoo for browser smoke
         run: |
           docker run -d --name ui-smoke -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -87,7 +88,7 @@ jobs:
           pip install playwright==1.58.0 libsass==0.23.0
           python -m playwright install --with-deps chromium
           python -m unittest discover -s docs/ui/e2e -p 'test_*.py' -v
-          python docs/ui/e2e/smoke_ui.py http://localhost:8069 "$(cat ui-order.txt)"
+          python docs/ui/e2e/smoke_ui.py http://localhost:8069 "$(cat ui-order.txt)" "$(cat ui-invoice.txt)"
       - name: UI runtime diagnostics
         if: always()
         run: |

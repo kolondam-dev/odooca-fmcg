@@ -119,18 +119,56 @@ body.id-shell-sidebar {
             padding-right: 1.25rem !important;
         }
 
-        // Footer form sticky (total & terms): tetap diam di bottom, tanpa border bottom
-        .o_form_sheet .o_group:has(.oe_subtotal_footer) {
-            position: sticky;
-            bottom: 0;
-            background: #ffffff;
+        // Footer form sticky (total & terms). Sticky harus tetap di dalam scroll owner Odoo;
+        // jangan memakai fixed karena dapat menutupi line terakhir, statusbar atau action buttons.
+        .o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer)) {
+            position: sticky !important;
+            bottom: 0 !important;
             z-index: 4;
-            border-top: 1px solid #dee2e6;
+            isolation: isolate;
+            box-sizing: border-box;
+            background: #ffffff;
+            border-top: 1px solid #d8e0eb;
             border-bottom: none;
             padding: 0.65rem 1.25rem;
             margin: 0.5rem -1.25rem 0 -1.25rem;
             margin-top: 0.5rem !important; // kalah oleh aturan margin .o_group bawaan
-            box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.03);
+            margin-bottom: 0 !important; // hindari celah antara sticky box dan batas bawah scrollport
+            box-shadow: 0 -4px 14px rgba(11, 31, 77, 0.07);
+        }
+
+        // Ringkasan nilai tampil sebagai panel yang terpisah dari isi transaksi.
+        // Tidak memindahkan field/model dan tidak mengasumsikan adanya field diskon.
+        .o_form_sheet .oe_subtotal_footer {
+            box-sizing: border-box;
+            width: 32rem;
+            max-width: 100%;
+            margin-inline-start: auto;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e3e8f0;
+            border-radius: 0.35rem;
+            background: #f7f9fc;
+            color: #0b1f4d;
+        }
+
+        .o_form_sheet .oe_subtotal_footer .o_field_widget,
+        .o_form_sheet .oe_subtotal_footer .o_field_widget input {
+            font-variant-numeric: tabular-nums;
+        }
+
+        @media (max-width: 767.98px) {
+            .o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer)) {
+                position: sticky !important;
+                bottom: 0 !important;
+                padding: 0.5rem 0.75rem;
+                margin-inline: -0.75rem;
+                margin-bottom: 0 !important;
+            }
+
+            .o_form_sheet .oe_subtotal_footer {
+                max-width: 100%;
+                padding: 0.65rem 0.75rem;
+            }
         }
     }
 }
