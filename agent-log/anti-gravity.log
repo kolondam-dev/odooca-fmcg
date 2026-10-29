@@ -1039,3 +1039,9 @@
 - Kompatibilitas Balance & Debit/Credit Odoo 19: Membaca nilai akuntansi dari line dictionaries dengan memeriksa 'debit'/'credit' maupun 'balance' (karena Odoo 19 mendefinisikan debit/credit sebagai computed field di atas balance) serta mengonfirmasi total_amount > 0.
 - Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), verify_seed_invariants PASS, verify_seed_acceptance PASS.
 - Task managed by antigravity at 2026-10-29T07:28:00+07:00
+
+
+[2026-10-29T07:35:00+07:00] [INFO] Penyesuaian Asersi Company ID pada Dictionary Line Vals Native COGS
+- Pada verify_disposable_slice.py: Mengondisikan asersi l_val.get('company_id') hanya jika key tersebut diekspos secara eksplisit oleh native dictionary Odoo 19, mengingat account.move.line mewarisi company_id dari move induknya saat record dibuat di database.
+- Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), verify_seed_invariants PASS, verify_seed_acceptance PASS.
+- Task managed by antigravity at 2026-10-29T07:35:00+07:00

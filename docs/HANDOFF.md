@@ -1,5 +1,16 @@
 # HANDOFF
 
+## 2026-10-29 — antigravity agent — Penyesuaian Asersi Company ID pada Dictionary Line Vals Native COGS
+**Konteks & Resolusi:**
+- Pada `scripts/ops/verify_disposable_slice.py` (`verify_native_cogs_and_seed_suppression_real_orm`), mengondisikan asersi `l_val.get('company_id')` hanya jika key tersebut diekspos secara eksplisit oleh native dictionary Odoo 19, mengingat field `company_id` pada `account.move.line` diwarisi secara otomatis dari move induk saat record dibuat di database Odoo.
+- Hasil Verifikasi:
+  * `python -m ruff check .`: All checks passed!
+  * `python scripts/check_manifests.py`: manifest ok: 4 addon
+  * `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations)
+  * `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations)
+  * 15 file CSV register kanonikal di `data/registers/` 100% beku tanpa modifikasi.
+  * PR #15 tidak dimerge ke `main` dan tidak dideploy ke Railway.
+
 ## 2026-10-29 — antigravity agent — Penanganan Valuasi Standard Price dan Kompatibilitas Balance pada Verifikasi Native COGS Disposable Slice
 **Konteks & Resolusi:**
 - Menyelesaikan asersi `total_debit > 0` pada `verify_native_cogs_and_seed_suppression_real_orm` di `scripts/ops/verify_disposable_slice.py`:
