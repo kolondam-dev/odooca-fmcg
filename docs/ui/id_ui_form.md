@@ -39,7 +39,7 @@ pindah ke statusbar; footer total menempel di bawah (sticky).
   dan `.o_form_statusbar`, serta kelas `.oe_subtotal_footer`.
 
 ## Uji
-`docs/ui/e2e/smoke_ui.py` (Playwright): sidebar, tab chatter, tanpa chatter samping, tanpa scroll halaman,
+`docs/ui/e2e/test_form_scss_compile.py` mengompilasi SCSS produksi `id_form.scss` menggunakan libsass yang dipasang CI (`libsass==0.23.0`); kegagalan kompilasi membuat regression test gagal. `docs/ui/e2e/smoke_ui.py` (Playwright) juga menggulir SO fixture dengan 18 baris transaksi dan memeriksa scroll owner, posisi footer di scrollport, keterjangkauan baris terakhir, serta overflow horizontal. Cakupan invoice lintas-scroll dan validasi model/resolved view masih perlu diuji pada runtime Odoo 19 CE. Smoke mencakup sidebar, tab chatter, tanpa chatter samping, tanpa scroll halaman,
 judul murni tepat di tengah (SO, faktur), keyboard edit nomor draft (Enter/Space/blur/Escape),
 blok berisi field tidak diangkat (kendaraan), layar kecil,
 footer sticky, divider systray (normal dan debug), pager, ganti tata letak, hotkey.
@@ -49,22 +49,56 @@ footer sticky, divider systray (normal dan debug), pager, ganti tata letak, hotk
 `python -m unittest discover -s docs/ui/e2e -p 'test_*.py' -v` menjalankan fungsi `readTitleSpec` yang diekstrak dari source produksi di Chromium terhadap fixture readonly, nomor draft invoice, multiple input, contenteditable, required/aria-required/Odoo modifier, select, textarea, input luar h1, tipe input tak didukung, serta hidden input sebelum nomor draft untuk memastikan fokus selalu ke input yang tervalidasi.
 
 
+## Keputusan bisnis: ringkasan diskon native Odoo (2026-10-29)
+
+**Keputusan pemilik: pilih opsi B.** Untuk tahap demo, UI menggunakan ringkasan diskon native yang memang tersedia dari model/view Odoo yang terpasang. Tidak menambahkan dua diskon dokumen baru, field visual palsu, formula baru, atau perilaku diskon/promo khusus hanya demi memenuhi layout.
+
+**Alasan dan batas cakupan:** aturan diskon dan promosi end-to-end — termasuk akuisisi/penambahan modul, pengelolaan aturan, dashboard, konfigurasi, dan workflow approval — cukup kompleks dan berada di luar scope demo saat ini. Mengimplementasikan semua itu sekarang akan memperluas scope UI secara tidak proporsional dan berisiko mengarang aturan bisnis yang belum disetujui.
+
+**Aturan tampilan untuk PR #36:**
+- Pertahankan dan tata letak ulang ringkasan diskon/totals native yang sudah ada pada resolved view/model; audit runtime tetap diperlukan untuk memastikan field yang benar-benar tersedia.
+- Jika sumber native menyediakan total diskon yang valid, tampilkan nilai tersebut dengan label yang jelas. Jangan menjumlahkan ulang atau menafsirkan ulang diskon baris, early-payment discount, pajak, atau promo.
+- Jika Odoo tidak menyediakan satu agregat native yang jelas pada form/model terkait, tampilkan ringkasan native yang tersedia atau jangan tampilkan angka agregat tambahan. Jangan menciptakan formula pengganti.
+- Fokus penerimaan UI adalah hierarki visual, responsivitas, scroll/sticky, aksesibilitas, dan keterjangkauan baris transaksi. Semantik diskon/promo bukan blocker untuk UI ini.
+- Kebutuhan mesin aturan diskon/promo, konfigurasi, dashboard, dan approval workflow dicatat sebagai pekerjaan bisnis terpisah di luar demo; keputusan ini bukan persetujuan untuk implementasi fitur tersebut dalam PR #36.
+
+**Pemisahan gate:** keputusan ini menyelesaikan blocker keputusan bisnis mengenai diskon. Gate teknis yang independen — CI aktual pada SHA terbaru, audit resolved view/runtime, dan bukti browser scroll/footer — tetap wajib diselesaikan sebelum PR dapat dipertimbangkan untuk merge. PR tetap draft/HOLD sampai gate teknis tersebut ditutup.
+
+Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T14:31:00+07:00
+
 ## Enhancement footer transaksi — spesifikasi penerimaan
 
-Target layout desktop pada sidebar layout adalah **tiga kolom** bila ruang dan struktur view memungkinkan:
+Target layout desktop pada sidebar layout adalah tiga kolom bila ruang dan struktur view memungkinkan:
 
 1. **Notes** — catatan transaksi.
-2. **Footer discount** — dua field/baris diskon dokumen (footer discount 1 dan 2).
-3. **Ringkasan nilai** — subtotal, DPP, tax, dan grand total.
+2. **Ringkasan diskon native** — hanya diskon/agregat yang memang disediakan model dan resolved view Odoo.
+3. **Ringkasan nilai** — subtotal, DPP, tax, dan grand total yang memang tersedia pada dokumen.
 
 Kolom harus collapse menjadi layout bertumpuk pada viewport sempit; tidak boleh menyebabkan horizontal overflow atau menutupi baris transaksi. Grand total menjadi fokus visual utama; DPP/subtotal menjadi tingkat kedua. Warna mengikuti token UI konsisten, bukan warna status hardcoded pada nilai bisnis.
 
-**Perilaku scroll wajib diverifikasi:** footer tidak boleh ikut bergeser secara mengganggu saat scroll baris/form; jangan menyelesaikannya hanya dengan menambah `z-index`. Pastikan tidak ada nested scroll yang bersaing, konten terakhir tidak tertutup, footer tidak menutupi tombol/statusbar, serta keyboard dan zoom tetap bekerja. Uji quotation/SO, invoice/customer bill yang sesuai, dan form lain yang memiliki `.oe_subtotal_footer`.
+**Perilaku scroll wajib diverifikasi:** footer tidak boleh ikut bergeser secara mengganggu saat scroll baris/form. Pastikan tidak ada nested scroll yang bersaing, konten terakhir tidak tertutup, footer tidak menutupi tombol/statusbar, serta keyboard dan zoom tetap bekerja. Uji quotation/SO dan invoice/customer bill yang sesuai.
 
-**Integritas nilai:** kedua footer discount harus terhubung ke field/model dan metode hitung yang sah. Tidak boleh membuat field visual palsu. Urutan hitung konsisten dengan Playbook: line discount lebih dahulu; footer discount pada basis yang dikonfigurasi (default playbook: setelah line discount dan sebelum PPN); tax dan grand total mengikuti konfigurasi pajak dokumen. Validasi terhadap model `id_discount` sebelum menambah/mengubah field. Sampai model tersebut ada, UI hanya menampilkan field yang benar-benar tersedia dan spesifikasi tetap berstatus belum terimplementasi.
+**Integritas nilai dan batas scope:** pilihan bisnis adalah opsi B, yaitu memakai ringkasan diskon native Odoo. Jangan membuat field diskon dokumen baru, menghitung ulang diskon/promo, atau mengasumsikan aturan agregasi yang tidak diberikan oleh model. Jika tidak ada agregat native yang jelas, jangan tampilkan angka agregat buatan. Implementasi rule engine diskon/promo, modul tambahan, management, dashboard, konfigurasi, dan approval workflow berada di luar tahap demo. Karena keputusan ini sudah dibuat, semantik diskon/promo tidak lagi menjadi blocker UI pada PR #36.
 
-**Status:** spesifikasi disetujui; implementasi tiga kolom memerlukan audit struktur XML/form dan runtime browser sebelum CSS/layout dipilih. Sticky saat ini memakai `.o_form_sheet .o_group:has(.oe_subtotal_footer)` dan telah diuji pada order penjualan saja; cakupan lintas form belum dibuktikan.
-
+**Status teknis:** audit registry/model dan resolved XML pada runtime Odoo 19 CE tetap dibutuhkan untuk mengonfirmasi field native yang tersedia. Sticky saat ini memakai selector .o_form_sheet .o_group:has(.oe_subtotal_footer); pengujian harus membuktikan scroll dan keterjangkauan baris terakhir pada SO dan invoice. Keputusan bisnis tidak menggantikan gate CI/runtime/browser.
 
 ### Catatan audit implementasi lanjutan (2026-10-29)
-Audit branch menemukan hanya addon kustom `id_base`, `id_ui`, `id_ui_shell`, dan `id_ui_form`; tidak ditemukan addon kustom `id_discount` atau field eksplisit untuk dua footer discount. Source penuh addon Odoo/OCA eksternal tidak disimpan dalam direktori `addons/` repo ini, sehingga perlu inspeksi registry/model dan resolved form architecture pada runtime Odoo 19 CE sebelum menetapkan field yang tersedia. Karena itu, layout tiga kolom dan penggantian perilaku sticky belum diklaim terimplementasi. Jangan memindahkan elemen atau menambahkan field hanya lewat CSS tanpa mengetahui parent XML dan sumber nilai. Uji sticky yang ada terbatas pada Sales Order menurut catatan sebelumnya; uji lintas-form dan scroll-container masih terbuka.
+
+Audit branch menemukan addon kustom id_base, id_ui, id_ui_shell, dan id_ui_form; tidak ditemukan addon kustom id_discount atau field eksplisit footer_discount_1/2. Source penuh addon Odoo/OCA eksternal tidak disimpan dalam direktori addons/ repo ini, sehingga inspeksi registry/model dan resolved form architecture pada runtime Odoo 19 CE tetap diperlukan untuk menentukan ringkasan native yang benar-benar tersedia. Jangan memindahkan elemen atau menambahkan field hanya lewat CSS tanpa mengetahui parent XML dan sumber nilainya.
+
+### Implementasi awal footer — 2026-10-29
+
+Pada branch agen/ui-footer-transaction-layout-v1, SCSS memberi panel ringkasan .oe_subtotal_footer latar netral, border halus, lebar maksimum responsif, alignment ke kanan dan angka tabular. Strip sticky diberi isolasi stacking dan bayangan yang lebih jelas; breakpoint mobile mengurangi padding dan mengizinkan panel memakai lebar penuh. Ini hanya enhancement visual pada markup yang sudah ada: tidak memindahkan field, tidak mengubah perhitungan, dan tidak menambahkan diskon.
+
+**Belum selesai / belum terverifikasi:** stabilitas sticky saat scroll nyata; overflow, zoom, keyboard, serta form selain SO. Runtime Odoo tidak tersedia dalam sesi implementasi ini, sehingga struktur resolved view/model dan field native pada invoice harus dikonfirmasi oleh CI/browser smoke. Layout tiga kolom tetap tujuan presentasi bila struktur view mendukung, tetapi kolom diskon menggunakan ringkasan native dan bukan dua field diskon baru.
+
+
+### Koreksi kompatibilitas libsass — 2026-10-29
+Smoke UI pada PR #36 mengungkap bahwa `max-width: min(100%, 32rem)` gagal dikompilasi oleh libsass CI (`Incompatible units: 'rem' and '%'`). Deklarasi diganti menjadi `width: 32rem; max-width: 100%;`, yang kompatibel pada uji kompilasi pembanding. Ini menghilangkan fungsi CSS `min()` yang tidak didukung pada jalur kompilasi ini; lebar tetap dibatasi kontainer. Tetap wajib memeriksa computed layout pada Odoo 19 CE. CI untuk commit koreksi belum diverifikasi. PR #36 tetap HOLD sampai smoke UI lulus; layout tiga kolom dan stabilitas sticky masih terbuka.
+
+
+### Follow-up regression coverage — 2026-10-29
+
+The CI fixture now creates a populated draft invoice from a confirmed 18-line order and prints runtime evidence for the installed modules, registry fields, XMLIDs, and resolved Sales Order/invoice form architecture. Playwright uses one geometry audit for `order_line` and `invoice_line_ids`: it calculates the sticky threshold from the natural footer position and scrollport geometry, checks multiple samples after engagement, requires exactly one sticky footer group, and tests the last row's visibility/uncovered area plus trial-click actionability. A hidden-row negative control rejects a row entirely above the scrollport. Overflow is measured at page, form, scroll owner, and footer levels. Invoice checks run at desktop, mobile viewport, and browser zoom.
+
+**Not yet verified:** these checks and runtime audit require a fresh successful GitHub Actions run; the latest SHA currently has no run/check evidence exposed by the connector. The fixture changes the CI install set to include `sale_management`, `account`, `fleet`, and `l10n_id` because the smoke uses Sales, invoice, and vehicle forms. The owner has selected option B: use only the native Odoo discount summary available from the resolved model/view. Discount/promotion semantics are no longer a UI blocker; CI, runtime model/view audit, and browser scroll/footer evidence remain technical gates. No merge/deploy.
