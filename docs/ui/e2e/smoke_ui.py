@@ -296,6 +296,30 @@ async def main():
                 try:
                     await cell.click(trial=True, timeout=3000)
                     check(f"{form_label}: last transaction row passes Playwright actionability", True)
+                    post_actionability = await page.evaluate("""(lineFieldName) => {
+                        const footer = document.querySelector('.o_form_sheet .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer))');
+                        const list = document.querySelector('.o_form_sheet [name="' + lineFieldName + '"]');
+                        const row = list && list.querySelector('.o_data_row:last-child');
+                        let owner = footer && footer.parentElement;
+                        while (owner && owner !== document.body) {
+                            const cs = getComputedStyle(owner);
+                            if (owner.scrollHeight > owner.clientHeight + 4 && /(auto|scroll)/.test(cs.overflowY)) break;
+                            owner = owner.parentElement;
+                        }
+                        if (!footer || !row || !owner || owner === document.body) return { ok: false, reason: 'missing footer, row, or scroll owner after trial click' };
+                        const fr = footer.getBoundingClientRect(), rr = row.getBoundingClientRect(), or = owner.getBoundingClientRect();
+                        const top = or.top + owner.clientTop, bottom = top + owner.clientHeight;
+                        return {
+                            ok: true, scrollTop: owner.scrollTop,
+                            row: { top: rr.top, bottom: rr.bottom },
+                            footer: { top: fr.top, bottom: fr.bottom },
+                            scrollport: { top, bottom },
+                            visibleAndUncovered: rr.top >= top - 2 && rr.bottom <= bottom + 2 && rr.bottom <= fr.top + 2 && rr.top < fr.top
+                        };
+                    }""", line_field)
+                    print(f"{form_label} geometry after trial actionability:", post_actionability, flush=True)
+                    check(f"{form_label}: last row remains visible and uncovered after Playwright actionability",
+                          post_actionability.get("ok") and post_actionability.get("visibleAndUncovered"))
                 except Exception as exc:
                     print(f"{form_label} last-row actionability:", str(exc), flush=True)
                     check(f"{form_label}: last transaction row passes Playwright actionability", False)
