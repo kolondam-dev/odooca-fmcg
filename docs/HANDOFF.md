@@ -1,3 +1,12 @@
+## 2026-10-29T14:32:00+07:00 — keputusan bisnis diskon native untuk PR #36
+
+Pemilik memilih opsi B: gunakan ringkasan diskon native Odoo yang benar-benar tersedia pada model/resolved view. Aturan diskon/promo end-to-end — akuisisi modul, management, dashboard, konfigurasi, dan approval workflow — di luar scope demo karena kompleksitasnya. Tidak menambahkan dua field diskon dokumen, angka agregat buatan, atau formula baru.
+
+Untuk UI PR #36, prioritaskan presentasi ringkasan native yang tersedia, hierarki subtotal/DPP/tax/grand total, responsivitas, sticky/scroll, aksesibilitas dan keterjangkauan baris terakhir. Semantik diskon/promo tidak lagi menjadi blocker UI. Jika runtime tidak menyediakan agregat native yang jelas, jangan mengarang agregasi; tampilkan ringkasan native yang tersedia.
+
+Keputusan bisnis ini tidak menutup gate teknis: CI aktual pada SHA terbaru, audit resolved view/model, dan browser smoke SO/invoice tetap harus diverifikasi. PR #36 tetap draft/HOLD; tidak merge/deploy.
+
+Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T14:32:00+07:00
 ## 2026-10-29T13:06:00+07:00 — regression guard SCSS dan scroll footer PR #36
 Branch `agen/ui-footer-transaction-layout-v1`, PR #36 tetap HOLD/draft; tidak merge/deploy. Ditambahkan `docs/ui/e2e/test_form_scss_compile.py` untuk mengompilasi SCSS produksi dengan libsass yang dipasang CI (0.23.0), fixture SO kini berisi 18 baris berbeda, dan browser smoke menggulir scroll owner aktual lalu memeriksa footer tetap dalam scrollport, baris terakhir tidak tertutup, serta tidak ada overflow horizontal. CI baru dan runtime Odoo belum dijalankan/dikonfirmasi untuk commit ini. Cakupan invoice dengan baris transaksi, resolved view/model, layout tiga kolom, dan kestabilan scroll lintas form tetap terbuka. Jangan menganggap regression test yang baru ditambahkan sebagai bukti lulus sebelum job CI benar-benar selesai.
 Commit signature: Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T13:06:00+07:00
