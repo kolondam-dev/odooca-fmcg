@@ -199,6 +199,13 @@ async def main():
                     || owner.scrollWidth > owner.clientWidth + 1
                     || footer.scrollWidth > footer.clientWidth + 1
                     || (!!form && form.scrollWidth > form.clientWidth + 1),
+                horizontalMetrics: {
+                    viewport: { client: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth },
+                    owner: { client: owner.clientWidth, scroll: owner.scrollWidth },
+                    form: form ? { client: form.clientWidth, scroll: form.scrollWidth } : null,
+                    footer: { client: footer.clientWidth, scroll: footer.scrollWidth },
+                    footerBox: { left: footer.getBoundingClientRect().left, right: footer.getBoundingClientRect().right },
+                },
                 lastCellPresent: !!lastCell,
             };
             owner.scrollTop = initialScroll;
