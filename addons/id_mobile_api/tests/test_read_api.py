@@ -1,1 +1,244 @@
-ZnJvbSB1bml0dGVzdC5tb2NrIGltcG9ydCBwYXRjaAoKZnJvbSBvZG9vIGltcG9ydCBDb21tYW5kCmZyb20gb2Rvby5leGNlcHRpb25zIGltcG9ydCBBY2Nlc3NFcnJvciwgVXNlckVycm9yLCBWYWxpZGF0aW9uRXJyb3IKZnJvbSBvZG9vLnRlc3RzIGltcG9ydCBIdHRwQ2FzZSwgVHJhbnNhY3Rpb25DYXNlLCB0YWdnZWQKZnJvbSBvZG9vLnRlc3RzLmNvbW1vbiBpbXBvcnQgbmV3X3Rlc3RfdXNlcgoKZnJvbSAuLm1vZGVscy5tb2JpbGVfd29ya2RheSBpbXBvcnQgYnVzaW5lc3NfZGF0ZSwgTW9iaWxlUmVhZENvbmZsaWN0CgoKY2xhc3MgTW9iaWxlRml4dHVyZToKICAgIEBjbGFzc21ldGhvZAogICAgZGVmIHNldFVwQ2xhc3MoY2xzKToKICAgICAgICBzdXBlcigpLnNldFVwQ2xhc3MoKQogICAgICAgIGN1cnJlbmN5ID0gY2xzLmVudi5yZWYoImJhc2UuSURSIikKICAgICAgICBjdXJyZW5jeS5hY3RpdmUgPSBUcnVlCiAgICAgICAgY2xzLmNvbXBhbnkgPSBjbHMuZW52WyJyZXMuY29tcGFueSJdLmNyZWF0ZSh7Im5hbWUiOiAiTW9iaWxlIEFQSSBDb21wYW55IiwgImN1cnJlbmN5X2lkIjogY3VycmVuY3kuaWR9KQogICAgICAgIGNscy5mb3JlaWduID0gY2xzLmVudlsicmVzLmNvbXBhbnkiXS5jcmVhdGUoeyJuYW1lIjogIk1vYmlsZSBBUEkgRm9yZWlnbiIsICJjdXJyZW5jeV9pZCI6IGN1cnJlbmN5LmlkfSkKICAgICAgICBjbHMud2FyZWhvdXNlID0gY2xzLmVudlsic3RvY2sud2FyZWhvdXNlIl0uc2VhcmNoKFsoImNvbXBhbnlfaWQiLCAiPSIsIGNscy5jb21wYW55LmlkKV0sIGxpbWl0PTEpCiAgICAgICAgaWYgbm90IGNscy53YXJlaG91c2U6CiAgICAgICAgICAgIGNscy53YXJlaG91c2UgPSBjbHMuZW52WyJzdG9jay53YXJlaG91c2UiXS5jcmVhdGUoewogICAgICAgICAgICAgICAgIm5hbWUiOiAiTW9iaWxlIFN0b2NrIiwgImNvZGUiOiAiTUJMIiwgImNvbXBhbnlfaWQiOiBjbHMuY29tcGFueS5pZCwKICAgICAgICAgICAgfSkKICAgICAgICBjbHMub3RoZXJfd2FyZWhvdXNlID0gY2xzLmVudlsic3RvY2sud2FyZWhvdXNlIl0uY3JlYXRlKHsKICAgICAgICAgICAgIm5hbWUiOiAiTm90IEFzc2lnbmVkIiwgImNvZGUiOiAiTUJMWCIsICJjb21wYW55X2lkIjogY2xzLmNvbXBhbnkuaWQsCiAgICAgICAgfSkKICAgICAgICBjbHMuZm9yZWlnbl93YXJlaG91c2UgPSBjbHMuZW52WyJzdG9jay53YXJlaG91c2UiXS5zZWFyY2goWygiY29tcGFueV9pZCIsICI9IiwgY2xzLmZvcmVpZ24uaWQpXSwgbGltaXQ9MSkKICAgICAgICBpZiBub3QgY2xzLmZvcmVpZ25fd2FyZWhvdXNlOgogICAgICAgICAgICBjbHMuZm9yZWlnbl93YXJlaG91c2UgPSBjbHMuZW52WyJzdG9jay53YXJlaG91c2UiXS5jcmVhdGUoewogICAgICAgICAgICAgICAgIm5hbWUiOiAiRm9yZWlnbiBTdG9jayIsICJjb2RlIjogIkZSR04iLCAiY29tcGFueV9pZCI6IGNscy5mb3JlaWduLmlkLAogICAgICAgICAgICB9KQogICAgICAgIGNscy5wcmljZWxpc3QgPSBjbHMuZW52WyJwcm9kdWN0LnByaWNlbGlzdCJdLmNyZWF0ZSh7CiAgICAgICAgICAgICJuYW1lIjogIk1vYmlsZSBJRFIiLCAiY3VycmVuY3lfaWQiOiBjdXJyZW5jeS5pZCwgImNvbXBhbnlfaWQiOiBjbHMuY29tcGFueS5pZCwKICAgICAgICB9KQogICAgICAgIGNscy5tb2JpbGUgPSBuZXdfdGVzdF91c2VyKAogICAgICAgICAgICBjbHMuZW52LCBsb2dpbj0ibW9iaWxlLWFwaS1zYWxlcyIsIHBhc3N3b3JkPSJtb2JpbGUtYXBpLXRlc3QiLCBncm91cHM9ImlkX21vYmlsZV9hcGkuZ3JvdXBfbW9iaWxlX3NhbGVzIiwKICAgICAgICAgICAgY29tcGFueV9pZD1jbHMuY29tcGFueS5pZCwKICAgICAgICApCiAgICAgICAgY2xzLm90aGVyID0gbmV3X3Rlc3RfdXNlcigKICAgICAgICAgICAgY2xzLmVudiwgbG9naW49Im1vYmlsZS1hcGktb3RoZXIiLCBncm91cHM9ImlkX21vYmlsZV9hcGkuZ3JvdXBfbW9iaWxlX3NhbGVzIiwgY29tcGFueV9pZD1jbHMuY29tcGFueS5pZCwKICAgICAgICApCiAgICAgICAgY2xzLmludGVybmFsID0gbmV3X3Rlc3RfdXNlcihjbHMuZW52LCBsb2dpbj0ibW9iaWxlLWFwaS1kZW5pZWQiLCBjb21wYW55X2lkPWNscy5jb21wYW55LmlkKQogICAgICAgIGNscy5wb3J0YWwgPSBuZXdfdGVzdF91c2VyKGNscy5lbnYsIGxvZ2luPSJtb2JpbGUtYXBpLXBvcnRhbCIsIGdyb3Vwcz0iYmFzZS5ncm91cF9wb3J0YWwiKQogICAgICAgIGNscy5wcmluY2lwYWwgPSBjbHMuZW52WyJpZC5wcmluY2lwYWwiXS5jcmVhdGUoeyJuYW1lIjogIkFQSSBQcmluY2lwYWwiLCAiY29kZSI6ICJBUEktVEVTVCJ9KQogICAgICAgIHVuaXQgPSBjbHMuZW52LnJlZigidW9tLnByb2R1Y3RfdW9tX3VuaXQiKQogICAgICAgIGNscy5wcm9kdWN0ID0gY2xzLmVudlsicHJvZHVjdC5wcm9kdWN0Il0uY3JlYXRlKHsKICAgICAgICAgICAgIm5hbWUiOiAiQVBJIFByb2R1Y3QiLCAiZGVmYXVsdF9jb2RlIjogIkFQSS1TS1UiLCAicHJpbmNpcGFsX2lkIjogY2xzLnByaW5jaXBhbC5pZCwKICAgICAgICAgICAgImNvbXBhbnlfaWQiOiBGYWxzZSwgInVvbV9pZCI6IHVuaXQuaWQsICJsaXN0X3ByaWNlIjogMTAwMCwKICAgICAgICAgICAgImNhcnRvbl9xdHkiOiAyNCwgImlubmVyX3F0eSI6IDYsICJ0eXBlIjogImNvbnN1IiwgImlzX3N0b3JhYmxlIjogVHJ1ZSwKICAgICAgICAgICAgInRheGVzX2lkIjogW0NvbW1hbmQuY2xlYXIoKV0sCiAgICAgICAgfSkKICAgICAgICBjbHMub3V0bGV0ID0gY2xzLmVudlsicmVzLnBhcnRuZXIiXS5jcmVhdGUoewogICAgICAgICAgICAibmFtZSI6ICJBUEkgU2NoZWR1bGVkIE91dGxldCIsICJjb21wYW55X2lkIjogY2xzLmNvbXBhbnkuaWQsICJ1c2VyX2lkIjogY2xzLm1vYmlsZS5pZCwKICAgICAgICAgICAgInBhcnRuZXJfbGF0aXR1ZGUiOiAxLjQ2NSwgInBhcnRuZXJfbG9uZ2l0dWRlIjogMTI0LjgzMywgInN0cmVldCI6ICJUZXN0IFN0cmVldCIsCiAgICAgICAgfSkKICAgICAgICBjbHMuYXNzaWdubWVudCA9IGNscy5lbnZbImlkLm1vYmlsZS53b3JrZGF5Il0uY3JlYXRlKHsKICAgICAgICAgICAgInVzZXJfaWQiOiBjbHMubW9iaWxlLmlkLCAiY29tcGFueV9pZCI6IGNscy5jb21wYW55LmlkLCAiYnVzaW5lc3NfZGF0ZSI6IGJ1c2luZXNzX2RhdGUoKSwKICAgICAgICAgICAgIndhcmVob3VzZV9pZCI6IGNscy53YXJlaG91c2UuaWQsICJwcmljZWxpc3RfaWQiOiBjbHMucHJpY2VsaXN0LmlkLAogICAgICAgICAgICAib3V0bGV0X2lkcyI6IFtDb21tYW5kLnNldChjbHMub3V0bGV0LmlkcyldLCAicHJvZHVjdF9pZHMiOiBbQ29tbWFuZC5zZXQoY2xzLnByb2R1Y3QuaWRzKV0sCiAgICAgICAgfSkKICAgICAgICAjIE5hdGl2ZSBxdWFudCB1cGRhdGUgQVBJOiBubyBpbnZlbnRvcnkgcG9zdGluZyBhbmQgbm8gaW52b2ljZS9wYXltZW50IGNyZWF0aW9uLgogICAgICAgIFF1YW50ID0gY2xzLmVudlsic3RvY2sucXVhbnQiXS53aXRoX2NvbXBhbnkoY2xzLmNvbXBhbnkpCiAgICAgICAgUXVhbnQuX3VwZGF0ZV9hdmFpbGFibGVfcXVhbnRpdHkoY2xzLnByb2R1Y3QsIGNscy53YXJlaG91c2UubG90X3N0b2NrX2lkLCA0OCkKICAgICAgICBRdWFudC5fdXBkYXRlX3Jlc2VydmVkX3F1YW50aXR5KGNscy5wcm9kdWN0LCBjbHMud2FyZWhvdXNlLmxvdF9zdG9ja19pZCwgMTIpCiAgICAgICAgUXVhbnQuX3VwZGF0ZV9hdmFpbGFibGVfcXVhbnRpdHkoY2xzLnByb2R1Y3QsIGNscy5vdGhlcl93YXJlaG91c2UubG90X3N0b2NrX2lkLCAyNDAwKQogICAgICAgIGNscy5lbnZbInN0b2NrLnF1YW50Il0ud2l0aF9jb21wYW55KGNscy5mb3JlaWduKS5fdXBkYXRlX2F2YWlsYWJsZV9xdWFudGl0eSgKICAgICAgICAgICAgY2xzLnByb2R1Y3QsIGNscy5mb3JlaWduX3dhcmVob3VzZS5sb3Rfc3RvY2tfaWQsIDQ4MDAsCiAgICAgICAgKQogICAgICAgIFF1YW50Ll91cGRhdGVfYXZhaWxhYmxlX3F1YW50aXR5KGNscy5wcm9kdWN0LCBjbHMud2FyZWhvdXNlLmxvdF9zdG9ja19pZCwgMTIwMCwgb3duZXJfaWQ9Y2xzLm91dGxldCkKCgpAdGFnZ2VkKCJwb3N0X2luc3RhbGwiLCAiLWF0X2luc3RhbGwiKQpjbGFzcyBUZXN0TW9iaWxlUmVhZChNb2JpbGVGaXh0dXJlLCBUcmFuc2FjdGlvbkNhc2UpOgogICAgZGVmIHNlcnZpY2Uoc2VsZiwgdXNlcj1Ob25lKToKICAgICAgICBhY3RvciA9IHVzZXIgb3Igc2VsZi5tb2JpbGUKICAgICAgICByZXR1cm4gc2VsZi5lbnZbImlkLm1vYmlsZS53b3JrZGF5Il0ud2l0aF91c2VyKGFjdG9yKS53aXRoX2NvbnRleHQoYWxsb3dlZF9jb21wYW55X2lkcz1hY3Rvci5jb21wYW55X2lkcy5pZHMpCgogICAgZGVmIGV4dHJhX3Byb2R1Y3Qoc2VsZiwgY29kZSk6CiAgICAgICAgIyBDcmVhdGUgYSBwZXJzaXN0ZWQgc2Vjb25kIHZhcmlhbnQgZXhwbGljaXRseS4gcHJvZHVjdC5wcm9kdWN0LmNvcHkoKQogICAgICAgICMgY2FuIHJldHVybiBhbiBlbXB0eSB2YXJpYW50IHJlY29yZCBpbiBPZG9vMTkncyB0ZW1wbGF0ZSBjb3B5IGZsb3cuCiAgICAgICAgcHJvZHVjdCA9IHNlbGYuZW52WyJwcm9kdWN0LnByb2R1Y3QiXS5jcmVhdGUoewogICAgICAgICAgICAibmFtZSI6ICJFeHRyYSBBUEkgUHJvZHVjdCIsICJkZWZhdWx0X2NvZGUiOiBjb2RlLCAicHJpbmNpcGFsX2lkIjogc2VsZi5wcmluY2lwYWwuaWQsCiAgICAgICAgICAgICJjb21wYW55X2lkIjogRmFsc2UsICJ1b21faWQiOiBzZWxmLnByb2R1Y3QudW9tX2lkLmlkLCAibGlzdF9wcmljZSI6IDEwMDAsCiAgICAgICAgICAgICJjYXJ0b25fcXR5IjogMjQsICJpbm5lcl9xdHkiOiA2LCAidHlwZSI6ICJjb25zdSIsICJpc19zdG9yYWJsZSI6IFRydWUsCiAgICAgICAgICAgICJ0YXhlc19pZCI6IFtDb21tYW5kLmNsZWFyKCldLAogICAgICAgIH0pCiAgICAgICAgc2VsZi5hc3NlcnRUcnVlKHByb2R1Y3QuaWQpCiAgICAgICAgcmV0dXJuIHByb2R1Y3QKCiAgICBkZWYgaGlkZV9wcm9kdWN0X3J1bGUoc2VsZik6CiAgICAgICAgc2VsZi5lbnZbImlyLnJ1bGUiXS5jcmVhdGUoewogICAgICAgICAgICAibmFtZSI6ICJIaWRlIGFzc2lnbmVkIHRlc3QgcHJvZHVjdCIsICJtb2RlbF9pZCI6IHNlbGYuZW52LnJlZigicHJvZHVjdC5tb2RlbF9wcm9kdWN0X3Byb2R1Y3QiKS5pZCwKICAgICAgICAgICAgImRvbWFpbl9mb3JjZSI6ICJbKCdpZCcsICchPScsICVzKV0iICUgc2VsZi5wcm9kdWN0LmlkLAogICAgICAgIH0pCgogICAgZGVmIHRlc3RfYm9vdHN0cmFwX2FuZF9jYXRhbG9nX2FyZV9zY29wZWRfYW5kX3RheF9leGNsdWRlZChzZWxmKToKICAgICAgICBib290c3RyYXAgPSBzZWxmLnNlcnZpY2UoKS5fYm9vdHN0cmFwX3BheWxvYWQoKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoYm9vdHN0cmFwWyJpZCJdLCBzdHIoc2VsZi5tb2JpbGUuaWQpKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoYm9vdHN0cmFwWyJjb21wYW55SWQiXSwgc3RyKHNlbGYuY29tcGFueS5pZCkpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChib290c3RyYXBbInJvbGVzIl0sIFsic2FsZXMiXSkKICAgICAgICBzbmFwc2hvdCA9IHNlbGYuc2VydmljZSgpLl9zbmFwc2hvdF9wYXlsb2FkKCkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNuYXBzaG90WyJzY29wZSJdWyJ3YXJlaG91c2VfaWQiXSwgc3RyKHNlbGYud2FyZWhvdXNlLmlkKSkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNuYXBzaG90WyJzY29wZSJdWyJidXNpbmVzc19kYXRlIl0sIGJ1c2luZXNzX2RhdGUoKS5pc29mb3JtYXQoKSkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNuYXBzaG90WyJwcm9kdWN0cyJdWzBdWyJwYWNrYWdpbmciXSwgeyJjYXJ0b24iOiAyNCwgInBhY2siOiA2LCAicGNzIjogMX0pCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChzbmFwc2hvdFsicHJvZHVjdHMiXVswXVsicHJpY2UiXSwgMjQwMDApCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChzbmFwc2hvdFsicHJvZHVjdHMiXVswXVsic3RvY2siXSwgMS41KQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoW3BbImlkIl0gZm9yIHAgaW4gc25hcHNob3RbIm91dGxldHMiXV0sIFtzdHIoc2VsZi5vdXRsZXQuaWQpXSkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNuYXBzaG90WyJkZWxpdmVyaWVzIl0sIFtdKQogICAgICAgIHNlcmlhbGl6ZWQgPSBzdHIoc25hcHNob3QpCiAgICAgICAgZm9yIHNlY3JldCBpbiAoInN0YW5kYXJkX3ByaWNlIiwgImNyZWRpdF9saW1pdCIsICJ2YXQiLCAicGhvbmUiLCAiYW1vdW50X3Jlc2lkdWFsIiwgImRlbW9fdW5yZXN0cmljdGVkIik6CiAgICAgICAgICAgIHNlbGYuYXNzZXJ0Tm90SW4oc2VjcmV0LCBzZXJpYWxpemVkKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoc25hcHNob3RbInZlcnNpb24iXSwgc2VsZi5zZXJ2aWNlKCkuX3NuYXBzaG90X3BheWxvYWQoKVsidmVyc2lvbiJdKQoKICAgIGRlZiB0ZXN0X21pc3Npbmdfcm9sZV9hc3NpZ25tZW50X2FuZF9wb3J0YWxfYXJlX2RlbmllZChzZWxmKToKICAgICAgICBmb3IgdXNlciBpbiAoc2VsZi5vdGhlciwgc2VsZi5pbnRlcm5hbCwgc2VsZi5wb3J0YWwpOgogICAgICAgICAgICB3aXRoIHNlbGYuYXNzZXJ0UmFpc2VzKEFjY2Vzc0Vycm9yKToKICAgICAgICAgICAgICAgIHNlbGYuc2VydmljZSh1c2VyKS5fc25hcHNob3RfcGF5bG9hZCgpCiAgICAgICAgc2VsZi5hc3NpZ25tZW50LmFjdGl2ZSA9IEZhbHNlCiAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhBY2Nlc3NFcnJvcik6CiAgICAgICAgICAgIHNlbGYuc2VydmljZSgpLl9ib290c3RyYXBfcGF5bG9hZCgpCgogICAgZGVmIHRlc3Rfb3duX2Fzc2lnbm1lbnRfcmVhZF9vbmx5X2FjbChzZWxmKToKICAgICAgICBvd24gPSBzZWxmLmVudlsiaWQubW9iaWxlLndvcmtkYXkiXS53aXRoX3VzZXIoc2VsZi5tb2JpbGUpLnNlYXJjaChbXSkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKG93biwgc2VsZi5hc3NpZ25tZW50KQogICAgICAgIHNlbGYuYXNzZXJ0RmFsc2Uoc2VsZi5lbnZbImlkLm1vYmlsZS53b3JrZGF5Il0ud2l0aF91c2VyKHNlbGYub3RoZXIpLnNlYXJjaChbXSkpCiAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhBY2Nlc3NFcnJvcik6CiAgICAgICAgICAgIHNlbGYuYXNzaWdubWVudC53aXRoX3VzZXIoc2VsZi5tb2JpbGUpLndyaXRlKHsid2FyZWhvdXNlX2lkIjogc2VsZi5vdGhlcl93YXJlaG91c2UuaWR9KQogICAgICAgIHdpdGggc2VsZi5hc3NlcnRSYWlzZXMoQWNjZXNzRXJyb3IpOgogICAgICAgICAgICBzZWxmLmFzc2lnbm1lbnQud2l0aF91c2VyKHNlbGYubW9iaWxlKS51bmxpbmsoKQogICAgICAgIHdpdGggc2VsZi5hc3NlcnRSYWlzZXMoQWNjZXNzRXJyb3IpOgogICAgICAgICAgICBzZWxmLmVudlsiaWQubW9iaWxlLndvcmtkYXkiXS53aXRoX3VzZXIoc2VsZi5tb2JpbGUpLmNyZWF0ZSh7ImJ1c2luZXNzX2RhdGUiOiBidXNpbmVzc19kYXRlKCl9KQoKICAgIGRlZiB0ZXN0X21vYmlsZV9yZWFkX2dyb3VwX2RvZXNfbm90X2dyYW50X2J1c2luZXNzX3dyaXRlX2FjY2VzcyhzZWxmKToKICAgICAgICB3aXRoIHNlbGYuYXNzZXJ0UmFpc2VzKEFjY2Vzc0Vycm9yKToKICAgICAgICAgICAgc2VsZi5lbnZbInNhbGUub3JkZXIiXS53aXRoX3VzZXIoc2VsZi5tb2JpbGUpLmNyZWF0ZSh7InBhcnRuZXJfaWQiOiBzZWxmLm91dGxldC5pZH0pCiAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhBY2Nlc3NFcnJvcik6CiAgICAgICAgICAgIHNlbGYuZW52WyJzdG9jay5xdWFudCJdLndpdGhfdXNlcihzZWxmLm1vYmlsZSkuY3JlYXRlKHsKICAgICAgICAgICAgICAgICJwcm9kdWN0X2lkIjogc2VsZi5wcm9kdWN0LmlkLCAibG9jYXRpb25faWQiOiBzZWxmLndhcmVob3VzZS5sb3Rfc3RvY2tfaWQuaWQsCiAgICAgICAgICAgIH0pCgogICAgZGVmIHRlc3RfZW1wdHlfY2F0YWxvZ19vcl9zdG9wc19pc19jb25maWd1cmF0aW9uX2Vycm9yKHNlbGYpOgogICAgICAgIHNlbGYuYXNzaWdubWVudC5wcm9kdWN0X2lkcyA9IFtDb21tYW5kLmNsZWFyKCldCiAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhVc2VyRXJyb3IpOgogICAgICAgICAgICBzZWxmLnNlcnZpY2UoKS5fc25hcHNob3RfcGF5bG9hZCgpCgogICAgZGVmIHRlc3RfY29tcGFueV9tZW1iZXJzaGlwX3JlY2hlY2tlZF9hbmRfY3Jvc3NfY29tcGFueV9jb25maWdfcmVqZWN0ZWQoc2VsZik6CiAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhWYWxpZGF0aW9uRXJyb3IpLCBzZWxmLmVudi5jci5zYXZlcG9pbnQoKToKICAgICAgICAgICAgc2VsZi5hc3NpZ25tZW50LmNvbXBhbnlfaWQgPSBzZWxmLmZvcmVpZ24KICAgICAgICBzZWxmLmFzc2lnbm1lbnQuYWN0aXZlID0gRmFsc2UKICAgICAgICBzZWxmLm1vYmlsZS5jb21wYW55X2lkcyA9IFtDb21tYW5kLmxpbmsoc2VsZi5mb3JlaWduLmlkKV0KICAgICAgICBzZWxmLm1vYmlsZS5jb21wYW55X2lkID0gc2VsZi5mb3JlaWduCiAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhBY2Nlc3NFcnJvcik6CiAgICAgICAgICAgIHNlbGYuc2VydmljZSgpLl9zbmFwc2hvdF9wYXlsb2FkKCkKCiAgICBkZWYgdGVzdF9pbnZhbGlkX3BhY2thZ2luZ19hbmRfZHVwbGljYXRlX2NvZGVzX2ZhaWxfY2xvc2VkKHNlbGYpOgogICAgICAgIHNlbGYucHJvZHVjdC5pbm5lcl9xdHkgPSA1CiAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhVc2VyRXJyb3IpOgogICAgICAgICAgICBzZWxmLnNlcnZpY2UoKS5fc25hcHNob3RfcGF5bG9hZCgpCiAgICAgICAgc2VsZi5wcm9kdWN0LmlubmVyX3F0eSA9IDYKICAgICAgICBkdXBsaWNhdGUgPSBzZWxmLmV4dHJhX3Byb2R1Y3Qoc2VsZi5wcm9kdWN0LmRlZmF1bHRfY29kZSkKICAgICAgICBzZWxmLmFzc2lnbm1lbnQucHJvZHVjdF9pZHMgPSBbQ29tbWFuZC5saW5rKGR1cGxpY2F0ZS5pZCldCiAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhVc2VyRXJyb3IpOgogICAgICAgICAgICBzZWxmLnNlcnZpY2UoKS5fc25hcHNob3RfcGF5bG9hZCgpCgogICAgZGVmIHRlc3RfcHJvZHVjdF9yZWNvcmRfcnVsZV9pc19ub3RfYnlwYXNzZWQoc2VsZik6CiAgICAgICAgc2VsZi5oaWRlX3Byb2R1Y3RfcnVsZSgpCiAgICAgICAgdmlzaWJsZSA9IHNlbGYuZW52WyJwcm9kdWN0LnByb2R1Y3QiXS53aXRoX3VzZXIoc2VsZi5tb2JpbGUpLnNlYXJjaChbKCJpZCIsICI9Iiwgc2VsZi5wcm9kdWN0LmlkKV0pCiAgICAgICAgc2VsZi5hc3NlcnRGYWxzZSh2aXNpYmxlKQogICAgICAgIHNlbGYuYXNzZXJ0RmFsc2Uoc2VsZi5zZXJ2aWNlKCkuZW52LnN1KQogICAgICAgICMgT2RvbyBmaWx0ZXJzIGhpZGRlbiByZWNvcmRzIGZyb20gdGhlIGFzc2lnbm1lbnQncyBNMk0gcmVsYXRpb24uIEFuCiAgICAgICAgIyBlbnRpcmVseSBoaWRkZW4gY2F0YWxvZyBiZWNvbWVzIGVtcHR5IGFuZCBtdXN0IG5vdCByZXR1cm4gYSBzbmFwc2hvdC4KICAgICAgICB3aXRoIHNlbGYuYXNzZXJ0UmFpc2VzUmVnZXgoVXNlckVycm9yLCAiQXNzaWduIGF0IGxlYXN0IG9uZSBwcm9kdWN0Iik6CiAgICAgICAgICAgIHNlbGYuc2VydmljZSgpLl9zbmFwc2hvdF9wYXlsb2FkKCkKCiAgICBkZWYgdGVzdF9wYXJ0aWFsbHlfaGlkZGVuX2NhdGFsb2dfcHJlc2VydmVzX25hdGl2ZV9yZWNvcmRfcnVsZXMoc2VsZik6CiAgICAgICAgdmlzaWJsZSA9IHNlbGYuZXh0cmFfcHJvZHVjdCgiQVBJLVZJU0lCTEUiKQogICAgICAgIHNlbGYuYXNzaWdubWVudC5wcm9kdWN0X2lkcyA9IFtDb21tYW5kLmxpbmsodmlzaWJsZS5pZCldCiAgICAgICAgc2VsZi5oaWRlX3Byb2R1Y3RfcnVsZSgpCiAgICAgICAgIyBSZWFkIHJlbGF0aW9ucyBhZnJlc2ggYXMgYSByZXF1ZXN0IHdvdWxkLCByYXRoZXIgdGhhbiBpbmhlcml0aW5nIHRoZQogICAgICAgICMgYWRtaW5pc3RyYXRvcidzIHByZWZldGNoZWQgTTJNIHdoaWxlIHByb3Zpc2lvbmluZyB0aGUgYXNzaWdubWVudC4KICAgICAgICBzZWxmLmVudi5pbnZhbGlkYXRlX2FsbCgpCiAgICAgICAgc2VydmljZSA9IHNlbGYuc2VydmljZSgpCiAgICAgICAgc2VsZi5hc3NlcnRGYWxzZShzZXJ2aWNlLmVudi5zdSkKICAgICAgICBhbGxvd2VkID0gc2VsZi5lbnZbInByb2R1Y3QucHJvZHVjdCJdLndpdGhfdXNlcihzZWxmLm1vYmlsZSkuc2VhcmNoKFsKICAgICAgICAgICAgKCJpZCIsICJpbiIsIChzZWxmLnByb2R1Y3QgfCB2aXNpYmxlKS5pZHMpLAogICAgICAgIF0pCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChhbGxvd2VkLmlkcywgdmlzaWJsZS5pZHMpCiAgICAgICAgcGF5bG9hZCA9IHNlcnZpY2UuX3NuYXBzaG90X3BheWxvYWQoKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoW3Jvd1siaWQiXSBmb3Igcm93IGluIHBheWxvYWRbInByb2R1Y3RzIl1dLCBbc3RyKHZpc2libGUuaWQpXSkKICAgICAgICBzZWxmLmFzc2VydE5vdEluKHNlbGYucHJvZHVjdC5kZWZhdWx0X2NvZGUsIFtyb3dbInNrdV9jb2RlIl0gZm9yIHJvdyBpbiBwYXlsb2FkWyJwcm9kdWN0cyJdXSkKICAgICAgICAjIEV4cGxpY2l0IGFjY2VzcyB0byBhIHJlY29yZHNldCBjb250YWluaW5nIGEgZm9yYmlkZGVuIFNLVSBzdGlsbCBmYWlsczsKICAgICAgICAjIG5laXRoZXIgcmVsYXRpb24gZmlsdGVyaW5nIG5vciBzbmFwc2hvdCByZWFkcyBncmFudCBhY2Nlc3MgdG8gaXQuCiAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhBY2Nlc3NFcnJvcik6CiAgICAgICAgICAgIHNlcnZpY2UuZW52WyJwcm9kdWN0LnByb2R1Y3QiXS5icm93c2UoKHNlbGYucHJvZHVjdCB8IHZpc2libGUpLmlkcykuY2hlY2tfYWNjZXNzKCJyZWFkIikKCiAgICBkZWYgdGVzdF9kYXlfcm9sbG92ZXJfaXNfY29uZmxpY3Rfbm90X2FfbmV3X3Njb3BlKHNlbGYpOgogICAgICAgIHdpdGggcGF0Y2goIm9kb28uYWRkb25zLmlkX21vYmlsZV9hcGkubW9kZWxzLm1vYmlsZV93b3JrZGF5LmJ1c2luZXNzX2RhdGUiLCBzaWRlX2VmZmVjdD1bCiAgICAgICAgICAgIGJ1c2luZXNzX2RhdGUoKSwgYnVzaW5lc3NfZGF0ZSgpLnJlcGxhY2UoeWVhcj0yMDAwKSwKICAgICAgICBdKToKICAgICAgICAgICAgd2l0aCBzZWxmLmFzc2VydFJhaXNlcyhNb2JpbGVSZWFkQ29uZmxpY3QpOgogICAgICAgICAgICAgICAgc2VsZi5zZXJ2aWNlKCkuX2Jvb3RzdHJhcF9wYXlsb2FkKCkKCiAgICBkZWYgdGVzdF9yZWFkX2RvZXNfbm90X3dyaXRlX2J1c2luZXNzX21vZGVscyhzZWxmKToKICAgICAgICBtb2RlbHMgPSAoInNhbGUub3JkZXIiLCAic3RvY2sucGlja2luZyIsICJzdG9jay5tb3ZlIiwgImFjY291bnQubW92ZSIsICJhY2NvdW50LnBheW1lbnQiLCAiaWQubW9iaWxlLndvcmtkYXkiKQogICAgICAgIGJlZm9yZSA9IHttb2RlbDogc2VsZi5lbnZbbW9kZWxdLnNlYXJjaF9jb3VudChbXSkgZm9yIG1vZGVsIGluIG1vZGVsc30KICAgICAgICBjb25maWdfZGF0ZSA9IHNlbGYuYXNzaWdubWVudC53cml0ZV9kYXRlCiAgICAgICAgc2VsZi5zZXJ2aWNlKCkuX2Jvb3RzdHJhcF9wYXlsb2FkKCkKICAgICAgICBzZWxmLnNlcnZpY2UoKS5fc25hcHNob3RfcGF5bG9hZCgpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChiZWZvcmUsIHttb2RlbDogc2VsZi5lbnZbbW9kZWxdLnNlYXJjaF9jb3VudChbXSkgZm9yIG1vZGVsIGluIG1vZGVsc30pCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChzZWxmLmFzc2lnbm1lbnQud3JpdGVfZGF0ZSwgY29uZmlnX2RhdGUpCgoKQHRhZ2dlZCgicG9zdF9pbnN0YWxsIiwgIi1hdF9pbnN0YWxsIikKY2xhc3MgVGVzdE1vYmlsZVJlYWRIdHRwKE1vYmlsZUZpeHR1cmUsIEh0dHBDYXNlKToKICAgIGRlZiB0ZXN0X3B1YmxpY19wb3J0YWxfcm9sZV9hbmRfcXVlcnlfaXNvbGF0aW9uKHNlbGYpOgogICAgICAgIHJlc3BvbnNlID0gc2VsZi51cmxfb3BlbigiL2FwaS92MS9tZS9ib290c3RyYXAiKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwocmVzcG9uc2Uuc3RhdHVzX2NvZGUsIDQwMSkKICAgICAgICBzZWxmLmF1dGhlbnRpY2F0ZShzZWxmLnBvcnRhbC5sb2dpbiwgIm1vYmlsZS1hcGktcG9ydGFsIikKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNlbGYudXJsX29wZW4oIi9hcGkvdjEvc3luYy9zbmFwc2hvdCIpLnN0YXR1c19jb2RlLCA0MDMpCiAgICAgICAgc2VsZi5hdXRoZW50aWNhdGUoc2VsZi5pbnRlcm5hbC5sb2dpbiwgIm1vYmlsZS1hcGktZGVuaWVkIikKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNlbGYudXJsX29wZW4oIi9hcGkvdjEvbWUvYm9vdHN0cmFwIikuc3RhdHVzX2NvZGUsIDQwMykKICAgICAgICBzZWxmLmF1dGhlbnRpY2F0ZShzZWxmLm90aGVyLmxvZ2luLCAibW9iaWxlLWFwaS1vdGhlciIpCiAgICAgICAgc2VsZi5hc3NlcnRFcXVhbChzZWxmLnVybF9vcGVuKCIvYXBpL3YxL21lL2Jvb3RzdHJhcCIpLnN0YXR1c19jb2RlLCA0MDMpCiAgICAgICAgc2VsZi5hdXRoZW50aWNhdGUoc2VsZi5tb2JpbGUubG9naW4sICJtb2JpbGUtYXBpLXRlc3QiKQogICAgICAgIGZvciBxdWVyeSBpbiAoIj9jb21wYW55X2lkPTEiLCAiP3VzZXJfaWQ9MSIsICI/d2FyZWhvdXNlX2lkPTEiLCAiP2RiPW90aGVyIik6CiAgICAgICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoc2VsZi51cmxfb3BlbigiL2FwaS92MS9zeW5jL3NuYXBzaG90IiArIHF1ZXJ5KS5zdGF0dXNfY29kZSwgNDAwKQoKICAgIGRlZiB0ZXN0X3Nlc3Npb25fcmVzcG9uc2VfY2FjaGVfYm91bmRhcnlfYW5kX3JlYWRfb25seV9yb3V0ZXMoc2VsZik6CiAgICAgICAgc2VsZi5hdXRoZW50aWNhdGUoc2VsZi5tb2JpbGUubG9naW4sICJtb2JpbGUtYXBpLXRlc3QiKQogICAgICAgIGJvb3RzdHJhcCA9IHNlbGYudXJsX29wZW4oIi9hcGkvdjEvbWUvYm9vdHN0cmFwIikKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKGJvb3RzdHJhcC5zdGF0dXNfY29kZSwgMjAwKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoYm9vdHN0cmFwLmpzb24oKVsiaWQiXSwgc3RyKHNlbGYubW9iaWxlLmlkKSkKICAgICAgICBzZWxmLmFzc2VydFRydWUoYm9vdHN0cmFwLmpzb24oKVsiY3NyZlRva2VuIl0pCiAgICAgICAgc25hcHNob3QgPSBzZWxmLnVybF9vcGVuKCIvYXBpL3YxL3N5bmMvc25hcHNob3QiKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoc25hcHNob3Quc3RhdHVzX2NvZGUsIDIwMCkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNuYXBzaG90Lmpzb24oKVsic2NvcGUiXVsiY29tcGFueV9pZCJdLCBzdHIoc2VsZi5jb21wYW55LmlkKSkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNuYXBzaG90Lmpzb24oKVsicHJvZHVjdHMiXVswXVsic3RvY2siXSwgMS41KQogICAgICAgIHNlbGYuYXNzZXJ0SW4oIm5vLXN0b3JlIiwgc25hcHNob3QuaGVhZGVyc1siQ2FjaGUtQ29udHJvbCJdKQogICAgICAgIHNlbGYuYXNzZXJ0SW4oIkNvb2tpZSIsIHNuYXBzaG90LmhlYWRlcnNbIlZhcnkiXSkKICAgICAgICBzZWxmLmFzc2VydE5vdEluKCJBY2Nlc3MtQ29udHJvbC1BbGxvdy1PcmlnaW4iLCBzbmFwc2hvdC5oZWFkZXJzKQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoc2VsZi51cmxfb3BlbigiL2FwaS92MS9tZS9ib290c3RyYXAiLCBkYXRhPSJ7fSIpLnN0YXR1c19jb2RlLCA0MDUpCiAgICAgICAgY3Jvc3MgPSBzZWxmLnVybF9vcGVuKCIvYXBpL3YxL3N5bmMvc25hcHNob3QiLCBoZWFkZXJzPXsiT3JpZ2luIjogImh0dHBzOi8vb3RoZXIuaW52YWxpZCJ9KQogICAgICAgIHNlbGYuYXNzZXJ0RXF1YWwoY3Jvc3Muc3RhdHVzX2NvZGUsIDQwMCkKICAgICAgICBzZWxmLmFzc2VydEVxdWFsKHNlbGYudXJsX29wZW4oIi9hcGkvdjEvc3luYy9jb21tYW5kcyIsIGRhdGE9Int9Iikuc3RhdHVzX2NvZGUsIDQwNCkK
+from unittest.mock import patch
+
+from odoo import Command
+from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.tests import HttpCase, TransactionCase, tagged
+from odoo.tests.common import new_test_user
+
+from ..models.mobile_workday import business_date, MobileReadConflict
+
+
+class MobileFixture:
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        currency = cls.env.ref("base.IDR")
+        currency.active = True
+        cls.company = cls.env["res.company"].create({"name": "Mobile API Company", "currency_id": currency.id})
+        cls.foreign = cls.env["res.company"].create({"name": "Mobile API Foreign", "currency_id": currency.id})
+        cls.warehouse = cls.env["stock.warehouse"].search([("company_id", "=", cls.company.id)], limit=1)
+        if not cls.warehouse:
+            cls.warehouse = cls.env["stock.warehouse"].create({
+                "name": "Mobile Stock", "code": "MBL", "company_id": cls.company.id,
+            })
+        cls.other_warehouse = cls.env["stock.warehouse"].create({
+            "name": "Not Assigned", "code": "MBLX", "company_id": cls.company.id,
+        })
+        cls.foreign_warehouse = cls.env["stock.warehouse"].search([("company_id", "=", cls.foreign.id)], limit=1)
+        if not cls.foreign_warehouse:
+            cls.foreign_warehouse = cls.env["stock.warehouse"].create({
+                "name": "Foreign Stock", "code": "FRGN", "company_id": cls.foreign.id,
+            })
+        cls.pricelist = cls.env["product.pricelist"].create({
+            "name": "Mobile IDR", "currency_id": currency.id, "company_id": cls.company.id,
+        })
+        cls.mobile = new_test_user(
+            cls.env, login="mobile-api-sales", password="mobile-api-test", groups="id_mobile_api.group_mobile_sales",
+            company_id=cls.company.id,
+        )
+        cls.other = new_test_user(
+            cls.env, login="mobile-api-other", groups="id_mobile_api.group_mobile_sales", company_id=cls.company.id,
+        )
+        cls.internal = new_test_user(cls.env, login="mobile-api-denied", company_id=cls.company.id)
+        cls.portal = new_test_user(cls.env, login="mobile-api-portal", groups="base.group_portal")
+        cls.principal = cls.env["id.principal"].create({"name": "API Principal", "code": "API-TEST"})
+        unit = cls.env.ref("uom.product_uom_unit")
+        cls.product = cls.env["product.product"].create({
+            "name": "API Product", "default_code": "API-SKU", "principal_id": cls.principal.id,
+            "company_id": False, "uom_id": unit.id, "list_price": 1000,
+            "carton_qty": 24, "inner_qty": 6, "type": "consu", "is_storable": True,
+            "taxes_id": [Command.clear()],
+        })
+        cls.outlet = cls.env["res.partner"].create({
+            "name": "API Scheduled Outlet", "company_id": cls.company.id, "user_id": cls.mobile.id,
+            "partner_latitude": 1.465, "partner_longitude": 124.833, "street": "Test Street",
+        })
+        cls.assignment = cls.env["id.mobile.workday"].create({
+            "user_id": cls.mobile.id, "company_id": cls.company.id, "business_date": business_date(),
+            "warehouse_id": cls.warehouse.id, "pricelist_id": cls.pricelist.id,
+            "outlet_ids": [Command.set(cls.outlet.ids)], "product_ids": [Command.set(cls.product.ids)],
+        })
+        # Native quant update API: no inventory posting and no invoice/payment creation.
+        Quant = cls.env["stock.quant"].with_company(cls.company)
+        Quant._update_available_quantity(cls.product, cls.warehouse.lot_stock_id, 48)
+        Quant._update_reserved_quantity(cls.product, cls.warehouse.lot_stock_id, 12)
+        Quant._update_available_quantity(cls.product, cls.other_warehouse.lot_stock_id, 2400)
+        cls.env["stock.quant"].with_company(cls.foreign)._update_available_quantity(
+            cls.product, cls.foreign_warehouse.lot_stock_id, 4800,
+        )
+        Quant._update_available_quantity(cls.product, cls.warehouse.lot_stock_id, 1200, owner_id=cls.outlet)
+
+
+@tagged("post_install", "-at_install")
+class TestMobileRead(MobileFixture, TransactionCase):
+    def service(self, user=None):
+        actor = user or self.mobile
+        return self.env["id.mobile.workday"].with_user(actor).with_context(allowed_company_ids=actor.company_ids.ids)
+
+    def extra_product(self, code):
+        # Create a persisted second variant explicitly. product.product.copy()
+        # can return an empty variant record in Odoo19's template copy flow.
+        product = self.env["product.product"].create({
+            "name": "Extra API Product", "default_code": code, "principal_id": self.principal.id,
+            "company_id": False, "uom_id": self.product.uom_id.id, "list_price": 1000,
+            "carton_qty": 24, "inner_qty": 6, "type": "consu", "is_storable": True,
+            "taxes_id": [Command.clear()],
+        })
+        self.assertTrue(product.id)
+        return product
+
+    def hide_product_rule(self):
+        self.env["ir.rule"].create({
+            "name": "Hide assigned test product", "model_id": self.env.ref("product.model_product_product").id,
+            "domain_force": "[('id', '!=', %s)]" % self.product.id,
+        })
+
+    def test_bootstrap_and_catalog_are_scoped_and_tax_excluded(self):
+        bootstrap = self.service()._bootstrap_payload()
+        self.assertEqual(bootstrap["id"], str(self.mobile.id))
+        self.assertEqual(bootstrap["companyId"], str(self.company.id))
+        self.assertEqual(bootstrap["roles"], ["sales"])
+        snapshot = self.service()._snapshot_payload()
+        self.assertEqual(snapshot["scope"]["warehouse_id"], str(self.warehouse.id))
+        self.assertEqual(snapshot["scope"]["business_date"], business_date().isoformat())
+        self.assertEqual(snapshot["products"][0]["packaging"], {"carton": 24, "pack": 6, "pcs": 1})
+        self.assertEqual(snapshot["products"][0]["price"], 24000)
+        self.assertEqual(snapshot["products"][0]["stock"], 1.5)
+        self.assertEqual([p["id"] for p in snapshot["outlets"]], [str(self.outlet.id)])
+        self.assertEqual(snapshot["deliveries"], [])
+        serialized = str(snapshot)
+        for secret in ("standard_price", "credit_limit", "vat", "phone", "amount_residual", "demo_unrestricted"):
+            self.assertNotIn(secret, serialized)
+        self.assertEqual(snapshot["version"], self.service()._snapshot_payload()["version"])
+
+    def test_missing_role_assignment_and_portal_are_denied(self):
+        for user in (self.other, self.internal, self.portal):
+            with self.assertRaises(AccessError):
+                self.service(user)._snapshot_payload()
+        self.assignment.active = False
+        with self.assertRaises(AccessError):
+            self.service()._bootstrap_payload()
+
+    def test_own_assignment_read_only_acl(self):
+        own = self.env["id.mobile.workday"].with_user(self.mobile).search([])
+        self.assertEqual(own, self.assignment)
+        self.assertFalse(self.env["id.mobile.workday"].with_user(self.other).search([]))
+        with self.assertRaises(AccessError):
+            self.assignment.with_user(self.mobile).write({"warehouse_id": self.other_warehouse.id})
+        with self.assertRaises(AccessError):
+            self.assignment.with_user(self.mobile).unlink()
+        with self.assertRaises(AccessError):
+            self.env["id.mobile.workday"].with_user(self.mobile).create({"business_date": business_date()})
+
+    def test_mobile_read_group_does_not_grant_business_write_access(self):
+        with self.assertRaises(AccessError):
+            self.env["sale.order"].with_user(self.mobile).create({"partner_id": self.outlet.id})
+        with self.assertRaises(AccessError):
+            self.env["stock.quant"].with_user(self.mobile).create({
+                "product_id": self.product.id, "location_id": self.warehouse.lot_stock_id.id,
+            })
+
+    def test_empty_catalog_or_stops_is_configuration_error(self):
+        self.assignment.product_ids = [Command.clear()]
+        with self.assertRaises(UserError):
+            self.service()._snapshot_payload()
+
+    def test_company_membership_rechecked_and_cross_company_config_rejected(self):
+        with self.assertRaises(ValidationError), self.env.cr.savepoint():
+            self.assignment.company_id = self.foreign
+        self.assignment.active = False
+        self.mobile.company_ids = [Command.link(self.foreign.id)]
+        self.mobile.company_id = self.foreign
+        with self.assertRaises(AccessError):
+            self.service()._snapshot_payload()
+
+    def test_invalid_packaging_and_duplicate_codes_fail_closed(self):
+        self.product.inner_qty = 5
+        with self.assertRaises(UserError):
+            self.service()._snapshot_payload()
+        self.product.inner_qty = 6
+        duplicate = self.extra_product(self.product.default_code)
+        self.assignment.product_ids = [Command.link(duplicate.id)]
+        with self.assertRaises(UserError):
+            self.service()._snapshot_payload()
+
+    def test_product_record_rule_is_not_bypassed(self):
+        self.hide_product_rule()
+        visible = self.env["product.product"].with_user(self.mobile).search([("id", "=", self.product.id)])
+        self.assertFalse(visible)
+        self.assertFalse(self.service().env.su)
+        # Odoo filters hidden records from the assignment's M2M relation. An
+        # entirely hidden catalog becomes empty and must not return a snapshot.
+        with self.assertRaisesRegex(UserError, "Assign at least one product"):
+            self.service()._snapshot_payload()
+
+    def test_partially_hidden_catalog_preserves_native_record_rules(self):
+        visible = self.extra_product("API-VISIBLE")
+        self.assignment.product_ids = [Command.link(visible.id)]
+        self.hide_product_rule()
+        # Read relations afresh as a request would, rather than inheriting the
+        # administrator's prefetched M2M while provisioning the assignment.
+        self.env.invalidate_all()
+        service = self.service()
+        self.assertFalse(service.env.su)
+        allowed = self.env["product.product"].with_user(self.mobile).search([
+            ("id", "in", (self.product | visible).ids),
+        ])
+        self.assertEqual(allowed.ids, visible.ids)
+        payload = service._snapshot_payload()
+        self.assertEqual([row["id"] for row in payload["products"]], [str(visible.id)])
+        self.assertNotIn(self.product.default_code, [row["sku_code"] for row in payload["products"]])
+        # Explicit access to a recordset containing a forbidden SKU still fails;
+        # neither relation filtering nor snapshot reads grant access to it.
+        with self.assertRaises(AccessError):
+            service.env["product.product"].browse((self.product | visible).ids).check_access("read")
+
+    def test_day_rollover_is_conflict_not_a_new_scope(self):
+        with patch("odoo.addons.id_mobile_api.models.mobile_workday.business_date", side_effect=[
+            business_date(), business_date().replace(year=2000),
+        ]):
+            with self.assertRaises(MobileReadConflict):
+                self.service()._bootstrap_payload()
+
+    def test_read_does_not_write_business_models(self):
+        models = ("sale.order", "stock.picking", "stock.move", "account.move", "account.payment", "id.mobile.workday")
+        before = {model: self.env[model].search_count([]) for model in models}
+        config_date = self.assignment.write_date
+        self.service()._bootstrap_payload()
+        self.service()._snapshot_payload()
+        self.assertEqual(before, {model: self.env[model].search_count([]) for model in models})
+        self.assertEqual(self.assignment.write_date, config_date)
+
+
+@tagged("post_install", "-at_install")
+class TestMobileReadHttp(MobileFixture, HttpCase):
+    def test_public_portal_role_and_query_isolation(self):
+        response = self.url_open("/api/v1/me/bootstrap")
+        self.assertEqual(response.status_code, 401)
+        self.authenticate(self.portal.login, "mobile-api-portal")
+        self.assertEqual(self.url_open("/api/v1/sync/snapshot").status_code, 403)
+        self.authenticate(self.internal.login, "mobile-api-denied")
+        self.assertEqual(self.url_open("/api/v1/me/bootstrap").status_code, 403)
+        self.authenticate(self.other.login, "mobile-api-other")
+        self.assertEqual(self.url_open("/api/v1/me/bootstrap").status_code, 403)
+        self.authenticate(self.mobile.login, "mobile-api-test")
+        for query in ("?company_id=1", "?user_id=1", "?warehouse_id=1", "?db=other"):
+            self.assertEqual(self.url_open("/api/v1/sync/snapshot" + query).status_code, 400)
+
+    def test_session_response_cache_boundary_and_read_only_routes(self):
+        self.authenticate(self.mobile.login, "mobile-api-test")
+        bootstrap = self.url_open("/api/v1/me/bootstrap")
+        self.assertEqual(bootstrap.status_code, 200)
+        self.assertEqual(bootstrap.json()["id"], str(self.mobile.id))
+        self.assertTrue(bootstrap.json()["csrfToken"])
+        snapshot = self.url_open("/api/v1/sync/snapshot")
+        self.assertEqual(snapshot.status_code, 200)
+        self.assertEqual(snapshot.json()["scope"]["company_id"], str(self.company.id))
+        self.assertEqual(snapshot.json()["products"][0]["stock"], 1.5)
+        self.assertIn("no-store", snapshot.headers["Cache-Control"])
+        self.assertIn("Cookie", snapshot.headers["Vary"])
+        self.assertNotIn("Access-Control-Allow-Origin", snapshot.headers)
+        self.assertEqual(self.url_open("/api/v1/me/bootstrap", data="{}").status_code, 405)
+        cross = self.url_open("/api/v1/sync/snapshot", headers={"Origin": "https://other.invalid"})
+        self.assertEqual(cross.status_code, 400)
+        self.assertEqual(self.url_open("/api/v1/sync/commands", data="{}").status_code, 404)
