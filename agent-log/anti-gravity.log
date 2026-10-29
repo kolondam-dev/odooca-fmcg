@@ -1045,3 +1045,9 @@
 - Pada verify_disposable_slice.py: Mengondisikan asersi l_val.get('company_id') hanya jika key tersebut diekspos secara eksplisit oleh native dictionary Odoo 19, mengingat account.move.line mewarisi company_id dari move induknya saat record dibuat di database.
 - Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), verify_seed_invariants PASS, verify_seed_acceptance PASS.
 - Task managed by antigravity at 2026-10-29T07:35:00+07:00
+
+
+[2026-10-29T07:42:00+07:00] [INFO] Koreksi Penamaan Method Step Karantina pada Injeksi Kegagalan Rollback Loader Boundary
+- Pada verify_disposable_slice.py (verify_loader_boundary_transaction_rollback): Menyelaraskan nama method adapter yang di-mock untuk injeksi kegagalan dari load_returns_and_quarantine menjadi load_rejections_quarantine sesuai nama fungsi resmi CanonicalPerpetualAdapter.
+- Verifikasi lokal: ruff check PASS, check_manifests PASS (4 addon), verify_seed_invariants PASS, verify_seed_acceptance PASS.
+- Task managed by antigravity at 2026-10-29T07:42:00+07:00

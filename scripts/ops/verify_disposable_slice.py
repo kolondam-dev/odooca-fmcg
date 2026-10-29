@@ -2457,7 +2457,7 @@ def verify_loader_boundary_transaction_rollback(env, reg_path):
     env.cr.rollback = spy_rollback
 
     partial_ids = {}
-    orig_run_step = adapter.load_returns_and_quarantine
+    orig_run_step = adapter.load_rejections_quarantine
 
     def failing_step(*args, **kwargs):
         prod = env["product.product"].sudo().search([], limit=1)
@@ -2531,7 +2531,7 @@ def verify_loader_boundary_transaction_rollback(env, reg_path):
 
         raise InjectedLoaderFailure("Simulated unhandled exception during loader execution after partial writes")
 
-    adapter.load_returns_and_quarantine = failing_step
+    adapter.load_rejections_quarantine = failing_step
 
     error_caught = False
     try:
@@ -2539,7 +2539,7 @@ def verify_loader_boundary_transaction_rollback(env, reg_path):
     except InjectedLoaderFailure:
         error_caught = True
     finally:
-        adapter.load_returns_and_quarantine = orig_run_step
+        adapter.load_rejections_quarantine = orig_run_step
         env.cr.commit = orig_commit
         env.cr.rollback = orig_rollback
 
