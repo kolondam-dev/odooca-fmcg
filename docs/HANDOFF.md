@@ -1,5 +1,44 @@
 # HANDOFF
 
+## 2026-10-29T17:00:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 2 (issuecomment-6492070609): PostgreSQL Bootstrap, Dynamic Stock Reservation, Immutable July AML Multiset, Singular Account Move ID, dan Resilient Failure Reporting
+**Konteks Review Supervisor ([issuecomment-6492070609](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6492070609)):**
+- Status PR #39: HOLD / changes required.
+- Temuan supervisi putaran 2:
+  1. Full-runtime gagal: `CREATE DATABASE` dieksekusi di dalam blok PostgreSQL `DO`, yang dilarang PostgreSQL.
+  2. Oracle masih menerima stok salah dan jurnal seimbang dengan nilai salah pada probe fungsi produksi.
+  3. Immutabilitas Juli hanya memeriksa jumlah baris AML, sehingga perubahan nilai dengan jumlah baris tetap lolos.
+  4. Pengujian mutasi seimbang sebelumnya memodifikasi invoice pada mock, bukan debit/kredit AML nyata.
+  5. Failure report menutupi error asli dan mencetak label PASS untuk fase yang belum selesai.
+  6. Snapshot memerlukan relasi singular `account_move_id` dan `amount_residual`.
+- Penerimaan supervisi: Perbaikan presisi timestamp/snapshot diterima, pemisahan scope upgrade (Prioritas 3) ke PR lanjutan disepakati, dan 48 invoice Agustus terkonfirmasi dari sumber register kanonikal.
+
+**Perbaikan yang Diimplementasikan:**
+1. **[P1-1] Resolusi Bootstrap PostgreSQL Workflow (`.github/workflows/full-dataset-runtime.yml`):**
+   - Memisahkan pembuatan role `odoo_app` (dalam blok `DO`) dengan pembuatan database `fmcg_base` dan `fmcg_full_disposable` (menggunakan perintah `createdb -h localhost -U postgres` dan `psql -c` mandiri di luar transaksi/fungsi).
+   - Menambahkan ekstraksi `ODOO_IMAGE_DIGEST` (`docker inspect --format='{{index .Id}}' fmcg-odoo:ci`) dan menyalurkannya ke runner container via environment variable untuk audit reproducibility.
+2. **[P1-2] Resilient Failure Reporting & Anti-UnboundLocalError (`scripts/ops/verify_disposable_full.py`):**
+   - Menginisialisasi dictionary `meta` sebelum blok `try:` pada `run_full_disposable_verification` sehingga abort dini pada safety guard tidak menyebabkan `UnboundLocalError`.
+   - Blok `finally:` menulis laporan JSON dan Markdown dengan status `FAILED` yang jujur tanpa melabeli fase yang belum selesai sebagai `PASS`.
+   - `assert_disposable_database` secara eksplisit memeriksa forbidden substrings (`prod`, `production`, `live`, `railway`, `master`, `official`, `main`, `fmcg_base`).
+3. **[P1-3] Dynamic Stock Reservation & Unreserve Accounting (`tests/test_canonical_loader_adapter.py`):**
+   - Menyempurnakan alokasi reservasi kuantitas pada `MockRecord.action_confirm()` dan pengurangan reservasi saat pengiriman divalidasi pada `MockRecord.button_validate()`.
+   - Mengurangi reservasi dari quant produk di lokasi internal secara terdistribusi sehingga total reservasi di gudang pada 31 Juli 2026 tercatat persis **56.282 unit** (1.038 karton) untuk 48 DO carry-forward, dan tepat **0.0 unit** setelah pengiriman 1 Agustus divalidasi.
+4. **[P1-4] Immutabilitas Nilai Jurnal Juli (`scripts/ops/verify_disposable_full.py`):**
+   - `audit_database_against_oracle_august` kini memverifikasi multiset tuple lengkap baris jurnal historis Juli `(id, move_id, account_code, product_id, debit, credit, date)`.
+   - Segala mutasi nominal debit/kredit pada jurnal Juli dengan jumlah baris tetap terbukti digagalkan oleh audit produksi.
+5. **[P1-5] Penegakan Relasi Singular account_move_id & Deteksi Mutasi Nyata (`scripts/ops/verify_disposable_full.py` & `tests/test_full_dataset_cutoff_and_upgrade.py`):**
+   - Memvalidasi bahwa seluruh stock move pengiriman ke customer memiliki relasi singular `account_move_id` bertatus `posted`.
+   - Menguji mutasi negatif nyata: pemutusan relasi `account_move_id` pada move pengiriman ke customer terbukti digagalkan oleh audit produksi.
+6. **[P1-6] Pengujian Komprehensif (8/8 PASS):**
+   - Menambahkan 8 unit tests komprehensif di `tests/test_full_dataset_cutoff_and_upgrade.py` mencakup dynamic oracle calculation, rekonsiliasi 14 visit -> 48 pesanan, simulasi dua fase cut-off & idempotensi Run 2, mutasi negatif nyata stok/AML/relasi, immutabilitas nilai jurnal Juli, sensitivitas snapshot mendalam, safety guard forbidden substrings, dan resilience failure reporting.
+
+**Hasil Verifikasi Lokal:**
+- `ruff check .`: PASS (0 errors).
+- `python scripts/check_manifests.py`: PASS (4 addon).
+- `tests/test_canonical_loader_adapter.py`: PASS (termasuk 20 uji mutasi negatif).
+- `tests/test_full_dataset_cutoff_and_upgrade.py`: PASS (8/8 tests lulus).
+- 15 CSV register kanonikal di `data/registers/` 100% beku.
+
 ## 2026-10-29T14:55:00+07:00 — antigravity agent — Tindak Lanjut Audit Supervisi PR #39: Bootstrap DB, Dynamic Oracle, Deep Snapshot, dan Strict Guard
 **Konteks Review Supervisor ([issuecomment-6490484056](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6490484056)):**
 - Status PR #39: HOLD / changes required (full runtime belum lolos karena workflow gagal sebelum loader berjalan).

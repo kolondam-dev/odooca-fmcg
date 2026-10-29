@@ -383,6 +383,11 @@ class MockRecord:
                 mv.move_line_ids = MockRecordList([ml])
                 move_lines.append(ml)
                 moves.append(mv)
+                if "stock.quant" in self._env:
+                    StockQuant = self._env["stock.quant"]
+                    q = StockQuant.search([("product_id", "=", p_id)], limit=1)
+                    if q:
+                        q.write({"reserved_quantity": float(getattr(q, "reserved_quantity", 0.0)) + qty})
 
             pick = self._env["stock.picking"].create({
                 "origin": self._vals.get("client_order_ref", "SO"),
@@ -479,8 +484,43 @@ class MockRecord:
                             [("product_id", "=", p_id), ("location_id", "=", src_loc.id), ("lot_id", "=", l_id)],
                             limit=1,
                         )
+                        if not q_src:
+                            q_src = StockQuant.search(
+                                [("product_id", "=", p_id), ("location_id", "=", src_loc.id)],
+                                limit=1,
+                            )
                         if q_src:
-                            q_src.write({"quantity": float(getattr(q_src, "quantity", 0.0)) - qty})
+                            cur_q = float(getattr(q_src, "quantity", 0.0))
+                            q_src.write({"quantity": max(0.0, cur_q - qty)})
+
+                        # Unreserve qty for this product across internal quants
+                        rem_res = qty
+                        if q_src and float(getattr(q_src, "reserved_quantity", 0.0)) > 0:
+                            cur_res = float(getattr(q_src, "reserved_quantity", 0.0))
+                            dec = min(cur_res, rem_res)
+                            q_src.write({"reserved_quantity": cur_res - dec})
+                            rem_res -= dec
+                        if rem_res > 0:
+                            for pq in StockQuant.search([
+                                ("product_id", "=", p_id),
+                                ("location_id", "=", src_loc.id),
+                            ]):
+                                cur_res = float(getattr(pq, "reserved_quantity", 0.0))
+                                if cur_res > 0:
+                                    dec = min(cur_res, rem_res)
+                                    pq.write({"reserved_quantity": cur_res - dec})
+                                    rem_res -= dec
+                                    if rem_res <= 0:
+                                        break
+                        if rem_res > 0:
+                            for pq in StockQuant.search([("product_id", "=", p_id)]):
+                                cur_res = float(getattr(pq, "reserved_quantity", 0.0))
+                                if cur_res > 0:
+                                    dec = min(cur_res, rem_res)
+                                    pq.write({"reserved_quantity": cur_res - dec})
+                                    rem_res -= dec
+                                    if rem_res <= 0:
+                                        break
                     if dest_usage == "internal":
                         q_dst = StockQuant.search(
                             [("product_id", "=", p_id), ("location_id", "=", dest_loc.id), ("lot_id", "=", l_id)],

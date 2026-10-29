@@ -6,13 +6,14 @@ Menguji:
 2. Rekonsiliasi 14 kunjungan 31 Juli menjadi 48 pesanan single-prinsipal 1 Agustus dengan lineage lengkap.
 3. Eksekusi dua fase deterministik: Closing 31 Juli 2026 vs Post-Transaksi 1 Agustus 2026 dan immutabilitas.
 4. Zero drift penuh pada deep state snapshot (quants, moves, move_lines, pickings, orders, AML, GL).
-5. Uji mutasi negatif nyata pada database ditolak oleh audit produksi.
-6. Sensitivitas snapshot: perubahan product_id, location_id, atau datetime terdeteksi.
-7. Safety guard: penolakan mutlak nama database non-disposable atau terlarang.
+5. Uji mutasi negatif nyata pada database ditolak oleh audit produksi (stok salah, AML seimbang salah-nilai, tanggal).
+6. Sensitivitas snapshot: perubahan singular account_move_id, product_id, location_id, atau datetime terdeteksi.
+7. Safety guard: penolakan mutlak nama database non-disposable atau terlarang, serta ketahanan reporting failure.
 """
 
 from decimal import Decimal
 from pathlib import Path
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,10 +29,9 @@ from scripts.ops.verify_disposable_full import (  # noqa: E402
     audit_database_against_oracle_august,
     audit_database_against_oracle_july,
     capture_deep_state_snapshot,
+    run_full_disposable_verification,
 )
-from tests.test_canonical_loader_adapter import (  # noqa: E402
-    setup_standard_mock_env,
-)
+from tests.test_canonical_loader_adapter import setup_standard_mock_env  # noqa: E402
 
 
 class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
@@ -66,16 +66,24 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         self.assertEqual(july["ap_payments_count"], 4)
         self.assertEqual(july["opex_count"], 30)
 
-        # Saldo Fisik & Reservasi Stok Dinamis
+        # COGS Nominal
+        self.assertEqual(Decimal(july["july_cogs_nominal"]), Decimal("4971741000.00"))
+        self.assertEqual(Decimal(aug["total_cogs_nominal"]), Decimal("5138995000.00"))
+
+        # Saldo Fisik & Reservasi Stok Dinamis (Karton & Unit Base UoM)
         self.assertEqual(july["physical_on_hand_cartons_july"], 53837)
         self.assertEqual(july["reserved_cartons_july"], 1038)
         self.assertEqual(july["available_cartons_july"], 52799)
         self.assertEqual(july["quarantine_cartons_july"], 9)
+        self.assertEqual(july["physical_units_july"], 2911524)
+        self.assertEqual(july["reserved_units_july"], 56282)
+        self.assertEqual(july["quarantine_units_july"], 320)
 
         # August Post-Transaction
         self.assertEqual(aug["physical_on_hand_cartons_august"], 52799)
         self.assertEqual(aug["reserved_cartons_august"], 0)
-        self.assertEqual(aug["available_cartons_august"], 52799)
+        self.assertEqual(aug["physical_units_august"], 2855242)
+        self.assertEqual(aug["reserved_units_august"], 0)
         self.assertEqual(aug["invoices_total_posted"], 1324)
         self.assertEqual(aug["do_total_validated"], 1329)  # 1.324 DO + 5 PO
 
@@ -94,7 +102,7 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         july31_orders = [so for so in orders if so["date_order"] == "2026-07-31"]
         self.assertEqual(len(july31_orders), 48)
 
-        # Lineage customer, salesperson, and principal
+        # Lineage customer, salesman, and principal
         customers_visited = {so["customer"] for so in july31_orders}
         self.assertEqual(len(customers_visited), 14)
 
@@ -146,8 +154,23 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         # Audit Independen Checkpoint Juli menggunakan fungsi audit produksi
         audit_database_against_oracle_july(mock_env, oracle)
 
-        # Simpan snapshot baris AML Juli untuk uji immutabilitas
-        july_amls = list(mock_env["account.move.line"].search([("date", "<=", "2026-07-31")]))
+        # Simpan snapshot baris AML Juli immutable untuk uji immutabilitas
+        AML = mock_env["account.move.line"]
+        july_amls = sorted([
+            (
+                ln.id,
+                getattr(getattr(ln, "move_id", None), "id", None),
+                getattr(getattr(ln, "account_id", None), "code", "") or "",
+                getattr(getattr(ln, "product_id", None), "id", None),
+                str(round(float(getattr(ln, "debit", 0.0) or 0.0), 2)),
+                str(round(float(getattr(ln, "credit", 0.0) or 0.0), 2)),
+                str(getattr(ln, "date", "") or ""),
+                str(round(float(getattr(ln, "amount_residual", 0.0) or 0.0), 2)),
+                getattr(ln, "reconciled", False),
+                getattr(getattr(ln, "company_id", None), "id", None),
+            )
+            for ln in AML.search([("date", "<=", "2026-07-31")])
+        ])
 
         # FASE 2: Carry-Forward 1 Agustus 2026
         adapter_aug = CanonicalPerpetualAdapter(
@@ -191,8 +214,8 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         self.assertEqual(snap1["payments"], snap2["payments"])
         self.assertEqual(snap1["gl_balances"], snap2["gl_balances"])
 
-    def test_negative_mutations_rejected_by_production_audit(self):
-        """Mutasi negatif nyata pada database wajib digagalkan oleh audit oracle produksi."""
+    def test_real_mutations_rejected_by_production_audit(self):
+        """Mutasi negatif nyata pada database (stok, AML salah-nilai seimbang) wajib digagalkan audit."""
         mock_env = setup_standard_mock_env()
         oracle = FullDatasetCanonicalOracle(REG_DIR)
 
@@ -207,10 +230,48 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         # Baseline wajib PASS
         audit_database_against_oracle_july(mock_env, oracle)
 
+        Quant = mock_env["stock.quant"]
         AM = mock_env["account.move"]
         AML = mock_env["account.move.line"]
+        SM = mock_env["stock.move"]
 
-        # Mutasi 1: Sisipkan faktur out_invoice bertanggal Agustus pada database Juli
+        # Mutasi 1: Ubah quantity pada stock.quant internal (supervisor probe)
+        target_quant = next(q for q in Quant.search([]) if q.location_id.usage == "internal")
+        orig_qty = target_quant.quantity
+        target_quant.quantity = 999999.0
+        with self.assertRaises(AssertionError):
+            audit_database_against_oracle_july(mock_env, oracle)
+        # Rollback Mutasi 1
+        target_quant.quantity = orig_qty
+        audit_database_against_oracle_july(mock_env, oracle)
+
+        # Mutasi 2: Ubah reserved_quantity pada stock.quant internal
+        orig_res = target_quant.reserved_quantity
+        target_quant.reserved_quantity = 999999.0
+        with self.assertRaises(AssertionError):
+            audit_database_against_oracle_july(mock_env, oracle)
+        # Rollback Mutasi 2
+        target_quant.reserved_quantity = orig_res
+        audit_database_against_oracle_july(mock_env, oracle)
+
+        # Mutasi 3: Jurnal seimbang tetapi nominal salah (debit +1000 COGS 510000, credit +1000 Stok 113000)
+        cogs_line = next(ln for ln in AML.search([]) if ln.account_id.code == "510000")
+        stk_line = next(
+            ln for ln in AML.search([])
+            if ln.move_id.id == cogs_line.move_id.id and ln.account_id.code == "113000"
+        )
+        orig_debit = cogs_line.debit
+        orig_credit = stk_line.credit
+        cogs_line.debit += 1000.0
+        stk_line.credit += 1000.0
+        with self.assertRaises(AssertionError):
+            audit_database_against_oracle_july(mock_env, oracle)
+        # Rollback Mutasi 3
+        cogs_line.debit = orig_debit
+        stk_line.credit = orig_credit
+        audit_database_against_oracle_july(mock_env, oracle)
+
+        # Mutasi 4: Sisipkan faktur out_invoice bertanggal Agustus pada database Juli
         illegal_inv = AM.create({
             "name": "INV/ILLEGAL/2026/08",
             "move_type": "out_invoice",
@@ -219,37 +280,87 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
             "amount_untaxed": 1000000.0,
             "amount_tax": 110000.0,
             "amount_total": 1110000.0,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
         })
         with self.assertRaises(AssertionError):
             audit_database_against_oracle_july(mock_env, oracle)
-        # Rollback Mutasi 1
+        # Rollback Mutasi 4
         del AM.store[illegal_inv.id]
         audit_database_against_oracle_july(mock_env, oracle)
 
-        # Mutasi 2: AML seimbang tetapi nilai diubah (debit +1000, credit +1000)
-        target_inv = next(m for m in AM.search([]) if getattr(m, "move_type", "") == "out_invoice")
-        orig_untaxed = target_inv.amount_untaxed
-        target_inv.amount_untaxed += 1000.0
+        # Mutasi 5: Putus relasi singular account_move_id pada stock move pengiriman ke customer
+        deliv_move = next(
+            m for m in SM.search([])
+            if getattr(m, "account_move_id", None) is not None
+            and getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
+        )
+        orig_am = deliv_move.account_move_id
+        deliv_move.account_move_id = None
         with self.assertRaises(AssertionError):
             audit_database_against_oracle_july(mock_env, oracle)
-        # Rollback Mutasi 2
-        target_inv.amount_untaxed = orig_untaxed
+        # Rollback Mutasi 5
+        deliv_move.account_move_id = orig_am
         audit_database_against_oracle_july(mock_env, oracle)
 
-        # Mutasi 3: Perubahan tanggal baris jurnal melintasi batas cut-off
-        first_aml = next(iter(AML.search([])))
-        orig_aml_date = first_aml.date
-        first_aml.date = "2026-08-02"
+    def test_july_historical_closing_immutability_detects_value_modifications(self):
+        """Audit Agustus wajib mendeteksi perubahan nilai pada jurnal Juli meskipun jumlah baris tetap sama."""
+        mock_env = setup_standard_mock_env()
+        oracle = FullDatasetCanonicalOracle(REG_DIR)
+
+        adapter_july = CanonicalPerpetualAdapter(
+            mock_env,
+            reg_path=REG_DIR,
+            cutoff_date="2026-07-31",
+            enforce_invoice_cutoff=True,
+        )
+        adapter_july.run_all()
+
+        AML = mock_env["account.move.line"]
+        july_amls_snapshot = sorted([
+            (
+                ln.id,
+                getattr(getattr(ln, "move_id", None), "id", None),
+                getattr(getattr(ln, "account_id", None), "code", "") or "",
+                getattr(getattr(ln, "product_id", None), "id", None),
+                str(round(float(getattr(ln, "debit", 0.0) or 0.0), 2)),
+                str(round(float(getattr(ln, "credit", 0.0) or 0.0), 2)),
+                str(getattr(ln, "date", "") or ""),
+                str(round(float(getattr(ln, "amount_residual", 0.0) or 0.0), 2)),
+                getattr(ln, "reconciled", False),
+                getattr(getattr(ln, "company_id", None), "id", None),
+            )
+            for ln in AML.search([("date", "<=", "2026-07-31")])
+        ])
+
+        # Carry forward Agustus
+        adapter_aug = CanonicalPerpetualAdapter(
+            mock_env,
+            reg_path=REG_DIR,
+            cutoff_date="2026-08-01",
+            enforce_invoice_cutoff=True,
+        )
+        adapter_aug.run_all()
+
+        # Baseline as-of closing audit PASS
+        audit_database_against_oracle_august(mock_env, oracle, prior_july_aml_snapshot=july_amls_snapshot)
+
+        # PROBE SUPERVISOR: Ubah nilai debit pada baris Juli tanpa menambah baris (count tetap sama)
+        target_line = next(ln for ln in AML.search([("date", "<=", "2026-07-31")]) if ln.debit > 0)
+        orig_debit = target_line.debit
+        target_line.debit += 1000.0
+
         with self.assertRaises(AssertionError):
-            audit_database_against_oracle_july(mock_env, oracle)
-        # Rollback Mutasi 3
-        first_aml.date = orig_aml_date
-        audit_database_against_oracle_july(mock_env, oracle)
+            audit_database_against_oracle_august(mock_env, oracle, prior_july_aml_snapshot=july_amls_snapshot)
+
+        # Rollback
+        target_line.debit = orig_debit
+        audit_database_against_oracle_august(mock_env, oracle, prior_july_aml_snapshot=july_amls_snapshot)
 
     def test_deep_state_snapshot_detects_field_modifications(self):
         """Membuktikan probe supervisor: modifikasi product_id, location_id, atau datetime move line terdeteksi."""
         mock_env = setup_standard_mock_env()
         SML = mock_env["stock.move.line"]
+        SM = mock_env["stock.move"]
 
         # Buat move line fixture
         fixture_sml = SML.create({
@@ -283,10 +394,24 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         fixture_sml.date = "2026-07-31 20:00:00"
         snap_after_date = capture_deep_state_snapshot(mock_env)
         self.assertNotEqual(snap_before["move_lines"], snap_after_date["move_lines"])
+        fixture_sml.date = "2026-07-31 00:00:00"
+
+        # Probe 4: Ubah singular account_move_id pada stock move
+        fixture_sm = SM.create({
+            "product_id": 10,
+            "location_id": 1,
+            "location_dest_id": 3,
+            "product_uom_qty": 50.0,
+            "state": "done",
+            "account_move_id": 101,
+        })
+        snap_sm1 = capture_deep_state_snapshot(mock_env)
+        fixture_sm.account_move_id = 999
+        snap_sm2 = capture_deep_state_snapshot(mock_env)
+        self.assertNotEqual(snap_sm1["moves"], snap_sm2["moves"])
 
     def test_safety_guard_rejects_non_disposable_and_forbidden_substrings(self):
         """Safety guard wajib menolak nama database operasional atau yang memuat substring terlarang."""
-        # Menolak nama yang mengandung kata terlarang meskipun memiliki substring aman
         for forbidden_db in ["official_live", "fmcg_full_production", "fmcg_base", "railway", "master_db"]:
             env_bad = setup_standard_mock_env()
             env_bad.cr.dbname = forbidden_db
@@ -294,11 +419,29 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
                 assert_disposable_database(env_bad)
             self.assertIn("SAFETY-ABORT", str(ctx.exception))
 
-        # Mengizinkan database disposable yang sah
         for valid_db in ["fmcg_full_disposable", "ci_db", "test_disposable", "tenant_disposable_slice"]:
             env_good = setup_standard_mock_env()
             env_good.cr.dbname = valid_db
             self.assertEqual(assert_disposable_database(env_good), valid_db)
+
+    def test_failure_reporting_resilience_and_no_unbound_local(self):
+        """Kegagalan awal pada runner tidak boleh tertutup oleh UnboundLocalError dan report MD mencatat FAILED."""
+        env_bad = setup_standard_mock_env()
+        env_bad.cr.dbname = "official_live"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with self.assertRaises(RuntimeError):
+                run_full_disposable_verification(env_bad, output_dir=tmpdir)
+
+            report_file = Path(tmpdir) / "full_dataset_runtime_report.json"
+            summary_file = Path(tmpdir) / "full_dataset_runtime_summary.md"
+            self.assertTrue(report_file.exists())
+            self.assertTrue(summary_file.exists())
+
+            summary_text = summary_file.read_text(encoding="utf-8")
+            self.assertIn("Status:** FAILED", summary_text)
+            self.assertIn("FAIL / INCOMPLETE", summary_text)
+            self.assertNotIn("Status:** SUCCESS", summary_text)
 
 
 if __name__ == "__main__":
