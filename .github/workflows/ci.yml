@@ -129,7 +129,7 @@ jobs:
             -e PGHOST=localhost -e PGUSER=postgres -e PGPASSWORD=ci-postgres -e PGDATABASE=fmcg \
             -e ODOO_DB_USER=odoo_app -e ODOO_DB_PASSWORD=ci-app -e ADMIN_PASSWD=ci-master \
             -e ADMIN_LOGIN_PASSWORD=ci-admin -e BASE_URL=http://ci.example.test \
-            -e INIT_MODULES=id_base,l10n_id,sale_management,stock fmcg-odoo:ci
+            -e INIT_MODULES=id_base,l10n_id,sale_management,stock,purchase,account,product_expiry,stock_account fmcg-odoo:ci
           for i in $(seq 1 120); do
             [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8069/web/login)" = "200" ] && break
             sleep 5
@@ -151,3 +151,39 @@ jobs:
         run: |
           cat init1.log init2.log > init.log
           if grep -E " (ERROR|CRITICAL) |Traceback" init.log; then exit 1; fi
+      - name: Siapkan database terisolasi untuk eksperimen
+        run: |
+          docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo psql -h localhost -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='fmcg' AND pid <> pg_backend_pid();"
+          docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo dropdb -h localhost -U postgres --if-exists fmcg_exp
+          docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo createdb -h localhost -U postgres -O odoo_app -T fmcg fmcg_exp
+      - name: Eksekusi eksperimen seeding historis minimal pada Odoo 19 disposable
+        run: |
+          set -o pipefail
+          docker exec -i -e PGDATABASE=fmcg_exp odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_historical_experiment.py 2>&1 | tee experiment.log
+      - name: Ekstraksi laporan eksperimen historis
+        if: always()
+        run: |
+          docker exec odoo cat /tmp/historical_experiment_report.json > historical_experiment_report.json 2>/dev/null || docker exec odoo cat historical_experiment_report.json > historical_experiment_report.json 2>/dev/null || true
+          [ -s historical_experiment_report.json ] || echo "[WARN] Laporan eksperimen historis kosong"
+      - name: Upload artifact diagnostik eksperimen historis Odoo 19
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: odoo19-historical-experiment-report
+          path: |
+            historical_experiment_report.json
+            experiment.log
+          retention-days: 14
+      - name: Eksekusi dan verifikasi slice representatif pada Odoo 19 disposable
+        run: |
+          set -o pipefail
+          docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_slice.py 2>&1 | tee slice_runtime.log
+      - name: Upload artifact verifikasi runtime disposable
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: odoo19-disposable-slice-log
+          path: |
+            slice_runtime.log
+            init.log
+          retention-days: 14

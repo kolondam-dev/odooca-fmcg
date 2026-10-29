@@ -7,12 +7,19 @@ class ProductTemplate(models.Model):
     principal_id = fields.Many2one("id.principal", string="Principal", index=True)
     fmcg_category = fields.Selection(
         [
-            ("food", "Food"),
-            ("rtd", "RTD (Ready-To-Drink)"),
-            ("home_care", "Home Care"),
-            ("personal_care", "Personal Care"),
+            ("biscuit_wafer", "Biscuit & Wafer"),
+            ("confectionery", "Chocolate & Confectionery"),
+            ("coffee_powder", "Coffee & Powdered Beverage"),
+            ("coffee_hot", "Coffee & Hot Beverages"),
+            ("noodles_food", "Instant Noodles & Foods"),
+            ("beverages_rtd", "Ready to Drink (RTD) & Beverage"),
+            ("coffee_wings", "Coffee"),
+            ("foods_savory", "Foods & Savory"),
+            ("home_care", "Home Care & Hygiene"),
+            ("personal_care", "Personal Care & Beauty"),
+            ("food", "Food & Grocery"),
+            ("rtd", "Ready-To-Drink"),
             ("dairy", "Dairy"),
-            ("confectionery", "Confectionery"),
             ("other", "Other"),
         ],
         string="Principal Category / Divisi",
@@ -35,4 +42,3 @@ class ProductTemplate(models.Model):
         default=1,
         help="Konversi kemasan sekunder: jumlah satuan dasar per dus/karton.",
     )
-

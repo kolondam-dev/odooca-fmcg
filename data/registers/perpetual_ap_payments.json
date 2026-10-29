@@ -1,0 +1,38 @@
+[
+  {
+    "ap_payment_id": "PAY-AP-01",
+    "payment_date": "2026-07-22",
+    "po_number": "PO-2026-06-01",
+    "principal_name": "PT Sayapp Mas Utamma",
+    "amount_paid_dpp": 1849772800.0,
+    "due_date": "2026-07-22",
+    "bank_source": "Bank Mandiri Rekening Operasional"
+  },
+  {
+    "ap_payment_id": "PAY-AP-02",
+    "payment_date": "2026-07-29",
+    "po_number": "PO-2026-06-02",
+    "principal_name": "PT Santos Jaya Abadii",
+    "amount_paid_dpp": 1449737600.0,
+    "due_date": "2026-07-29",
+    "bank_source": "Bank Mandiri Rekening Operasional"
+  },
+  {
+    "ap_payment_id": "PAY-AP-03",
+    "payment_date": "2026-07-31",
+    "po_number": "PO-2026-06-03",
+    "principal_name": "PT Mayyora Indahh Tbk",
+    "amount_paid_dpp": 699826000.0,
+    "due_date": "2026-08-01",
+    "bank_source": "Bank Mandiri Rekening Operasional"
+  },
+  {
+    "ap_payment_id": "PAY-AP-04",
+    "payment_date": "2026-07-31",
+    "po_number": "PO-2026-06-04",
+    "principal_name": "PT Mayyora Indahh Tbk",
+    "amount_paid_dpp": 2598138400.0,
+    "due_date": "2026-08-02",
+    "bank_source": "Bank Mandiri Rekening Operasional"
+  }
+]

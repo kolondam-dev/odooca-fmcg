@@ -17,7 +17,6 @@ class IdChannel(models.Model):
     ]
 
 
-
 class IdCoverageArea(models.Model):
     _name = "id.coverage.area"
     _description = "FMCG Distribution Coverage Area"
@@ -96,7 +95,6 @@ class IdDistrict(models.Model):
     active = fields.Boolean(default=True)
 
 
-
 class IdSubdistrict(models.Model):
     _name = "id.subdistrict"
     _description = "Kelurahan / Desa"
@@ -109,5 +107,3 @@ class IdSubdistrict(models.Model):
     latitude = fields.Float(string="Latitude", digits=(10, 7))
     longitude = fields.Float(string="Longitude", digits=(10, 7))
     active = fields.Boolean(default=True)
-
-

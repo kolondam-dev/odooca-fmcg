@@ -137,17 +137,58 @@ def load_hierarchical_categories():
     Principal = env["id.principal"].sudo()
     Brand = env["id.brand"].sudo()
 
-    division_labels = {
+    category_labels = {
+        "biscuit_wafer": "Biscuit & Wafer",
+        "confectionery": "Chocolate & Confectionery",
+        "coffee_powder": "Coffee & Powdered Beverage",
+        "coffee_hot": "Coffee & Hot Beverages",
+        "noodles_food": "Instant Noodles & Foods",
+        "beverages_rtd": "Ready to Drink (RTD) & Beverage",
+        "coffee_wings": "Coffee",
+        "foods_savory": "Foods & Savory",
+        "home_care": "Home Care & Hygiene",
+        "personal_care": "Personal Care & Beauty",
         "food": "Food & Grocery",
         "rtd": "Ready to Drink (RTD)",
-        "home_care": "Home Care",
-        "personal_care": "Personal Care",
-        "confectionery": "Confectionery & Candy",
     }
 
-    # Map: (principal_code, fmcg_cat, brand_code) -> category_id
-    leaf_cat_map = {}
+    brand_division_map = {
+        # Mayora
+        "BRD-RMA": "biscuit_wafer",
+        "BRD-BTR": "biscuit_wafer",
+        "BRD-SLI": "biscuit_wafer",
+        "BRD-BBG": "confectionery",
+        "BRD-KPK": "confectionery",
+        "BRD-KIS": "confectionery",
+        "BRD-TMR": "confectionery",
+        "BRD-TRB": "coffee_powder",
+        "BRD-EGN": "coffee_powder",
+        # Santos (Kapal Api)
+        "BRD-KA": "coffee_hot",
+        "BRD-ABC": "coffee_hot",
+        "BRD-YA": "coffee_hot",
+        "BRD-KPT": "coffee_hot",
+        # Unilever
+        "BRD-RYC": "foods_savory",
+        "BRD-BNG": "foods_savory",
+        "BRD-RNS": "home_care",
+        "BRD-MLT": "home_care",
+        "BRD-SNL": "home_care",
+        "BRD-LFB": "personal_care",
+        "BRD-CLR": "personal_care",
+        "BRD-PSD": "personal_care",
+        "BRD-RXN": "personal_care",
+        # Wings
+        "BRD-SDP": "noodles_food",
+        "BRD-JSJ": "beverages_rtd",
+        "BRD-SGD": "beverages_rtd",
+        "BRD-TOP": "coffee_wings",
+        "BRD-FLD": "beverages_rtd",
+        "BRD-JVN": "beverages_rtd",
+        "BRD-GLD": "beverages_rtd",
+    }
 
+    leaf_cat_map = {}
     principals = Principal.search([])
 
     for p in principals:
@@ -157,15 +198,10 @@ def load_hierarchical_categories():
         # Dapatkan semua brand di bawah principal ini
         p_brands = Brand.search([("principal_id", "=", p.id)])
         for b in p_brands:
-            # Tentukan divisi default
-            div_code = "food"
-            for code, lbl in division_labels.items():
-                if lbl.lower() in (b.name or "").lower():
-                    div_code = code
-                    break
+            div_code = brand_division_map.get(b.code, "food")
+            div_label = category_labels.get(div_code, "Food & Grocery")
 
             # Level 2: Divisi Kategori di bawah Principal
-            div_label = division_labels.get(div_code, "Food & Grocery")
             div_cat = get_or_create_category(Category, div_label, parent_id=p_cat.id)
 
             # Level 3: Brand di bawah Divisi

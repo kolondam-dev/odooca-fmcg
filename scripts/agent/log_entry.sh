@@ -10,6 +10,7 @@ case "$agent" in
   claude-dev)    file="claude-dev.log";    sig="claude-dev agent" ;;
   antigravity)   file="anti-gravity.log";  sig="antigravity-agent" ;;
   claude-design) file="claude-design.log"; sig="claude-design agent" ;;
+  codex) file="codex.log"; sig="codex agent" ;;
   *) echo "agen tidak dikenal: $agent" >&2; exit 2 ;;
 esac
 ts="$(TZ=Asia/Jakarta date +%Y-%m-%dT%H:%M:%S%:z)"
