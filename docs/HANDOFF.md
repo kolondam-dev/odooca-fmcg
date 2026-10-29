@@ -1,3 +1,20 @@
+## 2026-10-29T09:24:05+07:00 — codex supervisor — Sinkronisasi integrasi PR35
+Main ea20ed0 diintegrasikan untuk required checks strict sebelum merge yang diminta pemilik. Tidak ada konflik; scope ikon sidebar/roadmap tetap sama. Menunggu CI integrasi.
+
+## 2026-10-29T08:05:00+07:00 — keputusan prioritas UI/dashboard dan audit baseline
+**Sumber keputusan:** percakapan pemilik pada 2026-10-29 setelah permintaan deep-scan backlog aktual, eksplorasi dashboard default Odoo, dashboard FMCG berdasarkan business playbook/brainstorming, serta enhancement UI.
+**Urutan disetujui pemilik:** (1) audit baseline/backlog dan selesaikan footer transaksi; (2) tingkatkan dashboard native Odoo; (3) bangun custom dashboard FMCG; (4) evaluasi `spreadsheet_dashboard` paling akhir dan hanya bila tetap relevan/kompatibel Odoo 19 Community.
+**Detail yang disetujui:** ikon aplikasi sidebar full-color secara default dan saat selected; pembeda selected hanya background (dipertahankan). Footer target tiga kolom: `notes | footer discount 1 + footer discount 2 | subtotal, DPP, tax, grand total`; jangan buat field diskon palsu. Dashboard native harus dimanfaatkan dulu, custom dashboard hanya untuk kebutuhan lintas-modul yang belum tercukupi.
+**Audit aktual branch/repo:** addon kustom yang ada mencakup `id_base`, `id_ui`, `id_ui_shell`, `id_ui_form`; belum ditemukan addon kustom `id_discount` atau field `footer_discount_1/2`. Repository tidak menyertakan seluruh source addon Odoo/OCA yang menjadi dependency, jadi ini bukan bukti bahwa field tidak ada pada instalasi runtime. Implementasi footer harus memeriksa view/model Odoo 19 CE aktual sebelum mengubah XML atau menghitung nilai. Selector sticky saat ini hanya tercatat diuji pada Sales Order; sticky scroll container dan form lain belum diverifikasi.
+**Langkah berikut:** audit resolved views/models di runtime Odoo dan addon path; tentukan sumber notes/discount/totals; implementasi footer dengan test regresi browser; lalu native dashboard action/filter/graph/pivot berbasis model nyata. Belum melakukan merge atau deploy.
+**Commit signature:** Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T08:05:00+07:00
+
+## 2026-10-29 — claude-design-takeoverby-codex — Ikon full-color, footer dan urutan dashboard
+**Mandat:** lanjutkan enhancement UI dari main setelah PR #32; urutan kerja: audit baseline → sidebar/footer → native dashboard → custom dashboard → evaluasi spreadsheet dashboard.
+**Perubahan kode pada branch `agen/ui-footer-dashboard-roadmap-v1`:** ikon aplikasi sidebar diatur full-color default dan selected; selected tetap dibedakan hanya oleh background item. Tidak mengubah warna ikon saat hover/fokus/selected.
+**Spesifikasi:** footer ditargetkan 3 kolom (notes | footer discount 1+2 | subtotal/DPP/tax/grand total), responsif dan dengan nilai berasal dari model; sticky harus diuji pada beberapa form/scroll container. Blueprint dashboard FMCG memprioritaskan native Odoo, kemudian `id_dashboard`, lalu `spreadsheet_dashboard` bila relevan.
+**Belum diverifikasi:** runtime Odoo/browser, CSS computed layout, scroll regression, model/field footer discount, CE spreadsheet dashboard capabilities, dan CI remote. Tidak merge/deploy.
+
 # HANDOFF
 
 ## 2026-10-29 — agent-codex-pwa — Deadline koreksi dan approval root SO PR34

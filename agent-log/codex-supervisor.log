@@ -3,3 +3,8 @@
 - Main d2a54bf diintegrasikan ke 766a60e; konflik HANDOFF diselesaikan dengan mempertahankan kedua sisi.
 - Tidak ada perubahan runtime tambahan; menunggu CI integrasi sebelum merge.
 - task managed by codex-supervisor at 2026-10-28T22:34:01+07:00
+
+[2026-10-29T09:24:05+07:00] [INFO] Sinkronisasi main untuk merge PR35
+- Mandat pemilik: merge PR35 setelah review d60abbc. Required checks strict meminta integrasi main ea20ed0 terlebih dahulu.
+- Merge otomatis tanpa konflik; perubahan UI yang direview dan PWA main dipertahankan. Menunggu CI integrasi; tidak deployment manual.
+- task managed by codex-supervisor at 2026-10-29T09:24:05+07:00
