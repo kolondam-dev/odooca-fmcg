@@ -43,7 +43,10 @@ Pemilik/agent deploy mengganti hostname upstream dan memverifikasi TLS/network.
 - Dua route baca `/api/v1/me/bootstrap` dan `/api/v1/sync/snapshot` menuju Odoo.
 - Route `/api/` lain ditolak404, method non-GET pada route baca ditolak gateway.
 - `/web/login`, session dan asset Odoo tetap menuju Odoo pada origin yang sama.
-- Cookie, host dan protokol diteruskan; tidak ada CORS wildcard, credential di
+- Host dan X-Forwarded-Host ditetapkan dari `$http_host`; X-Forwarded-Proto
+  dari `$scheme` dan X-Forwarded-For dari `$remote_addr`, termasuk pada route
+  API dan fallback Odoo. Header Forwarded/X-Forwarded-Port/Prefix kiriman klien
+  dibuang, bukan dipercaya. Cookie diteruskan; tidak ada CORS wildcard, credential di
   build, auth bypass, login API baru, API proxy dalam static server, atau rewrite
   ke HTML untuk API. Cookie session Odoo harus Path=/, HttpOnly dan Secure HTTPS.
 - Odoo perlu `proxy_mode=True`, host/database filtering benar dan hanya menerima
@@ -66,8 +69,15 @@ malam. Fixture tidak membuktikan login Odoo asli atau penerimaan data staging.
 HttpCase Odoo tahap2 tetap menguji autentikasi/ACL nyata pada CI Odoo.
 
 `bash pwa/hosting/test-gateway.sh` dari root repo menjalankan Nginx+build staging
-bersama fixture backend disposable dalam Docker CI. Ini membuktikan forwarding
-cookie/routing/method boundary; bukan bukti ACL atau deployment Odoo nyata.
+bersama fixture backend disposable Python/Werkzeug dalam Docker CI. Fixture
+mereplikasi gate Odoo19: ProxyFix x_for=1/x_proto=1/x_host=1 hanya bila
+X-Forwarded-Host tersedia. Tiga probe unit membuktikan perilaku header hilang,
+header attacker, dan authority gateway yang sah. Smoke menguji HTTP serta
+HTTPS dengan sertifikat CA disposable yang diverifikasi curl (--cacert, bukan
+-k), port publik nondefault, kedua route API dan fallback /web, spoofed
+forwarded headers, origin valid/invalid, secure cookie dan method boundary.
+Key/cert dibuang saat cleanup; bukan artifact atau credential deployment.
+Ini membuktikan TLS/proxy transport; bukan bukti ACL atau deployment Odoo nyata.
 Fixture hanya dipakai tes; tidak ikut runtime image PWA.
 
 [BU] Acceptance end-to-end **pada staging nyata** harus dilakukan setelah deploy
