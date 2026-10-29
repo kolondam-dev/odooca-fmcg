@@ -1,3 +1,6 @@
+## 2026-10-29T12:26:00+07:00 — koreksi blocker SCSS PR #36
+PR #36 ditahan setelah smoke UI gagal dikompilasi oleh libsass pada `max-width: min(100%, 32rem)` (error incompatible units). Diganti menjadi `width: 32rem; max-width: 100%;`, sesuai kandidat yang lolos uji kompilasi pembanding. Commit: `a172bb77d5f107ae9e816b8be0ad88284164cbc7`. Perubahan ini hanya memperbaiki kompatibilitas SCSS; hasil layout tetap perlu diverifikasi di Odoo runtime. CI ulang untuk SHA baru belum dikonfirmasi. PR tetap draft/HOLD; tidak merge/deploy. Tiga kolom dan stabilitas sticky masih belum selesai.
+
 ## 2026-10-29T09:52:00+07:00 — implementasi awal visual footer transaksi
 Branch: `agen/ui-footer-transaction-layout-v1`, berbasis `main` setelah merge PR #35. Perubahan SCSS memberi `.oe_subtotal_footer` panel ringkasan responsif (latar netral, border, alignment kanan, angka tabular) dan memperjelas strip sticky tanpa mengubah model/perhitungan. Belum memenuhi tiga kolom; belum membuktikan pergerakan sticky teratasi. Perlu runtime Odoo 19 CE untuk inspect resolved XML/model dan browser scroll regression. Jangan menambah footer discount palsu. Tidak merge/deploy.
 
