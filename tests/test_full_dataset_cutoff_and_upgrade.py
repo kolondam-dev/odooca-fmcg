@@ -30,6 +30,7 @@ from scripts.ops.verify_disposable_full import (  # noqa: E402
     audit_database_against_oracle_july,
     capture_deep_state_snapshot,
     run_full_disposable_verification,
+    run_real_negative_mutations_on_database,
 )
 from tests.test_canonical_loader_adapter import setup_standard_mock_env  # noqa: E402
 
@@ -215,7 +216,7 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         self.assertEqual(snap1["gl_balances"], snap2["gl_balances"])
 
     def test_real_mutations_rejected_by_production_audit(self):
-        """Mutasi negatif nyata pada database (stok, AML salah-nilai seimbang) wajib digagalkan audit."""
+        """Mutasi negatif nyata pada database (stok swap, lot dummy, AML seimbang) wajib digagalkan audit."""
         mock_env = setup_standard_mock_env()
         oracle = FullDatasetCanonicalOracle(REG_DIR)
 
@@ -230,76 +231,17 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         # Baseline wajib PASS
         audit_database_against_oracle_july(mock_env, oracle)
 
-        Quant = mock_env["stock.quant"]
-        AM = mock_env["account.move"]
-        AML = mock_env["account.move.line"]
-        SM = mock_env["stock.move"]
+        # Jalankan rangkaian 6 mutasi counterexample nyata via savepoint context manager
+        mut_results = run_real_negative_mutations_on_database(mock_env, oracle)
+        self.assertEqual(len(mut_results), 6)
+        for probe_code, probe_info in mut_results.items():
+            self.assertEqual(
+                probe_info.get("status"),
+                "REJECTED_AS_EXPECTED",
+                f"Probe {probe_code} tidak berstatus REJECTED_AS_EXPECTED: {probe_info}",
+            )
 
-        # Mutasi 1: Ubah quantity pada stock.quant internal (supervisor probe)
-        target_quant = next(q for q in Quant.search([]) if q.location_id.usage == "internal")
-        orig_qty = target_quant.quantity
-        target_quant.quantity = 999999.0
-        with self.assertRaises(AssertionError):
-            audit_database_against_oracle_july(mock_env, oracle)
-        # Rollback Mutasi 1
-        target_quant.quantity = orig_qty
-        audit_database_against_oracle_july(mock_env, oracle)
-
-        # Mutasi 2: Ubah reserved_quantity pada stock.quant internal
-        orig_res = target_quant.reserved_quantity
-        target_quant.reserved_quantity = 999999.0
-        with self.assertRaises(AssertionError):
-            audit_database_against_oracle_july(mock_env, oracle)
-        # Rollback Mutasi 2
-        target_quant.reserved_quantity = orig_res
-        audit_database_against_oracle_july(mock_env, oracle)
-
-        # Mutasi 3: Jurnal seimbang tetapi nominal salah (debit +1000 COGS 510000, credit +1000 Stok 113000)
-        cogs_line = next(ln for ln in AML.search([]) if ln.account_id.code == "510000")
-        stk_line = next(
-            ln for ln in AML.search([])
-            if ln.move_id.id == cogs_line.move_id.id and ln.account_id.code == "113000"
-        )
-        orig_debit = cogs_line.debit
-        orig_credit = stk_line.credit
-        cogs_line.debit += 1000.0
-        stk_line.credit += 1000.0
-        with self.assertRaises(AssertionError):
-            audit_database_against_oracle_july(mock_env, oracle)
-        # Rollback Mutasi 3
-        cogs_line.debit = orig_debit
-        stk_line.credit = orig_credit
-        audit_database_against_oracle_july(mock_env, oracle)
-
-        # Mutasi 4: Sisipkan faktur out_invoice bertanggal Agustus pada database Juli
-        illegal_inv = AM.create({
-            "name": "INV/ILLEGAL/2026/08",
-            "move_type": "out_invoice",
-            "state": "posted",
-            "date": "2026-08-01",
-            "amount_untaxed": 1000000.0,
-            "amount_tax": 110000.0,
-            "amount_total": 1110000.0,
-            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
-        })
-        with self.assertRaises(AssertionError):
-            audit_database_against_oracle_july(mock_env, oracle)
-        # Rollback Mutasi 4
-        del AM.store[illegal_inv.id]
-        audit_database_against_oracle_july(mock_env, oracle)
-
-        # Mutasi 5: Putus relasi singular account_move_id pada stock move pengiriman ke customer
-        deliv_move = next(
-            m for m in SM.search([])
-            if getattr(m, "account_move_id", None) is not None
-            and getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
-        )
-        orig_am = deliv_move.account_move_id
-        deliv_move.account_move_id = None
-        with self.assertRaises(AssertionError):
-            audit_database_against_oracle_july(mock_env, oracle)
-        # Rollback Mutasi 5
-        deliv_move.account_move_id = orig_am
+        # Baseline wajib tetap PASS setelah seluruh mutasi di-rollback
         audit_database_against_oracle_july(mock_env, oracle)
 
     def test_july_historical_closing_immutability_detects_value_modifications(self):

@@ -12,6 +12,7 @@ Menutup seluruh temuan supervisi pada PR #15:
 7. Pengujian adapter pada mock Odoo environment dengan 15 hash fingerprint LF utuh.
 """
 
+import contextlib
 import csv
 from decimal import Decimal
 import json
@@ -949,6 +950,16 @@ class MockCursor:
         self.rollbacked = True
         if self.env and hasattr(self.env, "_restore_snapshot"):
             self.env._restore_snapshot()
+
+    @contextlib.contextmanager
+    def savepoint(self):
+        snap = self.env._take_snapshot() if self.env and hasattr(self.env, "_take_snapshot") else None
+        try:
+            yield
+        except Exception:
+            if snap and hasattr(self.env, "_restore_snapshot"):
+                self.env._restore_snapshot(snap)
+            raise
 
 
 def _serialize_val(val):

@@ -247,10 +247,16 @@ class FullDatasetCanonicalOracle:
         ]
         aug_cogs = sum(Decimal(str(round(float(so["cogs_dpp"]), 2))) for so in aug_sos)
 
+        july_ol = [
+            ol for ol in self.order_lines
+            if do_date_map.get(so_do_map.get(ol["so_number"], ""), "") <= "2026-07-31"
+        ]
+
         return {
             "so_count": len(self.so_rows),
             "do_validated_july": len(july_do) + len(self.po_headers),
             "do_pending_august": len(aug_do),
+            "outbound_moves_july": len(july_ol),
             "invoices_july_posted": len(july_inv),
             "invoices_august_pending": len(aug_inv),
             "july_inv_dpp": str(july_inv_dpp),
@@ -285,6 +291,7 @@ class FullDatasetCanonicalOracle:
         return {
             "so_count": len(self.so_rows),
             "do_total_validated": len(self.deliveries) + len(self.po_headers),
+            "outbound_moves_total": len(self.order_lines),
             "invoices_total_posted": len(self.invoices),
             "ar_collections_total": len(self.ar_collections),
             "ap_payments_total": len(self.ap_payments),
@@ -304,6 +311,51 @@ class FullDatasetCanonicalOracle:
             "total_inv_ppn": str(Decimal(july_exp["july_inv_ppn"]) + Decimal(july_exp["aug_inv_ppn"])),
             "total_inv_amount": str(Decimal(july_exp["july_inv_total"]) + Decimal(july_exp["aug_inv_total"])),
         }
+
+    def get_expected_stock_multiset(self, cutoff_date="2026-07-31") -> tuple[dict, dict, dict]:
+        """Menghitung multiset persediaan per-(SKU, Lot) dan reservasi per-SKU secara dinamis dari CSV register."""
+        do_date_map = {d["do_number"]: d["scheduled_delivery_date"] for d in self.deliveries}
+        so_do_map = {d["so_number"]: d["do_number"] for d in self.deliveries}
+
+        expected_phys = {}
+        expected_res_by_sku = {}
+        expected_quar = {}
+
+        # 1. Opening stock
+        for r in self.opening_rows:
+            sku = r["sku_code"]
+            lot = r["lot_number"]
+            units = float(r.get("qty_units_on_hand") or (int(r["qty_cartons_on_hand"]) * int(r["carton_qty"])))
+            expected_phys[(sku, lot)] = expected_phys.get((sku, lot), 0.0) + units
+
+        # 2. Inbound PO transit
+        for r in self.po_lines:
+            sku = r["sku_code"]
+            lot = r["lot_number"]
+            units = float(int(r["qty_cartons"]) * int(r["carton_qty"]))
+            expected_phys[(sku, lot)] = expected_phys.get((sku, lot), 0.0) + units
+
+        # 3. Deliveries & Reservations
+        for ol in self.order_lines:
+            so = ol["so_number"]
+            do_num = so_do_map.get(so)
+            do_date = do_date_map.get(do_num, "")
+            sku = ol["sku_code"]
+            lot = ol["lot_number"]
+            units = float(int(ol["qty_cartons"]) * int(ol["carton_qty"]))
+            if do_date <= cutoff_date:
+                expected_phys[(sku, lot)] = expected_phys.get((sku, lot), 0.0) - units
+            else:
+                expected_res_by_sku[sku] = expected_res_by_sku.get(sku, 0.0) + units
+
+        # 4. Quarantine rejections
+        for r in self.rejections:
+            sku = r["sku_code"]
+            lot = r["lot_number"]
+            units = float(int(r["qty_cartons"]) * int(r["carton_qty"]))
+            expected_quar[(sku, lot)] = expected_quar.get((sku, lot), 0.0) + units
+
+        return expected_phys, expected_res_by_sku, expected_quar
 
 
 def capture_deep_state_snapshot(env) -> dict:
@@ -517,41 +569,111 @@ def verify_anti_fallback_salespersons(env):
         )
 
 
+def resolve_canonical_locations(env):
+    """Menyelesaikan lokasi gudang internal dan karantina secara deterministik tanpa substring fuzzy atau fallback ID."""
+    StockLocation = env["stock.location"].sudo()
+    wh_stock_loc = None
+    if "stock.warehouse" in env:
+        whs = _iter_records(env["stock.warehouse"].sudo().search([]))
+        fmcg_whs = [w for w in whs if getattr(w, "lot_stock_id", None) and "other" not in str(getattr(w, "name", "")).lower()]
+        if fmcg_whs:
+            wh_stock_loc = fmcg_whs[0].lot_stock_id
+    if not wh_stock_loc:
+        candidates = _iter_records(StockLocation.search([("usage", "=", "internal")]))
+        for name in ("WH/Stock", "Stock", "Gudang Utama Maumbi"):
+            matched = [c for c in candidates if str(getattr(c, "name", "")).strip() == name]
+            if matched:
+                wh_stock_loc = matched[0]
+                break
+    if not wh_stock_loc:
+        raise LookupError("[canonical_locations] Lokasi gudang internal utama tidak ditemukan!")
+
+    quar_candidates = _iter_records(StockLocation.search([
+        ("name", "=", "Karantina FMCG Maumbi"),
+        ("usage", "=", "internal"),
+    ]))
+    if not quar_candidates:
+        raise LookupError("[canonical_locations] Lokasi karantina 'Karantina FMCG Maumbi' tidak ditemukan!")
+    quarantine_loc = quar_candidates[0]
+
+    return wh_stock_loc, quarantine_loc
+
+
 def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
     """Mengaudit database Odoo aktual secara menyeluruh terhadap ekspektasi Oracle Cut-off 31 Juli 2026."""
     july_exp = oracle.get_july_closing_expectations()
+    wh_stock_loc, quarantine_loc = resolve_canonical_locations(env)
+    exp_phys, exp_res_by_sku, exp_quar = oracle.get_expected_stock_multiset(cutoff_date="2026-07-31")
 
-    # 1. Stock Quants (Fisik, Reservasi, dan Karantina per Unit & Karton)
+    # 1. Stock Quants Multiset (Fisik per SKU+Lot, Reservasi per SKU, dan Karantina per SKU+Lot)
     if "stock.quant" in env:
         Quant = env["stock.quant"].sudo()
-        quants = _iter_records(Quant.search([]))
-        internal_quants = [
-            q for q in quants
-            if getattr(getattr(q, "location_id", None), "usage", "") == "internal"
-            and "karantina" not in str(getattr(getattr(q, "location_id", None), "name", "")).lower()
-        ]
-        quarantine_quants = [
-            q for q in quants
-            if "karantina" in str(getattr(getattr(q, "location_id", None), "name", "")).lower()
-            or getattr(getattr(q, "location_id", None), "id", None) == 2
-        ]
+        internal_quants = _iter_records(Quant.search([("location_id", "=", wh_stock_loc.id)]))
+        quarantine_quants = _iter_records(Quant.search([("location_id", "=", quarantine_loc.id)]))
 
-        # Audit kuantitas fisik internal
-        tot_phys_units = sum(float(getattr(q, "quantity", 0.0) or 0.0) for q in internal_quants)
+        actual_phys = {}
+        actual_res_by_sku = {}
+        for q in internal_quants:
+            sku = getattr(getattr(q, "product_id", None), "default_code", "") or ""
+            lot = getattr(getattr(q, "lot_id", None), "name", "") or ""
+            qty = round(float(getattr(q, "quantity", 0.0) or 0.0), 4)
+            res = round(float(getattr(q, "reserved_quantity", 0.0) or 0.0), 4)
+            if qty != 0.0 or (sku, lot) in exp_phys:
+                actual_phys[(sku, lot)] = actual_phys.get((sku, lot), 0.0) + qty
+            if res > 0.0:
+                actual_res_by_sku[sku] = actual_res_by_sku.get(sku, 0.0) + res
+
+        # 1a. Audit kuantitas fisik internal exact per-(SKU, Lot)
+        for (sku, lot), expected_qty in exp_phys.items():
+            act_qty = actual_phys.get((sku, lot), 0.0)
+            assert act_qty == expected_qty, (
+                f"Audit Fisik Mismatch pada SKU '{sku}', Lot '{lot}'! Expected {expected_qty}, got {act_qty}"
+            )
+        for (sku, lot), act_qty in actual_phys.items():
+            if (sku, lot) not in exp_phys and act_qty != 0.0:
+                raise AssertionError(f"Audit Fisik Menemukan SKU/Lot Tak Dikenal: SKU '{sku}', Lot '{lot}' qty={act_qty}!")
+
+        tot_phys_units = sum(actual_phys.values())
         exp_phys_units = float(july_exp["physical_units_july"])
         assert tot_phys_units == exp_phys_units, (
             f"Audit Fisik Gudang Juli Gagal! Expected {exp_phys_units} units, got {tot_phys_units}"
         )
 
-        # Audit kuantitas reservasi (untuk DO carry-forward 1 Agustus)
-        tot_res_units = sum(float(getattr(q, "reserved_quantity", 0.0) or 0.0) for q in internal_quants)
+        # 1b. Audit kuantitas reservasi exact per-SKU (untuk 48 DO carry-forward 1 Agustus)
+        for sku, expected_res in exp_res_by_sku.items():
+            act_res = actual_res_by_sku.get(sku, 0.0)
+            assert act_res == expected_res, (
+                f"Audit Reservasi Mismatch pada SKU '{sku}'! Expected {expected_res}, got {act_res}"
+            )
+        for sku, act_res in actual_res_by_sku.items():
+            if sku not in exp_res_by_sku and act_res != 0.0:
+                raise AssertionError(f"Audit Reservasi Menemukan SKU Tak Terduga: SKU '{sku}' reserved={act_res}!")
+
+        tot_res_units = sum(actual_res_by_sku.values())
         exp_res_units = float(july_exp["reserved_units_july"])
         assert tot_res_units == exp_res_units, (
             f"Audit Reservasi Stok Juli Gagal! Expected {exp_res_units} units, got {tot_res_units}"
         )
 
-        # Audit kuantitas karantina
-        tot_quar_units = sum(float(getattr(q, "quantity", 0.0) or 0.0) for q in quarantine_quants)
+        # 1c. Audit kuantitas karantina exact per-(SKU, Lot)
+        actual_quar = {}
+        for q in quarantine_quants:
+            sku = getattr(getattr(q, "product_id", None), "default_code", "") or ""
+            lot = getattr(getattr(q, "lot_id", None), "name", "") or ""
+            qty = round(float(getattr(q, "quantity", 0.0) or 0.0), 4)
+            if qty != 0.0 or (sku, lot) in exp_quar:
+                actual_quar[(sku, lot)] = actual_quar.get((sku, lot), 0.0) + qty
+
+        for (sku, lot), expected_qty in exp_quar.items():
+            act_qty = actual_quar.get((sku, lot), 0.0)
+            assert act_qty == expected_qty, (
+                f"Audit Karantina Mismatch pada SKU '{sku}', Lot '{lot}'! Expected {expected_qty}, got {act_qty}"
+            )
+        for (sku, lot), act_qty in actual_quar.items():
+            if (sku, lot) not in exp_quar and act_qty != 0.0:
+                raise AssertionError(f"Audit Karantina Menemukan SKU/Lot Tak Dikenal: SKU '{sku}', Lot '{lot}' qty={act_qty}!")
+
+        tot_quar_units = sum(actual_quar.values())
         exp_quar_units = float(july_exp["quarantine_units_july"])
         assert tot_quar_units == exp_quar_units, (
             f"Audit Karantina Juli Gagal! Expected {exp_quar_units} units, got {tot_quar_units}"
@@ -615,7 +737,7 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
             f"Audit Total Faktur Juli Mismatch! Expected {expected_gross}, got {tot_gross}"
         )
 
-    # 5. Saldo COGS Nominal & Relasi Singular Stock Move
+    # 5. Saldo COGS Nominal & Relasi Singular Stock Move Non-Vacuous
     if "account.move.line" in env:
         AML = env["account.move.line"].sudo()
         all_lines = _iter_records(AML.search([]))
@@ -632,16 +754,25 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
 
     if "stock.move" in env:
         SM = env["stock.move"].sudo()
+        # Non-vacuous check: boolean check 'not m.origin_returned_move_id' tahan terhadap empty recordset
         done_out_moves = [
             m for m in _iter_records(SM.search([("state", "=", "done")]))
-            if getattr(m, "origin_returned_move_id", False) is False
-            and getattr(m, "is_inventory", False) is False
+            if not getattr(m, "origin_returned_move_id", False)
+            and not getattr(m, "is_inventory", False)
             and getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
         ]
+        expected_out_moves = july_exp["outbound_moves_july"]  # 2650 customer delivery moves pada 1281 DO tervalidasi
+        assert len(done_out_moves) == expected_out_moves, (
+            f"Audit Outbound Moves Juli Gagal! Expected {expected_out_moves}, got {len(done_out_moves)}"
+        )
         for m in done_out_moves:
             am = getattr(m, "account_move_id", None)
-            assert am, f"Stock move pengiriman {m.id} wajib memiliki binding singular account_move_id!"
-            assert getattr(am, "state", "") == "posted", f"Account move {getattr(am, 'name', '')} belum posted!"
+            assert am, f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
+            assert getattr(am, "state", "") == "posted", f"Account move {getattr(am, 'name', '')} pada move {m.id} belum posted!"
+            lines = _iter_records(getattr(am, "line_ids", []))
+            codes = {getattr(getattr(ln, "account_id", None), "code", "") for ln in lines}
+            assert "510000" in codes, f"Account move {am.name} pada move {m.id} tidak memiliki debit COGS 510000!"
+            assert "113000" in codes, f"Account move {am.name} pada move {m.id} tidak memiliki credit Persediaan 113000!"
 
     # 6. Pembayaran AR / AP / OPEX
     if "account.payment" in env:
@@ -675,23 +806,62 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
 def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle, prior_july_aml_snapshot=None):
     """Mengaudit database Odoo aktual setelah carry-forward 1 Agustus 2026 selesai diproses."""
     aug_exp = oracle.get_august_opening_expectations()
+    wh_stock_loc, quarantine_loc = resolve_canonical_locations(env)
+    exp_phys, _, exp_quar = oracle.get_expected_stock_multiset(cutoff_date="2026-08-01")
 
-    # 1. Stock Quants (Reservasi Nol & Fisik Berkurang Bersih)
+    # 1. Stock Quants Multiset (Reservasi Nol & Fisik Berkurang Bersih)
     if "stock.quant" in env:
         Quant = env["stock.quant"].sudo()
-        quants = _iter_records(Quant.search([]))
-        internal_quants = [
-            q for q in quants
-            if getattr(getattr(q, "location_id", None), "usage", "") == "internal"
-            and "karantina" not in str(getattr(getattr(q, "location_id", None), "name", "")).lower()
-        ]
-        tot_phys_units = sum(float(getattr(q, "quantity", 0.0) or 0.0) for q in internal_quants)
+        internal_quants = _iter_records(Quant.search([("location_id", "=", wh_stock_loc.id)]))
+        quarantine_quants = _iter_records(Quant.search([("location_id", "=", quarantine_loc.id)]))
+
+        actual_phys = {}
+        actual_res_by_sku = {}
+        for q in internal_quants:
+            sku = getattr(getattr(q, "product_id", None), "default_code", "") or ""
+            lot = getattr(getattr(q, "lot_id", None), "name", "") or ""
+            qty = round(float(getattr(q, "quantity", 0.0) or 0.0), 4)
+            res = round(float(getattr(q, "reserved_quantity", 0.0) or 0.0), 4)
+            if qty != 0.0 or (sku, lot) in exp_phys:
+                actual_phys[(sku, lot)] = actual_phys.get((sku, lot), 0.0) + qty
+            if res > 0.0:
+                actual_res_by_sku[sku] = actual_res_by_sku.get(sku, 0.0) + res
+
+        # 1a. Audit kuantitas fisik internal exact per-(SKU, Lot)
+        for (sku, lot), expected_qty in exp_phys.items():
+            act_qty = actual_phys.get((sku, lot), 0.0)
+            assert act_qty == expected_qty, (
+                f"Audit Fisik Agustus Mismatch pada SKU '{sku}', Lot '{lot}'! Expected {expected_qty}, got {act_qty}"
+            )
+        for (sku, lot), act_qty in actual_phys.items():
+            if (sku, lot) not in exp_phys and act_qty != 0.0:
+                raise AssertionError(f"Audit Fisik Agustus Menemukan SKU/Lot Tak Dikenal: SKU '{sku}', Lot '{lot}' qty={act_qty}!")
+
+        tot_phys_units = sum(actual_phys.values())
         exp_phys_units = float(aug_exp["physical_units_august"])
         assert tot_phys_units == exp_phys_units, (
             f"Audit Fisik Gudang Agustus Mismatch! Expected {exp_phys_units} units, got {tot_phys_units}"
         )
-        tot_res_units = sum(float(getattr(q, "reserved_quantity", 0.0) or 0.0) for q in internal_quants)
-        assert tot_res_units == 0.0, f"Audit Reservasi Agustus Gagal! Expected 0, got {tot_res_units}"
+
+        # 1b. Audit kuantitas reservasi nol bersih untuk seluruh SKU
+        assert len(actual_res_by_sku) == 0, (
+            f"Audit Reservasi Agustus Gagal! Ditemukan SKU dengan reservasi aktif: {actual_res_by_sku}"
+        )
+
+        # 1c. Audit kuantitas karantina exact per-(SKU, Lot)
+        actual_quar = {}
+        for q in quarantine_quants:
+            sku = getattr(getattr(q, "product_id", None), "default_code", "") or ""
+            lot = getattr(getattr(q, "lot_id", None), "name", "") or ""
+            qty = round(float(getattr(q, "quantity", 0.0) or 0.0), 4)
+            if qty != 0.0 or (sku, lot) in exp_quar:
+                actual_quar[(sku, lot)] = actual_quar.get((sku, lot), 0.0) + qty
+
+        for (sku, lot), expected_qty in exp_quar.items():
+            act_qty = actual_quar.get((sku, lot), 0.0)
+            assert act_qty == expected_qty, (
+                f"Audit Karantina Agustus Mismatch pada SKU '{sku}', Lot '{lot}'! Expected {expected_qty}, got {act_qty}"
+            )
 
     # 2. Total Pickings (1.324 DO + 5 PO + 9 Retur Karantina = 1.338 Pickings tervalidasi)
     if "stock.picking" in env:
@@ -730,7 +900,7 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
             f"Audit Total PPN Faktur Mismatch! Expected {expected_ppn}, got {tot_ppn}"
         )
 
-    # 4. Total COGS Nominal
+    # 4. Total COGS Nominal & Relasi Singular Stock Move Non-Vacuous
     if "account.move.line" in env:
         AML = env["account.move.line"].sudo()
         all_lines = _iter_records(AML.search([]))
@@ -743,6 +913,27 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
         assert tot_cogs_debit == exp_cogs, (
             f"Audit Total COGS Nominal Mismatch! Expected Rp {exp_cogs}, got Rp {tot_cogs_debit}"
         )
+
+    if "stock.move" in env:
+        SM = env["stock.move"].sudo()
+        done_out_moves = [
+            m for m in _iter_records(SM.search([("state", "=", "done")]))
+            if not getattr(m, "origin_returned_move_id", False)
+            and not getattr(m, "is_inventory", False)
+            and getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
+        ]
+        expected_out_moves = aug_exp["outbound_moves_total"]  # 2738 customer delivery moves pada 1324 DO total
+        assert len(done_out_moves) == expected_out_moves, (
+            f"Audit Outbound Moves Total Gagal! Expected {expected_out_moves}, got {len(done_out_moves)}"
+        )
+        for m in done_out_moves:
+            am = getattr(m, "account_move_id", None)
+            assert am, f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
+            assert getattr(am, "state", "") == "posted", f"Account move {getattr(am, 'name', '')} pada move {m.id} belum posted!"
+            lines = _iter_records(getattr(am, "line_ids", []))
+            codes = {getattr(getattr(ln, "account_id", None), "code", "") for ln in lines}
+            assert "510000" in codes, f"Account move {am.name} pada move {m.id} tidak memiliki debit COGS 510000!"
+            assert "113000" in codes, f"Account move {am.name} pada move {m.id} tidak memiliki credit Persediaan 113000!"
 
     # 5. Immutabilitas Penutupan Historis Juli (Exact Multiset Matching)
     if prior_july_aml_snapshot is not None and "account.move.line" in env:
@@ -765,6 +956,185 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
         assert current_july_aml_multiset == prior_july_aml_snapshot, (
             "VIOLATION HISTORICAL CLOSING: Rekonsiliasi multiset baris AML Juli berubah setelah carry-forward Agustus!"
         )
+
+
+def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOracle) -> dict:
+    """Menguji penolakan mutasi negatif aktual langsung pada database menggunakan transaction savepoint.
+
+    Membuktikan secara deterministik pada database PostgreSQL nyata bahwa auditor produksi menolak:
+    1. Pertukaran kuantitas fisik antar-SKU (+5 / -5).
+    2. Substitusi lot_id ke dummy probe lot 999.
+    3. Pertukaran kuantitas reservasi antar-SKU (+5 / -5).
+    4. Pemutusan relasi singular account_move_id pada outbound delivery move.
+    5. Modifikasi nilai seimbang pada baris AML (COGS debit +500k, Stock credit +500k).
+    6. Injeksi faktur komersial Agustus pada penutupan Juli (cross-cutoff leak).
+    """
+    results = {}
+    Quant = env["stock.quant"].sudo() if "stock.quant" in env else None
+    StockLot = env["stock.lot"].sudo() if "stock.lot" in env else None
+    SM = env["stock.move"].sudo() if "stock.move" in env else None
+    AM = env["account.move"].sudo() if "account.move" in env else None
+    AML = env["account.move.line"].sudo() if "account.move.line" in env else None
+
+    cr = getattr(env, "cr", None)
+    if not (cr and hasattr(cr, "savepoint")):
+        raise RuntimeError("[negative_mutations] Cursor savepoint() tidak tersedia pada environment!")
+
+    # 1. Mutasi: SKU Physical On-Hand Swap (+5 di SKU A, -5 di SKU B)
+    if Quant is not None:
+        int_quants = [
+            q for q in _iter_records(Quant.search([]))
+            if getattr(getattr(q, "location_id", None), "usage", "") == "internal"
+            and "karantina" not in str(getattr(getattr(q, "location_id", None), "name", "")).lower()
+            and float(getattr(q, "quantity", 0.0) or 0.0) >= 10.0
+        ]
+        if len(int_quants) >= 2:
+            q1, q2 = int_quants[0], int_quants[1]
+            try:
+                with cr.savepoint():
+                    q1.write({"quantity": float(q1.quantity) + 5.0})
+                    q2.write({"quantity": float(q2.quantity) - 5.0})
+                    audit_database_against_oracle_july(env, oracle)
+                    raise RuntimeError("Mutasi SKU physical swap lolos audit tanpa penolakan!")
+            except AssertionError as exc:
+                results["probe_1_sku_physical_swap"] = {
+                    "status": "REJECTED_AS_EXPECTED",
+                    "description": f"Tukar fisik +5 di {getattr(q1.product_id, 'default_code', '')} dan -5 di {getattr(q2.product_id, 'default_code', '')}",
+                    "rejection_message": str(exc),
+                }
+                print(f"   [Probe 1 PASS] SKU Physical Swap (+5/-5) sukses ditolak: {exc}")
+
+    # 2. Mutasi: Dummy Lot Substitution (lot 999)
+    if Quant is not None and StockLot is not None:
+        target_q = next((
+            q for q in _iter_records(Quant.search([]))
+            if getattr(getattr(q, "location_id", None), "usage", "") == "internal"
+            and "karantina" not in str(getattr(getattr(q, "location_id", None), "name", "")).lower()
+            and float(getattr(q, "quantity", 0.0) or 0.0) > 0.0
+        ), None)
+        if target_q:
+            try:
+                with cr.savepoint():
+                    dummy_lot = StockLot.search([("name", "=", "LOT-PROBE-999")], limit=1)
+                    if not dummy_lot:
+                        dummy_lot = StockLot.create({
+                            "name": "LOT-PROBE-999",
+                            "product_id": target_q.product_id.id,
+                        })
+                    target_q.write({"lot_id": dummy_lot.id})
+                    audit_database_against_oracle_july(env, oracle)
+                    raise RuntimeError("Mutasi lot substitution lolos audit tanpa penolakan!")
+            except AssertionError as exc:
+                results["probe_2_lot_substitution"] = {
+                    "status": "REJECTED_AS_EXPECTED",
+                    "description": f"Substitusi lot_id ke LOT-PROBE-999 pada {getattr(target_q.product_id, 'default_code', '')}",
+                    "rejection_message": str(exc),
+                }
+                print(f"   [Probe 2 PASS] Lot Substitution (LOT-PROBE-999) sukses ditolak: {exc}")
+
+    # 3. Mutasi: Reserved SKU Swap (+5 di SKU A, -5 di SKU B)
+    if Quant is not None:
+        res_quants = [
+            q for q in _iter_records(Quant.search([]))
+            if getattr(getattr(q, "location_id", None), "usage", "") == "internal"
+            and float(getattr(q, "reserved_quantity", 0.0) or 0.0) >= 10.0
+        ]
+        if len(res_quants) >= 2:
+            rq1, rq2 = res_quants[0], res_quants[1]
+            try:
+                with cr.savepoint():
+                    rq1.write({"reserved_quantity": float(rq1.reserved_quantity) + 5.0})
+                    rq2.write({"reserved_quantity": float(rq2.reserved_quantity) - 5.0})
+                    audit_database_against_oracle_july(env, oracle)
+                    raise RuntimeError("Mutasi reserved SKU swap lolos audit tanpa penolakan!")
+            except AssertionError as exc:
+                results["probe_3_reserved_sku_swap"] = {
+                    "status": "REJECTED_AS_EXPECTED",
+                    "description": f"Tukar reservasi +5 di {getattr(rq1.product_id, 'default_code', '')} dan -5 di {getattr(rq2.product_id, 'default_code', '')}",
+                    "rejection_message": str(exc),
+                }
+                print(f"   [Probe 3 PASS] Reserved SKU Swap (+5/-5) sukses ditolak: {exc}")
+
+    # 4. Mutasi: Unlink account_move_id on Outbound Customer Delivery Move
+    if SM is not None:
+        out_mv = next((
+            m for m in _iter_records(SM.search([("state", "=", "done")]))
+            if not getattr(m, "origin_returned_move_id", False)
+            and not getattr(m, "is_inventory", False)
+            and getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
+            and getattr(m, "account_move_id", None)
+        ), None)
+        if out_mv:
+            try:
+                with cr.savepoint():
+                    out_mv.write({"account_move_id": False})
+                    audit_database_against_oracle_july(env, oracle)
+                    raise RuntimeError("Mutasi pemutusan account_move_id lolos audit tanpa penolakan!")
+            except AssertionError as exc:
+                results["probe_4_cogs_binding_unlink"] = {
+                    "status": "REJECTED_AS_EXPECTED",
+                    "description": f"Unlink account_move_id pada stock.move ID {out_mv.id}",
+                    "rejection_message": str(exc),
+                }
+                print(f"   [Probe 4 PASS] COGS Binding Unlink sukses ditolak: {exc}")
+
+    # 5. Mutasi: Balanced AML Value Tampering (+500k debit COGS 510000, +500k credit Persediaan 113000)
+    if AML is not None and AM is not None:
+        cogs_ln = next((
+            ln for ln in _iter_records(AML.search([]))
+            if getattr(getattr(ln, "account_id", None), "code", "") == "510000"
+            and float(getattr(ln, "debit", 0.0) or 0.0) > 0.0
+        ), None)
+        if cogs_ln:
+            mv_id = getattr(getattr(cogs_ln, "move_id", None), "id", None)
+            stk_ln = next((
+                ln for ln in _iter_records(AML.search([("move_id", "=", mv_id)]))
+                if getattr(getattr(ln, "account_id", None), "code", "") == "113000"
+                and float(getattr(ln, "credit", 0.0) or 0.0) > 0.0
+            ), None)
+            if stk_ln:
+                try:
+                    with cr.savepoint():
+                        cogs_ln.write({"debit": float(cogs_ln.debit) + 500000.0})
+                        stk_ln.write({"credit": float(stk_ln.credit) + 500000.0})
+                        audit_database_against_oracle_july(env, oracle)
+                        raise RuntimeError("Mutasi balanced AML tampering lolos audit tanpa penolakan!")
+                except AssertionError as exc:
+                    results["probe_5_balanced_aml_tampering"] = {
+                        "status": "REJECTED_AS_EXPECTED",
+                        "description": "Tambah Rp 500.000 seimbang pada debit 510000 & credit 113000",
+                        "rejection_message": str(exc),
+                    }
+                    print(f"   [Probe 5 PASS] Balanced AML Tampering (+Rp 500k) sukses ditolak: {exc}")
+
+    # 6. Mutasi: Injeksi Faktur Agustus pada Database Juli (Cross-Cutoff Leak)
+    if AM is not None:
+        try:
+            with cr.savepoint():
+                AM.create({
+                    "name": "INV/ILLEGAL/2026/08",
+                    "move_type": "out_invoice",
+                    "state": "posted",
+                    "date": "2026-08-01",
+                    "amount_untaxed": 1000000.0,
+                    "amount_tax": 110000.0,
+                    "amount_total": 1110000.0,
+                    "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+                })
+                audit_database_against_oracle_july(env, oracle)
+                raise RuntimeError("Injeksi faktur Agustus lolos audit tanpa penolakan!")
+        except AssertionError as exc:
+            results["probe_6_cross_cutoff_invoice"] = {
+                "status": "REJECTED_AS_EXPECTED",
+                "description": "Injeksi out_invoice bertanggal 2026-08-01 ke database penutupan Juli",
+                "rejection_message": str(exc),
+            }
+            print(f"   [Probe 6 PASS] Cross-Cutoff Invoice Injection sukses ditolak: {exc}")
+
+    # Verifikasi ulang baseline: pastikan database kembali bersih 100% setelah seluruh probe di-rollback
+    audit_database_against_oracle_july(env, oracle)
+    print("   [Baseline Verified] Database terbukti bersih dan identik setelah seluruh mutasi di-rollback.")
+    return results
 
 
 def run_full_disposable_verification(env, output_dir=None):
@@ -843,6 +1213,21 @@ def run_full_disposable_verification(env, output_dir=None):
         print("\n[Audit Checkpoint Juli] Memverifikasi database aktual terhadap Oracle Kanonikal...")
         audit_database_against_oracle_july(env, oracle)
         print(" -> [Audit Checkpoint Juli PASS] 1.324 SO, 1.281 DO tervalidasi, 1.276 Faktur Juli, GL seimbang.")
+
+        # 3B. Runtime Fault-Injection (Negative Mutations Probe) di Database Aktual via cr.savepoint
+        print("\n" + "=" * 80)
+        print("[Fase 1B] PENGUJIAN MUTASI NEGATIF AKTUAL PADA DATABASE (CR.SAVEPOINT)")
+        print("=" * 80)
+        t0_mut = time.time()
+        mut_results = run_real_negative_mutations_on_database(env, oracle)
+        dur_mut = time.time() - t0_mut
+        report["phases"]["phase1b_negative_mutations"] = {
+            "duration_seconds": round(dur_mut, 2),
+            "probes_count": len(mut_results),
+            "all_probes_rejected_as_expected": all(v.get("status") == "REJECTED_AS_EXPECTED" for v in mut_results.values()),
+        }
+        report["runtime_negative_mutations"] = mut_results
+        print(f" -> [Fase 1B PASS] Seluruh {len(mut_results)} mutasi negatif nyata terbukti digagalkan oleh audit ({dur_mut:.2f} s)!")
 
         # Capture snapshot immutable baris AML Juli untuk uji immutabilitas
         prior_july_aml_multiset = []
@@ -988,8 +1373,13 @@ def run_full_disposable_verification(env, output_dir=None):
             is_success = report.get("status") == "SUCCESS"
             dur_total = report.get("total_duration_seconds", round(time.time() - t0_global, 2))
             p1_dur = report.get("phases", {}).get("phase1_closing_july", {}).get("duration_seconds", "-")
+            p1b_dur = report.get("phases", {}).get("phase1b_negative_mutations", {}).get("duration_seconds", "-")
             p2_dur = report.get("phases", {}).get("phase2_opening_august", {}).get("duration_seconds", "-")
             p3_dur = report.get("phases", {}).get("phase3_idempotency_run2", {}).get("duration_seconds", "-")
+
+            mut_rows = ""
+            for p_name, p_data in report.get("runtime_negative_mutations", {}).items():
+                mut_rows += f"| `{p_name}` | {p_data.get('description', '-')} | **{p_data.get('status', '-')}** |\n"
 
             md_summary = f"""# Ringkasan Eksekusi Runtime Penuh Dataset Kanonikal FMCG
 
@@ -1005,17 +1395,22 @@ def run_full_disposable_verification(env, output_dir=None):
 | Fase Eksekusi | Status / Durasi | Dokumen Kunci Diproses |
 |---|---|---|
 | **Fase 1: Closing Juli 2026** | {p1_dur} s | {'SELESAI' if 'phase1_closing_july' in report.get('phases', {}) else 'NOT_RUN'} |
+| **Fase 1B: Pengujian Mutasi Negatif Nyata** | {p1b_dur} s | {len(report.get('runtime_negative_mutations', {}))} mutasi savepoint diuji |
 | **Fase 2: Post-Transaksi 1 Agustus 2026** | {p2_dur} s | {'SELESAI' if 'phase2_opening_august' in report.get('phases', {}) else 'NOT_RUN'} |
 | **Fase 3: Idempotensi Run 2** | {p3_dur} s | {'SELESAI' if 'phase3_idempotency_run2' in report.get('phases', {}) else 'NOT_RUN'} |
 
-## 2. Hasil Audit Saldo & Zero-Drift
+## 2. Hasil Pengujian Mutasi Negatif Nyata pada Database (cr.savepoint)
+| Kode Mutasi Probe | Deskripsi Mutasi / Skenario Counterexample | Status Penolakan |
+|---|---|---|
+{mut_rows}
+## 3. Hasil Audit Saldo & Zero-Drift
 - **Audit Oracle Kanonikal:** {'PASS' if is_success else 'FAIL / INCOMPLETE'}
 - **Anti-Fallback Salesperson:** {'PASS' if is_success else 'FAIL / INCOMPLETE'}
 - **Zero-Drift Idempotensi:** {'PASS' if is_success else 'FAIL / INCOMPLETE'}
 - **Saldo GL:** {'100% seimbang (Debit == Credit)' if is_success else 'FAIL / UNVERIFIED'}
 """
             if not is_success and "error" in report:
-                md_summary += f"\n## 3. Detail Kegagalan\n- **Error:** `{report['error']}`\n```\n{report.get('traceback', '')}\n```\n"
+                md_summary += f"\n## 4. Detail Kegagalan\n- **Error:** `{report['error']}`\n```\n{report.get('traceback', '')}\n```\n"
 
             for c_dir in candidate_dirs:
                 if not c_dir.is_dir():
