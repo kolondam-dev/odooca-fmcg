@@ -1,0 +1,39 @@
+# Translation of FMCG Mobile Read API.
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo 19.0\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "FMCG Mobile Sales Read"
+msgstr "Akses Baca Sales Mobile FMCG"
+
+msgid "Mobile Read Assignments"
+msgstr "Penugasan Baca Mobile"
+
+msgid "Scheduled Outlets"
+msgstr "Outlet Terjadwal"
+
+msgid "Allowed Products"
+msgstr "Produk yang Diizinkan"
+
+msgid "Outlet Geofence Radius (m)"
+msgstr "Radius Geofence Outlet (m)"
+
+msgid "Explicit read scope"
+msgstr "Cakupan baca eksplisit"
+
+msgid "Mobile read access is not enabled."
+msgstr "Akses baca mobile belum diaktifkan."
+
+msgid "An active assignment for today is required."
+msgstr "Penugasan aktif untuk hari ini wajib tersedia."
+
+msgid "The business day changed; bootstrap again."
+msgstr "Hari bisnis berubah; lakukan bootstrap ulang."
+
+msgid "Assign at least one product and scheduled outlet before enabling mobile reads."
+msgstr "Tetapkan minimal satu produk dan outlet terjadwal sebelum mengaktifkan akses baca mobile."

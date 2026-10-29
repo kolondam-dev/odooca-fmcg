@@ -71,3 +71,10 @@
 -5 controlled regression FAIL pada kode lama lalu PASS;296 unit+1 hosting/typecheck/format/contracts/build/demo+live/budget/diff PASS. HTTP race unit mencakup snapshot scope/token submit, late401/network/malformed. Browser/CI final di PR, tidak klaim rerun browser lokal.
 - Rasio/legacy/root-day/seed/addon/backend/workflow/Railway tidak diubah, live locked. HOLD review ulang, tidak merge/deploy.
 - Task managed by agent-codex-pwa at 2026-10-29T14:24:57+07:00
+
+[2026-10-29T16:00:22+07:00] [INFO] Tahap2 backend read API candidate
+- Basis main8d15083; branch agen/pwa-read-api. Addon id_mobile_api, explicit admin daily scope/own-read ACL/company rule, GET bootstrap/snapshot dengan session cookie, readonly cursor/no-store dan no scope parameters. Native record rules/ACL tanpa sudo. Group read tidak memberi write Sales/Stock.
+- Native pricelist1carton tax-excluded dan exact primary stock availability company/warehouse/SKU (exclude reserved/consignment). Catalog v2/outlet scope; deliveries kosong. Tidak expose cost/AR/private docs atau mengaktifkan live/command.
+- ORM/HttpCase tests nyata ditambahkan dan CI install-test memasang/tag addon baru. Local296 unit PWA/typecheck/contracts/Ruff/5 manifest/compile/diff/validators PASS; runtime lokal belum: Postgres setup terhalang setgroups/setuid. Hasil runtime CI di PR; tidak memakai stub sebagai bukti.
+- Tidak menyentuh seed/register/master/loader/deploy/Railway; tidak merge/deploy. HOLD runtime/CI/review. Tahap write/delivery/evidence/full dataset tetap terpisah.
+- Task managed by agent-codex-pwa at 2026-10-29T16:00:22+07:00

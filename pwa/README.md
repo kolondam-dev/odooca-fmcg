@@ -650,3 +650,13 @@ saat request ditolak. `data/catalog.ts` memetakan read-model sanitasi backend, b
 raw ORM, dan belum terhubung endpoint Odoo. Kontrak OpenAPI draft0.13 diekspor dari
 schema. Aplikasi live tetap terkunci; endpoint baca/auth/ACL dan integrasi transaksi
 adalah tahap berikutnya. Harga/pajak/stok final tetap tanggung jawab server.
+
+
+## Tahap2 backend baca (candidate)
+
+Addon [id_mobile_api](../addons/id_mobile_api/README.md) menyediakan GET bootstrap
+dan catalog-v2 snapshot untuk session Odoo dengan admin daily read assignment.
+Pemasangan/ORM/HttpCase diuji pada CI; tidak melakukan deployment. UI live dan
+hosting /api/ tetap terkunci, endpoint commands/evidence/assignment delivery belum
+ada. Batas sumber harga/stok, native ACL/record rules dan provisioning dijelaskan
+pada README addon. Kontrak write tetap draft dan authority server belum diaktifkan.
