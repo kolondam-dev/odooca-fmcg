@@ -8,7 +8,14 @@ admin.write({'login': 'admin', 'password': 'ci-ui'})
 env['res.users.settings']._find_or_create_for_user(admin).set_res_users_settings(  # noqa: F821
     {'id_ui_shell': 'sidebar'})
 partner = env['res.partner'].create({'name': 'UI Smoke Customer'})  # noqa: F821
-product = env['product.product'].create({'name': 'UI Smoke Product', 'type': 'service', 'invoice_policy': 'order', 'list_price': 100})  # noqa: F821
+product = env['product.product'].create(  # noqa: F821
+    {
+        'name': 'UI Smoke Product',
+        'type': 'service',
+        'invoice_policy': 'order',
+        'list_price': 100,
+    }
+)
 orders = env['sale.order']  # noqa: F821
 for i in range(2):
     line_commands = [
@@ -61,16 +68,21 @@ for model_name, view_xmlid, wanted in (
     view = env.ref(view_xmlid)  # noqa: F821
     resolved = model.get_view(view_id=view.id, view_type='form')
     root = etree.fromstring(resolved['arch'].encode())
+    footer_groups = root.xpath(
+        './/group[.//field[@name="tax_totals"] or .//field[@name="note"] or .//field[@name="narration"]]'
+    )
     audit[model_name] = {
         'view_xmlid': view_xmlid,
         'view_id': view.id,
         'view_model': view.model,
         'fields_present_in_registry': sorted(set(wanted) & set(model._fields)),
-        'resolved_view_field_names': sorted({node.get('name') for node in root.xpath('.//field[@name]') if node.get('name')}),
+        'resolved_view_field_names': sorted(
+            {node.get('name') for node in root.xpath('.//field[@name]') if node.get('name')}
+        ),
         'resolved_groups': [
             {'name': node.get('name'), 'class': node.get('class'),
              'field_names': [field.get('name') for field in node.xpath('.//field[@name]')]}
-            for node in root.xpath('.//group[.//field[@name="tax_totals"] or .//field[@name="note"] or .//field[@name="narration"]]')
+            for node in footer_groups
         ],
     }
 print('UI_RUNTIME_AUDIT=' + json.dumps(audit, sort_keys=True))
