@@ -1,5 +1,25 @@
 # HANDOFF
 
+## 2026-10-29T20:55:00+07:00 — antigravity agent — Resolusi Interaksi Cursor Savepoint dan Penajaman Probe Fault-Injection di Database Nyata
+**Konteks & Ringkasan Perbaikan:**
+1. **Resolusi Interaksi Cursor Savepoint:**
+   - Menghapus method savepoint(self) dari MockCursor di tests/test_canonical_loader_adapter.py.
+   - Mengimplementasikan _db_savepoint() terisolasi di scripts/ops/verify_disposable_full.py yang mendeteksi hasattr(cr, 'savepoint') and callable(getattr(cr, 'savepoint')) untuk PostgreSQL nyata, atau fallback ke _take_snapshot / _restore_snapshot jika berjalan di MockEnv.
+   - Mengeliminasi regresi pada scripts/ops/verify_disposable_slice.py (yang mengandalkan ketiadaan savepoint pada MockEnv untuk menjalankan snapshot mock), sehingga seluruh 20 mutasi negatif slice di test_canonical_loader_adapter.py lulus 100%.
+2. **Penajaman Probe 5 (Balanced AML Tampering) di Database Nyata:**
+   - Mengatasi odoo.exceptions.UserError: The entry is not balanced pada real Odoo ORM saat baris cogs_ln dan stk_ln ditulis berturut-turut.
+   - Pada PostgreSQL nyata di dalam savepoint, perubahan nilai (+Rp 500.000 debit 510000 & +Rp 500.000 credit 113000) dieksekusi via direct SQL UPDATE account_move_line, lalu diikuti env.invalidate_all() untuk membersihkan cache ORM.
+   - Terbukti ditolak secara deterministik oleh audit_database_against_oracle_july dengan AssertionError: Audit COGS Nominal Juli Mismatch!, membuktikan audit saldo GL dan nominal COGS aktif dan non-vacuous.
+3. **Penajaman Probe 6 (Cross-Cutoff Invoice Injection):**
+   - Menambahkan binding partner_id dan journal_id sah pada kreasi faktur out_invoice bertanggal 2026-08-01 di database penutupan Juli.
+   - Terbukti ditolak secara deterministik oleh audit jumlah faktur dan batas tanggal cut-off dengan AssertionError.
+4. **Hasil Verifikasi Penuh:**
+   - python -m ruff check .: PASS (0 errors).
+   - python scripts/check_manifests.py: PASS (5 addon).
+   - python -m unittest tests/test_canonical_loader_adapter.py: PASS (seluruh 63 adapter tests, termasuk 20 slice negative mutations).
+   - python -m unittest tests/test_full_dataset_cutoff_and_upgrade.py: PASS (8/8 tests, termasuk 6 real in-database savepoint mutations).
+   - 15 CSV register kanonikal di data/registers/ 100% beku.
+
 ## 2026-10-29T20:13:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 3: Exact Multiset Stock, Non-Vacuous COGS Binding, dan In-Database Fault-Injection (cr.savepoint)
 **Konteks Review Supervisor ([issuecomment-6496046798](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6496046798)):**
 - Status PR #39: HOLD / changes required (full runtime SUCCESS terkonfirmasi pada run 40865942482, namun audit stok masih agregat, binding HPP vacuous pada empty recordset, dan mutasi negatif belum dieksekusi di database PostgreSQL nyata).

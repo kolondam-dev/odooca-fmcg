@@ -12,6 +12,7 @@ Membuktikan secara deterministik dari database kosong / disposable terisolasi:
 """
 
 from collections import defaultdict
+import contextlib
 from decimal import Decimal
 import json
 import os
@@ -977,8 +978,21 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
     AML = env["account.move.line"].sudo() if "account.move.line" in env else None
 
     cr = getattr(env, "cr", None)
-    if not (cr and hasattr(cr, "savepoint")):
-        raise RuntimeError("[negative_mutations] Cursor savepoint() tidak tersedia pada environment!")
+    has_sp = cr and hasattr(cr, "savepoint") and callable(getattr(cr, "savepoint"))
+
+    @contextlib.contextmanager
+    def _db_savepoint():
+        if has_sp:
+            with cr.savepoint():
+                yield
+        elif hasattr(env, "_take_snapshot") and hasattr(env, "_restore_snapshot"):
+            snap = env._take_snapshot()
+            try:
+                yield
+            finally:
+                env._restore_snapshot(snap)
+        else:
+            raise RuntimeError("[negative_mutations] Cursor savepoint() tidak tersedia pada environment!")
 
     # 1. Mutasi: SKU Physical On-Hand Swap (+5 di SKU A, -5 di SKU B)
     if Quant is not None:
@@ -991,7 +1005,7 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
         if len(int_quants) >= 2:
             q1, q2 = int_quants[0], int_quants[1]
             try:
-                with cr.savepoint():
+                with _db_savepoint():
                     q1.write({"quantity": float(q1.quantity) + 5.0})
                     q2.write({"quantity": float(q2.quantity) - 5.0})
                     audit_database_against_oracle_july(env, oracle)
@@ -1014,7 +1028,7 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
         ), None)
         if target_q:
             try:
-                with cr.savepoint():
+                with _db_savepoint():
                     dummy_lot = StockLot.search([("name", "=", "LOT-PROBE-999")], limit=1)
                     if not dummy_lot:
                         dummy_lot = StockLot.create({
@@ -1042,7 +1056,7 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
         if len(res_quants) >= 2:
             rq1, rq2 = res_quants[0], res_quants[1]
             try:
-                with cr.savepoint():
+                with _db_savepoint():
                     rq1.write({"reserved_quantity": float(rq1.reserved_quantity) + 5.0})
                     rq2.write({"reserved_quantity": float(rq2.reserved_quantity) - 5.0})
                     audit_database_against_oracle_july(env, oracle)
@@ -1066,7 +1080,7 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
         ), None)
         if out_mv:
             try:
-                with cr.savepoint():
+                with _db_savepoint():
                     out_mv.write({"account_move_id": False})
                     audit_database_against_oracle_july(env, oracle)
                     raise RuntimeError("Mutasi pemutusan account_move_id lolos audit tanpa penolakan!")
@@ -1094,9 +1108,21 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
             ), None)
             if stk_ln:
                 try:
-                    with cr.savepoint():
-                        cogs_ln.write({"debit": float(cogs_ln.debit) + 500000.0})
-                        stk_ln.write({"credit": float(stk_ln.credit) + 500000.0})
+                    with _db_savepoint():
+                        if has_sp and hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                            env.cr.execute(
+                                "UPDATE account_move_line SET debit = debit + 500000.0 WHERE id = %s",
+                                [cogs_ln.id],
+                            )
+                            env.cr.execute(
+                                "UPDATE account_move_line SET credit = credit + 500000.0 WHERE id = %s",
+                                [stk_ln.id],
+                            )
+                            if hasattr(env, "invalidate_all"):
+                                env.invalidate_all()
+                        else:
+                            cogs_ln.write({"debit": float(cogs_ln.debit) + 500000.0})
+                            stk_ln.write({"credit": float(stk_ln.credit) + 500000.0})
                         audit_database_against_oracle_july(env, oracle)
                         raise RuntimeError("Mutasi balanced AML tampering lolos audit tanpa penolakan!")
                 except AssertionError as exc:
@@ -1110,17 +1136,25 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
     # 6. Mutasi: Injeksi Faktur Agustus pada Database Juli (Cross-Cutoff Leak)
     if AM is not None:
         try:
-            with cr.savepoint():
-                AM.create({
+            with _db_savepoint():
+                partner = env["res.partner"].search([], limit=1) if "res.partner" in env else None
+                jnl = env["account.journal"].search([("type", "=", "sale")], limit=1) if "account.journal" in env else None
+                inv_vals = {
                     "name": "INV/ILLEGAL/2026/08",
                     "move_type": "out_invoice",
                     "state": "posted",
                     "date": "2026-08-01",
+                    "invoice_date": "2026-08-01",
                     "amount_untaxed": 1000000.0,
                     "amount_tax": 110000.0,
                     "amount_total": 1110000.0,
                     "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
-                })
+                }
+                if partner:
+                    inv_vals["partner_id"] = getattr(partner, "id", partner)
+                if jnl:
+                    inv_vals["journal_id"] = getattr(jnl, "id", jnl)
+                AM.create(inv_vals)
                 audit_database_against_oracle_july(env, oracle)
                 raise RuntimeError("Injeksi faktur Agustus lolos audit tanpa penolakan!")
         except AssertionError as exc:
