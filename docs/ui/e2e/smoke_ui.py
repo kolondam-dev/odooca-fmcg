@@ -136,7 +136,7 @@ async def main():
             if (maxScroll < 40) return { ok: false, reason: 'form did not produce meaningful vertical overflow', maxScroll };
             const initialScroll = owner.scrollTop;
             const ownerRect = owner.getBoundingClientRect();
-            const innerBottom = ownerRect.bottom - owner.clientBottom;
+            const innerBottom = ownerRect.top + owner.clientTop + owner.clientHeight;
             owner.scrollTop = 0;
             const naturalRect = footer.getBoundingClientRect();
             const footerHeight = footer.getBoundingClientRect().height;
@@ -155,20 +155,19 @@ async def main():
                 owner.scrollTop = y;
                 const fr = footer.getBoundingClientRect();
                 const or = owner.getBoundingClientRect();
-                const scrollportBottom = or.bottom - owner.clientBottom;
+                const scrollportBottom = or.top + owner.clientTop + owner.clientHeight;
                 pinned.push({ scrollTop: y, footerBottom: fr.bottom, scrollportBottom, drift: Math.abs(fr.bottom - scrollportBottom) });
             }
             owner.scrollTop = maxScroll;
             const footerRect = footer.getBoundingClientRect();
             const scrollport = owner.getBoundingClientRect();
             const scrollportTop = scrollport.top + owner.clientTop;
-            const scrollportBottom = scrollport.bottom - owner.clientBottom;
+            const scrollportBottom = scrollport.top + owner.clientTop + owner.clientHeight;
             const lastRow = rows[rows.length - 1];
             lastRow.scrollIntoView({ block: 'nearest', inline: 'nearest' });
             const rowRect = lastRow.getBoundingClientRect();
             const footerAfterRowScroll = footer.getBoundingClientRect();
             const visibleTop = Math.max(scrollportTop, footerAfterRowScroll.top);
-            const visibleBottom = Math.min(scrollportBottom, footerAfterRowScroll.top);
             const lastRowVisible = rowRect.top >= scrollportTop - 2
                 && rowRect.bottom <= footerAfterRowScroll.top + 2
                 && rowRect.bottom <= scrollportBottom + 2
