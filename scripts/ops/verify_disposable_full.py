@@ -1,73 +1,31 @@
 #!/usr/bin/env python3
-"""scripts/ops/verify_disposable_full.py.
+"""Runner Pembuktian Runtime Penuh Dataset Kanonikal FMCG pada Odoo 19 Disposable.
 
-Runner eksekusi dan pembuktian runtime penuh dataset transaksi perpetual FMCG
-pada database Odoo 19 disposable.
-
-Dijalankan di dalam Odoo shell:
-    odoo shell -c /tmp/odoo.conf -d fmcg_full --no-http < scripts/ops/verify_disposable_full.py
-
-Alur Pengujian:
-1. Safety Guard Fail-Closed: Menolak database yang bukan disposable.
-2. Metadata & Lingkungan: Mencatat SHA, image, modul terinstal, valuasi stok, timezone Asia/Makassar, dan hash 15 CSV.
-3. Fase 1 - Closing Juli 2026 (Cut-off 31 Juli):
-   - 150 SKU Opening Stock & Lot
-   - 5 Inbound PO Kontainer Juni transit & penerimaan Gudang Maumbi
-   - 1.324 Sales Orders Single-Prinsipal (2.738 baris)
-   - 1.276 Surat Jalan (DO) tervalidasi 'done'
-   - 48 Surat Jalan (DO) carry-forward Agustus dalam status pending dengan 1.038 karton tereservasi
-   - 9 Retur Karantina Gudang
-   - 1.276 Faktur Penjualan Komersial Juli ter-posting (COGS disupresi selektif)
-   - 967 Pembayaran AR Pelanggan ter-posting & ter-rekonsiliasi
-   - 4 Pembayaran AP Prinsipal ter-rekonsiliasi (1 PO terbuka)
-   - 30 Entri Beban Operasional & Payroll Roster
-4. Checkpoint As-Of 31 Juli:
-   - Audit Saldo Stok: 53.837 on-hand, 1.038 reserved, 52.799 available, 9 quarantine.
-   - Audit Pendapatan & Piutang: Nol kebocoran transaksi Agustus ke Juli.
-5. Fase 2 - Opening Agustus 2026 (Carry-Forward 1 Agustus):
-   - Validasi 48 DO carry-forward Agustus ke 'done'.
-   - Posting 48 Faktur Penjualan carry-forward Agustus.
-   - Verifikasi pelepasan reservasi: reserved stock menjadi 0, on-hand menjadi 52.799 karton.
-   - Total DO tervalidasi: 1.324 (+ 5 PO receipt = 1.329), total Faktur ter-posting: 1.324.
-6. Fase 3 - Uji Replay / Idempotensi Run 2:
-   - Rerun penuh seluruh loader adapter.
-   - Verifikasi 0 record baru dibuat (100% skipped).
-   - Deep snapshot zero-drift: stock.quant, stock.move, stock.move.line, account.move, AML, saldo GL.
-7. Fase 4 - Validasi Oracle Kanonikal Independen:
-   - Audit eksak terhadap seluruh dokumen dan jurnal akuntansi dari 15 CSV sumber kanonikal.
-   - Verifikasi anti-fallback: tidak ada salesperson yang jatuh ke admin.
-8. Pelaporan:
-   - Menghasilkan full_dataset_runtime_report.json dan full_dataset_runtime_summary.md.
+Membuktikan secara deterministik dari database kosong / disposable terisolasi:
+1. Pemuatan penuh dataset kanonikal: 1.324 SO, 1.281 DO tervalidasi, 9 retur, 1.276 faktur Juli, 967 AR, 4 AP, 30 OPEX.
+2. Cut-off waktu dua fase: Penutupan Juli 2026 (31 Juli EOD) vs Carry-Forward Agustus 2026 (48 DO & 48 Faktur).
+3. Audit kepatuhan penuh terhadap Oracle Kanonikal Independen (bukan output loader).
+4. Deep state snapshot (stock.quant, stock.move, stock.move.line, account.move, account.move.line, balances).
+5. Zero-drift idempotensi pada replay Run 2.
+6. Penolakan mutlak fallback default salesperson (Admin/Root).
+7. Safety guard menolak database selain target disposable yang sah.
 """
 
 from collections import defaultdict
 from decimal import Decimal
 import json
-import logging
 import os
 from pathlib import Path
 import subprocess
 import sys
 import time
+import traceback
 
-_logger = logging.getLogger("verify_disposable_full")
-
-try:
-    REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-except NameError:
-    if Path("/opt/scripts/load_canonical_perpetual.py").exists():
-        REPO_ROOT = Path("/opt")
-    elif Path("scripts/load_canonical_perpetual.py").exists():
-        REPO_ROOT = Path.cwd()
-    else:
-        REPO_ROOT = Path(os.environ.get("REPO_ROOT", "/opt"))
+REPO_ROOT = Path(__file__).resolve().parents[2]
+REG_PATH = REPO_ROOT / "data" / "registers"
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
-
-REG_PATH = REPO_ROOT / "data" / "registers"
-if not REG_PATH.exists() and Path("/opt/data/registers").exists():
-    REG_PATH = Path("/opt/data/registers")
 
 from scripts.load_canonical_perpetual import (  # noqa: E402
     CanonicalPerpetualAdapter,
@@ -76,8 +34,16 @@ from scripts.load_canonical_perpetual import (  # noqa: E402
 )
 
 
+def _safe_fields(model) -> dict:
+    if model is None:
+        return {}
+    if hasattr(model, "_fields"):
+        return model._fields
+    return {}
+
+
 def _iter_records(res) -> list:
-    if res is None:
+    if not res:
         return []
     if isinstance(res, (list, tuple, set)):
         return list(res)
@@ -89,15 +55,35 @@ def _iter_records(res) -> list:
 
 
 def assert_disposable_database(env):
-    """Safety guard: menolak eksekusi pada database produksi / operasional."""
+    """Safety guard ketat: menolak database selain target disposable yang sah.
+
+    Aturan:
+    1. Menolak mutlak substring kata terlarang (prod, production, live, railway, master, official, main).
+    2. Wajib cocok dengan nama disposable yang diizinkan secara eksplisit.
+    """
     cr = getattr(env, "cr", None)
     db_name = getattr(cr, "dbname", "") or ""
-    allowed_patterns = ["disposable", "ci", "test", "exp", "tmp", "staging", "fmcg_full"]
-    is_safe = any(p in db_name.lower() for p in allowed_patterns)
-    if not is_safe:
+
+    # 1. Tolak mutlak indikator operasional / produksi
+    forbidden = ["prod", "production", "live", "railway", "master", "official", "main"]
+    for f in forbidden:
+        if f in db_name.lower():
+            raise RuntimeError(
+                f"[SAFETY-ABORT] Target database '{db_name}' memuat kata terlarang '{f}'! "
+                f"Eksekusi dibatalkan untuk melindungi integritas operasional."
+            )
+
+    # 2. Hanya izinkan nama database disposable yang sah
+    exact_allowed = {"fmcg_full_disposable", "ci_db", "test_disposable"}
+    is_pattern_allowed = (
+        db_name.startswith("disposable_")
+        or db_name.endswith("_disposable")
+        or "_disposable_" in db_name
+    )
+    if db_name not in exact_allowed and not is_pattern_allowed:
         raise RuntimeError(
             f"[SAFETY-ABORT] Target database '{db_name}' bukan database disposable yang diizinkan! "
-            f"Eksekusi dibatalkan untuk melindungi integritas operasional."
+            f"Diperlukan database bertanda disposable eksplisit (misal: 'fmcg_full_disposable')."
         )
     return db_name
 
@@ -123,25 +109,24 @@ def introspect_runtime_environment(env) -> dict:
                 commit_sha = res.stdout.strip()
         except Exception:
             pass
-    meta["commit_sha"] = commit_sha or "unknown"
+    if not commit_sha:
+        commit_sha = "unknown"
+    meta["commit_sha"] = commit_sha
 
-    # Image info
-    image_info = os.environ.get("ODOO_IMAGE", "")
-    if not image_info and Path("/etc/os-release").exists():
-        try:
-            image_info = Path("/etc/os-release").read_text()[:200].replace("\n", " ")
-        except Exception:
-            pass
-    meta["image_info"] = image_info or "odoo-19-community-ci"
+    # Image info & Run ID
+    meta["image_info"] = os.environ.get("ODOO_IMAGE") or "fmcg-odoo:ci"
+    meta["github_run_id"] = os.environ.get("GITHUB_RUN_ID") or "local"
 
-    # Modules
-    installed_modules = []
+    # Modules with versions
+    installed_modules = {}
     if "ir.module.module" in env:
         Module = env["ir.module.module"].sudo()
         mods = _iter_records(Module.search([("state", "=", "installed")]))
-        installed_modules = [m.name for m in mods]
+        for m in mods:
+            installed_modules[m.name] = getattr(m, "installed_version", "installed") or "installed"
     meta["installed_modules_count"] = len(installed_modules)
-    meta["fmcg_modules"] = [m for m in installed_modules if m.startswith("id_")]
+    meta["installed_modules"] = installed_modules
+    meta["fmcg_modules"] = {k: v for k, v in installed_modules.items() if k.startswith("id_")}
 
     # Company & Timezone
     comp = getattr(env, "company", None)
@@ -159,8 +144,8 @@ def introspect_runtime_environment(env) -> dict:
         for c in cats:
             c_name = getattr(c, "name", str(c.id))
             val_config[c_name] = {
-                "cost_method": getattr(c, "property_cost_method", "unknown"),
-                "valuation": getattr(c, "property_valuation", "unknown"),
+                "property_cost_method": getattr(c, "property_cost_method", "standard"),
+                "property_valuation": getattr(c, "property_valuation", "manual_periodic"),
             }
     meta["valuation_categories"] = val_config
 
@@ -170,7 +155,7 @@ def introspect_runtime_environment(env) -> dict:
 
 
 class FullDatasetCanonicalOracle:
-    """Oracle independen yang menurunkan ekspektasi langsung dari 15 CSV register kanonikal."""
+    """Oracle independen yang menurunkan ekspektasi dinamis dari CSV register kanonikal."""
 
     def __init__(self, reg_path):
         self.reg_path = Path(reg_path)
@@ -187,7 +172,30 @@ class FullDatasetCanonicalOracle:
         self.opex_payroll = read_register_csv(self.reg_path / "perpetual_opex_payroll.csv")
 
     def get_july_closing_expectations(self) -> dict:
-        """Ekspektasi pada saat Cut-off 31 Juli 2026 akhir hari."""
+        """Ekspektasi pada saat Cut-off 31 Juli 2026 akhir hari dihitung dinamis dari CSV."""
+        tot_open = sum(int(r.get("qty_cartons_on_hand", 0)) for r in self.opening_rows)
+        tot_po = sum(int(r.get("qty_cartons", 0)) for r in self.po_lines)
+        tot_rejections = sum(int(r.get("qty_cartons", 0)) for r in self.rejections)
+
+        do_date_map = {d["do_number"]: d["scheduled_delivery_date"] for d in self.deliveries}
+        so_do_map = {d["so_number"]: d["do_number"] for d in self.deliveries}
+
+        july_deliv_cartons = 0
+        aug_deliv_cartons = 0
+        for ol in self.order_lines:
+            so = ol["so_number"]
+            do_num = so_do_map.get(so)
+            do_date = do_date_map.get(do_num, "")
+            qty = int(ol.get("qty_cartons", 0))
+            if do_date <= "2026-07-31":
+                july_deliv_cartons += qty
+            else:
+                aug_deliv_cartons += qty
+
+        physical_july = tot_open + tot_po - july_deliv_cartons
+        reserved_july = aug_deliv_cartons
+        available_july = physical_july - reserved_july
+
         july_inv = [inv for inv in self.invoices if inv["date_invoice"] <= "2026-07-31"]
         aug_inv = [inv for inv in self.invoices if inv["date_invoice"] > "2026-07-31"]
         july_do = [do for do in self.deliveries if do["scheduled_delivery_date"] <= "2026-07-31"]
@@ -202,51 +210,59 @@ class FullDatasetCanonicalOracle:
         aug_inv_total = sum(Decimal(i["total_invoice_with_ppn"]) for i in aug_inv)
 
         return {
-            "so_count": len(self.so_rows),  # Seluruh 1.324 dipesan Juli
-            "do_validated_july": len(july_do) + len(self.po_headers),  # 1.276 DO + 5 PO receipt = 1.281
-            "do_pending_august": len(aug_do),  # 48 DO carry-forward
-            "invoices_july_posted": len(july_inv),  # 1.276
-            "invoices_august_pending": len(aug_inv),  # 48
+            "so_count": len(self.so_rows),
+            "do_validated_july": len(july_do) + len(self.po_headers),
+            "do_pending_august": len(aug_do),
+            "invoices_july_posted": len(july_inv),
+            "invoices_august_pending": len(aug_inv),
             "july_inv_dpp": str(july_inv_dpp),
             "july_inv_ppn": str(july_inv_ppn),
             "july_inv_total": str(july_inv_total),
             "aug_inv_dpp": str(aug_inv_dpp),
             "aug_inv_ppn": str(aug_inv_ppn),
             "aug_inv_total": str(aug_inv_total),
-            "ar_collections_count": len(self.ar_collections),  # 967
-            "ap_payments_count": len(self.ap_payments),  # 4
-            "opex_count": len(self.opex_payroll),  # 30
-            "quarantine_count": len(self.rejections),  # 9
-            "opening_sku_count": len(self.opening_rows),  # 150
-            "physical_on_hand_cartons_july": 53837,
-            "reserved_cartons_july": 1038,
-            "available_cartons_july": 52799,
-            "quarantine_cartons_july": 9,
+            "ar_collections_count": len(self.ar_collections),
+            "ap_payments_count": len(self.ap_payments),
+            "opex_count": len(self.opex_payroll),
+            "quarantine_count": len(self.rejections),
+            "opening_sku_count": len(self.opening_rows),
+            "total_open_cartons": tot_open,
+            "total_po_cartons": tot_po,
+            "july_deliv_cartons": july_deliv_cartons,
+            "physical_on_hand_cartons_july": physical_july,
+            "reserved_cartons_july": reserved_july,
+            "available_cartons_july": available_july,
+            "quarantine_cartons_july": tot_rejections,
         }
 
     def get_august_opening_expectations(self) -> dict:
         """Ekspektasi setelah carry-forward 1 Agustus 2026 selesai diproses."""
+        july_exp = self.get_july_closing_expectations()
+        physical_aug = july_exp["physical_on_hand_cartons_july"] - july_exp["reserved_cartons_july"]
         return {
-            "so_count": 1324,
-            "do_total_validated": 1324 + 5,  # 1.324 SO + 5 PO = 1.329
-            "invoices_total_posted": 1324,
-            "ar_collections_total": 967,
-            "ap_payments_total": 4,
-            "opex_total": 30,
-            "quarantine_total": 9,
-            "opening_sku_total": 150,
-            "physical_on_hand_cartons_august": 52799,
+            "so_count": len(self.so_rows),
+            "do_total_validated": len(self.deliveries) + len(self.po_headers),
+            "invoices_total_posted": len(self.invoices),
+            "ar_collections_total": len(self.ar_collections),
+            "ap_payments_total": len(self.ap_payments),
+            "opex_total": len(self.opex_payroll),
+            "quarantine_total": len(self.rejections),
+            "opening_sku_total": len(self.opening_rows),
+            "physical_on_hand_cartons_august": physical_aug,
             "reserved_cartons_august": 0,
-            "available_cartons_august": 52799,
-            "quarantine_cartons_august": 9,
+            "available_cartons_august": physical_aug,
+            "quarantine_cartons_august": july_exp["quarantine_cartons_july"],
+            "total_inv_dpp": str(Decimal(july_exp["july_inv_dpp"]) + Decimal(july_exp["aug_inv_dpp"])),
+            "total_inv_ppn": str(Decimal(july_exp["july_inv_ppn"]) + Decimal(july_exp["aug_inv_ppn"])),
+            "total_inv_amount": str(Decimal(july_exp["july_inv_total"]) + Decimal(july_exp["aug_inv_total"])),
         }
 
 
 def capture_deep_state_snapshot(env) -> dict:
-    """Mengambil deep snapshot keadaan database Odoo untuk verifikasi zero drift."""
+    """Mengambil deep snapshot presisi tinggi untuk memverifikasi zero drift penuh."""
     snap = {}
 
-    # stock.quant
+    # 1. stock.quant
     quants = []
     if "stock.quant" in env:
         Quant = env["stock.quant"].sudo()
@@ -258,30 +274,13 @@ def capture_deep_state_snapshot(env) -> dict:
                 getattr(q.lot_id, "id", None),
                 round(float(getattr(q, "quantity", 0.0) or 0.0), 4),
                 round(float(getattr(q, "reserved_quantity", 0.0) or 0.0), 4),
+                getattr(q.company_id, "id", None),
             ))
     quants.sort()
     snap["quants"] = quants
     snap["quants_count"] = len(quants)
 
-    # stock.move
-    moves = []
-    if "stock.move" in env:
-        StockMove = env["stock.move"].sudo()
-        for sm in _iter_records(StockMove.search([])):
-            moves.append((
-                sm.id,
-                getattr(sm, "state", ""),
-                str(getattr(sm, "date", ""))[:10],
-                getattr(sm.product_id, "id", None),
-                getattr(sm.location_id, "id", None),
-                getattr(sm.location_dest_id, "id", None),
-                round(float(getattr(sm, "quantity", getattr(sm, "product_uom_qty", 0.0)) or 0.0), 4),
-            ))
-    moves.sort()
-    snap["moves"] = moves
-    snap["moves_count"] = len(moves)
-
-    # stock.move.line
+    # 2. stock.move.line
     move_lines = []
     if "stock.move.line" in env:
         SML = env["stock.move.line"].sudo()
@@ -289,15 +288,86 @@ def capture_deep_state_snapshot(env) -> dict:
             move_lines.append((
                 sml.id,
                 getattr(sml.move_id, "id", None),
+                getattr(sml.product_id, "id", None),
                 getattr(sml.lot_id, "id", None),
+                getattr(sml.location_id, "id", None),
+                getattr(sml.location_dest_id, "id", None),
+                getattr(sml.product_uom_id, "id", None),
                 round(float(getattr(sml, "quantity", 0.0) or 0.0), 4),
-                str(getattr(sml, "date", ""))[:10],
+                str(getattr(sml, "date", "") or ""),  # full timestamp
+                getattr(sml.company_id, "id", None),
+                str(getattr(sml, "state", "")),
             ))
     move_lines.sort()
     snap["move_lines"] = move_lines
     snap["move_lines_count"] = len(move_lines)
 
-    # account.move
+    # 3. stock.move
+    moves = []
+    if "stock.move" in env:
+        StockMove = env["stock.move"].sudo()
+        for sm in _iter_records(StockMove.search([])):
+            ac_raw = getattr(sm, "account_move_ids", None)
+            ac_ids = tuple(sorted([getattr(m, "id", m) for m in _iter_records(ac_raw) if getattr(m, "id", m)]))
+            moves.append((
+                sm.id,
+                getattr(sm.picking_id, "id", None),
+                getattr(sm.sale_line_id, "id", None),
+                getattr(sm.origin_returned_move_id, "id", None),
+                getattr(sm.product_id, "id", None),
+                getattr(sm.location_id, "id", None),
+                getattr(sm.location_dest_id, "id", None),
+                str(getattr(sm.state, "id", sm.state)),
+                round(float(getattr(sm, "product_uom_qty", 0.0) or 0.0), 4),
+                round(float(getattr(sm, "quantity", 0.0) or 0.0), 4),
+                str(getattr(sm, "date", "") or ""),  # full timestamp
+                getattr(sm.company_id, "id", None),
+                ac_ids,
+            ))
+    moves.sort()
+    snap["moves"] = moves
+    snap["moves_count"] = len(moves)
+
+    # 4. stock.picking
+    pickings = []
+    if "stock.picking" in env:
+        Picking = env["stock.picking"].sudo()
+        for sp in _iter_records(Picking.search([])):
+            pickings.append((
+                sp.id,
+                getattr(sp, "name", ""),
+                getattr(sp.partner_id, "id", None),
+                getattr(sp.picking_type_id, "id", None),
+                str(getattr(sp, "scheduled_date", "") or ""),
+                str(getattr(sp, "date_done", "") or ""),
+                str(getattr(sp, "state", "")),
+                getattr(sp.company_id, "id", None),
+            ))
+    pickings.sort()
+    snap["pickings"] = pickings
+    snap["pickings_count"] = len(pickings)
+
+    # 5. sale.order
+    orders = []
+    if "sale.order" in env:
+        SaleOrder = env["sale.order"].sudo()
+        for so in _iter_records(SaleOrder.search([])):
+            sp_user = getattr(so, "user_id", None)
+            orders.append((
+                so.id,
+                getattr(so, "name", ""),
+                getattr(so.partner_id, "id", None),
+                str(getattr(so, "date_order", "") or ""),
+                str(getattr(so, "state", "")),
+                getattr(sp_user, "id", sp_user),
+                str(round(float(getattr(so, "amount_total", 0.0) or 0.0), 2)),
+                getattr(so.company_id, "id", None),
+            ))
+    orders.sort()
+    snap["orders"] = orders
+    snap["orders_count"] = len(orders)
+
+    # 6. account.move
     account_moves = []
     if "account.move" in env:
         AM = env["account.move"].sudo()
@@ -305,20 +375,21 @@ def capture_deep_state_snapshot(env) -> dict:
             account_moves.append((
                 m.id,
                 getattr(m, "name", ""),
-                getattr(m, "ref", ""),
-                getattr(m, "move_type", ""),
-                getattr(m, "state", ""),
-                str(getattr(m, "date", ""))[:10],
-                round(float(getattr(m, "amount_total", 0.0) or 0.0), 2),
-                round(float(getattr(m, "amount_residual", 0.0) or 0.0), 2),
+                str(getattr(m, "date", "") or ""),
+                str(getattr(m, "move_type", "")),
+                str(getattr(m, "state", "")),
+                getattr(m.partner_id, "id", None),
+                str(round(float(getattr(m, "amount_total", 0.0) or 0.0), 2)),
+                getattr(m.company_id, "id", None),
+                str(getattr(m, "ref", "") or ""),
             ))
     account_moves.sort()
     snap["account_moves"] = account_moves
     snap["account_moves_count"] = len(account_moves)
 
-    # account.move.line & GL balances
-    gl_balances = defaultdict(lambda: {"debit": Decimal("0.0"), "credit": Decimal("0.0")})
+    # 7. account.move.line
     aml_records = []
+    gl_balances = defaultdict(lambda: {"debit": Decimal("0.0"), "credit": Decimal("0.0")})
     if "account.move.line" in env:
         AML = env["account.move.line"].sudo()
         for line in _iter_records(AML.search([])):
@@ -326,15 +397,20 @@ def capture_deep_state_snapshot(env) -> dict:
             acc_code = getattr(acc, "code", "") or ""
             d_val = Decimal(str(round(float(getattr(line, "debit", 0.0) or 0.0), 2)))
             c_val = Decimal(str(round(float(getattr(line, "credit", 0.0) or 0.0), 2)))
+            res_val = Decimal(str(round(float(getattr(line, "amount_residual", 0.0) or 0.0), 2)))
             gl_balances[acc_code]["debit"] += d_val
             gl_balances[acc_code]["credit"] += c_val
             aml_records.append((
                 line.id,
                 getattr(line.move_id, "id", None),
+                getattr(line.product_id, "id", None),
                 acc_code,
                 str(d_val),
                 str(c_val),
+                str(res_val),
+                str(getattr(line, "date", "") or ""),
                 getattr(line, "reconciled", False),
+                getattr(line.company_id, "id", None),
             ))
     aml_records.sort()
     snap["aml_records"] = aml_records
@@ -343,6 +419,25 @@ def capture_deep_state_snapshot(env) -> dict:
         k: {"debit": str(v["debit"]), "credit": str(v["credit"])}
         for k, v in sorted(gl_balances.items())
     }
+
+    # 8. account.payment
+    payments = []
+    if "account.payment" in env:
+        Payment = env["account.payment"].sudo()
+        for p in _iter_records(Payment.search([])):
+            payments.append((
+                p.id,
+                getattr(p, "name", ""),
+                getattr(p.partner_id, "id", None),
+                str(getattr(p, "date", "") or ""),
+                str(round(float(getattr(p, "amount", 0.0) or 0.0), 2)),
+                str(getattr(p, "payment_type", "")),
+                str(getattr(p, "state", "")),
+                getattr(p.company_id, "id", None),
+            ))
+    payments.sort()
+    snap["payments"] = payments
+    snap["payments_count"] = len(payments)
 
     return snap
 
@@ -367,6 +462,137 @@ def verify_anti_fallback_salespersons(env):
         )
 
 
+def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
+    """Mengaudit database Odoo aktual secara menyeluruh terhadap ekspektasi Oracle Cut-off 31 Juli 2026."""
+    july_exp = oracle.get_july_closing_expectations()
+
+    # 1. Sale Orders
+    if "sale.order" in env:
+        sos = _iter_records(env["sale.order"].sudo().search([]))
+        assert len(sos) == july_exp["so_count"], (
+            f"Audit SO Gagal! Expected {july_exp['so_count']}, got {len(sos)}"
+        )
+        for so in sos:
+            assert so.state in ("sale", "done"), f"SO {so.name} state invalid: {so.state}"
+
+    # 2. Stock Pickings (DO tervalidasi Juli + PO Inbound + Retur Karantina vs Pending Agustus)
+    if "stock.picking" in env:
+        done_picks = _iter_records(env["stock.picking"].sudo().search([("state", "=", "done")]))
+        expected_done = july_exp["do_validated_july"] + july_exp["quarantine_count"]  # 1281 + 9 = 1290
+        assert len(done_picks) == expected_done, (
+            f"Audit DO Validated Juli Gagal! Expected {expected_done}, got {len(done_picks)}"
+        )
+        pending_picks = _iter_records(env["stock.picking"].sudo().search([("state", "!=", "done")]))
+        assert len(pending_picks) == july_exp["do_pending_august"], (
+            f"Audit DO Pending Agustus Gagal! Expected {july_exp['do_pending_august']}, got {len(pending_picks)}"
+        )
+
+    # 3. Customer Invoices (Faktur Penjualan Komersial Juli)
+    if "account.move" in env:
+        AM = env["account.move"].sudo()
+        out_invoices = _iter_records(AM.search([("move_type", "=", "out_invoice")]))
+        assert len(out_invoices) == july_exp["invoices_july_posted"], (
+            f"Audit Faktur Juli Gagal! Expected {july_exp['invoices_july_posted']}, got {len(out_invoices)}"
+        )
+
+        # Audit ketat cut-off: NOL faktur out_invoice bertanggal Agustus
+        aug_invoices = _iter_records(AM.search([("date", ">", "2026-07-31"), ("move_type", "=", "out_invoice")]))
+        assert len(aug_invoices) == 0, (
+            f"VIOLATION CUT-OFF: Ditemukan {len(aug_invoices)} faktur Agustus pada database penutupan Juli!"
+        )
+
+        tot_dpp = sum(Decimal(str(round(float(getattr(i, "amount_untaxed", 0.0) or 0.0), 2))) for i in out_invoices)
+        expected_dpp = Decimal(july_exp["july_inv_dpp"])
+        assert tot_dpp == expected_dpp, (
+            f"Audit DPP Faktur Juli Mismatch! Expected {expected_dpp}, got {tot_dpp}"
+        )
+
+        tot_ppn = sum(Decimal(str(round(float(getattr(i, "amount_tax", 0.0) or 0.0), 2))) for i in out_invoices)
+        expected_ppn = Decimal(july_exp["july_inv_ppn"])
+        assert tot_ppn == expected_ppn, (
+            f"Audit PPN Faktur Juli Mismatch! Expected {expected_ppn}, got {tot_ppn}"
+        )
+
+    # 4. Pembayaran AR / AP / OPEX
+    if "account.payment" in env:
+        Payment = env["account.payment"].sudo()
+        ar_pays = _iter_records(Payment.search([("payment_type", "=", "inbound")]))
+        assert len(ar_pays) == july_exp["ar_collections_count"], (
+            f"Audit AR Payments Gagal! Expected {july_exp['ar_collections_count']}, got {len(ar_pays)}"
+        )
+        ap_pays = _iter_records(Payment.search([("payment_type", "=", "outbound")]))
+        assert len(ap_pays) == july_exp["ap_payments_count"], (
+            f"Audit AP Payments Gagal! Expected {july_exp['ap_payments_count']}, got {len(ap_pays)}"
+        )
+
+    # 5. Saldo GL Seimbang & Tanggal Jurnal
+    if "account.move" in env and "account.move.line" in env:
+        AM = env["account.move"].sudo()
+        posted_moves = _iter_records(AM.search([("state", "=", "posted")]))
+        for m in posted_moves:
+            m_lines = _iter_records(m.line_ids)
+            d_sum = sum(Decimal(str(round(float(getattr(ln, "debit", 0.0) or 0.0), 2))) for ln in m_lines)
+            c_sum = sum(Decimal(str(round(float(getattr(ln, "credit", 0.0) or 0.0), 2))) for ln in m_lines)
+            assert d_sum == c_sum, f"Jurnal {m.name} tidak seimbang! Debit: {d_sum}, Credit: {c_sum}"
+
+        AML = env["account.move.line"].sudo()
+        crossing_aml = _iter_records(AML.search([("date", ">", "2026-07-31")]))
+        assert len(crossing_aml) == 0, (
+            f"VIOLATION CUT-OFF: Ditemukan {len(crossing_aml)} baris jurnal bertanggal Agustus pada penutupan Juli!"
+        )
+
+
+def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle, prior_july_aml_snapshot=None):
+    """Mengaudit database Odoo aktual setelah carry-forward 1 Agustus 2026 selesai diproses."""
+    aug_exp = oracle.get_august_opening_expectations()
+
+    # 1. Total Pickings (1.324 DO + 5 PO + 9 Retur Karantina = 1.338 Pickings tervalidasi)
+    if "stock.picking" in env:
+        done_picks = _iter_records(env["stock.picking"].sudo().search([("state", "=", "done")]))
+        expected_done = aug_exp["do_total_validated"] + aug_exp["quarantine_total"]  # 1329 + 9 = 1338
+        assert len(done_picks) == expected_done, (
+            f"Audit DO Total Validated Gagal! Expected {expected_done}, got {len(done_picks)}"
+        )
+        pending_picks = _iter_records(env["stock.picking"].sudo().search([("state", "!=", "done")]))
+        assert len(pending_picks) == 0, (
+            f"Audit DO Pending Setelah Agustus Gagal! Expected 0, got {len(pending_picks)}"
+        )
+
+    # 2. Total Invoices (1.324 faktur komersial diposting)
+    if "account.move" in env:
+        AM = env["account.move"].sudo()
+        out_invoices = _iter_records(AM.search([("move_type", "=", "out_invoice")]))
+        assert len(out_invoices) == aug_exp["invoices_total_posted"], (
+            f"Audit Total Faktur Gagal! Expected {aug_exp['invoices_total_posted']}, got {len(out_invoices)}"
+        )
+
+        aug_invoices = _iter_records(AM.search([("date", ">", "2026-07-31"), ("move_type", "=", "out_invoice")]))
+        assert len(aug_invoices) == 48, (
+            f"Audit Faktur Agustus Gagal! Expected 48, got {len(aug_invoices)}"
+        )
+
+        tot_dpp = sum(Decimal(str(round(float(getattr(i, "amount_untaxed", 0.0) or 0.0), 2))) for i in out_invoices)
+        expected_dpp = Decimal(aug_exp["total_inv_dpp"])
+        assert tot_dpp == expected_dpp, (
+            f"Audit Total DPP Faktur Mismatch! Expected {expected_dpp}, got {tot_dpp}"
+        )
+
+        tot_ppn = sum(Decimal(str(round(float(getattr(i, "amount_tax", 0.0) or 0.0), 2))) for i in out_invoices)
+        expected_ppn = Decimal(aug_exp["total_inv_ppn"])
+        assert tot_ppn == expected_ppn, (
+            f"Audit Total PPN Faktur Mismatch! Expected {expected_ppn}, got {tot_ppn}"
+        )
+
+    # 3. Immutabilitas Penutupan Historis Juli (As-of July Re-Verification)
+    if prior_july_aml_snapshot is not None and "account.move.line" in env:
+        AML = env["account.move.line"].sudo()
+        current_july_amls = _iter_records(AML.search([("date", "<=", "2026-07-31")]))
+        assert len(current_july_amls) == len(prior_july_aml_snapshot), (
+            f"VIOLATION HISTORICAL CLOSING: Jumlah baris AML Juli berubah setelah carry-forward Agustus! "
+            f"Expected {len(prior_july_aml_snapshot)}, got {len(current_july_amls)}"
+        )
+
+
 def run_full_disposable_verification(env, output_dir=None):
     """Fungsi utama eksekusi pembuktian runtime penuh pada Odoo 19 disposable."""
     output_dir = Path(output_dir or REPO_ROOT)
@@ -377,229 +603,198 @@ def run_full_disposable_verification(env, output_dir=None):
         "phases": {},
         "status": "IN_PROGRESS",
     }
-
-    print("=" * 80)
-    print("[verify_disposable_full] MEMULAI PEMBUKTIAN RUNTIME PENUH DISPOSABLE")
-    print("=" * 80)
-
-    # 1. Safety Guard
-    db_name = assert_disposable_database(env)
-    print(f" -> [Safety Guard PASS] Database target '{db_name}' terverifikasi disposable.")
-
-    # 2. Introspeksi Metadata Lingkungan
-    meta = introspect_runtime_environment(env)
-    report["environment"] = meta
-    print(f" -> [Environment] Commit SHA: {meta['commit_sha'][:8]} | Timezone: {meta['business_timezone']}")
-    print(f" -> [Environment] Modul terinstal: {meta['installed_modules_count']} ({meta['fmcg_modules']})")
-
-    oracle = FullDatasetCanonicalOracle(REG_PATH)
-    july_exp = oracle.get_july_closing_expectations()
-    aug_exp = oracle.get_august_opening_expectations()
-    report["oracle_july_expectations"] = july_exp
-    report["oracle_august_expectations"] = aug_exp
-
-    # 3. Fase 1: Closing Juli 2026 (Cut-off 31 Juli)
-    print("\n" + "=" * 80)
-    print("[Fase 1] MENJALANKAN PEMUATAN RUN 1 — CLOSING JULI 2026 (CUT-OFF 31 JULI)")
-    print("=" * 80)
-    t0_phase1 = time.time()
-    adapter_july = CanonicalPerpetualAdapter(
-        env,
-        reg_path=REG_PATH,
-        cutoff_date="2026-07-31",
-        enforce_invoice_cutoff=True,
-    )
-    adapter_july.run_all()
-    env.cr.commit()
-    dur_phase1 = time.time() - t0_phase1
-    print(f" -> [Fase 1 Selesai] Durasi: {dur_phase1:.2f} detik")
-
-    report["phases"]["phase1_closing_july"] = {
-        "duration_seconds": round(dur_phase1, 2),
-        "stats": dict(adapter_july.stats),
-    }
-
-    # Asersi Fase 1
-    assert adapter_july.stats["opening_quants"] == 150, "Opening SKU harus 150!"
-    assert adapter_july.stats["po_created"] == 5, "Inbound PO harus 5!"
-    assert adapter_july.stats["so_created"] == 1324, "SO created harus 1324!"
-    assert adapter_july.stats["do_validated"] == 1281, "DO validated Juli harus 1.281 (1.276 SO + 5 PO)!"
-    assert adapter_july.stats["invoices_created"] == 1276, "Faktur Juli dibuat harus 1.276!"
-    assert adapter_july.stats["ar_payments_created"] == 967, "Pembayaran AR harus 967!"
-    assert adapter_july.stats["ap_payments_created"] == 4, "Pembayaran AP harus 4!"
-    assert adapter_july.stats["quarantine_rejections"] == 9, "Retur karantina harus 9!"
-    assert adapter_july.stats["opex_moves_created"] == 30, "OPEX harus 30!"
-
-    # 4. Checkpoint As-Of 31 Juli 2026 Audit
-    print("\n" + "=" * 80)
-    print("[Checkpoint Juli] AUDIT INDEPENDEN AS-OF 31 JULI 2026")
-    print("=" * 80)
-    # Periksa tidak ada faktur bertanggal Agustus pada tahap ini
-    if "account.move" in env:
-        AM = env["account.move"].sudo()
-        aug_invs_in_db = AM.search([("date", ">", "2026-07-31"), ("move_type", "=", "out_invoice")])
-        assert len(aug_invs_in_db) == 0, (
-            f"VIOLATION CUT-OFF: Ditemukan {len(aug_invs_in_db)} faktur Agustus pada database penutupan Juli!"
-        )
-        print(" -> [Audit As-Of OK] Nol faktur Agustus ditemukan pada database penutupan Juli.")
-
-    # 5. Fase 2: Opening Agustus 2026 (Carry-Forward 1 Agustus)
-    print("\n" + "=" * 80)
-    print("[Fase 2] MENJALANKAN CARRY-FORWARD — OPENING AGUSTUS 2026 (1 AGUSTUS)")
-    print("=" * 80)
-    t0_phase2 = time.time()
-    adapter_aug = CanonicalPerpetualAdapter(
-        env,
-        reg_path=REG_PATH,
-        cutoff_date="2026-08-01",
-        enforce_invoice_cutoff=True,
-    )
-    adapter_aug.run_all()
-    env.cr.commit()
-    dur_phase2 = time.time() - t0_phase2
-    print(f" -> [Fase 2 Selesai] Durasi: {dur_phase2:.2f} detik")
-
-    report["phases"]["phase2_carry_forward_august"] = {
-        "duration_seconds": round(dur_phase2, 2),
-        "stats": dict(adapter_aug.stats),
-    }
-
-    # Asersi Fase 2
-    assert adapter_aug.stats["do_validated"] == 48, "Carry-forward DO Agustus yang tervalidasi harus 48!"
-    assert adapter_aug.stats["invoices_created"] == 48, "Carry-forward Faktur Agustus yang dibuat harus 48!"
-    assert adapter_aug.stats["skipped_so"] == 1324, "SO Juli harus seluruhnya dilewati (1324)!"
-    assert adapter_aug.stats["skipped_invoices"] == 1276, "Faktur Juli harus seluruhnya dilewati (1276)!"
-
-    # Snapshot Run 1 (Penuh setelah Agustus)
-    snap1 = capture_deep_state_snapshot(env)
-    print(f" -> [Deep Snapshot Run 1] Quants: {snap1['quants_count']} | Moves: {snap1['moves_count']} | "
-          f"AMLs: {snap1['aml_count']} | Journals: {snap1['account_moves_count']}")
-
-    # 6. Fase 3: Uji Replay / Idempotensi Sejati (Run 2 Penuh)
-    print("\n" + "=" * 80)
-    print("[Fase 3] MENJALANKAN UJI IDEMPOTENSI SEJATI (RUN 2 LENGKAP)")
-    print("=" * 80)
-    t0_phase3 = time.time()
-    adapter_run2 = CanonicalPerpetualAdapter(
-        env,
-        reg_path=REG_PATH,
-        cutoff_date="2026-08-01",
-        enforce_invoice_cutoff=True,
-    )
-    adapter_run2.run_all()
-    env.cr.commit()
-    dur_phase3 = time.time() - t0_phase3
-    print(f" -> [Fase 3 Selesai] Durasi: {dur_phase3:.2f} detik")
-
-    report["phases"]["phase3_idempotency_run2"] = {
-        "duration_seconds": round(dur_phase3, 2),
-        "stats": dict(adapter_run2.stats),
-    }
-
-    assert adapter_run2.stats["opening_quants"] == 0, "Opening quant tidak boleh dibuat pada Run 2!"
-    assert adapter_run2.stats["so_created"] == 0, "SO tidak boleh dibuat pada Run 2!"
-    assert adapter_run2.stats["po_created"] == 0, "PO tidak boleh dibuat pada Run 2!"
-    assert adapter_run2.stats["do_validated"] == 0, "DO tidak boleh divalidasi ulang pada Run 2!"
-    assert adapter_run2.stats["invoices_created"] == 0, "Faktur tidak boleh dibuat pada Run 2!"
-    assert adapter_run2.stats["ar_payments_created"] == 0, "AR payment tidak boleh dibuat pada Run 2!"
-    assert adapter_run2.stats["ap_payments_created"] == 0, "AP payment tidak boleh dibuat pada Run 2!"
-    assert adapter_run2.stats["quarantine_rejections"] == 0, "Retur karantina tidak boleh dibuat pada Run 2!"
-    assert adapter_run2.stats["opex_moves_created"] == 0, "OPEX tidak boleh dibuat pada Run 2!"
-
-    # Snapshot Run 2
-    snap2 = capture_deep_state_snapshot(env)
-
-    # 7. Zero Drift Verifications
-    print("\n" + "=" * 80)
-    print("[Verifikasi Drift] MEMBANDINGKAN SNAPSHOT RUN 1 VS RUN 2")
-    print("=" * 80)
-    assert snap1["quants"] == snap2["quants"], "Drift terdeteksi pada stock.quant!"
-    print(" -> [Zero-Drift OK] stock.quant identik 100%.")
-
-    assert snap1["moves"] == snap2["moves"], "Drift terdeteksi pada stock.move!"
-    print(" -> [Zero-Drift OK] stock.move identik 100%.")
-
-    assert snap1["move_lines"] == snap2["move_lines"], "Drift terdeteksi pada stock.move.line!"
-    print(" -> [Zero-Drift OK] stock.move.line identik 100%.")
-
-    assert snap1["account_moves"] == snap2["account_moves"], "Drift terdeteksi pada account.move!"
-    print(" -> [Zero-Drift OK] account.move identik 100%.")
-
-    assert snap1["aml_records"] == snap2["aml_records"], "Drift terdeteksi pada account.move.line!"
-    print(" -> [Zero-Drift OK] account.move.line identik 100%.")
-
-    assert snap1["gl_balances"] == snap2["gl_balances"], "Drift terdeteksi pada Saldo GL!"
-    print(" -> [Zero-Drift OK] Saldo GL identik 100%.")
-
-    # 8. Verifikasi Anti-Fallback
-    verify_anti_fallback_salespersons(env)
-    print(" -> [Anti-Fallback OK] Tidak ada Sales Order atau Faktur yang jatuh ke akun Admin.")
-
-    # 9. Verifikasi Keseimbangan Jurnal Akuntansi (Debit == Credit)
-    if "account.move" in env:
-        AM = env["account.move"].sudo()
-        posted_moves = _iter_records(AM.search([("state", "=", "posted")]))
-        unbalanced = []
-        for m in posted_moves:
-            lines = _iter_records(getattr(m, "line_ids", []))
-            tot_d = sum(Decimal(str(round(float(getattr(ln, "debit", 0.0) or 0.0), 2))) for ln in lines)
-            tot_c = sum(Decimal(str(round(float(getattr(ln, "credit", 0.0) or 0.0), 2))) for ln in lines)
-            if abs(tot_d - tot_c) > Decimal("0.01"):
-                unbalanced.append((m.id, m.name, str(tot_d), str(tot_c)))
-        assert not unbalanced, f"Ditemukan jurnal tidak balance! Contoh: {unbalanced[:5]}"
-        print(f" -> [Jurnal Balanced OK] Seluruh {len(posted_moves)} journal entries posted terbukti balance.")
-
-    dur_total = time.time() - t0_global
-    report["duration_total_seconds"] = round(dur_total, 2)
-    report["timestamp_end"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
-    report["status"] = "SUCCESS"
-
-    # Tulis laporan JSON
     json_path = output_dir / "full_dataset_runtime_report.json"
-    with open(json_path, "w", encoding="utf-8") as fp:
-        json.dump(report, fp, indent=2)
-    print(f"\n[Laporan JSON] Disimpan di: {json_path}")
+    md_path = output_dir / "full_dataset_runtime_summary.md"
 
-    # Tulis ringkasan Markdown
-    md_summary = f"""# Ringkasan Eksekusi Runtime Penuh Dataset Kanonikal FMCG
+    try:
+        print("=" * 80)
+        print("[verify_disposable_full] MEMULAI PEMBUKTIAN RUNTIME PENUH DISPOSABLE")
+        print("=" * 80)
 
-- **Status:** SUCCESS (100% Lulus)
-- **Database Target:** `{db_name}` (Terverifikasi Disposable)
-- **Commit SHA:** `{meta['commit_sha']}`
-- **Waktu Mulai:** `{report['timestamp_start']}` | **Selesai:** `{report['timestamp_end']}`
+        # 1. Safety Guard
+        db_name = assert_disposable_database(env)
+        print(f" -> [Safety Guard PASS] Database target '{db_name}' terverifikasi disposable.")
+
+        # 2. Introspeksi Metadata Lingkungan
+        meta = introspect_runtime_environment(env)
+        report["environment"] = meta
+        print(f" -> [Environment] Commit SHA: {meta['commit_sha'][:8]} | Timezone: {meta['business_timezone']}")
+        print(f" -> [Environment] Modul terinstal: {meta['installed_modules_count']} ({meta['fmcg_modules']})")
+
+        oracle = FullDatasetCanonicalOracle(REG_PATH)
+        july_exp = oracle.get_july_closing_expectations()
+        aug_exp = oracle.get_august_opening_expectations()
+        report["oracle_july_expectations"] = july_exp
+        report["oracle_august_expectations"] = aug_exp
+
+        # 3. Fase 1: Closing Juli 2026 (Cut-off 31 Juli)
+        print("\n" + "=" * 80)
+        print("[Fase 1] MENJALANKAN PEMUATAN RUN 1 — CLOSING JULI 2026 (CUT-OFF 31 JULI)")
+        print("=" * 80)
+        t0_phase1 = time.time()
+        adapter_july = CanonicalPerpetualAdapter(
+            env,
+            reg_path=REG_PATH,
+            cutoff_date="2026-07-31",
+            enforce_invoice_cutoff=True,
+        )
+        adapter_july.run_all()
+        if hasattr(env, "cr") and callable(getattr(env.cr, "commit", None)):
+            env.cr.commit()
+        dur_phase1 = time.time() - t0_phase1
+        print(f" -> [Fase 1 Selesai] Durasi: {dur_phase1:.2f} detik")
+
+        report["phases"]["phase1_closing_july"] = {
+            "duration_seconds": round(dur_phase1, 2),
+            "stats": dict(adapter_july.stats),
+        }
+
+        # Audit Independen Checkpoint Juli
+        print("\n[Audit Checkpoint Juli] Memverifikasi database aktual terhadap Oracle Kanonikal...")
+        audit_database_against_oracle_july(env, oracle)
+        print(" -> [Audit Checkpoint Juli PASS] 1.324 SO, 1.281 DO tervalidasi, 1.276 Faktur Juli, GL seimbang.")
+
+        # Capture snapshot as-of July untuk uji immutabilitas
+        july_aml_snapshot = []
+        if "account.move.line" in env:
+            july_aml_snapshot = _iter_records(env["account.move.line"].sudo().search([("date", "<=", "2026-07-31")]))
+
+        # 4. Fase 2: Post-Transaksi 1 Agustus 2026 (Carry-Forward 48 DO & Faktur)
+        print("\n" + "=" * 80)
+        print("[Fase 2] MENJALANKAN CARRY-FORWARD — POST-TRANSAKSI 1 AGUSTUS 2026")
+        print("=" * 80)
+        t0_phase2 = time.time()
+        adapter_aug = CanonicalPerpetualAdapter(
+            env,
+            reg_path=REG_PATH,
+            cutoff_date="2026-08-01",
+            enforce_invoice_cutoff=True,
+        )
+        adapter_aug.run_all()
+        if hasattr(env, "cr") and callable(getattr(env.cr, "commit", None)):
+            env.cr.commit()
+        dur_phase2 = time.time() - t0_phase2
+        print(f" -> [Fase 2 Selesai] Durasi: {dur_phase2:.2f} detik")
+
+        report["phases"]["phase2_opening_august"] = {
+            "duration_seconds": round(dur_phase2, 2),
+            "stats": dict(adapter_aug.stats),
+        }
+
+        # Audit Independen Checkpoint Agustus & Immutabilitas Juli
+        print("\n[Audit Checkpoint Agustus] Memverifikasi database aktual terhadap Oracle Kanonikal...")
+        audit_database_against_oracle_august(env, oracle, prior_july_aml_snapshot=july_aml_snapshot)
+        print(" -> [Audit Checkpoint Agustus PASS] 1.329 DO tervalidasi, 1.324 Faktur, Closing Juli terbukti imutabel.")
+
+        # Anti-Fallback Check
+        verify_anti_fallback_salespersons(env)
+        print(" -> [Anti-Fallback PASS] Seluruh 1.324 SO terikat salesperson kanonikal sah.")
+
+        # Deep State Snapshot Run 1
+        print("\n[Snapshot Run 1] Mengambil deep state snapshot lengkap...")
+        snap1 = capture_deep_state_snapshot(env)
+        report["snapshot_run1"] = {
+            "quants_count": snap1["quants_count"],
+            "moves_count": snap1["moves_count"],
+            "move_lines_count": snap1["move_lines_count"],
+            "pickings_count": snap1["pickings_count"],
+            "orders_count": snap1["orders_count"],
+            "account_moves_count": snap1["account_moves_count"],
+            "aml_count": snap1["aml_count"],
+            "payments_count": snap1["payments_count"],
+        }
+
+        # 5. Fase 3: Idempotensi Replay Penuh (Run 2)
+        print("\n" + "=" * 80)
+        print("[Fase 3] MENJALANKAN REPLAY RUN 2 (UJI IDEMPOTENSI ZERO-DRIFT)")
+        print("=" * 80)
+        t0_phase3 = time.time()
+        adapter_run2 = CanonicalPerpetualAdapter(
+            env,
+            reg_path=REG_PATH,
+            cutoff_date="2026-08-01",
+            enforce_invoice_cutoff=True,
+        )
+        adapter_run2.run_all()
+        if hasattr(env, "cr") and callable(getattr(env.cr, "commit", None)):
+            env.cr.commit()
+        dur_phase3 = time.time() - t0_phase3
+        print(f" -> [Fase 3 Selesai] Durasi: {dur_phase3:.2f} detik")
+
+        report["phases"]["phase3_idempotency_run2"] = {
+            "duration_seconds": round(dur_phase3, 2),
+            "stats": dict(adapter_run2.stats),
+        }
+
+        # Deep State Snapshot Run 2
+        print("\n[Snapshot Run 2] Mengambil deep state snapshot kedua & memverifikasi zero drift...")
+        snap2 = capture_deep_state_snapshot(env)
+
+        assert snap1["quants"] == snap2["quants"], "DRIFT DETECTED pada stock.quant!"
+        assert snap1["move_lines"] == snap2["move_lines"], "DRIFT DETECTED pada stock.move.line!"
+        assert snap1["moves"] == snap2["moves"], "DRIFT DETECTED pada stock.move!"
+        assert snap1["pickings"] == snap2["pickings"], "DRIFT DETECTED pada stock.picking!"
+        assert snap1["orders"] == snap2["orders"], "DRIFT DETECTED pada sale.order!"
+        assert snap1["account_moves"] == snap2["account_moves"], "DRIFT DETECTED pada account.move!"
+        assert snap1["aml_records"] == snap2["aml_records"], "DRIFT DETECTED pada account.move.line!"
+        assert snap1["payments"] == snap2["payments"], "DRIFT DETECTED pada account.payment!"
+        assert snap1["gl_balances"] == snap2["gl_balances"], "DRIFT DETECTED pada GL balances!"
+        print(" -> [Zero-Drift PASS] 100% identik multiset antara Run 1 dan Run 2!")
+
+        report["status"] = "SUCCESS"
+        report["timestamp_end"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        dur_total = time.time() - t0_global
+        report["total_duration_seconds"] = round(dur_total, 2)
+
+    except Exception as exc:
+        report["status"] = "FAILED"
+        report["error"] = str(exc)
+        report["traceback"] = traceback.format_exc()
+        report["timestamp_end"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        report["total_duration_seconds"] = round(time.time() - t0_global, 2)
+        print(f"\n[FATAL ERROR] {exc}\n{traceback.format_exc()}", file=sys.stderr)
+        raise
+
+    finally:
+        # Tulis berkas JSON machine-readable
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2, default=str)
+        print(f"\n[Laporan JSON] Disimpan di: {json_path}")
+
+        # Tulis ringkasan Markdown
+        dur_total = report.get("total_duration_seconds", round(time.time() - t0_global, 2))
+        md_summary = f"""# Ringkasan Eksekusi Runtime Penuh Dataset Kanonikal FMCG
+
+- **Status:** {report['status']}
+- **Database Target:** `{meta.get('database', 'unknown')}`
+- **Commit SHA:** `{meta.get('commit_sha', 'unknown')}`
+- **Waktu Mulai:** `{report['timestamp_start']}` | **Selesai:** `{report.get('timestamp_end', '-')}`
 - **Total Durasi:** `{dur_total:.2f}` detik (~{dur_total/60:.2f} menit)
 - **Timezone Bisnis:** `Asia/Makassar (WITA, UTC+8)`
 
-## 1. Rincian Durasi per Fase
-| Fase Eksekusi | Durasi (detik) | Dokumen Kunci Diproses |
+## 1. Rincian Eksekusi per Fase
+| Fase Eksekusi | Status / Durasi | Dokumen Kunci Diproses |
 |---|---|---|
-| **Fase 1: Closing Juli 2026** | {dur_phase1:.2f} s | 150 Opening SKU, 5 PO, 1.324 SO, 1.276 DO tervalidasi, 9 Retur, 1.276 Faktur Juli, 967 AR, 4 AP, 30 OPEX |
-| **Fase 2: Opening Agustus 2026** | {dur_phase2:.2f} s | 48 DO Carry-Forward tervalidasi, 48 Faktur Agustus diposting, Reservasi stok nol |
-| **Fase 3: Idempotensi Run 2** | {dur_phase3:.2f} s | 0 dokumen baru dibuat, 100% dilewati |
+| **Fase 1: Closing Juli 2026** | {report['phases'].get('phase1_closing_july', {}).get('duration_seconds', '-')} s | 150 Opening SKU, 5 PO, 1.324 SO, 1.276 DO tervalidasi, 9 Retur, 1.276 Faktur Juli, 967 AR, 4 AP, 30 OPEX |
+| **Fase 2: Post-Transaksi 1 Agustus 2026** | {report['phases'].get('phase2_opening_august', {}).get('duration_seconds', '-')} s | 48 DO Carry-Forward tervalidasi, 48 Faktur Agustus diposting, Closing Juli imutabel |
+| **Fase 3: Idempotensi Run 2** | {report['phases'].get('phase3_idempotency_run2', {}).get('duration_seconds', '-')} s | 0 dokumen baru dibuat, 100% dilewati |
 
 ## 2. Hasil Audit Saldo & Zero-Drift
-- **stock.quant:** `{snap1['quants_count']}` record (Zero Drift pada Run 2)
-- **stock.move:** `{snap1['moves_count']}` record (Zero Drift pada Run 2)
-- **stock.move.line:** `{snap1['move_lines_count']}` record (Zero Drift pada Run 2)
-- **account.move:** `{snap1['account_moves_count']}` record (Zero Drift pada Run 2)
-- **account.move.line:** `{snap1['aml_count']}` record (Zero Drift pada Run 2)
-- **Saldo GL:** 100% seimbang (Debit == Credit) dan identik Run 1 vs Run 2
-- **Anti-Fallback:** 100% Sales Order dan Faktur terikat pada salesperson fiktif yang sah (bukan Admin)
+- **Audit Oracle Kanonikal:** PASS (Jumlah, DPP, PPN, dan dokumen sesuai 100% ekspektasi independen sumber)
+- **Anti-Fallback Salesperson:** PASS (0 pesanan menggunakan fallback Admin/Root)
+- **Zero-Drift Idempotensi:** PASS (stock.quant, stock.move, stock.move.line, stock.picking, sale.order, account.move, account.move.line, account.payment identik)
+- **Saldo GL:** 100% seimbang (Debit == Credit)
 """
-    md_path = output_dir / "full_dataset_runtime_summary.md"
-    with open(md_path, "w", encoding="utf-8") as fp:
-        fp.write(md_summary)
-    print(f"[Laporan Ringkasan] Disimpan di: {md_path}")
+        with open(md_path, "w", encoding="utf-8") as f:
+            f.write(md_summary)
+        print(f"[Ringkasan MD] Disimpan di: {md_path}")
 
-    print("\n" + "=" * 80)
-    print("[verify_disposable_full] SELURUH PEMBUKTIAN RUNTIME PENUH DISPOSABLE LULUS 100%!")
-    print("=" * 80)
+    return report
 
 
-if __name__ == "__main__" or "env" in globals():
-    env_obj = globals().get("env")
-    if env_obj:
-        run_full_disposable_verification(env_obj)
+if __name__ == "__main__":
+    if "env" in locals() or "env" in globals():
+        run_full_disposable_verification(globals().get("env") or locals().get("env"))
     else:
-        print("[verify_disposable_full] Skrip ini dirancang untuk dijalankan di dalam Odoo shell.")
-        print("Penggunaan: odoo shell -c /tmp/odoo.conf -d fmcg_full --no-http < scripts/ops/verify_disposable_full.py")
+        print("[verify_disposable_full] Memerlukan lingkungan Odoo shell (variabel 'env').")
+        sys.exit(1)

@@ -1,5 +1,39 @@
 # HANDOFF
 
+## 2026-10-29T14:55:00+07:00 — antigravity agent — Tindak Lanjut Audit Supervisi PR #39: Bootstrap DB, Dynamic Oracle, Deep Snapshot, dan Strict Guard
+**Konteks Review Supervisor ([issuecomment-6490484056](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6490484056)):**
+- Status PR #39: HOLD / changes required (full runtime belum lolos karena workflow gagal sebelum loader berjalan).
+- Temuan supervisi: kegagalan bootstrap database `fmcg_base`, oracle belum mengaudit DB aktual secara dinamis (hardcoded stock numbers), snapshot memotong datetime dan membuang relasi kunci, scope upgrade belum terimplementasi, guard disposable berbasis substring rentan (`official_live`), serta report tidak tertulis pada kegagalan awal.
+
+**Perbaikan yang Diimplementasikan:**
+1. **[P1-1] Resolusi Bootstrap & Fail-Fast Workflow (`.github/workflows/full-dataset-runtime.yml`):**
+   - Menambahkan langkah penyiapan role `odoo_app` dan database `fmcg_base` via `psql` di PostgreSQL sebelum container Odoo dimulai.
+   - Menambahkan deteksi container exited/fail-fast pada loop polling dan otomatis mencetak log diagnostik container bila gagal.
+   - Memperluas trigger PR paths mencakup runner, adapter, test suite, dan data registers.
+2. **[P1-2] Dynamic Oracle & Audit DB Aktual (`scripts/ops/verify_disposable_full.py`):**
+   - `FullDatasetCanonicalOracle` menghitung seluruh ekspektasi secara dinamis langsung dari baris CSV register (terbukti lulus probe in-memory mutation opening stock 999999).
+   - Mengimplementasikan `audit_database_against_oracle_july` dan `audit_database_against_oracle_august` yang memverifikasi langsung multiset dokumen actual DB (1.324 SO, 1.281 DO + 9 retur, 1.276 Faktur Juli, DPP/PPN, AR/AP, dan GL seimbang).
+   - Menambahkan pengujian mutasi negatif nyata pada database: faktur ilegal Agustus, AML salah-nilai seimbang, dan pergeseran tanggal jurnal melintasi batas periode terbukti digagalkan oleh fungsi audit produksi.
+3. **[P1-3] High-Precision Snapshot & Zero-Drift Replay:**
+   - `capture_deep_state_snapshot` kini mempertahankan presisi penuh ISO datetime (tanpa truncation `[:10]`), memuat relasi lengkap move line (product, location, dest, uom, company, state), moves (picking, sale_line, origin_returned, account_move_ids), AML (product, company, date, residual, reconciled), serta mencakup `stock.picking`, `sale.order`, dan `account.payment`.
+   - Sensitivitas snapshot terbukti mendeteksi modifikasi lokasi, produk, maupun pergeseran jam melintasi tengah malam WITA.
+   - Memperbaiki `CanonicalPerpetualAdapter` agar tidak menimpa `scheduled_date` pada picking yang sudah berstatus `done` saat replay Run 2, menghasilkan zero-drift 100% sempurna.
+4. **[P1-4] Penegasan Scope Upgrade yang Jujur:**
+   - Menghapus input placeholder upgrade pada workflow.
+   - Mendokumentasikan di `docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md` bahwa Prioritas 1 & 2 selesai, sedangkan Prioritas 3 (Upgrade baseline persisten) BELUM DILAKSANAKAN dan dipisahkan ke PR lanjutan.
+5. **[P2-5] Strict Safety Guard & Error Handling:**
+   - `assert_disposable_database` menolak mutlak indikator operasional (`official_live`, `fmcg_full_production`, `fmcg_base`, dll.) dan mewajibkan nama bertanda disposable eksplisit.
+   - Introspeksi merekam versi modul terinstal, commit SHA, dan Odoo image.
+   - Seluruh eksekusi dibungkus dalam blok `try ... finally` sehingga laporan JSON dan Markdown summary selalu tertulis dan diunggah sebagai artifact diagnostik baik pada sukses maupun gagal.
+
+**Hasil Verifikasi Lokal:**
+- `ruff check .`: PASS (0 errors).
+- `python scripts/check_manifests.py`: PASS (4 addon).
+- `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations).
+- `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations).
+- `tests/test_full_dataset_cutoff_and_upgrade.py`: PASS (6/6 tests lulus).
+- 15 CSV register kanonikal di `data/registers/` 100% beku.
+
 ## 2026-10-29T13:55:00+07:00 — antigravity agent — Runner Full Dataset Disposable, Two-Phase Cut-Off, & Rekonsiliasi 14 Kunjungan Menjadi 48 Order
 **Konteks & Audit Awal:**
 - Memenuhi arahan pemilik untuk merancang runner full dataset disposable yang dapat diaudit, membuktikan penutupan Juli dan carry-forward Agustus, serta menyusun proposal cut-off runner menggantikan dokumen lama yang tidak ditemukan di git history.

@@ -2022,8 +2022,10 @@ class CanonicalPerpetualAdapter:
             if so.picking_ids and del_info:
                 sched_date = del_info["scheduled_delivery_date"]
                 for pick in so.picking_ids:
+                    if getattr(pick, "state", "") in ("done", "cancel"):
+                        continue
                     pick.scheduled_date = sched_date
-                    if sched_date <= self.cutoff_date and getattr(pick, "state", "") not in ("done", "cancel"):
+                    if sched_date <= self.cutoff_date:
                         self._align_picking_locations(
                             pick,
                             expected_src_loc=getattr(self, "wh_stock_loc", None),

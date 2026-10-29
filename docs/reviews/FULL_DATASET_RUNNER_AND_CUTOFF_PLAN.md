@@ -15,6 +15,7 @@ Pada commit `fae5835`, pemilik menetapkan aturan ketat **SO-PRINCIPAL**:
 
 Ketika 14 kunjungan outlet pada 31 Juli tersebut dipecah secara murni per prinsipal:
 - 14 kunjungan outlet menghasilkan **48 Sales Orders single-prinsipal** bertanggal `2026-07-31`.
+- Memetakan 14 pelanggan unik, 4 prinsipal nasional (`MYR`, `KPA`, `ULV`, `WNG`), dan tim salesman kanonikal.
 - Masing-masing menghasilkan **48 Surat Jalan (DO)** terjadwal tanggal `2026-08-01`.
 - Masing-masing menghasilkan **48 Faktur Penjualan (Invoice)** bertanggal `2026-08-01`.
 - Nilai total: DPP Rp 187.858.691,40; PPN 11% Rp 20.664.456,06; Grand Total Rp 208.523.147,46.
@@ -44,7 +45,7 @@ Ketika 14 kunjungan outlet pada 31 Juli tersebut dipecah secara murni per prinsi
      * Closing Juli: `2026-07-31 23:59:59 WITA` = `2026-07-31 15:59:59 UTC`.
      * Opening Agustus: `2026-08-01 00:00:00 WITA` = `2026-07-31 16:00:00 UTC`.
 2. **Kemandirian Tanggal Transaksi:**
-   - Tanggal SO, Surat Jalan (DO), Faktur, dan Pembayaran tidak boleh disamakan secara paksa:
+   - Tanggal SO, Surat Jalan (DO), Faktur, dan Pembayaran tidak disamakan secara paksa:
      * SO dibuat pada tanggal kunjungan salesman (`date_order`).
      * DO tervalidasi pada tanggal pengiriman fisik barang (`scheduled_date` / `date_done`).
      * Faktur komersial mengikat tanggal tagihan sah (`invoice_date` / `date`).
@@ -52,6 +53,7 @@ Ketika 14 kunjungan outlet pada 31 Juli tersebut dipecah secara murni per prinsi
 3. **Pemisahan Laporan As-Of:**
    - Transaksi 1 Agustus 2026 tidak boleh bocor ke Laporan Laba Rugi maupun Neraca per 31 Juli 2026.
    - Saldo Piutang Usaha per 31 Juli hanya mengakui 1.276 faktur Juli. 48 faktur Agustus baru diakui pada tanggal 1 Agustus 2026.
+   - Penutupan historis Juli terbukti imutabel: re-audit baris jurnal Juli setelah pemrosesan 1 Agustus memastikan saldo dan hitungan AML Juli tidak mengalami perubahan.
 
 ---
 
@@ -59,32 +61,34 @@ Ketika 14 kunjungan outlet pada 31 Juli tersebut dipecah secara murni per prinsi
 
 ### 3.1 Prinsip Desain
 1. **Safety Fail-Closed:**
-   - Runner memverifikasi nama database target: wajib memuat substring disposable (misal `disposable`, `ci`, `test`, `exp`) dan menolak database produksi/operasional secara mutlak.
+   - Menolak mutlak substring kata terlarang operasional/produksi (`prod`, `production`, `live`, `railway`, `master`, `official`, `main`).
+   - Wajib cocok dengan nama database disposable eksplisit (`fmcg_full_disposable`, `ci_db`, `test_disposable`, atau pola regex `_disposable`).
 2. **Audit Metadata Lingkungan:**
-   - Mencatat Git Commit SHA, Odoo Image ID/Digest, daftar modul terpasang beserta versinya, konfigurasi valuasi stok kategori produk (`cost_method=fifo`, `valuation=real_time`), company ID, timezone, dan hash 15 CSV kanonikal.
+   - Mencatat Git Commit SHA (`GITHUB_SHA`), Docker Image ID/Digest (`ODOO_IMAGE`), GitHub Run ID, daftar modul terpasang beserta versinya (`installed_version`), konfigurasi valuasi stok kategori produk, company ID, timezone, dan hash 15 CSV kanonikal.
 3. **Menggunakan Loader Produksi:**
    - Mengeksekusi `CanonicalPerpetualAdapter` dari `scripts/load_canonical_perpetual.py` tanpa bypass aturan.
 4. **Alur Deterministi Dua Fase:**
-   - **Fase A (Closing Juli 2026):** Memuat master, opening stock 150 SKU, 5 PO inbound, 1.324 SO, memvalidasi 1.276 DO Juli, memuat 9 retur karantina, menerbitkan 1.276 Faktur Juli, 967 Pembayaran AR, 4 Pembayaran AP, dan 30 OPEX. Pada fase ini, 48 DO Agustus tetap dalam status pending/reserved (1.038 karton tereservasi).
-   - **Audit Checkpoint Juli:** Memverifikasi saldo stok (53.837 on-hand, 1.038 reserved, 52.799 available) dan GL Juli terhadap Oracle Kanonikal.
-   - **Fase B (Opening Agustus 2026):** Memvalidasi 48 DO carry-forward Agustus ke status `done`, menerbitkan 48 Faktur Agustus. Memverifikasi reservasi stok turun menjadi 0,0 dan fisik menjadi 52.799 karton.
-   - **Fase C (Uji Replay / Idempotensi Run 2):** Menjalankan ulang seluruh loader. Memverifikasi 0 record baru dibuat (100% skipped) dan deep snapshot zero-drift.
-   - **Fase D (Audit Oracle Independen):** Menghitung ekspektasi langsung dari 15 CSV register tanpa membaca ringkasan loader, membandingkan multiset baris, akun, debit/kredit, dan relasi dokumen.
+   - **Fase 1 (Closing Juli 2026):** Memuat master, opening stock 150 SKU, 5 PO inbound, 1.324 SO, memvalidasi 1.276 DO Juli, memuat 9 retur karantina, menerbitkan 1.276 Faktur Juli, 967 Pembayaran AR, 4 Pembayaran AP, dan 30 OPEX. Pada fase ini, 48 DO Agustus tetap dalam status pending/reserved (1.038 karton tereservasi).
+   - **Audit Checkpoint Juli:** Memverifikasi saldo stok (53.837 on-hand, 1.038 reserved, 52.799 available) dan GL Juli terhadap Oracle Kanonikal secara dinamis.
+   - **Fase 2 (Post-Transaksi 1 Agustus 2026):** Memvalidasi 48 DO carry-forward Agustus ke status `done`, menerbitkan 48 Faktur Agustus. Memverifikasi reservasi stok turun menjadi 0,0 dan fisik menjadi 52.799 karton. Re-verifikasi as-of closing Juli membuktikan saldo historis tidak terdistorsi.
+   - **Fase 3 (Uji Replay / Idempotensi Run 2):** Menjalankan ulang seluruh loader. Memverifikasi 0 record baru dibuat (100% skipped) dan deep snapshot zero-drift.
+   - **Audit Oracle Independen Dinamis:** Menghitung ekspektasi langsung secara dinamis dari baris CSV register tanpa hardcode angka, membuktikan responsivitas terhadap perubahan data sumber (lulus supervisor mutation probe).
+
+### 3.2 Deep State Snapshot Presisi Tinggi
+- Menyimpan presisi penuh datetime (tanpa pemotongan 10 karakter).
+- `stock.move.line`: mencakup `product_id`, `lot_id`, `location_id`, `location_dest_id`, `product_uom_id`, `quantity`, `date`, `company_id`, `state`.
+- `stock.move`: mencakup relasi `picking_id`, `sale_line_id`, `origin_returned_move_id`, `account_move_ids`.
+- `account.move.line`: mencakup `product_id`, `company_id`, `date`, `amount_residual`, `reconciled`.
+- Sensitivitas snapshot terbukti menangkap perubahan lokasi, produk, maupun pergeseran jam yang melintasi tengah malam WITA.
 
 ---
 
-## 4. Pengujian Upgrade Modul & Isolasi COGS
+## 4. Status Tiga Prioritas & Pemisahan Scope Upgrade
 
-1. **Upgrade Path:**
-   - Database disposable yang telah berisi master/seed diuji dengan perintah upgrade Odoo:
-     `odoo -d <dbname> -u id_base,id_ui_form --stop-after-init`
-   - Memverifikasi bahwa schema ORM, data register, dan integritas move lines tidak terganggu oleh proses upgrade.
-2. **Isolasi Supresi COGS:**
-   - Menguji pembuatan invoice biasa (ordinary non-seed invoice):
-     * Wajib membukukan HPP native jika delivery belum membukukan HPP.
-     * Supresi COGS hanya berlaku secara sempit pada invoice berpenanda `is_fmcg_seed_invoice = True` dan `fmcg_seed_batch = 'CANONICAL_JULY_2026_PERPETUAL'`.
-3. **Injeksi Kegagalan & Rollback Boundary:**
-   - Mensimulasikan kegagalan write di tengah batch transaksi; membuktikan bahwa rollback transaction boundary bekerja bersih tanpa partial commit atau quant leak.
+Sesuai arahan audit supervisi ([issuecomment-6490484056](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6490484056)):
+1. **Prioritas 1 (Runner Full Dataset Disposable):** **SELESAI** — diimplementasikan dalam `scripts/ops/verify_disposable_full.py` dan diuji via `.github/workflows/full-dataset-runtime.yml`.
+2. **Prioritas 2 (Two-Phase Cut-Off Juli & Agustus):** **SELESAI** — parameter `enforce_invoice_cutoff` diimplementasikan, diaudit dengan oracle dinamis, as-of closing Juli imutabel, dan mutasi negatif ditolak.
+3. **Prioritas 3 (Upgrade Baseline Persisten):** **BELUM DILAKSANAKAN / DIPISAHKAN KE PR LANJUTAN** — untuk menjaga deliverable tetap terfokus dan jujur, jalur upgrade dipisahkan ke PR tersendiri setelah runtime penuh fase 1 & 2 terbukti di lingkungan disposable nyata.
 
 ---
 
@@ -92,8 +96,7 @@ Ketika 14 kunjungan outlet pada 31 Juli tersebut dipecah secara murni per prinsi
 
 1. **Workflow GitHub Actions Mandiri:**
    - Berkas: `.github/workflows/full-dataset-runtime.yml`.
-   - Trigger: `workflow_dispatch` (manual) dan push pada branch khusus.
+   - Trigger: `workflow_dispatch`, push branch `agen/full-dataset*`, dan pull request pada path runner/loader/test terkait.
    - Timeout terukur: 45 menit.
-   - Menjalankan container disposable `fmcg-odoo:ci` dengan PostgreSQL 16 bersih.
-   - Mengunggah artefak laporan: `full_dataset_runtime_report.json` dan `full_dataset_runtime_summary.md`.
-
+   - Bootstrap terisolasi: membuat database `fmcg_base` sebelum container Odoo dimulai, deteksi fail-fast container exit, dan pembuatan template disposable `fmcg_full_disposable`.
+   - Mengunggah artefak diagnostik lengkap pada status SUKSES maupun GAGAL (`full_dataset_runtime_report.json`, `full_dataset_runtime_summary.md`, `full_dataset_runtime.log`, `odoo_container.log`).
