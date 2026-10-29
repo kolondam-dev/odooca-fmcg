@@ -2,6 +2,7 @@ import { TripClosing } from "./components/TripClosing";
 import { OrderCorrections } from "./components/OrderCorrections";
 import { DeliveryApproval } from "./components/DeliveryApproval";
 import { DiscountApproval } from "./components/DiscountApproval";
+import { productPackaging } from "./domain/product-units";
 import { orderQuote, type OrderUom } from "./domain/order-pricing";
 import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -1127,15 +1128,21 @@ function FormDialog({
             document.removeEventListener("keydown", keys);
         };
     }, []);
-    const total = snapshot.products.reduce(
-        (n, p) =>
-            n +
-            (p.price *
-                (qty[p.id] || 0) *
-                { carton: 144, pack: 12, pcs: 1 }[units[p.id] ?? "carton"]) /
-                144,
-        0,
-    );
+    let total = 0;
+    try {
+        total = orderQuote(
+            Object.entries(qty)
+                .filter(([, q]) => q > 0)
+                .map(([product_id, q]) => ({
+                    product_id,
+                    qty: String(q),
+                    uom: units[product_id] ?? "carton",
+                })),
+            snapshot,
+        ).gross;
+    } catch {
+        /* Invalid input remains editable; submission reports the error. */
+    }
     const title = {
         order: "Buat Sales Order",
         extra: "Ajukan extra call",
@@ -1403,9 +1410,11 @@ function FormDialog({
                                                     <strong>{p.name}</strong>
                                                     <small>
                                                         {p.unit} · stok contoh{" "}
-                                                        {p.stock}
+                                                        {p.stock} karton
                                                     </small>
-                                                    <b>{money(p.price)}</b>
+                                                    <b>
+                                                        {money(p.price)}/karton
+                                                    </b>
                                                 </div>
                                                 <label>
                                                     Satuan
@@ -1425,10 +1434,24 @@ function FormDialog({
                                                         }
                                                     >
                                                         <option value="carton">
-                                                            Karton · 144 pcs
+                                                            Karton ·{" "}
+                                                            {
+                                                                productPackaging(
+                                                                    p,
+                                                                    snapshot.catalog_version,
+                                                                ).carton
+                                                            }{" "}
+                                                            pcs
                                                         </option>
                                                         <option value="pack">
-                                                            Pack · 12 pcs
+                                                            Pack ·{" "}
+                                                            {
+                                                                productPackaging(
+                                                                    p,
+                                                                    snapshot.catalog_version,
+                                                                ).pack
+                                                            }{" "}
+                                                            pcs
                                                         </option>
                                                         <option value="pcs">
                                                             Pcs

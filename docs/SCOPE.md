@@ -253,3 +253,23 @@ Closing trip saat tiba di kantor, geofence + toleransi25m; cashier handoff di lu
 scope PWA, upload resi uang/cek/faktur/retur dicatat backlog. Pada demo, lokasi dan
 foto diterima tanpa validasi geofence/akurasi/keaslian, tetapi watermark timestamp
 dan koordinat tetap wajib. File/integritas/owner tetap diperiksa demi penyimpanan.
+
+
+## 16. Fondasi integrasi snapshot PWA (2026-10-29)
+
+Tahap1 setelah PR37: rasio satuan per SKU, metadata basis harga/stok karton dan scope
+snapshot. Legacy demo144/12 tetap sah untuk snapshot lama; katalog baru wajib
+metadata lengkap dan scope user/company/hari sesuai bootstrap. Kontrak/adaptor
+read-model murni dijelaskan di [catalog-v2](../pwa/contracts/catalog-v2.md).
+Endpoint backend/auth/ACL/PJP/manifest dan transaksi resmi belum diimplementasikan
+pada tahap ini; live tetap terkunci. Full dataset/cut-off adalah acceptance terpisah.
+
+
+## 17. Tahap2 endpoint baca mobile (2026-10-29)
+
+Candidate addon id_mobile_api membatasi dua GET bootstrap/snapshot pada session
+internal mobile user dan penugasan harian admin. Company default akun, warehouse,
+pricelist, SKU dan outlet eksplisit; native ACL/record rules tanpa sudo. Stok hanya
+primary stock location terpilih, harga estimasi1karton/tax-excluded native. Delivery
+masih kosong; tidak ada command/evidence/write atau activation UI live. Runtime
+acceptance melalui install+ORM/HttpCase CI, lalu staging terpisah. Tidak deploy.

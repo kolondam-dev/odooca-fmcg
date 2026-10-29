@@ -56,3 +56,40 @@
 -271 unit+1 hosting/typecheck/format/contracts/build/budget/Ruff/4 manifest/diff PASS. Tiga requirement tests FAIL sebelum fix. Regresi midnight/two-connection/CAS rollback/parent-date/replay;6 targeted browser PASS. Full100 dan CI final dilaporkan pada PR.
 - Backend/live/seed/addon/workflow/Railway tidak diubah, tidak merge/deploy; menunggu review ulang.
 - Task managed by agent-codex-pwa at 2026-10-29T08:03:45+07:00
+
+[2026-10-29T13:33:20+07:00] [INFO] Tahap1 catalog v2 dan rasio satuan SKU
+- Basis main b957e02; branch agen/pwa-sku-units-snapshot. Mandat implementasi bertahap mulai mapping kontrak/satuan sebelum endpoint/transactions.
+- Scope v2 company/user/warehouse/hari, SKU identity, packaging/basis harga-stok karton; adapter sanitasi read-model. HTTP bootstrap/scope guard dan stale-session response rejection; daily restore scope. Quote/form order+koreksi per-SKU; legacy demo144/12 tetap, demo tambahan24/6. OpenAPI0.13/rules/docs diperbarui.
+-291 unit+1 hosting+102 browser resmi PASS (default workers,tanpa retry/failed);2 targeted baru PASS. Metadata/rasio/identity/scope/session race, legacy JSON/quote, mixedSKU/offline correction diuji. Typecheck/format/contracts/build/budget/Ruff/4 manifest/diff PASS.
+- Endpoint/auth/ACL/PJP/manifest resmi dan backend write/live belum diimplementasi; full dataset/cut-off acceptance terpisah. Tidak menyentuh seed/register/master/addon/loader/deploy/workflow/Railway; tidak merge/deploy.
+- Menunggu CI/review tahap1, dilanjutkan endpoint baca resmi.
+- Task managed by agent-codex-pwa at 2026-10-29T13:33:20+07:00
+
+[2026-10-29T14:24:57+07:00] [INFO] Generation guard bootstrap follow-up P2 PR38
+- Review6490586079 terkonfirmasi pada2464522; existing test hanya pending snapshot, bukan dua bootstrap out-of-order.
+- Monotonic generation sebelum request; hanya terbaru mengadopsi identity/CSRF. Stale success/error ditolak409 dan tidak mengubah sesi terbaru; B gagal tidak dapat dipulihkan A lama. Snapshot guard dipertahankan.
+-5 controlled regression FAIL pada kode lama lalu PASS;296 unit+1 hosting/typecheck/format/contracts/build/demo+live/budget/diff PASS. HTTP race unit mencakup snapshot scope/token submit, late401/network/malformed. Browser/CI final di PR, tidak klaim rerun browser lokal.
+- Rasio/legacy/root-day/seed/addon/backend/workflow/Railway tidak diubah, live locked. HOLD review ulang, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T14:24:57+07:00
+
+[2026-10-29T16:00:22+07:00] [INFO] Tahap2 backend read API candidate
+- Basis main8d15083; branch agen/pwa-read-api. Addon id_mobile_api, explicit admin daily scope/own-read ACL/company rule, GET bootstrap/snapshot dengan session cookie, readonly cursor/no-store dan no scope parameters. Native record rules/ACL tanpa sudo. Group read tidak memberi write Sales/Stock.
+- Native pricelist1carton tax-excluded dan exact primary stock availability company/warehouse/SKU (exclude reserved/consignment). Catalog v2/outlet scope; deliveries kosong. Tidak expose cost/AR/private docs atau mengaktifkan live/command.
+- ORM/HttpCase tests nyata ditambahkan dan CI install-test memasang/tag addon baru. Local296 unit PWA/typecheck/contracts/Ruff/5 manifest/compile/diff/validators PASS; runtime lokal belum: Postgres setup terhalang setgroups/setuid. Hasil runtime CI di PR; tidak memakai stub sebagai bukti.
+- Tidak menyentuh seed/register/master/loader/deploy/Railway; tidak merge/deploy. HOLD runtime/CI/review. Tahap write/delivery/evidence/full dataset tetap terpisah.
+- Task managed by agent-codex-pwa at 2026-10-29T16:00:22+07:00
+
+[2026-10-29T16:09:14+07:00] [INFO] PO metadata follow-up tahap2 PR40
+- CI8045e9d install-test gagal sebelum API tests: Odoo PoFileReader memerlukan module comment dan source occurrences.
+- Metadata10 entry diperbaiki sesuai parser resmi; tidak bypass language/security atau mengubah tes API. Polib metadata check/Ruff/5 manifest/diff PASS. Runtime menunggu CI baru; HOLD, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T16:09:14+07:00
+
+[2026-10-29T16:18:30+07:00] [INFO] Fixture dan hidden-record regression PR40
+- CI0eff187 registry/HTTP positif dan boundary berjalan;2 test errors: duplicate fixture ID False dari variant copy, hidden M2M menghasilkan empty-config UserError lebih awal. Bukan PASS runtime lengkap.
+- Fixture dibuat native ORM/persisted ID; assertions hidden search/no sudo/empty error dan partially hidden catalog (hanya visible, tidak expose hidden SKU) ditambahkan. Service/ACL tidak diubah.13 targeted ORM/HTTP tests menunggu CI baru; Ruff/5 manifest/diff PASS. HOLD, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T16:18:30+07:00
+
+[2026-10-29T16:26:42+07:00] [INFO] Partial recordset fail-closed assertion PR40
+- CIe39824d:0 failed/1 error pada ekspektasi partial response. Explicit check_access sudah menolak recordset terlarang; perilaku aman dipertahankan.
+- Regresi menguji visible search lalu AccessError pada snapshot; doc partial-response sebelumnya dikoreksi. Tidak mengubah service/ACL/sudo atau menghilangkan negative test. Ruff/5 manifest/diff PASS; runtime final menunggu. HOLD, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T16:26:42+07:00

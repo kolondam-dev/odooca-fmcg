@@ -1,7 +1,7 @@
+import { productPackaging } from "./product-units.ts";
 import { z } from "zod";
 import type { Snapshot } from "./contracts";
 export const UomSchema = z.enum(["carton", "pack", "pcs"]);
-export const UOM_PCS = { carton: 144, pack: 12, pcs: 1 } as const;
 export type OrderUom = z.infer<typeof UomSchema>;
 export const DiscountRequestSchema = z
     .object({
@@ -23,9 +23,12 @@ export function orderQuote(
             !UomSchema.safeParse(l.uom).success
         )
             throw new Error("SKU/satuan/qty tidak valid.");
-        gross += (p.price * Number(l.qty) * UOM_PCS[l.uom]) / 144;
+        const units = productPackaging(p, snapshot.catalog_version);
+        gross += (p.price * Number(l.qty) * units[l.uom]) / units.carton;
     }
     gross = Math.round(gross);
+    if (!Number.isSafeInteger(gross))
+        throw new Error("Total estimasi melampaui batas angka aman.");
     const request = discount
         ? DiscountRequestSchema.parse(discount)
         : undefined;
