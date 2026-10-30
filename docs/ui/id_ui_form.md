@@ -121,3 +121,25 @@ Audit Playwright sekarang:
 Regression: `test_smoke_javascript.py` mengekstrak blok JavaScript produksi dan menjalankan `node --check`; `test_footer_audit_fixture.py` menjalankan fungsi audit produksi pada fixture bottom-sticky terkontrol (pinned lalu released) dan menolak nested sticky; `test_form_scss_compile.py` menjaga kontrak bottom-sticky dan tab invoice.
 
 **Belum terverifikasi:** hasil ini masih memerlukan run CI/browser aktual pada SHA final. Tidak merge/deploy.
+
+### Verifikasi runtime CI — 2026-10-30
+
+Run `41052331139` (event `pull_request`, PR #36), head commit `94aae90f0a0fc7f3a314e116afba990387fcbab9`, job `install-test` id `124051252622` (12:02:13Z -> 12:08:07Z) **success**; job `static` dan `init-test` juga success. Browser smoke melaporkan 128 check PASS, 0 FAIL.
+
+Geometri footer (18 baris transaksi pada setiap konteks, `pinStart`/`pinEnd` adalah offset scroll):
+
+| Konteks | pinStart | pinEnd | drift maks | clamp awal | released | overflow |
+| --- | --- | --- | --- | --- | --- | --- |
+| SO | 0 | 684 | 0.25 px | 0.25 px (`startClampExplained=true`) | ya | tidak |
+| SO desktop | 0 | 723 | 0.25 px | 0.25 px | ya | tidak |
+| SO mobile | 0 | 1021 | 0 px | 0 px | ya | tidak |
+| SO zoom 125% | 0 | 897 | 0.25 px | 0.25 px | ya | tidak |
+| Invoice | 0 | 754 | 0.25 px | 0.25 px | ya | tidak |
+| Invoice mobile | 13 | 1053 | 0 px | 12.5 px (clamp containing block) | ya | tidak |
+| Invoice zoom 125% | 0 | 919 | 0.25 px | 0.25 px | ya | tidak |
+
+Catatan metode yang dipakai pada run ini:
+
+- Interval pinned diturunkan dari kotak normal-flow (sticky dimatikan sementara), lalu dibatasi oleh *content box* containing block (padding + border) dan margin elemen sticky. Chromium menahan margin box sticky di dalam content box itu, sehingga pada invoice mobile kotak di-clamp di tepi atas containing block dan pin baru mulai pada scroll 13 px; audit mencatatnya sebagai `startOverflowBelow`/`startClampExplained`, bukan sebagai drift.
+- Overflow horizontal 4 px yang tersisa pada zoom 125% berasal dari `.o_notebook_headers` dan `.o_list_renderer` Odoo 19 yang terukur 704 px di dalam content box sheet 656 px (rect 452..1156 vs sheet 456..1152), sedangkan footer tetap 476..1132. Keduanya sudah punya scroll horizontal sendiri, jadi dibatasi dengan `max-width: 100%` di dalam `.o_form_sheet` (bukan `overflow: hidden` global).
+- Kontrol pembanding pada view daftar yang tidak memakai aturan footer menunjukkan `.o_content` 696/696 pada zoom yang sama, sehingga sisa selisih sebelumnya dapat dipastikan berasal dari geometri notebook form, bukan dari shell.

@@ -65,3 +65,13 @@
 - Regression: test_smoke_javascript (node --check blok JS produksi), test_footer_audit_fixture (bottom-sticky pinned/released), compile SCSS libsass 0.23.0.
 - Lokal PASS: ruff, check_manifests.py, compile SCSS, node --check, fixture Chromium (flat + nested). Runtime Odoo/CI final belum; tidak merge/deploy.
 - Task managed by claude-dev agent at 2026-10-30T18:34:41+07:00
+
+[2026-10-30T19:55:00+07:00] [INFO] PR #36 HIJAU: sticky footer SO/invoice desktop/mobile/zoom pada 94aae90
+- Run GitHub Actions 41052331139 (event pull_request, PR #36), head commit 94aae90f0a0fc7f3a314e116afba990387fcbab9: job static, init-test, install-test semua success. Job install-test 124051252622, 12:02:13Z -> 12:08:07Z.
+- Browser smoke: 128 check PASS, 0 FAIL.
+- Metrik sticky (pinStart..pinEnd, drift maks): SO [0..684] 0.25 px; SO desktop [0..723] 0.25 px; SO mobile [0..1021] 0 px; SO zoom 125% [0..897] 0.25 px; Invoice [0..754] 0.25 px; Invoice mobile [13..1053] 0 px (clamp containing block 12.5 px); Invoice zoom 125% [0..919] 0.25 px. Semua: footer released setelah interval, item terakhir terlihat+terbuka, trial click PASS, horizontalOverflow false.
+- Interval pinned diturunkan dari content box containing block (padding+border) plus margin sticky; clamp di awal dicatat sebagai startOverflowBelow/startClampExplained, bukan drift.
+- Akar sisa overflow 4 px pada zoom 125%: .o_notebook_headers dan .o_list_renderer Odoo 19 terukur 704 px di content box sheet 656 px (footer tetap 476..1132); dibatasi max-width: 100% di dalam .o_form_sheet, bukan overflow hidden global. Kontrol list view: .o_content 696/696 pada zoom yang sama.
+- Fixture regresi tambahan: containing block mulai 250 px, sticky 200 px, padding 16 px, margin 8 px -> pinStart 74, drift 0.
+- 15 CSV data/registers/ tidak disentuh. PR tetap draft; tidak merge/deploy.
+- Task managed by claude-dev agent at 2026-10-30T19:55:00+07:00
