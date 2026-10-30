@@ -1,5 +1,9 @@
 # HANDOFF
 
+## 2026-10-30 — codex — Deployment demo parsial dan batas shell
+**Eksekusi:** PR45 merged7d667915. field-pwa pinned4973935, mode staging, deployment84abcb97 SUCCESS dan build-info publik staging. Gateway awal memakai static Dockerfile akibat default pwa/railway.toml; update railwayConfigFile ditolak plugin (deprecated). Beralih image resmi nginx:1.28-alpine dengan Start Command yang merekonstruksi tiga file gateway audited4973935; deployment8f42f93b SUCCESS.
+**Reproduksi:** pwa/scripts/railway-gateway-command.mjs menghasilkan command dari file source tanpa credential/download runtime; docs/DEMO_DEPLOYMENT_20261030.md mencatat status dan urutan operator.
+**Belum selesai:** endpoint mobile Odoo404; log DB railway. Shell/backup/ORM tidak tersedia via plugin. Tidak memutasi database, menyalakan reset/FORCE_UPGRADE, memodifikasi guard atau membuat akun server. Login/acceptance end-to-end belum siap.
 ## 2026-10-30T13:20:00+07:00 — antigravity agent — Resolusi Binding Persisten Canonical Company pada Disposable Runtime Proof
 **Konteks Diagnostik Workflow Full Dataset Runtime Verification:**
 - Pada eksekusi container database disposable Odoo (`fmcg_full_disposable`), nama default perusahaan Odoo baru adalah `My Company` (bukan `PT Salva Inti Mandiri`).
