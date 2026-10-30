@@ -1,0 +1,123 @@
+name: Full Dataset Runtime Verification
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'agen/full-dataset*']
+  pull_request:
+    paths:
+      - 'scripts/ops/verify_disposable_full.py'
+      - 'scripts/load_canonical_perpetual.py'
+      - 'tests/test_full_dataset_cutoff_and_upgrade.py'
+      - '.github/workflows/full-dataset-runtime.yml'
+      - 'data/registers/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-dataset-runtime-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full-runtime-proof:
+    name: Full Dataset Disposable Runtime Proof
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t fmcg-odoo:ci .
+
+      - name: Ekstrak Docker Image Digest
+        run: |
+          DIGEST=$(docker inspect --format='{{index .Id}}' fmcg-odoo:ci)
+          echo "ODOO_IMAGE_DIGEST=$DIGEST" >> $GITHUB_ENV
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Image Digest: $DIGEST"
+
+      - name: Siapkan Role dan Database fmcg_base di PostgreSQL
+        run: |
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 psql -h localhost -U postgres -d postgres -c "
+            DO \$\$ BEGIN
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'odoo_app') THEN
+                CREATE ROLE odoo_app LOGIN CREATEDB PASSWORD 'ci-app';
+              END IF;
+            END \$\$;
+          "
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 psql -h localhost -U postgres -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'fmcg_base'" | grep -q 1 || \
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 createdb -h localhost -U postgres -O odoo_app fmcg_base
+
+      - name: Inisialisasi Odoo Container Dasar
+        run: |
+          docker run -d --name odoo --network host \
+            -e PGHOST=localhost -e PGUSER=postgres -e PGPASSWORD=ci-postgres -e PGDATABASE=fmcg_base \
+            -e ODOO_DB_USER=odoo_app -e ODOO_DB_PASSWORD=ci-app -e ADMIN_PASSWD=ci-master \
+            -e ADMIN_LOGIN_PASSWORD=ci-admin -e BASE_URL=http://ci.example.test \
+            -e GITHUB_SHA=${{ github.sha }} -e ODOO_IMAGE_DIGEST="${{ env.ODOO_IMAGE_DIGEST }}" -e GITHUB_RUN_ID=${{ github.run_id }} \
+            -e INIT_MODULES=id_base,l10n_id,sale_management,stock,purchase,account,product_expiry,stock_account fmcg-odoo:ci
+          for i in $(seq 1 120); do
+            if ! docker ps -q --filter "name=odoo" --filter "status=running" | grep -q .; then
+              echo "CRITICAL: Odoo container exited unexpectedly!"
+              docker logs odoo
+              exit 1
+            fi
+            [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8069/web/login)" = "200" ] && break
+            sleep 5
+          done
+          curl -sf -o /dev/null http://localhost:8069/web/login
+
+      - name: Siapkan Database Disposable fmcg_full_disposable
+        run: |
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 psql -h localhost -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='fmcg_base' AND pid <> pg_backend_pid();"
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 dropdb -h localhost -U postgres --if-exists fmcg_full_disposable
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 createdb -h localhost -U postgres -O odoo_app -T fmcg_base fmcg_full_disposable
+
+      - name: Eksekusi Runtime Penuh Dataset Kanonikal pada Disposable DB
+        run: |
+          set -o pipefail
+          docker exec -i \
+            -e PGDATABASE=fmcg_full_disposable \
+            -e GITHUB_SHA=${{ github.sha }} \
+            -e ODOO_IMAGE_DIGEST="${{ env.ODOO_IMAGE_DIGEST }}" \
+            -e GITHUB_RUN_ID=${{ github.run_id }} \
+            -e PYTHONUNBUFFERED=1 \
+            odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_full.py 2>&1 | tee full_dataset_runtime.log
+
+      - name: Ekstraksi Laporan & Ringkasan Runtime
+        if: always()
+        run: |
+          docker exec odoo cat /tmp/full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || \
+          docker exec odoo cat /opt/full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || \
+          docker exec odoo cat full_dataset_runtime_report.json > full_dataset_runtime_report.json 2>/dev/null || true
+
+          docker exec odoo cat /tmp/full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || \
+          docker exec odoo cat /opt/full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || \
+          docker exec odoo cat full_dataset_runtime_summary.md > full_dataset_runtime_summary.md 2>/dev/null || true
+
+          docker logs odoo > odoo_container.log 2>&1 || true
+
+      - name: Upload Artifact Diagnostik Full Runtime
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-dataset-runtime-diagnostics-${{ github.sha }}
+          path: |
+            full_dataset_runtime.log
+            full_dataset_runtime_report.json
+            full_dataset_runtime_summary.md
+            odoo_container.log
+          retention-days: 30

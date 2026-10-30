@@ -185,3 +185,7 @@
 - PR45 merged7d667915; PWA staging84abcb97 SUCCESS dengan build-info staging.
 - Default config repo memilih static PWA; plugin menolak railwayConfigFile deprecated. Gateway memakai image nginx1.28-alpine dan byte file audited4973935 dari Start Command;8f42f93b SUCCESS.
 - Tambah generator reproducible dan laporan status; tidak ada mutasi database/provisioning. Backend mobile404, shell/backup/ORM tetap terblock capability plugin.
+[2026-10-30T12:07:06+07:00] [INFO] Skill supervisi berbasis bukti dan konteks pengganti
+- Pemilik meminta metode review reusable dan ringkasan aktor/domain/environment. Tambah skill portable dan SUPERVISOR_HANDOFF snapshot main7d667915.
+- Refresh PR36/39/46/47, CI, ruleset dan inventaris Railway. Bedakan otorisasi terbaru dari catatan historis; tidak mengubah verdict/operasional.
+- Validator skill PASS; forward-test offline memakai source/evidence mentah menghasilkan temuan executable dan batas bukti yang benar. Tidak ada aksi eksternal pada forward-test.
