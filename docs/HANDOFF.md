@@ -1,3 +1,37 @@
+## 2026-10-30T19:55:00+07:00 — PR #36 HIJAU: sticky footer SO/invoice desktop/mobile/zoom (SHA 94aae90)
+
+Run `41052331139` pada head `94aae90f0a0fc7f3a314e116afba990387fcbab9` (PR #36): `static`, `init-test`, `install-test` success; job `install-test` `124051252622` 12:02:13Z -> 12:08:07Z; browser smoke 128 check PASS / 0 FAIL.
+
+Sticky footer terverifikasi di dua form transaksi nyata (SO 18 baris, invoice 18 baris): drift <= 0.25 px pada SO desktop/mobile/zoom dan invoice desktop/zoom; invoice mobile pin mulai scroll 13 px karena clamp containing block (12.5 px) dan drift 0. Semua konteks lolos release setelah interval, item terakhir terlihat+terbuka, trial click Playwright, dan horizontalOverflow false.
+
+Koreksi metode: interval pinned memakai content box containing block + margin sticky (bukan padding box saja); clamp awal dilaporkan eksplisit, bukan drift. Sisa overflow 4 px pada zoom 125% berasal dari `.o_notebook_headers`/`.o_list_renderer` Odoo 19 (704 px di content box 656 px) dan dibatasi `max-width: 100%` di dalam `.o_form_sheet`; kontrol list view menunjukkan `.o_content` 696/696.
+
+15 CSV `data/registers/` tidak disentuh. PR tetap draft; tidak merge/deploy tanpa otorisasi pemilik.
+
+Head final setelah commit dokumentasi ini: `be63bc3948f5aac3978d9bfc71ebadf62ecb8927`, run `41053697213` success (`static`, `init-test`, `install-test`; job `124055863616`; 128 PASS / 0 FAIL) dengan metrik sticky identik. Bukti dipasang sebagai komentar PR: https://github.com/kolondam-dev/odooca-fmcg/pull/36#issuecomment-6522709264
+
+Task Managed by agent claude-dev at 2026-10-30T19:55:00+07:00
+
+## 2026-10-30T18:34:41+07:00 — PR #36: perbaikan akar sticky/overflow + regression audit
+
+PR #36 (branch `agen/ui-footer-transaction-layout-v1`): audit log CI `2c694f8` menunjukkan `stickyGroupCount=0` di mobile karena aturan footer berada di bawah `body.id-shell-sidebar` (kelas dilepas saat `ui.isSmall`), drift SO karena `top` sticky tidak pernah pinned di containing block pendek, dan overflow invoice dari kolom total `colspan=4` plus margin negatif.
+
+Perubahan: aturan footer dipindah ke scope `.o_form_view` (berlaku sidebar/klasik/mobile); sticky kembali `bottom: 0`; padding-bottom `100vh` dihapus; invoice memakai `.oe_invoice_lines_tab` sebagai elemen sticky dengan narration+total ditumpuk penuh tanpa margin negatif. Audit Playwright mengukur interval bottom-sticky dari normal-flow (sticky dimatikan sementara), batas containing block, dan `bottom` inset; audit menerima baris list maupun kartu kanban, memeriksa visibility awal, release, actionability, dan menolak nested sticky. Zoom diemulasikan via CDP dan diverifikasi metriknya berubah.
+
+Regression baru: `test_smoke_javascript.py` (`node --check` blok JS produksi) dan `test_footer_audit_fixture.py` (fixture bottom-sticky pinned/released + nested ditolak). `ruff`, `check_manifests.py`, compile SCSS libsass 0.23.0, dan fixture Chromium lokal PASS.
+
+**Belum terverifikasi:** run CI/browser pada SHA final, termasuk SO/invoice desktop/mobile/zoom. PR tetap draft/HOLD; tidak merge/deploy.
+
+Task Managed by agent claude-dev at 2026-10-30T18:34:41+07:00
+
+## 2026-10-29T16:28:00+07:00 — sinkronisasi aman PR #36 dan keputusan diskon native
+
+PR #36: pemilik memilih opsi B — gunakan ringkasan diskon native Odoo yang benar-benar tersedia; tidak membuat field diskon dokumen atau formula agregat baru. Rule engine diskon/promo, management, dashboard, konfigurasi, dan approval workflow berada di luar scope demo. Semantik diskon/promo bukan lagi blocker UI.
+
+Sinkronisasi dilakukan berbasis main terbaru agar riwayat HANDOFF dari agen lain tetap utuh. Perubahan yang dibawa khusus untuk UI PR #36: SCSS footer, fixture SO+invoice, smoke scroll/footer, regression compile test, dokumentasi/log dan CI yang diperlukan. PR tetap draft/HOLD; CI/runtime/browser perlu bukti aktual; tidak merge/deploy.
+
+Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T16:28:00+07:00
+
 # HANDOFF
 
 ## 2026-10-30T17:42:00+07:00 — antigravity agent — Supervisory Audit PR #49: PASS / MERGE-READY
