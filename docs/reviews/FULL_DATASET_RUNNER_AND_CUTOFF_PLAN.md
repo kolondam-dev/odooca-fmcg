@@ -135,6 +135,28 @@ Agar upgrade benar-benar melakukan kerja perbaikan (bukan sekadar re-load tanpa 
 6. **Fase C:** verifikasi registry/DDL/FK/view/HPP + replay zero-drift + imutabilitas Juli + audit oracle.
 7. Artefak diagnostik (`upgrade_baseline_state.json`, laporan JSON/MD kedua fase, log upgrade, log container) diunggah pada status apa pun.
 
-### 6.4 Batasan Jujur
+### 6.4 Bukti Eksekusi Exact-SHA (GitHub Actions)
+
+| Item | Nilai |
+|---|---|
+| PR | #49 (`agen/persisted-baseline-upgrade` ? `main`, Draft) |
+| Head commit (kode) | `a7ff8aec49037e1586877b1256cb312976faeacc` |
+| Merge ref SHA (dijalankan runner) | `862b9d341c3926d9ceac50049ff7f2c7723636b6` |
+| Run / Job | [41033574353](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/41033574353) ? job `123988914701` |
+| Durasi job | 25 menit 39 detik (09:27:43Z ? 09:53:22Z) |
+| Hasil | **success** ? `UPGRADE_BASELINE_PHASE=SUCCESS`, `UPGRADE_PROCESS_CONTRACT=PASS`, `UPGRADE_REPLAY_ZERO_DRIFT=PASS`, `UPGRADE_VERIFY_PHASE=SUCCESS` |
+| Artefak | `upgrade-runtime-diagnostics-862b9d341c3926d9ceac50049ff7f2c7723636b6` |
+
+Angka kunci dari laporan runtime:
+
+- Registry pasca-upgrade: `id_base=19.0.1.0.0`, `id_mobile_api=19.0.1.2.0` (kembali sama dengan manifest setelah version skew).
+- DDL: 155 kolom modul terverifikasi, 0 hilang; 1 drift kolom (`id_mobile_office.radius`) dipulihkan oleh `-u`.
+- Relasi: 51 relasi many2one diperiksa, 0 baris orphan.
+- View XML: 16 view valid; `id_mobile_api.view_mobile_office_form` dipulihkan.
+- Hook HPP: 1.324 faktur seed, **0** baris HPP 510000 duplikat, 2.738 delivery outbound semuanya memiliki jurnal valuasi STJ posted.
+- Replay `CanonicalPerpetualAdapter.run_all()`: **0** record baru; skip SO 1.324, invoice 1.324, AR 967, AP 4, OPEX 30, karantina 9, opening quant 150, PO 5 (16,65 detik).
+- Zero-drift: 9/9 entitas deep-state identik; 13.540 baris AML closing Juli imutabel; audit oracle Agustus + anti-fallback salesperson PASS.
+
+### 6.5 Batasan Jujur
 - Drift version/skema/view adalah simulasi terkontrol untuk membuktikan jalur perbaikan upgrade; bukan bukti bahwa pernah ada rilis modul lama yang benar-benar dideploy.
 - Unit test lokal hanya memvalidasi kontrak logika; pembuktian upgrade wajib berasal dari eksekusi container pada GitHub Actions (exact SHA).

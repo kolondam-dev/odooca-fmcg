@@ -1,5 +1,16 @@
 # HANDOFF
 
+## 2026-10-30T17:01:10+07:00 ? claude-dev agent ? BUKTI HIJAU Prioritas 3: upgrade modul dari baseline persisten + replay idempotensi
+**Hasil:** Seluruh check PR #49 hijau pada head commit `a7ff8ae` (merge ref `862b9d3`), termasuk job runtime `Module Upgrade from Persisted Baseline + Replay Zero Drift` (run [41033574353](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/41033574353), job id `123988914701`, 25m39s, conclusion success).
+**Bukti kunci (container Odoo 19 + PostgreSQL 16, database disposable `fmcg_upgrade_disposable`):**
+- Fase A baseline: closing Juli 2026 (13.540 baris AML) + carry-forward 1 Agustus 2026, audit oracle Juli & Agustus PASS; drift terkontrol tersuntik (`latest_version` id_base 19.0.0.0.0 / id_mobile_api 19.0.1.1.0, kolom `id_mobile_office.radius` dihapus, view `id_mobile_api.view_mobile_office_form` dihapus).
+- Fase B upgrade nyata: `odoo -u id_base,id_mobile_api --stop-after-init` exit 0, 84 baris log, 0 temuan registry corruption, penanda `Modules loaded.` ada (`Loading module id_base (78/89)`, `Module id_mobile_api loaded in 0.31s`).
+- Fase C: registry kembali sinkron manifest (19.0.1.0.0 / 19.0.1.2.0), DDL 155 kolom modul PASS + 1 drift dipulihkan, FK 51 relasi 0 orphan, 16 view XML valid + view drift dipulihkan, hook HPP `id_base` aktif (1.324 faktur seed, 0 baris HPP 510000 duplikat, 2.738 delivery outbound semuanya punya jurnal STJ posted), replay `run_all()` 0 record baru (skip SO=1.324, invoice=1.324, 16,65 s), zero-drift 9/9 entitas snapshot identik, 13.540 baris AML Juli imutabel, audit oracle Agustus + anti-fallback salesperson PASS.
+- Artefak diagnostik: `upgrade-runtime-diagnostics-862b9d341c3926d9ceac50049ff7f2c7723636b6` (state baseline, laporan JSON/MD kedua fase, `upgrade_odoo.log`, log container).
+**Diverifikasi (bagaimana):** GitHub Actions exact-SHA (bukan mock lokal); `ruff`/`check_manifests` 9 unit kontrak juga hijau pada job `static` dan job `contract-tests`.
+**Belum diuji:** tidak ada eksekusi pada database operasional (sesuai guard); drift version/skema/view adalah simulasi terkontrol [A].
+**Butir terbuka:** menunggu audit Supervisor (Antigravity) sebelum PR ditandai siap review; tidak ada merge/deploy tanpa otorisasi pemilik.
+
 ## 2026-10-30T15:28:17+07:00 — claude-dev agent — Prioritas 3: Upgrade Modul dari Baseline Persisten + Replay Idempotensi
 **Berubah:**
 - `scripts/ops/verify_upgrade_baseline.py` (baru): runner dua fase. Fase `baseline` memuat dataset kanonikal penuh (closing Juli + carry-forward 1 Agustus) melalui `CanonicalPerpetualAdapter`, menjalankan audit Juli & Agustus, mengambil deep state snapshot + digest SHA-256, lalu menyuntikkan tiga drift terkontrol (version skew `latest_version`, hapus kolom `id_mobile_office.radius`, hapus view `id_mobile_api.view_mobile_office_form`). Fase `verify` memvalidasi kontrak proses upgrade (exit 0 + bebas indikasi registry corruption), registry/versi manifest, DDL field modul, relasi many2one bebas orphan, view XML, hook HPP `id_base`, replay `run_all()` zero-creation, zero-drift snapshot, imutabilitas closing Juli, dan audit oracle Agustus.

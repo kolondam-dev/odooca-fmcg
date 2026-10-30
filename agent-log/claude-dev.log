@@ -47,3 +47,12 @@
 - Kontrak log diperkuat: validate_upgrade_exit_code() kini juga mewajibkan penanda "Modules loaded." agar exit 0 palsu (abort konfigurasi dini) tidak lolos; unit test ditambah.
 - Verifikasi lokal: ruff PASS, yaml valid, 9/9 unit PASS, check_manifests PASS.
 - Task managed by claude-dev agent at 2026-10-30T16:26:32+07:00
+
+[2026-10-30T17:01:10+07:00] [INFO] BUKTI HIJAU Prioritas 3: upgrade-proof lulus di container Odoo 19 + PostgreSQL 16
+- Run GitHub Actions 41033574353 (event pull_request, PR #49), head commit a7ff8aec49037e1586877b1256cb312976faeacc, merge ref SHA 862b9d341c3926d9ceac50049ff7f2c7723636b6. Job "Module Upgrade from Persisted Baseline + Replay Zero Drift" id 123988914701, 09:27:43Z -> 09:53:22Z (25m39s), conclusion success. Job "Kontrak Runner Upgrade (unit)" id 123988862112 success.
+- Fase A baseline: 13540 baris AML Juli; fase 2 carry-forward PASS; drift terkontrol tersuntik (latest_version id_base 19.0.0.0.0, id_mobile_api 19.0.1.1.0; kolom id_mobile_office.radius dihapus; view id_mobile_api.view_mobile_office_form dihapus).
+- Fase B upgrade nyata: exit 0, 84 baris log, 0 temuan corruption, penanda "Modules loaded." ada; log menunjukkan "Loading module id_base (78/89)" dan "Module id_mobile_api loaded in 0.31s".
+- Fase C: Registry PASS (id_base=19.0.1.0.0, id_mobile_api=19.0.1.2.0), DDL 155 kolom PASS + 1 drift dipulihkan, FK 51 relasi 0 orphan, View XML 16 view valid + view drift dipulihkan, HPP Hook PASS (1324 faktur seed, 0 HPP duplikat, 2738 outbound semua ber-STJ posted), Replay 0 record baru (skip SO=1324, invoice=1324, 16.65 s), Zero-Drift 9/9 entitas identik, Imutabilitas 13540 baris AML Juli, Audit oracle Agustus + anti-fallback PASS.
+- Seluruh check PR #49 hijau pada SHA a7ff8ae: upgrade-proof, full-dataset, static, install-test, init-test, invariant-tests, seed-invariants, pwa-*. Artefak: upgrade-runtime-diagnostics-862b9d341c3926d9ceac50049ff7f2c7723636b6.
+- 15 CSV data/registers/ tetap beku (0 byte berubah).
+- Task managed by claude-dev agent at 2026-10-30T17:01:10+07:00
