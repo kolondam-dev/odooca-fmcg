@@ -69,7 +69,11 @@ class TestExistingDemo(MobileFixture, TransactionCase):
                 self.run_provision()
 
     def test_existing_business_rows_are_preserved_on_two_runs(self):
-        before = protected_snapshot(self.env)
+        existing_company_ids = set(self.env["res.company"].search([]).ids)
+        existing_company_partners = set(
+            self.env["res.company"].browse(list(existing_company_ids)).mapped("partner_id").ids
+        )
+        before = protected_snapshot(self.env, normalize_partner_audit_ids=existing_company_partners)
 
         def observed(*args, **kwargs):
             self.env.flush_all()
@@ -97,6 +101,7 @@ class TestExistingDemo(MobileFixture, TransactionCase):
         after = protected_snapshot(
             self.env,
             normalize_company_property_company_ids=fixture_company_ids(self.env),
+            normalize_partner_audit_ids=existing_company_partners,
         )
         for model, rows in before.items():
             self.assertTrue(all(after[model].get(row_id) == digest for row_id, digest in rows.items()), model)

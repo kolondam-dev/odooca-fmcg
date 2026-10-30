@@ -1,5 +1,9 @@
 # HANDOFF
 
+## 2026-10-30 — agent-codex-pwa — Narrow native partner audit metadata side effect
+**Bukti shell smoke:** native unit suite mencapai positive two-run dan negative stock-property regressions, tetapi operator entrypoint pada clone existing-data masih gagal di hash res.partner. Perbedaan tambahan adalah write_uid/write_date pada company partner yang ditulis native Stock.
+**Perbaikan:** metadata audit hanya dinormalisasi untuk partner res.company.partner_id yang sudah ada sebelum provisioning. Snapshot mentah memverifikasi actor=operator, timestamp tidak mundur, dan partner yang sama harus menerima key company TEST baru dengan lokasi inter-company exact. Partner lain, company partner tanpa property addition, dan seluruh business columns tetap exact.
+**Status:** follow-up CI pada SHA baru diperlukan untuk membuktikan operator smoke dua-run dan sentinel DB/filestore. Tidak ada mutasi Railway.
 ## 2026-10-30 — agent-codex-pwa — P1 company-dependent stock-property preservation
 **Akar masalah:** Odoo 19 Stock saat membuat company baru menulis property_stock_customer dan property_stock_supplier pada partner milik company existing, scoped ke key company baru dan bernilai stock.stock_location_inter_company. Snapshot row partner sebelumnya menganggap penambahan native key ini sebagai drift generik.
 **Perbaikan:** snapshot JSONB tetap mempertahankan seluruh nilai lama. Hanya penambahan key untuk satu company TEST baru pada partner res.company.partner_id existing dengan lokasi inter-company exact yang diterima; perubahan/penghapusan key lama, partner lain, key lain, atau nilai lain tetap menyebabkan rollback. Run kedua tidak mengizinkan key tambahan.

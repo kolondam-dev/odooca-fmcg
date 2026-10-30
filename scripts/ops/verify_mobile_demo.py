@@ -30,7 +30,11 @@ attachment = env["ir.attachment"].create(
 )
 env["sale.order"].create({"partner_id": partner.id})  # noqa: F821
 env.cr.commit()  # noqa: F821
-before = protected_snapshot(env)  # noqa: F821
+existing_company_ids = set(env["res.company"].search([]).ids)  # noqa: F821
+existing_company_partners = set(  # noqa: F821
+    env["res.company"].browse(list(existing_company_ids)).mapped("partner_id").ids  # noqa: F821
+)
+before = protected_snapshot(env, normalize_partner_audit_ids=existing_company_partners)  # noqa: F821
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
     dump = root / "database.dump"
@@ -67,7 +71,9 @@ with tempfile.TemporaryDirectory() as directory:
         for _attempt in range(2):
             runpy.run_path("/opt/scripts/ops/provision_mobile_demo.py", init_globals={"env": env})  # noqa: F821
             after = protected_snapshot(
-                env, normalize_company_property_company_ids=fixture_company_ids(env)
+                env,
+                normalize_company_property_company_ids=fixture_company_ids(env),
+                normalize_partner_audit_ids=existing_company_partners,
             )  # noqa: F821
             assert all(
                 after[model].get(row_id) == digest for model, rows in before.items() for row_id, digest in rows.items()

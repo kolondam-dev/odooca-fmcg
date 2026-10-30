@@ -182,3 +182,9 @@
 - Guard menyimpan peta JSONB dan hanya mengizinkan satu key TEST baru pada partner res.company.partner_id existing dengan nilai exact; key lama, partner lain, field lain, dan nilai lain tetap fail-closed. Run kedua harus identik.
 - Tambah regresi negatif terpisah untuk customer/supplier property mutation + rollback; positive two-run dan CI operator smoke menormalisasi hanya key baru yang sudah diverifikasi. Native CI final menunggu. Tidak ada mutasi Railway/deploy.
 - Task managed by agent-codex-pwa at 2026-10-30T15:55:35.658+07:00
+
+[2026-10-30T16:04:33.362+07:00] [INFO] Pembatasan metadata audit partner native Stock
+- Operator smoke clone existing-data menunjukkan perubahan write_uid/write_date pada partner company ketika native Stock menambahkan key property TEST; native test database sebelumnya tidak menangkap karena timestamp fixture satu detik.
+- Normalisasi audit dibatasi ke partner res.company.partner_id existing dan hanya jika partner itu benar-benar menerima key TEST valid; actor harus operator dan waktu tidak mundur. Semua partner lain dan semua business values tetap strict.
+- CI static sebelumnya PASS; operator smoke dan suite lengkap menunggu rerun. Tidak ada Railway mutation/deploy.
+- Task managed by agent-codex-pwa at 2026-10-30T16:04:33.362+07:00
