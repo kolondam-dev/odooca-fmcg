@@ -233,9 +233,9 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         # Baseline wajib PASS
         audit_database_against_oracle_july(mock_env, oracle)
 
-        # Jalankan rangkaian 8 mutasi counterexample nyata via savepoint context manager
+        # Jalankan rangkaian 9 mutasi counterexample nyata via savepoint context manager
         mut_results = run_real_negative_mutations_on_database(mock_env, oracle)
-        self.assertEqual(len(mut_results), 8)
+        self.assertEqual(len(mut_results), 9)
         for probe_code, probe_info in mut_results.items():
             self.assertEqual(
                 probe_info.get("status"),
