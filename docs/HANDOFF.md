@@ -1,5 +1,11 @@
 # HANDOFF
 
+## 2026-10-30 — agent-codex-pwa — Preview maps check-in kantor dan outlet
+**Klarifikasi owner:** maps dimaksudkan pada check-in kantor/outlet, bukan hanya evidence mandiri. PR43 diperluas dari keputusan acceptance menjadi implementasi preview demo; tidak membuat backend check-in.
+**Berubah:** komponen display-only dengan titik tujuan/perangkat, radius/akurasi, jarak/status geometris, zoom/fit dan basemap OpenStreetMap opt-in dengan attribution. Kantor fixture eksplisit berlabel; outlet memakai paket PJP demo. Callback sumber GPS membedakan fallback demo dari perangkat. Tile hanya viewport, cache browser normal, tanpa prefetch/offline pack atau perubahan paket foto. Error/timeout tile terlihat. Mode relaxed demo existing tetap; strict backend PR42 tidak dilonggarkan.
+**Verifikasi:**326 unit, typecheck/contracts/format, hosting dan tiga build/budget PASS lokal.7 tes proyeksi baru dan4 skenario browser baru (phone/tablet). Download Chromium lokal gagal ZIP truncated; pengujian browser/CI SHA kandidat belum diklaim PASS.
+**Batas/menunggu:**maps pada demo, bukan staging evidence; master kantor resmi/check-in backend/remote-test server/staging provisioning/akun dummy/device acceptance masih terpisah. Tidak merge/deploy, mengubah data server atau kredensial. Lihat REMOTE_ACCEPTANCE_DECISIONS.md.
+
 ## 2026-10-30 — agent-codex-pwa — Keputusan acceptance remote owner
 **Mandat:** owner mengizinkan akun/password dummy disposable, pemilihan customer sesuai assignment hari, serta placeholder/pengecualian akurasi untuk sesi remote; maps dan fungsi harus tetap terlihat. Keputusan lengkap: [REMOTE_ACCEPTANCE_DECISIONS.md](REMOTE_ACCEPTANCE_DECISIONS.md).
 **Temuan:** inventaris Railway read-only hanya production dengan field-pwa/Odoo/Postgres. Rekomendasi environment staging-remote pada proyek sama dengan DB/filestore/origin terisolasi. Layar evidence PR42 belum basemap; maps dan remote-test berlabel masih implementasi berikutnya.

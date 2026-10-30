@@ -141,3 +141,9 @@
 - Railway read-only: pleasant-caring hanya production; rekomendasi staging-remote terisolasi pada proyek sama. Belum maps resmi pada evidence staging.
 - Tidak deploy/provisioning, mengubah akun/master, atau melonggarkan runtime; status implementasi dan acceptance dipisahkan.
 - Task managed by agent-codex-pwa at 2026-10-30T06:58:20+07:00
+
+[2026-10-30T07:07:25+07:00] [INFO] Preview maps pada check-in kantor dan outlet demo
+- Owner clarified maps belong to office/outlet check-in. PR43 now includes display-only road preview, viewport tiles/attribution, radius/accuracy, distance/status, zoom/fit and explicit simulation/fallback labels.
+- Local326 unit, hosting, typecheck/contracts/format/build budgets PASS. Chromium download failed truncated ZIP; new4 browser scenarios and final CI pending. Backend strict evidence, business gates and live lock unchanged.
+- No deploy/provisioning/password/master mutation. Office fixture not official master; demo preview not actual staging acceptance. Decisions/HANDOFF updated.
+- Task managed by agent-codex-pwa at 2026-10-30T07:07:25+07:00

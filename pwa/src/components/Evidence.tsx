@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { FieldStore } from "../storage/store";
 import { Icon } from "./Icon";
+import { CheckinMap } from "./CheckinMap";
+import type { MapSite } from "../domain/checkin-map";
 import {
     assertLocalEvidence,
     type EvidenceReference,
@@ -26,12 +28,14 @@ export function EvidenceCapture({
     onChange,
     existingRef,
     readOnly = false,
+    mapSite,
 }: {
     store: FieldStore;
     owner: string;
     onChange: (ref?: EvidenceRef) => void;
     existingRef?: EvidenceRef;
     readOnly?: boolean;
+    mapSite?: MapSite;
 }) {
     const [file, setFile] = useState<Blob>();
     const [display, setDisplay] = useState<Blob>();
@@ -39,6 +43,7 @@ export function EvidenceCapture({
     const [mapPreview, setMapPreview] = useState("");
     const [selectedAt, setSelectedAt] = useState<string>();
     const [location, setLocation] = useState<GeolocationPosition>();
+    const [simulated, setSimulated] = useState(false);
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [preview, setPreview] = useState("");
@@ -145,6 +150,7 @@ export function EvidenceCapture({
         const ticket = ++generation.current;
         report(undefined);
         setLocation(undefined);
+        setSimulated(false);
         setMap(undefined);
         setDisplay(file);
         setError("");
@@ -236,7 +242,13 @@ export function EvidenceCapture({
             {!readOnly && __DEMO__ && (
                 <button
                     class="secondary"
+                    disabled={busy}
                     onClick={() => {
+                        ++generation.current;
+                        report(undefined);
+                        setMap(undefined);
+                        setDisplay(file);
+                        setSimulated(true);
                         setLocation({
                             coords: {
                                 latitude: 1.465,
@@ -318,6 +330,28 @@ export function EvidenceCapture({
                     {location.coords.longitude.toFixed(6)} · ±
                     {Math.round(location.coords.accuracy)} m
                 </p>
+            )}
+            {mapSite && (
+                <CheckinMap
+                    site={mapSite}
+                    fix={
+                        location
+                            ? {
+                                  latitude: location.coords.latitude,
+                                  longitude: location.coords.longitude,
+                                  accuracy: location.coords.accuracy,
+                                  simulated,
+                              }
+                            : existingRef
+                              ? {
+                                    latitude: existingRef.latitude,
+                                    longitude: existingRef.longitude,
+                                    accuracy: existingRef.accuracy,
+                                    simulated: __DEMO__,
+                                }
+                              : undefined
+                    }
+                />
             )}
             {!readOnly && (
                 <button

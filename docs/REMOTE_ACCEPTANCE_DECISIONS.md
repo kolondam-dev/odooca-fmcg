@@ -3,6 +3,9 @@
 Tanggal: 2026-10-30 (WIB). Basis: main fca1e0ff20ea9bcd3fd466d0d85bac46efe72cdf, PR #42.
 Status: keputusan kebutuhan dan rencana pelaksanaan; belum deployment/provisioning atau acceptance.
 
+## Klarifikasi scope maps owner [F]
+Preview maps dimaksudkan pada proses check-in kantor dan check-in outlet, bukan hanya form evidence mandiri. Preview menampilkan titik tujuan, posisi perangkat, radius, jarak dan akurasi. Pengecualian lokasi sesi remote memungkinkan pengujian alur demo dari jauh tanpa menghilangkan preview.
+
 ## Mandat owner [F]
 - Asumsikan staging belum tersedia; evaluasi penggunaan server demo awal atau instance tambahan pada Railway yang sama.
 - Agen boleh memilih akun uji dan menetapkan password dummy. Owner mengizinkan kredensial akun demo transparan karena lingkungan disposable; tidak berlaku untuk akun admin, Railway, database atau lingkungan lain.
@@ -52,3 +55,12 @@ Sesi dinyatakan lulus fungsi remote setelah:
 - Berikutnya: implementasi mode remote-test berlabel dan maps melalui PR, regresi strict vs remote, kemudian provisioning environment terisolasi dan akun/master melalui alur aplikasi/fixture terkontrol.
 - Setelah deployment yang ditentukan secara eksplisit: berikan URL HTTPS dan akun dummy kepada owner, jalankan sesi uji perangkat.
 - Belum dilakukan: create environment, deploy/redeploy, reset database, perubahan akun/password/master, maps, bypass geofence, atau acceptance perangkat. Live tetap terkunci.
+
+## Implementasi preview check-in pada PR ini [F/BU]
+Preview dipasang pada dialog Absensi Foto (kantor demo) dan panel Kunjungan Outlet (check-in/check-out demo). Kantor memakai titik fixture berlabel, bukan master kantor yang sudah diverifikasi. Outlet memakai koordinat/radius paket PJP demo. Posisi perangkat dan fallback demo dibedakan; mode demo relaxed yang sudah tersedia tetap menjadi jalur pengecualian remote. Komponen peta tidak mengubah eligibility atau validasi geofence.
+
+Diagram posisi/radius selalu tersedia; tombol Muat peta jalan memuat hanya tile viewport OpenStreetMap melalui browser. Attribution terlihat, cache HTTP browser dipertahankan, tidak ada prefetch/offline tile pack atau gambar map yang dimasukkan ke evidence. Area peta dan IP dibagikan ke penyedia tile setelah tombol dipilih; foto/identitas tidak dikirim. Jaringan gagal/timeout ditampilkan, tanpa klaim basemap sukses. Zoom dan fit kedua titik tersedia; bukan navigasi/routing.
+
+Sumber kebijakan provider dibaca 2026-10-30: https://operations.osmfoundation.org/policies/tiles/ . Layanan best-effort; acceptance tile nyata pada perangkat owner masih [BU]. Status jarak preview bersifat geometris, bukan otorisasi check-in atau pemeriksaan freshness.
+
+Backend PR42 tetap evidence mandiri strict; tidak ada bypass server baru, master kantor resmi, check-in/POD backend, provisioning atau deployment pada PR ini. Mode remote-test server berlabel receipt/watermark tetap pekerjaan terpisah sebelum acceptance staging nyata. Preview demo bukan bukti requirement check-in resmi sudah terintegrasi end-to-end.
