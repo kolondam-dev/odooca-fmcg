@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
         base: "/field/",
         define: {
             __DEMO__: JSON.stringify(demo),
-            __READ_ONLY__: JSON.stringify(false),
+            __READ_ONLY__: JSON.stringify(mode === "staging"),
         },
         build: {
             outDir: `dist/${target}`,

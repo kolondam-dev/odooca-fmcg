@@ -85,6 +85,21 @@ function Heading({
     );
 }
 export function App() {
+    if (!__DEMO__)
+        return (
+            <main class="boot">
+                <Brand large />
+                <h1 class="sr-only">Odoo FMCG Mobile</h1>
+                <p role="status">
+                    Integrasi layanan perusahaan belum diaktifkan.
+                </p>
+                <p class="muted">
+                    Build live dikunci sampai kontrak, autentikasi, ACL dan
+                    backend lulus penerimaan. Tidak ada login simulasi atau
+                    fallback data demo.
+                </p>
+            </main>
+        );
     const [actor, setActor] = useState("sales");
     const [attempt, setAttempt] = useState(0);
     const [boot, setBoot] = useState<{
