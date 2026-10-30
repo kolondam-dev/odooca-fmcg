@@ -1,9 +1,9 @@
 # HANDOFF
 
-## 2026-10-30 — codex — Deployment demo dan konfigurasi gateway terpisah
-**Eksekusi:** PR45 merged 7d667915; scope production demo disetujui. field-pwa pinned 4973935, mode staging, deployment 84abcb97 SUCCESS; build-info publik menunjukkan staging. Layanan demo-gateway dibuat, tetapi probe awal mengungkap default pwa/railway.toml memilih Dockerfile static PWA sehingga healthz hijau bukan bukti proxy siap.
-**Perbaikan:** konfigurasi gateway khusus pwa/hosting/railway-gateway.toml; pilih Config File /pwa/hosting/railway-gateway.toml dan Root Directory /pwa sebelum build. Jangan menggunakan railway.toml milik static PWA.
-**Runtime backend:** log Odoo menyebut database railway; bukan bukti target fmcg_base. Endpoint mobile langsung mengembalikan404. Addon aktif, backup database+filestore, adaptasi guard exact-target demo, dan provisioning akun memerlukan pemeriksaan shell; belum dieksekusi/diklaim selesai. Tidak mengubah data/role/module database, mengaktifkan FORCE_UPGRADE/reset atau membuat akun server dalam iterasi ini.
+## 2026-10-30 — codex — Deployment demo parsial dan batas shell
+**Eksekusi:** PR45 merged7d667915. field-pwa pinned4973935, mode staging, deployment84abcb97 SUCCESS dan build-info publik staging. Gateway awal memakai static Dockerfile akibat default pwa/railway.toml; update railwayConfigFile ditolak plugin (deprecated). Beralih image resmi nginx:1.28-alpine dengan Start Command yang merekonstruksi tiga file gateway audited4973935; deployment8f42f93b SUCCESS.
+**Reproduksi:** pwa/scripts/railway-gateway-command.mjs menghasilkan command dari file source tanpa credential/download runtime; docs/DEMO_DEPLOYMENT_20261030.md mencatat status dan urutan operator.
+**Belum selesai:** endpoint mobile Odoo404; log DB railway. Shell/backup/ORM tidak tersedia via plugin. Tidak memutasi database, menyalakan reset/FORCE_UPGRADE, memodifikasi guard atau membuat akun server. Login/acceptance end-to-end belum siap.
 
 ## 2026-10-30 — codex — Otorisasi production sebagai environment demo
 **Keputusan pemilik:** menyetujui penggunaan environment production existing untuk demo setelah penjelasan konsekuensi downtime/perubahan konfigurasi. Menggantikan rencana wajib staging-remote dan batas sebelumnya yang mengecualikan production untuk scope PR44.

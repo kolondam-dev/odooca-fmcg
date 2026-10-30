@@ -181,7 +181,7 @@
 - Guard disposable tidak diubah/dilewati; adaptasi exact-target demo wajib direview dan diuji sebelum provisioning existing DB.
 - Dokumentasi saja; tidak ada deployment, perubahan konfigurasi server, akun atau data Railway pada aksi ini.
 
-[2026-10-30T08:48:26+07:00] [INFO] Deploy PWA staging dan koreksi config gateway demo
-- PR45 merged7d667915; field-pwa pinned4973935 staging deployment84abcb97 SUCCESS dan build-info mode staging.
-- Gateway awal salah image karena default pwa/railway.toml memilih static Dockerfile; tambah config gateway khusus untuk dipilih secara eksplisit.
-- Odoo endpoint mobile404; log DB railway. Shell/backup/adaptasi provisioning existing tetap terbuka; tidak memutasi database.
+[2026-10-30T08:50:51+07:00] [INFO] Deployment demo parsial dan koreksi gateway
+- PR45 merged7d667915; PWA staging84abcb97 SUCCESS dengan build-info staging.
+- Default config repo memilih static PWA; plugin menolak railwayConfigFile deprecated. Gateway memakai image nginx1.28-alpine dan byte file audited4973935 dari Start Command;8f42f93b SUCCESS.
+- Tambah generator reproducible dan laporan status; tidak ada mutasi database/provisioning. Backend mobile404, shell/backup/ORM tetap terblock capability plugin.
