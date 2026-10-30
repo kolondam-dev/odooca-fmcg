@@ -571,12 +571,50 @@ def verify_anti_fallback_salespersons(env):
 
 
 def resolve_canonical_company(env):
-    """Menyelesaikan canonical company secara unik (code='FMCG' atau name='PT Salva Inti Mandiri').
+    """Menyelesaikan canonical company secara deterministik dan fail-closed.
 
-    Fail-closed jika tidak ditemukan atau ambigu.
+    Prioritas resolusi berbasis binding identitas eksplisit kontrak loader:
+    1. ir.config_parameter 'fmcg.seed_company_id' (binding resmi yang didaftarkan loader kanonikal)
+    2. XMLID 'id_base.fmcg_seed_company'
+    3. res.company dengan code 'FMCG' atau name 'PT Salva Inti Mandiri' (singular)
+
+    DILARANG keras fallback ke ambient env.company. Fail-closed (raise LookupError) jika
+    seluruh binding eksplisit tersebut tidak ada atau ambigu.
     """
     company = None
-    if "res.company" in env:
+
+    # 1. Cek parameter konfigurasi persisten 'fmcg.seed_company_id'
+    if "ir.config_parameter" in env:
+        try:
+            Param = env["ir.config_parameter"].sudo()
+            param_val = Param.get_param("fmcg.seed_company_id")
+            if param_val:
+                comp_id = int(param_val)
+                if "res.company" in env:
+                    cand = env["res.company"].sudo().browse(comp_id)
+                    if callable(getattr(cand, "exists", None)):
+                        cand = cand.exists()
+                    if cand and getattr(cand, "id", None) and getattr(cand, "name", None):
+                        company = cand
+        except Exception:
+            pass
+
+    # 2. Cek XMLID resmi 'id_base.fmcg_seed_company'
+    if not company and hasattr(env, "ref"):
+        try:
+            cand = env.ref("id_base.fmcg_seed_company", raise_if_not_found=False)
+            if cand and getattr(cand, "id", None):
+                model_name = getattr(cand, "_name", None) or getattr(cand, "_model", None)
+                if model_name == "res.company":
+                    if callable(getattr(cand, "exists", None)):
+                        cand = cand.exists()
+                    if cand and getattr(cand, "id", None) and getattr(cand, "name", None):
+                        company = cand
+        except Exception:
+            pass
+
+    # 3. Pencarian singular berdasarkan kode resmi atau nama perusahaan kanonikal
+    if not company and "res.company" in env:
         Company = env["res.company"].sudo()
         matches = []
         if hasattr(Company, "_fields") and "code" in Company._fields:
@@ -596,7 +634,11 @@ def resolve_canonical_company(env):
             raise LookupError(f"[canonical_company] Ditemukan {len(matches)} canonical company kandidat (wajib tepat 1)!")
 
     if not company:
-        raise LookupError("[canonical_company] Canonical company ('FMCG' / 'PT Salva Inti Mandiri') tidak ditemukan!")
+        raise LookupError(
+            "[canonical_company] Canonical company binding tidak ditemukan "
+            "(tidak ada ir.config_parameter 'fmcg.seed_company_id', XMLID 'id_base.fmcg_seed_company', "
+            "atau company 'FMCG' / 'PT Salva Inti Mandiri')!"
+        )
 
     return company
 

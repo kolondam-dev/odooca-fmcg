@@ -1188,3 +1188,9 @@
 - [P2-1] Eliminasi Fail-Open Resolver: Menghapus fallback env.company dan heuristik gudang 'not other'. Resolver kini murni fail-closed dengan LookupError jika company atau warehouse kanonikal tidak unik atau tidak ditemukan.
 - [P3-1] Sinkronisasi Main & Kerapihan Whitespace: Sinkronisasi commit main 7d66791 (PR #45), membersihkan trailing whitespace, dan memperbarui suite test unit.
 - Task managed by antigravity at 2026-10-30T12:15:00+07:00
+
+[2026-10-30T13:20:00+07:00] [INFO] Resolusi Binding Persisten Canonical Company pada Disposable Runtime Proof
+- [P2-1] Binding Persisten Kontrak Loader: Mengintegrasikan pengecekan parameter konfigurasi resmi 'fmcg.seed_company_id' (yang didaftarkan oleh loader kanonikal pada saat bootstrap) dan XMLID 'id_base.fmcg_seed_company' pada resolve_canonical_company(env) di scripts/ops/verify_disposable_full.py. Resolver mengidentifikasi company kanonikal secara presisi pada database disposable tanpa bergantung pada nama 'PT Salva Inti Mandiri' (karena database Odoo baru default memiliki nama 'My Company'), serta tetap menolak keras (fail-closed raise LookupError) fallback ambient env.company ID 999 yang tidak memiliki binding sah.
+- [P2-2] Verifikasi Unit Test Regresi: Menambahkan skenario uji kasus 5 (explicit binding config parameter) dan kasus 6 (explicit binding XMLID) pada test_canonical_location_resolver_rejects_ambiguity_and_foreign_company di tests/test_full_dataset_cutoff_and_upgrade.py. Seluruh 10 pengujian suite lulus 100% (termasuk 9 in-database savepoint mutation probes).
+- Integritas Baseline: 15 CSV register kanonikal di data/registers/ 100% beku. ruff check PASS (0 errors), check_manifests PASS (5 addon).
+- Task managed by antigravity at 2026-10-30T13:20:00+07:00

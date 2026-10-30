@@ -453,7 +453,7 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         env_foreign.company = unrelated_comp
         with self.assertRaises(LookupError) as ctx:
             resolve_canonical_company(env_foreign)
-        self.assertIn("Canonical company ('FMCG' / 'PT Salva Inti Mandiri') tidak ditemukan", str(ctx.exception))
+        self.assertIn("Canonical company binding tidak ditemukan", str(ctx.exception))
 
         # 4. Counterexample Supervisor P2: Canonical company ada, tapi tidak ada warehouse WH (hanya lone AUX)
         env_aux = setup_standard_mock_env()
@@ -473,6 +473,26 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         with self.assertRaises(LookupError) as ctx:
             resolve_canonical_locations(env_aux)
         self.assertIn("Warehouse gudang utama ('code'='WH') ambigu atau tidak ditemukan", str(ctx.exception))
+
+        # 5. Explicit binding via ir.config_parameter 'fmcg.seed_company_id' untuk generic company
+        env_param = setup_standard_mock_env()
+        env_param["res.company"].store.clear()
+        generic_comp = env_param["res.company"].create({"name": "My Company", "code": False})
+        env_param["ir.config_parameter"].set_param("fmcg.seed_company_id", str(generic_comp.id))
+        resolved_param = resolve_canonical_company(env_param)
+        self.assertEqual(resolved_param.id, generic_comp.id)
+
+        # 6. Explicit binding via XMLID 'id_base.fmcg_seed_company'
+        env_xmlid = setup_standard_mock_env()
+        env_xmlid["res.company"].store.clear()
+        xmlid_comp = env_xmlid["res.company"].create({"name": "Custom Seed Company", "code": False})
+        env_xmlid.ref = (
+            lambda xmlid, raise_if_not_found=True: xmlid_comp if xmlid == "id_base.fmcg_seed_company" else None
+        )
+        # Clear config param agar menguji jalur XMLID secara independen
+        env_xmlid["ir.config_parameter"].store.clear()
+        resolved_xmlid = resolve_canonical_company(env_xmlid)
+        self.assertEqual(resolved_xmlid.id, xmlid_comp.id)
 
     def test_exact_hpp_journal_binding_rejects_wrong_journal_account_direction_or_reuse(self):
         """Audit HPP produksi wajib menolak jurnal non-STJ, arah debit-kredit terbalik, nominal salah, atau reuse."""

@@ -1,5 +1,27 @@
 # HANDOFF
 
+## 2026-10-30T13:20:00+07:00 — antigravity agent — Resolusi Binding Persisten Canonical Company pada Disposable Runtime Proof
+**Konteks Diagnostik Workflow Full Dataset Runtime Verification:**
+- Pada eksekusi container database disposable Odoo (`fmcg_full_disposable`), nama default perusahaan Odoo baru adalah `My Company` (bukan `PT Salva Inti Mandiri`).
+- Ketika `resolve_canonical_company(env)` dieksekusi tanpa fallback `env.company`, kueri nama/kode gagal menemukan company kanonikal karena identitas persisten resmi kontrak loader (`ir.config_parameter` `fmcg.seed_company_id` dan XMLID `id_base.fmcg_seed_company`) belum diikutsertakan dalam urutan resolusi.
+- Supervisor dalam Putaran 5 secara eksplisit menetapkan acceptance: *"Gunakan identitas company/gudang persisten yang eksplisit (config/XMLID yang cocok dengan loader/kontrak); reject jika binding hilang, ambigu, atau berbeda company."*
+
+**Perbaikan yang Diimplementasikan:**
+1. **Binding Identitas Persisten Loader pada `resolve_canonical_company` (`scripts/ops/verify_disposable_full.py`):**
+   - Mengintegrasikan pengecekan parameter konfigurasi persisten `fmcg.seed_company_id` yang selalu didaftarkan oleh `CanonicalPerpetualAdapter` saat pemuatan awal.
+   - Mengintegrasikan pengecekan XMLID `id_base.fmcg_seed_company` (khusus untuk record dengan model `res.company`).
+   - Melanjutkan pencarian singular berdasarkan kode `FMCG` atau nama `PT Salva Inti Mandiri`.
+   - Tetap menghapus seluruh fallback ambient `env.company`: jika seluruh binding eksplisit tersebut tidak ada atau menunjuk record yang tidak ada di database, resolver menolak secara deterministik (`raise LookupError`).
+2. **Pengujian Regresi Unit (`tests/test_full_dataset_cutoff_and_upgrade.py`):**
+   - Menambahkan skenario 5: resolusi via `ir.config_parameter` `fmcg.seed_company_id` untuk company dengan nama generik (`My Company`).
+   - Menambahkan skenario 6: resolusi via XMLID `id_base.fmcg_seed_company`.
+   - Memastikan skenario 3 (counterexample supervisor: Unrelated Company ID 999 tanpa binding persisten) tetap terbukti gagal dan melempar `LookupError`.
+   - Menjalankan seluruh 10 pengujian di `tests/test_full_dataset_cutoff_and_upgrade.py` (termasuk 9 in-database savepoint mutation probes): seluruhnya PASS dalam 1085 detik.
+3. **Integritas:**
+   - 15 CSV register kanonikal di `data/registers/` 100% beku.
+   - `python -m ruff check .`: PASS (0 errors).
+   - `python scripts/check_manifests.py`: PASS (5 addon).
+
 ## 2026-10-30T12:15:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 5: Validasi Arah Fisik Source Outbound dan Determinisme Fail-Closed Resolver
 **Konteks Review Supervisor ([issuecomment-6515188630](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6515188630)):**
 - Status PR #39: HOLD / changes required (Full runtime SUCCESS pada run 40986984211, 8 mutasi savepoint REJECTED_AS_EXPECTED, baseline pulih, carry-forward 48 DO/invoice, Run 2 zero-drift, dan seluruh 9 job CI PR resmi DITERIMA dan TERBUKTI).
