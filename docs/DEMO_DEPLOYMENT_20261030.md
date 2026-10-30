@@ -34,4 +34,12 @@ Operator dengan CLI Railway aktif perlu:
 4. Buat company/dua akun/assignment TEST melalui jalur yang telah direview; verifikasi bootstrap/snapshot dan isolasi foto.
 5. Catat hasil login+GPS/foto aktual dengan owner. Endpoint404 dan akun belum tersedia berarti acceptance belum siap walau build/deploy SUCCESS.
 
-Tidak ada klaim deployment end-to-end selesai.
+## Probe HTTPS aktual setelah deployment gateway
+
+- /healthz:200.
+- /field/build-info.json:200, mode staging.
+- /web/login:200, halaman login Odoo.
+- /api/v1/me/bootstrap:404; backend mobile belum aktif/siap.
+- /api/v1/sync/commands:404, batas API bisnis tetap tertutup.
+
+Generator diperiksa node --check/Prettier, dan decoding setiap payload membuktikan byte identik ketiga file audited. Tidak ada klaim deployment end-to-end selesai.
