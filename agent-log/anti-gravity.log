@@ -1240,3 +1240,15 @@
   * Menggabungkan main (commit 44029c6 pasca-merge PR #47) ke agen/persisted-baseline-upgrade; resolusi konflik bersih pada docs/HANDOFF.md.
   * Menyiapkan verdict review GitHub dan rekomendasi merge.
 - Task managed by antigravity at 2026-10-30T17:42:00+07:00
+
+
+[2026-10-30T18:30:00+07:00] [INFO] Sukses Deployment & Aktivasi Demo Mobile di Railway (Live E2E PASS)
+- [P1] Preflight & Backup: Database target 'railway' terkonfirmasi. pg_dump custom format (7,39 MB, 12.301 TOC entries) dan arsip filestore (5,10 MB) berhasil dibuat dan diverifikasi dengan pg_restore --list. Manifest hash-bound tersimpan di server dan salinan offsite telah diunduh lokal ke ~/.railway_backups/20261030_railway_demo/.
+- [P2] Addon Installation: id_mobile_api terpasang via odoo -i id_mobile_api --no-http --stop-after-init dengan peran odoo_app (98 modul aktif, registry loaded, exit 0).
+- [P3] Service Restart & Gateway Probe: odooca-fmcg dan demo-gateway direstart terkontrol. Anonymous probe ke /api/v1/me/bootstrap menghasilkan 401 Unauthorized (bukan 404).
+- [P4] Demo Provisioning: provision_mobile_demo.py dieksekusi di atas live DB dengan mode PRESERVE_EXISTING_DEMO. 20 tabel preservasi terbukti bebas drift, 0 transaksi bisnis baru, kontak & gudang existing utuh.
+- [P5] Live Gateway E2E Verification:
+  * staging.capture.1: login OK (UID 5), bootstrap OK (role: sales), snapshot OK (1 outlet, 1 product).
+  * staging.capture.2: login OK (UID 6), bootstrap OK (role: driver).
+  * PWA frontend https://demo-gateway-production-abd1.up.railway.app/field/ aktif dan siap diuji oleh owner.
+- Task managed by antigravity at 2026-10-30T18:30:00+07:00
