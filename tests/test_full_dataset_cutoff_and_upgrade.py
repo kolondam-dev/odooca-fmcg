@@ -46,6 +46,7 @@ from scripts.ops.verify_upgrade_baseline import (  # noqa: E402
     detect_registry_corruption,
     digest_payload,
     expected_module_versions,
+    is_column_backed_field,
     load_baseline_state,
     previous_release_version,
     run_upgrade_baseline_verification,
@@ -744,6 +745,27 @@ class TestUpgradeBaselineRunner(unittest.TestCase):
             no_digest_path.write_text(json.dumps({"schema_version": 1, "database": "x"}), encoding="utf-8")
             with self.assertRaises(RuntimeError):
                 load_baseline_state(no_digest_path)
+
+    def test_schema_integrity_skips_non_column_fields(self):
+        """Field attachment/relasional/non-stored tidak boleh dianggap kolom hilang (regresi DDL)."""
+
+        class _FakeField:
+            def __init__(self, **kwargs):
+                self.__dict__.update(kwargs)
+
+        self.assertTrue(is_column_backed_field(_FakeField(store=True, type="char", column_type="varchar")))
+        self.assertTrue(is_column_backed_field(_FakeField(store=True, type="float", column_type="numeric")))
+        self.assertTrue(is_column_backed_field(_FakeField(store=True, type="many2one", column_type="int4")))
+        # Binary attachment=True disimpan di ir.attachment, bukan kolom tabel.
+        self.assertFalse(
+            is_column_backed_field(
+                _FakeField(store=True, type="binary", attachment=True, column_type="varchar")
+            )
+        )
+        self.assertFalse(is_column_backed_field(_FakeField(store=True, type="many2many", column_type=None)))
+        self.assertFalse(is_column_backed_field(_FakeField(store=True, type="one2many", column_type=None)))
+        self.assertFalse(is_column_backed_field(_FakeField(store=False, type="char", column_type="varchar")))
+        self.assertFalse(is_column_backed_field(_FakeField(store=True, type="char", column_type=None)))
 
     def test_verify_failure_writes_failed_report(self):
         """Kegagalan guard pada fase verify wajib tetap menulis report FAILED untuk audit."""

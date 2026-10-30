@@ -417,6 +417,22 @@ def assert_module_registry_integrity(env, expected_versions=None) -> dict:
     return {"status": "PASS", "modules": inventory}
 
 
+def is_column_backed_field(field) -> bool:
+    """True hanya untuk field stored yang disimpan sebagai kolom PostgreSQL nyata.
+
+    Dikecualikan: field non-stored, field relasional many2many/one2many (disimpan
+    di tabel relasi), dan Binary `attachment=True` (disimpan sebagai ir.attachment).
+    Pengecualian ini mencegah negatif palsu pada pemeriksaan DDL.
+    """
+    if not getattr(field, "store", False):
+        return False
+    if getattr(field, "type", None) in ("many2many", "one2many"):
+        return False
+    if getattr(field, "attachment", False):
+        return False
+    return bool(getattr(field, "column_type", None))
+
+
 def assert_schema_integrity(env) -> dict:
     """Setiap field stored milik modul id_* wajib memiliki kolom nyata di PostgreSQL."""
     modules = set(UPGRADE_MODULES)
@@ -433,9 +449,7 @@ def assert_schema_integrity(env) -> dict:
         module_fields = [
             (fname, field)
             for fname, field in getattr(model, "_fields", {}).items()
-            if getattr(field, "_module", None) in modules
-            and getattr(field, "store", False)
-            and getattr(field, "type", None) not in ("many2many", "one2many")
+            if getattr(field, "_module", None) in modules and is_column_backed_field(field)
         ]
         if not module_fields:
             continue

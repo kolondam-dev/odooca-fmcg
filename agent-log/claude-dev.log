@@ -33,3 +33,10 @@
 - Verifikasi lokal: ruff PASS, check_manifests PASS (5 addon), 8/8 unit PASS, YAML valid. Eksekusi upgrade nyata belum diuji lokal (tanpa Docker); wajib dibuktikan di GitHub Actions exact SHA.
 - 15 CSV register data/registers/ tidak disentuh.
 - Task managed by claude-dev agent at 2026-10-30T15:28:17+07:00
+
+[2026-10-30T16:02:47+07:00] [INFO] Perbaikan DDL check: kecualikan field attachment/relasional (run pertama upgrade-proof)
+- Run 41027367047 pada SHA e6783b3: Fase A baseline PASS (fase 1 = 13540 baris AML Juli, 899 s; fase 2 carry-forward PASS 48 faktur), lalu GAGAL di assert_schema_integrity pra-upgrade dengan 2 negatif palsu: id.mobile.evidence.original/watermarked (Binary attachment=True disimpan di ir.attachment, bukan kolom tabel).
+- Menambah helper is_column_backed_field(field) (store=True, bukan many2many/one2many, bukan attachment, column_type ada) dan memakainya pada assert_schema_integrity.
+- Menambah unit test regresi test_schema_integrity_skips_non_column_fields (9/9 test PASS) + ruff PASS.
+- Fase C pada run tsb otomatis gagal karena state baseline tidak ada (kaskade), sesuai harapan.
+- Task managed by claude-dev agent at 2026-10-30T16:02:47+07:00
