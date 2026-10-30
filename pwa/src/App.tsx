@@ -142,11 +142,47 @@ export function App() {
                         <p class="muted">
                             {__DEMO__
                                 ? "Simulator gagal dimuat."
-                                : "Mode live. Tidak ada fallback ke data simulasi. Backend/sesi resmi diperlukan."}
+                                : error.includes("Sesi resmi") ||
+                                    error.includes("login") ||
+                                    error.includes("401")
+                                  ? "Sesi login Odoo diperlukan untuk menyinkronkan rute kunjungan dan katalog produk FMCG."
+                                  : error}
                         </p>
-                        <button onClick={() => setAttempt((x) => x + 1)}>
-                            Coba lagi
-                        </button>
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "10px",
+                                marginTop: "16px",
+                                justifyContent: "center",
+                            }}
+                        >
+                            {!__DEMO__ && (
+                                <a
+                                    href="/web/login?redirect=/field/"
+                                    class="button primary"
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        padding: "10px 18px",
+                                        background: "#102746",
+                                        color: "#ffffff",
+                                        borderRadius: "10px",
+                                        textDecoration: "none",
+                                        fontWeight: "600",
+                                        fontSize: "0.95rem",
+                                    }}
+                                >
+                                    Masuk ke Akun Odoo
+                                </a>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => setAttempt((x) => x + 1)}
+                            >
+                                Coba lagi
+                            </button>
+                        </div>
                     </>
                 )}
             </main>
