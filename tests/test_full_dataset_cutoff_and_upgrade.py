@@ -659,6 +659,11 @@ class TestUpgradeBaselineRunner(unittest.TestCase):
             validate_upgrade_exit_code(2, "log normal tanpa error")
         self.assertIn("UPGRADE-FAIL", str(ctx.exception))
 
+        # Exit 0 tanpa penanda registry dimuat bukan bukti upgrade (mis. abort konfigurasi dini).
+        with self.assertRaises(RuntimeError) as ctx:
+            validate_upgrade_exit_code(0, "2026-10-30 10:00:00 WARNING db odoo.tools.config: oke\n")
+        self.assertIn("Modules loaded", str(ctx.exception))
+
         corrupt_log = (
             "2026-10-30 10:00:00 CRITICAL db odoo.modules.loading: Registry loading failed\n"
             "Traceback (most recent call last):\n"

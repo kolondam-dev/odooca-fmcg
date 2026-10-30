@@ -40,3 +40,10 @@
 - Menambah unit test regresi test_schema_integrity_skips_non_column_fields (9/9 test PASS) + ruff PASS.
 - Fase C pada run tsb otomatis gagal karena state baseline tidak ada (kaskade), sesuai harapan.
 - Task managed by claude-dev agent at 2026-10-30T16:02:47+07:00
+
+[2026-10-30T16:26:32+07:00] [INFO] Perbaikan Fase B upgrade: PGUSER env menimpa odoo.conf (run kedua upgrade-proof)
+- Run 41030642274 (SHA 5bcd075): Fase A baseline PASS, Fase B upgrade GAGAL exit 1 dengan log hanya 3 baris. Akar masalah: odoo/tools/config.py Odoo 19 memakai ChainMap(runtime > CLI > ENV > file) dan opsi db_user punya env_name=PGUSER, sehingga PGUSER=postgres (env admin Postgres di container) menimpa db_user=odoo_app dari /tmp/odoo.conf dan check_postgres_user() di odoo/cli/server.py mengabortkan proses.
+- Perbaikan workflow Fase B: docker exec -u odoo dengan -e PGUSER=odoo_app -e PGPASSWORD=ci-app serta --db_host/--db_port eksplisit dan --without-demo=all.
+- Kontrak log diperkuat: validate_upgrade_exit_code() kini juga mewajibkan penanda "Modules loaded." agar exit 0 palsu (abort konfigurasi dini) tidak lolos; unit test ditambah.
+- Verifikasi lokal: ruff PASS, yaml valid, 9/9 unit PASS, check_manifests PASS.
+- Task managed by claude-dev agent at 2026-10-30T16:26:32+07:00

@@ -242,7 +242,12 @@ def detect_registry_corruption(log_text: str) -> list:
 
 
 def validate_upgrade_exit_code(returncode: int, log_text: str) -> dict:
-    """Kontrak proses upgrade: exit code 0 DAN log bebas indikasi registry corruption."""
+    """Kontrak proses upgrade: exit code 0 DAN log bebas indikasi registry corruption.
+
+    Selain itu log wajib memuat penanda registry benar-benar dimuat
+    (`Modules loaded.`), sehingga exit 0 palsu (mis. abort konfigurasi dini)
+    tidak lolos sebagai bukti upgrade.
+    """
     findings = detect_registry_corruption(log_text)
     if int(returncode) != 0:
         raise RuntimeError(
@@ -254,10 +259,16 @@ def validate_upgrade_exit_code(returncode: int, log_text: str) -> dict:
             "[UPGRADE-FAIL] Proses upgrade exit 0 tetapi log memuat indikasi registry/skema "
             f"corruption ({len(findings)} baris):\n" + "\n".join(findings[:20])
         )
+    if not re.search(r"Modules loaded\.", log_text or ""):
+        raise RuntimeError(
+            "[UPGRADE-FAIL] Log upgrade tidak memuat penanda 'Modules loaded.'; proses exit 0 "
+            "tidak membuktikan registry modul benar-benar dimuat/di-upgrade."
+        )
     return {
         "status": "PASS",
         "exit_code": int(returncode),
         "corruption_findings": [],
+        "modules_loaded_marker": True,
         "log_lines": len((log_text or "").splitlines()),
     }
 

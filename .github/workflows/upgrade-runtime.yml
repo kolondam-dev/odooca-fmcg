@@ -128,10 +128,18 @@ jobs:
       - name: Fase B - Eksekusi Upgrade Odoo Nyata (odoo -u id_base,id_mobile_api)
         run: |
           set +e
-          docker exec -e PGDATABASE="$TARGET_DB" odoo bash -c '
+          # Env PG* container (PGUSER=postgres) menimpa odoo.conf dan memicu
+          # "Using the database user 'postgres' is a security risk, aborting."
+          # karena itu kredensial peran Odoo diset eksplisit seperti pada init.sh.
+          docker exec -u odoo \
+            -e PGDATABASE="$TARGET_DB" \
+            -e PGUSER=odoo_app \
+            -e PGPASSWORD=ci-app \
+            odoo bash -c '
             odoo -c /tmp/odoo.conf -d "$PGDATABASE" \
+              --db_host localhost --db_port 5432 \
               --addons-path "$(/opt/deploy/addons_path.sh)" --data-dir /var/lib/odoo \
-              --without-demo=true --log-level=info \
+              --without-demo=all --log-level=info \
               --stop-after-init -u id_base,id_mobile_api
           ' > upgrade_odoo.log 2>&1
           UPGRADE_RC=$?
