@@ -193,7 +193,8 @@ def _assert_partner_company_properties_preserved(env, before, existing_company_i
                 or any(int(new_values[company_id]) != inter_company_location_id for company_id in added_company_ids)
             ):
                 raise ValidationError(
-                    f"Unexpected company-dependent value added in res.partner.{field_name}; provisioning was rolled back."
+                    f"Unexpected company-dependent value added in res.partner.{field_name}; "
+                    "provisioning was rolled back."
                 )
 
 

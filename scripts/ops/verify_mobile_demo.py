@@ -66,7 +66,9 @@ with tempfile.TemporaryDirectory() as directory:
         runpy.run_path("/opt/scripts/ops/mobile_demo_preflight.py", init_globals={"env": env})
         for _attempt in range(2):
             runpy.run_path("/opt/scripts/ops/provision_mobile_demo.py", init_globals={"env": env})  # noqa: F821
-            after = protected_snapshot(\n                env, normalize_company_property_company_ids=fixture_company_ids(env)\n            )  # noqa: F821
+            after = protected_snapshot(
+                env, normalize_company_property_company_ids=fixture_company_ids(env)
+            )  # noqa: F821
             assert all(
                 after[model].get(row_id) == digest for model, rows in before.items() for row_id, digest in rows.items()
             )
