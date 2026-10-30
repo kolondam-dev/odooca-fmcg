@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
-for (const mode of ["demo", "live"]) {
+for (const mode of ["demo", "live", "staging"]) {
     const dir = `dist/${mode}`;
     const files = readdirSync(dir, { recursive: true }).filter(
         (x) => typeof x === "string",
@@ -39,7 +39,7 @@ for (const mode of ["demo", "live"]) {
     assert.equal(manifest.scope, "/field/");
     assert.equal(manifest.start_url, "/field/");
     const code = js.map((f) => readFileSync(`${dir}/${f}`, "utf8")).join("\n");
-    if (mode === "live") {
+    if (mode !== "demo") {
         for (const fixture of [
             "DEMO-ANDRE",
             "Koreksi Sales Order",
@@ -77,10 +77,25 @@ for (const mode of ["demo", "live"]) {
             !files.some((f) => /mock-.*\.js/.test(f)),
             "Live build ships a mock adapter",
         );
+        if (mode === "live")
+            assert(
+                code.includes("Integrasi layanan perusahaan belum diaktifkan."),
+                "Live build must remain fail-closed",
+            );
+    }
+    if (mode === "staging") {
+        assert(code.includes("STAGING · BACA SAJA"));
+        assert(code.includes("/web/login?redirect=%2Ffield%2F"));
         assert(
-            code.includes("Integrasi layanan perusahaan belum diaktifkan."),
-            "Live build must remain fail-closed",
+            !code.includes("indexedDB"),
+            "Staging must not include the business database",
         );
+        const worker = readFileSync(`${dir}/sw.js`, "utf8");
+        assert(
+            !worker.includes("respondWith"),
+            "Staging worker must not serve offline data",
+        );
+        assert(worker.includes("unregister"));
     }
     console.log(
         `${mode}: JS gzip ${(bytes / 1024).toFixed(1)} KiB; font ${(fonts / 1024).toFixed(1)} KiB; mode/scope/fixtures PASS`,

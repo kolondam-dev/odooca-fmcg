@@ -16,7 +16,9 @@ export const IdentitySchema = z.object({
     name: z.string().min(1),
     title: z.string(),
     roles: z.array(Role),
-    capabilities: z.array(z.enum(["collection.capture"])).optional(),
+    capabilities: z
+        .array(z.enum(["collection.capture", "evidence.capture"]))
+        .optional(),
     businessDate: z.string(),
     csrfToken: z.string().optional(),
 });
@@ -113,10 +115,21 @@ export const ReceiptSchema = z.object({
     reference: z.string(),
 });
 export type Receipt = z.infer<typeof ReceiptSchema>;
+export const OfficeMapSchema = z
+    .object({
+        id: z.string().min(1),
+        name: z.string().min(1),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        radius: z.number().min(5).max(500),
+        coordinate_status: z.enum(["test", "unverified", "verified"]),
+    })
+    .strict();
 export const SnapshotSchema = z
     .object({
         catalog_version: z.literal(2).optional(),
         scope: SnapshotScopeSchema.optional(),
+        office: OfficeMapSchema.optional(),
         version: z.string(),
         updatedAt: z.string(),
         outlets: z.array(

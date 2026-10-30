@@ -9,12 +9,19 @@ import {
 } from "../domain/contracts";
 export class HttpProvider implements FieldProvider {
     readonly mode = "live" as const;
+    constructor(private options: { readOnly?: boolean } = {}) {}
+    invalidate() {
+        ++this.bootstrapGeneration;
+        this.identity = undefined;
+        this.csrf = undefined;
+    }
     private csrf?: string;
     private identity?: Identity;
     private bootstrapGeneration = 0;
     private async request(path: string, body?: unknown) {
         const response = await fetch(`/api/v1/${path}`, {
             credentials: "same-origin",
+            redirect: "error",
             cache: "no-store",
             signal: AbortSignal.timeout(15000),
             headers: {
@@ -88,6 +95,8 @@ export class HttpProvider implements FieldProvider {
         return snapshot;
     }
     async submit(command: Command) {
+        if (this.options.readOnly)
+            throw new ApiError(405, "Build staging hanya membaca data.");
         if (!this.csrf) throw new ApiError(401, "CSRF/session belum tersedia.");
         return ReceiptSchema.parse(
             await this.request("sync/commands", command),

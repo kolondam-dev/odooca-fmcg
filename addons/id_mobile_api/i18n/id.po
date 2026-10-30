@@ -57,3 +57,94 @@ msgstr "Hari bisnis berubah; lakukan bootstrap ulang."
 #: code:addons/id_mobile_api/models/mobile_workday.py:0
 msgid "Assign at least one product and scheduled outlet before enabling mobile reads."
 msgstr "Tetapkan minimal satu produk dan outlet terjadwal sebelum mengaktifkan akses baca mobile."
+
+#. module: id_mobile_api
+#: model:res.groups,name:id_mobile_api.group_mobile_evidence
+msgid "FMCG Mobile Evidence Capture"
+msgstr "Hak Unggah Bukti Mobile FMCG"
+
+#. module: id_mobile_api
+#: model:ir.model,name:id_mobile_api.model_id_mobile_evidence
+msgid "Mobile Location and Photo Evidence"
+msgstr "Bukti Lokasi dan Foto Mobile"
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_evidence.py:0
+msgid "Captured evidence is immutable."
+msgstr "Bukti yang sudah direkam tidak dapat diubah."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_evidence.py:0
+msgid "Mobile evidence access is not enabled."
+msgstr "Hak unggah bukti mobile belum diaktifkan."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_evidence.py:0
+msgid "Evidence UUID cannot be reused for different content."
+msgstr "UUID bukti tidak dapat digunakan untuk isi yang berbeda."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_evidence.py:0
+msgid "The assignment changed; synchronize again."
+msgstr "Penugasan berubah; lakukan sinkronisasi ulang."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_evidence.py:0
+msgid "Outlet is not assigned to this user."
+msgstr "Outlet tidak ditugaskan kepada pengguna ini."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_evidence.py:0
+msgid "Evidence submission raced; retry the same UUID."
+msgstr "Unggahan bukti bersamaan; ulangi dengan UUID yang sama."
+
+#. module: id_mobile_api
+#: model:ir.model,name:id_mobile_api.model_id_mobile_office
+msgid "Mobile Office Location"
+msgstr "Lokasi Kantor Mobile"
+
+#. module: id_mobile_api
+#: model:ir.ui.menu,name:id_mobile_api.menu_mobile_office
+#: model:ir.actions.act_window,name:id_mobile_api.action_mobile_office
+msgid "Mobile Office Locations"
+msgstr "Master Lokasi Kantor Mobile"
+
+#. module: id_mobile_api
+#: model:ir.model.fields,field_description:id_mobile_api.field_id_mobile_workday__office_id
+msgid "Office Location"
+msgstr "Lokasi Kantor"
+
+#. module: id_mobile_api
+#: model:ir.model.fields,field_description:id_mobile_api.field_id_mobile_office__radius
+msgid "Office Radius (m)"
+msgstr "Radius Kantor (m)"
+
+#. module: id_mobile_api
+#: model:ir.model.fields,field_description:id_mobile_api.field_id_mobile_office__coordinate_note
+msgid "Coordinate Source / Verification Note"
+msgstr "Sumber Koordinat / Catatan Verifikasi"
+
+#. module: id_mobile_api
+#: model:ir.model.fields.selection,name:id_mobile_api.selection__id_mobile_office__coordinate_status__test
+msgid "Test Coordinates"
+msgstr "Koordinat Uji"
+
+#. module: id_mobile_api
+#: model:ir.model.fields.selection,name:id_mobile_api.selection__id_mobile_office__coordinate_status__unverified
+msgid "Unverified Coordinates"
+msgstr "Koordinat Belum Diverifikasi"
+
+#. module: id_mobile_api
+#: model:ir.model.fields.selection,name:id_mobile_api.selection__id_mobile_office__coordinate_status__verified
+msgid "Verified Coordinates"
+msgstr "Koordinat Terverifikasi"
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_office.py:0
+msgid "Office requires valid coordinates, a source note and radius between 5 and 500 metres."
+msgstr "Kantor memerlukan koordinat valid, catatan sumber, dan radius antara 5 dan 500 meter."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_office.py:0
+msgid "The assigned office is inactive."
+msgstr "Kantor pada penugasan tidak aktif."

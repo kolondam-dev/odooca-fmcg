@@ -93,3 +93,104 @@
 - CIe39824d:0 failed/1 error pada ekspektasi partial response. Explicit check_access sudah menolak recordset terlarang; perilaku aman dipertahankan.
 - Regresi menguji visible search lalu AccessError pada snapshot; doc partial-response sebelumnya dikoreksi. Tidak mengubah service/ACL/sudo atau menghilangkan negative test. Ruff/5 manifest/diff PASS; runtime final menunggu. HOLD, tidak merge/deploy.
 - Task managed by agent-codex-pwa at 2026-10-29T16:26:42+07:00
+
+[2026-10-29T18:08:22+07:00] [INFO] Tahap3 sesi resmi dan UI baca staging
+- Basis main d06fbc6; staging explicit native Odoo login/bootstrap/daily snapshot. No demo/business outbox or persistence; readonly submit blocked before network.
+- Generation/day/session/offline/hidden invalidation; retire old field shell cache. Gateway template and disposable transport smoke added to CI.
+- Local307 unit+hosting/typecheck/contracts/format/Ruff5manifest/seed validators PASS; browser final and CI pending at this checkpoint. Root-cwd fixture failure rerun from pwa without loosening tests.
+- Actual staging E2E/TLS/cookie acceptance pending deployment owner; live locked, no merge/deploy. Demo documentation publication authorized by owner on PR40.
+- Task managed by agent-codex-pwa at 2026-10-29T18:08:22+07:00
+
+[2026-10-29T18:09:45+07:00] [INFO] Verifikasi final tahap3
+- Suite lengkap116 browser resmi PASS tanpa failed/retry;307 unit PASS. Preview ponsel diperiksa. Native gateway runtime menunggu CI, actual staging E2E belum dilakukan.
+- Task managed by agent-codex-pwa at 2026-10-29T18:09:45+07:00
+
+[2026-10-29T18:10:35+07:00] [INFO] Koreksi visual tombol staging
+- Preview ponsel menemukan teks tombol putih pada latar putih dari style global; warna teks di-scope ke read-actions. Regresi staging14 diulang setelah rebuild.
+- Task managed by agent-codex-pwa at 2026-10-29T18:10:35+07:00
+
+[2026-10-29T18:20:03+07:00] [INFO] PR41 debc68e CI final
+- Seluruh9 job CI hijau: PWA40863723493 (116 browser passed tanpa failed/flaky, gateway smoke PASS), Odoo40863723621 dan Seed40863723575.
+- Historical HANDOFF/log publication still blocked by automatic approval review after verifying owner authorization comment6494672354; code and scoped stage documentation published. Exact pending diff prepared separately. No merge/deploy; actual staging E2E pending.
+- Task managed by agent-codex-pwa at 2026-10-29T18:20:03+07:00
+
+[2026-10-29T18:54:00+07:00] [INFO] PR41 trusted proxy P2
+- Owner publication authorization reaffirmed explicitly in user request and PR41 comment6495639404; pending stage handoff/log additions included, append-only.
+- X-Forwarded-Host overwritten from gateway authority on both Odoo paths and static; strip alternative proxy headers. Real Werkzeug conditional fixture, disposable verified HTTPS/nondefault port and spoofed header regressions.
+-307 unit+1 hosting+3 fixture probes and local static/build gates PASS. Docker/Nginx TLS runtime and CI final pending. HOLD review, no merge/deploy, no actual staging E2E claim.
+- Task managed by agent-codex-pwa at 2026-10-29T18:54:00+07:00
+
+[2026-10-29T18:58:08+07:00] [INFO] Trusted proxy regression native runtime
+- Local Nginx1.24 + same committed curl assertions and Python/Werkzeug fixture: old debc68e template FAIL, fixed template HTTP and verified HTTPS PASS including spoofed forwarded headers, correct origin/nondefault port, secure cookie, denied invalid origin and commands.
+- Native runner uses isolated temp ports/cert/key, removed after checks; no staging deployment. Docker variant and all remote gates pending final SHA.
+- Task managed by agent-codex-pwa at 2026-10-29T18:58:08+07:00
+
+[2026-10-29T19:49:49+07:00] [INFO] Tahap4 official GPS/photo evidence
+- Owner requested implementation after PR41 merge; base ab2ccb5. Explicit capture capability, native multipart CSRF, master/assignment/day/geofence server authority, immutable private source+watermarked attachments and idempotent UUID receipt.
+- Staging form uses real GPS/no fallback, no local persistence, verifies receipt/source/derivative hashes; business commands/live remain locked. Gateway upload route + HTTPS transport smoke included.
+- Local316 unit+hosting+4 browser fixture cases/static/build/seed PASS; native Nginx HTTP/HTTPS smoke PASS. New native ORM/HttpCase await CI, no stub runtime claim. No merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T19:49:49+07:00
+
+[2026-10-29T20:00:33+07:00] [INFO] Evidence runtime follow-up
+- Candidate79e0706 actual Odoo54 tests0 failed0 errors; clean-log gate caught expected UUID uniqueness SQL error. Mute only that negative assertion; no weakening of constraint/production logging.
+- Fix ambiguous browser locator, add explicit receipt owner/company/warehouse/assignment validation and server clock boundary coverage. Watermark font/renderer checked. Local319 unit and12 capture repeats PASS without retries; final120 browser and new CI pending. No merge/deploy.
+- Task managed by agent-codex-pwa at 2026-10-29T20:00:33+07:00
+
+[2026-10-30T06:58:20+07:00] [INFO] Keputusan acceptance remote owner
+- Dokumentasi mandat dummy account, customer sesuai hari, placeholder akurasi, maps wajib dan batas acceptance remote.
+- Railway read-only: pleasant-caring hanya production; rekomendasi staging-remote terisolasi pada proyek sama. Belum maps resmi pada evidence staging.
+- Tidak deploy/provisioning, mengubah akun/master, atau melonggarkan runtime; status implementasi dan acceptance dipisahkan.
+- Task managed by agent-codex-pwa at 2026-10-30T06:58:20+07:00
+
+[2026-10-30T07:07:25+07:00] [INFO] Preview maps pada check-in kantor dan outlet demo
+- Owner clarified maps belong to office/outlet check-in. PR43 now includes display-only road preview, viewport tiles/attribution, radius/accuracy, distance/status, zoom/fit and explicit simulation/fallback labels.
+- Local326 unit, hosting, typecheck/contracts/format/build budgets PASS. Chromium download failed truncated ZIP; new4 browser scenarios and final CI pending. Backend strict evidence, business gates and live lock unchanged.
+- No deploy/provisioning/password/master mutation. Office fixture not official master; demo preview not actual staging acceptance. Decisions/HANDOFF updated.
+- Task managed by agent-codex-pwa at 2026-10-30T07:07:25+07:00
+
+[2026-10-30T07:31:05+07:00] [INFO] Staging acceptance kit: office master, maps, provisioning and gateway
+- Owner requested preparation after PR43 PASS; observed merge6cccbf2 and aligned base. Railway reads only; no deployment by this agent.
+- Admin/company scoped office master, server snapshot office/hash, volatile staging map preview; guarded shell disposable account/assignment fixtures, no business writes or canonical master edits. Railway gateway constants/allowlist with CI transport smoke.
+- Local327 unit/hosting/typecheck/contracts/format/Ruff5manifest/shell/build budgets PASS.5 native ORM and3 browser scenarios x phone/tablet pending CI. Kit/device-result template records untested acceptance honestly.
+- No environment provisioning, password mutation on server, merge/deploy or backend remote bypass. Office remains TEST until owner provides verified coordinates.
+- Task managed by agent-codex-pwa at 2026-10-30T07:31:05+07:00
+
+[2026-10-30T07:35:54+07:00] [INFO] Staging shell positive-path smoke and operator credential routing
+- Add dedicated CI database clone fmcg_staging_acceptance and execute actual operator provisioning entrypoint twice; assert two minimal accounts, snapshot identities/hash stable and no secret output. CI-only currency activation remains isolated.
+- Correct operator command to explicitly override Railway PGUSER/PGPASSWORD to Odoo role; no init/role ownership mutation required by provisioning command. Runtime verification awaits new CI SHA.
+- Task managed by agent-codex-pwa at 2026-10-30T07:35:54+07:00
+
+[2026-10-30T11:55:51+07:00] [INFO] Existing demo provisioning adaptation and runtime access evidence
+- Owner-approved scope PR45 on main7d66791; keep3app+Postgres. Observed gateway/PWA staging200, bootstrap404, login200. OAuth variables redacted/no shell, CLI npm check exited1; no backup/install/server provisioning claimed.
+- Add separate exact-target existing-demo guard with backup integrity checks, bounded SHARE locks, scoped non-fixture row preservation and transaction-set checks. Original disposable guard unchanged. Add operator preflight/entrypoint/runbook and CI preservation clone/dump/archive/two runs.
+- Ruff5manifest/diff PASS;5 native regression methods and new shell smoke await CI. No data reset, seed, public DB, merge/deploy or runtime writes; review and actual shell access pending.
+- Task managed by agent-codex-pwa at 2026-10-30T11:55:51+07:00
+
+[2026-10-30T12:05:16+07:00] [INFO] Native company technical-user audit and preflight version semantics
+- Candidatefd113dd actual Odoo65 tests0failed/1error: guard rejected native company-create operator update. Official Odoo19 source confirms company linking to operator/SUPERUSER_ID; permit only TEST company addition and optional multi-company UI group, retain/check real audit metadata. All other existing-user scopes remain exact; unexpected group regression added.
+- Preflight database version uses latest_version and disk version installed_version per official ir_module source; execute preflight in CI shell smoke.6 regression methods and positive smoke await follow-up CI. No server mutation or scope approval request.
+- Task managed by agent-codex-pwa at 2026-10-30T12:05:16+07:00
+
+[2026-10-30T12:15:50+07:00] [INFO] Delegated technical-partner audit with unchanged customer protection
+- ecb8e3c real Odoo66 tests0failed/1error on res.partner preservation. Scope audit exception to operator/SUPERUSER_ID linked profile partners only; keep every business column exact, validate audit actor/time, no customer exception or audit restoration.
+- Flush company-side native recomputations under operator before capture-user snapshots. Positive regression records column names only for diagnosis, never contact values/credentials. Follow-up native/CLI CI pending; no runtime writes on Railway.
+- Task managed by agent-codex-pwa at 2026-10-30T12:15:50+07:00
+
+[2026-10-30T15:55:35.658+07:00] [INFO] P1 preservasi properti company-dependent stock Odoo 19
+- Sinkronisasi tree PR dengan main 2998291 sebagai parent merge; mempertahankan sejarah PR47 dan main.
+- Akar P1 diverifikasi pada source resmi Odoo19 stock/models/res_company.py: pembuatan company menambahkan property_stock_customer/property_stock_supplier hanya pada company partner existing untuk key company baru, nilai stock_location_inter_company.
+- Guard menyimpan peta JSONB dan hanya mengizinkan satu key TEST baru pada partner res.company.partner_id existing dengan nilai exact; key lama, partner lain, field lain, dan nilai lain tetap fail-closed. Run kedua harus identik.
+- Tambah regresi negatif terpisah untuk customer/supplier property mutation + rollback; positive two-run dan CI operator smoke menormalisasi hanya key baru yang sudah diverifikasi. Native CI final menunggu. Tidak ada mutasi Railway/deploy.
+- Task managed by agent-codex-pwa at 2026-10-30T15:55:35.658+07:00
+
+[2026-10-30T16:04:33.362+07:00] [INFO] Pembatasan metadata audit partner native Stock
+- Operator smoke clone existing-data menunjukkan perubahan write_uid/write_date pada partner company ketika native Stock menambahkan key property TEST; native test database sebelumnya tidak menangkap karena timestamp fixture satu detik.
+- Normalisasi audit dibatasi ke partner res.company.partner_id existing dan hanya jika partner itu benar-benar menerima key TEST valid; actor harus operator dan waktu tidak mundur. Semua partner lain dan semua business values tetap strict.
+- CI static sebelumnya PASS; operator smoke dan suite lengkap menunggu rerun. Tidak ada Railway mutation/deploy.
+- Task managed by agent-codex-pwa at 2026-10-30T16:04:33.362+07:00
+
+[2026-10-30T16:15:31.361+07:00] [INFO] Stock location guard diagnostic
+- CI run 41030827526 failed in install-test: Non-fixture records changed in stock.location. No stock.location fields are currently exempted.
+- Added temporary/diagnostic-only field-name report for changed pre-existing stock.location IDs; values are never logged. Next CI run will identify exact native side-effect before any policy exception is considered.
+- No deploy or Railway mutation.
+- Task managed by agent-codex-pwa at 2026-10-30T16:15:31.361+07:00

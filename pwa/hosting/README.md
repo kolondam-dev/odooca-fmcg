@@ -12,7 +12,8 @@ shell dari `/field/`, lalu menjalankan UI, draft dan outbox di browser.
 
 Saat API siap, gunakan origin PWA yang sama untuk `/api/v1/*`, diteruskan oleh
 gateway ke Odoo melalui private network. Saat ini server sengaja mengembalikan
-503 untuk `/api/*`; proxy/auth belum diimplementasi. Jangan mengaktifkan HTTP
+503 untuk `/api/*`; gateway satu origin harus disediakan terpisah.
+Template dan build staging baca tersedia di [STAGING_READ.md](STAGING_READ.md). Jangan mengaktifkan HTTP
 adapter melalui URL lintas origin tanpa desain cookie, CSRF, CORS dan session.
 
 Alternatif tanpa service tambahan: reverse proxy yang sudah ada menyajikan

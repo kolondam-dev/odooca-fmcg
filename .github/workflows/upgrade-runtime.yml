@@ -1,0 +1,208 @@
+# Prioritas 3: membuktikan upgrade modul nyata (odoo -u) dari baseline persisten
+# lalu replay idempotensi zero-drift pada container Odoo 19 + PostgreSQL 16 disposable.
+name: Upgrade Runtime Verification
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'agen/persisted-baseline*']
+  pull_request:
+    paths:
+      - 'scripts/ops/verify_upgrade_baseline.py'
+      - 'scripts/ops/verify_disposable_full.py'
+      - 'scripts/load_canonical_perpetual.py'
+      - 'tests/test_full_dataset_cutoff_and_upgrade.py'
+      - '.github/workflows/upgrade-runtime.yml'
+      - 'data/registers/**'
+      - 'addons/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upgrade-runtime-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract-tests:
+    name: Kontrak Runner Upgrade (unit)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Jalankan kontrak runner upgrade
+        run: python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner -v
+
+  upgrade-proof:
+    name: Module Upgrade from Persisted Baseline + Replay Zero Drift
+    needs: contract-tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      TARGET_DB: fmcg_upgrade_disposable
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t fmcg-odoo:ci .
+
+      - name: Ekstrak Docker Image Digest
+        run: |
+          DIGEST=$(docker inspect --format='{{index .Id}}' fmcg-odoo:ci)
+          echo "ODOO_IMAGE_DIGEST=$DIGEST" >> $GITHUB_ENV
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Image Digest: $DIGEST"
+
+      - name: Siapkan Role dan Database fmcg_base di PostgreSQL
+        run: |
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 psql -h localhost -U postgres -d postgres -c "
+            DO \$\$ BEGIN
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'odoo_app') THEN
+                CREATE ROLE odoo_app LOGIN CREATEDB PASSWORD 'ci-app';
+              END IF;
+            END \$\$;
+          "
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 psql -h localhost -U postgres -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'fmcg_base'" | grep -q 1 || \
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 createdb -h localhost -U postgres -O odoo_app fmcg_base
+
+      - name: Inisialisasi Odoo Container Dasar
+        run: |
+          docker run -d --name odoo --network host \
+            -e PGHOST=localhost -e PGUSER=postgres -e PGPASSWORD=ci-postgres -e PGDATABASE=fmcg_base \
+            -e ODOO_DB_USER=odoo_app -e ODOO_DB_PASSWORD=ci-app -e ADMIN_PASSWD=ci-master \
+            -e ADMIN_LOGIN_PASSWORD=ci-admin -e BASE_URL=http://ci.example.test \
+            -e GITHUB_SHA=${{ github.sha }} -e ODOO_IMAGE_DIGEST="${{ env.ODOO_IMAGE_DIGEST }}" -e GITHUB_RUN_ID=${{ github.run_id }} \
+            -e INIT_MODULES=id_base,id_mobile_api,l10n_id,sale_management,stock,purchase,account,product_expiry,stock_account fmcg-odoo:ci
+          for i in $(seq 1 120); do
+            if ! docker ps -q --filter "name=odoo" --filter "status=running" | grep -q .; then
+              echo "CRITICAL: Odoo container exited unexpectedly!"
+              docker logs odoo
+              exit 1
+            fi
+            [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8069/web/login)" = "200" ] && break
+            sleep 5
+          done
+          curl -sf -o /dev/null http://localhost:8069/web/login
+
+      - name: Siapkan Database Disposable Upgrade
+        run: |
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 psql -h localhost -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='fmcg_base' AND pid <> pg_backend_pid();"
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 dropdb -h localhost -U postgres --if-exists "$TARGET_DB"
+          docker run --rm --network host -e PGPASSWORD=ci-postgres postgres:16 createdb -h localhost -U postgres -O odoo_app -T fmcg_base "$TARGET_DB"
+
+      - name: Fase A - Baseline Persisten (dataset kanonikal penuh, audit, snapshot, drift)
+        run: |
+          set -o pipefail
+          docker exec -i \
+            -e PGDATABASE="$TARGET_DB" \
+            -e UPGRADE_PHASE=baseline \
+            -e UPGRADE_OUTPUT_DIR=/tmp \
+            -e GITHUB_SHA=${{ github.sha }} \
+            -e ODOO_IMAGE_DIGEST="${{ env.ODOO_IMAGE_DIGEST }}" \
+            -e GITHUB_RUN_ID=${{ github.run_id }} \
+            -e PYTHONUNBUFFERED=1 \
+            odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_upgrade_baseline.py 2>&1 | tee upgrade_baseline.log
+
+      - name: Asersi Fase A berhasil
+        run: |
+          grep -q 'UPGRADE_BASELINE_PHASE=SUCCESS' upgrade_baseline.log
+
+      - name: Ekstrak State Baseline Persisten
+        if: always()
+        run: docker cp odoo:/tmp/upgrade_baseline_state.json upgrade_baseline_state.json || true
+
+      - name: Fase B - Eksekusi Upgrade Odoo Nyata (odoo -u id_base,id_mobile_api)
+        run: |
+          set +e
+          # Env PG* container (PGUSER=postgres) menimpa odoo.conf dan memicu
+          # "Using the database user 'postgres' is a security risk, aborting."
+          # karena itu kredensial peran Odoo diset eksplisit seperti pada init.sh.
+          docker exec -u odoo \
+            -e PGDATABASE="$TARGET_DB" \
+            -e PGUSER=odoo_app \
+            -e PGPASSWORD=ci-app \
+            odoo bash -c '
+            odoo -c /tmp/odoo.conf -d "$PGDATABASE" \
+              --db_host localhost --db_port 5432 \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --data-dir /var/lib/odoo \
+              --without-demo=all --log-level=info \
+              --stop-after-init -u id_base,id_mobile_api
+          ' > upgrade_odoo.log 2>&1
+          UPGRADE_RC=$?
+          set -e
+          echo "UPGRADE_EXIT_CODE=$UPGRADE_RC" >> "$GITHUB_ENV"
+          echo "Exit code upgrade: $UPGRADE_RC"
+          tail -n 40 upgrade_odoo.log
+
+      - name: Fase B2 - Validasi Kontrak Proses Upgrade (exit code + registry corruption)
+        run: |
+          python3 scripts/ops/verify_upgrade_baseline.py \
+            --check-log upgrade_odoo.log \
+            --exit-code "$UPGRADE_EXIT_CODE" \
+            --db "$TARGET_DB" | tee upgrade_contract.log
+
+      - name: Salin Log Upgrade ke Container (bukti fase verify)
+        if: always()
+        run: docker cp upgrade_odoo.log odoo:/tmp/upgrade_odoo.log || true
+
+      - name: Fase C - Verifikasi Pasca-Upgrade + Replay Idempotensi Zero-Drift
+        if: always()
+        run: |
+          set -o pipefail
+          docker exec -i \
+            -e PGDATABASE="$TARGET_DB" \
+            -e UPGRADE_PHASE=verify \
+            -e UPGRADE_OUTPUT_DIR=/tmp \
+            -e UPGRADE_EXIT_CODE="${UPGRADE_EXIT_CODE:-99}" \
+            -e UPGRADE_LOG_PATH=/tmp/upgrade_odoo.log \
+            -e GITHUB_SHA=${{ github.sha }} \
+            -e ODOO_IMAGE_DIGEST="${{ env.ODOO_IMAGE_DIGEST }}" \
+            -e GITHUB_RUN_ID=${{ github.run_id }} \
+            -e PYTHONUNBUFFERED=1 \
+            odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_upgrade_baseline.py 2>&1 | tee upgrade_verify.log
+
+      - name: Asersi Fase C berhasil (replay zero-drift)
+        run: |
+          grep -q 'UPGRADE_VERIFY_PHASE=SUCCESS' upgrade_verify.log
+          grep -q 'UPGRADE_REPLAY_ZERO_DRIFT=PASS' upgrade_verify.log
+
+      - name: Ekstraksi Laporan Diagnostik Upgrade
+        if: always()
+        run: |
+          docker cp odoo:/tmp/upgrade_runtime_report.json upgrade_runtime_report.json 2>/dev/null || true
+          docker cp odoo:/tmp/upgrade_runtime_summary.md upgrade_runtime_summary.md 2>/dev/null || true
+          docker cp odoo:/tmp/upgrade_baseline_report.json upgrade_baseline_report.json 2>/dev/null || true
+          docker cp odoo:/tmp/upgrade_baseline_summary.md upgrade_baseline_summary.md 2>/dev/null || true
+          docker logs odoo > odoo_container.log 2>&1 || true
+
+      - name: Upload Artifact Diagnostik Upgrade
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upgrade-runtime-diagnostics-${{ github.sha }}
+          path: |
+            upgrade_baseline.log
+            upgrade_baseline_state.json
+            upgrade_baseline_report.json
+            upgrade_baseline_summary.md
+            upgrade_odoo.log
+            upgrade_contract.log
+            upgrade_verify.log
+            upgrade_runtime_report.json
+            upgrade_runtime_summary.md
+            odoo_container.log
+          retention-days: 30

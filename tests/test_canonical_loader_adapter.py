@@ -306,7 +306,15 @@ class MockRecord:
                 return acc
         return MockRecord({"code": code, "account_type": acc_type}, "account.account", int(code), self._env)
 
-    def _create_valuation_move(self, ref_str: str, date_str: str, debit_code: str, credit_code: str, amount: float):
+    def _create_valuation_move(
+        self,
+        ref_str: str,
+        date_str: str,
+        debit_code: str,
+        credit_code: str,
+        amount: float,
+        product_id=None,
+    ):
         if not self._env or "account.move" not in self._env:
             return None
         debit_acc = self._find_or_create_acc(
@@ -316,21 +324,30 @@ class MockRecord:
             credit_code, "expense" if credit_code.startswith("5") else "asset_current"
         )
         AML = self._env["account.move.line"] if "account.move.line" in self._env else None
+        comp = getattr(self._env, "company", None)
+        jnl = (
+            self._env["account.journal"].search([("code", "=", "STJ")], limit=1)
+            if "account.journal" in self._env else None
+        ) or MockRecord({"code": "STJ", "name": "Stock Valuation Journal"}, "account.journal", 10, self._env)
         ln1_vals = {
             "name": f"{ref_str} Dr",
             "account_id": debit_acc,
+            "product_id": product_id,
             "debit": round(amount, 2),
             "credit": 0.0,
             "date": date_str,
             "reconciled": False,
+            "company_id": comp,
         }
         ln2_vals = {
             "name": f"{ref_str} Cr",
             "account_id": credit_acc,
+            "product_id": product_id,
             "debit": 0.0,
             "credit": round(amount, 2),
             "date": date_str,
             "reconciled": False,
+            "company_id": comp,
         }
         ln1 = AML.create(ln1_vals) if AML is not None else MockRecord(ln1_vals, "account.move.line", 1, self._env)
         ln2 = AML.create(ln2_vals) if AML is not None else MockRecord(ln2_vals, "account.move.line", 2, self._env)
@@ -340,9 +357,15 @@ class MockRecord:
             "name": f"STJ/{ref_str}",
             "date": date_str,
             "state": "posted",
+            "company_id": comp,
+            "journal_id": jnl,
         })
         ln1.move_id = am
         ln2.move_id = am
+        ln1.product_id = product_id
+        ln2.product_id = product_id
+        ln1.company_id = comp
+        ln2.company_id = comp
         am.line_ids = MockRecordList([ln1, ln2])
         return am
 
@@ -370,6 +393,7 @@ class MockRecord:
                     "state": "assigned",
                     "location_id": wh_loc.id if wh_loc else 1,
                     "location_dest_id": cust_loc.id if cust_loc else 2,
+                    "company_id": getattr(self._env, "company", None),
                 })
                 ml = self._env["stock.move.line"].create({
                     "move_id": mv.id,
@@ -379,10 +403,16 @@ class MockRecord:
                     "qty_done": 0.0,
                     "location_id": wh_loc.id if wh_loc else 1,
                     "location_dest_id": cust_loc.id if cust_loc else 2,
+                    "company_id": getattr(self._env, "company", None),
                 })
                 mv.move_line_ids = MockRecordList([ml])
                 move_lines.append(ml)
                 moves.append(mv)
+                if "stock.quant" in self._env:
+                    StockQuant = self._env["stock.quant"]
+                    q = StockQuant.search([("product_id", "=", p_id)], limit=1)
+                    if q:
+                        q.write({"reserved_quantity": float(getattr(q, "reserved_quantity", 0.0)) + qty})
 
             pick = self._env["stock.picking"].create({
                 "origin": self._vals.get("client_order_ref", "SO"),
@@ -479,8 +509,43 @@ class MockRecord:
                             [("product_id", "=", p_id), ("location_id", "=", src_loc.id), ("lot_id", "=", l_id)],
                             limit=1,
                         )
+                        if not q_src:
+                            q_src = StockQuant.search(
+                                [("product_id", "=", p_id), ("location_id", "=", src_loc.id)],
+                                limit=1,
+                            )
                         if q_src:
-                            q_src.write({"quantity": float(getattr(q_src, "quantity", 0.0)) - qty})
+                            cur_q = float(getattr(q_src, "quantity", 0.0))
+                            q_src.write({"quantity": max(0.0, cur_q - qty)})
+
+                        # Unreserve qty for this product across internal quants
+                        rem_res = qty
+                        if q_src and float(getattr(q_src, "reserved_quantity", 0.0)) > 0:
+                            cur_res = float(getattr(q_src, "reserved_quantity", 0.0))
+                            dec = min(cur_res, rem_res)
+                            q_src.write({"reserved_quantity": cur_res - dec})
+                            rem_res -= dec
+                        if rem_res > 0:
+                            for pq in StockQuant.search([
+                                ("product_id", "=", p_id),
+                                ("location_id", "=", src_loc.id),
+                            ]):
+                                cur_res = float(getattr(pq, "reserved_quantity", 0.0))
+                                if cur_res > 0:
+                                    dec = min(cur_res, rem_res)
+                                    pq.write({"reserved_quantity": cur_res - dec})
+                                    rem_res -= dec
+                                    if rem_res <= 0:
+                                        break
+                        if rem_res > 0:
+                            for pq in StockQuant.search([("product_id", "=", p_id)]):
+                                cur_res = float(getattr(pq, "reserved_quantity", 0.0))
+                                if cur_res > 0:
+                                    dec = min(cur_res, rem_res)
+                                    pq.write({"reserved_quantity": cur_res - dec})
+                                    rem_res -= dec
+                                    if rem_res <= 0:
+                                        break
                     if dest_usage == "internal":
                         q_dst = StockQuant.search(
                             [("product_id", "=", p_id), ("location_id", "=", dest_loc.id), ("lot_id", "=", l_id)],
@@ -531,15 +596,17 @@ class MockRecord:
                 val = round(mv_qty * unit_cost, 2)
                 origin_str = str(getattr(self, "origin", None) or getattr(mv, "origin", "PICK"))
                 if src_usage == "supplier" and dest_usage == "internal":
-                    am = self._create_valuation_move(origin_str, eff_date, "113000", "113900", val)
+                    am = self._create_valuation_move(origin_str, eff_date, "113000", "113900", val, product_id=p_rec)
                 elif src_usage == "internal" and dest_usage == "customer":
-                    am = self._create_valuation_move(origin_str, eff_date, "510000", "113000", val)
+                    am = self._create_valuation_move(origin_str, eff_date, "510000", "113000", val, product_id=p_rec)
                 elif src_usage == "customer" and (dest_usage == "internal" or "karantina" in dest_name.lower()):
-                    am = self._create_valuation_move(origin_str, eff_date, "113000", "510000", val)
+                    am = self._create_valuation_move(origin_str, eff_date, "113000", "510000", val, product_id=p_rec)
                 else:
-                    am = self._create_valuation_move(origin_str, eff_date, "113000", "113900", val)
+                    am = self._create_valuation_move(origin_str, eff_date, "113000", "113900", val, product_id=p_rec)
                 if am:
                     mv.account_move_id = am
+                    mv.company_id = getattr(self._env, "company", None)
+                    mv.date = eff_date
         return True
 
     def action_apply_inventory(self):
@@ -565,6 +632,7 @@ class MockRecord:
                     "location_id": inv_loc.id if inv_loc else 5,
                     "location_dest_id": loc_id,
                     "date": f"{eff_date} 00:00:00",
+                    "company_id": getattr(self._env, "company", None),
                 })
                 mv = self._env["stock.move"].create({
                     "origin": "OPENING-20260701",
@@ -576,13 +644,18 @@ class MockRecord:
                     "is_inventory": True,
                     "state": "done",
                     "date": f"{eff_date} 00:00:00",
+                    "company_id": getattr(self._env, "company", None),
                     "move_line_ids": MockRecordList([ml]),
                 })
                 unit_cost = float(getattr(p_rec, "standard_price", 0.0) or 1000.0)
                 val = round(qty * unit_cost, 2)
-                am = self._create_valuation_move("OPENING-20260701", eff_date, "113000", "113900", val)
+                am = self._create_valuation_move(
+                    "OPENING-20260701", eff_date, "113000", "113900", val, product_id=p_rec
+                )
                 if am:
                     mv.account_move_id = am
+                    mv.company_id = getattr(self._env, "company", None)
+                    mv.date = eff_date
         return True
 
     def action_post(self):
@@ -832,7 +905,10 @@ class MockModel:
                 field, op, val = term
                 rec_val = getattr(rec, field, False)
                 if op == "=":
-                    if hasattr(rec_val, "id") and isinstance(val, int):
+                    if hasattr(rec_val, "id") and hasattr(val, "id"):
+                        if rec_val.id != val.id:
+                            match = False
+                    elif hasattr(rec_val, "id") and isinstance(val, int):
                         if rec_val.id != val:
                             match = False
                     elif hasattr(val, "id") and isinstance(rec_val, int):
@@ -842,6 +918,20 @@ class MockModel:
                         match = False
                 elif op == "!=" and rec_val == val:
                     match = False
+                elif op in (">", ">=", "<", "<="):
+                    r_comp = str(rec_val) if hasattr(rec_val, "strftime") else rec_val
+                    v_comp = str(val) if hasattr(val, "strftime") else val
+                    try:
+                        if op == ">" and not (r_comp > v_comp):
+                            match = False
+                        elif op == ">=" and not (r_comp >= v_comp):
+                            match = False
+                        elif op == "<" and not (r_comp < v_comp):
+                            match = False
+                        elif op == "<=" and not (r_comp <= v_comp):
+                            match = False
+                    except TypeError:
+                        match = False
                 elif op == "in":
                     val_set = val if isinstance(val, (list, tuple, set)) else [val]
                     raw_rec_val = getattr(rec_val, "id", rec_val)
@@ -935,13 +1025,23 @@ class MockEnv(dict):
         self.cr = MockCursor(env=self)
         self.company = MockCompany()
         models = [
-            "res.partner", "product.product", "res.users", "stock.quant", "stock.location",
+            "res.company", "res.partner", "product.product", "res.users", "stock.quant", "stock.location",
             "stock.lot", "purchase.order", "sale.order", "account.move", "account.payment",
             "stock.picking", "stock.move", "stock.move.line", "account.account",
-            "account.journal", "product.category",
+            "account.journal", "product.category", "stock.warehouse",
         ]
         for m in models:
             self[m] = MockModel(m, env=self)
+        self.company._model = "res.company"
+        self.company._env = self
+        self.company._vals = {
+            "name": self.company.name,
+            "code": self.company.code,
+            "id": self.company.id,
+        }
+        self.company.sudo = lambda: self.company
+        self["res.company"].store[self.company.id] = self.company
+        self["res.company"].seq = 2
         self.company.partner_id = self["res.partner"].create({"name": "PT MDU", "ref": "COMPANY"})
         self["ir.config_parameter"].set_param("fmcg.seed_company_id", str(self.company.id))
         self._initial_snapshot = None
@@ -1090,11 +1190,21 @@ def setup_standard_mock_env():
         "discount": True,
         "display_type": True,
     }
-    mock_env["stock.location"].create({"name": "WH/Stock", "usage": "internal", "company_id": mock_env.company.id})
+    wh_stock = mock_env["stock.location"].create({
+        "name": "WH/Stock",
+        "usage": "internal",
+        "company_id": mock_env.company.id,
+    })
     mock_env["stock.location"].create({
         "name": "Karantina FMCG Maumbi",
         "usage": "internal",
         "company_id": mock_env.company.id,
+    })
+    mock_env["stock.warehouse"].create({
+        "name": "Gudang Utama Maumbi",
+        "code": "WH",
+        "lot_stock_id": wh_stock,
+        "company_id": mock_env.company,
     })
     mock_env["stock.location"].create({"name": "Partner Locations/Customers", "usage": "customer", "company_id": False})
     mock_env["stock.location"].create({"name": "Partner Locations/Vendors", "usage": "supplier", "company_id": False})

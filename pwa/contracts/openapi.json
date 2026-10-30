@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "FMCG Field client contract draft",
-    "version": "0.13.0",
-    "description": "Client-owned draft. Not an implemented Odoo API. Single command receipt; batch extension requires agreement."
+    "version": "0.15.0",
+    "description": "Bootstrap/snapshot and explicit evidence routes are implemented by id_mobile_api. Business command routes remain draft and unavailable on staging."
   },
   "servers": [
     {
@@ -42,6 +42,129 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/evidence": {
+      "post": {
+        "description": "Explicit evidence capability; native Odoo multipart csrf_token. Stores evidence only, not a business command.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "metadata",
+                  "photo",
+                  "csrf_token"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "metadata": {
+                    "type": "string",
+                    "description": "JSON OfficialEvidenceMetadata"
+                  },
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "csrf_token": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contract response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfficialEvidenceReceipt"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Contract response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfficialEvidenceReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid native CSRF or request"
+          },
+          "403": {
+            "description": "Evidence capability or scope denied"
+          },
+          "409": {
+            "description": "UUID/scope/day conflict"
+          },
+          "413": {
+            "description": "Upload limit"
+          },
+          "422": {
+            "description": "Invalid photo, stale fix or geofence not inside"
+          }
+        }
+      }
+    },
+    "/evidence/{client_uuid}/{variant}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "client_uuid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "variant",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "original",
+                "watermarked"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private owner/company-scoped image; no-store",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Evidence role/scope denied"
+          },
+          "404": {
+            "description": "Image not found in current owner/company scope"
           }
         }
       }
@@ -100,6 +223,200 @@
   },
   "components": {
     "schemas": {
+      "OfficialEvidenceMetadata": {
+        "type": "object",
+        "properties": {
+          "client_uuid": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "outlet_id": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "business_date": {
+            "type": "string"
+          },
+          "snapshot_version": {
+            "type": "string"
+          },
+          "photo_selected_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "device_recorded_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "fix_sampled_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "accuracy": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "client_uuid",
+          "outlet_id",
+          "business_date",
+          "snapshot_version",
+          "photo_selected_at",
+          "device_recorded_at",
+          "fix_sampled_at",
+          "latitude",
+          "longitude",
+          "accuracy"
+        ],
+        "additionalProperties": false
+      },
+      "OfficialEvidenceReceipt": {
+        "type": "object",
+        "properties": {
+          "client_uuid": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "outlet_id": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "business_date": {
+            "type": "string"
+          },
+          "photo_selected_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "device_recorded_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "fix_sampled_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "accuracy": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10000
+          },
+          "snapshot_version": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "company_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "warehouse_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "assignment_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "master_latitude": {
+            "type": "number"
+          },
+          "master_longitude": {
+            "type": "number"
+          },
+          "distance_m": {
+            "type": "number",
+            "minimum": 0
+          },
+          "radius_m": {
+            "type": "number",
+            "minimum": 5,
+            "maximum": 15
+          },
+          "original_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "watermarked_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "binding_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "original_url": {
+            "type": "string"
+          },
+          "watermarked_url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_uuid",
+          "outlet_id",
+          "business_date",
+          "photo_selected_at",
+          "device_recorded_at",
+          "fix_sampled_at",
+          "latitude",
+          "longitude",
+          "accuracy",
+          "snapshot_version",
+          "user_id",
+          "company_id",
+          "warehouse_id",
+          "assignment_id",
+          "received_at",
+          "master_latitude",
+          "master_longitude",
+          "distance_m",
+          "radius_m",
+          "original_sha256",
+          "watermarked_sha256",
+          "binding_sha256",
+          "original_url",
+          "watermarked_url"
+        ],
+        "additionalProperties": false
+      },
       "Packaging": {
         "type": "object",
         "properties": {
@@ -4231,7 +4548,8 @@
             "items": {
               "type": "string",
               "enum": [
-                "collection.capture"
+                "collection.capture",
+                "evidence.capture"
               ]
             }
           },
@@ -4285,6 +4603,51 @@
               "user_id",
               "warehouse_id",
               "business_date"
+            ],
+            "additionalProperties": false
+          },
+          "office": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "latitude": {
+                "type": "number",
+                "minimum": -90,
+                "maximum": 90
+              },
+              "longitude": {
+                "type": "number",
+                "minimum": -180,
+                "maximum": 180
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 5,
+                "maximum": 500
+              },
+              "coordinate_status": {
+                "type": "string",
+                "enum": [
+                  "test",
+                  "unverified",
+                  "verified"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "latitude",
+              "longitude",
+              "radius",
+              "coordinate_status"
             ],
             "additionalProperties": false
           },
@@ -4517,6 +4880,6 @@
       }
     }
   },
-  "x-status": "draft-client-only",
+  "x-status": "read-and-evidence-implemented-business-commands-draft",
   "x-auth": "same-origin cookie; no shared privileged API key"
 }

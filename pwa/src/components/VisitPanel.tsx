@@ -1,5 +1,6 @@
 import { VisitPhotoField } from "./VisitPhotoField";
 import { EvidenceCapture } from "./Evidence";
+import { CheckinMap } from "./CheckinMap";
 import type { FieldStore } from "../storage/store";
 import type { VisitEvidence } from "../domain/visit-contracts";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -40,6 +41,7 @@ export function VisitPanel({
             (Date.now() - Date.parse(photo.capturedAt) <= 60000 &&
                 Date.now() >= Date.parse(photo.capturedAt)));
     const [fix, setFix] = useState<VisitFix>();
+    const [fixSource, setFixSource] = useState<"device" | "demo">("device");
     const [pinpointSetAt, setPinpointSetAt] = useState(0);
     const [now, setNow] = useState(Date.now());
     const [error, setError] = useState("");
@@ -101,7 +103,9 @@ export function VisitPanel({
         setError("");
         const ticket = generation.current;
         try {
-            const position = await captureVisitLocation();
+            const position = await captureVisitLocation((source) => {
+                if (ticket === generation.current) setFixSource(source);
+            });
             if (ticket === generation.current) {
                 setFix(position);
                 setPinpointSetAt(Date.now());
@@ -154,7 +158,9 @@ export function VisitPanel({
         setError("");
         const ticket = generation.current;
         try {
-            const position = await captureVisitLocation();
+            const position = await captureVisitLocation((source) => {
+                if (ticket === generation.current) setFixSource(source);
+            });
             if (ticket !== generation.current) return;
             setFix(position);
             setNow(Date.now());
@@ -239,6 +245,21 @@ export function VisitPanel({
                     </small>
                 </div>
             )}
+            <CheckinMap
+                key={`${sessionId}:${outlet.id}`}
+                site={{
+                    name: outlet.name,
+                    latitude: outlet.latitude,
+                    longitude: outlet.longitude,
+                    radius: outlet.radius,
+                    simulated: true,
+                }}
+                fix={
+                    fix
+                        ? { ...fix, simulated: fixSource === "demo" }
+                        : undefined
+                }
+            />
             {!active && !closed && (
                 <p>
                     Opening: foto toko, set pinpoint dengan Ambil lokasi outlet,

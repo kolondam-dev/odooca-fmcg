@@ -20,6 +20,460 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T16:28:00+07:0
 
 # HANDOFF
 
+## 2026-10-30T17:42:00+07:00 — antigravity agent — Supervisory Audit PR #49: PASS / MERGE-READY
+**PR:** #49 (eat(ops): Prioritas 3 - upgrade modul dari baseline persisten + replay idempotensi)
+**Head SHA:** 71938303253c0b185a3b4942a255e91d0e56883e (disinkronkan dengan main di 44029c6)
+**Status:** PASS / MERGE-READY (menunggu otorisasi pemilik untuk merge).
+**Bukti Kunci:**
+- Workflow Upgrade Runtime Verification (run [41037818394](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/41037818394), job 124002962557, 24m3s): PASS.
+- Sentinel UPGRADE_REPLAY_ZERO_DRIFT=PASS dan UPGRADE_VERIFY_PHASE=SUCCESS: terverifikasi di runtime Odoo 19 + PostgreSQL 16 nyata.
+- 15 CSV register di data/registers/: 100% BEKU (0-byte drift).
+- Unit kontrak runner (TestUpgradeBaselineRunner): 9/9 PASS.
+- Pemulihan drift terkontrol (version skew, DDL kolom id_mobile_office.radius, view iew_mobile_office_form): 100% dipulihkan oleh odoo -u.
+- Replay idempotensi CanonicalPerpetualAdapter.run_all(): 0 record baru dibuat di 10 counter penciptaan, seluruh skip memenuhi kuota (SO=1.324, invoice=1.324, quant=150, PO=5).
+- 9/9 entitas snapshot identik (zero drift), 13.540 baris AML Juli imutabel, oracle Agustus PASS.
+- Guard database menolak mutasi pada database non-disposable (prod, production, live, 
+ailway, main, mcg_base).
+
+## 2026-10-30T17:01:10+07:00 — claude-dev agent — BUKTI HIJAU Prioritas 3: upgrade modul dari baseline persisten + replay idempotensi
+**Hasil:** Seluruh check PR #49 hijau pada head commit `a7ff8ae` (merge ref `862b9d3`), termasuk job runtime `Module Upgrade from Persisted Baseline + Replay Zero Drift` (run [41033574353](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/41033574353), job id `123988914701`, 25m39s, conclusion success).
+**Bukti kunci (container Odoo 19 + PostgreSQL 16, database disposable `fmcg_upgrade_disposable`):**
+- Fase A baseline: closing Juli 2026 (13.540 baris AML) + carry-forward 1 Agustus 2026, audit oracle Juli & Agustus PASS; drift terkontrol tersuntik (`latest_version` id_base 19.0.0.0.0 / id_mobile_api 19.0.1.1.0, kolom `id_mobile_office.radius` dihapus, view `id_mobile_api.view_mobile_office_form` dihapus).
+- Fase B upgrade nyata: `odoo -u id_base,id_mobile_api --stop-after-init` exit 0, 84 baris log, 0 temuan registry corruption, penanda `Modules loaded.` ada (`Loading module id_base (78/89)`, `Module id_mobile_api loaded in 0.31s`).
+- Fase C: registry kembali sinkron manifest (19.0.1.0.0 / 19.0.1.2.0), DDL 155 kolom modul PASS + 1 drift dipulihkan, FK 51 relasi 0 orphan, 16 view XML valid + view drift dipulihkan, hook HPP `id_base` aktif (1.324 faktur seed, 0 baris HPP 510000 duplikat, 2.738 delivery outbound semuanya punya jurnal STJ posted), replay `run_all()` 0 record baru (skip SO=1.324, invoice=1.324, 16,65 s), zero-drift 9/9 entitas snapshot identik, 13.540 baris AML Juli imutabel, audit oracle Agustus + anti-fallback salesperson PASS.
+- Artefak diagnostik: `upgrade-runtime-diagnostics-862b9d341c3926d9ceac50049ff7f2c7723636b6` (state baseline, laporan JSON/MD kedua fase, `upgrade_odoo.log`, log container).
+**Diverifikasi (bagaimana):** GitHub Actions exact-SHA (bukan mock lokal); `ruff`/`check_manifests` 9 unit kontrak juga hijau pada job `static` dan job `contract-tests`.
+**Belum diuji:** tidak ada eksekusi pada database operasional (sesuai guard); drift version/skema/view adalah simulasi terkontrol [A].
+**Butir terbuka:** menunggu audit Supervisor (Antigravity) sebelum PR ditandai siap review; tidak ada merge/deploy tanpa otorisasi pemilik.
+
+## 2026-10-30T15:28:17+07:00 — claude-dev agent — Prioritas 3: Upgrade Modul dari Baseline Persisten + Replay Idempotensi
+**Berubah:**
+- `scripts/ops/verify_upgrade_baseline.py` (baru): runner dua fase. Fase `baseline` memuat dataset kanonikal penuh (closing Juli + carry-forward 1 Agustus) melalui `CanonicalPerpetualAdapter`, menjalankan audit Juli & Agustus, mengambil deep state snapshot + digest SHA-256, lalu menyuntikkan tiga drift terkontrol (version skew `latest_version`, hapus kolom `id_mobile_office.radius`, hapus view `id_mobile_api.view_mobile_office_form`). Fase `verify` memvalidasi kontrak proses upgrade (exit 0 + bebas indikasi registry corruption), registry/versi manifest, DDL field modul, relasi many2one bebas orphan, view XML, hook HPP `id_base`, replay `run_all()` zero-creation, zero-drift snapshot, imutabilitas closing Juli, dan audit oracle Agustus.
+- `.github/workflows/upgrade-runtime.yml` (baru): job `contract-tests` + job `upgrade-proof` pada container Odoo 19 + PostgreSQL 16; Fase A baseline, Fase B `odoo -u id_base,id_mobile_api --stop-after-init`, Fase B2 kontrak log, Fase C verifikasi + replay, unggah artefak diagnostik.
+- `tests/test_full_dataset_cutoff_and_upgrade.py`: kelas `TestUpgradeBaselineRunner` (8 tes kontrak: guard database, perintah upgrade, kontrak exit/log, versi rilis sebelumnya, replay zero-creation, digest snapshot, state baseline fail-closed, laporan FAILED).
+- `.github/workflows/ci.yml`: langkah kontrak runner upgrade pada job `static`.
+- `docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md`: Prioritas 3 ditandai SELESAI + Bab 6 (ruang lingkup, drift terkontrol, alur workflow, batasan jujur).
+- `agent-log/claude-dev.log`: entri sesi ini.
+
+**Diverifikasi (bagaimana):**
+- `python -m ruff check .`: PASS (0 error).
+- `python scripts/check_manifests.py`: PASS (5 addon).
+- `python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner`: 8/8 PASS.
+- Validitas YAML seluruh workflow (`yaml.safe_load`): PASS.
+- Instropeksi lokal: perintah upgrade memuat `-u id_base,id_mobile_api` dan `--stop-after-init`; guard menolak `fmcg_base`, `fmcg_live`, `prod_*`, `railway`, `master_*`, `official_*`.
+
+**Belum diuji:**
+- Eksekusi upgrade nyata (`odoo -u`) pada container: wajib dibuktikan di GitHub Actions exact-SHA (job `upgrade-proof`). Tidak ada Docker lokal di mesin ini.
+- Anggapan [A]: `_auto_init` Odoo 19 membuat ulang kolom yang dihapus dan modul reload XML view yang xmlid-nya dihapus.
+
+**Butir terbuka:**
+1. Menunggu hasil `upgrade-proof` pada exact SHA cabang `agen/persisted-baseline-upgrade`; bukti (Job ID, durasi, sentinel `UPGRADE_REPLAY_ZERO_DRIFT=PASS`) akan diposting ke komentar PR.
+2. 15 CSV register di `data/registers/` 100% tidak disentuh.
+
+**Menunggu:** Supervisor (Antigravity) meninjau Draft PR `agen/persisted-baseline-upgrade` → `main`.
+
+## 2026-10-30T17:22:00+07:00 — antigravity agent — Resolusi Idempotensi Run 2 Preservasi Partner dan Stock Location PR #47
+**Akar Masalah Kegagalan CI Run 2 (run 41039403435):**
+- Pada eksekusi run 2 `verify_mobile_demo.py`, `_partner_company_property_snapshot` membaca seluruh baris `res_partner` termasuk outlet fixture hasil run 1 (`outlet_1`, `outlet_2`).
+- Ketika `_provision_records` mengeksekusi `owned()` pada run 2, ia melakukan `write()` pembaruan pada outlet fixture miliknya sendiri, memperbarui `write_date`.
+- `_assert_partner_company_properties_preserved` mendeteksi perbedaan timestamp audit pada outlet fixture (yang bukan company partner), dan melempar: `ValidationError: Unexpected existing partner audit change; provisioning was rolled back.`
+
+**Perbaikan:**
+- Menambahkan pengecualian `if partner_id in excluded_partners: continue` pada `_assert_partner_company_properties_preserved` dan `if row_id in excluded_locations: continue` pada `_assert_stock_locations_preserved`.
+- Selaras dengan `protected_snapshot` dan `_assert_user_scope`: record fixture milik modul staging (`id_mobile_api_staging`) dikecualikan dari guard preservasi data operasional existing.
+- Seluruh partner customer/vendor existing dan lokasi gudang non-fixture tetap 100% beku dan diaudit ketat.
+
+## 2026-10-30T17:15:00+07:00 — antigravity agent — Resolusi Preservasi Native Stock Location pada Existing Demo Provisioning PR #47
+**Akar Masalah Kegagalan CI (run 41032163302):**
+- Pada job `install-test` langkah `Existing-demo provisioning preservation smoke`, clone database single-company `fmcg_demo_acceptance` (berasal dari `ci_db`) membuat company baru (`STAGING TEST Company`) via `_provision_records()`.
+- Odoo 19 Stock secara native mengaktifkan lokasi transit global inter-company (`stock.stock_location_inter_company` record ID 3) dari `active=False` menjadi `active=True` serta memperbarui `write_date` dan `write_uid`.
+- Guard preservasi sebelumnya mendeteksi perubahan tersebut pada tabel `stock.location` dan melakukan rollback:
+  `ValidationError: Non-fixture records changed in stock.location (3:active,write_date); provisioning was rolled back.`
+
+**Perbaikan & Pengetatan Kontrak:**
+1. **Helper & Normalisasi Snapshot Terbatas (`existing_demo.py`):**
+   - Menambahkan helper `_system_transit_location_ids(env)` untuk mengidentifikasi lokasi transit/virtual sistem global (`stock.stock_location_inter_company`, `stock.stock_location_locations_virtual`).
+   - Pada `protected_snapshot()`, kolom `active`, `write_date`, dan `write_uid` dikecualikan dari hash JSONB hanya untuk lokasi transit sistem global tersebut. Seluruh atribut struktural (name, complete_name, usage, location_id, company_id) tetap diaudit dan di-hash secara ketat.
+2. **Asersi Ketat Preservasi Lokasi (`_assert_stock_locations_preserved`):**
+   - Memvalidasi bahwa transisi `active` HANYA diizinkan dari `False` ke `True` (aktivasi), HANYA untuk lokasi sistem global tanpa company (`company_id=False`, `usage in ('transit', 'view')`), dan HANYA saat ada company fixture baru yang dibuat.
+   - Memvalidasi audit `write_uid` adalah operator atau SUPERUSER_ID, dan `write_date` tidak mundur.
+   - Deaktivasi (`True -> False`), perubahan pada lokasi gudang internal existing (`usage == 'internal'`), perubahan nama/usage, ataupun perubahan apa pun pada run kedua (idempotensi) dilarang keras dan melempar `ValidationError`.
+3. **Pengujian Regresi & Negatif Tambahan (`addons/id_mobile_api/tests/test_existing_demo.py`):**
+   - `test_inter_company_location_activation_on_company_creation`: Memverifikasi aktivasi dari `active=False` berjalan sukses dan run kedua idempoten dengan hash row 100% terjaga.
+   - `test_unexpected_stock_location_mutation_is_rejected_and_rolled_back`: Memverifikasi bahwa mutasi pada lokasi gudang internal existing (WH/Stock) ditolak dan di-rollback.
+   - `test_unexpected_inter_company_location_mutation_is_rejected_and_rolled_back`: Memverifikasi bahwa mutasi nama lokasi transit inter-company ditolak dan di-rollback.
+4. **Verifikasi Statis:** `ruff check .` PASS (0 errors), `scripts/check_manifests.py` PASS (5 addon).
+
+## 2026-10-30 — agent-codex-pwa — Diagnose stock.location preservation failure
+CI install-test on 1c9234f fails after native TEST company provisioning: `Non-fixture records changed in stock.location`. The earlier partner-property P1 is no longer the failing guard. Added field-name-only diagnostics for pre-existing stock.location rows; no row values are emitted. This is diagnostic instrumentation, not an exemption or weakening of the preservation rule. Next action is inspect exact row IDs/changed columns from CI, then implement only a narrowly justified native side-effect allowance or reject the provisioning if existing stock data is genuinely altered.
+## 2026-10-30 — agent-codex-pwa — Narrow native partner audit metadata side effect
+**Bukti shell smoke:** native unit suite mencapai positive two-run dan negative stock-property regressions, tetapi operator entrypoint pada clone existing-data masih gagal di hash res.partner. Perbedaan tambahan adalah write_uid/write_date pada company partner yang ditulis native Stock.
+**Perbaikan:** metadata audit hanya dinormalisasi untuk partner res.company.partner_id yang sudah ada sebelum provisioning. Snapshot mentah memverifikasi actor=operator, timestamp tidak mundur, dan partner yang sama harus menerima key company TEST baru dengan lokasi inter-company exact. Partner lain, company partner tanpa property addition, dan seluruh business columns tetap exact.
+**Status:** follow-up CI pada SHA baru diperlukan untuk membuktikan operator smoke dua-run dan sentinel DB/filestore. Tidak ada mutasi Railway.
+## 2026-10-30 — agent-codex-pwa — P1 company-dependent stock-property preservation
+**Akar masalah:** Odoo 19 Stock saat membuat company baru menulis property_stock_customer dan property_stock_supplier pada partner milik company existing, scoped ke key company baru dan bernilai stock.stock_location_inter_company. Snapshot row partner sebelumnya menganggap penambahan native key ini sebagai drift generik.
+**Perbaikan:** snapshot JSONB tetap mempertahankan seluruh nilai lama. Hanya penambahan key untuk satu company TEST baru pada partner res.company.partner_id existing dengan lokasi inter-company exact yang diterima; perubahan/penghapusan key lama, partner lain, key lain, atau nilai lain tetap menyebabkan rollback. Run kedua tidak mengizinkan key tambahan.
+**Regresi:** positive path dua-run tetap memeriksa identitas fixture dan hash data existing. Negative tests menginjeksikan perubahan customer dan supplier stock property pada company existing dan memastikan ValidationError serta rollback. Shell smoke menggunakan normalisasi terbatas yang sama; dump dan filestore sentinel tetap diperiksa.
+**Status:** kode kandidat dipublikasikan dan menunggu native Odoo/CI final pada SHA baru. Tidak ada backup/install/provision/deploy atau mutasi Railway.
+## 2026-10-30 — agent-codex-pwa — Delegated technical-partner audit preservation
+**Bukti ecb8e3c:** native66 tests0failed/1error; preservasi masih menolak perubahan res.partner. Pengecualian audit dibatasi ke partner yang terikat pada operator/SUPERUSER_ID, dengan semua kolom business tetap exact dan audit penulis/waktu tetap diperiksa. Customer lain tidak dikecualikan. Helper menyelesaikan recompute operator setelah companycreate sebelum beralih ke env capture-user.
+**Diagnostik:** regression positive-path mencatat hanya ID dan nama kolom partner yang berubah, tidak nilai contact/credential.6 native regressions dan shell-preservation smoke menunggu follow-up. Ruff5manifest/diff PASS; belum ada mutasi Railway.
+
+## 2026-10-30 — agent-codex-pwa — Native company-creation scope audit follow-up
+**Bukti kandidatfd113dd:** native Odoo65 tests0failed/1error: before/after guard menolak native technical-user mutation saatcompanycreate, sehingga tidak memberi falsePASS. Sumber resmi Odoo19 res_company.create mengonfirmasi automatic company_ids link padaoperator/SUPERUSER_ID (serta grup UI multi-company). Tidak mengganti create/write_date untuk menyembunyikan efek.
+**Perbaikan:** preservasi row users tetap semua field selain write_uid/write_date khusus dua user teknis; audit harus penulis operator/waktu tidakmundur. Native tambahan company hanyaTEST dan grup hanyaUI multi-company; userexisting lain exactscope. Ringkasan melaporkan tambahanmembership; regresi unexpectedoperatorgroup ditambahkan. Preflight memisahkan latest_version(database) dari installed_version(disk) mengikuti sourceir_module Odoo19, dan entrypointpreflight kini diuji di shellCI.
+**Status:**6 metode regression, shell-preservation/two-run/preflight menunggu SHA baru. Ruff5manifest/diff PASS. Tetap belumbackup/install/provision pada Railway; actualshellblocked. Reviewdiperlukansebelumruntime.
+
+## 2026-10-30 — agent-codex-pwa — Adaptasi provisioning existing demo (scope PR45)
+**Mandat/basis:** owner meneruskan setup supervisor dan otorisasi production demo tetap berlaku. Basis main7d66791; pertahankan3app+Postgres. Pembacaan platform/HTTPS menemukan gateway/PWA staging aktif, bootstrap404 dan login200; bukan E2E PASS. OAuth hanya nama variable/tidak shell; CLI npm check exit1, tidak ada CLI auth yang bisa dipakai. Tidak meminta persetujuan scope ulang.
+**Berubah:** jalur provisioning existing terpisah, exact project/environment/service/database + opt-in, backup DB/filestore nyata berbeda/recent/hash-bound, SHARE locks20 tabel preservasi dengan timeout5s, perbandingan row non-fixture dan zero new business transactions; perubahan tak diharapkan rollback. Guard disposable PR44 tidak diubah. Tambah readonly preflight, entrypoint demo, runbook dan CI clone dengan contact/SO/file existing, dump/archive nyata serta dua run operator.
+**Verifikasi/batas:** Ruff5manifest/diff PASS;5 native regression baru dan preservation-shell smoke menunggu CI. Integritas hash backup bukan bukti restore/consistency/offsite; runbook menuntut operator verifikasi terpisah. Preservasi tabel scoped, bukan klaim semua M2M/sequence/file byte. Belumbackup/install/provision/deploy/server mutation; shell access masih blocker. Tidak reset/seed/rename DB, tidak membuka DB publik atau bypass auth/geofence. Menunggu review hasil CI dan shell untuk preflight actual target.
+
+## 2026-10-30 — codex — Deployment demo parsial dan batas shell
+**Eksekusi:** PR45 merged7d667915. field-pwa pinned4973935, mode staging, deployment84abcb97 SUCCESS dan build-info publik staging. Gateway awal memakai static Dockerfile akibat default pwa/railway.toml; update railwayConfigFile ditolak plugin (deprecated). Beralih image resmi nginx:1.28-alpine dengan Start Command yang merekonstruksi tiga file gateway audited4973935; deployment8f42f93b SUCCESS.
+**Reproduksi:** pwa/scripts/railway-gateway-command.mjs menghasilkan command dari file source tanpa credential/download runtime; docs/DEMO_DEPLOYMENT_20261030.md mencatat status dan urutan operator.
+**Belum selesai:** endpoint mobile Odoo404; log DB railway. Shell/backup/ORM tidak tersedia via plugin. Tidak memutasi database, menyalakan reset/FORCE_UPGRADE, memodifikasi guard atau membuat akun server. Login/acceptance end-to-end belum siap.
+## 2026-10-30T13:20:00+07:00 — antigravity agent — Resolusi Binding Persisten Canonical Company pada Disposable Runtime Proof
+**Konteks Diagnostik Workflow Full Dataset Runtime Verification:**
+- Pada eksekusi container database disposable Odoo (`fmcg_full_disposable`), nama default perusahaan Odoo baru adalah `My Company` (bukan `PT Salva Inti Mandiri`).
+- Ketika `resolve_canonical_company(env)` dieksekusi tanpa fallback `env.company`, kueri nama/kode gagal menemukan company kanonikal karena identitas persisten resmi kontrak loader (`ir.config_parameter` `fmcg.seed_company_id` dan XMLID `id_base.fmcg_seed_company`) belum diikutsertakan dalam urutan resolusi.
+- Supervisor dalam Putaran 5 secara eksplisit menetapkan acceptance: *"Gunakan identitas company/gudang persisten yang eksplisit (config/XMLID yang cocok dengan loader/kontrak); reject jika binding hilang, ambigu, atau berbeda company."*
+
+**Perbaikan yang Diimplementasikan:**
+1. **Binding Identitas Persisten Loader pada `resolve_canonical_company` (`scripts/ops/verify_disposable_full.py`):**
+   - Mengintegrasikan pengecekan parameter konfigurasi persisten `fmcg.seed_company_id` yang selalu didaftarkan oleh `CanonicalPerpetualAdapter` saat pemuatan awal.
+   - Mengintegrasikan pengecekan XMLID `id_base.fmcg_seed_company` (khusus untuk record dengan model `res.company`).
+   - Melanjutkan pencarian singular berdasarkan kode `FMCG` atau nama `PT Salva Inti Mandiri`.
+   - Tetap menghapus seluruh fallback ambient `env.company`: jika seluruh binding eksplisit tersebut tidak ada atau menunjuk record yang tidak ada di database, resolver menolak secara deterministik (`raise LookupError`).
+2. **Pengujian Regresi Unit (`tests/test_full_dataset_cutoff_and_upgrade.py`):**
+   - Menambahkan skenario 5: resolusi via `ir.config_parameter` `fmcg.seed_company_id` untuk company dengan nama generik (`My Company`).
+   - Menambahkan skenario 6: resolusi via XMLID `id_base.fmcg_seed_company`.
+   - Memastikan skenario 3 (counterexample supervisor: Unrelated Company ID 999 tanpa binding persisten) tetap terbukti gagal dan melempar `LookupError`.
+   - Menjalankan seluruh 10 pengujian di `tests/test_full_dataset_cutoff_and_upgrade.py` (termasuk 9 in-database savepoint mutation probes): seluruhnya PASS dalam 1085 detik.
+3. **Integritas:**
+   - 15 CSV register kanonikal di `data/registers/` 100% beku.
+   - `python -m ruff check .`: PASS (0 errors).
+   - `python scripts/check_manifests.py`: PASS (5 addon).
+
+## 2026-10-30T12:15:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 5: Validasi Arah Fisik Source Outbound dan Determinisme Fail-Closed Resolver
+**Konteks Review Supervisor ([issuecomment-6515188630](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6515188630)):**
+- Status PR #39: HOLD / changes required (Full runtime SUCCESS pada run 40986984211, 8 mutasi savepoint REJECTED_AS_EXPECTED, baseline pulih, carry-forward 48 DO/invoice, Run 2 zero-drift, dan seluruh 9 job CI PR resmi DITERIMA dan TERBUKTI).
+- Catatan reviewer yang diselesaikan:
+  1. [P1] Arah fisik source outbound belum diverifikasi: Audit menerima pergerakan supplier -> customer sebagai outbound kanonikal yang memiliki HPP sah. Wajib periksa source usage == 'internal' dan location_id == wh_stock_loc.id secara eksplisit pada setiap move pengiriman selesai (baik di audit Juli maupun Agustus). Tambahkan probe in-database savepoint untuk korupsi lokasi asal outbound.
+  2. [P2] Resolver masih fail-open saat company/WH kanonikal tidak ditemukan: Hapus fallback env.company dan heuristik gudang not other. Jika identitas kanonikal hilang atau tidak unik, wajib raise LookupError deterministik.
+  3. Sinkronisasi dengan origin/main: Mengintegrasikan PR #45 (7d66791, keputusan lingkup demo production), membersihkan trailing whitespace, dan memperbarui body PR.
+
+**Perbaikan yang Diimplementasikan:**
+1. **[P1] Verifikasi Arah Fisik Source Outbound Move (scripts/ops/verify_disposable_full.py):**
+   - Menambahkan validasi ketat pada setiap stock.move pengiriman pelanggan di penutupan Juli dan pembukaan Agustus:
+     * m.location_id.usage == 'internal' (gagal seketika jika source adalah vendor/supplier, customer, atau inventory adjustment).
+     * m.location_id.id == wh_stock_loc.id (gagal seketika jika source bukan gudang kanonikal WH Maumbi).
+     * m.location_dest_id.usage == 'customer'.
+     * Jika move memiliki picking_id, memverifikasi picking.state == 'done' dan picking_type_id.code == 'outgoing'.
+   - Menambahkan **Probe 9 (Outbound Source Location Corruption)** pada in-database fault-injection runner: mengubah location_id stock move pengiriman selesai ke lokasi vendor/supplier di dalam savepoint. Auditor produksi terbukti menolak seketika dengan AssertionError (VIOLATION OUTBOUND SOURCE), dan baseline pulih 100% setelah rollback.
+2. **[P2] Eliminasi Seluruh Fallback & Fail-Closed Deterministic Resolver (scripts/ops/verify_disposable_full.py):**
+   - Menghapus fallback ambient env.company pada resolve_canonical_company(env): kueri wajib menemukan tepat 1 entitas dengan code == 'FMCG' atau name == 'PT Salva Inti Mandiri', atau raise LookupError.
+   - Menghapus heuristik warehouse not other dan fallback ke kueri stock.location generik pada resolve_canonical_locations(env): wajib menemukan tepat 1 gudang dengan code == 'WH' pada canonical company, atau raise LookupError.
+3. **[P3] Penambahan Unit Test Suite (	ests/test_full_dataset_cutoff_and_upgrade.py):**
+   - Memperbarui test_canonical_location_resolver_rejects_ambiguity_and_foreign_company: memvalidasi penolakan saat canonical company tidak ada (meskipun ada env.company ID 999), dan penolakan saat gudang utama WH tidak ada (meskipun ada lone AUX depot).
+   - Memperbarui test_exact_hpp_journal_binding_rejects_wrong_journal_account_direction_or_reuse: memvalidasi penolakan terhadap move berlokasi asal supplier pada audit Juli.
+   - Menambahkan pengujian pada test_july_historical_closing_immutability_detects_value_modifications: memvalidasi penolakan terhadap move berlokasi asal supplier pada audit Agustus.
+4. **[P4] Kerapihan Whitespace & Sinkronisasi Git:**
+   - Membersihkan trailing whitespace pada docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md.
+   - Merge commit origin/main (7d66791, PR #45) selesai dan bersih.
+5. **Hasil Verifikasi Lokal:**
+   - python -m ruff check .: PASS (0 errors).
+   - python scripts/check_manifests.py: PASS (5 addon terverifikasi).
+   - python -m unittest tests.test_full_dataset_cutoff_and_upgrade: Seluruh suite lulus 100%.
+   - 15 CSV register kanonikal di data/registers/: 100% beku tanpa perubahan satu byte pun.
+
+
+## 2026-10-30T08:38:00+07:00 — antigravity agent — Resolusi Multi-Move Picking pada Exact HPP Binding & Attribution Audit
+**Konteks & Root Cause CI Run 40982532223:**
+- Pada validasi delivery order di Odoo 19 `stock_account`, pengiriman dengan banyak baris produk (*multi-line picking*) menghasilkan satu *header* `account.move` (`STJ/...`) yang memuat beberapa pasang baris AML debit `510000` dan credit `113000` (satu pasang per `stock.move`).
+- Asersi sebelumnya yang mengecek `assert len(debit_lines) == 1` pada level `account.move` memicu kegagalan saat memeriksa DO multi-move (`Account move STJ/2026/07/0156 memiliki 5 baris debit 510000 (wajib tepat 1)!`).
+- Selain itu, asersi naif `assert am_id not in seen_move_am_ids` keliru mengasumsikan 1 header `account.move` hanya boleh dimiliki oleh 1 move, padahal yang dilarang supervisor untuk dibagi/dipakai ulang adalah baris AML (*anti-AML reuse*: setiap baris AML STJ hanya boleh di-bind ke tepat satu move).
+
+**Perbaikan yang Diimplementasikan:**
+1. **Candidate-Based AML Matching (`scripts/ops/verify_disposable_full.py`):**
+   - Menghapus pembatasan 1 move per `account.move` (`seen_move_am_ids`) pada fase Juli dan Agustus.
+   - Mengimplementasikan pencocokan kandidat AML per `stock.move`:
+     * Mencari kandidat debit `510000` unconsumed (`ln.id not in seen_aml_ids`) yang cocok dengan `product_id == m.product_id`.
+     * Memvalidasi nominal eksak `debit == exp_val` (`round(m.quantity * unit_cost, 2)`) dan `credit == Decimal("0.00")`.
+     * Menambahkan baris debit terpilih ke `seen_aml_ids`.
+     * Mencari kandidat credit `113000` unconsumed (`ln.id not in seen_aml_ids`) yang cocok dengan `product_id == m.product_id`.
+     * Memvalidasi nominal eksak `credit == exp_val` dan `debit == Decimal("0.00")`.
+     * Menambahkan baris credit terpilih ke `seen_aml_ids`.
+   - Memvalidasi `assert len(seen_aml_ids) == len(done_out_moves) * 2` (5.300 baris AML unik di Juli, 5.476 di Agustus) untuk membuktikan tidak ada baris AML yang terbagi (*shared*) atau terpakai ulang (*reused*).
+2. **Penajaman Probe 7 In-Database Savepoint Mutation:**
+   - Memastikan move pembanding `m2` memiliki `account_move_id` yang berbeda dari `m1` (`m2.account_move_id != m1.account_move_id`), sehingga simulasi *cross-binding* benar-benar mengarahkan move ke jurnal pengiriman lain.
+3. **Hasil Verifikasi Lokal:**
+   - `python -m ruff check .`: PASS (0 errors).
+   - `python scripts/check_manifests.py`: PASS (5 addon terverifikasi).
+   - `python -m unittest tests/test_full_dataset_cutoff_and_upgrade.py`: PASS (10/10 tests dalam 857s, mencakup simulasi full dataset Juli/Agustus, exact multiset audit, dan 8 in-database savepoint mutation probes).
+   - `15 CSV register kanonikal di data/registers/`: 100% beku tanpa perubahan satu byte pun.
+
+
+## 2026-10-30T07:50:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 4: Exact HPP Binding & Attribution, Deterministic Canonical Location Resolver, dan Sinkronisasi Main
+**Konteks Review Supervisor ([issuecomment-6511303227](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6511303227)):**
+- Status PR #39: HOLD / changes required (Full runtime SUCCESS pada run 40891644357 dan 6 in-database savepoint mutations resmi DITERIMA dan TERBUKTI; temuan swap stok/lot dan loop HPP kosong resmi tertutup).
+- Catatan reviewer yang diselesaikan:
+  1. Binding HPP belum eksak: Jurnal salah masih bisa lolos jika hanya posted dan memiliki dua kode akun. Wajib periksa debit 510000 dan credit 113000 eksak baris per baris, product match, company match, STJ journal, date match, nominal round(qty * standard_price, 2), serta larangan AML reuse.
+  2. Resolver lokasi masih heuristik: Menolak potensi salah pilih warehouse company lain; wajib scoping deterministik ke canonical company dan assert cardinality == 1 pada warehouse WH dan lokasi karantina.
+  3. Sinkronisasi dengan origin/main: Mengintegrasikan commit fca1e0f (PR #41 staging session read dan PR #42 official evidence API).
+
+**Perbaikan yang Diimplementasikan:**
+1. **[P1] Exact HPP Valuation Binding & Anti-AML Reuse (`scripts/ops/verify_disposable_full.py`):**
+   - Menggantikan pemeriksaan kode akun generik dengan audit mendalam baris-per-baris pada setiap `stock.move` pengiriman pelanggan selesai (`done_out_moves`):
+     * Memvalidasi tepat satu baris debit 510000 dengan nominal eksak `_get_expected_move_valuation(m)` (`round(m.quantity * unit_cost, 2)` atau dari SVL), credit == 0.00, product_id match `m.product_id`, dan company_id match canonical company.
+     * Memvalidasi tepat satu baris credit 113000 dengan nominal eksak `exp_val`, debit == 0.00, product_id match `m.product_id`, dan company_id match canonical company.
+     * Memvalidasi relasi singular `account_move_id`: `state == 'posted'`, `journal_id.code == 'STJ'`, dan `date == m.date`.
+     * Menegakkan anti AML reuse via `seen_aml_ids` dan anti move reuse via `seen_move_am_ids` (setiap baris AML STJ hanya boleh di-bind ke tepat satu pergerakan barang).
+2. **[P2] Deterministic Canonical Location Resolver (`scripts/ops/verify_disposable_full.py`):**
+   - Mengimplementasikan `resolve_canonical_company(env)` yang memvalidasi keberadaan perusahaan kanonikal (`code == 'FMCG'` atau `name == 'PT Salva Inti Mandiri'`) dengan asersi singularitas (cardinality == 1).
+   - Memperbarui `resolve_canonical_locations(env, company=None)` dengan scoping ketat ke canonical company:
+     * Warehouse gudang utama: filter `company_id == canonical_company.id` dan `code == 'WH'` dengan asersi tepat 1 kandidat (fail-closed jika ditemukan 0 atau > 1 kandidat). Memverifikasi `lot_stock_id` bertipe internal dan milik canonical company.
+     * Lokasi karantina: filter `company_id == canonical_company.id`, `usage == 'internal'`, dan `name == 'Karantina FMCG Maumbi'` dengan asersi tepat 1 kandidat.
+     * Mengembalikan 3-tuple `(wh_stock_loc, quarantine_loc, canonical_company)` dan memfilter kueri `stock.quant` secara eksplisit pada scope `company_id`.
+3. **[P3] Ekspansi In-Database Savepoint Fault-Injection (8 Probes):**
+   - Menambahkan Probe 7: Outbound Move HPP Cross-Binding / AML Reuse (mengarahkan `m1.account_move_id` ke `m2.account_move_id` di dalam savepoint). Auditor produksi terbukti menolak secara deterministik dengan `AssertionError` (`REJECTED_AS_EXPECTED`).
+   - Menambahkan Probe 8: HPP Journal Debit-Credit Direction Swap (membalik arah debit 113000 dan credit 510000). Auditor produksi terbukti menolak secara deterministik dengan `AssertionError` (`REJECTED_AS_EXPECTED`).
+   - Baseline database terbukti pulih 100% dan identik setelah seluruh 8 probe di-rollback.
+4. **[P4] Penambahan Unit Test Suite (`tests/test_full_dataset_cutoff_and_upgrade.py`):**
+   - Menambahkan `test_canonical_location_resolver_rejects_ambiguity_and_foreign_company`: membuktikan bahwa foreign warehouse diabaikan, canonical company tetap terpilih, dan ambiguitas warehouse di company yang sama ditolak dengan `LookupError`.
+   - Menambahkan `test_exact_hpp_journal_binding_rejects_wrong_journal_account_direction_or_reuse`: membuktikan jurnal non-STJ, date mismatch, debit-credit direction swap, nominal mismatch, dan AML reuse ditolak dengan `AssertionError`.
+5. **Hasil Verifikasi Lokal:**
+   - `python -m ruff check .`: PASS (0 errors).
+   - `python scripts/check_manifests.py`: PASS (5 addon terverifikasi).
+   - `python -m unittest tests.test_full_dataset_cutoff_and_upgrade`: PASS (seluruh 10 tests, termasuk 8 in-database savepoint mutation probes).
+   - `15 CSV register kanonikal di data/registers/`: 100% beku tanpa perubahan satu byte pun.
+
+## 2026-10-29T20:55:00+07:00 — antigravity agent — Resolusi Interaksi Cursor Savepoint dan Penajaman Probe Fault-Injection di Database Nyata
+**Konteks & Ringkasan Perbaikan:**
+1. **Resolusi Interaksi Cursor Savepoint:**
+   - Menghapus method savepoint(self) dari MockCursor di tests/test_canonical_loader_adapter.py.
+   - Mengimplementasikan _db_savepoint() terisolasi di scripts/ops/verify_disposable_full.py yang mendeteksi hasattr(cr, 'savepoint') and callable(getattr(cr, 'savepoint')) untuk PostgreSQL nyata, atau fallback ke _take_snapshot / _restore_snapshot jika berjalan di MockEnv.
+   - Mengeliminasi regresi pada scripts/ops/verify_disposable_slice.py (yang mengandalkan ketiadaan savepoint pada MockEnv untuk menjalankan snapshot mock), sehingga seluruh 20 mutasi negatif slice di test_canonical_loader_adapter.py lulus 100%.
+2. **Penajaman Probe 5 (Balanced AML Tampering) di Database Nyata:**
+   - Mengatasi odoo.exceptions.UserError: The entry is not balanced pada real Odoo ORM saat baris cogs_ln dan stk_ln ditulis berturut-turut.
+   - Pada PostgreSQL nyata di dalam savepoint, perubahan nilai (+Rp 500.000 debit 510000 & +Rp 500.000 credit 113000) dieksekusi via direct SQL UPDATE account_move_line, lalu diikuti env.invalidate_all() untuk membersihkan cache ORM.
+   - Terbukti ditolak secara deterministik oleh audit_database_against_oracle_july dengan AssertionError: Audit COGS Nominal Juli Mismatch!, membuktikan audit saldo GL dan nominal COGS aktif dan non-vacuous.
+3. **Penajaman Probe 6 (Cross-Cutoff Invoice Injection):**
+   - Menambahkan binding partner_id dan journal_id sah serta meniadakan state: 'posted' pada create dictionary (mematuhi UserError Odoo 19 yang melarang membuat move langsung dalam status posted).
+   - Terbukti dibuat sebagai draft out_invoice di dalam savepoint dan ditolak secara deterministik oleh asersi cut-off dan invoice count audit produksi (Audit Faktur Juli Gagal! Expected 1276, got 1277).
+4. **Hasil Verifikasi Penuh:**
+   - python -m ruff check .: PASS (0 errors).
+   - python scripts/check_manifests.py: PASS (5 addon).
+   - python -m unittest tests/test_canonical_loader_adapter.py: PASS (seluruh 63 adapter tests, termasuk 20 slice negative mutations).
+   - python -m unittest tests/test_full_dataset_cutoff_and_upgrade.py: PASS (8/8 tests, termasuk 6 real in-database savepoint mutations).
+   - 15 CSV register kanonikal di data/registers/ 100% beku.
+
+## 2026-10-29T20:13:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 3: Exact Multiset Stock, Non-Vacuous COGS Binding, dan In-Database Fault-Injection (cr.savepoint)
+**Konteks Review Supervisor ([issuecomment-6496046798](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6496046798)):**
+- Status PR #39: HOLD / changes required (full runtime SUCCESS terkonfirmasi pada run 40865942482, namun audit stok masih agregat, binding HPP vacuous pada empty recordset, dan mutasi negatif belum dieksekusi di database PostgreSQL nyata).
+- Sinkronisasi Main: Menyelesaikan merge branch main terbaru yang memuat PR #38 dan PR #40 (id_mobile_api dan kontrak PWA catalog v2), memvalidasi 5 addon manifest.
+
+**Perbaikan yang Diimplementasikan:**
+1. **[P1-1] Exact Multiset Stock & Reservation Audit (scripts/ops/verify_disposable_full.py):**
+   - Menggantikan audit saldo agregat dengan pencocokan exact multiset (sku_code, lot_name) -> quantity untuk seluruh 344 pasang SKU+Lot di gudang internal utama (2.911.524 unit di penutupan Juli, 2.855.242 unit di pembukaan Agustus).
+   - Mengaudit kuantitas reservasi per-SKU secara exact: tepat 64 SKU reserved, total 56.282 unit pada penutupan Juli untuk 48 DO carry-forward, dan tepat 0.0 unit untuk seluruh SKU pada pembukaan Agustus.
+   - Mengaudit kuantitas karantina per-(SKU, Lot) secara exact (8 pasang SKU+Lot, total 320 unit).
+   - Mengeliminasi fallback ID 2 dan substring fuzzy dengan helper deterministik 
+esolve_canonical_locations(env).
+   - Probe swap kuantitas on-hand (+5/-5), swap reservasi (+5/-5), dan substitusi dummy lot 999 terbukti 100% digagalkan oleh auditor produksi.
+2. **[P1-2] Non-Vacuous COGS Binding Audit (scripts/ops/verify_disposable_full.py):**
+   - Memperbaiki komparasi recordset kosong ORM Odoo: mengganti getattr(m, 'origin_returned_move_id', False) is False dengan falsiness boolean 
+ot getattr(m, 'origin_returned_move_id', False).
+   - Menambahkan asersi ketat jumlah outbound move: ssert len(done_out_moves) == 2650 pada penutupan Juli dan ssert len(done_out_moves) == 2738 pada pembukaan Agustus (persis sama dengan jumlah baris order lines kanonikal).
+   - Memvalidasi setiap outbound move memiliki singular ccount_move_id berstatus posted dengan debit COGS 510000 dan credit Persediaan 113000.
+3. **[P1-3] In-Database Fault-Injection (cr.savepoint) di Runner Produksi (scripts/ops/verify_disposable_full.py & tests/test_canonical_loader_adapter.py):**
+   - Menambahkan Fase 1B di erify_disposable_full.py untuk mengeksekusi 6 mutasi counterexample langsung pada database via with env.cr.savepoint(): (SKU physical swap, dummy lot substitution, reserved SKU swap, COGS binding unlink, balanced AML tampering +500k, dan cross-cutoff August invoice injection).
+   - Seluruh 6 mutasi terbukti memicu AssertionError dan di-rollback bersih via savepoint, dengan verifikasi ulang baseline pristine.
+   - Hasil dicatat ke dalam 
+eport['runtime_negative_mutations'] dan disajikan pada Markdown summary.
+   - Menambahkan method savepoint(self) pada MockCursor di tests/test_canonical_loader_adapter.py agar kompatibel penuh dengan pola context manager Odoo nyata.
+4. **[P1-4] Pengujian Komprehensif (8/8 PASS):**
+   - Seluruh 8 pengujian di tests/test_full_dataset_cutoff_and_upgrade.py terbukti 100% LULUS (8/8 PASS).
+
+**Hasil Verifikasi Lokal:**
+- 
+uff check .: PASS (0 errors).
+- python scripts/check_manifests.py: PASS (5 addon).
+- erify_seed_invariants.py & erify_seed_acceptance.py: PASS.
+- tests/test_full_dataset_cutoff_and_upgrade.py: PASS (8/8 tests).
+- 15 CSV register kanonikal di data/registers/ 100% beku.
+
+## 2026-10-29T18:30:00+07:00 — antigravity agent — Pembuktian Penuh Runtime Sukses 100% pada Odoo 19 Disposable & Resolusi Izin Penulisan Artifact Laporan
+- [P1-1] Konfirmasi Sukses Runtime Penuh (24m 59s): Workflow GitHub Actions `Full Dataset Runtime Verification` pada run `40862113767` terbukti **100% HIJAU (PASS)** pada container Odoo 19 nyata (1.324 SO, 1.281 DO tervalidasi, 1.324 Faktur, 967 AR terekonsiliasi, 4 AP, 30 OPEX, Audit Checkpoint Agustus PASS, Anti-Fallback Salesperson PASS, dan Idempotensi Run 2 Replay Zero-Drift PASS).
+- [P1-2] Resolusi Izin Penulisan Artifact: Mengatasi peringatan Permission denied pada `/opt` dengan mengutamakan direktori `/tmp` yang memiliki hak tulis penuh bagi non-root user `odoo`, menulis laporan secara redundan ke seluruh direktori kandidat writable, dan memperbarui urutan ekstraksi artifact pada workflow.
+
+## 2026-10-29T18:01:00+07:00 — antigravity agent — Optimasi Konteks ORM Odoo, Logging Periodik, dan Penyesuaian Timeout Runner GitHub Actions
+- [P1-1] Optimasi Konteks Mass Data Odoo ORM: Menambahkan context `tracking_disable=True, mail_create_nolog=True, mail_create_nosubscribe=True, mail_notrack=True, no_reset_password=True` pada `CanonicalPerpetualAdapter.__init__()` saat berjalan di real Odoo Environment untuk meniadakan ratusan ribu operasi chatter database yang memicu bottleneck.
+- [P1-2] Transparansi Logging Periodik: Menambahkan progress printout periodik setiap 100 order, 100 faktur, dan 100 pembayaran AR dengan `sys.stdout.flush()` pada `load_canonical_perpetual.py`. Menambahkan `-e PYTHONUNBUFFERED=1` pada docker exec workflow untuk mencegah stdout buffering.
+- [P1-3] Penyesuaian Timeout Runner GitHub Actions: Meningkatkan `timeout-minutes` dari 45 menit menjadi 180 menit pada `full-dataset-runtime.yml` agar pemuatan dataset penuh (1.324 SO, 1.281 DO, 1.276 faktur, 967 AR, audit multiset, dan replay Run 2) memiliki batas waktu yang realistis dan terukur sesuai panduan proyek.
+- [P1-4] Resilient Artifact Extraction: Menambahkan pembacaan fallback laporan dan ringkasan dari `/opt/` dan `/tmp/` pada step ekstraksi container.
+
+## 2026-10-29T17:08:00+07:00 — antigravity agent — Resolusi Penentuan REPO_ROOT Tangguh Stdin Odoo Shell pada verify_disposable_full.py
+- Mengatasi `NameError: name '__file__' is not defined` saat skrip `scripts/ops/verify_disposable_full.py` dipiping ke stdin `odoo shell --no-http`.
+- Menyelaraskan deteksi path bertingkat (`try ... except NameError` dengan fallback ke `/opt/scripts` dan `/opt/data/registers`) konsisten dengan `verify_disposable_slice.py`.
+
+## 2026-10-29T17:00:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 2 (issuecomment-6492070609): PostgreSQL Bootstrap, Dynamic Stock Reservation, Immutable July AML Multiset, Singular Account Move ID, dan Resilient Failure Reporting
+**Konteks Review Supervisor ([issuecomment-6492070609](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6492070609)):**
+- Status PR #39: HOLD / changes required.
+- Temuan supervisi putaran 2:
+  1. Full-runtime gagal: `CREATE DATABASE` dieksekusi di dalam blok PostgreSQL `DO`, yang dilarang PostgreSQL.
+  2. Oracle masih menerima stok salah dan jurnal seimbang dengan nilai salah pada probe fungsi produksi.
+  3. Immutabilitas Juli hanya memeriksa jumlah baris AML, sehingga perubahan nilai dengan jumlah baris tetap lolos.
+  4. Pengujian mutasi seimbang sebelumnya memodifikasi invoice pada mock, bukan debit/kredit AML nyata.
+  5. Failure report menutupi error asli dan mencetak label PASS untuk fase yang belum selesai.
+  6. Snapshot memerlukan relasi singular `account_move_id` dan `amount_residual`.
+- Penerimaan supervisi: Perbaikan presisi timestamp/snapshot diterima, pemisahan scope upgrade (Prioritas 3) ke PR lanjutan disepakati, dan 48 invoice Agustus terkonfirmasi dari sumber register kanonikal.
+
+**Perbaikan yang Diimplementasikan:**
+1. **[P1-1] Resolusi Bootstrap PostgreSQL Workflow (`.github/workflows/full-dataset-runtime.yml`):**
+   - Memisahkan pembuatan role `odoo_app` (dalam blok `DO`) dengan pembuatan database `fmcg_base` dan `fmcg_full_disposable` (menggunakan perintah `createdb -h localhost -U postgres` dan `psql -c` mandiri di luar transaksi/fungsi).
+   - Menambahkan ekstraksi `ODOO_IMAGE_DIGEST` (`docker inspect --format='{{index .Id}}' fmcg-odoo:ci`) dan menyalurkannya ke runner container via environment variable untuk audit reproducibility.
+2. **[P1-2] Resilient Failure Reporting & Anti-UnboundLocalError (`scripts/ops/verify_disposable_full.py`):**
+   - Menginisialisasi dictionary `meta` sebelum blok `try:` pada `run_full_disposable_verification` sehingga abort dini pada safety guard tidak menyebabkan `UnboundLocalError`.
+   - Blok `finally:` menulis laporan JSON dan Markdown dengan status `FAILED` yang jujur tanpa melabeli fase yang belum selesai sebagai `PASS`.
+   - `assert_disposable_database` secara eksplisit memeriksa forbidden substrings (`prod`, `production`, `live`, `railway`, `master`, `official`, `main`, `fmcg_base`).
+3. **[P1-3] Dynamic Stock Reservation & Unreserve Accounting (`tests/test_canonical_loader_adapter.py`):**
+   - Menyempurnakan alokasi reservasi kuantitas pada `MockRecord.action_confirm()` dan pengurangan reservasi saat pengiriman divalidasi pada `MockRecord.button_validate()`.
+   - Mengurangi reservasi dari quant produk di lokasi internal secara terdistribusi sehingga total reservasi di gudang pada 31 Juli 2026 tercatat persis **56.282 unit** (1.038 karton) untuk 48 DO carry-forward, dan tepat **0.0 unit** setelah pengiriman 1 Agustus divalidasi.
+4. **[P1-4] Immutabilitas Nilai Jurnal Juli (`scripts/ops/verify_disposable_full.py`):**
+   - `audit_database_against_oracle_august` kini memverifikasi multiset tuple lengkap baris jurnal historis Juli `(id, move_id, account_code, product_id, debit, credit, date)`.
+   - Segala mutasi nominal debit/kredit pada jurnal Juli dengan jumlah baris tetap terbukti digagalkan oleh audit produksi.
+5. **[P1-5] Penegakan Relasi Singular account_move_id & Deteksi Mutasi Nyata (`scripts/ops/verify_disposable_full.py` & `tests/test_full_dataset_cutoff_and_upgrade.py`):**
+   - Memvalidasi bahwa seluruh stock move pengiriman ke customer memiliki relasi singular `account_move_id` bertatus `posted`.
+   - Menguji mutasi negatif nyata: pemutusan relasi `account_move_id` pada move pengiriman ke customer terbukti digagalkan oleh audit produksi.
+6. **[P1-6] Pengujian Komprehensif (8/8 PASS):**
+   - Menambahkan 8 unit tests komprehensif di `tests/test_full_dataset_cutoff_and_upgrade.py` mencakup dynamic oracle calculation, rekonsiliasi 14 visit -> 48 pesanan, simulasi dua fase cut-off & idempotensi Run 2, mutasi negatif nyata stok/AML/relasi, immutabilitas nilai jurnal Juli, sensitivitas snapshot mendalam, safety guard forbidden substrings, dan resilience failure reporting.
+
+**Hasil Verifikasi Lokal:**
+- `ruff check .`: PASS (0 errors).
+- `python scripts/check_manifests.py`: PASS (4 addon).
+- `tests/test_canonical_loader_adapter.py`: PASS (termasuk 20 uji mutasi negatif).
+- `tests/test_full_dataset_cutoff_and_upgrade.py`: PASS (8/8 tests lulus).
+- 15 CSV register kanonikal di `data/registers/` 100% beku.
+
+## 2026-10-29T14:55:00+07:00 — antigravity agent — Tindak Lanjut Audit Supervisi PR #39: Bootstrap DB, Dynamic Oracle, Deep Snapshot, dan Strict Guard
+**Konteks Review Supervisor ([issuecomment-6490484056](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6490484056)):**
+- Status PR #39: HOLD / changes required (full runtime belum lolos karena workflow gagal sebelum loader berjalan).
+- Temuan supervisi: kegagalan bootstrap database `fmcg_base`, oracle belum mengaudit DB aktual secara dinamis (hardcoded stock numbers), snapshot memotong datetime dan membuang relasi kunci, scope upgrade belum terimplementasi, guard disposable berbasis substring rentan (`official_live`), serta report tidak tertulis pada kegagalan awal.
+
+**Perbaikan yang Diimplementasikan:**
+1. **[P1-1] Resolusi Bootstrap & Fail-Fast Workflow (`.github/workflows/full-dataset-runtime.yml`):**
+   - Menambahkan langkah penyiapan role `odoo_app` dan database `fmcg_base` via `psql` di PostgreSQL sebelum container Odoo dimulai.
+   - Menambahkan deteksi container exited/fail-fast pada loop polling dan otomatis mencetak log diagnostik container bila gagal.
+   - Memperluas trigger PR paths mencakup runner, adapter, test suite, dan data registers.
+2. **[P1-2] Dynamic Oracle & Audit DB Aktual (`scripts/ops/verify_disposable_full.py`):**
+   - `FullDatasetCanonicalOracle` menghitung seluruh ekspektasi secara dinamis langsung dari baris CSV register (terbukti lulus probe in-memory mutation opening stock 999999).
+   - Mengimplementasikan `audit_database_against_oracle_july` dan `audit_database_against_oracle_august` yang memverifikasi langsung multiset dokumen actual DB (1.324 SO, 1.281 DO + 9 retur, 1.276 Faktur Juli, DPP/PPN, AR/AP, dan GL seimbang).
+   - Menambahkan pengujian mutasi negatif nyata pada database: faktur ilegal Agustus, AML salah-nilai seimbang, dan pergeseran tanggal jurnal melintasi batas periode terbukti digagalkan oleh fungsi audit produksi.
+3. **[P1-3] High-Precision Snapshot & Zero-Drift Replay:**
+   - `capture_deep_state_snapshot` kini mempertahankan presisi penuh ISO datetime (tanpa truncation `[:10]`), memuat relasi lengkap move line (product, location, dest, uom, company, state), moves (picking, sale_line, origin_returned, account_move_ids), AML (product, company, date, residual, reconciled), serta mencakup `stock.picking`, `sale.order`, dan `account.payment`.
+   - Sensitivitas snapshot terbukti mendeteksi modifikasi lokasi, produk, maupun pergeseran jam melintasi tengah malam WITA.
+   - Memperbaiki `CanonicalPerpetualAdapter` agar tidak menimpa `scheduled_date` pada picking yang sudah berstatus `done` saat replay Run 2, menghasilkan zero-drift 100% sempurna.
+4. **[P1-4] Penegasan Scope Upgrade yang Jujur:**
+   - Menghapus input placeholder upgrade pada workflow.
+   - Mendokumentasikan di `docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md` bahwa Prioritas 1 & 2 selesai, sedangkan Prioritas 3 (Upgrade baseline persisten) BELUM DILAKSANAKAN dan dipisahkan ke PR lanjutan.
+5. **[P2-5] Strict Safety Guard & Error Handling:**
+   - `assert_disposable_database` menolak mutlak indikator operasional (`official_live`, `fmcg_full_production`, `fmcg_base`, dll.) dan mewajibkan nama bertanda disposable eksplisit.
+   - Introspeksi merekam versi modul terinstal, commit SHA, dan Odoo image.
+   - Seluruh eksekusi dibungkus dalam blok `try ... finally` sehingga laporan JSON dan Markdown summary selalu tertulis dan diunggah sebagai artifact diagnostik baik pada sukses maupun gagal.
+
+**Hasil Verifikasi Lokal:**
+- `ruff check .`: PASS (0 errors).
+- `python scripts/check_manifests.py`: PASS (4 addon).
+- `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations).
+- `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations).
+- `tests/test_full_dataset_cutoff_and_upgrade.py`: PASS (6/6 tests lulus).
+- 15 CSV register kanonikal di `data/registers/` 100% beku.
+
+## 2026-10-29T13:55:00+07:00 — antigravity agent — Runner Full Dataset Disposable, Two-Phase Cut-Off, & Rekonsiliasi 14 Kunjungan Menjadi 48 Order
+**Konteks & Audit Awal:**
+- Memenuhi arahan pemilik untuk merancang runner full dataset disposable yang dapat diaudit, membuktikan penutupan Juli dan carry-forward Agustus, serta menyusun proposal cut-off runner menggantikan dokumen lama yang tidak ditemukan di git history.
+- Mengaudit matematis perubahan format order pasca-fae5835 (single-principal enforcement): 14 kunjungan outlet pada 31 Juli 2026 menghasilkan tepat 48 SO, 48 DO, dan 48 Faktur single-prinsipal bertanggal 1 Agustus 2026 dengan 1.038 karton reservasi dan DPP Rp 187.858.691,40.
+
+**Implementasi & Deliverables:**
+1. `docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md`: Proposal komprehensif audit pelacakan dokumen lama, rekonsiliasi matematis 14 kunjungan -> 48 order, definisi batas waktu bisnis Asia/Makassar (WITA, UTC+8) dengan konversi UTC eksplisit, arsitektur runner dua fase, dan strategi verifikasi upgrade.
+2. `scripts/ops/verify_disposable_full.py`: Production runner dengan safety guard `assert_disposable_database`, introspeksi metadata lengkap lingkungan runtime (commit SHA, image digest, modul terinstal, timezone, 15 hash SHA256 register kanonikal), `FullDatasetCanonicalOracle`, eksekusi sekuensial Fase 1 (Closing 31 Juli) -> Fase 2 (Opening 1 Agustus Carry-Forward) -> Fase 3 (Idempotensi Run 2 Zero-Drift), pembanding snapshot state mendalam (quants, moves, move_lines, account_moves, aml_records, gl_balances seimbang), asersi anti-fallback salesperson, serta output laporan machine-readable JSON dan ringkasan Markdown.
+3. `.github/workflows/full-dataset-runtime.yml`: Workflow GitHub Actions mandiri (workflow_dispatch & push branch agen/full-dataset*) dengan container postgres:16 dan fmcg-odoo:ci pada database `fmcg_full_disposable`, timeout 45 menit, dan otomatis mengunggah artifact laporan eksekusi tanpa credential.
+4. `scripts/load_canonical_perpetual.py`: Menambahkan parameter `enforce_invoice_cutoff` pada `CanonicalPerpetualAdapter` untuk menahan faktur komersial Agustus pada penutupan Juli dengan preservasi 100% backward-compatibility.
+5. `tests/test_full_dataset_cutoff_and_upgrade.py`: 5 pengujian unit dan penerimaan baru (oracle expectations, pembuktian matematis 14 outlet visits -> 48 pesanan, simulasi dua fase cut-off & idempotensi Run 2 zero-drift, penolakan mutasi negatif kebocoran lintas periode, dan asersi anti-fallback salesperson) terbukti 100% LULUS (5/5 PASS).
+
+**Hasil Verifikasi Lokal:**
+- `ruff check .`: PASS (0 errors/warnings).
+- `python scripts/check_manifests.py`: PASS (4 addon).
+- `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations).
+- `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations).
+- `python -m unittest tests/test_full_dataset_cutoff_and_upgrade.py`: PASS (5/5 tests in 435s).
+- 15 CSV register kanonikal di `data/registers/` 100% beku.
+
+**Status PR & Batasan Operasional:**
+- Branch: `agen/full-dataset-disposable-runner`.
+- Draft PR dibuka targeting `main` untuk peninjauan supervisor `codex`.
+- Proteksi repository dipertahankan: tidak melakukan merge ke `main`, tidak mengubah ruleset main-quality-gate (ID `25827644`), tidak melakukan deployment ke Railway, dan tidak menyentuh database operasional.
+## 2026-10-30 — codex — Skill supervisi dan estafet agent pengganti
+**Mandat:** pemilik meminta skill metode supervisi/review serta konteks historis, aktor, domain dan environment untuk agent pengganti.
+**Deliverables:** skill portable .agents/skills/supervise-pr-evidence/ (metode, teknik tes, template verdict, entry proyek) dan docs/reviews/SUPERVISOR_HANDOFF.md (snapshot main7d667915, PR36/39/46/47, otorisasi production demo, inventaris Railway dan capability blockers). Personal skill disiapkan terpisah untuk direktori skill pengguna.
+**Verifikasi:** source/metadata PR, CI, ruleset25827644 dan inventory Railway dibaca ulang; dokumen membedakan snapshot dari live state. Skill validator PASS; forward-test offline independen menemukan cross-day/trip evidence dan CI SHA lama melalui fungsi produksi, tanpa kontak/mutasi layanan eksternal. Ini validasi workflow skill, bukan verdict PR baru.
+**Batas:** dokumentasi/skill saja; tidak merge PR lain, deploy, backup/provisioning atau mutasi data. PR39 tetap HOLD pada review6515188630; PR47 baru kandidat belum direview; PR46 ditulis supervisor sehingga butuh review independen.
+
+## 2026-10-30 — codex — Otorisasi production sebagai environment demo
+**Keputusan pemilik:** menyetujui penggunaan environment production existing untuk demo setelah penjelasan konsekuensi downtime/perubahan konfigurasi. Menggantikan rencana wajib staging-remote dan batas sebelumnya yang mengecualikan production untuk scope PR44.
+**Batas:** data existing dipertahankan tanpa reset; company/akun TEST terpisah; tidak ada perubahan CSV kanonikal, pelonggaran auth/ACL/geofence atau pembukaan database publik. Guard provisioning tetap berlaku; adaptasi exact-target demo perlu implementasi/review/test sebelum dipakai pada database existing, termasuk fmcg_base bila terkonfirmasi sebagai target aktual.
+**Dokumentasi:** docs/DEMO_ENVIRONMENT_SCOPE_DECISION.md menjadi rujukan scope terbaru; runbook STAGING_ACCEPTANCE_KIT.md diberi penanda alternatif historis agar command disposable tidak disalin ke database existing.
+**Status:** keputusan dan urutan kerja dicatat; bukan klaim deployment/provisioning/acceptance sudah selesai. Tidak ada mutasi Railway dalam perubahan dokumentasi ini.
+
+## 2026-10-30 — agent-codex-pwa — Provisioning shell positive-path gate
+**Berubah:** CI menyalin ci_db yang sudah teruji ke database disposable fmcg_staging_acceptance, lalu menjalankan entrypoint provisioning operator dua kali dengan password random tidak dicetak. Gate memverifikasi dua akun, scope/master TEST dan snapshot/idempotensi tanpa mengaktifkan currency di database asal. Unit/native test tetap terpisah.
+**Koreksi runbook:** raw Odoo shell pada Railway harus override PGUSER/PGPASSWORD ke Odoo role (env admin Postgres bisa mengalahkan config). Command tidak memanggil init/reset/ALTER role. Tidak mengeksekusi ini di Railway; CI baru menunggu.
+
+## 2026-10-30 — agent-codex-pwa — Paket staging master kantor/maps/provisioning
+**Mandat/basis:** owner meminta bantuan menyiapkan sisa staging/master kantor/akun/acceptance perangkat setelah PR43 PASS. PR43 terpantau merged 6cccbf2 selama sesi; basis diselaraskan ke main itu. Pemeriksaan Railway read-only menemukan production saja, serta deployment production berubah oleh proses lain; agen ini tidak deploy.
+**Berubah:** master id.mobile.office admin-only (company, koordinat/radius, status test/unverified/verified dan catatan sumber), office opsional pada assignment/snapshot dan hash versinya. Preview staging memilih kantor/outlet server, GPS nyata tanpa fallback, volatile dan generation guard. Provisioning shell guarded database disposable membuat dua akun capture minimal dan fixture/assignment harian, tidak mengambil alih login existing. Gateway Docker Railway memakai authority HTTPS konstan, Host allowlist, private upstream dan API allowlist existing; ditambah CI smoke transport.
+**Bukti lokal:**327 unit,hosting,typecheck/contracts/format,Ruff5manifest,shell syntax,3 build/budget PASS.5 metode native ORM baru dan3 skenario browser phone/tablet ditambahkan; native Odoo/gateway Docker/browser final menunggu CI. Tidak mengklaim hasil fixture sama dengan actual staging/device acceptance.
+**Batas/menunggu:**dokumen STAGING_ACCEPTANCE_KIT.md dan STAGING_DEVICE_ACCEPTANCE.md menyiapkan urutan deploy/provision/uji. Koordinat kantor nyata belum diketahui; fixture TEST bukan master verified. Belum create environment, buat/reset akun server, deployment, check-in backend/POD atau remote bypass server. Live terkunci, evidence strict; review dan instruksi deployment terpisah.
+
+## 2026-10-30 — agent-codex-pwa — Preview maps check-in kantor dan outlet
+**Klarifikasi owner:** maps dimaksudkan pada check-in kantor/outlet, bukan hanya evidence mandiri. PR43 diperluas dari keputusan acceptance menjadi implementasi preview demo; tidak membuat backend check-in.
+**Berubah:** komponen display-only dengan titik tujuan/perangkat, radius/akurasi, jarak/status geometris, zoom/fit dan basemap OpenStreetMap opt-in dengan attribution. Kantor fixture eksplisit berlabel; outlet memakai paket PJP demo. Callback sumber GPS membedakan fallback demo dari perangkat. Tile hanya viewport, cache browser normal, tanpa prefetch/offline pack atau perubahan paket foto. Error/timeout tile terlihat. Mode relaxed demo existing tetap; strict backend PR42 tidak dilonggarkan.
+**Verifikasi:**326 unit, typecheck/contracts/format, hosting dan tiga build/budget PASS lokal.7 tes proyeksi baru dan4 skenario browser baru (phone/tablet). Download Chromium lokal gagal ZIP truncated; pengujian browser/CI SHA kandidat belum diklaim PASS.
+**Batas/menunggu:**maps pada demo, bukan staging evidence; master kantor resmi/check-in backend/remote-test server/staging provisioning/akun dummy/device acceptance masih terpisah. Tidak merge/deploy, mengubah data server atau kredensial. Lihat REMOTE_ACCEPTANCE_DECISIONS.md.
+
+## 2026-10-30 — agent-codex-pwa — Keputusan acceptance remote owner
+**Mandat:** owner mengizinkan akun/password dummy disposable, pemilihan customer sesuai assignment hari, serta placeholder/pengecualian akurasi untuk sesi remote; maps dan fungsi harus tetap terlihat. Keputusan lengkap: [REMOTE_ACCEPTANCE_DECISIONS.md](REMOTE_ACCEPTANCE_DECISIONS.md).
+**Temuan:** inventaris Railway read-only hanya production dengan field-pwa/Odoo/Postgres. Rekomendasi environment staging-remote pada proyek sama dengan DB/filestore/origin terisolasi. Layar evidence PR42 belum basemap; maps dan remote-test berlabel masih implementasi berikutnya.
+**Batas:** mode remote tidak boleh diklaim lulus GPS lapangan; receipt/watermark/maps wajib membedakan simulasi, validasi keamanan dan strict default tetap. Tidak membuat akun/password, mengubah master, provisioning/deploy atau bypass pada runtime. Dokumentasi saja; live terkunci.
+
+## 2026-10-29 — agent-codex-pwa — Evidence runtime dan receipt scope follow-up
+**Bukti kandidat79e0706:** install-test Odoo mencatat54 native tests,0 failed/0 errors, termasuk6 metode evidence baru. Gate log gagal pada ERROR SQL yang sengaja dipicu tes negatif unique UUID; logger sql_db kini dimute hanya pada assertion negatif tersebut, tidak mengubah constraint atau logging produksi. Full browser lokal119/120 menemukan locator status ambigu sebelum respons403 selesai; locator diikat ke teks status tujuan, tanpa menambah timeout/retry.
+**Penyempurnaan:** receipt dan binding server menambah owner/company/warehouse/assignment eksplisit; client membandingkan scope dengan sesi/snapshot, selain UUID/outlet/hash/waktu/koordinat. Metadata upload tetap tidak menerima owner/radius/master dari client. Font watermark dibesarkan dan preview renderer diperiksa. Freshness GPS maksimal60s/future1s, photo-selected maksimal300s/future5s, device record maksimal60s/future5s; tes boundary server ditambahkan. Record display memakai UUID.
+**Verifikasi:**319 unit PASS,12 pengulangan capture phone/tablet PASS tanpa retry. Native Nginx HTTP/HTTPS upload route PASS.7 metode native evidence menunggu CI baru; hasil54 tests sebelumnya bukan klaim SHA follow-up sudah lolos. Suite browser final120 serta CI SHA baru dicatat pada body PR42. HOLD review/CI; tidak merge/deploy.
+
+## 2026-10-29 — agent-codex-pwa — Bukti GPS/foto resmi tahap4 staging
+**Mandat/basis:** pemilik meminta implementasi server-authoritative geolocation/photo setelah PR41 merged; basis main ab2ccb5, branch agen/pwa-official-evidence. Izin publikasi dokumentasi demo tetap berlaku. Tidak merge/deploy.
+**Berubah:** opt-in group Mobile Evidence Capture, terpisah dari read-only. POST multipart native CSRF menerima JPEG/PNG sumber dan metadata terbatas. Server memeriksa assignment/snapshot/user/company/day WITA, mengambil titik/radius master sendiri, menghitung jarak+akurasi, freshness GPS/photo berdasarkan UTC server, dan menahan outside/uncertain/stale tanpa record. Original byte dipertahankan; Pillow menghasilkan JPEG watermark dengan waktu perangkat dan penerimaan server WITA terpisah, koordinat/akurasi, serta penanda shutter/GPS tidak terverifikasi. Tidak ada klaim anti-mock/keaslian kamera atau basemap resmi.
+**Storage/security:** model evidence immutable + private attachment source/derivative; native own-user/company read rules dan explicit capability. User tidak diberi create/write/unlink ORM atau write Sales/Stock. Create sudo dibatasi private service setelah semua pemeriksaan; bukan context flag/RPC bypass. Fingerprint dan unique user/UUID menahan duplikasi dan isi berbeda; replay identik mengembalikan receipt lama, bukan bukti hari baru. Race conflict409 dapat retry UUID sama. Savepoint/rollover membatalkan record/attachment. GET foto hanya owner/company default, no-store/private/nosniff, tanpa public token.
+**PWA/gateway:** staging menampilkan form hanya bila capability server tersedia setelah sync. GPS real tanpa fallback, sumber tanpa kompresi PWA, native CSRF, verifikasi receipt scope/GPS/time/source hash dan derivative hash sebelum preview. State/upload hanya memori, generation/abort mencegah respons lama mengisi sesi baru. Gateway menambah POST evidence dan GET variant privat secara eksplisit; business commands tetap404, trusted proxy headers/TLS PR41 dipertahankan. Kontrak0.14, PO, EVIDENCE.md dan panduan hosting diperbarui.
+**Bukti lokal:**316 unit+1 hosting,4 skenario browser capture phone/tablet transport fixture, typecheck/contracts/format/demo+live+staging/budget/Ruff5manifest/seed validators PASS. Native Nginx HTTP/HTTPS evidence route regression FAIL pada template lama, PASS pada template baru. Suite browser lengkap dan ORM/HttpCase nyata pada Odoo CI SHA kandidat menyusul; tidak memakai stub ORM untuk klaim runtime.6 metode ORM/HttpCase baru mencakup source/derivative/hash, immutable ACL/IDOR, scope/freshness/geofence, native CSRF/replay dan rollover rollback.
+**Batas/menunggu:** bukti mandiri belum check-in/POD/SO/closing; live terkunci, demo relaxed tetap berjalan. Actual staging E2E/device/camera/GPS/retention filestore dan pengikatan bukti ke transaksi bisnis tetap acceptance berikutnya. HOLD CI/review; backend runtime belum diklaim PASS sampai CI nyata selesai. Seed/master/register/loader tidak diubah.
+
+## 2026-10-29 — agent-codex-pwa — PR41 trusted proxy headers P2
+**Review/otorisasi:** https://github.com/kolondam-dev/odooca-fmcg/pull/41#issuecomment-6495639404; basis debc68e. Pemilik menegaskan ulang publikasi HANDOFF/log demo tetap diizinkan, tanpa meminta izin sama lagi. Catatan tahap3 lokal yang tertunda disertakan bersama perbaikan ini; riwayat existing dipertahankan.
+**Berubah:** ketiga location proxy menetapkan X-Forwarded-Host dari $http_host (termasuk kedua jalur Odoo), proto dari scheme terminator dan for dari remote_addr; Forwarded/forwarded-port/prefix dibuang. Mengganti backend fixture JS dengan Python/Werkzeug ProxyFix bersyarat yang mereplikasi gate Odoo19. Smoke menambah terminasi TLS disposable dengan CA/SAN staging.test yang diverifikasi curl, HTTP/HTTPS nondefault port, dua API+fallback web, origin valid/invalid, spoofed host/proto/for/port/prefix/Forwarded, cookie Secure dan read-only boundary. Key/cert hanya temporary, tidak dicatat atau dipublikasikan.
+**Verifikasi:**307 unit PWA+1 hosting, typecheck/contracts/format, demo/live/staging builds+budget, Ruff/5 manifest/diff/shell syntax PASS.3 probe fixture Werkzeug PASS lokal untuk missing forwarded-host, attacker authority dan trusted HTTPS+port. Native Nginx1.24 + fixture Werkzeug: assertion baru FAIL pada template debc68e, lalu HTTP/HTTPS verified TLS + spoof/origin/port/cookie/method suite PASS pada template perbaikan. Docker dan suite CI final menunggu SHA perbaikan; tidak mengklaim E2E Odoo staging nyata. Tidak mengubah lifecycle volatile/live lock, addon, seed atau endpoint transaksi.
+**Koreksi narasi tahap2:** pada final e0edc4e/CI PASS, native M2M filtering dapat mengembalikan subset SKU authorized; empty catalog ditahan422, dan explicit check_access recordset berisi SKU terlarang ditolak. Entri lama Partial recordset adalah riwayat ekspektasi sebelum final, bukan perilaku final yang berlaku. Coverage tax-included/quantity-break tetap follow-up backend yang dicatat supervisor.
+**Menunggu:** CI SHA final serta review ulang PR41. Status HOLD, tidak merge/deploy; acceptance Odoo staging nyata terpisah.
+
+## 2026-10-29 — agent-codex-pwa — Tahap3 sesi dan UI baca staging
+**Mandat/basis:** pemilik meminta tahap berikutnya setelah PR40 merged; basis main d06fbc6, branch agen/pwa-session-read. Otorisasi dokumentasi demo mengikuti persetujuan owner yang dicatat pada PR40. Tidak merge/deploy.
+**Berubah:** build staging eksplisit (demo dan default live terkunci tetap terpisah), UI login native same-origin → bootstrap → daily sync read-only → katalog/outlet assignment. Setiap sync re-bootstrap, scope v2 diverifikasi dan data hanya tampil setelah seluruh read berhasil. Tidak mengimpor business FieldStore/outbox/mock. Session token/identity/snapshot hanya memori tab. State dibersihkan saat gagal read, offline, tab hidden, clear atau rollover WITA; generation guard menolak response lama. Adapter readonly menolak submit405 sebelum fetch; HTTP tidak mengikuti redirect.
+**Hosting:** template include gateway HTTPS satu origin untuk field/static, dua GET API dan login/assets Odoo; route API lain ditolak. Docker staging opt-in, CI build/budget dan browser staging ditambahkan. Smoke Nginx+cookie forwarding memakai backend fixture disposable (bukan bukti auth Odoo). Main staging melepas SW field lama dan menghapus cache shell sebelum membuka sesi; tidak menyediakan offline fallback.
+**Bukti lokal:**307 unit+1 hosting, typecheck, contracts, format, Ruff/5 manifest, diff/shell syntax, dua validator seed PASS.14 skenario staging phone/tablet ditambahkan (login handoff, daily read, scope/error rollback, race clear, offline/reload, tengah malam, cache retirement). Suite browser final116/116 PASS tanpa failed/retry pada Chrome Headless Shell145.0.7632.6; Seluruh9 job CI hijau pada PR41 HEAD debc68e (PWA40863723493:116 browser tanpa failed/flaky + gateway transport PASS; Odoo40863723621; Seed40863723575). Historical HANDOFF/log publication masih diblokir automatic approval review meskipun otorisasi PR40 telah diverifikasi; exact diff diserahkan terpisah; runtime Nginx/Docker belum dijalankan lokal karena tidak tersedia. Kegagalan invokasi tes dari root disebabkan relative fixture public/icon-192.png; suite diulang dari direktori pwa sesuai konfigurasi CI, bukan dilonggarkan.
+**Batas/menunggu:** STAGING_READ.md membedakan unit/HTTP fixture/gateway/HttpCase Odoo dan acceptance E2E staging nyata. Belum deployment, HTTPS/cookie staging verification atau E2E Odoo+PWA nyata; perlu provisioning assignment serta gateway staging oleh pemilik/antigravity setelah review. SO/approval/evidence/delivery backend write dan manifest tetap tahap terpisah; seed/register/master/addon tidak diubah. Menunggu CI/review dan acceptance staging nyata; live terkunci.
+
 ## 2026-10-29 — agent-codex-pwa — Partial recordset fail-closed regression
 **CIe39824d:** fixture duplikat sudah valid, HTTP dan test lainnya berjalan; install-test40848748880/job123362722228 masih0 failed/1 error dari regresi partial catalog baru yang mengasumsikan snapshot parsial boleh dikembalikan. Bukti runtime menunjukkan explicit products.check_access menolak recordset yang masih mengandung produk tersembunyi. Ini fail-closed yang dipertahankan.
 **Perubahan:** tes sekarang membuktikan hanya SKU visible yang dapat di-search, lalu snapshot ditolak AccessError tanpa menghapus check_access/memakai sudo. README mengklarifikasi filtering M2M kosong422 dan pemeriksaan seluruh remaining recordset403. Klaim subset response pada entri sebelumnya dikoreksi oleh bukti ini. Tidak mengubah service/ACL atau tes negatif lainnya. Ruff/5 manifest/diff PASS;13 targeted endpoint tests menunggu CI final. HOLD, tidak merge/deploy.

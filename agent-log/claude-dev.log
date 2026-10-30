@@ -24,6 +24,39 @@
 - Tidak mengubah kode agen lain; perbaikan diusulkan sebagai M1a-M1c di dokumen review.
 - Task managed by claude-dev agent at 2026-10-25T09:24:46+07:00
 
+[2026-10-30T15:28:17+07:00] [INFO] Prioritas 3: upgrade modul dari baseline persisten + replay idempotensi
+- Menambah scripts/ops/verify_upgrade_baseline.py: fase baseline memuat dataset kanonikal penuh (fase 1 + fase 2), audit Juli/Agustus, snapshot digest SHA-256, lalu menyuntikkan drift terkontrol (version skew latest_version, kolom id_mobile_office.radius dihapus, view id_mobile_api.view_mobile_office_form dihapus).
+- Fase verify memvalidasi kontrak proses `odoo -u` (exit 0, bebas registry corruption), registry/versi manifest, DDL kolom modul, many2one bebas orphan, view XML valid + drift dipulihkan, hook HPP id_base (0 HPP duplikat pada faktur seed, semua outbound punya STJ posted), replay run_all() zero-creation, zero-drift snapshot, imutabilitas AML Juli, audit oracle Agustus.
+- Menambah .github/workflows/upgrade-runtime.yml (contract-tests + upgrade-proof pada Odoo 19/PostgreSQL 16; Fase A baseline, Fase B `odoo -u id_base,id_mobile_api --stop-after-init`, Fase B2 kontrak log, Fase C verify+replay, artefak diagnostik).
+- Menambah 8 tes kontrak di tests/test_full_dataset_cutoff_and_upgrade.py (kelas TestUpgradeBaselineRunner) dan langkah unit di ci.yml static.
+- Memperbarui docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md (Prioritas 3 SELESAI + Bab 6).
+- Verifikasi lokal: ruff PASS, check_manifests PASS (5 addon), 8/8 unit PASS, YAML valid. Eksekusi upgrade nyata belum diuji lokal (tanpa Docker); wajib dibuktikan di GitHub Actions exact SHA.
+- 15 CSV register data/registers/ tidak disentuh.
+- Task managed by claude-dev agent at 2026-10-30T15:28:17+07:00
+
+[2026-10-30T16:02:47+07:00] [INFO] Perbaikan DDL check: kecualikan field attachment/relasional (run pertama upgrade-proof)
+- Run 41027367047 pada SHA e6783b3: Fase A baseline PASS (fase 1 = 13540 baris AML Juli, 899 s; fase 2 carry-forward PASS 48 faktur), lalu GAGAL di assert_schema_integrity pra-upgrade dengan 2 negatif palsu: id.mobile.evidence.original/watermarked (Binary attachment=True disimpan di ir.attachment, bukan kolom tabel).
+- Menambah helper is_column_backed_field(field) (store=True, bukan many2many/one2many, bukan attachment, column_type ada) dan memakainya pada assert_schema_integrity.
+- Menambah unit test regresi test_schema_integrity_skips_non_column_fields (9/9 test PASS) + ruff PASS.
+- Fase C pada run tsb otomatis gagal karena state baseline tidak ada (kaskade), sesuai harapan.
+- Task managed by claude-dev agent at 2026-10-30T16:02:47+07:00
+
+[2026-10-30T16:26:32+07:00] [INFO] Perbaikan Fase B upgrade: PGUSER env menimpa odoo.conf (run kedua upgrade-proof)
+- Run 41030642274 (SHA 5bcd075): Fase A baseline PASS, Fase B upgrade GAGAL exit 1 dengan log hanya 3 baris. Akar masalah: odoo/tools/config.py Odoo 19 memakai ChainMap(runtime > CLI > ENV > file) dan opsi db_user punya env_name=PGUSER, sehingga PGUSER=postgres (env admin Postgres di container) menimpa db_user=odoo_app dari /tmp/odoo.conf dan check_postgres_user() di odoo/cli/server.py mengabortkan proses.
+- Perbaikan workflow Fase B: docker exec -u odoo dengan -e PGUSER=odoo_app -e PGPASSWORD=ci-app serta --db_host/--db_port eksplisit dan --without-demo=all.
+- Kontrak log diperkuat: validate_upgrade_exit_code() kini juga mewajibkan penanda "Modules loaded." agar exit 0 palsu (abort konfigurasi dini) tidak lolos; unit test ditambah.
+- Verifikasi lokal: ruff PASS, yaml valid, 9/9 unit PASS, check_manifests PASS.
+- Task managed by claude-dev agent at 2026-10-30T16:26:32+07:00
+
+[2026-10-30T17:01:10+07:00] [INFO] BUKTI HIJAU Prioritas 3: upgrade-proof lulus di container Odoo 19 + PostgreSQL 16
+- Run GitHub Actions 41033574353 (event pull_request, PR #49), head commit a7ff8aec49037e1586877b1256cb312976faeacc, merge ref SHA 862b9d341c3926d9ceac50049ff7f2c7723636b6. Job "Module Upgrade from Persisted Baseline + Replay Zero Drift" id 123988914701, 09:27:43Z -> 09:53:22Z (25m39s), conclusion success. Job "Kontrak Runner Upgrade (unit)" id 123988862112 success.
+- Fase A baseline: 13540 baris AML Juli; fase 2 carry-forward PASS; drift terkontrol tersuntik (latest_version id_base 19.0.0.0.0, id_mobile_api 19.0.1.1.0; kolom id_mobile_office.radius dihapus; view id_mobile_api.view_mobile_office_form dihapus).
+- Fase B upgrade nyata: exit 0, 84 baris log, 0 temuan corruption, penanda "Modules loaded." ada; log menunjukkan "Loading module id_base (78/89)" dan "Module id_mobile_api loaded in 0.31s".
+- Fase C: Registry PASS (id_base=19.0.1.0.0, id_mobile_api=19.0.1.2.0), DDL 155 kolom PASS + 1 drift dipulihkan, FK 51 relasi 0 orphan, View XML 16 view valid + view drift dipulihkan, HPP Hook PASS (1324 faktur seed, 0 HPP duplikat, 2738 outbound semua ber-STJ posted), Replay 0 record baru (skip SO=1324, invoice=1324, 16.65 s), Zero-Drift 9/9 entitas identik, Imutabilitas 13540 baris AML Juli, Audit oracle Agustus + anti-fallback PASS.
+- Seluruh check PR #49 hijau pada SHA a7ff8ae: upgrade-proof, full-dataset, static, install-test, init-test, invariant-tests, seed-invariants, pwa-*. Artefak: upgrade-runtime-diagnostics-862b9d341c3926d9ceac50049ff7f2c7723636b6.
+- 15 CSV data/registers/ tetap beku (0 byte berubah).
+- Task managed by claude-dev agent at 2026-10-30T17:01:10+07:00
+
 [2026-10-30T18:34:41+07:00] [INFO] PR #36: perbaikan akar sticky/overflow + regression audit
 - Akar mobile: aturan footer di bawah body.id-shell-sidebar, sedangkan kelas dilepas saat ui.isSmall; footer kini global .o_form_view.
 - Akar pinned: top sticky tidak punya ruang di containing block; kembali ke bottom:0 dan interval diturunkan dari normal-flow/containing-block/bottom inset.

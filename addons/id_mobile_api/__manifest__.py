@@ -1,7 +1,7 @@
 {
-    "name": "FMCG Mobile Read API",
-    "summary": "Session-scoped, read-only bootstrap and catalog snapshots for mobile clients.",
-    "version": "19.0.1.0.0",
+    "name": "FMCG Mobile API",
+    "summary": "Scoped mobile reads and immutable geolocation/photo evidence capture.",
+    "version": "19.0.1.2.1",
     "license": "LGPL-3",
     "author": "kolondam-dev",
     "category": "Distribution",
@@ -10,6 +10,7 @@
         "security/mobile_security.xml",
         "security/ir.model.access.csv",
         "views/mobile_workday_views.xml",
+        "views/mobile_office_views.xml",
     ],
     "installable": True,
     "application": False,

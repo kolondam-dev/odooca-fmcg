@@ -5,5 +5,5 @@ export default defineConfig({
         include: ["tests/*.test.ts"],
         setupFiles: ["tests/setup.ts"],
     },
-    define: { __DEMO__: true },
+    define: { __DEMO__: true, __READ_ONLY__: false },
 });

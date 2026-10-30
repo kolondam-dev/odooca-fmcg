@@ -1,0 +1,16 @@
+# The public Railway edge terminates HTTPS; this listener is private HTTP.
+# Default vhost exposes health only. Browser traffic must use STAGING_HOST.
+server {
+    listen ${PORT} default_server;
+    server_name _;
+    location = /healthz { access_log off; return 200 'ok'; }
+    location / { return 444; }
+}
+server {
+    listen ${PORT};
+    server_name ${STAGING_HOST};
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    add_header X-Content-Type-Options nosniff always;
+    location = /healthz { access_log off; return 200 'ok'; }
+    include /etc/nginx/staging-locations.conf;
+}
