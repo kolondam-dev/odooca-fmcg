@@ -85,21 +85,6 @@ function Heading({
     );
 }
 export function App() {
-    if (!__DEMO__)
-        return (
-            <main class="boot">
-                <Brand large />
-                <h1 class="sr-only">Odoo FMCG Mobile</h1>
-                <p role="status">
-                    Integrasi layanan perusahaan belum diaktifkan.
-                </p>
-                <p class="muted">
-                    Build live dikunci sampai kontrak, autentikasi, ACL dan
-                    backend lulus penerimaan. Tidak ada login simulasi atau
-                    fallback data demo.
-                </p>
-            </main>
-        );
     const [actor, setActor] = useState("sales");
     const [attempt, setAttempt] = useState(0);
     const [boot, setBoot] = useState<{
@@ -142,11 +127,47 @@ export function App() {
                         <p class="muted">
                             {__DEMO__
                                 ? "Simulator gagal dimuat."
-                                : "Mode live. Tidak ada fallback ke data simulasi. Backend/sesi resmi diperlukan."}
+                                : error.includes("Sesi resmi") ||
+                                    error.includes("login") ||
+                                    error.includes("401")
+                                  ? "Sesi login Odoo diperlukan untuk menyinkronkan rute kunjungan dan katalog produk FMCG."
+                                  : error}
                         </p>
-                        <button onClick={() => setAttempt((x) => x + 1)}>
-                            Coba lagi
-                        </button>
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "10px",
+                                marginTop: "16px",
+                                justifyContent: "center",
+                            }}
+                        >
+                            {!__DEMO__ && (
+                                <a
+                                    href="/web/login?redirect=/field/"
+                                    class="button primary"
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        padding: "10px 18px",
+                                        background: "#102746",
+                                        color: "#ffffff",
+                                        borderRadius: "10px",
+                                        textDecoration: "none",
+                                        fontWeight: "600",
+                                        fontSize: "0.95rem",
+                                    }}
+                                >
+                                    Masuk ke Akun Odoo
+                                </a>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => setAttempt((x) => x + 1)}
+                            >
+                                Coba lagi
+                            </button>
+                        </div>
                     </>
                 )}
             </main>
@@ -578,11 +599,9 @@ function Workspace({
                             ) && (
                                 <VisitPanel
                                     key={`${owner}:${morning?.sessionId}:${visitOutlet}`}
-                                    outlet={
-                                        snapshot.outlets.find(
-                                            (o) => o.id === visitOutlet,
-                                        )!
-                                    }
+                                    outlet={snapshot.outlets.find(
+                                        (o) => o.id === visitOutlet,
+                                    )!}
                                     service={visits}
                                     store={store}
                                     owner={owner}
