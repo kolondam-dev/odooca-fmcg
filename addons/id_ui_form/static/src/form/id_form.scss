@@ -217,6 +217,16 @@ body.id-shell-sidebar {
         .oe_subtotal_footer .o_field_widget input {
             font-variant-numeric: tabular-nums;
         }
+
+        // Odoo 19 renders the notebook headers and the x2many list renderer wider
+        // than their parent at 125% browser zoom (704 px inside a 656 px content
+        // box), which leaks 4 px of horizontal overflow into the edge-to-edge
+        // sheet. Both elements scroll horizontally on their own, so cap them at
+        // the sheet content width instead of clipping the whole form.
+        .o_notebook_headers,
+        .o_list_renderer {
+            max-width: 100%;
+        }
     }
 }
 

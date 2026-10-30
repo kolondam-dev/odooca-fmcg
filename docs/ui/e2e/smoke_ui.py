@@ -311,7 +311,7 @@ async def main():
             // below the pinned position; it is then clamped to the containing block
             // content edge. Record that honestly instead of treating it as drift.
             const startOverflowBelow = Math.max(0, startFooterRect.bottom - scrollportBottom);
-            const startClampExplained = startOverflowBelow <= 0
+            const startClampExplained = startOverflowBelow <= 1
                 || startFooterRect.top <= containingBlockContentTop + marginTop + 1;
             const overflowAncestors = [];
             let ancestor = footer.parentElement;

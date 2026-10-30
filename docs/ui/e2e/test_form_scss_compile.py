@@ -24,6 +24,10 @@ class TestFormStylesCompile(unittest.TestCase):
         # Invoice totals live in a narrow colspan column; the tab must be the
         # sticky element and stack the columns to avoid horizontal overflow.
         self.assertIn(".o_form_view .o_form_sheet .oe_invoice_lines_tab", css)
+        # Notebook headers and the x2many renderer are capped so their own
+        # horizontal overflow cannot leak into the edge-to-edge sheet.
+        self.assertIn(".o_notebook_headers", css)
+        self.assertIn(".o_list_renderer", css)
 
 
 if __name__ == "__main__":
