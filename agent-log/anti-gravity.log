@@ -1219,3 +1219,24 @@
   * Seluruh kontak existing non-fixture dan lokasi non-fixture tetap 100% terkunci dan tidak boleh mengalami perubahan apa pun.
 - [P3] Integritas: ruff check PASS (0 error), check_manifests PASS (5 addon).
 - Task managed by antigravity at 2026-10-30T17:22:00+07:00
+
+
+[2026-10-30T17:42:00+07:00] [INFO] Audit Supervisi PR #49: Prioritas 3 Upgrade Modul Baseline Persisten + Replay Idempotensi (PASS / MERGE-READY)
+- [P1] Verifikasi Bukti CI Exact-SHA:
+  * Workflow Upgrade Runtime Verification (run 41037818394, job 124002962557, durasi 24m3s): SUCCESS.
+  * Sentinel UPGRADE_REPLAY_ZERO_DRIFT=PASS dan UPGRADE_VERIFY_PHASE=SUCCESS terverifikasi pada runtime container Odoo 19 + PostgreSQL 16.
+  * Unit kontrak TestUpgradeBaselineRunner di tests/test_full_dataset_cutoff_and_upgrade.py: 9/9 PASS.
+- [P2] Verifikasi Integritas Data & Oracle:
+  * 15 CSV register di data/registers/ 100% BEKU (0-byte drift).
+  * 13.540 baris AML closing Juli 2026 terbukti imutabel (hash identik sebelum dan sesudah upgrade & replay).
+  * Carry-forward 1 Agustus 2026: audit oracle independen Juli & Agustus PASS, anti-fallback salesperson PASS.
+- [P3] Verifikasi Pemulihan Drift Terkontrol & Replay:
+  * Tiga controlled drift berhasil dipulihkan oleh upgrade native odoo -u id_base,id_mobile_api: version skew sinkron kembali, DDL kolom id_mobile_office.radius dipulihkan (155 kolom modul valid), XML view id_mobile_api.view_mobile_office_form dipulihkan (16 view XML valid).
+  * 51 relasi foreign key diperiksa, 0 orphan records.
+  * Hook HPP id_base tetap aktif pasca-upgrade (0 duplikat baris COGS 510000 pada 1.324 faktur, STJ posted pada seluruh 2.738 outbound delivery).
+  * Replay CanonicalPerpetualAdapter.run_all(): 0 record baru dibuat di seluruh 10 counter penciptaan; seluruh target skip terpenuhi (SO=1.324, invoice=1.324, quant=150, PO=5).
+  * Komparasi snapshot 9 entitas: identik 100% (zero drift).
+- [P4] Sinkronisasi Cabang:
+  * Menggabungkan main (commit 44029c6 pasca-merge PR #47) ke agen/persisted-baseline-upgrade; resolusi konflik bersih pada docs/HANDOFF.md.
+  * Menyiapkan verdict review GitHub dan rekomendasi merge.
+- Task managed by antigravity at 2026-10-30T17:42:00+07:00

@@ -12,6 +12,7 @@ Menguji:
 """
 
 from decimal import Decimal
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -35,6 +36,23 @@ from scripts.ops.verify_disposable_full import (  # noqa: E402
     run_real_negative_mutations_on_database,
 )
 from tests.test_canonical_loader_adapter import setup_standard_mock_env  # noqa: E402
+from scripts.ops.verify_upgrade_baseline import (  # noqa: E402
+    CREATION_COUNTERS,
+    EXPECTED_SKIP_MINIMUMS,
+    assert_replay_zero_creation,
+    assert_upgrade_target_database,
+    build_upgrade_command,
+    compare_snapshot_digests,
+    detect_registry_corruption,
+    digest_payload,
+    expected_module_versions,
+    is_column_backed_field,
+    load_baseline_state,
+    previous_release_version,
+    run_upgrade_baseline_verification,
+    snapshot_digest,
+    validate_upgrade_exit_code,
+)
 
 
 class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
@@ -586,6 +604,191 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
             audit_database_against_oracle_july(mock_env, oracle)
         self.assertIn("VIOLATION OUTBOUND SOURCE", str(ctx.exception))
         target_mv.location_id = orig_src_loc
+
+
+class TestUpgradeBaselineRunner(unittest.TestCase):
+    """Kontrak runner Prioritas 3: upgrade dari baseline persisten + replay idempotensi.
+
+    Catatan: pengujian unit ini memvalidasi kontrak logika runner. Pembuktian upgrade
+    nyata (`odoo -u`) wajib dieksekusi pada container Odoo 19 + PostgreSQL 16 melalui
+    `.github/workflows/upgrade-runtime.yml`; bukan pengganti eksekusi nyata.
+    """
+
+    def test_upgrade_guard_rejects_operational_databases(self):
+        """Guard database disposable upgrade wajib fail-closed untuk nama operasional."""
+        for forbidden_db in [
+            "fmcg_live",
+            "fmcg_full_production",
+            "railway",
+            "master_db",
+            "official_main",
+            "fmcg_base",
+            "prod_fmcg",
+        ]:
+            with self.assertRaises(RuntimeError) as ctx:
+                assert_upgrade_target_database(forbidden_db)
+            self.assertIn("SAFETY-ABORT", str(ctx.exception))
+
+        for valid_db in ["fmcg_upgrade_disposable", "fmcg_full_disposable", "ci_db", "tenant_disposable_slice"]:
+            self.assertEqual(assert_upgrade_target_database(valid_db), valid_db)
+
+        with self.assertRaises(RuntimeError):
+            assert_upgrade_target_database("   ")
+
+    def test_upgrade_command_is_real_odoo_update(self):
+        """Perintah upgrade wajib memuat `-u id_base,id_mobile_api` dan `--stop-after-init`."""
+        argv = build_upgrade_command("fmcg_upgrade_disposable", addons_path="/opt/id-addons")
+        self.assertEqual(argv[0], "odoo")
+        self.assertEqual(argv[argv.index("-d") + 1], "fmcg_upgrade_disposable")
+        self.assertEqual(argv[argv.index("-u") + 1], "id_base,id_mobile_api")
+        self.assertIn("--stop-after-init", argv)
+        self.assertIn("/opt/id-addons", argv)
+
+        with self.assertRaises(RuntimeError):
+            build_upgrade_command("fmcg_production")
+
+    def test_upgrade_process_contract_detects_failures(self):
+        """Kontrak proses: exit code 0 dan log bebas indikasi registry corruption."""
+        ok = validate_upgrade_exit_code(
+            0, "2026-10-30 10:00:00 INFO db odoo.modules.loading: Modules loaded.\n"
+        )
+        self.assertEqual(ok["status"], "PASS")
+        self.assertEqual(ok["corruption_findings"], [])
+
+        with self.assertRaises(RuntimeError) as ctx:
+            validate_upgrade_exit_code(2, "log normal tanpa error")
+        self.assertIn("UPGRADE-FAIL", str(ctx.exception))
+
+        # Exit 0 tanpa penanda registry dimuat bukan bukti upgrade (mis. abort konfigurasi dini).
+        with self.assertRaises(RuntimeError) as ctx:
+            validate_upgrade_exit_code(0, "2026-10-30 10:00:00 WARNING db odoo.tools.config: oke\n")
+        self.assertIn("Modules loaded", str(ctx.exception))
+
+        corrupt_log = (
+            "2026-10-30 10:00:00 CRITICAL db odoo.modules.loading: Registry loading failed\n"
+            "Traceback (most recent call last):\n"
+        )
+        with self.assertRaises(RuntimeError) as ctx:
+            validate_upgrade_exit_code(0, corrupt_log)
+        self.assertIn("UPGRADE-FAIL", str(ctx.exception))
+
+        self.assertEqual(detect_registry_corruption("semua baik"), [])
+        self.assertTrue(detect_registry_corruption("psycopg2.errors.UndefinedColumn: kolom hilang"))
+
+    def test_previous_release_version_is_strictly_lower(self):
+        """Version skew simulasi harus benar-benar lebih rendah dari versi manifest."""
+        def as_tuple(value):
+            return tuple(int(part) for part in value.split("."))
+
+        for manifest_version in ("19.0.1.0.0", "19.0.1.2.0", "19.0.2.0.0"):
+            previous = previous_release_version(manifest_version)
+            self.assertLess(as_tuple(previous), as_tuple(manifest_version))
+        self.assertEqual(previous_release_version("19.0.1.2.0"), "19.0.1.1.0")
+        self.assertEqual(previous_release_version("19.0.1.0.0"), "19.0.0.0.0")
+        self.assertEqual(previous_release_version("tidak-valid"), "19.0.0.0.0")
+
+        versions = expected_module_versions()
+        self.assertEqual(set(versions), {"id_base", "id_mobile_api"})
+        for name, version in versions.items():
+            self.assertTrue(version.startswith("19.0."), f"{name} versi manifest tidak sah: {version}")
+
+    def test_replay_zero_creation_contract(self):
+        """Replay pasca-upgrade wajib 0 record baru dan minimum skip kanonikal terpenuhi."""
+        stats = {key: 0 for key in CREATION_COUNTERS}
+        stats.update(EXPECTED_SKIP_MINIMUMS)
+        result = assert_replay_zero_creation(stats)
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["total_created"], 0)
+
+        created_drift = dict(stats)
+        created_drift["so_created"] = 1
+        with self.assertRaises(AssertionError) as ctx:
+            assert_replay_zero_creation(created_drift)
+        self.assertIn("UPGRADE-REPLAY", str(ctx.exception))
+
+        skip_shortfall = dict(stats)
+        skip_shortfall["skipped_so"] = 10
+        with self.assertRaises(AssertionError) as ctx:
+            assert_replay_zero_creation(skip_shortfall)
+        self.assertIn("UPGRADE-REPLAY", str(ctx.exception))
+
+    def test_snapshot_digest_normalizes_tuples_and_lists(self):
+        """Digest snapshot harus stabil meski state melewati serialisasi JSON (tuple -> list)."""
+        tuples_payload = {"quants": [(1, 2), (3, 4)], "moves": [], "gl_balances": {"113000": "x"}}
+        lists_payload = {"quants": [[1, 2], [3, 4]], "moves": [], "gl_balances": {"113000": "x"}}
+        self.assertEqual(digest_payload(tuples_payload["quants"]), digest_payload(lists_payload["quants"]))
+        self.assertEqual(snapshot_digest(tuples_payload), snapshot_digest(lists_payload))
+
+        baseline = snapshot_digest(tuples_payload)
+        drifted = snapshot_digest({"quants": [[1, 2], [9, 9]], "moves": [], "gl_balances": {"113000": "x"}})
+        with self.assertRaises(AssertionError) as ctx:
+            compare_snapshot_digests(baseline, drifted)
+        self.assertIn("UPGRADE-DRIFT", str(ctx.exception))
+
+    def test_baseline_state_roundtrip_and_fail_closed_database(self):
+        """State baseline wajib memuat digest dan menolak database target yang berbeda."""
+        state = {
+            "schema_version": 1,
+            "database": "fmcg_upgrade_disposable",
+            "snapshot_digests": {"quants": "abc"},
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state_path = Path(tmpdir) / "upgrade_baseline_state.json"
+            state_path.write_text(json.dumps(state), encoding="utf-8")
+
+            loaded = load_baseline_state(state_path, expected_database="fmcg_upgrade_disposable")
+            self.assertEqual(loaded["database"], "fmcg_upgrade_disposable")
+
+            with self.assertRaises(RuntimeError) as ctx:
+                load_baseline_state(state_path, expected_database="lain_disposable")
+            self.assertIn("Ditolak", str(ctx.exception))
+
+            with self.assertRaises(RuntimeError):
+                load_baseline_state(Path(tmpdir) / "tidak_ada.json")
+
+            no_digest_path = Path(tmpdir) / "no_digest.json"
+            no_digest_path.write_text(json.dumps({"schema_version": 1, "database": "x"}), encoding="utf-8")
+            with self.assertRaises(RuntimeError):
+                load_baseline_state(no_digest_path)
+
+    def test_schema_integrity_skips_non_column_fields(self):
+        """Field attachment/relasional/non-stored tidak boleh dianggap kolom hilang (regresi DDL)."""
+
+        class _FakeField:
+            def __init__(self, **kwargs):
+                self.__dict__.update(kwargs)
+
+        self.assertTrue(is_column_backed_field(_FakeField(store=True, type="char", column_type="varchar")))
+        self.assertTrue(is_column_backed_field(_FakeField(store=True, type="float", column_type="numeric")))
+        self.assertTrue(is_column_backed_field(_FakeField(store=True, type="many2one", column_type="int4")))
+        # Binary attachment=True disimpan di ir.attachment, bukan kolom tabel.
+        self.assertFalse(
+            is_column_backed_field(
+                _FakeField(store=True, type="binary", attachment=True, column_type="varchar")
+            )
+        )
+        self.assertFalse(is_column_backed_field(_FakeField(store=True, type="many2many", column_type=None)))
+        self.assertFalse(is_column_backed_field(_FakeField(store=True, type="one2many", column_type=None)))
+        self.assertFalse(is_column_backed_field(_FakeField(store=False, type="char", column_type="varchar")))
+        self.assertFalse(is_column_backed_field(_FakeField(store=True, type="char", column_type=None)))
+
+    def test_verify_failure_writes_failed_report(self):
+        """Kegagalan guard pada fase verify wajib tetap menulis report FAILED untuk audit."""
+        env_bad = setup_standard_mock_env()
+        env_bad.cr.dbname = "official_live"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with self.assertRaises(RuntimeError):
+                run_upgrade_baseline_verification(env_bad, output_dir=tmpdir)
+
+            report_file = Path(tmpdir) / "upgrade_runtime_report.json"
+            summary_file = Path(tmpdir) / "upgrade_runtime_summary.md"
+            self.assertTrue(report_file.exists())
+            self.assertTrue(summary_file.exists())
+            self.assertIn("FAILED", report_file.read_text(encoding="utf-8"))
+            summary_text = summary_file.read_text(encoding="utf-8")
+            self.assertIn("Status:** FAILED", summary_text)
+            self.assertNotIn("Status:** SUCCESS", summary_text)
 
 
 if __name__ == "__main__":
