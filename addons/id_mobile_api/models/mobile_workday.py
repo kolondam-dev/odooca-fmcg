@@ -32,6 +32,7 @@ class MobileWorkday(models.Model):
     outlet_ids = fields.Many2many("res.partner", string="Scheduled Outlets", check_company=True)
     product_ids = fields.Many2many("product.product", string="Allowed Products", check_company=True)
     outlet_radius = fields.Integer(string="Outlet Geofence Radius (m)", required=True, default=10)
+    office_id = fields.Many2one("id.mobile.office", string="Office Location", check_company=True)
 
     _unique_day = models.Constraint(
         "UNIQUE(user_id, company_id, business_date)",
@@ -172,6 +173,8 @@ class MobileWorkday(models.Model):
                       "warehouse_id": str(assignment.warehouse_id.id), "business_date": day.isoformat()},
             "products": catalog, "outlets": outlets, "deliveries": [],
         }
+        if assignment.office_id:
+            result["office"] = assignment.office_id._map_payload()
         digest = hashlib.sha256(json.dumps(result, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         result.update(
             version=f"odoo-read-v1:{digest}",

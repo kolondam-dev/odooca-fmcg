@@ -147,3 +147,15 @@
 - Local326 unit, hosting, typecheck/contracts/format/build budgets PASS. Chromium download failed truncated ZIP; new4 browser scenarios and final CI pending. Backend strict evidence, business gates and live lock unchanged.
 - No deploy/provisioning/password/master mutation. Office fixture not official master; demo preview not actual staging acceptance. Decisions/HANDOFF updated.
 - Task managed by agent-codex-pwa at 2026-10-30T07:07:25+07:00
+
+[2026-10-30T07:31:05+07:00] [INFO] Staging acceptance kit: office master, maps, provisioning and gateway
+- Owner requested preparation after PR43 PASS; observed merge6cccbf2 and aligned base. Railway reads only; no deployment by this agent.
+- Admin/company scoped office master, server snapshot office/hash, volatile staging map preview; guarded shell disposable account/assignment fixtures, no business writes or canonical master edits. Railway gateway constants/allowlist with CI transport smoke.
+- Local327 unit/hosting/typecheck/contracts/format/Ruff5manifest/shell/build budgets PASS.5 native ORM and3 browser scenarios x phone/tablet pending CI. Kit/device-result template records untested acceptance honestly.
+- No environment provisioning, password mutation on server, merge/deploy or backend remote bypass. Office remains TEST until owner provides verified coordinates.
+- Task managed by agent-codex-pwa at 2026-10-30T07:31:05+07:00
+
+[2026-10-30T07:35:54+07:00] [INFO] Staging shell positive-path smoke and operator credential routing
+- Add dedicated CI database clone fmcg_staging_acceptance and execute actual operator provisioning entrypoint twice; assert two minimal accounts, snapshot identities/hash stable and no secret output. CI-only currency activation remains isolated.
+- Correct operator command to explicitly override Railway PGUSER/PGPASSWORD to Odoo role; no init/role ownership mutation required by provisioning command. Runtime verification awaits new CI SHA.
+- Task managed by agent-codex-pwa at 2026-10-30T07:35:54+07:00
