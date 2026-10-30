@@ -188,3 +188,9 @@
 - Normalisasi audit dibatasi ke partner res.company.partner_id existing dan hanya jika partner itu benar-benar menerima key TEST valid; actor harus operator dan waktu tidak mundur. Semua partner lain dan semua business values tetap strict.
 - CI static sebelumnya PASS; operator smoke dan suite lengkap menunggu rerun. Tidak ada Railway mutation/deploy.
 - Task managed by agent-codex-pwa at 2026-10-30T16:04:33.362+07:00
+
+[2026-10-30T16:15:31.361+07:00] [INFO] Stock location guard diagnostic
+- CI run 41030827526 failed in install-test: Non-fixture records changed in stock.location. No stock.location fields are currently exempted.
+- Added temporary/diagnostic-only field-name report for changed pre-existing stock.location IDs; values are never logged. Next CI run will identify exact native side-effect before any policy exception is considered.
+- No deploy or Railway mutation.
+- Task managed by agent-codex-pwa at 2026-10-30T16:15:31.361+07:00

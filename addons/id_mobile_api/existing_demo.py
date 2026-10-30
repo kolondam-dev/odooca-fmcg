@@ -97,6 +97,14 @@ def fixture_company_ids(env):
     return _excluded(env).get("res.company", set())
 
 
+def _raw_model_snapshot(env, model):
+    """Raw rows for field-name-only diagnostics; never include business values in errors."""
+    env.flush_all()
+    table = env[model]._table
+    env.cr.execute(sql.SQL("SELECT id, to_jsonb(t) FROM {} t ORDER BY id").format(sql.Identifier(table)))
+    return {row_id: payload for row_id, payload in env.cr.fetchall()}
+
+
 def _partner_company_property_snapshot(env):
     """Raw company-dependent stock properties and audit metadata, keyed by partner."""
     env.flush_all()
@@ -223,7 +231,7 @@ def _assert_partner_company_properties_preserved(env, before, existing_company_i
             raise ValidationError("Unexpected existing partner audit change; provisioning was rolled back.")
 
 
-def _assert_preserved(env, before, partner_properties_before, existing_company_ids):
+def _assert_preserved(env, before, partner_properties_before, existing_company_ids, stock_location_before):
     _assert_partner_company_properties_preserved(env, partner_properties_before, existing_company_ids)
     newly_created_fixture_ids = fixture_company_ids(env) - set(existing_company_ids)
     existing_company_partners = _existing_company_partner_ids(env, existing_company_ids)
@@ -234,6 +242,23 @@ def _assert_preserved(env, before, partner_properties_before, existing_company_i
     )
     for model, rows in before.items():
         if any(after[model].get(row_id) != digest for row_id, digest in rows.items()):
+            if model == "stock.location":
+                location_after = _raw_model_snapshot(env, "stock.location")
+                changes = []
+                for row_id, old_row in stock_location_before.items():
+                    new_row = location_after.get(row_id)
+                    if new_row is None:
+                        changes.append(f"{row_id}:deleted")
+                        continue
+                    changed_fields = sorted(
+                        key for key in set(old_row) | set(new_row) if old_row.get(key) != new_row.get(key)
+                    )
+                    if changed_fields:
+                        changes.append(f"{row_id}:{','.join(changed_fields)}")
+                detail = "; ".join(changes[:20]) or "unidentified"
+                raise ValidationError(
+                    f"Non-fixture records changed in stock.location ({detail}); provisioning was rolled back."
+                )
             raise ValidationError(f"Non-fixture records changed in {model}; provisioning was rolled back.")
         if model in NO_NEW_TRANSACTIONS and after[model] != rows:
             raise ValidationError(f"Provisioning created transactions in {model}; changes were rolled back.")
@@ -303,10 +328,13 @@ def provision_existing_demo(env, *, expected_database, opt_in, backup, passwords
         existing_company_ids = set(env["res.company"].search([]).ids)
         existing_company_partners = _existing_company_partner_ids(env, existing_company_ids)
         before = protected_snapshot(env, normalize_partner_audit_ids=existing_company_partners)
+        stock_location_before = _raw_model_snapshot(env, "stock.location")
         partner_properties_before = _partner_company_property_snapshot(env)
         scopes = _user_scope(env)
         accounts = _provision_records(env, passwords=passwords)
-        _assert_preserved(env, before, partner_properties_before, existing_company_ids)
+        _assert_preserved(
+            env, before, partner_properties_before, existing_company_ids, stock_location_before
+        )
         _assert_user_scope(env, scopes, accounts)
         after_scopes = _user_scope(env)
         operator_changes = [

@@ -1,5 +1,7 @@
 # HANDOFF
 
+## 2026-10-30 — agent-codex-pwa — Diagnose stock.location preservation failure
+CI install-test on 1c9234f fails after native TEST company provisioning: `Non-fixture records changed in stock.location`. The earlier partner-property P1 is no longer the failing guard. Added field-name-only diagnostics for pre-existing stock.location rows; no row values are emitted. This is diagnostic instrumentation, not an exemption or weakening of the preservation rule. Next action is inspect exact row IDs/changed columns from CI, then implement only a narrowly justified native side-effect allowance or reject the provisioning if existing stock data is genuinely altered.
 ## 2026-10-30 — agent-codex-pwa — Narrow native partner audit metadata side effect
 **Bukti shell smoke:** native unit suite mencapai positive two-run dan negative stock-property regressions, tetapi operator entrypoint pada clone existing-data masih gagal di hash res.partner. Perbedaan tambahan adalah write_uid/write_date pada company partner yang ditulis native Stock.
 **Perbaikan:** metadata audit hanya dinormalisasi untuk partner res.company.partner_id yang sudah ada sebelum provisioning. Snapshot mentah memverifikasi actor=operator, timestamp tidak mundur, dan partner yang sama harus menerima key company TEST baru dengan lokasi inter-company exact. Partner lain, company partner tanpa property addition, dan seluruh business columns tetap exact.
