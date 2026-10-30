@@ -259,6 +259,12 @@ uff check .: PASS (0 errors).
 - Branch: `agen/full-dataset-disposable-runner`.
 - Draft PR dibuka targeting `main` untuk peninjauan supervisor `codex`.
 - Proteksi repository dipertahankan: tidak melakukan merge ke `main`, tidak mengubah ruleset main-quality-gate (ID `25827644`), tidak melakukan deployment ke Railway, dan tidak menyentuh database operasional.
+## 2026-10-30 — codex — Skill supervisi dan estafet agent pengganti
+**Mandat:** pemilik meminta skill metode supervisi/review serta konteks historis, aktor, domain dan environment untuk agent pengganti.
+**Deliverables:** skill portable .agents/skills/supervise-pr-evidence/ (metode, teknik tes, template verdict, entry proyek) dan docs/reviews/SUPERVISOR_HANDOFF.md (snapshot main7d667915, PR36/39/46/47, otorisasi production demo, inventaris Railway dan capability blockers). Personal skill disiapkan terpisah untuk direktori skill pengguna.
+**Verifikasi:** source/metadata PR, CI, ruleset25827644 dan inventory Railway dibaca ulang; dokumen membedakan snapshot dari live state. Skill validator PASS; forward-test offline independen menemukan cross-day/trip evidence dan CI SHA lama melalui fungsi produksi, tanpa kontak/mutasi layanan eksternal. Ini validasi workflow skill, bukan verdict PR baru.
+**Batas:** dokumentasi/skill saja; tidak merge PR lain, deploy, backup/provisioning atau mutasi data. PR39 tetap HOLD pada review6515188630; PR47 baru kandidat belum direview; PR46 ditulis supervisor sehingga butuh review independen.
+
 ## 2026-10-30 — codex — Otorisasi production sebagai environment demo
 **Keputusan pemilik:** menyetujui penggunaan environment production existing untuk demo setelah penjelasan konsekuensi downtime/perubahan konfigurasi. Menggantikan rencana wajib staging-remote dan batas sebelumnya yang mengecualikan production untuk scope PR44.
 **Batas:** data existing dipertahankan tanpa reset; company/akun TEST terpisah; tidak ada perubahan CSV kanonikal, pelonggaran auth/ACL/geofence atau pembukaan database publik. Guard provisioning tetap berlaku; adaptasi exact-target demo perlu implementasi/review/test sebelum dipakai pada database existing, termasuk fmcg_base bila terkonfirmasi sebagai target aktual.
