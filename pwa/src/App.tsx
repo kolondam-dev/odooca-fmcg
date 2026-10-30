@@ -599,9 +599,11 @@ function Workspace({
                             ) && (
                                 <VisitPanel
                                     key={`${owner}:${morning?.sessionId}:${visitOutlet}`}
-                                    outlet={snapshot.outlets.find(
-                                        (o) => o.id === visitOutlet,
-                                    )!}
+                                    outlet={
+                                        snapshot.outlets.find(
+                                            (o) => o.id === visitOutlet,
+                                        )!
+                                    }
                                     service={visits}
                                     store={store}
                                     owner={owner}
