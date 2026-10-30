@@ -74,6 +74,17 @@ jobs:
           ' 2>&1 | tee staging-provision.log
           grep -q 'STAGING_PROVISION_SMOKE=PASS' staging-provision.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' staging-provision.log; then exit 1; fi
+      - name: Existing-demo provisioning preservation smoke
+        run: |
+          set -o pipefail
+          docker run --rm --network host --entrypoint bash fmcg-odoo:ci -c '
+            set -euo pipefail
+            PGPASSWORD=odoo createdb -h localhost -p 5432 -U odoo -T ci_db fmcg_demo_acceptance
+            odoo shell -d fmcg_demo_acceptance --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http < /opt/scripts/ops/verify_mobile_demo.py
+          ' 2>&1 | tee existing-demo.log
+          grep -q 'EXISTING_DEMO_PROVISION=PASS' existing-demo.log
+          if grep -E ' (ERROR|CRITICAL) |Traceback' existing-demo.log; then exit 1; fi
       - name: Prepare disposable UI fixtures
         run: |
           set -o pipefail

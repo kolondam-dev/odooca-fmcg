@@ -1,6 +1,21 @@
 # HANDOFF
 
-## 2026-10-30T17:01:10+07:00 ? claude-dev agent ? BUKTI HIJAU Prioritas 3: upgrade modul dari baseline persisten + replay idempotensi
+## 2026-10-30T17:42:00+07:00 — antigravity agent — Supervisory Audit PR #49: PASS / MERGE-READY
+**PR:** #49 (eat(ops): Prioritas 3 - upgrade modul dari baseline persisten + replay idempotensi)
+**Head SHA:** 71938303253c0b185a3b4942a255e91d0e56883e (disinkronkan dengan main di 44029c6)
+**Status:** PASS / MERGE-READY (menunggu otorisasi pemilik untuk merge).
+**Bukti Kunci:**
+- Workflow Upgrade Runtime Verification (run [41037818394](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/41037818394), job 124002962557, 24m3s): PASS.
+- Sentinel UPGRADE_REPLAY_ZERO_DRIFT=PASS dan UPGRADE_VERIFY_PHASE=SUCCESS: terverifikasi di runtime Odoo 19 + PostgreSQL 16 nyata.
+- 15 CSV register di data/registers/: 100% BEKU (0-byte drift).
+- Unit kontrak runner (TestUpgradeBaselineRunner): 9/9 PASS.
+- Pemulihan drift terkontrol (version skew, DDL kolom id_mobile_office.radius, view iew_mobile_office_form): 100% dipulihkan oleh odoo -u.
+- Replay idempotensi CanonicalPerpetualAdapter.run_all(): 0 record baru dibuat di 10 counter penciptaan, seluruh skip memenuhi kuota (SO=1.324, invoice=1.324, quant=150, PO=5).
+- 9/9 entitas snapshot identik (zero drift), 13.540 baris AML Juli imutabel, oracle Agustus PASS.
+- Guard database menolak mutasi pada database non-disposable (prod, production, live, 
+ailway, main, mcg_base).
+
+## 2026-10-30T17:01:10+07:00 — claude-dev agent — BUKTI HIJAU Prioritas 3: upgrade modul dari baseline persisten + replay idempotensi
 **Hasil:** Seluruh check PR #49 hijau pada head commit `a7ff8ae` (merge ref `862b9d3`), termasuk job runtime `Module Upgrade from Persisted Baseline + Replay Zero Drift` (run [41033574353](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/41033574353), job id `123988914701`, 25m39s, conclusion success).
 **Bukti kunci (container Odoo 19 + PostgreSQL 16, database disposable `fmcg_upgrade_disposable`):**
 - Fase A baseline: closing Juli 2026 (13.540 baris AML) + carry-forward 1 Agustus 2026, audit oracle Juli & Agustus PASS; drift terkontrol tersuntik (`latest_version` id_base 19.0.0.0.0 / id_mobile_api 19.0.1.1.0, kolom `id_mobile_office.radius` dihapus, view `id_mobile_api.view_mobile_office_form` dihapus).
@@ -36,6 +51,63 @@
 2. 15 CSV register di `data/registers/` 100% tidak disentuh.
 
 **Menunggu:** Supervisor (Antigravity) meninjau Draft PR `agen/persisted-baseline-upgrade` → `main`.
+
+## 2026-10-30T17:22:00+07:00 — antigravity agent — Resolusi Idempotensi Run 2 Preservasi Partner dan Stock Location PR #47
+**Akar Masalah Kegagalan CI Run 2 (run 41039403435):**
+- Pada eksekusi run 2 `verify_mobile_demo.py`, `_partner_company_property_snapshot` membaca seluruh baris `res_partner` termasuk outlet fixture hasil run 1 (`outlet_1`, `outlet_2`).
+- Ketika `_provision_records` mengeksekusi `owned()` pada run 2, ia melakukan `write()` pembaruan pada outlet fixture miliknya sendiri, memperbarui `write_date`.
+- `_assert_partner_company_properties_preserved` mendeteksi perbedaan timestamp audit pada outlet fixture (yang bukan company partner), dan melempar: `ValidationError: Unexpected existing partner audit change; provisioning was rolled back.`
+
+**Perbaikan:**
+- Menambahkan pengecualian `if partner_id in excluded_partners: continue` pada `_assert_partner_company_properties_preserved` dan `if row_id in excluded_locations: continue` pada `_assert_stock_locations_preserved`.
+- Selaras dengan `protected_snapshot` dan `_assert_user_scope`: record fixture milik modul staging (`id_mobile_api_staging`) dikecualikan dari guard preservasi data operasional existing.
+- Seluruh partner customer/vendor existing dan lokasi gudang non-fixture tetap 100% beku dan diaudit ketat.
+
+## 2026-10-30T17:15:00+07:00 — antigravity agent — Resolusi Preservasi Native Stock Location pada Existing Demo Provisioning PR #47
+**Akar Masalah Kegagalan CI (run 41032163302):**
+- Pada job `install-test` langkah `Existing-demo provisioning preservation smoke`, clone database single-company `fmcg_demo_acceptance` (berasal dari `ci_db`) membuat company baru (`STAGING TEST Company`) via `_provision_records()`.
+- Odoo 19 Stock secara native mengaktifkan lokasi transit global inter-company (`stock.stock_location_inter_company` record ID 3) dari `active=False` menjadi `active=True` serta memperbarui `write_date` dan `write_uid`.
+- Guard preservasi sebelumnya mendeteksi perubahan tersebut pada tabel `stock.location` dan melakukan rollback:
+  `ValidationError: Non-fixture records changed in stock.location (3:active,write_date); provisioning was rolled back.`
+
+**Perbaikan & Pengetatan Kontrak:**
+1. **Helper & Normalisasi Snapshot Terbatas (`existing_demo.py`):**
+   - Menambahkan helper `_system_transit_location_ids(env)` untuk mengidentifikasi lokasi transit/virtual sistem global (`stock.stock_location_inter_company`, `stock.stock_location_locations_virtual`).
+   - Pada `protected_snapshot()`, kolom `active`, `write_date`, dan `write_uid` dikecualikan dari hash JSONB hanya untuk lokasi transit sistem global tersebut. Seluruh atribut struktural (name, complete_name, usage, location_id, company_id) tetap diaudit dan di-hash secara ketat.
+2. **Asersi Ketat Preservasi Lokasi (`_assert_stock_locations_preserved`):**
+   - Memvalidasi bahwa transisi `active` HANYA diizinkan dari `False` ke `True` (aktivasi), HANYA untuk lokasi sistem global tanpa company (`company_id=False`, `usage in ('transit', 'view')`), dan HANYA saat ada company fixture baru yang dibuat.
+   - Memvalidasi audit `write_uid` adalah operator atau SUPERUSER_ID, dan `write_date` tidak mundur.
+   - Deaktivasi (`True -> False`), perubahan pada lokasi gudang internal existing (`usage == 'internal'`), perubahan nama/usage, ataupun perubahan apa pun pada run kedua (idempotensi) dilarang keras dan melempar `ValidationError`.
+3. **Pengujian Regresi & Negatif Tambahan (`addons/id_mobile_api/tests/test_existing_demo.py`):**
+   - `test_inter_company_location_activation_on_company_creation`: Memverifikasi aktivasi dari `active=False` berjalan sukses dan run kedua idempoten dengan hash row 100% terjaga.
+   - `test_unexpected_stock_location_mutation_is_rejected_and_rolled_back`: Memverifikasi bahwa mutasi pada lokasi gudang internal existing (WH/Stock) ditolak dan di-rollback.
+   - `test_unexpected_inter_company_location_mutation_is_rejected_and_rolled_back`: Memverifikasi bahwa mutasi nama lokasi transit inter-company ditolak dan di-rollback.
+4. **Verifikasi Statis:** `ruff check .` PASS (0 errors), `scripts/check_manifests.py` PASS (5 addon).
+
+## 2026-10-30 — agent-codex-pwa — Diagnose stock.location preservation failure
+CI install-test on 1c9234f fails after native TEST company provisioning: `Non-fixture records changed in stock.location`. The earlier partner-property P1 is no longer the failing guard. Added field-name-only diagnostics for pre-existing stock.location rows; no row values are emitted. This is diagnostic instrumentation, not an exemption or weakening of the preservation rule. Next action is inspect exact row IDs/changed columns from CI, then implement only a narrowly justified native side-effect allowance or reject the provisioning if existing stock data is genuinely altered.
+## 2026-10-30 — agent-codex-pwa — Narrow native partner audit metadata side effect
+**Bukti shell smoke:** native unit suite mencapai positive two-run dan negative stock-property regressions, tetapi operator entrypoint pada clone existing-data masih gagal di hash res.partner. Perbedaan tambahan adalah write_uid/write_date pada company partner yang ditulis native Stock.
+**Perbaikan:** metadata audit hanya dinormalisasi untuk partner res.company.partner_id yang sudah ada sebelum provisioning. Snapshot mentah memverifikasi actor=operator, timestamp tidak mundur, dan partner yang sama harus menerima key company TEST baru dengan lokasi inter-company exact. Partner lain, company partner tanpa property addition, dan seluruh business columns tetap exact.
+**Status:** follow-up CI pada SHA baru diperlukan untuk membuktikan operator smoke dua-run dan sentinel DB/filestore. Tidak ada mutasi Railway.
+## 2026-10-30 — agent-codex-pwa — P1 company-dependent stock-property preservation
+**Akar masalah:** Odoo 19 Stock saat membuat company baru menulis property_stock_customer dan property_stock_supplier pada partner milik company existing, scoped ke key company baru dan bernilai stock.stock_location_inter_company. Snapshot row partner sebelumnya menganggap penambahan native key ini sebagai drift generik.
+**Perbaikan:** snapshot JSONB tetap mempertahankan seluruh nilai lama. Hanya penambahan key untuk satu company TEST baru pada partner res.company.partner_id existing dengan lokasi inter-company exact yang diterima; perubahan/penghapusan key lama, partner lain, key lain, atau nilai lain tetap menyebabkan rollback. Run kedua tidak mengizinkan key tambahan.
+**Regresi:** positive path dua-run tetap memeriksa identitas fixture dan hash data existing. Negative tests menginjeksikan perubahan customer dan supplier stock property pada company existing dan memastikan ValidationError serta rollback. Shell smoke menggunakan normalisasi terbatas yang sama; dump dan filestore sentinel tetap diperiksa.
+**Status:** kode kandidat dipublikasikan dan menunggu native Odoo/CI final pada SHA baru. Tidak ada backup/install/provision/deploy atau mutasi Railway.
+## 2026-10-30 — agent-codex-pwa — Delegated technical-partner audit preservation
+**Bukti ecb8e3c:** native66 tests0failed/1error; preservasi masih menolak perubahan res.partner. Pengecualian audit dibatasi ke partner yang terikat pada operator/SUPERUSER_ID, dengan semua kolom business tetap exact dan audit penulis/waktu tetap diperiksa. Customer lain tidak dikecualikan. Helper menyelesaikan recompute operator setelah companycreate sebelum beralih ke env capture-user.
+**Diagnostik:** regression positive-path mencatat hanya ID dan nama kolom partner yang berubah, tidak nilai contact/credential.6 native regressions dan shell-preservation smoke menunggu follow-up. Ruff5manifest/diff PASS; belum ada mutasi Railway.
+
+## 2026-10-30 — agent-codex-pwa — Native company-creation scope audit follow-up
+**Bukti kandidatfd113dd:** native Odoo65 tests0failed/1error: before/after guard menolak native technical-user mutation saatcompanycreate, sehingga tidak memberi falsePASS. Sumber resmi Odoo19 res_company.create mengonfirmasi automatic company_ids link padaoperator/SUPERUSER_ID (serta grup UI multi-company). Tidak mengganti create/write_date untuk menyembunyikan efek.
+**Perbaikan:** preservasi row users tetap semua field selain write_uid/write_date khusus dua user teknis; audit harus penulis operator/waktu tidakmundur. Native tambahan company hanyaTEST dan grup hanyaUI multi-company; userexisting lain exactscope. Ringkasan melaporkan tambahanmembership; regresi unexpectedoperatorgroup ditambahkan. Preflight memisahkan latest_version(database) dari installed_version(disk) mengikuti sourceir_module Odoo19, dan entrypointpreflight kini diuji di shellCI.
+**Status:**6 metode regression, shell-preservation/two-run/preflight menunggu SHA baru. Ruff5manifest/diff PASS. Tetap belumbackup/install/provision pada Railway; actualshellblocked. Reviewdiperlukansebelumruntime.
+
+## 2026-10-30 — agent-codex-pwa — Adaptasi provisioning existing demo (scope PR45)
+**Mandat/basis:** owner meneruskan setup supervisor dan otorisasi production demo tetap berlaku. Basis main7d66791; pertahankan3app+Postgres. Pembacaan platform/HTTPS menemukan gateway/PWA staging aktif, bootstrap404 dan login200; bukan E2E PASS. OAuth hanya nama variable/tidak shell; CLI npm check exit1, tidak ada CLI auth yang bisa dipakai. Tidak meminta persetujuan scope ulang.
+**Berubah:** jalur provisioning existing terpisah, exact project/environment/service/database + opt-in, backup DB/filestore nyata berbeda/recent/hash-bound, SHARE locks20 tabel preservasi dengan timeout5s, perbandingan row non-fixture dan zero new business transactions; perubahan tak diharapkan rollback. Guard disposable PR44 tidak diubah. Tambah readonly preflight, entrypoint demo, runbook dan CI clone dengan contact/SO/file existing, dump/archive nyata serta dua run operator.
+**Verifikasi/batas:** Ruff5manifest/diff PASS;5 native regression baru dan preservation-shell smoke menunggu CI. Integritas hash backup bukan bukti restore/consistency/offsite; runbook menuntut operator verifikasi terpisah. Preservasi tabel scoped, bukan klaim semua M2M/sequence/file byte. Belumbackup/install/provision/deploy/server mutation; shell access masih blocker. Tidak reset/seed/rename DB, tidak membuka DB publik atau bypass auth/geofence. Menunggu review hasil CI dan shell untuk preflight actual target.
 
 ## 2026-10-30 — codex — Deployment demo parsial dan batas shell
 **Eksekusi:** PR45 merged7d667915. field-pwa pinned4973935, mode staging, deployment84abcb97 SUCCESS dan build-info publik staging. Gateway awal memakai static Dockerfile akibat default pwa/railway.toml; update railwayConfigFile ditolak plugin (deprecated). Beralih image resmi nginx:1.28-alpine dengan Start Command yang merekonstruksi tiga file gateway audited4973935; deployment8f42f93b SUCCESS.

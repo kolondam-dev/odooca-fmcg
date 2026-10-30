@@ -1194,3 +1194,49 @@
 - [P2-2] Verifikasi Unit Test Regresi: Menambahkan skenario uji kasus 5 (explicit binding config parameter) dan kasus 6 (explicit binding XMLID) pada test_canonical_location_resolver_rejects_ambiguity_and_foreign_company di tests/test_full_dataset_cutoff_and_upgrade.py. Seluruh 10 pengujian suite lulus 100% (termasuk 9 in-database savepoint mutation probes).
 - Integritas Baseline: 15 CSV register kanonikal di data/registers/ 100% beku. ruff check PASS (0 errors), check_manifests PASS (5 addon).
 - Task managed by antigravity at 2026-10-30T13:20:00+07:00
+
+
+[2026-10-30T17:15:00+07:00] [INFO] Resolusi Preservasi Native Stock Location pada Existing Demo Provisioning PR #47
+- [P1] Analisis Akar Masalah: Pada saat database single-company (seperti ci_db / fmcg_demo_acceptance) membuat company baru (STAGING TEST Company), Odoo 19 native Stock otomatis mengaktifkan lokasi transit global inter-company (stock.stock_location_inter_company dan parent virtual view) dari active=False menjadi active=True serta memperbarui write_date/write_uid. Guard preservasi mentah sebelumnya menolak aktivasi native ini sebagai drift.
+- [P2] Perbaikan Guard Preservasi & Snapshot:
+  * Menambahkan helper _system_transit_location_ids(env) yang mendeteksi ID lokasi sistem global tanpa company (stock.stock_location_inter_company dan stock.stock_location_locations_virtual).
+  * Pada protected_snapshot(): mengecualikan 'active', 'write_date', 'write_uid' hanya untuk lokasi transit sistem tersebut; seluruh field struktural (name, complete_name, usage, location_id, company_id) tetap diaudit dan di-hash secara ketat.
+  * Menambahkan asersi ketat _assert_stock_locations_preserved(env, before, existing_company_ids): memverifikasi bahwa perubahan active hanya diizinkan untuk lokasi sistem transit tanpa company (company_id=False, usage in ('transit', 'view')), hanya dari False -> True (aktivasi saat company baru dibuat), audit write_uid=operator/superuser dengan timestamp tidak mundur, dan menolak keras setiap perubahan field struktural, deaktivasi (True -> False), mutasi lokasi internal/gudang existing, ataupun perubahan pada run kedua.
+- [P3] Penambahan Unit Test Regresi & Negatif:
+  * test_inter_company_location_activation_on_company_creation: membuktikan aktivasi inter-company transit berjalan mulus pada run 1 dan idempoten/preservasi hash utuh pada run 2.
+  * test_unexpected_stock_location_mutation_is_rejected_and_rolled_back: membuktikan mutasi lokasi gudang internal existing (WH/Stock) ditolak dengan ValidationError dan di-rollback bersih.
+  * test_unexpected_inter_company_location_mutation_is_rejected_and_rolled_back: membuktikan pemalsuan nama inter-company transit ditolak dan di-rollback bersih.
+- [P4] Dokumentasi: DEMO_EXISTING_ACTIVATION.md dan HANDOFF.md diperbarui mencakup aturan preservasi stock location native Odoo 19.
+- Integritas Baseline: 15 CSV register kanonikal di data/registers/ 100% beku. ruff check PASS (0 error), check_manifests PASS (5 addon).
+- Task managed by antigravity at 2026-10-30T17:15:00+07:00
+
+
+[2026-10-30T17:22:00+07:00] [INFO] Resolusi Idempotensi Run 2 Preservasi Partner dan Stock Location PR #47
+- [P1] Analisis Akar Masalah Run 2: Pada eksekusi run kedua verify_mobile_demo.py (idempotency smoke), snapshot mentah _partner_company_property_snapshot dan _raw_model_snapshot(stock.location) memuat seluruh baris tabel termasuk baris fixture yang sudah dibuat pada run pertama (outlet_1, outlet_2, warehouse location). Saat _provision_records berjalan di run kedua, owned() memanggil record.write(values) pada fixture miliknya sendiri sehingga write_date fixture terbarui. Guard preservasi _assert_partner_company_properties_preserved memeriksa baris fixture tersebut dan salah mengidentifikasinya sebagai perubahan kontak existing (karena outlet bukan company partner).
+- [P2] Perbaikan & Pengetatan:
+  * Menambahkan pengecekan if partner_id in excluded_partners: continue pada _assert_partner_company_properties_preserved, selaras dengan pengecualian fixture di protected_snapshot dan _assert_user_scope.
+  * Menambahkan pengecekan if row_id in excluded_locations: continue pada _assert_stock_locations_preserved.
+  * Seluruh kontak existing non-fixture dan lokasi non-fixture tetap 100% terkunci dan tidak boleh mengalami perubahan apa pun.
+- [P3] Integritas: ruff check PASS (0 error), check_manifests PASS (5 addon).
+- Task managed by antigravity at 2026-10-30T17:22:00+07:00
+
+
+[2026-10-30T17:42:00+07:00] [INFO] Audit Supervisi PR #49: Prioritas 3 Upgrade Modul Baseline Persisten + Replay Idempotensi (PASS / MERGE-READY)
+- [P1] Verifikasi Bukti CI Exact-SHA:
+  * Workflow Upgrade Runtime Verification (run 41037818394, job 124002962557, durasi 24m3s): SUCCESS.
+  * Sentinel UPGRADE_REPLAY_ZERO_DRIFT=PASS dan UPGRADE_VERIFY_PHASE=SUCCESS terverifikasi pada runtime container Odoo 19 + PostgreSQL 16.
+  * Unit kontrak TestUpgradeBaselineRunner di tests/test_full_dataset_cutoff_and_upgrade.py: 9/9 PASS.
+- [P2] Verifikasi Integritas Data & Oracle:
+  * 15 CSV register di data/registers/ 100% BEKU (0-byte drift).
+  * 13.540 baris AML closing Juli 2026 terbukti imutabel (hash identik sebelum dan sesudah upgrade & replay).
+  * Carry-forward 1 Agustus 2026: audit oracle independen Juli & Agustus PASS, anti-fallback salesperson PASS.
+- [P3] Verifikasi Pemulihan Drift Terkontrol & Replay:
+  * Tiga controlled drift berhasil dipulihkan oleh upgrade native odoo -u id_base,id_mobile_api: version skew sinkron kembali, DDL kolom id_mobile_office.radius dipulihkan (155 kolom modul valid), XML view id_mobile_api.view_mobile_office_form dipulihkan (16 view XML valid).
+  * 51 relasi foreign key diperiksa, 0 orphan records.
+  * Hook HPP id_base tetap aktif pasca-upgrade (0 duplikat baris COGS 510000 pada 1.324 faktur, STJ posted pada seluruh 2.738 outbound delivery).
+  * Replay CanonicalPerpetualAdapter.run_all(): 0 record baru dibuat di seluruh 10 counter penciptaan; seluruh target skip terpenuhi (SO=1.324, invoice=1.324, quant=150, PO=5).
+  * Komparasi snapshot 9 entitas: identik 100% (zero drift).
+- [P4] Sinkronisasi Cabang:
+  * Menggabungkan main (commit 44029c6 pasca-merge PR #47) ke agen/persisted-baseline-upgrade; resolusi konflik bersih pada docs/HANDOFF.md.
+  * Menyiapkan verdict review GitHub dan rekomendasi merge.
+- Task managed by antigravity at 2026-10-30T17:42:00+07:00
