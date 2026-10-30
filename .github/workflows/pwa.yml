@@ -81,6 +81,7 @@ jobs:
           docker build --build-arg PWA_BUILD_MODE=demo -t fmcg-pwa-demo ./pwa
           docker build --build-arg PWA_BUILD_MODE=staging -t fmcg-pwa-staging ./pwa
           bash pwa/hosting/test-gateway.sh
+          bash pwa/hosting/test-railway-gateway.sh
   pwa-gate:
     if: always()
     needs: [pwa-quality, pwa-browser, pwa-container]

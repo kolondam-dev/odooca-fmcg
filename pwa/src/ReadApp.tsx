@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { OfficialEvidence } from "./components/OfficialEvidence";
+import { OfficialMaps } from "./components/OfficialMaps";
 import { Brand } from "./components/Brand";
 import { ReadSession, type ReadState } from "./data/read-session";
 import { money } from "./domain/format";
@@ -157,6 +158,10 @@ export function ReadApp() {
                             }
                         />
                     )}
+                    <OfficialMaps
+                        key={state.snapshot.version}
+                        snapshot={state.snapshot}
+                    />
                     <p>
                         Manifest Delivery, SO, approval, collection, dan closing
                         belum terhubung pada tahap baca ini.

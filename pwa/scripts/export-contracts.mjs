@@ -154,7 +154,7 @@ const spec = {
     openapi: "3.1.0",
     info: {
         title: "FMCG Field client contract draft",
-        version: "0.14.0",
+        version: "0.15.0",
         description:
             "Bootstrap/snapshot and explicit evidence routes are implemented by id_mobile_api. Business command routes remain draft and unavailable on staging.",
     },
