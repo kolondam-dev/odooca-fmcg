@@ -34,6 +34,21 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T16:28:00+07:0
 
 # HANDOFF
 
+## 2026-10-30T18:30:00+07:00 — antigravity agent — Sukses Deployment & Aktivasi Demo Mobile di Railway (Live E2E PASS)
+**Hasil:** Eksekusi penuh aktivasi demo mobile pada server Railway production (project `pleasant-caring`, service `odooca-fmcg` & `demo-gateway`) berhasil diselesaikan 100% mengikuti protokol `docs/DEMO_EXISTING_ACTIVATION.md`.
+**Tahapan Eksekusi:**
+1. **Preflight Read-Only:** Database target terkonfirmasi `railway`, project/env/service IDs cocok 100%, 10 model master terdata (1 company, 4 users, 387 partners, 150 products, 2 account moves).
+2. **Backup Konsisten & Offsite:** `pg_dump -Fc` (7,39 MB, 12.301 TOC entries, `pg_restore --list` verified) dan arsip filestore (5,10 MB). SHA-256 terhitung dan manifest dibuat di `/root/backup/20261030_pre_activation/backup_manifest.json`. Salinan offsite telah diunduh ke laptop lokal di `~/.railway_backups/20261030_railway_demo/` dengan verifikasi hash identik.
+3. **Instalasi Terarah Addon:** `odoo -i id_mobile_api --no-http --stop-after-init` dieksekusi dengan kredensial `odoo_app`. 98 modul termuat, tabel `id_mobile_api` terbuat, XML security/views/i18n terpasang bersih (exit 0).
+4. **Controlled Restart:** Service `odooca-fmcg` dan `demo-gateway` direstart terkontrol. Anonymous probe pada `/api/v1/me/bootstrap` terbukti beralih dari 404 menjadi 401 Unauthorized (`{"error": "not_authenticated"}`).
+5. **Provisioning Demo Fixture (Preservasi Data):** `provision_mobile_demo.py` dieksekusi dengan mode `PRESERVE_EXISTING_DEMO`. Guard sebelum/sesudah memverifikasi 20 tabel protected tidak mengalami perubahan, 0 transaksi bisnis baru, dan seluruh kontak/gudang existing 100% utuh.
+6. **Verifikasi E2E Live Gateway:**
+   - Login native Odoo session via gateway `https://demo-gateway-production-abd1.up.railway.app`:
+     * User 1: `staging.capture.1` (UID 5, role: sales, company: STAGING TEST Company) -> `/api/v1/me/bootstrap` return 200 OK.
+     * Snapshot: `/api/v1/sync/snapshot` return 200 OK (outlets: 1, products: 1).
+     * User 2: `staging.capture.2` (UID 6, role: driver) -> `/api/v1/me/bootstrap` return 200 OK.
+   - PWA Frontend: `https://demo-gateway-production-abd1.up.railway.app/field/` aktif dalam mode staging (200 OK).
+
 ## 2026-10-30T17:42:00+07:00 — antigravity agent — Supervisory Audit PR #49: PASS / MERGE-READY
 **PR:** #49 (eat(ops): Prioritas 3 - upgrade modul dari baseline persisten + replay idempotensi)
 **Head SHA:** 71938303253c0b185a3b4942a255e91d0e56883e (disinkronkan dengan main di 44029c6)
