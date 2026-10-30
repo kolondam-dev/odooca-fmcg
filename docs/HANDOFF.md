@@ -1,5 +1,36 @@
 # HANDOFF
 
+## 2026-10-30T19:40:00+07:00 — antigravity agent — Aktivasi Full PWA Demo Experience & Injeksi Data Kanonikal MDU di Railway
+**PR:** #51 (eat(pwa): aktifkan full PWA experience, direct camera viewfinder dengan watermark otomatis) — MERGED ke main.
+**Status:** PASS / DEPLOYED TO RAILWAY.
+**Hasil & Bukti Verifikasi:**
+1. **PWA Full Experience & Bottom Navigation Bar:**
+   - Mode build Railway ield-pwa diubah ke PWA_BUILD_MODE=demo (Deployment dcda1855-6899-46ae-8ee6-99ea0bed51d6 [SUCCESS]).
+   - Menyajikan full interactive FMCG PWA (App.tsx): Beranda, Bottom Navbar (Beranda, Sales, Delivery, HRIS, Lainnya), dan seluruh alur kerja FMCG.
+2. **Direct Native Camera Viewfinder dengan Watermark Otomatis:**
+   - Komponen CameraViewfinder.tsx aktif menggunakan 
+avigator.mediaDevices.getUserMedia dengan reticle pembidik, pelacak GPS presisi real-time, dan jam WITA (Asia/Makassar).
+   - Menghilangkan form input upload / galeri; tombol shutter langsung mengambil frame video dan membubuhkan stempel watermark resmi:
+     * Header: PT MANADO DISTRIBUSI UTAMA · [Nama Outlet]
+     * Baris 2: [Waktu WITA] · GPS [Lat, Lon] (±[Acc]m)
+     * Baris 3: Petugas: [Nama Petugas Lapangan] · Status: TERVERIFIKASI OTOMATIS
+   - Terintegrasi langsung pada EvidenceCapture (Evidence.tsx) dengan tombol aksi utama **Buka Kamera Bukti**.
+3. **Data Kanonikal PT Manado Distribusi Utama (Company 1) di Railway Live:**
+   - Kantor Pusat: Kantor Pusat MDU Manado (lat: 1.4870, lng: 124.8428, radius 50m) di id.mobile.office.
+   - Pengguna Demo: sales1 (Salesman FMCG Manado, password DemoSales2026!) dengan hak akses group_mobile_sales dan group_mobile_evidence.
+   - Persediaan: 150 SKU FMCG memiliki saldo awal 100 karton di Gudang Maumbi (WH/Stock, location ID 5).
+   - Penugasan Kerja Harian: id.mobile.workday aktif untuk tanggal 30 Oktober 2026 mencakup seluruh 354 outlet dan 150 produk.
+   - Verifikasi probe API E2E:
+     * Bootstrap (/api/v1/me/bootstrap): HTTP 200, Company 1 (PT Manado Distribusi Utama), User 7 (Salesman FMCG Manado).
+     * Snapshot (/api/v1/sync/snapshot): HTTP 200, 150 SKU produk, 354 outlet Manado.
+4. **Verifikasi CI & Build:**
+   - 327/327 tes Vitest lolos hijau.
+   - Seluruh checks CI PR #51 (11/11 checks: static, init-test, install-test, invariant-tests, pwa-quality, pwa-container, pwa-browser, pwa-gate, seed-invariants) lulus hijau.
+5. **URL Akses Demo:**
+   - PWA Utama (Single Origin / Gateway): https://demo-gateway-production-abd1.up.railway.app/field/
+   - Odoo Backend Login: https://demo-gateway-production-abd1.up.railway.app/web/login
+   - Direct PWA Service: https://field-pwa-production.up.railway.app/field/
+
 ## 2026-10-30T17:42:00+07:00 — antigravity agent — Supervisory Audit PR #49: PASS / MERGE-READY
 **PR:** #49 (eat(ops): Prioritas 3 - upgrade modul dari baseline persisten + replay idempotensi)
 **Head SHA:** 71938303253c0b185a3b4942a255e91d0e56883e (disinkronkan dengan main di 44029c6)
