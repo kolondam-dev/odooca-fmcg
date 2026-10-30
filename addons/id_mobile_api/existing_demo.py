@@ -102,16 +102,19 @@ def protected_snapshot(env):
         if model not in env:
             continue
         table = env[model]._table
-        if model == "res.users":
+        if model in ("res.users", "res.partner"):
             # Native res.company.create links the new company to its operator
             # and SUPERUSER_ID. Preserve their real audit timestamp; verify the
             # exact additive company/group change separately below.
+            audit_ids = [env.uid, SUPERUSER_ID]
+            if model == "res.partner":
+                audit_ids = env["res.users"].browse(audit_ids).partner_id.ids
             env.cr.execute(
                 sql.SQL(
                     "SELECT id, (CASE WHEN id = ANY(%s) THEN to_jsonb(t) - 'write_date' - 'write_uid' "
                     "ELSE to_jsonb(t) END)::text FROM {} t ORDER BY id"
                 ).format(sql.Identifier(table)),
-                ([env.uid, SUPERUSER_ID],),
+                (audit_ids,),
             )
         else:
             env.cr.execute(sql.SQL("SELECT id, to_jsonb(t)::text FROM {} t ORDER BY id").format(sql.Identifier(table)))
@@ -138,6 +141,7 @@ def _user_scope(env):
             "companies": set(user.company_ids.ids),
             "groups": set(user.group_ids.ids),
             "audit": (user.write_uid.id, user.write_date),
+            "partner_audit": (user.partner_id.write_uid.id, user.partner_id.write_date),
         }
         for user in env["res.users"].with_context(active_test=False).search([])
     }
@@ -158,11 +162,12 @@ def _assert_user_scope(env, before, accounts):
                 "groups"
             ] <= old["groups"] | {multi}:
                 raise ValidationError("Unexpected operator scope change; provisioning was rolled back.")
-            writer, at = after[user_id]["audit"]
-            if after[user_id]["audit"] != old["audit"] and (
-                writer != env.uid or not at or (old["audit"][1] and at < old["audit"][1])
-            ):
-                raise ValidationError("Unexpected operator audit metadata; provisioning was rolled back.")
+            for field in ("audit", "partner_audit"):
+                writer, at = after[user_id][field]
+                if after[user_id][field] != old[field] and (
+                    writer != env.uid or not at or (old[field][1] and at < old[field][1])
+                ):
+                    raise ValidationError("Unexpected operator audit metadata; provisioning was rolled back.")
         elif after[user_id] != old:
             raise ValidationError("Existing user access changed; provisioning was rolled back.")
 

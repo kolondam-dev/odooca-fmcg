@@ -1,5 +1,9 @@
 # HANDOFF
 
+## 2026-10-30 — agent-codex-pwa — Delegated technical-partner audit preservation
+**Bukti ecb8e3c:** native66 tests0failed/1error; preservasi masih menolak perubahan res.partner. Pengecualian audit dibatasi ke partner yang terikat pada operator/SUPERUSER_ID, dengan semua kolom business tetap exact dan audit penulis/waktu tetap diperiksa. Customer lain tidak dikecualikan. Helper menyelesaikan recompute operator setelah companycreate sebelum beralih ke env capture-user.
+**Diagnostik:** regression positive-path mencatat hanya ID dan nama kolom partner yang berubah, tidak nilai contact/credential.6 native regressions dan shell-preservation smoke menunggu follow-up. Ruff5manifest/diff PASS; belum ada mutasi Railway.
+
 ## 2026-10-30 — agent-codex-pwa — Native company-creation scope audit follow-up
 **Bukti kandidatfd113dd:** native Odoo65 tests0failed/1error: before/after guard menolak native technical-user mutation saatcompanycreate, sehingga tidak memberi falsePASS. Sumber resmi Odoo19 res_company.create mengonfirmasi automatic company_ids link padaoperator/SUPERUSER_ID (serta grup UI multi-company). Tidak mengganti create/write_date untuk menyembunyikan efek.
 **Perbaikan:** preservasi row users tetap semua field selain write_uid/write_date khusus dua user teknis; audit harus penulis operator/waktu tidakmundur. Native tambahan company hanyaTEST dan grup hanyaUI multi-company; userexisting lain exactscope. Ringkasan melaporkan tambahanmembership; regresi unexpectedoperatorgroup ditambahkan. Preflight memisahkan latest_version(database) dari installed_version(disk) mengikuti sourceir_module Odoo19, dan entrypointpreflight kini diuji di shellCI.

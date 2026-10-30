@@ -170,3 +170,8 @@
 - Candidatefd113dd actual Odoo65 tests0failed/1error: guard rejected native company-create operator update. Official Odoo19 source confirms company linking to operator/SUPERUSER_ID; permit only TEST company addition and optional multi-company UI group, retain/check real audit metadata. All other existing-user scopes remain exact; unexpected group regression added.
 - Preflight database version uses latest_version and disk version installed_version per official ir_module source; execute preflight in CI shell smoke.6 regression methods and positive smoke await follow-up CI. No server mutation or scope approval request.
 - Task managed by agent-codex-pwa at 2026-10-30T12:05:16+07:00
+
+[2026-10-30T12:15:50+07:00] [INFO] Delegated technical-partner audit with unchanged customer protection
+- ecb8e3c real Odoo66 tests0failed/1error on res.partner preservation. Scope audit exception to operator/SUPERUSER_ID linked profile partners only; keep every business column exact, validate audit actor/time, no customer exception or audit restoration.
+- Flush company-side native recomputations under operator before capture-user snapshots. Positive regression records column names only for diagnosis, never contact values/credentials. Follow-up native/CLI CI pending; no runtime writes on Railway.
+- Task managed by agent-codex-pwa at 2026-10-30T12:15:50+07:00

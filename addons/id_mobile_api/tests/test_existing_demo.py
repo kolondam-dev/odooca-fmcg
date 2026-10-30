@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 import tempfile
 from datetime import datetime, timezone
@@ -69,7 +70,27 @@ class TestExistingDemo(MobileFixture, TransactionCase):
 
     def test_existing_business_rows_are_preserved_on_two_runs(self):
         before = protected_snapshot(self.env)
-        with patch.dict(os.environ, self.runtime):
+
+        def observed(*args, **kwargs):
+            self.env.flush_all()
+            self.env.cr.execute("SELECT id, to_jsonb(p) FROM res_partner p")
+            partners = dict(self.env.cr.fetchall())
+            result = _provision_records(*args, **kwargs)
+            self.env.flush_all()
+            self.env.cr.execute("SELECT id, to_jsonb(p) FROM res_partner p")
+            changed = {
+                row_id: sorted(key for key in values if values[key] != partners[row_id].get(key))
+                for row_id, values in self.env.cr.fetchall()
+                if row_id in partners and values != partners[row_id]
+            }
+            # Field names only; never log any contact values or credentials.
+            logging.getLogger(__name__).info("Native partner column changes: %s", changed)
+            return result
+
+        with (
+            patch.dict(os.environ, self.runtime),
+            patch("odoo.addons.id_mobile_api.existing_demo._provision_records", side_effect=observed),
+        ):
             first = self.run_provision()
             second = self.run_provision()
         self.assertEqual(first["accounts"], second["accounts"])

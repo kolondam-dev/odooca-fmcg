@@ -47,6 +47,9 @@ def _provision_records(env, *, passwords):
     if not currency.active:
         raise ValidationError("Activate IDR before provisioning this disposable database.")
     company = owned("company", "res.company", {"name": "STAGING TEST Company", "currency_id": currency.id})
+    # Finish native operator/partner recomputations before reading snapshots as
+    # the newly created capture users later in this transaction.
+    env.flush_all()
     warehouse = env["stock.warehouse"].search([("company_id", "=", company.id)], limit=1)
     if not warehouse:
         warehouse = owned(
