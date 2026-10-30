@@ -14,7 +14,7 @@ body.id-shell-sidebar {
                 box-shadow: none;
                 border: none;
                 border-radius: 0;
-                padding: 1rem 1.25rem 0;
+                padding: 1rem 1.25rem;
             }
 
             // Blok judul asli di sheet disembunyikan hanya bila judulnya sudah tampil di header
@@ -118,19 +118,129 @@ body.id-shell-sidebar {
             padding-left: 1.25rem !important;
             padding-right: 1.25rem !important;
         }
+    }
+}
 
-        // Footer form sticky (total & terms): tetap diam di bottom, tanpa border bottom
-        .o_form_sheet .o_group:has(.oe_subtotal_footer) {
-            position: sticky;
-            bottom: 0;
-            background: #ffffff;
+// Footer transaksi: total & syarat. Aturan ini sengaja TIDAK di bawah
+// body.id-shell-sidebar karena kelas itu dilepas saat layar kecil (Odoo memakai
+// NavBar bawaan). Footer harus tetap dapat diuji dan tetap terbaca di sidebar,
+// tata letak klasik, dan mobile.
+.o_form_view {
+    .o_form_sheet {
+        // Sticky bawah (bottom: 0). Kotak hanya dapat bergeser di dalam containing
+        // block-nya, jadi elemen sticky dipilih yang containing block-nya memuat
+        // baris transaksi (group catatan/total pada SO, tab baris/total pada invoice).
+        // Jangan memakai position: fixed: dapat menutupi baris terakhir/statusbar.
+        .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer)):not(.oe_invoice_lines_tab *) {
+            position: sticky !important;
+            top: auto !important;
+            bottom: 0 !important;
             z-index: 4;
-            border-top: 1px solid #dee2e6;
+            isolation: isolate;
+            box-sizing: border-box;
+            width: 100%;
+            min-width: 0;
+            background: #ffffff;
+            border-top: 1px solid #d8e0eb;
             border-bottom: none;
             padding: 0.65rem 1.25rem;
-            margin: 0.5rem -1.25rem 0 -1.25rem;
-            margin-top: 0.5rem !important; // kalah oleh aturan margin .o_group bawaan
-            box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.03);
+            margin: 0.5rem 0 0 0;
+            box-shadow: 0 -4px 14px rgba(11, 31, 77, 0.07);
+        }
+
+        // Invoice: grup total adalah kolom sempit (colspan 4) di samping narration;
+        // membuatnya sticky akan terkunci oleh containing block kolom itu. Buat tab
+        // baris/total menjadi sticky (sama seperti group catatan pada SO), susun
+        // narration + total sebagai blok penuh agar tidak ada overflow horizontal.
+        .oe_invoice_lines_tab {
+            position: sticky !important;
+            top: auto !important;
+            bottom: 0 !important;
+            display: block !important;
+            z-index: 4;
+            isolation: isolate;
+            box-sizing: border-box;
+            width: 100%;
+            min-width: 0;
+            overflow: visible !important;
+            background: #ffffff;
+            border-top: 1px solid #d8e0eb;
+            border-bottom: none;
+            padding: 0.65rem 1.25rem;
+            margin: 0.5rem 0 0 0;
+            box-shadow: 0 -4px 14px rgba(11, 31, 77, 0.07);
+
+            > .o_group {
+                display: block;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0;
+                margin-inline: 0;
+            }
+
+            // Hindari sticky bertumpuk: pembungkus kolom di dalam tab tidak sticky.
+            .o_group:has(.oe_subtotal_footer) {
+                position: static !important;
+            }
+
+            .oe_subtotal_footer {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0;
+                margin-inline-start: 0;
+            }
+        }
+
+        // Ringkasan nilai tampil sebagai panel yang terpisah dari isi transaksi.
+        // Tidak memindahkan field/model dan tidak mengasumsikan adanya field diskon.
+        .oe_subtotal_footer {
+            box-sizing: border-box;
+            width: 32rem;
+            max-width: 100%;
+            min-width: 0;
+            margin-inline-start: auto;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e3e8f0;
+            border-radius: 0.35rem;
+            background: #f7f9fc;
+            color: #0b1f4d;
+        }
+
+        .oe_subtotal_footer.col-lg-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .oe_subtotal_footer .o_field_widget,
+        .oe_subtotal_footer .o_field_widget input {
+            font-variant-numeric: tabular-nums;
+        }
+
+        // Odoo 19 renders the notebook headers and the x2many list renderer wider
+        // than their parent at 125% browser zoom (704 px inside a 656 px content
+        // box), which leaks 4 px of horizontal overflow into the edge-to-edge
+        // sheet. Both elements scroll horizontally on their own, so cap them at
+        // the sheet content width instead of clipping the whole form.
+        .o_notebook_headers,
+        .o_list_renderer {
+            max-width: 100%;
+        }
+    }
+}
+
+@media (max-width: 767.98px) {
+    .o_form_view .o_form_sheet {
+        .o_group:has(.oe_subtotal_footer):not(:has(.o_group .oe_subtotal_footer)):not(.oe_invoice_lines_tab *),
+        .oe_invoice_lines_tab {
+            padding: 0.5rem 0.75rem;
+            margin-inline: 0;
+        }
+
+        .oe_subtotal_footer {
+            max-width: 100%;
+            padding: 0.65rem 0.75rem;
         }
     }
 }
