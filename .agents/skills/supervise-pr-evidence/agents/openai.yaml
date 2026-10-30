@@ -1,0 +1,4 @@
+interface:
+  display_name: "Supervisor PR Berbasis Bukti"
+  short_description: "Audit PR, CI, regresi dan merge berdasarkan bukti nyata."
+  default_prompt: "Gunakan $supervise-pr-evidence untuk meninjau PR ini, membuktikan temuan, dan memberikan verdict yang dapat dieksekusi."
