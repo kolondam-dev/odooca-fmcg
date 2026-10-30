@@ -1,5 +1,39 @@
 # HANDOFF
 
+## 2026-10-30T07:50:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 4: Exact HPP Binding & Attribution, Deterministic Canonical Location Resolver, dan Sinkronisasi Main
+**Konteks Review Supervisor ([issuecomment-6511303227](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6511303227)):**
+- Status PR #39: HOLD / changes required (Full runtime SUCCESS pada run 40891644357 dan 6 in-database savepoint mutations resmi DITERIMA dan TERBUKTI; temuan swap stok/lot dan loop HPP kosong resmi tertutup).
+- Catatan reviewer yang diselesaikan:
+  1. Binding HPP belum eksak: Jurnal salah masih bisa lolos jika hanya posted dan memiliki dua kode akun. Wajib periksa debit 510000 dan credit 113000 eksak baris per baris, product match, company match, STJ journal, date match, nominal round(qty * standard_price, 2), serta larangan AML reuse.
+  2. Resolver lokasi masih heuristik: Menolak potensi salah pilih warehouse company lain; wajib scoping deterministik ke canonical company dan assert cardinality == 1 pada warehouse WH dan lokasi karantina.
+  3. Sinkronisasi dengan origin/main: Mengintegrasikan commit fca1e0f (PR #41 staging session read dan PR #42 official evidence API).
+
+**Perbaikan yang Diimplementasikan:**
+1. **[P1] Exact HPP Valuation Binding & Anti-AML Reuse (`scripts/ops/verify_disposable_full.py`):**
+   - Menggantikan pemeriksaan kode akun generik dengan audit mendalam baris-per-baris pada setiap `stock.move` pengiriman pelanggan selesai (`done_out_moves`):
+     * Memvalidasi tepat satu baris debit 510000 dengan nominal eksak `_get_expected_move_valuation(m)` (`round(m.quantity * unit_cost, 2)` atau dari SVL), credit == 0.00, product_id match `m.product_id`, dan company_id match canonical company.
+     * Memvalidasi tepat satu baris credit 113000 dengan nominal eksak `exp_val`, debit == 0.00, product_id match `m.product_id`, dan company_id match canonical company.
+     * Memvalidasi relasi singular `account_move_id`: `state == 'posted'`, `journal_id.code == 'STJ'`, dan `date == m.date`.
+     * Menegakkan anti AML reuse via `seen_aml_ids` dan anti move reuse via `seen_move_am_ids` (setiap baris AML STJ hanya boleh di-bind ke tepat satu pergerakan barang).
+2. **[P2] Deterministic Canonical Location Resolver (`scripts/ops/verify_disposable_full.py`):**
+   - Mengimplementasikan `resolve_canonical_company(env)` yang memvalidasi keberadaan perusahaan kanonikal (`code == 'FMCG'` atau `name == 'PT Salva Inti Mandiri'`) dengan asersi singularitas (cardinality == 1).
+   - Memperbarui `resolve_canonical_locations(env, company=None)` dengan scoping ketat ke canonical company:
+     * Warehouse gudang utama: filter `company_id == canonical_company.id` dan `code == 'WH'` dengan asersi tepat 1 kandidat (fail-closed jika ditemukan 0 atau > 1 kandidat). Memverifikasi `lot_stock_id` bertipe internal dan milik canonical company.
+     * Lokasi karantina: filter `company_id == canonical_company.id`, `usage == 'internal'`, dan `name == 'Karantina FMCG Maumbi'` dengan asersi tepat 1 kandidat.
+     * Mengembalikan 3-tuple `(wh_stock_loc, quarantine_loc, canonical_company)` dan memfilter kueri `stock.quant` secara eksplisit pada scope `company_id`.
+3. **[P3] Ekspansi In-Database Savepoint Fault-Injection (8 Probes):**
+   - Menambahkan Probe 7: Outbound Move HPP Cross-Binding / AML Reuse (mengarahkan `m1.account_move_id` ke `m2.account_move_id` di dalam savepoint). Auditor produksi terbukti menolak secara deterministik dengan `AssertionError` (`REJECTED_AS_EXPECTED`).
+   - Menambahkan Probe 8: HPP Journal Debit-Credit Direction Swap (membalik arah debit 113000 dan credit 510000). Auditor produksi terbukti menolak secara deterministik dengan `AssertionError` (`REJECTED_AS_EXPECTED`).
+   - Baseline database terbukti pulih 100% dan identik setelah seluruh 8 probe di-rollback.
+4. **[P4] Penambahan Unit Test Suite (`tests/test_full_dataset_cutoff_and_upgrade.py`):**
+   - Menambahkan `test_canonical_location_resolver_rejects_ambiguity_and_foreign_company`: membuktikan bahwa foreign warehouse diabaikan, canonical company tetap terpilih, dan ambiguitas warehouse di company yang sama ditolak dengan `LookupError`.
+   - Menambahkan `test_exact_hpp_journal_binding_rejects_wrong_journal_account_direction_or_reuse`: membuktikan jurnal non-STJ, date mismatch, debit-credit direction swap, nominal mismatch, dan AML reuse ditolak dengan `AssertionError`.
+5. **Hasil Verifikasi Lokal:**
+   - `python -m ruff check .`: PASS (0 errors).
+   - `python scripts/check_manifests.py`: PASS (5 addon terverifikasi).
+   - `python -m unittest tests.test_full_dataset_cutoff_and_upgrade`: PASS (seluruh 10 tests, termasuk 8 in-database savepoint mutation probes).
+   - `15 CSV register kanonikal di data/registers/`: 100% beku tanpa perubahan satu byte pun.
+
 ## 2026-10-29T20:55:00+07:00 — antigravity agent — Resolusi Interaksi Cursor Savepoint dan Penajaman Probe Fault-Injection di Database Nyata
 **Konteks & Ringkasan Perbaikan:**
 1. **Resolusi Interaksi Cursor Savepoint:**

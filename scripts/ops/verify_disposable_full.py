@@ -570,51 +570,172 @@ def verify_anti_fallback_salespersons(env):
         )
 
 
-def resolve_canonical_locations(env):
-    """Menyelesaikan lokasi gudang internal dan karantina secara deterministik tanpa substring fuzzy atau fallback ID."""
-    StockLocation = env["stock.location"].sudo()
+def resolve_canonical_company(env):
+    """Menyelesaikan canonical company secara unik (code='FMCG' atau name='PT Salva Inti Mandiri').
+
+    Fail-closed jika tidak ditemukan atau ambigu.
+    """
+    company = None
+    if "res.company" in env:
+        Company = env["res.company"].sudo()
+        matches = []
+        if hasattr(Company, "_fields") and "code" in Company._fields:
+            matches = _iter_records(Company.search([("code", "=", "FMCG")]))
+        else:
+            try:
+                matches = [c for c in _iter_records(Company.search([])) if getattr(c, "code", "") == "FMCG"]
+            except Exception:
+                matches = []
+
+        if not matches:
+            matches = _iter_records(Company.search([("name", "=", "PT Salva Inti Mandiri")]))
+
+        if len(matches) == 1:
+            company = matches[0]
+        elif len(matches) > 1:
+            raise LookupError(f"[canonical_company] Ditemukan {len(matches)} canonical company kandidat (wajib tepat 1)!")
+
+    if not company and hasattr(env, "company") and env.company:
+        company = env.company
+
+    if not company:
+        raise LookupError("[canonical_company] Canonical company ('FMCG' / 'PT Salva Inti Mandiri') tidak ditemukan!")
+
+    return company
+
+
+def resolve_canonical_locations(env, company=None):
+    """Menyelesaikan lokasi gudang internal dan karantina secara deterministik scoped ke canonical company.
+
+    Menolak warehouse/lokasi company lain dan fail-closed jika terdapat ambiguitas (cardinality != 1).
+    Mengembalikan: (wh_stock_loc, quarantine_loc, canonical_company)
+    """
+    if company is None:
+        company = resolve_canonical_company(env)
+    company_id = getattr(company, "id", None)
+
     wh_stock_loc = None
+    # 1. Resolusi Warehouse Gudang Utama Maumbi (WH) scoped ke canonical company
     if "stock.warehouse" in env:
-        whs = _iter_records(env["stock.warehouse"].sudo().search([]))
-        fmcg_whs = [w for w in whs if getattr(w, "lot_stock_id", None) and "other" not in str(getattr(w, "name", "")).lower()]
-        if fmcg_whs:
-            wh_stock_loc = fmcg_whs[0].lot_stock_id
-    if not wh_stock_loc:
-        candidates = _iter_records(StockLocation.search([("usage", "=", "internal")]))
-        for name in ("WH/Stock", "Stock", "Gudang Utama Maumbi"):
-            matched = [c for c in candidates if str(getattr(c, "name", "")).strip() == name]
-            if matched:
-                wh_stock_loc = matched[0]
-                break
+        StockWarehouse = env["stock.warehouse"].sudo()
+        wh_domain = [("code", "=", "WH")]
+        if company_id:
+            wh_domain.append(("company_id", "=", company_id))
+        wh_matches = _iter_records(StockWarehouse.search(wh_domain))
+
+        # Jika tidak ditemukan dengan code 'WH', cari warehouse milik company yang bukan 'other'
+        if not wh_matches:
+            c_domain = [("company_id", "=", company_id)] if company_id else []
+            wh_matches = [
+                w for w in _iter_records(StockWarehouse.search(c_domain))
+                if getattr(w, "lot_stock_id", None) and "other" not in str(getattr(w, "name", "")).lower()
+            ]
+
+        if len(wh_matches) != 1:
+            raise LookupError(
+                f"[canonical_locations] Warehouse gudang utama ambigu atau tidak ditemukan untuk company {company_id}: "
+                f"ditemukan {len(wh_matches)} kandidat (wajib tepat 1)!"
+            )
+        wh = wh_matches[0]
+        wh_stock_loc = getattr(wh, "lot_stock_id", None)
+        assert wh_stock_loc, f"[canonical_locations] Warehouse '{wh.name}' tidak memiliki lot_stock_id!"
+        assert getattr(wh_stock_loc, "usage", "") == "internal", (
+            f"[canonical_locations] lot_stock_id pada warehouse '{wh.name}' bertipe '{wh_stock_loc.usage}', diharapkan 'internal'!"
+        )
+        if company_id:
+            loc_comp_id = getattr(getattr(wh_stock_loc, "company_id", None), "id", getattr(wh_stock_loc, "company_id", None))
+            if loc_comp_id not in (company_id, None, False):
+                raise AssertionError(
+                    f"[canonical_locations] lot_stock_id warehouse '{wh.name}' berasal dari company ID {loc_comp_id}, "
+                    f"diharapkan company ID {company_id}!"
+                )
+
+    # Fallback pencarian langsung ke stock.location internal scoped ke company
+    if not wh_stock_loc and "stock.location" in env:
+        StockLocation = env["stock.location"].sudo()
+        loc_domain = [("usage", "=", "internal")]
+        if company_id:
+            loc_domain.append(("company_id", "in", [company_id, False]))
+        candidates = _iter_records(StockLocation.search(loc_domain))
+        explicit_names = ("WH/Stock", "Stock", "Gudang Utama Maumbi")
+        matched = [c for c in candidates if str(getattr(c, "name", "")).strip() in explicit_names]
+        if len(matched) != 1:
+            raise LookupError(
+                f"[canonical_locations] Lokasi gudang utama internal tidak unik: ditemukan {len(matched)} kandidat!"
+            )
+        wh_stock_loc = matched[0]
+
     if not wh_stock_loc:
         raise LookupError("[canonical_locations] Lokasi gudang internal utama tidak ditemukan!")
 
-    quar_candidates = _iter_records(StockLocation.search([
-        ("name", "=", "Karantina FMCG Maumbi"),
-        ("usage", "=", "internal"),
-    ]))
-    if not quar_candidates:
-        raise LookupError("[canonical_locations] Lokasi karantina 'Karantina FMCG Maumbi' tidak ditemukan!")
-    quarantine_loc = quar_candidates[0]
+    # 2. Resolusi Lokasi Karantina 'Karantina FMCG Maumbi' scoped ke canonical company
+    StockLocation = env["stock.location"].sudo() if "stock.location" in env else None
+    if StockLocation is not None:
+        quar_domain = [
+            ("name", "=", "Karantina FMCG Maumbi"),
+            ("usage", "=", "internal"),
+        ]
+        if company_id:
+            quar_domain.append(("company_id", "in", [company_id, False]))
+        quar_matches = _iter_records(StockLocation.search(quar_domain))
+        if len(quar_matches) != 1:
+            raise LookupError(
+                f"[canonical_locations] Lokasi karantina 'Karantina FMCG Maumbi' ambigu atau tidak ditemukan: "
+                f"ditemukan {len(quar_matches)} kandidat (wajib tepat 1)!"
+            )
+        quarantine_loc = quar_matches[0]
+        if company_id:
+            quar_comp_id = getattr(getattr(quarantine_loc, "company_id", None), "id", getattr(quarantine_loc, "company_id", None))
+            if quar_comp_id not in (company_id, None, False):
+                raise AssertionError(
+                    f"[canonical_locations] Lokasi karantina berasal dari company ID {quar_comp_id}, "
+                    f"diharapkan company ID {company_id}!"
+                )
+    else:
+        quarantine_loc = None
 
-    return wh_stock_loc, quarantine_loc
+    return wh_stock_loc, quarantine_loc, company
+
+
+def _get_expected_move_valuation(m):
+    """Menghitung nilai nominal valuasi eksak dari pergerakan stok (svl_ids, value, atau qty * standard_price)."""
+    svl_list = getattr(m, "stock_valuation_layer_ids", None)
+    if svl_list:
+        val = sum(abs(float(getattr(layer, "value", 0.0) or 0.0)) for layer in svl_list)
+        return Decimal(str(round(val, 2)))
+    m_val = getattr(m, "value", None)
+    if m_val is not None and m_val is not False:
+        return Decimal(str(round(abs(float(m_val)), 2)))
+    prod = getattr(m, "product_id", None)
+    std_price = float(getattr(prod, "standard_price", 0.0) or 0.0)
+    qty = float(getattr(m, "quantity", getattr(m, "product_uom_qty", 0.0)) or 0.0)
+    return Decimal(str(round(qty * std_price, 2)))
 
 
 def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
     """Mengaudit database Odoo aktual secara menyeluruh terhadap ekspektasi Oracle Cut-off 31 Juli 2026."""
     july_exp = oracle.get_july_closing_expectations()
-    wh_stock_loc, quarantine_loc = resolve_canonical_locations(env)
+    wh_stock_loc, quarantine_loc, canonical_company = resolve_canonical_locations(env)
+    company_id = getattr(canonical_company, "id", None)
     exp_phys, exp_res_by_sku, exp_quar = oracle.get_expected_stock_multiset(cutoff_date="2026-07-31")
 
     # 1. Stock Quants Multiset (Fisik per SKU+Lot, Reservasi per SKU, dan Karantina per SKU+Lot)
     if "stock.quant" in env:
         Quant = env["stock.quant"].sudo()
-        internal_quants = _iter_records(Quant.search([("location_id", "=", wh_stock_loc.id)]))
-        quarantine_quants = _iter_records(Quant.search([("location_id", "=", quarantine_loc.id)]))
+        int_quant_domain = [("location_id", "=", wh_stock_loc.id)]
+        quar_quant_domain = [("location_id", "=", quarantine_loc.id)]
+        if company_id:
+            int_quant_domain.append(("company_id", "in", [company_id, False]))
+            quar_quant_domain.append(("company_id", "in", [company_id, False]))
+        internal_quants = _iter_records(Quant.search(int_quant_domain))
+        quarantine_quants = _iter_records(Quant.search(quar_quant_domain))
 
         actual_phys = {}
         actual_res_by_sku = {}
         for q in internal_quants:
+            if company_id:
+                q_comp_id = getattr(getattr(q, "company_id", None), "id", getattr(q, "company_id", None))
+                assert q_comp_id in (company_id, None, False), f"Quant {q.id} company_id mismatch: {q_comp_id}"
             sku = getattr(getattr(q, "product_id", None), "default_code", "") or ""
             lot = getattr(getattr(q, "lot_id", None), "name", "") or ""
             qty = round(float(getattr(q, "quantity", 0.0) or 0.0), 4)
@@ -766,14 +887,103 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
         assert len(done_out_moves) == expected_out_moves, (
             f"Audit Outbound Moves Juli Gagal! Expected {expected_out_moves}, got {len(done_out_moves)}"
         )
+        seen_move_am_ids = set()
+        seen_aml_ids = set()
         for m in done_out_moves:
             am = getattr(m, "account_move_id", None)
-            assert am, f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
-            assert getattr(am, "state", "") == "posted", f"Account move {getattr(am, 'name', '')} pada move {m.id} belum posted!"
+            assert am and getattr(am, "id", None), (
+                f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
+            )
+            am_id = getattr(am, "id", None)
+            assert am_id not in seen_move_am_ids, (
+                f"VIOLATION AML REUSE: Account move {am_id} di-bind oleh lebih dari satu stock.move (move ID: {m.id})!"
+            )
+            seen_move_am_ids.add(am_id)
+
+            assert getattr(am, "state", "") == "posted", (
+                f"Account move {getattr(am, 'name', am_id)} pada move {m.id} belum posted!"
+            )
+
+            # Scoping company
+            m_comp_id = getattr(getattr(m, "company_id", None), "id", getattr(m, "company_id", None))
+            am_comp_id = getattr(getattr(am, "company_id", None), "id", getattr(am, "company_id", None))
+            if company_id:
+                assert m_comp_id in (company_id, None, False), f"Move {m.id} company_id mismatch: {m_comp_id} != {company_id}"
+                assert am_comp_id in (company_id, None, False), f"Account move {am_id} company_id mismatch: {am_comp_id} != {company_id}"
+
+            # Journal STJ
+            j_code = getattr(getattr(am, "journal_id", None), "code", "")
+            assert j_code == "STJ", f"Account move {getattr(am, 'name', am_id)} journal code '{j_code}', diharapkan 'STJ'!"
+
+            # Date match move date
+            am_date = str(getattr(am, "date", ""))[:10]
+            m_date = str(getattr(m, "date", ""))[:10]
+            assert am_date == m_date, (
+                f"Account move {getattr(am, 'name', am_id)} tanggal '{am_date}' mismatch dengan stock move date '{m_date}'!"
+            )
+
+            # Valuation value
+            exp_val = _get_expected_move_valuation(m)
             lines = _iter_records(getattr(am, "line_ids", []))
-            codes = {getattr(getattr(ln, "account_id", None), "code", "") for ln in lines}
-            assert "510000" in codes, f"Account move {am.name} pada move {m.id} tidak memiliki debit COGS 510000!"
-            assert "113000" in codes, f"Account move {am.name} pada move {m.id} tidak memiliki credit Persediaan 113000!"
+
+            # Exactly 1 debit 510000
+            debit_lines = [
+                ln for ln in lines
+                if getattr(getattr(ln, "account_id", None), "code", "") == "510000"
+            ]
+            assert len(debit_lines) == 1, (
+                f"Account move {getattr(am, 'name', am_id)} memiliki {len(debit_lines)} baris debit 510000 (wajib tepat 1)!"
+            )
+            d_ln = debit_lines[0]
+            assert d_ln.id not in seen_aml_ids, f"Baris AML debit ID {d_ln.id} terpakai ulang (AML reuse)!"
+            seen_aml_ids.add(d_ln.id)
+
+            d_amt = Decimal(str(round(float(getattr(d_ln, "debit", 0.0) or 0.0), 2)))
+            d_cr = Decimal(str(round(float(getattr(d_ln, "credit", 0.0) or 0.0), 2)))
+            assert d_amt == exp_val, (
+                f"Account move {getattr(am, 'name', am_id)} debit 510000 mismatch! Expected Rp {exp_val}, got Rp {d_amt}"
+            )
+            assert d_cr == Decimal("0.00"), (
+                f"Account move {getattr(am, 'name', am_id)} baris debit 510000 memiliki credit {d_cr} != 0.00!"
+            )
+            d_prod_id = getattr(getattr(d_ln, "product_id", None), "id", getattr(d_ln, "product_id", None))
+            m_prod_id = getattr(getattr(m, "product_id", None), "id", getattr(m, "product_id", None))
+            if d_prod_id is not None and m_prod_id is not None:
+                assert d_prod_id == m_prod_id, (
+                    f"Account move {getattr(am, 'name', am_id)} debit 510000 product ID {d_prod_id} != move product ID {m_prod_id}!"
+                )
+            if company_id:
+                d_comp_id = getattr(getattr(d_ln, "company_id", None), "id", getattr(d_ln, "company_id", None))
+                assert d_comp_id in (company_id, None, False), f"Debit line {d_ln.id} company_id mismatch!"
+
+            # Exactly 1 credit 113000
+            credit_lines = [
+                ln for ln in lines
+                if getattr(getattr(ln, "account_id", None), "code", "") == "113000"
+            ]
+            assert len(credit_lines) == 1, (
+                f"Account move {getattr(am, 'name', am_id)} memiliki {len(credit_lines)} baris credit 113000 (wajib tepat 1)!"
+            )
+            c_ln = credit_lines[0]
+            assert c_ln.id not in seen_aml_ids, f"Baris AML credit ID {c_ln.id} terpakai ulang (AML reuse)!"
+            seen_aml_ids.add(c_ln.id)
+
+            c_amt = Decimal(str(round(float(getattr(c_ln, "credit", 0.0) or 0.0), 2)))
+            c_dr = Decimal(str(round(float(getattr(c_ln, "debit", 0.0) or 0.0), 2)))
+            assert c_amt == exp_val, (
+                f"Account move {getattr(am, 'name', am_id)} credit 113000 mismatch! Expected Rp {exp_val}, got Rp {c_amt}"
+            )
+            assert c_dr == Decimal("0.00"), (
+                f"Account move {getattr(am, 'name', am_id)} baris credit 113000 memiliki debit {c_dr} != 0.00!"
+            )
+            c_prod_id = getattr(getattr(c_ln, "product_id", None), "id", getattr(c_ln, "product_id", None))
+            if c_prod_id is not None and m_prod_id is not None:
+                assert c_prod_id == m_prod_id, (
+                    f"Account move {getattr(am, 'name', am_id)} credit 113000 product ID {c_prod_id} != move product ID {m_prod_id}!"
+                )
+            if company_id:
+                c_comp_id = getattr(getattr(c_ln, "company_id", None), "id", getattr(c_ln, "company_id", None))
+                assert c_comp_id in (company_id, None, False), f"Credit line {c_ln.id} company_id mismatch!"
 
     # 6. Pembayaran AR / AP / OPEX
     if "account.payment" in env:
@@ -807,18 +1017,27 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
 def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle, prior_july_aml_snapshot=None):
     """Mengaudit database Odoo aktual setelah carry-forward 1 Agustus 2026 selesai diproses."""
     aug_exp = oracle.get_august_opening_expectations()
-    wh_stock_loc, quarantine_loc = resolve_canonical_locations(env)
+    wh_stock_loc, quarantine_loc, canonical_company = resolve_canonical_locations(env)
+    company_id = getattr(canonical_company, "id", None)
     exp_phys, _, exp_quar = oracle.get_expected_stock_multiset(cutoff_date="2026-08-01")
 
     # 1. Stock Quants Multiset (Reservasi Nol & Fisik Berkurang Bersih)
     if "stock.quant" in env:
         Quant = env["stock.quant"].sudo()
-        internal_quants = _iter_records(Quant.search([("location_id", "=", wh_stock_loc.id)]))
-        quarantine_quants = _iter_records(Quant.search([("location_id", "=", quarantine_loc.id)]))
+        int_quant_domain = [("location_id", "=", wh_stock_loc.id)]
+        quar_quant_domain = [("location_id", "=", quarantine_loc.id)]
+        if company_id:
+            int_quant_domain.append(("company_id", "in", [company_id, False]))
+            quar_quant_domain.append(("company_id", "in", [company_id, False]))
+        internal_quants = _iter_records(Quant.search(int_quant_domain))
+        quarantine_quants = _iter_records(Quant.search(quar_quant_domain))
 
         actual_phys = {}
         actual_res_by_sku = {}
         for q in internal_quants:
+            if company_id:
+                q_comp_id = getattr(getattr(q, "company_id", None), "id", getattr(q, "company_id", None))
+                assert q_comp_id in (company_id, None, False), f"Quant {q.id} company_id mismatch: {q_comp_id}"
             sku = getattr(getattr(q, "product_id", None), "default_code", "") or ""
             lot = getattr(getattr(q, "lot_id", None), "name", "") or ""
             qty = round(float(getattr(q, "quantity", 0.0) or 0.0), 4)
@@ -927,14 +1146,103 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
         assert len(done_out_moves) == expected_out_moves, (
             f"Audit Outbound Moves Total Gagal! Expected {expected_out_moves}, got {len(done_out_moves)}"
         )
+        seen_move_am_ids = set()
+        seen_aml_ids = set()
         for m in done_out_moves:
             am = getattr(m, "account_move_id", None)
-            assert am, f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
-            assert getattr(am, "state", "") == "posted", f"Account move {getattr(am, 'name', '')} pada move {m.id} belum posted!"
+            assert am and getattr(am, "id", None), (
+                f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
+            )
+            am_id = getattr(am, "id", None)
+            assert am_id not in seen_move_am_ids, (
+                f"VIOLATION AML REUSE: Account move {am_id} di-bind oleh lebih dari satu stock.move (move ID: {m.id})!"
+            )
+            seen_move_am_ids.add(am_id)
+
+            assert getattr(am, "state", "") == "posted", (
+                f"Account move {getattr(am, 'name', am_id)} pada move {m.id} belum posted!"
+            )
+
+            # Scoping company
+            m_comp_id = getattr(getattr(m, "company_id", None), "id", getattr(m, "company_id", None))
+            am_comp_id = getattr(getattr(am, "company_id", None), "id", getattr(am, "company_id", None))
+            if company_id:
+                assert m_comp_id in (company_id, None, False), f"Move {m.id} company_id mismatch: {m_comp_id} != {company_id}"
+                assert am_comp_id in (company_id, None, False), f"Account move {am_id} company_id mismatch: {am_comp_id} != {company_id}"
+
+            # Journal STJ
+            j_code = getattr(getattr(am, "journal_id", None), "code", "")
+            assert j_code == "STJ", f"Account move {getattr(am, 'name', am_id)} journal code '{j_code}', diharapkan 'STJ'!"
+
+            # Date match move date
+            am_date = str(getattr(am, "date", ""))[:10]
+            m_date = str(getattr(m, "date", ""))[:10]
+            assert am_date == m_date, (
+                f"Account move {getattr(am, 'name', am_id)} tanggal '{am_date}' mismatch dengan stock move date '{m_date}'!"
+            )
+
+            # Valuation value
+            exp_val = _get_expected_move_valuation(m)
             lines = _iter_records(getattr(am, "line_ids", []))
-            codes = {getattr(getattr(ln, "account_id", None), "code", "") for ln in lines}
-            assert "510000" in codes, f"Account move {am.name} pada move {m.id} tidak memiliki debit COGS 510000!"
-            assert "113000" in codes, f"Account move {am.name} pada move {m.id} tidak memiliki credit Persediaan 113000!"
+
+            # Exactly 1 debit 510000
+            debit_lines = [
+                ln for ln in lines
+                if getattr(getattr(ln, "account_id", None), "code", "") == "510000"
+            ]
+            assert len(debit_lines) == 1, (
+                f"Account move {getattr(am, 'name', am_id)} memiliki {len(debit_lines)} baris debit 510000 (wajib tepat 1)!"
+            )
+            d_ln = debit_lines[0]
+            assert d_ln.id not in seen_aml_ids, f"Baris AML debit ID {d_ln.id} terpakai ulang (AML reuse)!"
+            seen_aml_ids.add(d_ln.id)
+
+            d_amt = Decimal(str(round(float(getattr(d_ln, "debit", 0.0) or 0.0), 2)))
+            d_cr = Decimal(str(round(float(getattr(d_ln, "credit", 0.0) or 0.0), 2)))
+            assert d_amt == exp_val, (
+                f"Account move {getattr(am, 'name', am_id)} debit 510000 mismatch! Expected Rp {exp_val}, got Rp {d_amt}"
+            )
+            assert d_cr == Decimal("0.00"), (
+                f"Account move {getattr(am, 'name', am_id)} baris debit 510000 memiliki credit {d_cr} != 0.00!"
+            )
+            d_prod_id = getattr(getattr(d_ln, "product_id", None), "id", getattr(d_ln, "product_id", None))
+            m_prod_id = getattr(getattr(m, "product_id", None), "id", getattr(m, "product_id", None))
+            if d_prod_id is not None and m_prod_id is not None:
+                assert d_prod_id == m_prod_id, (
+                    f"Account move {getattr(am, 'name', am_id)} debit 510000 product ID {d_prod_id} != move product ID {m_prod_id}!"
+                )
+            if company_id:
+                d_comp_id = getattr(getattr(d_ln, "company_id", None), "id", getattr(d_ln, "company_id", None))
+                assert d_comp_id in (company_id, None, False), f"Debit line {d_ln.id} company_id mismatch!"
+
+            # Exactly 1 credit 113000
+            credit_lines = [
+                ln for ln in lines
+                if getattr(getattr(ln, "account_id", None), "code", "") == "113000"
+            ]
+            assert len(credit_lines) == 1, (
+                f"Account move {getattr(am, 'name', am_id)} memiliki {len(credit_lines)} baris credit 113000 (wajib tepat 1)!"
+            )
+            c_ln = credit_lines[0]
+            assert c_ln.id not in seen_aml_ids, f"Baris AML credit ID {c_ln.id} terpakai ulang (AML reuse)!"
+            seen_aml_ids.add(c_ln.id)
+
+            c_amt = Decimal(str(round(float(getattr(c_ln, "credit", 0.0) or 0.0), 2)))
+            c_dr = Decimal(str(round(float(getattr(c_ln, "debit", 0.0) or 0.0), 2)))
+            assert c_amt == exp_val, (
+                f"Account move {getattr(am, 'name', am_id)} credit 113000 mismatch! Expected Rp {exp_val}, got Rp {c_amt}"
+            )
+            assert c_dr == Decimal("0.00"), (
+                f"Account move {getattr(am, 'name', am_id)} baris credit 113000 memiliki debit {c_dr} != 0.00!"
+            )
+            c_prod_id = getattr(getattr(c_ln, "product_id", None), "id", getattr(c_ln, "product_id", None))
+            if c_prod_id is not None and m_prod_id is not None:
+                assert c_prod_id == m_prod_id, (
+                    f"Account move {getattr(am, 'name', am_id)} credit 113000 product ID {c_prod_id} != move product ID {m_prod_id}!"
+                )
+            if company_id:
+                c_comp_id = getattr(getattr(c_ln, "company_id", None), "id", getattr(c_ln, "company_id", None))
+                assert c_comp_id in (company_id, None, False), f"Credit line {c_ln.id} company_id mismatch!"
 
     # 5. Immutabilitas Penutupan Historis Juli (Exact Multiset Matching)
     if prior_july_aml_snapshot is not None and "account.move.line" in env:
@@ -1163,6 +1471,66 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
                 "rejection_message": str(exc),
             }
             print(f"   [Probe 6 PASS] Cross-Cutoff Invoice Injection sukses ditolak: {exc}")
+
+    # 7. Mutasi: Outbound Move HPP Cross-Binding / AML Reuse
+    if SM is not None:
+        done_out = [
+            m for m in _iter_records(SM.search([("state", "=", "done")]))
+            if not getattr(m, "origin_returned_move_id", False)
+            and not getattr(m, "is_inventory", False)
+            and getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
+            and getattr(m, "account_move_id", None)
+        ]
+        if len(done_out) >= 2:
+            m1, m2 = done_out[0], done_out[1]
+            try:
+                with _db_savepoint():
+                    m1.write({"account_move_id": getattr(m2.account_move_id, "id", m2.account_move_id)})
+                    audit_database_against_oracle_july(env, oracle)
+                    raise RuntimeError("Mutasi HPP cross-binding lolos audit tanpa penolakan!")
+            except AssertionError as exc:
+                results["probe_7_hpp_cross_binding"] = {
+                    "status": "REJECTED_AS_EXPECTED",
+                    "description": f"Cross-binding HPP: move {m1.id} diarahkan ke account_move move {m2.id}",
+                    "rejection_message": str(exc),
+                }
+                print(f"   [Probe 7 PASS] HPP Cross-Binding Reuse sukses ditolak: {exc}")
+
+    # 8. Mutasi: HPP Journal Debit-Credit Direction Swap (Jurnal Terbalik)
+    if SM is not None and (AML is not None or has_sp):
+        out_mv_target = next((
+            m for m in _iter_records(SM.search([("state", "=", "done")]))
+            if not getattr(m, "origin_returned_move_id", False)
+            and not getattr(m, "is_inventory", False)
+            and getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
+            and getattr(m, "account_move_id", None)
+        ), None)
+        if out_mv_target:
+            target_am = out_mv_target.account_move_id
+            target_am_id = getattr(target_am, "id", None)
+            try:
+                with _db_savepoint():
+                    if has_sp and hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                        env.cr.execute(
+                            "UPDATE account_move_line SET debit = credit, credit = debit WHERE move_id = %s",
+                            [target_am_id],
+                        )
+                        if hasattr(env, "invalidate_all"):
+                            env.invalidate_all()
+                    else:
+                        for ln in _iter_records(getattr(target_am, "line_ids", [])):
+                            old_d = float(getattr(ln, "debit", 0.0) or 0.0)
+                            old_c = float(getattr(ln, "credit", 0.0) or 0.0)
+                            ln.write({"debit": old_c, "credit": old_d})
+                    audit_database_against_oracle_july(env, oracle)
+                    raise RuntimeError("Mutasi HPP debit-credit swap lolos audit tanpa penolakan!")
+            except AssertionError as exc:
+                results["probe_8_hpp_direction_swap"] = {
+                    "status": "REJECTED_AS_EXPECTED",
+                    "description": f"Debit-credit direction swap pada jurnal HPP move {out_mv_target.id}",
+                    "rejection_message": str(exc),
+                }
+                print(f"   [Probe 8 PASS] HPP Debit-Credit Direction Swap sukses ditolak: {exc}")
 
     # Verifikasi ulang baseline: pastikan database kembali bersih 100% setelah seluruh probe di-rollback
     audit_database_against_oracle_july(env, oracle)

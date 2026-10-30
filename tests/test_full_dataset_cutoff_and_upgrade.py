@@ -29,6 +29,8 @@ from scripts.ops.verify_disposable_full import (  # noqa: E402
     audit_database_against_oracle_august,
     audit_database_against_oracle_july,
     capture_deep_state_snapshot,
+    resolve_canonical_company,
+    resolve_canonical_locations,
     run_full_disposable_verification,
     run_real_negative_mutations_on_database,
 )
@@ -231,9 +233,9 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         # Baseline wajib PASS
         audit_database_against_oracle_july(mock_env, oracle)
 
-        # Jalankan rangkaian 6 mutasi counterexample nyata via savepoint context manager
+        # Jalankan rangkaian 8 mutasi counterexample nyata via savepoint context manager
         mut_results = run_real_negative_mutations_on_database(mock_env, oracle)
-        self.assertEqual(len(mut_results), 6)
+        self.assertEqual(len(mut_results), 8)
         for probe_code, probe_info in mut_results.items():
             self.assertEqual(
                 probe_info.get("status"),
@@ -384,6 +386,123 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
             self.assertIn("Status:** FAILED", summary_text)
             self.assertIn("FAIL / INCOMPLETE", summary_text)
             self.assertNotIn("Status:** SUCCESS", summary_text)
+
+    def test_canonical_location_resolver_rejects_ambiguity_and_foreign_company(self):
+        """Resolver lokasi wajib fail-closed jika ambigu atau gudang berasal dari company lain."""
+        mock_env = setup_standard_mock_env()
+        self.assertEqual(resolve_canonical_company(mock_env).id, mock_env.company.id)
+        wh_loc, quar_loc, comp = resolve_canonical_locations(mock_env)
+        self.assertIsNotNone(wh_loc)
+        self.assertIsNotNone(quar_loc)
+        self.assertEqual(comp.id, mock_env.company.id)
+
+        # 1. Foreign Warehouse: warehouse di company lain tidak boleh dipilih
+        foreign_comp = mock_env["res.company"].create({"name": "Foreign Corp", "code": "FOR"})
+        foreign_loc = mock_env["stock.location"].create({
+            "name": "Foreign/Stock",
+            "usage": "internal",
+            "company_id": foreign_comp.id,
+        })
+        mock_env["stock.warehouse"].create({
+            "name": "Foreign Warehouse",
+            "code": "WH",
+            "lot_stock_id": foreign_loc,
+            "company_id": foreign_comp,
+        })
+        # Resolver tetap memilih canonical company (FMCG)
+        wh_loc2, _, comp2 = resolve_canonical_locations(mock_env)
+        self.assertEqual(wh_loc2.id, wh_loc.id)
+        self.assertEqual(comp2.id, mock_env.company.id)
+
+        # 2. Ambiguitas Warehouse pada canonical company: 2 warehouse dengan code WH di company yang sama
+        mock_env["stock.warehouse"].create({
+            "name": "Duplicate WH",
+            "code": "WH",
+            "lot_stock_id": wh_loc,
+            "company_id": mock_env.company,
+        })
+        with self.assertRaises(LookupError) as ctx:
+            resolve_canonical_locations(mock_env)
+        self.assertIn("ambigu atau tidak ditemukan", str(ctx.exception))
+
+    def test_exact_hpp_journal_binding_rejects_wrong_journal_account_direction_or_reuse(self):
+        """Audit HPP produksi wajib menolak jurnal non-STJ, arah debit-kredit terbalik, nominal salah, atau reuse."""
+        mock_env = setup_standard_mock_env()
+        oracle = FullDatasetCanonicalOracle(REG_DIR)
+
+        # Setup cut-off Juli
+        adapter = CanonicalPerpetualAdapter(
+            mock_env,
+            reg_path=REG_DIR,
+            cutoff_date="2026-07-31",
+            enforce_invoice_cutoff=True,
+        )
+        adapter.run_all()
+
+        # Baseline PASS
+        audit_database_against_oracle_july(mock_env, oracle)
+
+        SM = mock_env["stock.move"]
+        target_mv = next(
+            m for m in SM.search([("state", "=", "done")])
+            if getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
+            and not getattr(m, "origin_returned_move_id", False)
+            and getattr(m, "account_move_id", None)
+        )
+        orig_am = target_mv.account_move_id
+
+        # 1. Wrong journal code (bukan STJ)
+        orig_jnl = orig_am.journal_id
+        orig_am.journal_id = mock_env["account.journal"].create({"name": "Bank Journal", "code": "BNK"})
+        with self.assertRaises(AssertionError) as ctx:
+            audit_database_against_oracle_july(mock_env, oracle)
+        self.assertIn("diharapkan 'STJ'", str(ctx.exception))
+        orig_am.journal_id = orig_jnl
+
+        # 2. Date mismatch antara stock.move dan account.move
+        orig_date = orig_am.date
+        orig_am.date = "2026-07-20"
+        target_mv.date = "2026-07-21"
+        with self.assertRaises(AssertionError) as ctx:
+            audit_database_against_oracle_july(mock_env, oracle)
+        self.assertIn("mismatch dengan stock move date", str(ctx.exception))
+        orig_am.date = orig_date
+        target_mv.date = orig_date
+
+        # 3. Direction swap pada baris HPP (510000 memiliki credit != 0.00)
+        d_ln = next(ln for ln in orig_am.line_ids if getattr(ln.account_id, "code", "") == "510000")
+        c_ln = next(ln for ln in orig_am.line_ids if getattr(ln.account_id, "code", "") == "113000")
+        orig_debit = d_ln.debit
+        orig_credit = c_ln.credit
+        d_ln.debit, d_ln.credit = 0.0, orig_debit
+        c_ln.debit, c_ln.credit = orig_credit, 0.0
+        with self.assertRaises(AssertionError) as ctx:
+            audit_database_against_oracle_july(mock_env, oracle)
+        self.assertTrue(
+            "Audit COGS Nominal Juli Mismatch" in str(ctx.exception)
+            or "memiliki 0 baris debit 510000" in str(ctx.exception)
+            or "memiliki credit" in str(ctx.exception)
+        )
+        d_ln.debit, d_ln.credit = orig_debit, 0.0
+        c_ln.debit, c_ln.credit = 0.0, orig_credit
+
+        # 4. AML reuse / cross-move binding
+        other_mv = next(
+            m for m in SM.search([("state", "=", "done")])
+            if getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
+            and not getattr(m, "origin_returned_move_id", False)
+            and getattr(m, "account_move_id", None)
+            and m.id != target_mv.id
+        )
+        target_mv.account_move_id = other_mv.account_move_id
+        with self.assertRaises(AssertionError) as ctx:
+            audit_database_against_oracle_july(mock_env, oracle)
+        self.assertTrue(
+            "VIOLATION AML REUSE" in str(ctx.exception)
+            or "debit 510000 mismatch" in str(ctx.exception)
+            or "product ID" in str(ctx.exception)
+        )
+        target_mv.account_move_id = orig_am
 
 
 if __name__ == "__main__":

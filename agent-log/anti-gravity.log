@@ -1167,3 +1167,10 @@
 - [P1-3] Penajaman Probe 6 (Cross-Cutoff Invoice Injection): Menambahkan partner_id dan journal_id sah serta meniadakan state: posted pada dictionary create (mematuhi UserError Odoo 19 yang melarang membuat move langsung dalam status posted). Faktur draft bertanggal 2026-08-01 berhasil dibuat di dalam savepoint dan ditolak secara deterministik oleh asersi cut-off dan invoice count audit produksi (Audit Faktur Juli Gagal! Expected 1276, got 1277).
 - Integritas Baseline: 15 CSV register kanonikal di data/registers/ 100% beku. ruff check PASS, check_manifests PASS (5 addon), seluruh pengujian unit & adapter PASS (63 adapter tests, 8 full dataset runner tests).
 - Task managed by antigravity at 2026-10-29T21:26:00+07:00
+
+[2026-10-30T00:48:54+00:00] [INFO] Resolusi Audit Supervisi Putaran 4: Exact HPP Binding, Deterministic Canonical Location Resolver, dan Sinkronisasi Main
+- [P1] Exact HPP Binding & Attribution: Memvalidasi setiap outbound customer delivery move memiliki tepat satu debit 510000 dan credit 113000 dengan nilai eksak round(qty * standard_price, 2), product_id match, company_id match canonical company, journal STJ, date match, serta anti-reuse AML (seen_aml_ids) dan move (seen_move_am_ids).
+- [P2] Deterministic Canonical Location Resolver: Scoping eksak resolve_canonical_locations ke canonical company (code 'FMCG' / 'PT Salva Inti Mandiri') dengan asersi cardinality == 1 untuk warehouse WH, lot_stock_id internal, dan lokasi karantina 'Karantina FMCG Maumbi'. Menolak foreign warehouse dan ambiguitas company lain.
+- [P3] Ekspansi In-Database Savepoint Fault-Injection (8 Probes): Menambahkan Probe 7 (HPP Cross-Binding Reuse) dan Probe 8 (HPP Debit-Credit Direction Swap). Seluruh 8 probe terbukti 100% REJECTED_AS_EXPECTED dan di-rollback bersih via savepoint.
+- [P4] Sinkronisasi origin/main: Merge commit main fca1e0f (PR #41 dan PR #42) dengan 5 addon terverifikasi, seluruh 63 adapter tests dan 10 test full dataset runner lulus 100%.
+- Task managed by antigravity-agent at 2026-10-30T00:48:54+00:00
