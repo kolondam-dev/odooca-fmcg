@@ -175,3 +175,10 @@
 - ecb8e3c real Odoo66 tests0failed/1error on res.partner preservation. Scope audit exception to operator/SUPERUSER_ID linked profile partners only; keep every business column exact, validate audit actor/time, no customer exception or audit restoration.
 - Flush company-side native recomputations under operator before capture-user snapshots. Positive regression records column names only for diagnosis, never contact values/credentials. Follow-up native/CLI CI pending; no runtime writes on Railway.
 - Task managed by agent-codex-pwa at 2026-10-30T12:15:50+07:00
+
+[2026-10-30T15:55:35.658+07:00] [INFO] P1 preservasi properti company-dependent stock Odoo 19
+- Sinkronisasi tree PR dengan main 2998291 sebagai parent merge; mempertahankan sejarah PR47 dan main.
+- Akar P1 diverifikasi pada source resmi Odoo19 stock/models/res_company.py: pembuatan company menambahkan property_stock_customer/property_stock_supplier hanya pada company partner existing untuk key company baru, nilai stock_location_inter_company.
+- Guard menyimpan peta JSONB dan hanya mengizinkan satu key TEST baru pada partner res.company.partner_id existing dengan nilai exact; key lama, partner lain, field lain, dan nilai lain tetap fail-closed. Run kedua harus identik.
+- Tambah regresi negatif terpisah untuk customer/supplier property mutation + rollback; positive two-run dan CI operator smoke menormalisasi hanya key baru yang sudah diverifikasi. Native CI final menunggu. Tidak ada mutasi Railway/deploy.
+- Task managed by agent-codex-pwa at 2026-10-30T15:55:35.658+07:00

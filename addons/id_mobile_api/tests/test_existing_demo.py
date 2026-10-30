@@ -10,7 +10,7 @@ from odoo import Command
 from odoo.exceptions import AccessError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
-from ..existing_demo import TARGET, protected_snapshot, provision_existing_demo
+from ..existing_demo import TARGET, fixture_company_ids, protected_snapshot, provision_existing_demo
 from ..staging import _provision_records
 from .test_read_api import MobileFixture
 
@@ -94,7 +94,10 @@ class TestExistingDemo(MobileFixture, TransactionCase):
             first = self.run_provision()
             second = self.run_provision()
         self.assertEqual(first["accounts"], second["accounts"])
-        after = protected_snapshot(self.env)
+        after = protected_snapshot(
+            self.env,
+            normalize_company_property_company_ids=fixture_company_ids(self.env),
+        )
         for model, rows in before.items():
             self.assertTrue(all(after[model].get(row_id) == digest for row_id, digest in rows.items()), model)
         self.assertEqual(self.outlet.name, "API Scheduled Outlet")
@@ -115,6 +118,41 @@ class TestExistingDemo(MobileFixture, TransactionCase):
             self.run_provision()
         self.assertEqual(self.outlet.name, original)
         self.assertFalse(self.env["res.users"].search([("login", "=", "staging.capture.1")]))
+
+    def test_existing_company_stock_property_mutations_are_rejected_and_rolled_back(self):
+        company = self.env.company
+        partner = company.partner_id
+        candidates = (
+            self.env.ref("stock.stock_location_inter_company"),
+            self.env.ref("stock.stock_location_customers"),
+            self.env.ref("stock.stock_location_suppliers"),
+        )
+
+        for field_name in ("property_stock_customer", "property_stock_supplier"):
+            with self.subTest(field=field_name):
+                original = partner.with_company(company)[field_name].id
+                replacement = next((location.id for location in candidates if location.id != original), None)
+                self.assertIsNotNone(replacement)
+
+                def mutated(*args, **kwargs):
+                    result = _provision_records(*args, **kwargs)
+                    partner.with_company(company).write({field_name: replacement})
+                    return result
+
+                with (
+                    patch.dict(os.environ, self.runtime),
+                    patch("odoo.addons.id_mobile_api.existing_demo._provision_records", side_effect=mutated),
+                    self.assertRaises(ValidationError),
+                ):
+                    self.run_provision()
+
+                self.assertEqual(partner.with_company(company)[field_name].id, original)
+                self.assertFalse(
+                    self.env["ir.model.data"].search(
+                        [("module", "=", "id_mobile_api_staging"), ("name", "=", "company")]
+                    )
+                )
+                self.assertFalse(self.env["res.users"].search([("login", "=", "staging.capture.1")]))
 
     def test_existing_login_is_not_taken_over(self):
         self.other.login = "staging.capture.1"

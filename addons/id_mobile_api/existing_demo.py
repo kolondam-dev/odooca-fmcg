@@ -92,11 +92,37 @@ def _excluded(env):
     return owned
 
 
-def protected_snapshot(env):
+def fixture_company_ids(env):
+    """Company IDs owned by the staging fixture module, including an existing TEST company."""
+    return _excluded(env).get("res.company", set())
+
+
+def _partner_company_property_snapshot(env):
+    """Raw company-dependent stock properties, keyed by partner and company ID."""
+    env.flush_all()
+    env.cr.execute(
+        "SELECT id, COALESCE(property_stock_customer, '{}'::jsonb), "
+        "COALESCE(property_stock_supplier, '{}'::jsonb) FROM res_partner ORDER BY id"
+    )
+    result = {}
+    for partner_id, customer, supplier in env.cr.fetchall():
+        if isinstance(customer, str):
+            customer = json.loads(customer)
+        if isinstance(supplier, str):
+            supplier = json.loads(supplier)
+        result[partner_id] = {
+            "property_stock_customer": dict(customer or {}),
+            "property_stock_supplier": dict(supplier or {}),
+        }
+    return result
+
+
+def protected_snapshot(env, *, normalize_company_property_company_ids=()):
     if not env.su:
         raise AccessError("Only the operator shell may inspect the preservation baseline.")
     env.flush_all()
     excluded = _excluded(env)
+    normalized_company_ids = {str(company_id) for company_id in normalize_company_property_company_ids}
     result = {}
     for model in PROTECTED:
         if model not in env:
@@ -118,16 +144,63 @@ def protected_snapshot(env):
             )
         else:
             env.cr.execute(sql.SQL("SELECT id, to_jsonb(t)::text FROM {} t ORDER BY id").format(sql.Identifier(table)))
-        result[model] = {
-            row_id: hashlib.sha256(value.encode()).hexdigest()
-            for row_id, value in env.cr.fetchall()
-            if row_id not in excluded.get(model, set())
-        }
+        rows = {}
+        for row_id, value in env.cr.fetchall():
+            if row_id in excluded.get(model, set()):
+                continue
+            if model == "res.partner":
+                payload = json.loads(value)
+                for field_name in ("property_stock_customer", "property_stock_supplier"):
+                    company_values = payload.get(field_name)
+                    if isinstance(company_values, dict):
+                        for company_id in normalized_company_ids:
+                            company_values.pop(company_id, None)
+                value = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+            rows[row_id] = hashlib.sha256(value.encode()).hexdigest()
+        result[model] = rows
     return result
 
 
-def _assert_preserved(env, before):
-    after = protected_snapshot(env)
+def _assert_partner_company_properties_preserved(env, before, existing_company_ids):
+    after = _partner_company_property_snapshot(env)
+    fixture_ids = fixture_company_ids(env)
+    newly_created_fixture_ids = fixture_ids - set(existing_company_ids)
+    newly_created_fixture_keys = {str(company_id) for company_id in newly_created_fixture_ids}
+    if len(newly_created_fixture_ids) > 1:
+        raise ValidationError("Unexpected TEST company creation; provisioning was rolled back.")
+
+    existing_company_partners = set(
+        env["res.company"].browse(list(existing_company_ids)).exists().mapped("partner_id").ids
+    )
+    inter_company_location_id = env.ref("stock.stock_location_inter_company").id
+    fields = ("property_stock_customer", "property_stock_supplier")
+
+    for partner_id, old_fields in before.items():
+        new_fields = after.get(partner_id)
+        if new_fields is None:
+            raise ValidationError("Existing partner row disappeared; provisioning was rolled back.")
+        for field_name in fields:
+            old_values = old_fields[field_name]
+            new_values = new_fields[field_name]
+            if any(new_values.get(company_id) != value for company_id, value in old_values.items()):
+                raise ValidationError(
+                    f"Existing company value changed in res.partner.{field_name}; provisioning was rolled back."
+                )
+            added_company_ids = set(new_values) - set(old_values)
+            if added_company_ids and (
+                partner_id not in existing_company_partners
+                or not added_company_ids <= newly_created_fixture_keys
+                or any(int(new_values[company_id]) != inter_company_location_id for company_id in added_company_ids)
+            ):
+                raise ValidationError(
+                    f"Unexpected company-dependent value added in res.partner.{field_name}; provisioning was rolled back."
+                )
+
+
+def _assert_preserved(env, before, partner_properties_before, existing_company_ids):
+    _assert_partner_company_properties_preserved(env, partner_properties_before, existing_company_ids)
+    newly_created_fixture_ids = fixture_company_ids(env) - set(existing_company_ids)
+    after = protected_snapshot(env, normalize_company_property_company_ids=newly_created_fixture_ids)
     for model, rows in before.items():
         if any(after[model].get(row_id) != digest for row_id, digest in rows.items()):
             raise ValidationError(f"Non-fixture records changed in {model}; provisioning was rolled back.")
@@ -197,9 +270,11 @@ def provision_existing_demo(env, *, expected_database, opt_in, backup, passwords
             sql.SQL("LOCK TABLE {} IN SHARE MODE").format(sql.SQL(", ").join(sql.Identifier(table) for table in tables))
         )
         before = protected_snapshot(env)
+        partner_properties_before = _partner_company_property_snapshot(env)
+        existing_company_ids = set(env["res.company"].search([]).ids)
         scopes = _user_scope(env)
         accounts = _provision_records(env, passwords=passwords)
-        _assert_preserved(env, before)
+        _assert_preserved(env, before, partner_properties_before, existing_company_ids)
         _assert_user_scope(env, scopes, accounts)
         after_scopes = _user_scope(env)
         operator_changes = [

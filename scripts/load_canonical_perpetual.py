@@ -23,6 +23,7 @@ from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 import json
 import logging
+import sys
 import pathlib
 
 _logger = logging.getLogger("canonical_perpetual_loader")
@@ -319,8 +320,19 @@ def _iter_records(res) -> list:
 class CanonicalPerpetualAdapter:
     """Adapter yang memetakan register kanonikal ke model Odoo aktual dengan jaminan idempotensi."""
 
-    def __init__(self, env, reg_path=None, cutoff_date="2026-07-31"):
-        self.env = env
+    def __init__(self, env, reg_path=None, cutoff_date="2026-07-31", enforce_invoice_cutoff=False):
+        # Optimasi performa Odoo ORM saat pemuatan seed massal (meniadakan overhead chatter dan mail tracking)
+        if callable(getattr(env, "__call__", None)) and hasattr(env, "context"):
+            self.env = env(context=dict(
+                env.context,
+                tracking_disable=True,
+                mail_create_nolog=True,
+                mail_create_nosubscribe=True,
+                mail_notrack=True,
+                no_reset_password=True,
+            ))
+        else:
+            self.env = env
         self.cr = env.cr
         self.company = env.company
         # Daftarkan explicit seed company ID ke ir.config_parameter untuk integritas fail-closed hook COGS
@@ -333,6 +345,7 @@ class CanonicalPerpetualAdapter:
                 pass
         self.reg_path = reg_path or resolve_canonical_dir()
         self.cutoff_date = cutoff_date
+        self.enforce_invoice_cutoff = enforce_invoice_cutoff
 
         # Verifikasi berkas kanonikal
         self.meta = verify_canonical_fingerprints(self.reg_path)
@@ -1967,7 +1980,11 @@ class CanonicalPerpetualAdapter:
         del_by_so = {dl["so_number"]: dl for dl in del_rows}
 
         sos_by_num = {}
-        for so_data in so_rows:
+        total_so_count = len(so_rows)
+        for idx, so_data in enumerate(so_rows, 1):
+            if idx % 100 == 0 or idx == total_so_count:
+                print(f"    [SO & DO Progress] {idx}/{total_so_count} diproses...")
+                sys.stdout.flush()
             header_p = build_so_header_payload(so_data)
             so_num = header_p["so_number"]
 
@@ -2021,8 +2038,10 @@ class CanonicalPerpetualAdapter:
             if so.picking_ids and del_info:
                 sched_date = del_info["scheduled_delivery_date"]
                 for pick in so.picking_ids:
+                    if getattr(pick, "state", "") in ("done", "cancel"):
+                        continue
                     pick.scheduled_date = sched_date
-                    if sched_date <= self.cutoff_date and getattr(pick, "state", "") not in ("done", "cancel"):
+                    if sched_date <= self.cutoff_date:
                         self._align_picking_locations(
                             pick,
                             expected_src_loc=getattr(self, "wh_stock_loc", None),
@@ -2043,7 +2062,11 @@ class CanonicalPerpetualAdapter:
         # agar rekonsiliasi pengiriman bersih (dispatched - return == billed) terpenuhi secara fisik
         self.load_rejections_quarantine(limit_orders=limit_orders, target_so_numbers=target_so_numbers)
 
-        for so_data in so_rows:
+        total_inv_count = len(so_rows)
+        for idx, so_data in enumerate(so_rows, 1):
+            if idx % 100 == 0 or idx == total_inv_count:
+                print(f"    [Invoice Progress] {idx}/{total_inv_count} diproses...")
+                sys.stdout.flush()
             header_p = build_so_header_payload(so_data)
             so_num = header_p["so_number"]
             so = sos_by_num.get(so_num)
@@ -2051,6 +2074,9 @@ class CanonicalPerpetualAdapter:
             # Faktur Penjualan Sah (Net of Rejections) dengan product_id & sale_line_ids lengkap
             inv_info = inv_by_so.get(so_num)
             if AccountMove is not None and inv_info:
+                inv_date = inv_info.get("date_invoice", "")
+                if getattr(self, "enforce_invoice_cutoff", False) and self.cutoff_date and inv_date > self.cutoff_date:
+                    continue
                 inv_num = inv_info["invoice_number"]
                 existing_invs = _iter_records(AccountMove.search([("ref", "=", inv_num)]))
                 if len(existing_invs) > 1:
@@ -2445,7 +2471,11 @@ class CanonicalPerpetualAdapter:
             }
             ar_rows = [ar for ar in ar_rows if ar["invoice_number"] in inv_sample]
 
-        for ar in ar_rows:
+        total_ar_count = len(ar_rows)
+        for idx, ar in enumerate(ar_rows, 1):
+            if idx % 100 == 0 or idx == total_ar_count:
+                print(f"    [AR Payment Progress] {idx}/{total_ar_count} diproses...")
+                sys.stdout.flush()
             p_data = build_ar_payment_payload(ar)
             pay_id = p_data["payment_id"]
             cust_partner = self.get_partner(p_data["customer_ref"])
@@ -2826,7 +2856,15 @@ class CanonicalPerpetualAdapter:
                 assert total_so == 1324, f"Jumlah SO tidak lengkap! Expected 1324, got {total_so}"
 
                 total_inv = self.stats["invoices_created"] + self.stats["skipped_invoices"]
-                assert total_inv == 1324, f"Jumlah Invoice tidak lengkap! Expected 1324, got {total_inv}"
+                is_july_cutoff = (
+                    getattr(self, "enforce_invoice_cutoff", False)
+                    and self.cutoff_date
+                    and self.cutoff_date <= "2026-07-31"
+                )
+                if is_july_cutoff:
+                    assert total_inv == 1276, f"Jumlah Invoice cut-off Juli tidak cocok! Expected 1276, got {total_inv}"
+                else:
+                    assert total_inv == 1324, f"Jumlah Invoice tidak lengkap! Expected 1324, got {total_inv}"
 
                 total_ar = self.stats["ar_payments_created"] + self.stats["skipped_ar"]
                 assert total_ar == 967, f"Jumlah AR tidak lengkap! Expected 967, got {total_ar}"
