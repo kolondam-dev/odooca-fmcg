@@ -88,7 +88,7 @@ Ketika 14 kunjungan outlet pada 31 Juli tersebut dipecah secara murni per prinsi
 Sesuai arahan audit supervisi ([issuecomment-6490484056](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6490484056)):
 1. **Prioritas 1 (Runner Full Dataset Disposable):** **SELESAI** — diimplementasikan dalam `scripts/ops/verify_disposable_full.py` dan diuji via `.github/workflows/full-dataset-runtime.yml`.
 2. **Prioritas 2 (Two-Phase Cut-Off Juli & Agustus):** **SELESAI** — parameter `enforce_invoice_cutoff` diimplementasikan, diaudit dengan oracle dinamis, as-of closing Juli imutabel, dan mutasi negatif ditolak.
-3. **Prioritas 3 (Upgrade Baseline Persisten):** **BELUM DILAKSANAKAN / DIPISAHKAN KE PR LANJUTAN** — untuk menjaga deliverable tetap terfokus dan jujur, jalur upgrade dipisahkan ke PR tersendiri setelah runtime penuh fase 1 & 2 terbukti di lingkungan disposable nyata.
+3. **Prioritas 3 (Upgrade Baseline Persisten):** **SELESAI (PR lanjutan `agen/persisted-baseline-upgrade`)** — jalur upgrade dipisahkan ke PR tersendiri setelah runtime penuh fase 1 & 2 terbukti di lingkungan disposable nyata. Implementasi: `scripts/ops/verify_upgrade_baseline.py` (dua fase: baseline persisten dan verifikasi pasca-upgrade) + `.github/workflows/upgrade-runtime.yml`. Rincian pada Bab 6.
 
 ---
 
@@ -100,3 +100,41 @@ Sesuai arahan audit supervisi ([issuecomment-6490484056](https://github.com/kolo
    - Timeout terukur: 45 menit.
    - Bootstrap terisolasi: membuat database `fmcg_base` sebelum container Odoo dimulai, deteksi fail-fast container exit, dan pembuatan template disposable `fmcg_full_disposable`.
    - Mengunggah artefak diagnostik lengkap pada status SUKSES maupun GAGAL (`full_dataset_runtime_report.json`, `full_dataset_runtime_summary.md`, `full_dataset_runtime.log`, `odoo_container.log`).
+
+---
+
+## 6. Prioritas 3: Upgrade Modul dari Baseline Persisten & Replay Idempotensi
+
+**Status:** SELESAI — diimplementasikan 2026-10-30 (agen implementer `claude-dev`). Bukti runtime exact-SHA dilampirkan pada komentar PR.
+
+### 6.1 Ruang Lingkup yang Dibuktikan
+| Aspek | Bukti |
+|---|---|
+| Upgrade nyata | `odoo -u id_base,id_mobile_api --stop-after-init -d fmcg_upgrade_disposable` pada container Odoo 19 + PostgreSQL 16; exit code 0 dan log bebas `ERROR`/`CRITICAL`/`Traceback`/`psycopg2.errors.` |
+| Baseline persisten | Database berisi dataset kanonikal penuh (closing Juli + carry-forward 1 Agustus, 1.324 SO / 1.324 faktur / 967 AR / 4 AP / 30 OPEX) sebelum upgrade, dengan deep state snapshot + digest SHA-256. |
+| Integritas DDL | Setiap field stored milik `id_base`/`id_mobile_api` wajib memiliki kolom nyata; satu kolom (`id_mobile_office.radius`) sengaja dihapus dan wajib dibuat ulang oleh `-u`. |
+| Integritas relasi | Tidak ada baris orphan pada seluruh field many2one milik modul `id_*`. |
+| Integritas view XML | Seluruh xmlid view modul ter-resolve, arch non-kosong, dan XML valid; satu view (`id_mobile_api.view_mobile_office_form`) sengaja dihapus dan wajib dimuat ulang oleh `-u`. |
+| Hook akuntansi | Override HPP `id_base` aktif pada registry; faktur komersial seed tidak membawa baris HPP 510000 duplikat; setiap delivery outbound selesai memiliki jurnal valuasi native STJ posted. |
+| Replay idempotensi | `CanonicalPerpetualAdapter.run_all()` dijalankan ulang pasca-upgrade: seluruh counter pembuatan = 0, minimum skip kanonikal terpenuhi, dan digest snapshot identik 100% dengan baseline (zero-drift). |
+| Imutabilitas historis | Multiset baris AML closing Juli identik sebelum dan sesudah upgrade + replay. |
+| Audit oracle | `audit_database_against_oracle_august` + anti-fallback salesperson dijalankan ulang pasca-upgrade. |
+
+### 6.2 Drift Terkontrol [A]
+Agar upgrade benar-benar melakukan kerja perbaikan (bukan sekadar re-load tanpa perubahan), baseline menyuntikkan tiga drift terkontrol sebelum `-u`:
+1. **Version skew:** `ir.module.module.latest_version` diturunkan ke versi rilis sebelumnya; pasca-upgrade wajib kembali sama dengan versi manifest kode.
+2. **Schema drift:** kolom `id_mobile_office.radius` dihapus (tabel wajib kosong; jika tidak kosong, injeksi dilewati demi keamanan data).
+3. **View drift:** record `ir.ui.view` + xmlid `id_mobile_api.view_mobile_office_form` dihapus.
+
+### 6.3 Alur Workflow `upgrade-runtime.yml`
+1. `contract-tests`: unit test kontrak runner (guard, perintah upgrade, kontrak log, replay, digest).
+2. Bootstrap `fmcg_base` (init.sh) → template `fmcg_upgrade_disposable`.
+3. **Fase A:** baseline persisten — muat fase 1 + audit Juli, muat fase 2 + audit Agustus, snapshot + digest, suntik drift.
+4. **Fase B:** `odoo -u id_base,id_mobile_api` nyata → exit code dicatat.
+5. **Fase B2:** validasi kontrak log (exit 0, tanpa indikasi registry corruption).
+6. **Fase C:** verifikasi registry/DDL/FK/view/HPP + replay zero-drift + imutabilitas Juli + audit oracle.
+7. Artefak diagnostik (`upgrade_baseline_state.json`, laporan JSON/MD kedua fase, log upgrade, log container) diunggah pada status apa pun.
+
+### 6.4 Batasan Jujur
+- Drift version/skema/view adalah simulasi terkontrol untuk membuktikan jalur perbaikan upgrade; bukan bukti bahwa pernah ada rilis modul lama yang benar-benar dideploy.
+- Unit test lokal hanya memvalidasi kontrak logika; pembuktian upgrade wajib berasal dari eksekusi container pada GitHub Actions (exact SHA).

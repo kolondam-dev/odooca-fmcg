@@ -25,6 +25,8 @@ jobs:
         run: ruff check .
       - name: Manifest addon
         run: python scripts/check_manifests.py
+      - name: Kontrak runner upgrade modul (unit)
+        run: python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner -v
       - name: Sintaks shell
         run: bash -n deploy/init.sh deploy/addons_path.sh scripts/fetch_oca.sh scripts/oca_bump.sh scripts/agent/*.sh scripts/sandbox/*.sh
       - name: Validitas YAML

@@ -1,5 +1,31 @@
 # HANDOFF
 
+## 2026-10-30T15:28:17+07:00 — claude-dev agent — Prioritas 3: Upgrade Modul dari Baseline Persisten + Replay Idempotensi
+**Berubah:**
+- `scripts/ops/verify_upgrade_baseline.py` (baru): runner dua fase. Fase `baseline` memuat dataset kanonikal penuh (closing Juli + carry-forward 1 Agustus) melalui `CanonicalPerpetualAdapter`, menjalankan audit Juli & Agustus, mengambil deep state snapshot + digest SHA-256, lalu menyuntikkan tiga drift terkontrol (version skew `latest_version`, hapus kolom `id_mobile_office.radius`, hapus view `id_mobile_api.view_mobile_office_form`). Fase `verify` memvalidasi kontrak proses upgrade (exit 0 + bebas indikasi registry corruption), registry/versi manifest, DDL field modul, relasi many2one bebas orphan, view XML, hook HPP `id_base`, replay `run_all()` zero-creation, zero-drift snapshot, imutabilitas closing Juli, dan audit oracle Agustus.
+- `.github/workflows/upgrade-runtime.yml` (baru): job `contract-tests` + job `upgrade-proof` pada container Odoo 19 + PostgreSQL 16; Fase A baseline, Fase B `odoo -u id_base,id_mobile_api --stop-after-init`, Fase B2 kontrak log, Fase C verifikasi + replay, unggah artefak diagnostik.
+- `tests/test_full_dataset_cutoff_and_upgrade.py`: kelas `TestUpgradeBaselineRunner` (8 tes kontrak: guard database, perintah upgrade, kontrak exit/log, versi rilis sebelumnya, replay zero-creation, digest snapshot, state baseline fail-closed, laporan FAILED).
+- `.github/workflows/ci.yml`: langkah kontrak runner upgrade pada job `static`.
+- `docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md`: Prioritas 3 ditandai SELESAI + Bab 6 (ruang lingkup, drift terkontrol, alur workflow, batasan jujur).
+- `agent-log/claude-dev.log`: entri sesi ini.
+
+**Diverifikasi (bagaimana):**
+- `python -m ruff check .`: PASS (0 error).
+- `python scripts/check_manifests.py`: PASS (5 addon).
+- `python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner`: 8/8 PASS.
+- Validitas YAML seluruh workflow (`yaml.safe_load`): PASS.
+- Instropeksi lokal: perintah upgrade memuat `-u id_base,id_mobile_api` dan `--stop-after-init`; guard menolak `fmcg_base`, `fmcg_live`, `prod_*`, `railway`, `master_*`, `official_*`.
+
+**Belum diuji:**
+- Eksekusi upgrade nyata (`odoo -u`) pada container: wajib dibuktikan di GitHub Actions exact-SHA (job `upgrade-proof`). Tidak ada Docker lokal di mesin ini.
+- Anggapan [A]: `_auto_init` Odoo 19 membuat ulang kolom yang dihapus dan modul reload XML view yang xmlid-nya dihapus.
+
+**Butir terbuka:**
+1. Menunggu hasil `upgrade-proof` pada exact SHA cabang `agen/persisted-baseline-upgrade`; bukti (Job ID, durasi, sentinel `UPGRADE_REPLAY_ZERO_DRIFT=PASS`) akan diposting ke komentar PR.
+2. 15 CSV register di `data/registers/` 100% tidak disentuh.
+
+**Menunggu:** Supervisor (Antigravity) meninjau Draft PR `agen/persisted-baseline-upgrade` → `main`.
+
 ## 2026-10-30 — codex — Deployment demo parsial dan batas shell
 **Eksekusi:** PR45 merged7d667915. field-pwa pinned4973935, mode staging, deployment84abcb97 SUCCESS dan build-info publik staging. Gateway awal memakai static Dockerfile akibat default pwa/railway.toml; update railwayConfigFile ditolak plugin (deprecated). Beralih image resmi nginx:1.28-alpine dengan Start Command yang merekonstruksi tiga file gateway audited4973935; deployment8f42f93b SUCCESS.
 **Reproduksi:** pwa/scripts/railway-gateway-command.mjs menghasilkan command dari file source tanpa credential/download runtime; docs/DEMO_DEPLOYMENT_20261030.md mencatat status dan urutan operator.

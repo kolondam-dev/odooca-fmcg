@@ -23,3 +23,13 @@
 - Belum diuji: skrip snapshot terhadap Railway; CI di GitHub (status hijau hanya dari log AntiGravity); loader di DB berisi transaksi.
 - Tidak mengubah kode agen lain; perbaikan diusulkan sebagai M1a-M1c di dokumen review.
 - Task managed by claude-dev agent at 2026-10-25T09:24:46+07:00
+
+[2026-10-30T15:28:17+07:00] [INFO] Prioritas 3: upgrade modul dari baseline persisten + replay idempotensi
+- Menambah scripts/ops/verify_upgrade_baseline.py: fase baseline memuat dataset kanonikal penuh (fase 1 + fase 2), audit Juli/Agustus, snapshot digest SHA-256, lalu menyuntikkan drift terkontrol (version skew latest_version, kolom id_mobile_office.radius dihapus, view id_mobile_api.view_mobile_office_form dihapus).
+- Fase verify memvalidasi kontrak proses `odoo -u` (exit 0, bebas registry corruption), registry/versi manifest, DDL kolom modul, many2one bebas orphan, view XML valid + drift dipulihkan, hook HPP id_base (0 HPP duplikat pada faktur seed, semua outbound punya STJ posted), replay run_all() zero-creation, zero-drift snapshot, imutabilitas AML Juli, audit oracle Agustus.
+- Menambah .github/workflows/upgrade-runtime.yml (contract-tests + upgrade-proof pada Odoo 19/PostgreSQL 16; Fase A baseline, Fase B `odoo -u id_base,id_mobile_api --stop-after-init`, Fase B2 kontrak log, Fase C verify+replay, artefak diagnostik).
+- Menambah 8 tes kontrak di tests/test_full_dataset_cutoff_and_upgrade.py (kelas TestUpgradeBaselineRunner) dan langkah unit di ci.yml static.
+- Memperbarui docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md (Prioritas 3 SELESAI + Bab 6).
+- Verifikasi lokal: ruff PASS, check_manifests PASS (5 addon), 8/8 unit PASS, YAML valid. Eksekusi upgrade nyata belum diuji lokal (tanpa Docker); wajib dibuktikan di GitHub Actions exact SHA.
+- 15 CSV register data/registers/ tidak disentuh.
+- Task managed by claude-dev agent at 2026-10-30T15:28:17+07:00
