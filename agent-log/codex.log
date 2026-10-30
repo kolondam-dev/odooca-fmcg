@@ -180,3 +180,8 @@
 - Keputusan terbaru menggantikan pengecualian production dan kewajiban environment staging-remote untuk PR44; mode build staging dan live lock tetap dibedakan.
 - Guard disposable tidak diubah/dilewati; adaptasi exact-target demo wajib direview dan diuji sebelum provisioning existing DB.
 - Dokumentasi saja; tidak ada deployment, perubahan konfigurasi server, akun atau data Railway pada aksi ini.
+
+[2026-10-30T08:48:26+07:00] [INFO] Deploy PWA staging dan koreksi config gateway demo
+- PR45 merged7d667915; field-pwa pinned4973935 staging deployment84abcb97 SUCCESS dan build-info mode staging.
+- Gateway awal salah image karena default pwa/railway.toml memilih static Dockerfile; tambah config gateway khusus untuk dipilih secara eksplisit.
+- Odoo endpoint mobile404; log DB railway. Shell/backup/adaptasi provisioning existing tetap terbuka; tidak memutasi database.

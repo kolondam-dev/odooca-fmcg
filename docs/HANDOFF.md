@@ -1,5 +1,10 @@
 # HANDOFF
 
+## 2026-10-30 — codex — Deployment demo dan konfigurasi gateway terpisah
+**Eksekusi:** PR45 merged 7d667915; scope production demo disetujui. field-pwa pinned 4973935, mode staging, deployment 84abcb97 SUCCESS; build-info publik menunjukkan staging. Layanan demo-gateway dibuat, tetapi probe awal mengungkap default pwa/railway.toml memilih Dockerfile static PWA sehingga healthz hijau bukan bukti proxy siap.
+**Perbaikan:** konfigurasi gateway khusus pwa/hosting/railway-gateway.toml; pilih Config File /pwa/hosting/railway-gateway.toml dan Root Directory /pwa sebelum build. Jangan menggunakan railway.toml milik static PWA.
+**Runtime backend:** log Odoo menyebut database railway; bukan bukti target fmcg_base. Endpoint mobile langsung mengembalikan404. Addon aktif, backup database+filestore, adaptasi guard exact-target demo, dan provisioning akun memerlukan pemeriksaan shell; belum dieksekusi/diklaim selesai. Tidak mengubah data/role/module database, mengaktifkan FORCE_UPGRADE/reset atau membuat akun server dalam iterasi ini.
+
 ## 2026-10-30 — codex — Otorisasi production sebagai environment demo
 **Keputusan pemilik:** menyetujui penggunaan environment production existing untuk demo setelah penjelasan konsekuensi downtime/perubahan konfigurasi. Menggantikan rencana wajib staging-remote dan batas sebelumnya yang mengecualikan production untuk scope PR44.
 **Batas:** data existing dipertahankan tanpa reset; company/akun TEST terpisah; tidak ada perubahan CSV kanonikal, pelonggaran auth/ACL/geofence atau pembukaan database publik. Guard provisioning tetap berlaku; adaptasi exact-target demo perlu implementasi/review/test sebelum dipakai pada database existing, termasuk fmcg_base bila terkonfirmasi sebagai target aktual.
