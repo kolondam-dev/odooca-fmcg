@@ -887,7 +887,6 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
         assert len(done_out_moves) == expected_out_moves, (
             f"Audit Outbound Moves Juli Gagal! Expected {expected_out_moves}, got {len(done_out_moves)}"
         )
-        seen_move_am_ids = set()
         seen_aml_ids = set()
         for m in done_out_moves:
             am = getattr(m, "account_move_id", None)
@@ -895,11 +894,6 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
                 f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
             )
             am_id = getattr(am, "id", None)
-            assert am_id not in seen_move_am_ids, (
-                f"VIOLATION AML REUSE: Account move {am_id} di-bind oleh lebih dari satu stock.move (move ID: {m.id})!"
-            )
-            seen_move_am_ids.add(am_id)
-
             assert getattr(am, "state", "") == "posted", (
                 f"Account move {getattr(am, 'name', am_id)} pada move {m.id} belum posted!"
             )
@@ -925,65 +919,69 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
             # Valuation value
             exp_val = _get_expected_move_valuation(m)
             lines = _iter_records(getattr(am, "line_ids", []))
+            m_prod_id = getattr(getattr(m, "product_id", None), "id", getattr(m, "product_id", None))
 
-            # Exactly 1 debit 510000
-            debit_lines = [
+            # Unconsumed debit line 510000 for this move
+            debit_candidates = [
                 ln for ln in lines
                 if getattr(getattr(ln, "account_id", None), "code", "") == "510000"
+                and (
+                    getattr(getattr(ln, "product_id", None), "id", getattr(ln, "product_id", None)) == m_prod_id
+                    or (m_prod_id is None and getattr(ln, "product_id", None) is None)
+                )
+                and ln.id not in seen_aml_ids
             ]
-            assert len(debit_lines) == 1, (
-                f"Account move {getattr(am, 'name', am_id)} memiliki {len(debit_lines)} baris debit 510000 (wajib tepat 1)!"
+            assert debit_candidates, (
+                f"Account move {getattr(am, 'name', am_id)} tidak memiliki baris debit 510000 unconsumed untuk move {m.id} (product ID {m_prod_id})!"
             )
-            d_ln = debit_lines[0]
-            assert d_ln.id not in seen_aml_ids, f"Baris AML debit ID {d_ln.id} terpakai ulang (AML reuse)!"
+            # Match exact nominal attribution exp_val and credit == 0
+            matching_debit_lines = [
+                ln for ln in debit_candidates
+                if Decimal(str(round(float(getattr(ln, "debit", 0.0) or 0.0), 2))) == exp_val
+                and Decimal(str(round(float(getattr(ln, "credit", 0.0) or 0.0), 2))) == Decimal("0.00")
+            ]
+            assert matching_debit_lines, (
+                f"Account move {getattr(am, 'name', am_id)} baris debit 510000 mismatch! Expected Rp {exp_val} debit (credit 0.00) untuk move {m.id} (product ID {m_prod_id})!"
+            )
+            d_ln = matching_debit_lines[0]
             seen_aml_ids.add(d_ln.id)
 
-            d_amt = Decimal(str(round(float(getattr(d_ln, "debit", 0.0) or 0.0), 2)))
-            d_cr = Decimal(str(round(float(getattr(d_ln, "credit", 0.0) or 0.0), 2)))
-            assert d_amt == exp_val, (
-                f"Account move {getattr(am, 'name', am_id)} debit 510000 mismatch! Expected Rp {exp_val}, got Rp {d_amt}"
-            )
-            assert d_cr == Decimal("0.00"), (
-                f"Account move {getattr(am, 'name', am_id)} baris debit 510000 memiliki credit {d_cr} != 0.00!"
-            )
-            d_prod_id = getattr(getattr(d_ln, "product_id", None), "id", getattr(d_ln, "product_id", None))
-            m_prod_id = getattr(getattr(m, "product_id", None), "id", getattr(m, "product_id", None))
-            if d_prod_id is not None and m_prod_id is not None:
-                assert d_prod_id == m_prod_id, (
-                    f"Account move {getattr(am, 'name', am_id)} debit 510000 product ID {d_prod_id} != move product ID {m_prod_id}!"
-                )
             if company_id:
                 d_comp_id = getattr(getattr(d_ln, "company_id", None), "id", getattr(d_ln, "company_id", None))
                 assert d_comp_id in (company_id, None, False), f"Debit line {d_ln.id} company_id mismatch!"
 
-            # Exactly 1 credit 113000
-            credit_lines = [
+            # Unconsumed credit line 113000 for this move
+            credit_candidates = [
                 ln for ln in lines
                 if getattr(getattr(ln, "account_id", None), "code", "") == "113000"
+                and (
+                    getattr(getattr(ln, "product_id", None), "id", getattr(ln, "product_id", None)) == m_prod_id
+                    or (m_prod_id is None and getattr(ln, "product_id", None) is None)
+                )
+                and ln.id not in seen_aml_ids
             ]
-            assert len(credit_lines) == 1, (
-                f"Account move {getattr(am, 'name', am_id)} memiliki {len(credit_lines)} baris credit 113000 (wajib tepat 1)!"
+            assert credit_candidates, (
+                f"Account move {getattr(am, 'name', am_id)} tidak memiliki baris credit 113000 unconsumed untuk move {m.id} (product ID {m_prod_id})!"
             )
-            c_ln = credit_lines[0]
-            assert c_ln.id not in seen_aml_ids, f"Baris AML credit ID {c_ln.id} terpakai ulang (AML reuse)!"
+            # Match exact nominal attribution exp_val and debit == 0
+            matching_credit_lines = [
+                ln for ln in credit_candidates
+                if Decimal(str(round(float(getattr(ln, "credit", 0.0) or 0.0), 2))) == exp_val
+                and Decimal(str(round(float(getattr(ln, "debit", 0.0) or 0.0), 2))) == Decimal("0.00")
+            ]
+            assert matching_credit_lines, (
+                f"Account move {getattr(am, 'name', am_id)} baris credit 113000 mismatch! Expected Rp {exp_val} credit (debit 0.00) untuk move {m.id} (product ID {m_prod_id})!"
+            )
+            c_ln = matching_credit_lines[0]
             seen_aml_ids.add(c_ln.id)
 
-            c_amt = Decimal(str(round(float(getattr(c_ln, "credit", 0.0) or 0.0), 2)))
-            c_dr = Decimal(str(round(float(getattr(c_ln, "debit", 0.0) or 0.0), 2)))
-            assert c_amt == exp_val, (
-                f"Account move {getattr(am, 'name', am_id)} credit 113000 mismatch! Expected Rp {exp_val}, got Rp {c_amt}"
-            )
-            assert c_dr == Decimal("0.00"), (
-                f"Account move {getattr(am, 'name', am_id)} baris credit 113000 memiliki debit {c_dr} != 0.00!"
-            )
-            c_prod_id = getattr(getattr(c_ln, "product_id", None), "id", getattr(c_ln, "product_id", None))
-            if c_prod_id is not None and m_prod_id is not None:
-                assert c_prod_id == m_prod_id, (
-                    f"Account move {getattr(am, 'name', am_id)} credit 113000 product ID {c_prod_id} != move product ID {m_prod_id}!"
-                )
             if company_id:
                 c_comp_id = getattr(getattr(c_ln, "company_id", None), "id", getattr(c_ln, "company_id", None))
                 assert c_comp_id in (company_id, None, False), f"Credit line {c_ln.id} company_id mismatch!"
+
+        assert len(seen_aml_ids) == len(done_out_moves) * 2, (
+            f"Audit AML HPP Gagal! Expected {len(done_out_moves) * 2} baris AML unik (1 debit 510000 + 1 credit 113000 per move), terikat {len(seen_aml_ids)}"
+        )
 
     # 6. Pembayaran AR / AP / OPEX
     if "account.payment" in env:
@@ -1146,7 +1144,6 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
         assert len(done_out_moves) == expected_out_moves, (
             f"Audit Outbound Moves Total Gagal! Expected {expected_out_moves}, got {len(done_out_moves)}"
         )
-        seen_move_am_ids = set()
         seen_aml_ids = set()
         for m in done_out_moves:
             am = getattr(m, "account_move_id", None)
@@ -1154,11 +1151,6 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
                 f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
             )
             am_id = getattr(am, "id", None)
-            assert am_id not in seen_move_am_ids, (
-                f"VIOLATION AML REUSE: Account move {am_id} di-bind oleh lebih dari satu stock.move (move ID: {m.id})!"
-            )
-            seen_move_am_ids.add(am_id)
-
             assert getattr(am, "state", "") == "posted", (
                 f"Account move {getattr(am, 'name', am_id)} pada move {m.id} belum posted!"
             )
@@ -1184,65 +1176,69 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
             # Valuation value
             exp_val = _get_expected_move_valuation(m)
             lines = _iter_records(getattr(am, "line_ids", []))
+            m_prod_id = getattr(getattr(m, "product_id", None), "id", getattr(m, "product_id", None))
 
-            # Exactly 1 debit 510000
-            debit_lines = [
+            # Unconsumed debit line 510000 for this move
+            debit_candidates = [
                 ln for ln in lines
                 if getattr(getattr(ln, "account_id", None), "code", "") == "510000"
+                and (
+                    getattr(getattr(ln, "product_id", None), "id", getattr(ln, "product_id", None)) == m_prod_id
+                    or (m_prod_id is None and getattr(ln, "product_id", None) is None)
+                )
+                and ln.id not in seen_aml_ids
             ]
-            assert len(debit_lines) == 1, (
-                f"Account move {getattr(am, 'name', am_id)} memiliki {len(debit_lines)} baris debit 510000 (wajib tepat 1)!"
+            assert debit_candidates, (
+                f"Account move {getattr(am, 'name', am_id)} tidak memiliki baris debit 510000 unconsumed untuk move {m.id} (product ID {m_prod_id})!"
             )
-            d_ln = debit_lines[0]
-            assert d_ln.id not in seen_aml_ids, f"Baris AML debit ID {d_ln.id} terpakai ulang (AML reuse)!"
+            # Match exact nominal attribution exp_val and credit == 0
+            matching_debit_lines = [
+                ln for ln in debit_candidates
+                if Decimal(str(round(float(getattr(ln, "debit", 0.0) or 0.0), 2))) == exp_val
+                and Decimal(str(round(float(getattr(ln, "credit", 0.0) or 0.0), 2))) == Decimal("0.00")
+            ]
+            assert matching_debit_lines, (
+                f"Account move {getattr(am, 'name', am_id)} baris debit 510000 mismatch! Expected Rp {exp_val} debit (credit 0.00) untuk move {m.id} (product ID {m_prod_id})!"
+            )
+            d_ln = matching_debit_lines[0]
             seen_aml_ids.add(d_ln.id)
 
-            d_amt = Decimal(str(round(float(getattr(d_ln, "debit", 0.0) or 0.0), 2)))
-            d_cr = Decimal(str(round(float(getattr(d_ln, "credit", 0.0) or 0.0), 2)))
-            assert d_amt == exp_val, (
-                f"Account move {getattr(am, 'name', am_id)} debit 510000 mismatch! Expected Rp {exp_val}, got Rp {d_amt}"
-            )
-            assert d_cr == Decimal("0.00"), (
-                f"Account move {getattr(am, 'name', am_id)} baris debit 510000 memiliki credit {d_cr} != 0.00!"
-            )
-            d_prod_id = getattr(getattr(d_ln, "product_id", None), "id", getattr(d_ln, "product_id", None))
-            m_prod_id = getattr(getattr(m, "product_id", None), "id", getattr(m, "product_id", None))
-            if d_prod_id is not None and m_prod_id is not None:
-                assert d_prod_id == m_prod_id, (
-                    f"Account move {getattr(am, 'name', am_id)} debit 510000 product ID {d_prod_id} != move product ID {m_prod_id}!"
-                )
             if company_id:
                 d_comp_id = getattr(getattr(d_ln, "company_id", None), "id", getattr(d_ln, "company_id", None))
                 assert d_comp_id in (company_id, None, False), f"Debit line {d_ln.id} company_id mismatch!"
 
-            # Exactly 1 credit 113000
-            credit_lines = [
+            # Unconsumed credit line 113000 for this move
+            credit_candidates = [
                 ln for ln in lines
                 if getattr(getattr(ln, "account_id", None), "code", "") == "113000"
+                and (
+                    getattr(getattr(ln, "product_id", None), "id", getattr(ln, "product_id", None)) == m_prod_id
+                    or (m_prod_id is None and getattr(ln, "product_id", None) is None)
+                )
+                and ln.id not in seen_aml_ids
             ]
-            assert len(credit_lines) == 1, (
-                f"Account move {getattr(am, 'name', am_id)} memiliki {len(credit_lines)} baris credit 113000 (wajib tepat 1)!"
+            assert credit_candidates, (
+                f"Account move {getattr(am, 'name', am_id)} tidak memiliki baris credit 113000 unconsumed untuk move {m.id} (product ID {m_prod_id})!"
             )
-            c_ln = credit_lines[0]
-            assert c_ln.id not in seen_aml_ids, f"Baris AML credit ID {c_ln.id} terpakai ulang (AML reuse)!"
+            # Match exact nominal attribution exp_val and debit == 0
+            matching_credit_lines = [
+                ln for ln in credit_candidates
+                if Decimal(str(round(float(getattr(ln, "credit", 0.0) or 0.0), 2))) == exp_val
+                and Decimal(str(round(float(getattr(ln, "debit", 0.0) or 0.0), 2))) == Decimal("0.00")
+            ]
+            assert matching_credit_lines, (
+                f"Account move {getattr(am, 'name', am_id)} baris credit 113000 mismatch! Expected Rp {exp_val} credit (debit 0.00) untuk move {m.id} (product ID {m_prod_id})!"
+            )
+            c_ln = matching_credit_lines[0]
             seen_aml_ids.add(c_ln.id)
 
-            c_amt = Decimal(str(round(float(getattr(c_ln, "credit", 0.0) or 0.0), 2)))
-            c_dr = Decimal(str(round(float(getattr(c_ln, "debit", 0.0) or 0.0), 2)))
-            assert c_amt == exp_val, (
-                f"Account move {getattr(am, 'name', am_id)} credit 113000 mismatch! Expected Rp {exp_val}, got Rp {c_amt}"
-            )
-            assert c_dr == Decimal("0.00"), (
-                f"Account move {getattr(am, 'name', am_id)} baris credit 113000 memiliki debit {c_dr} != 0.00!"
-            )
-            c_prod_id = getattr(getattr(c_ln, "product_id", None), "id", getattr(c_ln, "product_id", None))
-            if c_prod_id is not None and m_prod_id is not None:
-                assert c_prod_id == m_prod_id, (
-                    f"Account move {getattr(am, 'name', am_id)} credit 113000 product ID {c_prod_id} != move product ID {m_prod_id}!"
-                )
             if company_id:
                 c_comp_id = getattr(getattr(c_ln, "company_id", None), "id", getattr(c_ln, "company_id", None))
                 assert c_comp_id in (company_id, None, False), f"Credit line {c_ln.id} company_id mismatch!"
+
+        assert len(seen_aml_ids) == len(done_out_moves) * 2, (
+            f"Audit AML HPP Gagal! Expected {len(done_out_moves) * 2} baris AML unik (1 debit 510000 + 1 credit 113000 per move), terikat {len(seen_aml_ids)}"
+        )
 
     # 5. Immutabilitas Penutupan Historis Juli (Exact Multiset Matching)
     if prior_july_aml_snapshot is not None and "account.move.line" in env:
@@ -1482,19 +1478,25 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
             and getattr(m, "account_move_id", None)
         ]
         if len(done_out) >= 2:
-            m1, m2 = done_out[0], done_out[1]
-            try:
-                with _db_savepoint():
-                    m1.write({"account_move_id": getattr(m2.account_move_id, "id", m2.account_move_id)})
-                    audit_database_against_oracle_july(env, oracle)
-                    raise RuntimeError("Mutasi HPP cross-binding lolos audit tanpa penolakan!")
-            except AssertionError as exc:
-                results["probe_7_hpp_cross_binding"] = {
-                    "status": "REJECTED_AS_EXPECTED",
-                    "description": f"Cross-binding HPP: move {m1.id} diarahkan ke account_move move {m2.id}",
-                    "rejection_message": str(exc),
-                }
-                print(f"   [Probe 7 PASS] HPP Cross-Binding Reuse sukses ditolak: {exc}")
+            m1 = done_out[0]
+            m1_am_id = getattr(getattr(m1, "account_move_id", None), "id", getattr(m1, "account_move_id", None))
+            m2 = next((
+                m for m in done_out[1:]
+                if getattr(getattr(m, "account_move_id", None), "id", getattr(m, "account_move_id", None)) != m1_am_id
+            ), None)
+            if m2 is not None:
+                try:
+                    with _db_savepoint():
+                        m1.write({"account_move_id": getattr(m2.account_move_id, "id", m2.account_move_id)})
+                        audit_database_against_oracle_july(env, oracle)
+                        raise RuntimeError("Mutasi HPP cross-binding lolos audit tanpa penolakan!")
+                except AssertionError as exc:
+                    results["probe_7_hpp_cross_binding"] = {
+                        "status": "REJECTED_AS_EXPECTED",
+                        "description": f"Cross-binding HPP: move {m1.id} diarahkan ke account_move move {m2.id}",
+                        "rejection_message": str(exc),
+                    }
+                    print(f"   [Probe 7 PASS] HPP Cross-Binding Reuse sukses ditolak: {exc}")
 
     # 8. Mutasi: HPP Journal Debit-Credit Direction Swap (Jurnal Terbalik)
     if SM is not None and (AML is not None or has_sp):

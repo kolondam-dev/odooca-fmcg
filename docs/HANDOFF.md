@@ -1,5 +1,31 @@
 # HANDOFF
 
+## 2026-10-30T08:38:00+07:00 — antigravity agent — Resolusi Multi-Move Picking pada Exact HPP Binding & Attribution Audit
+**Konteks & Root Cause CI Run 40982532223:**
+- Pada validasi delivery order di Odoo 19 `stock_account`, pengiriman dengan banyak baris produk (*multi-line picking*) menghasilkan satu *header* `account.move` (`STJ/...`) yang memuat beberapa pasang baris AML debit `510000` dan credit `113000` (satu pasang per `stock.move`).
+- Asersi sebelumnya yang mengecek `assert len(debit_lines) == 1` pada level `account.move` memicu kegagalan saat memeriksa DO multi-move (`Account move STJ/2026/07/0156 memiliki 5 baris debit 510000 (wajib tepat 1)!`).
+- Selain itu, asersi naif `assert am_id not in seen_move_am_ids` keliru mengasumsikan 1 header `account.move` hanya boleh dimiliki oleh 1 move, padahal yang dilarang supervisor untuk dibagi/dipakai ulang adalah baris AML (*anti-AML reuse*: setiap baris AML STJ hanya boleh di-bind ke tepat satu move).
+
+**Perbaikan yang Diimplementasikan:**
+1. **Candidate-Based AML Matching (`scripts/ops/verify_disposable_full.py`):**
+   - Menghapus pembatasan 1 move per `account.move` (`seen_move_am_ids`) pada fase Juli dan Agustus.
+   - Mengimplementasikan pencocokan kandidat AML per `stock.move`:
+     * Mencari kandidat debit `510000` unconsumed (`ln.id not in seen_aml_ids`) yang cocok dengan `product_id == m.product_id`.
+     * Memvalidasi nominal eksak `debit == exp_val` (`round(m.quantity * unit_cost, 2)`) dan `credit == Decimal("0.00")`.
+     * Menambahkan baris debit terpilih ke `seen_aml_ids`.
+     * Mencari kandidat credit `113000` unconsumed (`ln.id not in seen_aml_ids`) yang cocok dengan `product_id == m.product_id`.
+     * Memvalidasi nominal eksak `credit == exp_val` dan `debit == Decimal("0.00")`.
+     * Menambahkan baris credit terpilih ke `seen_aml_ids`.
+   - Memvalidasi `assert len(seen_aml_ids) == len(done_out_moves) * 2` (5.300 baris AML unik di Juli, 5.476 di Agustus) untuk membuktikan tidak ada baris AML yang terbagi (*shared*) atau terpakai ulang (*reused*).
+2. **Penajaman Probe 7 In-Database Savepoint Mutation:**
+   - Memastikan move pembanding `m2` memiliki `account_move_id` yang berbeda dari `m1` (`m2.account_move_id != m1.account_move_id`), sehingga simulasi *cross-binding* benar-benar mengarahkan move ke jurnal pengiriman lain.
+3. **Hasil Verifikasi Lokal:**
+   - `python -m ruff check .`: PASS (0 errors).
+   - `python scripts/check_manifests.py`: PASS (5 addon terverifikasi).
+   - `python -m unittest tests/test_full_dataset_cutoff_and_upgrade.py`: PASS (10/10 tests dalam 857s, mencakup simulasi full dataset Juli/Agustus, exact multiset audit, dan 8 in-database savepoint mutation probes).
+   - `15 CSV register kanonikal di data/registers/`: 100% beku tanpa perubahan satu byte pun.
+
+
 ## 2026-10-30T07:50:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 4: Exact HPP Binding & Attribution, Deterministic Canonical Location Resolver, dan Sinkronisasi Main
 **Konteks Review Supervisor ([issuecomment-6511303227](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6511303227)):**
 - Status PR #39: HOLD / changes required (Full runtime SUCCESS pada run 40891644357 dan 6 in-database savepoint mutations resmi DITERIMA dan TERBUKTI; temuan swap stok/lot dan loop HPP kosong resmi tertutup).

@@ -482,6 +482,7 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
             "Audit COGS Nominal Juli Mismatch" in str(ctx.exception)
             or "memiliki 0 baris debit 510000" in str(ctx.exception)
             or "memiliki credit" in str(ctx.exception)
+            or "baris debit 510000 mismatch" in str(ctx.exception)
         )
         d_ln.debit, d_ln.credit = orig_debit, 0.0
         c_ln.debit, c_ln.credit = 0.0, orig_credit
@@ -501,6 +502,7 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
             "VIOLATION AML REUSE" in str(ctx.exception)
             or "debit 510000 mismatch" in str(ctx.exception)
             or "product ID" in str(ctx.exception)
+            or "unconsumed" in str(ctx.exception)
         )
         target_mv.account_move_id = orig_am
 

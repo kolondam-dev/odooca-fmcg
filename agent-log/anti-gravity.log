@@ -1174,3 +1174,10 @@
 - [P3] Ekspansi In-Database Savepoint Fault-Injection (8 Probes): Menambahkan Probe 7 (HPP Cross-Binding Reuse) dan Probe 8 (HPP Debit-Credit Direction Swap). Seluruh 8 probe terbukti 100% REJECTED_AS_EXPECTED dan di-rollback bersih via savepoint.
 - [P4] Sinkronisasi origin/main: Merge commit main fca1e0f (PR #41 dan PR #42) dengan 5 addon terverifikasi, seluruh 63 adapter tests dan 10 test full dataset runner lulus 100%.
 - Task managed by antigravity-agent at 2026-10-30T00:48:54+00:00
+
+[2026-10-30T08:38:00+07:00] [INFO] Resolusi Multi-Move Picking pada Exact HPP Binding & Attribution Audit
+- [P1-1] Multi-Move Picking & Candidate AML Attribution: Menghilangkan asersi naif 1-move-per-journal-header (seen_move_am_ids dan assert len(debit_lines) == 1). Menggantikannya dengan pencarian kandidat debit 510000 dan credit 113000 unconsumed (ln.id not in seen_aml_ids) yang cocok secara eksak pada product_id, nominal attribution exp_val = round(m.quantity * unit_cost, 2), dan saldo nol pada arah sebaliknya (credit == 0.00 untuk baris debit, debit == 0.00 untuk baris credit).
+- [P1-2] Validasi Anti-AML Reuse Eksak: Mengonsumsi tepat 1 debit AML dan 1 credit AML per stock move ke dalam seen_aml_ids. Memvalidasi assert len(seen_aml_ids) == len(done_out_moves) * 2 (5.300 AML di Juli, 5.476 AML di Agustus) untuk memastikan tidak ada baris jurnal HPP yang terbagi atau terpakai ulang antar move.
+- [P1-3] Penajaman Probe 7 In-Database Savepoint: Memastikan m2 yang dipilih pada mutasi HPP cross-binding berasal dari picking/move yang berbeda (m2.account_move_id != m1.account_move_id), sehingga perubahan binding benar-benar menguji kegagalan audit.
+- [P1-4] Verifikasi Lokal: 10/10 test di test_full_dataset_cutoff_and_upgrade.py lulus (termasuk 8 in-database savepoint mutation probes). ruff check PASS, check_manifests PASS.
+- Task managed by antigravity at 2026-10-30T08:38:00+07:00
