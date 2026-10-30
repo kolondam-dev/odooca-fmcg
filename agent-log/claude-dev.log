@@ -75,3 +75,11 @@
 - Fixture regresi tambahan: containing block mulai 250 px, sticky 200 px, padding 16 px, margin 8 px -> pinStart 74, drift 0.
 - 15 CSV data/registers/ tidak disentuh. PR tetap draft; tidak merge/deploy.
 - Task managed by claude-dev agent at 2026-10-30T19:55:00+07:00
+
+[2026-10-30T20:05:00+07:00] [INFO] PR #36 SHA final be63bc3 hijau + komentar bukti dipasang
+- Head final branch: be63bc3948f5aac3978d9bfc71ebadf62ecb8927 (dokumentasi bukti di atas 94aae90).
+- Run 41053697213 (event pull_request): static, init-test, install-test success; job install-test 124055863616, 12:13:24Z -> 12:19:12Z; browser smoke 128 PASS / 0 FAIL.
+- Metrik identik dengan 94aae90: SO [0..684]/[0..723]/[0..1021]/[0..897], Invoice [0..754]/[13..1053]/[0..919]; drift <= 0.25 px, clamp awal terjelaskan, semua released, horizontalOverflow false.
+- Komentar bukti exact-SHA di PR #36: https://github.com/kolondam-dev/odooca-fmcg/pull/36#issuecomment-6522709264
+- 15 CSV data/registers/ tidak disentuh; PR tetap draft; tidak merge/deploy.
+- Task managed by claude-dev agent at 2026-10-30T20:05:00+07:00

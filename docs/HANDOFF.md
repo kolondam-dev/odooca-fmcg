@@ -8,6 +8,8 @@ Koreksi metode: interval pinned memakai content box containing block + margin st
 
 15 CSV `data/registers/` tidak disentuh. PR tetap draft; tidak merge/deploy tanpa otorisasi pemilik.
 
+Head final setelah commit dokumentasi ini: `be63bc3948f5aac3978d9bfc71ebadf62ecb8927`, run `41053697213` success (`static`, `init-test`, `install-test`; job `124055863616`; 128 PASS / 0 FAIL) dengan metrik sticky identik. Bukti dipasang sebagai komentar PR: https://github.com/kolondam-dev/odooca-fmcg/pull/36#issuecomment-6522709264
+
 Task Managed by agent claude-dev at 2026-10-30T19:55:00+07:00
 
 ## 2026-10-30T18:34:41+07:00 — PR #36: perbaikan akar sticky/overflow + regression audit
