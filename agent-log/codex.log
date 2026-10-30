@@ -174,3 +174,9 @@
 - Basis main f99e117; UUID/foto/alasan baru, receipt rejected cocok, CAS pointer+receipt, validasi ancestor dan dedup klaim historis.
 - 227 unit +1 hosting +58 browser lokal PASS; typecheck/format/contracts/build/budget/Ruff/4 manifest PASS, CI setelah push. Live terkunci, tidak merge/deploy/backend/seed/Railway.
 - Task managed by codex agent at 2026-10-28T10:08:23+07:00
+
+[2026-10-30T08:26:12+07:00] [INFO] Persetujuan scope environment production untuk demo
+- Pemilik menyetujui scope demo existing; data dipertahankan tanpa reset dan company/akun TEST dipisahkan.
+- Keputusan terbaru menggantikan pengecualian production dan kewajiban environment staging-remote untuk PR44; mode build staging dan live lock tetap dibedakan.
+- Guard disposable tidak diubah/dilewati; adaptasi exact-target demo wajib direview dan diuji sebelum provisioning existing DB.
+- Dokumentasi saja; tidak ada deployment, perubahan konfigurasi server, akun atau data Railway pada aksi ini.

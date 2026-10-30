@@ -1,5 +1,11 @@
 # HANDOFF
 
+## 2026-10-30 — codex — Otorisasi production sebagai environment demo
+**Keputusan pemilik:** menyetujui penggunaan environment production existing untuk demo setelah penjelasan konsekuensi downtime/perubahan konfigurasi. Menggantikan rencana wajib staging-remote dan batas sebelumnya yang mengecualikan production untuk scope PR44.
+**Batas:** data existing dipertahankan tanpa reset; company/akun TEST terpisah; tidak ada perubahan CSV kanonikal, pelonggaran auth/ACL/geofence atau pembukaan database publik. Guard provisioning tetap berlaku; adaptasi exact-target demo perlu implementasi/review/test sebelum dipakai pada database existing, termasuk fmcg_base bila terkonfirmasi sebagai target aktual.
+**Dokumentasi:** docs/DEMO_ENVIRONMENT_SCOPE_DECISION.md menjadi rujukan scope terbaru; runbook STAGING_ACCEPTANCE_KIT.md diberi penanda alternatif historis agar command disposable tidak disalin ke database existing.
+**Status:** keputusan dan urutan kerja dicatat; bukan klaim deployment/provisioning/acceptance sudah selesai. Tidak ada mutasi Railway dalam perubahan dokumentasi ini.
+
 ## 2026-10-30 — agent-codex-pwa — Provisioning shell positive-path gate
 **Berubah:** CI menyalin ci_db yang sudah teruji ke database disposable fmcg_staging_acceptance, lalu menjalankan entrypoint provisioning operator dua kali dengan password random tidak dicetak. Gate memverifikasi dua akun, scope/master TEST dan snapshot/idempotensi tanpa mengaktifkan currency di database asal. Unit/native test tetap terpisah.
 **Koreksi runbook:** raw Odoo shell pada Railway harus override PGUSER/PGPASSWORD ke Odoo role (env admin Postgres bisa mengalahkan config). Command tidak memanggil init/reset/ALTER role. Tidak mengeksekusi ini di Railway; CI baru menunggu.

@@ -2,7 +2,13 @@
 
 Status: implementasi/paket persiapan; belum create environment, provision akun server, deploy, atau acceptance perangkat. Pekerjaan ini tidak mencatat check-in/absensi/POD resmi. Backend evidence tetap strict. Baseline PR43 yang sudah diterima dipertahankan.
 
-## Lingkungan yang dipilih
+## Pembaruan scope pemilik — 30 Oktober 2026
+
+**Keputusan terbaru:** gunakan environment `production` existing sebagai demo, pertahankan data tanpa reset, pisahkan company/akun TEST. Lihat [DEMO_ENVIRONMENT_SCOPE_DECISION.md](DEMO_ENVIRONMENT_SCOPE_DECISION.md) untuk otorisasi, batas, dan urutan eksekusi.
+
+Rencana environment terisolasi dan command provisioning di bawah dipertahankan sebagai alternatif historis. **Jangan menjalankan command disposable tersebut terhadap database existing atau melewati guard `fmcg_base`.** Adaptasi provisioning demo memerlukan implementasi, review dan pengujian terlebih dahulu. Dokumentasi ini tidak menyatakan deployment sudah selesai.
+
+## Lingkungan yang dipilih (rencana terisolasi sebelumnya)
 
 [F] Pembacaan Railway menemukan proyek `pleasant-caring` (`569df00d-48e8-411a-93a5-df39ba97f16b`), hanya environment `production`, dengan Odoo/Postgres/field-pwa. Pemeriksaan platform bukan audit versi addon/data yang berjalan. Ada perubahan deployment production oleh proses lain selama sesi; agen ini tidak melakukan deploy.
 
