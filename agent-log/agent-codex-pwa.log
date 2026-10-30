@@ -154,3 +154,8 @@
 - Local327 unit/hosting/typecheck/contracts/format/Ruff5manifest/shell/build budgets PASS.5 native ORM and3 browser scenarios x phone/tablet pending CI. Kit/device-result template records untested acceptance honestly.
 - No environment provisioning, password mutation on server, merge/deploy or backend remote bypass. Office remains TEST until owner provides verified coordinates.
 - Task managed by agent-codex-pwa at 2026-10-30T07:31:05+07:00
+
+[2026-10-30T07:35:54+07:00] [INFO] Staging shell positive-path smoke and operator credential routing
+- Add dedicated CI database clone fmcg_staging_acceptance and execute actual operator provisioning entrypoint twice; assert two minimal accounts, snapshot identities/hash stable and no secret output. CI-only currency activation remains isolated.
+- Correct operator command to explicitly override Railway PGUSER/PGPASSWORD to Odoo role; no init/role ownership mutation required by provisioning command. Runtime verification awaits new CI SHA.
+- Task managed by agent-codex-pwa at 2026-10-30T07:35:54+07:00

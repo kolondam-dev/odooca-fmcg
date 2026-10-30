@@ -38,8 +38,12 @@ Skrip: `scripts/ops/provision_mobile_staging.py`, dijalankan melalui Odoo shell 
 export FMCG_STAGING_DISPOSABLE=YES
 export FMCG_STAGING_DATABASE=fmcg_staging_remote
 # FMCG_STAGING_PASSWORD_1 dan FMCG_STAGING_PASSWORD_2 harus sudah tersedia.
-odoo shell -c /tmp/odoo.conf -d fmcg_staging_remote --no-http < /opt/scripts/ops/provision_mobile_staging.py
+env PGUSER="$ODOO_DB_USER" PGPASSWORD="$ODOO_DB_PASSWORD" \
+  odoo shell -c /tmp/odoo.conf -d "$FMCG_STAGING_DATABASE" --no-http \
+  < /opt/scripts/ops/provision_mobile_staging.py
 ```
+
+Jalankan sebagai OS user odoo (atau gunakan delegasi user yang disetujui operator). PGUSER/PGPASSWORD diwariskan Railway sebagai admin Postgres, sehingga wajib dioverride ke role Odoo seperti di atas; raw odoo shell tanpa override dapat ditolak Odoo. Skrip ini tidak memanggil init ulang atau mengganti kepemilikan/role database.
 
 Root Dockerfile menyalin scripts ke /opt/scripts, sehingga path di atas tersedia pada image SHA ini. Pastikan image yang berjalan memang memuat versi tersebut. Library provisioning berada pada addon terinstal. Sebelum eksekusi, pastikan role database/shell dan config menunjuk staging. Panggilan guard tidak menjadi pengganti review resource isolation.
 

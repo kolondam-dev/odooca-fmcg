@@ -1,5 +1,9 @@
 # HANDOFF
 
+## 2026-10-30 — agent-codex-pwa — Provisioning shell positive-path gate
+**Berubah:** CI menyalin ci_db yang sudah teruji ke database disposable fmcg_staging_acceptance, lalu menjalankan entrypoint provisioning operator dua kali dengan password random tidak dicetak. Gate memverifikasi dua akun, scope/master TEST dan snapshot/idempotensi tanpa mengaktifkan currency di database asal. Unit/native test tetap terpisah.
+**Koreksi runbook:** raw Odoo shell pada Railway harus override PGUSER/PGPASSWORD ke Odoo role (env admin Postgres bisa mengalahkan config). Command tidak memanggil init/reset/ALTER role. Tidak mengeksekusi ini di Railway; CI baru menunggu.
+
 ## 2026-10-30 — agent-codex-pwa — Paket staging master kantor/maps/provisioning
 **Mandat/basis:** owner meminta bantuan menyiapkan sisa staging/master kantor/akun/acceptance perangkat setelah PR43 PASS. PR43 terpantau merged 6cccbf2 selama sesi; basis diselaraskan ke main itu. Pemeriksaan Railway read-only menemukan production saja, serta deployment production berubah oleh proses lain; agen ini tidak deploy.
 **Berubah:** master id.mobile.office admin-only (company, koordinat/radius, status test/unverified/verified dan catatan sumber), office opsional pada assignment/snapshot dan hash versinya. Preview staging memilih kantor/outlet server, GPS nyata tanpa fallback, volatile dan generation guard. Provisioning shell guarded database disposable membuat dua akun capture minimal dan fixture/assignment harian, tidak mengambil alih login existing. Gateway Docker Railway memakai authority HTTPS konstan, Host allowlist, private upstream dan API allowlist existing; ditambah CI smoke transport.
