@@ -180,3 +180,8 @@
 - Keputusan terbaru menggantikan pengecualian production dan kewajiban environment staging-remote untuk PR44; mode build staging dan live lock tetap dibedakan.
 - Guard disposable tidak diubah/dilewati; adaptasi exact-target demo wajib direview dan diuji sebelum provisioning existing DB.
 - Dokumentasi saja; tidak ada deployment, perubahan konfigurasi server, akun atau data Railway pada aksi ini.
+
+[2026-10-30T12:07:06+07:00] [INFO] Skill supervisi berbasis bukti dan konteks pengganti
+- Pemilik meminta metode review reusable dan ringkasan aktor/domain/environment. Tambah skill portable dan SUPERVISOR_HANDOFF snapshot main7d667915.
+- Refresh PR36/39/46/47, CI, ruleset dan inventaris Railway. Bedakan otorisasi terbaru dari catatan historis; tidak mengubah verdict/operasional.
+- Validator skill PASS; forward-test offline memakai source/evidence mentah menghasilkan temuan executable dan batas bukti yang benar. Tidak ada aksi eksternal pada forward-test.
