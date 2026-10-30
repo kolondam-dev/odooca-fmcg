@@ -22,9 +22,12 @@ import {
 } from "./visit-contracts";
 import type { FieldStore } from "../storage/store";
 import type { Outbox } from "./outbox";
-export function captureVisitLocation(): Promise<VisitFix> {
+export function captureVisitLocation(
+    source?: (value: "device" | "demo") => void,
+): Promise<VisitFix> {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation && __DEMO__) {
+            source?.("demo");
             resolve({
                 latitude: 1.465,
                 longitude: 124.833,
@@ -38,15 +41,18 @@ export function captureVisitLocation(): Promise<VisitFix> {
             return;
         }
         navigator.geolocation.getCurrentPosition(
-            (p) =>
+            (p) => {
+                source?.("device");
                 resolve({
                     latitude: p.coords.latitude,
                     longitude: p.coords.longitude,
                     accuracy: p.coords.accuracy,
                     sampled_at: new Date(p.timestamp).toISOString(),
-                }),
-            (e) =>
-                __DEMO__
+                });
+            },
+            (e) => {
+                source?.("demo");
+                return __DEMO__
                     ? resolve({
                           latitude: 1.465,
                           longitude: 124.833,
@@ -61,7 +67,8 @@ export function captureVisitLocation(): Promise<VisitFix> {
                                     ? "Pengambilan lokasi timeout. Coba lagi di tempat aman."
                                     : "Lokasi belum tersedia. Coba lagi.",
                           ),
-                      ),
+                      );
+            },
             { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 },
         );
     });

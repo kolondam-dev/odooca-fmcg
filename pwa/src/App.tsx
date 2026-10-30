@@ -1660,6 +1660,13 @@ function FormDialog({
                                     store={store}
                                     owner={owner}
                                     onChange={setEvidence}
+                                    mapSite={{
+                                        name: "Kantor demo",
+                                        latitude: 1.465,
+                                        longitude: 124.833,
+                                        radius: 15,
+                                        simulated: true,
+                                    }}
                                 />
                             </>
                         )}
