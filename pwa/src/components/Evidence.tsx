@@ -90,7 +90,7 @@ export function EvidenceCapture({
                 true,
             );
             if (generation.current === ticket) {
-                await store.putEvidence(packaged);
+                await store.saveEvidence(packaged);
                 setMap(packaged.visual?.map);
                 setDisplay(packaged.blob);
                 report(ref);
