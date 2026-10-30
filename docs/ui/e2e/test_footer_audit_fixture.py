@@ -66,6 +66,34 @@ html, body {{ margin: 0; padding: 0; }}
 FIXTURE = TEMPLATE.format(rows=ROWS, footer=FOOTER)
 NESTED_FIXTURE = TEMPLATE.format(rows=ROWS, footer=NESTED_FOOTER)
 
+# Same contract, but the containing block starts below the top of the scrollport
+# and the sticky box is taller than the room left at scroll start. This is the
+# invoice-on-mobile case: Chromium clamps the box to the containing block content
+# edge, so the pinned interval must start after the clamp instead of at 0.
+CLAMP_TEMPLATE = """<!doctype html>
+<html><head><meta charset="utf-8"><style>
+html, body {{ margin: 0; padding: 0; }}
+.o_form_sheet_bg {{ width: 600px; height: 400px; overflow-y: auto; }}
+.filler {{ height: 250px; background: #eee; }}
+.o_form_sheet {{ box-sizing: border-box; width: 600px; padding: 16px 0 0; }}
+.o_data_row {{ height: 80px; box-sizing: border-box; border-bottom: 1px solid #ddd; }}
+.fixture-footer {{ position: sticky; bottom: 0; height: 200px; margin-top: 8px;
+                   box-sizing: border-box; background: #fff; border-top: 1px solid #999; }}
+.oe_subtotal_footer {{ width: 32rem; max-width: 100%; box-sizing: border-box; }}
+</style></head><body>
+<div class="o_form_sheet_bg">
+  <div class="filler"></div>
+  <div class="o_form_sheet">
+    <div name="order_line">
+{rows}
+    </div>
+{footer}
+  </div>
+</div>
+</body></html>"""
+
+CLAMP_FIXTURE = CLAMP_TEMPLATE.format(rows=ROWS, footer=FOOTER)
+
 
 class TestFooterStickyIntervalFixture(unittest.TestCase):
     @unittest.skipUnless(sync_playwright, "playwright is required for the sticky fixture")
@@ -96,6 +124,29 @@ class TestFooterStickyIntervalFixture(unittest.TestCase):
         self.assertTrue(result["hiddenRowCounterexampleRejected"], result)
         self.assertFalse(result["horizontalOverflow"], result)
         self.assertGreaterEqual(len(result["stickySamples"]), 3, result)
+
+    @unittest.skipUnless(sync_playwright, "playwright is required for the sticky fixture")
+    def test_containing_block_clamp_moves_the_pinned_interval_start(self):
+        audit = js_blocks()["FOOTER_SCROLL_AUDIT"]
+        with sync_playwright() as playwright:
+            browser = launch_chromium(playwright)
+            page = browser.new_page(viewport={"width": 900, "height": 600})
+            page.set_content(CLAMP_FIXTURE)
+            result = page.evaluate(f"({audit})('order_line')")
+            browser.close()
+
+        self.assertTrue(result["ok"], result)
+        # Content top 250 + padding 16 + margin 8 - pinned top 200 = 74.
+        self.assertEqual(result["containingBlockContentTop"], 266, result)
+        self.assertEqual(result["pinStart"], 74, result)
+        self.assertEqual(result["startOverflowBelow"], 74, result)
+        self.assertTrue(result["startClampExplained"], result)
+        self.assertTrue(result["stickyPinned"], result)
+        self.assertTrue(result["stickyEngagedAtLeastTwice"], result)
+        for sample in result["stickySamples"]:
+            self.assertGreaterEqual(sample["scrollTop"], 74, sample)
+            self.assertLessEqual(sample["drift"], 1, sample)
+            self.assertTrue(sample["insideContainingBlockHorizontally"], sample)
 
     @unittest.skipUnless(sync_playwright, "playwright is required for the sticky fixture")
     def test_nested_sticky_containers_are_rejected(self):

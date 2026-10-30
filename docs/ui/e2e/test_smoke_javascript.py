@@ -45,10 +45,14 @@ class TestSmokeJavascriptParses(unittest.TestCase):
             "setProperty('position', 'static', 'important')",
             "containingBlockTopAtZero",
             "containingBlockBottomAtZero",
+            "containingBlockContentTop",
+            "containingBlockContentBottom",
             "bottomInset",
             "releaseAt",
             "pinStart",
             "pinEnd",
+            "startClampExplained",
+            "insideContainingBlockHorizontally",
         ):
             self.assertIn(needle, source)
 

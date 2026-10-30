@@ -37,6 +37,38 @@ TITLE_STATE = """(() => {
 })()"""
 
 
+PAGE_BOX_PROBE = """(() => {
+    const box = (el) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        return {
+            tag: el.tagName,
+            className: String(el.className || '').slice(0, 120),
+            left: Math.round(r.left * 100) / 100,
+            right: Math.round(r.right * 100) / 100,
+            width: Math.round(r.width * 100) / 100,
+            offsetWidth: el.offsetWidth,
+            clientWidth: el.clientWidth,
+            scrollWidth: el.scrollWidth,
+            computedWidth: cs.width,
+            boxSizing: cs.boxSizing,
+            paddingLeft: cs.paddingLeft,
+            paddingRight: cs.paddingRight,
+            overflowX: cs.overflowX,
+            scrollbarWidth: el.offsetWidth - el.clientWidth
+        };
+    };
+    return {
+        viewport: { client: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth },
+        content: box(document.querySelector('.o_content')),
+        formView: box(document.querySelector('.o_form_view')),
+        listView: box(document.querySelector('.o_list_view')),
+        listRenderer: box(document.querySelector('.o_list_renderer'))
+    };
+})()"""
+
+
 async def main():
     failures = []
 
@@ -132,6 +164,31 @@ async def main():
             const stickyGroups = [...stickySet];
             if (stickyGroups.length !== 1) return { ok: false, reason: 'expected exactly one sticky footer container', stickyGroupCount: stickyGroups.length, subtotalCount: subtotals.length };
             const footer = stickyGroups[0];
+            const describeBox = (el) => {
+                if (!el) return null;
+                const r = el.getBoundingClientRect();
+                const cs = getComputedStyle(el);
+                return {
+                    tag: el.tagName,
+                    className: String(el.className || '').slice(0, 120),
+                    left: Math.round(r.left * 100) / 100,
+                    right: Math.round(r.right * 100) / 100,
+                    width: Math.round(r.width * 100) / 100,
+                    offsetWidth: el.offsetWidth,
+                    clientWidth: el.clientWidth,
+                    scrollWidth: el.scrollWidth,
+                    computedWidth: cs.width,
+                    boxSizing: cs.boxSizing,
+                    paddingLeft: cs.paddingLeft,
+                    paddingRight: cs.paddingRight,
+                    borderLeft: cs.borderLeftWidth,
+                    borderRight: cs.borderRightWidth,
+                    marginLeft: cs.marginLeft,
+                    marginRight: cs.marginRight,
+                    overflowX: cs.overflowX,
+                    scrollbarWidth: el.offsetWidth - el.clientWidth
+                };
+            };
             let owner = footer.parentElement;
             while (owner && owner !== document.body) {
                 const style = getComputedStyle(owner);
@@ -177,16 +234,34 @@ async def main():
             const containingBlockTopAtZero = containingRect.top;
             const containingBlockBottomAtZero = containingRect.bottom;
             const containingBlockHeight = containingRect.height;
+            // A sticky box may only shift while its *margin box* stays inside the
+            // containing block's content box, so the interval has to use the
+            // padding box (padding + border) and the element's own margins.
+            const cbStyle = getComputedStyle(containingBlock);
+            const cbBorderTop = parseFloat(cbStyle.borderTopWidth) || 0;
+            const cbBorderLeft = parseFloat(cbStyle.borderLeftWidth) || 0;
+            const cbPadTop = parseFloat(cbStyle.paddingTop) || 0;
+            const cbPadBottom = parseFloat(cbStyle.paddingBottom) || 0;
+            const cbPadLeft = parseFloat(cbStyle.paddingLeft) || 0;
+            const cbPadRight = parseFloat(cbStyle.paddingRight) || 0;
+            const containingBlockContentTop = containingRect.top + cbBorderTop + cbPadTop;
+            const containingBlockContentBottom = containingRect.top + cbBorderTop
+                + containingBlock.clientHeight - cbPadBottom;
+            const containingBlockContentLeft = containingRect.left + cbBorderLeft + cbPadLeft;
+            const containingBlockContentWidth = containingBlock.clientWidth - cbPadLeft - cbPadRight;
+            const marginTop = parseFloat(computed.marginTop) || 0;
+            const marginBottom = parseFloat(computed.marginBottom) || 0;
             const pinnedBottom = scrollportBottom - bottomInset;
             const pinnedTop = pinnedBottom - naturalFooterHeight;
             // Bottom sticky pins while the normal-flow bottom is still below the
             // scrollport inset, and only while the containing block can surround
-            // the shifted box. It releases once the natural bottom crosses the
-            // inset (or the containing block ends first).
+            // the shifted margin box. It releases once the natural bottom crosses
+            // the inset (or the containing block ends first).
             const releaseAt = Math.max(0, Math.round(naturalFooterBottom - pinnedBottom));
-            const earliestAllowed = Math.max(0, Math.ceil(containingBlockTopAtZero - pinnedTop));
-            const pinStart = Math.max(0, Math.min(maxScroll, earliestAllowed));
-            const pinEnd = Math.max(0, Math.min(maxScroll, releaseAt, Math.round(containingBlockBottomAtZero - pinnedBottom)));
+            const earliestPinnedTop = containingBlockContentTop + marginTop;
+            const latestPinnedBottom = containingBlockContentBottom - marginBottom;
+            const pinStart = Math.max(0, Math.min(maxScroll, Math.ceil(earliestPinnedTop - pinnedTop)));
+            const pinEnd = Math.max(0, Math.min(maxScroll, Math.floor(releaseAt), Math.floor(latestPinnedBottom - pinnedBottom)));
             const pinSpan = Math.max(0, pinEnd - pinStart);
             const candidates = [
                 pinStart,
@@ -206,6 +281,10 @@ async def main():
                 const sampleScrollportTop = or.top + owner.clientTop;
                 const sampleScrollportBottom = sampleScrollportTop + owner.clientHeight;
                 const samplePinnedBottom = sampleScrollportBottom - bottomInset;
+                const cbs = getComputedStyle(containingBlock);
+                const sampleCbContentTop = cr.top + (parseFloat(cbs.borderTopWidth) || 0) + (parseFloat(cbs.paddingTop) || 0);
+                const sampleCbContentBottom = cr.top + (parseFloat(cbs.borderTopWidth) || 0)
+                    + containingBlock.clientHeight - (parseFloat(cbs.paddingBottom) || 0);
                 pinned.push({
                     scrollTop: owner.scrollTop,
                     footerTop: fr.top,
@@ -215,14 +294,25 @@ async def main():
                     scrollportBottom: sampleScrollportBottom,
                     containingBlockTop: cr.top,
                     containingBlockBottom: cr.bottom,
+                    containingBlockContentTop: sampleCbContentTop,
+                    containingBlockContentBottom: sampleCbContentBottom,
                     drift: Math.abs(fr.bottom - samplePinnedBottom),
                     insideScrollport: fr.top >= sampleScrollportTop - 2 && fr.bottom <= sampleScrollportBottom + 2,
-                    insideContainingBlock: fr.top >= cr.top - 2 && fr.bottom <= cr.bottom + 2
+                    insideContainingBlock: fr.top - marginTop >= sampleCbContentTop - 1
+                        && fr.bottom + marginBottom <= sampleCbContentBottom + 1,
+                    insideContainingBlockHorizontally: fr.left >= containingBlockContentLeft - 1
+                        && fr.right <= containingBlockContentLeft + containingBlockContentWidth + 1
                 });
             }
             owner.scrollTop = 0;
             const startFooterRect = footer.getBoundingClientRect();
             const footerVisibleAtStart = startFooterRect.top < scrollportBottom - 1 && startFooterRect.bottom > scrollportTop + 1;
+            // A bottom-sticky box cannot pin while its containing block still starts
+            // below the pinned position; it is then clamped to the containing block
+            // content edge. Record that honestly instead of treating it as drift.
+            const startOverflowBelow = Math.max(0, startFooterRect.bottom - scrollportBottom);
+            const startClampExplained = startOverflowBelow <= 0
+                || startFooterRect.top <= containingBlockContentTop + marginTop + 1;
             const overflowAncestors = [];
             let ancestor = footer.parentElement;
             while (ancestor && ancestor !== document.body) {
@@ -281,6 +371,12 @@ async def main():
                 containingBlockTopAtZero,
                 containingBlockBottomAtZero,
                 containingBlockHeight,
+                containingBlockContentTop,
+                containingBlockContentBottom,
+                containingBlockContentLeft,
+                containingBlockContentWidth,
+                containingBlockPadding: { top: cbPadTop, bottom: cbPadBottom, left: cbPadLeft, right: cbPadRight },
+                footerMargin: { top: marginTop, bottom: marginBottom },
                 bottomInset,
                 pinnedTop,
                 releaseAt,
@@ -298,8 +394,11 @@ async def main():
                 stickySamples: pinned,
                 stickyEngagedAtLeastTwice: pinSpan >= 8 && pinned.length >= 2,
                 stickyPinned: pinSpan >= 8 && pinned.length >= 2
-                    && pinned.every(p => p.drift <= 1 && p.insideScrollport && p.insideContainingBlock),
+                    && pinned.every(p => p.drift <= 1 && p.insideScrollport && p.insideContainingBlock
+                        && p.insideContainingBlockHorizontally),
                 footerVisibleAtStart,
+                startOverflowBelow,
+                startClampExplained,
                 footerInScrollport: footerAfterItemScroll.top >= endScrollportTop - 2 && footerAfterItemScroll.bottom <= endScrollportBottom + 2,
                 releasedAtEnd: maxScroll > pinEnd + 8 ? footerAfterItemScroll.bottom < endPinnedBottom - 8 : null,
                 lastItemVisibleAndUncovered,
@@ -309,12 +408,44 @@ async def main():
                     || owner.scrollWidth > owner.clientWidth + 1
                     || footer.scrollWidth > footer.clientWidth + 1
                     || (!!form && form.scrollWidth > form.clientWidth + 1),
+                ownerHorizontalOverflow: owner.scrollWidth > owner.clientWidth + 1,
                 horizontalMetrics: {
                     viewport: { client: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth },
-                    owner: { client: owner.clientWidth, scroll: owner.scrollWidth },
-                    form: form ? { client: form.clientWidth, scroll: form.scrollWidth } : null,
-                    footer: { client: footer.clientWidth, scroll: footer.scrollWidth },
+                    owner: describeBox(owner),
+                    formView: describeBox(document.querySelector('.o_form_view')),
+                    sheet: describeBox(form),
+                    footer: describeBox(footer),
                     footerBox: { left: footerRect.left, right: footerRect.right },
+                    ownerChildren: [...(owner ? owner.children : [])].map(describeBox),
+                    unclippedOverflowNodes: [...(form ? form.querySelectorAll('*') : [])]
+                        .map(el => ({ el, rect: el.getBoundingClientRect() }))
+                        .filter(({ el, rect }) => el.offsetWidth || el.offsetHeight)
+                        .filter(({ el, rect }) => {
+                            const sheetRect = form.getBoundingClientRect();
+                            const outside = rect.right > sheetRect.right + 1 || rect.left < sheetRect.left - 1;
+                            if (!outside) return false;
+                            let n = el.parentElement;
+                            while (n && n !== form) {
+                                const cs = getComputedStyle(n);
+                                if (/(hidden|clip|auto|scroll)/.test(cs.overflowX)) return false;
+                                n = n.parentElement;
+                            }
+                            return true;
+                        })
+                        .map(({ el, rect }) => {
+                            const cs = getComputedStyle(el);
+                            return {
+                                tag: el.tagName,
+                                className: String(el.className || '').slice(0, 120),
+                                left: Math.round(rect.left * 100) / 100,
+                                right: Math.round(rect.right * 100) / 100,
+                                width: Math.round(rect.width * 100) / 100,
+                                computedWidth: cs.width,
+                                minWidth: cs.minWidth,
+                                overflowX: cs.overflowX
+                            };
+                        })
+                        .slice(0, 10),
                     culpritNodes: [...document.querySelectorAll('body *')].map(el => {
                         const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
                         return {
@@ -347,6 +478,8 @@ async def main():
                   result.get("ok") and result.get("maxScroll", 0) >= 40 and result.get("itemCount", 0) >= 10)
             check(f"{form_label}: footer is visible at the start of the scroll contract",
                   result.get("ok") and result.get("footerVisibleAtStart"))
+            check(f"{form_label}: any footer offset at scroll start is the containing-block clamp, not drift",
+                  result.get("ok") and result.get("startClampExplained"))
             check(f"{form_label}: sticky interval derived from normal-flow and containing-block geometry",
                   result.get("ok") and result.get("stickyEngagedAtLeastTwice"))
             check(f"{form_label}: footer remains pinned to scrollport in the derived sticky interval",
@@ -588,6 +721,19 @@ async def main():
               or zoom_before_invoice["dpr"] != zoom_after_invoice["dpr"]
               or zoom_before_invoice["scale"] != zoom_after_invoice["scale"])
         await audit_footer("Invoice browser zoom", "invoice_line_ids")
+        # Control: measure the same shell boxes on a list view we do not style.
+        # If the content area reports the same extra width there, the discrepancy
+        # belongs to the Odoo shell at this emulated zoom level, not to the
+        # transaction footer or the form sheet.
+        await page.goto(f"{BASE}/odoo/action-sale.action_quotations_with_onboarding")
+        await page.wait_for_selector(".o_list_view", timeout=30000)
+        await page.wait_for_timeout(1500)
+        list_control = await page.evaluate(PAGE_BOX_PROBE)
+        print("List view geometry control at emulated 125% zoom:", list_control, flush=True)
+        check("list view control measures shell geometry at emulated zoom",
+              list_control.get("content") is not None
+              and list_control.get("formView") is None
+              and list_control["viewport"]["client"] < 1440)
         await clear_browser_zoom()
 
         await page.goto(f"{BASE}/odoo/action-fleet.fleet_vehicle_action/new")
