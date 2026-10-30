@@ -159,3 +159,9 @@
 - Add dedicated CI database clone fmcg_staging_acceptance and execute actual operator provisioning entrypoint twice; assert two minimal accounts, snapshot identities/hash stable and no secret output. CI-only currency activation remains isolated.
 - Correct operator command to explicitly override Railway PGUSER/PGPASSWORD to Odoo role; no init/role ownership mutation required by provisioning command. Runtime verification awaits new CI SHA.
 - Task managed by agent-codex-pwa at 2026-10-30T07:35:54+07:00
+
+[2026-10-30T11:55:51+07:00] [INFO] Existing demo provisioning adaptation and runtime access evidence
+- Owner-approved scope PR45 on main7d66791; keep3app+Postgres. Observed gateway/PWA staging200, bootstrap404, login200. OAuth variables redacted/no shell, CLI npm check exited1; no backup/install/server provisioning claimed.
+- Add separate exact-target existing-demo guard with backup integrity checks, bounded SHARE locks, scoped non-fixture row preservation and transaction-set checks. Original disposable guard unchanged. Add operator preflight/entrypoint/runbook and CI preservation clone/dump/archive/two runs.
+- Ruff5manifest/diff PASS;5 native regression methods and new shell smoke await CI. No data reset, seed, public DB, merge/deploy or runtime writes; review and actual shell access pending.
+- Task managed by agent-codex-pwa at 2026-10-30T11:55:51+07:00

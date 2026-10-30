@@ -1,0 +1,156 @@
+"""Explicit existing-demo provisioning. No HTTP/RPC entrypoint or reset path."""
+
+import hashlib
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+from psycopg2 import sql
+
+from odoo.exceptions import AccessError, ValidationError
+
+from .staging import _provision_records
+
+TARGET = {
+    "RAILWAY_PROJECT_ID": "569df00d-48e8-411a-93a5-df39ba97f16b",
+    "RAILWAY_ENVIRONMENT_ID": "47b72704-4054-4941-b978-d42c1befca55",
+    "RAILWAY_SERVICE_ID": "56186eb1-eec2-4604-92d3-f449504cba4a",
+}
+PROTECTED = (
+    "res.company",
+    "res.users",
+    "res.partner",
+    "product.template",
+    "product.product",
+    "product.pricelist",
+    "id.principal",
+    "stock.warehouse",
+    "stock.location",
+    "stock.quant",
+    "sale.order",
+    "sale.order.line",
+    "stock.picking",
+    "stock.move",
+    "stock.move.line",
+    "account.move",
+    "account.move.line",
+    "ir.attachment",
+    "id.mobile.office",
+    "id.mobile.workday",
+)
+NO_NEW_TRANSACTIONS = (
+    "sale.order",
+    "sale.order.line",
+    "stock.picking",
+    "stock.move",
+    "stock.move.line",
+    "stock.quant",
+    "account.move",
+    "account.move.line",
+)
+
+
+def verify_backup(backup, database):
+    """Check local archive identity/integrity, NOT restore readiness or consistency."""
+    try:
+        if backup["database"] != database or backup["target"] != TARGET:
+            raise ValueError("scope")
+        created = datetime.fromisoformat(backup["created_at"])
+        if created.tzinfo is None or not 0 <= (datetime.now(timezone.utc) - created).total_seconds() <= 86400:
+            raise ValueError("age")
+        paths = []
+        for key in ("database_dump", "filestore_archive"):
+            entry = backup[key]
+            path = Path(entry["path"])
+            if not path.is_absolute() or path.is_symlink() or not path.is_file() or not path.stat().st_size:
+                raise ValueError("file")
+            digest = hashlib.sha256()
+            with path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            if digest.hexdigest() != entry["sha256"]:
+                raise ValueError("hash")
+            paths.append(path.resolve())
+        if os.path.samefile(paths[0], paths[1]):
+            raise ValueError("same archive")
+    except (KeyError, TypeError, ValueError, OSError) as error:
+        raise AccessError("A matching, recent database AND filestore backup manifest is required.") from error
+
+
+def _excluded(env):
+    owned = {}
+    for marker in env["ir.model.data"].sudo().search([("module", "=", "id_mobile_api_staging")]):
+        owned.setdefault(marker.model, set()).add(marker.res_id)
+    # Native related records belonging to the existing TEST fixtures may be updated.
+    users = env["res.users"].browse(list(owned.get("res.users", set()))).exists()
+    companies = env["res.company"].browse(list(owned.get("res.company", set()))).exists()
+    products = env["product.product"].browse(list(owned.get("product.product", set()))).exists()
+    owned.setdefault("res.partner", set()).update((users.partner_id | companies.partner_id).ids)
+    owned.setdefault("product.template", set()).update(products.product_tmpl_id.ids)
+    return owned
+
+
+def protected_snapshot(env):
+    if not env.su:
+        raise AccessError("Only the operator shell may inspect the preservation baseline.")
+    env.flush_all()
+    excluded = _excluded(env)
+    result = {}
+    for model in PROTECTED:
+        if model not in env:
+            continue
+        table = env[model]._table
+        env.cr.execute(sql.SQL("SELECT id, to_jsonb(t)::text FROM {} t ORDER BY id").format(sql.Identifier(table)))
+        result[model] = {
+            row_id: hashlib.sha256(value.encode()).hexdigest()
+            for row_id, value in env.cr.fetchall()
+            if row_id not in excluded.get(model, set())
+        }
+    return result
+
+
+def _assert_preserved(env, before):
+    after = protected_snapshot(env)
+    for model, rows in before.items():
+        if any(after[model].get(row_id) != digest for row_id, digest in rows.items()):
+            raise ValidationError("Non-fixture records changed; provisioning was rolled back.")
+        if model in NO_NEW_TRANSACTIONS and after[model] != rows:
+            raise ValidationError("Provisioning created business transactions; changes were rolled back.")
+
+
+def provision_existing_demo(env, *, expected_database, opt_in, backup, passwords):
+    if (
+        not env.su
+        or opt_in != "PRESERVE_EXISTING_DEMO"
+        or not expected_database
+        or env.cr.dbname != expected_database
+        or os.environ.get("PGDATABASE") != expected_database
+        or any(os.environ.get(key) != value for key, value in TARGET.items())
+        or len(passwords) != 2
+        or any(not isinstance(p, str) or len(p) < 12 for p in passwords)
+        or passwords[0] == passwords[1]
+    ):
+        raise AccessError("Exact Railway demo target, database, opt-in and distinct test passwords are required.")
+    verify_backup(backup, expected_database)
+    with env.cr.savepoint():
+        # Serialize writes to the preservation tables for this short operator
+        # transaction. Reads remain available; competing writers cause a bounded
+        # lock timeout instead of silently invalidating the before/after proof.
+        env.flush_all()
+        env.cr.execute("SET LOCAL lock_timeout = '5s'")
+        tables = sorted({env[model]._table for model in PROTECTED if model in env})
+        env.cr.execute(
+            sql.SQL("LOCK TABLE {} IN SHARE MODE").format(sql.SQL(", ").join(sql.Identifier(table) for table in tables))
+        )
+        before = protected_snapshot(env)
+        accounts = _provision_records(env, passwords=passwords)
+        _assert_preserved(env, before)
+        digest = hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest()
+    return {
+        "database": expected_database,
+        "mode": "existing-demo-preserve",
+        "accounts": accounts,
+        "protected_baseline_sha256": digest,
+        "protected_models": sorted(before),
+    }
