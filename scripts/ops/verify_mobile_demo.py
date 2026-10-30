@@ -63,6 +63,7 @@ with tempfile.TemporaryDirectory() as directory:
         "FMCG_DEMO_PASSWORD_2": secrets.token_urlsafe(24),
     }
     with patch.dict(os.environ, runtime):
+        runpy.run_path("/opt/scripts/ops/mobile_demo_preflight.py", init_globals={"env": env})
         for _attempt in range(2):
             runpy.run_path("/opt/scripts/ops/provision_mobile_demo.py", init_globals={"env": env})  # noqa: F821
             after = protected_snapshot(env)  # noqa: F821

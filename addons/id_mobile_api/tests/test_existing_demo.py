@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
+from odoo import Command
 from odoo.exceptions import AccessError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
@@ -100,3 +101,19 @@ class TestExistingDemo(MobileFixture, TransactionCase):
         with patch.dict(os.environ, self.runtime), self.assertRaises(ValidationError):
             self.run_provision()
         self.assertEqual(before, protected_snapshot(self.env))
+
+    def test_unexpected_operator_group_change_is_rolled_back(self):
+        group = self.env["res.groups"].create({"name": "Unexpected operator privilege"})
+
+        def mutated(*args, **kwargs):
+            result = _provision_records(*args, **kwargs)
+            self.env.user.group_ids = [Command.link(group.id)]
+            return result
+
+        with (
+            patch.dict(os.environ, self.runtime),
+            patch("odoo.addons.id_mobile_api.existing_demo._provision_records", side_effect=mutated),
+            self.assertRaises(ValidationError),
+        ):
+            self.run_provision()
+        self.assertNotIn(group, self.env.user.group_ids)

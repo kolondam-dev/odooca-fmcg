@@ -1,5 +1,10 @@
 # HANDOFF
 
+## 2026-10-30 — agent-codex-pwa — Native company-creation scope audit follow-up
+**Bukti kandidatfd113dd:** native Odoo65 tests0failed/1error: before/after guard menolak native technical-user mutation saatcompanycreate, sehingga tidak memberi falsePASS. Sumber resmi Odoo19 res_company.create mengonfirmasi automatic company_ids link padaoperator/SUPERUSER_ID (serta grup UI multi-company). Tidak mengganti create/write_date untuk menyembunyikan efek.
+**Perbaikan:** preservasi row users tetap semua field selain write_uid/write_date khusus dua user teknis; audit harus penulis operator/waktu tidakmundur. Native tambahan company hanyaTEST dan grup hanyaUI multi-company; userexisting lain exactscope. Ringkasan melaporkan tambahanmembership; regresi unexpectedoperatorgroup ditambahkan. Preflight memisahkan latest_version(database) dari installed_version(disk) mengikuti sourceir_module Odoo19, dan entrypointpreflight kini diuji di shellCI.
+**Status:**6 metode regression, shell-preservation/two-run/preflight menunggu SHA baru. Ruff5manifest/diff PASS. Tetap belumbackup/install/provision pada Railway; actualshellblocked. Reviewdiperlukansebelumruntime.
+
 ## 2026-10-30 — agent-codex-pwa — Adaptasi provisioning existing demo (scope PR45)
 **Mandat/basis:** owner meneruskan setup supervisor dan otorisasi production demo tetap berlaku. Basis main7d66791; pertahankan3app+Postgres. Pembacaan platform/HTTPS menemukan gateway/PWA staging aktif, bootstrap404 dan login200; bukan E2E PASS. OAuth hanya nama variable/tidak shell; CLI npm check exit1, tidak ada CLI auth yang bisa dipakai. Tidak meminta persetujuan scope ulang.
 **Berubah:** jalur provisioning existing terpisah, exact project/environment/service/database + opt-in, backup DB/filestore nyata berbeda/recent/hash-bound, SHARE locks20 tabel preservasi dengan timeout5s, perbandingan row non-fixture dan zero new business transactions; perubahan tak diharapkan rollback. Guard disposable PR44 tidak diubah. Tambah readonly preflight, entrypoint demo, runbook dan CI clone dengan contact/SO/file existing, dump/archive nyata serta dua run operator.

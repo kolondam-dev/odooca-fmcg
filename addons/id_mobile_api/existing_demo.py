@@ -8,6 +8,7 @@ from pathlib import Path
 
 from psycopg2 import sql
 
+from odoo import SUPERUSER_ID
 from odoo.exceptions import AccessError, ValidationError
 
 from .staging import _provision_records
@@ -101,7 +102,19 @@ def protected_snapshot(env):
         if model not in env:
             continue
         table = env[model]._table
-        env.cr.execute(sql.SQL("SELECT id, to_jsonb(t)::text FROM {} t ORDER BY id").format(sql.Identifier(table)))
+        if model == "res.users":
+            # Native res.company.create links the new company to its operator
+            # and SUPERUSER_ID. Preserve their real audit timestamp; verify the
+            # exact additive company/group change separately below.
+            env.cr.execute(
+                sql.SQL(
+                    "SELECT id, (CASE WHEN id = ANY(%s) THEN to_jsonb(t) - 'write_date' - 'write_uid' "
+                    "ELSE to_jsonb(t) END)::text FROM {} t ORDER BY id"
+                ).format(sql.Identifier(table)),
+                ([env.uid, SUPERUSER_ID],),
+            )
+        else:
+            env.cr.execute(sql.SQL("SELECT id, to_jsonb(t)::text FROM {} t ORDER BY id").format(sql.Identifier(table)))
         result[model] = {
             row_id: hashlib.sha256(value.encode()).hexdigest()
             for row_id, value in env.cr.fetchall()
@@ -114,9 +127,44 @@ def _assert_preserved(env, before):
     after = protected_snapshot(env)
     for model, rows in before.items():
         if any(after[model].get(row_id) != digest for row_id, digest in rows.items()):
-            raise ValidationError("Non-fixture records changed; provisioning was rolled back.")
+            raise ValidationError(f"Non-fixture records changed in {model}; provisioning was rolled back.")
         if model in NO_NEW_TRANSACTIONS and after[model] != rows:
-            raise ValidationError("Provisioning created business transactions; changes were rolled back.")
+            raise ValidationError(f"Provisioning created transactions in {model}; changes were rolled back.")
+
+
+def _user_scope(env):
+    return {
+        user.id: {
+            "companies": set(user.company_ids.ids),
+            "groups": set(user.group_ids.ids),
+            "audit": (user.write_uid.id, user.write_date),
+        }
+        for user in env["res.users"].with_context(active_test=False).search([])
+    }
+
+
+def _assert_user_scope(env, before, accounts):
+    after = _user_scope(env)
+    if set(after) != set(before) | {item["user_id"] for item in accounts}:
+        raise ValidationError("Unexpected user creation; provisioning was rolled back.")
+    companies = {item["company_id"] for item in accounts}
+    multi = env.ref("base.group_multi_company").id
+    for user_id, old in before.items():
+        # Fixture accounts are checked by the existing minimal-group builder.
+        if user_id in {item["user_id"] for item in accounts}:
+            continue
+        if user_id in (env.uid, SUPERUSER_ID):
+            if after[user_id]["companies"] != old["companies"] | companies or not old["groups"] <= after[user_id][
+                "groups"
+            ] <= old["groups"] | {multi}:
+                raise ValidationError("Unexpected operator scope change; provisioning was rolled back.")
+            writer, at = after[user_id]["audit"]
+            if after[user_id]["audit"] != old["audit"] and (
+                writer != env.uid or not at or (old["audit"][1] and at < old["audit"][1])
+            ):
+                raise ValidationError("Unexpected operator audit metadata; provisioning was rolled back.")
+        elif after[user_id] != old:
+            raise ValidationError("Existing user access changed; provisioning was rolled back.")
 
 
 def provision_existing_demo(env, *, expected_database, opt_in, backup, passwords):
@@ -144,8 +192,19 @@ def provision_existing_demo(env, *, expected_database, opt_in, backup, passwords
             sql.SQL("LOCK TABLE {} IN SHARE MODE").format(sql.SQL(", ").join(sql.Identifier(table) for table in tables))
         )
         before = protected_snapshot(env)
+        scopes = _user_scope(env)
         accounts = _provision_records(env, passwords=passwords)
         _assert_preserved(env, before)
+        _assert_user_scope(env, scopes, accounts)
+        after_scopes = _user_scope(env)
+        operator_changes = [
+            {
+                "user_id": uid,
+                "added_company_ids": sorted(after_scopes[uid]["companies"] - scopes[uid]["companies"]),
+                "added_group_ids": sorted(after_scopes[uid]["groups"] - scopes[uid]["groups"]),
+            }
+            for uid in sorted({env.uid, SUPERUSER_ID})
+        ]
         digest = hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest()
     return {
         "database": expected_database,
@@ -153,4 +212,5 @@ def provision_existing_demo(env, *, expected_database, opt_in, backup, passwords
         "accounts": accounts,
         "protected_baseline_sha256": digest,
         "protected_models": sorted(before),
+        "native_operator_scope_changes": operator_changes,
     }

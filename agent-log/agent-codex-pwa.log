@@ -165,3 +165,8 @@
 - Add separate exact-target existing-demo guard with backup integrity checks, bounded SHARE locks, scoped non-fixture row preservation and transaction-set checks. Original disposable guard unchanged. Add operator preflight/entrypoint/runbook and CI preservation clone/dump/archive/two runs.
 - Ruff5manifest/diff PASS;5 native regression methods and new shell smoke await CI. No data reset, seed, public DB, merge/deploy or runtime writes; review and actual shell access pending.
 - Task managed by agent-codex-pwa at 2026-10-30T11:55:51+07:00
+
+[2026-10-30T12:05:16+07:00] [INFO] Native company technical-user audit and preflight version semantics
+- Candidatefd113dd actual Odoo65 tests0failed/1error: guard rejected native company-create operator update. Official Odoo19 source confirms company linking to operator/SUPERUSER_ID; permit only TEST company addition and optional multi-company UI group, retain/check real audit metadata. All other existing-user scopes remain exact; unexpected group regression added.
+- Preflight database version uses latest_version and disk version installed_version per official ir_module source; execute preflight in CI shell smoke.6 regression methods and positive smoke await follow-up CI. No server mutation or scope approval request.
+- Task managed by agent-codex-pwa at 2026-10-30T12:05:16+07:00

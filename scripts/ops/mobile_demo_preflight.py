@@ -28,7 +28,8 @@ print(
             },
             "mobile_module": {
                 "state": module.state if module else "not_listed",
-                "installed_version": module.installed_version if module else None,
+                "installed_version": module.latest_version if module else None,
+                "disk_version": module.installed_version if module else None,
             },
             "counts": {
                 model: env[model].sudo().with_context(active_test=False).search_count([])
