@@ -3,6 +3,7 @@ import { FieldStore } from "../storage/store";
 import { Icon } from "./Icon";
 import { CheckinMap } from "./CheckinMap";
 import type { MapSite } from "../domain/checkin-map";
+import { CameraViewfinder, type CameraCaptureResult } from "./CameraViewfinder";
 import {
     assertLocalEvidence,
     type EvidenceReference,
@@ -47,6 +48,64 @@ export function EvidenceCapture({
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [preview, setPreview] = useState("");
+    const [showCamera, setShowCamera] = useState(false);
+
+    async function onCameraCapture(res: CameraCaptureResult) {
+        const ticket = ++generation.current;
+        report(undefined);
+        setFile(res.blob);
+        setDisplay(res.blob);
+        setSelectedAt(new Date(res.timestamp).toISOString());
+        setLocation({
+            coords: {
+                latitude: res.latitude,
+                longitude: res.longitude,
+                accuracy: res.accuracy,
+                altitude: null,
+                altitudeAccuracy: null,
+                heading: null,
+                speed: null,
+            },
+            timestamp: res.timestamp,
+        } as GeolocationPosition);
+        setError("");
+        setBusy(true);
+
+        const id = crypto.randomUUID();
+        const capturedAt = new Date().toISOString();
+        try {
+            const ref = {
+                id,
+                latitude: res.latitude,
+                longitude: res.longitude,
+                accuracy: res.accuracy,
+                capturedAt,
+            };
+            const packaged = await renderEvidencePackage(
+                res.blob,
+                owner,
+                ref,
+                new Date(res.timestamp).toISOString(),
+                new Date(res.timestamp).toISOString(),
+                true,
+            );
+            if (generation.current === ticket) {
+                await store.saveEvidence(packaged);
+                setMap(packaged.visual?.map);
+                setDisplay(packaged.blob);
+                report(ref);
+            }
+        } catch (e) {
+            if (generation.current === ticket) {
+                setError(
+                    e instanceof Error ? e.message : "Gagal menyimpan bukti.",
+                );
+                report(undefined);
+            }
+        } finally {
+            if (generation.current === ticket) setBusy(false);
+        }
+    }
     const generation = useRef(0);
     const selfChange = useRef<string | undefined>(undefined);
     function report(ref?: EvidenceRef) {
@@ -270,18 +329,46 @@ export function EvidenceCapture({
                 </button>
             )}
             {!readOnly && (
-                <label class="upload">
-                    <Icon name="camera" /> Ambil foto
+                <>
+                    <button
+                        type="button"
+                        class="camera-open-btn"
+                        onClick={() => setShowCamera(true)}
+                        disabled={busy}
+                    >
+                        <Icon name="camera" size={20} />
+                        <span>Buka Kamera Bukti</span>
+                    </button>
                     <input
                         aria-label="Foto bukti"
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
                         capture="environment"
+                        style={{ display: "none" }}
                         onChange={(e) =>
                             void selectFile(e.currentTarget.files?.[0])
                         }
                     />
-                </label>
+                    {showCamera && (
+                        <CameraViewfinder
+                            title="Ambil Foto Bukti Lapangan"
+                            outletName={mapSite?.name}
+                            defaultCoordinates={
+                                mapSite
+                                    ? {
+                                          latitude: mapSite.latitude,
+                                          longitude: mapSite.longitude,
+                                      }
+                                    : undefined
+                            }
+                            onCapture={(res) => {
+                                setShowCamera(false);
+                                void onCameraCapture(res);
+                            }}
+                            onClose={() => setShowCamera(false)}
+                        />
+                    )}
+                </>
             )}
             {preview && (
                 <img
