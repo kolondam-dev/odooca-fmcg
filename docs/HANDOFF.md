@@ -1,5 +1,15 @@
 # HANDOFF
 
+## 2026-10-30 — agent-codex-pwa — Provisioning shell positive-path gate
+**Berubah:** CI menyalin ci_db yang sudah teruji ke database disposable fmcg_staging_acceptance, lalu menjalankan entrypoint provisioning operator dua kali dengan password random tidak dicetak. Gate memverifikasi dua akun, scope/master TEST dan snapshot/idempotensi tanpa mengaktifkan currency di database asal. Unit/native test tetap terpisah.
+**Koreksi runbook:** raw Odoo shell pada Railway harus override PGUSER/PGPASSWORD ke Odoo role (env admin Postgres bisa mengalahkan config). Command tidak memanggil init/reset/ALTER role. Tidak mengeksekusi ini di Railway; CI baru menunggu.
+
+## 2026-10-30 — agent-codex-pwa — Paket staging master kantor/maps/provisioning
+**Mandat/basis:** owner meminta bantuan menyiapkan sisa staging/master kantor/akun/acceptance perangkat setelah PR43 PASS. PR43 terpantau merged 6cccbf2 selama sesi; basis diselaraskan ke main itu. Pemeriksaan Railway read-only menemukan production saja, serta deployment production berubah oleh proses lain; agen ini tidak deploy.
+**Berubah:** master id.mobile.office admin-only (company, koordinat/radius, status test/unverified/verified dan catatan sumber), office opsional pada assignment/snapshot dan hash versinya. Preview staging memilih kantor/outlet server, GPS nyata tanpa fallback, volatile dan generation guard. Provisioning shell guarded database disposable membuat dua akun capture minimal dan fixture/assignment harian, tidak mengambil alih login existing. Gateway Docker Railway memakai authority HTTPS konstan, Host allowlist, private upstream dan API allowlist existing; ditambah CI smoke transport.
+**Bukti lokal:**327 unit,hosting,typecheck/contracts/format,Ruff5manifest,shell syntax,3 build/budget PASS.5 metode native ORM baru dan3 skenario browser phone/tablet ditambahkan; native Odoo/gateway Docker/browser final menunggu CI. Tidak mengklaim hasil fixture sama dengan actual staging/device acceptance.
+**Batas/menunggu:**dokumen STAGING_ACCEPTANCE_KIT.md dan STAGING_DEVICE_ACCEPTANCE.md menyiapkan urutan deploy/provision/uji. Koordinat kantor nyata belum diketahui; fixture TEST bukan master verified. Belum create environment, buat/reset akun server, deployment, check-in backend/POD atau remote bypass server. Live terkunci, evidence strict; review dan instruksi deployment terpisah.
+
 ## 2026-10-30 — agent-codex-pwa — Preview maps check-in kantor dan outlet
 **Klarifikasi owner:** maps dimaksudkan pada check-in kantor/outlet, bukan hanya evidence mandiri. PR43 diperluas dari keputusan acceptance menjadi implementasi preview demo; tidak membuat backend check-in.
 **Berubah:** komponen display-only dengan titik tujuan/perangkat, radius/akurasi, jarak/status geometris, zoom/fit dan basemap OpenStreetMap opt-in dengan attribution. Kantor fixture eksplisit berlabel; outlet memakai paket PJP demo. Callback sumber GPS membedakan fallback demo dari perangkat. Tile hanya viewport, cache browser normal, tanpa prefetch/offline pack atau perubahan paket foto. Error/timeout tile terlihat. Mode relaxed demo existing tetap; strict backend PR42 tidak dilonggarkan.

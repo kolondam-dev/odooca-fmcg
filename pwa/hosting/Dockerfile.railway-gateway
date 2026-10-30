@@ -1,0 +1,6 @@
+FROM nginx:1.28-alpine
+COPY hosting/staging-locations.conf hosting/railway-gateway.conf.template /opt/gateway/
+COPY hosting/railway-gateway-entrypoint.sh /opt/gateway/entrypoint.sh
+ENV PORT=8080
+EXPOSE 8080
+ENTRYPOINT ["/bin/sh", "/opt/gateway/entrypoint.sh"]
