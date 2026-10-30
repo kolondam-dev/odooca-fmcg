@@ -1209,3 +1209,13 @@
 - [P4] Dokumentasi: DEMO_EXISTING_ACTIVATION.md dan HANDOFF.md diperbarui mencakup aturan preservasi stock location native Odoo 19.
 - Integritas Baseline: 15 CSV register kanonikal di data/registers/ 100% beku. ruff check PASS (0 error), check_manifests PASS (5 addon).
 - Task managed by antigravity at 2026-10-30T17:15:00+07:00
+
+
+[2026-10-30T17:22:00+07:00] [INFO] Resolusi Idempotensi Run 2 Preservasi Partner dan Stock Location PR #47
+- [P1] Analisis Akar Masalah Run 2: Pada eksekusi run kedua verify_mobile_demo.py (idempotency smoke), snapshot mentah _partner_company_property_snapshot dan _raw_model_snapshot(stock.location) memuat seluruh baris tabel termasuk baris fixture yang sudah dibuat pada run pertama (outlet_1, outlet_2, warehouse location). Saat _provision_records berjalan di run kedua, owned() memanggil record.write(values) pada fixture miliknya sendiri sehingga write_date fixture terbarui. Guard preservasi _assert_partner_company_properties_preserved memeriksa baris fixture tersebut dan salah mengidentifikasinya sebagai perubahan kontak existing (karena outlet bukan company partner).
+- [P2] Perbaikan & Pengetatan:
+  * Menambahkan pengecekan if partner_id in excluded_partners: continue pada _assert_partner_company_properties_preserved, selaras dengan pengecualian fixture di protected_snapshot dan _assert_user_scope.
+  * Menambahkan pengecekan if row_id in excluded_locations: continue pada _assert_stock_locations_preserved.
+  * Seluruh kontak existing non-fixture dan lokasi non-fixture tetap 100% terkunci dan tidak boleh mengalami perubahan apa pun.
+- [P3] Integritas: ruff check PASS (0 error), check_manifests PASS (5 addon).
+- Task managed by antigravity at 2026-10-30T17:22:00+07:00

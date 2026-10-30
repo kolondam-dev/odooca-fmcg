@@ -1,5 +1,16 @@
 # HANDOFF
 
+## 2026-10-30T17:22:00+07:00 — antigravity agent — Resolusi Idempotensi Run 2 Preservasi Partner dan Stock Location PR #47
+**Akar Masalah Kegagalan CI Run 2 (run 41039403435):**
+- Pada eksekusi run 2 `verify_mobile_demo.py`, `_partner_company_property_snapshot` membaca seluruh baris `res_partner` termasuk outlet fixture hasil run 1 (`outlet_1`, `outlet_2`).
+- Ketika `_provision_records` mengeksekusi `owned()` pada run 2, ia melakukan `write()` pembaruan pada outlet fixture miliknya sendiri, memperbarui `write_date`.
+- `_assert_partner_company_properties_preserved` mendeteksi perbedaan timestamp audit pada outlet fixture (yang bukan company partner), dan melempar: `ValidationError: Unexpected existing partner audit change; provisioning was rolled back.`
+
+**Perbaikan:**
+- Menambahkan pengecualian `if partner_id in excluded_partners: continue` pada `_assert_partner_company_properties_preserved` dan `if row_id in excluded_locations: continue` pada `_assert_stock_locations_preserved`.
+- Selaras dengan `protected_snapshot` dan `_assert_user_scope`: record fixture milik modul staging (`id_mobile_api_staging`) dikecualikan dari guard preservasi data operasional existing.
+- Seluruh partner customer/vendor existing dan lokasi gudang non-fixture tetap 100% beku dan diaudit ketat.
+
 ## 2026-10-30T17:15:00+07:00 — antigravity agent — Resolusi Preservasi Native Stock Location pada Existing Demo Provisioning PR #47
 **Akar Masalah Kegagalan CI (run 41032163302):**
 - Pada job `install-test` langkah `Existing-demo provisioning preservation smoke`, clone database single-company `fmcg_demo_acceptance` (berasal dari `ci_db`) membuat company baru (`STAGING TEST Company`) via `_provision_records()`.

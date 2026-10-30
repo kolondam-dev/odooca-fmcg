@@ -205,12 +205,15 @@ def _assert_partner_company_properties_preserved(env, before, existing_company_i
     if len(newly_created_fixture_ids) > 1:
         raise ValidationError("Unexpected TEST company creation; provisioning was rolled back.")
 
+    excluded_partners = _excluded(env).get("res.partner", set())
     existing_company_partners = _existing_company_partner_ids(env, existing_company_ids)
     inter_company_location_id = env.ref("stock.stock_location_inter_company").id
     fields = ("property_stock_customer", "property_stock_supplier")
     partners_with_expected_property_additions = set()
 
     for partner_id, old_fields in before.items():
+        if partner_id in excluded_partners:
+            continue
         new_fields = after.get(partner_id)
         if new_fields is None:
             raise ValidationError("Existing partner row disappeared; provisioning was rolled back.")
@@ -256,9 +259,12 @@ def _assert_stock_locations_preserved(env, before, existing_company_ids):
     if len(newly_created_fixture_ids) > 1:
         raise ValidationError("Unexpected TEST company creation; provisioning was rolled back.")
 
+    excluded_locations = _excluded(env).get("stock.location", set())
     system_loc_ids = _system_transit_location_ids(env)
     changes = []
     for row_id, old_row in before.items():
+        if row_id in excluded_locations:
+            continue
         new_row = after.get(row_id)
         if new_row is None:
             raise ValidationError("Existing stock location disappeared; provisioning was rolled back.")
