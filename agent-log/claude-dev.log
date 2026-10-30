@@ -23,3 +23,12 @@
 - Belum diuji: skrip snapshot terhadap Railway; CI di GitHub (status hijau hanya dari log AntiGravity); loader di DB berisi transaksi.
 - Tidak mengubah kode agen lain; perbaikan diusulkan sebagai M1a-M1c di dokumen review.
 - Task managed by claude-dev agent at 2026-10-25T09:24:46+07:00
+
+[2026-10-30T18:34:41+07:00] [INFO] PR #36: perbaikan akar sticky/overflow + regression audit
+- Akar mobile: aturan footer di bawah body.id-shell-sidebar, sedangkan kelas dilepas saat ui.isSmall; footer kini global .o_form_view.
+- Akar pinned: top sticky tidak punya ruang di containing block; kembali ke bottom:0 dan interval diturunkan dari normal-flow/containing-block/bottom inset.
+- Akar invoice: kolom total colspan=4 + margin negatif; .oe_invoice_lines_tab jadi sticky, narration+total ditumpuk penuh, margin negatif dihapus.
+- Audit: ancestor sticky unik (nested ditolak), list/kanban, visibility awal, release, actionability, zoom CDP 125% terverifikasi.
+- Regression: test_smoke_javascript (node --check blok JS produksi), test_footer_audit_fixture (bottom-sticky pinned/released), compile SCSS libsass 0.23.0.
+- Lokal PASS: ruff, check_manifests.py, compile SCSS, node --check, fixture Chromium (flat + nested). Runtime Odoo/CI final belum; tidak merge/deploy.
+- Task managed by claude-dev agent at 2026-10-30T18:34:41+07:00

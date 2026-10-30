@@ -1,3 +1,15 @@
+## 2026-10-30T18:34:41+07:00 — PR #36: perbaikan akar sticky/overflow + regression audit
+
+PR #36 (branch `agen/ui-footer-transaction-layout-v1`): audit log CI `2c694f8` menunjukkan `stickyGroupCount=0` di mobile karena aturan footer berada di bawah `body.id-shell-sidebar` (kelas dilepas saat `ui.isSmall`), drift SO karena `top` sticky tidak pernah pinned di containing block pendek, dan overflow invoice dari kolom total `colspan=4` plus margin negatif.
+
+Perubahan: aturan footer dipindah ke scope `.o_form_view` (berlaku sidebar/klasik/mobile); sticky kembali `bottom: 0`; padding-bottom `100vh` dihapus; invoice memakai `.oe_invoice_lines_tab` sebagai elemen sticky dengan narration+total ditumpuk penuh tanpa margin negatif. Audit Playwright mengukur interval bottom-sticky dari normal-flow (sticky dimatikan sementara), batas containing block, dan `bottom` inset; audit menerima baris list maupun kartu kanban, memeriksa visibility awal, release, actionability, dan menolak nested sticky. Zoom diemulasikan via CDP dan diverifikasi metriknya berubah.
+
+Regression baru: `test_smoke_javascript.py` (`node --check` blok JS produksi) dan `test_footer_audit_fixture.py` (fixture bottom-sticky pinned/released + nested ditolak). `ruff`, `check_manifests.py`, compile SCSS libsass 0.23.0, dan fixture Chromium lokal PASS.
+
+**Belum terverifikasi:** run CI/browser pada SHA final, termasuk SO/invoice desktop/mobile/zoom. PR tetap draft/HOLD; tidak merge/deploy.
+
+Task Managed by agent claude-dev at 2026-10-30T18:34:41+07:00
+
 ## 2026-10-29T16:28:00+07:00 — sinkronisasi aman PR #36 dan keputusan diskon native
 
 PR #36: pemilik memilih opsi B — gunakan ringkasan diskon native Odoo yang benar-benar tersedia; tidak membuat field diskon dokumen atau formula agregat baru. Rule engine diskon/promo, management, dashboard, konfigurasi, dan approval workflow berada di luar scope demo. Semantik diskon/promo bukan lagi blocker UI.

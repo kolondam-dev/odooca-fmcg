@@ -17,6 +17,13 @@ class TestFormStylesCompile(unittest.TestCase):
         self.assertIn(".oe_subtotal_footer", css)
         self.assertIn("width: 32rem;", css)
         self.assertIn("max-width: 100%;", css)
+        # Footer must use bottom-sticky containment (not the top offset that
+        # could never pin inside the short containing block).
+        self.assertIn("position: sticky !important;", css)
+        self.assertIn("bottom: 0 !important;", css)
+        # Invoice totals live in a narrow colspan column; the tab must be the
+        # sticky element and stack the columns to avoid horizontal overflow.
+        self.assertIn(".o_form_view .o_form_sheet .oe_invoice_lines_tab", css)
 
 
 if __name__ == "__main__":

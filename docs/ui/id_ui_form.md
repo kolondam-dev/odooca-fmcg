@@ -102,3 +102,22 @@ Smoke UI pada PR #36 mengungkap bahwa `max-width: min(100%, 32rem)` gagal dikomp
 The CI fixture now creates a populated draft invoice from a confirmed 18-line order and prints runtime evidence for the installed modules, registry fields, XMLIDs, and resolved Sales Order/invoice form architecture. Playwright uses one geometry audit for `order_line` and `invoice_line_ids`: it calculates the sticky threshold from the natural footer position and scrollport geometry, checks multiple samples after engagement, requires exactly one sticky footer group, and tests the last row's visibility/uncovered area plus trial-click actionability. A hidden-row negative control rejects a row entirely above the scrollport. Overflow is measured at page, form, scroll owner, and footer levels. Invoice checks run at desktop, mobile viewport, and browser zoom.
 
 **Not yet verified:** these checks and runtime audit require a fresh successful GitHub Actions run; the latest SHA currently has no run/check evidence exposed by the connector. The fixture changes the CI install set to include `sale_management`, `account`, `fleet`, and `l10n_id` because the smoke uses Sales, invoice, and vehicle forms. The owner has selected option B: use only the native Odoo discount summary available from the resolved model/view. Discount/promotion semantics are no longer a UI blocker; CI, runtime model/view audit, and browser scroll/footer evidence remain technical gates. No merge/deploy.
+
+### Koreksi sticky/overflow hasil audit runtime — 2026-10-30
+
+Audit CI pada HEAD `2c694f8` menunjukkan tiga akar masalah, bukan toleransi tes:
+
+1. Seluruh aturan footer berada di bawah `body.id-shell-sidebar`. Kelas itu dilepas `id_sidebar.js` saat `ui.isSmall`, sehingga di viewport mobile tidak ada grup sticky (`stickyGroupCount=0`). Aturan footer dipindah keluar scope sidebar agar berlaku juga di mobile dan tata letak klasik.
+2. Sticky sempat memakai `top: calc(100vh - 300px)`. Containing block grup total hanya menyisakan sekitar 16px ruang, sehingga kotak tidak pernah benar-benar pinned; audit lama lalu mengambil sampel di luar fase sticky. Footer kembali memakai `position: sticky; bottom: 0`, dan interval pinned diturunkan dari geometri normal-flow (sticky dimatikan sementara), batas containing block, serta `bottom` inset.
+3. Pada invoice, grup total adalah kolom `colspan=4` di samping narration; margin inline negatif menambah overflow. Tab `.oe_invoice_lines_tab` kini menjadi elemen sticky (setara group catatan pada SO), kolom narration+total ditumpuk penuh, dan margin negatif dihapus.
+
+Audit Playwright sekarang:
+
+- Mengumpulkan seluruh ancestor sticky dari `.oe_subtotal_footer` dan menolak lebih dari satu (nested sticky).
+- Menerima baris list desktop maupun kartu kanban mobile (minimal 10 item) dan menguji trial click tanpa force.
+- Mengukur pinned bottom terhadap scrollport bottom pada interval `[pinStart, pinEnd]`, visibility di awal, release setelah interval, serta keterjangkauan item terakhir.
+- Mengemulasikan zoom browser 125% lewat CDP `Emulation.setDeviceMetricsOverride` (1152x688 CSS px, DPR 1.25) dan membuktikan metrik browser berubah; bukan sekadar menekan Ctrl+Equal.
+
+Regression: `test_smoke_javascript.py` mengekstrak blok JavaScript produksi dan menjalankan `node --check`; `test_footer_audit_fixture.py` menjalankan fungsi audit produksi pada fixture bottom-sticky terkontrol (pinned lalu released) dan menolak nested sticky; `test_form_scss_compile.py` menjaga kontrak bottom-sticky dan tab invoice.
+
+**Belum terverifikasi:** hasil ini masih memerlukan run CI/browser aktual pada SHA final. Tidak merge/deploy.
