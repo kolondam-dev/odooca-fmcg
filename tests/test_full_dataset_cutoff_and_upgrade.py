@@ -300,6 +300,26 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
         target_line.debit = orig_debit
         audit_database_against_oracle_august(mock_env, oracle, prior_july_aml_snapshot=july_amls_snapshot)
 
+        # PROBE SUPERVISOR P1: Outbound Source Location Corruption pada Audit Agustus
+        SM = mock_env["stock.move"]
+        aug_target_mv = next(
+            m for m in SM.search([("state", "=", "done")])
+            if getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
+            and not getattr(m, "origin_returned_move_id", False)
+            and getattr(m, "account_move_id", None)
+        )
+        sup_loc = next(
+            loc for loc in mock_env["stock.location"].search([])
+            if getattr(loc, "usage", "") == "supplier"
+        )
+        orig_mv_loc = aug_target_mv.location_id
+        aug_target_mv.location_id = sup_loc
+        with self.assertRaises(AssertionError) as ctx:
+            audit_database_against_oracle_august(mock_env, oracle, prior_july_aml_snapshot=july_amls_snapshot)
+        self.assertIn("VIOLATION OUTBOUND SOURCE", str(ctx.exception))
+        aug_target_mv.location_id = orig_mv_loc
+        audit_database_against_oracle_august(mock_env, oracle, prior_july_aml_snapshot=july_amls_snapshot)
+
     def test_deep_state_snapshot_detects_field_modifications(self):
         """Membuktikan probe supervisor: modifikasi product_id, location_id, atau datetime move line terdeteksi."""
         mock_env = setup_standard_mock_env()
@@ -425,6 +445,35 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
             resolve_canonical_locations(mock_env)
         self.assertIn("ambigu atau tidak ditemukan", str(ctx.exception))
 
+        # 3. Counterexample Supervisor P2: Canonical company tidak ditemukan, env.company adalah Unrelated ID 999
+        env_foreign = setup_standard_mock_env()
+        # Kosongkan store res.company lalu buat unrelated company saja
+        env_foreign["res.company"].store.clear()
+        unrelated_comp = env_foreign["res.company"].create({"name": "Unrelated Company", "code": "OTHER"})
+        env_foreign.company = unrelated_comp
+        with self.assertRaises(LookupError) as ctx:
+            resolve_canonical_company(env_foreign)
+        self.assertIn("Canonical company ('FMCG' / 'PT Salva Inti Mandiri') tidak ditemukan", str(ctx.exception))
+
+        # 4. Counterexample Supervisor P2: Canonical company ada, tapi tidak ada warehouse WH (hanya lone AUX)
+        env_aux = setup_standard_mock_env()
+        # Hapus warehouse WH, ganti dengan lone AUX
+        env_aux["stock.warehouse"].store.clear()
+        aux_loc = env_aux["stock.location"].create({
+            "name": "Auxiliary Stock",
+            "usage": "internal",
+            "company_id": env_aux.company.id,
+        })
+        env_aux["stock.warehouse"].create({
+            "name": "Auxiliary Depot",
+            "code": "AUX",
+            "lot_stock_id": aux_loc,
+            "company_id": env_aux.company,
+        })
+        with self.assertRaises(LookupError) as ctx:
+            resolve_canonical_locations(env_aux)
+        self.assertIn("Warehouse gudang utama ('code'='WH') ambigu atau tidak ditemukan", str(ctx.exception))
+
     def test_exact_hpp_journal_binding_rejects_wrong_journal_account_direction_or_reuse(self):
         """Audit HPP produksi wajib menolak jurnal non-STJ, arah debit-kredit terbalik, nominal salah, atau reuse."""
         mock_env = setup_standard_mock_env()
@@ -505,6 +554,18 @@ class TestFullDatasetCutoffAndUpgrade(unittest.TestCase):
             or "unconsumed" in str(ctx.exception)
         )
         target_mv.account_move_id = orig_am
+
+        # 5. Outbound source location corruption (supplier location / foreign internal)
+        sup_loc = next(
+            loc for loc in mock_env["stock.location"].search([])
+            if getattr(loc, "usage", "") == "supplier"
+        )
+        orig_src_loc = target_mv.location_id
+        target_mv.location_id = sup_loc
+        with self.assertRaises(AssertionError) as ctx:
+            audit_database_against_oracle_july(mock_env, oracle)
+        self.assertIn("VIOLATION OUTBOUND SOURCE", str(ctx.exception))
+        target_mv.location_id = orig_src_loc
 
 
 if __name__ == "__main__":

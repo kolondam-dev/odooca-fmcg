@@ -1,5 +1,38 @@
 # HANDOFF
 
+## 2026-10-30T12:15:00+07:00 — antigravity agent — Resolusi Audit Supervisi PR #39 Putaran 5: Validasi Arah Fisik Source Outbound dan Determinisme Fail-Closed Resolver
+**Konteks Review Supervisor ([issuecomment-6515188630](https://github.com/kolondam-dev/odooca-fmcg/pull/39#issuecomment-6515188630)):**
+- Status PR #39: HOLD / changes required (Full runtime SUCCESS pada run 40986984211, 8 mutasi savepoint REJECTED_AS_EXPECTED, baseline pulih, carry-forward 48 DO/invoice, Run 2 zero-drift, dan seluruh 9 job CI PR resmi DITERIMA dan TERBUKTI).
+- Catatan reviewer yang diselesaikan:
+  1. [P1] Arah fisik source outbound belum diverifikasi: Audit menerima pergerakan supplier -> customer sebagai outbound kanonikal yang memiliki HPP sah. Wajib periksa source usage == 'internal' dan location_id == wh_stock_loc.id secara eksplisit pada setiap move pengiriman selesai (baik di audit Juli maupun Agustus). Tambahkan probe in-database savepoint untuk korupsi lokasi asal outbound.
+  2. [P2] Resolver masih fail-open saat company/WH kanonikal tidak ditemukan: Hapus fallback env.company dan heuristik gudang not other. Jika identitas kanonikal hilang atau tidak unik, wajib raise LookupError deterministik.
+  3. Sinkronisasi dengan origin/main: Mengintegrasikan PR #45 (7d66791, keputusan lingkup demo production), membersihkan trailing whitespace, dan memperbarui body PR.
+
+**Perbaikan yang Diimplementasikan:**
+1. **[P1] Verifikasi Arah Fisik Source Outbound Move (scripts/ops/verify_disposable_full.py):**
+   - Menambahkan validasi ketat pada setiap stock.move pengiriman pelanggan di penutupan Juli dan pembukaan Agustus:
+     * m.location_id.usage == 'internal' (gagal seketika jika source adalah vendor/supplier, customer, atau inventory adjustment).
+     * m.location_id.id == wh_stock_loc.id (gagal seketika jika source bukan gudang kanonikal WH Maumbi).
+     * m.location_dest_id.usage == 'customer'.
+     * Jika move memiliki picking_id, memverifikasi picking.state == 'done' dan picking_type_id.code == 'outgoing'.
+   - Menambahkan **Probe 9 (Outbound Source Location Corruption)** pada in-database fault-injection runner: mengubah location_id stock move pengiriman selesai ke lokasi vendor/supplier di dalam savepoint. Auditor produksi terbukti menolak seketika dengan AssertionError (VIOLATION OUTBOUND SOURCE), dan baseline pulih 100% setelah rollback.
+2. **[P2] Eliminasi Seluruh Fallback & Fail-Closed Deterministic Resolver (scripts/ops/verify_disposable_full.py):**
+   - Menghapus fallback ambient env.company pada resolve_canonical_company(env): kueri wajib menemukan tepat 1 entitas dengan code == 'FMCG' atau name == 'PT Salva Inti Mandiri', atau raise LookupError.
+   - Menghapus heuristik warehouse not other dan fallback ke kueri stock.location generik pada resolve_canonical_locations(env): wajib menemukan tepat 1 gudang dengan code == 'WH' pada canonical company, atau raise LookupError.
+3. **[P3] Penambahan Unit Test Suite (	ests/test_full_dataset_cutoff_and_upgrade.py):**
+   - Memperbarui test_canonical_location_resolver_rejects_ambiguity_and_foreign_company: memvalidasi penolakan saat canonical company tidak ada (meskipun ada env.company ID 999), dan penolakan saat gudang utama WH tidak ada (meskipun ada lone AUX depot).
+   - Memperbarui test_exact_hpp_journal_binding_rejects_wrong_journal_account_direction_or_reuse: memvalidasi penolakan terhadap move berlokasi asal supplier pada audit Juli.
+   - Menambahkan pengujian pada test_july_historical_closing_immutability_detects_value_modifications: memvalidasi penolakan terhadap move berlokasi asal supplier pada audit Agustus.
+4. **[P4] Kerapihan Whitespace & Sinkronisasi Git:**
+   - Membersihkan trailing whitespace pada docs/reviews/FULL_DATASET_RUNNER_AND_CUTOFF_PLAN.md.
+   - Merge commit origin/main (7d66791, PR #45) selesai dan bersih.
+5. **Hasil Verifikasi Lokal:**
+   - python -m ruff check .: PASS (0 errors).
+   - python scripts/check_manifests.py: PASS (5 addon terverifikasi).
+   - python -m unittest tests.test_full_dataset_cutoff_and_upgrade: Seluruh suite lulus 100%.
+   - 15 CSV register kanonikal di data/registers/: 100% beku tanpa perubahan satu byte pun.
+
+
 ## 2026-10-30T08:38:00+07:00 — antigravity agent — Resolusi Multi-Move Picking pada Exact HPP Binding & Attribution Audit
 **Konteks & Root Cause CI Run 40982532223:**
 - Pada validasi delivery order di Odoo 19 `stock_account`, pengiriman dengan banyak baris produk (*multi-line picking*) menghasilkan satu *header* `account.move` (`STJ/...`) yang memuat beberapa pasang baris AML debit `510000` dan credit `113000` (satu pasang per `stock.move`).
@@ -98,21 +131,21 @@ esolve_canonical_locations(env).
 ot getattr(m, 'origin_returned_move_id', False).
    - Menambahkan asersi ketat jumlah outbound move: ssert len(done_out_moves) == 2650 pada penutupan Juli dan ssert len(done_out_moves) == 2738 pada pembukaan Agustus (persis sama dengan jumlah baris order lines kanonikal).
    - Memvalidasi setiap outbound move memiliki singular ccount_move_id berstatus posted dengan debit COGS 510000 dan credit Persediaan 113000.
-3. **[P1-3] In-Database Fault-Injection (cr.savepoint) di Runner Produksi (scripts/ops/verify_disposable_full.py & 	ests/test_canonical_loader_adapter.py):**
+3. **[P1-3] In-Database Fault-Injection (cr.savepoint) di Runner Produksi (scripts/ops/verify_disposable_full.py & tests/test_canonical_loader_adapter.py):**
    - Menambahkan Fase 1B di erify_disposable_full.py untuk mengeksekusi 6 mutasi counterexample langsung pada database via with env.cr.savepoint(): (SKU physical swap, dummy lot substitution, reserved SKU swap, COGS binding unlink, balanced AML tampering +500k, dan cross-cutoff August invoice injection).
    - Seluruh 6 mutasi terbukti memicu AssertionError dan di-rollback bersih via savepoint, dengan verifikasi ulang baseline pristine.
    - Hasil dicatat ke dalam 
 eport['runtime_negative_mutations'] dan disajikan pada Markdown summary.
-   - Menambahkan method savepoint(self) pada MockCursor di 	ests/test_canonical_loader_adapter.py agar kompatibel penuh dengan pola context manager Odoo nyata.
+   - Menambahkan method savepoint(self) pada MockCursor di tests/test_canonical_loader_adapter.py agar kompatibel penuh dengan pola context manager Odoo nyata.
 4. **[P1-4] Pengujian Komprehensif (8/8 PASS):**
-   - Seluruh 8 pengujian di 	ests/test_full_dataset_cutoff_and_upgrade.py terbukti 100% LULUS (8/8 PASS).
+   - Seluruh 8 pengujian di tests/test_full_dataset_cutoff_and_upgrade.py terbukti 100% LULUS (8/8 PASS).
 
 **Hasil Verifikasi Lokal:**
 - 
 uff check .: PASS (0 errors).
 - python scripts/check_manifests.py: PASS (5 addon).
 - erify_seed_invariants.py & erify_seed_acceptance.py: PASS.
-- 	ests/test_full_dataset_cutoff_and_upgrade.py: PASS (8/8 tests).
+- tests/test_full_dataset_cutoff_and_upgrade.py: PASS (8/8 tests).
 - 15 CSV register kanonikal di data/registers/ 100% beku.
 
 ## 2026-10-29T18:30:00+07:00 — antigravity agent — Pembuktian Penuh Runtime Sukses 100% pada Odoo 19 Disposable & Resolusi Izin Penulisan Artifact Laporan

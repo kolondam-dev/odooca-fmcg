@@ -1,6 +1,6 @@
 # Rencana Runner Full Dataset Disposable dan Protokol Cut-Off Dua Periode
 
-**Status:** Diajukan oleh `antigravity` agent (2026-10-29).  
+**Status:** Diajukan oleh `antigravity` agent (2026-10-29).
 **Konteks Baseline:** Dokumen `full_dataset_runner_and_cutoff_plan.md` pernah dirujuk pada catatan handoff/riwayat agen terdahulu, tetapi setelah diaudit secara menyeluruh di git history dan working tree, berkas tersebut belum pernah di-commit ke repositori. Dokumen ini menyusun proposal kanonikal lengkap berdasarkan source code aktual, register beku (`fae5835`), dan kontrak invariant `docs/reviews/SEED_INVARIANT_CONTRACT.md`.
 
 ---

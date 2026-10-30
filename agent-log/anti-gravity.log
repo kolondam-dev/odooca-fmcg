@@ -1181,3 +1181,10 @@
 - [P1-3] Penajaman Probe 7 In-Database Savepoint: Memastikan m2 yang dipilih pada mutasi HPP cross-binding berasal dari picking/move yang berbeda (m2.account_move_id != m1.account_move_id), sehingga perubahan binding benar-benar menguji kegagalan audit.
 - [P1-4] Verifikasi Lokal: 10/10 test di test_full_dataset_cutoff_and_upgrade.py lulus (termasuk 8 in-database savepoint mutation probes). ruff check PASS, check_manifests PASS.
 - Task managed by antigravity at 2026-10-30T08:38:00+07:00
+
+[2026-10-30T12:15:00+07:00] [INFO] Resolusi Audit Supervisi PR #39 Putaran 5: Validasi Arah Fisik Source Outbound dan Determinisme Fail-Closed Resolver
+- [P1-1] Validasi Arah Fisik Source Outbound (scripts/ops/verify_disposable_full.py): Memvalidasi bahwa setiap move pengiriman selesai di audit Juli dan Agustus memiliki source location usage 'internal' dan lokasi ID persis sama dengan gudang kanonikal WH Maumbi. Menolak move vendor/supplier -> customer.
+- [P1-2] In-Database Fault-Injection Probe 9: Menambahkan Probe 9 yang memalsukan source location stock move pengiriman selesai ke lokasi vendor/supplier di dalam savepoint. Terbukti 100% REJECTED_AS_EXPECTED dan di-rollback bersih.
+- [P2-1] Eliminasi Fail-Open Resolver: Menghapus fallback env.company dan heuristik gudang 'not other'. Resolver kini murni fail-closed dengan LookupError jika company atau warehouse kanonikal tidak unik atau tidak ditemukan.
+- [P3-1] Sinkronisasi Main & Kerapihan Whitespace: Sinkronisasi commit main 7d66791 (PR #45), membersihkan trailing whitespace, dan memperbarui suite test unit.
+- Task managed by antigravity at 2026-10-30T12:15:00+07:00

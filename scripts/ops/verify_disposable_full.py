@@ -595,9 +595,6 @@ def resolve_canonical_company(env):
         elif len(matches) > 1:
             raise LookupError(f"[canonical_company] Ditemukan {len(matches)} canonical company kandidat (wajib tepat 1)!")
 
-    if not company and hasattr(env, "company") and env.company:
-        company = env.company
-
     if not company:
         raise LookupError("[canonical_company] Canonical company ('FMCG' / 'PT Salva Inti Mandiri') tidak ditemukan!")
 
@@ -607,7 +604,7 @@ def resolve_canonical_company(env):
 def resolve_canonical_locations(env, company=None):
     """Menyelesaikan lokasi gudang internal dan karantina secara deterministik scoped ke canonical company.
 
-    Menolak warehouse/lokasi company lain dan fail-closed jika terdapat ambiguitas (cardinality != 1).
+    Menolak warehouse/lokasi company lain dan fail-closed jika terdapat ambiguitas atau ketidaksesuaian identitas (cardinality != 1).
     Mengembalikan: (wh_stock_loc, quarantine_loc, canonical_company)
     """
     if company is None:
@@ -623,17 +620,9 @@ def resolve_canonical_locations(env, company=None):
             wh_domain.append(("company_id", "=", company_id))
         wh_matches = _iter_records(StockWarehouse.search(wh_domain))
 
-        # Jika tidak ditemukan dengan code 'WH', cari warehouse milik company yang bukan 'other'
-        if not wh_matches:
-            c_domain = [("company_id", "=", company_id)] if company_id else []
-            wh_matches = [
-                w for w in _iter_records(StockWarehouse.search(c_domain))
-                if getattr(w, "lot_stock_id", None) and "other" not in str(getattr(w, "name", "")).lower()
-            ]
-
         if len(wh_matches) != 1:
             raise LookupError(
-                f"[canonical_locations] Warehouse gudang utama ambigu atau tidak ditemukan untuk company {company_id}: "
+                f"[canonical_locations] Warehouse gudang utama ('code'='WH') ambigu atau tidak ditemukan untuk company {company_id}: "
                 f"ditemukan {len(wh_matches)} kandidat (wajib tepat 1)!"
             )
         wh = wh_matches[0]
@@ -649,21 +638,6 @@ def resolve_canonical_locations(env, company=None):
                     f"[canonical_locations] lot_stock_id warehouse '{wh.name}' berasal dari company ID {loc_comp_id}, "
                     f"diharapkan company ID {company_id}!"
                 )
-
-    # Fallback pencarian langsung ke stock.location internal scoped ke company
-    if not wh_stock_loc and "stock.location" in env:
-        StockLocation = env["stock.location"].sudo()
-        loc_domain = [("usage", "=", "internal")]
-        if company_id:
-            loc_domain.append(("company_id", "in", [company_id, False]))
-        candidates = _iter_records(StockLocation.search(loc_domain))
-        explicit_names = ("WH/Stock", "Stock", "Gudang Utama Maumbi")
-        matched = [c for c in candidates if str(getattr(c, "name", "")).strip() in explicit_names]
-        if len(matched) != 1:
-            raise LookupError(
-                f"[canonical_locations] Lokasi gudang utama internal tidak unik: ditemukan {len(matched)} kandidat!"
-            )
-        wh_stock_loc = matched[0]
 
     if not wh_stock_loc:
         raise LookupError("[canonical_locations] Lokasi gudang internal utama tidak ditemukan!")
@@ -877,6 +851,7 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
     if "stock.move" in env:
         SM = env["stock.move"].sudo()
         # Non-vacuous check: boolean check 'not m.origin_returned_move_id' tahan terhadap empty recordset
+        # Validasi arah fisik pengiriman: outbound harus berasal dari lokasi internal gudang kanonikal menuju pelanggan
         done_out_moves = [
             m for m in _iter_records(SM.search([("state", "=", "done")]))
             if not getattr(m, "origin_returned_move_id", False)
@@ -889,6 +864,30 @@ def audit_database_against_oracle_july(env, oracle: FullDatasetCanonicalOracle):
         )
         seen_aml_ids = set()
         for m in done_out_moves:
+            # Validasi arah fisik pergerakan kanonikal
+            src_loc = getattr(m, "location_id", None)
+            assert src_loc and getattr(src_loc, "id", None), f"Stock move {m.id} tidak memiliki location_id!"
+            assert getattr(src_loc, "usage", "") == "internal", (
+                f"VIOLATION OUTBOUND SOURCE: Stock move pengiriman {m.id} memiliki source usage '{getattr(src_loc, 'usage', '')}', wajib 'internal'!"
+            )
+            assert src_loc.id == wh_stock_loc.id, (
+                f"VIOLATION OUTBOUND SOURCE: Stock move pengiriman {m.id} berasal dari lokasi {src_loc.id} ('{getattr(src_loc, 'name', '')}'), "
+                f"bukan gudang kanonikal {wh_stock_loc.id} ('{getattr(wh_stock_loc, 'name', '')}')!"
+            )
+
+            dest_loc = getattr(m, "location_dest_id", None)
+            assert dest_loc and getattr(dest_loc, "usage", "") == "customer", (
+                f"VIOLATION OUTBOUND DESTINATION: Stock move pengiriman {m.id} memiliki destination usage '{getattr(dest_loc, 'usage', '')}', wajib 'customer'!"
+            )
+
+            # Validasi picking delivery order
+            picking = getattr(m, "picking_id", None)
+            if picking:
+                assert getattr(picking, "state", "") == "done", f"Picking {getattr(picking, 'name', '')} pada move {m.id} belum 'done'!"
+                p_type = getattr(getattr(picking, "picking_type_id", None), "code", "")
+                if p_type:
+                    assert p_type == "outgoing", f"Picking {getattr(picking, 'name', '')} picking_type '{p_type}', wajib 'outgoing'!"
+
             am = getattr(m, "account_move_id", None)
             assert am and getattr(am, "id", None), (
                 f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
@@ -1134,6 +1133,7 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
 
     if "stock.move" in env:
         SM = env["stock.move"].sudo()
+        # Validasi arah fisik pengiriman: outbound harus berasal dari lokasi internal gudang kanonikal menuju pelanggan
         done_out_moves = [
             m for m in _iter_records(SM.search([("state", "=", "done")]))
             if not getattr(m, "origin_returned_move_id", False)
@@ -1146,6 +1146,30 @@ def audit_database_against_oracle_august(env, oracle: FullDatasetCanonicalOracle
         )
         seen_aml_ids = set()
         for m in done_out_moves:
+            # Validasi arah fisik pergerakan kanonikal
+            src_loc = getattr(m, "location_id", None)
+            assert src_loc and getattr(src_loc, "id", None), f"Stock move {m.id} tidak memiliki location_id!"
+            assert getattr(src_loc, "usage", "") == "internal", (
+                f"VIOLATION OUTBOUND SOURCE: Stock move pengiriman {m.id} memiliki source usage '{getattr(src_loc, 'usage', '')}', wajib 'internal'!"
+            )
+            assert src_loc.id == wh_stock_loc.id, (
+                f"VIOLATION OUTBOUND SOURCE: Stock move pengiriman {m.id} berasal dari lokasi {src_loc.id} ('{getattr(src_loc, 'name', '')}'), "
+                f"bukan gudang kanonikal {wh_stock_loc.id} ('{getattr(wh_stock_loc, 'name', '')}')!"
+            )
+
+            dest_loc = getattr(m, "location_dest_id", None)
+            assert dest_loc and getattr(dest_loc, "usage", "") == "customer", (
+                f"VIOLATION OUTBOUND DESTINATION: Stock move pengiriman {m.id} memiliki destination usage '{getattr(dest_loc, 'usage', '')}', wajib 'customer'!"
+            )
+
+            # Validasi picking delivery order
+            picking = getattr(m, "picking_id", None)
+            if picking:
+                assert getattr(picking, "state", "") == "done", f"Picking {getattr(picking, 'name', '')} pada move {m.id} belum 'done'!"
+                p_type = getattr(getattr(picking, "picking_type_id", None), "code", "")
+                if p_type:
+                    assert p_type == "outgoing", f"Picking {getattr(picking, 'name', '')} picking_type '{p_type}', wajib 'outgoing'!"
+
             am = getattr(m, "account_move_id", None)
             assert am and getattr(am, "id", None), (
                 f"Stock move pengiriman {m.id} ({getattr(m, 'name', '')}) wajib memiliki binding singular account_move_id!"
@@ -1533,6 +1557,40 @@ def run_real_negative_mutations_on_database(env, oracle: FullDatasetCanonicalOra
                     "rejection_message": str(exc),
                 }
                 print(f"   [Probe 8 PASS] HPP Debit-Credit Direction Swap sukses ditolak: {exc}")
+
+    # 9. Mutasi: Outbound Move Source Location Corruption (supplier / foreign location)
+    if SM is not None and "stock.location" in env:
+        StockLoc = env["stock.location"].sudo()
+        sup_loc = next((
+            loc for loc in _iter_records(StockLoc.search([("usage", "=", "supplier")]))
+        ), None)
+        out_mv_src = next((
+            m for m in _iter_records(SM.search([("state", "=", "done")]))
+            if not getattr(m, "origin_returned_move_id", False)
+            and not getattr(m, "is_inventory", False)
+            and getattr(getattr(m, "location_dest_id", None), "usage", "") == "customer"
+        ), None)
+        if out_mv_src and sup_loc:
+            try:
+                with _db_savepoint():
+                    if has_sp and hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                        env.cr.execute(
+                            "UPDATE stock_move SET location_id = %s WHERE id = %s",
+                            [sup_loc.id, out_mv_src.id],
+                        )
+                        if hasattr(env, "invalidate_all"):
+                            env.invalidate_all()
+                    else:
+                        out_mv_src.write({"location_id": sup_loc})
+                    audit_database_against_oracle_july(env, oracle)
+                    raise RuntimeError("Mutasi outbound source location lolos audit tanpa penolakan!")
+            except AssertionError as exc:
+                results["probe_9_outbound_source_corruption"] = {
+                    "status": "REJECTED_AS_EXPECTED",
+                    "description": f"Ubah source location stock move {out_mv_src.id} ke lokasi supplier {sup_loc.id}",
+                    "rejection_message": str(exc),
+                }
+                print(f"   [Probe 9 PASS] Outbound Source Location Corruption sukses ditolak: {exc}")
 
     # Verifikasi ulang baseline: pastikan database kembali bersih 100% setelah seluruh probe di-rollback
     audit_database_against_oracle_july(env, oracle)
