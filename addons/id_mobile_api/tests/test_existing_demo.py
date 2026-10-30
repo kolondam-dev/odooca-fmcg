@@ -181,3 +181,59 @@ class TestExistingDemo(MobileFixture, TransactionCase):
         ):
             self.run_provision()
         self.assertNotIn(group, self.env.user.group_ids)
+
+    def test_inter_company_location_activation_on_company_creation(self):
+        inter_loc = self.env.ref("stock.stock_location_inter_company")
+        inter_loc.write({"active": False})
+        existing_company_ids = set(self.env["res.company"].search([]).ids)
+        existing_company_partners = set(
+            self.env["res.company"].browse(list(existing_company_ids)).mapped("partner_id").ids
+        )
+        before = protected_snapshot(self.env, normalize_partner_audit_ids=existing_company_partners)
+        with patch.dict(os.environ, self.runtime):
+            first = self.run_provision()
+            self.assertTrue(inter_loc.active)
+            second = self.run_provision()
+            self.assertTrue(inter_loc.active)
+        self.assertEqual(first["accounts"], second["accounts"])
+        after = protected_snapshot(
+            self.env,
+            normalize_company_property_company_ids=fixture_company_ids(self.env),
+            normalize_partner_audit_ids=existing_company_partners,
+        )
+        for model, rows in before.items():
+            self.assertTrue(all(after[model].get(row_id) == digest for row_id, digest in rows.items()), model)
+
+    def test_unexpected_stock_location_mutation_is_rejected_and_rolled_back(self):
+        lot_stock = self.warehouse.lot_stock_id
+        original_name = lot_stock.name
+
+        def mutated(*args, **kwargs):
+            result = _provision_records(*args, **kwargs)
+            lot_stock.name = "Tampered Warehouse Location"
+            return result
+
+        with (
+            patch.dict(os.environ, self.runtime),
+            patch("odoo.addons.id_mobile_api.existing_demo._provision_records", side_effect=mutated),
+            self.assertRaises(ValidationError),
+        ):
+            self.run_provision()
+        self.assertEqual(lot_stock.name, original_name)
+
+    def test_unexpected_inter_company_location_mutation_is_rejected_and_rolled_back(self):
+        inter_loc = self.env.ref("stock.stock_location_inter_company")
+        original_name = inter_loc.name
+
+        def mutated(*args, **kwargs):
+            result = _provision_records(*args, **kwargs)
+            inter_loc.name = "Tampered Inter Company Transit"
+            return result
+
+        with (
+            patch.dict(os.environ, self.runtime),
+            patch("odoo.addons.id_mobile_api.existing_demo._provision_records", side_effect=mutated),
+            self.assertRaises(ValidationError),
+        ):
+            self.run_provision()
+        self.assertEqual(inter_loc.name, original_name)

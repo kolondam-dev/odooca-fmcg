@@ -1,5 +1,26 @@
 # HANDOFF
 
+## 2026-10-30T17:15:00+07:00 — antigravity agent — Resolusi Preservasi Native Stock Location pada Existing Demo Provisioning PR #47
+**Akar Masalah Kegagalan CI (run 41032163302):**
+- Pada job `install-test` langkah `Existing-demo provisioning preservation smoke`, clone database single-company `fmcg_demo_acceptance` (berasal dari `ci_db`) membuat company baru (`STAGING TEST Company`) via `_provision_records()`.
+- Odoo 19 Stock secara native mengaktifkan lokasi transit global inter-company (`stock.stock_location_inter_company` record ID 3) dari `active=False` menjadi `active=True` serta memperbarui `write_date` dan `write_uid`.
+- Guard preservasi sebelumnya mendeteksi perubahan tersebut pada tabel `stock.location` dan melakukan rollback:
+  `ValidationError: Non-fixture records changed in stock.location (3:active,write_date); provisioning was rolled back.`
+
+**Perbaikan & Pengetatan Kontrak:**
+1. **Helper & Normalisasi Snapshot Terbatas (`existing_demo.py`):**
+   - Menambahkan helper `_system_transit_location_ids(env)` untuk mengidentifikasi lokasi transit/virtual sistem global (`stock.stock_location_inter_company`, `stock.stock_location_locations_virtual`).
+   - Pada `protected_snapshot()`, kolom `active`, `write_date`, dan `write_uid` dikecualikan dari hash JSONB hanya untuk lokasi transit sistem global tersebut. Seluruh atribut struktural (name, complete_name, usage, location_id, company_id) tetap diaudit dan di-hash secara ketat.
+2. **Asersi Ketat Preservasi Lokasi (`_assert_stock_locations_preserved`):**
+   - Memvalidasi bahwa transisi `active` HANYA diizinkan dari `False` ke `True` (aktivasi), HANYA untuk lokasi sistem global tanpa company (`company_id=False`, `usage in ('transit', 'view')`), dan HANYA saat ada company fixture baru yang dibuat.
+   - Memvalidasi audit `write_uid` adalah operator atau SUPERUSER_ID, dan `write_date` tidak mundur.
+   - Deaktivasi (`True -> False`), perubahan pada lokasi gudang internal existing (`usage == 'internal'`), perubahan nama/usage, ataupun perubahan apa pun pada run kedua (idempotensi) dilarang keras dan melempar `ValidationError`.
+3. **Pengujian Regresi & Negatif Tambahan (`addons/id_mobile_api/tests/test_existing_demo.py`):**
+   - `test_inter_company_location_activation_on_company_creation`: Memverifikasi aktivasi dari `active=False` berjalan sukses dan run kedua idempoten dengan hash row 100% terjaga.
+   - `test_unexpected_stock_location_mutation_is_rejected_and_rolled_back`: Memverifikasi bahwa mutasi pada lokasi gudang internal existing (WH/Stock) ditolak dan di-rollback.
+   - `test_unexpected_inter_company_location_mutation_is_rejected_and_rolled_back`: Memverifikasi bahwa mutasi nama lokasi transit inter-company ditolak dan di-rollback.
+4. **Verifikasi Statis:** `ruff check .` PASS (0 errors), `scripts/check_manifests.py` PASS (5 addon).
+
 ## 2026-10-30 — agent-codex-pwa — Diagnose stock.location preservation failure
 CI install-test on 1c9234f fails after native TEST company provisioning: `Non-fixture records changed in stock.location`. The earlier partner-property P1 is no longer the failing guard. Added field-name-only diagnostics for pre-existing stock.location rows; no row values are emitted. This is diagnostic instrumentation, not an exemption or weakening of the preservation rule. Next action is inspect exact row IDs/changed columns from CI, then implement only a narrowly justified native side-effect allowance or reject the provisioning if existing stock data is genuinely altered.
 ## 2026-10-30 — agent-codex-pwa — Narrow native partner audit metadata side effect

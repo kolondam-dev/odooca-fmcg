@@ -1194,3 +1194,18 @@
 - [P2-2] Verifikasi Unit Test Regresi: Menambahkan skenario uji kasus 5 (explicit binding config parameter) dan kasus 6 (explicit binding XMLID) pada test_canonical_location_resolver_rejects_ambiguity_and_foreign_company di tests/test_full_dataset_cutoff_and_upgrade.py. Seluruh 10 pengujian suite lulus 100% (termasuk 9 in-database savepoint mutation probes).
 - Integritas Baseline: 15 CSV register kanonikal di data/registers/ 100% beku. ruff check PASS (0 errors), check_manifests PASS (5 addon).
 - Task managed by antigravity at 2026-10-30T13:20:00+07:00
+
+
+[2026-10-30T17:15:00+07:00] [INFO] Resolusi Preservasi Native Stock Location pada Existing Demo Provisioning PR #47
+- [P1] Analisis Akar Masalah: Pada saat database single-company (seperti ci_db / fmcg_demo_acceptance) membuat company baru (STAGING TEST Company), Odoo 19 native Stock otomatis mengaktifkan lokasi transit global inter-company (stock.stock_location_inter_company dan parent virtual view) dari active=False menjadi active=True serta memperbarui write_date/write_uid. Guard preservasi mentah sebelumnya menolak aktivasi native ini sebagai drift.
+- [P2] Perbaikan Guard Preservasi & Snapshot:
+  * Menambahkan helper _system_transit_location_ids(env) yang mendeteksi ID lokasi sistem global tanpa company (stock.stock_location_inter_company dan stock.stock_location_locations_virtual).
+  * Pada protected_snapshot(): mengecualikan 'active', 'write_date', 'write_uid' hanya untuk lokasi transit sistem tersebut; seluruh field struktural (name, complete_name, usage, location_id, company_id) tetap diaudit dan di-hash secara ketat.
+  * Menambahkan asersi ketat _assert_stock_locations_preserved(env, before, existing_company_ids): memverifikasi bahwa perubahan active hanya diizinkan untuk lokasi sistem transit tanpa company (company_id=False, usage in ('transit', 'view')), hanya dari False -> True (aktivasi saat company baru dibuat), audit write_uid=operator/superuser dengan timestamp tidak mundur, dan menolak keras setiap perubahan field struktural, deaktivasi (True -> False), mutasi lokasi internal/gudang existing, ataupun perubahan pada run kedua.
+- [P3] Penambahan Unit Test Regresi & Negatif:
+  * test_inter_company_location_activation_on_company_creation: membuktikan aktivasi inter-company transit berjalan mulus pada run 1 dan idempoten/preservasi hash utuh pada run 2.
+  * test_unexpected_stock_location_mutation_is_rejected_and_rolled_back: membuktikan mutasi lokasi gudang internal existing (WH/Stock) ditolak dengan ValidationError dan di-rollback bersih.
+  * test_unexpected_inter_company_location_mutation_is_rejected_and_rolled_back: membuktikan pemalsuan nama inter-company transit ditolak dan di-rollback bersih.
+- [P4] Dokumentasi: DEMO_EXISTING_ACTIVATION.md dan HANDOFF.md diperbarui mencakup aturan preservasi stock location native Odoo 19.
+- Integritas Baseline: 15 CSV register kanonikal di data/registers/ 100% beku. ruff check PASS (0 error), check_manifests PASS (5 addon).
+- Task managed by antigravity at 2026-10-30T17:15:00+07:00

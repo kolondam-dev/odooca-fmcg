@@ -132,6 +132,15 @@ def _existing_company_partner_ids(env, company_ids):
     return set(env["res.company"].browse(list(company_ids)).exists().mapped("partner_id").ids)
 
 
+def _system_transit_location_ids(env):
+    loc_ids = []
+    for xml_id in ("stock.stock_location_inter_company", "stock.stock_location_locations_virtual"):
+        loc = env.ref(xml_id, raise_if_not_found=False)
+        if loc:
+            loc_ids.append(loc.id)
+    return set(loc_ids)
+
+
 def protected_snapshot(env, *, normalize_company_property_company_ids=(), normalize_partner_audit_ids=()):
     if not env.su:
         raise AccessError("Only the operator shell may inspect the preservation baseline.")
@@ -159,6 +168,15 @@ def protected_snapshot(env, *, normalize_company_property_company_ids=(), normal
                     "ELSE to_jsonb(t) END)::text FROM {} t ORDER BY id"
                 ).format(sql.Identifier(table)),
                 (audit_ids,),
+            )
+        elif model == "stock.location":
+            system_location_ids = list(_system_transit_location_ids(env))
+            env.cr.execute(
+                sql.SQL(
+                    "SELECT id, (CASE WHEN id = ANY(%s) THEN to_jsonb(t) - 'write_date' - 'write_uid' - 'active' "
+                    "ELSE to_jsonb(t) END)::text FROM {} t ORDER BY id"
+                ).format(sql.Identifier(table)),
+                (system_location_ids,),
             )
         else:
             env.cr.execute(sql.SQL("SELECT id, to_jsonb(t)::text FROM {} t ORDER BY id").format(sql.Identifier(table)))
@@ -231,8 +249,53 @@ def _assert_partner_company_properties_preserved(env, before, existing_company_i
             raise ValidationError("Unexpected existing partner audit change; provisioning was rolled back.")
 
 
+def _assert_stock_locations_preserved(env, before, existing_company_ids):
+    after = _raw_model_snapshot(env, "stock.location")
+    fixture_ids = fixture_company_ids(env)
+    newly_created_fixture_ids = fixture_ids - set(existing_company_ids)
+    if len(newly_created_fixture_ids) > 1:
+        raise ValidationError("Unexpected TEST company creation; provisioning was rolled back.")
+
+    system_loc_ids = _system_transit_location_ids(env)
+    changes = []
+    for row_id, old_row in before.items():
+        new_row = after.get(row_id)
+        if new_row is None:
+            raise ValidationError("Existing stock location disappeared; provisioning was rolled back.")
+
+        changed_fields = sorted(
+            key for key in set(old_row) | set(new_row) if old_row.get(key) != new_row.get(key)
+        )
+        if not changed_fields:
+            continue
+
+        if (
+            row_id in system_loc_ids
+            and newly_created_fixture_ids
+            and old_row.get("active") is False
+            and new_row.get("active") is True
+            and not old_row.get("company_id")
+            and not new_row.get("company_id")
+            and old_row.get("usage") in ("transit", "view")
+            and new_row.get("usage") in ("transit", "view")
+            and set(changed_fields) <= {"active", "write_date", "write_uid"}
+            and new_row.get("write_uid") in (env.uid, SUPERUSER_ID)
+            and (not old_row.get("write_date") or new_row.get("write_date") >= old_row.get("write_date"))
+        ):
+            continue
+
+        changes.append(f"{row_id}:{','.join(changed_fields)}")
+
+    if changes:
+        detail = "; ".join(changes[:20])
+        raise ValidationError(
+            f"Non-fixture records changed in stock.location ({detail}); provisioning was rolled back."
+        )
+
+
 def _assert_preserved(env, before, partner_properties_before, existing_company_ids, stock_location_before):
     _assert_partner_company_properties_preserved(env, partner_properties_before, existing_company_ids)
+    _assert_stock_locations_preserved(env, stock_location_before, existing_company_ids)
     newly_created_fixture_ids = fixture_company_ids(env) - set(existing_company_ids)
     existing_company_partners = _existing_company_partner_ids(env, existing_company_ids)
     after = protected_snapshot(
@@ -242,23 +305,6 @@ def _assert_preserved(env, before, partner_properties_before, existing_company_i
     )
     for model, rows in before.items():
         if any(after[model].get(row_id) != digest for row_id, digest in rows.items()):
-            if model == "stock.location":
-                location_after = _raw_model_snapshot(env, "stock.location")
-                changes = []
-                for row_id, old_row in stock_location_before.items():
-                    new_row = location_after.get(row_id)
-                    if new_row is None:
-                        changes.append(f"{row_id}:deleted")
-                        continue
-                    changed_fields = sorted(
-                        key for key in set(old_row) | set(new_row) if old_row.get(key) != new_row.get(key)
-                    )
-                    if changed_fields:
-                        changes.append(f"{row_id}:{','.join(changed_fields)}")
-                detail = "; ".join(changes[:20]) or "unidentified"
-                raise ValidationError(
-                    f"Non-fixture records changed in stock.location ({detail}); provisioning was rolled back."
-                )
             raise ValidationError(f"Non-fixture records changed in {model}; provisioning was rolled back.")
         if model in NO_NEW_TRANSACTIONS and after[model] != rows:
             raise ValidationError(f"Provisioning created transactions in {model}; changes were rolled back.")
