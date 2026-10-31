@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_coretax_export_wizard_form" model="ir.ui.view">
+        <field name="name">coretax.export.wizard.form</field>
+        <field name="model">coretax.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Ekspor Faktur Pajak CoreTax DJP">
+                <field name="state" invisible="1"/>
+                <div class="alert alert-info" role="status" invisible="state == 'done'">
+                    Wizard ini akan menghasilkan berkas CSV resmi yang kompatibel dengan skema impor modul e-Faktur dan CoreTax DJP Indonesia.
+                </div>
+                <div class="alert alert-success" role="status" invisible="state != 'done'">
+                    Berkas CSV CoreTax berhasil dibuat! Silakan unduh berkas di bawah ini.
+                </div>
+                <group invisible="state == 'done'">
+                    <group string="Rentang Tanggal Faktur">
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                    </group>
+                    <group string="Filter Perusahaan &amp; Pelanggan">
+                        <field name="company_id" groups="base.group_multi_company"/>
+                        <field name="partner_ids" widget="many2many_tags" placeholder="Semua pelanggan..."/>
+                    </group>
+                </group>
+                <group invisible="state != 'done'">
+                    <group string="Ringkasan Ekspor">
+                        <field name="total_invoices"/>
+                        <field name="total_dpp" widget="monetary"/>
+                        <field name="total_ppn" widget="monetary"/>
+                    </group>
+                    <group string="Unduh Berkas">
+                        <field name="export_file" filename="export_filename" widget="binary"/>
+                        <field name="export_filename" invisible="1"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_generate_coretax_csv" string="Generate CSV CoreTax" type="object" class="btn-primary" invisible="state == 'done'"/>
+                    <button string="Tutup" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_coretax_export_wizard" model="ir.actions.act_window">
+        <field name="name">Ekspor CoreTax DJP</field>
+        <field name="res_model">coretax.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menu Item Ekspor CoreTax di Sales -->
+    <menuitem id="menu_action_coretax_export_sales"
+              name="Ekspor CoreTax DJP"
+              parent="sale.menu_sale_report"
+              action="action_coretax_export_wizard"
+              sequence="50"/>
+</odoo>
+

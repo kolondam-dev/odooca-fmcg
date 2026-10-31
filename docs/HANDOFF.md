@@ -1,3 +1,35 @@
+## 2026-10-31T16:55:00+07:00 — antigravity agent — Stack A Fase 2: Credit Limit Approval Workflow & Integrasi CoreTax Selesai
+**Branch:** `agen/stack-a-approval-finance-governance` (basis `origin/main` = `61c1c6d`)
+**Status:** PASS / VERIFIED & TESTED
+
+### 1. Approval Workflow Engine pada `sale.order` (`addons/id_base`)
+- **Pendeteksian Over-Limit & Overdue Invoices:**
+  - `credit_limit_exceeded` (boolean compute store): mendeteksi apakah pesanan menyebabkan total eksposur (`partner.credit + order.amount_total`) melebihi limit kredit outlet atau jika outlet memiliki faktur jatuh tempo yang belum terbayar (mode `strict` / `limit_due`).
+  - `credit_approval_state` (`none`, `pending`, `approved`, `rejected`): alur persetujuan bertingkat khusus Branch Manager / Sales Manager.
+  - `max_line_discount` & `discount_approval_state`: deteksi dan alur persetujuan diskon manual baris pesanan.
+  - **Guard `action_confirm()`:** Menolak konfirmasi penjualan jika `credit_limit_exceeded` belum disetujui atau jika diskon masih pending. Order historis (`fmcg_seed_batch` / `fmcg_seed_load`) dikecualikan secara presisi untuk menjaga integritas data historis Juli.
+- **UI Odoo Backend:**
+  - Banner alert peringatan kredit di atas sheet formulir pesanan.
+  - Tombol aksi: "Ajukan Persetujuan Kredit", "Setujui Kredit", "Tolak Kredit", serta persetujuan diskon.
+  - Tab formulir "Tata Kelola Kredit & Approval" dan filter pencarian "Perlu Persetujuan Kredit" / "Over Credit Limit".
+
+### 2. Kesiapan Faktur Pajak & CoreTax DJP Indonesia (`addons/id_base`)
+- **Metadata Pajak pada `account.move`:**
+  - `l10n_id_tax_transaction_code` (01, 02, 04, 08, 09), `l10n_id_tax_invoice_number` (NSFP), `l10n_id_tax_invoice_date`, dan penanda ekspor `l10n_id_coretax_exported`.
+  - Tombol aksi `action_generate_nsfp()` pada formulir faktur penjualan.
+- **Wizard Ekspor CoreTax (`coretax.export.wizard`):**
+  - Menghasilkan berkas CSV resmi kompatibel CoreTax DJP (18 kolom standar e-Faktur: `KD_JENIS_TRANSAKSI`, `FG_PENGGANTI`, `NOMOR_FAKTUR`, `MASA_PAJAK`, `TAHUN_PAJAK`, `TANGGAL_FAKTUR`, `NPWP`, `NAMA`, `ALAMAT_LENGKAP`, `JUMLAH_DPP`, `JUMLAH_PPN`, `JUMLAH_PPNBM`, dsb.).
+  - Menu aksi langsung di menu Penjualan & Akuntansi.
+
+### 3. Unit Tests Komprehensif
+- `addons/id_base/tests/test_credit_limit_approval.py`:
+  - `test_01_normal_order_within_credit_limit`: Order dalam batas limit langsung dikonfirmasi.
+  - `test_02_order_exceeding_credit_limit_blocks_confirmation`: Order over-limit diblokir, diajukan approval, disetujui BM, lalu berhasil dikonfirmasi.
+  - `test_03_strict_credit_mode_with_overdue_invoice`: Outlet strict dengan faktur jatuh tempo terblokir otomatis.
+  - `test_04_coretax_nsfp_generation_and_csv_export`: Pembuatan NSFP otomatis dan ekspor berkas CoreTax CSV.
+
+Task managed by antigravity-agent at 2026-10-31T16:55:00+07:00
+
 ## 2026-10-31T16:10:00+07:00 — antigravity agent — Eksekusi Master Data Sprint 2 Selesai 100% pada Live Railway DB
 **Branch:** `main` (commit `61c1c6d`)
 **Status:** SUCCESS 100% / LIVE VERIFIED
@@ -9,6 +41,7 @@
 - Seluruh 103 modul Odoo aktif dan sehat pada deployment live Railway (`a0238ebf-3d4f-409f-ac2c-f0ad17c67154`).
 
 Task managed by antigravity-agent at 2026-10-31T16:10:00+07:00
+
 
 ## 2026-10-31T14:45:00+07:00 — antigravity agent — Stack A Fase 1: Multi-UoM, Packaging Matrix, & Partner Coverage Alignment
 **Branch:** `agen/stack-a-master-uom-partner-alignment` (basis `origin/main` = `29683f2`)

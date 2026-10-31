@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form View Inherit: Credit Limit & Discount Approval -->
+    <record id="view_order_form_fmcg_approval_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.fmcg.approval.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Header Approval Buttons -->
+            <xpath expr="//header" position="inside">
+                <button name="action_request_credit_approval"
+                        type="object"
+                        string="Ajukan Persetujuan Kredit"
+                        class="btn-warning"
+                        invisible="not credit_limit_exceeded or credit_approval_state in ['pending', 'approved'] or state not in ['draft', 'sent']"/>
+                <button name="action_approve_credit"
+                        type="object"
+                        string="Setujui Kredit"
+                        class="btn-success"
+                        groups="sales_team.group_sale_manager"
+                        invisible="credit_approval_state != 'pending' or state not in ['draft', 'sent']"/>
+                <button name="action_reject_credit"
+                        type="object"
+                        string="Tolak Kredit"
+                        class="btn-danger"
+                        groups="sales_team.group_sale_manager"
+                        invisible="credit_approval_state != 'pending' or state not in ['draft', 'sent']"/>
+
+                <button name="action_request_discount_approval"
+                        type="object"
+                        string="Ajukan Persetujuan Diskon"
+                        class="btn-secondary"
+                        invisible="discount_approval_state != 'none' or max_line_discount &lt;= 0.0 or state not in ['draft', 'sent']"/>
+                <button name="action_approve_discount"
+                        type="object"
+                        string="Setujui Diskon"
+                        class="btn-success"
+                        groups="sales_team.group_sale_manager"
+                        invisible="discount_approval_state != 'pending' or state not in ['draft', 'sent']"/>
+                <button name="action_reject_discount"
+                        type="object"
+                        string="Tolak Diskon"
+                        class="btn-danger"
+                        groups="sales_team.group_sale_manager"
+                        invisible="discount_approval_state != 'pending' or state not in ['draft', 'sent']"/>
+            </xpath>
+
+            <!-- Alert Banner di atas form jika Over Limit -->
+            <xpath expr="//sheet" position="before">
+                <field name="credit_limit_exceeded" invisible="1"/>
+                <div class="alert alert-danger mb-0" role="alert"
+                     invisible="not credit_limit_exceeded or credit_approval_state == 'approved'">
+                    <strong>Peringatan Kebijakan Kredit FMCG:</strong>
+                    Pesanan ini melebihi limit kredit outlet atau terdapat faktur jatuh tempo yang belum lunas.
+                    Pesanan tidak dapat dikonfirmasi sebelum disetujui oleh Branch Manager / Finance.
+                </div>
+                <div class="alert alert-success mb-0" role="status"
+                     invisible="not credit_limit_exceeded or credit_approval_state != 'approved'">
+                    <strong>Persetujuan Kredit Disetujui:</strong>
+                    Pesanan over-limit ini telah disetujui secara resmi oleh Branch Manager dan siap diproses.
+                </div>
+            </xpath>
+
+            <!-- Tab Khusus Tata Kelola Kredit & Approval di Notebook -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Tata Kelola Kredit &amp; Approval" name="fmcg_credit_approval">
+                    <group>
+                        <group string="Analisis Kredit &amp; Limit Outlet">
+                            <field name="partner_credit_limit" widget="monetary"/>
+                            <field name="partner_credit_balance" widget="monetary"/>
+                            <field name="total_credit_exposure" widget="monetary"/>
+                            <field name="credit_approval_state" widget="badge"
+                                   decoration-danger="credit_approval_state == 'rejected'"
+                                   decoration-warning="credit_approval_state == 'pending'"
+                                   decoration-success="credit_approval_state == 'approved'"/>
+                            <field name="credit_approved_by" invisible="not credit_approved_by"/>
+                            <field name="credit_approved_date" invisible="not credit_approved_date"/>
+                            <field name="credit_approval_note" placeholder="Catatan analisa kredit / jaminan pembayaran..."/>
+                        </group>
+                        <group string="Analisis Diskon Khusus">
+                            <field name="max_line_discount"/>
+                            <field name="discount_approval_state" widget="badge"
+                                   decoration-danger="discount_approval_state == 'rejected'"
+                                   decoration-warning="discount_approval_state == 'pending'"
+                                   decoration-success="discount_approval_state == 'approved'"/>
+                            <field name="discount_approved_by" invisible="not discount_approved_by"/>
+                            <field name="discount_approved_date" invisible="not discount_approved_date"/>
+                            <field name="discount_approval_note" placeholder="Alasan pemberian diskon khusus..."/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Tree View Inherit -->
+    <record id="view_order_tree_fmcg_approval_inherit" model="ir.ui.view">
+        <field name="name">sale.order.tree.fmcg.approval.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='state']" position="before">
+                <field name="credit_approval_state" optional="show" widget="badge"
+                       decoration-danger="credit_approval_state == 'rejected'"
+                       decoration-warning="credit_approval_state == 'pending'"
+                       decoration-success="credit_approval_state == 'approved'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Search View Inherit Filter Approval -->
+    <record id="view_sales_order_filter_fmcg_approval" model="ir.ui.view">
+        <field name="name">sale.order.list.select.fmcg.approval</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
+                <separator/>
+                <filter string="Perlu Persetujuan Kredit" name="filter_credit_pending"
+                        domain="[('credit_approval_state', '=', 'pending')]"/>
+                <filter string="Over Credit Limit" name="filter_credit_exceeded"
+                        domain="[('credit_limit_exceeded', '=', True)]"/>
+                <filter string="Perlu Persetujuan Diskon" name="filter_discount_pending"
+                        domain="[('discount_approval_state', '=', 'pending')]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
