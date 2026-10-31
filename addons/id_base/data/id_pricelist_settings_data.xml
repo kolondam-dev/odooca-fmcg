@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Grant Pricelist & Discount visibility to standard Sales & Internal users -->
+    <record id="sales_team.group_sale_salesman" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('product.group_product_pricelist')), (4, ref('sale.group_discount_per_so_line'))]"/>
+    </record>
+
+    <!-- Activate Pricelists and Discount on lines in general system parameters -->
+    <record id="config_sale_pricelist_setting" model="ir.config_parameter">
+        <field name="key">product.group_product_pricelist</field>
+        <field name="value">1</field>
+    </record>
+
+    <record id="config_sale_discount_setting" model="ir.config_parameter">
+        <field name="key">sale.group_discount_per_so_line</field>
+        <field name="value">1</field>
+    </record>
+</odoo>

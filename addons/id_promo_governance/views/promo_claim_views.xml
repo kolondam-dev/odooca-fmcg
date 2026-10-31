@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Pivot View for Principal Promo Claims -->
+    <record id="view_sale_order_line_promo_claim_pivot" model="ir.ui.view">
+        <field name="name">sale.order.line.promo.claim.pivot</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <pivot string="Ringkasan Klaim Promosi Prinsipal" sample="1">
+                <field name="promo_principal_id" type="row"/>
+                <field name="promo_mou_number" type="row"/>
+                <field name="create_date" interval="month" type="col"/>
+                <field name="promo_discount_amount" type="measure"/>
+                <field name="promo_claim_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Tree View for Promo Claims -->
+    <record id="view_sale_order_line_promo_claim_tree" model="ir.ui.view">
+        <field name="name">sale.order.line.promo.claim.tree</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <list string="Daftar Tagihan Klaim Promosi" create="0" delete="0">
+                <field name="order_id" string="Nomor SO"/>
+                <field name="order_partner_id" string="Outlet / Toko"/>
+                <field name="promo_principal_id" string="Prinsipal"/>
+                <field name="promo_program_id" string="Program Promosi"/>
+                <field name="promo_mou_number" string="Nomor MoU"/>
+                <field name="product_id" string="SKU Produk"/>
+                <field name="product_uom_qty" string="Kuantitas"/>
+                <field name="price_subtotal" string="Subtotal Nilai"/>
+                <field name="promo_discount_amount" widget="monetary" string="Diskon Diberikan"/>
+                <field name="promo_claim_amount" widget="monetary" string="Nilai Tagihan Klaim Prinsipal"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View for Promo Claims -->
+    <record id="view_sale_order_line_promo_claim_search" model="ir.ui.view">
+        <field name="name">sale.order.line.promo.claim.search</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <search string="Cari Klaim Promosi">
+                <field name="promo_principal_id"/>
+                <field name="promo_mou_number"/>
+                <field name="promo_program_id"/>
+                <field name="order_partner_id"/>
+                <filter name="filter_has_claim" string="Memiliki Tagihan Klaim" domain="[('promo_claim_amount', '>', 0)]"/>
+                <filter name="filter_principal_100" string="Beban Prinsipal 100%" domain="[('promo_budget_source', '=', 'principal')]"/>
+                <filter name="filter_joint_50" string="Joint Sharing 50:50" domain="[('promo_budget_source', '=', 'joint')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_principal" string="Prinsipal" domain="[]" context="{'group_by': 'promo_principal_id'}"/>
+                    <filter name="group_mou" string="Nomor MoU" domain="[]" context="{'group_by': 'promo_mou_number'}"/>
+                    <filter name="group_program" string="Program Promo" domain="[]" context="{'group_by': 'promo_program_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Promo Claims Report -->
+    <record id="action_promo_claim_report" model="ir.actions.act_window">
+        <field name="name">Laporan Klaim Tagihan Promosi Prinsipal</field>
+        <field name="res_model">sale.order.line</field>
+        <field name="view_mode">pivot,list</field>
+        <field name="domain">[('promo_claim_amount', '>', 0)]</field>
+        <field name="context">{'search_default_filter_has_claim': 1, 'search_default_group_principal': 1}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_sale_order_line_promo_claim_pivot')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_sale_order_line_promo_claim_tree')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Belum ada data klaim promosi yang tercatat.
+            </p>
+            <p>
+                Laporan ini secara otomatis mengagregasi seluruh potongan diskon promosi yang berhak ditagihkan kembali ke prinsipal berdasarkan nomor perjanjian dagang (MoU).
+            </p>
+        </field>
+    </record>
+</odoo>

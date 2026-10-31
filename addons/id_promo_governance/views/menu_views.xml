@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Top-level Section Menu under Sales -->
+    <menuitem id="menu_fmcg_promo_root"
+              name="Tata Kelola Promosi"
+              parent="sale.sale_menu_root"
+              sequence="15"
+              groups="sales_team.group_sale_salesman"/>
+
+    <!-- Action for Loyalty Program FMCG -->
+    <record id="action_fmcg_promo_programs" model="ir.actions.act_window">
+        <field name="name">Program Promosi Prinsipal</field>
+        <field name="res_model">loyalty.program</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="context">{'default_program_type': 'promotion'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Buat program promosi prinsipal baru
+            </p>
+            <p>
+                Kelola program diskon promosi berjenjang, nomor MoU kontrak dagang, pembagian beban anggaran (prinsipal vs distributor), dan proses persetujuan internal.
+            </p>
+        </field>
+    </record>
+
+    <!-- Submenu: Program Promosi Prinsipal -->
+    <menuitem id="menu_fmcg_promo_programs"
+              name="Program Promosi Prinsipal"
+              parent="menu_fmcg_promo_root"
+              action="action_fmcg_promo_programs"
+              sequence="1"/>
+
+    <!-- Submenu: Laporan Klaim Tagihan Prinsipal -->
+    <menuitem id="menu_fmcg_promo_claims"
+              name="Laporan Klaim Tagihan Prinsipal"
+              parent="menu_fmcg_promo_root"
+              action="action_promo_claim_report"
+              sequence="2"/>
+</odoo>

@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class ResPartner(models.Model):
@@ -29,3 +29,64 @@ class ResPartner(models.Model):
     pic_name = fields.Char(string="Outlet PIC Name")
     pic_phone = fields.Char(string="Outlet PIC Phone")
     delivery_notes = fields.Text(string="Delivery & Staging Notes")
+
+    def _get_matrix_pricelist(self):
+        """Menemukan daftar harga matriks FMCG paling sesuai berdasarkan channel dan coverage."""
+        self.ensure_one()
+        pricelist_model = self.env["product.pricelist"]
+        cov_cat = self.coverage_area_id.category if self.coverage_area_id else False
+
+        # 1. Exact match: channel + specific coverage category
+        if self.channel_id and cov_cat:
+            pl = pricelist_model.search([
+                ("is_fmcg_matrix", "=", True),
+                ("channel_id", "=", self.channel_id.id),
+                ("coverage_category", "=", cov_cat),
+                ("active", "=", True),
+            ], limit=1)
+            if pl:
+                return pl
+
+        # 2. Channel match with all coverage
+        if self.channel_id:
+            pl = pricelist_model.search([
+                ("is_fmcg_matrix", "=", True),
+                ("channel_id", "=", self.channel_id.id),
+                ("coverage_category", "in", ["all", False]),
+                ("active", "=", True),
+            ], limit=1)
+            if pl:
+                return pl
+
+        # 3. Coverage match with generic channel
+        if cov_cat:
+            pl = pricelist_model.search([
+                ("is_fmcg_matrix", "=", True),
+                ("channel_id", "=", False),
+                ("coverage_category", "=", cov_cat),
+                ("active", "=", True),
+            ], limit=1)
+            if pl:
+                return pl
+
+        # 4. Default FMCG Base Matrix
+        pl = pricelist_model.search([
+            ("is_fmcg_matrix", "=", True),
+            ("active", "=", True),
+        ], order="sequence, id", limit=1)
+        return pl
+
+    def action_assign_matrix_pricelist(self):
+        """Mengaitkan pricelist matriks otomatis untuk partner outlet."""
+        for partner in self:
+            best_pl = partner._get_matrix_pricelist()
+            if best_pl:
+                partner.property_product_pricelist = best_pl.id
+
+    @api.onchange("channel_id", "coverage_area_id")
+    def _onchange_channel_coverage_for_pricelist(self):
+        for partner in self:
+            if partner.channel_id or partner.coverage_area_id:
+                best_pl = partner._get_matrix_pricelist()
+                if best_pl:
+                    partner.property_product_pricelist = best_pl.id
