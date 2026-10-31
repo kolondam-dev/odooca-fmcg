@@ -1444,3 +1444,41 @@
 - Fix: Unpack tuple keys {k for k, _label in aging._fields['bucket'].selection} before comparing with set(BUCKETS).
 - Static checks: ruff check PASS, check_manifests.py PASS (9 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T22:10:45+07:00
+
+[2026-10-31T22:41:15+07:00] [INFO] Merge main into PR #61 & Fix Sales Dashboard PO Header
+- Merged latest origin/main (containing PR #62 and PR #60) into agen/claude-design2-sales-productivity.
+- Resolved merge conflicts in .github/workflows/ci.yml, deploy/init.sh, and docs/HANDOFF.md.
+- Updated deploy/init.sh and ci.yml to install and test id_dashboard_sales alongside other id_* addons.
+- Formatted addons/id_dashboard_sales/i18n/id.po to include '#. module: id_dashboard_sales' headers.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T22:41:15+07:00
+
+[2026-10-31T22:52:15+07:00] [INFO] Fix Model Attribute Collision with _ids in SalesProductivity
+- Diagnosed install-test failure: AttributeError: 'id.sales.productivity' object attribute '_ids' is read-only.
+- Root cause: id.sales.productivity defined helper method 'def _ids(self, values)' which collided with Odoo's internal recordset attribute 'BaseModel._ids'.
+- Fix: Renamed helper method to '_parse_ids'.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T22:52:15+07:00
+
+[2026-10-31T22:59:25+07:00] [INFO] Fix Required Code in Principal and Brand Fixtures
+- Diagnosed install-test failure: NotNullViolation on id_principal.code in setUpClass of TestSalesProductivity.
+- Root cause: id.principal and id.brand require 'code' field.
+- Fix: Supplied 'code': 'DPRIN' and 'code': 'DBRAND' in test setUpClass.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T22:59:25+07:00
+
+
+[2026-10-31T23:08:45+07:00] [INFO] Fix IDR Currency Inactive in TestSalesProductivity setUpClass
+- Diagnosed install-test failure: UserError: 'You cannot validate a document with an inactive currency: IDR' during invoice.action_post() in test_fulfillment_counts_only_delivered_and_posted_invoice.
+- Cause: IDR currency was inactive in the base CI test environment when invoice validation occurred.
+- Fix: Ensured company currency and IDR currency are explicitly set active in setUpClass of TestSalesProductivity.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T23:08:45+07:00
+
+
+[2026-10-31T23:16:30+07:00] [INFO] Fix Picking date_done in TestSalesProductivity
+- Diagnosed install-test failure: AssertionError: 0 != 1 on data["total"]["do_count"] in test_fulfillment_counts_only_delivered_and_posted_invoice.
+- Root cause: picking.button_validate() defaults date_done to datetime.now(), falling outside the tested July 2026 period.
+- Fix: Set picking.date_done = datetime(2026, 7, 15, 4, 0) after validation so picking falls inside the query period.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T23:16:30+07:00

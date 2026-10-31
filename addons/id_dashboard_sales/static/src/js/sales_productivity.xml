@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="id_dashboard_sales.SalesProductivity">
+        <div class="o_action id-sp">
+            <div class="id-sp__scroll">
+                <header class="id-sp__header">
+                    <div>
+                        <h1 class="id-sp__title">Sales Productivity</h1>
+                        <p class="id-sp__subtitle">
+                            <span t-out="periodLabel"/> · WITA
+                        </p>
+                    </div>
+                </header>
+
+                <section class="id-sp__filters" aria-label="Filters">
+                    <div class="id-sp__filter-group">
+                        <div class="id-sp__seg" role="group">
+                            <t t-foreach="modes" t-as="m" t-key="m.key">
+                                <button type="button" class="id-sp__seg-btn"
+                                        t-att-class="{'is-active': state.mode === m.key}"
+                                        t-on-click="() => this.setMode(m.key)" t-out="m.label"/>
+                            </t>
+                        </div>
+                        <div class="id-sp__date">
+                            <button type="button" class="id-sp__icon-btn" title="Previous"
+                                    t-att-disabled="!canPrev" t-on-click="() => this.shift(-1)">‹</button>
+                            <input type="date" class="id-sp__input" t-att-value="state.anchor"
+                                   t-att-min="state.filters.period_min" t-att-max="state.filters.period_max"
+                                   t-on-change="setAnchor"/>
+                            <button type="button" class="id-sp__icon-btn" title="Next"
+                                    t-att-disabled="!canNext" t-on-click="() => this.shift(1)">›</button>
+                        </div>
+                        <button type="button" class="id-sp__link" t-on-click="reset">Reset</button>
+                    </div>
+                    <div class="id-sp__filter-group">
+                        <span class="id-sp__filter-label">Salesman</span>
+                        <div class="id-sp__chips">
+                            <t t-foreach="state.filters.salesmen" t-as="s" t-key="s.id">
+                                <button type="button" class="id-sp__chip"
+                                        t-att-class="{'is-active': state.salesmanIds.includes(s.id)}"
+                                        t-on-click="() => this.toggle('salesmanIds', s.id)" t-out="s.name"/>
+                            </t>
+                        </div>
+                    </div>
+                    <div class="id-sp__filter-group">
+                        <span class="id-sp__filter-label">Channel</span>
+                        <div class="id-sp__chips">
+                            <t t-foreach="state.filters.channels" t-as="c" t-key="c.id">
+                                <button type="button" class="id-sp__chip" t-att-title="c.name"
+                                        t-att-class="{'is-active': state.channelIds.includes(c.id)}"
+                                        t-on-click="() => this.toggle('channelIds', c.id)" t-out="c.code"/>
+                            </t>
+                        </div>
+                    </div>
+                </section>
+
+                <div t-if="state.error" class="id-sp__alert" role="alert" t-out="state.error"/>
+                <div t-if="state.loading and !state.data" class="id-sp__empty">Loading…</div>
+
+                <t t-if="state.data">
+                    <div class="id-sp__body" t-att-class="{'is-loading': state.loading}">
+                        <div t-if="!state.data.total.orders" class="id-sp__notice">
+                            No confirmed sales orders for this period and filter.
+                        </div>
+
+                        <section class="id-sp__cards id-sp__cards--primary">
+                            <button type="button" class="id-sp__card id-sp__card--navy" t-on-click="() => this.openOrders()">
+                                <span class="id-sp__card-label">Gross Revenue</span>
+                                <span class="id-sp__card-value" t-out="moneyShort(state.data.total.gross)"/>
+                                <span class="id-sp__card-meta"><t t-out="int(state.data.total.orders)"/> orders</span>
+                            </button>
+                            <button type="button" class="id-sp__card id-sp__card--amber" t-on-click="openDiscounted">
+                                <span class="id-sp__card-label">Discount Given</span>
+                                <span class="id-sp__card-value" t-out="moneyShort(state.data.total.discount)"/>
+                                <span class="id-sp__card-meta">
+                                    <t t-out="pct(state.data.total.gross ? state.data.total.discount / state.data.total.gross : null)"/> of gross
+                                </span>
+                            </button>
+                            <button type="button" class="id-sp__card id-sp__card--emerald" t-on-click="() => this.openOrders()">
+                                <span class="id-sp__card-label">Net Revenue</span>
+                                <span class="id-sp__card-value" t-out="moneyShort(state.data.total.net)"/>
+                                <span class="id-sp__card-meta" t-att-title="money(state.data.total.net)">ex-tax (DPP)</span>
+                            </button>
+                            <button type="button" class="id-sp__card id-sp__card--blue" t-on-click="openPickings">
+                                <span class="id-sp__card-label">Delivered DO</span>
+                                <span class="id-sp__card-value" t-out="int(state.data.total.do_count)"/>
+                                <span class="id-sp__card-meta">by delivery date</span>
+                            </button>
+                        </section>
+
+                        <section class="id-sp__cards id-sp__cards--secondary">
+                            <div class="id-sp__mini">
+                                <span class="id-sp__card-label">PJP Call Compliance</span>
+                                <span class="id-sp__mini-value" t-if="pjp.available" t-out="pct(pjp.compliance)"/>
+                                <span class="id-sp__mini-value is-na" t-else="">N/A</span>
+                                <span class="id-sp__card-meta" t-if="pjp.available">
+                                    <t t-out="int(pjp.completed)"/> / <t t-out="int(pjp.planned)"/> planned outlets
+                                </span>
+                                <span class="id-sp__card-meta" t-else="" t-out="pjpReason"/>
+                            </div>
+                            <div class="id-sp__mini">
+                                <span class="id-sp__card-label">Effective Call Ratio</span>
+                                <span class="id-sp__mini-value" t-if="pjp.available" t-out="pct(pjp.ec_ratio)"/>
+                                <span class="id-sp__mini-value is-na" t-else="">N/A</span>
+                                <span class="id-sp__card-meta" t-if="pjp.available">
+                                    <t t-out="int(pjp.effective)"/> / <t t-out="int(pjp.visits)"/> visits with order
+                                </span>
+                                <span class="id-sp__card-meta" t-else="" t-out="pjpReason"/>
+                            </div>
+                            <div class="id-sp__mini">
+                                <span class="id-sp__card-label">Lines per Order</span>
+                                <span class="id-sp__mini-value" t-att-class="lpoClass" t-out="num1(state.data.total.lpo)"/>
+                                <span class="id-sp__card-meta">Target ≥ <t t-out="num1(state.data.lpo_target)"/> SKU/order</span>
+                            </div>
+                            <div class="id-sp__mini">
+                                <span class="id-sp__card-label">SKU Sold</span>
+                                <span class="id-sp__mini-value" t-out="int(state.data.total.sku_sold)"/>
+                                <span class="id-sp__card-meta">distinct SKU</span>
+                            </div>
+                            <div class="id-sp__mini">
+                                <span class="id-sp__card-label">Fulfillment-to-Invoice</span>
+                                <span class="id-sp__mini-value" t-out="pct(state.data.total.fulfillment)"/>
+                                <span class="id-sp__card-meta">delivered and posted-invoiced value</span>
+                            </div>
+                        </section>
+                        <p t-if="pjp.available and pjpScopeOwn" class="id-sp__note">
+                            PJP figures cover your own visits only (access scope).
+                        </p>
+
+                        <section class="id-sp__panel">
+                            <h2 class="id-sp__panel-title">Net revenue trend</h2>
+                            <svg class="id-sp__trend" viewBox="0 0 100 100" preserveAspectRatio="none" role="img"
+                                 aria-label="Net revenue per day">
+                                <t t-foreach="trendBars" t-as="bar" t-key="bar.date">
+                                    <rect t-att-x="bar.x" t-att-y="bar.y" t-att-width="bar.w" t-att-height="bar.h"
+                                          class="id-sp__bar">
+                                        <title><t t-out="bar.date"/> · <t t-out="money(bar.net)"/> · <t t-out="bar.orders"/> orders</title>
+                                    </rect>
+                                </t>
+                            </svg>
+                            <div class="id-sp__trend-axis">
+                                <span t-out="state.data.trend[0]?.date"/>
+                                <span t-out="state.data.trend[state.data.trend.length - 1]?.date"/>
+                            </div>
+                        </section>
+
+                        <section class="id-sp__panel">
+                            <div class="id-sp__panel-head">
+                                <h2 class="id-sp__panel-title">Productivity</h2>
+                                <div class="id-sp__seg" role="group">
+                                    <button type="button" class="id-sp__seg-btn"
+                                            t-att-class="{'is-active': state.dimension === 'salesman'}"
+                                            t-on-click="() => state.dimension = 'salesman'">Per Salesman</button>
+                                    <button type="button" class="id-sp__seg-btn"
+                                            t-att-class="{'is-active': state.dimension === 'channel'}"
+                                            t-on-click="() => state.dimension = 'channel'">Per Channel</button>
+                                </div>
+                            </div>
+                            <div class="id-sp__table-wrap">
+                                <table class="id-sp__table">
+                                    <thead>
+                                        <tr>
+                                            <th t-out="state.dimension === 'salesman' ? 'Salesman' : 'Channel'"/>
+                                            <th class="num">Orders</th>
+                                            <th class="num">Gross</th>
+                                            <th class="num">Discount</th>
+                                            <th class="num">Net</th>
+                                            <th class="num">DO</th>
+                                            <th class="num">PJP Compliance</th>
+                                            <th class="num">EC Ratio</th>
+                                            <th class="num">LPO</th>
+                                            <th class="num">SKU</th>
+                                            <th class="num">Fulfillment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="rows" t-as="row" t-key="row.id" t-on-click="() => this.openRow(row)"
+                                            class="id-sp__row">
+                                            <td class="name" t-out="row.name"/>
+                                            <td class="num" t-out="int(row.orders)"/>
+                                            <td class="num" t-out="moneyShort(row.gross)"/>
+                                            <td class="num" t-out="moneyShort(row.discount)"/>
+                                            <td class="num" t-out="moneyShort(row.net)"/>
+                                            <td class="num" t-out="int(row.do_count)"/>
+                                            <td class="num" t-out="row.pjp ? pct(row.pjp.compliance) : '–'"/>
+                                            <td class="num" t-out="row.pjp ? pct(row.pjp.ec_ratio) : '–'"/>
+                                            <td class="num">
+                                                <span class="id-sp__pill"
+                                                      t-att-class="row.lpo_ok === null ? '' : (row.lpo_ok ? 'is-ok' : 'is-low')"
+                                                      t-out="num1(row.lpo)"/>
+                                            </td>
+                                            <td class="num" t-out="int(row.sku_sold)"/>
+                                            <td class="num" t-out="pct(row.fulfillment)"/>
+                                        </tr>
+                                        <tr t-if="!rows.length">
+                                            <td colspan="11" class="id-sp__empty">No data for this period and filter.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="id-sp__note">"–" means the metric has no data source for that row; N/A means the source is not available.</p>
+                        </section>
+
+                        <section class="id-sp__panel">
+                            <div class="id-sp__panel-head">
+                                <h2 class="id-sp__panel-title">SKU penetration</h2>
+                                <div class="id-sp__seg" role="group">
+                                    <button type="button" class="id-sp__seg-btn"
+                                            t-att-class="{'is-active': state.penKind === 'principal'}"
+                                            t-on-click="() => state.penKind = 'principal'">Per Principal</button>
+                                    <button type="button" class="id-sp__seg-btn"
+                                            t-att-class="{'is-active': state.penKind === 'brand'}"
+                                            t-on-click="() => state.penKind = 'brand'">Per Brand</button>
+                                </div>
+                            </div>
+                            <div class="id-sp__table-wrap">
+                                <table class="id-sp__table" t-if="penetration.length">
+                                    <thead>
+                                        <tr>
+                                            <th t-out="state.penKind === 'principal' ? 'Principal' : 'Brand'"/>
+                                            <th class="num">Catalog SKU</th>
+                                            <th class="num" t-foreach="rows" t-as="row" t-key="row.id" t-out="row.name"/>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="penetration" t-as="item" t-key="item.id">
+                                            <td class="name" t-out="item.name"/>
+                                            <td class="num" t-out="int(item.catalog)"/>
+                                            <td t-foreach="rows" t-as="row" t-key="row.id" class="num"
+                                                t-att-class="heat(penCell(item, row).penetration)">
+                                                <t t-out="int(penCell(item, row).sold)"/>
+                                                <small t-out="pct(penCell(item, row).penetration)"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div t-else="" class="id-sp__empty">No SKU sold for this period and filter.</div>
+                            </div>
+                            <p class="id-sp__note">Cell = distinct SKU sold (share of saleable catalogue SKU of that principal/brand).</p>
+                        </section>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>
