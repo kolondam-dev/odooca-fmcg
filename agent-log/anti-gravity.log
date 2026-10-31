@@ -1430,3 +1430,10 @@
 - Fix: Refactored FLEET_COST_SQL to use two clean CTEs (monthly_cost and monthly_delivery) and LEFT JOIN on vehicle_id and period_month.
 - Static checks: ruff check PASS, check_manifests.py PASS (9 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T21:56:20+07:00
+
+[2026-10-31T22:03:40+07:00] [INFO] Fix PO Translation Headers for Odoo 19 Importer
+- Diagnosed install-test failure: AttributeError: 'NoneType' object has no attribute 'groups' in odoo/tools/translate.py line 858 during id_ui post_init_hook.
+- Root cause: Odoo 19 translation parser expects '#. module: <module_name>' comment header above each msgid entry in PO files. id_dashboard_monetary and id_dashboard_wms PO files lacked these headers.
+- Fix: Formatted both id.po files to include '#. module: <name>' above each translation string.
+- Static checks: ruff check PASS, check_manifests.py PASS (9 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T22:03:40+07:00

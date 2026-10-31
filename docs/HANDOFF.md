@@ -1,4 +1,14 @@
-﻿## 2026-10-31T21:56:20+07:00 — antigravity agent — Refactor SQL View id_wms_fleet_cost Menggunakan CTE
+﻿## 2026-10-31T22:03:40+07:00 — antigravity agent — Perbaikan Format PO Translation Header Odoo 19
+**Branch:** gen/dashboard-monetary-wms
+**Status:** PASS (Static) -> Siap CI install-test
+
+### Diagnosa & Perbaikan
+- CI install-test memicu error AttributeError: 'NoneType' object has no attribute 'groups' pada odoo/tools/translate.py (line 858) saat id_ui menjalankan _post_init_hook untuk mengaktifkan bahasa Indonesia (id).
+- Penyebab: Parser file translasi PO Odoo 19 membaca header komentar regex e.match(r"(module[s]?): (\w+)", entry.comment) sebelum setiap msgid. File ddons/id_dashboard_monetary/i18n/id.po dan ddons/id_dashboard_wms/i18n/id.po belum menyertakan baris #. module: <nama_modul>.
+- Perbaikan: Menambahkan anotasi #. module: id_dashboard_monetary dan #. module: id_dashboard_wms pada setiap blok msgid di kedua file .po.
+- Verifikasi: uff check PASS, check_manifests.py PASS.
+
+## 2026-10-31T21:56:20+07:00 — antigravity agent — Refactor SQL View id_wms_fleet_cost Menggunakan CTE
 **Branch:** gen/dashboard-monetary-wms
 **Status:** PASS (Static) -> Siap CI install-test
 
@@ -3281,6 +3291,7 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai seluruh job selesai sebelum verdict. Hasil belum diklaim.
 - Scope tetap UI/tests/docs. PR #32 tetap draft; tidak merge dan tidak deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:26:00+07:00
+
 
 
 

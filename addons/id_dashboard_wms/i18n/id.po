@@ -10,292 +10,385 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 # Menu and action names
+#. module: id_dashboard_wms
 msgid "Warehouse & Logistics"
 msgstr "Gudang & Logistik"
 
+#. module: id_dashboard_wms
 msgid "Stock by FMCG Category"
 msgstr "Stok per Kategori FMCG"
 
+#. module: id_dashboard_wms
 msgid "FEFO Expiry Monitoring"
 msgstr "Pemantauan Kedaluwarsa FEFO"
 
+#. module: id_dashboard_wms
 msgid "Delivery Fulfillment"
 msgstr "Pemenuhan Delivery Order"
 
+#. module: id_dashboard_wms
 msgid "Delivery Rate per Period"
 msgstr "Rasio Pengiriman per Periode"
 
+#. module: id_dashboard_wms
 msgid "Rejection Breakdown"
 msgstr "Rincian Penolakan"
 
+#. module: id_dashboard_wms
 msgid "Delivery Cost Ratio"
 msgstr "Rasio Biaya Pengiriman"
 
+#. module: id_dashboard_wms
 msgid "Delivery Trip Costs"
 msgstr "Biaya Perjalanan Pengiriman"
 
 # Picking fields
+#. module: id_dashboard_wms
 msgid "FMCG Rejection Reason"
 msgstr "Alasan Penolakan FMCG"
 
+#. module: id_dashboard_wms
 msgid "Delivery Vehicle"
 msgstr "Armada Pengiriman"
 
 # Category fields
+#. module: id_dashboard_wms
 msgid "FMCG Category"
 msgstr "Kategori FMCG"
 
+#. module: id_dashboard_wms
 msgid "Merchandising Group"
 msgstr "Kelompok Merchandising"
 
+#. module: id_dashboard_wms
 msgid "Products"
 msgstr "Produk"
 
+#. module: id_dashboard_wms
 msgid "Lots"
 msgstr "Batch"
 
+#. module: id_dashboard_wms
 msgid "Quantity On Hand"
 msgstr "Stok Tersedia"
 
+#. module: id_dashboard_wms
 msgid "Quantity Reserved"
 msgstr "Stok Direservasi"
 
+#. module: id_dashboard_wms
 msgid "Stock Value"
 msgstr "Nilai Persediaan"
 
 # Expiry fields
+#. module: id_dashboard_wms
 msgid "Product"
 msgstr "Produk"
 
+#. module: id_dashboard_wms
 msgid "Lot / Batch"
 msgstr "Lot / Batch"
 
+#. module: id_dashboard_wms
 msgid "Lot Number"
 msgstr "Nomor Lot"
 
+#. module: id_dashboard_wms
 msgid "Expiry Date"
 msgstr "Tanggal Kedaluwarsa"
 
+#. module: id_dashboard_wms
 msgid "Days to Expiry"
 msgstr "Sisa Hari ke ED"
 
+#. module: id_dashboard_wms
 msgid "Expiry Bucket"
 msgstr "Kelompok Kedaluwarsa"
 
+#. module: id_dashboard_wms
 msgid "Recommended Action"
 msgstr "Tindakan Disarankan"
 
 # Delivery fields
+#. module: id_dashboard_wms
 msgid "Delivery Order"
 msgstr "Delivery Order"
 
+#. module: id_dashboard_wms
 msgid "Scheduled Date"
 msgstr "Tanggal Dijadwalkan"
 
+#. module: id_dashboard_wms
 msgid "Delivered Date"
 msgstr "Tanggal Terkirim"
 
+#. module: id_dashboard_wms
 msgid "Status"
 msgstr "Status"
 
+#. module: id_dashboard_wms
 msgid "Operation Type"
 msgstr "Tipe Operasi"
 
+#. module: id_dashboard_wms
 msgid "Rejection Reason"
 msgstr "Alasan Penolakan"
 
+#. module: id_dashboard_wms
 msgid "Sales Order"
 msgstr "Sales Order"
 
+#. module: id_dashboard_wms
 msgid "Sales Order Amount"
 msgstr "Nilai Sales Order"
 
+#. module: id_dashboard_wms
 msgid "Delivered"
 msgstr "Terkirim"
 
+#. module: id_dashboard_wms
 msgid "Delivered Late"
 msgstr "Terkirim Terlambat"
 
+#. module: id_dashboard_wms
 msgid "Delivered Value"
 msgstr "Nilai Terkirim"
 
+#. module: id_dashboard_wms
 msgid "Scheduled Deliveries"
 msgstr "DO Dijadwalkan"
 
+#. module: id_dashboard_wms
 msgid "Not Delivered"
 msgstr "Belum Terkirim"
 
+#. module: id_dashboard_wms
 msgid "Late"
 msgstr "Terlambat"
 
+#. module: id_dashboard_wms
 msgid "Delivery Rate (%)"
 msgstr "Rasio Pengiriman (%)"
 
+#. module: id_dashboard_wms
 msgid "Scheduled Sales Value"
 msgstr "Nilai SO Dijadwalkan"
 
+#. module: id_dashboard_wms
 msgid "Rejected Deliveries"
 msgstr "DO Ditolak"
 
+#. module: id_dashboard_wms
 msgid "Rejected Order Value"
 msgstr "Nilai Order Ditolak"
 
 # Trip cost fields
+#. module: id_dashboard_wms
 msgid "Vehicle"
 msgstr "Armada"
 
+#. module: id_dashboard_wms
 msgid "Fuel Cost"
 msgstr "Biaya BBM"
 
+#. module: id_dashboard_wms
 msgid "Helper Cost"
 msgstr "Biaya Helper"
 
+#. module: id_dashboard_wms
 msgid "Total Cost"
 msgstr "Total Biaya"
 
+#. module: id_dashboard_wms
 msgid "Cost Ratio (%)"
 msgstr "Rasio Biaya (%)"
 
+#. module: id_dashboard_wms
 msgid "Trip Date"
 msgstr "Tanggal Perjalanan"
 
+#. module: id_dashboard_wms
 msgid "Notes"
 msgstr "Catatan"
 
+#. module: id_dashboard_wms
 msgid "Period"
 msgstr "Periode"
 
+#. module: id_dashboard_wms
 msgid "Quantity"
 msgstr "Kuantitas"
 
+#. module: id_dashboard_wms
 msgid "Scheduled"
 msgstr "Dijadwalkan"
 
+#. module: id_dashboard_wms
 msgid "Fuel"
 msgstr "BBM"
 
+#. module: id_dashboard_wms
 msgid "Helper"
 msgstr "Helper"
 
 # Rejection reasons
+#. module: id_dashboard_wms
 msgid "Wet / Crushed Packaging in Transit"
 msgstr "Kemasan basah/penyok saat transit"
 
+#. module: id_dashboard_wms
 msgid "Product Close to Expiry"
 msgstr "Produk mendekati ED"
 
+#. module: id_dashboard_wms
 msgid "Wrong SKU / Quantity Delivered"
 msgstr "Salah kirim SKU/qty"
 
+#. module: id_dashboard_wms
 msgid "Store Closed / Refused the Delivery Note"
 msgstr "Toko tutup / menolak nota"
 
+#. module: id_dashboard_wms
 msgid "Not Recorded"
 msgstr "Tidak Tercatat"
 
 # Expiry buckets
+#. module: id_dashboard_wms
 msgid "Critical (< 30 Days)"
 msgstr "Kritis (< 30 Hari)"
 
+#. module: id_dashboard_wms
 msgid "Warning (30-90 Days)"
 msgstr "Peringatan (30-90 Hari)"
 
+#. module: id_dashboard_wms
 msgid "Good Stock (> 90 Days)"
 msgstr "Stok Aman (> 90 Hari)"
 
 # Merchandising groups
+#. module: id_dashboard_wms
 msgid "Food"
 msgstr "Food"
 
+#. module: id_dashboard_wms
 msgid "RTD / Beverage"
 msgstr "RTD / Minuman"
 
+#. module: id_dashboard_wms
 msgid "Home Care"
 msgstr "Home Care"
 
+#. module: id_dashboard_wms
 msgid "Personal Care"
 msgstr "Personal Care"
 
+#. module: id_dashboard_wms
 msgid "Confectionery"
 msgstr "Konfeksi"
 
+#. module: id_dashboard_wms
 msgid "Other / Unmapped"
 msgstr "Lainnya / Belum Dipetakan"
 
 # FMCG categories
+#. module: id_dashboard_wms
 msgid "Biscuit & Wafer"
 msgstr "Biskuit & Wafer"
 
+#. module: id_dashboard_wms
 msgid "Chocolate & Confectionery"
 msgstr "Cokelat & Konfeksi"
 
+#. module: id_dashboard_wms
 msgid "Coffee & Powdered Beverage"
 msgstr "Kopi & Minuman Bubuk"
 
+#. module: id_dashboard_wms
 msgid "Coffee & Hot Beverages"
 msgstr "Kopi & Minuman Panas"
 
+#. module: id_dashboard_wms
 msgid "Instant Noodles & Foods"
 msgstr "Mie Instan & Makanan"
 
+#. module: id_dashboard_wms
 msgid "Ready to Drink (RTD) & Beverage"
 msgstr "Siap Minum (RTD) & Minuman"
 
+#. module: id_dashboard_wms
 msgid "Coffee"
 msgstr "Kopi"
 
+#. module: id_dashboard_wms
 msgid "Foods & Savory"
 msgstr "Makanan & Gurih"
 
+#. module: id_dashboard_wms
 msgid "Home Care & Hygiene"
 msgstr "Home Care & Kebersihan"
 
+#. module: id_dashboard_wms
 msgid "Personal Care & Beauty"
 msgstr "Personal Care & Kecantikan"
 
+#. module: id_dashboard_wms
 msgid "Food & Grocery"
 msgstr "Makanan & Sembako"
 
+#. module: id_dashboard_wms
 msgid "Ready-To-Drink"
 msgstr "Siap Minum"
 
+#. module: id_dashboard_wms
 msgid "Dairy"
 msgstr "Susu & Olahan"
 
+#. module: id_dashboard_wms
 msgid "Other"
 msgstr "Lainnya"
 
 # Picking states
+#. module: id_dashboard_wms
 msgid "Draft"
 msgstr "Draf"
 
+#. module: id_dashboard_wms
 msgid "Waiting Another Operation"
 msgstr "Menunggu Operasi Lain"
 
+#. module: id_dashboard_wms
 msgid "Waiting"
 msgstr "Menunggu"
 
+#. module: id_dashboard_wms
 msgid "Ready"
 msgstr "Siap"
 
+#. module: id_dashboard_wms
 msgid "Done"
 msgstr "Selesai"
 
+#. module: id_dashboard_wms
 msgid "Cancelled"
 msgstr "Dibatalkan"
 
 # Filters and grouping
+#. module: id_dashboard_wms
 msgid "Rejected"
 msgstr "Ditolak"
 
+#. module: id_dashboard_wms
 msgid "Expiry Month"
 msgstr "Bulan Kedaluwarsa"
 
+#. module: id_dashboard_wms
 msgid "Customer"
 msgstr "Customer"
 
+#. module: id_dashboard_wms
 msgid "Group By"
 msgstr "Kelompokkan"
 
+#. module: id_dashboard_wms
 msgid "Month"
 msgstr "Bulan"
