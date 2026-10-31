@@ -176,3 +176,4 @@
         <field name="search_view_id" ref="view_fmcg_approval_request_search"/>
     </record>
 </odoo>
+

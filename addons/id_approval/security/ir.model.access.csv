@@ -7,3 +7,4 @@ access_fmcg_approval_request_user,fmcg.approval.request.user,model_fmcg_approval
 access_fmcg_approval_request_mgr,fmcg.approval.request.mgr,model_fmcg_approval_request,id_approval.group_fmcg_approval_manager,1,1,1,1
 access_fmcg_approval_request_line_user,fmcg.approval.request.line.user,model_fmcg_approval_request_line,base.group_user,1,1,1,0
 access_fmcg_approval_request_line_mgr,fmcg.approval.request.line.mgr,model_fmcg_approval_request_line,id_approval.group_fmcg_approval_manager,1,1,1,1
+

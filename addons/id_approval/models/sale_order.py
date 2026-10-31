@@ -7,19 +7,19 @@ class SaleOrder(models.Model):
 
     has_tactical_discount = fields.Boolean(
         string="Memiliki Diskon Taktikal",
-        compute="_compute_discount_and_cost_governance",
+        compute="_compute_discount_and_cost_flags",
         store=True,
         help="Menandakan adanya diskon manual pada baris pesanan di luar program promo resmi.",
     )
     has_below_hpp = fields.Boolean(
         string="Harga Jual di Bawah HPP",
-        compute="_compute_discount_and_cost_governance",
+        compute="_compute_discount_and_cost_flags",
         store=True,
         help="Peringatan keras: Produk dijual dengan harga net lebih rendah dari HPP (standard_price)!",
     )
     below_hpp_summary = fields.Text(
         string="Rincian Produk di Bawah HPP",
-        compute="_compute_discount_and_cost_governance",
+        compute="_compute_below_hpp_summary",
     )
     below_hpp_approval_state = fields.Selection([
         ("none", "Normal"),
@@ -54,33 +54,37 @@ class SaleOrder(models.Model):
             order.approval_count = len(requests)
 
     @api.depends("order_line.discount", "order_line.price_unit", "order_line.product_id")
-    def _compute_discount_and_cost_governance(self):
+    def _compute_discount_and_cost_flags(self):
         for order in self:
             tactical = False
             below_hpp = False
-            summary_items = []
-
             for line in order.order_line:
                 if not line.product_id or line.display_type:
                     continue
-
                 if line.discount > 0.0:
                     tactical = True
-
-                # Hitung harga net per unit setelah diskon
                 net_price = line.price_unit * (1.0 - (line.discount / 100.0))
                 cost_price = line.product_id.standard_price
-
                 if cost_price > 0.0 and net_price < cost_price:
                     below_hpp = True
+            order.has_tactical_discount = tactical
+            order.has_below_hpp = below_hpp
+
+    @api.depends("order_line.discount", "order_line.price_unit", "order_line.product_id")
+    def _compute_below_hpp_summary(self):
+        for order in self:
+            summary_items = []
+            for line in order.order_line:
+                if not line.product_id or line.display_type:
+                    continue
+                net_price = line.price_unit * (1.0 - (line.discount / 100.0))
+                cost_price = line.product_id.standard_price
+                if cost_price > 0.0 and net_price < cost_price:
                     selisih = cost_price - net_price
                     summary_items.append(
                         f"• {line.product_id.name}: Harga Net Rp {net_price:,.2f} < HPP Rp {cost_price:,.2f} "
                         f"(Rugi Rp {selisih:,.2f}/unit x {line.product_uom_qty} {line.product_uom.name})"
                     )
-
-            order.has_tactical_discount = tactical
-            order.has_below_hpp = below_hpp
             order.below_hpp_summary = "\n".join(summary_items) if summary_items else ""
 
     def action_request_below_hpp_approval(self, reason=""):

@@ -193,3 +193,20 @@ class TestApprovalEngine(TransactionCase):
         self.assertEqual(req.state, "rejected")
         self.assertEqual(prod_tmpl.fmcg_approval_state, "rejected")
         self.assertFalse(prod_tmpl.sale_ok)
+
+    def test_06_search_my_approval(self):
+        """Memverifikasi pencarian filter is_current_user_approver berjalan tanpa error."""
+        prod_tmpl = self.env["product.template"].create({
+            "name": "SKU Search Test",
+            "fmcg_approval_state": "draft",
+            "sale_ok": False,
+        })
+        action = prod_tmpl.action_request_new_sku_approval(reason="Testing search filter")
+        req = self.env["fmcg.approval.request"].browse(action["res_id"])
+
+        # Sebagai user manager, request harus ditemukan saat mencari is_current_user_approver = True
+        my_reqs = self.env["fmcg.approval.request"].with_user(self.user_mgr).search([
+            ("is_current_user_approver", "=", True),
+        ])
+        self.assertIn(req, my_reqs)
+

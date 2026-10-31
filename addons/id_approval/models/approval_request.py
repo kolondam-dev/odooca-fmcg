@@ -80,6 +80,7 @@ class FmcgApprovalRequest(models.Model):
     is_current_user_approver = fields.Boolean(
         string="Pengguna Berhak Menyetujui",
         compute="_compute_is_current_user_approver",
+        search="_search_is_current_user_approver",
     )
 
     @api.depends("line_ids")
@@ -119,6 +120,38 @@ class FmcgApprovalRequest(models.Model):
                 is_approver = True
 
             rec.is_current_user_approver = is_approver
+
+    def _search_is_current_user_approver(self, operator, value):
+        if operator not in ("=", "!=") or not isinstance(value, bool):
+            return []
+
+        current_user = self.env.user
+        user_groups = current_user.groups_id.ids
+
+        # Cari lines yang berstatus pending dan approver cocok dengan user atau group
+        lines = self.env["fmcg.approval.request.line"].search([
+            ("state", "=", "pending"),
+            "|",
+            ("user_id", "=", current_user.id),
+            ("group_id", "in", user_groups),
+        ])
+
+        req_ids = []
+        for line in lines:
+            req = line.request_id
+            if req.state == "pending" and line.tier_sequence == req.current_tier_sequence:
+                req_ids.append(req.id)
+
+        # Direktur / Administrator berhak mengesahkan semua permintaan pending
+        if current_user.has_group("id_approval.group_fmcg_approval_director"):
+            all_pending = self.search([("state", "=", "pending")]).ids
+            req_ids = list(set(req_ids + all_pending))
+
+        is_positive = (operator == "=" and value is True) or (operator == "!=" and value is False)
+        if is_positive:
+            return [("id", "in", req_ids)]
+        else:
+            return [("id", "not in", req_ids)]
 
     def action_submit(self):
         """Membangun lines tier persetujuan dan mengaktifkan status pending."""

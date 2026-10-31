@@ -26,3 +26,4 @@ class FmcgApprovalRule(models.Model):
     min_discount = fields.Float(string="Batas Diskon Minimal (%)", default=0.0)
     max_discount = fields.Float(string="Batas Diskon Maksimal (%)", default=0.0)
     sla_hours = fields.Integer(string="Target SLA (Jam)", default=24)
+
