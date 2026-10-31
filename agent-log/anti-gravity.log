@@ -1311,3 +1311,9 @@
 - Menyusun docs/prompts/AGENT_DISPATCH_PROMPTS_SPRINT1_SPRINT2.md berisi prompt spesifik untuk 6 stream kerjaan (claude-dev, opencode, subagents)
 - Menyiapkan panduan eksekusi untuk user
 - Task managed by antigravity-agent at 2026-10-31T03:59:25+00:00
+
+[2026-10-31T04:52:53+00:00] [INFO] Stack A: Tata Kelola Promo & Matriks Harga FMCG Selesai
+- Membangun addon id_promo_governance: integrasi sale_loyalty, nomor MoU, budget source, wizard target SKU, approval workflow, dan laporan klaim prinsipal
+- Membangun Matriks Harga FMCG pada id_base: product.pricelist channel x coverage, cron reminder jatuh tempo, dan auto-assignment partner
+- Memastikan keterpakaian UI: grup product.group_product_pricelist dan discount line aktif secara sistem, menu dedicated di Sales
+- Task managed by antigravity-agent at 2026-10-31T04:52:53+00:00

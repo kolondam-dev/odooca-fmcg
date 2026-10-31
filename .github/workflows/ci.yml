@@ -56,7 +56,7 @@ jobs:
           docker run --rm -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             odoo -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
               --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
-              -i id_base,id_ui_form,id_mobile_api,sale_management,account,fleet,l10n_id --test-tags /id_base,/id_ui,/id_ui_shell,/id_mobile_api --stop-after-init --log-level=test
+              -i id_base,id_ui_form,id_mobile_api,id_promo_governance,sale_management,account,fleet,l10n_id --test-tags /id_base,/id_ui,/id_ui_shell,/id_mobile_api,/id_promo_governance --stop-after-init --log-level=test
           ' 2>&1 | tee odoo.log
       - name: Log harus bersih
         run: |

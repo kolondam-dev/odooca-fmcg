@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- 1. FMCG Default Base Price -->
+    <record id="pricelist_fmcg_base" model="product.pricelist">
+        <field name="name">FMCG Default Base Price (Standard Retail)</field>
+        <field name="currency_id" ref="base.IDR"/>
+        <field name="is_fmcg_matrix">True</field>
+        <field name="channel_id" ref="channel_rtl"/>
+        <field name="coverage_category">all</field>
+        <field name="tier">cash</field>
+        <field name="date_start">2026-08-01</field>
+        <field name="date_end">2027-07-31</field>
+        <field name="alert_days_before">14</field>
+    </record>
+
+    <record id="item_fmcg_base_rule" model="product.pricelist.item">
+        <field name="pricelist_id" ref="pricelist_fmcg_base"/>
+        <field name="applied_on">3_global</field>
+        <field name="compute_price">formula</field>
+        <field name="base">list_price</field>
+        <field name="price_discount">0.0</field>
+        <field name="date_start">2026-08-01 00:00:00</field>
+        <field name="date_end">2027-07-31 23:59:59</field>
+    </record>
+
+    <!-- 2. FMCG Modern Trade Matrix (Diskon 5%) -->
+    <record id="pricelist_fmcg_mt" model="product.pricelist">
+        <field name="name">FMCG Modern Trade (Diskon Matrix 5%)</field>
+        <field name="currency_id" ref="base.IDR"/>
+        <field name="is_fmcg_matrix">True</field>
+        <field name="channel_id" ref="channel_mt"/>
+        <field name="coverage_category">all</field>
+        <field name="tier">credit_30</field>
+        <field name="date_start">2026-08-01</field>
+        <field name="date_end">2027-07-31</field>
+        <field name="alert_days_before">14</field>
+    </record>
+
+    <record id="item_fmcg_mt_rule" model="product.pricelist.item">
+        <field name="pricelist_id" ref="pricelist_fmcg_mt"/>
+        <field name="applied_on">3_global</field>
+        <field name="compute_price">formula</field>
+        <field name="base">list_price</field>
+        <field name="price_discount">5.0</field>
+        <field name="date_start">2026-08-01 00:00:00</field>
+        <field name="date_end">2027-07-31 23:59:59</field>
+    </record>
+
+    <!-- 3. FMCG General Trade Urban -->
+    <record id="pricelist_fmcg_gt_urban" model="product.pricelist">
+        <field name="name">FMCG General Trade Urban (Manado Kota)</field>
+        <field name="currency_id" ref="base.IDR"/>
+        <field name="is_fmcg_matrix">True</field>
+        <field name="channel_id" ref="channel_gt"/>
+        <field name="coverage_category">urban</field>
+        <field name="tier">credit_14</field>
+        <field name="date_start">2026-08-01</field>
+        <field name="date_end">2027-07-31</field>
+        <field name="alert_days_before">14</field>
+    </record>
+
+    <record id="item_fmcg_gt_urban_rule" model="product.pricelist.item">
+        <field name="pricelist_id" ref="pricelist_fmcg_gt_urban"/>
+        <field name="applied_on">3_global</field>
+        <field name="compute_price">formula</field>
+        <field name="base">list_price</field>
+        <field name="price_discount">0.0</field>
+        <field name="date_start">2026-08-01 00:00:00</field>
+        <field name="date_end">2027-07-31 23:59:59</field>
+    </record>
+
+    <!-- 4. FMCG General Trade Hinterland & Rural -->
+    <record id="pricelist_fmcg_gt_rural" model="product.pricelist">
+        <field name="name">FMCG General Trade Hinterland &amp; Rural (Luar Kota +2%)</field>
+        <field name="currency_id" ref="base.IDR"/>
+        <field name="is_fmcg_matrix">True</field>
+        <field name="channel_id" ref="channel_gt"/>
+        <field name="coverage_category">rural</field>
+        <field name="tier">credit_14</field>
+        <field name="date_start">2026-08-01</field>
+        <field name="date_end">2027-07-31</field>
+        <field name="alert_days_before">14</field>
+    </record>
+
+    <record id="item_fmcg_gt_rural_rule" model="product.pricelist.item">
+        <field name="pricelist_id" ref="pricelist_fmcg_gt_rural"/>
+        <field name="applied_on">3_global</field>
+        <field name="compute_price">formula</field>
+        <field name="base">list_price</field>
+        <field name="price_discount">-2.0</field>
+        <field name="date_start">2026-08-01 00:00:00</field>
+        <field name="date_end">2027-07-31 23:59:59</field>
+    </record>
+
+    <!-- 5. FMCG Institusional & Food Service -->
+    <record id="pricelist_fmcg_inst" model="product.pricelist">
+        <field name="name">FMCG Institusional &amp; Food Service (Diskon 3%)</field>
+        <field name="currency_id" ref="base.IDR"/>
+        <field name="is_fmcg_matrix">True</field>
+        <field name="channel_id" ref="channel_inst"/>
+        <field name="coverage_category">all</field>
+        <field name="tier">credit_30</field>
+        <field name="date_start">2026-08-01</field>
+        <field name="date_end">2027-07-31</field>
+        <field name="alert_days_before">14</field>
+    </record>
+
+    <record id="item_fmcg_inst_rule" model="product.pricelist.item">
+        <field name="pricelist_id" ref="pricelist_fmcg_inst"/>
+        <field name="applied_on">3_global</field>
+        <field name="compute_price">formula</field>
+        <field name="base">list_price</field>
+        <field name="price_discount">3.0</field>
+        <field name="date_start">2026-08-01 00:00:00</field>
+        <field name="date_end">2027-07-31 23:59:59</field>
+    </record>
+
+    <!-- 6. FMCG Semi-Wholesale & Grosir -->
+    <record id="pricelist_fmcg_gt_ws" model="product.pricelist">
+        <field name="name">FMCG Semi-Wholesale &amp; Grosir (Volume Break Tier 4%)</field>
+        <field name="currency_id" ref="base.IDR"/>
+        <field name="is_fmcg_matrix">True</field>
+        <field name="channel_id" ref="channel_gt"/>
+        <field name="coverage_category">all</field>
+        <field name="tier">cash</field>
+        <field name="date_start">2026-08-01</field>
+        <field name="date_end">2027-07-31</field>
+        <field name="alert_days_before">14</field>
+    </record>
+
+    <record id="item_fmcg_gt_ws_rule" model="product.pricelist.item">
+        <field name="pricelist_id" ref="pricelist_fmcg_gt_ws"/>
+        <field name="applied_on">3_global</field>
+        <field name="compute_price">formula</field>
+        <field name="base">list_price</field>
+        <field name="min_quantity">10</field>
+        <field name="price_discount">4.0</field>
+        <field name="date_start">2026-08-01 00:00:00</field>
+        <field name="date_end">2027-07-31 23:59:59</field>
+    </record>
+</odoo>
+

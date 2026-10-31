@@ -1,0 +1,27 @@
+{
+    "name": "FMCG Promotion & Discount Governance",
+    "summary": "Tata kelola promosi prinsipal, nomor MoU, approval bertingkat, SKU wizard, dan klaim tagihan.",
+    "version": "19.0.1.0.0",
+    "category": "Sales/Pricing",
+    "license": "LGPL-3",
+    "author": "kolondam-dev",
+    "depends": [
+        "base",
+        "sale",
+        "sale_loyalty",
+        "id_base",
+        "account",
+    ],
+    "data": [
+        "security/ir.model.access.csv",
+        "data/ir_sequence_data.xml",
+        "data/id_promo_demo_data.xml",
+        "wizards/promo_sku_wizard_views.xml",
+        "views/loyalty_program_views.xml",
+        "views/sale_order_views.xml",
+        "views/promo_claim_views.xml",
+        "views/menu_views.xml",
+    ],
+    "installable": True,
+    "application": True,
+}

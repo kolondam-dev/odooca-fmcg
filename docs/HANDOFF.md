@@ -1,3 +1,47 @@
+## 2026-10-31T11:55:00+07:00 — antigravity agent — Stack A: Promo Governance & Native Pricelist Matrix Selesai
+**Branch:** `agen/stack-a-promo-pricelist-matrix`
+**Status:** PASS / VERIFIED & TESTED
+
+### 1. Tata Kelola Promo & Diskon Prinsipal (`addons/id_promo_governance`):
+- Memanfaatkan modul bawaan Odoo 19 `sale_loyalty` / `loyalty.program` sebagai fondasi native.
+- Penambahan metadata FMCG lengkap pada program promo:
+  - Nomor Surat Perjanjian Dagang / MoU Prinsipal (`mou_number`, auto-sequence `id.promo.mou`).
+  - Tanggal Dokumen Kontrak (`doc_date`).
+  - Alokasi Beban Anggaran (`budget_source`: 100% Beban Prinsipal, 100% Distributor MDU, atau Joint Sharing 50:50).
+  - Prinsipal Pemilik (`principal_id` -> `id.principal`).
+  - Akun Piutang Klaim Promosi (`claim_account_id` -> `account.account`) dan Akun Analitik (`analytic_account_id`).
+  - Bukti Persetujuan Prinsipal: Nama pejabat, jabatan, dan unggahan berkas scan MoU (`mou_attachment`).
+- Workflow Approval Bertingkat: `draft` -> `pending` (Sales SPV / BM) -> `approved` -> `active` -> `closed` / `rejected`.
+- Wizard Penentuan Target SKU (`id.promo.sku.wizard`):
+  - Filter berjenjang berdasarkan Prinsipal, Brand (`id.brand`), Sub-Brand (`id.sub.brand`), dan Kategori Produk (`product.category`).
+  - Seleksi otomatis dan penempelan SKU ke `loyalty.rule` program promosi.
+- Keterlacakan & Laporan Tagihan Klaim Prinsipal (`views/promo_claim_views.xml`):
+  - Pencatatan otomatis nilai potongan dan porsi tagihan klaim (`promo_claim_amount`) pada baris SO dan Invoice.
+  - Tampilan Pivot & List Laporan Klaim Tagihan Promosi Prinsipal di menu **Sales > Tata Kelola Promosi > Laporan Klaim Tagihan Prinsipal**.
+
+### 2. Matriks Daftar Harga Native & Expiry Reminder (`addons/id_base`):
+- Memperluas `product.pricelist` dengan integrasi chatter/mail activity (`mail.thread`, `mail.activity.mixin`).
+- Dimensi Matriks FMCG:
+  - Kanal Distribusi (`channel_id` -> `id.channel`: MT, GT, Retail, Institusional).
+  - Tipe Area Coverage (`coverage_category`: All, Urban, Hinterland, Port, Rural).
+  - Payment / Credit Tier (`tier`: Cash/CBD, Kredit 14 Hari, Kredit 30 Hari, Custom).
+  - Periode Masa Berlaku (`date_start`, `date_end`).
+  - Status Jatuh Tempo Otomatis (`expiry_state`: `draft`, `active`, `near_expiry`, `expired`).
+- 6 Matriks Daftar Harga Resmi Terkonfigurasi (`data/id_pricelist_data.xml`):
+  1. Base Standard Retail (Default list_price)
+  2. Modern Trade Matrix (Formula Diskon -5.00%)
+  3. General Trade Urban (Manado Kota Base)
+  4. General Trade Hinterland & Rural (Formula Penyesuaian Transport Surcharge Luar Kota +2.00%)
+  5. Institusional & Food Service (Formula Diskon -3.00%)
+  6. Semi-Wholesale & Grosir (Volume Break Diskon -4.00% min beli 10 pcs/1 ctn)
+- Cron Reminder Jatuh Tempo Harian (`data/ir_cron_data.xml`):
+  - Memindai daftar harga yang mendekati batas `date_end` (H-14 hari) dan secara otomatis membuat aktivitas `mail.activity` untuk peninjauan berkala oleh Sales Manager.
+- Keterpakaian UI Terjamin:
+  - Mengaktifkan `product.group_product_pricelist` dan `sale.group_discount_per_so_line` secara implisit ke grup Sales (`sales_team.group_sale_salesman`) sehingga menu Daftar Harga dan Diskon langsung tampil di UI Sales tanpa tersembunyi di pengaturan.
+  - Action & menu khusus: **Sales > Produk > Matriks Harga FMCG**.
+
+Task Managed by agent antigravity at 2026-10-31T11:55:00+07:00
+
 ## 2026-10-31T11:00:00+07:00 — antigravity agent — Agent Dispatch Prompts Prepared (Sprint 1 & Sprint 2)
 **Branch:** `main`
 **Status:** READY FOR USER DISPATCH
