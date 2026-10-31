@@ -1,4 +1,15 @@
-﻿## 2026-10-31T22:52:15+07:00 — antigravity agent — Perbaikan Kolisi Nama Atribut _ids pada Model id.sales.productivity
+﻿## 2026-10-31T22:59:25+07:00 — antigravity agent — Perbaikan Field Wajib Code pada Fixture Test id_dashboard_sales
+**Branch:** gen/claude-design2-sales-productivity
+**Status:** PASS (Static) -> Siap CI install-test
+
+### Diagnosa & Perbaikan
+- CI install-test memicu error PostgreSQL psycopg2.errors.NotNullViolation: null value in column "code" of relation "id_principal" pada setUpClass di 	est_sales_productivity.py.
+- Penyebab: Model id.principal dan id.brand mewajibkan field code (equired=True), sedangkan fixture test membuatnya hanya dengan atribut 
+ame.
+- Perbaikan: Menambahkan nilai "code": "DPRIN" untuk id.principal dan "code": "DBRAND" untuk id.brand pada ddons/id_dashboard_sales/tests/test_sales_productivity.py.
+- Verifikasi: uff check addons/id_dashboard_sales PASS, check_manifests.py PASS.
+
+## 2026-10-31T22:52:15+07:00 — antigravity agent — Perbaikan Kolisi Nama Atribut _ids pada Model id.sales.productivity
 **Branch:** gen/claude-design2-sales-productivity
 **Status:** PASS (Static) -> Siap CI install-test
 
@@ -3336,6 +3347,7 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai seluruh job selesai sebelum verdict. Hasil belum diklaim.
 - Scope tetap UI/tests/docs. PR #32 tetap draft; tidak merge dan tidak deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:26:00+07:00
+
 
 
 

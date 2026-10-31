@@ -22,8 +22,10 @@ class TestSalesProductivity(TransactionCase):
         cls.channel_gt = cls.env["id.channel"].create({"code": "ZGT", "name": "Dash GT"})
         cls.outlet_mt = cls.env["res.partner"].create({"name": "Dash Outlet MT", "channel_id": cls.channel_mt.id})
         cls.outlet_gt = cls.env["res.partner"].create({"name": "Dash Outlet GT", "channel_id": cls.channel_gt.id})
-        cls.principal = cls.env["id.principal"].create({"name": "Dash Principal"})
-        cls.brand = cls.env["id.brand"].create({"name": "Dash Brand", "principal_id": cls.principal.id})
+        cls.principal = cls.env["id.principal"].create({"name": "Dash Principal", "code": "DPRIN"})
+        cls.brand = cls.env["id.brand"].create({
+            "name": "Dash Brand", "code": "DBRAND", "principal_id": cls.principal.id
+        })
         cls.products = cls.env["product.product"].create([
             {"name": f"Dash SKU {i}", "list_price": 1000.0, "type": "consu",
              "principal_id": cls.principal.id, "brand_id": cls.brand.id}

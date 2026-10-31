@@ -1459,3 +1459,10 @@
 - Fix: Renamed helper method to '_parse_ids'.
 - Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T22:52:15+07:00
+
+[2026-10-31T22:59:25+07:00] [INFO] Fix Required Code in Principal and Brand Fixtures
+- Diagnosed install-test failure: NotNullViolation on id_principal.code in setUpClass of TestSalesProductivity.
+- Root cause: id.principal and id.brand require 'code' field.
+- Fix: Supplied 'code': 'DPRIN' and 'code': 'DBRAND' in test setUpClass.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T22:59:25+07:00
