@@ -1474,3 +1474,11 @@
 - Fix: Ensured company currency and IDR currency are explicitly set active in setUpClass of TestSalesProductivity.
 - Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T23:08:45+07:00
+
+
+[2026-10-31T23:16:30+07:00] [INFO] Fix Picking date_done in TestSalesProductivity
+- Diagnosed install-test failure: AssertionError: 0 != 1 on data["total"]["do_count"] in test_fulfillment_counts_only_delivered_and_posted_invoice.
+- Root cause: picking.button_validate() defaults date_done to datetime.now(), falling outside the tested July 2026 period.
+- Fix: Set picking.date_done = datetime(2026, 7, 15, 4, 0) after validation so picking falls inside the query period.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T23:16:30+07:00

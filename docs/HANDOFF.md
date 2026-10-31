@@ -1,3 +1,13 @@
+## 2026-10-31T23:16:30+07:00 — antigravity agent — Perbaikan Tanggal date_done Picking pada Test id_dashboard_sales
+**Branch:** agen/claude-design2-sales-productivity
+**Status:** PASS (Static) -> Siap CI install-test
+
+### Diagnosa & Perbaikan
+- CI install-test gagal pada assertion test_fulfillment_counts_only_delivered_and_posted_invoice: AssertionError: 0 != 1 pada data['total']['do_count'].
+- Penyebab: picking.button_validate() mengisi picking.date_done dengan datetime.now() (Oktober 2026), sehingga berada di luar periode query tes (Juli 2026: 2026-07-01 s/d 2026-07-31).
+- Perbaikan: Mengatur picking.date_done = datetime(2026, 7, 15, 4, 0) setelah picking.button_validate() pada addons/id_dashboard_sales/tests/test_sales_productivity.py.
+- Verifikasi: ruff check addons/id_dashboard_sales PASS, check_manifests.py PASS (10 addon terverifikasi).
+
 ## 2026-10-31T23:08:45+07:00 — antigravity agent — Perbaikan Currency IDR Inactive pada Test id_dashboard_sales
 **Branch:** agen/claude-design2-sales-productivity
 **Status:** PASS (Static) -> Siap CI install-test

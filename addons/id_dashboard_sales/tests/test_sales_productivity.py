@@ -118,6 +118,7 @@ class TestSalesProductivity(TransactionCase):
         picking = order.picking_ids
         picking.move_ids.write({"quantity": 10.0})
         picking.button_validate()
+        picking.date_done = datetime(2026, 7, 15, 4, 0)
         invoice = order._create_invoices()
         data = self._service().get_data("month", "2026-07-10", [self.salesman.id], [])
         self.assertAlmostEqual(data["total"]["fulfillment"], 0.0, msg="draft invoice must not count")
