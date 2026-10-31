@@ -1,4 +1,8 @@
-import { PackagingSchema, SnapshotScopeSchema } from "./product-units.ts";
+import {
+    PackagingSchema,
+    SnapshotScopeSchema,
+    UnitLabelSchema,
+} from "./product-units.ts";
 import { TripCloseSchema } from "./trip-close-contracts.ts";
 import { OrderRevisionSchema } from "./order-revision-contracts.ts";
 import {
@@ -157,6 +161,9 @@ export const SnapshotSchema = z
                 stock: z.number().nonnegative(),
                 sku_code: z.string().trim().min(1).optional(),
                 packaging: PackagingSchema.optional(),
+                carton_label: UnitLabelSchema.optional(),
+                pack_label: UnitLabelSchema.optional(),
+                unit_label: UnitLabelSchema.optional(),
                 price_basis: z.literal("carton").optional(),
                 stock_basis: z.literal("carton").optional(),
             }),

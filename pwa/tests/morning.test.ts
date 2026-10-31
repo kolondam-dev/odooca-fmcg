@@ -33,7 +33,7 @@ async function setup(actor = "sales") {
 }
 it("requires accepted simulator attendance before a complete online snapshot, then restores the exact bundle offline", async () => {
     const { identity, service } = await setup();
-    await expect(service.open()).rejects.toThrow("absensi");
+    await expect(service.open()).rejects.toThrow("Absensi");
     const attendance = await service.acceptAttendance();
     expect(morningReady(attendance, ownerKey(identity))).toBe(false);
     const session = await service.open();
@@ -54,7 +54,9 @@ it("blocks offline morning opening and never converts rejected/expired scenarios
         "timeout",
     ] as const) {
         provider.scenario = scenario;
-        await expect(service.acceptAttendance()).rejects.toThrow("Simulator");
+        await expect(service.acceptAttendance()).rejects.toThrow(
+            "Sesi ditolak",
+        );
         expect(await service.restore()).toBeUndefined();
     }
 });

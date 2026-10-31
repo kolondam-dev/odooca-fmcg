@@ -79,9 +79,7 @@ export function MorningSession({
         setBusy(true);
         setError("");
         try {
-            const next = today
-                ? await service.open()
-                : await service.acceptAttendance();
+            const next = await service.openDay();
             setRecord(next);
             changed.current(next);
         } catch (e) {
@@ -98,36 +96,29 @@ export function MorningSession({
     return (
         <section
             class="morning-card"
-            aria-label="Sesi kerja pagi simulasi"
+            aria-label="Sesi kerja"
             data-owner={`${identity.companyId}:${identity.id}`}
             aria-busy={!loaded || busy}
         >
             <div class="morning-heading">
                 <Icon name={ready ? "check" : "clock"} />
                 <div>
-                    <h2>Sesi kerja pagi</h2>
-                    <p>SIMULASI · {date} · WITA</p>
+                    <h2>Sesi kerja</h2>
+                    <p>
+                        {date} · WITA
+                        {ready && today?.snapshot?.version
+                            ? ` · ${today.snapshot.version}`
+                            : ""}
+                    </p>
                 </div>
                 <span class={`pill ${ready ? "success" : "neutral"}`}>
-                    {ready ? "Sesi terbuka" : "Belum siap"}
+                    {ready ? "Sesi aktif" : "Belum dibuka"}
                 </span>
             </div>
-            <ol class="morning-steps">
-                <li>{today ? "✓" : "1."} Absensi diterima simulator</li>
-                <li>
-                    {ready ? "✓" : "2."} Daily sync online PJP, stok, harga &
-                    manifest
-                </li>
-                <li>{ready ? "✓" : "3."} List Sales/Delivery dapat dibuka</li>
-            </ol>
-            <p class="footnote">
-                Kontrol demo ini menggantikan respons absensi untuk menguji
-                alur. Bukan absensi sah, login atau persetujuan Odoo.
-            </p>
             {ready ? (
                 <p class="notice" role="status">
-                    Paket pagi {today?.snapshot?.version} tersimpan. Order dapat
-                    dibuat offline hari ini.
+                    Paket outlet, stok dan harga tersimpan. Order dapat dibuat
+                    offline hari ini.
                 </p>
             ) : (
                 <button
@@ -135,11 +126,7 @@ export function MorningSession({
                     disabled={!loaded || busy}
                     onClick={() => void advance()}
                 >
-                    {busy
-                        ? "Memproses…"
-                        : today
-                          ? "Sync pagi & buka sesi demo"
-                          : "Simulasikan absensi diterima"}
+                    {busy ? "Memproses…" : "Buka sesi kerja"}
                 </button>
             )}
             {error && (

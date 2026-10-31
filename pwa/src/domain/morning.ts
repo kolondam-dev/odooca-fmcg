@@ -109,7 +109,7 @@ export class MorningSimulation {
             );
         if (this.provider.scenario && this.provider.scenario !== "normal")
             throw new Error(
-                "Simulator menolak / belum menerima sesi. Pilih respons Normal untuk melanjutkan simulasi.",
+                "Sesi ditolak atau belum diterima. Pilih mode Normal untuk melanjutkan.",
             );
         const current = await this.provider.bootstrap();
         if (
@@ -122,6 +122,17 @@ export class MorningSimulation {
         if (!current.roles.some((r) => r === "sales" || r === "delivery"))
             throw new Error("Sesi kunjungan hanya untuk Sales/Canvasser.");
         return current.businessDate;
+    }
+    /**
+     * One-tap day start: attendance is accepted when the day has no record yet,
+     * then the daily bundle is opened. Attendance evidence captured elsewhere in
+     * the app is already durable before this call.
+     */
+    async openDay() {
+        const current = await this.restore();
+        if (!current || current.businessDate !== fieldBusinessDate())
+            await this.acceptAttendance();
+        return this.open();
     }
     async acceptAttendance() {
         const businessDate = await this.checkConnection();
@@ -142,7 +153,7 @@ export class MorningSimulation {
         const date = await this.checkConnection();
         const attendance = await this.restore();
         if (!attendance || attendance.businessDate !== date)
-            throw new Error("Simulasikan absensi diterima sebelum sync pagi.");
+            throw new Error("Absensi belum diterima. Buka sesi kerja dahulu.");
         const snapshot = SnapshotSchema.parse(await this.provider.snapshot());
         const deliveryManifest = this.identity.roles.includes("delivery")
             ? z

@@ -275,7 +275,7 @@ export function EvidenceCapture({
                 setMap(row.visual!.map);
                 report({ ...ref, packageHash: row.visual!.bindingSha256 });
                 setError(
-                    "Foto dan pinpoint simulasi tersimpan lokal. Peta resmi belum tersedia.",
+                    "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
                 );
             }
         } catch (error) {
@@ -321,11 +321,11 @@ export function EvidenceCapture({
                             timestamp: Date.now(),
                         } as GeolocationPosition);
                         setError(
-                            "Lokasi DEMO dipilih; bukan lokasi terverifikasi.",
+                            "Lokasi acuan dipakai; bukan lokasi terverifikasi.",
                         );
                     }}
                 >
-                    Gunakan lokasi demo
+                    Gunakan lokasi acuan
                 </button>
             )}
             {!readOnly && (
@@ -379,13 +379,10 @@ export function EvidenceCapture({
             )}
             {mapPreview && (
                 <figure class="evidence-map">
-                    <img
-                        src={mapPreview}
-                        alt="Pinpoint simulasi tanpa basemap"
-                    />
+                    <img src={mapPreview} alt="Pinpoint tanpa basemap" />
                     <figcaption>
-                        Grid koordinat simulasi · bukan peta jalan. Area biru
-                        menunjukkan akurasi lokasi.
+                        Grid koordinat · bukan peta jalan. Area biru menunjukkan
+                        akurasi lokasi.
                     </figcaption>
                 </figure>
             )}
@@ -463,7 +460,7 @@ export function EvidenceCapture({
             )}
             <small>
                 Map pending · foto baru memiliki watermark waktu pencatatan dan
-                koordinat. Pinpoint simulasi tidak memenuhi gate peta resmi.
+                koordinat. Pinpoint lokal tidak memenuhi gate peta resmi.
             </small>
         </div>
     );

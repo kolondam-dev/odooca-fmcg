@@ -27,3 +27,12 @@ export async function saveVisitPhoto(
             .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
             .click();
 }
+/** Store-display proof required before an order can leave the sheet. */
+export async function saveDisplayPhoto(page: Page) {
+    await page
+        .getByLabel("Foto display outlet")
+        .setInputFiles("public/icon-192.png");
+    await expect(
+        page.getByRole("dialog").getByText("Tersimpan", { exact: true }),
+    ).toBeVisible();
+}

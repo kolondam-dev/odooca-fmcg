@@ -5,7 +5,7 @@ import {
     saveDeliveryPhoto,
     startDelivery,
 } from "./delivery-helpers";
-import { saveVisitPhoto } from "./visit-helpers";
+import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
 test.beforeEach(async ({ context }) => {
     await context.grantPermissions(["geolocation"]);
     await context.setGeolocation({
@@ -24,7 +24,7 @@ for (const approved of [true, false])
             .getByRole("button", { name: "Sales", exact: true })
             .click();
         await expect(
-            page.getByText("Daily sync wajib sebelum membuka list Sales."),
+            page.getByText("Buka sesi kerja sebelum membuka daftar outlet."),
         ).toBeVisible();
         await expect(
             page.getByRole("button", { name: /Toko Sinar Pagi/ }),
@@ -36,22 +36,38 @@ for (const approved of [true, false])
             .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
             .click();
         await page
-            .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
+            .getByRole("button", { name: "Mulai kunjungan", exact: true })
             .click();
         await page
             .getByRole("button", { name: "Buat order di outlet", exact: true })
             .click();
-        await page
-            .getByLabel("Satuan Biskuit Kelapa 300 g", { exact: true })
-            .selectOption("pack");
+        const units = page.getByRole("group", {
+            name: "Satuan Biskuit Kelapa 300 g",
+            exact: true,
+        });
+        await expect(
+            units.getByRole("button", { name: "Renceng", exact: true }),
+        ).toBeVisible();
+        await expect(
+            page
+                .getByText("1 Karton = 144 Pcs · 1 Renceng = 12 Pcs", {
+                    exact: true,
+                })
+                .first(),
+        ).toBeVisible();
+        await units
+            .getByRole("button", { name: "Renceng", exact: true })
+            .click();
         await page
             .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
             .fill("1");
+        await page.locator("details.order-extra > summary").click();
         await page.getByLabel("Diskon diminta (%)", { exact: true }).fill("5");
         await page
             .getByLabel("Alasan permintaan diskon", { exact: true })
             .fill("Promo contoh");
-        await page.locator(".product").first().scrollIntoViewIfNeeded();
+        await saveDisplayPhoto(page);
+        await page.locator(".product-card").first().scrollIntoViewIfNeeded();
         await page.screenshot({
             path: `test-results/order-tiers-${test.info().project.name}.png`,
             fullPage: true,
@@ -63,7 +79,7 @@ for (const approved of [true, false])
         ).toBe(true);
         await page
             .getByRole("button", {
-                name: "Simpan ke antrean demo",
+                name: "Simpan ke antrean",
                 exact: true,
             })
             .click();
@@ -81,9 +97,7 @@ for (const approved of [true, false])
             .fill("Review simulasi");
         await page
             .getByRole("button", {
-                name: approved
-                    ? "Simulasikan setujui diskon"
-                    : "Simulasikan tolak diskon",
+                name: approved ? "Setujui diskon" : "Tolak diskon",
                 exact: true,
             })
             .click();
@@ -193,47 +207,59 @@ test("SKU packaging drives new order and offline correction prices independently
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await saveVisitPhoto(page, "check-in");
     await page
-        .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
+        .getByRole("button", { name: "Mulai kunjungan", exact: true })
         .click();
     await page
         .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
-    const units = page.getByLabel("Satuan Biskuit Mini 24 pcs", {
+    const units = page.getByRole("group", {
+        name: "Satuan Biskuit Mini 24 pcs",
         exact: true,
     });
-    await expect(units.locator('option[value="carton"]')).toHaveText(
-        "Karton · 24 pcs",
-    );
-    await expect(units.locator('option[value="pack"]')).toHaveText(
-        "Pack · 6 pcs",
-    );
-    await units.selectOption("pack");
+    await expect(
+        units.getByRole("button", { name: "Box", exact: true }),
+    ).toBeVisible();
+    await expect(
+        units.getByRole("button", { name: "Pack", exact: true }),
+    ).toBeVisible();
+    await expect(
+        page.getByText("1 Box = 24 Pcs · 1 Pack = 6 Pcs", {
+            exact: true,
+        }),
+    ).toBeVisible();
+    await units.getByRole("button", { name: "Pack", exact: true }).click();
     await page
         .getByLabel("Kuantitas Biskuit Mini 24 pcs", { exact: true })
         .fill("2");
     await page
-        .getByLabel("Satuan Biskuit Kelapa 300 g", { exact: true })
-        .selectOption("pack");
+        .getByRole("group", {
+            name: "Satuan Biskuit Kelapa 300 g",
+            exact: true,
+        })
+        .getByRole("button", { name: "Renceng", exact: true })
+        .click();
     await page
         .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
         .fill("1");
+    await page.locator("details.order-extra > summary").click();
     await page.getByLabel("Diskon diminta (%)", { exact: true }).fill("5");
     await page
         .getByLabel("Alasan permintaan diskon", { exact: true })
         .fill("Promo kemasan SKU");
+    await saveDisplayPhoto(page);
     await page
-        .getByRole("button", { name: "Simpan ke antrean demo", exact: true })
+        .getByRole("button", { name: "Simpan ke antrean", exact: true })
         .click();
     await saveVisitPhoto(page, "check-out");
     await page
-        .getByRole("button", { name: "Tutup kunjungan demo", exact: true })
+        .getByRole("button", { name: "Tutup kunjungan", exact: true })
         .click();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await page
         .getByLabel("Alasan keputusan diskon", { exact: true })
         .fill("Revisi jumlah pack");
     await page
-        .getByRole("button", { name: "Simulasikan tolak diskon", exact: true })
+        .getByRole("button", { name: "Tolak diskon", exact: true })
         .click();
     await page.getByText(/Riwayat SO ·/).click();
     await page

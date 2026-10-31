@@ -88,9 +88,7 @@ export function validateAdvance(
 ): SimulatedAdvance {
     const parsed = SimulatedAdvanceSchema.safeParse(value);
     if (!parsed.success)
-        throw new Error(
-            "Data pencairan simulasi tidak valid. Review ulang diperlukan.",
-        );
+        throw new Error("Data pencairan tidak valid. Review ulang diperlukan.");
     const advance = parsed.data;
     const request = requestFrom(item, owner);
     const roles = approvalRoles(
@@ -113,7 +111,7 @@ export function validateAdvance(
         item.receipt.client_uuid !== item.command.client_uuid
     )
         throw new Error(
-            "Pencairan simulasi tidak cocok dengan pengajuan/persetujuan. Review ulang diperlukan.",
+            "Pencairan tidak cocok dengan pengajuan/persetujuan. Review ulang diperlukan.",
         );
     return advance;
 }
@@ -329,7 +327,7 @@ export class ExpenseSimulation {
             throw new Error("Realisasi resmi belum tersedia.");
         const item = await this.source(uuid),
             advance = await this.load(uuid);
-        if (!advance) throw new Error("Simulasikan approval/pencairan dahulu.");
+        if (!advance) throw new Error("Proses approval/pencairan dahulu.");
         const predecessor = advance.realization_uuid
             ? (await this.store.list(advance.owner)).find(
                   (q) => q.command.client_uuid === advance.realization_uuid,

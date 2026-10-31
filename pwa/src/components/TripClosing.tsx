@@ -130,7 +130,7 @@ export function TripClosing({
             );
             setClosed((v) => ({ ...v, [trip]: true }));
             setMessage(
-                `Trip closed lokal. Jarak kantor contoh ${Math.round(distanceMeters(fix.latitude, fix.longitude, DEMO_OFFICE.latitude, DEMO_OFFICE.longitude))}m; toleransi25m. Demo tanpa validasi lokasi. Belum settlement kasir/Odoo.`,
+                `Trip closed lokal. Jarak kantor contoh ${Math.round(distanceMeters(fix.latitude, fix.longitude, DEMO_OFFICE.latitude, DEMO_OFFICE.longitude))}m; toleransi25m. Tanpa validasi lokasi kantor. Belum settlement kasir/Odoo.`,
             );
             changed();
             void engine.flush();
@@ -146,9 +146,9 @@ export function TripClosing({
             <h3>Closing trip · tiba di kantor</h3>
             <p>
                 Kantor contoh radius30m + toleransi25m. Aturan geofence
-                disimpan, tidak memblokir demo tanpa validasi lokasi. Selesaikan
-                semua hasil DO dan tutup sesi aktif dahulu; pending approval
-                boleh tercatat, bukan dianggap disetujui.
+                disimpan, tidak memblokir validasi lokasi. Selesaikan semua
+                hasil DO dan tutup sesi aktif dahulu; pending approval boleh
+                tercatat, bukan dianggap disetujui.
             </p>
             {trips.map((trip) => (
                 <p key={trip}>
@@ -161,7 +161,7 @@ export function TripClosing({
                             disabled={busy}
                             onClick={() => void close(trip)}
                         >
-                            Tutup trip demo
+                            Tutup trip
                         </button>
                     )}
                 </p>
