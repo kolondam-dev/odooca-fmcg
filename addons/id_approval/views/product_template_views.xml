@@ -20,13 +20,15 @@
             </xpath>
 
             <!-- Header Status SKU Approval -->
-            <xpath expr="//header" position="inside">
-                <button name="action_request_new_sku_approval"
-                        type="object"
-                        string="Ajukan Persetujuan SKU Baru"
-                        class="btn-primary"
-                        invisible="fmcg_approval_state in ('active', 'pending')"/>
-                <field name="fmcg_approval_state" widget="statusbar" statusbar_visible="draft,pending,active"/>
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_request_new_sku_approval"
+                            type="object"
+                            string="Ajukan Persetujuan SKU Baru"
+                            class="btn-primary"
+                            invisible="fmcg_approval_state in ('active', 'pending')"/>
+                    <field name="fmcg_approval_state" widget="statusbar" statusbar_visible="draft,pending,active"/>
+                </header>
             </xpath>
         </field>
     </record>
