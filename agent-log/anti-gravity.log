@@ -1385,3 +1385,27 @@
 - Unit Test Suite:
   * test_credit_limit_approval.py mencakup pengujian order normal, order over-limit terblokir, approval BM, penolakan, proteksi overdue invoice mode strict, dan validasi ekspor CSV CoreTax.
 - Task managed by antigravity-agent at 2026-10-31T16:55:00+07:00
+
+[2026-10-31T18:15:00+07:00] [FEAT] Implementasi Modul Mandiri id_approval (FMCG Multi-Tier Approval Governance)
+- Menginisialisasi addon baru id_approval (versi 19.0.1.0.0, lisensi LGPL-3):
+  * Core Engine: fmcg.approval.category, fmcg.approval.rule, fmcg.approval.request, fmcg.approval.request.line
+  * Multi-Tier & Threshold Governance: single-tier, multi-tier, amount-based threshold, discount-percentage threshold
+  * Role Hierarchy Security: Staf Pengaju (User), Penyelia (Supervisor Tier 1), Manajer Cabang (Tier 2), Direksi/Pemilik (Owner Tier 3)
+- 10 Kategori Approval Terintegrasi:
+  1. partner_credit_limit: Plafon kredit & ToP tempo pelanggan baru (Bypass otomatis untuk ToP Cash).
+  2. partner_top_change: Perubahan syarat pembayaran customer eksisting.
+  3. new_sku: Otorisasi master produk baru sebelum aktif jual.
+  4. new_promo: Program diskon & promo baru beranggaran principal.
+  5. tactical_discount: Diskon manual di luar program (wajib akun analitik agar traceable).
+  6. discount_below_hpp: Penjualan di bawah harga pokok (wajib 2-line: BM hingga Direksi/Owner).
+  7. operational_expense: Pengeluaran operasional berjenjang (SPV <= 1 Juta, BM <= 5 Juta, Direksi > 5 Juta).
+  8. hr_leave_2line: Cuti karyawan 2 tingkat (SPV lalu BM).
+  9. early_inbound: Penerimaan barang sebelum jadwal PO di gudang.
+  10. extra_call: Kunjungan salesman di luar jadwal PJP harian.
+- UI Odoo & Traceability Reporting:
+  * Menu utama 'Pusat Persetujuan' (Approval Center), filter 'Menunggu Persetujuan Saya', pivot & graph view untuk audit laporan manajemen.
+  * Smart button & alert integrasi pada res.partner, sale.order, dan product.template.
+- Verifikasi & Test:
+  * Unit test komprehensif test_approval_engine.py menguji 5 skenario (cash bypass, 2-line approval below HPP, analytic constraint, new SKU activation, rejection).
+  * Lolos ruff check dan check_manifests.py (7 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T18:15:00+07:00

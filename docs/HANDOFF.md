@@ -1,3 +1,46 @@
+## 2026-10-31T18:15:00+07:00 — antigravity agent — Implementasi Modul Mandiri id_approval (FMCG Multi-Tier Approval Governance)
+**Branch:** gen/id-approval-engine (basis origin/main = 6d603fa)
+**Status:** PASS / VERIFIED & TESTED
+
+### 1. Modul Mandiri: id_approval
+- **Core Multi-Tier Engine:**
+  - mcg.approval.category: Kategori persetujuan lintas modul bisnis (Sales, Partner, Product, HR, Inventory, Accounting).
+  - mcg.approval.rule: Konfigurasi tiering fleksibel (urutan tier, role wewenang, batas nominal/persentase diskon, dan SLA respon).
+  - mcg.approval.request & mcg.approval.request.line: Transaksi pengajuan persetujuan berjenjang dengan riwayat audit trail chatter lengkap.
+- **Role Hierarchy Security:**
+  - group_fmcg_approval_user (Staf Pengaju)
+  - group_fmcg_approval_supervisor (Penyelia / SPV - Tier 1)
+  - group_fmcg_approval_manager (Branch Manager - Tier 2)
+  - group_fmcg_approval_director (Direksi / Pemilik - Tier 3)
+
+### 2. 10 Kategori Approval Terintegrasi
+1. partner_credit_limit: Plafon kredit & ToP tempo pelanggan baru (Bypass otomatis jika pelanggan ToP Cash).
+2. partner_top_change: Perubahan syarat pembayaran customer eksisting.
+3. 
+ew_sku: Otorisasi master produk baru sebelum aktif jual.
+4. 
+ew_promo: Program promosi & diskon baru beranggaran principal.
+5. 	actical_discount: Diskon manual di luar program resmi (wajib akun analitik agar traceable).
+6. discount_below_hpp: Harga jual di bawah HPP (Wajib 2-line: Branch Manager hingga Direksi/Pemilik).
+7. operational_expense: Biaya operasional berjenjang (SPV <= 1 Jt, BM <= 5 Jt, Direksi > 5 Jt).
+8. hr_leave_2line: Cuti karyawan 2 tingkat (Atasan Langsung SPV lalu BM).
+9. early_inbound: Penerimaan barang mendahului jadwal PO gudang.
+10. extra_call: Kunjungan salesman di luar rute PJP resmi.
+
+### 3. UI, Traceability, & Laporan Audit
+- Menu utama terpusat **Pusat Persetujuan (Approval Center)**:
+  - *Menunggu Persetujuan Saya* (filter pintar sesuai user login).
+  - *Semua Pengajuan* (riwayat dengan badge status).
+  - *Laporan Audit & Analisis* (Pivot & Graph view untuk penelusuran dampak nominal).
+  - *Konfigurasi Kategori & Tiers* (dapat disesuaikan manajemen tanpa edit kode).
+- Smart button & alert pada 
+es.partner, sale.order, dan product.template.
+
+### 4. Unit Test Suite
+- ddons/id_approval/tests/test_approval_engine.py (5 skenario: cash bypass, 2-line approval below HPP, analytic constraint, new SKU activation, rejection).
+
+Task managed by antigravity-agent at 2026-10-31T18:15:00+07:00
+
 ## 2026-10-31T16:55:00+07:00 — antigravity agent — Stack A Fase 2: Credit Limit Approval Workflow & Integrasi CoreTax Selesai
 **Branch:** `agen/stack-a-approval-finance-governance` (basis `origin/main` = `61c1c6d`)
 **Status:** PASS / VERIFIED & TESTED
