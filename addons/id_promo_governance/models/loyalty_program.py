@@ -1,6 +1,6 @@
 import logging
 
-from odoo import fields, models, _
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
@@ -11,7 +11,6 @@ class LoyaltyProgram(models.Model):
 
     mou_number = fields.Char(
         string="Nomor Perjanjian / MoU Prinsipal",
-        required=True,
         copy=False,
         index=True,
         default=lambda self: self.env["ir.sequence"].next_by_code("id.promo.mou") or "MOU-PROMO-DRAFT",
@@ -30,14 +29,12 @@ class LoyaltyProgram(models.Model):
         ],
         string="Sumber Anggaran Promosi",
         default="principal",
-        required=True,
         tracking=True,
         help="Alokasi penanggung beban biaya diskon promosi",
     )
     principal_id = fields.Many2one(
         "id.principal",
         string="Prinsipal Pemilik",
-        required=True,
         index=True,
         tracking=True,
         help="Prinsipal yang menerbitkan promo dan menjadi tujuan penagihan reimbursement",
@@ -116,6 +113,15 @@ class LoyaltyProgram(models.Model):
             ])
             record.order_line_count = len(lines)
             record.total_claimable_amount = sum(lines.mapped("promo_claim_amount"))
+
+    @api.constrains("governance_state", "principal_id", "mou_number")
+    def _check_fmcg_promo_requirements(self):
+        for record in self:
+            if record.governance_state in ["pending", "approved", "active"]:
+                if not record.principal_id:
+                    raise ValidationError(_("Prinsipal wajib ditentukan untuk program promosi yang diajukan/aktif!"))
+                if not record.mou_number:
+                    raise ValidationError(_("Nomor MoU wajib ditentukan untuk program promosi yang diajukan/aktif!"))
 
     def action_submit_approval(self):
         for record in self:
