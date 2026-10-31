@@ -215,3 +215,72 @@ msgstr "Tidak ada data untuk periode dan filter ini."
 #. module: id_dashboard_sales
 msgid "No SKU sold for this period and filter."
 msgstr "Tidak ada SKU terjual untuk periode dan filter ini."
+
+msgid "vs previous period"
+msgstr "dibanding periode sebelumnya"
+
+msgid "orders"
+msgstr "pesanan"
+
+msgid "of gross"
+msgstr "dari omset kotor"
+
+msgid "ex-tax (DPP)"
+msgstr "belum pajak (DPP)"
+
+msgid "by delivery date"
+msgstr "menurut tanggal kirim"
+
+msgid "planned outlets"
+msgstr "outlet terencana"
+
+msgid "visits with order"
+msgstr "kunjungan beromzet"
+
+msgid "Target ≥"
+msgstr "Target ≥"
+
+msgid "SKU/order"
+msgstr "SKU/pesanan"
+
+msgid "distinct SKU"
+msgstr "SKU unik"
+
+msgid "delivered and posted-invoiced value"
+msgstr "nilai terkirim dan terfaktur (posted)"
+
+msgid "Net revenue by salesman"
+msgstr "Omset bersih per salesman"
+
+msgid "Net revenue by channel"
+msgstr "Omset bersih per channel"
+
+msgid "Lines per order vs target"
+msgstr "Lines per order vs target"
+
+msgid "Fulfillment-to-invoice"
+msgstr "Fulfillment-ke-faktur"
+
+msgid "Sales"
+msgstr "Penjualan"
+
+msgid "Field productivity"
+msgstr "Produktivitas lapangan"
+
+msgid "No data"
+msgstr "Tidak ada data"
+
+msgid "Previous"
+msgstr "Sebelumnya"
+
+msgid "Next"
+msgstr "Berikutnya"
+
+msgid "PJP figures cover your own visits only (access scope)."
+msgstr "Angka PJP hanya mencakup kunjungan Anda sendiri (lingkup akses)."
+
+msgid "Vertical line = target ≥"
+msgstr "Garis vertikal = target ≥"
+
+msgid "Max"
+msgstr "Maks"

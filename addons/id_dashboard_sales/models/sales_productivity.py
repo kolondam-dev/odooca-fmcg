@@ -113,6 +113,17 @@ class SalesProductivity(models.AbstractModel):
     @api.model
     def get_data(self, mode="month", anchor=None, salesman_ids=None, channel_ids=None):
         self._check_access()
+        data = self._compute(mode, anchor, salesman_ids, channel_ids)
+        start = date.fromisoformat(data["period"]["start"])
+        previous_anchor = (start - timedelta(days=1)).isoformat() if mode == "month" else (
+            start - timedelta(days=1 if mode == "day" else 7)).isoformat()
+        previous = self._compute(mode, previous_anchor, salesman_ids, channel_ids, light=True)
+        data["previous"] = previous["total"]
+        data["previous_period"] = previous["period"]
+        return data
+
+    @api.model
+    def _compute(self, mode, anchor, salesman_ids, channel_ids, light=False):
         anchor = anchor or self._param("period_min", DEFAULT_PERIOD_MIN)
         start, end = self._period(mode, anchor)
         lo, hi = _to_utc(start), _to_utc(end)
@@ -188,9 +199,6 @@ class SalesProductivity(models.AbstractModel):
             keys_by_dim["channel"][channel_id]["pickings"].add(picking.id)
             keys_by_dim["total"][0]["pickings"].add(picking.id)
 
-        pjp = self._pjp(start, end, lo, hi, salesman_ids, channel_ids, order_info)
-        catalog = self._catalog()
-
         def finish(b, key_name=None):
             n_orders = len(b["orders"])
             lpo_sum = sum(len(order_skus[o]) for o in b["orders"])
@@ -207,6 +215,13 @@ class SalesProductivity(models.AbstractModel):
                 "sku_sold": len(b["skus"]),
                 "fulfillment": _ratio(b["fulfilled"], b["net"]),
             }
+
+        if light:
+            return {"period": {"mode": mode, "start": start.isoformat(), "end": (end - timedelta(days=1)).isoformat()},
+                    "total": finish(keys_by_dim["total"][0])}
+
+        pjp = self._pjp(start, end, lo, hi, salesman_ids, channel_ids, order_info)
+        catalog = self._catalog()
 
         def rows(dim, model, unknown):
             ids = [k for k in keys_by_dim[dim] if k] + [k for k in pjp["keys"][dim] if k and k not in keys_by_dim[dim]]

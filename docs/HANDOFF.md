@@ -1,3 +1,10 @@
+## 2026-11-01T06:38:38+07:00 — claude-design2 — Redesain Sales Productivity (flat, scorecard ikon)
+**Branch:** `agen/claude-design2-sales-productivity-redesign`
+**Berubah:** template OWL, SCSS, getter JS; backend `get_data` kini menambah `previous`/`previous_period` (periode sebelumnya, mode ringan); id.po; 1 tes baru.
+**Diverifikasi (bagaimana):** ruff, check_manifests, node --check; render mock DOM Chromium 1280/820px. **[BU]** runtime Odoo dan CI; tampilan dashboard bawaan tidak dibandingkan langsung.
+**Butir terbuka:** 1. Dashboard ini client action OWL, bukan spreadsheet_dashboard (metrik LPO/penetrasi/PJP tak bisa dinyatakan sebagai pivot). 2. Tak ada delta PJP/EC (periode sebelumnya tidak dihitung).
+**Menunggu:** pemilik (review visual di instance demo), CI.
+
 ## 2026-10-31T23:16:30+07:00 — antigravity agent — Perbaikan Tanggal date_done Picking pada Test id_dashboard_sales
 **Branch:** agen/claude-design2-sales-productivity
 **Status:** PASS (Static) -> Siap CI install-test
