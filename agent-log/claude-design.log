@@ -115,3 +115,12 @@
 - CI menggabungkan fixture SO/invoice dengan instalasi dan test tag id_mobile_api dari main (PR #40); API tests tetap disertakan.
 - CI/browser hasil sinkronisasi masih menunggu; tidak mengklaim lulus sebelum run terbaru selesai.
 Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:00
+
+[2026-10-31T16:53:53+07:00] [INFO] Sales Productivity Dashboard (addon id_dashboard_sales) — implementasi awal
+- Addon baru id_dashboard_sales: layanan agregasi id.sales.productivity (ORM, record rules berlaku, WITA), komponen OWL client action, menu FMCG Distribution > Dashboards > Sales Productivity.
+- Kartu KPI (navy/blue/emerald/amber): omset kotor, diskon (diskon native baris saja, opsi B), omset bersih, DO terkirim (picking outgoing done); drill-down ke SO/DO.
+- Metrik per salesman dan per channel: LPO (target 4, parameter id_dashboard_sales.lpo_target), SKU terjual + penetrasi per prinsipal/brand, fulfillment-to-invoice (hanya faktur posted, kirim x tagih), PJP compliance dan EC ratio.
+- PJP/EC bersumber id.mobile.workday + id.mobile.evidence; bila modul tidak ada, tidak terbaca, atau tanpa rencana pada periode: tampil N/A dengan alasan, tidak diestimasi. Data seed hanya Juli 2026 dan tanpa rencana PJP di Odoo, jadi Agu-Okt kosong dan PJP/EC N/A sampai id.mobile.workday terisi.
+- Filter: Harian/Mingguan/Bulanan (Jul-Okt 2026, parameter period_min/max), salesman (dinamis dari SO), channel (id.channel). Responsif desktop/tablet (grid 4/2/3 kolom).
+- Verifikasi: ruff check, scripts/check_manifests.py, py_compile, node --check lulus. [BU] Belum dijalankan di Odoo: tes TransactionCase ditambahkan dan tag /id_dashboard_sales + instal ditambahkan ke ci.yml; tampilan browser belum diperiksa. whats_new.sh tidak mengenal claude-design2 (dipakai claude-design).
+- Task Managed by agent claude-design2 at 2026-10-31T16:53:53+07:00

@@ -1,0 +1,444 @@
+// Sales Productivity dashboard. FMCG palette: navy / blue / emerald / amber.
+$sp-navy: #001a57;
+$sp-blue: #004ecc;
+$sp-emerald: #16a34a;
+$sp-amber: #d97706;
+$sp-ink: #0f172a;
+$sp-muted: #64748b;
+$sp-line: #e2e8f0;
+$sp-surface: #ffffff;
+$sp-bg: #f1f5f9;
+
+.id-sp {
+    background: $sp-bg;
+    color: $sp-ink;
+    overflow: hidden;
+
+    &__scroll {
+        height: 100%;
+        overflow-y: auto;
+        padding: 16px 20px 32px;
+    }
+
+    &__header {
+        margin-bottom: 12px;
+    }
+
+    &__title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: $sp-navy;
+    }
+
+    &__subtitle {
+        margin: 2px 0 0;
+        color: $sp-muted;
+        font-size: 13px;
+    }
+
+    // ---- filters
+    &__filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 24px;
+        align-items: center;
+        background: $sp-surface;
+        border: 1px solid $sp-line;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+    }
+
+    &__filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__filter-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: $sp-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    &__seg {
+        display: inline-flex;
+        border: 1px solid $sp-line;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    &__seg-btn {
+        border: 0;
+        background: $sp-surface;
+        padding: 6px 12px;
+        font-size: 13px;
+        color: $sp-ink;
+        cursor: pointer;
+
+        & + & {
+            border-left: 1px solid $sp-line;
+        }
+
+        &.is-active {
+            background: $sp-navy;
+            color: #fff;
+        }
+    }
+
+    &__date {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    &__icon-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid $sp-line;
+        border-radius: 8px;
+        background: $sp-surface;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+    }
+
+    &__input {
+        height: 32px;
+        border: 1px solid $sp-line;
+        border-radius: 8px;
+        padding: 0 8px;
+        font-size: 13px;
+    }
+
+    &__link {
+        border: 0;
+        background: none;
+        color: $sp-blue;
+        font-size: 13px;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    &__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    &__chip {
+        border: 1px solid $sp-line;
+        background: $sp-surface;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 13px;
+        cursor: pointer;
+
+        &.is-active {
+            background: $sp-blue;
+            border-color: $sp-blue;
+            color: #fff;
+        }
+    }
+
+    // ---- KPI cards
+    &__cards {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 16px;
+
+        &--primary {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        &--secondary {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+    }
+
+    &__card {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        text-align: left;
+        border: 0;
+        border-radius: 14px;
+        padding: 16px 18px;
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+
+        &--navy {
+            background: $sp-navy;
+        }
+
+        &--blue {
+            background: $sp-blue;
+        }
+
+        &--emerald {
+            background: $sp-emerald;
+        }
+
+        &--amber {
+            background: $sp-amber;
+        }
+    }
+
+    &__card-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.85;
+    }
+
+    &__card-value {
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.15;
+    }
+
+    &__card-meta {
+        font-size: 12px;
+        opacity: 0.8;
+    }
+
+    &__mini {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        background: $sp-surface;
+        border: 1px solid $sp-line;
+        border-radius: 12px;
+        padding: 12px 14px;
+
+        .id-sp__card-label {
+            color: $sp-muted;
+            opacity: 1;
+        }
+
+        .id-sp__card-meta {
+            color: $sp-muted;
+            opacity: 1;
+        }
+    }
+
+    &__mini-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: $sp-navy;
+
+        &.is-ok {
+            color: $sp-emerald;
+        }
+
+        &.is-low {
+            color: $sp-amber;
+        }
+
+        &.is-na {
+            color: $sp-muted;
+        }
+    }
+
+    // ---- panels / tables
+    &__panel {
+        background: $sp-surface;
+        border: 1px solid $sp-line;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+    }
+
+    &__panel-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    &__panel-title {
+        margin: 0 0 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: $sp-navy;
+    }
+
+    &__panel-head &__panel-title {
+        margin: 0;
+    }
+
+    &__table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    &__table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+
+        th,
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid $sp-line;
+            white-space: nowrap;
+        }
+
+        th {
+            text-align: left;
+            font-size: 12px;
+            color: $sp-muted;
+            font-weight: 600;
+        }
+
+        .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .name {
+            font-weight: 600;
+        }
+
+        small {
+            display: block;
+            color: $sp-muted;
+            font-size: 11px;
+        }
+    }
+
+    &__row {
+        cursor: pointer;
+
+        &:hover {
+            background: $sp-bg;
+        }
+    }
+
+    &__pill {
+        display: inline-block;
+        min-width: 38px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: $sp-bg;
+        text-align: center;
+
+        &.is-ok {
+            background: rgba(22, 163, 74, 0.14);
+            color: $sp-emerald;
+        }
+
+        &.is-low {
+            background: rgba(217, 119, 6, 0.16);
+            color: $sp-amber;
+        }
+    }
+
+    .heat-0 {
+        background: $sp-bg;
+    }
+
+    .heat-1 {
+        background: rgba(0, 78, 204, 0.1);
+    }
+
+    .heat-2 {
+        background: rgba(0, 78, 204, 0.22);
+    }
+
+    .heat-3 {
+        background: rgba(0, 78, 204, 0.38);
+    }
+
+    &__trend {
+        display: block;
+        width: 100%;
+        height: 140px;
+    }
+
+    &__bar {
+        fill: $sp-blue;
+    }
+
+    &__trend-axis {
+        display: flex;
+        justify-content: space-between;
+        color: $sp-muted;
+        font-size: 11px;
+    }
+
+    &__note {
+        margin: 8px 0 0;
+        color: $sp-muted;
+        font-size: 12px;
+    }
+
+    &__notice,
+    &__alert {
+        border-radius: 10px;
+        padding: 10px 14px;
+        margin-bottom: 12px;
+        font-size: 13px;
+    }
+
+    &__notice {
+        background: rgba(0, 78, 204, 0.08);
+        color: $sp-navy;
+    }
+
+    &__alert {
+        background: rgba(220, 38, 38, 0.1);
+        color: #991b1b;
+    }
+
+    &__empty {
+        padding: 16px;
+        text-align: center;
+        color: $sp-muted;
+    }
+
+    &__body.is-loading {
+        opacity: 0.55;
+        transition: opacity 0.15s;
+    }
+
+    // ---- tablet: 768-1199px
+    @media (max-width: 1199px) {
+        &__cards--primary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        &__cards--secondary {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    // ---- small tablet / phone
+    @media (max-width: 767px) {
+        &__scroll {
+            padding: 12px 12px 24px;
+        }
+
+        &__cards--primary,
+        &__cards--secondary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        &__card-value {
+            font-size: 22px;
+        }
+    }
+}

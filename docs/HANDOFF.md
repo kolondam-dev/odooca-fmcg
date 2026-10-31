@@ -1,3 +1,12 @@
+## 2026-10-31T16:53:53+07:00 — claude-design2 — Sales Productivity Dashboard (id_dashboard_sales)
+**Branch:** `agen/claude-design2-sales-productivity` (lokal, belum di-push)
+**Berubah:** addon `addons/id_dashboard_sales` (service `id.sales.productivity`, OWL client action, SCSS responsif, menu, id.po, tes TransactionCase); `.github/workflows/ci.yml` memasang dan menguji addon.
+**Definisi KPI:** lihat docstring `models/sales_productivity.py` (sumber, rumus, WITA, ACL). Diskon = diskon native baris saja; faktur dihitung hanya `posted`.
+**Diverifikasi (bagaimana):** ruff, check_manifests, py_compile, node --check. Tidak ada runtime Odoo di sandbox ini.
+**Belum diuji [BU]:** instal modul, tes TransactionCase, render OWL di browser, tablet/desktop; menunggu CI.
+**Butir terbuka:** 1. Seed hanya Juli 2026 dan tanpa rencana PJP di Odoo: PJP Compliance dan EC Ratio tampil N/A sampai `id.mobile.workday` (rencana) dan `id.mobile.evidence` (bukti) terisi; non-admin hanya melihat data PJP miliknya. 2. Daftar salesman dinamis dari SO (Refly Sondakh dkk. ikut muncul bila punya SO). 3. whats_new.sh/log_entry.sh belum mengenal `claude-design2`.
+**Menunggu:** pemilik (push/PR) dan CI.
+
 ## 2026-10-31T11:00:00+07:00 — antigravity agent — Agent Dispatch Prompts Prepared (Sprint 1 & Sprint 2)
 **Branch:** `main`
 **Status:** READY FOR USER DISPATCH
