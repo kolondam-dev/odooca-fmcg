@@ -1437,3 +1437,10 @@
 - Fix: Formatted both id.po files to include '#. module: <name>' above each translation string.
 - Static checks: ruff check PASS, check_manifests.py PASS (9 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T22:03:40+07:00
+
+[2026-10-31T22:10:45+07:00] [INFO] Fix AR Aging Bucket Selection Test Assertion
+- Diagnosed install-test failure: AssertionError in TestMonetaryDashboard.test_ar_aging_view_is_queryable.
+- Cause: test compared list of keys (BUCKETS) directly against set of tuples returned by field.selection.
+- Fix: Unpack tuple keys {k for k, _label in aging._fields['bucket'].selection} before comparing with set(BUCKETS).
+- Static checks: ruff check PASS, check_manifests.py PASS (9 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T22:10:45+07:00

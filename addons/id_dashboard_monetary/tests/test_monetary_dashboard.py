@@ -41,7 +41,7 @@ class TestMonetaryDashboard(TransactionCase):
     def test_ar_aging_view_is_queryable(self):
         aging = self.env["id.ar.aging"]
         records = aging.search([])
-        self.assertEqual(set(aging._fields["bucket"].selection), set(BUCKETS))
+        self.assertEqual({k for k, _label in aging._fields["bucket"].selection}, set(BUCKETS))
         for record in records:
             self.assertGreaterEqual(record.days_overdue, 0)
             self.assertIn(record.bucket, BUCKETS)
