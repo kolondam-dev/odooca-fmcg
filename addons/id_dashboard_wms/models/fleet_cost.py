@@ -11,24 +11,37 @@ from odoo import api, fields, models, tools
 
 FLEET_COST_SQL = """
 CREATE OR REPLACE VIEW id_wms_fleet_cost AS (
-    SELECT ROW_NUMBER() OVER (ORDER BY c.vehicle_id, date_trunc('month', c.date)) AS id,
-           c.vehicle_id AS vehicle_id,
-           date_trunc('month', c.date)::date AS period_month,
-           c.company_id AS company_id,
-           rc.currency_id AS currency_id,
-           SUM(c.fuel_cost) AS fuel_cost,
-           SUM(c.helper_cost) AS helper_cost,
-           SUM(c.fuel_cost + c.helper_cost) AS total_cost,
-           COALESCE((
-               SELECT SUM(d.delivered_value)
-                 FROM id_wms_delivery d
-                WHERE d.vehicle_id = c.vehicle_id
-                  AND d.is_delivered
-                  AND date_trunc('month', d.date_done) = date_trunc('month', c.date)
-           ), 0) AS delivered_value
-      FROM id_delivery_trip_cost c
-      JOIN res_company rc ON rc.id = c.company_id
-     GROUP BY c.vehicle_id, date_trunc('month', c.date), c.company_id, rc.currency_id
+    WITH monthly_cost AS (
+        SELECT c.vehicle_id,
+               date_trunc('month', c.date)::date AS period_month,
+               c.company_id,
+               rc.currency_id,
+               SUM(c.fuel_cost) AS fuel_cost,
+               SUM(c.helper_cost) AS helper_cost,
+               SUM(c.fuel_cost + c.helper_cost) AS total_cost
+          FROM id_delivery_trip_cost c
+          JOIN res_company rc ON rc.id = c.company_id
+         GROUP BY c.vehicle_id, date_trunc('month', c.date)::date, c.company_id, rc.currency_id
+    ),
+    monthly_delivery AS (
+        SELECT d.vehicle_id,
+               date_trunc('month', d.date_done)::date AS period_month,
+               SUM(d.delivered_value) AS delivered_value
+          FROM id_wms_delivery d
+         WHERE d.is_delivered AND d.vehicle_id IS NOT NULL AND d.date_done IS NOT NULL
+         GROUP BY d.vehicle_id, date_trunc('month', d.date_done)::date
+    )
+    SELECT ROW_NUMBER() OVER (ORDER BY mc.vehicle_id, mc.period_month) AS id,
+           mc.vehicle_id AS vehicle_id,
+           mc.period_month AS period_month,
+           mc.company_id AS company_id,
+           mc.currency_id AS currency_id,
+           mc.fuel_cost AS fuel_cost,
+           mc.helper_cost AS helper_cost,
+           mc.total_cost AS total_cost,
+           COALESCE(md.delivered_value, 0) AS delivered_value
+      FROM monthly_cost mc
+      LEFT JOIN monthly_delivery md ON md.vehicle_id = mc.vehicle_id AND md.period_month = mc.period_month
 )
 """
 

@@ -1,4 +1,17 @@
-﻿## 2026-10-31T21:48:40+07:00 — antigravity agent — Perbaikan PostgreSQL Interval Type pada View id_wms_expiry
+﻿## 2026-10-31T21:56:20+07:00 — antigravity agent — Refactor SQL View id_wms_fleet_cost Menggunakan CTE
+**Branch:** gen/dashboard-monetary-wms
+**Status:** PASS (Static) -> Siap CI install-test
+
+### Diagnosa & Perbaikan
+- CI install-test memicu error PostgreSQL psycopg2.errors.GroupingError: subquery uses ungrouped column "c.date" from outer query.
+- Penyebab: Outer query mengelompokkan GROUP BY date_trunc('month', c.date), namun subquery berkorelasi untuk menjumlahkan delivered_value memanggil date_trunc('month', c.date) yang dirujuk dari kolom c.date yang tidak di-group secara individual.
+- Perbaikan: Merefaktor FLEET_COST_SQL (ddons/id_dashboard_wms/models/fleet_cost.py) menjadi CTE:
+  1. monthly_cost: agregasi biaya bahan bakar & helper per kendaraan dan bulan.
+  2. monthly_delivery: agregasi nilai DO terkirim per kendaraan dan bulan.
+  3. LEFT JOIN deterministik pada ehicle_id dan period_month.
+- Verifikasi: uff check PASS, check_manifests.py PASS.
+
+## 2026-10-31T21:48:40+07:00 — antigravity agent — Perbaikan PostgreSQL Interval Type pada View id_wms_expiry
 **Branch:** gen/dashboard-monetary-wms
 **Status:** PASS (Static) -> Siap CI install-test
 
@@ -3268,5 +3281,6 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai seluruh job selesai sebelum verdict. Hasil belum diklaim.
 - Scope tetap UI/tests/docs. PR #32 tetap draft; tidak merge dan tidak deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:26:00+07:00
+
 
 

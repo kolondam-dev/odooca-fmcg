@@ -1423,3 +1423,10 @@
 - Fix: Cast lot.expiration_date::date before subtracting CURRENT_DATE in EXPIRY_SQL.
 - Static check: ruff check PASS, check_manifests.py PASS (9 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T21:48:40+07:00
+
+[2026-10-31T21:56:20+07:00] [INFO] Refactor WMS Fleet Cost SQL to CTE
+- Diagnosed install-test failure: psycopg2.errors.GroupingError: subquery uses ungrouped column c.date from outer query in id_wms_fleet_cost.
+- Root cause: Correlated subquery referenced c.date inside outer query with GROUP BY date_trunc('month', c.date).
+- Fix: Refactored FLEET_COST_SQL to use two clean CTEs (monthly_cost and monthly_delivery) and LEFT JOIN on vehicle_id and period_month.
+- Static checks: ruff check PASS, check_manifests.py PASS (9 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T21:56:20+07:00
