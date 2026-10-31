@@ -2032,6 +2032,8 @@ class CanonicalPerpetualAdapter:
             if so.state in ("draft", "sent"):
                 so.action_confirm()
                 self.stats["so_confirmed"] += 1
+                if header_p.get("date_order"):
+                    so.write({"date_order": header_p["date_order"]})
 
             # Tanggal Pengiriman & Validasi DO
             del_info = del_by_so.get(so_num)
