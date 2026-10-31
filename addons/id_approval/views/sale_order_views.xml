@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_fmcg_approval_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.fmcg.approval.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- Smart Button Riwayat Persetujuan -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="%(action_fmcg_approval_request_all)d"
+                        type="action"
+                        class="oe_stat_button"
+                        icon="fa-shield"
+                        context="{'search_default_reference_document': name}">
+                    <div class="o_stat_info">
+                        <field name="approval_count" class="o_stat_value"/>
+                        <span class="o_stat_text">Persetujuan</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!-- Banner Peringatan Keras Harga di Bawah HPP -->
+            <xpath expr="//sheet" position="before">
+                <field name="has_below_hpp" invisible="1"/>
+                <field name="below_hpp_approval_state" invisible="1"/>
+                <div class="alert alert-danger mb-0" role="alert"
+                     invisible="not has_below_hpp or below_hpp_approval_state == 'approved'">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-exclamation-triangle fa-2x me-3"/>
+                        <div>
+                            <h5 class="alert-heading mb-1 font-weight-bold">PERINGATAN KERAS: Harga Jual di Bawah HPP!</h5>
+                            <p class="mb-1">
+                                Terdapat produk yang dijual dengan harga akhir net lebih rendah dari Harga Pokok Penjualan (HPP).
+                                Transaksi ini berpotensi merugikan laba kotor cabang dan <strong>wajib disetujui 2 tingkat (Branch Manager hingga Direksi / Pemilik)</strong> sebelum dapat diproses.
+                            </p>
+                            <button name="action_request_below_hpp_approval"
+                                    type="object"
+                                    string="Ajukan Persetujuan ke Direksi (2-Line)"
+                                    class="btn btn-sm btn-danger font-weight-bold mt-1"
+                                    invisible="below_hpp_approval_state in ('approved', 'pending')"/>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+
+            <!-- Bagian Analitik Diskon Taktikal di Tab Tata Kelola -->
+            <xpath expr="//page[@name='fmcg_governance']" position="inside">
+                <group string="Tata Kelola Diskon Taktikal &amp; Analitik">
+                    <field name="has_tactical_discount" readonly="1"/>
+                    <field name="tactical_analytic_account_id"
+                           placeholder="Pilih akun analitik beban diskon khusus..."
+                           invisible="not has_tactical_discount"/>
+                    <div colspan="2" invisible="not has_tactical_discount">
+                        <button name="action_request_tactical_discount_approval"
+                                type="object"
+                                string="Ajukan Persetujuan Diskon Taktikal"
+                                class="btn-secondary"
+                                icon="fa-tags"/>
+                    </div>
+                </group>
+                <group string="Rincian Produk di Bawah HPP" invisible="not has_below_hpp">
+                    <field name="below_hpp_summary" readonly="1"/>
+                    <field name="below_hpp_approval_state"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_fmcg_approval_category_tree" model="ir.ui.view">
+        <field name="name">fmcg.approval.category.tree</field>
+        <field name="model">fmcg.approval.category</field>
+        <field name="arch" type="xml">
+            <list string="Kategori Persetujuan FMCG">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="res_model"/>
+                <field name="has_amount_tiers"/>
+                <field name="has_discount_tiers"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_fmcg_approval_category_form" model="ir.ui.view">
+        <field name="name">fmcg.approval.category.form</field>
+        <field name="model">fmcg.approval.category</field>
+        <field name="arch" type="xml">
+            <form string="Kategori Persetujuan FMCG">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Nama Kategori</span>
+                        <h1>
+                            <field name="name" placeholder="mis. Diskon di Bawah HPP"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Konfigurasi Teknis">
+                            <field name="code"/>
+                            <field name="res_model"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Karakteristik Tiering">
+                            <field name="has_amount_tiers"/>
+                            <field name="has_discount_tiers"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Tingkatan Approver (Tiers)" name="tiers">
+                            <field name="rule_ids">
+                                <list string="Tiers" editable="bottom">
+                                    <field name="tier_sequence"/>
+                                    <field name="name"/>
+                                    <field name="approver_type"/>
+                                    <field name="group_id" invisible="approver_type != 'group'"/>
+                                    <field name="user_id" invisible="approver_type != 'user'"/>
+                                    <field name="min_amount" string="Min (Rp)"/>
+                                    <field name="max_amount" string="Max (Rp)"/>
+                                    <field name="min_discount" string="Min (%)"/>
+                                    <field name="max_discount" string="Max (%)"/>
+                                    <field name="sla_hours" string="SLA (Jam)"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Keterangan &amp; Petunjuk" name="description">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_fmcg_approval_category" model="ir.actions.act_window">
+        <field name="name">Kategori &amp; Matriks Persetujuan</field>
+        <field name="res_model">fmcg.approval.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_fmcg_approval_rule" model="ir.actions.act_window">
+        <field name="name">Aturan Tingkatan Persetujuan (Tiers)</field>
+        <field name="res_model">fmcg.approval.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

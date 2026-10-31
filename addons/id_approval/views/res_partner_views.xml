@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_fmcg_approval_inherit" model="ir.ui.view">
+        <field name="name">res.partner.form.fmcg.approval.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Smart Button Riwayat Persetujuan -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="%(action_fmcg_approval_request_all)d"
+                        type="action"
+                        class="oe_stat_button"
+                        icon="fa-check-square-o"
+                        context="{'search_default_reference_document': name}">
+                    <div class="o_stat_info">
+                        <field name="approval_count" class="o_stat_value"/>
+                        <span class="o_stat_text">Persetujuan</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!-- Tombol Ajukan Approval di Tab Finansial -->
+            <xpath expr="//page[@name='fmcg_credit_governance']" position="inside">
+                <field name="is_cash_customer" invisible="1"/>
+                <div class="alert alert-info mt-2" role="status" invisible="not is_cash_customer">
+                    <i class="fa fa-info-circle me-1"/>
+                    <strong>Pelanggan Tunai (ToP Cash):</strong> Pelanggan ini bertransaksi secara tunai dan tidak memerlukan persetujuan limit kredit.
+                </div>
+                <div class="mt-2" invisible="is_cash_customer or credit_approval_state in ('approved', 'pending')">
+                    <button name="action_request_credit_limit_approval"
+                            type="object"
+                            string="Ajukan Persetujuan Limit Kredit &amp; ToP"
+                            class="btn-primary"
+                            icon="fa-paper-plane"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
