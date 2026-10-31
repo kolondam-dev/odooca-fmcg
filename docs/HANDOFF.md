@@ -34,6 +34,65 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T16:28:00+07:0
 
 # HANDOFF
 
+## 2026-10-31T07:45:00+07:00 — antigravity agent — Sukses 100% Injeksi Transaksi Perpetual Kanonikal di Railway Live DB
+**PR:** #52
+**Status:** PASS / VERIFIED ON RAILWAY PRODUCTION.
+**Hasil & Bukti Audit PostgreSQL Database Railway (Live `railway`):**
+1. **Sales Orders (SO):** 1.324 records, seluruhnya (100%) dalam state `sale` dan terikat pada `PT Manado Distribusi Utama` (Company ID 1).
+2. **Pengiriman & Pergerakan Barang (Pickings):** 1.338 records, seluruhnya (100%) dalam state `done`.
+   - 5 Inbound PO kontainer Juni & penerimaan gudang Maumbi.
+   - 1.324 Surat Jalan / Delivery Order (DO) pengiriman pelanggan (1.276 Juli + 48 carry-forward Agustus).
+   - 9 Retur Karantina Barang ke lokasi karantina khusus.
+3. **Faktur Komersial & Tagihan (Invoices/Bills):**
+   - 1.324 Faktur Penjualan (`out_invoice`), seluruhnya (100%) berstatus `posted` dengan pengakuan HPP singular non-duplikat di STJ.
+   - 35 Vendor Bills (`in_invoice`), seluruhnya `posted`.
+   - 2.619 Journal Entries (`entry`), seluruhnya `posted`.
+4. **Pembayaran & Rekonsiliasi (Payments):**
+   - 971 Payments, seluruhnya (100%) berstatus `paid`.
+     * 967 Penerimaan Piutang AR Pelanggan (`PAY-AR-*`).
+     * 4 Pembayaran Hutang AP Prinsipal (`PAY-AP-*`).
+   - 2.102 Baris Entri Jurnal (`account_move_line`) terekonsiliasi penuh (`reconciled = true`).
+5. **Pemecahan Masalah Eksekusi:**
+   - Menjalankan DDL update `odoo --update=id_base` dengan peran `odoo_app` untuk membuat kolom `is_fmcg_seed_invoice` dan `fmcg_seed_batch` di database Postgres Railway.
+   - Memperbaiki cut-off date ke `"2026-08-31"` agar 48 DO carry-forward Agustus tervalidasi `done` sebelum faktur di-posting.
+   - Menerapkan strategi batched chunking per 200 orders dengan commit periodik dan `env.invalidate_all()` untuk menghemat RAM container (1 GB limit) dan mencegah timeout koneksi.
+   - Merestart service `demo-gateway` agar proxy Nginx memperbarui cache DNS upstream internal ke container `odooca-fmcg` terbaru, mengembalikan HTTP 200 OK pada seluruh route.
+6. **URL Akses Demo Aktif:**
+   - PWA Single Origin (Gateway): https://demo-gateway-production-abd1.up.railway.app/field/ (HTTP 200 OK)
+   - Odoo Backend Login (Gateway): https://demo-gateway-production-abd1.up.railway.app/web/login (HTTP 200 OK)
+   - Direct Odoo Backend: https://odooca-fmcg-demo.up.railway.app/ (HTTP 200 OK)
+   - Direct PWA Service: https://field-pwa-production.up.railway.app/field/ (HTTP 200 OK)
+
+## 2026-10-30T19:40:00+07:00 — antigravity agent — Aktivasi Full PWA Demo Experience & Injeksi Data Kanonikal MDU di Railway
+**PR:** #51 (feat(pwa): aktifkan full PWA experience, direct camera viewfinder dengan watermark otomatis) — MERGED ke main.
+**Status:** PASS / DEPLOYED TO RAILWAY.
+**Hasil & Bukti Verifikasi:**
+1. **PWA Full Experience & Bottom Navigation Bar:**
+   - Mode build Railway field-pwa diubah ke PWA_BUILD_MODE=demo (Deployment dcda1855-6899-46ae-8ee6-99ea0bed51d6 [SUCCESS]).
+   - Menyajikan full interactive FMCG PWA (App.tsx): Beranda, Bottom Navbar (Beranda, Sales, Delivery, HRIS, Lainnya), dan seluruh alur kerja FMCG.
+2. **Direct Native Camera Viewfinder dengan Watermark Otomatis:**
+   - Komponen CameraViewfinder.tsx aktif menggunakan navigator.mediaDevices.getUserMedia dengan reticle pembidik, pelacak GPS presisi real-time, dan jam WITA (Asia/Makassar).
+   - Menghilangkan form input upload / galeri; tombol shutter langsung mengambil frame video dan membubuhkan stempel watermark resmi:
+     * Header: PT MANADO DISTRIBUSI UTAMA · [Nama Outlet]
+     * Baris 2: [Waktu WITA] · GPS [Lat, Lon] (±[Acc]m)
+     * Baris 3: Petugas: [Nama Petugas Lapangan] · Status: TERVERIFIKASI OTOMATIS
+   - Terintegrasi langsung pada EvidenceCapture (Evidence.tsx) dengan tombol aksi utama **Buka Kamera Bukti**.
+3. **Data Kanonikal PT Manado Distribusi Utama (Company 1) di Railway Live:**
+   - Kantor Pusat: Kantor Pusat MDU Manado (lat: 1.4870, lng: 124.8428, radius 50m) di id.mobile.office.
+   - Pengguna Demo: sales1 (Salesman FMCG Manado, password DemoSales2026!) dengan hak akses group_mobile_sales dan group_mobile_evidence.
+   - Persediaan: 150 SKU FMCG memiliki saldo awal 100 karton di Gudang Maumbi (WH/Stock, location ID 5).
+   - Penugasan Kerja Harian: id.mobile.workday aktif untuk tanggal 30 Oktober 2026 mencakup seluruh 354 outlet dan 150 produk.
+   - Verifikasi probe API E2E:
+     * Bootstrap (/api/v1/me/bootstrap): HTTP 200, Company 1 (PT Manado Distribusi Utama), User 7 (Salesman FMCG Manado).
+     * Snapshot (/api/v1/sync/snapshot): HTTP 200, 150 SKU produk, 354 outlet Manado.
+4. **Verifikasi CI & Build:**
+   - 327/327 tes Vitest lolos hijau.
+   - Seluruh checks CI PR #51 (11/11 checks: static, init-test, install-test, invariant-tests, pwa-quality, pwa-container, pwa-browser, pwa-gate, seed-invariants) lulus hijau.
+5. **URL Akses Demo:**
+   - PWA Utama (Single Origin / Gateway): https://demo-gateway-production-abd1.up.railway.app/field/
+   - Odoo Backend Login: https://demo-gateway-production-abd1.up.railway.app/web/login
+   - Direct PWA Service: https://field-pwa-production.up.railway.app/field/
+
 ## 2026-10-30T18:30:00+07:00 — antigravity agent — Sukses Deployment & Aktivasi Demo Mobile di Railway (Live E2E PASS)
 **Hasil:** Eksekusi penuh aktivasi demo mobile pada server Railway production (project `pleasant-caring`, service `odooca-fmcg` & `demo-gateway`) berhasil diselesaikan 100% mengikuti protokol `docs/DEMO_EXISTING_ACTIVATION.md`.
 **Tahapan Eksekusi:**

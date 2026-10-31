@@ -1252,3 +1252,40 @@
   * staging.capture.2: login OK (UID 6), bootstrap OK (role: driver).
   * PWA frontend https://demo-gateway-production-abd1.up.railway.app/field/ aktif dan siap diuji oleh owner.
 - Task managed by antigravity at 2026-10-30T18:30:00+07:00
+
+[2026-10-30T19:40:00+07:00] [SUCCESS] PWA Full Demo Experience Activated & Railway Live DB Provisioned
+- Mengimplementasikan CameraViewfinder.tsx dengan live viewfinder kamera langsung (navigator.mediaDevices.getUserMedia), reticle pembidik, pelacak GPS presisi real-time, dan jam WITA otomatis.
+- Menghilangkan form input upload / galeri; tombol shutter langsung mengambil frame video dan membubuhkan stempel watermark resmi:
+  * Header: PT MANADO DISTRIBUSI UTAMA · [Nama Outlet / Lokasi Kunjungan]
+  * Waktu & Koordinat: [Waktu WITA] · GPS [Lat, Lon] (±[Acc]m)
+  * Petugas: [Nama Petugas Lapangan] · Status: TERVERIFIKASI OTOMATIS
+- Mengintegrasikan CameraViewfinder ke EvidenceCapture (Evidence.tsx) dengan tombol aksi utama 'Buka Kamera Bukti'.
+- Menyiapkan data kanonikal FMCG PT Manado Distribusi Utama (Company 1) di database live Railway:
+  * Kantor Pusat MDU Manado (lat: 1.4870, lng: 124.8428, radius: 50m)
+  * Pengguna demo 'sales1' (Salesman FMCG Manado) terdaftar pada grup Mobile Sales dan Mobile Evidence
+  * 150 SKU FMCG memiliki saldo awal persediaan 100 karton di Gudang Maumbi (WH/Stock)
+  * Penugasan kerja harian (id.mobile.workday) tanggal 30 Oktober 2026 mencakup seluruh 354 outlet dan 150 produk
+- Mengubah mode build Railway field-pwa menjadi 'PWA_BUILD_MODE=demo' sehingga menyajikan full PWA application (Beranda, Bottom Navbar lengkap: Beranda, Sales, Delivery, HRIS, Lainnya).
+- PR #51 dibuat, 11/11 checks CI lulus hijau, dan telah dimerge ke main.
+- Deployment Railway field-pwa (dcda1855) sukses live; verifikasi E2E probe HTTP 200 OK via demo-gateway dan field-pwa.
+- Task managed by antigravity at 2026-10-30T19:40:00+07:00
+
+[2026-10-31T07:45:00+07:00] [SUCCESS] Injeksi Transaksi Perpetual Kanonikal Sukses 100% di Railway Live DB
+- Melakukan DDL upgrade modul id_base di database Railway live (odoo --update=id_base) untuk menambahkan kolom is_fmcg_seed_invoice dan fmcg_seed_batch pada tabel account_move dan sale_order.
+- Mengidentifikasi akar masalah terputusnya proses loader sebelumnya:
+  1. Cut-off date 2026-07-31 menyebabkan 48 DO Agustus belum divalidasi, memicu UserError fail-closed integritas stok saat posting invoice. Diatasi dengan parameter cutoff_date="2026-08-31".
+  2. Beban memori ORM Odoo pada database monolitik single-transaction (1 GB limit) dan timeout koneksi terminal SSH. Diatasi dengan strategi batched chunking per 200 orders dengan commit periodik dan env.invalidate_all().
+- Hasil audit PostgreSQL database Railway live (100% valid):
+  * sale_order: 1.324 records, state 'sale', company: 'PT Manado Distribusi Utama'
+  * stock_picking: 1.338 records (5 inbound PO + 1.324 DO pengiriman + 9 retur karantina), state 'done'
+  * purchase_order: 5 records, state 'purchase'
+  * account_move: 3.980 records, termasuk 1.324 faktur komersial posted dan 35 vendor bills posted
+  * account_payment: 971 records (967 AR customer collections + 4 AP principal payments), state 'paid'
+  * Reconciled journal items: 2.102 move lines terekonsiliasi penuh
+- Mengatasi 504 timeout pada demo-gateway dengan merestart service demo-gateway agar Nginx menyegarkan resolusi DNS internal ke IP container odooca-fmcg terbaru.
+- Verifikasi akses live:
+  * Gateway Backend Login: https://demo-gateway-production-abd1.up.railway.app/web/login -> HTTP 200 OK
+  * Gateway Field PWA: https://demo-gateway-production-abd1.up.railway.app/field/ -> HTTP 200 OK
+  * Direct Backend: https://odooca-fmcg-demo.up.railway.app/ -> HTTP 200 OK
+  * Direct PWA: https://field-pwa-production.up.railway.app/field/ -> HTTP 200 OK
+- Task managed by antigravity at 2026-10-31T07:45:00+07:00
