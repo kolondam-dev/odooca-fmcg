@@ -1,0 +1,301 @@
+# Indonesian translation for id_dashboard_wms.
+# Regenerate: odoo -d <db> --i18n-export=id.po --modules=id_dashboard_wms
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+# Menu and action names
+msgid "Warehouse & Logistics"
+msgstr "Gudang & Logistik"
+
+msgid "Stock by FMCG Category"
+msgstr "Stok per Kategori FMCG"
+
+msgid "FEFO Expiry Monitoring"
+msgstr "Pemantauan Kedaluwarsa FEFO"
+
+msgid "Delivery Fulfillment"
+msgstr "Pemenuhan Delivery Order"
+
+msgid "Delivery Rate per Period"
+msgstr "Rasio Pengiriman per Periode"
+
+msgid "Rejection Breakdown"
+msgstr "Rincian Penolakan"
+
+msgid "Delivery Cost Ratio"
+msgstr "Rasio Biaya Pengiriman"
+
+msgid "Delivery Trip Costs"
+msgstr "Biaya Perjalanan Pengiriman"
+
+# Picking fields
+msgid "FMCG Rejection Reason"
+msgstr "Alasan Penolakan FMCG"
+
+msgid "Delivery Vehicle"
+msgstr "Armada Pengiriman"
+
+# Category fields
+msgid "FMCG Category"
+msgstr "Kategori FMCG"
+
+msgid "Merchandising Group"
+msgstr "Kelompok Merchandising"
+
+msgid "Products"
+msgstr "Produk"
+
+msgid "Lots"
+msgstr "Batch"
+
+msgid "Quantity On Hand"
+msgstr "Stok Tersedia"
+
+msgid "Quantity Reserved"
+msgstr "Stok Direservasi"
+
+msgid "Stock Value"
+msgstr "Nilai Persediaan"
+
+# Expiry fields
+msgid "Product"
+msgstr "Produk"
+
+msgid "Lot / Batch"
+msgstr "Lot / Batch"
+
+msgid "Lot Number"
+msgstr "Nomor Lot"
+
+msgid "Expiry Date"
+msgstr "Tanggal Kedaluwarsa"
+
+msgid "Days to Expiry"
+msgstr "Sisa Hari ke ED"
+
+msgid "Expiry Bucket"
+msgstr "Kelompok Kedaluwarsa"
+
+msgid "Recommended Action"
+msgstr "Tindakan Disarankan"
+
+# Delivery fields
+msgid "Delivery Order"
+msgstr "Delivery Order"
+
+msgid "Scheduled Date"
+msgstr "Tanggal Dijadwalkan"
+
+msgid "Delivered Date"
+msgstr "Tanggal Terkirim"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Operation Type"
+msgstr "Tipe Operasi"
+
+msgid "Rejection Reason"
+msgstr "Alasan Penolakan"
+
+msgid "Sales Order"
+msgstr "Sales Order"
+
+msgid "Sales Order Amount"
+msgstr "Nilai Sales Order"
+
+msgid "Delivered"
+msgstr "Terkirim"
+
+msgid "Delivered Late"
+msgstr "Terkirim Terlambat"
+
+msgid "Delivered Value"
+msgstr "Nilai Terkirim"
+
+msgid "Scheduled Deliveries"
+msgstr "DO Dijadwalkan"
+
+msgid "Not Delivered"
+msgstr "Belum Terkirim"
+
+msgid "Late"
+msgstr "Terlambat"
+
+msgid "Delivery Rate (%)"
+msgstr "Rasio Pengiriman (%)"
+
+msgid "Scheduled Sales Value"
+msgstr "Nilai SO Dijadwalkan"
+
+msgid "Rejected Deliveries"
+msgstr "DO Ditolak"
+
+msgid "Rejected Order Value"
+msgstr "Nilai Order Ditolak"
+
+# Trip cost fields
+msgid "Vehicle"
+msgstr "Armada"
+
+msgid "Fuel Cost"
+msgstr "Biaya BBM"
+
+msgid "Helper Cost"
+msgstr "Biaya Helper"
+
+msgid "Total Cost"
+msgstr "Total Biaya"
+
+msgid "Cost Ratio (%)"
+msgstr "Rasio Biaya (%)"
+
+msgid "Trip Date"
+msgstr "Tanggal Perjalanan"
+
+msgid "Notes"
+msgstr "Catatan"
+
+msgid "Period"
+msgstr "Periode"
+
+msgid "Quantity"
+msgstr "Kuantitas"
+
+msgid "Scheduled"
+msgstr "Dijadwalkan"
+
+msgid "Fuel"
+msgstr "BBM"
+
+msgid "Helper"
+msgstr "Helper"
+
+# Rejection reasons
+msgid "Wet / Crushed Packaging in Transit"
+msgstr "Kemasan basah/penyok saat transit"
+
+msgid "Product Close to Expiry"
+msgstr "Produk mendekati ED"
+
+msgid "Wrong SKU / Quantity Delivered"
+msgstr "Salah kirim SKU/qty"
+
+msgid "Store Closed / Refused the Delivery Note"
+msgstr "Toko tutup / menolak nota"
+
+msgid "Not Recorded"
+msgstr "Tidak Tercatat"
+
+# Expiry buckets
+msgid "Critical (< 30 Days)"
+msgstr "Kritis (< 30 Hari)"
+
+msgid "Warning (30-90 Days)"
+msgstr "Peringatan (30-90 Hari)"
+
+msgid "Good Stock (> 90 Days)"
+msgstr "Stok Aman (> 90 Hari)"
+
+# Merchandising groups
+msgid "Food"
+msgstr "Food"
+
+msgid "RTD / Beverage"
+msgstr "RTD / Minuman"
+
+msgid "Home Care"
+msgstr "Home Care"
+
+msgid "Personal Care"
+msgstr "Personal Care"
+
+msgid "Confectionery"
+msgstr "Konfeksi"
+
+msgid "Other / Unmapped"
+msgstr "Lainnya / Belum Dipetakan"
+
+# FMCG categories
+msgid "Biscuit & Wafer"
+msgstr "Biskuit & Wafer"
+
+msgid "Chocolate & Confectionery"
+msgstr "Cokelat & Konfeksi"
+
+msgid "Coffee & Powdered Beverage"
+msgstr "Kopi & Minuman Bubuk"
+
+msgid "Coffee & Hot Beverages"
+msgstr "Kopi & Minuman Panas"
+
+msgid "Instant Noodles & Foods"
+msgstr "Mie Instan & Makanan"
+
+msgid "Ready to Drink (RTD) & Beverage"
+msgstr "Siap Minum (RTD) & Minuman"
+
+msgid "Coffee"
+msgstr "Kopi"
+
+msgid "Foods & Savory"
+msgstr "Makanan & Gurih"
+
+msgid "Home Care & Hygiene"
+msgstr "Home Care & Kebersihan"
+
+msgid "Personal Care & Beauty"
+msgstr "Personal Care & Kecantikan"
+
+msgid "Food & Grocery"
+msgstr "Makanan & Sembako"
+
+msgid "Ready-To-Drink"
+msgstr "Siap Minum"
+
+msgid "Dairy"
+msgstr "Susu & Olahan"
+
+msgid "Other"
+msgstr "Lainnya"
+
+# Picking states
+msgid "Draft"
+msgstr "Draf"
+
+msgid "Waiting Another Operation"
+msgstr "Menunggu Operasi Lain"
+
+msgid "Waiting"
+msgstr "Menunggu"
+
+msgid "Ready"
+msgstr "Siap"
+
+msgid "Done"
+msgstr "Selesai"
+
+msgid "Cancelled"
+msgstr "Dibatalkan"
+
+# Filters and grouping
+msgid "Rejected"
+msgstr "Ditolak"
+
+msgid "Expiry Month"
+msgstr "Bulan Kedaluwarsa"
+
+msgid "Customer"
+msgstr "Customer"
+
+msgid "Group By"
+msgstr "Kelompokkan"
+
+msgid "Month"
+msgstr "Bulan"

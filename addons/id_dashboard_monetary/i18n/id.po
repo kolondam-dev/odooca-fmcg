@@ -1,0 +1,181 @@
+# Indonesian translation for id_dashboard_monetary.
+# Regenerate: odoo -d <db> --i18n-export=id.po --modules=id_dashboard_monetary
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+# Menu and action names
+msgid "Monetary & AR"
+msgstr "Moneter & Piutang"
+
+msgid "AR Aging Matrix"
+msgstr "Matriks Aging Piutang"
+
+msgid "AR by Salesperson"
+msgstr "Piutang per Salesman"
+
+msgid "AR by Coverage Area"
+msgstr "Piutang per Wilayah"
+
+msgid "Top 10 Customers"
+msgstr "10 Customer Teratas"
+
+msgid "Financial Funnel"
+msgstr "Funnel Finansial"
+
+msgid "Revenue Targets"
+msgstr "Target Omset"
+
+msgid "All Customers by Receivable"
+msgstr "Semua Customer per Piutang"
+
+# Fields
+msgid "Target Period"
+msgstr "Periode Target"
+
+msgid "Start Date"
+msgstr "Tanggal Mulai"
+
+msgid "End Date"
+msgstr "Tanggal Selesai"
+
+msgid "Revenue Target"
+msgstr "Target Omset"
+
+msgid "Currency"
+msgstr "Mata Uang"
+
+msgid "Company"
+msgstr "Perusahaan"
+
+msgid "Notes"
+msgstr "Catatan"
+
+msgid "Funnel Stage"
+msgstr "Tahap Funnel"
+
+msgid "Period"
+msgstr "Periode"
+
+msgid "Amount"
+msgstr "Nilai"
+
+msgid "Achieved (%)"
+msgstr "Tercapai (%)"
+
+msgid "Invoice"
+msgstr "Faktur"
+
+msgid "Invoice Number"
+msgstr "Nomor Faktur"
+
+msgid "Customer"
+msgstr "Customer"
+
+msgid "Salesperson"
+msgstr "Salesman"
+
+msgid "Coverage Area"
+msgstr "Wilayah"
+
+msgid "Invoice Date"
+msgstr "Tanggal Faktur"
+
+msgid "Due Date"
+msgstr "Jatuh Tempo"
+
+msgid "Payment Status"
+msgstr "Status Pembayaran"
+
+msgid "Days Overdue"
+msgstr "Hari Terlambat"
+
+msgid "Aging Bucket"
+msgstr "Kelompok Aging"
+
+msgid "Outstanding Amount"
+msgstr "Saldo Piutang"
+
+msgid "Open Invoices"
+msgstr "Faktur Terbuka"
+
+msgid "Oldest Due Date"
+msgstr "Jatuh Tempo Tertua"
+
+msgid "Max Days Overdue"
+msgstr "Keterlambatan Maksimum"
+
+msgid "Worst Bucket"
+msgstr "Kelompok Terburuk"
+
+# Funnel stages
+msgid "Realized Revenue"
+msgstr "Omset Terealisasi"
+
+msgid "Total Receivable (AR)"
+msgstr "Total Piutang (AR)"
+
+msgid "Cash Collection"
+msgstr "Realisasi Penagihan Kas"
+
+# Aging buckets
+msgid "Not Due"
+msgstr "Belum Jatuh Tempo"
+
+msgid "Overdue 1-7 Days (Early Warning)"
+msgstr "Terlambat 1-7 Hari (Peringatan Awal)"
+
+msgid "Overdue 8-14 Days (Credit Hold)"
+msgstr "Terlambat 8-14 Hari (Tahan Pesanan Baru)"
+
+msgid "Overdue 15-30 Days (Supervisor Audit)"
+msgstr "Terlambat 15-30 Hari (Audit Supervisor)"
+
+msgid "Overdue > 30 Days (Bad Debt)"
+msgstr "Terlambat > 30 Hari (Penanganan Khusus)"
+
+# Payment states
+msgid "Not Paid"
+msgstr "Belum Dibayar"
+
+msgid "Partially Paid"
+msgstr "Dibayar Sebagian"
+
+msgid "Paid"
+msgstr "Lunas"
+
+msgid "In Payment"
+msgstr "Dalam Pembayaran"
+
+msgid "Reversed"
+msgstr "Dibatalkan"
+
+msgid "Blocked"
+msgstr "Diblokir"
+
+# Filters and grouping
+msgid "Overdue"
+msgstr "Terlambat"
+
+msgid "Credit Hold (8-14 Days)"
+msgstr "Tahan Pesanan (8-14 Hari)"
+
+msgid "Bad Debt (> 30 Days)"
+msgstr "Piutang Macet (> 30 Hari)"
+
+msgid "Credit Hold and Worse"
+msgstr "Tahan Pesanan dan Lebih Buruk"
+
+msgid "Group By"
+msgstr "Kelompokkan"
+
+msgid "Stage"
+msgstr "Tahap"
+
+msgid "Total Outstanding"
+msgstr "Total Piutang"

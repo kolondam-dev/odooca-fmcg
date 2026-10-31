@@ -1,3 +1,36 @@
+## 2026-10-31T17:13:38+07:00 — Agent Opencode — Dashboard Moneter & Piutang + Dashboard Gudang & Logistik
+**Branch:** `agen/dashboard-monetary-wms` (basis `origin/main` = `6d603fa`, rebase dari `61c1c6d`)
+**Status:** GATE STATIS LOKAL PASS · SQL view lolos parser PostgreSQL · instalasi DB kosong [BU] menunggu CI `install-test`
+
+### 1. `addons/id_dashboard_monetary` — Funnel Finansial & AR
+- Funnel 4 tahap per periode target: Target Omset → Omset Terealisasi (`account_move` posted `out_invoice`/`out_refund`) → Total Piutang AR (`amount_residual_signed`, `payment_state` belum lunas) → Realisasi Penagihan Kas (`account_payment` inbound).
+- Target Rp 5.5 miliar Juli–Oktober 2026 disimpan sebagai **konfigurasi bertanggal** `id.monetary.target` (`data/id_monetary_target_data.xml`, `noupdate="1"`), bukan konstanta kode; finance dapat menambah periode tanpa mengubah kode.
+- Matriks aging 5 bucket dari `invoice_date_due`: belum jatuh tempo · 1–7 (peringatan awal) · 8–14 (tahan pesanan/credit hold) · 15–30 (audit supervisor) · >30 (penanganan khusus).
+- Breakdown AR: pivot per salesman (`invoice_user_id`, fallback `res_partner.user_id`), per wilayah (`res_partner.coverage_area_id` — Manado Urban, Bitung, Tomohon, Minut), dan Top 10 customer per saldo (`id.ar.customer.balance`, `limit=10`).
+
+### 2. `addons/id_dashboard_wms` — Gudang & Logistik
+- Stok per kategori: 5 kelompok merchandising dipetakan dari `product_template.fmcg_category`; kategori tak terpetakan masuk `other` agar kuantitas tidak hilang dari total.
+- FEFO dari `stock.lot.expiration_date`: `<30` kritis (retur ke prinsipal) · `30–90` peringatan (bundling/diskon) · `>90` aman; lot tanpa tanggal ED tidak dihitung.
+- Order Delivery Rate = DO `done` / seluruh DO `outgoing` berjadwal, plus jumlah terlambat; rincian penolakan pada 4 alasan standar (`stock.picking.fmcg_reject_reason`, field baru).
+- Rasio biaya pengiriman per armada: input `id.delivery.trip.cost` (BBM + helper) dibagi nilai DO terkirim armada yang sama per bulan (`stock.picking.fmcg_vehicle_id`, field baru).
+- Nilai DO dihitung dari `sale_order_line.price_subtotal / product_uom_qty` lalu dikonversi UoM (`uom_uom.factor`); fallback `product.product.standard_price` (jsonb per company) untuk move tanpa baris sale.
+
+### 3. Pola teknis
+- Semua dashboard = SQL view read-only (`_auto = False` + `init()` `CREATE OR REPLACE VIEW`); tidak ada tabel salinan sehingga angka selalu live dari `account_move`, `sale_order`, `stock_picking`, `stock_quant`.
+- Hanya 2 model yang bisa ditulis: `id.monetary.target` dan `id.delivery.trip.cost` (grup sistem).
+- Urutan impor `models/__init__.py` menentukan urutan pembuatan view (view yang membaca view lain diimpor setelahnya).
+- Visualisasi: `graph` (bar/line/pie), `pivot`, `list` dengan `decoration-*`, filter dan group-by; menu di bawah **FMCG Distribution** (`id_base.menu_fmcg_root`).
+
+### 4. Verifikasi
+- PASS: `ruff check .`; `python scripts/check_manifests.py` (8 addon); seluruh XML valid; 9 definisi SQL view lolos parser PostgreSQL (`pglast`); 34 arch view lolos skema RNG resmi Odoo 19 (`odoo/addons/base/rng/{search,list,graph,pivot}_view.rng`).
+- CI run pertama GAGAL di `install-test`: `<group expand="0" string="Group By">` tidak lagi sah pada search view Odoo 19 (atribut `expand`/`string` dihapus). Diperbaiki menjadi `<group>` polos di 8 tempat/6 berkas; validasi RNG diulang dan PASS.
+- [BU] Instalasi nyata pada DB kosong: laptop ini tanpa Odoo/Postgres/Docker. CI `install-test` (`.github/workflows/ci.yml`) kini menginstal `id_dashboard_monetary,id_dashboard_wms` dan menjalankan `--test-tags /id_dashboard_monetary,/id_dashboard_wms`.
+- Pasang di DB yang sudah ada: `odoo -d <db> -i id_dashboard_monetary,id_dashboard_wms --stop-after-init` (atau cukup deploy ulang; `deploy/init.sh` `INIT_MODULES` sudah memuat keduanya).
+
+### 5. Catatan operasional
+- Rejection reason dan armada diisi pada form Transfer (grup "FMCG Logistics"); tanpa pengisian, penolakan tampil sebagai `not_recorded` dan rasio biaya armada bernilai 0.
+- Belum ada merge/deploy: menunggu CI hijau dan keputusan pemilik.
+
 ## 2026-10-31T16:55:00+07:00 — antigravity agent — Stack A Fase 2: Credit Limit Approval Workflow & Integrasi CoreTax Selesai
 **Branch:** `agen/stack-a-approval-finance-governance` (basis `origin/main` = `61c1c6d`)
 **Status:** PASS / VERIFIED & TESTED
@@ -29,6 +62,7 @@
   - `test_04_coretax_nsfp_generation_and_csv_export`: Pembuatan NSFP otomatis dan ekspor berkas CoreTax CSV.
 
 Task managed by antigravity-agent at 2026-10-31T16:55:00+07:00
+
 
 ## 2026-10-31T16:10:00+07:00 — antigravity agent — Eksekusi Master Data Sprint 2 Selesai 100% pada Live Railway DB
 **Branch:** `main` (commit `61c1c6d`)
