@@ -48,11 +48,10 @@
                 <filter name="filter_has_claim" string="Memiliki Tagihan Klaim" domain="[('promo_claim_amount', '>', 0)]"/>
                 <filter name="filter_principal_100" string="Beban Prinsipal 100%" domain="[('promo_budget_source', '=', 'principal')]"/>
                 <filter name="filter_joint_50" string="Joint Sharing 50:50" domain="[('promo_budget_source', '=', 'joint')]"/>
-                <group expand="0" string="Group By">
-                    <filter name="group_principal" string="Prinsipal" domain="[]" context="{'group_by': 'promo_principal_id'}"/>
-                    <filter name="group_mou" string="Nomor MoU" domain="[]" context="{'group_by': 'promo_mou_number'}"/>
-                    <filter name="group_program" string="Program Promo" domain="[]" context="{'group_by': 'promo_program_id'}"/>
-                </group>
+                <separator/>
+                <filter name="group_principal" string="Prinsipal" domain="[]" context="{'group_by': 'promo_principal_id'}"/>
+                <filter name="group_mou" string="Nomor MoU" domain="[]" context="{'group_by': 'promo_mou_number'}"/>
+                <filter name="group_program" string="Program Promo" domain="[]" context="{'group_by': 'promo_program_id'}"/>
             </search>
         </field>
     </record>
@@ -77,3 +76,4 @@
         </field>
     </record>
 </odoo>
+

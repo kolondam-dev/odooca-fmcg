@@ -76,12 +76,11 @@
                 <filter name="filter_active_status" string="Status Aktif" domain="[('expiry_state', '=', 'active')]"/>
                 <filter name="filter_near_expiry" string="Mendekati Jatuh Tempo" domain="[('expiry_state', '=', 'near_expiry')]"/>
                 <filter name="filter_expired" string="Sudah Kadaluarsa" domain="[('expiry_state', '=', 'expired')]"/>
-                <group expand="0" string="Group By">
-                    <filter name="group_channel" string="Distribution Channel" domain="[]" context="{'group_by': 'channel_id'}"/>
-                    <filter name="group_coverage" string="Coverage Type" domain="[]" context="{'group_by': 'coverage_category'}"/>
-                    <filter name="group_tier" string="Payment Tier" domain="[]" context="{'group_by': 'tier'}"/>
-                    <filter name="group_expiry_state" string="Status Masa Berlaku" domain="[]" context="{'group_by': 'expiry_state'}"/>
-                </group>
+                <separator/>
+                <filter name="group_channel" string="Distribution Channel" domain="[]" context="{'group_by': 'channel_id'}"/>
+                <filter name="group_coverage" string="Coverage Type" domain="[]" context="{'group_by': 'coverage_category'}"/>
+                <filter name="group_tier" string="Payment Tier" domain="[]" context="{'group_by': 'tier'}"/>
+                <filter name="group_expiry_state" string="Status Masa Berlaku" domain="[]" context="{'group_by': 'expiry_state'}"/>
             </xpath>
         </field>
     </record>
@@ -111,3 +110,4 @@
               sequence="3"
               groups="sales_team.group_sale_salesman"/>
 </odoo>
+
