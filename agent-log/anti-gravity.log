@@ -1452,3 +1452,10 @@
 - Formatted addons/id_dashboard_sales/i18n/id.po to include '#. module: id_dashboard_sales' headers.
 - Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T22:41:15+07:00
+
+[2026-10-31T22:52:15+07:00] [INFO] Fix Model Attribute Collision with _ids in SalesProductivity
+- Diagnosed install-test failure: AttributeError: 'id.sales.productivity' object attribute '_ids' is read-only.
+- Root cause: id.sales.productivity defined helper method 'def _ids(self, values)' which collided with Odoo's internal recordset attribute 'BaseModel._ids'.
+- Fix: Renamed helper method to '_parse_ids'.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T22:52:15+07:00

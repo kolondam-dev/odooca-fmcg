@@ -1,4 +1,14 @@
-﻿## 2026-10-31T22:41:15+07:00 — antigravity agent — Sinkronisasi PR #61 dengan Main & Format PO Header
+﻿## 2026-10-31T22:52:15+07:00 — antigravity agent — Perbaikan Kolisi Nama Atribut _ids pada Model id.sales.productivity
+**Branch:** gen/claude-design2-sales-productivity
+**Status:** PASS (Static) -> Siap CI install-test
+
+### Diagnosa & Perbaikan
+- CI install-test memicu error Odoo core AttributeError: 'id.sales.productivity' object attribute '_ids' is read-only saat inisialisasi class model (model = model_cls(env, (), ())).
+- Penyebab: Model id.sales.productivity mendefinisikan helper method bernama def _ids(self, values):. Di Odoo 19, BaseModel._ids merupakan atribut internal recordset yang diisi pada __init__. Penamaan method yang sama mengubah atribut kelas menjadi method sehingga pemanggilan self._ids = ids gagal karena read-only.
+- Perbaikan: Mengganti nama method helper menjadi def _parse_ids(self, values): pada ddons/id_dashboard_sales/models/sales_productivity.py.
+- Verifikasi: uff check addons/id_dashboard_sales PASS, check_manifests.py PASS.
+
+## 2026-10-31T22:41:15+07:00 — antigravity agent — Sinkronisasi PR #61 dengan Main & Format PO Header
 **Branch:** gen/claude-design2-sales-productivity (basis origin/main = 49b5b31)
 **Status:** PASS (Static) -> Siap CI
 
@@ -3326,6 +3336,7 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai seluruh job selesai sebelum verdict. Hasil belum diklaim.
 - Scope tetap UI/tests/docs. PR #32 tetap draft; tidak merge dan tidak deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:26:00+07:00
+
 
 
 

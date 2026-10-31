@@ -83,7 +83,7 @@ class SalesProductivity(models.AbstractModel):
         return start, nxt
 
     @api.model
-    def _ids(self, values):
+    def _parse_ids(self, values):
         return [int(v) for v in (values or []) if str(v).isdigit() or isinstance(v, int)]
 
     # ------------------------------------------------------------------ filters
@@ -116,8 +116,8 @@ class SalesProductivity(models.AbstractModel):
         anchor = anchor or self._param("period_min", DEFAULT_PERIOD_MIN)
         start, end = self._period(mode, anchor)
         lo, hi = _to_utc(start), _to_utc(end)
-        salesman_ids = self._ids(salesman_ids)
-        channel_ids = self._ids(channel_ids)
+        salesman_ids = self._parse_ids(salesman_ids)
+        channel_ids = self._parse_ids(channel_ids)
         company_ids = self.env.companies.ids
         lpo_target = float(self._param("lpo_target", DEFAULT_LPO_TARGET))
 
