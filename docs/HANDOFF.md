@@ -1,13 +1,25 @@
+## 2026-10-31T23:08:45+07:00 — antigravity agent — Perbaikan Currency IDR Inactive pada Test id_dashboard_sales
+**Branch:** agen/claude-design2-sales-productivity
+**Status:** PASS (Static) -> Siap CI install-test
+
+### Diagnosa & Perbaikan
+- CI install-test memicu UserError: You cannot validate a document with an inactive currency: IDR saat pemanggilan invoice.action_post() pada test_fulfillment_counts_only_delivered_and_posted_invoice.
+- Penyebab: Di environment CI Odoo dasar, currency IDR berstatus active=False secara default.
+- Perbaikan: Memastikan company currency dan res.currency(name='IDR') diaktifkan (active=True) pada setUpClass di addons/id_dashboard_sales/tests/test_sales_productivity.py.
+- Verifikasi: ruff check addons/id_dashboard_sales PASS, check_manifests.py PASS (10 addon terverifikasi).
+
 ﻿## 2026-10-31T22:59:25+07:00 — antigravity agent — Perbaikan Field Wajib Code pada Fixture Test id_dashboard_sales
 **Branch:** gen/claude-design2-sales-productivity
 **Status:** PASS (Static) -> Siap CI install-test
 
 ### Diagnosa & Perbaikan
 - CI install-test memicu error PostgreSQL psycopg2.errors.NotNullViolation: null value in column "code" of relation "id_principal" pada setUpClass di 	est_sales_productivity.py.
-- Penyebab: Model id.principal dan id.brand mewajibkan field code (equired=True), sedangkan fixture test membuatnya hanya dengan atribut 
+- Penyebab: Model id.principal dan id.brand mewajibkan field code (
+equired=True), sedangkan fixture test membuatnya hanya dengan atribut 
 ame.
 - Perbaikan: Menambahkan nilai "code": "DPRIN" untuk id.principal dan "code": "DBRAND" untuk id.brand pada ddons/id_dashboard_sales/tests/test_sales_productivity.py.
-- Verifikasi: uff check addons/id_dashboard_sales PASS, check_manifests.py PASS.
+- Verifikasi: 
+uff check addons/id_dashboard_sales PASS, check_manifests.py PASS.
 
 ## 2026-10-31T22:52:15+07:00 — antigravity agent — Perbaikan Kolisi Nama Atribut _ids pada Model id.sales.productivity
 **Branch:** gen/claude-design2-sales-productivity
@@ -17,7 +29,8 @@ ame.
 - CI install-test memicu error Odoo core AttributeError: 'id.sales.productivity' object attribute '_ids' is read-only saat inisialisasi class model (model = model_cls(env, (), ())).
 - Penyebab: Model id.sales.productivity mendefinisikan helper method bernama def _ids(self, values):. Di Odoo 19, BaseModel._ids merupakan atribut internal recordset yang diisi pada __init__. Penamaan method yang sama mengubah atribut kelas menjadi method sehingga pemanggilan self._ids = ids gagal karena read-only.
 - Perbaikan: Mengganti nama method helper menjadi def _parse_ids(self, values): pada ddons/id_dashboard_sales/models/sales_productivity.py.
-- Verifikasi: uff check addons/id_dashboard_sales PASS, check_manifests.py PASS.
+- Verifikasi: 
+uff check addons/id_dashboard_sales PASS, check_manifests.py PASS.
 
 ## 2026-10-31T22:41:15+07:00 — antigravity agent — Sinkronisasi PR #61 dengan Main & Format PO Header
 **Branch:** gen/claude-design2-sales-productivity (basis origin/main = 49b5b31)
@@ -27,7 +40,8 @@ ame.
 - Merge origin/main (memuat id_approval PR #62 dan dashboard moneter/WMS PR #60) ke dalam branch gen/claude-design2-sales-productivity.
 - Menggabungkan pipeline pengujian CI .github/workflows/ci.yml dan deploy/init.sh agar menguji seluruh 10 addon FMCG secara utuh.
 - Memperbaiki ddons/id_dashboard_sales/i18n/id.po dengan menyisipkan #. module: id_dashboard_sales pada setiap string translasi untuk mencegah AttributeError di odoo/tools/translate.py.
-- Verifikasi: uff check addons/id_dashboard_sales PASS, check_manifests.py PASS (10 addon terverifikasi).
+- Verifikasi: 
+uff check addons/id_dashboard_sales PASS, check_manifests.py PASS (10 addon terverifikasi).
 
 ## 2026-10-31T16:53:53+07:00 â€” claude-design2 â€” Sales Productivity Dashboard (id_dashboard_sales)
 **Branch:** `agen/claude-design2-sales-productivity` (lokal, belum di-push)

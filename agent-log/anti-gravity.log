@@ -1466,3 +1466,11 @@
 - Fix: Supplied 'code': 'DPRIN' and 'code': 'DBRAND' in test setUpClass.
 - Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T22:59:25+07:00
+
+
+[2026-10-31T23:08:45+07:00] [INFO] Fix IDR Currency Inactive in TestSalesProductivity setUpClass
+- Diagnosed install-test failure: UserError: 'You cannot validate a document with an inactive currency: IDR' during invoice.action_post() in test_fulfillment_counts_only_delivered_and_posted_invoice.
+- Cause: IDR currency was inactive in the base CI test environment when invoice validation occurred.
+- Fix: Ensured company currency and IDR currency are explicitly set active in setUpClass of TestSalesProductivity.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T23:08:45+07:00

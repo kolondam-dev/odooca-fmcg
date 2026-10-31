@@ -9,6 +9,10 @@ class TestSalesProductivity(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.env.company.currency_id.active = True
+        idr = cls.env["res.currency"].with_context(active_test=False).search([("name", "=", "IDR")], limit=1)
+        if idr and not idr.active:
+            idr.active = True
         cls.manager = cls.env["res.users"].with_context(no_reset_password=True).create({
             "name": "Dashboard Manager", "login": "dash_manager", "email": "dash_manager@example.com",
             "group_ids": [(6, 0, [cls.env.ref("sales_team.group_sale_manager").id,
