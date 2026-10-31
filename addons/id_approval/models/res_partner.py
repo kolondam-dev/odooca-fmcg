@@ -41,8 +41,12 @@ class ResPartner(models.Model):
         for partner in self:
             term = partner.property_payment_term_id
             name = (term.name or "").lower() if term else ""
-            is_cash = partner.credit_mode == "cash" or "cash" in name or "tunai" in name or not term
-            partner.is_cash_customer = is_cash
+            if any(k in name for k in ["tempo", "net", "day", "hari"]):
+                partner.is_cash_customer = False
+            elif "cash" in name or "tunai" in name or not term:
+                partner.is_cash_customer = True
+            else:
+                partner.is_cash_customer = False
 
     def action_request_credit_limit_approval(self, reason=""):
         """Mengajukan persetujuan limit kredit & ToP tempo."""

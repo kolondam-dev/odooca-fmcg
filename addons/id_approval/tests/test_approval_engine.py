@@ -34,14 +34,23 @@ class TestApprovalEngine(TransactionCase):
             "group_ids": [(6, 0, [cls.grp_dir.id])],
         })
 
+        # Payment terms Cash & Tempo
+        cls.term_cash = cls.env["account.payment.term"].create({
+            "name": "Tunai / Cash",
+        })
+        cls.term_tempo = cls.env["account.payment.term"].create({
+            "name": "Tempo 14 Hari (Net 14)",
+        })
+
         # Partner Cash & Tempo
         cls.partner_cash = cls.env["res.partner"].create({
             "name": "Kios Tunai Manado",
-            "credit_mode": "cash",
+            "property_payment_term_id": cls.term_cash.id,
             "credit_limit": 0.0,
         })
         cls.partner_tempo = cls.env["res.partner"].create({
             "name": "Toko Tempo Minahasa",
+            "property_payment_term_id": cls.term_tempo.id,
             "credit_mode": "limit",
             "credit_limit": 5_000_000.0,
         })
