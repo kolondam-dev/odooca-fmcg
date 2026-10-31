@@ -1356,3 +1356,7 @@
   * Menghapus field usang (category_id, uom_type, rounding) yang sudah dihilangkan pada model uom.uom di Odoo 19.
   * Menggunakan field native Odoo 19: relative_uom_id ref="uom.product_uom_unit" dan relative_factor="1.0" (factor absolut dihitung otomatis).
 - Task managed by antigravity-agent at 2026-10-31T15:05:00+07:00
+
+[2026-10-31T15:32:00+07:00] [FIX] Sesuaikan Presisi Desimal Bobot Produk di Unit Test
+- Menyesuaikan nilai gramasi uji pada test_01_product_dimensions_and_weight_computation dari 115g (0.115kg) menjadi 250g (0.25kg) agar sesuai dengan decimal precision bawaan Odoo 'Stock Weight' (2 digit desimal).
+- Task managed by antigravity-agent at 2026-10-31T15:32:00+07:00

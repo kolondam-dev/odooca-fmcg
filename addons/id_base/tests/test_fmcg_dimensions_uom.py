@@ -44,8 +44,8 @@ class TestFMCGDimensionsUoM(TransactionCase):
         self.assertAlmostEqual(product.carton_volume_cbm, 0.0446, places=4)
 
         # Cek inverse gramasi g -> kg
-        product.write({"base_weight_g": 115.0})
-        self.assertAlmostEqual(product.weight, 0.115, places=3)
+        product.write({"base_weight_g": 250.0})
+        self.assertAlmostEqual(product.weight, 0.25, places=2)
 
     def test_02_native_uom_records_exist(self):
         """Verifikasi bahwa satuan-satuan native FMCG tersedia di registry."""
