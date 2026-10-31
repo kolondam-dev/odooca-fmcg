@@ -19,19 +19,19 @@ class TestApprovalEngine(TransactionCase):
             "name": "Supervisor Sales Uji",
             "login": "spv_test",
             "email": "spv@example.test",
-            "groups_id": [(6, 0, [cls.grp_spv.id])],
+            "group_ids": [(6, 0, [cls.grp_spv.id])],
         })
         cls.user_mgr = cls.env["res.users"].create({
             "name": "Branch Manager Uji",
             "login": "mgr_test",
             "email": "mgr@example.test",
-            "groups_id": [(6, 0, [cls.grp_mgr.id])],
+            "group_ids": [(6, 0, [cls.grp_mgr.id])],
         })
         cls.user_dir = cls.env["res.users"].create({
             "name": "Owner Director Uji",
             "login": "dir_test",
             "email": "dir@example.test",
-            "groups_id": [(6, 0, [cls.grp_dir.id])],
+            "group_ids": [(6, 0, [cls.grp_dir.id])],
         })
 
         # Partner Cash & Tempo

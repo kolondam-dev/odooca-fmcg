@@ -107,7 +107,7 @@ class FmcgApprovalRequest(models.Model):
             is_approver = False
             if current_line.user_id and current_line.user_id == current_user:
                 is_approver = True
-            elif current_line.group_id and current_line.group_id in current_user.groups_id:
+            elif current_line.group_id and current_line.group_id in current_user.group_ids:
                 is_approver = True
             elif current_line.approver_type == "manager":
                 # Atasan langsung dari requester
@@ -126,7 +126,7 @@ class FmcgApprovalRequest(models.Model):
             return []
 
         current_user = self.env.user
-        user_groups = current_user.groups_id.ids
+        user_groups = current_user.group_ids.ids
 
         # Cari lines yang berstatus pending dan approver cocok dengan user atau group
         lines = self.env["fmcg.approval.request.line"].search([
