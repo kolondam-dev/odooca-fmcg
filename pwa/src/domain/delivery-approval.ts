@@ -1,6 +1,10 @@
 import { z } from "zod";
 export const CancelReasonSchema = z.enum([
     "Toko Tutup",
+    "Kemasan basah/penyok saat handling transit",
+    "Produk mendekati kadaluarsa / Expired",
+    "Salah kirim SKU / kuantitas lebih",
+    "Toko tutup / menolak menerima pesanan",
     "Kesalahan Order",
     "Tidak bisa bayar",
     "Toko tidak dapat diakses",

@@ -780,6 +780,10 @@
                 "type": "string",
                 "enum": [
                   "Toko Tutup",
+                  "Kemasan basah/penyok saat handling transit",
+                  "Produk mendekati kadaluarsa / Expired",
+                  "Salah kirim SKU / kuantitas lebih",
+                  "Toko tutup / menolak menerima pesanan",
                   "Kesalahan Order",
                   "Tidak bisa bayar",
                   "Toko tidak dapat diakses",
@@ -1108,6 +1112,10 @@
                     "type": "string",
                     "enum": [
                       "Toko Tutup",
+                      "Kemasan basah/penyok saat handling transit",
+                      "Produk mendekati kadaluarsa / Expired",
+                      "Salah kirim SKU / kuantitas lebih",
+                      "Toko tutup / menolak menerima pesanan",
                       "Kesalahan Order",
                       "Tidak bisa bayar",
                       "Toko tidak dapat diakses",
@@ -2778,6 +2786,10 @@
                             "type": "string",
                             "enum": [
                               "Toko Tutup",
+                              "Kemasan basah/penyok saat handling transit",
+                              "Produk mendekati kadaluarsa / Expired",
+                              "Salah kirim SKU / kuantitas lebih",
+                              "Toko tutup / menolak menerima pesanan",
                               "Kesalahan Order",
                               "Tidak bisa bayar",
                               "Toko tidak dapat diakses",
