@@ -1416,3 +1416,10 @@
 - Diagnosed and fixed install-test failure: removed invalid 'order' field from ir.actions.act_window records in addons/id_dashboard_monetary/views/ar_aging_views.xml.
 - Ran static analysis: ruff check PASS, check_manifests.py PASS (9 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T21:42:00+07:00
+
+[2026-10-31T21:48:40+07:00] [INFO] Fix PostgreSQL Interval Type in WMS Expiry View
+- Diagnosed install-test failure: psycopg2.errors.UndefinedFunction: operator does not exist: interval < integer in id_wms_expiry view.
+- Cause: lot.expiration_date is timestamp; lot.expiration_date - CURRENT_DATE yields interval instead of integer days.
+- Fix: Cast lot.expiration_date::date before subtracting CURRENT_DATE in EXPIRY_SQL.
+- Static check: ruff check PASS, check_manifests.py PASS (9 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T21:48:40+07:00

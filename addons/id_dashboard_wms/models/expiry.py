@@ -21,11 +21,11 @@ CREATE OR REPLACE VIEW id_wms_expiry AS (
            sq.product_id AS product_id,
            sq.lot_id AS lot_id,
            lot.name AS lot_name,
-           lot.expiration_date AS expiration_date,
-           (lot.expiration_date - CURRENT_DATE) AS days_to_expiry,
+           lot.expiration_date::date AS expiration_date,
+           (lot.expiration_date::date - CURRENT_DATE) AS days_to_expiry,
            CASE
-               WHEN (lot.expiration_date - CURRENT_DATE) < 30 THEN 'critical'
-               WHEN (lot.expiration_date - CURRENT_DATE) <= 90 THEN 'warning'
+               WHEN (lot.expiration_date::date - CURRENT_DATE) < 30 THEN 'critical'
+               WHEN (lot.expiration_date::date - CURRENT_DATE) <= 90 THEN 'warning'
                ELSE 'good'
            END AS bucket,
            pt.fmcg_category AS fmcg_category,

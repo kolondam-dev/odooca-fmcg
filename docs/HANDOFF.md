@@ -1,4 +1,14 @@
-﻿## 2026-10-31T21:42:00+07:00 — antigravity agent — Resolusi Konflik & Perbaikan PR #60 (Dashboard Moneter & WMS)
+﻿## 2026-10-31T21:48:40+07:00 — antigravity agent — Perbaikan PostgreSQL Interval Type pada View id_wms_expiry
+**Branch:** gen/dashboard-monetary-wms
+**Status:** PASS (Static) -> Siap CI install-test
+
+### Diagnosa & Perbaikan
+- CI install-test pada Odoo 19 memunculkan error psycopg2.errors.UndefinedFunction: operator does not exist: interval < integer.
+- Penyebab: Field expiration_date pada stock_lot bertipe PostgreSQL 	imestamp. Pengurangan langsung (lot.expiration_date - CURRENT_DATE) menghasilkan tipe interval, sehingga operator perbandingan < 30 memicu UndefinedFunction.
+- Perbaikan: Dilakukan casting eksplisit (lot.expiration_date::date - CURRENT_DATE) di query EXPIRY_SQL (ddons/id_dashboard_wms/models/expiry.py), menghasilkan integer hari yang valid untuk field days_to_expiry dan evaluasi CASE bucket.
+- Verifikasi: uff check PASS, check_manifests.py PASS.
+
+## 2026-10-31T21:42:00+07:00 — antigravity agent — Resolusi Konflik & Perbaikan PR #60 (Dashboard Moneter & WMS)
 **Branch:** gen/dashboard-monetary-wms (basis origin/main = 1edd8c4)
 **Status:** PASS / VERIFIED (Static & Schema) -> Siap CI install-test
 
@@ -3258,4 +3268,5 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai seluruh job selesai sebelum verdict. Hasil belum diklaim.
 - Scope tetap UI/tests/docs. PR #32 tetap draft; tidak merge dan tidak deploy.
 - Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:26:00+07:00
+
 
