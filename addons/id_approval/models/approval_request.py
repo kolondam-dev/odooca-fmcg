@@ -272,7 +272,7 @@ class FmcgApprovalRequest(models.Model):
     def _notify_target_record(self, status):
         """Memanggil callback pada record model target jika tersedia."""
         for rec in self:
-            target = self.env[rec.res_model].browse(rec.res_id).exists()
+            target = self.env[rec.res_model].sudo().browse(rec.res_id).exists()
             if target and hasattr(target, "_on_approval_status_change"):
                 target._on_approval_status_change(rec, status)
 

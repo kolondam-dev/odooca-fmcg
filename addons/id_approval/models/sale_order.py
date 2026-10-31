@@ -81,9 +81,11 @@ class SaleOrder(models.Model):
                 cost_price = line.product_id.standard_price
                 if cost_price > 0.0 and net_price < cost_price:
                     selisih = cost_price - net_price
+                    uom = getattr(line, "product_uom_id", None) or getattr(line.product_id, "uom_id", None)
+                    uom_name = uom.name if uom else ""
                     summary_items.append(
                         f"• {line.product_id.name}: Harga Net Rp {net_price:,.2f} < HPP Rp {cost_price:,.2f} "
-                        f"(Rugi Rp {selisih:,.2f}/unit x {line.product_uom_qty} {line.product_uom.name})"
+                        f"(Rugi Rp {selisih:,.2f}/unit x {line.product_uom_qty} {uom_name})"
                     )
             order.below_hpp_summary = "\n".join(summary_items) if summary_items else ""
 
