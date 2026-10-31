@@ -113,12 +113,11 @@
                 <filter string="Perlu Persetujuan Saya" name="filter_my_approval" domain="[('state', '=', 'pending'), ('is_current_user_approver', '=', True)]"/>
                 <filter string="Disetujui" name="filter_approved" domain="[('state', '=', 'approved')]"/>
                 <filter string="Ditolak" name="filter_rejected" domain="[('state', '=', 'rejected')]"/>
-                <group expand="0" string="Kelompokkan Berdasarkan">
-                    <filter string="Kategori" name="group_category" context="{'group_by': 'category_id'}"/>
-                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Diajukan Oleh" name="group_requester" context="{'group_by': 'requested_by'}"/>
-                    <filter string="Tanggal Pengajuan" name="group_date" context="{'group_by': 'request_date:month'}"/>
-                </group>
+                <separator/>
+                <filter string="Kategori" name="group_category" domain="[]" context="{'group_by': 'category_id'}"/>
+                <filter string="Status" name="group_state" domain="[]" context="{'group_by': 'state'}"/>
+                <filter string="Diajukan Oleh" name="group_requester" domain="[]" context="{'group_by': 'requested_by'}"/>
+                <filter string="Tanggal Pengajuan" name="group_date" domain="[]" context="{'group_by': 'request_date:month'}"/>
             </search>
         </field>
     </record>
