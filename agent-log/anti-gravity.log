@@ -1306,3 +1306,8 @@
     - 5 Tipe Kemasan / Packaging (stock.package.type): CTN (Karton), BOX (Box), PACK (Pack), RCG (Renceng), DUS (Dus).
     - Verifikasi 9 armada logistik (fleet.vehicle) lengkap dengan plat DB, kubikasi m3, tonase, driver, STNK, dan masa berlaku KIR.
 - Task managed by antigravity at 2026-10-31T10:20:00+07:00
+
+[2026-10-31T03:59:25+00:00] [INFO] Docs draft prompt dispatch per agen
+- Menyusun docs/prompts/AGENT_DISPATCH_PROMPTS_SPRINT1_SPRINT2.md berisi prompt spesifik untuk 6 stream kerjaan (claude-dev, opencode, subagents)
+- Menyiapkan panduan eksekusi untuk user
+- Task managed by antigravity-agent at 2026-10-31T03:59:25+00:00

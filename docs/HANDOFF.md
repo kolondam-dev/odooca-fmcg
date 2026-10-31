@@ -1,3 +1,19 @@
+## 2026-10-31T11:00:00+07:00 — antigravity agent — Agent Dispatch Prompts Prepared (Sprint 1 & Sprint 2)
+**Branch:** `main`
+**Status:** READY FOR USER DISPATCH
+
+### Rangkuman Dispatch Prompts:
+- Disusun dokumen komprehensif `docs/prompts/AGENT_DISPATCH_PROMPTS_SPRINT1_SPRINT2.md` dan chat artifact `AGENT_DISPATCH_PROMPTS.md` berisi 6 prompt siap salin (*ready-to-dispatch*) untuk didelegasikan oleh user kepada masing-masing agen (`claude-dev`, `opencode`, dan subagen).
+- Pembagian 6 Stream:
+  1. **Prompt 1 (`claude-dev`):** Stack A Promo & Discount Governance (`addons/id_promo_governance`).
+  2. **Prompt 2 (`claude-dev`):** Stack A Native Pricelist Matrix & Expiry Reminder (`product.pricelist`).
+  3. **Prompt 3 (`opencode`):** Stack B Dashboard 1 & 2 (Executive Overview & Sales Productivity).
+  4. **Prompt 4 (`opencode`):** Stack B Dashboard 3 & 4 (Monetary AR Aging & Warehouse Logistics).
+  5. **Prompt 5 (`opencode` / `claude-dev`):** Stack B Dashboard 5 (Territorial Map & GeoJSON Polygon Sulut).
+  6. **Prompt 6 (`claude-dev` / `claude-design`):** Stack C PWA Multi-UoM Taking Order & Offline Flow.
+
+Task Managed by agent antigravity at 2026-10-31T11:00:00+07:00
+
 ## 2026-10-31T10:20:00+07:00 — antigravity agent — Sprint 1: PWA Mobile-First Refinements & Master Data Enrichment
 **Branch:** `agen/sprint-1-pwa-master-data`
 **Status:** PASS / TESTED & VERIFIED ON LIVE RAILWAY POSTGRES
