@@ -1360,3 +1360,13 @@
 [2026-10-31T15:32:00+07:00] [FIX] Sesuaikan Presisi Desimal Bobot Produk di Unit Test
 - Menyesuaikan nilai gramasi uji pada test_01_product_dimensions_and_weight_computation dari 115g (0.115kg) menjadi 250g (0.25kg) agar sesuai dengan decimal precision bawaan Odoo 'Stock Weight' (2 digit desimal).
 - Task managed by antigravity-agent at 2026-10-31T15:32:00+07:00
+
+[2026-10-31T16:10:00+07:00] [SUCCESS] Eksekusi Pengayaan Master Data Sprint 2 di Live Railway DB Selesai 100%
+- Menyelaraskan scripts/enrich_master_data_sprint2_uom_partner.py dengan arsitektur Odoo 19:
+  * Menggunakan JSONB format spesifik Odoo 19 (specific_property_product_pricelist) untuk auto-assignment daftar harga partner berdasarkan channel dan coverage area.
+  * Menyelaraskan 14 atribut fisik & dimensi kemasan FMCG langsung pada product.template (carton_qty, inner_qty, panjang, lebar, tinggi, volume kubikasi, berat base, berat karton, barcode karton).
+- Hasil eksekusi pada live database Railway:
+  * 354 coverage area partner diperbarui & 354 matriks harga diselaraskan (Modern Trade Diskon 5%, General Trade Urban, Luar Manado Surcharge).
+  * 150 produk FMCG diperbarui lengkap dengan 14 dimensi fisik dan rasio kemasan karton.
+  * Status: SUCCESS 100%.
+- Task managed by antigravity-agent at 2026-10-31T16:10:00+07:00
