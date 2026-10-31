@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_fmcg_approval_request_tree" model="ir.ui.view">
+        <field name="name">fmcg.approval.request.tree</field>
+        <field name="model">fmcg.approval.request</field>
+        <field name="arch" type="xml">
+            <list string="Pengajuan Persetujuan" decoration-info="state == 'draft'" decoration-warning="state == 'pending'" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'">
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="reference_document"/>
+                <field name="requested_by"/>
+                <field name="request_date"/>
+                <field name="amount" widget="monetary" sum="Total Nominal"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="current_tier_sequence" string="Tier"/>
+                <field name="total_tiers" string="Total"/>
+                <field name="state" widget="badge" decoration-warning="state == 'pending'" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_fmcg_approval_request_form" model="ir.ui.view">
+        <field name="name">fmcg.approval.request.form</field>
+        <field name="model">fmcg.approval.request</field>
+        <field name="arch" type="xml">
+            <form string="Pengajuan Persetujuan FMCG">
+                <header>
+                    <button name="action_submit"
+                            string="Kirim Pengajuan"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve"
+                            string="Setujui (Approve)"
+                            type="object"
+                            class="btn-success"
+                            invisible="not is_current_user_approver"/>
+                    <button name="action_reject"
+                            string="Tolak (Reject)"
+                            type="object"
+                            class="btn-danger"
+                            invisible="not is_current_user_approver"/>
+                    <button name="action_cancel"
+                            string="Batalkan"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state not in ('draft', 'pending')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,approved"/>
+                </header>
+                <sheet>
+                    <field name="is_current_user_approver" invisible="1"/>
+                    <div class="oe_title">
+                        <span class="o_form_label">No. Pengajuan</span>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Informasi Pengajuan">
+                            <field name="category_id" readonly="state != 'draft'"/>
+                            <field name="category_code" invisible="1"/>
+                            <field name="reference_document" readonly="state != 'draft'"/>
+                            <field name="requested_by" readonly="state != 'draft'"/>
+                            <field name="request_date" readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Finansial &amp; Traceability">
+                            <field name="company_id" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="amount" widget="monetary" readonly="state != 'draft'"/>
+                            <field name="discount_percent" readonly="state != 'draft'"/>
+                            <field name="analytic_account_id" readonly="state != 'draft'"/>
+                            <field name="current_tier_sequence" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Alasan &amp; Justifikasi" name="justification">
+                            <field name="reason" placeholder="Jelaskan alasan dan latar belakang pengajuan persetujuan..." readonly="state != 'draft'"/>
+                        </page>
+                        <page string="Tahapan &amp; Log Persetujuan (Tiers)" name="tiers">
+                            <field name="line_ids" readonly="1">
+                                <list string="Tahapan Persetujuan">
+                                    <field name="tier_sequence" string="Tingkat"/>
+                                    <field name="tier_name"/>
+                                    <field name="group_id" string="Wewenang Role"/>
+                                    <field name="actual_approver_id" string="Eksekutor Approver"/>
+                                    <field name="action_date" string="Tanggal Eksekusi"/>
+                                    <field name="state" widget="badge" decoration-warning="state == 'pending'" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'"/>
+                                    <field name="notes" string="Catatan"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_fmcg_approval_request_search" model="ir.ui.view">
+        <field name="name">fmcg.approval.request.search</field>
+        <field name="model">fmcg.approval.request</field>
+        <field name="arch" type="xml">
+            <search string="Cari Pengajuan">
+                <field name="name"/>
+                <field name="reference_document"/>
+                <field name="category_id"/>
+                <field name="requested_by"/>
+                <separator/>
+                <filter string="Menunggu Persetujuan" name="filter_pending" domain="[('state', '=', 'pending')]"/>
+                <filter string="Perlu Persetujuan Saya" name="filter_my_approval" domain="[('state', '=', 'pending'), ('is_current_user_approver', '=', True)]"/>
+                <filter string="Disetujui" name="filter_approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Ditolak" name="filter_rejected" domain="[('state', '=', 'rejected')]"/>
+                <separator/>
+                <filter string="Kategori" name="group_category" domain="[]" context="{'group_by': 'category_id'}"/>
+                <filter string="Status" name="group_state" domain="[]" context="{'group_by': 'state'}"/>
+                <filter string="Diajukan Oleh" name="group_requester" domain="[]" context="{'group_by': 'requested_by'}"/>
+                <filter string="Tanggal Pengajuan" name="group_date" domain="[]" context="{'group_by': 'request_date:month'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Pivot View (Traceable Report) -->
+    <record id="view_fmcg_approval_request_pivot" model="ir.ui.view">
+        <field name="name">fmcg.approval.request.pivot</field>
+        <field name="model">fmcg.approval.request</field>
+        <field name="arch" type="xml">
+            <pivot string="Laporan Analisis Persetujuan (Traceable)">
+                <field name="category_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Graph View -->
+    <record id="view_fmcg_approval_request_graph" model="ir.ui.view">
+        <field name="name">fmcg.approval.request.graph</field>
+        <field name="model">fmcg.approval.request</field>
+        <field name="arch" type="xml">
+            <graph string="Grafik Pengajuan Persetujuan" type="bar">
+                <field name="category_id"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Actions -->
+    <record id="action_fmcg_approval_request_all" model="ir.actions.act_window">
+        <field name="name">Semua Pengajuan Persetujuan</field>
+        <field name="res_model">fmcg.approval.request</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_fmcg_approval_request_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Belum ada pengajuan persetujuan yang tercatat.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_fmcg_approval_request_pending_me" model="ir.actions.act_window">
+        <field name="name">Menunggu Persetujuan Saya</field>
+        <field name="res_model">fmcg.approval.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'pending'), ('is_current_user_approver', '=', True)]</field>
+        <field name="search_view_id" ref="view_fmcg_approval_request_search"/>
+    </record>
+
+    <record id="action_fmcg_approval_report_pivot" model="ir.actions.act_window">
+        <field name="name">Laporan Audit &amp; Traceability Persetujuan</field>
+        <field name="res_model">fmcg.approval.request</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="search_view_id" ref="view_fmcg_approval_request_search"/>
+    </record>
+</odoo>
+

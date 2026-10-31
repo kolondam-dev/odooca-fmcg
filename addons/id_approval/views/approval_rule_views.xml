@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Rule Tree -->
+    <record id="view_fmcg_approval_rule_tree" model="ir.ui.view">
+        <field name="name">fmcg.approval.rule.tree</field>
+        <field name="model">fmcg.approval.rule</field>
+        <field name="arch" type="xml">
+            <list string="Aturan Tingkatan (Tier Rules)">
+                <field name="tier_sequence"/>
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="approver_type"/>
+                <field name="group_id"/>
+                <field name="min_amount" string="Min (Rp)"/>
+                <field name="max_amount" string="Max (Rp)"/>
+                <field name="min_discount" string="Min (%)"/>
+                <field name="max_discount" string="Max (%)"/>
+                <field name="sla_hours" string="SLA (Jam)"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Rule Form -->
+    <record id="view_fmcg_approval_rule_form" model="ir.ui.view">
+        <field name="name">fmcg.approval.rule.form</field>
+        <field name="model">fmcg.approval.rule</field>
+        <field name="arch" type="xml">
+            <form string="Aturan Tingkatan Persetujuan">
+                <sheet>
+                    <group>
+                        <group string="Identitas Tingkat (Tier)">
+                            <field name="category_id"/>
+                            <field name="tier_sequence"/>
+                            <field name="name"/>
+                        </group>
+                        <group string="Otorisasi &amp; Wewenang">
+                            <field name="approver_type"/>
+                            <field name="group_id" invisible="approver_type != 'group'"/>
+                            <field name="user_id" invisible="approver_type != 'user'"/>
+                            <field name="sla_hours"/>
+                        </group>
+                    </group>
+                    <group string="Ambang Batas (Threshold)">
+                        <group string="Nominal Transaksi (Rp)">
+                            <field name="min_amount"/>
+                            <field name="max_amount"/>
+                        </group>
+                        <group string="Persentase Diskon (%)">
+                            <field name="min_discount"/>
+                            <field name="max_discount"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
+

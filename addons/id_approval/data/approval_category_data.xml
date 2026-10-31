@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- 1. Credit Limit & ToP Pelanggan Baru -->
+    <record id="cat_partner_credit_limit" model="fmcg.approval.category">
+        <field name="name">Limit Kredit &amp; ToP Pelanggan Baru</field>
+        <field name="code">partner_credit_limit</field>
+        <field name="sequence">10</field>
+        <field name="res_model">res.partner</field>
+        <field name="description">Persetujuan batas plafon kredit dan tenor tempo untuk outlet baru. Pelanggan tunai (Cash) otomatis dibebaskan dari persetujuan ini.</field>
+        <field name="has_amount_tiers">True</field>
+    </record>
+
+    <record id="rule_credit_limit_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_partner_credit_limit"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Verifikasi Credit Control / Supervisor</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_supervisor"/>
+        <field name="sla_hours">12</field>
+    </record>
+
+    <record id="rule_credit_limit_tier2" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_partner_credit_limit"/>
+        <field name="tier_sequence">2</field>
+        <field name="name">Tier 2: Otorisasi Branch Manager</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_manager"/>
+        <field name="sla_hours">24</field>
+    </record>
+
+    <!-- 2. Perubahan ToP Pelanggan Lama -->
+    <record id="cat_partner_top_change" model="fmcg.approval.category">
+        <field name="name">Perubahan Term of Payment (ToP)</field>
+        <field name="code">partner_top_change</field>
+        <field name="sequence">20</field>
+        <field name="res_model">res.partner</field>
+        <field name="description">Persetujuan perubahan termin pembayaran (misal dari Cash ke Tempo, atau perpanjangan hari kredit).</field>
+    </record>
+
+    <record id="rule_top_change_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_partner_top_change"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Rekomendasi Sales Manager</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_manager"/>
+        <field name="sla_hours">24</field>
+    </record>
+
+    <!-- 3. New SKU Master Activation -->
+    <record id="cat_new_sku" model="fmcg.approval.category">
+        <field name="name">Registrasi SKU Baru (New SKU)</field>
+        <field name="code">new_sku</field>
+        <field name="sequence">30</field>
+        <field name="res_model">product.template</field>
+        <field name="description">Persetujuan aktivasi master produk baru agar barcode, dimensi, kemasan karton, dan gramasi tervalidasi.</field>
+    </record>
+
+    <record id="rule_new_sku_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_new_sku"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Otorisasi Master Data &amp; Branch Manager</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_manager"/>
+        <field name="sla_hours">24</field>
+    </record>
+
+    <!-- 4. New Promo & Discount Program -->
+    <record id="cat_new_promo" model="fmcg.approval.category">
+        <field name="name">Program Promosi &amp; Diskon Baru</field>
+        <field name="code">new_promo</field>
+        <field name="sequence">40</field>
+        <field name="res_model">loyalty.program</field>
+        <field name="description">Otorisasi program promosi baru, anggaran klaim principal, dan mekanisme diskon.</field>
+    </record>
+
+    <record id="rule_new_promo_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_new_promo"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Evaluasi Sales Manager</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_manager"/>
+        <field name="sla_hours">24</field>
+    </record>
+
+    <!-- 5. Diskon Taktikal di Luar Program -->
+    <record id="cat_tactical_discount" model="fmcg.approval.category">
+        <field name="name">Diskon Taktikal (Di Luar Program)</field>
+        <field name="code">tactical_discount</field>
+        <field name="sequence">50</field>
+        <field name="res_model">sale.order</field>
+        <field name="description">Pemberian diskon manual di luar promo resmi untuk menangkal kompetisi lokal. Wajib menyertakan akun analitik untuk pelacakan dampak laba/rugi.</field>
+        <field name="has_discount_tiers">True</field>
+    </record>
+
+    <record id="rule_tactical_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_tactical_discount"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Diskon Ringan (&lt;= 3%) - Supervisor</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_supervisor"/>
+        <field name="min_discount">0.01</field>
+        <field name="max_discount">3.0</field>
+        <field name="sla_hours">4</field>
+    </record>
+
+    <record id="rule_tactical_tier2" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_tactical_discount"/>
+        <field name="tier_sequence">2</field>
+        <field name="name">Tier 2: Diskon Sedang (&gt; 3% s/d 7%) - Branch Manager</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_manager"/>
+        <field name="min_discount">3.01</field>
+        <field name="max_discount">7.0</field>
+        <field name="sla_hours">8</field>
+    </record>
+
+    <record id="rule_tactical_tier3" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_tactical_discount"/>
+        <field name="tier_sequence">3</field>
+        <field name="name">Tier 3: Diskon Besar (&gt; 7%) - Direksi / Owner</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_director"/>
+        <field name="min_discount">7.01</field>
+        <field name="sla_hours">12</field>
+    </record>
+
+    <!-- 6. Harga di Bawah HPP (2-Line Mandatory) -->
+    <record id="cat_discount_below_hpp" model="fmcg.approval.category">
+        <field name="name">Harga Jual di Bawah HPP (Loss Guard)</field>
+        <field name="code">discount_below_hpp</field>
+        <field name="sequence">60</field>
+        <field name="res_model">sale.order</field>
+        <field name="description">Proteksi penjualan di bawah harga pokok (rugi margin kotor). Wajib persetujuan 2-line: Branch Manager hingga Direksi/Pemilik.</field>
+    </record>
+
+    <record id="rule_below_hpp_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_discount_below_hpp"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Evaluasi Kelayakan - Branch Manager</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_manager"/>
+        <field name="sla_hours">12</field>
+    </record>
+
+    <record id="rule_below_hpp_tier2" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_discount_below_hpp"/>
+        <field name="tier_sequence">2</field>
+        <field name="name">Tier 2: Otorisasi Akhir Kerugian - Direksi / Pemilik</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_director"/>
+        <field name="sla_hours">24</field>
+    </record>
+
+    <!-- 7. Biaya Operasional (Tiering Nominal) -->
+    <record id="cat_operational_expense" model="fmcg.approval.category">
+        <field name="name">Pengeluaran Kas / Biaya Operasional</field>
+        <field name="code">operational_expense</field>
+        <field name="sequence">70</field>
+        <field name="res_model">account.payment</field>
+        <field name="description">Otorisasi pencairan kas operasional cabang (bensin, perawatan armada canvass, utilitas) berjenjang sesuai plafon nominal.</field>
+        <field name="has_amount_tiers">True</field>
+    </record>
+
+    <record id="rule_op_expense_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_operational_expense"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Biaya Rutin (&lt;= Rp 1 Juta) - Operasional SPV</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_supervisor"/>
+        <field name="min_amount">0.0</field>
+        <field name="max_amount">1000000.0</field>
+        <field name="sla_hours">6</field>
+    </record>
+
+    <record id="rule_op_expense_tier2" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_operational_expense"/>
+        <field name="tier_sequence">2</field>
+        <field name="name">Tier 2: Biaya Sedang (&gt; Rp 1 Juta s/d Rp 5 Juta) - Branch Manager</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_manager"/>
+        <field name="min_amount">1000001.0</field>
+        <field name="max_amount">5000000.0</field>
+        <field name="sla_hours">12</field>
+    </record>
+
+    <record id="rule_op_expense_tier3" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_operational_expense"/>
+        <field name="tier_sequence">3</field>
+        <field name="name">Tier 3: Biaya Besar (&gt; Rp 5 Juta) - Finance Director / Owner</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_director"/>
+        <field name="min_amount">5000001.0</field>
+        <field name="sla_hours">24</field>
+    </record>
+
+    <!-- 8. Cuti Karyawan (2-Line Approval) -->
+    <record id="cat_hr_leave_2line" model="fmcg.approval.category">
+        <field name="name">Cuti &amp; Izin Karyawan (2-Line)</field>
+        <field name="code">hr_leave_2line</field>
+        <field name="sequence">80</field>
+        <field name="res_model">hr.leave</field>
+        <field name="description">Pengajuan cuti dan izin kerja karyawan melalui alur persetujuan 2 tingkat: Atasan Langsung (SPV) lalu Branch Manager.</field>
+    </record>
+
+    <record id="rule_leave_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_hr_leave_2line"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Rekomendasi Atasan Langsung (SPV)</field>
+        <field name="approver_type">manager</field>
+        <field name="sla_hours">12</field>
+    </record>
+
+    <record id="rule_leave_tier2" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_hr_leave_2line"/>
+        <field name="tier_sequence">2</field>
+        <field name="name">Tier 2: Pengesahan Branch Manager</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_manager"/>
+        <field name="sla_hours">24</field>
+    </record>
+
+    <!-- 9. Early Inbound Delivery -->
+    <record id="cat_early_inbound" model="fmcg.approval.category">
+        <field name="name">Penerimaan Inbound Sebelum Jadwal</field>
+        <field name="code">early_inbound</field>
+        <field name="sequence">90</field>
+        <field name="res_model">stock.picking</field>
+        <field name="description">Persetujuan armada Principal yang tiba di gudang mendahului estimasi jadwal PO untuk mencegah penumpukan dermaga bongkar (dock congestion).</field>
+    </record>
+
+    <record id="rule_early_inbound_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_early_inbound"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Verifikasi Slot Gudang - Kepala Gudang</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_supervisor"/>
+        <field name="sla_hours">6</field>
+    </record>
+
+    <!-- 10. Extra Call Salesman -->
+    <record id="cat_extra_call" model="fmcg.approval.category">
+        <field name="name">Extra Call / Kunjungan Luar Rute</field>
+        <field name="code">extra_call</field>
+        <field name="sequence">100</field>
+        <field name="res_model">fmcg.pjp.visit</field>
+        <field name="description">Otorisasi kunjungan salesman ke outlet di luar jadwal PJP mingguan resmi untuk pemesanan tambahan darurat.</field>
+    </record>
+
+    <record id="rule_extra_call_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_extra_call"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Otorisasi Rute - Field Sales Supervisor</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_supervisor"/>
+        <field name="sla_hours">2</field>
+    </record>
+</odoo>
+

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Root Menu Approval Center -->
+    <menuitem id="menu_fmcg_approval_root"
+              name="Pusat Persetujuan"
+              web_icon="id_approval,static/description/icon.png"
+              sequence="15"/>
+
+    <!-- Submenu Persetujuan -->
+    <menuitem id="menu_fmcg_approval_operations"
+              name="Pengajuan Persetujuan"
+              parent="menu_fmcg_approval_root"
+              sequence="10"/>
+
+    <menuitem id="menu_fmcg_approval_pending_me"
+              name="Menunggu Persetujuan Saya"
+              parent="menu_fmcg_approval_operations"
+              action="action_fmcg_approval_request_pending_me"
+              sequence="10"/>
+
+    <menuitem id="menu_fmcg_approval_all"
+              name="Semua Pengajuan"
+              parent="menu_fmcg_approval_operations"
+              action="action_fmcg_approval_request_all"
+              sequence="20"/>
+
+    <!-- Submenu Laporan (Reporting & Traceability) -->
+    <menuitem id="menu_fmcg_approval_reporting"
+              name="Laporan &amp; Audit"
+              parent="menu_fmcg_approval_root"
+              sequence="20"/>
+
+    <menuitem id="menu_fmcg_approval_report_pivot"
+              name="Laporan Audit &amp; Analisis"
+              parent="menu_fmcg_approval_reporting"
+              action="action_fmcg_approval_report_pivot"
+              sequence="10"/>
+
+    <!-- Submenu Konfigurasi -->
+    <menuitem id="menu_fmcg_approval_configuration"
+              name="Konfigurasi"
+              parent="menu_fmcg_approval_root"
+              groups="id_approval.group_fmcg_approval_manager"
+              sequence="30"/>
+
+    <menuitem id="menu_fmcg_approval_category_menu"
+              name="Kategori Persetujuan"
+              parent="menu_fmcg_approval_configuration"
+              action="action_fmcg_approval_category"
+              sequence="10"/>
+
+    <menuitem id="menu_fmcg_approval_rule_menu"
+              name="Aturan Tingkatan (Tiers)"
+              parent="menu_fmcg_approval_configuration"
+              action="action_fmcg_approval_rule"
+              sequence="20"/>
+</odoo>
+

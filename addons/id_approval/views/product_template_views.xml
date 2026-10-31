@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_product_template_form_fmcg_approval_inherit" model="ir.ui.view">
+        <field name="name">product.template.form.fmcg.approval.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <!-- Smart Button Persetujuan -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="%(action_fmcg_approval_request_all)d"
+                        type="action"
+                        class="oe_stat_button"
+                        icon="fa-check-circle"
+                        context="{'search_default_reference_document': name}">
+                    <div class="o_stat_info">
+                        <field name="approval_count" class="o_stat_value"/>
+                        <span class="o_stat_text">Persetujuan</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <!-- Header Status SKU Approval -->
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_request_new_sku_approval"
+                            type="object"
+                            string="Ajukan Persetujuan SKU Baru"
+                            class="btn-primary"
+                            invisible="fmcg_approval_state in ('active', 'pending')"/>
+                    <field name="fmcg_approval_state" widget="statusbar" statusbar_visible="draft,pending,active"/>
+                </header>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

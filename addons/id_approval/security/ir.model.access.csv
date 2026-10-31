@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fmcg_approval_category_user,fmcg.approval.category.user,model_fmcg_approval_category,base.group_user,1,0,0,0
+access_fmcg_approval_category_mgr,fmcg.approval.category.mgr,model_fmcg_approval_category,id_approval.group_fmcg_approval_manager,1,1,1,1
+access_fmcg_approval_rule_user,fmcg.approval.rule.user,model_fmcg_approval_rule,base.group_user,1,0,0,0
+access_fmcg_approval_rule_mgr,fmcg.approval.rule.mgr,model_fmcg_approval_rule,id_approval.group_fmcg_approval_manager,1,1,1,1
+access_fmcg_approval_request_user,fmcg.approval.request.user,model_fmcg_approval_request,base.group_user,1,1,1,0
+access_fmcg_approval_request_mgr,fmcg.approval.request.mgr,model_fmcg_approval_request,id_approval.group_fmcg_approval_manager,1,1,1,1
+access_fmcg_approval_request_line_user,fmcg.approval.request.line.user,model_fmcg_approval_request_line,base.group_user,1,1,1,0
+access_fmcg_approval_request_line_mgr,fmcg.approval.request.line.mgr,model_fmcg_approval_request_line,id_approval.group_fmcg_approval_manager,1,1,1,1
+
