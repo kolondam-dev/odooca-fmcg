@@ -1370,3 +1370,18 @@
   * 150 produk FMCG diperbarui lengkap dengan 14 dimensi fisik dan rasio kemasan karton.
   * Status: SUCCESS 100%.
 - Task managed by antigravity-agent at 2026-10-31T16:10:00+07:00
+
+[2026-10-31T16:55:00+07:00] [INFO] Stack A Fase 2: Tata Kelola Finansial, Approval Kredit & Integrasi CoreTax Selesai
+- Approval Workflow Engine pada sale.order (id_base):
+  * credit_limit_exceeded: Pengecekan otomatis saldo piutang berjalan + nilai order terhadap limit kredit outlet (credit_limit) dan deteksi faktur jatuh tempo (overdue invoices) untuk mode strict & limit_due.
+  * credit_approval_state: Status alur persetujuan bertingkat (none, pending, approved, rejected) lengkap dengan authorized role (Branch Manager / Sales Manager) dan audit chatter.
+  * max_line_discount & discount_approval_state: Deteksi otomatis diskon manual/khusus pada baris pesanan dan mekanisme persetujuan manajerial.
+  * Guard action_confirm(): Memblokir konfirmasi pesanan jika over-limit atau diskon pending, dengan perlindungan khusus bagi data seed/historis kanonikal (fmcg_seed_batch).
+  * UI Odoo: Alert banner merah/hijau, tombol aksi di header, tab khusus "Tata Kelola Kredit & Approval", badge status di tree view, dan filter pencarian.
+- Kesiapan Faktur Pajak & CoreTax DJP Indonesia (account.move & wizard):
+  * l10n_id_tax_transaction_code (01, 02, 04, 08, 09), nomor seri faktur pajak (NSFP), tanggal faktur pajak, dan penanda ekspor.
+  * Tombol aksi action_generate_nsfp() pada faktur penjualan.
+  * Wizard ekspor coretax.export.wizard yang menghasilkan berkas CSV resmi sesuai spesifikasi skema DJP e-Faktur / CoreTax.
+- Unit Test Suite:
+  * test_credit_limit_approval.py mencakup pengujian order normal, order over-limit terblokir, approval BM, penolakan, proteksi overdue invoice mode strict, dan validasi ekspor CSV CoreTax.
+- Task managed by antigravity-agent at 2026-10-31T16:55:00+07:00

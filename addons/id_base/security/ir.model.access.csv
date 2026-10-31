@@ -18,3 +18,4 @@ access_id_subdistrict_manager,id.subdistrict.manager,model_id_subdistrict,base.g
 access_id_city_user,id.city.user,model_id_city,base.group_user,1,0,0,0
 access_id_city_manager,id.city.manager,model_id_city,base.group_system,1,1,1,1
 
+access_coretax_export_wizard_user,coretax.export.wizard.user,model_coretax_export_wizard,base.group_user,1,1,1,1

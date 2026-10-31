@@ -1,6 +1,6 @@
 {
     "name": "FMCG Distributor Base",
-    "summary": "Fondasi distributor FMCG: principal, brand, area, channel, matriks harga, multi-uom, kemasan.",
+    "summary": "Fondasi FMCG: principal, brand, area, channel, matriks harga, multi-uom, kemasan, approval, pajak.",
     "version": "19.0.1.0.0",
     "category": "Distribution",
     "license": "LGPL-3",
@@ -27,6 +27,9 @@
         "views/product_template_views.xml",
         "views/product_pricelist_views.xml",
         "views/fleet_vehicle_views.xml",
+        "wizard/coretax_export_wizard_views.xml",
+        "views/sale_order_views.xml",
+        "views/account_move_views.xml",
         "views/menu_views.xml",
     ],
     "installable": True,
