@@ -1289,3 +1289,20 @@
   * Direct Backend: https://odooca-fmcg-demo.up.railway.app/ -> HTTP 200 OK
   * Direct PWA: https://field-pwa-production.up.railway.app/field/ -> HTTP 200 OK
 - Task managed by antigravity at 2026-10-31T07:45:00+07:00
+
+[2026-10-31T10:20:00+07:00] [SUCCESS] Sprint 1 PWA Mobile-First Refinements & Master Data Enrichment
+- PWA Mobile-First Refinements (Stack C):
+  * Header & Topbar solid/fixed: dibungkus dalam .header-fixed (position: fixed; top: 0; left: 50%; max-width: 720px; z-index: 30) dengan background solid putih, border, dan shadow halus; padding .content diselaraskan agar tidak bertumpuk.
+  * Menghilangkan badge/background kotak di seluruh icon (.metric-icon, .quick-icon, .outlet-icon, .nav-icon); icon tampil bersih, modern, dan standalone.
+  * Bottom navbar solid/fixed (position: fixed; bottom: 0; z-index: 30) kebal scroll, active menu background menyatu dengan body secara seamless, feedback tap :active (scale 0.92), dan icon aktif berwarna stand out (vibrant sapphire #004ecc, scale 1.12x).
+  * Menstandarkan alasan penolakan pengiriman (delivery reject reasons) di PWA matching backend: Kemasan basah/penyok saat handling transit, Produk mendekati kadaluarsa / Expired, Salah kirim SKU / kuantitas lebih, Toko tutup / menolak menerima pesanan.
+  * Navigasi & kendali login/logout eksplisit: modal sesi akun di avatar topbar serta tombol aksi langsung di halaman Akun & Sinkronisasi (Ganti Akun Odoo /web/login dan Logout /web/session/logout).
+  * Verifikasi PWA: 327/327 tests PASS di 18 test suite Vitest, OpenAPI schema drift gate PASS, typecheck tsc --noEmit lolos bersih, dan build demo & production sukses.
+- Master Data Enrichment pada Live Railway Database (Stack A):
+  * Menulis dan mengeksekusi scripts/enrich_master_data_sprint1.py secara aman dan idempoten di live DB:
+    - 8 Bank resmi & 10 Rekening Bank (res.bank, res.partner.bank) untuk PT MDU (BCA, Mandiri, BSG), 12 Prinsipal FMCG, Key Accounts MT/GT, dan staf operasional.
+    - 354 child PIC contacts (res.partner dengan type='contact', parent_id=outlet.id, PIC name, phone, function) untuk seluruh outlet aktif.
+    - 9 Seksi Gudang Fisik Internal Maumbi (stock.location) di bawah WH/Stock: GD-MND/UTAMA, EACHES, RETURN-STAGING, BAD-STOCK, PROMO, PREMIUM, COLD, DOCK, IN-TRANSIT.
+    - 5 Tipe Kemasan / Packaging (stock.package.type): CTN (Karton), BOX (Box), PACK (Pack), RCG (Renceng), DUS (Dus).
+    - Verifikasi 9 armada logistik (fleet.vehicle) lengkap dengan plat DB, kubikasi m3, tonase, driver, STNK, dan masa berlaku KIR.
+- Task managed by antigravity at 2026-10-31T10:20:00+07:00

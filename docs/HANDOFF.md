@@ -1,3 +1,25 @@
+## 2026-10-31T10:20:00+07:00 — antigravity agent — Sprint 1: PWA Mobile-First Refinements & Master Data Enrichment
+**Branch:** `agen/sprint-1-pwa-master-data`
+**Status:** PASS / TESTED & VERIFIED ON LIVE RAILWAY POSTGRES
+
+### 1. PWA Mobile-First Refinements (Stack C):
+- **Fixed Solid Header:** Wrapped `.simulation` dan `.topbar` di dalam `.header-fixed` (`position: fixed; top: 0; left: 50%; max-width: 720px; z-index: 30`) dengan latar solid putih `#ffffff`, border bawah, dan shadow tipis. Content padding disesuaikan (`padding-top: 104px`) agar konten mulus di bawah header dan tidak pernah terpotong.
+- **Icon Standalone (Hilangkan Badge Background):** Menghapus seluruh container background kotak/badge di belakang icon (`.metric-icon`, `.quick-icon`, `.outlet-icon`, `.nav-icon`). Seluruh icon tampil bersih, elegan, dan langsung di atas kartu/komponen.
+- **Fixed Solid Bottom Navbar:** Dipasang solid di `bottom: 0` (`z-index: 30`) kebal scroll. Menu aktif memiliki latar menyatu seamless dengan body (`background: transparent`), interaksi tap `:active { transform: scale(0.92); }`, dan icon aktif tampil stand out dengan warna sapphire `#004ecc` dan scale 1.12x.
+- **Alasan Reject Pengiriman Standar FMCG:** Menambahkan alasan penolakan matching backend Odoo (`Kemasan basah/penyok saat handling transit`, `Produk mendekati kadaluarsa / Expired`, `Salah kirim SKU / kuantitas lebih`, `Toko tutup / menolak menerima pesanan`).
+- **Navigasi Sesi & Logout:** Menambahkan modal profil akun di tombol avatar topbar serta tautan langsung di menu Akun & Sinkronisasi untuk "Ganti Akun Odoo" (`/web/login?redirect=/field/`) dan "Keluar dari Sesi (Logout)" (`/web/session/logout?redirect=/field/`).
+- **Pengujian PWA:** 327/327 tests PASS (18 test suite Vitest), OpenAPI schema drift check PASS, typecheck `tsc --noEmit` bersih 0 error, build demo dan live sukses.
+
+### 2. Master Data Enrichment di Live Database Railway (Stack A):
+- Dieksekusi via `scripts/enrich_master_data_sprint1.py` secara aman, terisolasi, dan idempoten:
+  1. **Bank Master Data:** 8 bank terdaftar (`res.bank`) dan 10 rekening operasional (`res.partner.bank`) untuk PT Manado Distribusi Utama (BCA Manado, Mandiri Manado, Bank SulutGo), 12 prinsipal nasional (Mayora, Santos, Unilever, Wings, dll), key customers (Indomaret DC, Alfamidi DC, FreshMart, Jumbo), serta staf lapangan.
+  2. **Outlet Child PIC Contacts:** **354 contact records** (`res.partner` dengan `parent_id = outlet.id`, `type = 'contact'`, nama representatif Sulut, nomor telepon, dan fungsi/jabatan) dibuat untuk 100% outlet aktif.
+  3. **9 Seksi Gudang Fisik Maumbi (`stock.location`):** `GD-MND/UTAMA` (Good stock bulk), `GD-MND/EACHES` (Eaches picking), `GD-MND/RETURN-STAGING` (Retur toko), `GD-MND/BAD-STOCK` (Karantina BS), `GD-MND/PROMO` (POSM & hadiah), `GD-MND/PREMIUM` (High value), `GD-MND/COLD` (Dairy/Chiller), `GD-MND/DOCK` (Loading dock), `GD-MND/IN-TRANSIT` (Stok di truk delivery).
+  4. **Tipe Kemasan Stok (`stock.package.type`):** 5 tipe kemasan standar (`CTN`, `BOX`, `PACK`, `RCG`, `DUS`) dengan dimensi PxLxT dan kapasitas beban.
+  5. **Armada Logistik (`fleet.vehicle`):** Terverifikasi 9 kendaraan riil terkonfigurasi dengan plat Sulawesi Utara (DB), kubikasi m3, tonase, driver, STNK, dan masa berlaku uji kelayakan KIR.
+
+Task Managed by agent antigravity at 2026-10-31T10:20:00+07:00
+
 ## 2026-10-30T19:55:00+07:00 — PR #36 HIJAU: sticky footer SO/invoice desktop/mobile/zoom (SHA 94aae90)
 
 Run `41052331139` pada head `94aae90f0a0fc7f3a314e116afba990387fcbab9` (PR #36): `static`, `init-test`, `install-test` success; job `install-test` `124051252622` 12:02:13Z -> 12:08:07Z; browser smoke 128 check PASS / 0 FAIL.
