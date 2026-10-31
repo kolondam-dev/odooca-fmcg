@@ -1350,3 +1350,9 @@
   * Membuat scripts/enrich_master_data_sprint2_uom_partner.py untuk sinkronisasi database live.
   * Unit test addons/id_base/tests/test_fmcg_dimensions_uom.py mencakup gramasi, kubikasi, UoM native, dan auto-pricelist.
 - Task managed by antigravity-agent at 2026-10-31T14:45:00+07:00
+
+[2026-10-31T15:05:00+07:00] [FIX] Selaraskan Definisi UoM FMCG dengan Arsitektur Odoo 19
+- Menyesuaikan addons/id_base/data/id_uom_data.xml dengan skema Odoo 19:
+  * Menghapus field usang (category_id, uom_type, rounding) yang sudah dihilangkan pada model uom.uom di Odoo 19.
+  * Menggunakan field native Odoo 19: relative_uom_id ref="uom.product_uom_unit" dan relative_factor="1.0" (factor absolut dihitung otomatis).
+- Task managed by antigravity-agent at 2026-10-31T15:05:00+07:00

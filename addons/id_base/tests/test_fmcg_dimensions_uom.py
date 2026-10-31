@@ -77,3 +77,4 @@ class TestFMCGDimensionsUoM(TransactionCase):
         # Action assign matrix
         partner.action_assign_matrix_pricelist()
         self.assertEqual(partner.property_product_pricelist.id, pl.id)
+

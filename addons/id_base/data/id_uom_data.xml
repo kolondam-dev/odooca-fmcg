@@ -1,121 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
-    <!-- Satuan Dasar Kemasan FMCG (Unit Category) -->
+    <!-- Satuan Dasar Kemasan FMCG Odoo 19 (Relative to uom.product_uom_unit) -->
     <record id="uom_pcs" model="uom.uom">
         <field name="name">Pieces</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">smaller</field>
-        <field name="factor">1.0</field>
-        <field name="rounding">0.001</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_sch" model="uom.uom">
         <field name="name">Sachet</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">smaller</field>
-        <field name="factor">1.0</field>
-        <field name="rounding">0.001</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_btl" model="uom.uom">
         <field name="name">Botol</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">smaller</field>
-        <field name="factor">1.0</field>
-        <field name="rounding">0.001</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_pouch" model="uom.uom">
         <field name="name">Pouch</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">smaller</field>
-        <field name="factor">1.0</field>
-        <field name="rounding">0.001</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_can" model="uom.uom">
         <field name="name">Kaleng</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">smaller</field>
-        <field name="factor">1.0</field>
-        <field name="rounding">0.001</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_jrg" model="uom.uom">
         <field name="name">Jerigen</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">smaller</field>
-        <field name="factor">1.0</field>
-        <field name="rounding">0.001</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_gln" model="uom.uom">
         <field name="name">Galon</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">smaller</field>
-        <field name="factor">1.0</field>
-        <field name="rounding">0.001</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_bended" model="uom.uom">
         <field name="name">Bended</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">smaller</field>
-        <field name="factor">1.0</field>
-        <field name="rounding">0.001</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
-    <!-- Kemasan Berjenjang FMCG Lebih Besar (Bigger than Unit) -->
+    <!-- Satuan Kemasan Berjenjang FMCG Lebih Besar -->
     <record id="uom_karton" model="uom.uom">
         <field name="name">Karton</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">bigger</field>
-        <field name="factor_inv">1.0</field>
-        <field name="rounding">1.0</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_dus" model="uom.uom">
         <field name="name">Dus</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">bigger</field>
-        <field name="factor_inv">1.0</field>
-        <field name="rounding">1.0</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_box" model="uom.uom">
         <field name="name">Box</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">bigger</field>
-        <field name="factor_inv">1.0</field>
-        <field name="rounding">1.0</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_pack" model="uom.uom">
         <field name="name">Pack</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">bigger</field>
-        <field name="factor_inv">1.0</field>
-        <field name="rounding">1.0</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 
     <record id="uom_renceng" model="uom.uom">
         <field name="name">Renceng</field>
-        <field name="category_id" ref="uom.product_uom_categ_unit"/>
-        <field name="uom_type">bigger</field>
-        <field name="factor_inv">1.0</field>
-        <field name="rounding">1.0</field>
+        <field name="relative_uom_id" ref="uom.product_uom_unit"/>
+        <field name="relative_factor">1.0</field>
         <field name="active">True</field>
     </record>
 </odoo>

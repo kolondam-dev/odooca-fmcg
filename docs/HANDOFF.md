@@ -21,7 +21,7 @@
 - View UI: Tab form "FMCG & Kemasan" dan field di tree view `product.template`.
 
 ### 3. Satuan FMCG Native & Multi-UoM Packaging
-- `addons/id_base/data/id_uom_data.xml`: Satuan dasar (Pieces, Sachet, Botol, Pouch, Kaleng, Jerigen, Galon, Bended) dan satuan bertingkat (Karton, Dus, Box, Pack, Renceng) terdaftar di bawah `uom.product_uom_categ_unit` dengan mematuhi constraint Odoo 19 (1 reference unit).
+- `addons/id_base/data/id_uom_data.xml`: Satuan dasar (Pieces, Sachet, Botol, Pouch, Kaleng, Jerigen, Galon, Bended) dan satuan bertingkat (Karton, Dus, Box, Pack, Renceng) terdaftar menggunakan arsitektur native Odoo 19 (`relative_uom_id` mengacu ke `uom.product_uom_unit`, rasio `relative_factor`, tanpa dependensi ke `uom.category` yang sudah dihapus di v19).
 - Rasio kemasan multi-pack dikelola secara native via model `product.packaging`.
 
 ### 4. Penyelarasan Master Outlet & Matriks Harga 354 Partner
