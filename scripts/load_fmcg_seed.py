@@ -269,6 +269,12 @@ def load_products():
                 "brand_id": brand.id if brand else False,
                 "inner_qty": int(row.get("inner_qty", 1)),
                 "carton_qty": int(row.get("carton_qty", 1)),
+                "carton_length_cm": float(row.get("carton_length_cm", 0.0)),
+                "carton_width_cm": float(row.get("carton_width_cm", 0.0)),
+                "carton_height_cm": float(row.get("carton_height_cm", 0.0)),
+                "carton_volume_cbm": float(row.get("carton_volume_cbm", 0.0)),
+                "carton_weight_kg": float(row.get("carton_weight_kg", 0.0)),
+                "carton_barcode": row.get("carton_barcode") or False,
                 "standard_price": float(row.get("cost_price", 0.0)),
                 "list_price": float(row.get("list_price", 0.0)),
                 "weight": float(row.get("weight_kg", 0.0)),
@@ -580,12 +586,25 @@ def load_partners():
             pt_days = int(row.get("payment_term_days", 0))
             sls_code = row.get("salesman_code")
 
+            cov_urban = env.ref("id_base.area_mnd_urban", raise_if_not_found=False)
+            cov_hinterland = env.ref("id_base.area_tmh_hinterland", raise_if_not_found=False)
+            cov_port = env.ref("id_base.area_btg_port", raise_if_not_found=False)
+            cov_rural = env.ref("id_base.area_minut_rural", raise_if_not_found=False)
+            city_cov_map = {
+                "Kota Manado": cov_urban.id if cov_urban else False,
+                "Kota Tomohon": cov_hinterland.id if cov_hinterland else False,
+                "Kota Bitung": cov_port.id if cov_port else False,
+                "Kab. Minahasa Utara": cov_rural.id if cov_rural else False,
+            }
+            coverage_area_id = city_cov_map.get(city) or (cov_urban.id if cov_urban else False)
+
             vals = {
                 "name": name,
                 "ref": ref,
                 "is_company": row.get("is_company", "True").lower() == "true",
                 "customer_rank": 1,
                 "channel_id": channel_id,
+                "coverage_area_id": coverage_area_id,
                 "district_id": district_id,
                 "subdistrict_id": subdistrict_id,
                 "street": row.get("street", ""),
@@ -610,8 +629,14 @@ def load_partners():
                 partner.write(vals)
                 count_updated += 1
             else:
-                Partner.create(vals)
+                partner = Partner.create(vals)
                 count_created += 1
+
+            # Auto-assign FMCG Matrix Pricelist
+            if partner and hasattr(partner, "_get_matrix_pricelist"):
+                pl = partner._get_matrix_pricelist()
+                if pl and "property_product_pricelist" in partner._fields:
+                    partner.property_product_pricelist = pl.id
 
     print(f"    Selesai: {count_created} dibuat, {count_updated} diperbarui (Alamat, TOP, & Salesman lengkap).")
 
