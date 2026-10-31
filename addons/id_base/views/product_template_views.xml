@@ -5,13 +5,55 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
-            <xpath expr="//group[@name='group_general']" position="inside">
-                <field name="principal_id"/>
-                <field name="fmcg_category"/>
-                <field name="brand_id"/>
-                <field name="sub_brand_id"/>
-                <field name="inner_qty"/>
-                <field name="carton_qty"/>
+            <xpath expr="//notebook" position="inside">
+                <page string="FMCG &amp; Kemasan" name="fmcg_packaging_dimensions">
+                    <group>
+                        <group string="Klasifikasi Prinsipal &amp; Merek">
+                            <field name="principal_id"/>
+                            <field name="fmcg_category"/>
+                            <field name="brand_id"/>
+                            <field name="sub_brand_id"/>
+                        </group>
+                        <group string="Hierarki Rasio Kemasan">
+                            <field name="inner_qty"/>
+                            <field name="carton_qty"/>
+                            <field name="carton_barcode"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Bobot Satuan &amp; Karton">
+                            <field name="base_weight_g"/>
+                            <field name="weight" string="Berat Base (kg)"/>
+                            <field name="carton_weight_kg"/>
+                        </group>
+                        <group string="Dimensi &amp; Kubikasi Karton">
+                            <label for="carton_length_cm" string="Dimensi Karton (P x L x T)"/>
+                            <div class="o_row">
+                                <field name="carton_length_cm" placeholder="P"/> x
+                                <field name="carton_width_cm" placeholder="L"/> x
+                                <field name="carton_height_cm" placeholder="T"/> cm
+                            </div>
+                            <field name="carton_volume_cbm"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Tree View Inherit untuk 14 Kolom Standar FMCG -->
+    <record id="product_template_tree_fmcg_inherit" model="ir.ui.view">
+        <field name="name">product.template.tree.fmcg.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="principal_id" optional="show"/>
+                <field name="brand_id" optional="show"/>
+                <field name="carton_qty" optional="show"/>
+                <field name="base_weight_g" optional="hide"/>
+                <field name="carton_weight_kg" optional="hide"/>
+                <field name="carton_volume_cbm" optional="hide"/>
             </xpath>
         </field>
     </record>

@@ -1,3 +1,44 @@
+## 2026-10-31T14:45:00+07:00 — antigravity agent — Stack A Fase 1: Multi-UoM, Packaging Matrix, & Partner Coverage Alignment
+**Branch:** `agen/stack-a-master-uom-partner-alignment` (basis `origin/main` = `29683f2`)
+**Status:** PASS / VERIFIED & TESTED
+
+### 1. Keamanan Transaksi Historis Juli 2026
+- Analisis transaksi Juli (1.324 SO, stock moves, account move lines): seluruhnya tercatat dalam satuan terkecil (Pcs/Sachet) dengan `price_unit` satuan terkecil yang wajar (mis. Roma Sandwich Rp 8.500/pcs x 420 pcs = Rp 3.570.000).
+- `uom_id` (Base UoM) pada 150 produk dipastikan tetap pada satuan terkecil sehingga tidak ada pergeseran kuantitas atau nominal pada data historis.
+
+### 2. Standar 14 Atribut Logistik FMCG (`addons/id_base`)
+- Field baru pada `product.template`:
+  - SKU Code (`default_code`), Nama Produk (`name`), Vendor ID (`seller_ids`), Base UoM (`uom_id`).
+  - `base_weight_g`: gramasi base (g) compute & inverse dua arah terhadap `weight` (kg).
+  - `carton_qty`: rasio satuan dasar per karton.
+  - `carton_length_cm`, `carton_width_cm`, `carton_height_cm`: dimensi fisik karton (cm).
+  - `carton_volume_cbm`: kubikasi karton ($m^3$) terhitung otomatis ($P \times L \times T / 1.000.000$).
+  - `weight`: berat satuan dasar (kg).
+  - `carton_weight_kg`: berat bruto kemasan karton (kg).
+  - `standard_price`: cost base (Rp).
+  - `list_price`: harga jual base (Rp).
+  - `carton_barcode`: barcode kemasan karton (GTIN-14 / ITF-14).
+- View UI: Tab form "FMCG & Kemasan" dan field di tree view `product.template`.
+
+### 3. Satuan FMCG Native & Multi-UoM Packaging
+- `addons/id_base/data/id_uom_data.xml`: Satuan dasar (Pieces, Sachet, Botol, Pouch, Kaleng, Jerigen, Galon, Bended) dan satuan bertingkat (Karton, Dus, Box, Pack, Renceng) terdaftar menggunakan arsitektur native Odoo 19 (`relative_uom_id` mengacu ke `uom.product_uom_unit`, rasio `relative_factor`, tanpa dependensi ke `uom.category` yang sudah dihapus di v19).
+- Rasio kemasan multi-pack dikelola secara native via model `product.packaging`.
+
+### 4. Penyelarasan Master Outlet & Matriks Harga 354 Partner
+- Seluruh 354 outlet dipetakan ke 4 coverage area resmi:
+  - Kota Manado -> Manado Urban (`id_base.area_mnd_urban`)
+  - Kota Tomohon -> Tomohon Hinterland (`id_base.area_tmh_hinterland`)
+  - Kota Bitung -> Bitung Port (`id_base.area_btg_port`)
+  - Kab. Minahasa Utara -> Minut Rural (`id_base.area_minut_rural`)
+- Tombol dan method `action_assign_matrix_pricelist` otomatis memasang `property_product_pricelist` pada outlet: Modern Trade (diskon 5%), General Trade Urban (Base), Luar Manado (+2% ongkos logistik).
+
+### 5. Script Pengayaan & Unit Tests
+- `scripts/load_fmcg_seed.py`: Menangani inisialisasi awal produk dan partner secara otomatis.
+- `scripts/enrich_master_data_sprint2_uom_partner.py`: Script idempoten untuk migrasi database live Railway.
+- `addons/id_base/tests/test_fmcg_dimensions_uom.py`: Unit test lengkap (gramasi dua arah, volume karton, satuan native, dan matriks harga partner).
+
+Task managed by antigravity-agent at 2026-10-31T14:45:00+07:00
+
 ## 2026-10-31T12:15:00+07:00 — Agent Opencode — PWA Taking Order multi-UoM + alur sesi diperbaiki
 **Branch:** `agen/pwa-taking-order-multiuom-v1` (basis `origin/main` = `09be9f4`)
 **Status:** GATE LOKAL PASS · e2e browser PASS 134/134 (phone + tablet) · CI menunggu

@@ -1,6 +1,6 @@
 {
     "name": "FMCG Distributor Base",
-    "summary": "Fondasi distributor FMCG: master principal, brand, area coverage, channel distribusi, matriks harga.",
+    "summary": "Fondasi distributor FMCG: principal, brand, area, channel, matriks harga, multi-uom, kemasan.",
     "version": "19.0.1.0.0",
     "category": "Distribution",
     "license": "LGPL-3",
@@ -12,6 +12,7 @@
     "data": [
         "security/ir.model.access.csv",
         "data/id_pricelist_settings_data.xml",
+        "data/id_uom_data.xml",
         "data/id_channel_data.xml",
         "data/id_coverage_area_data.xml",
         "data/id_principal_data.xml",

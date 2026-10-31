@@ -21,8 +21,16 @@
                             <field name="delivery_notes" placeholder="e.g. Accessible by 4-wheel box, unload via back alley..."/>
                         </group>
                     </group>
-                    <group string="Authorized Principals">
-                        <field name="principal_ids" widget="many2many_tags" placeholder="Select authorized principals for this outlet..."/>
+                    <group>
+                        <group string="Matriks Harga Komersial">
+                            <field name="property_product_pricelist" string="Matriks Daftar Harga"/>
+                            <div>
+                                <button name="action_assign_matrix_pricelist" type="object" string="Pasang Matriks Harga Otomatis" class="btn btn-secondary" icon="fa-calculator"/>
+                            </div>
+                        </group>
+                        <group string="Authorized Principals">
+                            <field name="principal_ids" widget="many2many_tags" placeholder="Select authorized principals for this outlet..."/>
+                        </group>
                     </group>
                 </page>
             </xpath>
