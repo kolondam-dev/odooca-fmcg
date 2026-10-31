@@ -2,8 +2,9 @@ import { TripClosing } from "./components/TripClosing";
 import { OrderCorrections } from "./components/OrderCorrections";
 import { DeliveryApproval } from "./components/DeliveryApproval";
 import { DiscountApproval } from "./components/DiscountApproval";
-import { productPackaging } from "./domain/product-units";
 import { orderQuote, type OrderUom } from "./domain/order-pricing";
+import { OrderCatalog, OrderSummary } from "./components/OrderSheet";
+import { DisplayPhoto } from "./components/DisplayPhoto";
 import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { createProvider } from "./data/provider";
@@ -26,9 +27,13 @@ import { DeliveryWorkspace } from "./components/DeliveryWorkspace";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
 import { MorningSession } from "./components/MorningSession";
-import { morningReady, type MorningRecord } from "./domain/morning";
+import {
+    morningReady,
+    MorningSimulation,
+    type MorningRecord,
+} from "./domain/morning";
 import { Outbox } from "./domain/outbox";
-import { haptic, money, time } from "./domain/format";
+import { haptic, money } from "./domain/format";
 import { FieldStore, type QueueItem } from "./storage/store";
 import { Icon, type IconName } from "./components/Icon";
 import { EvidenceCapture, type EvidenceRef } from "./components/Evidence";
@@ -72,14 +77,14 @@ function Heading({
     action,
 }: {
     title: string;
-    note: string;
+    note?: string;
     action?: ComponentChildren;
 }) {
     return (
         <div class="section-heading">
             <div>
                 <h2>{title}</h2>
-                <p class="muted">{note}</p>
+                {note && <p class="muted">{note}</p>}
             </div>
             {action}
         </div>
@@ -221,16 +226,26 @@ function Workspace({
     const owner = ownerKey(identity);
     const [visitOutlet, setVisitOutlet] = useState<string>();
     const [morning, setMorning] = useState<MorningRecord>();
+    const [morningRevision, setMorningRevision] = useState(0);
     const dailyReady =
         morningReady(morning, owner) &&
         (!identity.roles.includes("delivery") ||
             !!morning?.deliveryManifest?.length);
     const snapshot = dailyReady ? morning!.snapshot! : initialSnapshot;
+    const morningService = useMemo(
+        () => new MorningSimulation(store, identity, provider),
+        [identity, provider],
+    );
+    async function startSession() {
+        const record = await morningService.openDay();
+        setMorning(record);
+        setMorningRevision((value) => value + 1);
+        setToast("Sesi kerja aktif. Daftar outlet siap.");
+        haptic();
+    }
     function openOrder(outlet: string) {
         if (!dailyReady) {
-            setToast(
-                "Absensi simulasi dan sync pagi wajib selesai sebelum kunjungan/order.",
-            );
+            setToast("Buka sesi kerja terlebih dahulu sebelum order.");
             setPage("home");
             window.scrollTo({ top: 0 });
             return;
@@ -301,6 +316,19 @@ function Workspace({
         const id = setTimeout(() => setToast(""), 6000);
         return () => clearTimeout(id);
     }, [toast]);
+    // Accidental reload must not drop an open form or an unsent queue.
+    useEffect(() => {
+        const guard = (e: BeforeUnloadEvent) => {
+            const unsent = queue.some((item) =>
+                ["queued", "sending", "auth_required"].includes(item.state),
+            );
+            if (!dialog && !unsent) return;
+            e.preventDefault();
+            e.returnValue = "";
+        };
+        window.addEventListener("beforeunload", guard);
+        return () => window.removeEventListener("beforeunload", guard);
+    }, [dialog, queue]);
     const pending = queue.filter((x) =>
         ["queued", "sending", "auth_required"].includes(x.state),
     ).length;
@@ -361,12 +389,6 @@ function Workspace({
     return (
         <div class="app-shell">
             <div class="header-fixed">
-                <div class="simulation">
-                    <span class="sim-dot" />
-                    {provider.mode === "demo"
-                        ? "SIMULASI • Data fiktif, belum terhubung Odoo"
-                        : "LIVE • Menggunakan layanan perusahaan"}
-                </div>
                 <header class="topbar">
                     <a
                         class="wordmark"
@@ -403,6 +425,7 @@ function Workspace({
                     (r) => r === "sales" || r === "delivery",
                 ) && (
                     <MorningSession
+                        key={`morning:${morningRevision}`}
                         identity={identity}
                         provider={provider}
                         store={store}
@@ -419,104 +442,33 @@ function Workspace({
                                     <br />
                                     <span>{identity.name}.</span>
                                 </h1>
-                                <p class="muted">
-                                    Satu hari, langkah yang berarti.
-                                </p>
                             </div>
                             <span class="weather">
-                                <Icon name="signal" size={20} />
+                                <Icon name="signal" size={18} />
                                 {online ? "Online" : "Offline"}
                             </span>
                         </div>
-                        <section class="day-card" aria-label="Ringkasan hari">
-                            <div class="day-top">
-                                <Pill tone="light">
-                                    <span class="live-dot" />
-                                    Ruang kerja simulasi
-                                </Pill>
-                                <Icon name="arrow" />
-                            </div>
-                            <h2>
-                                Siap untuk
-                                <br />
-                                perjalanan hari ini?
-                            </h2>
-                            <p>
-                                Semua tugas dalam satu genggaman.
-                                <br />
-                                Draft tetap tersedia saat jaringan putus.*
-                            </p>
-                            <div class="day-bottom">
-                                <span>
-                                    <Icon name="pin" size={18} /> Manado &
-                                    sekitarnya
-                                </span>
-                                <strong>
-                                    MDU<span>FIELD TEAM</span>
-                                </strong>
-                            </div>
-                            <div class="hero-orbit" aria-hidden="true" />
-                        </section>
-                        <div class="summary-grid">
-                            <button
-                                class="metric"
-                                onClick={() =>
-                                    go(
-                                        identity.roles.includes("sales")
-                                            ? "sales"
-                                            : "delivery",
-                                    )
-                                }
-                            >
-                                <span class="metric-icon blue">
-                                    <Icon
-                                        name={
-                                            identity.roles.includes("sales")
-                                                ? "store"
-                                                : "truck"
-                                        }
-                                    />
-                                </span>
-                                <strong>
-                                    {identity.roles.includes("sales")
-                                        ? snapshot.outlets.length
-                                        : snapshot.deliveries.length}
-                                    <small>tugas hari ini</small>
-                                </strong>
-                                <Icon name="caret" size={18} />
-                            </button>
-                            <button class="metric" onClick={() => go("more")}>
-                                <span class="metric-icon amber">
-                                    <Icon name="clock" />
-                                </span>
-                                <strong>
-                                    {pending + review}
-                                    <small>pending / review</small>
-                                </strong>
-                                <Icon name="caret" size={18} />
-                            </button>
-                        </div>
-                        <Heading
-                            title="Akses cepat"
-                            note="Kebutuhan kerja, tanpa berputar."
-                        />
                         <div class="quick-grid">
                             {identity.roles.includes("sales") && (
                                 <button onClick={() => go("sales")}>
                                     <span class="quick-icon">
-                                        <Icon name="bag" size={28} />
+                                        <Icon name="bag" size={26} />
                                     </span>
                                     <strong>Buat order</strong>
-                                    <small>Untuk outlet PJP</small>
+                                    <small>
+                                        {snapshot.outlets.length} outlet
+                                    </small>
                                 </button>
                             )}
                             {identity.roles.includes("delivery") && (
                                 <button onClick={() => go("delivery")}>
                                     <span class="quick-icon">
-                                        <Icon name="truck" size={28} />
+                                        <Icon name="truck" size={26} />
                                     </span>
                                     <strong>Pengiriman</strong>
-                                    <small>Manifest & bukti</small>
+                                    <small>
+                                        {snapshot.deliveries.length} manifest
+                                    </small>
                                 </button>
                             )}
                             <button
@@ -525,7 +477,7 @@ function Workspace({
                                 }
                             >
                                 <span class="quick-icon">
-                                    <Icon name="user" size={28} />
+                                    <Icon name="user" size={26} />
                                 </span>
                                 <strong>Absensi</strong>
                                 <small>Foto & lokasi</small>
@@ -534,82 +486,66 @@ function Workspace({
                                 onClick={() => setDialog({ type: "expense" })}
                             >
                                 <span class="quick-icon">
-                                    <Icon name="wallet" size={28} />
+                                    <Icon name="wallet" size={26} />
                                 </span>
                                 <strong>Uang lapangan</strong>
-                                <small>Biaya & petty cash</small>
+                                <small>{pending + review} pending</small>
                             </button>
                         </div>
-                        <Heading
-                            title={
-                                identity.roles.includes("sales")
-                                    ? "Kunjungan berikutnya"
-                                    : "Tugas berikutnya"
-                            }
-                            note="Mulai dari rencana, lanjutkan dengan aksi."
-                            action={
-                                <button
-                                    class="text-button"
-                                    onClick={() =>
-                                        go(
-                                            identity.roles.includes("sales")
-                                                ? "sales"
-                                                : "delivery",
-                                        )
-                                    }
-                                >
-                                    Lihat semua <Icon name="arrow" size={16} />
-                                </button>
-                            }
-                        />
                         {identity.roles.includes("sales") && dailyReady ? (
-                            <OutletCard
-                                outlet={snapshot.outlets[0]}
-                                open={() => openVisit(snapshot.outlets[0].id)}
-                            />
+                            <>
+                                <Heading
+                                    title="Kunjungan berikutnya"
+                                    action={
+                                        <button
+                                            class="text-button"
+                                            onClick={() => go("sales")}
+                                        >
+                                            Semua{" "}
+                                            <Icon name="arrow" size={16} />
+                                        </button>
+                                    }
+                                />
+                                <OutletCard
+                                    outlet={snapshot.outlets[0]}
+                                    open={() =>
+                                        openVisit(snapshot.outlets[0].id)
+                                    }
+                                />
+                            </>
                         ) : (
-                            <button
-                                class="outlet-card"
-                                onClick={() => go("delivery")}
-                            >
-                                Buka manifest pengiriman
-                            </button>
+                            !identity.roles.includes("sales") && (
+                                <button
+                                    class="outlet-card"
+                                    onClick={() => go("delivery")}
+                                >
+                                    Buka manifest pengiriman
+                                </button>
+                            )
                         )}
-                        <div class="tip">
-                            <span class="quick-icon">
-                                <Icon name="bell" />
-                            </span>
-                            <div>
-                                <strong>Sebelum memulai kunjungan</strong>
-                                <p>
-                                    Selesaikan dua langkah sesi pagi di atas.
-                                    Paket yang tersimpan berlaku sampai
-                                    pergantian hari WITA; otorisasi resmi tetap
-                                    menunggu backend.
-                                </p>
-                            </div>
-                        </div>
-                        <p class="footnote">
-                            * Penyimpanan browser dapat terhapus saat
-                            clear-data/uninstall. Sinkronkan sebelum mengakhiri
-                            pekerjaan.
-                        </p>
                     </>
                 )}
                 {page === "sales" && !dailyReady && (
                     <p class="notice">
-                        Daily sync wajib sebelum membuka list Sales.
+                        Buka sesi kerja sebelum membuka daftar outlet.
                     </p>
                 )}
                 {page === "sales" && dailyReady && (
                     <>
                         <Heading
-                            title="Sales & kunjungan"
-                            note={`PJP contoh · snapshot ${time(snapshot.updatedAt)} WITA*`}
+                            title="Outlet"
+                            action={
+                                <button
+                                    class="text-button"
+                                    onClick={() => go("home")}
+                                >
+                                    Beranda
+                                </button>
+                            }
                         />
                         <div class="notice">
-                            Harga & stok di bawah adalah estimasi simulasi.
-                            Extra call memerlukan approval supervisor.
+                            Harga & stok estimasi. Extra call memerlukan
+                            approval supervisor.
                         </div>
                         {visitOutlet &&
                             dailyReady &&
@@ -739,7 +675,7 @@ function Workspace({
                             onClick={() =>
                                 setDialog({
                                     type: "expense",
-                                    trip: "TRIP-DEMO-01",
+                                    trip: "TRIP-01",
                                 })
                             }
                         >
@@ -763,7 +699,7 @@ function Workspace({
                             <div>
                                 <h2>{identity.name}</h2>
                                 <p>{identity.title}</p>
-                                <Pill>Employee simulasi</Pill>
+                                <Pill>Employee</Pill>
                             </div>
                         </section>
                         <div class="hris-actions">
@@ -932,15 +868,14 @@ function Workspace({
                         </div>
                         {__DEMO__ && (
                             <section class="paper-card demo-controls">
-                                <h3>Laboratorium simulasi</h3>
+                                <h3>Lingkungan & peran</h3>
                                 <p class="muted">
-                                    Kontrol ini hanya ada pada build demo.
-                                    Mengganti persona tidak memindahkan antrean.
+                                    Beralih peran tidak memindahkan antrean.
                                 </p>
                                 <label>
-                                    Persona demo
+                                    Peran
                                     <select
-                                        aria-label="Persona demo"
+                                        aria-label="Peran"
                                         value={actor}
                                         onChange={(e) =>
                                             changeActor(e.currentTarget.value)
@@ -958,9 +893,9 @@ function Workspace({
                                     </select>
                                 </label>
                                 <label>
-                                    Respons simulator
+                                    Mode respons
                                     <select
-                                        aria-label="Respons simulator"
+                                        aria-label="Mode respons"
                                         value={scenario}
                                         onChange={(e) =>
                                             setScenario(
@@ -1009,7 +944,7 @@ function Workspace({
                             Binding perangkat, approval resmi, notifikasi
                             backend dan pengiriman evidence menunggu integrasi
                             API. Tidak ada token atau dokumen gaji di cache
-                            demo.
+                            lokal.
                         </p>
                     </>
                 )}
@@ -1057,6 +992,7 @@ function Workspace({
                     snapshot={snapshot}
                     owner={owner}
                     submit={submit}
+                    startSession={startSession}
                     close={() => setDialog(undefined)}
                 />
             )}
@@ -1102,6 +1038,7 @@ function FormDialog({
     snapshot,
     owner,
     submit,
+    startSession,
     close,
 }: {
     dialog: Dialog;
@@ -1113,12 +1050,15 @@ function FormDialog({
         payload: Record<string, unknown>,
         label: string,
     ) => Promise<QueueItem>;
+    startSession: () => Promise<void>;
     close: () => void;
 }) {
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [qty, setQty] = useState<Record<string, number>>({});
-    const [principal, setPrincipal] = useState("mayora");
+    const [principal, setPrincipal] = useState(
+        () => snapshot.products[0]?.principal ?? "mayora",
+    );
     const [units, setUnits] = useState<Record<string, OrderUom>>({});
     const [discount, setDiscount] = useState(0);
     const [discountReason, setDiscountReason] = useState("");
@@ -1144,12 +1084,14 @@ function FormDialog({
                         units?: Record<string, OrderUom>;
                         discount?: number;
                         discountReason?: string;
+                        evidence?: EvidenceRef;
                     };
                     setQty(v.quantities ?? {});
                     setPrincipal(v.principal ?? "mayora");
                     setUnits(v.units ?? {});
                     setDiscount(v.discount ?? 0);
                     setDiscountReason(v.discountReason ?? "");
+                    if (v.evidence) setEvidence(v.evidence);
                 }
                 if (active) setRestored(true);
             })
@@ -1169,11 +1111,12 @@ function FormDialog({
                     units,
                     discount,
                     discountReason,
+                    ...(evidence ? { evidence } : {}),
                 })
                 .catch(() =>
                     setError("Draft gagal disimpan. Periksa penyimpanan."),
                 );
-    }, [qty, principal, units, discount, discountReason, restored]);
+    }, [qty, principal, units, discount, discountReason, evidence, restored]);
     useEffect(() => {
         const old = document.body.style.overflow;
         document.body.style.overflow = "hidden";
@@ -1218,21 +1161,7 @@ function FormDialog({
             document.removeEventListener("keydown", keys);
         };
     }, []);
-    let total = 0;
-    try {
-        total = orderQuote(
-            Object.entries(qty)
-                .filter(([, q]) => q > 0)
-                .map(([product_id, q]) => ({
-                    product_id,
-                    qty: String(q),
-                    uom: units[product_id] ?? "carton",
-                })),
-            snapshot,
-        ).gross;
-    } catch {
-        /* Invalid input remains editable; submission reports the error. */
-    }
+    const orderLines = Object.entries(qty).filter(([, q]) => q > 0);
     const title = {
         order: "Buat Sales Order",
         extra: "Ajukan extra call",
@@ -1253,6 +1182,10 @@ function FormDialog({
             let payload: Record<string, unknown>;
             let label: string;
             if (dialog.type === "order") {
+                if (!evidence)
+                    throw new Error(
+                        "Ambil foto display outlet sebelum mengirim order.",
+                    );
                 const lines = Object.entries(qty)
                     .filter(([, q]) => q > 0)
                     .map(([productId, quantity]) => ({ productId, quantity }));
@@ -1343,24 +1276,22 @@ function FormDialog({
             } else {
                 if (!evidence)
                     throw new Error("Simpan foto dan lokasi dahulu.");
-                type =
-                    dialog.type === "attendance"
-                        ? "hris.attendance.capture"
-                        : "delivery.proof.submit";
+                if (dialog.type === "attendance") {
+                    await startSession();
+                    close();
+                    return;
+                }
+                if (dialog.type !== "proof")
+                    throw new Error("Form bukti tidak dikenal.");
+                type = "delivery.proof.submit";
                 payload = {
                     event: f.get("event"),
-                    delivery_id:
-                        dialog.type === "proof" ? dialog.delivery : null,
+                    delivery_id: dialog.delivery,
                     result: f.get("result"),
                     evidence,
                     map_status: "pending",
                 };
-                label =
-                    dialog.type === "attendance"
-                        ? "Bukti absensi • map pending"
-                        : dialog.type === "proof"
-                          ? `POD • ${dialog.delivery}`
-                          : "Bukti";
+                label = `POD • ${dialog.delivery}`;
             }
             // Evidence remains local: receipts must not claim the backend has verified it.
             if (
@@ -1394,7 +1325,7 @@ function FormDialog({
             >
                 <header class="sheet-head">
                     <div>
-                        <p class="eyebrow">{identity.name} · SIMULASI</p>
+                        <p class="eyebrow">{identity.name}</p>
                         <h2 id="dialog-title">{title}</h2>
                     </div>
                     <button
@@ -1411,191 +1342,94 @@ function FormDialog({
                     <div class="sheet-body">
                         {dialog.type === "order" && (
                             <>
-                                <p class="muted">
+                                <p class="sheet-subtitle">
                                     {
                                         snapshot.outlets.find(
                                             (o) => o.id === dialog.outlet,
                                         )?.name
                                     }{" "}
-                                    · satu principal per SO
+                                    · satu principal per order
                                 </p>
-                                <label>
-                                    Principal
-                                    <select
-                                        value={principal}
-                                        onChange={(e) => {
-                                            setPrincipal(e.currentTarget.value);
-                                            setQty({});
-                                        }}
-                                    >
-                                        <option value="mayora">Mayora</option>
-                                        <option value="santos">Santos</option>
-                                    </select>
-                                </label>
-                                <label>
-                                    Diskon diminta (%) · simulasi
-                                    <input
-                                        aria-label="Diskon diminta (%)"
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        step="1"
-                                        value={discount}
-                                        onInput={(e) =>
-                                            setDiscount(
-                                                Number(e.currentTarget.value),
-                                            )
-                                        }
-                                    />
-                                </label>
-                                {discount > 0 && (
+                                <OrderCatalog
+                                    snapshot={snapshot}
+                                    principal={principal}
+                                    onPrincipal={setPrincipal}
+                                    qty={qty}
+                                    onQty={setQty}
+                                    units={units}
+                                    onUnits={setUnits}
+                                />
+                                <details class="order-extra">
+                                    <summary>Catatan & diskon</summary>
                                     <label>
-                                        Alasan permintaan diskon
-                                        <textarea
-                                            required
-                                            minLength={3}
-                                            maxLength={500}
-                                            value={discountReason}
+                                        Diskon diminta (%)
+                                        <input
+                                            aria-label="Diskon diminta (%)"
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            step="1"
+                                            inputMode="numeric"
+                                            value={discount}
                                             onInput={(e) =>
-                                                setDiscountReason(
-                                                    e.currentTarget.value,
+                                                setDiscount(
+                                                    Number(
+                                                        e.currentTarget.value,
+                                                    ),
                                                 )
                                             }
                                         />
                                     </label>
-                                )}
-                                <p>
-                                    Gross {money(Math.round(total))} · diskon
-                                    diminta{" "}
-                                    {money(
-                                        Math.round((total * discount) / 100),
-                                    )}{" "}
-                                    · estimasi setelah diskon{" "}
-                                    {money(
-                                        Math.round(total) -
-                                            Math.round(
-                                                (Math.round(total) * discount) /
-                                                    100,
-                                            ),
+                                    {discount > 0 && (
+                                        <label>
+                                            Alasan permintaan diskon
+                                            <textarea
+                                                required
+                                                minLength={3}
+                                                maxLength={500}
+                                                value={discountReason}
+                                                onInput={(e) =>
+                                                    setDiscountReason(
+                                                        e.currentTarget.value,
+                                                    )
+                                                }
+                                            />
+                                        </label>
                                     )}
-                                    . Diskon disetujui: belum ada keputusan.
-                                    Normal → menunggu approval. Buka Lainnya →
-                                    Simulator approval diskon untuk keputusan
-                                    disetujui/ditolak.
-                                </p>
-                                <div class="product-list">
-                                    {snapshot.products
-                                        .filter(
-                                            (p) => p.principal === principal,
-                                        )
-                                        .map((p) => (
-                                            <article class="product" key={p.id}>
-                                                <span class="product-symbol">
-                                                    <Icon
-                                                        name="bag"
-                                                        size={26}
-                                                    />
-                                                </span>
-                                                <div>
-                                                    <small class="eyebrow">
-                                                        {p.brand} · SKU {p.id}
-                                                    </small>
-                                                    <strong>{p.name}</strong>
-                                                    <small>
-                                                        {p.unit} · stok contoh{" "}
-                                                        {p.stock} karton
-                                                    </small>
-                                                    <b>
-                                                        {money(p.price)}/karton
-                                                    </b>
-                                                </div>
-                                                <label>
-                                                    Satuan
-                                                    <select
-                                                        aria-label={`Satuan ${p.name}`}
-                                                        value={
-                                                            units[p.id] ??
-                                                            "carton"
-                                                        }
-                                                        onChange={(e) =>
-                                                            setUnits((v) => ({
-                                                                ...v,
-                                                                [p.id]: e
-                                                                    .currentTarget
-                                                                    .value as OrderUom,
-                                                            }))
-                                                        }
-                                                    >
-                                                        <option value="carton">
-                                                            Karton ·{" "}
-                                                            {
-                                                                productPackaging(
-                                                                    p,
-                                                                    snapshot.catalog_version,
-                                                                ).carton
-                                                            }{" "}
-                                                            pcs
-                                                        </option>
-                                                        <option value="pack">
-                                                            Pack ·{" "}
-                                                            {
-                                                                productPackaging(
-                                                                    p,
-                                                                    snapshot.catalog_version,
-                                                                ).pack
-                                                            }{" "}
-                                                            pcs
-                                                        </option>
-                                                        <option value="pcs">
-                                                            Pcs
-                                                        </option>
-                                                    </select>
-                                                </label>
-                                                <input
-                                                    aria-label={`Kuantitas ${p.name}`}
-                                                    type="number"
-                                                    min="0"
-                                                    max="999"
-                                                    step="1"
-                                                    inputMode="numeric"
-                                                    value={qty[p.id] || 0}
-                                                    onInput={(e) =>
-                                                        setQty((v) => ({
-                                                            ...v,
-                                                            [p.id]: Number(
-                                                                e.currentTarget
-                                                                    .value,
-                                                            ),
-                                                        }))
-                                                    }
-                                                />
-                                            </article>
-                                        ))}
-                                </div>
-                                <label>
-                                    Catatan order
-                                    <textarea
-                                        name="note"
-                                        placeholder="Permintaan outlet (opsional)"
-                                    />
-                                </label>
-                                <div class="estimate">
-                                    <span>Estimasi total</span>
-                                    <strong>
-                                        {money(
-                                            Math.round(total) -
-                                                Math.round(
-                                                    (Math.round(total) *
-                                                        discount) /
-                                                        100,
-                                                ),
-                                        )}
-                                    </strong>
-                                </div>
+                                    <label>
+                                        Catatan order
+                                        <textarea
+                                            name="note"
+                                            maxLength={500}
+                                            placeholder="Permintaan outlet (opsional)"
+                                        />
+                                    </label>
+                                </details>
+                                <DisplayPhoto
+                                    store={store}
+                                    owner={owner}
+                                    value={evidence}
+                                    outletName={
+                                        snapshot.outlets.find(
+                                            (o) => o.id === dialog.outlet,
+                                        )?.name ?? "Outlet"
+                                    }
+                                    coordinates={(() => {
+                                        const outlet = snapshot.outlets.find(
+                                            (o) => o.id === dialog.outlet,
+                                        );
+                                        return outlet
+                                            ? {
+                                                  latitude: outlet.latitude,
+                                                  longitude: outlet.longitude,
+                                              }
+                                            : undefined;
+                                    })()}
+                                    onChange={setEvidence}
+                                />
                                 <p class="footnote">
-                                    Harga akhir, kredit, extra discount dan
-                                    approval below-HPP diputuskan backend. Angka
-                                    ini belum menjadi penawaran resmi.
+                                    Harga akhir, kredit dan approval below-HPP
+                                    diputuskan backend. Angka ini estimasi.
                                 </p>
                             </>
                         )}
@@ -1707,12 +1541,11 @@ function FormDialog({
                                             />
                                         </label>
                                         <p class="footnote">
-                                            Tanggal bisnis simulasi:{" "}
+                                            Tanggal bisnis:{" "}
                                             {identity.businessDate}. Pengajuan
                                             BBM H-1 memerlukan foto odometer;
                                             realisasi memerlukan struk dan foto
-                                            odometer setelah isi. Form ini baru
-                                            draft permohonan simulasi.
+                                            odometer setelah isi.
                                         </p>
                                     </>
                                 )}
@@ -1754,7 +1587,7 @@ function FormDialog({
                                     owner={owner}
                                     onChange={setEvidence}
                                     mapSite={{
-                                        name: "Kantor demo",
+                                        name: "Kantor Pusat",
                                         latitude: 1.465,
                                         longitude: 124.833,
                                         radius: 15,
@@ -1972,24 +1805,60 @@ function FormDialog({
                         )}
                     </div>
                     {dialog.type !== "profile" ? (
-                        <footer class="sheet-footer">
-                            <button
-                                type="button"
-                                class="secondary"
-                                onClick={close}
-                                disabled={busy}
-                            >
-                                Kembali
-                            </button>
-                            <button type="submit" disabled={busy || !restored}>
-                                {busy
-                                    ? "Menyimpan…"
-                                    : ["attendance", "proof"].includes(
-                                            dialog.type,
-                                        )
-                                      ? "Periksa kesiapan bukti"
-                                      : "Simpan ke antrean demo"}
-                            </button>
+                        <footer
+                            class={`sheet-footer${dialog.type === "order" ? " order-footer" : ""}`}
+                        >
+                            {dialog.type === "order" ? (
+                                <>
+                                    <OrderSummary
+                                        snapshot={snapshot}
+                                        qty={qty}
+                                        units={units}
+                                        discount={discount}
+                                    />
+                                    {!evidence && (
+                                        <p class="summary-hint">
+                                            Foto display outlet wajib sebelum
+                                            order dikirim.
+                                        </p>
+                                    )}
+                                    <button
+                                        type="submit"
+                                        class="order-submit"
+                                        disabled={
+                                            busy ||
+                                            !restored ||
+                                            orderLines.length === 0 ||
+                                            !evidence
+                                        }
+                                    >
+                                        {busy
+                                            ? "Menyimpan…"
+                                            : "Simpan ke antrean"}
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        type="button"
+                                        class="secondary"
+                                        onClick={close}
+                                        disabled={busy}
+                                    >
+                                        Kembali
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={busy || !restored}
+                                    >
+                                        {busy
+                                            ? "Menyimpan…"
+                                            : dialog.type === "attendance"
+                                              ? "Simpan absensi"
+                                              : "Simpan ke antrean"}
+                                    </button>
+                                </>
+                            )}
                         </footer>
                     ) : (
                         <footer

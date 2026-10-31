@@ -1,4 +1,4 @@
-import { productPackaging } from "./product-units.ts";
+import { productPackaging, type UnitTier } from "./product-units.ts";
 import { z } from "zod";
 import type { Snapshot } from "./contracts";
 export const UomSchema = z.enum(["carton", "pack", "pcs"]);
@@ -40,6 +40,51 @@ export function orderQuote(
         requestedTotal:
             gross - (request ? Math.round((gross * request.percent) / 100) : 0),
     };
+}
+/**
+ * Presentation-only per-line numbers. The authoritative totals still come from
+ * orderQuote so the observed_total sent to the outbox stays identical.
+ */
+export function lineQuote(
+    product: Snapshot["products"][number],
+    qty: number,
+    uom: UnitTier,
+    catalogVersion?: 2,
+) {
+    const units = productPackaging(product, catalogVersion);
+    const per = units[uom];
+    const pcs = qty * per;
+    return {
+        per,
+        pcs,
+        cartons: pcs / units.carton,
+        subtotal: Math.round((product.price * pcs) / units.carton),
+    };
+}
+export function orderSummary(
+    lines: { product_id: string; qty: string; uom: OrderUom }[],
+    snapshot: Snapshot,
+) {
+    let items = 0,
+        pcs = 0,
+        cartons = 0;
+    for (const line of lines) {
+        const product = snapshot.products.find((p) => p.id === line.product_id);
+        if (!product || !/^[1-9]\d{0,2}$/.test(line.qty)) continue;
+        const units = productPackaging(product, snapshot.catalog_version);
+        const quantity = Number(line.qty);
+        const pieces = quantity * units[line.uom];
+        items += quantity;
+        pcs += pieces;
+        cartons += pieces / units.carton;
+    }
+    let subtotal = 0;
+    try {
+        subtotal = orderQuote(lines, snapshot).gross;
+    } catch {
+        subtotal = 0;
+    }
+    return { items, pcs, cartons, subtotal };
 }
 export function validateOrderQuote(
     body: {

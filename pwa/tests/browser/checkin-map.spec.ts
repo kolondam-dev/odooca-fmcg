@@ -17,7 +17,7 @@ test("office check-in previews real fix and handles failed road tiles without au
     await page.goto("./");
     await page.getByRole("button", { name: /^Absensi Foto/ }).click();
     const map = page.getByRole("region", {
-        name: "Preview peta Kantor demo",
+        name: "Preview peta Kantor Pusat",
         exact: true,
     });
     await expect(map).toContainText("Posisi perangkat belum tersedia");
@@ -33,7 +33,7 @@ test("office check-in previews real fix and handles failed road tiles without au
         .click();
     await expect(map.getByRole("status")).toContainText("Peta jalan gagal");
     await expect(map.getByRole("img")).toBeVisible();
-    await page.getByRole("button", { name: "Periksa kesiapan bukti" }).click();
+    await page.getByRole("button", { name: "Simpan absensi" }).click();
     await expect(page.getByRole("alert")).toContainText(
         "Simpan foto dan lokasi dahulu.",
     );
@@ -57,20 +57,18 @@ test("office simulated position is labeled and new real fix clears simulated lab
     await page.goto("./");
     await page.getByRole("button", { name: /^Absensi Foto/ }).click();
     const map = page.getByRole("region", {
-        name: "Preview peta Kantor demo",
+        name: "Preview peta Kantor Pusat",
         exact: true,
     });
     await page
-        .getByRole("button", { name: "Gunakan lokasi demo", exact: true })
+        .getByRole("button", { name: "Gunakan lokasi acuan", exact: true })
         .click();
-    await expect(map).toContainText("Posisi simulasi / akurasi placeholder");
+    await expect(map).toContainText("posisi simulasi");
     await page
         .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
         .click();
-    await expect(map).toContainText("Posisi perangkat bila tersedia");
-    await expect(map).not.toContainText(
-        "Posisi simulasi / akurasi placeholder",
-    );
+    await expect(map).toContainText("Di dalam radius");
+    await expect(map).not.toContainText("posisi simulasi");
 });
 test("outlet check-in renders attributed road preview, zoom and scope reset with strict guard intact", async ({
     page,
@@ -91,17 +89,11 @@ test("outlet check-in renders attributed road preview, zoom and scope reset with
     await page.goto("./");
     await page
         .getByRole("button", {
-            name: "Simulasikan absensi diterima",
+            name: "Buka sesi kerja",
             exact: true,
         })
         .click();
-    await page
-        .getByRole("button", {
-            name: "Sync pagi & buka sesi demo",
-            exact: true,
-        })
-        .click();
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
@@ -115,7 +107,7 @@ test("outlet check-in renders attributed road preview, zoom and scope reset with
         .click();
     await expect(map).toContainText("Di luar radius");
     await expect(
-        page.getByRole("button", { name: "Mulai kunjungan demo", exact: true }),
+        page.getByRole("button", { name: "Mulai kunjungan", exact: true }),
     ).toBeDisabled();
     await map
         .getByRole("button", { name: "Muat peta jalan", exact: true })
@@ -164,17 +156,11 @@ test("denied outlet GPS labels fallback as simulation", async ({ page }) => {
     await page.goto("./");
     await page
         .getByRole("button", {
-            name: "Simulasikan absensi diterima",
+            name: "Buka sesi kerja",
             exact: true,
         })
         .click();
-    await page
-        .getByRole("button", {
-            name: "Sync pagi & buka sesi demo",
-            exact: true,
-        })
-        .click();
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
@@ -187,5 +173,5 @@ test("denied outlet GPS labels fallback as simulation", async ({ page }) => {
             name: "Preview peta Toko Sinar Pagi",
             exact: true,
         }),
-    ).toContainText("Posisi simulasi / akurasi placeholder");
+    ).toContainText("posisi simulasi");
 });

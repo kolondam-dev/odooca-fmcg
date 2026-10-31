@@ -134,7 +134,10 @@ test("unconfigured office and denied GPS produce no fallback staging coordinates
     await expect(panel).toContainText("Tidak ada posisi pengganti");
     await expect(panel).toContainText("Posisi perangkat belum tersedia");
     await expect(
-        panel.getByRole("button", { name: "Gunakan lokasi demo", exact: true }),
+        panel.getByRole("button", {
+            name: "Gunakan lokasi acuan",
+            exact: true,
+        }),
     ).toHaveCount(0);
 });
 test("late GPS callback cannot populate a different server target", async ({

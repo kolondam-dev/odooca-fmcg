@@ -55,14 +55,11 @@ export function CheckinMap({ site, fix }: { site: MapSite; fix?: MapFix }) {
             <strong>Preview peta · {site.name}</strong>
             {(site.simulated || fix?.simulated) && (
                 <p class="notice">
-                    MODE UJI ·{" "}
                     {site.simulated
                         ? "Titik tujuan simulasi"
-                        : "Titik tujuan dari paket demo"}
-                    {fix?.simulated
-                        ? " · Posisi simulasi / akurasi placeholder"
-                        : " · Posisi perangkat bila tersedia"}
-                    . Bukan validasi kehadiran resmi.
+                        : "Titik tujuan paket"}
+                    {fix?.simulated ? " · posisi simulasi" : ""} · bukan
+                    validasi kehadiran resmi.
                 </p>
             )}
             <p>

@@ -5,9 +5,9 @@ const owners = {
     canvass: "demo-mdu:DEMO-STEVEN",
 };
 export async function switchPersona(page: Page, actor: keyof typeof owners) {
-    await page.getByLabel("Persona demo").selectOption(actor);
+    await page.getByLabel("Peran").selectOption(actor);
     const region = page.getByRole("region", {
-        name: "Sesi kerja pagi simulasi",
+        name: "Sesi kerja",
         exact: true,
     });
     await expect(region).toHaveAttribute("data-owner", owners[actor]);
@@ -15,27 +15,18 @@ export async function switchPersona(page: Page, actor: keyof typeof owners) {
 }
 export async function ensureDaily(page: Page) {
     const region = page.getByRole("region", {
-        name: "Sesi kerja pagi simulasi",
+        name: "Sesi kerja",
         exact: true,
     });
     await expect(region).toHaveAttribute("aria-busy", "false");
-    const ready = region.getByText("Sesi terbuka", { exact: true });
+    const ready = region.getByText("Sesi aktif", { exact: true });
     if (await ready.isVisible()) return;
-    const attendance = region.getByRole("button", {
-        name: "Simulasikan absensi diterima",
+    const open = region.getByRole("button", {
+        name: "Buka sesi kerja",
         exact: true,
     });
-    const sync = region.getByRole("button", {
-        name: "Sync pagi & buka sesi demo",
-        exact: true,
-    });
-    if (await attendance.isVisible()) {
-        await attendance.click();
-        // The IDB write must finish before the next action exists/enables.
-        await expect(sync).toBeEnabled();
-    }
-    await expect(sync).toBeEnabled();
-    await sync.click();
+    await expect(open).toBeEnabled();
+    await open.click();
     await expect(region).toHaveAttribute("aria-busy", "false");
     await expect(ready).toBeVisible();
 }
@@ -50,7 +41,7 @@ export async function saveDeliveryPhoto(task: Locator) {
         .click();
     await expect(
         task.getByText(
-            "Foto dan pinpoint simulasi tersimpan lokal. Peta resmi belum tersedia.",
+            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
         ),
     ).toBeVisible();
 }

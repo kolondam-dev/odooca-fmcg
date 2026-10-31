@@ -140,9 +140,7 @@ export function ExpenseWorkspace({
         try {
             setAdvance(await service.simulateDisbursement(selected));
         } catch (e) {
-            setError(
-                e instanceof Error ? e.message : "Simulasi pencairan gagal.",
-            );
+            setError(e instanceof Error ? e.message : "Pencairan gagal.");
         } finally {
             running.current = false;
             setBusy(false);
@@ -155,9 +153,8 @@ export function ExpenseWorkspace({
             </button>
             <h1>Realisasi & uang lapangan</h1>
             <p class="notice">
-                SIMULASI · Pengajuan, pencairan fiktif dan review realisasi
-                adalah status berbeda. Tidak ada uang atau jurnal Odoo yang
-                dibuat.
+                Pengajuan, pencairan dan review realisasi adalah status berbeda.
+                Tidak ada uang atau jurnal Odoo yang dibuat.
             </p>
             <button class="secondary full" onClick={create}>
                 <Icon name="wallet" size={20} /> Ajukan uang lapangan baru
@@ -220,7 +217,7 @@ export function ExpenseWorkspace({
                                 }
                                 onClick={() => void disburse()}
                             >
-                                Simulasikan approval & pencairan
+                                Proses approval & pencairan
                             </button>
                             <p class="footnote">
                                 Hanya online + respons Normal. Limit contoh
@@ -744,9 +741,7 @@ function RealizationEditor({
                         disabled={!loaded || busy}
                         type="submit"
                     >
-                        {busy
-                            ? "Menyimpan…"
-                            : "Simpan realisasi ke antrean demo"}
+                        {busy ? "Menyimpan…" : "Simpan realisasi ke antrean"}
                     </button>
                 </>
             )}

@@ -16,17 +16,11 @@ async function prepare(page: Page, context: BrowserContext) {
     await page.goto("./");
     await page
         .getByRole("button", {
-            name: "Simulasikan absensi diterima",
+            name: "Buka sesi kerja",
             exact: true,
         })
         .click();
-    await page
-        .getByRole("button", {
-            name: "Sync pagi & buka sesi demo",
-            exact: true,
-        })
-        .click();
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await openVisit(page);
     await page
         .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
@@ -43,7 +37,7 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
 }) => {
     await prepare(page, context);
     const start = page.getByRole("button", {
-        name: "Mulai kunjungan demo",
+        name: "Mulai kunjungan",
         exact: true,
     });
     await expect(start).toBeDisabled();
@@ -56,9 +50,7 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
         name: "Foto check-in kunjungan",
         exact: true,
     });
-    await expect(
-        photo.getByAltText("Pinpoint simulasi tanpa basemap"),
-    ).toBeVisible();
+    await expect(photo.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await expect(
         photo.getByText("Paket foto tersimpan untuk check-in outlet ini.", {
             exact: true,
@@ -81,12 +73,10 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
         }),
     });
     await history.locator("summary").click();
-    await expect(
-        history.getByAltText("Pinpoint simulasi tanpa basemap"),
-    ).toBeVisible();
+    await expect(history.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await expect(history.getByLabel("Foto bukti")).toHaveCount(0);
     const close = page.getByRole("button", {
-        name: "Tutup kunjungan demo",
+        name: "Tutup kunjungan",
         exact: true,
     });
     await expect(close).toBeDisabled();
@@ -145,7 +135,7 @@ test("tampered persisted parent media blocks restore and both queued actions aft
     await saveVisitPhoto(page, "check-in");
     await context.setOffline(true);
     await page
-        .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
+        .getByRole("button", { name: "Mulai kunjungan", exact: true })
         .click();
     await expect(
         page.getByText("Kunjungan lokal aktif", { exact: true }),
@@ -155,7 +145,7 @@ test("tampered persisted parent media blocks restore and both queued actions aft
         .getByLabel("Catatan kunjungan")
         .fill("Selesai kunjungan offline");
     await page
-        .getByRole("button", { name: "Tutup kunjungan demo", exact: true })
+        .getByRole("button", { name: "Tutup kunjungan", exact: true })
         .click();
     await expect(
         page.getByText("Kunjungan ditutup lokal", { exact: false }),
@@ -194,7 +184,7 @@ test("tampered persisted parent media blocks restore and both queued actions aft
             .filter({ hasText: "Isi foto/snapshot/metadata berubah" }),
     ).toBeVisible();
     await expect(
-        page.getByRole("button", { name: "Mulai kunjungan demo", exact: true }),
+        page.getByRole("button", { name: "Mulai kunjungan", exact: true }),
     ).toBeDisabled();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await context.setOffline(false);

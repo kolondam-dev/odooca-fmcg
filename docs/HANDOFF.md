@@ -1,3 +1,38 @@
+## 2026-10-31T12:15:00+07:00 — Agent Opencode — PWA Taking Order multi-UoM + alur sesi diperbaiki
+**Branch:** `agen/pwa-taking-order-multiuom-v1` (basis `origin/main` = `09be9f4`)
+**Status:** GATE LOKAL PASS · e2e browser PASS 134/134 (phone + tablet) · CI menunggu
+
+### 1. Shell mobile-first (produksi, bukan tutorial)
+- Logo header 172 → 116 px; topbar 64 → 56 px; padding konten 80/92 px.
+- Bottom nav berlatar navy; menu aktif memakai pil putih (`#f7f9fc`, sama dengan body) dengan ikon/warna teks tetap seperti sebelumnya.
+- `overscroll-behavior-y: none` pada `html`/`body` + guard `beforeunload` saat form terbuka atau antrean belum terkirim: refresh tak sengaja tidak membuang draft/antrean.
+- Beranda diringkas: hero, summary-grid, tip, dan footnote dihapus; banner simulator dihapus. Label demo di UI dinetralkan (`Peran`, `Mode respons`, `Lingkungan & peran`, `Kantor Pusat`, `Gunakan lokasi acuan`).
+
+### 2. Taking Order multi-UoM
+- Domain baru: `product-units.ts` (`UnitLabelSchema`, `unitOptions`, `conversionLabel`, `unitLabelFor`, `pcsPerUnit`, `productUnitLabels`) dan `order-pricing.ts` (`lineQuote`, `orderSummary`).
+- Label satuan presentasional opsional (`carton_label`, `pack_label`, `unit_label`) ditambahkan ke `SnapshotSchema.products` dan `CatalogRowSchema`; enum wire tetap `carton|pack|pcs`; rasio tetap di `packaging`.
+- `OrderSheet.tsx`: pencarian produk, segmented principal (diturunkan dari snapshot), chip satuan (Karton/Renceng/Pack/Box/Pcs), stepper qty, total per baris, rasio nyata (mis. `1 Karton = 144 Pcs · 1 Renceng = 12 Pcs`), dan footer sticky berisi item, ekuivalen karton, serta subtotal.
+- `contracts/openapi.json` diregenerasi; `contracts:check` PASS (zero drift).
+
+### 3. Foto display & integritas offline
+- `DisplayPhoto.tsx`: `CameraViewfinder` + fallback unggah untuk perangkat tanpa kamera; paket bukti disimpan ke IndexedDB dan direferensikan oleh draft order. Kontrak wire order tetap `.strict()` tanpa field bukti.
+- Submit order wajib foto display; draft menyimpan/memulihkan referensi bukti; tombol submit nonaktif sampai bukti ada.
+
+### 4. Perbaikan alur sesi (deadlock)
+- `VisitPanel`: tombol "Mulai kunjungan" tidak lagi terkunci permanen bila pinpoint dibuat sebelum foto; `start()` mengambil ulang lokasi bila pinpoint lebih tua dari foto. Aturan domain (pinpoint di antara foto dan mulai) tidak dilonggarkan.
+- `MorningSession` disederhanakan menjadi satu aksi "Buka sesi kerja" (status "Sesi aktif"/"Belum dibuka") memakai `MorningSimulation.openDay()` (absensi simulasi + buka sesi). Dialog absensi kini memulai sesi setelah bukti tersimpan.
+
+### 5. Copy & kejujuran bukti
+- Klaim "TERVERIFIKASI OTOMATIS" pada watermark kamera diganti "bukti lokal, belum diverifikasi"; nama PT fiktif dihapus dari watermark; label GPS fallback dibuat eksplisit.
+- String provenance yang disimpan tetap dipertahankan: banner `SIMULASI | …`, receipt `SIMULASI:`, `PINPOINT SIMULASI - TANPA BASEMAP`, dan nama DB `fmcg-field-demo-v1`.
+
+### 6. Gate
+- `npm run contracts:check` PASS; `npm run typecheck` PASS; `npm run test` 18/18 suite, 327/327 test PASS.
+- `npm run build:demo`, `npm run build`, `npm run build:staging`, `npm run check:build` PASS (demo JS gzip 80.4 KiB; live 34.5 KiB; staging 30.6 KiB; font 47.1 KiB).
+- Spec Playwright diperbarui (satu klik "Buka sesi kerja", chip satuan, foto display, label baru). Suite browser lokal: 134/134 PASS (67 phone + 67 tablet, 14 file) memakai Chromium 1248 lokal; job `pwa-browser` CI tetap wajib hijau sebelum PR dianggap siap.
+
+Task managed by Agent Opencode at 2026-10-31T12:53:38+07:00
+
 ## 2026-10-31T11:00:00+07:00 — antigravity agent — Agent Dispatch Prompts Prepared (Sprint 1 & Sprint 2)
 **Branch:** `main`
 **Status:** READY FOR USER DISPATCH

@@ -261,14 +261,13 @@ export function CameraViewfinder({
         ctx.fillStyle = "#ffffff";
         ctx.textBaseline = "middle";
 
-        // Line 1: Company & Outlet
+        // Line 1: outlet & document context
         ctx.font =
             "bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-        const compText = "PT MANADO DISTRIBUSI UTAMA";
         const outletText = outletName
-            ? ` · ${outletName}`
-            : " · BUKTI KUNJUNGAN LAPANGAN";
-        ctx.fillText(compText + outletText, 20, targetHeight + 28);
+            ? `BUKTI DISPLAY · ${outletName}`
+            : "BUKTI KUNJUNGAN LAPANGAN";
+        ctx.fillText(outletText, 20, targetHeight + 28);
 
         // Line 2: Timestamp & GPS Coordinates
         ctx.font =
@@ -283,7 +282,7 @@ export function CameraViewfinder({
         ctx.font =
             "14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
         ctx.fillStyle = "#94a3b8";
-        const officerText = `Petugas: ${salespersonName}   |   Status: TERVERIFIKASI OTOMATIS`;
+        const officerText = `Petugas: ${salespersonName}   |   Status: bukti lokal, belum diverifikasi`;
         ctx.fillText(officerText, 20, targetHeight + 86);
 
         // Convert to Blob
@@ -381,7 +380,7 @@ export function CameraViewfinder({
                     <div>
                         <h3>{title}</h3>
                         <p class="camera-subtitle">
-                            {outletName || "PT Manado Distribusi Utama"}
+                            {outletName || "Bukti kunjungan lapangan"}
                         </p>
                     </div>
                     <button
@@ -447,7 +446,9 @@ export function CameraViewfinder({
                                     <span>
                                         {gpsStatus === "locked"
                                             ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)} (±${Math.round(coords.accuracy)}m)`
-                                            : "Mencari GPS presisi..."}
+                                            : gpsStatus === "fallback"
+                                              ? "GPS belum tersedia · titik outlet"
+                                              : "Mencari GPS…"}
                                     </span>
                                 </div>
                             </div>

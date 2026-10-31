@@ -23,7 +23,7 @@ async function photo(task: Locator) {
         .click();
     await expect(
         task.getByText(
-            "Foto dan pinpoint simulasi tersimpan lokal. Peta resmi belum tersedia.",
+            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
         ),
     ).toBeVisible();
 }
@@ -66,9 +66,7 @@ test("cash collection draft restores offline and syncs only for review", async (
     await expect(
         task.getByLabel("Nominal diterima (Rupiah bulat)"),
     ).toHaveValue("500000");
-    await expect(
-        task.getByAltText("Pinpoint simulasi tanpa basemap"),
-    ).toBeVisible();
+    await expect(task.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await task
         .getByRole("button", { name: "Ajukan penerimaan untuk review" })
         .click();
@@ -216,7 +214,7 @@ test("business rejection opens offline correction draft and preserves immutable 
     await page.goto("./");
     await open(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Respons simulator").selectOption("rejected");
+    await page.getByLabel("Mode respons").selectOption("rejected");
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
     let task = page
         .locator(".collection-task")

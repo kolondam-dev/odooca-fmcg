@@ -1,0 +1,18 @@
+[2026-10-31T12:15:00+07:00] [INFO] PWA taking order multi-UoM + perbaikan alur sesi
+- Branch agen/pwa-taking-order-multiuom-v1 dari origin/main 09be9f4; belum commit/push saat entri ini ditulis.
+- Shell: logo 116 px, topbar 56 px, bottom nav navy dengan pil putih aktif, overscroll-behavior-y none, guard beforeunload saat form/antrean belum aman.
+- Multi-UoM: product-units.ts + order-pricing.ts; label satuan opsional (carton_label/pack_label/unit_label) di SnapshotSchema.products dan CatalogRowSchema; enum wire tetap carton|pack|pcs; contracts/openapi.json diregenerasi.
+- OrderSheet.tsx: pencarian, principal dari snapshot, chip satuan, stepper qty, rasio konversi, total baris, footer sticky (item, karton, subtotal).
+- DisplayPhoto.tsx: CameraViewfinder + fallback unggah, paket bukti lokal di IndexedDB, wajib sebelum submit order; draft menyimpan referensi bukti.
+- VisitPanel: pinpoint basi tidak lagi mematikan tombol Mulai kunjungan; fix diambil ulang otomatis. MorningSession: satu aksi Buka sesi kerja via MorningSimulation.openDay(); dialog absensi memulai sesi.
+- Copy: klaim TERVERIFIKASI OTOMATIS diganti bukti lokal belum diverifikasi; nama PT fiktif dihapus dari watermark; label demo UI dinetralkan. Provenance tersimpan (SIMULASI, receipt, pinpoint, nama DB demo) dipertahankan.
+- Gate lokal PASS: contracts:check, typecheck, test 18/18 suite 327/327, build:demo, build, build:staging, check:build (demo JS gzip 80.4 KiB; live 34.5 KiB; staging 30.6 KiB; font 47.1 KiB).
+- Spec Playwright diperbarui; run browser lokal belum dieksekusi (binary Chromium belum tersedia) [BU]; job pwa-browser CI wajib hijau.
+- Task managed by Agent Opencode at 2026-10-31T12:15:00+07:00
+
+[2026-10-31T12:53:38+07:00] [INFO] e2e browser lokal PASS 134/134 + gate final
+- Playwright 134/134 PASS (67 phone + 67 tablet, 14 file) memakai PWA_CHROMIUM_EXECUTABLE=chromium-1248.
+- 5 kegagalan awal diperbaiki pada spec: label peta/geofence, tombol sibuk Memproses…, pesan gate Sales, notice outlet demo; tidak ada pelonggaran aturan domain.
+- Gate final: contracts:check PASS; typecheck PASS; test 18/18 suite 327/327 PASS; build:demo, build, build:staging, check:build PASS (demo JS gzip 80.4 KiB; live 34.5; staging 30.6; font 47.1).
+- VisitPanel: efek auto-locate dihapus; start() tetap mengambil ulang fix basi. docs/HANDOFF.md status diperbarui menjadi e2e PASS.
+- Task managed by Agent Opencode at 2026-10-31T12:53:38+07:00
