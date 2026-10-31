@@ -6,7 +6,7 @@ class TestPromoGovernance(TransactionCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.env = cls.env(context=dict(cls.env.context, tracking_disable=True))
-        cls.principal_myr = cls.env.ref("id_base.principal_myr")
+        cls.principal_myr = cls.env.ref("id_base.principal_mayora")
         cls.program = cls.env["loyalty.program"].create({
             "name": "Promo Uji Coba Kopi Mayora",
             "program_type": "promotion",
@@ -94,3 +94,4 @@ class TestPromoGovernance(TransactionCase):
         self.program.budget_source = "joint"
         line._compute_promo_claim_amount()
         self.assertAlmostEqual(line.promo_claim_amount, 5000.0, places=2)
+

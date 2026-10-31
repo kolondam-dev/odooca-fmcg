@@ -8,7 +8,7 @@
         <field name="mou_number">MOU/MYR/MND/2026/088</field>
         <field name="doc_date">2026-08-01</field>
         <field name="budget_source">principal</field>
-        <field name="principal_id" ref="id_base.principal_myr"/>
+        <field name="principal_id" ref="id_base.principal_mayora"/>
         <field name="principal_approver_name">Hendrik Pangemanan</field>
         <field name="principal_approver_title">Area Sales &amp; Promotion Manager Sulut</field>
         <field name="governance_state">approved</field>
@@ -40,7 +40,7 @@
         <field name="mou_number">MOU/SJA/MND/2026/104</field>
         <field name="doc_date">2026-08-15</field>
         <field name="budget_source">joint</field>
-        <field name="principal_id" ref="id_base.principal_sja"/>
+        <field name="principal_id" ref="id_base.principal_kapalapi"/>
         <field name="principal_approver_name">Budi Santoso</field>
         <field name="principal_approver_title">Regional Trade Marketing Manager</field>
         <field name="governance_state">approved</field>
@@ -64,3 +64,4 @@
         <field name="required_points">1</field>
     </record>
 </odoo>
+

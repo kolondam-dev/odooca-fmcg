@@ -36,3 +36,4 @@ class AccountMoveLine(models.Model):
         currency_field="currency_id",
         help="Porsi rupiah diskon promosi yang ditagihkan kembali ke prinsipal",
     )
+

@@ -156,3 +156,4 @@ class ProductPricelist(models.Model):
                         "date_deadline": pl.date_end or today,
                     })
                     _logger.info("Created pricelist expiry activity for pricelist %s (id %s)", pl.name, pl.id)
+

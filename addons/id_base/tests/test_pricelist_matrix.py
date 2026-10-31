@@ -67,3 +67,4 @@ class TestPricelistMatrix(TransactionCase):
         calculated_price = pl_mt._get_product_price(self.product, 1.0)
         # 10.000 diskon 5% = 9.500
         self.assertAlmostEqual(calculated_price, 9500.0, places=2)
+

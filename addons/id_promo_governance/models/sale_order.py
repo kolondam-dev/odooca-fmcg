@@ -79,3 +79,4 @@ class SaleOrderLine(models.Model):
                 "promo_claim_amount": self.promo_claim_amount,
             })
         return res
+
