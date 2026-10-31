@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Promo Mayora: Festival Kopi Torabika Manado -->
+    <record id="promo_mayora_torabika_2026" model="loyalty.program">
+        <field name="name">Mayora - Gebyar Promo Torabika Sulut Q3-Q4</field>
+        <field name="program_type">promotion</field>
+        <field name="trigger">auto</field>
+        <field name="mou_number">MOU/MYR/MND/2026/088</field>
+        <field name="doc_date">2026-08-01</field>
+        <field name="budget_source">principal</field>
+        <field name="principal_id" ref="id_base.principal_mayora"/>
+        <field name="principal_approver_name">Hendrik Pangemanan</field>
+        <field name="principal_approver_title">Area Sales &amp; Promotion Manager Sulut</field>
+        <field name="governance_state">approved</field>
+        <field name="active">True</field>
+        <field name="date_from">2026-08-01 00:00:00</field>
+        <field name="date_to">2026-12-31 23:59:59</field>
+    </record>
+
+    <record id="rule_mayora_torabika" model="loyalty.rule">
+        <field name="program_id" ref="promo_mayora_torabika_2026"/>
+        <field name="minimum_qty">1</field>
+        <field name="reward_point_amount">1</field>
+    </record>
+
+    <record id="reward_mayora_torabika" model="loyalty.reward">
+        <field name="program_id" ref="promo_mayora_torabika_2026"/>
+        <field name="reward_type">discount</field>
+        <field name="discount">5.0</field>
+        <field name="discount_mode">percent</field>
+        <field name="discount_applicability">order</field>
+        <field name="required_points">1</field>
+    </record>
+
+    <!-- Promo Santos Jaya Abadi: Kapal Api Mantap Manado (Joint 50:50) -->
+    <record id="promo_santos_kapalapi_2026" model="loyalty.program">
+        <field name="name">Santos - Semarak Kopi Kapal Api Bersama MDU</field>
+        <field name="program_type">promotion</field>
+        <field name="trigger">auto</field>
+        <field name="mou_number">MOU/SJA/MND/2026/104</field>
+        <field name="doc_date">2026-08-15</field>
+        <field name="budget_source">joint</field>
+        <field name="principal_id" ref="id_base.principal_kapalapi"/>
+        <field name="principal_approver_name">Budi Santoso</field>
+        <field name="principal_approver_title">Regional Trade Marketing Manager</field>
+        <field name="governance_state">approved</field>
+        <field name="active">True</field>
+        <field name="date_from">2026-08-15 00:00:00</field>
+        <field name="date_to">2026-12-31 23:59:59</field>
+    </record>
+
+    <record id="rule_santos_kapalapi" model="loyalty.rule">
+        <field name="program_id" ref="promo_santos_kapalapi_2026"/>
+        <field name="minimum_qty">1</field>
+        <field name="reward_point_amount">1</field>
+    </record>
+
+    <record id="reward_santos_kapalapi" model="loyalty.reward">
+        <field name="program_id" ref="promo_santos_kapalapi_2026"/>
+        <field name="reward_type">discount</field>
+        <field name="discount">3.0</field>
+        <field name="discount_mode">percent</field>
+        <field name="discount_applicability">order</field>
+        <field name="required_points">1</field>
+    </record>
+</odoo>
+
