@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_id_wms_expiry_list" model="ir.ui.view">
+        <field name="name">id.wms.expiry.list</field>
+        <field name="model">id.wms.expiry</field>
+        <field name="arch" type="xml">
+            <list string="FEFO Expiry Monitoring"
+                  create="0" edit="0" delete="0"
+                  decoration-danger="bucket == 'critical'"
+                  decoration-warning="bucket == 'warning'">
+                <field name="lot_name"/>
+                <field name="product_id"/>
+                <field name="fmcg_category" optional="show"/>
+                <field name="expiration_date"/>
+                <field name="days_to_expiry"/>
+                <field name="bucket"/>
+                <field name="qty_on_hand" sum="Quantity"/>
+                <field name="stock_value" sum="Stock Value"/>
+                <field name="recommended_action" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_id_wms_expiry_graph" model="ir.ui.view">
+        <field name="name">id.wms.expiry.graph</field>
+        <field name="model">id.wms.expiry</field>
+        <field name="arch" type="xml">
+            <graph string="Stock Value per Expiry Bucket" type="bar">
+                <field name="bucket"/>
+                <field name="stock_value" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_id_wms_expiry_pivot" model="ir.ui.view">
+        <field name="name">id.wms.expiry.pivot</field>
+        <field name="model">id.wms.expiry</field>
+        <field name="arch" type="xml">
+            <pivot string="FEFO Expiry Monitoring">
+                <field name="bucket" type="row"/>
+                <field name="fmcg_category" type="col"/>
+                <field name="stock_value" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_id_wms_expiry_search" model="ir.ui.view">
+        <field name="name">id.wms.expiry.search</field>
+        <field name="model">id.wms.expiry</field>
+        <field name="arch" type="xml">
+            <search string="FEFO Expiry Monitoring">
+                <field name="product_id"/>
+                <field name="lot_name"/>
+                <filter name="filter_critical" string="Critical (&lt; 30 Days)"
+                        domain="[('bucket', '=', 'critical')]"/>
+                <filter name="filter_warning" string="Warning (30-90 Days)"
+                        domain="[('bucket', '=', 'warning')]"/>
+                <filter name="filter_good" string="Good Stock (&gt; 90 Days)"
+                        domain="[('bucket', '=', 'good')]"/>
+                <separator/>
+                <filter name="filter_expiry_date" string="Expiry Date" date="expiration_date"/>
+                <group>
+                    <filter name="group_bucket" string="Expiry Bucket" context="{'group_by': 'bucket'}"/>
+                    <filter name="group_fmcg_category" string="FMCG Category"
+                            context="{'group_by': 'fmcg_category'}"/>
+                    <filter name="group_expiration_date" string="Expiry Month"
+                            context="{'group_by': 'expiration_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_id_wms_expiry" model="ir.actions.act_window">
+        <field name="name">FEFO Expiry Monitoring</field>
+        <field name="res_model">id.wms.expiry</field>
+        <field name="view_mode">graph,list,pivot</field>
+        <field name="context">{'search_default_group_bucket': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No stock lot with an expiry date</p>
+            <p>Lots are classified as critical (under 30 days), warning (30 to 90 days),
+               or good stock (over 90 days) so the team can return to principal or run a
+               bundling program before the shelf life runs out.</p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_id_wms_stock_category_list" model="ir.ui.view">
+        <field name="name">id.wms.stock.category.list</field>
+        <field name="model">id.wms.stock.category</field>
+        <field name="arch" type="xml">
+            <list string="Stock by FMCG Category" create="0" edit="0" delete="0">
+                <field name="category_group"/>
+                <field name="fmcg_category"/>
+                <field name="product_count" sum="Products"/>
+                <field name="lot_count" sum="Lots"/>
+                <field name="qty_on_hand" sum="Quantity"/>
+                <field name="qty_reserved" optional="hide"/>
+                <field name="stock_value" sum="Stock Value"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_id_wms_stock_category_graph" model="ir.ui.view">
+        <field name="name">id.wms.stock.category.graph</field>
+        <field name="model">id.wms.stock.category</field>
+        <field name="arch" type="xml">
+            <graph string="Stock Value per FMCG Category" type="bar">
+                <field name="category_group"/>
+                <field name="stock_value" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_id_wms_stock_category_pivot" model="ir.ui.view">
+        <field name="name">id.wms.stock.category.pivot</field>
+        <field name="model">id.wms.stock.category</field>
+        <field name="arch" type="xml">
+            <pivot string="Stock by FMCG Category">
+                <field name="category_group" type="row"/>
+                <field name="fmcg_category" type="col"/>
+                <field name="stock_value" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_id_wms_stock_category_search" model="ir.ui.view">
+        <field name="name">id.wms.stock.category.search</field>
+        <field name="model">id.wms.stock.category</field>
+        <field name="arch" type="xml">
+            <search string="Stock by FMCG Category">
+                <field name="category_group"/>
+                <field name="fmcg_category"/>
+                <filter name="filter_food" string="Food" domain="[('category_group', '=', 'food')]"/>
+                <filter name="filter_beverage" string="RTD / Beverage"
+                        domain="[('category_group', '=', 'rtd_beverage')]"/>
+                <filter name="filter_home_care" string="Home Care"
+                        domain="[('category_group', '=', 'home_care')]"/>
+                <filter name="filter_personal_care" string="Personal Care"
+                        domain="[('category_group', '=', 'personal_care')]"/>
+                <filter name="filter_confectionery" string="Confectionery"
+                        domain="[('category_group', '=', 'confectionery')]"/>
+                <group>
+                    <filter name="group_category_group" string="Merchandising Group"
+                            context="{'group_by': 'category_group'}"/>
+                    <filter name="group_fmcg_category" string="FMCG Category"
+                            context="{'group_by': 'fmcg_category'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_id_wms_stock_category" model="ir.actions.act_window">
+        <field name="name">Stock by FMCG Category</field>
+        <field name="res_model">id.wms.stock.category</field>
+        <field name="view_mode">graph,list,pivot</field>
+        <field name="context">{'search_default_group_category_group': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No stock in internal locations</p>
+            <p>Every internal stock quant is grouped into the five FMCG merchandising groups
+               with its on-hand quantity and stock value.</p>
+        </field>
+    </record>
+</odoo>

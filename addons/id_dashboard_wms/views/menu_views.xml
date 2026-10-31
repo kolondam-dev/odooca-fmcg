@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_fmcg_wms"
+              name="Warehouse &amp; Logistics"
+              parent="id_base.menu_fmcg_root"
+              sequence="30"/>
+
+    <menuitem id="menu_wms_stock_category"
+              name="Stock by FMCG Category"
+              parent="menu_fmcg_wms"
+              action="action_id_wms_stock_category"
+              sequence="10"/>
+
+    <menuitem id="menu_wms_expiry"
+              name="FEFO Expiry Monitoring"
+              parent="menu_fmcg_wms"
+              action="action_id_wms_expiry"
+              sequence="20"/>
+
+    <menuitem id="menu_wms_delivery"
+              name="Delivery Fulfillment"
+              parent="menu_fmcg_wms"
+              action="action_id_wms_delivery"
+              sequence="30"/>
+
+    <menuitem id="menu_wms_delivery_summary"
+              name="Delivery Rate per Period"
+              parent="menu_fmcg_wms"
+              action="action_id_wms_delivery_summary"
+              sequence="40"/>
+
+    <menuitem id="menu_wms_reject"
+              name="Rejection Breakdown"
+              parent="menu_fmcg_wms"
+              action="action_id_wms_reject"
+              sequence="50"/>
+
+    <menuitem id="menu_wms_fleet_cost"
+              name="Delivery Cost Ratio"
+              parent="menu_fmcg_wms"
+              action="action_id_wms_fleet_cost"
+              sequence="60"/>
+
+    <menuitem id="menu_delivery_trip_cost"
+              name="Delivery Trip Costs"
+              parent="menu_fmcg_wms"
+              action="action_id_delivery_trip_cost"
+              sequence="90"
+              groups="base.group_system"/>
+</odoo>

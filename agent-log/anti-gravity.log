@@ -1409,3 +1409,38 @@
   * Unit test komprehensif test_approval_engine.py menguji 5 skenario (cash bypass, 2-line approval below HPP, analytic constraint, new SKU activation, rejection).
   * Lolos ruff check dan check_manifests.py (7 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T18:15:00+07:00
+
+[2026-10-31T21:42:00+07:00] [INFO] Fix PR #60 & Sync with Main
+- Merged origin/main (memuat PR #62 id_approval) into branch agen/dashboard-monetary-wms.
+- Resolved merge conflicts in .github/workflows/ci.yml, deploy/init.sh, and docs/HANDOFF.md.
+- Diagnosed and fixed install-test failure: removed invalid 'order' field from ir.actions.act_window records in addons/id_dashboard_monetary/views/ar_aging_views.xml.
+- Ran static analysis: ruff check PASS, check_manifests.py PASS (9 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T21:42:00+07:00
+
+[2026-10-31T21:48:40+07:00] [INFO] Fix PostgreSQL Interval Type in WMS Expiry View
+- Diagnosed install-test failure: psycopg2.errors.UndefinedFunction: operator does not exist: interval < integer in id_wms_expiry view.
+- Cause: lot.expiration_date is timestamp; lot.expiration_date - CURRENT_DATE yields interval instead of integer days.
+- Fix: Cast lot.expiration_date::date before subtracting CURRENT_DATE in EXPIRY_SQL.
+- Static check: ruff check PASS, check_manifests.py PASS (9 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T21:48:40+07:00
+
+[2026-10-31T21:56:20+07:00] [INFO] Refactor WMS Fleet Cost SQL to CTE
+- Diagnosed install-test failure: psycopg2.errors.GroupingError: subquery uses ungrouped column c.date from outer query in id_wms_fleet_cost.
+- Root cause: Correlated subquery referenced c.date inside outer query with GROUP BY date_trunc('month', c.date).
+- Fix: Refactored FLEET_COST_SQL to use two clean CTEs (monthly_cost and monthly_delivery) and LEFT JOIN on vehicle_id and period_month.
+- Static checks: ruff check PASS, check_manifests.py PASS (9 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T21:56:20+07:00
+
+[2026-10-31T22:03:40+07:00] [INFO] Fix PO Translation Headers for Odoo 19 Importer
+- Diagnosed install-test failure: AttributeError: 'NoneType' object has no attribute 'groups' in odoo/tools/translate.py line 858 during id_ui post_init_hook.
+- Root cause: Odoo 19 translation parser expects '#. module: <module_name>' comment header above each msgid entry in PO files. id_dashboard_monetary and id_dashboard_wms PO files lacked these headers.
+- Fix: Formatted both id.po files to include '#. module: <name>' above each translation string.
+- Static checks: ruff check PASS, check_manifests.py PASS (9 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T22:03:40+07:00
+
+[2026-10-31T22:10:45+07:00] [INFO] Fix AR Aging Bucket Selection Test Assertion
+- Diagnosed install-test failure: AssertionError in TestMonetaryDashboard.test_ar_aging_view_is_queryable.
+- Cause: test compared list of keys (BUCKETS) directly against set of tuples returned by field.selection.
+- Fix: Unpack tuple keys {k for k, _label in aging._fields['bucket'].selection} before comparing with set(BUCKETS).
+- Static checks: ruff check PASS, check_manifests.py PASS (9 addons ok).
+- Task managed by antigravity-agent at 2026-10-31T22:10:45+07:00
