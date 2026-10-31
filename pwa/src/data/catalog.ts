@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PackagingSchema } from "../domain/product-units.ts";
+import { PackagingSchema, UnitLabelSchema } from "../domain/product-units.ts";
 import type { Snapshot } from "../domain/contracts";
 // Sanitized read-model proposed for the backend; not a raw ORM/RPC response.
 // Prices and stock must already have an explicit carton basis and authorized
@@ -15,6 +15,9 @@ export const CatalogRowSchema = z
         inner_qty: z.number().int().positive(),
         price_per_carton: z.number().nonnegative().finite(),
         stock_cartons: z.number().nonnegative().finite(),
+        carton_label: UnitLabelSchema.optional(),
+        pack_label: UnitLabelSchema.optional(),
+        unit_label: UnitLabelSchema.optional(),
     })
     .strict();
 export function mapCatalogProducts(value: unknown): Snapshot["products"] {
@@ -38,6 +41,9 @@ export function mapCatalogProducts(value: unknown): Snapshot["products"] {
         }),
         price: row.price_per_carton,
         stock: row.stock_cartons,
+        ...(row.carton_label ? { carton_label: row.carton_label } : {}),
+        ...(row.pack_label ? { pack_label: row.pack_label } : {}),
+        ...(row.unit_label ? { unit_label: row.unit_label } : {}),
         price_basis: "carton" as const,
         stock_basis: "carton" as const,
     }));

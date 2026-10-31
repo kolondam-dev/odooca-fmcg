@@ -184,19 +184,19 @@ test("daily helper waits for deliberately held attendance persistence before syn
     await page.waitForFunction(() => (window as any).__attendanceHeld === true);
     await expect(
         page.getByRole("region", {
-            name: "Sesi kerja pagi simulasi",
+            name: "Sesi kerja",
             exact: true,
         }),
     ).toHaveAttribute("aria-busy", "true");
     await expect(
         page.getByRole("button", {
-            name: "Sync pagi & buka sesi demo",
+            name: "Memproses…",
             exact: true,
         }),
-    ).toHaveCount(0);
+    ).toBeDisabled();
     await page.evaluate(() => (window as any).__releaseAttendance());
     await pending;
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
 });
 test("persona helper waits for deliberately held restore of the destination owner", async ({
     page,
@@ -245,7 +245,7 @@ test("persona helper waits for deliberately held restore of the destination owne
     const pending = switchPersona(page, "delivery");
     await page.waitForFunction(() => (window as any).__restoreHeld === true);
     const region = page.getByRole("region", {
-        name: "Sesi kerja pagi simulasi",
+        name: "Sesi kerja",
         exact: true,
     });
     await expect(region).toHaveAttribute("data-owner", "demo-mdu:DEMO-NOVRY");
@@ -254,7 +254,7 @@ test("persona helper waits for deliberately held restore of the destination owne
     await pending;
     await context.setOffline(true);
     await ensureDaily(page);
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
 });
 for (const legacy of [false, true])
     test(`POD revision history uses each historical SKU unit, legacy=${legacy}`, async ({
@@ -291,7 +291,7 @@ for (const legacy of [false, true])
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
-        await page.getByLabel("Respons simulator").selectOption("rejected");
+        await page.getByLabel("Mode respons").selectOption("rejected");
         await page
             .getByRole("button", { name: "Delivery", exact: true })
             .click();

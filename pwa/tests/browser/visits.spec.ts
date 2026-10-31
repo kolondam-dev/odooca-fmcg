@@ -13,17 +13,11 @@ test("visit location guards, offline restore and checkout sync", async ({
     await page.goto("./");
     await page
         .getByRole("button", {
-            name: "Simulasikan absensi diterima",
+            name: "Buka sesi kerja",
             exact: true,
         })
         .click();
-    await page
-        .getByRole("button", {
-            name: "Sync pagi & buka sesi demo",
-            exact: true,
-        })
-        .click();
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
@@ -33,7 +27,7 @@ test("visit location guards, offline restore and checkout sync", async ({
         exact: true,
     });
     const start = page.getByRole("button", {
-        name: "Mulai kunjungan demo",
+        name: "Mulai kunjungan",
         exact: true,
     });
     await locate.click();
@@ -80,7 +74,7 @@ test("visit location guards, offline restore and checkout sync", async ({
         .fill("Toko tutup untuk kunjungan simulasi");
     await page.getByLabel("Hasil kunjungan").selectOption("outlet_closed");
     await page
-        .getByRole("button", { name: "Tutup kunjungan demo", exact: true })
+        .getByRole("button", { name: "Tutup kunjungan", exact: true })
         .click();
     await expect(
         page.getByText("Kunjungan ditutup lokal", { exact: false }),
@@ -115,17 +109,11 @@ test("denied GPS permits demo coordinates but photo is still mandatory", async (
     await page.goto("./");
     await page
         .getByRole("button", {
-            name: "Simulasikan absensi diterima",
+            name: "Buka sesi kerja",
             exact: true,
         })
         .click();
-    await page
-        .getByRole("button", {
-            name: "Sync pagi & buka sesi demo",
-            exact: true,
-        })
-        .click();
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
@@ -134,11 +122,13 @@ test("denied GPS permits demo coordinates but photo is still mandatory", async (
         .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
         .click();
     await expect(
-        page.getByText(/Lokasi\/foto diterima tanpa validasi/),
+        page.getByText(
+            "Lokasi dan foto dicatat perangkat; geofence outlet ini tidak memblokir kunjungan.",
+        ),
     ).toBeVisible();
     await expect(page.getByRole("alert")).toHaveCount(0);
     await expect(
-        page.getByRole("button", { name: "Mulai kunjungan demo", exact: true }),
+        page.getByRole("button", { name: "Mulai kunjungan", exact: true }),
     ).toBeDisabled();
     const photo = page.getByRole("group", {
         name: "Foto check-in kunjungan",
@@ -149,7 +139,7 @@ test("denied GPS permits demo coordinates but photo is still mandatory", async (
         photo.getByAltText("Pratinjau foto bukti lokal"),
     ).toBeVisible();
     await photo
-        .getByRole("button", { name: "Gunakan lokasi demo", exact: true })
+        .getByRole("button", { name: "Gunakan lokasi acuan", exact: true })
         .click();
     await photo
         .getByRole("button", { name: "Simpan bukti lokal", exact: true })
@@ -163,7 +153,7 @@ test("denied GPS permits demo coordinates but photo is still mandatory", async (
         .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
         .click();
     await expect(
-        page.getByRole("button", { name: "Mulai kunjungan demo", exact: true }),
+        page.getByRole("button", { name: "Mulai kunjungan", exact: true }),
     ).toBeEnabled();
 });
 
@@ -180,17 +170,11 @@ test("corrupt offline check-in remains held after reload, reconnect and manual r
     await page.goto("./");
     await page
         .getByRole("button", {
-            name: "Simulasikan absensi diterima",
+            name: "Buka sesi kerja",
             exact: true,
         })
         .click();
-    await page
-        .getByRole("button", {
-            name: "Sync pagi & buka sesi demo",
-            exact: true,
-        })
-        .click();
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
@@ -206,7 +190,7 @@ test("corrupt offline check-in remains held after reload, reconnect and manual r
     await context.setOffline(true);
     await saveVisitPhoto(page, "check-in");
     await page
-        .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
+        .getByRole("button", { name: "Mulai kunjungan", exact: true })
         .click();
     await expect(
         page.getByText("Kunjungan lokal aktif", { exact: true }),
@@ -234,7 +218,7 @@ test("corrupt offline check-in remains held after reload, reconnect and manual r
         return result;
     });
     await page.reload();
-    await expect(page.getByText("Sesi terbuka", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await context.setOffline(false);
     // Reload online too: setOffline may fire before Preact's post-paint
     // connectivity effect attaches during boot. Test the persisted sync guard.

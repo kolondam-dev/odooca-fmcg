@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Pricelist Form View -->
+    <record id="view_product_pricelist_form_fmcg_inherit" model="ir.ui.view">
+        <field name="name">product.pricelist.form.fmcg.inherit</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view"/>
+        <field name="arch" type="xml">
+            <sheet position="before">
+                <header>
+                    <field name="expiry_state" widget="statusbar" statusbar_visible="draft,active,near_expiry,expired"/>
+                </header>
+                <div class="alert alert-warning mb-0" role="alert" invisible="expiry_state != 'near_expiry'">
+                    <strong>Peringatan Jatuh Tempo:</strong> Daftar harga matriks ini mendekati tanggal akhir berlaku (<field name="date_end" readonly="1"/>). Harap lakukan peninjauan dan pembaruan periodik.
+                </div>
+                <div class="alert alert-danger mb-0" role="alert" invisible="expiry_state != 'expired'">
+                    <strong>Daftar Harga Kadaluarsa:</strong> Daftar harga ini telah melewati masa berlaku (<field name="date_end" readonly="1"/>). Harap perbarui tanggal atau terapkan matriks baru.
+                </div>
+            </sheet>
+
+            <xpath expr="//group[@name='pricelist_settings']" position="after">
+                <group string="Matriks Distribusi FMCG" name="fmcg_matrix_group">
+                    <group>
+                        <field name="is_fmcg_matrix"/>
+                        <field name="channel_id" options="{'no_create': True}"/>
+                        <field name="coverage_category"/>
+                        <field name="coverage_area_id" options="{'no_create': True}" invisible="coverage_category == 'all'"/>
+                        <field name="tier"/>
+                    </group>
+                    <group>
+                        <field name="date_start"/>
+                        <field name="date_end"/>
+                        <field name="alert_days_before"/>
+                        <field name="item_count"/>
+                    </group>
+                </group>
+            </xpath>
+
+            <sheet position="after">
+                <chatter/>
+            </sheet>
+        </field>
+    </record>
+
+    <!-- Inherit Pricelist Tree View -->
+    <record id="view_product_pricelist_tree_fmcg_inherit" model="ir.ui.view">
+        <field name="name">product.pricelist.tree.fmcg.inherit</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view_tree"/>
+        <field name="arch" type="xml">
+            <field name="currency_id" position="after">
+                <field name="channel_id" optional="show"/>
+                <field name="coverage_category" optional="show"/>
+                <field name="tier" optional="show"/>
+                <field name="date_start" optional="show"/>
+                <field name="date_end" optional="show"/>
+                <field name="expiry_state" widget="badge" 
+                       decoration-success="expiry_state == 'active'" 
+                       decoration-warning="expiry_state == 'near_expiry'" 
+                       decoration-danger="expiry_state == 'expired'" 
+                       decoration-info="expiry_state == 'draft'" 
+                       optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Inherit Pricelist Search View -->
+    <record id="view_product_pricelist_search_fmcg_inherit" model="ir.ui.view">
+        <field name="name">product.pricelist.search.fmcg.inherit</field>
+        <field name="model">product.pricelist</field>
+        <field name="inherit_id" ref="product.product_pricelist_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='inactive']" position="after">
+                <separator/>
+                <filter name="filter_fmcg_matrix" string="Matriks FMCG" domain="[('is_fmcg_matrix', '=', True)]"/>
+                <filter name="filter_active_status" string="Status Aktif" domain="[('expiry_state', '=', 'active')]"/>
+                <filter name="filter_near_expiry" string="Mendekati Jatuh Tempo" domain="[('expiry_state', '=', 'near_expiry')]"/>
+                <filter name="filter_expired" string="Sudah Kadaluarsa" domain="[('expiry_state', '=', 'expired')]"/>
+                <separator/>
+                <filter name="group_channel" string="Distribution Channel" domain="[]" context="{'group_by': 'channel_id'}"/>
+                <filter name="group_coverage" string="Coverage Type" domain="[]" context="{'group_by': 'coverage_category'}"/>
+                <filter name="group_tier" string="Payment Tier" domain="[]" context="{'group_by': 'tier'}"/>
+                <filter name="group_expiry_state" string="Status Masa Berlaku" domain="[]" context="{'group_by': 'expiry_state'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Dedicated FMCG Matrix Pricelist Action -->
+    <record id="action_fmcg_pricelist_matrix" model="ir.actions.act_window">
+        <field name="name">Matriks Daftar Harga FMCG</field>
+        <field name="res_model">product.pricelist</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_fmcg_matrix', '=', True)]</field>
+        <field name="context">{'default_is_fmcg_matrix': True, 'search_default_filter_fmcg_matrix': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Buat matriks daftar harga distributor FMCG baru
+            </p>
+            <p>
+                Kelola matriks harga berbasis kombinasi kanal distribusi (Modern Trade, General Trade, Horeka), jenis wilayah (Urban, Hinterland), dan tier pembayaran lengkap dengan masa berlaku serta reminder jatuh tempo.
+            </p>
+        </field>
+    </record>
+
+    <!-- Direct Menu Item Under Sales / Products -->
+    <menuitem id="menu_fmcg_pricelist_matrix"
+              name="Matriks Harga FMCG"
+              parent="sale.product_menu_catalog"
+              action="action_fmcg_pricelist_matrix"
+              sequence="3"
+              groups="sales_team.group_sale_salesman"/>
+</odoo>
+

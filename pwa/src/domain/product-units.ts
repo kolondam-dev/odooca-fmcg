@@ -19,6 +19,28 @@ export const SnapshotScopeSchema = z
         business_date: z.iso.date(),
     })
     .strict();
+// Presentation labels only. Ratios stay in PackagingSchema and prices stay on
+// a carton basis; a missing label falls back to a neutral name.
+export const UnitLabelSchema = z.string().trim().min(1).max(24);
+export type UnitTier = "carton" | "pack" | "pcs";
+export type UnitLabels = { carton: string; pack: string; pcs: string };
+export interface UnitOption {
+    uom: UnitTier;
+    label: string;
+    /** Pieces contained in one unit of this tier. */
+    per: number;
+}
+type LabelledProduct = {
+    packaging?: Packaging;
+    carton_label?: string;
+    pack_label?: string;
+    unit_label?: string;
+};
+const DEFAULT_LABELS: UnitLabels = {
+    carton: "Karton",
+    pack: "Pack",
+    pcs: "Pcs",
+};
 export function productPackaging(
     product: { packaging?: Packaging },
     catalogVersion?: 2,
@@ -30,4 +52,57 @@ export function productPackaging(
     if (__DEMO__ && catalogVersion === undefined)
         return { carton: 144, pack: 12, pcs: 1 };
     throw new Error("Rasio satuan SKU wajib tersedia pada snapshot.");
+}
+export function productUnitLabels(product: LabelledProduct): UnitLabels {
+    return {
+        carton: product.carton_label?.trim() || DEFAULT_LABELS.carton,
+        pack: product.pack_label?.trim() || DEFAULT_LABELS.pack,
+        pcs: product.unit_label?.trim() || DEFAULT_LABELS.pcs,
+    };
+}
+/**
+ * Orderable tiers of one SKU, largest first. A SKU whose pack equals one piece
+ * only offers the carton and the base retail unit.
+ */
+export function unitOptions(
+    product: LabelledProduct,
+    catalogVersion?: 2,
+): UnitOption[] {
+    const packaging = productPackaging(product, catalogVersion);
+    const labels = productUnitLabels(product);
+    const options: UnitOption[] = [
+        { uom: "carton", label: labels.carton, per: packaging.carton },
+    ];
+    if (packaging.pack > 1)
+        options.push({ uom: "pack", label: labels.pack, per: packaging.pack });
+    options.push({ uom: "pcs", label: labels.pcs, per: 1 });
+    return options;
+}
+/** "1 Karton = 144 Pcs · 1 Renceng = 12 Pcs" */
+export function conversionLabel(
+    product: LabelledProduct,
+    catalogVersion?: 2,
+): string {
+    return unitOptions(product, catalogVersion)
+        .slice(0, -1)
+        .map((option) => `1 ${option.label} = ${option.per} Pcs`)
+        .join(" · ");
+}
+export function unitLabelFor(
+    product: LabelledProduct,
+    uom: UnitTier,
+    catalogVersion?: 2,
+): string {
+    const labels = productUnitLabels(product);
+    // A pack tier without its own ratio is the base retail unit.
+    if (uom === "pack" && productPackaging(product, catalogVersion).pack === 1)
+        return labels.pcs;
+    return labels[uom];
+}
+export function pcsPerUnit(
+    product: { packaging?: Packaging },
+    uom: UnitTier,
+    catalogVersion?: 2,
+): number {
+    return productPackaging(product, catalogVersion)[uom];
 }

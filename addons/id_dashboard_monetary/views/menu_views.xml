@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_fmcg_monetary"
+              name="Monetary &amp; AR"
+              parent="id_base.menu_fmcg_root"
+              sequence="20"/>
+
+    <menuitem id="menu_ar_aging"
+              name="AR Aging Matrix"
+              parent="menu_fmcg_monetary"
+              action="action_id_ar_aging"
+              sequence="10"/>
+
+    <menuitem id="menu_ar_by_salesman"
+              name="AR by Salesperson"
+              parent="menu_fmcg_monetary"
+              action="action_id_ar_by_salesman"
+              sequence="20"/>
+
+    <menuitem id="menu_ar_by_area"
+              name="AR by Coverage Area"
+              parent="menu_fmcg_monetary"
+              action="action_id_ar_by_area"
+              sequence="30"/>
+
+    <menuitem id="menu_ar_top_customers"
+              name="Top 10 Customers"
+              parent="menu_fmcg_monetary"
+              action="action_id_ar_customer_balance"
+              sequence="40"/>
+
+    <menuitem id="menu_monetary_funnel"
+              name="Financial Funnel"
+              parent="menu_fmcg_monetary"
+              action="action_id_monetary_funnel"
+              sequence="50"/>
+
+    <menuitem id="menu_monetary_target"
+              name="Revenue Targets"
+              parent="menu_fmcg_monetary"
+              action="action_id_monetary_target"
+              sequence="90"
+              groups="base.group_system"/>
+</odoo>

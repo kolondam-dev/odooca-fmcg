@@ -85,14 +85,14 @@ export function DiscountApproval({
                             disabled={busy || !!blocked}
                             onClick={() => void decide(row, true)}
                         >
-                            Simulasikan setujui diskon
+                            Setujui diskon
                         </button>
                         <button
                             class="secondary"
                             disabled={busy || !!blocked}
                             onClick={() => void decide(row, false)}
                         >
-                            Simulasikan tolak diskon
+                            Tolak diskon
                         </button>
                     </div>
                 );

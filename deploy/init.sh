@@ -29,7 +29,7 @@ if [ "$(id -u)" = "0" ]; then
   fi
 fi
 
-INIT_MODULES="${INIT_MODULES:-id_base,id_ui,id_ui_shell,id_ui_form,l10n_id,fleet,hr,uom,product_expiry,stock_account}"
+INIT_MODULES="${INIT_MODULES:-id_base,id_approval,id_ui,id_ui_shell,id_ui_form,id_promo_governance,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,l10n_id,fleet,hr,uom,product_expiry,stock_account}"
 export PGHOST PGPORT PGUSER PGPASSWORD PGDATABASE
 case "$ODOO_DB_USER" in postgres) log "ODOO_DB_USER tidak boleh 'postgres'"; exit 1;; esac
 case "$ODOO_DB_USER$ODOO_DB_PASSWORD$PGDATABASE" in *\'*|*\"*|*\\*) log "kutip/backslash tidak diizinkan pada user, password, atau nama DB"; exit 1;; esac
@@ -145,10 +145,10 @@ else
 fi
 
 # 4b. Sinkronisasi & pembaruan modul (idempoten: memastikan kolom model baru seperti res_partner.channel_id terbuat di DB)
-if ! has_mark upgrade_modules_v2 || [ "${FORCE_UPGRADE:-0}" = "1" ]; then
-  log "upgrade_modules_v2: mengupdate dan menginstal modul ${INIT_MODULES}..."
+if ! has_mark upgrade_modules_v3 || [ "${FORCE_UPGRADE:-0}" = "1" ]; then
+  log "upgrade_modules_v3: mengupdate dan menginstal modul ${INIT_MODULES}..."
   odoo_run -i "$INIT_MODULES" -u "$INIT_MODULES" --stop-after-init
-  set_mark upgrade_modules_v2
+  set_mark upgrade_modules_v3
 fi
 
 # 5. Postinit (v1): URL dasar, kata sandi admin, bahasa. TODO M1: aktifkan id_ID, grup bisnis admin.

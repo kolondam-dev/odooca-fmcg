@@ -25,7 +25,7 @@ async function requestAdvance(page: Page, category = "meal") {
         .getByRole("button", { name: "Uang lapangan", exact: false })
         .click();
     await page.getByLabel("Kategori", { exact: true }).selectOption(category);
-    await page.getByLabel("Referensi trip / perjalanan").fill("TRIP-DEMO-01");
+    await page.getByLabel("Referensi trip / perjalanan").fill("TRIP-01");
     await page.getByLabel("Tanggal perjalanan").fill("2026-10-28");
     await page.getByLabel("Nominal pengajuan (Rp)").fill("200000");
     if (category.startsWith("fuel"))
@@ -33,7 +33,7 @@ async function requestAdvance(page: Page, category = "meal") {
     await page
         .getByLabel("Tujuan / alasan")
         .fill("Uang lapangan simulasi luar kota");
-    await page.getByRole("button", { name: "Simpan ke antrean demo" }).click();
+    await page.getByRole("button", { name: "Simpan ke antrean" }).click();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(
         page
@@ -42,7 +42,7 @@ async function requestAdvance(page: Page, category = "meal") {
     ).toBeVisible();
     await openExpenses(page);
     await page
-        .getByRole("button", { name: "Simulasikan approval & pencairan" })
+        .getByRole("button", { name: "Proses approval & pencairan" })
         .click();
     await expect(
         page.getByText("Uang muka fiktif Rp", { exact: false }),
@@ -116,7 +116,7 @@ test("component draft restores offline and queues realization separately from ap
         page.getByRole("region", { name: "Estimasi settlement" }),
     ).toContainText(/Rp\s*50\.000/);
     await page
-        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
     await expect(
         page.locator(".realization-form > .notice[role=status]"),
@@ -164,12 +164,12 @@ test("fuel validates paired local evidence, liter-price arithmetic and nondecrea
     await photo(page, context, "Foto odometer sebelum");
     await photo(page, context, "Foto odometer sesudah");
     await page
-        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
     await expect(page.getByRole("alert")).toContainText("liter × harga");
     await page.getByLabel("Liter BBM", { exact: true }).fill("15");
     await page
-        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
     await expect(page.getByRole("alert")).toContainText("KM tidak boleh turun");
     await page.getByLabel("KM setelah pengisian", { exact: true }).fill("1000");
@@ -177,7 +177,7 @@ test("fuel validates paired local evidence, liter-price arithmetic and nondecrea
         page.getByRole("region", { name: "Estimasi settlement" }),
     ).toContainText("Supervisor + Branch Manager");
     await page
-        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
     await expect(
         page.locator(".realization-form > .notice[role=status]"),
@@ -306,7 +306,7 @@ test("missing persisted photo clears the preview and blocks realization without 
         0,
     );
     await page
-        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
     await expect(page.getByRole("alert")).toContainText(
         "Foto lokal tidak ditemukan",
@@ -323,10 +323,10 @@ test("business rejection opens an auditable correction with a new UUID, leaving 
     await details(page, 1, "150000", "REVISION-001");
     await photo(page, context, "Foto struk 1");
     await page.getByRole("button", { name: "Kembali ke akun" }).click();
-    await page.getByLabel("Respons simulator").selectOption("rejected");
+    await page.getByLabel("Mode respons").selectOption("rejected");
     await openExpenses(page);
     await page
-        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
     await expect(
         page.getByRole("heading", { name: "Koreksi realisasi ditolak" }),
@@ -360,13 +360,13 @@ test("business rejection opens an auditable correction with a new UUID, leaving 
         .getByLabel("Alasan koreksi", { exact: true })
         .fill("Perbaikan nominal sesuai struk");
     await page.getByRole("button", { name: "Kembali ke akun" }).click();
-    await page.getByLabel("Respons simulator").selectOption("normal");
+    await page.getByLabel("Mode respons").selectOption("normal");
     await openExpenses(page);
     await expect(
         page.getByLabel("Alasan koreksi", { exact: true }),
     ).toHaveValue("Perbaikan nominal sesuai struk");
     await page
-        .getByRole("button", { name: "Simpan realisasi ke antrean demo" })
+        .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
     await expect(
         page.locator(".realization-form > .notice[role=status]"),
@@ -428,9 +428,7 @@ test("visual evidence package restores offline and rejects changed photo bytes",
         name: "Foto struk 1",
         exact: true,
     });
-    await expect(
-        group.getByAltText("Pinpoint simulasi tanpa basemap"),
-    ).toBeVisible();
+    await expect(group.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     const meta = await page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve) => {
             const r = indexedDB.open("fmcg-field-demo-v1");
@@ -483,9 +481,7 @@ test("visual evidence package restores offline and rejects changed photo bytes",
     await page.reload();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await openExpenses(page);
-    await expect(
-        group.getByAltText("Pinpoint simulasi tanpa basemap"),
-    ).toBeVisible();
+    await expect(group.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await expect(
         group.getByAltText("Pratinjau foto bukti lokal"),
     ).toBeVisible();
@@ -514,15 +510,13 @@ test("visual evidence package restores offline and rejects changed photo bytes",
     await expect(group.getByAltText("Pratinjau foto bukti lokal")).toHaveCount(
         0,
     );
-    await expect(
-        group.getByAltText("Pinpoint simulasi tanpa basemap"),
-    ).toHaveCount(0);
+    await expect(group.getByAltText("Pinpoint tanpa basemap")).toHaveCount(0);
     await expect(
         group.getByText("Foto lokal tidak dapat dipulihkan.", { exact: false }),
     ).toBeVisible();
     await page
         .getByRole("button", {
-            name: "Simpan realisasi ke antrean demo",
+            name: "Simpan realisasi ke antrean",
             exact: true,
         })
         .click();

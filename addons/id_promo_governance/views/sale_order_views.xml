@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_promo_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.promo.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='discount']" position="after">
+                <field name="promo_program_id" optional="hide"/>
+                <field name="promo_mou_number" optional="hide"/>
+                <field name="promo_budget_source" optional="hide"/>
+                <field name="promo_claim_amount" optional="show" widget="monetary"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

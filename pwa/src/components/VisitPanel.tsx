@@ -93,6 +93,8 @@ export function VisitPanel({
               now,
           )
         : undefined;
+    // Saving the photo after the pinpoint used to disable "Mulai kunjungan"
+    // forever. start() refreshes the fix instead so the documented order holds.
     const active = info?.active?.context.outlet_id === outlet.id;
     const closed = !!info?.selected?.check_out;
     async function locate() {
@@ -124,13 +126,26 @@ export function VisitPanel({
         }
     }
     async function start() {
-        if (running.current || !fix) return;
+        if (running.current) return;
         running.current = true;
         setBusy(true);
         setError("");
         const ticket = generation.current;
         try {
-            await service.checkIn(outlet.id, fix, inPhoto);
+            // A photo saved after the pinpoint must not lock the visit: capture a
+            // fresh fix at the moment of check-in instead of disabling the action.
+            const photoAt = inPhoto ? Date.parse(inPhoto.capturedAt) : 0;
+            const stale = !fix || pinpointSetAt < photoAt;
+            const position = stale
+                ? await captureVisitLocation((source) => {
+                      if (ticket === generation.current) setFixSource(source);
+                  })
+                : fix!;
+            if (ticket !== generation.current) return;
+            setFix(position);
+            setPinpointSetAt(Date.now());
+            setNow(Date.now());
+            await service.checkIn(outlet.id, position, inPhoto);
             if (ticket !== generation.current) return;
             const restored = await service.restore(outlet.id);
             if (ticket !== generation.current) return;
@@ -206,8 +221,8 @@ export function VisitPanel({
             <p>{outlet.address}</p>
             <p class="notice">
                 {outlet.demo_unrestricted
-                    ? "DEMO · Lokasi/foto diterima tanpa validasi geofence atau keaslian; timestamp dan lokasi foto tetap wajib."
-                    : `SIMULASI · Radius ${outlet.radius} m dari paket PJP pagi. Jarak + akurasi harus tetap di dalam radius.`}
+                    ? "Lokasi dan foto dicatat perangkat; geofence outlet ini tidak memblokir kunjungan."
+                    : `Radius ${outlet.radius} m dari titik outlet. Jarak + akurasi harus di dalam radius.`}
             </p>
             <p role="status">
                 {closed
@@ -261,9 +276,9 @@ export function VisitPanel({
                 }
             />
             {!active && !closed && (
-                <p>
-                    Opening: foto toko, set pinpoint dengan Ambil lokasi outlet,
-                    lalu mulai sesi.
+                <p class="muted">
+                    Ambil foto toko, lalu mulai kunjungan. Lokasi diambil
+                    otomatis saat mulai bila belum ada.
                 </p>
             )}
             {!active && !closed && (
@@ -315,13 +330,13 @@ export function VisitPanel({
                         !!info.active ||
                         busy ||
                         (!outlet.demo_unrestricted &&
+                            !!fix &&
                             assessment?.status !== "inside") ||
-                        !fresh(inPhoto) ||
-                        pinpointSetAt < Date.parse(inPhoto?.capturedAt ?? "")
+                        !fresh(inPhoto)
                     }
                     onClick={() => void start()}
                 >
-                    Mulai kunjungan demo
+                    Mulai kunjungan
                 </button>
             )}
             {active && !closed && (
@@ -407,7 +422,7 @@ export function VisitPanel({
                             type="submit"
                             disabled={busy || !fresh(outPhoto)}
                         >
-                            Tutup kunjungan demo
+                            Tutup kunjungan
                         </button>
                     </form>
                 </>
@@ -417,11 +432,6 @@ export function VisitPanel({
                     {error}
                 </p>
             )}
-            <p class="footnote">
-                Koordinat outlet dan sesi masih contoh. Geolocation browser
-                tidak membuktikan bebas mock GPS. Verifikasi lokasi/otorisasi
-                resmi menunggu backend; tidak ada polling lokasi latar belakang.
-            </p>
         </section>
     );
 }

@@ -8,158 +8,210 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#. module: id_dashboard_sales
 msgid "Sales Productivity"
 msgstr "Produktivitas Sales"
 
+#. module: id_dashboard_sales
 msgid "Dashboards"
 msgstr "Dasbor"
 
+#. module: id_dashboard_sales
 msgid "Daily"
 msgstr "Harian"
 
+#. module: id_dashboard_sales
 msgid "Weekly"
 msgstr "Mingguan"
 
+#. module: id_dashboard_sales
 msgid "Monthly"
 msgstr "Bulanan"
 
+#. module: id_dashboard_sales
 msgid "Sales Orders"
 msgstr "Pesanan Penjualan"
 
+#. module: id_dashboard_sales
 msgid "Delivered DO"
 msgstr "DO Terkirim"
 
+#. module: id_dashboard_sales
 msgid "Sales dashboards require the Sales / User role."
 msgstr "Dasbor penjualan memerlukan peran Penjualan / Pengguna."
 
+#. module: id_dashboard_sales
 msgid "Unknown period mode."
 msgstr "Mode periode tidak dikenal."
 
+#. module: id_dashboard_sales
 msgid "Invalid date."
 msgstr "Tanggal tidak valid."
 
+#. module: id_dashboard_sales
 msgid "Too many orders for one query; narrow the period or filters."
 msgstr "Pesanan terlalu banyak untuk satu kueri; persempit periode atau filter."
 
+#. module: id_dashboard_sales
 msgid "(No salesman)"
 msgstr "(Tanpa salesman)"
 
+#. module: id_dashboard_sales
 msgid "(No channel)"
 msgstr "(Tanpa channel)"
 
+#. module: id_dashboard_sales
 msgid "(Unassigned)"
 msgstr "(Belum ditetapkan)"
 
+#. module: id_dashboard_sales
 msgid "The mobile API module (PJP plan and visit evidence) is not installed."
 msgstr "Modul API mobile (rencana PJP dan bukti kunjungan) belum terpasang."
 
+#. module: id_dashboard_sales
 msgid "Your role cannot read PJP plans and visit evidence."
 msgstr "Peran Anda tidak dapat membaca rencana PJP dan bukti kunjungan."
 
+#. module: id_dashboard_sales
 msgid "No PJP plan (workday assignment) exists for this period and filter."
 msgstr "Belum ada rencana PJP (penugasan hari kerja) untuk periode dan filter ini."
 
+#. module: id_dashboard_sales
 msgid "Gross Revenue"
 msgstr "Omset Kotor"
 
+#. module: id_dashboard_sales
 msgid "Discount Given"
 msgstr "Diskon Diberikan"
 
+#. module: id_dashboard_sales
 msgid "Net Revenue"
 msgstr "Omset Bersih"
 
+#. module: id_dashboard_sales
 msgid "PJP Call Compliance"
 msgstr "Kepatuhan Kunjungan PJP"
 
+#. module: id_dashboard_sales
 msgid "Effective Call Ratio"
 msgstr "Rasio Effective Call"
 
+#. module: id_dashboard_sales
 msgid "Lines per Order"
 msgstr "Lines per Order"
 
+#. module: id_dashboard_sales
 msgid "SKU Sold"
 msgstr "SKU Terjual"
 
+#. module: id_dashboard_sales
 msgid "Fulfillment-to-Invoice"
 msgstr "Fulfillment-ke-Faktur"
 
+#. module: id_dashboard_sales
 msgid "Net revenue trend"
 msgstr "Tren omset bersih"
 
+#. module: id_dashboard_sales
 msgid "Productivity"
 msgstr "Produktivitas"
 
+#. module: id_dashboard_sales
 msgid "Per Salesman"
 msgstr "Per Salesman"
 
+#. module: id_dashboard_sales
 msgid "Per Channel"
 msgstr "Per Channel"
 
+#. module: id_dashboard_sales
 msgid "SKU penetration"
 msgstr "Penetrasi SKU"
 
+#. module: id_dashboard_sales
 msgid "Per Principal"
 msgstr "Per Prinsipal"
 
+#. module: id_dashboard_sales
 msgid "Per Brand"
 msgstr "Per Brand"
 
+#. module: id_dashboard_sales
 msgid "Salesman"
 msgstr "Salesman"
 
+#. module: id_dashboard_sales
 msgid "Channel"
 msgstr "Channel"
 
+#. module: id_dashboard_sales
 msgid "Reset"
 msgstr "Atur ulang"
 
+#. module: id_dashboard_sales
 msgid "Orders"
 msgstr "Pesanan"
 
+#. module: id_dashboard_sales
 msgid "Gross"
 msgstr "Kotor"
 
+#. module: id_dashboard_sales
 msgid "Discount"
 msgstr "Diskon"
 
+#. module: id_dashboard_sales
 msgid "Net"
 msgstr "Bersih"
 
+#. module: id_dashboard_sales
 msgid "DO"
 msgstr "DO"
 
+#. module: id_dashboard_sales
 msgid "PJP Compliance"
 msgstr "Kepatuhan PJP"
 
+#. module: id_dashboard_sales
 msgid "EC Ratio"
 msgstr "Rasio EC"
 
+#. module: id_dashboard_sales
 msgid "LPO"
 msgstr "LPO"
 
+#. module: id_dashboard_sales
 msgid "SKU"
 msgstr "SKU"
 
+#. module: id_dashboard_sales
 msgid "Fulfillment"
 msgstr "Fulfillment"
 
+#. module: id_dashboard_sales
 msgid "Principal"
 msgstr "Prinsipal"
 
+#. module: id_dashboard_sales
 msgid "Brand"
 msgstr "Brand"
 
+#. module: id_dashboard_sales
 msgid "Catalog SKU"
 msgstr "SKU Katalog"
 
+#. module: id_dashboard_sales
 msgid "Loading…"
 msgstr "Memuat…"
 
+#. module: id_dashboard_sales
 msgid "No confirmed sales orders for this period and filter."
 msgstr "Tidak ada pesanan penjualan terkonfirmasi untuk periode dan filter ini."
 
+#. module: id_dashboard_sales
 msgid "No data for this period and filter."
 msgstr "Tidak ada data untuk periode dan filter ini."
 
+#. module: id_dashboard_sales
 msgid "No SKU sold for this period and filter."
 msgstr "Tidak ada SKU terjual untuk periode dan filter ini."

@@ -1,0 +1,236 @@
+# Indonesian translation for id_dashboard_monetary.
+# Regenerate: odoo -d <db> --i18n-export=id.po --modules=id_dashboard_monetary
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+# Menu and action names
+#. module: id_dashboard_monetary
+msgid "Monetary & AR"
+msgstr "Moneter & Piutang"
+
+#. module: id_dashboard_monetary
+msgid "AR Aging Matrix"
+msgstr "Matriks Aging Piutang"
+
+#. module: id_dashboard_monetary
+msgid "AR by Salesperson"
+msgstr "Piutang per Salesman"
+
+#. module: id_dashboard_monetary
+msgid "AR by Coverage Area"
+msgstr "Piutang per Wilayah"
+
+#. module: id_dashboard_monetary
+msgid "Top 10 Customers"
+msgstr "10 Customer Teratas"
+
+#. module: id_dashboard_monetary
+msgid "Financial Funnel"
+msgstr "Funnel Finansial"
+
+#. module: id_dashboard_monetary
+msgid "Revenue Targets"
+msgstr "Target Omset"
+
+#. module: id_dashboard_monetary
+msgid "All Customers by Receivable"
+msgstr "Semua Customer per Piutang"
+
+# Fields
+#. module: id_dashboard_monetary
+msgid "Target Period"
+msgstr "Periode Target"
+
+#. module: id_dashboard_monetary
+msgid "Start Date"
+msgstr "Tanggal Mulai"
+
+#. module: id_dashboard_monetary
+msgid "End Date"
+msgstr "Tanggal Selesai"
+
+#. module: id_dashboard_monetary
+msgid "Revenue Target"
+msgstr "Target Omset"
+
+#. module: id_dashboard_monetary
+msgid "Currency"
+msgstr "Mata Uang"
+
+#. module: id_dashboard_monetary
+msgid "Company"
+msgstr "Perusahaan"
+
+#. module: id_dashboard_monetary
+msgid "Notes"
+msgstr "Catatan"
+
+#. module: id_dashboard_monetary
+msgid "Funnel Stage"
+msgstr "Tahap Funnel"
+
+#. module: id_dashboard_monetary
+msgid "Period"
+msgstr "Periode"
+
+#. module: id_dashboard_monetary
+msgid "Amount"
+msgstr "Nilai"
+
+#. module: id_dashboard_monetary
+msgid "Achieved (%)"
+msgstr "Tercapai (%)"
+
+#. module: id_dashboard_monetary
+msgid "Invoice"
+msgstr "Faktur"
+
+#. module: id_dashboard_monetary
+msgid "Invoice Number"
+msgstr "Nomor Faktur"
+
+#. module: id_dashboard_monetary
+msgid "Customer"
+msgstr "Customer"
+
+#. module: id_dashboard_monetary
+msgid "Salesperson"
+msgstr "Salesman"
+
+#. module: id_dashboard_monetary
+msgid "Coverage Area"
+msgstr "Wilayah"
+
+#. module: id_dashboard_monetary
+msgid "Invoice Date"
+msgstr "Tanggal Faktur"
+
+#. module: id_dashboard_monetary
+msgid "Due Date"
+msgstr "Jatuh Tempo"
+
+#. module: id_dashboard_monetary
+msgid "Payment Status"
+msgstr "Status Pembayaran"
+
+#. module: id_dashboard_monetary
+msgid "Days Overdue"
+msgstr "Hari Terlambat"
+
+#. module: id_dashboard_monetary
+msgid "Aging Bucket"
+msgstr "Kelompok Aging"
+
+#. module: id_dashboard_monetary
+msgid "Outstanding Amount"
+msgstr "Saldo Piutang"
+
+#. module: id_dashboard_monetary
+msgid "Open Invoices"
+msgstr "Faktur Terbuka"
+
+#. module: id_dashboard_monetary
+msgid "Oldest Due Date"
+msgstr "Jatuh Tempo Tertua"
+
+#. module: id_dashboard_monetary
+msgid "Max Days Overdue"
+msgstr "Keterlambatan Maksimum"
+
+#. module: id_dashboard_monetary
+msgid "Worst Bucket"
+msgstr "Kelompok Terburuk"
+
+# Funnel stages
+#. module: id_dashboard_monetary
+msgid "Realized Revenue"
+msgstr "Omset Terealisasi"
+
+#. module: id_dashboard_monetary
+msgid "Total Receivable (AR)"
+msgstr "Total Piutang (AR)"
+
+#. module: id_dashboard_monetary
+msgid "Cash Collection"
+msgstr "Realisasi Penagihan Kas"
+
+# Aging buckets
+#. module: id_dashboard_monetary
+msgid "Not Due"
+msgstr "Belum Jatuh Tempo"
+
+#. module: id_dashboard_monetary
+msgid "Overdue 1-7 Days (Early Warning)"
+msgstr "Terlambat 1-7 Hari (Peringatan Awal)"
+
+#. module: id_dashboard_monetary
+msgid "Overdue 8-14 Days (Credit Hold)"
+msgstr "Terlambat 8-14 Hari (Tahan Pesanan Baru)"
+
+#. module: id_dashboard_monetary
+msgid "Overdue 15-30 Days (Supervisor Audit)"
+msgstr "Terlambat 15-30 Hari (Audit Supervisor)"
+
+#. module: id_dashboard_monetary
+msgid "Overdue > 30 Days (Bad Debt)"
+msgstr "Terlambat > 30 Hari (Penanganan Khusus)"
+
+# Payment states
+#. module: id_dashboard_monetary
+msgid "Not Paid"
+msgstr "Belum Dibayar"
+
+#. module: id_dashboard_monetary
+msgid "Partially Paid"
+msgstr "Dibayar Sebagian"
+
+#. module: id_dashboard_monetary
+msgid "Paid"
+msgstr "Lunas"
+
+#. module: id_dashboard_monetary
+msgid "In Payment"
+msgstr "Dalam Pembayaran"
+
+#. module: id_dashboard_monetary
+msgid "Reversed"
+msgstr "Dibatalkan"
+
+#. module: id_dashboard_monetary
+msgid "Blocked"
+msgstr "Diblokir"
+
+# Filters and grouping
+#. module: id_dashboard_monetary
+msgid "Overdue"
+msgstr "Terlambat"
+
+#. module: id_dashboard_monetary
+msgid "Credit Hold (8-14 Days)"
+msgstr "Tahan Pesanan (8-14 Hari)"
+
+#. module: id_dashboard_monetary
+msgid "Bad Debt (> 30 Days)"
+msgstr "Piutang Macet (> 30 Hari)"
+
+#. module: id_dashboard_monetary
+msgid "Credit Hold and Worse"
+msgstr "Tahan Pesanan dan Lebih Buruk"
+
+#. module: id_dashboard_monetary
+msgid "Group By"
+msgstr "Kelompokkan"
+
+#. module: id_dashboard_monetary
+msgid "Stage"
+msgstr "Tahap"
+
+#. module: id_dashboard_monetary
+msgid "Total Outstanding"
+msgstr "Total Piutang"

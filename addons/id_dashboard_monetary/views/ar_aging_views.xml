@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- AR aging matrix -->
+    <record id="view_id_ar_aging_list" model="ir.ui.view">
+        <field name="name">id.ar.aging.list</field>
+        <field name="model">id.ar.aging</field>
+        <field name="arch" type="xml">
+            <list string="AR Aging Matrix"
+                  create="0" edit="0" delete="0"
+                  decoration-danger="bucket == 'overdue_over_30'"
+                  decoration-warning="bucket == 'overdue_8_14' or bucket == 'overdue_15_30'"
+                  decoration-info="bucket == 'overdue_1_7'">
+                <field name="invoice_number"/>
+                <field name="partner_id"/>
+                <field name="salesman_id" optional="show"/>
+                <field name="area_id" optional="show"/>
+                <field name="invoice_date" optional="hide"/>
+                <field name="date_due"/>
+                <field name="days_overdue"/>
+                <field name="bucket"/>
+                <field name="amount_residual" sum="Total Outstanding"/>
+                <field name="payment_state" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_id_ar_aging_graph" model="ir.ui.view">
+        <field name="name">id.ar.aging.graph</field>
+        <field name="model">id.ar.aging</field>
+        <field name="arch" type="xml">
+            <graph string="AR Aging Matrix" type="bar">
+                <field name="bucket"/>
+                <field name="amount_residual" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_id_ar_aging_pivot" model="ir.ui.view">
+        <field name="name">id.ar.aging.pivot</field>
+        <field name="model">id.ar.aging</field>
+        <field name="arch" type="xml">
+            <pivot string="AR Aging Matrix">
+                <field name="salesman_id" type="row"/>
+                <field name="bucket" type="col"/>
+                <field name="amount_residual" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_id_ar_aging_search" model="ir.ui.view">
+        <field name="name">id.ar.aging.search</field>
+        <field name="model">id.ar.aging</field>
+        <field name="arch" type="xml">
+            <search string="AR Aging Matrix">
+                <field name="partner_id"/>
+                <field name="invoice_number"/>
+                <field name="salesman_id"/>
+                <field name="area_id"/>
+                <filter name="filter_not_due" string="Not Due" domain="[('bucket', '=', 'not_due')]"/>
+                <filter name="filter_overdue" string="Overdue" domain="[('days_overdue', '&gt;', 0)]"/>
+                <filter name="filter_credit_hold" string="Credit Hold (8-14 Days)"
+                        domain="[('bucket', '=', 'overdue_8_14')]"/>
+                <filter name="filter_bad_debt" string="Bad Debt (&gt; 30 Days)"
+                        domain="[('bucket', '=', 'overdue_over_30')]"/>
+                <separator/>
+                <filter name="filter_date_due" string="Due Date" date="date_due"/>
+                <group>
+                    <filter name="group_bucket" string="Aging Bucket" context="{'group_by': 'bucket'}"/>
+                    <filter name="group_salesman" string="Salesperson" context="{'group_by': 'salesman_id'}"/>
+                    <filter name="group_area" string="Coverage Area" context="{'group_by': 'area_id'}"/>
+                    <filter name="group_partner" string="Customer" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_id_ar_aging" model="ir.actions.act_window">
+        <field name="name">AR Aging Matrix</field>
+        <field name="res_model">id.ar.aging</field>
+        <field name="view_mode">graph,list,pivot</field>
+        <field name="context">{'search_default_group_bucket': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No open receivable</p>
+            <p>Every posted customer invoice with an outstanding balance is classified into the
+               FMCG aging buckets: not due, 1-7, 8-14, 15-30, and over 30 days overdue.</p>
+        </field>
+    </record>
+
+    <record id="action_id_ar_by_salesman" model="ir.actions.act_window">
+        <field name="name">AR by Salesperson</field>
+        <field name="res_model">id.ar.aging</field>
+        <field name="view_mode">pivot,list</field>
+        <field name="context">{'search_default_group_salesman': 1, 'search_default_group_bucket': 1}</field>
+    </record>
+
+    <record id="action_id_ar_by_area" model="ir.actions.act_window">
+        <field name="name">AR by Coverage Area</field>
+        <field name="res_model">id.ar.aging</field>
+        <field name="view_mode">pivot,list</field>
+        <field name="context">{'search_default_group_area': 1, 'search_default_group_bucket': 1}</field>
+    </record>
+
+    <!-- Customer exposure / top 10 -->
+    <record id="view_id_ar_customer_balance_list" model="ir.ui.view">
+        <field name="name">id.ar.customer.balance.list</field>
+        <field name="model">id.ar.customer.balance</field>
+        <field name="arch" type="xml">
+            <list string="Customer Receivable Exposure"
+                  create="0" edit="0" delete="0"
+                  decoration-danger="worst_bucket == 'overdue_over_30'"
+                  decoration-warning="worst_bucket == 'overdue_8_14' or worst_bucket == 'overdue_15_30'">
+                <field name="partner_id"/>
+                <field name="salesman_id" optional="show"/>
+                <field name="area_id" optional="show"/>
+                <field name="invoice_count"/>
+                <field name="oldest_due_date"/>
+                <field name="max_days_overdue"/>
+                <field name="worst_bucket"/>
+                <field name="amount_residual" sum="Total Outstanding"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_id_ar_customer_balance_pivot" model="ir.ui.view">
+        <field name="name">id.ar.customer.balance.pivot</field>
+        <field name="model">id.ar.customer.balance</field>
+        <field name="arch" type="xml">
+            <pivot string="Customer Receivable Exposure">
+                <field name="area_id" type="row"/>
+                <field name="worst_bucket" type="col"/>
+                <field name="amount_residual" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_id_ar_customer_balance_search" model="ir.ui.view">
+        <field name="name">id.ar.customer.balance.search</field>
+        <field name="model">id.ar.customer.balance</field>
+        <field name="arch" type="xml">
+            <search string="Customer Receivable Exposure">
+                <field name="partner_id"/>
+                <field name="salesman_id"/>
+                <field name="area_id"/>
+                <filter name="filter_credit_hold" string="Credit Hold and Worse"
+                        domain="[('worst_bucket', 'in', ['overdue_8_14', 'overdue_15_30', 'overdue_over_30'])]"/>
+                <group>
+                    <filter name="group_area" string="Coverage Area" context="{'group_by': 'area_id'}"/>
+                    <filter name="group_salesman" string="Salesperson" context="{'group_by': 'salesman_id'}"/>
+                    <filter name="group_worst_bucket" string="Worst Bucket" context="{'group_by': 'worst_bucket'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_id_ar_customer_balance" model="ir.actions.act_window">
+        <field name="name">Top 10 Customers by Receivable</field>
+        <field name="res_model">id.ar.customer.balance</field>
+        <field name="view_mode">list,pivot</field>
+        <field name="limit">10</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No customer exposure</p>
+            <p>Customers are ranked by outstanding receivable. Remove the list limit to see the
+               full exposure list.</p>
+        </field>
+    </record>
+
+    <record id="action_id_ar_customer_exposure_all" model="ir.actions.act_window">
+        <field name="name">All Customers by Receivable</field>
+        <field name="res_model">id.ar.customer.balance</field>
+        <field name="view_mode">list,pivot</field>
+    </record>
+</odoo>

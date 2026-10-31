@@ -5,7 +5,7 @@ import {
     startDelivery,
     saveDeliveryPhoto,
 } from "./delivery-helpers";
-import { saveVisitPhoto } from "./visit-helpers";
+import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
 test.beforeEach(async ({ context }) => {
     await context.grantPermissions(["geolocation"]);
     await context.setGeolocation({
@@ -76,7 +76,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
         await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
         await saveVisitPhoto(page, "check-in");
         await page
-            .getByRole("button", { name: "Mulai kunjungan demo", exact: true })
+            .getByRole("button", { name: "Mulai kunjungan", exact: true })
             .click();
         await expect(
             page.getByText("Kunjungan lokal aktif", { exact: true }),
@@ -87,19 +87,21 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
         await page
             .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
             .fill("1");
+        await page.locator("details.order-extra > summary").click();
         await page.getByLabel("Diskon diminta (%)", { exact: true }).fill("5");
         await page
             .getByLabel("Alasan permintaan diskon", { exact: true })
             .fill("Promo pertama");
+        await saveDisplayPhoto(page);
         await page
             .getByRole("button", {
-                name: "Simpan ke antrean demo",
+                name: "Simpan ke antrean",
                 exact: true,
             })
             .click();
         await saveVisitPhoto(page, "check-out");
         await page
-            .getByRole("button", { name: "Tutup kunjungan demo", exact: true })
+            .getByRole("button", { name: "Tutup kunjungan", exact: true })
             .click();
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
@@ -109,7 +111,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             .fill("Diskon terlalu besar");
         await page
             .getByRole("button", {
-                name: "Simulasikan tolak diskon",
+                name: "Tolak diskon",
                 exact: true,
             })
             .click();
@@ -231,13 +233,13 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             await page.clock.runFor(1000);
             await expect(
                 page.getByRole("button", {
-                    name: "Simulasikan setujui diskon",
+                    name: "Setujui diskon",
                     exact: true,
                 }),
             ).toBeDisabled();
             await expect(
                 page.getByRole("button", {
-                    name: "Simulasikan tolak diskon",
+                    name: "Tolak diskon",
                     exact: true,
                 }),
             ).toBeDisabled();
@@ -248,7 +250,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
                 .click();
             await expect(
                 page.getByRole("button", {
-                    name: "Simulasikan setujui diskon",
+                    name: "Setujui diskon",
                     exact: true,
                 }),
             ).toBeDisabled();
@@ -263,7 +265,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             await ensureDaily(page);
             await expect(
                 page.getByRole("button", {
-                    name: "Simulasikan setujui diskon",
+                    name: "Setujui diskon",
                     exact: true,
                 }),
             ).toBeDisabled();
@@ -282,7 +284,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             .fill("Revisi disetujui");
         await page
             .getByRole("button", {
-                name: "Simulasikan setujui diskon",
+                name: "Setujui diskon",
                 exact: true,
             })
             .click();
@@ -338,14 +340,14 @@ for (const days of [2, 3])
             .fill("Review pengiriman ulang");
         await approval
             .getByRole("button", {
-                name: "Simulasikan setujui branch_manager",
+                name: "Setujui branch_manager",
                 exact: true,
             })
             .click();
         await expect(approval.getByRole("alert")).toContainText("Urutan");
         await approval
             .getByRole("button", {
-                name: "Simulasikan setujui spv",
+                name: "Setujui spv",
                 exact: true,
             })
             .click();
@@ -355,7 +357,7 @@ for (const days of [2, 3])
             ).toBeVisible();
             await approval
                 .getByRole("button", {
-                    name: "Simulasikan setujui branch_manager",
+                    name: "Setujui branch_manager",
                     exact: true,
                 })
                 .click();
@@ -363,7 +365,7 @@ for (const days of [2, 3])
         await expect(approval.getByText(/spv: disetujui/)).toBeVisible();
         await expect(
             approval.getByRole("button", {
-                name: "Simulasikan setujui spv",
+                name: "Setujui spv",
                 exact: true,
             }),
         ).toHaveCount(0);
@@ -397,7 +399,7 @@ test("Cancel Delivery has the required subreason and SPV rejection keeps origina
         .getByLabel("Alasan keputusan delivery", { exact: true })
         .fill("Rute perlu dievaluasi");
     await approval
-        .getByRole("button", { name: "Simulasikan tolak spv", exact: true })
+        .getByRole("button", { name: "Tolak spv", exact: true })
         .click();
     await expect(approval.getByText(/spv: ditolak/)).toBeVisible();
     await expect(
@@ -415,7 +417,7 @@ test("closing trip at office uses recorded location, accepts demo outside office
         })
         .locator("..");
     await closing
-        .getByRole("button", { name: "Tutup trip demo", exact: true })
+        .getByRole("button", { name: "Tutup trip", exact: true })
         .click();
     await expect(closing.getByRole("status")).toContainText(/hilang|lengkap/);
     for (const id of ["DEMO-DO-001", "DEMO-DO-002"]) {
@@ -430,7 +432,7 @@ test("closing trip at office uses recorded location, accepts demo outside office
         await expect(task.getByText(/Session closed/).first()).toBeVisible();
     }
     await closing
-        .getByRole("button", { name: "Tutup trip demo", exact: true })
+        .getByRole("button", { name: "Tutup trip", exact: true })
         .click();
     await expect(closing.getByRole("status")).toContainText(
         "Trip closed lokal",
@@ -439,7 +441,7 @@ test("closing trip at office uses recorded location, accepts demo outside office
         "Belum settlement kasir/Odoo",
     );
     await expect(
-        closing.getByRole("button", { name: "Tutup trip demo", exact: true }),
+        closing.getByRole("button", { name: "Tutup trip", exact: true }),
     ).toHaveCount(0);
 });
 
@@ -466,7 +468,7 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
         })
         .locator("..");
     await closing
-        .getByRole("button", { name: "Tutup trip demo", exact: true })
+        .getByRole("button", { name: "Tutup trip", exact: true })
         .click();
     await expect(closing.getByRole("status")).toContainText(
         "Trip closed lokal",
@@ -512,7 +514,7 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
         await expect(task.getByText(/Session closed/)).toHaveCount(0);
     }
     await closing
-        .getByRole("button", { name: "Tutup trip demo", exact: true })
+        .getByRole("button", { name: "Tutup trip", exact: true })
         .click();
     await expect(closing.getByRole("status")).toContainText(
         "POD berbeda sumber manifest",
@@ -524,7 +526,7 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
     await closing
-        .getByRole("button", { name: "Tutup trip demo", exact: true })
+        .getByRole("button", { name: "Tutup trip", exact: true })
         .click();
     await expect(closing.getByRole("status")).toContainText(
         "POD berbeda sumber manifest",
@@ -589,7 +591,7 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
         "Status closing tidak valid",
     );
     await expect(
-        closing.getByRole("button", { name: "Tutup trip demo", exact: true }),
+        closing.getByRole("button", { name: "Tutup trip", exact: true }),
     ).toBeVisible();
     expect(await readLocal()).toEqual(restored);
 });

@@ -513,6 +513,21 @@
           "stock_cartons": {
             "type": "number",
             "minimum": 0
+          },
+          "carton_label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24
+          },
+          "pack_label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24
+          },
+          "unit_label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24
           }
         },
         "required": [
@@ -4778,6 +4793,21 @@
                     "pcs"
                   ],
                   "additionalProperties": false
+                },
+                "carton_label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 24
+                },
+                "pack_label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 24
+                },
+                "unit_label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 24
                 },
                 "price_basis": {
                   "type": "string",

@@ -104,8 +104,8 @@ export function DeliveryWorkspace({
         <section>
             <h2>Serah terima pengiriman</h2>
             <p class="notice">
-                Simulasi POD · manifest multi-SKU dalam pcs (karton 144 / pack
-                12). Tidak memposting stok, picking, retur atau penerimaan uang.
+                POD · manifest multi-SKU dalam pcs (karton 144 / pack 12). Tidak
+                memposting stok, picking, retur atau penerimaan uang.
             </p>
             {error && <p role="alert">{error}</p>}
             {tasks?.map((task) => (

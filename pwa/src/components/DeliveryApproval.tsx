@@ -84,7 +84,7 @@ export function DeliveryApproval({
                                             )
                                         }
                                     >
-                                        Simulasikan setujui {role}
+                                        Setujui {role}
                                     </button>
                                     <button
                                         class="secondary"
@@ -99,7 +99,7 @@ export function DeliveryApproval({
                                             )
                                         }
                                     >
-                                        Simulasikan tolak {role}
+                                        Tolak {role}
                                     </button>
                                 </span>
                             ))}

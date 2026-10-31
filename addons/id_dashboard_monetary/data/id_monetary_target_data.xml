@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Business target from the owner brief (Rp 5.5 billion, July-October 2026).
+         It is configuration, not a regulated rate: finance can add or replace periods. -->
+    <record id="target_revenue_q3q4_2026" model="id.monetary.target">
+        <field name="name">Revenue Target Q3-Q4 2026</field>
+        <field name="date_from">2026-07-01</field>
+        <field name="date_to">2026-10-31</field>
+        <field name="target_revenue">5500000000</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="note">Target omset Rp 5.5 miliar untuk periode demo Juli-Oktober 2026.</field>
+    </record>
+</odoo>

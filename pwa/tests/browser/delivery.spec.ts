@@ -42,7 +42,7 @@ test("POD draft restores offline and queues only for review, with read-only proo
         .click();
     await expect(
         task.getByText(
-            "Foto dan pinpoint simulasi tersimpan lokal. Peta resmi belum tersedia.",
+            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
             { exact: false },
         ),
     ).toBeVisible();
@@ -58,9 +58,7 @@ test("POD draft restores offline and queues only for review, with read-only proo
     await expect(task.getByLabel("Penerima", { exact: true })).toHaveValue(
         "Budi Outlet",
     );
-    await expect(
-        task.getByAltText("Pinpoint simulasi tanpa basemap"),
-    ).toBeVisible();
+    await expect(task.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
     await expect(task.getByText(/POD tersimpan ·/)).toBeVisible();
     await expect(task.locator('input[type="file"]')).toHaveCount(0);
@@ -102,7 +100,7 @@ test("corrupt offline POD media blocks restore and reconnect sync", async ({
         .click();
     await expect(
         task.getByText(
-            "Foto dan pinpoint simulasi tersimpan lokal. Peta resmi belum tersedia.",
+            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
         ),
     ).toBeVisible();
     await page.evaluate(() => navigator.serviceWorker.ready);
@@ -160,7 +158,7 @@ async function savePodPhoto(task: ReturnType<Page["locator"]>) {
         .click();
     await expect(
         task.getByText(
-            "Foto dan pinpoint simulasi tersimpan lokal. Peta resmi belum tersedia.",
+            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
         ),
     ).toBeVisible();
 }
@@ -177,7 +175,7 @@ test("business rejection opens offline correction draft and preserves immutable 
     await page.goto("./");
     await openDelivery(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page.getByLabel("Respons simulator").selectOption("rejected");
+    await page.getByLabel("Mode respons").selectOption("rejected");
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
     let task = page
         .locator(".delivery-task")

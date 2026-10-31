@@ -64,8 +64,8 @@ export function SyncDiagnostics({
     return (
         <section class="sync-diagnostics" aria-label="Diagnosis sinkronisasi">
             <p class="footnote">
-                Diagnosis lokal · Data simulasi. Membuka detail tidak mengirim
-                atau mengubah transaksi.
+                Diagnosis lokal. Membuka detail tidak mengirim atau mengubah
+                transaksi.
             </p>
             <div class="queue-filters" role="group" aria-label="Filter antrean">
                 {filters.map(([id, label]) => (

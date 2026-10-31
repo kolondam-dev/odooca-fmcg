@@ -73,6 +73,50 @@ class AccountMove(models.Model):
         help="Identitas batch seed kanonikal resmi (misal: CANONICAL_JULY_2026_PERPETUAL).",
     )
 
+    # --- Ekstensi Faktur Pajak & CoreTax DJP Indonesia ---
+    l10n_id_tax_transaction_code = fields.Selection(
+        [
+            ("01", "01 - Penyerahan BKP/JKP kepada Selain Pemungut PPN"),
+            ("02", "02 - Penyerahan BKP/JKP kepada Pemungut Instansi Pemerintah"),
+            ("03", "03 - Penyerahan BKP/JKP kepada Pemungut Selain Instansi Pemerintah"),
+            ("04", "04 - Penyerahan BKP/JKP Dasar Pengenaan Pajak (DPP) Nilai Lain"),
+            ("08", "08 - Penyerahan BKP/JKP Dibebaskan dari Pengenaan PPN"),
+            ("09", "09 - Penyerahan BKP/JKP Tidak Dipungut PPN"),
+        ],
+        string="Kode Transaksi CoreTax",
+        default="01",
+        help="Kode transaksi faktur pajak sesuai format CoreTax DJP.",
+    )
+    l10n_id_tax_invoice_number = fields.Char(
+        string="Nomor Seri Faktur Pajak (NSFP)",
+        copy=False,
+        index=True,
+        help="Nomor Faktur Pajak resmi atau CoreTax Document Reference.",
+    )
+    l10n_id_tax_invoice_date = fields.Date(
+        string="Tanggal Faktur Pajak",
+        copy=False,
+        help="Tanggal penerbitan faktur pajak elektronik.",
+    )
+    l10n_id_coretax_exported = fields.Boolean(
+        string="Sudah Ekspor CoreTax",
+        copy=False,
+        default=False,
+        help="Menandakan dokumen faktur pajak ini sudah pernah diekspor ke format CoreTax DJP.",
+    )
+
+    def action_generate_nsfp(self):
+        """Menghasilkan nomor seri faktur pajak otomatis jika belum terisi."""
+        for move in self:
+            if not move.l10n_id_tax_invoice_number and move.move_type == "out_invoice":
+                seq_code = move.l10n_id_tax_transaction_code or "01"
+                prefix = f"{seq_code}0.000-26."
+                next_num = str(move.id).zfill(8)
+                move.l10n_id_tax_invoice_number = f"{prefix}{next_num}"
+                if not move.l10n_id_tax_invoice_date:
+                    move.l10n_id_tax_invoice_date = move.invoice_date or fields.Date.today()
+        return True
+
     def _get_fmcg_seed_company_id(self):
         """Mendapatkan ID company seed yang ditentukan secara eksplisit.
         Tidak mengandalkan nama, code, atau base.main_company yang dapat kebetulan cocok.

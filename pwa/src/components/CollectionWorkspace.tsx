@@ -81,7 +81,7 @@ export function CollectionWorkspace({
     if (!identity.capabilities?.includes("collection.capture")) return null;
     return (
         <section>
-            <h2>Penerimaan uang · simulasi</h2>
+            <h2>Penerimaan uang</h2>
             <p class="notice">
                 Saldo tagihan contoh, bukan saldo piutang Odoo. Foto transfer
                 belum diverifikasi bank. Satu pencatatan per tagihan; tidak

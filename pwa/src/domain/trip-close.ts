@@ -65,7 +65,7 @@ export function validateTripClose(
         .deliveryManifest!.filter((t) => t.trip === p.trip_id)
         .every((t) => t.site.demo_unrestricted);
     if (!!p.demo_unrestricted !== relaxed)
-        throw new Error("Kebijakan demo closing tidak sesuai sumber.");
+        throw new Error("Kebijakan closing tidak sesuai sumber.");
     if (
         !(__DEMO__ && p.demo_unrestricted) &&
         (distanceMeters(
