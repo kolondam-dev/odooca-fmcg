@@ -43,25 +43,27 @@
                 </div>
             </xpath>
 
-            <!-- Bagian Analitik Diskon Taktikal di Tab Tata Kelola -->
-            <xpath expr="//page[@name='fmcg_governance']" position="inside">
-                <group string="Tata Kelola Diskon Taktikal &amp; Analitik">
-                    <field name="has_tactical_discount" readonly="1"/>
-                    <field name="tactical_analytic_account_id"
-                           placeholder="Pilih akun analitik beban diskon khusus..."
-                           invisible="not has_tactical_discount"/>
-                    <div colspan="2" invisible="not has_tactical_discount">
-                        <button name="action_request_tactical_discount_approval"
-                                type="object"
-                                string="Ajukan Persetujuan Diskon Taktikal"
-                                class="btn-secondary"
-                                icon="fa-tags"/>
-                    </div>
-                </group>
-                <group string="Rincian Produk di Bawah HPP" invisible="not has_below_hpp">
-                    <field name="below_hpp_summary" readonly="1"/>
-                    <field name="below_hpp_approval_state"/>
-                </group>
+            <!-- Tab Khusus Tata Kelola Persetujuan FMCG di Notebook -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Tata Kelola Persetujuan FMCG" name="fmcg_approval_governance">
+                    <group string="Tata Kelola Diskon Taktikal &amp; Analitik">
+                        <field name="has_tactical_discount" readonly="1"/>
+                        <field name="tactical_analytic_account_id"
+                               placeholder="Pilih akun analitik beban diskon khusus..."
+                               invisible="not has_tactical_discount"/>
+                        <div colspan="2" invisible="not has_tactical_discount">
+                            <button name="action_request_tactical_discount_approval"
+                                    type="object"
+                                    string="Ajukan Persetujuan Diskon Taktikal"
+                                    class="btn-secondary"
+                                    icon="fa-tags"/>
+                        </div>
+                    </group>
+                    <group string="Rincian Produk di Bawah HPP" invisible="not has_below_hpp">
+                        <field name="below_hpp_summary" readonly="1"/>
+                        <field name="below_hpp_approval_state"/>
+                    </group>
+                </page>
             </xpath>
         </field>
     </record>

@@ -19,20 +19,30 @@
                 </button>
             </xpath>
 
-            <!-- Tombol Ajukan Approval di Tab Finansial -->
-            <xpath expr="//page[@name='fmcg_credit_governance']" position="inside">
-                <field name="is_cash_customer" invisible="1"/>
-                <div class="alert alert-info mt-2" role="status" invisible="not is_cash_customer">
-                    <i class="fa fa-info-circle me-1"/>
-                    <strong>Pelanggan Tunai (ToP Cash):</strong> Pelanggan ini bertransaksi secara tunai dan tidak memerlukan persetujuan limit kredit.
-                </div>
-                <div class="mt-2" invisible="is_cash_customer or credit_approval_state in ('approved', 'pending')">
-                    <button name="action_request_credit_limit_approval"
-                            type="object"
-                            string="Ajukan Persetujuan Limit Kredit &amp; ToP"
-                            class="btn-primary"
-                            icon="fa-paper-plane"/>
-                </div>
+            <!-- Tab Persetujuan & Tata Kelola Kredit -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Tata Kelola Kredit &amp; Approval" name="fmcg_credit_governance">
+                    <group>
+                        <group string="Status Plafon Kredit">
+                            <field name="is_cash_customer" invisible="1"/>
+                            <field name="credit_approval_state" readonly="1" widget="badge"
+                                   decoration-warning="credit_approval_state == 'pending'"
+                                   decoration-success="credit_approval_state == 'approved'"
+                                   decoration-danger="credit_approval_state == 'rejected'"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info mt-2" role="status" invisible="not is_cash_customer">
+                        <i class="fa fa-info-circle me-1"/>
+                        <strong>Pelanggan Tunai (ToP Cash):</strong> Pelanggan ini bertransaksi secara tunai dan tidak memerlukan persetujuan limit kredit.
+                    </div>
+                    <div class="mt-2" invisible="is_cash_customer or credit_approval_state in ('approved', 'pending')">
+                        <button name="action_request_credit_limit_approval"
+                                type="object"
+                                string="Ajukan Persetujuan Limit Kredit &amp; ToP"
+                                class="btn-primary"
+                                icon="fa-paper-plane"/>
+                    </div>
+                </page>
             </xpath>
         </field>
     </record>

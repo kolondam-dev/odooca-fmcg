@@ -19,6 +19,12 @@ class ResPartner(models.Model):
         compute="_compute_is_cash_customer",
         help="Pelanggan tunai (Cash) tidak memerlukan persetujuan kredit.",
     )
+    credit_approval_state = fields.Selection([
+        ("none", "Belum Diajukan"),
+        ("pending", "Menunggu Persetujuan"),
+        ("approved", "Disetujui"),
+        ("rejected", "Ditolak"),
+    ], string="Status Persetujuan Kredit", default="none", copy=False, tracking=True)
 
     def _compute_approval_requests(self):
         ApprovalRequest = self.env["fmcg.approval.request"]
