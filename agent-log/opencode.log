@@ -16,3 +16,23 @@
 - Gate final: contracts:check PASS; typecheck PASS; test 18/18 suite 327/327 PASS; build:demo, build, build:staging, check:build PASS (demo JS gzip 80.4 KiB; live 34.5; staging 30.6; font 47.1).
 - VisitPanel: efek auto-locate dihapus; start() tetap mengambil ulang fix basi. docs/HANDOFF.md status diperbarui menjadi e2e PASS.
 - Task managed by Agent Opencode at 2026-10-31T12:53:38+07:00
+
+[2026-10-31T17:13:38+07:00] [INFO] Dashboard Moneter & Piutang + Dashboard Gudang & Logistik (Odoo 19)
+- Dua addon baru: addons/id_dashboard_monetary dan addons/id_dashboard_wms (LGPL-3, versi 19.0.1.0.0), dibangun di atas origin/main 61c1c6d pada cabang agen/dashboard-monetary-wms.
+- Semua dashboard berupa SQL view read-only (_auto=False + init() CREATE OR REPLACE VIEW) yang membaca langsung account_move, account_payment, stock_picking, stock_move, stock_quant, stock_lot, sale_order_line; tidak ada tabel salinan.
+- Monetary: funnel 4 tahap (Target Omset -> Omset Terealisasi -> Total Piutang AR -> Realisasi Penagihan Kas), matriks aging 5 bucket (belum jatuh tempo, 1-7, 8-14, 15-30, >30), AR per salesman, AR per wilayah, Top 10 customer; target Rp 5,5 miliar disimpan sebagai konfigurasi bertanggal id.monetary.target, bukan konstanta kode.
+- WMS: stok per 5 kelompok merchandising (Food, RTD/Beverage, Home Care, Personal Care, Confectionery), FEFO dari stock.lot.expiration_date (<30 kritis, 30-90 peringatan, >90 aman), delivery rate + keterlambatan, rincian penolakan 4 alasan standar, rasio biaya BBM+helper terhadap nilai DO terkirim per armada.
+- Model input yang bisa ditulis hanya id.monetary.target dan id.delivery.trip.cost; field baru stock.picking: fmcg_reject_reason dan fmcg_vehicle_id.
+- Nilai DO dihitung dari price_subtotal/product_uom_qty lalu dikonversi UoM memakai uom_uom.factor; fallback ke product.product.standard_price (jsonb per company) untuk move tanpa baris sale.
+- 9 definisi SQL view lolos parser PostgreSQL (pglast) di lokal; ruff check . PASS; check_manifests.py PASS (8 addon); seluruh XML valid.
+- CI: .github/workflows/ci.yml menambah id_dashboard_monetary,id_dashboard_wms beserta test-tags; deploy/init.sh INIT_MODULES ikut ditambah. Instalasi nyata pada DB kosong belum dijalankan di laptop ini (tanpa Odoo/Postgres/Docker) [BU] sampai job install-test hijau.
+- i18n/id.po bahasa Indonesia untuk kedua modul (menu, aksi, label field, selection).
+- Task managed by Agent Opencode at 2026-10-31T17:13:38+07:00
+
+[2026-10-31T17:48:19+07:00] [WARN] install-test CI gagal: atribut group pada search view Odoo 19
+- Run 41192427804 job install-test: ParseError pada id_dashboard_monetary/views/monetary_funnel_views.xml; RNG menolak <group expand="0" string="Group By"> (atribut expand/string sudah tidak ada pada search view Odoo 19).
+- Perbaikan: 8 kemunculan di 6 berkas diganti menjadi <group> polos mengikuti gaya core Odoo 19 (stock/account/sale).
+- Validasi baru yang dipakai: seluruh arch view (34) diuji dengan lxml terhadap skema resmi odoo/addons/base/rng/{search,list,graph,pivot}_view.rng 19.0 -> PASS; ruff check ., check_manifests.py, dan parser PostgreSQL untuk 9 definisi view tetap PASS.
+- Cabang di-rebase ke origin/main a67ebae (PR #58) karena PR #60 konflik; konflik hanya pada docs/HANDOFF.md dan diselesaikan tanpa menghapus entri agen lain.
+- Status akhir tetap [BU] sampai install-test hijau.
+- Task managed by Agent Opencode at 2026-10-31T17:48:19+07:00

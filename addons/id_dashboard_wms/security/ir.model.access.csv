@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_id_wms_stock_category_user,id.wms.stock.category.user,model_id_wms_stock_category,base.group_user,1,0,0,0
+access_id_wms_expiry_user,id.wms.expiry.user,model_id_wms_expiry,base.group_user,1,0,0,0
+access_id_wms_delivery_user,id.wms.delivery.user,model_id_wms_delivery,base.group_user,1,0,0,0
+access_id_wms_delivery_summary_user,id.wms.delivery.summary.user,model_id_wms_delivery_summary,base.group_user,1,0,0,0
+access_id_wms_reject_user,id.wms.reject.user,model_id_wms_reject,base.group_user,1,0,0,0
+access_id_wms_fleet_cost_user,id.wms.fleet.cost.user,model_id_wms_fleet_cost,base.group_user,1,0,0,0
+access_id_delivery_trip_cost_user,id.delivery.trip.cost.user,model_id_delivery_trip_cost,base.group_user,1,0,0,0
+access_id_delivery_trip_cost_manager,id.delivery.trip.cost.manager,model_id_delivery_trip_cost,base.group_system,1,1,1,1

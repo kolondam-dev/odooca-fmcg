@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Delivery fulfillment -->
+    <record id="view_id_wms_delivery_list" model="ir.ui.view">
+        <field name="name">id.wms.delivery.list</field>
+        <field name="model">id.wms.delivery</field>
+        <field name="arch" type="xml">
+            <list string="Delivery Fulfillment"
+                  create="0" edit="0" delete="0"
+                  decoration-success="is_delivered and not is_late"
+                  decoration-warning="is_delivered and is_late"
+                  decoration-danger="not is_delivered and state == 'cancel'">
+                <field name="picking_name"/>
+                <field name="partner_id"/>
+                <field name="scheduled_date"/>
+                <field name="date_done"/>
+                <field name="state"/>
+                <field name="is_delivered"/>
+                <field name="is_late" optional="show"/>
+                <field name="reject_reason" optional="show"/>
+                <field name="vehicle_id" optional="hide"/>
+                <field name="delivered_value" sum="Delivered Value"/>
+                <field name="sale_order_amount" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_id_wms_delivery_graph" model="ir.ui.view">
+        <field name="name">id.wms.delivery.graph</field>
+        <field name="model">id.wms.delivery</field>
+        <field name="arch" type="xml">
+            <graph string="Delivery Orders per Status" type="bar">
+                <field name="state"/>
+                <field name="delivered_value" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_id_wms_delivery_pivot" model="ir.ui.view">
+        <field name="name">id.wms.delivery.pivot</field>
+        <field name="model">id.wms.delivery</field>
+        <field name="arch" type="xml">
+            <pivot string="Delivery Fulfillment">
+                <field name="state" type="row"/>
+                <field name="reject_reason" type="col"/>
+                <field name="delivered_value" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_id_wms_delivery_search" model="ir.ui.view">
+        <field name="name">id.wms.delivery.search</field>
+        <field name="model">id.wms.delivery</field>
+        <field name="arch" type="xml">
+            <search string="Delivery Fulfillment">
+                <field name="picking_name"/>
+                <field name="partner_id"/>
+                <filter name="filter_delivered" string="Delivered" domain="[('is_delivered', '=', True)]"/>
+                <filter name="filter_undelivered" string="Not Delivered"
+                        domain="[('is_delivered', '=', False)]"/>
+                <filter name="filter_late" string="Delivered Late" domain="[('is_late', '=', True)]"/>
+                <filter name="filter_rejected" string="Rejected"
+                        domain="[('reject_reason', '!=', 'not_recorded')]"/>
+                <separator/>
+                <filter name="filter_scheduled_date" string="Scheduled Date" date="scheduled_date"/>
+                <group>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_reject_reason" string="Rejection Reason"
+                            context="{'group_by': 'reject_reason'}"/>
+                    <filter name="group_vehicle" string="Vehicle" context="{'group_by': 'vehicle_id'}"/>
+                    <filter name="group_partner" string="Customer" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_id_wms_delivery" model="ir.actions.act_window">
+        <field name="name">Delivery Fulfillment</field>
+        <field name="res_model">id.wms.delivery</field>
+        <field name="view_mode">graph,list,pivot</field>
+        <field name="context">{'search_default_group_state': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No outgoing delivery order</p>
+            <p>Outgoing transfers are compared with their schedule so the delivery rate and
+               the rejection reasons stay visible without opening each document.</p>
+        </field>
+    </record>
+
+    <!-- Delivery rate per period -->
+    <record id="view_id_wms_delivery_summary_graph" model="ir.ui.view">
+        <field name="name">id.wms.delivery.summary.graph</field>
+        <field name="model">id.wms.delivery.summary</field>
+        <field name="arch" type="xml">
+            <graph string="Delivery Rate per Period" type="line">
+                <field name="period_month"/>
+                <field name="delivery_rate" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_id_wms_delivery_summary_list" model="ir.ui.view">
+        <field name="name">id.wms.delivery.summary.list</field>
+        <field name="model">id.wms.delivery.summary</field>
+        <field name="arch" type="xml">
+            <list string="Delivery Rate per Period" create="0" edit="0" delete="0">
+                <field name="period_month"/>
+                <field name="scheduled_count" sum="Scheduled"/>
+                <field name="delivered_count" sum="Delivered"/>
+                <field name="undelivered_count" sum="Not Delivered"/>
+                <field name="late_count" sum="Late"/>
+                <field name="delivery_rate"/>
+                <field name="delivered_value" sum="Delivered Value"/>
+                <field name="sale_order_value" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_id_wms_delivery_summary" model="ir.actions.act_window">
+        <field name="name">Delivery Rate per Period</field>
+        <field name="res_model">id.wms.delivery.summary</field>
+        <field name="view_mode">graph,list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No scheduled delivery yet</p>
+            <p>The delivery rate is the number of delivered transfer orders divided by all
+               scheduled transfer orders in the same month.</p>
+        </field>
+    </record>
+
+    <!-- Rejection breakdown -->
+    <record id="view_id_wms_reject_graph" model="ir.ui.view">
+        <field name="name">id.wms.reject.graph</field>
+        <field name="model">id.wms.reject</field>
+        <field name="arch" type="xml">
+            <graph string="Rejection Breakdown" type="pie">
+                <field name="reason"/>
+                <field name="picking_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_id_wms_reject_list" model="ir.ui.view">
+        <field name="name">id.wms.reject.list</field>
+        <field name="model">id.wms.reject</field>
+        <field name="arch" type="xml">
+            <list string="Rejection Breakdown" create="0" edit="0" delete="0">
+                <field name="reason"/>
+                <field name="picking_count" sum="Rejected Deliveries"/>
+                <field name="rejected_value" sum="Rejected Value"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_id_wms_reject_pivot" model="ir.ui.view">
+        <field name="name">id.wms.reject.pivot</field>
+        <field name="model">id.wms.reject</field>
+        <field name="arch" type="xml">
+            <pivot string="Rejection Breakdown">
+                <field name="reason" type="row"/>
+                <field name="picking_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_id_wms_reject" model="ir.actions.act_window">
+        <field name="name">Rejection Breakdown</field>
+        <field name="res_model">id.wms.reject</field>
+        <field name="view_mode">graph,list,pivot</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No rejected delivery recorded</p>
+            <p>Rejections are grouped by the four standard FMCG reasons: wet or crushed
+               packaging in transit, product close to expiry, wrong SKU or quantity, and
+               store closed or refusing the delivery note.</p>
+        </field>
+    </record>
+</odoo>
