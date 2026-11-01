@@ -59,7 +59,7 @@ class WmsDashboard(models.TransientModel):
         }
 
     @api.model
-    def get_data(self, fmcg_category=None, vehicle_id=None):
+    def get_data(self, fmcg_category=None, vehicle_id=None, **kwargs):
         self._check_access()
         company_ids = self.env.companies.ids
 

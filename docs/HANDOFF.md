@@ -1,3 +1,22 @@
+## 2026-11-01T10:35:00+07:00 — anti-gravity agent — Review Komprehensif Dashboard FMCG & Perbaikan Parameter Handling
+**Branch:** agen/review-fmcg-dashboards
+**Status:** PASS (Static, Manifest, Ruff) -> Siap Review
+
+### Ringkasan Misi Review & Analisis End-to-End
+1. **Analisis Lintas Disiplin (Data Analyst + ERP Implementor + FMCG Expert):**
+   - Menganalisis 3 modul dashboard aktif: id_dashboard_sales, id_dashboard_monetary, dan id_dashboard_wms, didukung probe langsung pada live instance Railway (https://odooca-fmcg-demo.up.railway.app).
+   - Menemukan akar penyebab mengapa dashboard terasa "kurang sreg": keterpisahan menjadi 3 silo terisolasi (bukan unified Control Tower), belum adanya dimensi komparasi tingkat pertama per Principal FMCG, angka bersifat pasif tanpa Actionable Exception Queues, dan adanya temporal drift akibat hardcoded CURRENT_DATE pada PostgreSQL SQL views.
+   - Mengklasifikasikan kebutuhan dashboard ke dalam 4 kompartemen disiplin FMCG (Executive Control Tower, Sales & Commercial, Finance & Credit Control, Warehouse & Logistics) dengan kategori Necessary, Nice to Have, dan Not Necessary.
+2. **Perbaikan Kode & Technical Defect Closes:**
+   - Memperbaiki method get_data pada id_dashboard_monetary agar menerima area_ids, salesman_ids, dan **kwargs secara aman, mengeliminasi TypeError crash saat filter diklik di UI.
+   - Menyelaraskan get_data pada id_dashboard_wms dengan **kwargs.
+   - Menambahkan automated regression test pada addons/id_dashboard_monetary/tests/test_monetary_dashboard.py.
+3. **Dokumen Arsitektur & Rekomendasi:**
+   - Menyusun dokumen komprehensif docs/reviews/FMCG_DASHBOARD_COMPREHENSIVE_REVIEW.md sebagai panduan arsitektur dan roadmap pengembangan dashboard FMCG berikutnya.
+4. **Verifikasi:**
+   - ruff check PASS (addons/id_dashboard_monetary, addons/id_dashboard_wms).
+   - check_manifests.py PASS (10 addons ok).
+
 ## 2026-11-01T09:29:21+07:00 — codex — Integrasi PR64 dengan main untuk merge berotorisasi
 **Otorisasi:** pemilik meminta merge PR64 jika ready. P2 foto retry telah ditutup pada7b55883.
 **Integrasi:** gabungkan main6fcb328 (dashboard PR65); konflik hanya HANDOFF, kedua blok riwayat dipertahankan. Source PWA perbaikan tetap identik dengan reviewed7b55883; perubahan dashboard main diadopsi utuh.

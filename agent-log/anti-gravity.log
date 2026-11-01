@@ -1536,3 +1536,17 @@
 - Replaced domain on non-existent groups_id with sales_group.users access and safe fallback to non-share users.
 - Verification: ruff check PASS, check_manifests.py PASS (10 addons ok).
 - Task managed by antigravity-agent at 2026-11-01T08:57:00+07:00
+
+[2026-11-01T10:35:00+07:00] [INFO] Comprehensive Review of FMCG Dashboards & Fix Parameter Handling
+- Conducted end-to-end evaluation of FMCG dashboards (id_dashboard_sales, id_dashboard_monetary, id_dashboard_wms) as Data Analyst, ERP Implementor, and FMCG Distribution Business Expert.
+- Live Railway verification (https://odooca-fmcg-demo.up.railway.app):
+  * Diagnosed runtime exception on Monetary filter: TypeError on area_ids keyword argument.
+  * Identified temporal drift trap: hardcoded CURRENT_DATE in PostgreSQL SQL views causing 100% bad debt on historical dataset (July 2026).
+  * Discovered data gaps: stock.lot expiration_date is False in seed, disabling FEFO expiry monitoring; empty id_delivery_trip_cost.
+- Applied fixes:
+  * Updated addons/id_dashboard_monetary/models/monetary_dashboard.py to accept area_ids, salesman_ids, and **kwargs cleanly.
+  * Updated addons/id_dashboard_wms/models/wms_dashboard.py to accept **kwargs cleanly.
+  * Added regression test in addons/id_dashboard_monetary/tests/test_monetary_dashboard.py.
+- Authored comprehensive architectural review document: docs/reviews/FMCG_DASHBOARD_COMPREHENSIVE_REVIEW.md covering problem framing, end-to-end analysis, 4-compartment POV classification (Necessary, Nice to Have, Redundant), actionable exception queues, and unified multi-principal control tower roadmap.
+- Verification: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by anti-gravity at 2026-11-01T10:35:00+07:00

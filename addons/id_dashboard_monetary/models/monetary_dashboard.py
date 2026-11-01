@@ -57,12 +57,19 @@ class MonetaryDashboard(models.TransientModel):
         }
 
     @api.model
-    def get_data(self, area_id=None, salesman_id=None):
+    def get_data(self, area_id=None, salesman_id=None, **kwargs):
         self._check_access()
         company_ids = self.env.companies.ids
 
-        area_ids = [int(area_id)] if area_id else []
-        salesman_ids = [int(salesman_id)] if salesman_id else []
+        raw_areas = kwargs.get('area_ids') or (area_id and [area_id]) or []
+        if isinstance(raw_areas, (int, str)):
+            raw_areas = [raw_areas]
+        area_ids = [int(a) for a in raw_areas if str(a).isdigit() or isinstance(a, int)]
+
+        raw_salesmen = kwargs.get('salesman_ids') or (salesman_id and [salesman_id]) or []
+        if isinstance(raw_salesmen, (int, str)):
+            raw_salesmen = [raw_salesmen]
+        salesman_ids = [int(s) for s in raw_salesmen if str(s).isdigit() or isinstance(s, int)]
 
         # ----------------------------------------------------------- AR Aging Records
         aging_domain = [("company_id", "in", company_ids)]
