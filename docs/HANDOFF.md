@@ -1,3 +1,12 @@
+## 2026-11-01T08:42:00+07:00 — antigravity agent — Perbaikan External ID ParseError di id_base menu_views
+**Branch:** agen/unify-fmcg-dashboards (PR #65)
+**Status:** PASS (Static, XML, Manifest) -> Siap Push & CI
+
+### Diagnosa & Perbaikan CI Exit Code 255
+1. **Penyebab:** Pada addons/id_base/views/menu_views.xml, terdapat menu item `menu_fmcg_tier` yang memanggil `action_id_tier` yang tidak terdefinisi di id_base, memicu ParseError saat `install-test`.
+2. **Perbaikan:** Menghapus baris tier yang belum terdefinisi tersebut dan mempertahankan struktur bersih persis `origin/main` dengan tambahan menu item baru `menu_fmcg_dashboard` di bawah `menu_fmcg_root`.
+3. **Verifikasi:** XML parsing ElementTree PASS, ruff check PASS, check_manifests.py PASS (10 addons ok).
+
 ## 2026-11-01T08:32:00+07:00 — antigravity agent — Penerapan Flat Single-Sheet Spreadsheet Style & Scroll Fix
 **Branch:** agen/unify-fmcg-dashboards (PR #65)
 **Status:** PASS (Static, XML, JS, Manifest) -> Siap CI

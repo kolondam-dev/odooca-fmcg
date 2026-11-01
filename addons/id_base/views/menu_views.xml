@@ -61,14 +61,8 @@
               sequence="70"/>
 
     <menuitem id="menu_fmcg_subdistrict"
-              name="Kelurahan / Desa"
+              name="Kelurahan &amp; Kode Pos"
               parent="menu_fmcg_master"
               action="action_id_subdistrict"
-              sequence="75"/>
-
-    <menuitem id="menu_fmcg_tier"
-              name="Outlet Tiers"
-              parent="menu_fmcg_master"
-              action="action_id_tier"
               sequence="80"/>
 </odoo>

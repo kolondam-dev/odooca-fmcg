@@ -1513,3 +1513,10 @@
   * Hairline table borders and clear drilldown buttons.
 - Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), node check PASS, 16 XML files parse PASS.
 - Task managed by antigravity-agent at 2026-11-01T08:32:00+07:00
+
+[2026-11-01T08:42:00+07:00] [INFO] Fix XML External ID ParseError in id_base menu_views
+- Identified cause of install-test CI failure (Exit Code 255):
+  * addons/id_base/views/menu_views.xml contained extraneous menu_fmcg_tier referencing non-existent action_id_tier.
+- Cleaned addons/id_base/views/menu_views.xml to match origin/main and cleanly add menu_fmcg_dashboard.
+- Verified XML parsing and static linters (ruff check PASS, check_manifests PASS).
+- Task managed by antigravity-agent at 2026-11-01T08:42:00+07:00
