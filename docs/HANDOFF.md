@@ -1,3 +1,7 @@
+## 2026-11-01T23:32:04+07:00 — agent codex-pwa — PR71 currency fixture CI
+**[F] `b05f955`:** 131 tes native Odoo lulus; upgrade dashboard persisten, staging/demo preservation dan init-test lulus. Visual fixture gagal saat posting invoice karena default pricelist IDR memakai currency archived pada DB kosong. IDR diaktifkan hanya di fixture ci_db; tidak mengubah company currency/data server atau melemahkan validasi posting.
+**[BU] Menunggu:** CI final, screenshot native dan review; tidak merge/deploy.
+
 ## 2026-11-01T23:24:41+07:00 — agent codex-pwa — PR71 native fixture dan scroll capture
 **[F] CI `3585636`:** static, seed supervision dan PWA quality/container lulus; install-test gagal 1 assertion dari 130 tes native karena fixture quant belum flush computed company sebelum SQL view. Perbaikan memakai env.flush_all; tidak melemahkan assertion isolasi.
 **Berubah:** capture atas/tengah/bawah internal scroll dan tab; fixture finance memeriksa payload SQL terhadap invoice posted; key kategori WMS unik per company dan label company untuk mencegah tabrakan OWL multi-company.

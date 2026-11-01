@@ -5,6 +5,9 @@ from odoo import fields
 if env.cr.dbname != 'ci_db':  # noqa: F821
     raise RuntimeError('Dashboard visual fixtures are restricted to disposable ci_db')
 company = env.company  # noqa: F821
+# id_base supplies an IDR pricelist; a blank CI database can still have IDR archived.
+# Activate its currency only inside the disposable fixture; preserve company currency.
+env.ref('base.IDR').active = True  # noqa: F821
 admin = env.ref('base.user_admin')  # noqa: F821
 admin.group_ids = [(4, env.ref('sales_team.group_sale_manager').id)]  # noqa: F821
 partner = env['res.partner'].create({'name': 'Dashboard QA Outlet', 'user_id': admin.id})  # noqa: F821
