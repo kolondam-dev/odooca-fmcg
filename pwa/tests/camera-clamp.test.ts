@@ -39,3 +39,4 @@ describe("P2-5 Camera Viewfinder Watermark Dimension Clamping", () => {
         expect(dims.totalWidth).toBeLessThanOrEqual(MAX_CANVAS_DIM);
     });
 });
+

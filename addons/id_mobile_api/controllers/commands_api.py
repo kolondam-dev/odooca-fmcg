@@ -19,8 +19,14 @@ class MobileCommandsApi(MobileReadApi):
 
         # Validate X-CSRF-Token header against server session token
         csrf_token = request.httprequest.headers.get("X-CSRF-Token")
-        if not csrf_token or csrf_token != request.csrf_token():
+        if not csrf_token:
             return self._response({"error": "invalid_or_missing_csrf_token"}, 400)
+
+        if hasattr(request, "validate_csrf"):
+            try:
+                request.validate_csrf(csrf_token)
+            except Exception:
+                return self._response({"error": "invalid_or_missing_csrf_token"}, 400)
 
         try:
             body = request.httprequest.get_data()

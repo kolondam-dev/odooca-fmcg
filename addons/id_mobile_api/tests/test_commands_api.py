@@ -1,3 +1,4 @@
+import base64
 import json
 import uuid
 from unittest.mock import patch
@@ -69,9 +70,10 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         ])
         self.assertEqual(len(own_records), 1)
 
-        # System admin can audit commands
+        # System admin can audit commands within company scope
         admin = self.env.ref("base.user_admin")
-        admin_records = self.env["id.mobile.command"].with_user(admin).search([
+        admin.write({"company_ids": [Command.link(self.company.id)]})
+        admin_records = self.env["id.mobile.command"].with_user(admin).with_company(self.company).search([
             ("client_uuid", "=", valid_uuid)
         ])
         self.assertEqual(len(admin_records), 1)
@@ -199,7 +201,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
 
     def test_atomic_split_so_savepoint_rollback(self):
         """When multi-principal split SO encounters a failure, all generated SOs and logs must roll back cleanly."""
-        # Create second principal and product
         principal2 = self.env["id.principal"].create({"name": "Principal Two", "code": "PRIN-2"})
         unit = self.env.ref("uom.product_uom_unit")
         product2 = self.env["product.product"].create({
@@ -227,7 +228,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             },
         }
 
-        # Mock failure during second SaleOrder creation
         orig_create = self.env["sale.order"].create
         call_count = [0]
 
@@ -242,7 +242,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             with self.assertRaises(UserError):
                 model.process_command(command)
 
-        # Assert zero SOs persisted and zero command records persisted
         orders = self.env["sale.order"].sudo().search([("origin", "=", f"PWA Mobile Order {cmd_uuid[:8]}")])
         self.assertEqual(len(orders), 0, "No partial SO should remain after rollback.")
         cmds = self.env["id.mobile.command"].sudo().search([("client_uuid", "=", cmd_uuid)])
@@ -311,6 +310,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
 
         # Positive check-in with stored evidence
         evidence_uuid = str(uuid.uuid4())
+        dummy_base64 = base64.b64encode(b"dummy-image-binary-payload")
         self.env["id.mobile.evidence"].sudo().create({
             "user_id": self.mobile.id,
             "company_id": self.company.id,
@@ -318,8 +318,8 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "client_uuid": evidence_uuid,
             "fingerprint": "fake-evidence-fingerprint",
             "receipt_json": json.dumps({"status": "accepted"}),
-            "original": b"fake-jpg",
-            "watermarked": b"fake-jpg-wm",
+            "original": dummy_base64,
+            "watermarked": dummy_base64,
         })
         rc = model.process_command({
             "client_uuid": str(uuid.uuid4()),
@@ -410,8 +410,9 @@ class TestMobileCommandsHttp(MobileFixture, HttpCase):
         csrf = bootstrap.json()["csrfToken"]
         self.assertTrue(csrf)
 
-        # Empty body -> 400
-        res = self.url_open(url, data="", headers={"X-CSRF-Token": csrf})
+        # Empty body via raw POST -> 400
+        url_full = self.base_url() + url
+        res = self.opener.post(url_full, data="", headers={"X-CSRF-Token": csrf})
         self.assertEqual(res.status_code, 400)
 
         # Missing client_uuid -> 422
