@@ -13,7 +13,13 @@ case "$agent" in
   codex) file="codex.log"; sig="codex agent" ;;
   *) echo "agen tidak dikenal: $agent" >&2; exit 2 ;;
 esac
-ts="$(TZ=Asia/Jakarta date +%Y-%m-%dT%H:%M:%S%:z)"
+ts="$(TZ=Asia/Jakarta date +%Y-%m-%dT%H:%M:%S%:z 2>/dev/null || true)"
+# Git Bash di Windows tidak selalu punya basis data zona waktu (Asia/Jakarta -> UTC).
+# Fallback POSIX TZ untuk memaksa offset WIB +07:00 agar tanda tangan tetap sesuai konvensi.
+case "$ts" in
+  *+07:00) ;;
+  *) ts="$(TZ=WIB-7 date +%Y-%m-%dT%H:%M:%S%:z)" ;;
+esac
 if [ "${1:-}" = "--sig-only" ]; then echo "task managed by ${sig} at ${ts}"; exit 0; fi
 level="${1:?level wajib: INFO|WARN|ERROR}"; title="${2:?judul wajib}"; shift 2
 case "$level" in INFO|WARN|ERROR) ;; *) echo "level harus INFO|WARN|ERROR" >&2; exit 2 ;; esac

@@ -1,3 +1,29 @@
+## 2026-11-01T22:17:08+07:00 — claude-dev agent — PR-1: adopsi paket geo Sulut (dissolve poligon) + baseline
+**Branch:** `agen/geo-master-upgrade` (basis `origin/main` = `13b2ee0`)
+**Status:** GATE STATIS LOKAL PASS; belum menyentuh DB, seed, atau transaksi
+
+### 1. Keputusan pemilik yang dieksekusi
+- D1=B (171 kecamatan + 1.839 desa), D2=A (GeoJSON di `Text`), D3=A (provinsi: laporan + data-fix), D4=A (koordinat outlet: laporan saja), D5=B terbatas: 17 kelurahan legacy dipetakan, 2 (`Girian Weru`, `Paslaten Satu`) dibiarkan legacy karena ambigu/lintas kecamatan.
+
+### 2. Data & generator
+- `data/geo/*.geojson` dan `data/master/*` diganti build baru: poligon kecamatan/kab/provinsi dibentuk dari gabungan poligon desa (`dissolve_hierarchy`), kolom baru `asal_poligon`/`polygon_origin`, 3 desa salah letak dikecualikan dari gabungan.
+- `scripts/generate_sulut_master.py`: adopsi versi baru + opsi `--no-dissolve`; 3 perbaikan lint (hapus `import math` yang tidak terpakai, pecah komentar >120 kolom, ganti variabel `l`).
+- `SOURCES.csv` hanya berubah pada `diunduh_utc`; `bytes`/`sha256` sumber tetap sama. `sulut_kodepos.csv` dan `sulut_wilayah_semua_level.csv` tidak berubah isinya (hanya line ending CRLF di zip).
+- Dampak terukur: `sulut_districts.geojson` 178 KB → 1.325 KB; median titik kecamatan 19 → 268; tumpang tindih antar-kecamatan 126,5 km² → 1,07 km²; kecamatan ⊂ kab/kota 100%; total luas ±14.599 km².
+
+### 3. Dokumentasi & uji
+- `docs/geo/SULUT_ADMINISTRASI_GEO.md` diperbarui (asal poligon, kolom baru, angka QA, keterbatasan sumber, catatan integrasi Odoo + keputusan D5).
+- `docs/reviews/GEO_BASELINE_2026-11-01.md`: baseline repo, baseline geometri, rantai gate (`MASTER-SYNC`, `MASTER-GEO`, `REPORT-RECON`), pemetaan 19 kelurahan, kriteria penerimaan. Snapshot DB live [BU] (sandbox tanpa kredensial).
+- `tests/test_geo_master_data.py`: 12 uji (struktur hierarki, kode unik/induk, kelengkapan poligon, konsistensi GeoJSON↔CSV, kode pos, desa salah letak, luas/overlap/nesting via shapely).
+
+### 4. Verifikasi
+- PASS: `ruff check .`; `python scripts/check_manifests.py` (10 addon); `python -m unittest tests.test_geo_master_data` (12/12); `python scripts/ops/verify_seed_invariants.py --report ...` (PASS, 0 violation; XML geo & registry tidak disentuh).
+- [BU] Instalasi/loader Odoo: belum ada perubahan model, jadi belum perlu; PR-2/PR-3 menyusul.
+
+### 5. Catatan
+- Tidak ada perubahan `data/registers/*`, `data/seed/*`, akuntansi, stok, atau transaksi.
+- `sales_orders_historical.csv` tetap deprecated dan tidak dimuat loader kanonikal.
+
 ## 2026-11-01T18:20:00+07:00 — anti-gravity agent — Fix CI init-test guard dan test_01 dashboard query boundary
 **Branch:** `agen/pjp-master-and-workday`
 **Status:** PASS (Ruff, Check Manifests, Shell Syntax) -> Push ke PR #68

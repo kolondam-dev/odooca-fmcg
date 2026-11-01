@@ -1,172 +1,172 @@
-kode_kemendagri,kode_nodot,nama,kode_kab_kota,nama_kab_kota,jenis_kab_kota,lat_sentral,lng_sentral,centroid_sumber_di_dalam_poligon,lat_titik_dalam,lng_titik_dalam,luas_km2_approx,qa_persen_di_dalam_induk,qa_flag,src_kode_nama,src_lat_lng
-71.01.05,710105,Sang Tombolang,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.761959,123.803159,true,0.762282,123.807792,389.189,99.8,ok,S1,S3
-71.01.09,710109,Dumoga Barat,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.520475,123.826061,true,0.523724,123.851227,484.694,99.7,ok,S1,S3
-71.01.10,710110,Dumoga Timur,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.578091,124.087133,true,0.585274,124.111183,122.474,99.4,ok,S1,S3
-71.01.11,710111,Dumoga Utara,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.616638,123.861755,true,0.608984,123.836297,283.102,99.9,ok,S1,S3
-71.01.12,710112,Lolak,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.787286,123.998057,true,0.789049,124.00749,471.754,99.3,ok,S1,S3
-71.01.13,710113,Bolaang,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.814717,124.150521,true,0.820945,124.152625,202.111,99.7,ok,S1,S3
-71.01.14,710114,Lolayan,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.621373,124.249124,true,0.629832,124.265529,309.046,99.9,ok,S1,S3
-71.01.19,710119,Passi Barat,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.793675,124.257198,true,0.794515,124.257097,122.226,99.9,ok,S1,S3
-71.01.20,710120,Poigar,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.929794,124.279736,true,0.910319,124.284411,269.124,99.8,ok,S1,S3
-71.01.22,710122,Passi Timur,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.807291,124.383633,true,0.813181,124.386684,98.245,98.8,ok,S1,S3
-71.01.31,710131,Bolaang Timur,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.904064,124.179068,true,0.910939,124.168284,81.147,100.0,ok,S1,S3
-71.01.32,710132,Bilalang,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.849678,124.342635,true,0.8448,124.33512,62.863,98.9,ok,S1,S3
-71.01.33,710133,Dumoga,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.669406,124.129018,true,0.656508,124.113636,226.088,100.0,ok,S1,S3
-71.01.34,710134,Dumoga Tenggara,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.642398,124.007811,true,0.630804,124.000189,135.134,100.0,ok,S1,S3
-71.01.35,710135,Dumoga Tengah,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.52673,124.019286,true,0.528007,124.017624,47.819,99.3,ok,S1,S3
-71.02.01,710201,Tondano Barat,71.02,Kabupaten Minahasa,Kabupaten,1.299058,124.894363,true,1.302403,124.893799,22.812,100.0,ok,S1,S3
-71.02.02,710202,Tondano Timur,71.02,Kabupaten Minahasa,Kabupaten,1.291002,124.939868,true,1.295272,124.940939,30.707,100.0,ok,S1,S3
-71.02.03,710203,Eris,71.02,Kabupaten Minahasa,Kabupaten,1.226076,124.927291,true,1.217988,124.919054,45.531,100.0,ok,S1,S3
-71.02.04,710204,Kombi,71.02,Kabupaten Minahasa,Kabupaten,1.25488,125.004845,true,1.266271,125.006776,135.381,99.0,ok,S1,S3
-71.02.05,710205,Lembean Timur,71.02,Kabupaten Minahasa,Kabupaten,1.166157,124.978445,true,1.159595,124.983279,73.898,99.8,ok,S1,S3
-71.02.06,710206,Kakas,71.02,Kabupaten Minahasa,Kabupaten,1.147164,124.928318,true,1.139074,124.935593,78.486,100.0,ok,S1,S3
-71.02.07,710207,Tompaso,71.02,Kabupaten Minahasa,Kabupaten,1.184916,124.813736,true,1.183153,124.814809,14.282,100.0,ok,S1,S3
-71.02.08,710208,Remboken,71.02,Kabupaten Minahasa,Kabupaten,1.236034,124.850924,true,1.233834,124.851245,31.467,100.0,ok,S1,S3
-71.02.09,710209,Langowan Timur,71.02,Kabupaten Minahasa,Kabupaten,1.147947,124.856281,true,1.153786,124.848955,12.029,100.0,ok,S1,S3
-71.02.10,710210,Langowan Barat,71.02,Kabupaten Minahasa,Kabupaten,1.127606,124.789589,true,1.13022,124.793183,41.353,100.0,ok,S1,S3
-71.02.11,710211,Sonder,71.02,Kabupaten Minahasa,Kabupaten,1.266329,124.773801,true,1.261093,124.787063,46.396,98.4,ok,S1,S3
-71.02.12,710212,Kawangkoan,71.02,Kabupaten Minahasa,Kabupaten,1.210298,124.80797,true,1.208108,124.814953,13.937,100.0,ok,S1,S3
-71.02.13,710213,Pineleng,71.02,Kabupaten Minahasa,Kabupaten,1.411568,124.816294,true,1.412126,124.812522,41.378,97.4,ok,S1,S3
-71.02.14,710214,Tombulu,71.02,Kabupaten Minahasa,Kabupaten,1.402942,124.885344,true,1.411963,124.882871,71.513,99.5,ok,S1,S3
-71.02.15,710215,Tombariri,71.02,Kabupaten Minahasa,Kabupaten,1.374032,124.648906,true,1.375231,124.631183,104.348,99.0,ok,S1,S3
-71.02.16,710216,Tondano Utara,71.02,Kabupaten Minahasa,Kabupaten,1.326917,124.921288,true,1.325353,124.92912,19.207,100.0,ok,S1,S3
-71.02.17,710217,Langowan Selatan,71.02,Kabupaten Minahasa,Kabupaten,1.08159,124.887435,true,1.081634,124.892149,68.106,99.9,ok,S1,S3
-71.02.18,710218,Tondano Selatan,71.02,Kabupaten Minahasa,Kabupaten,1.261355,124.884195,false,1.2583,124.876507,32.823,99.6,ok,S1,S3
-71.02.19,710219,Langowan Utara,71.02,Kabupaten Minahasa,Kabupaten,1.169594,124.826522,true,1.179583,124.829662,8.718,100.0,ok,S1,S3
-71.02.20,710220,Kakas Barat,71.02,Kabupaten Minahasa,Kabupaten,1.13044,124.900929,true,1.122408,124.907757,69.932,100.0,ok,S1,S3
-71.02.21,710221,Kawangkoan Utara,71.02,Kabupaten Minahasa,Kabupaten,1.224992,124.782047,true,1.226085,124.782379,16.489,100.0,ok,S1,S3
-71.02.22,710222,Kawangkoan Barat,71.02,Kabupaten Minahasa,Kabupaten,1.186924,124.754263,true,1.187399,124.753464,35.703,98.7,ok,S1,S3
-71.02.23,710223,Mandolang,71.02,Kabupaten Minahasa,Kabupaten,1.419196,124.757378,true,1.412635,124.750907,37.865,100.0,ok,S1,S3
-71.02.24,710224,Tombariri Timur,71.02,Kabupaten Minahasa,Kabupaten,1.354986,124.728423,true,1.338544,124.726203,53.541,98.2,ok,S1,S3
-71.02.25,710225,Tompaso Barat,71.02,Kabupaten Minahasa,Kabupaten,1.157607,124.779227,true,1.16091,124.784987,21.277,100.0,ok,S1,S3
-71.03.08,710308,Tabukan Utara,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.675869,125.507451,true,3.676869,125.505691,90.815,99.5,ok,S1,S3
-71.03.09,710309,Nusa Tabukan,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.774176,125.590035,true,3.763869,125.570701,9.93,100.0,geometri_diperbaiki,S1,S3
-71.03.10,710310,Manganitu Selatan,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.415579,125.605604,true,3.440516,125.593759,58.807,98.9,ok,S1,S3
-71.03.11,710311,Tatoareng,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.17014,125.496704,false,3.241867,125.457967,19.14,100.0,ok,S1,S3
-71.03.12,710312,Tamako,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.459239,125.542818,true,3.462344,125.533901,69.617,100.0,ok,S1,S3
-71.03.13,710313,Manganitu,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.535266,125.515084,true,3.53568,125.518532,63.597,99.6,ok,S1,S3
-71.03.14,710314,Tabukan Tengah,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.568856,125.564525,true,3.568293,125.562852,71.024,100.0,geometri_diperbaiki,S1,S3
-71.03.15,710315,Tabukan Selatan,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.501883,125.611719,true,3.500612,125.601595,47.956,99.6,ok,S1,S3
-71.03.16,710316,Kendahe,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.714298,125.424541,true,3.69729,125.427727,46.033,99.6,ok,S1,S3
-71.03.17,710317,Tahuna,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.624734,125.484723,true,3.63162,125.492313,15.312,100.0,ok,S1,S3
-71.03.19,710319,Tabukan Selatan Tengah,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.464349,125.664554,true,3.464436,125.651215,24.177,98.0,ok,S1,S3
-71.03.20,710320,Tabukan Selatan Tenggara,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.440975,125.63103,true,3.444184,125.634365,30.279,100.0,ok,S1,S3
-71.03.23,710323,Tahuna Barat,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.648961,125.449674,true,3.649581,125.44392,33.914,100.0,ok,S1,S3
-71.03.24,710324,Tahuna Timur,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.606781,125.50981,true,3.604227,125.515421,12.734,98.8,ok,S1,S3
-71.03.25,710325,Kepulauan Marore,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,4.660709,125.500915,false,4.67118,125.43353,2.93,100.0,ok,S1,S3
-71.04.01,710401,Lirung,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.943273,126.67127,true,3.945062,126.665341,21.681,97.2,ok,S1,S3
-71.04.02,710402,Beo,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.239943,126.804289,true,4.243258,126.807166,44.521,99.8,ok,S1,S3
-71.04.03,710403,Rainis,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.248666,126.852174,true,4.238922,126.846388,78.162,99.4,ok,S1,S3
-71.04.04,710404,Essang,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.470216,126.748171,true,4.483672,126.742321,53.884,98.1,ok,S1,S3
-71.04.05,710405,Nanusa,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.732282,127.112697,false,4.730451,127.073218,23.837,100.0,ok,S1,S3
-71.04.06,710406,Kabaruan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.809726,126.771857,true,3.805782,126.769966,46.535,97.6,ok,S1,S3
-71.04.07,710407,Melonguane,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.03281,126.713076,true,4.038635,126.710322,75.92,99.9,ok,S1,S3
-71.04.08,710408,Gemeh,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.479264,126.800583,true,4.48545,126.805519,106.76,100.0,ok,S1,S3
-71.04.09,710409,Damau,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.773169,126.815039,true,3.785874,126.814299,46.759,99.8,ok,S1,S3
-71.04.10,710410,Tampan' Amma,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.365072,126.825646,true,4.334987,126.836516,126.262,98.5,ok,S1,S3
-71.04.11,710411,Salibabu,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.875504,126.682874,true,3.873002,126.680236,35.526,94.8,ok,S1,S3
-71.04.12,710412,Kalongan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.001985,126.631876,true,3.99735,126.629318,20.307,98.1,ok,S1,S3
-71.04.13,710413,Miangas,71.04,Kabupaten Kepulauan Talaud,Kabupaten,5.557456,126.583144,true,5.551654,126.58104,1.678,100.0,ok,S1,S3
-71.04.14,710414,Beo Utara,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.319516,126.751495,true,4.315254,126.756713,135.491,99.4,ok,S1,S3
-71.04.15,710415,Pulutan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.115844,126.782055,true,4.12965,126.782852,47.265,99.1,ok,S1,S3
-71.04.16,710416,Melonguane Timur,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.045462,126.776576,true,4.038118,126.778167,39.004,98.4,ok,S1,S3
-71.04.17,710417,Moronge,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.902935,126.708993,true,3.905764,126.708293,9.131,97.6,ok,S1,S3
-71.04.18,710418,Beo Selatan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.127112,126.751591,true,4.133689,126.754228,42.934,99.9,ok,S1,S3
-71.04.19,710419,Essang Selatan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.39707,126.72398,true,4.388727,126.724619,47.616,99.5,ok,S1,S3
-71.05.01,710501,Modoinding,71.05,Kabupaten Minahasa Selatan,Kabupaten,0.814502,124.451104,true,0.811687,124.455517,54.815,94.3,ok,S1,S3
-71.05.02,710502,Tompaso Baru,71.05,Kabupaten Minahasa Selatan,Kabupaten,0.929526,124.499361,true,0.927261,124.503383,106.641,99.3,ok,S1,S3
-71.05.03,710503,Ranoyapo,71.05,Kabupaten Minahasa Selatan,Kabupaten,0.991266,124.512485,true,0.994355,124.514196,94.83,99.9,ok,S1,S3
-71.05.07,710507,Motoling,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.031193,124.465169,true,1.024846,124.465916,22.39,100.0,ok,S1,S3
-71.05.08,710508,Sinonsayang,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.048616,124.361863,true,1.023334,124.331276,135.213,98.6,ok,S1,S3
-71.05.09,710509,Tenga,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.1449,124.426807,true,1.133055,124.423492,123.194,100.0,ok,S1,S3
-71.05.10,710510,Amurang,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.142701,124.621814,true,1.153449,124.605651,70.463,98.9,ok,S1,S3
-71.05.12,710512,Tumpaan,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.290868,124.65279,true,1.282054,124.651297,73.411,98.1,ok,S1,S3
-71.05.13,710513,Tareran,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.225912,124.705681,true,1.215504,124.713323,65.178,99.0,ok,S1,S3
-71.05.15,710515,Kumelembuai,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.086259,124.471515,true,1.085416,124.477952,45.664,100.0,ok,S1,S3
-71.05.16,710516,Maesaan,71.05,Kabupaten Minahasa Selatan,Kabupaten,0.873536,124.474164,true,0.862518,124.499032,142.997,99.6,ok,S1,S3
-71.05.17,710517,Amurang Barat,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.154345,124.529355,true,1.15307,124.530828,90.826,98.4,ok,S1,S3
-71.05.18,710518,Amurang Timur,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.17784,124.664173,true,1.175253,124.661069,115.507,99.7,ok,S1,S3
-71.05.19,710519,Tatapaan,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.317746,124.57297,true,1.321808,124.571263,112.784,99.4,ok,S1,S3
-71.05.21,710521,Motoling Barat,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.000864,124.409737,true,0.990884,124.41868,112.187,100.0,ok,S1,S3
-71.05.22,710522,Motoling Timur,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.071547,124.533324,true,1.07405,124.521697,69.604,99.3,ok,S1,S3
-71.05.23,710523,Suluun Tareran,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.269322,124.694756,true,1.268301,124.696481,40.054,97.3,ok,S1,S3
-71.06.01,710601,Kema,71.06,Kabupaten Minahasa Utara,Kabupaten,1.352139,125.054348,true,1.372177,125.063909,73.695,97.9,ok,S1,S3
-71.06.02,710602,Kauditan,71.06,Kabupaten Minahasa Utara,Kabupaten,1.395561,125.026473,true,1.3886,125.017197,107.789,99.1,ok,S1,S3
-71.06.03,710603,Airmadidi,71.06,Kabupaten Minahasa Utara,Kabupaten,1.39841,124.962345,true,1.385392,124.949146,90.698,99.8,ok,S1,S3
-71.06.04,710604,Wori,71.06,Kabupaten Minahasa Utara,Kabupaten,1.645844,124.862,false,1.628978,124.89887,88.323,98.5,ok,S1,S3
-71.06.05,710605,Dimembe,71.06,Kabupaten Minahasa Utara,Kabupaten,1.522309,125.006923,true,1.539019,125.023211,159.042,99.5,ok,S1,S3
-71.06.06,710606,Likupang Barat,71.06,Kabupaten Minahasa Utara,Kabupaten,1.725261,125.005052,true,1.847561,125.075831,82.633,98.5,ok,S1,S3
-71.06.07,710607,Likupang Timur,71.06,Kabupaten Minahasa Utara,Kabupaten,1.6723,125.112713,false,1.79187,125.15689,169.017,99.0,geometri_diperbaiki,S1,S3
-71.06.08,710608,Kalawat,71.06,Kabupaten Minahasa Utara,Kabupaten,1.451126,124.924777,true,1.443383,124.927479,49.847,99.3,ok,S1,S3
-71.06.09,710609,Talawaan,71.06,Kabupaten Minahasa Utara,Kabupaten,1.565941,124.940298,true,1.545277,124.950476,82.925,99.0,ok,S1,S3
-71.06.10,710610,Likupang Selatan,71.06,Kabupaten Minahasa Utara,Kabupaten,1.62134,125.028169,true,1.622781,125.034033,97.392,100.0,ok,S1,S3
-71.07.01,710701,Ratahan,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.051959,124.789933,true,1.039208,124.789206,70.717,99.6,ok,S1,S3
-71.07.02,710702,Pusomaen,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.004951,124.869111,true,1.010045,124.867532,49.947,99.3,ok,S1,S3
-71.07.03,710703,Belang,71.07,Kabupaten Minahasa Tenggara,Kabupaten,0.96166,124.782557,true,0.954787,124.76963,77.019,99.2,ok,S1,S3
-71.07.04,710704,Ratatotok,71.07,Kabupaten Minahasa Tenggara,Kabupaten,0.906457,124.693295,true,0.896533,124.69089,95.085,99.7,ok,S1,S3
-71.07.05,710705,Tombatu,71.07,Kabupaten Minahasa Tenggara,Kabupaten,0.986349,124.674558,true,0.987959,124.675382,72.495,100.0,ok,S1,S3
-71.07.06,710706,Touluaan,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.0692,124.620713,true,1.062424,124.627636,63.198,97.9,ok,S1,S3
-71.07.07,710707,Touluaan Selatan,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.008256,124.596205,true,1.013021,124.593523,103.535,98.7,ok,S1,S3
-71.07.08,710708,Silian Raya,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.0948,124.680153,true,1.083541,124.68416,63.072,98.8,ok,S1,S3
-71.07.09,710709,Tombatu Timur,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.010276,124.717326,true,1.005143,124.71768,14.005,100.0,ok,S1,S3
-71.07.10,710710,Tombatu Utara,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.055659,124.713669,true,1.057516,124.710071,35.834,100.0,ok,S1,S3
-71.07.11,710711,Pasan,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.021292,124.748034,true,1.034382,124.748092,54.768,100.0,ok,S1,S3
-71.07.12,710712,Ratahan Timur,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.066761,124.837313,true,1.064755,124.852985,56.301,99.8,ok,S1,S3
-71.08.01,710801,Sangkub,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.854794,123.655995,true,0.848257,123.666657,87.455,99.7,ok,S1,S3
-71.08.02,710802,Bintauna,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.715542,123.604588,true,0.729179,123.612567,654.038,99.5,ok,S1,S3
-71.08.03,710803,Bolangitang Timur,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.767845,123.447631,false,0.77143,123.489918,426.687,99.8,ok,S1,S3
-71.08.04,710804,Bolangitang Barat,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.786143,123.337912,true,0.808858,123.327276,313.999,100.0,ok,S1,S3
-71.08.05,710805,Kaidipang,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.883209,123.254964,true,0.881822,123.263655,98.417,99.7,ok,S1,S3
-71.08.06,710806,Pinogaluman,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.889057,123.185363,true,0.89543,123.164566,75.704,99.0,ok,S1,S3
-71.09.01,710901,Siau Timur,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.756878,125.419993,true,2.753808,125.425501,41.089,97.6,ok,S1,S3
-71.09.02,710902,Siau Barat,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.729847,125.331581,false,2.727726,125.367326,15.878,93.0,ok,S1,S3
-71.09.03,710903,Tagulandang,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.335859,125.38081,false,2.352235,125.390287,37.821,97.6,ok,S1,S3
-71.09.04,710904,Siau Timur Selatan,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.669259,125.418445,false,2.670324,125.397641,22.158,92.2,ok,S1,S3
-71.09.05,710905,Siau Barat Selatan,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.659018,125.38935,true,2.673984,125.380115,12.922,96.2,ok,S1,S3
-71.09.06,710906,Tagulandang Utara,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.35773,125.425037,true,2.365432,125.429811,13.368,99.9,ok,S1,S3
-71.09.07,710907,Biaro,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.102908,125.37012,true,2.102136,125.373941,24.515,100.0,geometri_diperbaiki,S1,S3
-71.09.08,710908,Siau Barat Utara,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.789543,125.397084,true,2.784758,125.396124,22.755,96.6,ok,S1,S3
-71.09.09,710909,Siau Tengah,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.743286,125.383522,true,2.72447,125.379432,9.929,100.0,ok,S1,S3
-71.09.10,710910,Tagulandang Selatan,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.342145,125.444575,true,2.342148,125.446991,14.581,98.0,ok,S1,S3
-71.10.01,711001,Tutuyan,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.779152,124.581215,true,0.76941,124.58546,154.365,98.9,geometri_diperbaiki,S1,S3
-71.10.02,711002,Kotabunan,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.870738,124.626212,true,0.876448,124.60854,134.85,100.0,ok,S1,S3
-71.10.03,711003,Nuangan,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.569076,124.489136,true,0.557176,124.474304,136.115,99.8,ok,S1,S3
-71.10.04,711004,Modayag,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.660272,124.422547,true,0.669276,124.432852,193.167,99.9,ok,S1,S3
-71.10.05,711005,Modayag Barat,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.667902,124.360396,false,0.639235,124.356551,35.76,93.9,ok,S1,S3
-71.10.06,711006,Motongkad,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.695855,124.527258,true,0.68442,124.532285,119.107,99.3,ok,S1,S3
-71.10.07,711007,Mooat,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.765692,124.47362,false,0.766077,124.427691,85.705,99.1,ok,S1,S3
-71.11.01,711101,Bolaang Uki,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.411476,123.967434,true,0.413866,123.975573,189.956,99.4,ok,S1,S3
-71.11.02,711102,Posigadan,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.437085,123.606489,true,0.443082,123.617442,573.083,99.7,ok,S1,S3
-71.11.03,711103,Pinolosian,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.458994,124.12088,true,0.457594,124.112218,268.555,98.3,ok,S1,S3
-71.11.04,711104,Pinolosian Tengah,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.472862,124.252917,true,0.46537,124.252651,200.108,98.2,ok,S1,S3
-71.11.05,711105,Pinolosian Timur,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.516453,124.381471,true,0.521285,124.38772,232.546,99.7,ok,S1,S3
-71.11.06,711106,Helumo,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.387716,123.826746,true,0.385791,123.828153,181.733,98.7,ok,S1,S3
-71.11.07,711107,Tomini,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.386879,123.724324,true,0.397282,123.721972,137.693,100.0,ok,S1,S3
-71.71.01,717101,Bunaken,71.71,Kota Manado,Kota,1.554125,124.841641,true,1.550643,124.84105,30.782,96.8,ok,S1,S3
-71.71.02,717102,Tuminting,71.71,Kota Manado,Kota,1.513432,124.854781,true,1.511663,124.852055,6.119,92.7,ok,S1,S3
-71.71.03,717103,Singkil,71.71,Kota Manado,Kota,1.499956,124.858358,true,1.505081,124.861446,4.73,100.0,ok,S1,S3
-71.71.04,717104,Wenang,71.71,Kota Manado,Kota,1.485741,124.841341,true,1.48712,124.840542,3.998,88.7,batas_tidak_presisi,S1,S3
-71.71.05,717105,Tikala,71.71,Kota Manado,Kota,1.467157,124.862001,true,1.464815,124.863994,8.063,92.5,ok,S1,S3
-71.71.06,717106,Sario,71.71,Kota Manado,Kota,1.468929,124.834335,true,1.473254,124.834766,1.928,92.2,ok,S1,S3
-71.71.07,717107,Wanea,71.71,Kota Manado,Kota,1.4555,124.848702,true,1.456945,124.845919,8.367,100.0,ok,S1,S3
-71.71.08,717108,Mapanget,71.71,Kota Manado,Kota,1.531479,124.896989,true,1.535367,124.893994,53.737,99.3,ok,S1,S3
-71.71.09,717109,Malalayang,71.71,Kota Manado,Kota,1.446659,124.816115,true,1.441442,124.821582,18.781,92.5,ok,S1,S3
-71.71.10,717110,Bunaken Kepulauan,71.71,Kota Manado,Kota,1.627036,124.728053,false,1.632314,124.699044,17.821,100.0,ok,S1,S3
-71.71.11,717111,Paal Dua,71.71,Kota Manado,Kota,1.481741,124.874344,true,1.476767,124.876602,9.039,96.9,ok,S1,S3
-71.72.01,717201,Lembeh Selatan,71.72,Kota Bitung,Kota,1.416812,125.215152,true,1.411346,125.207786,31.008,98.7,geometri_diperbaiki,S1,S3
-71.72.02,717202,Madidir,71.72,Kota Bitung,Kota,1.459598,125.162025,true,1.450674,125.16093,19.766,99.2,ok,S1,S3
-71.72.03,717203,Ranowulu,71.72,Kota Bitung,Kota,1.516392,125.122455,true,1.527726,125.135722,170.616,100.0,ok,S1,S3
-71.72.04,717204,Aertembaga,71.72,Kota Bitung,Kota,1.495945,125.211772,true,1.489889,125.206728,46.839,99.4,geometri_diperbaiki,S1,S3
-71.72.05,717205,Matuari,71.72,Kota Bitung,Kota,1.43114,125.106278,true,1.441169,125.106783,21.877,97.3,ok,S1,S3
-71.72.06,717206,Girian,71.72,Kota Bitung,Kota,1.445837,125.131905,true,1.449474,125.132163,5.81,99.8,ok,S1,S3
-71.72.07,717207,Maesa,71.72,Kota Bitung,Kota,1.46247,125.188205,true,1.456776,125.188108,8.89,99.7,ok,S1,S3
-71.72.08,717208,Lembeh Utara,71.72,Kota Bitung,Kota,1.473788,125.260904,true,1.481637,125.264662,24.037,96.2,geometri_diperbaiki,S1,S3
-71.73.01,717301,Tomohon Selatan,71.73,Kota Tomohon,Kota,1.28646,124.820503,true,1.275184,124.825968,34.102,99.3,ok,S1,S3
-71.73.02,717302,Tomohon Tengah,71.73,Kota Tomohon,Kota,1.319625,124.847912,false,1.320825,124.833702,16.45,95.3,ok,S1,S3
-71.73.03,717303,Tomohon Utara,71.73,Kota Tomohon,Kota,1.365035,124.814425,true,1.374094,124.810631,59.969,99.8,ok,S1,S3
-71.73.04,717304,Tomohon Barat,71.73,Kota Tomohon,Kota,1.321556,124.771834,true,1.327778,124.764336,40.247,98.4,ok,S1,S3
-71.73.05,717305,Tomohon Timur,71.73,Kota Tomohon,Kota,1.334481,124.873326,true,1.33206,124.871104,17.016,96.5,ok,S1,S3
-71.74.01,717401,Kotamobagu Utara,71.74,Kota Kotamobagu,Kota,0.75962,124.325282,true,0.760799,124.328293,10.177,100.0,ok,S1,S3
-71.74.02,717402,Kotamobagu Timur,71.74,Kota Kotamobagu,Kota,0.722474,124.338978,true,0.71172,124.341927,28.518,95.4,ok,S1,S3
-71.74.03,717403,Kotamobagu Selatan,71.74,Kota Kotamobagu,Kota,0.689775,124.316879,true,0.684781,124.322425,58.339,99.1,ok,S1,S3
-71.74.04,717404,Kotamobagu Barat,71.74,Kota Kotamobagu,Kota,0.739148,124.284882,true,0.737611,124.285133,16.112,96.6,ok,S1,S3
+kode_kemendagri,kode_nodot,nama,kode_kab_kota,nama_kab_kota,jenis_kab_kota,lat_sentral,lng_sentral,centroid_sumber_di_dalam_poligon,lat_titik_dalam,lng_titik_dalam,luas_km2_approx,asal_poligon,qa_persen_di_dalam_induk,qa_flag,src_kode_nama,src_lat_lng
+71.01.05,710105,Sang Tombolang,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.761959,123.803159,true,0.761173,123.808156,387.398,gabungan_desa,99.8,ok,S1,S3
+71.01.09,710109,Dumoga Barat,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.520475,123.826061,true,0.524289,123.851529,485.577,gabungan_desa,99.7,ok,S1,S3
+71.01.10,710110,Dumoga Timur,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.578091,124.087133,true,0.585711,124.106893,123.411,gabungan_desa,99.4,ok,S1,S3
+71.01.11,710111,Dumoga Utara,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.616638,123.861755,true,0.610947,123.836179,285.262,gabungan_desa,99.9,ok,S1,S3
+71.01.12,710112,Lolak,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.787286,123.998057,true,0.788748,124.003219,472.246,gabungan_desa,99.3,ok,S1,S3
+71.01.13,710113,Bolaang,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.814717,124.150521,true,0.822298,124.154065,205.358,gabungan_desa,99.7,ok,S1,S3
+71.01.14,710114,Lolayan,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.621373,124.249124,true,0.632299,124.263745,307.13,gabungan_desa,99.9,ok,S1,S3
+71.01.19,710119,Passi Barat,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.793675,124.257198,true,0.795366,124.259276,120.441,gabungan_desa,99.9,ok,S1,S3
+71.01.20,710120,Poigar,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.929794,124.279736,true,0.920284,124.283011,268.818,gabungan_desa,99.8,ok,S1,S3
+71.01.22,710122,Passi Timur,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.807291,124.383633,true,0.813098,124.386833,95.534,gabungan_desa,98.8,ok,S1,S3
+71.01.31,710131,Bolaang Timur,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.904064,124.179068,true,0.906805,124.16831,81.83,gabungan_desa,100.0,ok,S1,S3
+71.01.32,710132,Bilalang,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.849678,124.342635,true,0.843074,124.336888,64.081,gabungan_desa,98.9,ok,S1,S3
+71.01.33,710133,Dumoga,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.669406,124.129018,true,0.656424,124.113224,223.478,gabungan_desa,100.0,ok,S1,S3
+71.01.34,710134,Dumoga Tenggara,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.642398,124.007811,true,0.634785,123.995737,135.348,gabungan_desa,100.0,ok,S1,S3
+71.01.35,710135,Dumoga Tengah,71.01,Kabupaten Bolaang Mongondow,Kabupaten,0.52673,124.019286,true,0.533697,124.018105,49.343,gabungan_desa,99.3,ok,S1,S3
+71.02.01,710201,Tondano Barat,71.02,Kabupaten Minahasa,Kabupaten,1.299058,124.894363,true,1.301472,124.892189,22.785,gabungan_desa,100.0,ok,S1,S3
+71.02.02,710202,Tondano Timur,71.02,Kabupaten Minahasa,Kabupaten,1.291002,124.939868,true,1.291824,124.938778,30.68,gabungan_desa,100.0,ok,S1,S3
+71.02.03,710203,Eris,71.02,Kabupaten Minahasa,Kabupaten,1.226076,124.927291,true,1.224023,124.923381,43.678,gabungan_desa,100.0,ok,S1,S3
+71.02.04,710204,Kombi,71.02,Kabupaten Minahasa,Kabupaten,1.25488,125.004845,true,1.257405,125.005295,138.661,gabungan_desa,99.0,ok,S1,S3
+71.02.05,710205,Lembean Timur,71.02,Kabupaten Minahasa,Kabupaten,1.166157,124.978445,true,1.171378,124.976411,76.228,gabungan_desa,99.8,ok,S1,S3
+71.02.06,710206,Kakas,71.02,Kabupaten Minahasa,Kabupaten,1.147164,124.928318,true,1.143515,124.929861,75.953,gabungan_desa,100.0,ok,S1,S3
+71.02.07,710207,Tompaso,71.02,Kabupaten Minahasa,Kabupaten,1.184916,124.813736,true,1.184333,124.815064,12.525,gabungan_desa,100.0,ok,S1,S3
+71.02.08,710208,Remboken,71.02,Kabupaten Minahasa,Kabupaten,1.236034,124.850924,true,1.238038,124.847083,31.948,gabungan_desa,100.0,ok,S1,S3
+71.02.09,710209,Langowan Timur,71.02,Kabupaten Minahasa,Kabupaten,1.147947,124.856281,true,1.150449,124.852641,14.184,gabungan_desa,100.0,ok,S1,S3
+71.02.10,710210,Langowan Barat,71.02,Kabupaten Minahasa,Kabupaten,1.127606,124.789589,true,1.129524,124.792762,41.38,gabungan_desa,100.0,ok,S1,S3
+71.02.11,710211,Sonder,71.02,Kabupaten Minahasa,Kabupaten,1.266329,124.773801,true,1.264787,124.786875,46.621,gabungan_desa,98.4,ok,S1,S3
+71.02.12,710212,Kawangkoan,71.02,Kabupaten Minahasa,Kabupaten,1.210298,124.80797,true,1.21161,124.816278,13.758,gabungan_desa,100.0,ok,S1,S3
+71.02.13,710213,Pineleng,71.02,Kabupaten Minahasa,Kabupaten,1.411568,124.816294,true,1.408025,124.814971,41.461,gabungan_desa,97.4,ok,S1,S3
+71.02.14,710214,Tombulu,71.02,Kabupaten Minahasa,Kabupaten,1.402942,124.885344,true,1.406983,124.885065,71.038,gabungan_desa,99.5,ok,S1,S3
+71.02.15,710215,Tombariri,71.02,Kabupaten Minahasa,Kabupaten,1.374032,124.648906,true,1.376113,124.631209,103.795,gabungan_desa,99.0,ok,S1,S3
+71.02.16,710216,Tondano Utara,71.02,Kabupaten Minahasa,Kabupaten,1.326917,124.921288,true,1.327513,124.929275,18.343,gabungan_desa,100.0,ok,S1,S3
+71.02.17,710217,Langowan Selatan,71.02,Kabupaten Minahasa,Kabupaten,1.08159,124.887435,true,1.082241,124.89055,69.069,gabungan_desa,99.9,ok,S1,S3
+71.02.18,710218,Tondano Selatan,71.02,Kabupaten Minahasa,Kabupaten,1.261355,124.884195,false,1.260062,124.874407,33.751,gabungan_desa,99.6,ok,S1,S3
+71.02.19,710219,Langowan Utara,71.02,Kabupaten Minahasa,Kabupaten,1.169594,124.826522,true,1.171183,124.825837,7.908,gabungan_desa,100.0,ok,S1,S3
+71.02.20,710220,Kakas Barat,71.02,Kabupaten Minahasa,Kabupaten,1.13044,124.900929,true,1.132885,124.895854,67.919,gabungan_desa,100.0,ok,S1,S3
+71.02.21,710221,Kawangkoan Utara,71.02,Kabupaten Minahasa,Kabupaten,1.224992,124.782047,true,1.2261,124.784155,16.114,gabungan_desa,100.0,ok,S1,S3
+71.02.22,710222,Kawangkoan Barat,71.02,Kabupaten Minahasa,Kabupaten,1.186924,124.754263,true,1.186729,124.754347,35.401,gabungan_desa,98.7,ok,S1,S3
+71.02.23,710223,Mandolang,71.02,Kabupaten Minahasa,Kabupaten,1.419196,124.757378,true,1.417743,124.750844,40.121,gabungan_desa,100.0,ok,S1,S3
+71.02.24,710224,Tombariri Timur,71.02,Kabupaten Minahasa,Kabupaten,1.354986,124.728423,true,1.34745,124.7324,56.747,gabungan_desa,98.2,ok,S1,S3
+71.02.25,710225,Tompaso Barat,71.02,Kabupaten Minahasa,Kabupaten,1.157607,124.779227,true,1.161649,124.78093,23.444,gabungan_desa,100.0,ok,S1,S3
+71.03.08,710308,Tabukan Utara,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.675869,125.507451,true,3.67445,125.508228,92.296,gabungan_desa,99.5,ok,S1,S3
+71.03.09,710309,Nusa Tabukan,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.774176,125.590035,true,3.758241,125.570653,10.603,gabungan_desa,100.0,ok,S1,S3
+71.03.10,710310,Manganitu Selatan,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.415579,125.605604,true,3.428362,125.594119,61.788,gabungan_desa,98.9,ok,S1,S3
+71.03.11,710311,Tatoareng,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.17014,125.496704,false,3.24368,125.460339,18.577,gabungan_desa,100.0,ok,S1,S3
+71.03.12,710312,Tamako,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.459239,125.542818,true,3.46129,125.534381,69.467,gabungan_desa,100.0,ok,S1,S3
+71.03.13,710313,Manganitu,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.535266,125.515084,true,3.538171,125.518153,62.21,gabungan_desa,99.6,ok,S1,S3
+71.03.14,710314,Tabukan Tengah,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.568856,125.564525,true,3.572007,125.563595,70.051,gabungan_desa,100.0,ok,S1,S3
+71.03.15,710315,Tabukan Selatan,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.501883,125.611719,true,3.502099,125.602439,46.648,gabungan_desa,99.6,ok,S1,S3
+71.03.16,710316,Kendahe,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.714298,125.424541,true,3.695098,125.426092,46.979,gabungan_desa,99.6,ok,S1,S3
+71.03.17,710317,Tahuna,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.624734,125.484723,true,3.630954,125.489464,15.186,gabungan_desa,100.0,ok,S1,S3
+71.03.19,710319,Tabukan Selatan Tengah,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.464349,125.664554,true,3.45979,125.652437,24.915,gabungan_desa,98.0,ok,S1,S3
+71.03.20,710320,Tabukan Selatan Tenggara,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.440975,125.63103,true,3.442476,125.635346,31.176,gabungan_desa,100.0,ok,S1,S3
+71.03.23,710323,Tahuna Barat,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.648961,125.449674,true,3.652061,125.442642,33.741,gabungan_desa,100.0,ok,S1,S3
+71.03.24,710324,Tahuna Timur,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,3.606781,125.50981,true,3.604979,125.514017,12.944,gabungan_desa,98.8,ok,S1,S3
+71.03.25,710325,Kepulauan Marore,71.03,Kabupaten Kepulauan Sangihe,Kabupaten,4.660709,125.500915,false,4.736457,125.483492,3.338,gabungan_desa,100.0,ok,S1,S3
+71.04.01,710401,Lirung,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.943273,126.67127,true,3.946884,126.663735,20.045,gabungan_desa,97.2,ok,S1,S3
+71.04.02,710402,Beo,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.239943,126.804289,true,4.244205,126.807235,47.481,gabungan_desa,99.8,ok,S1,S3
+71.04.03,710403,Rainis,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.248666,126.852174,true,4.239112,126.844185,78.958,gabungan_desa,99.4,ok,S1,S3
+71.04.04,710404,Essang,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.470216,126.748171,true,4.483765,126.740824,52.989,gabungan_desa,98.1,ok,S1,S3
+71.04.05,710405,Nanusa,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.732282,127.112697,false,4.729981,127.073839,28.223,gabungan_desa,100.0,ok,S1,S3
+71.04.06,710406,Kabaruan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.809726,126.771857,true,3.802087,126.769012,46.161,gabungan_desa,97.6,ok,S1,S3
+71.04.07,710407,Melonguane,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.03281,126.713076,true,4.035857,126.709876,75.613,gabungan_desa,99.9,ok,S1,S3
+71.04.08,710408,Gemeh,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.479264,126.800583,true,4.48219,126.807333,107.555,gabungan_desa,100.0,ok,S1,S3
+71.04.09,710409,Damau,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.773169,126.815039,true,3.777942,126.817196,46.69,gabungan_desa,99.8,ok,S1,S3
+71.04.10,710410,Tampan' Amma,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.365072,126.825646,true,4.365856,126.816429,127.696,gabungan_desa,98.5,ok,S1,S3
+71.04.11,710411,Salibabu,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.875504,126.682874,true,3.872152,126.681702,35.888,gabungan_desa,94.8,ok,S1,S3
+71.04.12,710412,Kalongan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.001985,126.631876,true,3.997357,126.630947,20.92,gabungan_desa,98.1,ok,S1,S3
+71.04.13,710413,Miangas,71.04,Kabupaten Kepulauan Talaud,Kabupaten,5.557456,126.583144,true,5.555878,126.58281,2.066,gabungan_desa,100.0,ok,S1,S3
+71.04.14,710414,Beo Utara,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.319516,126.751495,true,4.321388,126.755692,135.191,gabungan_desa,99.4,ok,S1,S3
+71.04.15,710415,Pulutan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.115844,126.782055,true,4.125069,126.783223,48.386,gabungan_desa,99.1,ok,S1,S3
+71.04.16,710416,Melonguane Timur,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.045462,126.776576,true,4.039113,126.779145,40.561,gabungan_desa,98.4,ok,S1,S3
+71.04.17,710417,Moronge,71.04,Kabupaten Kepulauan Talaud,Kabupaten,3.902935,126.708993,true,3.90225,126.709149,10.937,gabungan_desa,97.6,ok,S1,S3
+71.04.18,710418,Beo Selatan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.127112,126.751591,true,4.128098,126.751018,44.334,gabungan_desa,99.9,ok,S1,S3
+71.04.19,710419,Essang Selatan,71.04,Kabupaten Kepulauan Talaud,Kabupaten,4.39707,126.72398,true,4.388015,126.724829,46.931,gabungan_desa,99.5,ok,S1,S3
+71.05.01,710501,Modoinding,71.05,Kabupaten Minahasa Selatan,Kabupaten,0.814502,124.451104,true,0.815074,124.455739,53.613,gabungan_desa,94.3,ok,S1,S3
+71.05.02,710502,Tompaso Baru,71.05,Kabupaten Minahasa Selatan,Kabupaten,0.929526,124.499361,true,0.926789,124.503961,105.876,gabungan_desa,99.3,ok,S1,S3
+71.05.03,710503,Ranoyapo,71.05,Kabupaten Minahasa Selatan,Kabupaten,0.991266,124.512485,true,0.994707,124.50994,94.096,gabungan_desa,99.9,ok,S1,S3
+71.05.07,710507,Motoling,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.031193,124.465169,true,1.028588,124.470862,23.989,gabungan_desa,100.0,ok,S1,S3
+71.05.08,710508,Sinonsayang,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.048616,124.361863,true,1.034379,124.331426,133.894,gabungan_desa,98.6,ok,S1,S3
+71.05.09,710509,Tenga,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.1449,124.426807,true,1.134493,124.423802,123.583,gabungan_desa,100.0,ok,S1,S3
+71.05.10,710510,Amurang,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.142701,124.621814,true,1.151114,124.603384,66.691,gabungan_desa,98.9,ok,S1,S3
+71.05.12,710512,Tumpaan,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.290868,124.65279,true,1.280142,124.650018,73.646,gabungan_desa,98.1,ok,S1,S3
+71.05.13,710513,Tareran,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.225912,124.705681,true,1.213179,124.713176,66.081,gabungan_desa,99.0,ok,S1,S3
+71.05.15,710515,Kumelembuai,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.086259,124.471515,true,1.090571,124.480133,45.629,gabungan_desa,100.0,ok,S1,S3
+71.05.16,710516,Maesaan,71.05,Kabupaten Minahasa Selatan,Kabupaten,0.873536,124.474164,true,0.862337,124.498462,140.652,gabungan_desa,99.6,ok,S1,S3
+71.05.17,710517,Amurang Barat,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.154345,124.529355,true,1.156358,124.530528,88.01,gabungan_desa,98.4,ok,S1,S3
+71.05.18,710518,Amurang Timur,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.17784,124.664173,true,1.173163,124.662058,113.801,gabungan_desa,99.7,ok,S1,S3
+71.05.19,710519,Tatapaan,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.317746,124.57297,true,1.320394,124.572111,111.945,gabungan_desa,99.4,ok,S1,S3
+71.05.21,710521,Motoling Barat,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.000864,124.409737,true,0.995445,124.416811,112.403,gabungan_desa,100.0,ok,S1,S3
+71.05.22,710522,Motoling Timur,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.071547,124.533324,true,1.072142,124.521552,68.556,gabungan_desa,99.3,ok,S1,S3
+71.05.23,710523,Suluun Tareran,71.05,Kabupaten Minahasa Selatan,Kabupaten,1.269322,124.694756,true,1.268636,124.694798,40.724,gabungan_desa,97.3,ok,S1,S3
+71.06.01,710601,Kema,71.06,Kabupaten Minahasa Utara,Kabupaten,1.352139,125.054348,true,1.369839,125.062797,74.083,gabungan_desa,97.9,ok,S1,S3
+71.06.02,710602,Kauditan,71.06,Kabupaten Minahasa Utara,Kabupaten,1.395561,125.026473,true,1.388572,125.017021,103.718,gabungan_desa,99.1,ok,S1,S3
+71.06.03,710603,Airmadidi,71.06,Kabupaten Minahasa Utara,Kabupaten,1.39841,124.962345,true,1.392492,124.951782,92.665,gabungan_desa,99.8,ok,S1,S3
+71.06.04,710604,Wori,71.06,Kabupaten Minahasa Utara,Kabupaten,1.645844,124.862,false,1.718587,124.75293,91.692,gabungan_desa,98.5,ok,S1,S3
+71.06.05,710605,Dimembe,71.06,Kabupaten Minahasa Utara,Kabupaten,1.522309,125.006923,true,1.536075,125.023136,157.595,gabungan_desa,99.5,ok,S1,S3
+71.06.06,710606,Likupang Barat,71.06,Kabupaten Minahasa Utara,Kabupaten,1.725261,125.005052,true,1.684738,124.979524,82.397,gabungan_desa,98.5,ok,S1,S3
+71.06.07,710607,Likupang Timur,71.06,Kabupaten Minahasa Utara,Kabupaten,1.6723,125.112713,false,1.790212,125.155791,169.6,gabungan_desa,99.0,ok,S1,S3
+71.06.08,710608,Kalawat,71.06,Kabupaten Minahasa Utara,Kabupaten,1.451126,124.924777,true,1.445904,124.929049,50.333,gabungan_desa,99.3,ok,S1,S3
+71.06.09,710609,Talawaan,71.06,Kabupaten Minahasa Utara,Kabupaten,1.565941,124.940298,true,1.557937,124.948683,81.638,gabungan_desa,99.0,ok,S1,S3
+71.06.10,710610,Likupang Selatan,71.06,Kabupaten Minahasa Utara,Kabupaten,1.62134,125.028169,true,1.623325,125.033832,96.227,gabungan_desa,100.0,ok,S1,S3
+71.07.01,710701,Ratahan,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.051959,124.789933,true,1.050356,124.788906,71.643,gabungan_desa,99.6,ok,S1,S3
+71.07.02,710702,Pusomaen,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.004951,124.869111,true,1.012343,124.868176,50.33,gabungan_desa,99.3,ok,S1,S3
+71.07.03,710703,Belang,71.07,Kabupaten Minahasa Tenggara,Kabupaten,0.96166,124.782557,true,0.956227,124.769948,73.66,gabungan_desa,99.2,ok,S1,S3
+71.07.04,710704,Ratatotok,71.07,Kabupaten Minahasa Tenggara,Kabupaten,0.906457,124.693295,true,0.897008,124.681621,98.222,gabungan_desa,99.7,ok,S1,S3
+71.07.05,710705,Tombatu,71.07,Kabupaten Minahasa Tenggara,Kabupaten,0.986349,124.674558,true,0.99567,124.672228,71.65,gabungan_desa,100.0,ok,S1,S3
+71.07.06,710706,Touluaan,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.0692,124.620713,true,1.064535,124.623266,63.467,gabungan_desa,97.9,ok,S1,S3
+71.07.07,710707,Touluaan Selatan,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.008256,124.596205,true,1.014061,124.602134,102.944,gabungan_desa,98.7,ok,S1,S3
+71.07.08,710708,Silian Raya,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.0948,124.680153,true,1.090909,124.686023,62.941,gabungan_desa,98.8,ok,S1,S3
+71.07.09,710709,Tombatu Timur,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.010276,124.717326,true,1.007842,124.718885,15.459,gabungan_desa,100.0,ok,S1,S3
+71.07.10,710710,Tombatu Utara,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.055659,124.713669,true,1.055706,124.708943,36.394,gabungan_desa,100.0,ok,S1,S3
+71.07.11,710711,Pasan,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.021292,124.748034,true,1.036736,124.744148,53.671,gabungan_desa,100.0,ok,S1,S3
+71.07.12,710712,Ratahan Timur,71.07,Kabupaten Minahasa Tenggara,Kabupaten,1.066761,124.837313,true,1.066864,124.854307,55.812,gabungan_desa,99.8,ok,S1,S3
+71.08.01,710801,Sangkub,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.854794,123.655995,true,0.849647,123.666216,88.091,gabungan_desa,99.7,ok,S1,S3
+71.08.02,710802,Bintauna,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.715542,123.604588,true,0.732218,123.608778,651.063,gabungan_desa,99.5,ok,S1,S3
+71.08.03,710803,Bolangitang Timur,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.767845,123.447631,false,0.76971,123.489311,425.909,gabungan_desa,99.8,ok,S1,S3
+71.08.04,710804,Bolangitang Barat,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.786143,123.337912,true,0.801162,123.324571,314.719,gabungan_desa,100.0,ok,S1,S3
+71.08.05,710805,Kaidipang,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.883209,123.254964,true,0.880867,123.265504,96.808,gabungan_desa,99.7,ok,S1,S3
+71.08.06,710806,Pinogaluman,71.08,Kabupaten Bolaang Mongondow Utara,Kabupaten,0.889057,123.185363,true,0.896286,123.166487,75.14,gabungan_desa,99.0,ok,S1,S3
+71.09.01,710901,Siau Timur,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.756878,125.419993,true,2.754174,125.425951,41.243,gabungan_desa,97.6,ok,S1,S3
+71.09.02,710902,Siau Barat,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.729847,125.331581,false,2.735037,125.169743,16.134,gabungan_desa,93.0,ok,S1,S3
+71.09.03,710903,Tagulandang,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.335859,125.38081,false,2.307282,125.36557,39.779,gabungan_desa,97.6,ok,S1,S3
+71.09.04,710904,Siau Timur Selatan,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.669259,125.418445,false,2.683308,125.454688,21.592,gabungan_desa,92.2,ok,S1,S3
+71.09.05,710905,Siau Barat Selatan,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.659018,125.38935,true,2.663058,125.384477,12.289,gabungan_desa,96.2,ok,S1,S3
+71.09.06,710906,Tagulandang Utara,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.35773,125.425037,true,2.360056,125.426577,14.754,gabungan_desa,99.9,ok,S1,S3
+71.09.07,710907,Biaro,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.102908,125.37012,true,2.102194,125.372882,23.841,gabungan_desa,100.0,ok,S1,S3
+71.09.08,710908,Siau Barat Utara,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.789543,125.397084,true,2.78798,125.394388,22.979,gabungan_desa,96.6,ok,S1,S3
+71.09.09,710909,Siau Tengah,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.743286,125.383522,true,2.737977,125.379383,10.258,gabungan_desa,100.0,ok,S1,S3
+71.09.10,710910,Tagulandang Selatan,71.09,Kabupaten Kep. Siau Tagulandang Biaro,Kabupaten,2.342145,125.444575,true,2.3454,125.45088,15.387,gabungan_desa,98.0,ok,S1,S3
+71.10.01,711001,Tutuyan,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.779152,124.581215,true,0.781977,124.591363,153.211,gabungan_desa,98.9,ok,S1,S3
+71.10.02,711002,Kotabunan,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.870738,124.626212,true,0.870494,124.613966,134.263,gabungan_desa,100.0,ok,S1,S3
+71.10.03,711003,Nuangan,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.569076,124.489136,true,0.558902,124.477119,134.565,gabungan_desa,99.8,ok,S1,S3
+71.10.04,711004,Modayag,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.660272,124.422547,true,0.663502,124.436483,194.529,gabungan_desa,99.9,ok,S1,S3
+71.10.05,711005,Modayag Barat,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.667902,124.360396,false,0.62766,124.355024,37.686,gabungan_desa,93.9,ok,S1,S3
+71.10.06,711006,Motongkad,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.695855,124.527258,true,0.689848,124.530689,120.689,gabungan_desa,99.3,ok,S1,S3
+71.10.07,711007,Mooat,71.10,Kabupaten Bolaang Mongondow Timur,Kabupaten,0.765692,124.47362,false,0.764868,124.418197,88.941,gabungan_desa,99.1,ok,S1,S3
+71.11.01,711101,Bolaang Uki,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.411476,123.967434,true,0.410015,123.975681,186.12,gabungan_desa,99.4,ok,S1,S3
+71.11.02,711102,Posigadan,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.437085,123.606489,true,0.439506,123.618189,568.683,gabungan_desa,99.7,ok,S1,S3
+71.11.03,711103,Pinolosian,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.458994,124.12088,true,0.462406,124.108006,267.574,gabungan_desa,98.3,ok,S1,S3
+71.11.04,711104,Pinolosian Tengah,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.472862,124.252917,true,0.463626,124.253009,199.244,gabungan_desa,98.2,ok,S1,S3
+71.11.05,711105,Pinolosian Timur,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.516453,124.381471,true,0.523996,124.383877,235.225,gabungan_desa,99.7,ok,S1,S3
+71.11.06,711106,Helumo,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.387716,123.826746,true,0.384724,123.829794,186.99,gabungan_desa,98.7,ok,S1,S3
+71.11.07,711107,Tomini,71.11,Kabupaten Bolaang Mongondow Selatan,Kabupaten,0.386879,123.724324,true,0.387977,123.719255,138.049,gabungan_desa,100.0,ok,S1,S3
+71.71.01,717101,Bunaken,71.71,Kota Manado,Kota,1.554125,124.841641,true,1.551236,124.843047,32.162,gabungan_desa,96.8,ok,S1,S3
+71.71.02,717102,Tuminting,71.71,Kota Manado,Kota,1.513432,124.854781,true,1.511086,124.852945,5.291,gabungan_desa,92.7,ok,S1,S3
+71.71.03,717103,Singkil,71.71,Kota Manado,Kota,1.499956,124.858358,true,1.500551,124.857666,4.908,gabungan_desa,100.0,ok,S1,S3
+71.71.04,717104,Wenang,71.71,Kota Manado,Kota,1.485741,124.841341,true,1.485666,124.83979,3.392,gabungan_desa,88.7,batas_tidak_presisi,S1,S3
+71.71.05,717105,Tikala,71.71,Kota Manado,Kota,1.467157,124.862001,true,1.468209,124.863856,6.707,gabungan_desa,92.5,ok,S1,S3
+71.71.06,717106,Sario,71.71,Kota Manado,Kota,1.468929,124.834335,true,1.468109,124.834536,1.79,gabungan_desa,92.2,ok,S1,S3
+71.71.07,717107,Wanea,71.71,Kota Manado,Kota,1.4555,124.848702,true,1.455241,124.846338,8.609,gabungan_desa,100.0,ok,S1,S3
+71.71.08,717108,Mapanget,71.71,Kota Manado,Kota,1.531479,124.896989,true,1.529116,124.893134,53.838,gabungan_desa,99.3,ok,S1,S3
+71.71.09,717109,Malalayang,71.71,Kota Manado,Kota,1.446659,124.816115,true,1.446232,124.814665,17.885,gabungan_desa,92.5,ok,S1,S3
+71.71.10,717110,Bunaken Kepulauan,71.71,Kota Manado,Kota,1.627036,124.728053,false,1.633412,124.698724,18.863,gabungan_desa,100.0,ok,S1,S3
+71.71.11,717111,Paal Dua,71.71,Kota Manado,Kota,1.481741,124.874344,true,1.4801,124.874594,9.413,gabungan_desa,96.9,ok,S1,S3
+71.72.01,717201,Lembeh Selatan,71.72,Kota Bitung,Kota,1.416812,125.215152,true,1.413903,125.210954,30.246,gabungan_desa,98.7,ok,S1,S3
+71.72.02,717202,Madidir,71.72,Kota Bitung,Kota,1.459598,125.162025,true,1.461248,125.16132,19.884,gabungan_desa,99.2,ok,S1,S3
+71.72.03,717203,Ranowulu,71.72,Kota Bitung,Kota,1.516392,125.122455,true,1.521524,125.132764,172.46,gabungan_desa,100.0,ok,S1,S3
+71.72.04,717204,Aertembaga,71.72,Kota Bitung,Kota,1.495945,125.211772,true,1.490746,125.206136,48.747,gabungan_desa,99.4,ok,S1,S3
+71.72.05,717205,Matuari,71.72,Kota Bitung,Kota,1.43114,125.106278,true,1.432027,125.109545,20.491,gabungan_desa,97.3,ok,S1,S3
+71.72.06,717206,Girian,71.72,Kota Bitung,Kota,1.445837,125.131905,true,1.44688,125.131538,5.026,gabungan_desa,99.8,ok,S1,S3
+71.72.07,717207,Maesa,71.72,Kota Bitung,Kota,1.46247,125.188205,true,1.462941,125.189155,8.98,gabungan_desa,99.7,ok,S1,S3
+71.72.08,717208,Lembeh Utara,71.72,Kota Bitung,Kota,1.473788,125.260904,true,1.485584,125.269581,25.381,gabungan_desa,96.2,ok,S1,S3
+71.73.01,717301,Tomohon Selatan,71.73,Kota Tomohon,Kota,1.28646,124.820503,true,1.280404,124.826041,35.469,gabungan_desa,99.3,ok,S1,S3
+71.73.02,717302,Tomohon Tengah,71.73,Kota Tomohon,Kota,1.319625,124.847912,false,1.31947,124.833858,15.998,gabungan_desa,95.3,ok,S1,S3
+71.73.03,717303,Tomohon Utara,71.73,Kota Tomohon,Kota,1.365035,124.814425,true,1.364315,124.814196,58.853,gabungan_desa,99.8,ok,S1,S3
+71.73.04,717304,Tomohon Barat,71.73,Kota Tomohon,Kota,1.321556,124.771834,true,1.327446,124.765601,40.896,gabungan_desa,98.4,ok,S1,S3
+71.73.05,717305,Tomohon Timur,71.73,Kota Tomohon,Kota,1.334481,124.873326,true,1.33218,124.868439,18.611,gabungan_desa,96.5,ok,S1,S3
+71.74.01,717401,Kotamobagu Utara,71.74,Kota Kotamobagu,Kota,0.75962,124.325282,true,0.76032,124.328108,9.541,gabungan_desa,100.0,ok,S1,S3
+71.74.02,717402,Kotamobagu Timur,71.74,Kota Kotamobagu,Kota,0.722474,124.338978,true,0.7177,124.333006,26.671,gabungan_desa,95.4,ok,S1,S3
+71.74.03,717403,Kotamobagu Selatan,71.74,Kota Kotamobagu,Kota,0.689775,124.316879,true,0.688146,124.322635,57.141,gabungan_desa,99.1,ok,S1,S3
+71.74.04,717404,Kotamobagu Barat,71.74,Kota Kotamobagu,Kota,0.739148,124.284882,true,0.741476,124.287246,16.046,gabungan_desa,96.6,ok,S1,S3
