@@ -183,14 +183,14 @@
                             </div>
                             <div class="id-md__card">
                                 <div class="id-md__card-header">
-                                    <span class="id-md__card-title">Pencairan Kas (Collection)</span>
+                                    <span class="id-md__card-title">Pembayaran Periode</span>
                                     <span class="id-md__micro-badge is-emerald"><i class="fa fa-money"/></span>
                                 </div>
                                 <div class="id-md__card-body">
                                     <span class="id-md__card-value is-ok" t-out="moneyShort(state.data.kpi.cash_collected)"/>
                                 </div>
                                 <div class="id-md__card-footer">
-                                    Kas pelunasan berhasil dikonfirmasi
+                                    Pembayaran tercatat, termasuk dalam proses; bukan verifikasi bank
                                 </div>
                             </div>
                         </div>

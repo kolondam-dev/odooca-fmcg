@@ -108,7 +108,7 @@
                                     <span class="id-wms__micro-badge is-emerald"><i class="fa fa-check-circle-o"/></span>
                                 </div>
                                 <div class="id-wms__card-body">
-                                    <span class="id-wms__card-value is-ok" t-out="pct(state.data.kpi.fulfillment_rate)"/>
+                                    <span class="id-wms__card-value" t-out="pct(state.data.kpi.fulfillment_rate)"/>
                                 </div>
                                 <div class="id-wms__card-footer">
                                     <t t-out="int(state.data.kpi.delivered_count)"/> dari <t t-out="int(state.data.kpi.total_deliveries)"/> pesanan terkirim

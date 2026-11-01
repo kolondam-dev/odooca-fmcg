@@ -1,3 +1,8 @@
+## 2026-11-01T23:54:01+07:00 — agent codex-pwa — PR71 temuan screenshot native
+**[F] `cef3fa5`:** install-test lulus (131 native, upgrade dashboard, fixture SQL dan visual); 54 PNG desktop/tablet, tanpa pageerror. Inspeksi top/bottom ketiga dashboard dan tab kategori/armada menemukan dua sidebar memakai 456px, content tablet 568px, document overflow 91px Sales/23px finance-WMS, KPI sempit, context filter hilang saat scroll, tabel lebar. Data CI sintetis/currency company USD; bukan review live.
+**Perbaikan:** penetrasi menempel 3 + 42,9% diberi unit SKU dan baris persentase terpisah; caption collection kedua diperjelas tercatat/bukan bank; 0% fulfillment tidak lagi diberi warna hijau. Redesign layout responsif, canonical app context dan exception-first tetap tahap 2.
+**[F/BU] PWA:** attempt awal cef3fa5 =167 pass/1 fail/2 flaky pada helper foto/lokasi, tanpa perubahan file PWA; artifact13091882456 tersimpan, rerun job satu kali pada SHA yang sama. Hasil akhir/CI HEAD baru menunggu; tidak menghapus kegagalan awal, tidak merge/deploy.
+
 ## 2026-11-01T23:42:07+07:00 — agent codex-pwa — PR71 isolasi urutan fixture visual
 **[F] `19fb11b`:** 131 native Odoo dan fixture finance SQL PASS; 170 browser PWA PASS. UI smoke existing gagal keyboard title draft invoice karena fixture dashboard sudah membuat sequence posted pada jurnal yang sama; Odoo `_compute_name_placeholder` menghilangkan input ketika sequence sudah ada. Bukan perubahan produksi form.
 **Berubah:** jalankan fixture dashboard sesudah UI form smoke dan sebelum audit dashboard. Assertion keyboard/native production tetap utuh. CI final dan screenshot menunggu; tidak merge/deploy.

@@ -260,3 +260,9 @@
 - 19fb11b:131 native/SQLfixture/170 PWA browser PASS. First posted invoice mengubah native draft name_placeholder, menggagalkan precondition keyboard title existing.
 - Reorder fixture dashboard setelah form smoke sebelum visual audit; tidak melemahkan assertion/production. CI final menunggu, tidak merge/deploy.
 - Task managed by agent-codex-pwa at 2026-11-01T23:42:07+07:00
+
+[2026-11-01T23:54:01+07:00] [INFO] PR71 visual native dan koreksi caption
+- cef3fa5 install-test131 native/upgrade/SQLfixture/visual PASS, 54 PNG. Review native top/bottom/tab desktop-tablet: content tablet568px, double sidebar456px, overflow91/23px, KPI/navigasi perlu redesign tahap2.
+- Pisahkan3SKU dan42,9% yang menempel, caption collection kedua bukan bank, hilangkan hijau pada fulfillment0%.
+- PWA attemptawal167pass/1fail/2flaky helperfoto-lokasi, pwa diff kosong; artifact13091882456 disimpan, satu rerunjob SHA sama. CI final menunggu; tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-11-01T23:54:01+07:00
