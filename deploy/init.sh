@@ -29,7 +29,7 @@ if [ "$(id -u)" = "0" ]; then
   fi
 fi
 
-INIT_MODULES="${INIT_MODULES:-id_base,id_approval,id_ui,id_ui_shell,id_ui_form,id_promo_governance,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,l10n_id,fleet,hr,uom,product_expiry,stock_account}"
+INIT_MODULES="${INIT_MODULES:-id_base,id_approval,id_ui,id_ui_shell,id_ui_form,id_promo_governance,id_mobile_api,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,l10n_id,fleet,hr,uom,product_expiry,stock_account}"
 export PGHOST PGPORT PGUSER PGPASSWORD PGDATABASE
 case "$ODOO_DB_USER" in postgres) log "ODOO_DB_USER tidak boleh 'postgres'"; exit 1;; esac
 case "$ODOO_DB_USER$ODOO_DB_PASSWORD$PGDATABASE" in *\'*|*\"*|*\\*) log "kutip/backslash tidak diizinkan pada user, password, atau nama DB"; exit 1;; esac
@@ -227,6 +227,23 @@ if ! has_mark seed_master_v4; then
       log "seed_master_v4: berhasil dimuat dan ditandai."
     else
       log "seed_master_v4 error: pemuatan gagal, mark tidak diset agar dapat diulang pada boot berikutnya."
+    fi
+  fi
+fi
+
+# 5c. Matriks PJP, Workdays & Evidence Seed
+if ! has_mark seed_pjp_workdays_v1; then
+  if [ -f "/opt/scripts/load_pjp_workdays.py" ]; then
+    if [ "$(q "SELECT state FROM ir_module_module WHERE name='id_mobile_api'")" = "installed" ]; then
+      log "seed_pjp_workdays_v1: memuat PJP Workdays dan Evidence..."
+      if odoo_run shell --no-http < /opt/scripts/load_pjp_workdays.py; then
+        set_mark seed_pjp_workdays_v1
+        log "seed_pjp_workdays_v1: berhasil dimuat dan ditandai."
+      else
+        log "seed_pjp_workdays_v1 error: pemuatan gagal, mark tidak diset agar dapat diulang pada boot berikutnya."
+      fi
+    else
+      log "seed_pjp_workdays_v1: modul id_mobile_api belum terpasang; lewati pemuatan PJP workdays."
     fi
   fi
 fi

@@ -30,6 +30,37 @@ class ResPartner(models.Model):
     pic_phone = fields.Char(string="Outlet PIC Phone")
     delivery_notes = fields.Text(string="Delivery & Staging Notes")
 
+    # Permanent Journey Plan (PJP) & Route Logistics
+    pjp_call_day = fields.Selection(
+        [
+            ("monday", "Monday (Senin)"),
+            ("tuesday", "Tuesday (Selasa)"),
+            ("wednesday", "Wednesday (Rabu)"),
+            ("thursday", "Thursday (Kamis)"),
+            ("friday", "Friday (Jumat)"),
+            ("saturday", "Saturday (Sabtu)"),
+        ],
+        string="PJP Call Day",
+        index=True,
+        help="Jadwal hari kunjungan tetap salesman (Permanent Journey Plan)",
+    )
+    pjp_frequency = fields.Selection(
+        [
+            ("F1", "F1 - Weekly (1x / Minggu)"),
+            ("F2", "F2 - Bi-weekly (1x / 2 Minggu)"),
+            ("F4", "F4 - Monthly (1x / 4 Minggu)"),
+        ],
+        string="PJP Call Frequency",
+        index=True,
+        default="F1",
+        help="Frekuensi siklus kunjungan salesman ke outlet",
+    )
+    delivery_route = fields.Char(
+        string="Delivery Route",
+        index=True,
+        help="Kode rute logistik/pengiriman yang melayani outlet ini",
+    )
+
     def _get_matrix_pricelist(self):
         """Menemukan daftar harga matriks FMCG paling sesuai berdasarkan channel dan coverage."""
         self.ensure_one()

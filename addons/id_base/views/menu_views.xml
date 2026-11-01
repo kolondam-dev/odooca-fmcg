@@ -12,11 +12,30 @@
               parent="menu_fmcg_root"
               sequence="5"/>
 
+    <record id="action_fmcg_partner_outlet" model="ir.actions.act_window">
+        <field name="name">Customer &amp; Outlet FMCG</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('customer_rank', '>', 0)]</field>
+        <field name="context">{'default_customer_rank': 1, 'search_default_customer': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Daftar Outlet &amp; Toko FMCG Terjadwal PJP
+            </p>
+        </field>
+    </record>
+
     <!-- Master Data Menu -->
     <menuitem id="menu_fmcg_master"
               name="Master Data"
               parent="menu_fmcg_root"
               sequence="10"/>
+
+    <menuitem id="menu_fmcg_partner_outlet"
+              name="Outlet &amp; Pelanggan PJP"
+              parent="menu_fmcg_master"
+              action="action_fmcg_partner_outlet"
+              sequence="5"/>
 
     <menuitem id="menu_fmcg_principal"
               name="Principals"

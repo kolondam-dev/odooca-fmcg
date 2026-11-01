@@ -570,6 +570,26 @@ def load_partners():
     district_city_map = {d.code: d.city for d in District.search([]) if d.city}
     subdistrict_map = {s.code: s.id for s in Subdistrict.search([])}
 
+    # PJP mappings from customer registry if available
+    reg_map = {}
+    for candidate_reg in [seed_dir.parent / "registers" / "customer_registry_354.csv",
+                          pathlib.Path("data/registers/customer_registry_354.csv"),
+                          pathlib.Path("/opt/data/registers/customer_registry_354.csv")]:
+        if candidate_reg.is_file():
+            try:
+                with open(candidate_reg, mode="r", encoding="utf-8") as rf:
+                    reg_map = {r["ref"]: r for r in csv.DictReader(rf) if r.get("ref")}
+                break
+            except Exception:
+                pass
+
+    pjp_day_map = {
+        "Senin": "monday", "Selasa": "tuesday", "Rabu": "wednesday",
+        "Kamis": "thursday", "Jumat": "friday", "Sabtu": "saturday",
+        "monday": "monday", "tuesday": "tuesday", "wednesday": "wednesday",
+        "thursday": "thursday", "friday": "friday", "saturday": "saturday",
+    }
+
     count_created = 0
     count_updated = 0
 
@@ -621,6 +641,18 @@ def load_partners():
                 "property_payment_term_id": get_term(pt_days),
                 "user_id": get_salesman_user(sls_code),
             }
+
+            reg_entry = reg_map.get(ref, {})
+            call_day_raw = row.get("pjp_call_day") or reg_entry.get("pjp_call_day")
+            freq_raw = row.get("pjp_frequency") or reg_entry.get("pjp_frequency")
+            route_raw = row.get("delivery_route") or reg_entry.get("delivery_route")
+
+            if call_day_raw and "pjp_call_day" in Partner._fields:
+                vals["pjp_call_day"] = pjp_day_map.get(call_day_raw, "monday")
+            if freq_raw and "pjp_frequency" in Partner._fields:
+                vals["pjp_frequency"] = freq_raw
+            if route_raw and "delivery_route" in Partner._fields:
+                vals["delivery_route"] = route_raw
 
             vals = {k: v for k, v in vals.items() if k in Partner._fields}
 

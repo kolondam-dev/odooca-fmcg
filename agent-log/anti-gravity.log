@@ -1571,3 +1571,77 @@
 - Verification & Test Cases: Added test_rejection_count_aggregation in addons/id_dashboard_wms/tests/test_wms_dashboard.py verifying 0 -> 0, 1 group with count 3 -> 3, and 2 groups with counts 3 and 2 -> 5 (3 + 2 = 5).
 - Quality checks: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax valid.
 - Task managed by anti-gravity at 2026-11-01T12:45:00+07:00
+
+
+[2026-11-01T13:55:00+07:00] [INFO] FMCG PJP Master Integration, Workday Ingestion & Live Verification
+- Root cause analysis: PJP schedules existed in offline CSV artifacts (customer_registry_354.csv) but were not mapped to res.partner fields, id.mobile.workday assignments, or id.mobile.evidence check-in records.
+- Partner Schema Enrichment:
+  * Added pjp_call_day (Selection: monday-saturday), pjp_frequency (Selection: F1, F2, F4), and delivery_route (Char) to res.partner in addons/id_base/models/res_partner.py.
+  * Extended partner form and search views in addons/id_base/views/res_partner_views.xml with dedicated PJP group and filters.
+  * Added menu item "Outlet & Pelanggan PJP" in addons/id_base/views/menu_views.xml under Master Data.
+  * Added comprehensive TransactionCase unit test suite in addons/id_base/tests/test_partner_pjp.py.
+- Workday Business Navigation:
+  * Added "Rencana Rute Kunjungan PJP" menu item in addons/id_mobile_api/views/mobile_workday_views.xml under FMCG Distribution root menu for field sales & manager navigation.
+- Ingestion & Deployment Scripts:
+  * Updated scripts/load_fmcg_seed.py to map PJP columns from customer_registry_354.csv into res.partner.
+  * Authored standalone idempotent loader scripts/load_pjp_workdays.py to populate 133 July 2026 workdays across 7 salesmen and 419 visit check-in records in id.mobile.evidence.
+  * Updated deploy/init.sh with step 5c seed_pjp_workdays_v1 to guarantee container startup idempotency.
+- Live Railway Verification:
+  * Executed live database update on Railway production: 354 partner PJP schedules, 133 workday records, and 419 visit evidence records successfully loaded.
+  * Verified id.sales.productivity get_data(mode='month', anchor='2026-07-01'): pjp_status available=True, planned=419, completed=419, compliance=100%, effective=419, ec_ratio=100%.
+  * Confirmed single-principal FMCG distributor logic: 419 effective customer visits generated 1,324 individual single-principal SOs (Kapal Api, Mayora, Unilever, Wings) with 100% PJP match.
+- Static & Quality Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax valid.
+- Task managed by anti-gravity at 2026-11-01T13:55:00+07:00
+
+
+[2026-11-01T15:20:00+07:00] [INFO] Resolusi 3 Blocker P1 Review PR #68
+- Blocker 1: Evidence Foto Attachment & Watermark Kunjungan Historis
+  * Root Cause: scripts/load_pjp_workdays.py sebelumnya menggunakan raw SQL INSERT tanpa mengisi field Binary original dan watermarked, menyebabkan handler photo() melempar TypeError saat decode False.
+  * Perbaikan: Menyediakan base photo contoh JPEG toko FMCG yang valid dan fungsi render_historical_watermark dengan label resmi 'DATA AWAL DEMO — FOTO ILUSTRASI (INJECT HISTORIS JULI 2026)', metadata kunjungan WITA, GPS, dan UUID.
+  * Persistensi: Menggunakan Evidence.sudo().create() sehingga Odoo ORM otomatis membuat record ir.attachment.
+  * Self-healing: Record lama yang cacat/tanpa attachment dihapus dan diganti dengan record ber-attachment lengkap.
+- Blocker 2: Update Lintas Company
+  * Root Cause: Update res_partner hanya berdasarkan ref tanpa isolasi company_id.
+  * Perbaikan: Menambahkan filter WHERE ref = %s AND (company_id = %s OR company_id IS NULL) dan mengisolasi partner_ref_map pada company target.
+- Blocker 3: Sukses Palsu Saat Modul Mobile Belum Terpasang
+  * Root Cause: Loader mengabaikan ketiadaan model id.mobile.workday secara diam-diam dan mengembalikan exit code 0, menyebabkan deploy/init.sh menandai seed_pjp_workdays_v1 selesai.
+  * Perbaikan: Menambahkan fail-fast check di awal scripts/load_pjp_workdays.py yang melempar RuntimeError jika model mobile belum terpasang, serta menambahkan id_mobile_api ke INIT_MODULES default di deploy/init.sh.
+- Regression & Unit Tests:
+  * Menambahkan addons/id_mobile_api/tests/test_pjp_loader_boundaries.py dengan 4 skenario uji (HttpCase probe photo controller 200 JPEG, multi-company partner isolation, fail-fast missing models, dan enforcement transaksi baru).
+- Verifikasi Kualitas: ruff check PASS, check_manifests.py PASS, bash syntax deploy/init.sh PASS.
+- Task managed by anti-gravity at 2026-11-01T15:20:00+07:00
+
+
+[2026-11-01T16:25:00+07:00] [INFO] Resolusi 4 Blocker Lanjutan PR #68
+- Blocker 1 (CI Gagal): Mengganti top-level import scripts.load_pjp_workdays di addons/id_mobile_api/tests/test_pjp_loader_boundaries.py dengan dynamic loader _get_pjp_loader_module() berbasis importlib.util yang aman di runner CI Docker (/opt/scripts) maupun lokal.
+- Blocker 2 (Tanggal Historis Bergeser): Loader mengeksekusi SQL update create_date dan write_date ke naive UTC timestamp Juli 2026 setelah ORM create, sehingga ev_domain pada id.sales.productivity menghitung completed visit secara presisi (> 0).
+- Blocker 3 (Self-Healing Terisolasi): Membatasi pencarian existing evidence dengan filter client_uuid, user_id, dan company_id secara ketat, mencegah penghapusan lintas tenan/user.
+- Blocker 4 (Scope Ketat): Menghapus fuzzy company search ilike Manado dan menggantinya dengan target_company/env.company deterministik. Preservasi workday: menggabungkan outlet PJP via [(4, oid)] tanpa menghapus outlet yang sudah ada pada workday biasa.
+- Test Suite: Memperluas test_pjp_loader_boundaries.py dengan eksekusi loader produksi utuh, verifikasi tanggal Juli 2026, probe controller 200 JPEG, preservasi workday biasa, isolasi self-healing, fail-fast, dan validasi ketat transaksi baru.
+- Verifikasi Kualitas: ruff check PASS, check_manifests.py PASS, bash syntax PASS.
+- Task managed by anti-gravity at 2026-11-01T16:25:00+07:00
+
+[2026-11-01T10:10:44+00:00] [INFO] Resolusi 4 Blocker Review PR #68 (Commit di Test, Fixture Ref, Proteksi Backdate Non-Seed, Preservasi Workday Biasa, Sinkronisasi Waktu 8 Jam)
+- CI & Fixture: Tambahkan parameter commit=False pada run_pjp_workdays_loader saat dipanggil dari test Odoo untuk mencegah transaksi rusak; gunakan ref kanonikal CUST-MT-04 dan login sls-01 agar test_01 menghasilkan workday dan evidence (>0)
+- Proteksi Backdate Evidence Non-Seed: Validasi is_historical_seed/seed_batch pada existing evidence sehingga evidence non-seed operasional tidak pernah dibackdate atau dihapus oleh loader
+- Preservasi Penuh Workday Biasa: Workday operasional yang sudah ada tidak lagi dimutasi atau ditambah outlet-nya oleh loader, menjaga integritas penugasan harian
+- Sinkronisasi Timezone WITA vs UTC (8 Jam): Format ISO UTC Z di receipt metadata (photo_selected_at, device_recorded_at, received_at, fix_sampled_at) diselaraskan presisi dengan waktu lokal WITA (UTC+8) pada teks watermark dan create_date
+- Test Suite: Menambahkan test_06 (proteksi non-seed) dan test_07 (sinkronisasi timezone UTC vs WITA 8 jam), serta memperbarui test_01 dan test_03
+- Task managed by antigravity-agent at 2026-11-01T10:10:44+00:00
+
+[2026-11-01T10:58:06+00:00] [INFO] Resolusi 3 Blocker P1 Review Supervisor PR #68 (ORM Invalidation, Preflight Workday Collision, Atomic Legacy Migration)
+- P1-1 (ORM Cache Invalidation): Menambahkan flush_recordset dan invalidasi cache ORM (invalidate_recordset, invalidate_model, invalidate_all) setelah raw SQL UPDATE create_date dengan RETURNING, serta memverifikasi readback ORM langsung (assert year=2026, month=7)
+- P1-2 (Preflight Binding & Collision): Menambahkan validasi preflight sebelum penulisan. Mendeteksi kolisi ordinary workday (missing scheduled outlets) dan non-seed collision; membatalkan pemuatan (RuntimeError) tanpa partial write dan tanpa memasang mark bila ada konflik; memastikan seluruh evidence terikat eksak ke outlet dalam assigned workday
+- P1-3 (Atomic Legacy Migration & Batch Ownership): Membatasi mutasi ketat pada current batch pjp_workdays_july_2026_v1 dan legacy kanonikal v1-canonical-july-2026; foreign batch dan non-seed ditolak aman; legacy yang tidak lengkap atau berwaktu lama dimigrasikan secara atomik (foto + watermark + receipt ISO UTC + create_date) dengan rekonsiliasi eksak
+- Test Suite: Memperluas test_pjp_loader_boundaries.py dengan eksekusi loader produksi utuh di test_02, penolakan preflight ordinary collision di test_03, penolakan non-seed di test_06, instant & working-hour assertion di test_07, atomic migration di test_08, dan penolakan foreign batch di test_09
+- Task managed by antigravity-agent at 2026-11-01T10:58:06+00:00
+
+[2026-11-01T11:19:22+00:00] [INFO] Fix CI init-test id_mobile_api guard and test_01 daily vs monthly dashboard assertion
+- Guard deploy/init.sh step 5c when id_mobile_api is not installed
+- Update test_01 assertion to check both daily (1) and monthly (3) completed visits
+- Task managed by antigravity-agent at 2026-11-01T11:19:22+00:00
+
+[2026-11-01T11:59:32+00:00] [INFO] Resolve conflict in docs/HANDOFF.md and sync origin/main into PR #68
+- Integrated origin/main (PR #69 UX improvements)
+- Preserved all PR #68 and PR #69 handoff entries chronologically
+- Task managed by antigravity-agent at 2026-11-01T11:59:32+00:00
