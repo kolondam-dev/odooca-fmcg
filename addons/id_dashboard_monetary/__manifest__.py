@@ -7,7 +7,7 @@
     "category": "Accounting/Reporting",
     "author": "kolondam-dev",
     "license": "LGPL-3",
-    "depends": ["base", "account", "sale", "id_base"],
+    "depends": ["base", "account", "sale", "id_base", "spreadsheet_dashboard"],
     "data": [
         "security/ir.model.access.csv",
         "data/id_monetary_target_data.xml",
@@ -16,6 +16,13 @@
         "views/ar_aging_views.xml",
         "views/menu_views.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "id_dashboard_monetary/static/src/scss/monetary_dashboard.scss",
+            "id_dashboard_monetary/static/src/js/monetary_dashboard.js",
+            "id_dashboard_monetary/static/src/js/monetary_dashboard.xml",
+        ],
+    },
     "installable": True,
     "application": False,
 }

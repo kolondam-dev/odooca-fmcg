@@ -6,6 +6,12 @@
               sequence="25"
               web_icon="id_base,static/description/icon.png"/>
 
+    <!-- Dashboards Menu Group -->
+    <menuitem id="menu_fmcg_dashboard"
+              name="Dashboards"
+              parent="menu_fmcg_root"
+              sequence="5"/>
+
     <!-- Master Data Menu -->
     <menuitem id="menu_fmcg_master"
               name="Master Data"
@@ -55,8 +61,14 @@
               sequence="70"/>
 
     <menuitem id="menu_fmcg_subdistrict"
-              name="Kelurahan &amp; Kode Pos"
+              name="Kelurahan / Desa"
               parent="menu_fmcg_master"
               action="action_id_subdistrict"
+              sequence="75"/>
+
+    <menuitem id="menu_fmcg_tier"
+              name="Outlet Tiers"
+              parent="menu_fmcg_master"
+              action="action_id_tier"
               sequence="80"/>
 </odoo>

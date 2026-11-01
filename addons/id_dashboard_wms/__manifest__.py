@@ -7,7 +7,7 @@
     "category": "Inventory/Reporting",
     "author": "kolondam-dev",
     "license": "LGPL-3",
-    "depends": ["base", "stock", "sale_stock", "product_expiry", "fleet", "id_base"],
+    "depends": ["base", "stock", "sale_stock", "product_expiry", "fleet", "id_base", "spreadsheet_dashboard"],
     "data": [
         "security/ir.model.access.csv",
         "views/stock_picking_views.xml",
@@ -17,6 +17,13 @@
         "views/fleet_cost_views.xml",
         "views/menu_views.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "id_dashboard_wms/static/src/scss/wms_dashboard.scss",
+            "id_dashboard_wms/static/src/js/wms_dashboard.js",
+            "id_dashboard_wms/static/src/js/wms_dashboard.xml",
+        ],
+    },
     "installable": True,
     "application": False,
 }

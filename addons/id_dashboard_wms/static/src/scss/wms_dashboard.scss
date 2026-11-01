@@ -1,0 +1,314 @@
+// Warehouse & Logistics (WMS) Executive Dashboard. FMCG palette: navy / blue / emerald / amber / red.
+$wms-navy: #001a57;
+$wms-blue: #004ecc;
+$wms-emerald: #16a34a;
+$wms-amber: #d97706;
+$wms-red: #dc2626;
+$wms-ink: #0f172a;
+$wms-muted: #64748b;
+$wms-line: #e2e8f0;
+$wms-surface: #ffffff;
+$wms-bg: #f8fafc;
+
+.id-wms {
+    background: $wms-bg;
+    color: $wms-ink;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+
+    &__scroll {
+        display: flex;
+        flex-direction: column;
+        flex: 1 0 auto;
+        min-height: 100%;
+        width: 100%;
+        padding: 16px 20px 48px;
+        box-sizing: border-box;
+    }
+
+    &__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    &__title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: $wms-navy;
+    }
+
+    &__subtitle {
+        margin: 2px 0 0;
+        color: $wms-muted;
+        font-size: 13px;
+    }
+
+    // ---- Quick Drilldown Header Bar
+    &__quick-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    &__quick-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: $wms-surface;
+        border: 1px solid $wms-line;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: $wms-blue;
+        cursor: pointer;
+        transition: all 0.15s;
+
+        &:hover {
+            background: #eff6ff;
+            border-color: $wms-blue;
+        }
+    }
+
+    // ---- Filters
+    &__filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        align-items: center;
+        background: $wms-surface;
+        border: 1px solid $wms-line;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+    }
+
+    &__filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__filter-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: $wms-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    &__select {
+        height: 32px;
+        border: 1px solid $wms-line;
+        border-radius: 8px;
+        padding: 0 10px;
+        font-size: 13px;
+        background: #fff;
+    }
+
+    // ---- KPI Cards
+    &__cards {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 16px;
+
+        &--primary {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        &--secondary {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    &__card {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        text-align: left;
+        border: 0;
+        border-radius: 14px;
+        padding: 16px 18px;
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+        transition: transform 0.15s, box-shadow 0.15s;
+
+        &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(15, 23, 42, 0.15);
+        }
+
+        &--navy { background: $wms-navy; }
+        &--emerald { background: $wms-emerald; }
+        &--amber { background: $wms-amber; }
+        &--red { background: $wms-red; }
+        &--blue { background: $wms-blue; }
+    }
+
+    &__card-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.9;
+    }
+
+    &__card-value {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.15;
+    }
+
+    &__card-meta {
+        font-size: 12px;
+        opacity: 0.85;
+    }
+
+    // ---- FEFO Health Bar
+    &__fefo-bar-wrap {
+        display: flex;
+        width: 100%;
+        height: 18px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #e2e8f0;
+        margin: 10px 0;
+    }
+
+    &__fefo-bar-segment {
+        height: 100%;
+        transition: width 0.3s ease;
+
+        &.seg-critical { background: $wms-red; }
+        &.seg-warning { background: $wms-amber; }
+        &.seg-good { background: $wms-emerald; }
+    }
+
+    &__fefo-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        margin-top: 8px;
+    }
+
+    &__legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: $wms-ink;
+    }
+
+    &__legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+
+        &.dot-critical { background: $wms-red; }
+        &.dot-warning { background: $wms-amber; }
+        &.dot-good { background: $wms-emerald; }
+    }
+
+    // ---- Panels
+    &__panel {
+        background: $wms-surface;
+        border: 1px solid $wms-line;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    &__panel-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    &__panel-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: $wms-navy;
+    }
+
+    // ---- Table
+    &__table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    &__table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+
+        th, td {
+            padding: 8px 12px;
+            border-bottom: 1px solid $wms-line;
+            white-space: nowrap;
+        }
+
+        th {
+            text-align: left;
+            font-size: 12px;
+            color: $wms-muted;
+            font-weight: 600;
+            background: #fafafa;
+        }
+
+        .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .name {
+            font-weight: 600;
+            color: $wms-ink;
+        }
+    }
+
+    &__empty {
+        padding: 20px;
+        text-align: center;
+        color: $wms-muted;
+    }
+
+    // Responsive
+    @media (max-width: 1199px) {
+        &__cards--primary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        &__cards--secondary {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        &__scroll {
+            padding: 12px 12px 32px;
+        }
+        &__cards--primary, &__cards--secondary {
+            grid-template-columns: 1fr;
+        }
+        &__card-value {
+            font-size: 22px;
+        }
+    }
+}

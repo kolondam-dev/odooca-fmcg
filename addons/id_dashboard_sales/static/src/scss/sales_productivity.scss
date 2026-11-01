@@ -10,16 +10,28 @@ $sp-surface: #ffffff;
 $sp-bg: #f1f5f9;
 
 .id-sp {
-    background: $sp-bg;
-    color: $sp-ink;
-    overflow: hidden;
+.id-sp {
+    background: -bg;
+    color: -ink;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 
     &__scroll {
-        height: 100%;
-        overflow-y: auto;
-        padding: 16px 20px 32px;
+        display: flex;
+        flex-direction: column;
+        flex: 1 0 auto;
+        min-height: 100%;
+        width: 100%;
+        padding: 16px 20px 48px;
+        box-sizing: border-box;
     }
-
     &__header {
         margin-bottom: 12px;
     }
@@ -413,6 +425,55 @@ $sp-bg: #f1f5f9;
     &__body.is-loading {
         opacity: 0.55;
         transition: opacity 0.15s;
+    }
+
+
+    // ---- visual progress & gauges
+    &__progress-wrap {
+        margin-top: 6px;
+        width: 100%;
+        background: #e2e8f0;
+        border-radius: 999px;
+        height: 6px;
+        overflow: hidden;
+    }
+
+    &__progress-bar {
+        height: 100%;
+        border-radius: 999px;
+        background: -blue;
+        transition: width 0.3s ease;
+
+        &.is-emerald { background: -emerald; }
+        &.is-amber { background: -amber; }
+        &.is-navy { background: -navy; }
+    }
+
+    &__status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-top: 4px;
+        width: fit-content;
+
+        &.is-ok {
+            background: rgba(22, 163, 74, 0.14);
+            color: -emerald;
+        }
+
+        &.is-low {
+            background: rgba(217, 119, 6, 0.16);
+            color: -amber;
+        }
+
+        &.is-neutral {
+            background: rgba(100, 116, 139, 0.12);
+            color: -muted;
+        }
     }
 
     // ---- tablet: 768-1199px

@@ -1,3 +1,24 @@
+## 2026-11-01T08:25:00+07:00 — antigravity agent — Penyatuan Menu & Presentasi Dashboard Eksekutif OWL (Sales, Monetary, WMS)
+**Branch:** agen/unify-fmcg-dashboards
+**Status:** PASS (Static, XML, JS, Manifest) -> Siap Push & CI
+
+### Ringkasan Aksi & Perbaikan UI/UX Dashboard
+1. **Penyempurnaan Dashboard Sales Productivity (id_dashboard_sales):**
+   - Mengatasi isu scrollable: menambahkan display: flex, height: 100%, width: 100%, dan overflow-y: auto !important pada .id-sp serta padding bawah fleksibel pada .id-sp__scroll.
+   - Mengubah kartu metrik datar menjadi komponen visual kaya: visual progress bar untuk LPO vs Target (≥ 4.0 SKU), status pill, gauge visual pemenuhan DO-ke-faktur, dan PJP compliance.
+2. **Transformasi Dashboard Moneter & AR (id_dashboard_monetary):**
+   - Menambahkan service agregasi id.monetary.dashboard: total piutang, piutang overdue, risiko macet >30 hari, pencapaian target, dan kas tertagih.
+   - Membangun komponen OWL Executive Dashboard lengkap dengan: AR Aging visual distribution bar (5 segmen warna), Top 10 outlet exposure dengan status credit hold, komparasi per wilayah & salesman.
+   - Menyertakan tombol quick drilldown langsung ke matriks aging pivot/graph, financial funnel, dan invoice list open-code sebelumnya tanpa menghapus satupun data analitis.
+3. **Transformasi Dashboard Gudang & Logistik WMS (id_dashboard_wms):**
+   - Menambahkan service agregasi id.wms.dashboard: total nilai persediaan, stok kritis FEFO, tingkat pemenuhan DO, rasio tolakan, dan biaya armada.
+   - Membangun komponen OWL Executive Dashboard lengkap dengan: FEFO Expiry health bar & rekomendasi operasional FMCG (retur principal vs promo bundling), breakdown alasan reject/retur, tabel efisiensi armada, dan sebaran kategori stok FMCG.
+   - Menyertakan tombol quick drilldown ke monitoring FEFO lengkap, analisis reject, dan biaya armada open-code sebelumnya.
+4. **Penyatuan Menu Grup (Unified Dashboard Grouping):**
+   - Mendaftarkan menu_fmcg_dashboard di id_base agar ketiga dashboard berada di bawah satu group menu yang harmonis.
+   - Mendaftarkan ketiga dashboard di bawah menu root Dashboards default Odoo (spreadsheet_dashboard.spreadsheet_dashboard_menu_root) sehingga dapat diakses bersamaan di https://odooca-fmcg-demo.up.railway.app/odoo/dashboards.
+   - Mendaftarkan ketiga dashboard di bawah FMCG Distribution -> Dashboards, serta sebagai menu pertama di modul masing-masing.
+
 ## 2026-10-31T23:16:30+07:00 — antigravity agent — Perbaikan Tanggal date_done Picking pada Test id_dashboard_sales
 **Branch:** agen/claude-design2-sales-productivity
 **Status:** PASS (Static) -> Siap CI install-test

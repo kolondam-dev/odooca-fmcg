@@ -1,0 +1,351 @@
+// Monetary & AR Executive Dashboard. FMCG palette: navy / blue / emerald / amber / red.
+$md-navy: #001a57;
+$md-blue: #004ecc;
+$md-emerald: #16a34a;
+$md-amber: #d97706;
+$md-red: #dc2626;
+$md-darkred: #991b1b;
+$md-ink: #0f172a;
+$md-muted: #64748b;
+$md-line: #e2e8f0;
+$md-surface: #ffffff;
+$md-bg: #f8fafc;
+
+.id-md {
+    background: $md-bg;
+    color: $md-ink;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+
+    &__scroll {
+        display: flex;
+        flex-direction: column;
+        flex: 1 0 auto;
+        min-height: 100%;
+        width: 100%;
+        padding: 16px 20px 48px;
+        box-sizing: border-box;
+    }
+
+    &__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    &__title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: $md-navy;
+    }
+
+    &__subtitle {
+        margin: 2px 0 0;
+        color: $md-muted;
+        font-size: 13px;
+    }
+
+    // ---- Quick Drilldown Header Bar
+    &__quick-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    &__quick-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: $md-surface;
+        border: 1px solid $md-line;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: $md-blue;
+        cursor: pointer;
+        transition: all 0.15s;
+
+        &:hover {
+            background: #eff6ff;
+            border-color: $md-blue;
+        }
+    }
+
+    // ---- Filters
+    &__filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        align-items: center;
+        background: $md-surface;
+        border: 1px solid $md-line;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+    }
+
+    &__filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__filter-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: $md-muted;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    &__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    &__chip {
+        border: 1px solid $md-line;
+        background: $md-surface;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s;
+
+        &.is-active {
+            background: $md-blue;
+            border-color: $md-blue;
+            color: #fff;
+        }
+    }
+
+    // ---- KPI Cards
+    &__cards {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 16px;
+
+        &--primary {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        &--funnel {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    &__card {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        text-align: left;
+        border: 0;
+        border-radius: 14px;
+        padding: 16px 18px;
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+        transition: transform 0.15s, box-shadow 0.15s;
+
+        &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(15, 23, 42, 0.15);
+        }
+
+        &--navy { background: $md-navy; }
+        &--red { background: $md-red; }
+        &--darkred { background: $md-darkred; }
+        &--emerald { background: $md-emerald; }
+        &--blue { background: $md-blue; }
+        &--amber { background: $md-amber; }
+    }
+
+    &__card-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.9;
+    }
+
+    &__card-value {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.15;
+    }
+
+    &__card-meta {
+        font-size: 12px;
+        opacity: 0.85;
+    }
+
+    // ---- Progress and Aging Bar
+    &__aging-bar-wrap {
+        display: flex;
+        width: 100%;
+        height: 18px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: #e2e8f0;
+        margin: 10px 0;
+    }
+
+    &__aging-bar-segment {
+        height: 100%;
+        transition: width 0.3s ease;
+
+        &.seg-not_due { background: $md-emerald; }
+        &.seg-overdue_1_7 { background: #eab308; }
+        &.seg-overdue_8_14 { background: $md-amber; }
+        &.seg-overdue_15_30 { background: #f97316; }
+        &.seg-overdue_over_30 { background: $md-red; }
+    }
+
+    &__aging-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 18px;
+        margin-top: 8px;
+    }
+
+    &__legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: $md-ink;
+    }
+
+    &__legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+
+        &.dot-not_due { background: $md-emerald; }
+        &.dot-overdue_1_7 { background: #eab308; }
+        &.dot-overdue_8_14 { background: $md-amber; }
+        &.dot-overdue_15_30 { background: #f97316; }
+        &.dot-overdue_over_30 { background: $md-red; }
+    }
+
+    // ---- Panels
+    &__panel {
+        background: $md-surface;
+        border: 1px solid $md-line;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    &__panel-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    &__panel-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: $md-navy;
+    }
+
+    // ---- Table
+    &__table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    &__table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+
+        th, td {
+            padding: 8px 12px;
+            border-bottom: 1px solid $md-line;
+            white-space: nowrap;
+        }
+
+        th {
+            text-align: left;
+            font-size: 12px;
+            color: $md-muted;
+            font-weight: 600;
+            background: #fafafa;
+        }
+
+        .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .name {
+            font-weight: 600;
+            color: $md-ink;
+        }
+    }
+
+    &__badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+
+        &.is-hold {
+            background: rgba(220, 38, 38, 0.14);
+            color: $md-red;
+        }
+
+        &.is-ok {
+            background: rgba(22, 163, 74, 0.14);
+            color: $md-emerald;
+        }
+    }
+
+    &__empty {
+        padding: 20px;
+        text-align: center;
+        color: $md-muted;
+    }
+
+    // Responsive
+    @media (max-width: 1199px) {
+        &__cards--primary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        &__cards--funnel {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        &__scroll {
+            padding: 12px 12px 32px;
+        }
+        &__cards--primary, &__cards--funnel {
+            grid-template-columns: 1fr;
+        }
+        &__card-value {
+            font-size: 22px;
+        }
+    }
+}

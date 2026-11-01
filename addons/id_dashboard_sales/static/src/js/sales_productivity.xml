@@ -93,8 +93,11 @@
                                 <span class="id-sp__card-label">PJP Call Compliance</span>
                                 <span class="id-sp__mini-value" t-if="pjp.available" t-out="pct(pjp.compliance)"/>
                                 <span class="id-sp__mini-value is-na" t-else="">N/A</span>
+                                <div t-if="pjp.available" class="id-sp__progress-wrap">
+                                    <div class="id-sp__progress-bar is-navy" t-att-style="'width:' + pjpCompliancePercent + '%'"/>
+                                </div>
                                 <span class="id-sp__card-meta" t-if="pjp.available">
-                                    <t t-out="int(pjp.completed)"/> / <t t-out="int(pjp.planned)"/> planned outlets
+                                    <t t-out="int(pjp.completed)"/> / <t t-out="int(pjp.planned)"/> planned
                                 </span>
                                 <span class="id-sp__card-meta" t-else="" t-out="pjpReason"/>
                             </div>
@@ -102,25 +105,35 @@
                                 <span class="id-sp__card-label">Effective Call Ratio</span>
                                 <span class="id-sp__mini-value" t-if="pjp.available" t-out="pct(pjp.ec_ratio)"/>
                                 <span class="id-sp__mini-value is-na" t-else="">N/A</span>
+                                <div t-if="pjp.available" class="id-sp__progress-wrap">
+                                    <div class="id-sp__progress-bar is-blue" t-att-style="'width:' + ecRatioPercent + '%'"/>
+                                </div>
                                 <span class="id-sp__card-meta" t-if="pjp.available">
-                                    <t t-out="int(pjp.effective)"/> / <t t-out="int(pjp.visits)"/> visits with order
+                                    <t t-out="int(pjp.effective)"/> / <t t-out="int(pjp.visits)"/> visits
                                 </span>
                                 <span class="id-sp__card-meta" t-else="" t-out="pjpReason"/>
                             </div>
                             <div class="id-sp__mini">
-                                <span class="id-sp__card-label">Lines per Order</span>
+                                <span class="id-sp__card-label">Lines per Order (LPO)</span>
                                 <span class="id-sp__mini-value" t-att-class="lpoClass" t-out="num1(state.data.total.lpo)"/>
-                                <span class="id-sp__card-meta">Target ≥ <t t-out="num1(state.data.lpo_target)"/> SKU/order</span>
+                                <div class="id-sp__progress-wrap">
+                                    <div class="id-sp__progress-bar" t-att-class="state.data.total.lpo_ok ? 'is-emerald' : 'is-amber'" t-att-style="'width:' + lpoPercent + '%'"/>
+                                </div>
+                                <span class="id-sp__card-meta">Target: ≥ <t t-out="num1(state.data.lpo_target)"/> SKU/order</span>
                             </div>
                             <div class="id-sp__mini">
-                                <span class="id-sp__card-label">SKU Sold</span>
+                                <span class="id-sp__card-label">SKU Penetrasi</span>
                                 <span class="id-sp__mini-value" t-out="int(state.data.total.sku_sold)"/>
-                                <span class="id-sp__card-meta">distinct SKU</span>
+                                <span class="id-sp__status-badge is-neutral"><t t-out="int(state.data.total.sku_sold)"/> SKU Aktif</span>
+                                <span class="id-sp__card-meta">Terjual dalam periode</span>
                             </div>
                             <div class="id-sp__mini">
-                                <span class="id-sp__card-label">Fulfillment-to-Invoice</span>
+                                <span class="id-sp__card-label">Fulfillment to Invoice</span>
                                 <span class="id-sp__mini-value" t-out="pct(state.data.total.fulfillment)"/>
-                                <span class="id-sp__card-meta">delivered and posted-invoiced value</span>
+                                <div class="id-sp__progress-wrap">
+                                    <div class="id-sp__progress-bar is-emerald" t-att-style="'width:' + fulfillmentPercent + '%'"/>
+                                </div>
+                                <span class="id-sp__card-meta">DO terkirim &amp; faktur posted</span>
                             </div>
                         </section>
                         <p t-if="pjp.available and pjpScopeOwn" class="id-sp__note">
