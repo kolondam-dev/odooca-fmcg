@@ -227,6 +227,7 @@ class WmsDashboard(models.TransientModel):
                 "total_deliveries": total_deliveries,
                 "delivered_count": delivered_count,
                 "late_count": late_count,
+                "total_rejections": total_rejections,
                 "delivered_value": delivered_value,
                 "fulfillment_rate": round(fulfillment_rate, 1),
                 "rejection_rate": round(rejection_rate, 1),

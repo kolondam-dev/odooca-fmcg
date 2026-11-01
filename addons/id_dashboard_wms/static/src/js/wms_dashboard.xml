@@ -189,7 +189,7 @@
                                     <span class="id-wms__micro-badge is-red"><i class="fa fa-undo"/></span>
                                 </div>
                                 <div class="id-wms__card-body">
-                                    <span class="id-wms__card-value is-danger" t-out="int(state.data.rejections.length)"/>
+                                    <span class="id-wms__card-value is-danger" t-out="int(totalRejections)"/>
                                 </div>
                                 <div class="id-wms__card-footer">
                                     Tingkat Tolakan: <strong><t t-out="pct(state.data.kpi.rejection_rate)"/></strong>

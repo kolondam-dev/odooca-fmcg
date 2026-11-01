@@ -1,5 +1,6 @@
 # Part of odooca-fmcg. License LGPL-3.
 from datetime import date
+from unittest.mock import patch
 
 from odoo.tests import TransactionCase, tagged
 
@@ -80,3 +81,40 @@ class TestWmsDashboard(TransactionCase):
         self.assertIn("expiry_buckets", data)
         self.assertIn("categories", data)
         self.assertEqual(len(data["expiry_buckets"]), 3)
+        self.assertIn("total_rejections", data["kpi"])
+
+    def test_rejection_count_aggregation(self):
+        """Verify delivery rejection count aggregation:
+        - Case 1: 0 rejections -> total is 0
+        - Case 2: 1 reason with count 3 -> total is 3 (not 1)
+        - Case 3: 2 reasons with count 3 and 2 -> total is 5 (3 + 2 = 5)
+        """
+        service = self.env["id.wms.dashboard"]
+        RejectModel = self.env["id.wms.reject"]
+
+        # Case 1: 0 rejections -> 0
+        with patch.object(type(RejectModel), "search_read", return_value=[]):
+            data = service.get_data()
+            self.assertEqual(data["kpi"]["total_rejections"], 0)
+            self.assertEqual(len(data["rejections"]), 0)
+
+        # Case 2: 1 reason group with count 3 -> total is 3 (not 1)
+        mock_data_1 = [
+            {"reason": "store_closed", "picking_count": 3, "rejected_value": 300000.0}
+        ]
+        with patch.object(type(RejectModel), "search_read", return_value=mock_data_1):
+            data = service.get_data()
+            self.assertEqual(data["kpi"]["total_rejections"], 3)
+            self.assertEqual(len(data["rejections"]), 1)
+            self.assertEqual(data["rejections"][0]["count"], 3)
+
+        # Case 3: 2 reason groups with counts 3 and 2 -> total is 5 (3 + 2 = 5)
+        mock_data_2 = [
+            {"reason": "store_closed", "picking_count": 3, "rejected_value": 300000.0},
+            {"reason": "packaging_damaged", "picking_count": 2, "rejected_value": 200000.0},
+        ]
+        with patch.object(type(RejectModel), "search_read", return_value=mock_data_2):
+            data = service.get_data()
+            self.assertEqual(data["kpi"]["total_rejections"], 5)
+            self.assertEqual(len(data["rejections"]), 2)
+            self.assertEqual(sum(r["count"] for r in data["rejections"]), 5)

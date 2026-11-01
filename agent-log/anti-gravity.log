@@ -1561,3 +1561,13 @@
 - Authored blueprint: docs/ui/FMCG_DASHBOARD_UX_REDESIGN_BLUEPRINT.md.
 - Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax checks PASS.
 - Task managed by anti-gravity at 2026-11-01T11:05:00+07:00
+
+
+[2026-11-01T12:45:00+07:00] [INFO] Fix WMS Dashboard Rejection Count Aggregation (PR #66 HOLD P2)
+- Diagnosed root cause: WMS delivery rejection card rendered state.data.rejections.length (group count of distinct reasons) instead of sum of picking rejections.
+- Backend fix: Added "total_rejections": total_rejections to KPI dictionary in addons/id_dashboard_wms/models/wms_dashboard.py.
+- Frontend JS: Added totalRejections getter in WmsDashboard component (addons/id_dashboard_wms/static/src/js/wms_dashboard.js) with safe fallback to summing reason counts.
+- Frontend XML: Updated line 192 in addons/id_dashboard_wms/static/src/js/wms_dashboard.xml to bind int(totalRejections).
+- Verification & Test Cases: Added test_rejection_count_aggregation in addons/id_dashboard_wms/tests/test_wms_dashboard.py verifying 0 -> 0, 1 group with count 3 -> 3, and 2 groups with counts 3 and 2 -> 5 (3 + 2 = 5).
+- Quality checks: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax valid.
+- Task managed by anti-gravity at 2026-11-01T12:45:00+07:00

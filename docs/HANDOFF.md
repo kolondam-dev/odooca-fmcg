@@ -1,3 +1,25 @@
+## 2026-11-01T12:45:00+07:00 — anti-gravity agent — Perbaikan Agregasi Kartu Tolakan Pengantaran WMS (PR #66 HOLD P2 Resolusi)
+**Branch:** agen/review-fmcg-dashboards
+**Status:** PASS (Ruff, Check Manifests, XML Valid, Unit Regression Test) -> Siap Review Ulang PR #66
+
+### Ringkasan Perbaikan
+1. **Penyebab & Gap:**
+   - Template `addons/id_dashboard_wms/static/src/js/wms_dashboard.xml` baris 192 sebelumnya merender `state.data.rejections.length` yang hanya menghitung jumlah kategori alasan (alasan kelompok), bukan akumulasi pengantaran yang ditolak.
+   - Contoh: 3 pengantaran ditolak karena alasan "Toko Tutup" menghasilkan 1 kelompok dengan `count: 3`, namun kartu menampilkan angka 1 bukannya 3.
+2. **Solusi Teknis:**
+   - **Backend (`addons/id_dashboard_wms/models/wms_dashboard.py`):** Menambahkan field `"total_rejections": total_rejections` pada payload dictionary `kpi` (sebelumnya nilai sudah dihitung via `sum(r["picking_count"] for r in reject_recs)` tetapi belum disertakan di dictionary kembalian).
+   - **Frontend JS (`addons/id_dashboard_wms/static/src/js/wms_dashboard.js`):** Menambahkan getter `totalRejections` pada komponen `WmsDashboard` yang memprioritaskan `this.state.data?.kpi?.total_rejections` dan menyediakan fallback aman `(this.state.data?.rejections || []).reduce((sum, r) => sum + (r.count || 0), 0)`.
+   - **Frontend XML (`addons/id_dashboard_wms/static/src/js/wms_dashboard.xml`):** Mengganti baris 192 menjadi `<span class="id-wms__card-value is-danger" t-out="int(totalRejections)"/>`.
+3. **Uji Kasus & Regresi:**
+   - Menambahkan test case komprehensif pada `addons/id_dashboard_wms/tests/test_wms_dashboard.py` (`test_rejection_count_aggregation`):
+     * Kasus 0 tolakan -> 0
+     * Kasus 1 kelompok alasan dengan count 3 -> 3 (bukan 1)
+     * Kasus 2 kelompok alasan dengan count 3 dan 2 -> 5 (3 + 2 = 5)
+4. **Verifikasi:**
+   - `python -m ruff check .` -> PASS (All checks passed)
+   - `python scripts/check_manifests.py` -> PASS (10 addon ok)
+   - Validasi struktur XML ElementTree -> PASS
+
 ## 2026-11-01T11:05:00+07:00 — anti-gravity agent — Redesain UX/UI & Restrukturisasi Narasi Dashboard FMCG
 **Branch:** agen/review-fmcg-dashboards
 **Status:** PASS (Static, Manifest, XML, Ruff) -> Siap Push/CI
