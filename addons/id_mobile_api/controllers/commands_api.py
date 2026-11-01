@@ -4,6 +4,7 @@ from odoo import http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 from .read_api import MobileReadApi
+from ..models.mobile_workday import MobileReadConflict
 
 _logger = logging.getLogger(__name__)
 
@@ -16,6 +17,11 @@ class MobileCommandsApi(MobileReadApi):
         if denied is not None:
             return denied
 
+        # Validate X-CSRF-Token header against server session token
+        csrf_token = request.httprequest.headers.get("X-CSRF-Token")
+        if not csrf_token or csrf_token != request.csrf_token():
+            return self._response({"error": "invalid_or_missing_csrf_token"}, 400)
+
         try:
             body = request.httprequest.get_data()
             if not body:
@@ -23,6 +29,9 @@ class MobileCommandsApi(MobileReadApi):
             command_data = json.loads(body.decode("utf-8"))
         except (ValueError, UnicodeDecodeError):
             return self._response({"error": "invalid_json"}, 400)
+
+        if not isinstance(command_data, dict):
+            return self._response({"error": "command_must_be_object"}, 400)
 
         client_uuid = command_data.get("client_uuid")
         if not client_uuid:
@@ -32,6 +41,8 @@ class MobileCommandsApi(MobileReadApi):
             CommandModel = request.env["id.mobile.command"]
             receipt = CommandModel.process_command(command_data)
             return self._response(receipt, 200)
+        except MobileReadConflict as e:
+            return self._response({"error": str(e) or "conflict"}, 409)
         except AccessError as e:
             return self._response({"error": str(e) or "forbidden"}, 403)
         except UserError as e:

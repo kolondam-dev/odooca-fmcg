@@ -1,3 +1,34 @@
+## 2026-11-01T23:30:00+07:00 — anti-gravity agent — Address Supervisor Review on PR #70 (P1-1, P1-2, P1-3, P2-4, P2-5)
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Supervisor review findings addressed across Backend & Frontend, waiting for CI run)
+
+### Detail Tindak Lanjut Temuan Supervisor:
+1. **P1-1 — Scope Guard SO, Model Security, Record Rules & CSRF Token:**
+   - Menambahkan guard `_actor()` mandiri pada `id.mobile.command` (memvalidasi non-share, active, group `id_mobile_api.group_mobile_sales`, dan company access). Direct ORM call tanpa group ditolak fail-closed dengan `AccessError`.
+   - Menambahkan 3 Record Rules untuk `id.mobile.command` di `mobile_security.xml`: company isolation, own-user isolation (`user_id = user.id`), dan admin audit rule. User mobile lain tidak dapat membaca command lintas pengguna.
+   - Penegakan scope assignment hari ini (`_current_assignment()`): outlet wajib terdaftar pada assignment hari ini, seluruh SKU wajib terdaftar pada assignment, dan snapshot stale ditolak dengan `MobileReadConflict` (HTTP 409).
+   - Validasi header `X-CSRF-Token` pada route `/api/v1/sync/commands`: token missing/mismatch ditolak dengan HTTP 400.
+2. **P1-2 — Fail-Closed Validasi Envelope & Evidence:**
+   - Validasi format canonical UUID v4 dan whitelist command type yang didukung. Unknown command dan malformed envelope ditolak fail-closed (HTTP 422 / UserError).
+   - `sales.visit.check_in` mewajibkan bukti foto dan lokasi yang valid di `id.mobile.evidence` untuk outlet & user yang bersangkutan, serta menolak check-in hari Minggu.
+   - `delivery.pod.submit` mewajibkan identitas trip dan bukti serah terima foto/tanda tangan penerima.
+3. **P1-3 — Canonical Fingerprint & Atomic Savepoint Split SO:**
+   - Menghitung canonical JSON SHA-256 fingerprint yang disimpan di kolom `fingerprint`. Replay identik menghasilkan cached receipt; perubahan payload/type/company pada UUID yang sama ditolak dengan `MobileReadConflict` (HTTP 409).
+   - Membungkus seluruh eksekusi split SO dan penyimpanan command di dalam `with self.env.cr.savepoint():`. Kegagalan pada salah satu order split me-rollback bersih seluruh SO yang sempat dibuat (zero partial write/duplicate).
+4. **P2-4 — Eliminasi `navigator.webdriver` Bypass:**
+   - Menghapus seluruh pengecualian `navigator.webdriver` dari `visits.ts`. Aturan libur operasional hari Minggu berlaku mutlak untuk semua browser runner.
+   - Menyetel context clock Playwright di `session-fixture.ts` ke hari kerja deterministik (`page.clock.setFixedTime("2026-10-29T08:00:00+08:00")`).
+5. **P2-5 — Strict Long-Edge Clamping 1280px pada Kamera:**
+   - Mengekstrak fungsi `computeWatermarkedDimensions` di `CameraViewfinder.tsx` yang menjamin `totalWidth <= 1280` dan `totalHeight <= 1280` (termasuk watermark banner 110px) untuk portrait kecil 480x1200, 720x1280, landscape, dan kamera resolusi tinggi.
+   - Menambahkan unit test suite `pwa/tests/camera-clamp.test.ts`.
+
+### Verifikasi:
+- `python -m ruff check .`: PASS
+- `python scripts/check_manifests.py`: PASS (10 addons OK)
+- PWA Unit Tests: 352 tests PASS (100%)
+- PWA Triple Build (demo, staging, live): PASS
+
 ## 2026-11-01T23:14:00+07:00 — anti-gravity agent — PR #70 All 13 CI Checks 100% PASS
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

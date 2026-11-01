@@ -13,6 +13,7 @@ export async function changeTestAccount(page: Page, actor: string) {
 export const test = base.extend({
     page: async ({ page }, use) => {
         actors.set(page, "sales");
+        await page.clock.setFixedTime(new Date("2026-10-29T08:00:00+08:00"));
         await page.context().setGeolocation({
             latitude: 1.465,
             longitude: 124.833,

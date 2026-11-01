@@ -1723,3 +1723,30 @@
   3. PWA quality (pwa-quality, pwa-container, pwa-browser with 170 browser tests, pwa-gate): PASS.
   4. Upgrade Runtime Verification (Kontrak Runner Upgrade, Module Upgrade from Persisted Baseline + Replay Zero Drift): PASS.
 - Task managed by antigravity agent at 2026-11-01T23:14:00+07:00
+
+[2026-11-01T23:30:00+07:00] [INFO] Fix Supervisor Review Findings on PR #70 (P1-1, P1-2, P1-3, P2-4, P2-5)
+- PR Link: https://github.com/kolondam-dev/odooca-fmcg/pull/70
+- P1-1: Boundary Assignment & Model Security Guard:
+  * Added model-level _actor() guard in id.mobile.command ensuring non-share, active, group_mobile_sales, and company validity before dispatching. Direct ORM/RPC calls without role raise AccessError.
+  * Added 3 record rules in mobile_security.xml for id.mobile.command: company isolation, own-user isolation (user_id = user.id), and system administrator audit rule.
+  * Enforced active workday assignment scope on SO creation: outlet must be in assignment.outlet_ids, products must be in assignment.product_ids, and stale snapshots raise MobileReadConflict (409).
+  * Enforced X-CSRF-Token header validation on POST /api/v1/sync/commands: missing or mismatching token returns HTTP 400.
+- P1-2: Fail-Closed Envelope & Evidence Validation:
+  * Strict canonical UUID v4 validation and supported command whitelist; unknown commands fail closed with UserError (HTTP 422).
+  * sales.visit.check_in requires verified immutable evidence in id.mobile.evidence matching the outlet and user, rejecting Sunday visits.
+  * delivery.pod.submit requires valid trip_id and proof evidence.
+- P1-3: Strict Idempotency Fingerprint & Atomic Savepoint:
+  * SHA-256 canonical JSON fingerprint saved on id.mobile.command. Same UUID with identical payload returns cached receipt; changed payload/type/company raises MobileReadConflict (HTTP 409).
+  * Wrapped command execution and multi-principal SO creation inside an atomic savepoint (with self.env.cr.savepoint():). Failure on any split SO cleanly rolls back all created SOs and command log with zero partial writes.
+- P2-4: Sunday Check-in Automation Guard Removed:
+  * Removed navigator.webdriver bypass from visits.ts; Sunday operational holiday is enforced unconditionally.
+  * Configured Playwright browser test fixture in session-fixture.ts with deterministic weekday clock (page.clock.setFixedTime("2026-10-29T08:00:00+08:00")).
+- P2-5: Camera Viewfinder 1280px Dimension Clamping:
+  * Implemented computeWatermarkedDimensions in CameraViewfinder.tsx strictly bounding both totalWidth and totalHeight (including 110px watermark banner) to <= 1280px.
+  * Added comprehensive unit test in pwa/tests/camera-clamp.test.ts for small portrait (480x1200), 720x1280, large camera captures, and raw captures.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+  * PWA Unit Tests (352 tests): 100% PASS
+  * PWA Triple Build (demo, staging, live): PASS
+- Task managed by antigravity agent at 2026-11-01T23:30:00+07:00
