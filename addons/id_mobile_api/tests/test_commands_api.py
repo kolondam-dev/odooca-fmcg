@@ -51,7 +51,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         self.assertIn(receipt1["status"], ["accepted", "needs_approval"])
 
         # Cek SO yang dibuat di Odoo
-        so = self.env["sale.order"].search([("origin", "=", f"PWA Mobile Order {cmd_uuid[:8]}")])
+        so = self.env["sale.order"].sudo().search([("origin", "=", f"PWA Mobile Order {cmd_uuid[:8]}")])
         self.assertTrue(so.exists(), "Sales Order harus berhasil dibuat di Odoo!")
         self.assertEqual(so.partner_id, self.outlet)
         self.assertEqual(so.client_order_ref, "PO-TEST-001")

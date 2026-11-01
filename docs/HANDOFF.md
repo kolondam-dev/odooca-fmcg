@@ -1,3 +1,13 @@
+## 2026-11-01T22:21:00+07:00 — anti-gravity agent — Sudo Elevation for Mobile Command Ingestion
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**Status:** In Progress (Fixed AccessError on command ingestion for mobile sales role)
+
+### Ringkasan Perbaikan:
+1. **Elevasi Hak Akses Model `id.mobile.command`:**
+   - Sesuai prinsip *least-privilege*, user mobile salesman (`group_mobile_sales`) sengaja tidak diberikan hak akses tulis langsung ke model ERP inti seperti `sale.order`.
+   - Modul `id_mobile_api` sekarang mengeksekusi pembuatan dokumen draft SO dan relasi command dengan `.sudo()`, menjaga integritas batas keamanan backend sementara tetap mengizinkan submission order dari PWA.
+   - Pengecekan order di `test_commands_api.py` diselaraskan menggunakan `.sudo().search()`.
+
 ## 2026-11-01T22:15:00+07:00 — anti-gravity agent — Fix CI Failures on PR #70
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **Status:** In Progress (PR #70 opened, Prettier formatting and id_mobile_api test assertions resolved)

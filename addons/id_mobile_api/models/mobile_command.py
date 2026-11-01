@@ -47,7 +47,7 @@ class MobileCommand(models.Model):
             raise UserError(_("Invalid command format: client_uuid and type are required."))
 
         # 1. Idempotency Check
-        existing = self.search([
+        existing = self.sudo().search([
             ("user_id", "=", user.id),
             ("client_uuid", "=", client_uuid),
         ], limit=1)
@@ -81,7 +81,7 @@ class MobileCommand(models.Model):
             reference = f"GEN-{client_uuid[:8]}"
 
         # 3. Store record for idempotency
-        record = self.create({
+        record = self.sudo().create({
             "client_uuid": client_uuid,
             "command_type": cmd_type,
             "user_id": user.id,
@@ -121,7 +121,7 @@ class MobileCommand(models.Model):
         warehouse = (
             assignment.warehouse_id
             if assignment
-            else self.env["stock.warehouse"].search([("company_id", "=", company.id)], limit=1)
+            else self.env["stock.warehouse"].sudo().search([("company_id", "=", company.id)], limit=1)
         )
 
         raw_lines = payload.get("lines", [])
@@ -130,7 +130,7 @@ class MobileCommand(models.Model):
 
         # Pengelompokan baris per Principal FMCG (Aturan Single-Principal SO)
         lines_by_principal = {}
-        Product = self.env["product.product"]
+        Product = self.env["product.product"].sudo()
         for line in raw_lines:
             pid = int(line.get("product_id"))
             product = Product.browse(pid)
@@ -146,7 +146,7 @@ class MobileCommand(models.Model):
         customer_po = payload.get("customer_po_number") or payload.get("note") or ""
 
         needs_approval = False
-        SaleOrder = self.env["sale.order"]
+        SaleOrder = self.env["sale.order"].sudo()
 
         for principal_id, items in lines_by_principal.items():
             order_lines = []

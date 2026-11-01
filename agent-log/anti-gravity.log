@@ -1687,3 +1687,12 @@
   * python -m ruff check .: PASS.
   * python scripts/check_manifests.py: PASS.
 - Task managed by antigravity agent at 2026-11-01T22:15:00+07:00
+
+[2026-11-01T22:21:00+07:00] [INFO] Fix AccessError on Mobile Command Dispatcher
+- Fixed mobile user write isolation in id.mobile.command:
+  * Elevated internal SO creation and command persistence with sudo() to allow mobile salesman role to submit orders without granting direct ERP backend write access.
+  * Updated test_commands_api.py sale.order verification with sudo() lookup.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-01T22:21:00+07:00
