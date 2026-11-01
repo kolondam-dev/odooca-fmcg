@@ -1785,3 +1785,32 @@
   * PWA Unit Tests (352 tests): 100% PASS
   * Upgrade runner unit tests: 9 tests PASS
 - Task managed by antigravity agent at 2026-11-02T01:18:00+07:00
+
+
+[2026-11-02T06:56:00+07:00] [INFO] Fix Supervisor Review Findings on PR #70: POD Binding, History Parser, WITA Timezone, and Typecheck
+- Addressed supervisor re-review comment 6564864332 at checkpoint 24d38db:
+- Authoritative Manifest Resolution & Strict POD Binding:
+  * Bound stock.picking resolution to exact trip + DO + company pair (origin=trip_id, name=do_id, company_id=company.id), removing OR alternative identity bypass.
+  * Verified picking partner outlet belongs to active workday assignment (do_partner_id in assignment.outlet_ids.ids) and matches source.outlet_id.
+  * Bound persistent evidence strictly to the DO partner outlet (evidence.outlet_id == do_partner_id), rejecting mismatched or fabricated evidence with UserError.
+  * Enforced trip closure completeness: all pickings under trip manifest must possess an accepted POD on current WITA business day.
+- History Parser & WITA Timezone Alignment:
+  * Implemented extract_cmd_payload(cmd_record) to parse inner payload from stored JSON envelopes.
+  * Implemented to_wita_date(dt) with ZoneInfo("Asia/Makassar") to convert PostgreSQL UTC datetimes to local WITA calendar dates.
+  * Aligned prior check-in lookup for checkout and prior accepted POD lookup for trip close to extract_cmd_payload and to_wita_date.
+- PWA TypeScript & Geolocation Prototype:
+  * Removed unused @ts-expect-error annotations in session-fixture.ts.
+  * Used Object.defineProperty to set pos.timestamp to window.Date.now(), preserving valid GeolocationPosition prototype and toJSON method.
+  * Typecheck (tsc --noEmit) passes cleanly with 0 errors.
+- Test Fixtures & Multi-Company Tax Boundary:
+  * Narrowly elevated taxes reading in mobile_workday.py:174 with product.sudo().taxes_id.filtered(lambda tax: tax.company_id == company).
+  * Separated test_scope_and_snapshot_guards into test_order_snapshot_and_scope_guards, test_order_hidden_sku_rule_guard, and test_order_uom_quantity_and_discount_guards.
+  * Added exhaustive negative tests for fabricated trip origin, cross-outlet evidence mismatch, unassigned DO outlet, and incomplete trip closure.
+- Verification:
+  * python -m ruff check .: PASS (All checks passed)
+  * python scripts/check_manifests.py: PASS (10 addons OK)
+  * npm --prefix pwa run typecheck: PASS (0 errors)
+  * npm --prefix pwa test: 352 unit tests PASS (22/22 test files)
+  * python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner: 9 tests PASS
+  * python -m unittest discover -s tests: 154 tests PASS
+- Task managed by antigravity agent at 2026-11-02T06:56:00+07:00

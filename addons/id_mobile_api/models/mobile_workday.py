@@ -171,7 +171,7 @@ class MobileWorkday(models.Model):
             codes.add(code)
             product.principal_id.check_access("read")
             price = assignment.pricelist_id._get_product_price(product, carton, uom=unit, date=day)
-            taxes = product.taxes_id.filtered(lambda tax: tax.company_id == company)
+            taxes = product.sudo().taxes_id.filtered(lambda tax: tax.company_id == company)
             price = taxes.compute_all(
                 price * carton, currency=assignment.pricelist_id.currency_id,
                 quantity=1, product=product,

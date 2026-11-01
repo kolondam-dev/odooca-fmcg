@@ -1,14 +1,18 @@
+from datetime import datetime, timezone
 import hashlib
 import json
 import logging
 import math
 import uuid
+from zoneinfo import ZoneInfo
 from psycopg2 import IntegrityError
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError
 from .mobile_workday import MobileReadConflict
 
 _logger = logging.getLogger(__name__)
+
+WITA = ZoneInfo("Asia/Makassar")
 
 SUPPORTED_COMMANDS = {
     "sales.order.submit",
@@ -18,6 +22,28 @@ SUPPORTED_COMMANDS = {
     "delivery.trip.close",
     "delivery.proof.submit",
 }
+
+
+def to_wita_date(dt):
+    """Converts a UTC datetime from PostgreSQL to a calendar date in Asia/Makassar (WITA)."""
+    if not dt:
+        return None
+    if isinstance(dt, datetime):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(WITA).date()
+    return dt
+
+
+def extract_cmd_payload(cmd_record):
+    """Safely extracts inner payload dictionary from either full envelope or raw payload."""
+    try:
+        data = json.loads(cmd_record.payload_json or "{}")
+        if isinstance(data, dict) and "payload" in data and isinstance(data["payload"], dict):
+            return data["payload"]
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
 
 
 def canonical_command_fingerprint(command_data):
@@ -353,7 +379,7 @@ class MobileCommand(models.Model):
             return "accepted", f"Check-in kunjungan outlet {outlet_id} tercatat dengan bukti {evidence_uuid[:8]}.", ref
 
         elif cmd_type == "sales.visit.check_out":
-            # Checkout must bind to an active check-in session for this outlet on the same day
+            # Checkout must bind to an active check-in session for this outlet on the same WITA business day
             prior_checkin = self.sudo().search([
                 ("user_id", "=", user.id),
                 ("company_id", "=", company.id),
@@ -362,8 +388,9 @@ class MobileCommand(models.Model):
             ], order="id desc")
             has_valid_checkin = False
             for cmd in prior_checkin:
-                p = json.loads(cmd.payload_json or "{}")
-                if str(p.get("outlet_id")) == str(outlet_id) and cmd.create_date.date() == day:
+                p = extract_cmd_payload(cmd)
+                cmd_outlet = str(p.get("outlet_id") or "")
+                if cmd_outlet == str(outlet_id) and to_wita_date(cmd.create_date) == day:
                     has_valid_checkin = True
                     break
             if not has_valid_checkin:
@@ -403,6 +430,12 @@ class MobileCommand(models.Model):
             source = payload.get("source") or {}
             trip_id = str(source.get("trip") or payload.get("trip_id") or payload.get("manifest_id") or "").strip()
             do_id = str(source.get("id") or payload.get("do_id") or "").strip()
+            outlet_id_raw = source.get("outlet_id") or payload.get("outlet_id")
+            try:
+                outlet_id = int(outlet_id_raw or 0)
+            except (ValueError, TypeError):
+                outlet_id = 0
+
             evidence_data = payload.get("evidence") or {}
             ev_id = evidence_data.get("id") or payload.get("evidence_uuid") or payload.get("proof_uuid")
             evidence_uuid = str(ev_id or "").strip()
@@ -411,19 +444,43 @@ class MobileCommand(models.Model):
 
             if not trip_id:
                 raise UserError(_("Trip ID atau Manifest ID wajib disertakan untuk pengiriman."))
+            if not do_id:
+                raise UserError(_("DO ID wajib disertakan untuk pengiriman."))
             if not evidence_uuid:
                 raise UserError(_("POD submit wajib menyertakan bukti foto atau tanda tangan penerima."))
             if not recipient or len(recipient) < 2:
                 raise UserError(_("Nama penerima POD wajib diisi (minimal 2 karakter)."))
 
-            # Verify persistent evidence existence, ownership, active date, and media
+            # 1. Authoritative manifest resolution: bind exact trip + DO + company pair (no OR bypass)
+            picking = self.env["stock.picking"].sudo().search([
+                ("company_id", "=", company.id),
+                ("name", "=", do_id),
+                ("origin", "=", trip_id),
+            ], limit=1)
+            if not picking:
+                raise UserError(
+                    _("DO %s dengan trip %s tidak ditemukan dalam manifest operasional.") % (do_id, trip_id)
+                )
+
+            # 2. DO outlet binding: must match DO partner and active workday assignment
+            do_partner_id = picking.partner_id.id
+            if outlet_id and do_partner_id != outlet_id:
+                raise UserError(_("DO %s bukan untuk outlet %s.") % (do_id, outlet_id))
+
+            if do_partner_id not in assignment.outlet_ids.ids:
+                raise UserError(_("Outlet %s tidak termasuk dalam scope assignment aktif hari ini.") % do_partner_id)
+
+            # 3. Persistent evidence binding: must match DO partner, actor, company, current day, and media
             evidence = self.env["id.mobile.evidence"].sudo().search([
                 ("client_uuid", "=", evidence_uuid),
                 ("user_id", "=", user.id),
                 ("company_id", "=", company.id),
+                ("outlet_id", "=", do_partner_id),
             ], limit=1)
             if not evidence or not evidence.original:
-                raise UserError(_("Bukti POD %s tidak ditemukan atau tidak memiliki media valid.") % evidence_uuid)
+                raise UserError(
+                    _("Bukti POD %s tidak ditemukan atau tidak valid untuk outlet %s.") % (evidence_uuid, do_partner_id)
+                )
 
             receipt_data = json.loads(evidence.receipt_json or "{}")
             if receipt_data.get("business_date") != day.isoformat():
@@ -438,16 +495,8 @@ class MobileCommand(models.Model):
                 if package_hash not in valid_hashes:
                     raise UserError(_("Hash paket bukti foto POD tidak cocok dengan media tersimpan."))
 
-            # Resolve trip / DO against operational picking manifest
-            picking = self.env["stock.picking"].sudo().search([
-                ("company_id", "=", company.id),
-                "|", ("origin", "=", trip_id), ("name", "=", do_id or trip_id),
-            ], limit=1)
-            if not picking:
-                raise UserError(_("Trip pengiriman %s tidak ditemukan dalam manifest operasional.") % trip_id)
-
             ref = f"POD-{client_uuid[:8]}"
-            return "accepted", f"Bukti serah terima pengiriman trip {trip_id} berhasil disimpan.", ref
+            return "accepted", f"Bukti serah terima pengiriman trip {trip_id} DO {do_id} berhasil disimpan.", ref
 
         elif cmd_type == "delivery.trip.close":
             trip_id = str(payload.get("trip_id") or "").strip()
@@ -458,42 +507,54 @@ class MobileCommand(models.Model):
             if business_date_str and business_date_str != day.isoformat():
                 raise UserError(_("Trip closure hanya dapat dilakukan untuk hari kerja hari ini."))
 
-            pod_uuids = payload.get("pod_uuids") or []
-            if not pod_uuids:
-                raise UserError(_("Trip closure wajib membuktikan POD milik manifest trip hari ini."))
-
-            # Trip must exist in operational pickings
-            picking = self.env["stock.picking"].sudo().search([
+            # Trip must exist in authoritative operational pickings
+            manifest_pickings = self.env["stock.picking"].sudo().search([
                 ("company_id", "=", company.id),
-                "|", ("origin", "=", trip_id), ("name", "=", trip_id),
-            ], limit=1)
-            if not picking:
+                ("origin", "=", trip_id),
+            ])
+            if not manifest_pickings:
                 raise UserError(_("Trip pengiriman %s tidak ditemukan dalam manifest operasional.") % trip_id)
 
-            # Prove all PODs belong to this trip and were accepted on this day
+            required_do_names = set(manifest_pickings.mapped("name"))
+
+            # Prove all DOs in manifest have accepted PODs submitted on this WITA day
             submitted_pods = self.sudo().search([
                 ("user_id", "=", user.id),
                 ("company_id", "=", company.id),
                 ("command_type", "=", "delivery.pod.submit"),
                 ("status", "=", "accepted"),
             ])
-            valid_pod_uuids = set()
+            accepted_dos_in_trip = set()
+            valid_pod_uuids_for_trip = set()
             for pod_cmd in submitted_pods:
-                if pod_cmd.create_date.date() == day:
-                    p = json.loads(pod_cmd.payload_json or "{}")
+                if to_wita_date(pod_cmd.create_date) == day:
+                    p = extract_cmd_payload(pod_cmd)
                     p_src = p.get("source") or {}
-                    p_trip = str(p_src.get("trip") or p.get("trip_id") or p.get("manifest_id") or "")
-                    if p_trip == trip_id:
-                        valid_pod_uuids.add(pod_cmd.client_uuid)
+                    p_trip = str(p_src.get("trip") or p.get("trip_id") or p.get("manifest_id") or "").strip()
+                    p_do = str(p_src.get("id") or p.get("do_id") or "").strip()
+                    if p_trip == trip_id and p_do:
+                        accepted_dos_in_trip.add(p_do)
+                        valid_pod_uuids_for_trip.add(pod_cmd.client_uuid)
+
+            missing_dos = required_do_names - accepted_dos_in_trip
+            if missing_dos:
+                raise UserError(
+                    _("Trip %s belum lengkap: DO %s belum memiliki POD yang diterima hari ini.")
+                    % (trip_id, ", ".join(sorted(missing_dos)))
+                )
+
+            pod_uuids = payload.get("pod_uuids") or []
+            if not pod_uuids:
+                raise UserError(_("Trip closure wajib menyertakan daftar POD yang diverifikasi."))
 
             for pid in pod_uuids:
-                if pid not in valid_pod_uuids:
+                if pid not in valid_pod_uuids_for_trip:
                     raise UserError(
                         _("POD %s bukan milik manifest trip %s pada hari ini atau belum diterima.") % (pid, trip_id)
                     )
 
             ref = f"TRIP-{client_uuid[:8]}"
-            msg = f"Trip pengiriman {trip_id} berhasil ditutup dengan {len(pod_uuids)} POD terverifikasi."
+            msg = f"Trip pengiriman {trip_id} berhasil ditutup dengan {len(accepted_dos_in_trip)} DO terverifikasi."
             return "accepted", msg, ref
 
         raise UserError(_("Unsupported delivery command: %s") % cmd_type)

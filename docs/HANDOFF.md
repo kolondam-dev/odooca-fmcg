@@ -1,3 +1,34 @@
+## 2026-11-02T06:56:00+07:00 — anti-gravity agent — Address Supervisor Checkpoint 24d38db Review on PR #70: POD Binding, History Parser, WITA Timezone, and Typecheck
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Supervisor checkpoint 24d38db findings addressed, full local test suite passed)
+
+### Detail Perbaikan:
+1. **P1-1 — Resolusi Manifest Otoritatif & Pengikatan Ketat POD:**
+   - Menghapus alternatif `OR` pada resolusi dokumen DO; mengikat picking `stock.picking` secara eksak pada trip origin (`origin = trip_id`), nomor DO (`name = do_id`), dan perusahaan aktif (`company_id = company.id`). DO fiktif atau mismatch trip langsung ditolak fail-closed dengan `UserError`.
+   - Mengikat partner outlet DO (`do_partner_id`) dengan scope assignment aktif hari ini (`assignment.outlet_ids`).
+   - Mengikat bukti persisten `id.mobile.evidence` ke partner outlet DO yang bersangkutan (`evidence.outlet_id == do_partner_id`). Evidence sah dari outlet lain yang dipakai untuk DO outlet berbeda ditolak dengan `UserError`.
+   - Menegakkan kelengkapan manifest pada trip closure: seluruh DO di bawah manifest trip picking wajib memiliki POD yang accepted pada hari kerja WITA yang sama. Penutupan dengan subset parsial ditolak dengan `UserError`.
+2. **P1-2 — Parser Riwayat Command & Penyelarasan Zona Waktu WITA:**
+   - Menyediakan fungsi `extract_cmd_payload(cmd_record)` untuk mengurai inner dictionary `payload` dari envelope lengkap JSON yang tersimpan pada `payload_json`.
+   - Menggunakan `ZoneInfo("Asia/Makassar")` via `to_wita_date(dt)` untuk mengonversi PostgreSQL UTC datetime ke tanggal kalender lokal WITA. Transaksi pada pukul 00:00–07:59 WITA tidak lagi tergeser ke tanggal UTC hari sebelumnya.
+   - Menggunakan parser riwayat dan tanggal WITA pada validasi check-in aktif saat checkout dan validasi POD diterima saat penutupan trip pengiriman.
+3. **PWA TypeScript & Geolocation Position Prototype:**
+   - Menghapus `@ts-expect-error` yang tidak terpakai pada `pwa/tests/browser/session-fixture.ts`.
+   - Menggunakan `Object.defineProperty(pos, "timestamp", { value: window.Date.now(), configurable: true, writable: true })` agar objek geolocation yang dikirimkan ke callback browser tetap memiliki prototype `GeolocationPosition` lengkap beserta method `toJSON()`.
+   - `npm --prefix pwa run typecheck` (`tsc --noEmit`) lulus 100% tanpa error (code 0).
+4. **Boundary Multi-Company Tax & Pemisahan Test Fixtures:**
+   - Pada `mobile_workday.py:174`, pembacaan tax snapshot diamankan dengan elevasi sempit `product.sudo().taxes_id.filtered(lambda tax: tax.company_id == company)` guna mencegah `AccessError` saat sales mobile membaca produk dengan konfigurasi tax multi-company.
+   - Memisahkan `test_scope_and_snapshot_guards` di `test_commands_api.py` menjadi tiga metode terisolasi: `test_order_snapshot_and_scope_guards`, `test_order_hidden_sku_rule_guard`, dan `test_order_uom_quantity_and_discount_guards`.
+   - Menambahkan pengujian negatif counterexample untuk resolusi manifest fiktif, mismatch evidence lintas outlet, outlet DO di luar rute, dan trip closure parsial.
+5. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+   - `npm --prefix pwa run typecheck`: PASS (0 errors)
+   - `npm --prefix pwa test`: 352 unit tests PASS (22/22 test files)
+   - `python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner`: 9 tests PASS
+   - `python -m unittest discover -s tests`: 154 tests PASS
+
 ## 2026-11-02T01:18:00+07:00 — anti-gravity agent — Address Supervisor Re-review on PR #70 (P1-A, P1-B, and Playwright Clock Fixture)
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

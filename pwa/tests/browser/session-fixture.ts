@@ -39,11 +39,7 @@ export const test = base.extend({
                         return RealDate.now() + shiftMs;
                     }
                 }
-                // @ts-expect-error Mock Date methods
-                ShiftedDate.UTC = RealDate.UTC;
-                // @ts-expect-error Mock Date methods
-                ShiftedDate.parse = RealDate.parse;
-                // @ts-expect-error Assign shifted date
+                // @ts-expect-error Assign shifted date constructor
                 window.Date = ShiftedDate;
             }
 
@@ -60,14 +56,15 @@ export const test = base.extend({
                     origGet(
                         function (pos) {
                             try {
-                                const proxyPos = {
-                                    coords: pos.coords,
-                                    timestamp: window.Date.now(),
-                                };
-                                success(proxyPos);
+                                Object.defineProperty(pos, "timestamp", {
+                                    value: window.Date.now(),
+                                    configurable: true,
+                                    writable: true,
+                                });
                             } catch {
-                                success(pos);
+                                // Ignore definition error and proceed
                             }
+                            success(pos);
                         },
                         error,
                         options,
@@ -85,14 +82,15 @@ export const test = base.extend({
                     return origWatch(
                         function (pos) {
                             try {
-                                const proxyPos = {
-                                    coords: pos.coords,
-                                    timestamp: window.Date.now(),
-                                };
-                                success(proxyPos);
+                                Object.defineProperty(pos, "timestamp", {
+                                    value: window.Date.now(),
+                                    configurable: true,
+                                    writable: true,
+                                });
                             } catch {
-                                success(pos);
+                                // Ignore definition error and proceed
                             }
+                            success(pos);
                         },
                         error,
                         options,
