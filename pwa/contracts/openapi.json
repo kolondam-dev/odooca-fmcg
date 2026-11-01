@@ -46,6 +46,56 @@
         }
       }
     },
+    "/outlets/{outlet_id}/image": {
+      "get": {
+        "description": "Private native outlet image, current assignment and company only; no-store.",
+        "parameters": [
+          {
+            "name": "outlet_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Raster image",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Official session required"
+          },
+          "403": {
+            "description": "Outlet is not assigned or not readable"
+          },
+          "404": {
+            "description": "No image available"
+          }
+        }
+      }
+    },
     "/evidence": {
       "post": {
         "description": "Explicit evidence capability; native Odoo multipart csrf_token. Stores evidence only, not a business command.",
@@ -1095,6 +1145,18 @@
             "type": "string",
             "maxLength": 500
           },
+          "do_reason": {
+            "type": "string",
+            "enum": [
+              "TOKO TUTUP",
+              "TOKO TIDAK PUNYA UANG",
+              "TOKO TIDAK DAPAT DIAKSES",
+              "TOKO TIDAK ORDER",
+              "ORDER MELEBIHI KEMAMPUAN TOKO",
+              "SKU TIDAK SESUAI ORDER",
+              "REQUEST PENDING KIRIM"
+            ]
+          },
           "request": {
             "anyOf": [
               {
@@ -1162,6 +1224,19 @@
                   "maximum": 9999
                 },
                 "reason": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "item_reason": {
+                  "type": "string",
+                  "enum": [
+                    "ITEM RUSAK",
+                    "ITEM EXPIRED",
+                    "SALAH SKU",
+                    "QTY TERLALU BANYAK"
+                  ]
+                },
+                "item_note": {
                   "type": "string",
                   "maxLength": 500
                 }
@@ -2769,6 +2844,18 @@
                     "type": "string",
                     "maxLength": 500
                   },
+                  "do_reason": {
+                    "type": "string",
+                    "enum": [
+                      "TOKO TUTUP",
+                      "TOKO TIDAK PUNYA UANG",
+                      "TOKO TIDAK DAPAT DIAKSES",
+                      "TOKO TIDAK ORDER",
+                      "ORDER MELEBIHI KEMAMPUAN TOKO",
+                      "SKU TIDAK SESUAI ORDER",
+                      "REQUEST PENDING KIRIM"
+                    ]
+                  },
                   "request": {
                     "anyOf": [
                       {
@@ -2836,6 +2923,19 @@
                           "maximum": 9999
                         },
                         "reason": {
+                          "type": "string",
+                          "maxLength": 500
+                        },
+                        "item_reason": {
+                          "type": "string",
+                          "enum": [
+                            "ITEM RUSAK",
+                            "ITEM EXPIRED",
+                            "SALAH SKU",
+                            "QTY TERLALU BANYAK"
+                          ]
+                        },
+                        "item_note": {
                           "type": "string",
                           "maxLength": 500
                         }
@@ -4194,7 +4294,8 @@
               "fuel_emergency",
               "meal",
               "lodging",
-              "repair"
+              "repair",
+              "delivery_fee"
             ]
           },
           "amount": {
@@ -4205,7 +4306,8 @@
             "type": "string",
             "enum": [
               "trip",
-              "delivery"
+              "delivery",
+              "outlet"
             ]
           },
           "trip_id": {
@@ -4224,6 +4326,11 @@
                 "type": "null"
               }
             ]
+          },
+          "outlet_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
           },
           "scheduled_date": {
             "type": "string",
@@ -4724,6 +4831,98 @@
                 "demo_unrestricted": {
                   "type": "boolean",
                   "const": true
+                },
+                "image_url": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\/api\\/v1\\/outlets\\/\\d+\\/image$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "commercial": {
+                  "type": "object",
+                  "properties": {
+                    "max_order": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "currency": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 3
+                    },
+                    "previous_visit_total": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "top_sku": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "payment_terms": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "credit_limit": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "contact": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "max_order",
+                    "previous_visit_total",
+                    "top_sku",
+                    "payment_terms",
+                    "credit_limit",
+                    "contact"
+                  ],
+                  "additionalProperties": false
                 }
               },
               "required": [
@@ -4755,6 +4954,9 @@
                   "type": "string"
                 },
                 "principal": {
+                  "type": "string"
+                },
+                "principal_name": {
                   "type": "string"
                 },
                 "unit": {

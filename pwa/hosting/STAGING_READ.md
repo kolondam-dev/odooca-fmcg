@@ -100,3 +100,10 @@ native CSRF, batas file5MiB, server geofence, retensi source/derivative dan peri
 retry dijelaskan dalam `addons/id_mobile_api/EVIDENCE.md` di root repo. Form tidak
 membuat check-in/POD, tidak memakai koordinat fallback dan tidak menyimpan draft
 upload offline. Mode default/read-only serta demo tetap terpisah.
+
+### Foto outlet (alur Sales/Delivery)
+
+GET tepat `/api/v1/outlets/<id numerik>/image` diteruskan oleh gateway dengan
+header authority yang sama seperti bootstrap/snapshot. POST diblokir. Odoo
+memvalidasi assignment/company dan mengembalikan PNG/JPEG/WebP privat tanpa cache.
+Tidak membuka `/api/v1/sync/commands` atau endpoint bisnis lainnya.

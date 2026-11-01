@@ -1,3 +1,4 @@
+import { OutletDirectory } from "./components/OutletDirectory";
 import { TripClosing } from "./components/TripClosing";
 import { OrderCorrections } from "./components/OrderCorrections";
 import { DeliveryApproval } from "./components/DeliveryApproval";
@@ -235,6 +236,26 @@ function Workspace({
     snapshot: Snapshot;
     provider: FieldProvider;
 }) {
+    useEffect(() => {
+        const app = document.querySelector<HTMLElement>(".app-shell");
+        const header = document.querySelector<HTMLElement>(".header-fixed"),
+            nav = document.querySelector<HTMLElement>(".bottom-nav");
+        const measure = () => {
+            app?.style.setProperty(
+                "--field-header-height",
+                `${header?.offsetHeight ?? 56}px`,
+            );
+            app?.style.setProperty(
+                "--field-nav-height",
+                `${nav?.offsetHeight ?? 70}px`,
+            );
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        if (header) observer.observe(header);
+        if (nav) observer.observe(nav);
+        return () => observer.disconnect();
+    }, []);
     const [now, setNow] = useState(Date.now());
     useEffect(() => {
         const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -247,7 +268,6 @@ function Workspace({
     const [toast, setToast] = useState("");
     const [syncing, setSyncing] = useState(false);
     const [scenario, setScenario] = useState<Scenario>("normal");
-    const [filter, setFilter] = useState("");
     const owner = ownerKey(identity);
     const [visitOutlet, setVisitOutlet] = useState<string>();
     const [morning, setMorning] = useState<MorningRecord>();
@@ -310,6 +330,7 @@ function Workspace({
             openOrder(outlet);
             return;
         }
+        setToast("");
         setVisitOutlet(outlet);
         go("sales");
     }
@@ -378,7 +399,7 @@ function Workspace({
     const go = (id: Page) => {
         if (canOpen(identity.roles, id)) {
             setPage(id);
-            setFilter("");
+            setToast("");
             haptic();
             window.scrollTo({ top: 0 });
         }
@@ -473,7 +494,10 @@ function Workspace({
                     </div>
                 </header>
             </div>
-            <main id="main-content" class="content">
+            <main
+                id="main-content"
+                class={`content${page === "sales" ? " sales-content" : ""}`}
+            >
                 {page === "home" && (
                     <>
                         <div class="greeting">
@@ -624,21 +648,21 @@ function Workspace({
                 )}
                 {page === "sales" && dailyReady && (
                     <>
-                        <Heading
-                            title="Outlet"
-                            action={
-                                <button
-                                    class="text-button"
-                                    onClick={() => go("home")}
-                                >
-                                    Beranda
-                                </button>
-                            }
-                        />
-                        <div class="notice">
-                            Harga & stok estimasi. Extra call memerlukan
-                            approval supervisor.
-                        </div>
+                        {!visitOutlet && (
+                            <>
+                                <Heading
+                                    title="Outlet"
+                                    action={
+                                        <button
+                                            class="text-button"
+                                            onClick={() => go("home")}
+                                        >
+                                            Beranda
+                                        </button>
+                                    }
+                                />
+                            </>
+                        )}
                         {visitOutlet &&
                             dailyReady &&
                             snapshot.outlets.some(
@@ -665,57 +689,26 @@ function Workspace({
                                     back={() => setVisitOutlet(undefined)}
                                 />
                             )}
-                        <label class="search">
-                            <Icon name="store" size={20} />
-                            <input
-                                placeholder="Cari outlet atau alamat…"
-                                aria-label="Cari outlet"
-                                value={filter}
-                                onInput={(e) =>
-                                    setFilter(e.currentTarget.value)
+                        {!visitOutlet && (
+                            <OutletDirectory
+                                outlets={snapshot.outlets}
+                                open={openVisit}
+                                extra={() => setDialog({ type: "extra" })}
+                                status={(id) =>
+                                    queue.some(
+                                        (q) =>
+                                            q.command.type ===
+                                                "sales.visit.check_out" &&
+                                            q.command.payload.outlet_id ===
+                                                id &&
+                                            q.command.payload.business_date ===
+                                                identity.businessDate,
+                                    )
+                                        ? "Session closed"
+                                        : "Belum ditutup"
                                 }
                             />
-                        </label>
-                        <div class="list-stack">
-                            {snapshot.outlets
-                                .filter((o) =>
-                                    `${o.name} ${o.address}`
-                                        .toLowerCase()
-                                        .includes(filter.toLowerCase()),
-                                )
-                                .map((o) => (
-                                    <OutletCard
-                                        key={o.id}
-                                        outlet={o}
-                                        status={
-                                            queue.some(
-                                                (q) =>
-                                                    q.command.type ===
-                                                        "sales.visit.check_out" &&
-                                                    q.command.payload
-                                                        .outlet_id === o.id &&
-                                                    q.command.payload
-                                                        .business_date ===
-                                                        identity.businessDate,
-                                            )
-                                                ? "Session closed · hasil sync di Lainnya"
-                                                : "Belum ditutup"
-                                        }
-                                        open={() => openVisit(o.id)}
-                                    />
-                                ))}
-                        </div>
-                        <button
-                            class="secondary full"
-                            onClick={() => setDialog({ type: "extra" })}
-                        >
-                            <Icon name="pin" size={20} />
-                            Ajukan extra call
-                        </button>
-                        <p class="footnote">
-                            * Waktu tampilan mengikuti perangkat; penetapan
-                            sesi/harga resmi menunggu backend.
-                        </p>
+                        )}
                     </>
                 )}
                 {page === "delivery" && !dailyReady && (
@@ -1044,10 +1037,7 @@ function Workspace({
                     </button>
                 ))}
             </nav>
-            <div
-                class={`connection ${online ? "" : "offline"}`}
-                aria-live="polite"
-            >
+            <div class="sr-only" aria-live="polite">
                 {online ? "" : "Offline · aktivitas disimpan di perangkat"}
             </div>
             {toast && (
@@ -1131,6 +1121,7 @@ function FormDialog({
     const focusOrigin = useRef(document.activeElement as HTMLElement | null);
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
+    const [orderPreview, setOrderPreview] = useState(false);
     const [qty, setQty] = useState<Record<string, number>>({});
     const [principal, setPrincipal] = useState(
         () => snapshot.products[0]?.principal ?? "mayora",
@@ -1252,6 +1243,11 @@ function FormDialog({
     async function send(e: SubmitEvent) {
         e.preventDefault();
         if (busy) return;
+        if (dialog.type === "order" && !orderPreview) {
+            if (orderLines.length && evidence) setOrderPreview(true);
+            else setError("Lengkapi item dan foto display sebelum preview.");
+            return;
+        }
         setError("");
         const f = new FormData(e.currentTarget as HTMLFormElement);
         setBusy(true);
@@ -1420,95 +1416,168 @@ function FormDialog({
                     <div class="sheet-body">
                         {dialog.type === "order" && (
                             <>
-                                <p class="sheet-subtitle">
-                                    {
-                                        snapshot.outlets.find(
-                                            (o) => o.id === dialog.outlet,
-                                        )?.name
-                                    }{" "}
-                                    · satu principal per order
-                                </p>
-                                <OrderCatalog
-                                    snapshot={snapshot}
-                                    principal={principal}
-                                    onPrincipal={setPrincipal}
-                                    qty={qty}
-                                    onQty={setQty}
-                                    units={units}
-                                    onUnits={setUnits}
-                                />
-                                <details class="order-extra">
-                                    <summary>Catatan & diskon</summary>
-                                    <label>
-                                        Diskon diminta (%)
-                                        <input
-                                            aria-label="Diskon diminta (%)"
-                                            type="number"
-                                            min="0"
-                                            max="100"
-                                            step="1"
-                                            inputMode="numeric"
-                                            value={discount}
-                                            onInput={(e) =>
-                                                setDiscount(
-                                                    Number(
-                                                        e.currentTarget.value,
-                                                    ),
-                                                )
+                                <nav
+                                    class="workflow-tabs"
+                                    aria-label="Tahap order"
+                                >
+                                    <button
+                                        type="button"
+                                        aria-pressed={!orderPreview}
+                                        onClick={() => setOrderPreview(false)}
+                                    >
+                                        Produk & cart
+                                    </button>
+                                    <button
+                                        type="button"
+                                        aria-pressed={orderPreview}
+                                        disabled={
+                                            !orderLines.length || !evidence
+                                        }
+                                        onClick={() => setOrderPreview(true)}
+                                    >
+                                        Preview order
+                                    </button>
+                                </nav>
+                                {orderPreview && (
+                                    <section
+                                        class="order-preview"
+                                        aria-label="Preview order"
+                                    >
+                                        <h3>
+                                            {
+                                                snapshot.outlets.find(
+                                                    (o) =>
+                                                        o.id === dialog.outlet,
+                                                )?.name
                                             }
-                                        />
-                                    </label>
-                                    {discount > 0 && (
+                                        </h3>
+                                        {orderLines.map(([id, quantity]) => (
+                                            <div class="preview-line" key={id}>
+                                                <span>
+                                                    {
+                                                        snapshot.products.find(
+                                                            (p) => p.id === id,
+                                                        )?.name
+                                                    }
+                                                    <small>
+                                                        {quantity}{" "}
+                                                        {units[id] ?? "carton"}
+                                                    </small>
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    class="secondary"
+                                                    aria-label={`Hapus ${snapshot.products.find((p) => p.id === id)?.name}`}
+                                                    onClick={() =>
+                                                        setQty({
+                                                            ...qty,
+                                                            [id]: 0,
+                                                        })
+                                                    }
+                                                >
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        ))}
+                                        <p>
+                                            {discount > 0
+                                                ? `Diskon ${discount}% • menunggu approval`
+                                                : "Harga sesuai snapshot"}
+                                        </p>
+                                    </section>
+                                )}
+                                <div hidden={orderPreview}>
+                                    <p class="sheet-subtitle">
+                                        {
+                                            snapshot.outlets.find(
+                                                (o) => o.id === dialog.outlet,
+                                            )?.name
+                                        }{" "}
+                                        · satu principal per order
+                                    </p>
+                                    <OrderCatalog
+                                        snapshot={snapshot}
+                                        principal={principal}
+                                        onPrincipal={setPrincipal}
+                                        qty={qty}
+                                        onQty={setQty}
+                                        units={units}
+                                        onUnits={setUnits}
+                                    />
+                                    <details class="order-extra">
+                                        <summary>Catatan & diskon</summary>
                                         <label>
-                                            Alasan permintaan diskon
-                                            <textarea
-                                                required
-                                                minLength={3}
-                                                maxLength={500}
-                                                value={discountReason}
+                                            Diskon diminta (%)
+                                            <input
+                                                aria-label="Diskon diminta (%)"
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                step="1"
+                                                inputMode="numeric"
+                                                value={discount}
                                                 onInput={(e) =>
-                                                    setDiscountReason(
-                                                        e.currentTarget.value,
+                                                    setDiscount(
+                                                        Number(
+                                                            e.currentTarget
+                                                                .value,
+                                                        ),
                                                     )
                                                 }
                                             />
                                         </label>
-                                    )}
-                                    <label>
-                                        Catatan order
-                                        <textarea
-                                            name="note"
-                                            maxLength={500}
-                                            placeholder="Permintaan outlet (opsional)"
-                                        />
-                                    </label>
-                                </details>
-                                <DisplayPhoto
-                                    store={store}
-                                    owner={owner}
-                                    value={evidence}
-                                    outletName={
-                                        snapshot.outlets.find(
-                                            (o) => o.id === dialog.outlet,
-                                        )?.name ?? "Outlet"
-                                    }
-                                    coordinates={(() => {
-                                        const outlet = snapshot.outlets.find(
-                                            (o) => o.id === dialog.outlet,
-                                        );
-                                        return outlet
-                                            ? {
-                                                  latitude: outlet.latitude,
-                                                  longitude: outlet.longitude,
-                                              }
-                                            : undefined;
-                                    })()}
-                                    onChange={setEvidence}
-                                />
-                                <p class="footnote">
-                                    Harga akhir, kredit dan approval below-HPP
-                                    diputuskan backend. Angka ini estimasi.
-                                </p>
+                                        {discount > 0 && (
+                                            <label>
+                                                Alasan permintaan diskon
+                                                <textarea
+                                                    required
+                                                    minLength={3}
+                                                    maxLength={500}
+                                                    value={discountReason}
+                                                    onInput={(e) =>
+                                                        setDiscountReason(
+                                                            e.currentTarget
+                                                                .value,
+                                                        )
+                                                    }
+                                                />
+                                            </label>
+                                        )}
+                                        <label>
+                                            Catatan order
+                                            <textarea
+                                                name="note"
+                                                maxLength={500}
+                                                placeholder="Permintaan outlet (opsional)"
+                                            />
+                                        </label>
+                                    </details>
+                                    <DisplayPhoto
+                                        store={store}
+                                        owner={owner}
+                                        value={evidence}
+                                        outletName={
+                                            snapshot.outlets.find(
+                                                (o) => o.id === dialog.outlet,
+                                            )?.name ?? "Outlet"
+                                        }
+                                        coordinates={(() => {
+                                            const outlet =
+                                                snapshot.outlets.find(
+                                                    (o) =>
+                                                        o.id === dialog.outlet,
+                                                );
+                                            return outlet
+                                                ? {
+                                                      latitude: outlet.latitude,
+                                                      longitude:
+                                                          outlet.longitude,
+                                                  }
+                                                : undefined;
+                                        })()}
+                                        onChange={setEvidence}
+                                    />
+                                </div>
                             </>
                         )}
                         {dialog.type === "extra" && (
@@ -1908,20 +1977,49 @@ function FormDialog({
                                             order dikirim.
                                         </p>
                                     )}
-                                    <button
-                                        type="submit"
-                                        class="order-submit"
-                                        disabled={
-                                            busy ||
-                                            !restored ||
-                                            orderLines.length === 0 ||
-                                            !evidence
-                                        }
-                                    >
-                                        {busy
-                                            ? "Menyimpan…"
-                                            : "Simpan ke antrean"}
-                                    </button>
+                                    {orderPreview ? (
+                                        <>
+                                            <button
+                                                type="button"
+                                                class="secondary"
+                                                onClick={() =>
+                                                    setOrderPreview(false)
+                                                }
+                                            >
+                                                Ubah order
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                class="order-submit"
+                                                disabled={
+                                                    busy ||
+                                                    !restored ||
+                                                    !orderLines.length ||
+                                                    !evidence
+                                                }
+                                            >
+                                                {busy
+                                                    ? "Mengirim…"
+                                                    : "Kirim order"}
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            class="order-submit"
+                                            disabled={
+                                                busy ||
+                                                !restored ||
+                                                !orderLines.length ||
+                                                !evidence
+                                            }
+                                            onClick={() =>
+                                                setOrderPreview(true)
+                                            }
+                                        >
+                                            Preview order
+                                        </button>
+                                    )}
                                 </>
                             ) : (
                                 <>

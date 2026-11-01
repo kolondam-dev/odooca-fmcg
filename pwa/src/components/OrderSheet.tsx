@@ -150,29 +150,35 @@ export function OrderCatalog({
     );
     return (
         <>
-            <label class="search product-search">
-                <Icon name="bag" size={18} />
-                <input
-                    aria-label="Cari produk"
-                    placeholder="Cari produk atau SKU"
-                    value={query}
-                    onInput={(e) => setQuery(e.currentTarget.value)}
-                />
-            </label>
-            <div class="segmented" role="group" aria-label="Principal">
-                {principals.map((p) => (
-                    <button
-                        key={p}
-                        type="button"
-                        aria-pressed={p === active}
-                        onClick={() => {
-                            onPrincipal(p);
-                            onQty({});
-                        }}
-                    >
-                        {principalName(p)}
-                    </button>
-                ))}
+            <div class="pos-toolbar">
+                <label class="search product-search">
+                    <Icon name="bag" size={18} />
+                    <input
+                        aria-label="Cari produk"
+                        placeholder="Cari produk atau SKU"
+                        value={query}
+                        onInput={(e) => setQuery(e.currentTarget.value)}
+                    />
+                </label>
+                <div class="segmented" role="group" aria-label="Principal">
+                    {principals.map((p) => (
+                        <button
+                            key={p}
+                            type="button"
+                            aria-pressed={p === active}
+                            disabled={
+                                p !== active &&
+                                Object.values(qty).some((value) => value > 0)
+                            }
+                            title="Satu principal per order"
+                            onClick={() => onPrincipal(p)}
+                        >
+                            {snapshot.products.find(
+                                (product) => product.principal === p,
+                            )?.principal_name ?? principalName(p)}
+                        </button>
+                    ))}
+                </div>
             </div>
             <div class="product-list">
                 {products.length === 0 && (

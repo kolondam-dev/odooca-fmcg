@@ -3,6 +3,10 @@ export async function saveVisitPhoto(
     page: Page,
     phase: "check-in" | "check-out",
 ) {
+    if (phase === "check-out")
+        await page
+            .getByRole("button", { name: "Close session", exact: true })
+            .click();
     const group = page.getByRole("group", {
         name: `Foto ${phase} kunjungan`,
         exact: true,
@@ -35,4 +39,14 @@ export async function saveDisplayPhoto(page: Page) {
     await expect(
         page.getByRole("dialog").getByText("Tersimpan", { exact: true }),
     ).toBeVisible();
+}
+
+export async function sendOrder(page: Page) {
+    await page
+        .getByRole("button", { name: "Preview order", exact: true })
+        .last()
+        .click();
+    await page
+        .getByRole("button", { name: "Kirim order", exact: true })
+        .click();
 }

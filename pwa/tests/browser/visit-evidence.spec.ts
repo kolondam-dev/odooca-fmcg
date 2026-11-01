@@ -73,6 +73,9 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
             exact: true,
         }),
     });
+    await page
+        .getByRole("button", { name: "Close session", exact: true })
+        .click();
     await history.locator("summary").click();
     await expect(history.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await expect(history.getByLabel("Foto bukti")).toHaveCount(0);

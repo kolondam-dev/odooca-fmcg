@@ -169,6 +169,41 @@ const spec = {
             },
         },
         "/sync/snapshot": { get: { responses: { 200: response("Snapshot") } } },
+        "/outlets/{outlet_id}/image": {
+            get: {
+                description:
+                    "Private native outlet image, current assignment and company only; no-store.",
+                parameters: [
+                    {
+                        name: "outlet_id",
+                        in: "path",
+                        required: true,
+                        schema: { type: "integer", minimum: 1 },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Raster image",
+                        content: {
+                            "image/png": {
+                                schema: { type: "string", format: "binary" },
+                            },
+                            "image/jpeg": {
+                                schema: { type: "string", format: "binary" },
+                            },
+                            "image/webp": {
+                                schema: { type: "string", format: "binary" },
+                            },
+                        },
+                    },
+                    401: { description: "Official session required" },
+                    403: {
+                        description: "Outlet is not assigned or not readable",
+                    },
+                    404: { description: "No image available" },
+                },
+            },
+        },
         "/evidence": {
             post: {
                 description:

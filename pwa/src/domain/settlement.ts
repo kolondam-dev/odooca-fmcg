@@ -76,6 +76,7 @@ function requestFrom(item: QueueItem, owner: string) {
     const request = parsed.data;
     if (
         (request.expense_scope === "delivery") !== !!request.delivery_id ||
+        (request.expense_scope === "outlet") !== !!request.outlet_id ||
         (request.category.startsWith("fuel") && request.odometer === null)
     )
         throw new Error("Konteks pengajuan biaya tidak valid.");

@@ -1,3 +1,8 @@
+## 2026-11-01T12:45:31+07:00 — codex — Re-review PR66 dan sinkronisasi main
+**Verdict source:** P2 kartu tolakan CLOSED pada 794b852; reproduksi fungsi produksi + OWL Odoo19/JSDOM menunjukkan 0→0, 3→3, 3+2→5. Tes baru implementer memeriksa payload; probe supervisor turut memeriksa kartu yang dirender.
+**Integrasi:** merge main 1b38463 (PR67); konflik HANDOFF diselesaikan dengan mempertahankan kedua blok riwayat. Kode dashboard reviewed tetap utuh; kode PWA/API main diadopsi utuh.
+**Gate:** CI final HEAD harus lulus sebelum merge berotorisasi. Tidak ada deployment/provisioning langsung.
+
 ## 2026-11-01T12:45:00+07:00 — anti-gravity agent — Perbaikan Agregasi Kartu Tolakan Pengantaran WMS (PR #66 HOLD P2 Resolusi)
 **Branch:** agen/review-fmcg-dashboards
 **Status:** PASS (Ruff, Check Manifests, XML Valid, Unit Regression Test) -> Siap Review Ulang PR #66
@@ -58,6 +63,14 @@
 4. **Verifikasi:**
    - ruff check PASS (addons/id_dashboard_monetary, addons/id_dashboard_wms).
    - check_manifests.py PASS (10 addons ok).
+
+## 2026-11-01T11:30:55+07:00 — agent codex-pwa — Alur Sales/Delivery PWA
+**Branch:** `agen/pwa-sales-delivery-workflow`, basis main merge PR64 `6901d9e`. PR64 sudah merged oleh sesi lain, diverifikasi tanpa deployment.
+**Berubah:** daftar outlet datar dengan scroll sendiri dan pencarian drawer penuh; halaman toko dengan gambar privat native Odoo, ringkasan tiga kolom/TOP/limit/PIC; Check-in → Open session mini POS → preview/kirim → Close session. Delivery menambah wizard qty, tiga status tampilan, alasan DO/item, tanggal pending, catatan item terpisah dan biaya DO/toko ber-scope. Draft item terikat sumber/SKU; pengajuan biaya atomik/CAS. Header status offline menggantikan banner yang menutup tombol; hasil restore order tidak mengambil alih tab yang sudah dipilih pengguna. Gateway mengizinkan GET image numerik secara khusus, header terpercaya tetap dipakai.
+**Diverifikasi lokal:** 345/345 unit; typecheck, format, contracts, build demo/live/staging + check:build, hosting smoke, 3 probe Werkzeug, ruff, manifest dan diff whitespace PASS. 154/154 browser phone/tablet PASS setelah perbaikan fase restore dan banner offline. Pemeriksaan screenshot phone/tablet dilakukan.
+**Batas:** addon `19.0.1.3.0` memerlukan upgrade terarah. Omset terbesar = SO terkonfirmasi sebelum pajak dengan ACL native; kunjungan resmi sebelumnya belum tersedia sehingga “—”. Tidak memberi hak sales baru otomatis. Rincian mapping alasan/biaya: `docs/ui/PWA_SALES_DELIVERY_WORKFLOW.md`.
+**Belum diuji [BU]:** Odoo install/upgrade dan transport Docker pada CI HEAD baru; server staging existing, perangkat nyata dan posting transaksi resmi. Tidak merge/deploy perubahan baru.
+**Menunggu:** CI exact HEAD dan reviewer independen; PR baru tetap draft.
 
 ## 2026-11-01T09:29:21+07:00 — codex — Integrasi PR64 dengan main untuk merge berotorisasi
 **Otorisasi:** pemilik meminta merge PR64 jika ready. P2 foto retry telah ditutup pada7b55883.
