@@ -142,3 +142,13 @@ class TestSalesProductivity(TransactionCase):
         self.assertEqual(filters["period_min"], "2026-07-01")
         self.assertEqual(filters["period_max"], "2026-10-31")
         self.assertEqual(filters["lpo_target"], 4.0)
+
+    def test_previous_period_comparison(self):
+        self._order(self.outlet_mt, self.salesman, self.products[:2], datetime(2026, 7, 15, 3, 0))
+        self._order(self.outlet_mt, self.salesman, self.products[:2], datetime(2026, 8, 5, 3, 0), qty=20.0)
+        data = self._service().get_data("month", "2026-08-10", [self.salesman.id], [])
+        self.assertAlmostEqual(data["total"]["net"], 40000.0)
+        self.assertAlmostEqual(data["previous"]["net"], 20000.0)
+        self.assertEqual(data["previous_period"]["start"], "2026-07-01")
+        first = self._service().get_data("month", "2026-07-10", [self.salesman.id], [])
+        self.assertEqual(first["previous"]["orders"], 0)

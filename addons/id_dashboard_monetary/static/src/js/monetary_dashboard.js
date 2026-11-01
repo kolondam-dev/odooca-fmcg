@@ -148,3 +148,4 @@ export class MonetaryDashboard extends Component {
 }
 
 registry.category("actions").add("id_dashboard_monetary.monetary_dashboard", MonetaryDashboard);
+

@@ -1,94 +1,127 @@
-// Sales Productivity dashboard. FMCG palette: navy / blue / emerald / amber.
+// Sales Productivity dashboard: flat, square, single-sheet layout (spreadsheet-dashboard style).
+// Font and base sizes are inherited from Odoo; palette: navy / blue / emerald / amber.
 $sp-navy: #001a57;
 $sp-blue: #004ecc;
 $sp-emerald: #16a34a;
 $sp-amber: #d97706;
-$sp-ink: #0f172a;
-$sp-muted: #64748b;
-$sp-line: #e2e8f0;
-$sp-surface: #ffffff;
-$sp-bg: #f1f5f9;
+$sp-ink: #212529;
+$sp-muted: #6c757d;
+$sp-line: #dee2e6;
+$sp-soft: #f8f9fa;
 
 .id-sp {
-.id-sp {
-    background: -bg;
-    color: -ink;
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    height: 100%;
-    width: 100%;
-    min-height: 0;
-    overflow-y: auto !important;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    background: $sp-soft;
+    color: $sp-ink;
+    overflow: auto;
 
-    &__scroll {
-        display: flex;
-        flex-direction: column;
-        flex: 1 0 auto;
-        min-height: 100%;
-        width: 100%;
-        padding: 16px 20px 48px;
-        box-sizing: border-box;
+    *,
+    *::before,
+    *::after {
+        border-radius: 0;
     }
-    &__header {
-        margin-bottom: 12px;
+
+    button,
+    input {
+        font-family: inherit;
+    }
+
+    // One big sheet; sections are separated only by hairlines.
+    &__sheet {
+        background: #fff;
+        border: 1px solid $sp-line;
+        margin: 16px;
+        min-width: 0;
+    }
+
+    &__section {
+        padding: 12px 16px;
+        border-top: 1px solid $sp-line;
+
+        &:first-child {
+            border-top: 0;
+        }
+
+        &.is-loading {
+            opacity: 0.55;
+            transition: opacity 0.15s;
+        }
+    }
+
+    &__section-title {
+        margin: 0 0 8px;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: $sp-navy;
+
+        .fa {
+            margin-right: 4px;
+            color: $sp-blue;
+        }
+    }
+
+    // ---- title + filter bar
+    &__filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 10px;
+    }
+
+    &__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+        flex: 1 1 100%;
+
+        .id-sp__section-title {
+            margin: 0;
+        }
+    }
+
+    &__filters > &__head {
+        margin-bottom: 0;
     }
 
     &__title {
         margin: 0;
-        font-size: 22px;
+        font-size: 1.25rem;
         font-weight: 700;
         color: $sp-navy;
+
+        .fa {
+            color: $sp-blue;
+            margin-right: 6px;
+        }
     }
 
-    &__subtitle {
-        margin: 2px 0 0;
+    &__period {
         color: $sp-muted;
-        font-size: 13px;
+        font-size: 0.8125rem;
     }
 
-    // ---- filters
-    &__filters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px 24px;
-        align-items: center;
-        background: $sp-surface;
-        border: 1px solid $sp-line;
-        border-radius: 12px;
-        padding: 12px 14px;
-        margin-bottom: 16px;
-    }
-
-    &__filter-group {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-    }
-
-    &__filter-label {
-        font-size: 12px;
-        font-weight: 600;
-        color: $sp-muted;
+    &__label {
+        margin-left: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
+        color: $sp-muted;
     }
 
     &__seg {
         display: inline-flex;
         border: 1px solid $sp-line;
-        border-radius: 8px;
-        overflow: hidden;
     }
 
     &__seg-btn {
         border: 0;
-        background: $sp-surface;
-        padding: 6px 12px;
-        font-size: 13px;
+        background: #fff;
+        padding: 4px 12px;
         color: $sp-ink;
         cursor: pointer;
 
@@ -102,20 +135,12 @@ $sp-bg: #f1f5f9;
         }
     }
 
-    &__date {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
     &__icon-btn {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border: 1px solid $sp-line;
-        border-radius: 8px;
-        background: $sp-surface;
-        font-size: 18px;
-        line-height: 1;
+        background: #fff;
+        color: $sp-ink;
         cursor: pointer;
 
         &:disabled {
@@ -125,34 +150,23 @@ $sp-bg: #f1f5f9;
     }
 
     &__input {
-        height: 32px;
+        height: 30px;
         border: 1px solid $sp-line;
-        border-radius: 8px;
         padding: 0 8px;
-        font-size: 13px;
     }
 
     &__link {
         border: 0;
         background: none;
         color: $sp-blue;
-        font-size: 13px;
         cursor: pointer;
-        text-decoration: underline;
-    }
-
-    &__chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
+        padding: 0 4px;
     }
 
     &__chip {
         border: 1px solid $sp-line;
-        background: $sp-surface;
-        border-radius: 999px;
-        padding: 4px 12px;
-        font-size: 13px;
+        background: #fff;
+        padding: 3px 10px;
         cursor: pointer;
 
         &.is-active {
@@ -162,92 +176,78 @@ $sp-bg: #f1f5f9;
         }
     }
 
-    // ---- KPI cards
-    &__cards {
+    // ---- scorecards: grid cells divided by hairlines
+    &__scorecards {
         display: grid;
-        gap: 12px;
-        margin-bottom: 16px;
+        margin: 0 -16px -12px;
+        overflow: hidden;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
 
-        &--primary {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-
-        &--secondary {
+        &--5 {
             grid-template-columns: repeat(5, minmax(0, 1fr));
         }
     }
 
-    &__card {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        text-align: left;
+    &__score {
+        position: relative;
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        grid-template-areas:
+            "icon title"
+            "icon value"
+            "icon delta"
+            "meta meta";
+        column-gap: 12px;
+        align-items: center;
+        padding: 14px 16px;
         border: 0;
-        border-radius: 14px;
-        padding: 16px 18px;
-        color: #fff;
-        cursor: pointer;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+        background: #fff;
+        text-align: left;
+        box-shadow: -1px 0 0 $sp-line, 0 -1px 0 $sp-line;
+        color: inherit;
+    }
 
-        &--navy {
+    &__icon {
+        grid-area: icon;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        color: #fff;
+        font-size: 1.125rem;
+
+        &.is-navy {
             background: $sp-navy;
         }
 
-        &--blue {
+        &.is-blue {
             background: $sp-blue;
         }
 
-        &--emerald {
+        &.is-emerald {
             background: $sp-emerald;
         }
 
-        &--amber {
+        &.is-amber {
             background: $sp-amber;
         }
     }
 
-    &__card-label {
-        font-size: 12px;
-        font-weight: 600;
+    &__score-title {
+        grid-area: title;
+        font-size: 0.75rem;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        opacity: 0.85;
+        letter-spacing: 0.04em;
+        color: $sp-muted;
     }
 
-    &__card-value {
-        font-size: 28px;
+    &__score-value {
+        grid-area: value;
+        font-size: 1.625rem;
         font-weight: 700;
-        line-height: 1.15;
-    }
-
-    &__card-meta {
-        font-size: 12px;
-        opacity: 0.8;
-    }
-
-    &__mini {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        background: $sp-surface;
-        border: 1px solid $sp-line;
-        border-radius: 12px;
-        padding: 12px 14px;
-
-        .id-sp__card-label {
-            color: $sp-muted;
-            opacity: 1;
-        }
-
-        .id-sp__card-meta {
-            color: $sp-muted;
-            opacity: 1;
-        }
-    }
-
-    &__mini-value {
-        font-size: 24px;
-        font-weight: 700;
+        line-height: 1.2;
         color: $sp-navy;
 
         &.is-ok {
@@ -263,35 +263,132 @@ $sp-bg: #f1f5f9;
         }
     }
 
-    // ---- panels / tables
-    &__panel {
-        background: $sp-surface;
-        border: 1px solid $sp-line;
-        border-radius: 12px;
-        padding: 14px 16px;
-        margin-bottom: 16px;
+    &__delta {
+        grid-area: delta;
+        min-height: 1.1em;
+        font-size: 0.75rem;
+        color: $sp-muted;
+
+        &.is-up {
+            color: $sp-emerald;
+        }
+
+        &.is-down {
+            color: #dc2626;
+        }
     }
 
-    &__panel-head {
+    &__score-meta {
+        grid-area: meta;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid $sp-line;
+        font-size: 0.75rem;
+        color: $sp-muted;
+        overflow-wrap: anywhere;
+    }
+
+    // ---- charts: one grid, hairline dividers
+    &__charts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0;
+        overflow: hidden;
+    }
+
+    &__chart {
+        padding: 12px 16px 14px;
+        box-shadow: -1px 0 0 $sp-line, 0 -1px 0 $sp-line;
+        min-width: 0;
+
+        &--wide {
+            grid-column: 1 / -1;
+        }
+    }
+
+    &__trend {
+        display: block;
+        width: 100%;
+        height: 160px;
+    }
+
+    &__grid {
+        stroke: $sp-line;
+        stroke-width: 0.3;
+        vector-effect: non-scaling-stroke;
+    }
+
+    &__rect {
+        fill: $sp-blue;
+    }
+
+    &__axis {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
         justify-content: space-between;
+        margin-top: 4px;
+        color: $sp-muted;
+        font-size: 0.6875rem;
+    }
+
+    &__hbar {
+        display: grid;
+        grid-template-columns: minmax(70px, 28%) minmax(0, 1fr) auto;
+        align-items: center;
         gap: 8px;
-        margin-bottom: 10px;
+        padding: 4px 0;
+        font-size: 0.8125rem;
     }
 
-    &__panel-title {
-        margin: 0 0 8px;
-        font-size: 16px;
+    &__hbar-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__hbar-track {
+        position: relative;
+        display: block;
+        height: 14px;
+        background: $sp-soft;
+    }
+
+    &__hbar-fill {
+        display: block;
+        height: 100%;
+
+        &.is-navy {
+            background: $sp-navy;
+        }
+
+        &.is-blue {
+            background: $sp-blue;
+        }
+
+        &.is-emerald {
+            background: $sp-emerald;
+        }
+
+        &.is-amber {
+            background: $sp-amber;
+        }
+    }
+
+    &__target {
+        position: absolute;
+        top: -3px;
+        bottom: -3px;
+        width: 2px;
+        background: $sp-ink;
+    }
+
+    &__hbar-value {
+        min-width: 64px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
         font-weight: 600;
-        color: $sp-navy;
     }
 
-    &__panel-head &__panel-title {
-        margin: 0;
-    }
-
+    // ---- tables
     &__table-wrap {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -300,20 +397,21 @@ $sp-bg: #f1f5f9;
     &__table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 13px;
+        font-size: 0.8125rem;
 
         th,
         td {
-            padding: 8px 10px;
-            border-bottom: 1px solid $sp-line;
+            padding: 6px 10px;
+            border: 1px solid $sp-line;
             white-space: nowrap;
         }
 
         th {
+            background: $sp-soft;
             text-align: left;
-            font-size: 12px;
+            font-size: 0.75rem;
             color: $sp-muted;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .num {
@@ -328,7 +426,7 @@ $sp-bg: #f1f5f9;
         small {
             display: block;
             color: $sp-muted;
-            font-size: 11px;
+            font-size: 0.6875rem;
         }
     }
 
@@ -336,16 +434,15 @@ $sp-bg: #f1f5f9;
         cursor: pointer;
 
         &:hover {
-            background: $sp-bg;
+            background: $sp-soft;
         }
     }
 
     &__pill {
         display: inline-block;
         min-width: 38px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: $sp-bg;
+        padding: 1px 8px;
+        background: $sp-soft;
         text-align: center;
 
         &.is-ok {
@@ -360,7 +457,7 @@ $sp-bg: #f1f5f9;
     }
 
     .heat-0 {
-        background: $sp-bg;
+        background: $sp-soft;
     }
 
     .heat-1 {
@@ -375,35 +472,18 @@ $sp-bg: #f1f5f9;
         background: rgba(0, 78, 204, 0.38);
     }
 
-    &__trend {
-        display: block;
-        width: 100%;
-        height: 140px;
-    }
-
-    &__bar {
-        fill: $sp-blue;
-    }
-
-    &__trend-axis {
-        display: flex;
-        justify-content: space-between;
-        color: $sp-muted;
-        font-size: 11px;
-    }
-
     &__note {
         margin: 8px 0 0;
         color: $sp-muted;
-        font-size: 12px;
+        font-size: 0.75rem;
     }
 
     &__notice,
     &__alert {
-        border-radius: 10px;
-        padding: 10px 14px;
-        margin-bottom: 12px;
-        font-size: 13px;
+        margin: 0;
+        padding: 8px 16px;
+        border-top: 1px solid $sp-line;
+        font-size: 0.8125rem;
     }
 
     &__notice {
@@ -417,89 +497,38 @@ $sp-bg: #f1f5f9;
     }
 
     &__empty {
-        padding: 16px;
+        padding: 12px;
         text-align: center;
         color: $sp-muted;
     }
 
-    &__body.is-loading {
-        opacity: 0.55;
-        transition: opacity 0.15s;
-    }
-
-
-    // ---- visual progress & gauges
-    &__progress-wrap {
-        margin-top: 6px;
-        width: 100%;
-        background: #e2e8f0;
-        border-radius: 999px;
-        height: 6px;
-        overflow: hidden;
-    }
-
-    &__progress-bar {
-        height: 100%;
-        border-radius: 999px;
-        background: -blue;
-        transition: width 0.3s ease;
-
-        &.is-emerald { background: -emerald; }
-        &.is-amber { background: -amber; }
-        &.is-navy { background: -navy; }
-    }
-
-    &__status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 600;
-        margin-top: 4px;
-        width: fit-content;
-
-        &.is-ok {
-            background: rgba(22, 163, 74, 0.14);
-            color: -emerald;
-        }
-
-        &.is-low {
-            background: rgba(217, 119, 6, 0.16);
-            color: -amber;
-        }
-
-        &.is-neutral {
-            background: rgba(100, 116, 139, 0.12);
-            color: -muted;
-        }
-    }
-
-    // ---- tablet: 768-1199px
+    // ---- tablet
     @media (max-width: 1199px) {
-        &__cards--primary {
+        &__scorecards,
+        &__scorecards--5 {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        &__cards--secondary {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
     }
 
-    // ---- small tablet / phone
     @media (max-width: 767px) {
-        &__scroll {
-            padding: 12px 12px 24px;
+        &__sheet {
+            margin: 8px;
         }
 
-        &__cards--primary,
-        &__cards--secondary {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+        &__charts {
+            grid-template-columns: minmax(0, 1fr);
         }
 
-        &__card-value {
-            font-size: 22px;
+        &__score-value {
+            font-size: 1.25rem;
         }
+    }
+}
+
+button.id-sp__score {
+    cursor: pointer;
+
+    &:hover {
+        background: $sp-soft;
     }
 }

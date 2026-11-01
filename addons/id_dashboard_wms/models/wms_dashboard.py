@@ -222,3 +222,4 @@ class WmsDashboard(models.AbstractModel):
             "categories": cat_list,
             "fleet": fleet_list,
         }
+

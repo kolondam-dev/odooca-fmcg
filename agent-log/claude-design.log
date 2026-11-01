@@ -124,3 +124,14 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - Filter: Harian/Mingguan/Bulanan (Jul-Okt 2026, parameter period_min/max), salesman (dinamis dari SO), channel (id.channel). Responsif desktop/tablet (grid 4/2/3 kolom).
 - Verifikasi: ruff check, scripts/check_manifests.py, py_compile, node --check lulus. [BU] Belum dijalankan di Odoo: tes TransactionCase ditambahkan dan tag /id_dashboard_sales + instal ditambahkan ke ci.yml; tampilan browser belum diperiksa. whats_new.sh tidak mengenal claude-design2 (dipakai claude-design).
 - Task Managed by agent claude-design2 at 2026-10-31T16:53:53+07:00
+
+[2026-11-01T06:38:38+07:00] [INFO] Sales Productivity Dashboard — redesain tampilan (flat, satu lembar, scorecard ikon)
+- Tanpa sudut membulat; satu sheet besar dengan section dipisah hairline; scorecard grid berikon dengan pembagi dan pembanding periode sebelumnya (backend: previous/previous_period); font diwarisi dari Odoo.
+- Grafik baru: tren omset, omset per salesman/channel, LPO vs target, fulfillment per salesman (batang CSS/SVG, tanpa pustaka).
+- Verifikasi: ruff, check_manifests, node --check, render mock DOM di Chromium (1280px/820px tanpa overflow horizontal). [BU] Belum dijalankan di Odoo; situs demo tidak terjangkau dari sandbox sehingga dashboard bawaan (dashboard_id=3) tidak dilihat langsung.
+- Task Managed by agent claude-design2 at 2026-11-01T06:38:38+07:00
+
+[2026-11-01T06:52:39+07:00] [ERROR] CI install-test gagal pada PR #63: id.po tanpa baris '#. module:'
+- Traceback: odoo/tools/translate.py PoFile.__iter__ (match.groups() pada None) saat memuat id_dashboard_sales/i18n/id.po; entri yang saya tambah di redesain tidak memiliki komentar '#. module: id_dashboard_sales'.
+- Perbaikan: semua 75 entri kini diawali '#. module: id_dashboard_sales'. [BU] menunggu CI ulang.
+- Task Managed by agent claude-design2 at 2026-11-01T06:52:39+07:00

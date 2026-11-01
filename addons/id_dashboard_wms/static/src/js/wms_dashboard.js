@@ -120,3 +120,4 @@ export class WmsDashboard extends Component {
 }
 
 registry.category("actions").add("id_dashboard_wms.wms_dashboard", WmsDashboard);
+

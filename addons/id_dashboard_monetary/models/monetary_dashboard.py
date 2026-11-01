@@ -205,3 +205,4 @@ class MonetaryDashboard(models.AbstractModel):
             "areas": area_list,
             "salesmen": salesman_list,
         }
+
