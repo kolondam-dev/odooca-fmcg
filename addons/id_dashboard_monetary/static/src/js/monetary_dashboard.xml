@@ -3,11 +3,15 @@
     <t t-name="id_dashboard_monetary.MonetaryDashboard">
         <div class="o_action id-md">
             <div class="id-md__sheet">
-                <!-- Header & Filters Section -->
-                <section class="id-md__section id-md__filters" aria-label="Filters">
-                    <div class="id-md__head">
-                        <h1 class="id-md__title"><i class="fa fa-money"/> Monetary &amp; Accounts Receivable</h1>
-                        <div class="id-md__quick-links">
+                <!-- Header & Unified Grouped Filter Bar -->
+                <header class="id-md__header">
+                    <div class="id-md__header-main">
+                        <div class="id-md__header-title-wrap">
+                            <span class="id-md__badge-dept"><i class="fa fa-money"/> DIVISI KEUANGAN &amp; KONTROL PIUTANG</span>
+                            <h1 class="id-md__title">Monetary &amp; Accounts Receivable Cockpit</h1>
+                            <span class="id-md__subtitle">Monitoring likuiditas kas, mitigasi risiko gagal bayar (bad debt), dan penegakan batas kredit outlet.</span>
+                        </div>
+                        <div class="id-md__header-quick">
                             <button type="button" class="id-md__quick-btn" t-on-click="openAgingMatrix">
                                 <i class="fa fa-table"/> AR Aging Matrix
                             </button>
@@ -15,63 +19,114 @@
                                 <i class="fa fa-filter"/> Financial Funnel
                             </button>
                             <button type="button" class="id-md__quick-btn" t-on-click="openAllInvoices">
-                                <i class="fa fa-list"/> Daftar Piutang
+                                <i class="fa fa-list"/> Semua Piutang
                             </button>
                         </div>
                     </div>
-                    <span class="id-md__label"><i class="fa fa-map-marker"/> Area</span>
-                    <t t-foreach="state.filters.areas" t-as="a" t-key="a.id">
-                        <button type="button" class="id-md__chip"
-                                t-att-class="{'is-active': state.areaIds.includes(a.id)}"
-                                t-on-click="() => this.toggleArea(a.id)" t-out="a.name"/>
-                    </t>
-                    <span class="id-md__label"><i class="fa fa-user"/> Salesman</span>
-                    <t t-foreach="state.filters.salesmen" t-as="s" t-key="s.id">
-                        <button type="button" class="id-md__chip"
-                                t-att-class="{'is-active': state.salesmanIds.includes(s.id)}"
-                                t-on-click="() => this.toggleSalesman(s.id)" t-out="s.name"/>
-                    </t>
-                    <button type="button" class="id-md__link" t-on-click="reset"><i class="fa fa-undo"/> Reset</button>
-                </section>
+
+                    <!-- Filter Bar Clusters -->
+                    <div class="id-md__filter-bar">
+                        <!-- Cluster 1: Area -->
+                        <div class="id-md__filter-cluster">
+                            <span class="id-md__cluster-label"><i class="fa fa-map-marker"/> Coverage Area (<t t-out="state.areaIds.length ? state.areaIds.length : 'Semua'"/>)</span>
+                            <div class="id-md__cluster-content">
+                                <t t-foreach="state.filters.areas" t-as="a" t-key="a.id">
+                                    <button type="button" class="id-md__chip"
+                                            t-att-class="{'is-active': state.areaIds.includes(a.id)}"
+                                            t-on-click="() => this.toggleArea(a.id)" t-out="a.name"/>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Cluster 2: Salesperson -->
+                        <div class="id-md__filter-cluster">
+                            <span class="id-md__cluster-label"><i class="fa fa-user"/> Salesperson (<t t-out="state.salesmanIds.length ? state.salesmanIds.length : 'Semua'"/>)</span>
+                            <div class="id-md__cluster-content">
+                                <t t-foreach="state.filters.salesmen" t-as="s" t-key="s.id">
+                                    <button type="button" class="id-md__chip"
+                                            t-att-class="{'is-active': state.salesmanIds.includes(s.id)}"
+                                            t-on-click="() => this.toggleSalesman(s.id)" t-out="s.name"/>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Cluster 3: Action -->
+                        <div class="id-md__filter-actions">
+                            <button type="button" class="id-md__btn-reset" t-on-click="reset">
+                                <i class="fa fa-undo"/> Reset Filter
+                            </button>
+                        </div>
+                    </div>
+                </header>
 
                 <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-out="state.error"/>
-                <div t-if="state.loading and !state.data" class="id-md__empty"><i class="fa fa-circle-o-notch fa-spin"/> Memuat data keuangan…</div>
+                <div t-if="state.loading and !state.data" class="id-md__empty"><i class="fa fa-circle-o-notch fa-spin"/> Memuat data keuangan &amp; piutang…</div>
 
                 <t t-if="state.data">
-                    <!-- Primary AR Scorecards -->
+                    <!-- BABAK 1: LIQUIDITY & AR SAFETY PULSE -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
-                        <h2 class="id-md__section-title"><i class="fa fa-credit-card"/> Status Saldo Piutang Beredar</h2>
-                        <div class="id-md__scorecards">
-                            <button type="button" class="id-md__score" t-on-click="openAllInvoices">
-                                <span class="id-md__icon is-navy"><i class="fa fa-balance-scale"/></span>
-                                <span class="id-md__score-title">Total Piutang Beredar</span>
-                                <span class="id-md__score-value" t-out="moneyShort(state.data.kpi.total_ar)"/>
-                                <span class="id-md__score-meta"><t t-out="int(state.data.kpi.invoices_count)"/> faktur terbuka aktif</span>
+                        <div class="id-md__head">
+                            <h2 class="id-md__section-title"><i class="fa fa-credit-card"/> Babak 1: Saldo Piutang Beredar &amp; Likuiditas Kas</h2>
+                            <span class="id-md__section-sub">Total saldo piutang berjalan, rasio jatuh tempo, eksposur risiko macet, dan kas tertagih.</span>
+                        </div>
+                        <div class="id-md__cards">
+                            <button type="button" class="id-md__card" t-on-click="openAllInvoices">
+                                <div class="id-md__card-header">
+                                    <span class="id-md__card-title">Total Piutang Beredar</span>
+                                    <span class="id-md__micro-badge is-navy"><i class="fa fa-balance-scale"/></span>
+                                </div>
+                                <div class="id-md__card-body">
+                                    <span class="id-md__card-value" t-out="moneyShort(state.data.kpi.total_ar)"/>
+                                </div>
+                                <div class="id-md__card-footer">
+                                    <t t-out="int(state.data.kpi.invoices_count)"/> faktur terbuka aktif
+                                </div>
                             </button>
-                            <button type="button" class="id-md__score" t-on-click="openOverdueInvoices">
-                                <span class="id-md__icon is-red"><i class="fa fa-exclamation-circle"/></span>
-                                <span class="id-md__score-title">Piutang Jatuh Tempo</span>
-                                <span class="id-md__score-value is-danger" t-out="moneyShort(state.data.kpi.overdue_ar)"/>
-                                <span class="id-md__score-meta"><t t-out="pct(state.data.kpi.overdue_ratio)"/> dari total piutang</span>
+                            <button type="button" class="id-md__card" t-on-click="openOverdueInvoices">
+                                <div class="id-md__card-header">
+                                    <span class="id-md__card-title">Piutang Jatuh Tempo</span>
+                                    <span class="id-md__micro-badge is-red"><i class="fa fa-exclamation-circle"/></span>
+                                </div>
+                                <div class="id-md__card-body">
+                                    <span class="id-md__card-value is-danger" t-out="moneyShort(state.data.kpi.overdue_ar)"/>
+                                </div>
+                                <div class="id-md__card-footer">
+                                    <t t-out="pct(state.data.kpi.overdue_ratio)"/> dari total saldo piutang
+                                </div>
                             </button>
-                            <button type="button" class="id-md__score" t-on-click="openOverdueInvoices">
-                                <span class="id-md__icon is-darkred"><i class="fa fa-shield"/></span>
-                                <span class="id-md__score-title">Risiko Macet (&gt;30 Hari)</span>
-                                <span class="id-md__score-value is-danger" t-out="moneyShort(state.data.kpi.bad_debt)"/>
-                                <span class="id-md__score-meta"><t t-out="pct(state.data.kpi.bad_debt_ratio)"/> eksposur audit SPV / Bad Debt</span>
+                            <button type="button" class="id-md__card" t-on-click="openOverdueInvoices">
+                                <div class="id-md__card-header">
+                                    <span class="id-md__card-title">Risiko Macet (&gt;30 Hari)</span>
+                                    <span class="id-md__micro-badge is-darkred"><i class="fa fa-shield"/></span>
+                                </div>
+                                <div class="id-md__card-body">
+                                    <span class="id-md__card-value is-danger" t-out="moneyShort(state.data.kpi.bad_debt)"/>
+                                </div>
+                                <div class="id-md__card-footer">
+                                    <t t-out="pct(state.data.kpi.bad_debt_ratio)"/> eksposur audit SPV / Potensi Macet
+                                </div>
                             </button>
-                            <button type="button" class="id-md__score" t-on-click="openFunnel">
-                                <span class="id-md__icon is-emerald"><i class="fa fa-check-circle"/></span>
-                                <span class="id-md__score-title">Kas Pelunasan Masuk</span>
-                                <span class="id-md__score-value is-ok" t-out="moneyShort(state.data.kpi.cash_collected)"/>
-                                <span class="id-md__score-meta">Pelunasan kas terkonfirmasi</span>
+                            <button type="button" class="id-md__card" t-on-click="openFunnel">
+                                <div class="id-md__card-header">
+                                    <span class="id-md__card-title">Kas Pelunasan Masuk</span>
+                                    <span class="id-md__micro-badge is-emerald"><i class="fa fa-check-circle"/></span>
+                                </div>
+                                <div class="id-md__card-body">
+                                    <span class="id-md__card-value is-ok" t-out="moneyShort(state.data.kpi.cash_collected)"/>
+                                </div>
+                                <div class="id-md__card-footer">
+                                    Pelunasan kas terkonfirmasi di bank
+                                </div>
                             </button>
                         </div>
                     </section>
 
-                    <!-- AR Aging Buckets Distribution -->
+                    <!-- BABAK 2: AGING DISTRIBUTION & CONVERSION FUNNEL -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
-                        <h2 class="id-md__section-title"><i class="fa fa-clock-o"/> Komposisi Umur Piutang (FMCG Aging Matrix)</h2>
+                        <div class="id-md__head">
+                            <h2 class="id-md__section-title"><i class="fa fa-clock-o"/> Babak 2: Komposisi Umur Piutang (FMCG Aging Matrix)</h2>
+                            <span class="id-md__section-sub">Proporsi faktur belum jatuh tempo vs peringatan dini (1-7h), credit hold (8-14h), dan potensi macet.</span>
+                        </div>
                         <div class="id-md__aging-bar-wrap">
                             <t t-foreach="state.data.buckets" t-as="b" t-key="b.key">
                                 <div t-attf-class="id-md__aging-bar-segment seg-#{b.key}"
@@ -89,49 +144,73 @@
                         </div>
                     </section>
 
-                    <!-- Financial Funnel Scorecards -->
+                    <!-- BABAK 2B: FINANCIAL TARGET & CONVERSION -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
-                        <h2 class="id-md__section-title"><i class="fa fa-bullseye"/> Financial Target &amp; Realisasi</h2>
-                        <div class="id-md__scorecards id-md__scorecards--3">
-                            <div class="id-md__score">
-                                <span class="id-md__icon is-blue"><i class="fa fa-flag"/></span>
-                                <span class="id-md__score-title">Target Penjualan</span>
-                                <span class="id-md__score-value" t-out="moneyShort(state.data.kpi.target_revenue)"/>
-                                <span class="id-md__score-meta">Target nominal distributor</span>
+                        <div class="id-md__head">
+                            <h2 class="id-md__section-title"><i class="fa fa-bullseye"/> Corong Target &amp; Realisasi Keuangan (Financial Funnel)</h2>
+                            <span class="id-md__section-sub">Target penjualan, faktur terbit resmi, piutang beredar, dan tingkat pencairan kas bersih.</span>
+                        </div>
+                        <div class="id-md__cards id-md__cards--3">
+                            <div class="id-md__card">
+                                <div class="id-md__card-header">
+                                    <span class="id-md__card-title">Target Penjualan</span>
+                                    <span class="id-md__micro-badge is-blue"><i class="fa fa-flag"/></span>
+                                </div>
+                                <div class="id-md__card-body">
+                                    <span class="id-md__card-value" t-out="moneyShort(state.data.kpi.target_revenue)"/>
+                                </div>
+                                <div class="id-md__card-footer">
+                                    Target anggaran periode aktif
+                                </div>
                             </div>
-                            <div class="id-md__score">
-                                <span class="id-md__icon is-amber"><i class="fa fa-shopping-cart"/></span>
-                                <span class="id-md__score-title">Realisasi Faktur</span>
-                                <span class="id-md__score-value" t-out="moneyShort(state.data.kpi.realized_revenue)"/>
-                                <span class="id-md__score-meta">Pencapaian: <t t-out="pct(state.data.kpi.achievement_rate)"/></span>
+                            <div class="id-md__card">
+                                <div class="id-md__card-header">
+                                    <span class="id-md__card-title">Realisasi Faktur</span>
+                                    <span class="id-md__micro-badge is-amber"><i class="fa fa-shopping-cart"/></span>
+                                </div>
+                                <div class="id-md__card-body">
+                                    <span class="id-md__card-value" t-out="moneyShort(state.data.kpi.realized_revenue)"/>
+                                </div>
+                                <div class="id-md__card-footer">
+                                    Pencapaian: <strong><t t-out="pct(state.data.kpi.achievement_rate)"/></strong> dari target
+                                </div>
                             </div>
-                            <div class="id-md__score">
-                                <span class="id-md__icon is-emerald"><i class="fa fa-money"/></span>
-                                <span class="id-md__score-title">Pencairan Kas (Collection)</span>
-                                <span class="id-md__score-value is-ok" t-out="moneyShort(state.data.kpi.cash_collected)"/>
-                                <span class="id-md__score-meta">Kas bersih diterima</span>
+                            <div class="id-md__card">
+                                <div class="id-md__card-header">
+                                    <span class="id-md__card-title">Pencairan Kas (Collection)</span>
+                                    <span class="id-md__micro-badge is-emerald"><i class="fa fa-money"/></span>
+                                </div>
+                                <div class="id-md__card-body">
+                                    <span class="id-md__card-value is-ok" t-out="moneyShort(state.data.kpi.cash_collected)"/>
+                                </div>
+                                <div class="id-md__card-footer">
+                                    Kas pelunasan berhasil dikonfirmasi
+                                </div>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Detailed Breakdown Tables -->
+                    <!-- BABAK 3: ACTION QUEUE & TOP CUSTOMER EXPOSURE -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h2 class="id-md__section-title mb-0"><i class="fa fa-list-alt"/> Analisis Eksposur Piutang</h2>
+                            <div>
+                                <h2 class="id-md__section-title mb-0"><i class="fa fa-list-alt"/> Babak 3: Antrean Mitigasi Risiko Kredit (Credit Hold Queue)</h2>
+                                <span class="id-md__section-sub">Daftar outlet mendekati plafon dan evaluasi eksposur per wilayah atau salesman.</span>
+                            </div>
                             <div class="btn-group btn-group-sm" role="group">
                                 <button type="button" class="btn"
                                         t-att-class="state.subTab === 'customers' ? 'btn-primary' : 'btn-outline-secondary'"
-                                        t-on-click="() => state.subTab = 'customers'">Top 10 Outlet</button>
+                                        t-on-click="() => state.subTab = 'customers'">Top 10 Outlet &amp; Plafon</button>
                                 <button type="button" class="btn"
                                         t-att-class="state.subTab === 'areas' ? 'btn-primary' : 'btn-outline-secondary'"
-                                        t-on-click="() => state.subTab = 'areas'">Per Wilayah</button>
+                                        t-on-click="() => state.subTab = 'areas'">Sebaran per Wilayah</button>
                                 <button type="button" class="btn"
                                         t-att-class="state.subTab === 'salesmen' ? 'btn-primary' : 'btn-outline-secondary'"
-                                        t-on-click="() => state.subTab = 'salesmen'">Per Salesman</button>
+                                        t-on-click="() => state.subTab = 'salesmen'">Sebaran per Salesman</button>
                             </div>
                         </div>
 
-                        <!-- SubTab 1: Customers -->
+                        <!-- SubTab 1: Customers / Credit Hold -->
                         <div t-if="state.subTab === 'customers'" class="id-md__table-wrap">
                             <table class="id-md__table">
                                 <thead>
@@ -139,7 +218,7 @@
                                         <th>Outlet / Pelanggan</th>
                                         <th>Channel</th>
                                         <th>Area</th>
-                                        <th>Salesman</th>
+                                        <th>Salesperson</th>
                                         <th class="num">Faktur</th>
                                         <th class="num">Total Piutang</th>
                                         <th class="num">Jatuh Tempo</th>
@@ -150,20 +229,19 @@
                                 </thead>
                                 <tbody>
                                     <tr t-foreach="state.data.top_customers" t-as="c" t-key="c.id"
-                                        t-on-click="() => this.openCustomerInvoices(c.id, c.name)"
-                                        style="cursor: pointer;">
+                                        t-on-click="() => this.openCustomerInvoices(c.id, c.name)">
                                         <td class="name" t-out="c.name"/>
                                         <td t-out="c.channel"/>
                                         <td t-out="c.area"/>
                                         <td t-out="c.salesman"/>
                                         <td class="num" t-out="int(c.open_count)"/>
-                                        <td class="num" t-out="money(c.total_balance)"/>
+                                        <td class="num font-weight-bold" t-out="money(c.total_balance)"/>
                                         <td class="num text-danger font-weight-bold" t-out="money(c.overdue_balance)"/>
                                         <td class="num" t-out="money(c.credit_limit)"/>
                                         <td class="num" t-out="pct(c.utilization)"/>
                                         <td>
-                                            <span t-if="c.credit_hold" class="id-md__badge is-hold">CREDIT HOLD</span>
-                                            <span t-else="" class="id-md__badge is-ok">Lancar</span>
+                                            <span t-if="c.credit_hold" class="id-md__status-pill is-hold">CREDIT HOLD</span>
+                                            <span t-else="" class="id-md__status-pill is-normal">Lancar</span>
                                         </td>
                                     </tr>
                                     <tr t-if="!state.data.top_customers.length">

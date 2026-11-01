@@ -1,15 +1,21 @@
-// Monetary & AR Dashboard: flat, square, single-sheet layout (spreadsheet-dashboard style).
-// Palette: navy / blue / emerald / amber / red.
-$md-navy: #001a57;
-$md-blue: #004ecc;
-$md-emerald: #16a34a;
+// Monetary & AR Dashboard: modern, clean, refined executive layout.
+// Design Tokens: deep navy (#0f172a), primary blue (#2563eb), emerald (#059669), amber (#d97706), red (#dc2626), dark red (#991b1b).
+$md-navy: #0f172a;
+$md-blue: #2563eb;
+$md-blue-soft: rgba(37, 99, 235, 0.08);
+$md-emerald: #059669;
+$md-emerald-soft: rgba(5, 150, 105, 0.08);
 $md-amber: #d97706;
+$md-amber-soft: rgba(217, 119, 6, 0.08);
 $md-red: #dc2626;
+$md-red-soft: rgba(220, 38, 38, 0.08);
 $md-darkred: #991b1b;
-$md-ink: #212529;
-$md-muted: #6c757d;
-$md-line: #dee2e6;
-$md-soft: #f8f9fa;
+$md-darkred-soft: rgba(153, 27, 27, 0.08);
+$md-ink: #1e293b;
+$md-muted: #64748b;
+$md-line: #e2e8f0;
+$md-soft: #f8fafc;
+$md-card-bg: #ffffff;
 
 .id-md {
     background: $md-soft;
@@ -24,203 +30,292 @@ $md-soft: #f8f9fa;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 
-    *,
-    *::before,
-    *::after {
-        border-radius: 0;
-    }
-
     button,
     input,
     select {
         font-family: inherit;
     }
 
-    // One big sheet; sections are separated only by hairlines.
+    // Outer sheet container with generous whitespace and subtle card elevation
     &__sheet {
-        background: #fff;
-        border: 1px solid $md-line;
-        margin: 16px 16px 64px 16px;
+        background: transparent;
+        margin: 20px 24px 64px 24px;
         min-width: 0;
-    }
-
-    &__section {
-        padding: 12px 16px;
-        border-top: 1px solid $md-line;
-
-        &:first-child {
-            border-top: 0;
-        }
-
-        &.is-loading {
-            opacity: 0.55;
-            transition: opacity 0.15s;
-        }
-    }
-
-    &__section-title {
-        margin: 0 0 8px;
-        font-size: 0.8125rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: $md-navy;
-
-        .fa {
-            margin-right: 4px;
-            color: $md-blue;
-        }
-    }
-
-    // ---- title + filter bar
-    &__filters {
         display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px 10px;
+        flex-direction: column;
+        gap: 20px;
     }
 
-    &__head {
+    // ------------------------------------------------------------- Header & Filter Bar
+    &__header {
+        background: $md-card-bg;
+        border: 1px solid $md-line;
+        border-radius: 6px;
+        padding: 20px 24px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    &__header-main {
+        display: flex;
         justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 8px;
-        flex: 1 1 100%;
-
-        .id-md__section-title {
-            margin: 0;
-        }
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 12px;
     }
 
-    &__filters > &__head {
-        margin-bottom: 0;
+    &__header-title-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    &__badge-dept {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: $md-emerald;
+        background: $md-emerald-soft;
+        padding: 3px 8px;
+        border-radius: 4px;
+        width: fit-content;
     }
 
     &__title {
-        margin: 0;
-        font-size: 1.25rem;
+        margin: 2px 0 0;
+        font-size: 1.375rem;
         font-weight: 700;
         color: $md-navy;
-
-        .fa {
-            color: $md-blue;
-            margin-right: 6px;
-        }
+        letter-spacing: -0.01em;
     }
 
-    &__period {
+    &__subtitle {
         color: $md-muted;
         font-size: 0.8125rem;
     }
 
-    &__quick-links {
+    &__header-quick {
         display: flex;
+        align-items: center;
+        gap: 8px;
         flex-wrap: wrap;
-        gap: 6px;
     }
 
     &__quick-btn {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
         border: 1px solid $md-line;
-        background: #fff;
-        padding: 3px 10px;
+        border-radius: 4px;
+        background: #ffffff;
+        padding: 6px 12px;
         font-size: 0.75rem;
         font-weight: 600;
-        color: $md-blue;
+        color: $md-muted;
         cursor: pointer;
+        transition: all 0.15s;
 
         &:hover {
-            background: $md-soft;
+            color: $md-blue;
+            border-color: #93c5fd;
+            background: $md-blue-soft;
+        }
+
+        .fa {
+            color: $md-blue;
         }
     }
 
-    &__label {
-        margin-left: 8px;
-        font-size: 0.75rem;
+    // Filter Bar with 3 Logical Clusters
+    &__filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        padding-top: 14px;
+        border-top: 1px solid $md-line;
+    }
+
+    &__filter-cluster {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__cluster-label {
+        font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.05em;
         color: $md-muted;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .fa {
+            font-size: 0.75rem;
+            color: $md-blue;
+        }
+    }
+
+    &__cluster-content {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        max-width: 520px;
     }
 
     &__chip {
         border: 1px solid $md-line;
-        background: #fff;
-        padding: 3px 10px;
-        font-size: 0.8125rem;
+        border-radius: 14px;
+        background: #ffffff;
+        padding: 4px 10px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: $md-muted;
         cursor: pointer;
+        transition: all 0.15s;
+
+        &:hover:not(.is-active) {
+            border-color: #cbd5e1;
+            color: $md-ink;
+            background: #f8fafc;
+        }
 
         &.is-active {
             background: $md-blue;
             border-color: $md-blue;
-            color: #fff;
+            color: #ffffff;
+            font-weight: 600;
         }
     }
 
-    &__link {
-        border: 0;
-        background: none;
-        color: $md-blue;
-        cursor: pointer;
-        padding: 0 4px;
-        font-size: 0.8125rem;
+    &__filter-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    // ---- scorecards
-    &__scorecards {
+    &__btn-reset {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid $md-line;
+        border-radius: 4px;
+        background: #ffffff;
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: $md-muted;
+        cursor: pointer;
+        transition: all 0.15s;
+
+        &:hover {
+            color: $md-red;
+            border-color: #fca5a5;
+            background: $md-red-soft;
+        }
+    }
+
+    // ------------------------------------------------------------- Sections & Containers
+    &__section {
+        background: $md-card-bg;
+        border: 1px solid $md-line;
+        border-radius: 6px;
+        padding: 20px 24px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        &.is-loading {
+            opacity: 0.6;
+            pointer-events: none;
+            transition: opacity 0.15s;
+        }
+    }
+
+    &__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    &__section-title {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: $md-navy;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .fa {
+            color: $md-blue;
+        }
+    }
+
+    &__section-sub {
+        font-size: 0.75rem;
+        color: $md-muted;
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: normal;
+        margin-left: 6px;
+    }
+
+    // ------------------------------------------------------------- Refined Metric Cards
+    &__cards {
         display: grid;
-        margin: 0 -16px -12px;
-        overflow: hidden;
         grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
 
         &--3 {
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
     }
 
-    &__score {
-        position: relative;
-        display: grid;
-        grid-template-columns: 40px minmax(0, 1fr);
-        grid-template-areas:
-            "icon title"
-            "icon value"
-            "icon delta"
-            "meta meta";
-        column-gap: 12px;
-        align-items: center;
-        padding: 14px 16px;
-        border: 0;
-        background: #fff;
-        text-align: left;
-        box-shadow: -1px 0 0 $md-line, 0 -1px 0 $md-line;
-        color: inherit;
-    }
-
-    &__icon {
-        grid-area: icon;
+    &__card {
+        background: #ffffff;
+        border: 1px solid $md-line;
+        border-radius: 6px;
+        padding: 16px 18px;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        color: #fff;
-        font-size: 1.125rem;
+        flex-direction: column;
+        gap: 10px;
+        text-align: left;
+        color: inherit;
+        cursor: pointer;
+        transition: all 0.15s ease-in-out;
+        position: relative;
 
-        &.is-navy { background: $md-navy; }
-        &.is-blue { background: $md-blue; }
-        &.is-emerald { background: $md-emerald; }
-        &.is-amber { background: $md-amber; }
-        &.is-red { background: $md-red; }
-        &.is-darkred { background: $md-darkred; }
+        &:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06);
+            transform: translateY(-1px);
+        }
     }
 
-    &__score-title {
-        grid-area: title;
+    &__card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__card-title {
         font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
@@ -228,103 +323,156 @@ $md-soft: #f8f9fa;
         color: $md-muted;
     }
 
-    &__score-value {
-        grid-area: value;
+    &__micro-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        font-size: 0.8125rem;
+
+        &.is-navy {
+            background: rgba(15, 23, 42, 0.08);
+            color: $md-navy;
+        }
+
+        &.is-blue {
+            background: $md-blue-soft;
+            color: $md-blue;
+        }
+
+        &.is-emerald {
+            background: $md-emerald-soft;
+            color: $md-emerald;
+        }
+
+        &.is-amber {
+            background: $md-amber-soft;
+            color: $md-amber;
+        }
+
+        &.is-red {
+            background: $md-red-soft;
+            color: $md-red;
+        }
+
+        &.is-darkred {
+            background: $md-darkred-soft;
+            color: $md-darkred;
+        }
+    }
+
+    &__card-body {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    &__card-value {
         font-size: 1.5rem;
         font-weight: 700;
         line-height: 1.1;
         letter-spacing: -0.02em;
+        color: $md-navy;
+        font-variant-numeric: tabular-nums;
 
-        &.is-ok { color: $md-emerald; }
-        &.is-warn { color: $md-amber; }
-        &.is-danger { color: $md-red; }
+        &.is-ok {
+            color: $md-emerald;
+        }
+
+        &.is-warn {
+            color: $md-amber;
+        }
+
+        &.is-danger {
+            color: $md-red;
+        }
     }
 
-    &__score-meta {
-        grid-area: meta;
-        margin-top: 8px;
+    &__card-footer {
         padding-top: 8px;
-        border-top: 1px solid $md-line;
+        border-top: 1px solid #f1f5f9;
         font-size: 0.75rem;
         color: $md-muted;
+        overflow-wrap: anywhere;
     }
 
-    // ---- aging visual bar
+    // ------------------------------------------------------------- AR Aging Bar
     &__aging-bar-wrap {
-        display: flex;
+        height: 14px;
         width: 100%;
-        height: 16px;
-        background: $md-soft;
-        border: 1px solid $md-line;
-        margin: 8px 0;
+        background: #f1f5f9;
+        border-radius: 7px;
+        overflow: hidden;
+        display: flex;
     }
 
     &__aging-bar-segment {
         height: 100%;
-        transition: width 0.3s ease;
+        transition: width 0.3s;
 
-        &.seg-not_due { background: $md-emerald; }
-        &.seg-overdue_1_7 { background: #eab308; }
-        &.seg-overdue_8_14 { background: $md-amber; }
-        &.seg-overdue_15_30 { background: #f97316; }
-        &.seg-overdue_over_30 { background: $md-red; }
+        &.seg-not_due {
+            background: $md-emerald;
+        }
+        &.seg-overdue_1_7 {
+            background: #3b82f6;
+        }
+        &.seg-overdue_8_14 {
+            background: $md-amber;
+        }
+        &.seg-overdue_15_30 {
+            background: $md-red;
+        }
+        &.seg-overdue_over_30 {
+            background: $md-darkred;
+        }
     }
 
     &__aging-legend {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px 16px;
-        margin-top: 6px;
+        gap: 12px 20px;
+        margin-top: 4px;
     }
 
     &__legend-item {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         font-size: 0.75rem;
+        color: $md-ink;
     }
 
     &__legend-dot {
         width: 10px;
         height: 10px;
+        border-radius: 50%;
 
-        &.dot-not_due { background: $md-emerald; }
-        &.dot-overdue_1_7 { background: #eab308; }
-        &.dot-overdue_8_14 { background: $md-amber; }
-        &.dot-overdue_15_30 { background: #f97316; }
-        &.dot-overdue_over_30 { background: $md-red; }
+        &.dot-not_due {
+            background: $md-emerald;
+        }
+        &.dot-overdue_1_7 {
+            background: #3b82f6;
+        }
+        &.dot-overdue_8_14 {
+            background: $md-amber;
+        }
+        &.dot-overdue_15_30 {
+            background: $md-red;
+        }
+        &.dot-overdue_over_30 {
+            background: $md-darkred;
+        }
     }
 
-    // ---- horizontal bars
-    &__hbar {
-        display: grid;
-        grid-template-columns: minmax(80px, 25%) minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 8px;
-        padding: 4px 0;
-        font-size: 0.8125rem;
-    }
-
-    &__hbar-track {
-        position: relative;
-        display: block;
-        height: 14px;
-        background: $md-soft;
-    }
-
-    &__hbar-fill {
-        display: block;
-        height: 100%;
-        &.is-emerald { background: $md-emerald; }
-        &.is-blue { background: $md-blue; }
-        &.is-amber { background: $md-amber; }
-        &.is-red { background: $md-red; }
-    }
-
-    // ---- tables
+    // ------------------------------------------------------------- Tables & Badges
     &__table-wrap {
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        border: 1px solid $md-line;
+        border-radius: 6px;
     }
 
     &__table {
@@ -332,71 +480,78 @@ $md-soft: #f8f9fa;
         border-collapse: collapse;
         font-size: 0.8125rem;
 
-        th, td {
-            padding: 6px 10px;
-            border: 1px solid $md-line;
-            white-space: nowrap;
+        th,
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid $md-line;
         }
 
         th {
-            background: $md-soft;
-            text-align: left;
-            font-size: 0.75rem;
-            color: $md-muted;
+            background: #f8fafc;
+            font-size: 0.6875rem;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: $md-muted;
+            white-space: nowrap;
+
+            &.num {
+                text-align: right;
+            }
         }
 
-        .num {
-            text-align: right;
-            font-variant-numeric: tabular-nums;
+        td {
+            color: $md-ink;
+
+            &.num {
+                text-align: right;
+                font-variant-numeric: tabular-nums;
+            }
+
+            &.name {
+                font-weight: 600;
+            }
         }
 
-        .name {
-            font-weight: 600;
+        tbody tr {
+            transition: background 0.15s;
+
+            &:hover {
+                background: #f8fafc;
+                cursor: pointer;
+            }
+
+            &:last-child td {
+                border-bottom: 0;
+            }
         }
     }
 
-    &__badge {
+    &__status-pill {
         display: inline-block;
-        padding: 1px 6px;
+        padding: 3px 8px;
+        border-radius: 10px;
         font-size: 0.6875rem;
-        font-weight: 700;
+        font-weight: 600;
+        text-transform: uppercase;
 
         &.is-hold {
-            background: rgba(220, 38, 38, 0.15);
+            background: $md-red-soft;
             color: $md-red;
+            border: 1px solid rgba(220, 38, 38, 0.2);
         }
 
-        &.is-ok {
-            background: rgba(22, 163, 74, 0.15);
+        &.is-normal {
+            background: $md-emerald-soft;
             color: $md-emerald;
+            border: 1px solid rgba(5, 150, 105, 0.2);
         }
     }
 
     &__empty {
-        padding: 12px;
+        padding: 32px;
         text-align: center;
         color: $md-muted;
+        font-size: 0.875rem;
     }
-
-    // ---- responsive
-    @media (max-width: 1199px) {
-        &__scorecards, &__scorecards--3 {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 767px) {
-        &__sheet {
-            margin: 8px 8px 48px 8px;
-        }
-        &__score-value {
-            font-size: 1.25rem;
-        }
-    }
-}
-
-button.id-md__score {
-    cursor: pointer;
-    &:hover { background: $md-soft; }
 }

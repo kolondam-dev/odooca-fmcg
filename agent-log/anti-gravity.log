@@ -1550,3 +1550,14 @@
 - Authored comprehensive architectural review document: docs/reviews/FMCG_DASHBOARD_COMPREHENSIVE_REVIEW.md covering problem framing, end-to-end analysis, 4-compartment POV classification (Necessary, Nice to Have, Redundant), actionable exception queues, and unified multi-principal control tower roadmap.
 - Verification: ruff check PASS, check_manifests.py PASS (10 addons ok).
 - Task managed by anti-gravity at 2026-11-01T10:35:00+07:00
+
+[2026-11-01T11:05:00+07:00] [INFO] FMCG Dashboard UX/UI Redesign & Narrative Restructuring
+- Executed comprehensive UX/UI redesign across all 3 dashboards (id_dashboard_sales, id_dashboard_monetary, id_dashboard_wms) based on user approval:
+  * Metric Cards: Removed heavy solid-colored 40x40 icon blocks; replaced with 28x28 subtle micro-badges with soft tint backgrounds; aligned baselines, improved typography with tabular numbers, and added soft delta pills.
+  * Whitespace & Rhythm: Replaced rigid tight hairline-caged layout with generous whitespace (20px-24px padding, 16px grid gaps, subtle 6px rounded card elevations).
+  * Filter Bar: Unified into 3 distinct functional clusters across all dashboards (Time/Period, Field/Territory/Sales, Channel/Category, and Quick Reset Action).
+  * Narrative Storytelling: Implemented the 3-Act Structure (Act 1: Executive Pulse, Act 2: Drivers & Variance Diagnostics, Act 3: Operational Action & Exception Queues).
+  * Bugfix: Fixed fleet cost ratio key binding in wms_dashboard.xml.
+- Authored blueprint: docs/ui/FMCG_DASHBOARD_UX_REDESIGN_BLUEPRINT.md.
+- Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax checks PASS.
+- Task managed by anti-gravity at 2026-11-01T11:05:00+07:00

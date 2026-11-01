@@ -1,3 +1,23 @@
+## 2026-11-01T11:05:00+07:00 — anti-gravity agent — Redesain UX/UI & Restrukturisasi Narasi Dashboard FMCG
+**Branch:** agen/review-fmcg-dashboards
+**Status:** PASS (Static, Manifest, XML, Ruff) -> Siap Push/CI
+
+### Ringkasan Eksekusi Redesain UX/UI & Pengorganisasian View
+1. **Pembersihan Visual & Metric Cards Modern:**
+   - Menghapus blok ikon padat 40x40 yang berat dan agresif; menggantinya dengan micro-badge halus 28x28px dengan latar soft-tint dan ikon glyph senada di pojok kanan atas.
+   - Merapikan tipografi angka utama (24px tabular-nums), menyelaraskan baseline kartu, dan membungkus delta komparasi dalam pill badge hijau/merah transparan.
+   - Memberikan whitespace lega (margin 20px 24px, card gap 16px, padding kartu 16px 18px, subtle elevation).
+2. **Standarisasi Unified Grouped Filter Bar:**
+   - Mengorganisasi parameter filtering ke dalam 3 klaster logis yang seragam di ketiga dashboard: Klaster Waktu/Periode, Klaster Tim & Teritori, Klaster Produk/Saluran, dan Klaster Aksi (Reset Filter).
+3. **Penyusunan Alur Narasi Bisnis (The 3-Act Structure):**
+   - Babak 1: Makro Pulse (Hero Cards Kinerja Utama).
+   - Babak 2: Drivers & Variance Analysis (Tren Harian, Sebaran Wilayah/Channel, FEFO Expiry Bar, AR Aging Bar).
+   - Babak 3: Operational Action & Exception Queues (Credit Hold Queue, Penetrasi SKU, Pareto Tolakan Pengantaran, Efisiensi Armada).
+4. **Verifikasi:**
+   - ruff check PASS (addons/id_dashboard_sales, addons/id_dashboard_monetary, addons/id_dashboard_wms).
+   - check_manifests.py PASS (10 addons ok).
+   - Seluruh 3 template XML teruji valid via ElementTree.
+
 ## 2026-11-01T10:35:00+07:00 — anti-gravity agent — Review Komprehensif Dashboard FMCG & Perbaikan Parameter Handling
 **Branch:** agen/review-fmcg-dashboards
 **Status:** PASS (Static, Manifest, Ruff) -> Siap Review

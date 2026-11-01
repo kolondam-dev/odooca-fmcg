@@ -136,3 +136,4 @@ Untuk mengembalikan kesehatan modul di repository dan production Railway:
 ## 6. Kesimpulan & Nilai Tambah
 
 Dengan mentransformasikan dashboard dari sekadar **kumpulan grafik terisolasi** menjadi **Sistem Kemudi Terpadu (Actionable FMCG Cockpit)** yang berpusat pada hierarki **Principal $\times$ Territory $\times$ Outlets**, manajemen distributor FMCG di Manado akan memperoleh kontrol penuh atas 3 pilar penentu profitabilitas: **pertumbuhan omzet berdisiplin (LPO & Penetrasi), keamanan kas (Anti-Bad Debt & MIT Control), dan efisiensi rantai pasok (FEFO & Utilisasi Armada)**.
+
