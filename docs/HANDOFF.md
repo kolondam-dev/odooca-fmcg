@@ -1,3 +1,25 @@
+## 2026-11-01T16:25:00+07:00 — anti-gravity agent — Resolusi 4 Blocker Lanjutan PR #68 (Dynamic Test Import, create_date Sync, Isolated Healing & Workday Preservation)
+**Branch:** `agen/pjp-master-and-workday`
+**Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Test Suite) -> Siap Re-Review PR #68
+
+### Ringkasan Perbaikan
+1. **Blocker 1 (CI Gagal - Top-Level ModuleNotFoundError):**
+   - **Penyebab:** Test `test_pjp_loader_boundaries.py` melakukan top-level import `from scripts.load_pjp_workdays import ...`. Pada runner Docker CI Odoo, `scripts` berada di `/opt/scripts` dan bukan package di `sys.path`, menyebabkan registry Odoo gagal dimuat.
+   - **Solusi:** Menggunakan pemuat modul dinamis `_get_pjp_loader_module()` dengan kandidat path (`/opt/scripts`, repo root, dsb.) via `importlib.util` di dalam method pengujian tanpa top-level import yang merusak registry.
+2. **Blocker 2 (Tanggal Historis Bergeser - create_date Sync):**
+   - **Penyebab:** Pembuatan evidence via ORM mengisi field `create_date` dengan waktu saat ini (November 2026). Akibatnya dashboard Sales Productivity (`id.sales.productivity`) yang memfilter rentang Juli 2026 berdasarkan `create_date` menghasilkan `completed: 0`.
+   - **Solusi:** Loader segera mengupdate `create_date` dan `write_date` ke naive UTC timestamp historis bulan Juli 2026 (`f"{tgl} {utc_hour:02d}:{minute:02d}:00"`) sehingga sinkron dengan query `ev_domain` dan `_local_date()`.
+3. **Blocker 3 (Self-Healing Terisolasi Per Company & User):**
+   - **Penyebab:** Pencarian existing evidence sebelumnya hanya berdasarkan `client_uuid` tanpa filter `user_id` dan `company_id`, berisiko menghapus evidence milik company/user lain.
+   - **Solusi:** Domain pencarian dibatasi ketat: `[("client_uuid", "=", cuuid), ("user_id", "=", uid), ("company_id", "=", company.id)]`.
+4. **Blocker 4 (Scope Ketat - Resolver Company & Preservasi Workday Biasa):**
+   - **Penyebab:** Resolver company sebelumnya menggunakan fuzzy search `ilike "Manado"`. Selain itu, loader menimpa paksa `existing.write(vals)` dengan `outlet_ids: [(6, 0, ...)]` sehingga outlet pada workday biasa yang sudah ada terhapus.
+   - **Solusi:**
+     * Menerima argumen `target_company=None` dan memprioritaskan `env.company` atau ID eksak, menghapus seluruh fuzzy search.
+     * Preservasi Workday: Jika workday sudah ada, loader menggabungkan outlet baru dengan operator link `[(4, oid)]` tanpa menghapus outlet yang sudah ada, serta mempertahankan warehouse dan pricelist yang ada.
+5. **Verifikasi Test Suite (`addons/id_mobile_api/tests/test_pjp_loader_boundaries.py`):**
+   - Menguji eksekusi menyeluruh loader produksi, verifikasi `create_date` bulan Juli 2026, probe controller foto HTTP 200 JPEG, preservasi outlet workday biasa, isolasi self-healing multi-company, fail-fast missing models, dan penolakan geofence transaksi baru.
+
 ## 2026-11-01T15:20:00+07:00 — anti-gravity agent — Resolusi 3 Blocker P1 Review PR #68 (Evidence Attachments, Multi-Company Scope & Fail-Fast)
 **Branch:** `agen/pjp-master-and-workday`
 **Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Boundary Tests) -> Siap Re-Review PR #68

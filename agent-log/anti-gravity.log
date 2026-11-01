@@ -1610,3 +1610,13 @@
   * Menambahkan addons/id_mobile_api/tests/test_pjp_loader_boundaries.py dengan 4 skenario uji (HttpCase probe photo controller 200 JPEG, multi-company partner isolation, fail-fast missing models, dan enforcement transaksi baru).
 - Verifikasi Kualitas: ruff check PASS, check_manifests.py PASS, bash syntax deploy/init.sh PASS.
 - Task managed by anti-gravity at 2026-11-01T15:20:00+07:00
+
+
+[2026-11-01T16:25:00+07:00] [INFO] Resolusi 4 Blocker Lanjutan PR #68
+- Blocker 1 (CI Gagal): Mengganti top-level import scripts.load_pjp_workdays di addons/id_mobile_api/tests/test_pjp_loader_boundaries.py dengan dynamic loader _get_pjp_loader_module() berbasis importlib.util yang aman di runner CI Docker (/opt/scripts) maupun lokal.
+- Blocker 2 (Tanggal Historis Bergeser): Loader mengeksekusi SQL update create_date dan write_date ke naive UTC timestamp Juli 2026 setelah ORM create, sehingga ev_domain pada id.sales.productivity menghitung completed visit secara presisi (> 0).
+- Blocker 3 (Self-Healing Terisolasi): Membatasi pencarian existing evidence dengan filter client_uuid, user_id, dan company_id secara ketat, mencegah penghapusan lintas tenan/user.
+- Blocker 4 (Scope Ketat): Menghapus fuzzy company search ilike Manado dan menggantinya dengan target_company/env.company deterministik. Preservasi workday: menggabungkan outlet PJP via [(4, oid)] tanpa menghapus outlet yang sudah ada pada workday biasa.
+- Test Suite: Memperluas test_pjp_loader_boundaries.py dengan eksekusi loader produksi utuh, verifikasi tanggal Juli 2026, probe controller 200 JPEG, preservasi workday biasa, isolasi self-healing, fail-fast, dan validasi ketat transaksi baru.
+- Verifikasi Kualitas: ruff check PASS, check_manifests.py PASS, bash syntax PASS.
+- Task managed by anti-gravity at 2026-11-01T16:25:00+07:00

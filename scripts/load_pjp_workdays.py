@@ -6,10 +6,12 @@ Skrip idempoten ini:
 2. Memperkaya master res.partner dengan pjp_call_day, pjp_frequency, dan delivery_route
    berdasarkan data/registers/customer_registry_354.csv dengan isolasi multi-company.
 3. Memuat penugasan harian salesman ke id.mobile.workday berdasarkan
-   data/registers/pjp_july_2026_matrix.csv (Juli 2026).
+   data/registers/pjp_july_2026_matrix.csv (Juli 2026) dengan menjaga/tidak menimpa
+   outlet pada workday yang sudah ada (preservasi workday operasional).
 4. Memuat bukti kunjungan lapangan ke id.mobile.evidence yang sinkron dengan
    transaksi penjualan (perpetual_sales_orders.csv) dan kunjungan rute, lengkap dengan
-   attachment foto asli yang valid serta watermark khusus demo per kunjungan.
+   attachment foto asli yang valid, watermark khusus demo per kunjungan, isolasi scope
+   company/user pada self-healing, serta create_date historis yang sinkron dengan dashboard.
 
 Dapat dijalankan:
 - Di dalam Odoo Shell:
@@ -67,7 +69,6 @@ CANONICAL_SALESMEN_LOGINS = {
     "cvs-02": "cvs-02",
     "mgt-01": "mgt-01",
 }
-
 
 # Fallback minimal JPEG bytes (valid JPEG 1x1 header-trailer) bila PIL tidak tersedia di CLI host
 MINIMAL_VALID_JPEG_BYTES = (
@@ -162,7 +163,7 @@ def render_historical_watermark(
             return result.getvalue()
 
 
-def run_pjp_workdays_loader(env, max_evidence_limit=None):
+def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None):
     # -------------------------------------------------------------------------
     # 0. Verifikasi Kesiapan Modul & Model (Fail-Fast: Mencegah Sukses Palsu)
     # -------------------------------------------------------------------------
@@ -184,7 +185,15 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None):
     Company = env["res.company"].sudo()
     Product = env["product.product"].sudo()
 
-    company = Company.search([("name", "ilike", "Manado")], limit=1) or env.company or Company.browse(1)
+    # Resolver Company yang ketat & non-fuzzy (menghindari fuzzy name ilike)
+    if target_company:
+        company = Company.browse(target_company.id if hasattr(target_company, "id") else target_company)
+    elif env.company:
+        company = env.company
+    else:
+        company = Company.search([], order="id asc", limit=1)
+
+    print(f"[pjp_loader] Target Company: ID {company.id} ('{company.name}')")
 
     # -------------------------------------------------------------------------
     # 1. Pastikan Kolom PJP Tersedia di DB & Update Master res.partner (Multi-Company Safe)
@@ -275,7 +284,7 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None):
         partner_ref_map[p.ref] = p
 
     # -------------------------------------------------------------------------
-    # 3. Muat Matriks PJP Juli 2026 ke id.mobile.workday
+    # 3. Muat Matriks PJP Juli 2026 ke id.mobile.workday (Preservasi Workday Biasa)
     # -------------------------------------------------------------------------
     pjp_matrix_file = reg_dir / "pjp_july_2026_matrix.csv"
     if not pjp_matrix_file.is_file():
@@ -291,6 +300,9 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None):
     for row in pjp_rows:
         sls = row["salesman"]
         tgl = row["tanggal"]
+        # Hanya proses penugasan dalam scope bulan Juli 2026
+        if not tgl.startswith("2026-07-"):
+            continue
         cust_ref = row["customer"].split(" - ")[0].strip()
         partner_rec = partner_ref_map.get(cust_ref)
         if not partner_rec:
@@ -323,23 +335,37 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None):
             ("business_date", "=", tgl),
         ], limit=1)
         outlets_unique = list(dict.fromkeys(outlets))[:500]
-        vals = {
-            "active": True,
-            "business_date": tgl,
-            "user_id": uid,
-            "company_id": company.id,
-            "warehouse_id": wh.id,
-            "pricelist_id": pl.id,
-            "outlet_radius": 10,
-            "office_id": office_rec.id if office_rec else False,
-            "outlet_ids": [(6, 0, outlets_unique)],
-            "product_ids": [(6, 0, product_ids)],
-        }
+
         if existing:
-            existing.write(vals)
-            updated_wd += 1
+            # Preservasi Workday Biasa: Gabungkan outlet PJP tanpa menghapus outlet yang sudah ada
+            current_outlets = set(existing.outlet_ids.ids)
+            outlets_to_add = [oid for oid in outlets_unique if oid not in current_outlets]
+            write_vals = {}
+            if outlets_to_add:
+                write_vals["outlet_ids"] = [(4, oid) for oid in outlets_to_add]
+            if office_rec and not existing.office_id:
+                write_vals["office_id"] = office_rec.id
+            if not existing.warehouse_id and wh:
+                write_vals["warehouse_id"] = wh.id
+            if not existing.pricelist_id and pl:
+                write_vals["pricelist_id"] = pl.id
+            if write_vals:
+                existing.write(write_vals)
+                updated_wd += 1
             workday_id_map[(uid, tgl)] = existing.id
         else:
+            vals = {
+                "active": True,
+                "business_date": tgl,
+                "user_id": uid,
+                "company_id": company.id,
+                "warehouse_id": wh.id,
+                "pricelist_id": pl.id,
+                "outlet_radius": 10,
+                "office_id": office_rec.id if office_rec else False,
+                "outlet_ids": [(6, 0, outlets_unique)],
+                "product_ids": [(6, 0, product_ids)],
+            }
             new_wd = Workday.create(vals)
             created_wd += 1
             workday_id_map[(uid, tgl)] = new_wd.id
@@ -405,17 +431,31 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None):
         visit_timestamp_str = f"{tgl} {hour:02d}:{minute:02d}:00"
         wd_id = workday_id_map.get((uid, tgl), False)
 
+        # Naive UTC timestamp untuk create_date & write_date di database Odoo (WITA UTC+8 -> UTC naive)
+        utc_hour = hour - 8
+        visit_utc_str = f"{tgl} {utc_hour:02d}:{minute:02d}:00"
+
         lat = p_rec.partner_latitude or 1.482187
         lon = p_rec.partner_longitude or 124.848921
         acc = 8.5
 
-        # Cek record yang sudah ada
-        existing = Evidence.search([("client_uuid", "=", cuuid)], limit=1)
+        # Cek record yang sudah ada: TERISOLASI ketat per user dan company (mencegah penghapusan lintas tenan)
+        existing = Evidence.search([
+            ("client_uuid", "=", cuuid),
+            ("user_id", "=", uid),
+            ("company_id", "=", company.id),
+        ], limit=1)
         if existing:
-            # Periksa apakah sudah memiliki attachment original & watermarked valid
+            # Pastikan create_date & write_date sinkron dengan tanggal historis UTC
+            cr.execute("""
+                UPDATE id_mobile_evidence
+                SET create_date = %s, write_date = %s
+                WHERE id = %s
+            """, [visit_utc_str, visit_utc_str, existing.id])
+
             if existing.original and existing.watermarked:
                 continue
-            # Self-healing: hapus record yang cacat/tanpa attachment dari run sebelumnya
+            # Self-healing terisolasi: hanya hapus record cacat milik user dan company ini
             existing.unlink()
             healed_ev += 1
 
@@ -484,7 +524,7 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None):
         receipt["binding_sha256"] = hashlib.sha256(binding).hexdigest()
 
         # Pembuatan melalui ORM dengan sudo() sehingga attachment tersimpan di ir.attachment
-        Evidence.create({
+        ev_rec = Evidence.create({
             "user_id": uid,
             "company_id": company.id,
             "outlet_id": pid,
@@ -494,6 +534,14 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None):
             "original": original_b64,
             "watermarked": watermarked_b64,
         })
+
+        # Set create_date & write_date sesuai timestamp historis UTC yang sinkron dengan dashboard
+        cr.execute("""
+            UPDATE id_mobile_evidence
+            SET create_date = %s, write_date = %s
+            WHERE id = %s
+        """, [visit_utc_str, visit_utc_str, ev_rec.id])
+
         created_ev += 1
 
     print(
