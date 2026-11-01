@@ -3,6 +3,7 @@ import { useLayoutEffect, useRef } from "preact/hooks";
 // Stack ownership matters: a camera opened inside a form must be the only
 // keyboard target; closing it restores both the form's inert state and focus.
 const stack: HTMLElement[] = [];
+let originalOverflow: string | undefined;
 export function useDialog<T extends HTMLElement = HTMLElement>(
     close: () => void,
 ) {
@@ -41,8 +42,8 @@ export function useDialog<T extends HTMLElement = HTMLElement>(
             if (parent === document.body) break;
             branch = parent;
         }
+        if (!stack.length) originalOverflow = document.body.style.overflow;
         stack.push(dialog);
-        const overflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         const focusable = () =>
             [
@@ -98,7 +99,10 @@ export function useDialog<T extends HTMLElement = HTMLElement>(
                 el.inert = inert;
                 if (modal !== null) el.setAttribute("aria-modal", modal);
             });
-            document.body.style.overflow = overflow;
+            if (!stack.length) {
+                document.body.style.overflow = originalOverflow ?? "";
+                originalOverflow = undefined;
+            } else document.body.style.overflow = "hidden";
             requestAnimationFrame(() => {
                 if (origin?.isConnected && !origin.closest("[inert]"))
                     origin.focus();

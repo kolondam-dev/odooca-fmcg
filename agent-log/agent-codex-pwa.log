@@ -234,3 +234,8 @@
 - Lokal: 346 unit, 168 browser, typecheck/format/contracts, hosting, semua mode build/budget, QA boundary off/on, Ruff/manifest/diff lulus.
 - CI native/upgrade/Docker pada HEAD publikasi masih menunggu; perangkat fisik/staging bisnis terpisah. Tidak merge/deploy atau perubahan master/live.
 - Task managed by agent codex-pwa at 2026-11-01T17:53:45+07:00
+
+[2026-11-01T18:00:11+07:00] [INFO] Penguatan cleanup dialog bertingkat pada pergantian akun PR69
+- Body overflow dikelola stack agar urutan unmount parent/child tidak meninggalkan scroll terkunci.
+- 16 browser UX terfokus dan typecheck lulus; full suite 170 browser/CI final menunggu. Tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-01T18:00:11+07:00

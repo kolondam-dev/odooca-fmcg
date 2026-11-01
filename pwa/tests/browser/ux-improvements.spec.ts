@@ -1,4 +1,4 @@
-import { test, expect, checkIn } from "./session-fixture";
+import { test, expect, checkIn, changeTestAccount } from "./session-fixture";
 import { saveVisitPhoto } from "./visit-helpers";
 
 test("browser Back closes camera before form and returns through pages", async ({
@@ -313,4 +313,31 @@ test("camera evidence saves one bound package automatically without a second loc
     await expect(
         page.getByText("Kunjungan lokal aktif", { exact: true }),
     ).toBeVisible();
+});
+
+test("account handover with nested camera restores body scroll and clears both dialogs", async ({
+    page,
+}) => {
+    await page.context().grantPermissions(["geolocation"]);
+    await page.goto("./");
+    const overflow = await page.evaluate(() => document.body.style.overflow);
+    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page.getByLabel("Alamat / nama lokasi").fill("Kantor Manado");
+    await page
+        .getByRole("button", { name: "Buka Kamera", exact: true })
+        .click();
+    await expect(page.locator(".camera-modal-backdrop")).toBeVisible();
+    await changeTestAccount(page, "delivery");
+    await expect(
+        page.getByRole("button", { name: "Profil dan Sesi Akun", exact: true }),
+    ).toHaveText("N");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect
+        .poll(() => page.evaluate(() => document.body.style.overflow))
+        .toBe(overflow);
+    await page.goBack();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(
+        page.getByRole("button", { name: "Profil dan Sesi Akun", exact: true }),
+    ).toHaveText("N");
 });

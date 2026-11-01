@@ -1,3 +1,8 @@
+## 2026-11-01T18:00:11+07:00 — agent codex-pwa — Penguatan cleanup dialog PR69
+**Berubah:** body scroll lock dimiliki stack dialog, bukan overflow per dialog. Pergantian akun saat kamera di dalam form terbuka membersihkan kedua dialog dan tidak meninggalkan body terkunci; history akun lama tidak membuka dialog pemilik sebelumnya.
+**[F] Verifikasi:** 16 browser UX terfokus (phone/tablet) dan typecheck lulus; baseline implementasi sebelumnya 346 unit/168 browser lulus. Rerun penuh mencakup 170 browser pada HEAD baru.
+**[BU] Menunggu:** CI final; PR69 tetap draft, tidak merge/deploy. Batas perangkat fisik/staging pada entri sebelumnya tetap berlaku.
+
 ## 2026-11-01T17:53:45+07:00 — agent codex-pwa — Perbaikan audit UX PWA
 **Branch:** agen/pwa-ux-improvements, basis main f3d9a72.
 **Berubah:** Back/history dan state daftar, shell/scroll/sticky konsisten, toast tanpa overlap CTA, POS compact/44px/500 SKU bertahap, biaya kontekstual/tanggal Indonesia, kontrol QA build-only, GPS otomatis Sales/Delivery, kamera autosave paket/hash, Leaflet gesture lokal dan consent/zoom stabil, dialog/fokus bersama, profil gudang/status sesi aktual. Rincian UX01–UX13: `docs/reviews/PWA_UX_IMPROVEMENTS.md`.
