@@ -7,7 +7,7 @@
     "category": "Distribution",
     "author": "kolondam-dev",
     "license": "LGPL-3",
-    "depends": ["web", "id_base", "sale_stock", "account"],
+    "depends": ["web", "id_base", "sale_stock", "account", "spreadsheet_dashboard"],
     "data": [
         "views/dashboard_views.xml",
     ],

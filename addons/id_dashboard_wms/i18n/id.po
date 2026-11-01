@@ -392,3 +392,11 @@ msgstr "Kelompokkan"
 #. module: id_dashboard_wms
 msgid "Month"
 msgstr "Bulan"
+
+#. module: id_dashboard_wms
+msgid "Warehouse & Logistics Dashboard"
+msgstr "Dashboard Gudang & Logistik"
+
+#. module: id_dashboard_wms
+msgid "Executive Dashboard"
+msgstr "Dashboard Eksekutif"

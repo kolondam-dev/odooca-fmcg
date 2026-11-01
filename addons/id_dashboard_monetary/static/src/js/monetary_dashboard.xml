@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="id_dashboard_monetary.MonetaryDashboard">
+        <div class="o_action id-md">
+            <div class="id-md__sheet">
+                <!-- Header & Filters Section -->
+                <section class="id-md__section id-md__filters" aria-label="Filters">
+                    <div class="id-md__head">
+                        <h1 class="id-md__title"><i class="fa fa-money"/> Monetary &amp; Accounts Receivable</h1>
+                        <div class="id-md__quick-links">
+                            <button type="button" class="id-md__quick-btn" t-on-click="openAgingMatrix">
+                                <i class="fa fa-table"/> AR Aging Matrix
+                            </button>
+                            <button type="button" class="id-md__quick-btn" t-on-click="openFunnel">
+                                <i class="fa fa-filter"/> Financial Funnel
+                            </button>
+                            <button type="button" class="id-md__quick-btn" t-on-click="openAllInvoices">
+                                <i class="fa fa-list"/> Daftar Piutang
+                            </button>
+                        </div>
+                    </div>
+                    <span class="id-md__label"><i class="fa fa-map-marker"/> Area</span>
+                    <t t-foreach="state.filters.areas" t-as="a" t-key="a.id">
+                        <button type="button" class="id-md__chip"
+                                t-att-class="{'is-active': state.areaIds.includes(a.id)}"
+                                t-on-click="() => this.toggleArea(a.id)" t-out="a.name"/>
+                    </t>
+                    <span class="id-md__label"><i class="fa fa-user"/> Salesman</span>
+                    <t t-foreach="state.filters.salesmen" t-as="s" t-key="s.id">
+                        <button type="button" class="id-md__chip"
+                                t-att-class="{'is-active': state.salesmanIds.includes(s.id)}"
+                                t-on-click="() => this.toggleSalesman(s.id)" t-out="s.name"/>
+                    </t>
+                    <button type="button" class="id-md__link" t-on-click="reset"><i class="fa fa-undo"/> Reset</button>
+                </section>
+
+                <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-out="state.error"/>
+                <div t-if="state.loading and !state.data" class="id-md__empty"><i class="fa fa-circle-o-notch fa-spin"/> Memuat data keuangan…</div>
+
+                <t t-if="state.data">
+                    <!-- Primary AR Scorecards -->
+                    <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
+                        <h2 class="id-md__section-title"><i class="fa fa-credit-card"/> Status Saldo Piutang Beredar</h2>
+                        <div class="id-md__scorecards">
+                            <button type="button" class="id-md__score" t-on-click="openAllInvoices">
+                                <span class="id-md__icon is-navy"><i class="fa fa-balance-scale"/></span>
+                                <span class="id-md__score-title">Total Piutang Beredar</span>
+                                <span class="id-md__score-value" t-out="moneyShort(state.data.kpi.total_ar)"/>
+                                <span class="id-md__score-meta"><t t-out="int(state.data.kpi.invoices_count)"/> faktur terbuka aktif</span>
+                            </button>
+                            <button type="button" class="id-md__score" t-on-click="openOverdueInvoices">
+                                <span class="id-md__icon is-red"><i class="fa fa-exclamation-circle"/></span>
+                                <span class="id-md__score-title">Piutang Jatuh Tempo</span>
+                                <span class="id-md__score-value is-danger" t-out="moneyShort(state.data.kpi.overdue_ar)"/>
+                                <span class="id-md__score-meta"><t t-out="pct(state.data.kpi.overdue_ratio)"/> dari total piutang</span>
+                            </button>
+                            <button type="button" class="id-md__score" t-on-click="openOverdueInvoices">
+                                <span class="id-md__icon is-darkred"><i class="fa fa-shield"/></span>
+                                <span class="id-md__score-title">Risiko Macet (&gt;30 Hari)</span>
+                                <span class="id-md__score-value is-danger" t-out="moneyShort(state.data.kpi.bad_debt)"/>
+                                <span class="id-md__score-meta"><t t-out="pct(state.data.kpi.bad_debt_ratio)"/> eksposur audit SPV / Bad Debt</span>
+                            </button>
+                            <button type="button" class="id-md__score" t-on-click="openFunnel">
+                                <span class="id-md__icon is-emerald"><i class="fa fa-check-circle"/></span>
+                                <span class="id-md__score-title">Kas Pelunasan Masuk</span>
+                                <span class="id-md__score-value is-ok" t-out="moneyShort(state.data.kpi.cash_collected)"/>
+                                <span class="id-md__score-meta">Pelunasan kas terkonfirmasi</span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- AR Aging Buckets Distribution -->
+                    <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
+                        <h2 class="id-md__section-title"><i class="fa fa-clock-o"/> Komposisi Umur Piutang (FMCG Aging Matrix)</h2>
+                        <div class="id-md__aging-bar-wrap">
+                            <t t-foreach="state.data.buckets" t-as="b" t-key="b.key">
+                                <div t-attf-class="id-md__aging-bar-segment seg-#{b.key}"
+                                     t-att-style="'width:' + b.percent + '%'"
+                                     t-att-title="b.label + ': ' + money(b.amount) + ' (' + pct(b.percent) + ')'"/>
+                            </t>
+                        </div>
+                        <div class="id-md__aging-legend">
+                            <t t-foreach="state.data.buckets" t-as="b" t-key="b.key">
+                                <div class="id-md__legend-item">
+                                    <span t-attf-class="id-md__legend-dot dot-#{b.key}"/>
+                                    <span><t t-out="b.label"/>: <strong><t t-out="moneyShort(b.amount)"/></strong> (<t t-out="pct(b.percent)"/> · <t t-out="int(b.count)"/> faktur)</span>
+                                </div>
+                            </t>
+                        </div>
+                    </section>
+
+                    <!-- Financial Funnel Scorecards -->
+                    <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
+                        <h2 class="id-md__section-title"><i class="fa fa-bullseye"/> Financial Target &amp; Realisasi</h2>
+                        <div class="id-md__scorecards id-md__scorecards--3">
+                            <div class="id-md__score">
+                                <span class="id-md__icon is-blue"><i class="fa fa-flag"/></span>
+                                <span class="id-md__score-title">Target Penjualan</span>
+                                <span class="id-md__score-value" t-out="moneyShort(state.data.kpi.target_revenue)"/>
+                                <span class="id-md__score-meta">Target nominal distributor</span>
+                            </div>
+                            <div class="id-md__score">
+                                <span class="id-md__icon is-amber"><i class="fa fa-shopping-cart"/></span>
+                                <span class="id-md__score-title">Realisasi Faktur</span>
+                                <span class="id-md__score-value" t-out="moneyShort(state.data.kpi.realized_revenue)"/>
+                                <span class="id-md__score-meta">Pencapaian: <t t-out="pct(state.data.kpi.achievement_rate)"/></span>
+                            </div>
+                            <div class="id-md__score">
+                                <span class="id-md__icon is-emerald"><i class="fa fa-money"/></span>
+                                <span class="id-md__score-title">Pencairan Kas (Collection)</span>
+                                <span class="id-md__score-value is-ok" t-out="moneyShort(state.data.kpi.cash_collected)"/>
+                                <span class="id-md__score-meta">Kas bersih diterima</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Detailed Breakdown Tables -->
+                    <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h2 class="id-md__section-title mb-0"><i class="fa fa-list-alt"/> Analisis Eksposur Piutang</h2>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn"
+                                        t-att-class="state.subTab === 'customers' ? 'btn-primary' : 'btn-outline-secondary'"
+                                        t-on-click="() => state.subTab = 'customers'">Top 10 Outlet</button>
+                                <button type="button" class="btn"
+                                        t-att-class="state.subTab === 'areas' ? 'btn-primary' : 'btn-outline-secondary'"
+                                        t-on-click="() => state.subTab = 'areas'">Per Wilayah</button>
+                                <button type="button" class="btn"
+                                        t-att-class="state.subTab === 'salesmen' ? 'btn-primary' : 'btn-outline-secondary'"
+                                        t-on-click="() => state.subTab = 'salesmen'">Per Salesman</button>
+                            </div>
+                        </div>
+
+                        <!-- SubTab 1: Customers -->
+                        <div t-if="state.subTab === 'customers'" class="id-md__table-wrap">
+                            <table class="id-md__table">
+                                <thead>
+                                    <tr>
+                                        <th>Outlet / Pelanggan</th>
+                                        <th>Channel</th>
+                                        <th>Area</th>
+                                        <th>Salesman</th>
+                                        <th class="num">Faktur</th>
+                                        <th class="num">Total Piutang</th>
+                                        <th class="num">Jatuh Tempo</th>
+                                        <th class="num">Credit Limit</th>
+                                        <th class="num">Utilisasi</th>
+                                        <th>Status Plafon</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.top_customers" t-as="c" t-key="c.id"
+                                        t-on-click="() => this.openCustomerInvoices(c.id, c.name)"
+                                        style="cursor: pointer;">
+                                        <td class="name" t-out="c.name"/>
+                                        <td t-out="c.channel"/>
+                                        <td t-out="c.area"/>
+                                        <td t-out="c.salesman"/>
+                                        <td class="num" t-out="int(c.open_count)"/>
+                                        <td class="num" t-out="money(c.total_balance)"/>
+                                        <td class="num text-danger font-weight-bold" t-out="money(c.overdue_balance)"/>
+                                        <td class="num" t-out="money(c.credit_limit)"/>
+                                        <td class="num" t-out="pct(c.utilization)"/>
+                                        <td>
+                                            <span t-if="c.credit_hold" class="id-md__badge is-hold">CREDIT HOLD</span>
+                                            <span t-else="" class="id-md__badge is-ok">Lancar</span>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="!state.data.top_customers.length">
+                                        <td colspan="10" class="id-md__empty">Tidak ada saldo piutang terbuka untuk filter terpilih.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- SubTab 2: Areas -->
+                        <div t-if="state.subTab === 'areas'" class="id-md__table-wrap">
+                            <table class="id-md__table">
+                                <thead>
+                                    <tr>
+                                        <th>Wilayah Coverage Area</th>
+                                        <th class="num">Jumlah Faktur</th>
+                                        <th class="num">Total Piutang</th>
+                                        <th class="num">Piutang Jatuh Tempo</th>
+                                        <th class="num">Rasio Overdue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.areas" t-as="a" t-key="a.id">
+                                        <td class="name" t-out="a.name"/>
+                                        <td class="num" t-out="int(a.count)"/>
+                                        <td class="num font-weight-bold" t-out="money(a.total_ar)"/>
+                                        <td class="num text-danger" t-out="money(a.overdue_ar)"/>
+                                        <td class="num" t-out="pct(a.overdue_ratio)"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- SubTab 3: Salesmen -->
+                        <div t-if="state.subTab === 'salesmen'" class="id-md__table-wrap">
+                            <table class="id-md__table">
+                                <thead>
+                                    <tr>
+                                        <th>Salesperson</th>
+                                        <th class="num">Jumlah Faktur</th>
+                                        <th class="num">Total Piutang</th>
+                                        <th class="num">Piutang Jatuh Tempo</th>
+                                        <th class="num">Rasio Overdue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.salesmen" t-as="s" t-key="s.id">
+                                        <td class="name" t-out="s.name"/>
+                                        <td class="num" t-out="int(s.count)"/>
+                                        <td class="num font-weight-bold" t-out="money(s.total_ar)"/>
+                                        <td class="num text-danger" t-out="money(s.overdue_ar)"/>
+                                        <td class="num" t-out="pct(s.overdue_ratio)"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

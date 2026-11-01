@@ -1,3 +1,8 @@
+## 2026-11-01T09:29:21+07:00 — codex — Integrasi PR64 dengan main untuk merge berotorisasi
+**Otorisasi:** pemilik meminta merge PR64 jika ready. P2 foto retry telah ditutup pada7b55883.
+**Integrasi:** gabungkan main6fcb328 (dashboard PR65); konflik hanya HANDOFF, kedua blok riwayat dipertahankan. Source PWA perbaikan tetap identik dengan reviewed7b55883; perubahan dashboard main diadopsi utuh.
+**Verifikasi:**341unit dan probe supervisor sebelumnya PASS; CI integrasi pada HEAD sinkronisasi wajib lulus sebelum merge. Tidak memutasi database/Railway dalam aksi sinkronisasi ini.
+
 ## 2026-11-01T09:09:44+07:00 — agent codex-pwa — PR #64: perbaikan binding foto pengganti saat retry
 **Branch:** `agen/pwa-login-attendance-ux`, basis reviewed adbe2f7; temuan P2 issuecomment-6552060391.
 **Berubah:** openDay memvalidasi foto retry walaupun attendance-only sudah persisten. Foto B valid mengganti record sementara A sebelum pembukaan sesi; foto sama mempertahankan referensi/waktu. Sesi aktif idempoten dan tidak menerima foto berbeda; clock-out tidak dapat di-reopen. Kebijakan retry dijelaskan di docs/ui/PWA_LOGIN_ATTENDANCE_UX.md.
@@ -19,6 +24,70 @@
 **Diverifikasi (bagaimana):** ruff, check_manifests, node --check; render mock DOM Chromium 1280/820px. **[BU]** runtime Odoo dan CI; tampilan dashboard bawaan tidak dibandingkan langsung.
 **Butir terbuka:** 1. Dashboard ini client action OWL, bukan spreadsheet_dashboard (metrik LPO/penetrasi/PJP tak bisa dinyatakan sebagai pivot). 2. Tak ada delta PJP/EC (periode sebelumnya tidak dihitung).
 **Menunggu:** pemilik (review visual di instance demo), CI.
+
+## 2026-11-01T08:57:00+07:00 — antigravity agent — Perbaikan Filter User Groups pada id.monetary.dashboard
+**Branch:** agen/unify-fmcg-dashboards (PR #65)
+**Status:** PASS (Static, Manifest) -> Siap Push & CI
+
+### Diagnosa & Perbaikan CI KeyError: 'groups_id'
+1. **Penyebab:** Pada `get_filters()` di `id.monetary.dashboard`, query `res.users` mencari field `groups_id` yang di Odoo 19 telah direstrukturisasi menjadi `group_ids` / `res.groups.users`.
+2. **Perbaikan:** Menggunakan relasi langsung `sales_group.users` dengan fallback aman ke `res.users` non-share.
+3. **Verifikasi:** ruff check PASS, check_manifests.py PASS (10 addons ok).
+
+## 2026-11-01T08:50:00+07:00 — antigravity agent — Penyelarasan Nama Field ORM di Service Dashboard Moneter & WMS
+**Branch:** agen/unify-fmcg-dashboards (PR #65)
+**Status:** PASS (Static, Manifest) -> Siap Push & CI
+
+### Diagnosa & Perbaikan Test Failure
+1. **Penyebab:** Pada `test_monetary_dashboard_service`, pemanggilan `search_read` pada `id.ar.aging` meminta `invoice_date_due` dan `amount_total` yang tidak ada (nama field asli: `date_due` dan `amount_residual`). Begitu pula pada `test_wms_dashboard_service`, pemanggilan `search_read` pada `id.wms.reject` meminta `reject_reason` dan `rejection_count` (nama field asli: `reason` dan `picking_count`).
+2. **Perbaikan:**
+   - Menyelaraskan seluruh nama field pada `id.monetary.dashboard` (`date_due`, `amount_residual`, `collection` stage key) dan lookup profil partner untuk credit limit.
+   - Menyelaraskan nama field pada `id.wms.dashboard` (`reason`, `picking_count`, `rejected_value`).
+3. **Verifikasi:** ruff check PASS, check_manifests.py PASS (10 addons ok).
+
+## 2026-11-01T08:42:00+07:00 — antigravity agent — Perbaikan External ID ParseError di id_base menu_views
+**Branch:** agen/unify-fmcg-dashboards (PR #65)
+**Status:** PASS (Static, XML, Manifest) -> Siap Push & CI
+
+### Diagnosa & Perbaikan CI Exit Code 255
+1. **Penyebab:** Pada addons/id_base/views/menu_views.xml, terdapat menu item `menu_fmcg_tier` yang memanggil `action_id_tier` yang tidak terdefinisi di id_base, memicu ParseError saat `install-test`.
+2. **Perbaikan:** Menghapus baris tier yang belum terdefinisi tersebut dan mempertahankan struktur bersih persis `origin/main` dengan tambahan menu item baru `menu_fmcg_dashboard` di bawah `menu_fmcg_root`.
+3. **Verifikasi:** XML parsing ElementTree PASS, ruff check PASS, check_manifests.py PASS (10 addons ok).
+
+## 2026-11-01T08:32:00+07:00 — antigravity agent — Penerapan Flat Single-Sheet Spreadsheet Style & Scroll Fix
+**Branch:** agen/unify-fmcg-dashboards (PR #65)
+**Status:** PASS (Static, XML, JS, Manifest) -> Siap CI
+
+### Sinkronisasi & Penyelarasan Desain UI/UX
+1. **Rebase & Adopsi Desain Claude (Commit 628f603):**
+   - Menyelaraskan branch dengan desain flat single-sheet spreadsheet style dari claude-design2.
+   - Memperbaiki isu scrollable pada .id-sp dengan display: flex, height: 100%, dan overflow-y: auto !important serta padding bawah 64px.
+2. **Harmonisasi Desain Dashboard Moneter & WMS:**
+   - Mentransformasi id_dashboard_monetary dan id_dashboard_wms ke format yang sama persis: square corners, single sheet dengan hairline dividers, icon scorecards berlatar warna (navy, blue, emerald, amber, red), horizontal bar visual untuk AR aging dan FEFO health, serta hairline table border.
+   - Tetap mempertahankan seluruh SQL views/pivot/graph analitis lama sebagai tombol drilldown cepat.
+3. **Penyatuan Menu Grup:**
+   - Ketiga dashboard kini berada di group menu yang sama di bawah Dashboards default Odoo (/odoo/dashboards) dan FMCG Distribution -> Dashboards.
+
+## 2026-11-01T08:25:00+07:00 — antigravity agent — Penyatuan Menu & Presentasi Dashboard Eksekutif OWL (Sales, Monetary, WMS)
+**Branch:** agen/unify-fmcg-dashboards
+**Status:** PASS (Static, XML, JS, Manifest) -> Siap Push & CI
+
+### Ringkasan Aksi & Perbaikan UI/UX Dashboard
+1. **Penyempurnaan Dashboard Sales Productivity (id_dashboard_sales):**
+   - Mengatasi isu scrollable: menambahkan display: flex, height: 100%, width: 100%, dan overflow-y: auto !important pada .id-sp serta padding bawah fleksibel pada .id-sp__scroll.
+   - Mengubah kartu metrik datar menjadi komponen visual kaya: visual progress bar untuk LPO vs Target (≥ 4.0 SKU), status pill, gauge visual pemenuhan DO-ke-faktur, dan PJP compliance.
+2. **Transformasi Dashboard Moneter & AR (id_dashboard_monetary):**
+   - Menambahkan service agregasi id.monetary.dashboard: total piutang, piutang overdue, risiko macet >30 hari, pencapaian target, dan kas tertagih.
+   - Membangun komponen OWL Executive Dashboard lengkap dengan: AR Aging visual distribution bar (5 segmen warna), Top 10 outlet exposure dengan status credit hold, komparasi per wilayah & salesman.
+   - Menyertakan tombol quick drilldown langsung ke matriks aging pivot/graph, financial funnel, dan invoice list open-code sebelumnya tanpa menghapus satupun data analitis.
+3. **Transformasi Dashboard Gudang & Logistik WMS (id_dashboard_wms):**
+   - Menambahkan service agregasi id.wms.dashboard: total nilai persediaan, stok kritis FEFO, tingkat pemenuhan DO, rasio tolakan, dan biaya armada.
+   - Membangun komponen OWL Executive Dashboard lengkap dengan: FEFO Expiry health bar & rekomendasi operasional FMCG (retur principal vs promo bundling), breakdown alasan reject/retur, tabel efisiensi armada, dan sebaran kategori stok FMCG.
+   - Menyertakan tombol quick drilldown ke monitoring FEFO lengkap, analisis reject, dan biaya armada open-code sebelumnya.
+4. **Penyatuan Menu Grup (Unified Dashboard Grouping):**
+   - Mendaftarkan menu_fmcg_dashboard di id_base agar ketiga dashboard berada di bawah satu group menu yang harmonis.
+   - Mendaftarkan ketiga dashboard di bawah menu root Dashboards default Odoo (spreadsheet_dashboard.spreadsheet_dashboard_menu_root) sehingga dapat diakses bersamaan di https://odooca-fmcg-demo.up.railway.app/odoo/dashboards.
+   - Mendaftarkan ketiga dashboard di bawah FMCG Distribution -> Dashboards, serta sebagai menu pertama di modul masing-masing.
 
 ## 2026-10-31T23:16:30+07:00 — antigravity agent — Perbaikan Tanggal date_done Picking pada Test id_dashboard_sales
 **Branch:** agen/claude-design2-sales-productivity

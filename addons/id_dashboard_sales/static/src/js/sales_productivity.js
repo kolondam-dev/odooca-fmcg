@@ -167,6 +167,24 @@ export class SalesProductivity extends Component {
         const ok = this.state.data?.total?.lpo_ok;
         return ok === null || ok === undefined ? "" : ok ? "is-ok" : "is-low";
     }
+    get lpoPercent() {
+        const lpo = this.state.data?.total?.lpo;
+        const target = this.state.data?.lpo_target || 4;
+        if (!lpo) return 0;
+        return Math.min(100, Math.round((lpo / target) * 100));
+    }
+    get fulfillmentPercent() {
+        const val = this.state.data?.total?.fulfillment;
+        return val ? Math.min(100, Math.round(val * 100)) : 0;
+    }
+    get pjpCompliancePercent() {
+        const val = this.pjp?.compliance;
+        return val ? Math.min(100, Math.round(val * 100)) : 0;
+    }
+    get ecRatioPercent() {
+        const val = this.pjp?.ec_ratio;
+        return val ? Math.min(100, Math.round(val * 100)) : 0;
+    }
 
     // ---- penetration
     get penetration() {

@@ -5,15 +5,18 @@
         <field name="tag">id_dashboard_sales.sales_productivity</field>
     </record>
 
-    <menuitem id="menu_fmcg_dashboard"
-              name="Dashboards"
-              parent="id_base.menu_fmcg_root"
-              sequence="5"
-              groups="sales_team.group_sale_salesman"/>
-
+    <!-- Dashboards Group under FMCG Distribution -->
     <menuitem id="menu_sales_productivity"
               name="Sales Productivity"
-              parent="menu_fmcg_dashboard"
+              parent="id_base.menu_fmcg_dashboard"
+              action="action_sales_productivity"
+              sequence="10"
+              groups="sales_team.group_sale_salesman"/>
+
+    <!-- Dashboards Group under Odoo Root Dashboards -->
+    <menuitem id="menu_root_dash_sales_productivity"
+              name="Sales Productivity"
+              parent="spreadsheet_dashboard.spreadsheet_dashboard_menu_root"
               action="action_sales_productivity"
               sequence="10"
               groups="sales_team.group_sale_salesman"/>
