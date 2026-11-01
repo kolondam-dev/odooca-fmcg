@@ -1628,3 +1628,10 @@
 - Sinkronisasi Timezone WITA vs UTC (8 Jam): Format ISO UTC Z di receipt metadata (photo_selected_at, device_recorded_at, received_at, fix_sampled_at) diselaraskan presisi dengan waktu lokal WITA (UTC+8) pada teks watermark dan create_date
 - Test Suite: Menambahkan test_06 (proteksi non-seed) dan test_07 (sinkronisasi timezone UTC vs WITA 8 jam), serta memperbarui test_01 dan test_03
 - Task managed by antigravity-agent at 2026-11-01T10:10:44+00:00
+
+[2026-11-01T10:58:06+00:00] [INFO] Resolusi 3 Blocker P1 Review Supervisor PR #68 (ORM Invalidation, Preflight Workday Collision, Atomic Legacy Migration)
+- P1-1 (ORM Cache Invalidation): Menambahkan flush_recordset dan invalidasi cache ORM (invalidate_recordset, invalidate_model, invalidate_all) setelah raw SQL UPDATE create_date dengan RETURNING, serta memverifikasi readback ORM langsung (assert year=2026, month=7)
+- P1-2 (Preflight Binding & Collision): Menambahkan validasi preflight sebelum penulisan. Mendeteksi kolisi ordinary workday (missing scheduled outlets) dan non-seed collision; membatalkan pemuatan (RuntimeError) tanpa partial write dan tanpa memasang mark bila ada konflik; memastikan seluruh evidence terikat eksak ke outlet dalam assigned workday
+- P1-3 (Atomic Legacy Migration & Batch Ownership): Membatasi mutasi ketat pada current batch pjp_workdays_july_2026_v1 dan legacy kanonikal v1-canonical-july-2026; foreign batch dan non-seed ditolak aman; legacy yang tidak lengkap atau berwaktu lama dimigrasikan secara atomik (foto + watermark + receipt ISO UTC + create_date) dengan rekonsiliasi eksak
+- Test Suite: Memperluas test_pjp_loader_boundaries.py dengan eksekusi loader produksi utuh di test_02, penolakan preflight ordinary collision di test_03, penolakan non-seed di test_06, instant & working-hour assertion di test_07, atomic migration di test_08, dan penolakan foreign batch di test_09
+- Task managed by antigravity-agent at 2026-11-01T10:58:06+00:00

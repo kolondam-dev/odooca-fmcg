@@ -1,3 +1,40 @@
+## 2026-11-01T17:55:00+07:00 — anti-gravity agent — Resolusi 3 Blocker P1 Re-Review PR #68 (ORM Cache Invalidation, Preflight Workday Collision, Atomic Legacy Migration)
+**Branch:** `agen/pjp-master-and-workday`
+**Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Test Boundaries Suite) -> Siap Re-Review PR #68
+
+### Ringkasan Perbaikan
+1. **Blocker P1-1 (ORM Membaca Bulan November Setelah Raw SQL Backdate):**
+   - **Penyebab:** Eksekusi raw SQL `UPDATE id_mobile_evidence SET create_date = ...` tidak mengosongkan cache in-memory Odoo ORM (`env.cache`). Ketika method/test membaca field `create_date` via ORM, nilai yang terbaca adalah cached datetime saat create (bulan November 2026).
+   - **Solusi:**
+     * Eksekusi SQL UPDATE menggunakan clause `RETURNING id, create_date` dan memverifikasi `cr.rowcount == 1`.
+     * Menjalankan pembersihan cache menyeluruh: `flush_recordset`, `invalidate_recordset(["create_date", "write_date"])`, `invalidate_model(["create_date", "write_date"])`, dan `env.invalidate_all()`.
+     * Membaca ulang langsung dari ORM (`ev_rec.create_date`) dan memverifikasi via assert bahwa ORM membaca bulan 7 dan tahun 2026 sebelum melanjutkan alur.
+2. **Blocker P1-2 (Binding Assignment Inkonsisten & False Success saat Collision/Empty Target):**
+   - **Penyebab:**
+     * Loader sebelumnya mengikat existing workday biasa (misal ID 88 dengan outlet `[99]`) lalu membuat evidence untuk outlet `31` dengan `assignment_id = "88"`, melanggar domain contract di mana outlet harus terdaftar di assigned workday.
+     * Tidak adanya preflight menyebabkan collision ordinary workday atau non-seed evidence di-skip lalu dilaporkan sukses, dan target kosong mengembalikan exit 0 sehingga deployment dapat memasang success mark.
+   - **Solusi:**
+     * Menambahkan tahap **Preflight Validation** yang berjalan sebelum penulisan database apa pun:
+       a) Target check: melempar `RuntimeError` jika target kunjungan kosong (anti-false-success).
+       b) Ordinary workday collision check: mendeteksi jika workday yang ada tidak mencakup outlet PJP; jika ada kolisi, melempar `RuntimeError` sehingga snapshot workday biasa tetap 100% identik tanpa partial write.
+       c) Evidence collision check: menolak kolisi foreign batch dan non-seed evidence.
+     * Pada pembuatan evidence, loader menegakkan invariant: `assert pid in Workday.browse(wd_id).outlet_ids.ids`.
+     * Melakukan rekonsiliasi jumlah target vs created/repaired vs valid existing; melempar error jika total rekonsiliasi < target.
+3. **Blocker P1-3 (Ownership Batch & Migrasi Atomik Legacy Seed):**
+   - **Penyebab:** Predicate pengecekan seed sebelumnya mengizinkan record dari batch lain dengan operator OR, serta melewati repair untuk record lama yang memiliki foto cacat atau timestamp UTC lama (`08:10:00Z`).
+   - **Solusi:**
+     * Menetapkan batch kanonikal ketat `seed_batch: "pjp_workdays_july_2026_v1"` dan legacy provenance `snapshot_version: "v1-canonical-july-2026"`. Record milik batch lain ditolak saat preflight.
+     * Untuk record legacy yang tidak lengkap (tanpa foto) atau berformat lama (timestamp `08:10:00Z`), loader melakukan **Atomic Repair**: menghapus record lama dan membuat ulang seluruh unit secara atomik (foto + watermark resmi demo + receipt ISO UTC presisi `00:10:10Z` + binding SHA256 + create_date historis + ORM cache invalidation).
+     * Replay terbukti idempoten dengan zero-drift.
+4. **Verifikasi Regression & Unit Test Suite (`addons/id_mobile_api/tests/test_pjp_loader_boundaries.py`):**
+   - `test_01`: Verifikasi probe HTTP 200 JPEG, create_date Juli 2026 via ORM, receipt ISO UTC Z, dan exact dashboard completed visits count (=3) tanpa skip conditional.
+   - `test_02`: Verifikasi eksekusi loader jalur produksi utuh dengan isolasi multi-company partner dan evidence.
+   - `test_03`: Verifikasi penolakan preflight ordinary workday collision (snapshot ordinary tetap identik, 0 partial evidence).
+   - `test_06`: Verifikasi penolakan preflight non-seed evidence collision (record non-seed tidak dibackdate dan tidak dihapus).
+   - `test_07`: Verifikasi keselarasan instan receipt UTC vs database timestamp dan perbandingan waktu kerja lokal WITA vs UTC (selisih tepat 8 jam).
+   - `test_08`: Verifikasi migrasi atomik record legacy (timestamp lama 08:10Z diperbaiki ke 00:10:10Z, foto dan binding terbarui).
+   - `test_09`: Verifikasi penolakan foreign batch collision (record batch lain tidak termutasi).
+
 ## 2026-11-01T17:15:00+07:00 — anti-gravity agent — Resolusi 4 Blocker Review PR #68 (Commit di Test, Fixture Ref, Proteksi Backdate Non-Seed, Preservasi Workday, Timezone Sync 8 Jam)
 **Branch:** `agen/pjp-master-and-workday`
 **Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Test Boundaries Suite) -> Siap Re-Review PR #68
