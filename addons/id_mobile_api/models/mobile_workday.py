@@ -31,7 +31,7 @@ class MobileWorkday(models.Model):
     pricelist_id = fields.Many2one("product.pricelist", required=True, check_company=True)
     outlet_ids = fields.Many2many("res.partner", string="Scheduled Outlets", check_company=True)
     product_ids = fields.Many2many("product.product", string="Allowed Products", check_company=True)
-    outlet_radius = fields.Integer(string="Outlet Geofence Radius (m)", required=True, default=10)
+    outlet_radius = fields.Integer(string="Outlet Geofence Radius (m)", required=True, default=100)
     office_id = fields.Many2one("id.mobile.office", string="Office Location", check_company=True)
 
     _unique_day = models.Constraint(
@@ -51,10 +51,10 @@ class MobileWorkday(models.Model):
                 raise ValidationError(_("Pricelist must belong to the assigned company or be shared."))
             if record.pricelist_id.currency_id.name != "IDR" or record.company_id.currency_id.name != "IDR":
                 raise ValidationError(_("The mobile read contract currently requires IDR."))
-            if not 5 <= record.outlet_radius <= 15:
-                raise ValidationError(_("Outlet radius must be between 5 and 15 metres."))
-            if len(record.product_ids) > 500 or len(record.outlet_ids) > 500:
-                raise ValidationError(_("A mobile assignment may contain at most 500 products and 500 outlets."))
+            if not 5 <= record.outlet_radius <= 150:
+                raise ValidationError(_("Outlet radius must be between 5 and 150 metres."))
+            if len(record.product_ids) > 1000 or len(record.outlet_ids) > 1000:
+                raise ValidationError(_("A mobile assignment may contain at most 1000 products and 1000 outlets."))
 
     @api.model
     def _current_assignment(self):

@@ -5,7 +5,7 @@ import {
 } from "./visit-evidence";
 import type { VisitEvidence } from "./visit-contracts";
 import { ownerKey, type FieldProvider, type Identity } from "./contracts";
-import { MORNING_KEY } from "./morning";
+import { MORNING_KEY, isSundayBusinessDate } from "./morning";
 import {
     VISITS_KEY,
     bindVisitContext,
@@ -127,8 +127,12 @@ export class SalesVisits {
         };
     }
     async checkIn(outletId: string, fix: VisitFix, evidence?: VisitEvidence) {
-        const s = await this.state(),
-            outlet = s.morning.snapshot!.outlets.find((o) => o.id === outletId);
+        const s = await this.state();
+        if (isSundayBusinessDate(s.morning.businessDate))
+            throw new Error(
+                "Hari Minggu adalah hari libur operasional distributor FMCG. Kunjungan PJP tidak aktif.",
+            );
+        const outlet = s.morning.snapshot!.outlets.find((o) => o.id === outletId);
         if (!outlet)
             throw new Error(
                 "Outlet tidak ada di PJP. Extra call memerlukan approval supervisor.",

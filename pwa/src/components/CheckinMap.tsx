@@ -108,8 +108,8 @@ export function CheckinMap({
                         cx={map.site.x}
                         cy={map.site.y}
                         r={map.site.radius}
-                        fill="#15803d22"
-                        stroke="#15803d"
+                        fill={status === "Di luar radius" ? "#dc262622" : "#15803d22"}
+                        stroke={status === "Di luar radius" ? "#dc2626" : "#15803d"}
                         stroke-width="2"
                     />
                     {fix && (
@@ -136,7 +136,7 @@ export function CheckinMap({
                         cx={map.site.x}
                         cy={map.site.y}
                         r="7"
-                        fill="#15803d"
+                        fill={status === "Di luar radius" ? "#dc2626" : "#15803d"}
                         stroke="white"
                         stroke-width="2"
                     />

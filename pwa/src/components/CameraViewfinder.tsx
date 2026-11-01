@@ -242,8 +242,15 @@ export function CameraViewfinder({
         sourceWidth: number,
         sourceHeight: number,
     ): Promise<Blob> {
-        const targetWidth = Math.max(800, sourceWidth);
-        const scale = targetWidth / sourceWidth;
+        // Batasi resolusi maksimal 1280px proporsional agar hemat memori & kuota
+        const MAX_DIM = 1280;
+        let scale = 1;
+        if (sourceWidth > MAX_DIM || sourceHeight > MAX_DIM) {
+            scale = Math.min(MAX_DIM / sourceWidth, MAX_DIM / sourceHeight);
+        } else if (sourceWidth < 800) {
+            scale = 800 / sourceWidth;
+        }
+        const targetWidth = Math.round(sourceWidth * scale);
         const targetHeight = Math.round(sourceHeight * scale);
 
         const bannerHeight = rawCapture ? 0 : 110;
@@ -311,7 +318,7 @@ export function CameraViewfinder({
                         );
                 },
                 "image/jpeg",
-                0.86,
+                0.80,
             );
         });
     }

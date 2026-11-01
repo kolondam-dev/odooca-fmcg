@@ -1645,3 +1645,31 @@
 - Integrated origin/main (PR #69 UX improvements)
 - Preserved all PR #68 and PR #69 handoff entries chronologically
 - Task managed by antigravity-agent at 2026-11-01T11:59:32+00:00
+
+[2026-11-01T21:40:00+07:00] [INFO] Operational Readiness PWA Frontend & Odoo 19 Backend Integration
+- Branch: agen/pwa-odoo-operational-readiness
+- Geofence Relaxation:
+  * Expanded outlet circular radius from 5-15m to 100m default (max 150m) in models/mobile_workday.py and pwa domain contracts.
+  * Office circular radius set to 150m default in models/mobile_office.py.
+  * Formulated realistic GPS accuracy tolerance in mobile_evidence.py without rejecting valid on-site checkins.
+- Photo Capture & Responsive Preview:
+  * Constrained canvas capture to max 1280px dimension with 0.80 JPEG compression (<1.2MB target size).
+  * Fixed photo-preview CSS to scale responsively (max-height 200px, max-width 320px, object-fit contain).
+  * Stabilized two-point map preview (destination & device fix) in InteractiveMap.tsx and CheckinMap.tsx.
+- Sunday / Holiday Guard:
+  * Added Sunday check-in / attendance guard in morning.ts and visits.ts to prevent unauthorized weekend operations.
+- Multi-Order & UX Streamlining:
+  * Enabled multiple orders per visit session with '+ Tambah order lagi' action in VisitPanel.tsx.
+  * Added optional Customer PO Number ('customer_po_number') in TaskForm.tsx and VisitOrderSchema.
+  * Enabled Order Preview immediately upon having >= 1 item without requiring notes.
+- Command Dispatcher Backend:
+  * Implemented POST /api/v1/sync/commands controller in id_mobile_api/controllers/commands_api.py.
+  * Created id.mobile.command model with strict idempotency and automatic multi-principal SO splitting.
+  * Added unit test suite addons/id_mobile_api/tests/test_commands_api.py.
+- Verification:
+  * Python Ruff lint: PASS.
+  * Manifest check (10 addons): PASS.
+  * PWA contracts drift check: PASS.
+  * PWA build (demo, live, staging): PASS.
+  * PWA test suite (346 tests): PASS.
+- Task managed by antigravity agent at 2026-11-01T21:40:00+07:00

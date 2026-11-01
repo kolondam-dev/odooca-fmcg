@@ -1,3 +1,34 @@
+## 2026-11-01T21:40:00+07:00 — anti-gravity agent — Operational Readiness PWA Frontend & Odoo 19 Backend Integration
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**Status:** PASS (Ruff, Check Manifests, PWA Vitest 346 Tests, PWA Check Build, Contracts OpenAPI Gate)
+
+### Ringkasan Eksekusi & Solusi
+1. **Pelepasan Bottleneck Geofence Lapangan:**
+   - Radius circular outlet diperlonggar dari 5–15m menjadi default 100m (maks 150m) di `addons/id_mobile_api/models/mobile_workday.py` dan kontrak domain PWA (`contracts.ts`, `visit-contracts.ts`, `format.ts`, `official-evidence.ts`).
+   - Radius kantor diatur default 150m di `addons/id_mobile_api/models/mobile_office.py`.
+   - Formula evaluasi geofence di `mobile_evidence.py` dipisahkan antara jarak fisik dan batas toleransi akurasi GPS smartphone (maks 100m) sehingga check-in di toko nyata tidak tertolak salah.
+2. **Optimasi Foto Kamera & Preview Proporsional:**
+   - Kanvas kamera di `CameraViewfinder.tsx` dibatasi dimensi maksimal 1280px proporsional dengan kompresi JPEG 0.80 (target ukuran berkas < 1.2MB, hemat kuota dan memori).
+   - Preview foto di `style.css` diperbarui dari kotak kaku 96x96px menjadi proporsional responsif (max-height 200px, max-width 320px, object-fit contain).
+   - Menstabilkan preview peta interaktif 2 titik (tujuan dan posisi perangkat) di `InteractiveMap.tsx` dan `CheckinMap.tsx` dengan penundaan invalidateSize dan safe centering.
+3. **Penebalan Guard Jadwal Operasional & PJP:**
+   - Menambahkan guard hari Minggu di `morning.ts` dan `visits.ts` (`isSundayBusinessDate`) untuk mencegah check-in dan transaksi di hari libur operasional distributor FMCG.
+4. **Peningkatan UX Order & Multi-Order Sesi Kunjungan:**
+   - Membuka pembatasan single-order per kunjungan di `VisitPanel.tsx`: salesman dapat menekan tombol '+ Tambah order lagi' untuk outlet yang sama (misal beda prinsipal atau beda nomor PO).
+   - Menambahkan field opsional Nomor PO Outlet (`customer_po_number`) di formulir order `TaskForm.tsx` dan skema kontrak `VisitOrderSchema`.
+   - Tombol 'Preview order' aktif seketika setelah minimal 1 baris item produk dipilih (`orderLines.length >= 1`), tanpa mewajibkan catatan komentar.
+5. **Implementasi Command Ingestion Router di Odoo Backend:**
+   - Membuat controller HTTP `POST /api/v1/sync/commands` di `addons/id_mobile_api/controllers/commands_api.py`.
+   - Membuat model `id.mobile.command` di `addons/id_mobile_api/models/mobile_command.py` dengan penegakan idempotensi ketat (`client_uuid` unik per user).
+   - Logika pemecah keranjang belanja otomatis: 1 submission order PWA dipecah menjadi Draft `sale.order` Odoo per prinsipal (Kapal Api, Mayora, Unilever, Wings) dengan perhitungan diskon dan deteksi over-credit/below-HPP.
+   - Menambahkan automated regression test suite di `addons/id_mobile_api/tests/test_commands_api.py`.
+6. **Verifikasi Kualitas:**
+   - `python -m ruff check .` -> PASS (All checks passed)
+   - `python scripts/check_manifests.py` -> PASS (10 addons ok, id_mobile_api bumped to 19.0.1.4.0)
+   - `npm run contracts:check` -> PASS (OpenAPI/client schema drift gate PASS)
+   - `npm run check:build` -> PASS (demo, live, staging PASS)
+   - `npx vitest run` -> PASS (21 test files, 346 tests passed)
+
 ## 2026-11-01T18:20:00+07:00 — anti-gravity agent — Fix CI init-test guard dan test_01 dashboard query boundary
 **Branch:** `agen/pjp-master-and-workday`
 **Status:** PASS (Ruff, Check Manifests, Shell Syntax) -> Push ke PR #68

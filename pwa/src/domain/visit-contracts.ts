@@ -31,7 +31,7 @@ export const VisitSiteSchema = z
     .object({
         latitude: z.number().min(-90).max(90),
         longitude: z.number().min(-180).max(180),
-        radius: z.number().min(5).max(15),
+        radius: z.number().min(5).max(150),
         demo_unrestricted: z.literal(true).optional(),
     })
     .strict();
@@ -109,6 +109,7 @@ export const VisitOrderSchema = z
             .min(1)
             .max(500),
         note: z.string().max(500),
+        customer_po_number: z.string().trim().max(100).optional(),
         observed_total: z.string().regex(/^\d+$/),
         pricing_version: z.literal(1).optional(),
         discount_request: DiscountRequestSchema.optional(),

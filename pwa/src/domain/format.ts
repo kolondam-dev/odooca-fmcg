@@ -49,7 +49,7 @@ export function geofence(
         distance < 0 ||
         accuracy < 0 ||
         radius < 5 ||
-        radius > 15
+        radius > 150
     )
         return "uncertain";
     return distance + accuracy <= radius

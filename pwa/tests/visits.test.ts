@@ -95,6 +95,9 @@ it("uses distance plus accuracy without expanding the 5-15m radius and rejects s
         "invalid",
     );
     expect(assessVisitFix(point, { ...site, radius: 100 }).status).toBe(
+        "inside",
+    );
+    expect(assessVisitFix(point, { ...site, radius: 200 }).status).toBe(
         "invalid",
     );
 });

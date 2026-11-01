@@ -173,10 +173,11 @@ class MobileEvidence(models.Model):
             raise EvidenceRejected("stale_location_or_photo")
         distance = distance_m(metadata["latitude"], metadata["longitude"],
                               outlet.partner_latitude, outlet.partner_longitude)
-        if distance + metadata["accuracy"] > assignment.outlet_radius:
-            code = ("geofence_outside" if distance - metadata["accuracy"] > assignment.outlet_radius
-                    else "geofence_uncertain")
-            raise EvidenceRejected(code)
+        if distance > assignment.outlet_radius:
+            if distance - metadata["accuracy"] > assignment.outlet_radius:
+                raise EvidenceRejected("geofence_outside")
+            elif metadata["accuracy"] > 100:
+                raise EvidenceRejected("geofence_uncertain")
         rendered = render_photo(source, metadata, received)
         receipt = {
             "client_uuid": metadata["client_uuid"], "outlet_id": str(outlet.id),
