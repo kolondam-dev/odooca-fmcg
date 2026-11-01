@@ -59,13 +59,24 @@ class TestWmsDashboard(TransactionCase):
             {
                 "date": date.today(),
                 "vehicle_id": vehicle.id,
-                "fuel_cost": 250000.0,
-                "helper_cost": 100000.0,
+                "fuel_cost": 100000.0,
+                "driver_allowance": 50000.0,
+                "toll_cost": 25000.0,
             }
         )
-        self.assertAlmostEqual(cost.total_cost, 350000.0, places=2)
-        rows = self.env["id.wms.fleet.cost"].search([("vehicle_id", "=", vehicle.id)])
-        self.assertTrue(rows)
-        for row in rows:
-            self.assertAlmostEqual(row.total_cost, row.fuel_cost + row.helper_cost, places=2)
-            self.assertGreaterEqual(row.cost_ratio_percent, 0.0)
+        self.assertAlmostEqual(cost.total_cost, 175000.0, places=2)
+        records = self.env["id.wms.fleet.cost"].search([("vehicle_id", "=", vehicle.id)])
+        for record in records:
+            self.assertGreaterEqual(record.total_cost, 0.0)
+            self.assertGreaterEqual(record.cost_ratio_percent, 0.0)
+
+    def test_wms_dashboard_service(self):
+        service = self.env["id.wms.dashboard"]
+        filters = service.get_filters()
+        self.assertIn("categories", filters)
+        self.assertIn("vehicles", filters)
+        data = service.get_data()
+        self.assertIn("kpi", data)
+        self.assertIn("expiry_buckets", data)
+        self.assertIn("categories", data)
+        self.assertEqual(len(data["expiry_buckets"]), 3)

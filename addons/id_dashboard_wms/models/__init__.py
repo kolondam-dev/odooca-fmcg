@@ -6,3 +6,4 @@ from . import stock_category
 from . import expiry
 from . import delivery
 from . import fleet_cost
+from . import wms_dashboard

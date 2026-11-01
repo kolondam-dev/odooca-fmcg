@@ -59,6 +59,17 @@ class TestMonetaryDashboard(TransactionCase):
                     "name": "Invalid period",
                     "date_from": date.today(),
                     "date_to": date.today() - timedelta(days=1),
-                    "target_revenue": 1.0,
+                    "target_revenue": 100.0,
                 }
             )
+
+    def test_monetary_dashboard_service(self):
+        service = self.env["id.monetary.dashboard"]
+        filters = service.get_filters()
+        self.assertIn("areas", filters)
+        self.assertIn("salesmen", filters)
+        data = service.get_data()
+        self.assertIn("kpi", data)
+        self.assertIn("buckets", data)
+        self.assertIn("top_customers", data)
+        self.assertEqual(len(data["buckets"]), 5)

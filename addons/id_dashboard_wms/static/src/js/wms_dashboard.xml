@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="id_dashboard_wms.WmsDashboard">
+        <div class="o_action id-wms">
+            <div class="id-wms__sheet">
+                <!-- Header & Filters Section -->
+                <section class="id-wms__section id-wms__filters" aria-label="Filters">
+                    <div class="id-wms__head">
+                        <h1 class="id-wms__title"><i class="fa fa-truck"/> Warehouse &amp; Logistics (WMS)</h1>
+                        <div class="id-wms__quick-links">
+                            <button type="button" class="id-wms__quick-btn" t-on-click="openExpiryMatrix">
+                                <i class="fa fa-hourglass-half"/> FEFO Expiry
+                            </button>
+                            <button type="button" class="id-wms__quick-btn" t-on-click="openDeliveryFulfillment">
+                                <i class="fa fa-check-square-o"/> Delivery Fulfillment
+                            </button>
+                            <button type="button" class="id-wms__quick-btn" t-on-click="openRejectAnalysis">
+                                <i class="fa fa-ban"/> Analisis Retur/Reject
+                            </button>
+                            <button type="button" class="id-wms__quick-btn" t-on-click="openFleetCostAnalysis">
+                                <i class="fa fa-tachometer"/> Biaya Armada
+                            </button>
+                            <button type="button" class="id-wms__quick-btn" t-on-click="openStockCategories">
+                                <i class="fa fa-cubes"/> Stok Kategori
+                            </button>
+                        </div>
+                    </div>
+                    <span class="id-wms__label"><i class="fa fa-tags"/> Kategori FMCG</span>
+                    <select class="id-wms__select" t-att-value="state.fmcgCategory" t-on-change="onCategoryChange">
+                        <option value="">Semua Kategori</option>
+                        <t t-foreach="state.filters.categories" t-as="c" t-key="c.key">
+                            <option t-att-value="c.key" t-out="c.label"/>
+                        </t>
+                    </select>
+                    <span class="id-wms__label"><i class="fa fa-car"/> Kendaraan Armada</span>
+                    <select class="id-wms__select" t-att-value="state.vehicleId || ''" t-on-change="onVehicleChange">
+                        <option value="">Semua Armada</option>
+                        <t t-foreach="state.filters.vehicles" t-as="v" t-key="v.id">
+                            <option t-att-value="v.id" t-out="v.name"/>
+                        </t>
+                    </select>
+                    <button type="button" class="id-wms__link" t-on-click="reset"><i class="fa fa-undo"/> Reset</button>
+                </section>
+
+                <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-out="state.error"/>
+                <div t-if="state.loading and !state.data" class="id-wms__empty"><i class="fa fa-circle-o-notch fa-spin"/> Memuat data gudang &amp; logistik…</div>
+
+                <t t-if="state.data">
+                    <!-- Primary WMS Scorecards -->
+                    <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
+                        <h2 class="id-wms__section-title"><i class="fa fa-archive"/> Status Persediaan &amp; Pemenuhan DO</h2>
+                        <div class="id-wms__scorecards">
+                            <button type="button" class="id-wms__score" t-on-click="openStockCategories">
+                                <span class="id-wms__icon is-navy"><i class="fa fa-cubes"/></span>
+                                <span class="id-wms__score-title">Nilai Persediaan Gudang</span>
+                                <span class="id-wms__score-value" t-out="moneyShort(state.data.kpi.total_stock_value)"/>
+                                <span class="id-wms__score-meta"><t t-out="int(state.data.kpi.total_stock_qty)"/> unit produk fisik aktif</span>
+                            </button>
+                            <button type="button" class="id-wms__score" t-on-click="openExpiryMatrix">
+                                <span class="id-wms__icon is-red"><i class="fa fa-exclamation-triangle"/></span>
+                                <span class="id-wms__score-title">Stok Kritis FEFO (&lt;30 Hari)</span>
+                                <span class="id-wms__score-value is-danger" t-out="moneyShort(state.data.kpi.critical_expiry_val)"/>
+                                <span class="id-wms__score-meta"><t t-out="int(state.data.kpi.critical_expiry_count)"/> batch/lot wajib retur principal</span>
+                            </button>
+                            <button type="button" class="id-wms__score" t-on-click="openDeliveryFulfillment">
+                                <span class="id-wms__icon is-emerald"><i class="fa fa-check-circle-o"/></span>
+                                <span class="id-wms__score-title">Tingkat Pemenuhan DO</span>
+                                <span class="id-wms__score-value is-ok" t-out="pct(state.data.kpi.fulfillment_rate)"/>
+                                <span class="id-wms__score-meta"><t t-out="int(state.data.kpi.delivered_count)"/> dari <t t-out="int(state.data.kpi.total_deliveries)"/> pesanan terkirim</span>
+                            </button>
+                            <button type="button" class="id-wms__score" t-on-click="openFleetCostAnalysis">
+                                <span class="id-wms__icon is-amber"><i class="fa fa-money"/></span>
+                                <span class="id-wms__score-title">Rasio Biaya Armada Logistik</span>
+                                <span class="id-wms__score-value is-warn" t-out="pct(state.data.kpi.fleet_cost_ratio)"/>
+                                <span class="id-wms__score-meta">Total Biaya: <t t-out="moneyShort(state.data.kpi.total_trip_cost)"/></span>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- FEFO Health Distribution Bar -->
+                    <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
+                        <h2 class="id-wms__section-title"><i class="fa fa-hourglass-start"/> Monitoring Ketahanan Stok FEFO (First-Expired, First-Out)</h2>
+                        <div class="id-wms__fefo-bar-wrap">
+                            <t t-foreach="state.data.expiry_buckets" t-as="b" t-key="b.key">
+                                <div t-attf-class="id-wms__fefo-bar-segment seg-#{b.key}"
+                                     t-att-style="'width:' + b.share + '%'"
+                                     t-att-title="b.label + ': ' + money(b.value) + ' (' + pct(b.share) + ')'"/>
+                            </t>
+                        </div>
+                        <div class="id-wms__fefo-legend">
+                            <t t-foreach="state.data.expiry_buckets" t-as="b" t-key="b.key">
+                                <div class="id-wms__legend-item">
+                                    <span t-attf-class="id-wms__legend-dot dot-#{b.key}"/>
+                                    <span><t t-out="b.label"/>: <strong><t t-out="moneyShort(b.value)"/></strong> (<t t-out="pct(b.share)"/> · <t t-out="int(b.count)"/> lot)</span>
+                                </div>
+                            </t>
+                        </div>
+                    </section>
+
+                    <!-- Secondary Delivery Performance Scorecards -->
+                    <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
+                        <h2 class="id-wms__section-title"><i class="fa fa-road"/> Ringkasan Operasional Logistik</h2>
+                        <div class="id-wms__scorecards id-wms__scorecards--3">
+                            <div class="id-wms__score">
+                                <span class="id-wms__icon is-blue"><i class="fa fa-truck"/></span>
+                                <span class="id-wms__score-title">Nilai DO Terkirim Sukses</span>
+                                <span class="id-wms__score-value" t-out="moneyShort(state.data.kpi.delivered_value)"/>
+                                <span class="id-wms__score-meta"><t t-out="int(state.data.kpi.delivered_count)"/> pengantaran sukses</span>
+                            </div>
+                            <div class="id-wms__score">
+                                <span class="id-wms__icon is-amber"><i class="fa fa-clock-o"/></span>
+                                <span class="id-wms__score-title">Pengiriman Terlambat</span>
+                                <span class="id-wms__score-value is-warn" t-out="int(state.data.kpi.late_count)"/>
+                                <span class="id-wms__score-meta">Lewat jadwal pengantaran</span>
+                            </div>
+                            <div class="id-wms__score">
+                                <span class="id-wms__icon is-red"><i class="fa fa-undo"/></span>
+                                <span class="id-wms__score-title">Tolakan / Retur Pengantaran</span>
+                                <span class="id-wms__score-value is-danger" t-out="int(state.data.kpi.total_rejections)"/>
+                                <span class="id-wms__score-meta">Tingkat Tolakan: <t t-out="pct(state.data.kpi.rejection_rate)"/></span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Detail Tables -->
+                    <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h2 class="id-wms__section-title mb-0"><i class="fa fa-table"/> Rincian Operasional Detail</h2>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn"
+                                        t-att-class="state.activeTab === 'expiry' ? 'btn-primary' : 'btn-outline-secondary'"
+                                        t-on-click="() => state.activeTab = 'expiry'">Monitoring FEFO</button>
+                                <button type="button" class="btn"
+                                        t-att-class="state.activeTab === 'rejections' ? 'btn-primary' : 'btn-outline-secondary'"
+                                        t-on-click="() => state.activeTab = 'rejections'">Alasan Tolakan</button>
+                                <button type="button" class="btn"
+                                        t-att-class="state.activeTab === 'categories' ? 'btn-primary' : 'btn-outline-secondary'"
+                                        t-on-click="() => state.activeTab = 'categories'">Stok per Kategori</button>
+                                <button type="button" class="btn"
+                                        t-att-class="state.activeTab === 'fleet' ? 'btn-primary' : 'btn-outline-secondary'"
+                                        t-on-click="() => state.activeTab = 'fleet'">Efisiensi Armada</button>
+                            </div>
+                        </div>
+
+                        <!-- Tab 1: FEFO Detail -->
+                        <div t-if="state.activeTab === 'expiry'" class="id-wms__table-wrap">
+                            <table class="id-wms__table">
+                                <thead>
+                                    <tr>
+                                        <th>Status Ketahanan Kadaluwarsa</th>
+                                        <th class="num">Jumlah Lot/Batch</th>
+                                        <th class="num">Total Nilai Persediaan</th>
+                                        <th class="num">Pangsa Nilai</th>
+                                        <th>Rekomendasi Operasional FMCG</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.expiry_buckets" t-as="b" t-key="b.key"
+                                        t-on-click="openExpiryMatrix" style="cursor: pointer;">
+                                        <td class="name" t-out="b.label"/>
+                                        <td class="num" t-out="int(b.count)"/>
+                                        <td class="num font-weight-bold" t-out="money(b.value)"/>
+                                        <td class="num" t-out="pct(b.share)"/>
+                                        <td>
+                                            <span t-if="b.key === 'critical'" class="badge bg-danger">Wajib Retur ke Principal</span>
+                                            <span t-elif="b.key === 'warning'" class="badge bg-warning text-dark">Program Bundling / Diskon Cepat</span>
+                                            <span t-else="" class="badge bg-success">Rotasi Penjualan Normal</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Tab 2: Rejections Breakdown -->
+                        <div t-if="state.activeTab === 'rejections'" class="id-wms__table-wrap">
+                            <table class="id-wms__table">
+                                <thead>
+                                    <tr>
+                                        <th>Alasan Tolakan / Retur Pengantaran</th>
+                                        <th class="num">Jumlah Kejadian</th>
+                                        <th class="num">Pangsa Alasan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.rejections" t-as="r" t-key="r.reason"
+                                        t-on-click="openRejectAnalysis" style="cursor: pointer;">
+                                        <td class="name" t-out="r.label"/>
+                                        <td class="num font-weight-bold" t-out="int(r.count)"/>
+                                        <td class="num" t-out="pct(r.share)"/>
+                                    </tr>
+                                    <tr t-if="!state.data.rejections.length">
+                                        <td colspan="3" class="id-wms__empty">Tidak ada data penolakan pengiriman tercatat.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Tab 3: Stock Categories -->
+                        <div t-if="state.activeTab === 'categories'" class="id-wms__table-wrap">
+                            <table class="id-wms__table">
+                                <thead>
+                                    <tr>
+                                        <th>Kategori FMCG</th>
+                                        <th class="num">Jumlah SKU</th>
+                                        <th class="num">Kuantitas Fisik</th>
+                                        <th class="num">Total Nilai Stok</th>
+                                        <th class="num">Pangsa Nilai</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.categories" t-as="cat" t-key="cat.category"
+                                        t-on-click="openStockCategories" style="cursor: pointer;">
+                                        <td class="name text-capitalize" t-out="cat.category"/>
+                                        <td class="num" t-out="int(cat.product_count)"/>
+                                        <td class="num" t-out="int(cat.qty)"/>
+                                        <td class="num font-weight-bold" t-out="money(cat.value)"/>
+                                        <td class="num" t-out="pct(cat.share)"/>
+                                    </tr>
+                                    <tr t-if="!state.data.categories.length">
+                                        <td colspan="5" class="id-wms__empty">Tidak ada data kategori stok.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Tab 4: Fleet Efficiency -->
+                        <div t-if="state.activeTab === 'fleet'" class="id-wms__table-wrap">
+                            <table class="id-wms__table">
+                                <thead>
+                                    <tr>
+                                        <th>Kendaraan Armada</th>
+                                        <th>Periode Bulan</th>
+                                        <th class="num">Total Biaya Operasional</th>
+                                        <th class="num">Nilai Pengiriman Berhasil</th>
+                                        <th class="num">Rasio Biaya / Nilai</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="state.data.fleet" t-as="f" t-key="f.vehicle + f.month"
+                                        t-on-click="openFleetCostAnalysis" style="cursor: pointer;">
+                                        <td class="name" t-out="f.vehicle"/>
+                                        <td t-out="f.month"/>
+                                        <td class="num text-danger" t-out="money(f.cost)"/>
+                                        <td class="num font-weight-bold" t-out="money(f.delivered_value)"/>
+                                        <td class="num" t-out="pct(f.ratio)"/>
+                                    </tr>
+                                    <tr t-if="!state.data.fleet.length">
+                                        <td colspan="5" class="id-wms__empty">Tidak ada data biaya armada untuk filter terpilih.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

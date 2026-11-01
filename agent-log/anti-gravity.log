@@ -1482,3 +1482,57 @@
 - Fix: Set picking.date_done = datetime(2026, 7, 15, 4, 0) after validation so picking falls inside the query period.
 - Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
 - Task managed by antigravity-agent at 2026-10-31T23:16:30+07:00
+
+[2026-11-01T08:25:00+07:00] [INFO] Unify FMCG Dashboards UI/UX & Interactive OWL Presentation
+- Enhanced id_dashboard_sales:
+  * Resolved container sizing and scroll issue: added display: flex, height: 100%, and overflow-y: auto !important to .id-sp.
+  * Replaced flat metrics in secondary cards with visual progress bars, status pills, and gauges for LPO, PJP, and Fulfillment.
+- Built interactive OWL Executive Dashboard for id_dashboard_monetary:
+  * Added aggregation service id.monetary.dashboard (KPIs, 5-bucket AR aging bar, Top 10 customer exposures with credit hold status, area & salesman breakdowns).
+  * Created OWL client action id_dashboard_monetary.monetary_dashboard with interactive cards, aging distribution bar, quick drilldown links, and detail tables.
+  * Preserved all open-code SQL views/pivot/graph as analytical drilldown data.
+- Built interactive OWL Executive Dashboard for id_dashboard_wms:
+  * Added aggregation service id.wms.dashboard (stock values, FEFO health distribution, delivery fulfillment rate, reject reasons breakdown, fleet cost ratio).
+  * Created OWL client action id_dashboard_wms.wms_dashboard with FEFO health bar, rejection analysis, category shares, and fleet efficiency table.
+  * Preserved all open-code SQL views/pivot/graph as analytical drilldown data.
+- Unified Navigation & Menu Grouping:
+  * Added menu_fmcg_dashboard in id_base to avoid cross-module circular dependencies.
+  * Registered all 3 dashboards under the default Odoo root Dashboards menu (spreadsheet_dashboard.spreadsheet_dashboard_menu_root) so they appear together in /odoo/dashboards.
+  * Registered all 3 dashboards under FMCG Distribution -> Dashboards menu group, and as the primary executive landing view in their respective modules.
+- Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), XML/JS syntax checks PASS.
+- Task managed by antigravity-agent at 2026-11-01T08:25:00+07:00
+- Dispatched PR #65: https://github.com/kolondam-dev/odooca-fmcg/pull/65
+
+[2026-11-01T08:32:00+07:00] [INFO] Adopt Claude Flat Single-Sheet Spreadsheet Style for All 3 Dashboards
+- Rebased with origin/main containing claude-design2 redesign commit 628f603.
+- Fixed scrollable container on .id-sp by adding display: flex, flex-direction: column, height: 100%, and overflow-y: auto !important.
+- Re-architected id_dashboard_monetary and id_dashboard_wms into the exact same flat single-sheet spreadsheet style:
+  * Square corners, one big sheet divided by hairlines.
+  * Icon scorecards with tone backgrounds (navy, blue, emerald, amber, red).
+  * Horizontal bar gauges for AR aging buckets and FEFO health indicators.
+  * Hairline table borders and clear drilldown buttons.
+- Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), node check PASS, 16 XML files parse PASS.
+- Task managed by antigravity-agent at 2026-11-01T08:32:00+07:00
+
+[2026-11-01T08:42:00+07:00] [INFO] Fix XML External ID ParseError in id_base menu_views
+- Identified cause of install-test CI failure (Exit Code 255):
+  * addons/id_base/views/menu_views.xml contained extraneous menu_fmcg_tier referencing non-existent action_id_tier.
+- Cleaned addons/id_base/views/menu_views.xml to match origin/main and cleanly add menu_fmcg_dashboard.
+- Verified XML parsing and static linters (ruff check PASS, check_manifests PASS).
+- Task managed by antigravity-agent at 2026-11-01T08:42:00+07:00
+
+[2026-11-01T08:50:00+07:00] [INFO] Align ORM Field Names in id_dashboard_monetary & id_dashboard_wms Services
+- id_dashboard_monetary:
+  * Replaced nonexistent invoice_date_due and amount_total with date_due and amount_residual on id.ar.aging search_read.
+  * Corrected id.ar.customer.balance search_read fields (partner_id, salesman_id, area_id, invoice_count, amount_residual, max_days_overdue, worst_bucket) and resolved partner credit_limit/channel dynamically.
+  * Corrected funnel stage stage key mapping to collection and achievement_percent.
+- id_dashboard_wms:
+  * Corrected id.wms.reject search_read fields from reject_reason, rejection_count to reason, picking_count, rejected_value.
+  * Fixed fleet cost calculation directly from total_cost and delivered_value.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-11-01T08:50:00+07:00
+
+[2026-11-01T08:57:00+07:00] [INFO] Fix User Groups Filter on res.users in id_monetary_dashboard
+- Replaced domain on non-existent groups_id with sales_group.users access and safe fallback to non-share users.
+- Verification: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-11-01T08:57:00+07:00

@@ -6,6 +6,12 @@
               sequence="25"
               web_icon="id_base,static/description/icon.png"/>
 
+    <!-- Dashboards Menu Group -->
+    <menuitem id="menu_fmcg_dashboard"
+              name="Dashboards"
+              parent="menu_fmcg_root"
+              sequence="5"/>
+
     <!-- Master Data Menu -->
     <menuitem id="menu_fmcg_master"
               name="Master Data"

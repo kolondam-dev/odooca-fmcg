@@ -234,3 +234,11 @@ msgstr "Tahap"
 #. module: id_dashboard_monetary
 msgid "Total Outstanding"
 msgstr "Total Piutang"
+
+#. module: id_dashboard_monetary
+msgid "Monetary & AR Dashboard"
+msgstr "Dashboard Moneter & Piutang"
+
+#. module: id_dashboard_monetary
+msgid "Executive Dashboard"
+msgstr "Dashboard Eksekutif"
