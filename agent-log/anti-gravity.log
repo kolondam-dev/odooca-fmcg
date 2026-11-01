@@ -1502,3 +1502,14 @@
 - Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), XML/JS syntax checks PASS.
 - Task managed by antigravity-agent at 2026-11-01T08:25:00+07:00
 - Dispatched PR #65: https://github.com/kolondam-dev/odooca-fmcg/pull/65
+
+[2026-11-01T08:32:00+07:00] [INFO] Adopt Claude Flat Single-Sheet Spreadsheet Style for All 3 Dashboards
+- Rebased with origin/main containing claude-design2 redesign commit 628f603.
+- Fixed scrollable container on .id-sp by adding display: flex, flex-direction: column, height: 100%, and overflow-y: auto !important.
+- Re-architected id_dashboard_monetary and id_dashboard_wms into the exact same flat single-sheet spreadsheet style:
+  * Square corners, one big sheet divided by hairlines.
+  * Icon scorecards with tone backgrounds (navy, blue, emerald, amber, red).
+  * Horizontal bar gauges for AR aging buckets and FEFO health indicators.
+  * Hairline table borders and clear drilldown buttons.
+- Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), node check PASS, 16 XML files parse PASS.
+- Task managed by antigravity-agent at 2026-11-01T08:32:00+07:00

@@ -1,21 +1,21 @@
-// Warehouse & Logistics (WMS) Executive Dashboard. FMCG palette: navy / blue / emerald / amber / red.
+// Warehouse & Logistics (WMS) Dashboard: flat, square, single-sheet layout (spreadsheet-dashboard style).
+// Palette: navy / blue / emerald / amber / red.
 $wms-navy: #001a57;
 $wms-blue: #004ecc;
 $wms-emerald: #16a34a;
 $wms-amber: #d97706;
 $wms-red: #dc2626;
-$wms-ink: #0f172a;
-$wms-muted: #64748b;
-$wms-line: #e2e8f0;
-$wms-surface: #ffffff;
-$wms-bg: #f8fafc;
+$wms-ink: #212529;
+$wms-muted: #6c757d;
+$wms-line: #dee2e6;
+$wms-soft: #f8f9fa;
 
 .id-wms {
-    background: $wms-bg;
+    background: $wms-soft;
     color: $wms-ink;
     display: flex;
     flex-direction: column;
-    flex: 1 1 auto;
+    flex: 1 1 100%;
     height: 100%;
     width: 100%;
     min-height: 0;
@@ -23,170 +23,227 @@ $wms-bg: #f8fafc;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 
-    &__scroll {
-        display: flex;
-        flex-direction: column;
-        flex: 1 0 auto;
-        min-height: 100%;
-        width: 100%;
-        padding: 16px 20px 48px;
-        box-sizing: border-box;
+    *,
+    *::before,
+    *::after {
+        border-radius: 0;
     }
 
-    &__header {
+    button,
+    input,
+    select {
+        font-family: inherit;
+    }
+
+    // One big sheet; sections are separated only by hairlines.
+    &__sheet {
+        background: #fff;
+        border: 1px solid $wms-line;
+        margin: 16px 16px 64px 16px;
+        min-width: 0;
+    }
+
+    &__section {
+        padding: 12px 16px;
+        border-top: 1px solid $wms-line;
+
+        &:first-child {
+            border-top: 0;
+        }
+
+        &.is-loading {
+            opacity: 0.55;
+            transition: opacity 0.15s;
+        }
+    }
+
+    &__section-title {
+        margin: 0 0 8px;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: $wms-navy;
+
+        .fa {
+            margin-right: 4px;
+            color: $wms-blue;
+        }
+    }
+
+    // ---- title + filter bar
+    &__filters {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
+        gap: 8px 10px;
+    }
+
+    &__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
         justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 14px;
+        gap: 8px;
+        margin-bottom: 8px;
+        flex: 1 1 100%;
+
+        .id-wms__section-title {
+            margin: 0;
+        }
+    }
+
+    &__filters > &__head {
+        margin-bottom: 0;
     }
 
     &__title {
         margin: 0;
-        font-size: 22px;
+        font-size: 1.25rem;
         font-weight: 700;
         color: $wms-navy;
+
+        .fa {
+            color: $wms-blue;
+            margin-right: 6px;
+        }
     }
 
-    &__subtitle {
-        margin: 2px 0 0;
-        color: $wms-muted;
-        font-size: 13px;
-    }
-
-    // ---- Quick Drilldown Header Bar
     &__quick-links {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
     }
 
     &__quick-btn {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        background: $wms-surface;
+        gap: 4px;
         border: 1px solid $wms-line;
-        border-radius: 8px;
-        padding: 6px 12px;
-        font-size: 12px;
+        background: #fff;
+        padding: 3px 10px;
+        font-size: 0.75rem;
         font-weight: 600;
         color: $wms-blue;
         cursor: pointer;
-        transition: all 0.15s;
 
         &:hover {
-            background: #eff6ff;
-            border-color: $wms-blue;
+            background: $wms-soft;
         }
     }
 
-    // ---- Filters
-    &__filters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px 20px;
-        align-items: center;
-        background: $wms-surface;
-        border: 1px solid $wms-line;
-        border-radius: 12px;
-        padding: 12px 16px;
-        margin-bottom: 16px;
-    }
-
-    &__filter-group {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-    }
-
-    &__filter-label {
-        font-size: 12px;
-        font-weight: 600;
-        color: $wms-muted;
+    &__label {
+        margin-left: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
+        color: $wms-muted;
     }
 
     &__select {
-        height: 32px;
+        height: 30px;
         border: 1px solid $wms-line;
-        border-radius: 8px;
-        padding: 0 10px;
-        font-size: 13px;
+        padding: 0 8px;
         background: #fff;
+        font-size: 0.8125rem;
     }
 
-    // ---- KPI Cards
-    &__cards {
+    &__link {
+        border: 0;
+        background: none;
+        color: $wms-blue;
+        cursor: pointer;
+        padding: 0 4px;
+        font-size: 0.8125rem;
+    }
+
+    // ---- scorecards
+    &__scorecards {
         display: grid;
-        gap: 12px;
-        margin-bottom: 16px;
+        margin: 0 -16px -12px;
+        overflow: hidden;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
 
-        &--primary {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-
-        &--secondary {
+        &--3 {
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
     }
 
-    &__card {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        text-align: left;
+    &__score {
+        position: relative;
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr);
+        grid-template-areas:
+            "icon title"
+            "icon value"
+            "icon delta"
+            "meta meta";
+        column-gap: 12px;
+        align-items: center;
+        padding: 14px 16px;
         border: 0;
-        border-radius: 14px;
-        padding: 16px 18px;
+        background: #fff;
+        text-align: left;
+        box-shadow: -1px 0 0 $wms-line, 0 -1px 0 $wms-line;
+        color: inherit;
+    }
+
+    &__icon {
+        grid-area: icon;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
         color: #fff;
-        cursor: pointer;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
-        transition: transform 0.15s, box-shadow 0.15s;
+        font-size: 1.125rem;
 
-        &:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(15, 23, 42, 0.15);
-        }
-
-        &--navy { background: $wms-navy; }
-        &--emerald { background: $wms-emerald; }
-        &--amber { background: $wms-amber; }
-        &--red { background: $wms-red; }
-        &--blue { background: $wms-blue; }
+        &.is-navy { background: $wms-navy; }
+        &.is-blue { background: $wms-blue; }
+        &.is-emerald { background: $wms-emerald; }
+        &.is-amber { background: $wms-amber; }
+        &.is-red { background: $wms-red; }
     }
 
-    &__card-label {
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        opacity: 0.9;
-    }
-
-    &__card-value {
-        font-size: 26px;
+    &__score-title {
+        grid-area: title;
+        font-size: 0.75rem;
         font-weight: 700;
-        line-height: 1.15;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: $wms-muted;
     }
 
-    &__card-meta {
-        font-size: 12px;
-        opacity: 0.85;
+    &__score-value {
+        grid-area: value;
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+
+        &.is-ok { color: $wms-emerald; }
+        &.is-warn { color: $wms-amber; }
+        &.is-danger { color: $wms-red; }
+    }
+
+    &__score-meta {
+        grid-area: meta;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid $wms-line;
+        font-size: 0.75rem;
+        color: $wms-muted;
     }
 
     // ---- FEFO Health Bar
     &__fefo-bar-wrap {
         display: flex;
         width: 100%;
-        height: 18px;
-        border-radius: 999px;
-        overflow: hidden;
-        background: #e2e8f0;
-        margin: 10px 0;
+        height: 16px;
+        background: $wms-soft;
+        border: 1px solid $wms-line;
+        margin: 8px 0;
     }
 
     &__fefo-bar-segment {
@@ -202,53 +259,26 @@ $wms-bg: #f8fafc;
         display: flex;
         flex-wrap: wrap;
         gap: 12px 20px;
-        margin-top: 8px;
+        margin-top: 6px;
     }
 
     &__legend-item {
         display: flex;
         align-items: center;
         gap: 6px;
-        font-size: 12px;
-        color: $wms-ink;
+        font-size: 0.75rem;
     }
 
     &__legend-dot {
         width: 10px;
         height: 10px;
-        border-radius: 50%;
 
         &.dot-critical { background: $wms-red; }
         &.dot-warning { background: $wms-amber; }
         &.dot-good { background: $wms-emerald; }
     }
 
-    // ---- Panels
-    &__panel {
-        background: $wms-surface;
-        border: 1px solid $wms-line;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 16px;
-    }
-
-    &__panel-head {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 12px;
-    }
-
-    &__panel-title {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: $wms-navy;
-    }
-
-    // ---- Table
+    // ---- tables
     &__table-wrap {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -257,20 +287,20 @@ $wms-bg: #f8fafc;
     &__table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 13px;
+        font-size: 0.8125rem;
 
         th, td {
-            padding: 8px 12px;
-            border-bottom: 1px solid $wms-line;
+            padding: 6px 10px;
+            border: 1px solid $wms-line;
             white-space: nowrap;
         }
 
         th {
+            background: $wms-soft;
             text-align: left;
-            font-size: 12px;
+            font-size: 0.75rem;
             color: $wms-muted;
-            font-weight: 600;
-            background: #fafafa;
+            font-weight: 700;
         }
 
         .num {
@@ -280,36 +310,33 @@ $wms-bg: #f8fafc;
 
         .name {
             font-weight: 600;
-            color: $wms-ink;
         }
     }
 
     &__empty {
-        padding: 20px;
+        padding: 12px;
         text-align: center;
         color: $wms-muted;
     }
 
-    // Responsive
+    // ---- responsive
     @media (max-width: 1199px) {
-        &__cards--primary {
+        &__scorecards, &__scorecards--3 {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-        &__cards--secondary {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
     }
 
     @media (max-width: 767px) {
-        &__scroll {
-            padding: 12px 12px 32px;
+        &__sheet {
+            margin: 8px 8px 48px 8px;
         }
-        &__cards--primary, &__cards--secondary {
-            grid-template-columns: 1fr;
-        }
-        &__card-value {
-            font-size: 22px;
+        &__score-value {
+            font-size: 1.25rem;
         }
     }
 }
 
+button.id-wms__score {
+    cursor: pointer;
+    &:hover { background: $wms-soft; }
+}

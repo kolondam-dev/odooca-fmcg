@@ -1,3 +1,17 @@
+## 2026-11-01T08:32:00+07:00 — antigravity agent — Penerapan Flat Single-Sheet Spreadsheet Style & Scroll Fix
+**Branch:** agen/unify-fmcg-dashboards (PR #65)
+**Status:** PASS (Static, XML, JS, Manifest) -> Siap CI
+
+### Sinkronisasi & Penyelarasan Desain UI/UX
+1. **Rebase & Adopsi Desain Claude (Commit 628f603):**
+   - Menyelaraskan branch dengan desain flat single-sheet spreadsheet style dari claude-design2.
+   - Memperbaiki isu scrollable pada .id-sp dengan display: flex, height: 100%, dan overflow-y: auto !important serta padding bawah 64px.
+2. **Harmonisasi Desain Dashboard Moneter & WMS:**
+   - Mentransformasi id_dashboard_monetary dan id_dashboard_wms ke format yang sama persis: square corners, single sheet dengan hairline dividers, icon scorecards berlatar warna (navy, blue, emerald, amber, red), horizontal bar visual untuk AR aging dan FEFO health, serta hairline table border.
+   - Tetap mempertahankan seluruh SQL views/pivot/graph analitis lama sebagai tombol drilldown cepat.
+3. **Penyatuan Menu Grup:**
+   - Ketiga dashboard kini berada di group menu yang sama di bawah Dashboards default Odoo (/odoo/dashboards) dan FMCG Distribution -> Dashboards.
+
 ## 2026-11-01T08:25:00+07:00 — antigravity agent — Penyatuan Menu & Presentasi Dashboard Eksekutif OWL (Sales, Monetary, WMS)
 **Branch:** agen/unify-fmcg-dashboards
 **Status:** PASS (Static, XML, JS, Manifest) -> Siap Push & CI
