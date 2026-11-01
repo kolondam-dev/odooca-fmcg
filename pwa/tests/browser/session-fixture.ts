@@ -13,7 +13,27 @@ export async function changeTestAccount(page: Page, actor: string) {
 export const test = base.extend({
     page: async ({ page }, use) => {
         actors.set(page, "sales");
-        await page.clock.setFixedTime(new Date("2026-10-29T08:00:00+08:00"));
+        await page.addInitScript(() => {
+            const RealDate = window.Date;
+            const now = new RealDate();
+            if (now.getDay() === 0) {
+                const shiftMs = -3 * 24 * 60 * 60 * 1000;
+                class ShiftedDate extends RealDate {
+                    constructor(...args: unknown[]) {
+                        if (args.length === 0) {
+                            super(RealDate.now() + shiftMs);
+                        } else {
+                            super(...(args as [string | number | Date]));
+                        }
+                    }
+                    static now() {
+                        return RealDate.now() + shiftMs;
+                    }
+                }
+                // @ts-expect-error Mock date for Sunday determinism
+                window.Date = ShiftedDate;
+            }
+        });
         await page.context().setGeolocation({
             latitude: 1.465,
             longitude: 124.833,
