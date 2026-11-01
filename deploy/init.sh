@@ -234,12 +234,16 @@ fi
 # 5c. Matriks PJP, Workdays & Evidence Seed
 if ! has_mark seed_pjp_workdays_v1; then
   if [ -f "/opt/scripts/load_pjp_workdays.py" ]; then
-    log "seed_pjp_workdays_v1: memuat PJP Workdays dan Evidence..."
-    if odoo_run shell --no-http < /opt/scripts/load_pjp_workdays.py; then
-      set_mark seed_pjp_workdays_v1
-      log "seed_pjp_workdays_v1: berhasil dimuat dan ditandai."
+    if [ "$(q "SELECT state FROM ir_module_module WHERE name='id_mobile_api'")" = "installed" ]; then
+      log "seed_pjp_workdays_v1: memuat PJP Workdays dan Evidence..."
+      if odoo_run shell --no-http < /opt/scripts/load_pjp_workdays.py; then
+        set_mark seed_pjp_workdays_v1
+        log "seed_pjp_workdays_v1: berhasil dimuat dan ditandai."
+      else
+        log "seed_pjp_workdays_v1 error: pemuatan gagal, mark tidak diset agar dapat diulang pada boot berikutnya."
+      fi
     else
-      log "seed_pjp_workdays_v1 error: pemuatan gagal, mark tidak diset agar dapat diulang pada boot berikutnya."
+      log "seed_pjp_workdays_v1: modul id_mobile_api belum terpasang; lewati pemuatan PJP workdays."
     fi
   fi
 fi

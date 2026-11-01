@@ -100,9 +100,10 @@ class TestPjpLoaderBoundariesHttp(EvidenceFixture, HttpCase):
             self.assertGreater(im.width, 0)
             self.assertGreater(im.height, 0)
 
-        # 3. Verifikasi perhitungan dashboard sales productivity tidak 0
+        # 3. Verifikasi perhitungan dashboard sales productivity
         SalesProd = self.env["id.sales.productivity"].with_company(self.company).sudo()
-        pjp_data = SalesProd._pjp(
+        # Query harian untuk tanggal target_ev (2026-07-01) -> completed: 1
+        pjp_data_day = SalesProd._pjp(
             start=date(2026, 7, 1),
             end=date(2026, 8, 1),
             lo=target_ev.create_date.replace(hour=0, minute=0, second=0),
@@ -111,8 +112,25 @@ class TestPjpLoaderBoundariesHttp(EvidenceFixture, HttpCase):
             channel_ids=[],
             order_info={},
         )
-        self.assertTrue(pjp_data.get("status", {}).get("available"), "PJP status harus available.")
-        self.assertEqual(pjp_data.get("total", {}).get("completed"), 3, "Jumlah completed visits harus tepat 3.")
+        self.assertTrue(pjp_data_day.get("status", {}).get("available"), "PJP status harian harus available.")
+        self.assertEqual(pjp_data_day.get("total", {}).get("completed"), 1, "Completed visits hari ini harus tepat 1.")
+
+        # Query bulanan untuk seluruh bulan Juli 2026 -> completed: 3 (sesuai max_evidence_limit=3)
+        pjp_data_month = SalesProd._pjp(
+            start=date(2026, 7, 1),
+            end=date(2026, 8, 1),
+            lo=datetime(2026, 7, 1, 0, 0, 0),
+            hi=datetime(2026, 7, 31, 23, 59, 59),
+            salesman_ids=[target_ev.user_id.id],
+            channel_ids=[],
+            order_info={},
+        )
+        self.assertTrue(pjp_data_month.get("status", {}).get("available"), "PJP status bulanan harus available.")
+        self.assertEqual(
+            pjp_data_month.get("total", {}).get("completed"),
+            3,
+            "Completed visits seluruh bulan Juli harus tepat 3.",
+        )
 
 
 @tagged("post_install", "-at_install")

@@ -1,3 +1,18 @@
+## 2026-11-01T18:20:00+07:00 — anti-gravity agent — Fix CI init-test guard dan test_01 dashboard query boundary
+**Branch:** `agen/pjp-master-and-workday`
+**Status:** PASS (Ruff, Check Manifests, Shell Syntax) -> Push ke PR #68
+
+### Ringkasan Perbaikan
+1. **CI `init-test` (Guard Step 5c `deploy/init.sh`):**
+   - **Penyebab:** Pada workflow `init-test`, container Odoo di-start hanya dengan modul dasar (`INIT_MODULES=id_base,l10n_id,...` tanpa `id_mobile_api`). Ketika step 5c mengeksekusi `/opt/scripts/load_pjp_workdays.py`, loader melempar fail-fast `RuntimeError: Model ['id.mobile.workday', 'id.mobile.evidence'] belum terpasang`, mencetak `Traceback` ke `init.log`. Step `Log harus bersih` mendeteksi string `Traceback` dan menghentikan pipeline dengan error.
+   - **Solusi:** Menambahkan pengecekan status modul di PostgreSQL sebelum mengeksekusi loader: `if [ "$(q "SELECT state FROM ir_module_module WHERE name='id_mobile_api'")" = "installed" ]; then ... else ... lewati pemuatan`. Jika modul belum terpasang, langkah pemuatan dilewati secara bersih tanpa mencetak Traceback dan tanpa memasang success mark, sehingga aman dan idempoten.
+
+2. **CI `install-test` (Assertion Dashboard Harian vs Bulanan `test_01`):**
+   - **Penyebab:** Pada `addons/id_mobile_api/tests/test_pjp_loader_boundaries.py` baris 115, query dashboard memfilter evidence dengan batas `lo` dan `hi` diset ke tanggal spesifik `target_ev.create_date` (1 hari saja). Pada hari tersebut, kunjungan salesman tepat bernilai 1, sedangkan total 3 evidence (`max_evidence_limit=3`) tersebar di 3 minggu Juli yang berbeda, memicu `AssertionError: 1 != 3`.
+   - **Solusi:** Memisahkan assertion menjadi dua:
+     * Query harian (`lo=target_ev.create_date 00:00:00`, `hi=23:59:59`): `assert completed == 1`.
+     * Query bulanan (`lo=2026-07-01 00:00:00`, `hi=2026-07-31 23:59:59`): `assert completed == 3`.
+
 ## 2026-11-01T17:55:00+07:00 — anti-gravity agent — Resolusi 3 Blocker P1 Re-Review PR #68 (ORM Cache Invalidation, Preflight Workday Collision, Atomic Legacy Migration)
 **Branch:** `agen/pjp-master-and-workday`
 **Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Test Boundaries Suite) -> Siap Re-Review PR #68

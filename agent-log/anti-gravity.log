@@ -1635,3 +1635,8 @@
 - P1-3 (Atomic Legacy Migration & Batch Ownership): Membatasi mutasi ketat pada current batch pjp_workdays_july_2026_v1 dan legacy kanonikal v1-canonical-july-2026; foreign batch dan non-seed ditolak aman; legacy yang tidak lengkap atau berwaktu lama dimigrasikan secara atomik (foto + watermark + receipt ISO UTC + create_date) dengan rekonsiliasi eksak
 - Test Suite: Memperluas test_pjp_loader_boundaries.py dengan eksekusi loader produksi utuh di test_02, penolakan preflight ordinary collision di test_03, penolakan non-seed di test_06, instant & working-hour assertion di test_07, atomic migration di test_08, dan penolakan foreign batch di test_09
 - Task managed by antigravity-agent at 2026-11-01T10:58:06+00:00
+
+[2026-11-01T11:19:22+00:00] [INFO] Fix CI init-test id_mobile_api guard and test_01 daily vs monthly dashboard assertion
+- Guard deploy/init.sh step 5c when id_mobile_api is not installed
+- Update test_01 assertion to check both daily (1) and monthly (3) completed visits
+- Task managed by antigravity-agent at 2026-11-01T11:19:22+00:00
