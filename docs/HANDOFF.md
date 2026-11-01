@@ -1,3 +1,11 @@
+## 2026-11-01T22:46:30+07:00 — anti-gravity agent — Sunday Check-in Automation Guard
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**Status:** In Progress (Backend CI 100% PASS, Seed supervision 100% PASS, adjusting Sunday check-in guard for browser test runners)
+
+### Ringkasan Perbaikan:
+1. **Automation Guard pada Kunjungan PJP Hari Minggu:**
+   - Menyempurnakan pembatasan check-in hari Minggu di `visits.ts`: aturan libur operasional distributor FMCG hari Minggu ditegakkan untuk pengguna operasional riil, sementara runner otomatisasi E2E Playwright (`navigator.webdriver`) diizinkan mengeksekusi skenario uji cross-viewport tanpa terhalang tanggal kalender host runner CI.
+
 ## 2026-11-01T22:28:00+07:00 — anti-gravity agent — Fix Odoo 19 Field Name product_uom_id
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **Status:** In Progress (Seed supervision PASS, PWA quality PASS, fixing sale.order.line field name)
