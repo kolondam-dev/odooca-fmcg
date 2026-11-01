@@ -50,6 +50,22 @@ alamat/lokasi membatalkan referensi foto sebelumnya. Fix lebih dari 60 detik mem
 pengambilan ulang. Foto ditampilkan langsung setelah pemrosesan tanpa tombol simpan
 bukti tambahan. Tombol Check in/Check out menunggu paket foto lengkap.
 
+## Retry check-in setelah kegagalan sinkronisasi
+
+Bila snapshot gagal setelah foto A tersimpan, record attendance-only belum menjadi
+sesi aktif. Retry dengan foto B wajib memvalidasi paket, owner dan hari B terlebih
+dahulu. Bila valid, B mengganti record absensi sementara (termasuk referensi/waktu
+pencatatan absensi) sebelum snapshot dicoba ulang; sesi yang berhasil terikat ke B.
+Foto A tetap tersimpan sebagai paket lokal immutable, tetapi tidak dipakai diam-diam
+sebagai bukti sesi pengganti. B yang hilang, corrupt, foreign-owner atau stale-day
+menolak retry tanpa mengubah record A dan tanpa meminta snapshot untuk publish sesi.
+
+Retry dengan foto yang sama mempertahankan referensi/waktu absensi sementara. Pada
+sesi yang sudah aktif, foto yang sama mengembalikan sesi yang sama tanpa sinkronisasi
+atau penulisan ulang; foto berbeda ditolak. Sesi yang sudah clock out tidak dapat
+dibuka kembali lewat retry. Kebijakan ini berlaku pada workflow lokal demo, bukan
+posting absensi resmi Odoo.
+
 ## Batas integrasi yang tetap berlaku
 
 Autentikasi, identitas, company, penugasan dan snapshot dibaca dari Odoo nyata.

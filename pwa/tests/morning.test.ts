@@ -1,4 +1,11 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { openDB } from "idb";
+import {
+    sha256,
+    evidenceBinding,
+    type EvidenceReference,
+} from "../src/domain/evidence-package";
+import type { Evidence } from "../src/storage/store";
 import { FieldStore } from "../src/storage/store";
 import {
     fieldBusinessDate,
@@ -11,11 +18,13 @@ import { MockProvider } from "../src/data/mock";
 import { Outbox } from "../src/domain/outbox";
 import { ownerKey } from "../src/domain/contracts";
 let store: FieldStore;
+let databaseName: string;
 beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-27T00:00:00Z"));
     vi.stubGlobal("navigator", { onLine: true });
-    store = new FieldStore(crypto.randomUUID());
+    databaseName = crypto.randomUUID();
+    store = new FieldStore(databaseName);
 });
 afterEach(async () => {
     await store.close();
@@ -312,4 +321,128 @@ it("corrupt clock-out timestamp never restores a ready session", async () => {
         clockOutAt: "2026-10-28T00:00:00.000Z",
     });
     expect(await service.restore()).toBeUndefined();
+});
+
+async function attendancePhoto(
+    owner: string,
+    capturedAt = new Date().toISOString(),
+) {
+    const ref: EvidenceReference = {
+        id: crypto.randomUUID(),
+        latitude: 1.465,
+        longitude: 124.833,
+        accuracy: 3,
+        capturedAt,
+    };
+    const row: Evidence = {
+        owner,
+        key: `${owner}:${ref.id}`,
+        blob: new Blob([ref.id], { type: "image/jpeg" }),
+        latitude: ref.latitude,
+        longitude: ref.longitude,
+        accuracy: ref.accuracy,
+        capturedAt,
+        mapStatus: "pending",
+    };
+    const map = new Blob(["pinpoint"], { type: "image/png" });
+    const source = {
+        version: 1 as const,
+        kind: "simulation_grid" as const,
+        selectedAt: capturedAt,
+        fixSampledAt: capturedAt,
+        photoSha256: await sha256(row.blob),
+        mapSha256: await sha256(map),
+    };
+    ref.packageHash = await sha256(evidenceBinding(row, source));
+    row.visual = { ...source, bindingSha256: ref.packageHash, map };
+    await store.saveEvidence(row);
+    return { ref, row };
+}
+it("normal check-in binds the validated photo in returned and persisted session", async () => {
+    const { service, identity } = await setup();
+    const a = await attendancePhoto(ownerKey(identity));
+    const opened = await service.openDay(a.ref);
+    expect(opened.attendanceEvidence).toEqual(a.ref);
+    expect((await service.restore())?.attendanceEvidence).toEqual(a.ref);
+});
+it.each(["same", "replacement"])(
+    "retry after snapshot failure binds %s photo consistently",
+    async (kind) => {
+        const { service, provider, identity } = await setup();
+        const a = await attendancePhoto(ownerKey(identity));
+        vi.spyOn(provider, "snapshot").mockRejectedValueOnce(
+            new Error("snapshot unavailable"),
+        );
+        await expect(service.openDay(a.ref)).rejects.toThrow(
+            "snapshot unavailable",
+        );
+        const pending = await service.restore();
+        expect(pending?.sessionId).toBeNull();
+        expect(pending?.attendanceEvidence).toEqual(a.ref);
+        vi.setSystemTime(new Date("2026-10-27T00:01:00Z"));
+        const chosen =
+            kind === "same" ? a : await attendancePhoto(ownerKey(identity));
+        const opened = await service.openDay(chosen.ref);
+        expect(opened.attendanceEvidence).toEqual(chosen.ref);
+        expect((await service.restore())?.attendanceEvidence).toEqual(
+            chosen.ref,
+        );
+        expect(morningReady(opened, ownerKey(identity))).toBe(true);
+        if (kind === "same")
+            expect(opened.attendanceReference).toBe(
+                pending?.attendanceReference,
+            );
+    },
+);
+it.each(["missing", "corrupt", "foreign-owner", "stale-day"])(
+    "retry rejects %s replacement without falling back to A or mutating attendance",
+    async (kind) => {
+        const { service, provider, identity } = await setup();
+        const owner = ownerKey(identity);
+        const a = await attendancePhoto(owner);
+        const snapshots = vi
+            .spyOn(provider, "snapshot")
+            .mockRejectedValueOnce(new Error("snapshot unavailable"));
+        await expect(service.openDay(a.ref)).rejects.toThrow();
+        const pending = await service.restore();
+        const b = await attendancePhoto(
+            kind === "foreign-owner" ? "another:owner" : owner,
+            kind === "stale-day" ? "2026-10-26T00:00:00.000Z" : undefined,
+        );
+        if (kind === "missing" || kind === "corrupt") {
+            const db = await openDB(databaseName);
+            if (kind === "missing") await db.delete("evidence", b.row.key);
+            else
+                await db.put("evidence", {
+                    ...b.row,
+                    blob: new Blob(["corrupted"], { type: "image/jpeg" }),
+                });
+            db.close();
+        }
+        await expect(service.openDay(b.ref)).rejects.toThrow();
+        expect(await service.restore()).toEqual(pending);
+        expect(snapshots).toHaveBeenCalledTimes(1);
+    },
+);
+it("active check-in is idempotent and rejects another photo without replacing the complete session", async () => {
+    const { service, provider, identity } = await setup();
+    const a = await attendancePhoto(ownerKey(identity));
+    const snapshots = vi.spyOn(provider, "snapshot");
+    const opened = await service.openDay(a.ref);
+    expect(await service.openDay(a.ref)).toEqual(opened);
+    const b = await attendancePhoto(ownerKey(identity));
+    await expect(service.openDay(b.ref)).rejects.toThrow();
+    expect(await service.restore()).toEqual(opened);
+    expect(snapshots).toHaveBeenCalledTimes(1);
+});
+it("retry after clock-out cannot reopen or replace the closed session", async () => {
+    const { service, provider, identity } = await setup();
+    const a = await attendancePhoto(ownerKey(identity));
+    await service.openDay(a.ref);
+    const closed = await service.clockOut();
+    const snapshots = vi.spyOn(provider, "snapshot");
+    const b = await attendancePhoto(ownerKey(identity));
+    await expect(service.openDay(b.ref)).rejects.toThrow();
+    expect(await service.restore()).toEqual(closed);
+    expect(snapshots).not.toHaveBeenCalled();
 });

@@ -1,3 +1,10 @@
+## 2026-11-01T09:09:44+07:00 — agent codex-pwa — PR #64: perbaikan binding foto pengganti saat retry
+**Branch:** `agen/pwa-login-attendance-ux`, basis reviewed adbe2f7; temuan P2 issuecomment-6552060391.
+**Berubah:** openDay memvalidasi foto retry walaupun attendance-only sudah persisten. Foto B valid mengganti record sementara A sebelum pembukaan sesi; foto sama mempertahankan referensi/waktu. Sesi aktif idempoten dan tidak menerima foto berbeda; clock-out tidak dapat di-reopen. Kebijakan retry dijelaskan di docs/ui/PWA_LOGIN_ATTENDANCE_UX.md.
+**Diverifikasi:** regresi baru sebelum fix 7 gagal/34 lulus pada morning.test.ts; setelah fix 341/341 unit dan 148/148 browser phone/tablet lulus. Paket unit memakai photo/map/binding SHA256 valid; kasus B missing/corrupt/foreign-owner/stale-day menolak tanpa fallback A dan mempertahankan record awal. Browser membandingkan hash foto yang tampil dengan referensi sesi, termasuk setelah reload dan retry foto sama. Typecheck, format, contracts, build modes/check-build, ruff, manifest dan diff check PASS.
+**Belum diuji [BU]:** CI final HEAD menyusul; acceptance server/perangkat nyata tetap terpisah. Tidak merge/deploy.
+**Menunggu:** reviewer mengulang supervisi pada HEAD baru; PR tetap draft.
+
 ## 2026-11-01T08:20:33+07:00 — agent codex-pwa — Login nyata dan refinement beranda/absensi PWA
 **Branch:** `agen/pwa-login-attendance-ux` dari `main` 628f603.
 **Berubah:** login mandiri native Odoo + CSRF/cookie, identitas/snapshot nyata tanpa selector persona; navbar/logo/status/jam WITA; sesi kerja setelah sapaan; quick action menunggu check-in; kartu clock in/out persisten; form halaman penuh; preview GPS/geofence kantor dari snapshot, foto watermark perusahaan/karyawan/waktu/alamat/koordinat, referensi foto terikat sesi lokal. Bootstrap menambah companyName (addon 19.0.1.2.2).

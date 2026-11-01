@@ -138,14 +138,47 @@ export class MorningSimulation {
         return current.businessDate;
     }
     /**
-     * One-tap day start: attendance is accepted when the day has no record yet,
-     * then the daily bundle is opened. Attendance evidence captured elsewhere in
-     * the app is already durable before this call.
+     * Open a day using durable evidence. Pending attendance may adopt a validated
+     * replacement after snapshot failure; active/closed sessions cannot be rebound.
      */
     async openDay(evidence?: EvidenceReference) {
         const current = await this.restore();
-        if (!current || current.businessDate !== fieldBusinessDate())
+        if (current?.clockOutAt)
+            throw new Error(
+                "Sesi sudah clock out dan tidak dapat dibuka kembali.",
+            );
+        if (current) {
+            // An explicit retry photo must be validated even if attendance A
+            // was already durable before a failed snapshot request.
+            await this.checkEvidence(evidence ?? current.attendanceEvidence);
+            const samePhoto =
+                !evidence ||
+                [
+                    "id",
+                    "packageHash",
+                    "capturedAt",
+                    "latitude",
+                    "longitude",
+                    "accuracy",
+                ].every(
+                    (key) =>
+                        current.attendanceEvidence?.[
+                            key as keyof EvidenceReference
+                        ] === evidence[key as keyof EvidenceReference],
+                );
+            if (current.sessionId) {
+                if (!samePhoto)
+                    throw new Error(
+                        "Sesi sudah aktif; foto absensi tidak dapat diganti.",
+                    );
+                return current;
+            }
+            // Retrying the same photo preserves its attendance reference/time.
+            // A replacement starts a new attendance-only record before opening.
+            if (!samePhoto) await this.acceptAttendance(evidence);
+        } else {
             await this.acceptAttendance(evidence);
+        }
         return this.open();
     }
     async clockOut(evidence?: EvidenceReference) {

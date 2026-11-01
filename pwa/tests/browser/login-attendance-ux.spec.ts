@@ -240,3 +240,128 @@ test("expired session clears the workspace before another account can enter", as
     );
     await expect(page.getByRole("alert")).toContainText("Sesi berakhir");
 });
+
+for (const retake of [false, true])
+    test(`snapshot failure retry binds the displayed photo after reload; retake=${retake}`, async ({
+        page,
+        context,
+    }) => {
+        await context.grantPermissions(["geolocation"]);
+        let failNextSnapshot = false;
+        await page.route("**/api/v1/sync/snapshot", (route) => {
+            if (!failNextSnapshot) return route.fallback();
+            failNextSnapshot = false;
+            return route.fulfill({
+                status: 503,
+                json: { error: "snapshot unavailable" },
+            });
+        });
+        await page.goto("./");
+        await page
+            .getByRole("button", { name: /^Absensi/ })
+            .first()
+            .click();
+        async function photo(address: string) {
+            await page
+                .getByRole("button", {
+                    name: "Ambil Lokasi Presisi",
+                    exact: true,
+                })
+                .click();
+            await expect(
+                page.getByRole("region", { name: "Lokasi dan foto absensi" }),
+            ).toHaveAttribute("aria-busy", "false");
+            await page.getByLabel("Alamat / nama lokasi").fill(address);
+            await page
+                .getByRole("button", {
+                    name: /^(Buka Kamera|Foto ulang)$/,
+                    exact: true,
+                })
+                .click();
+            await page
+                .getByLabel("Buka Kamera Perangkat")
+                .setInputFiles("public/icon-192.png");
+            await expect(
+                page.getByAltText("Foto absensi dengan watermark"),
+            ).toBeInViewport();
+            await expect(
+                page.getByRole("button", { name: "Check in", exact: true }),
+            ).toBeEnabled();
+        }
+        const pending = () =>
+            page.evaluate(async () => {
+                const db = await new Promise<IDBDatabase>((resolve) => {
+                    const request = indexedDB.open("fmcg-field-demo-v1");
+                    request.onsuccess = () => resolve(request.result);
+                });
+                const result = await new Promise<any>((resolve) => {
+                    const request = db
+                        .transaction("drafts")
+                        .objectStore("drafts")
+                        .get("demo-mdu:DEMO-ANDRE:morning-session-v1");
+                    request.onsuccess = () => resolve(request.result?.value);
+                });
+                db.close();
+                return result;
+            });
+        await photo("Alamat foto A, Manado");
+        failNextSnapshot = true;
+        await page
+            .getByRole("button", { name: "Check in", exact: true })
+            .click();
+        await expect(page.getByRole("alert")).toContainText("503");
+        const a = await pending();
+        expect(a.sessionId).toBeNull();
+        expect(a.attendanceEvidence.packageHash).toMatch(/^[a-f0-9]{64}$/);
+        if (retake) await photo("Alamat foto B, lokasi pengganti, Manado");
+        const selected = await page
+            .getByAltText("Foto absensi dengan watermark")
+            .evaluate(async (image: HTMLImageElement) => {
+                const blob = await (await fetch(image.src)).blob();
+                const hash = [
+                    ...new Uint8Array(
+                        await crypto.subtle.digest(
+                            "SHA-256",
+                            await blob.arrayBuffer(),
+                        ),
+                    ),
+                ]
+                    .map((n) => n.toString(16).padStart(2, "0"))
+                    .join("");
+                const db = await new Promise<IDBDatabase>((resolve) => {
+                    const request = indexedDB.open("fmcg-field-demo-v1");
+                    request.onsuccess = () => resolve(request.result);
+                });
+                const rows = await new Promise<any[]>((resolve) => {
+                    const request = db
+                        .transaction("evidence")
+                        .objectStore("evidence")
+                        .getAll();
+                    request.onsuccess = () => resolve(request.result);
+                });
+                db.close();
+                const row = rows.find(
+                    (row) => row.visual?.photoSha256 === hash,
+                );
+                if (!row)
+                    throw new Error(
+                        "Displayed photo has no matching stored package",
+                    );
+                return {
+                    id: row.key.slice(row.owner.length + 1),
+                    packageHash: row.visual.bindingSha256,
+                };
+            });
+        if (retake) expect(selected.id).not.toBe(a.attendanceEvidence.id);
+        else expect(selected.id).toBe(a.attendanceEvidence.id);
+        await page
+            .getByRole("button", { name: "Check in", exact: true })
+            .click();
+        await expect(page.locator(".quick-attendance-record")).toBeVisible();
+        const opened = await pending();
+        expect(opened.attendanceEvidence).toMatchObject(selected);
+        expect(opened.sessionId).toBeTruthy();
+        await page.reload();
+        await expect(page.locator(".quick-attendance-record")).toBeVisible();
+        expect(await pending()).toEqual(opened);
+    });

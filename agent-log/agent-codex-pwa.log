@@ -213,3 +213,11 @@
 - PASS lokal final: 332 unit, 144 browser (phone/tablet), serta 10 tes login/absensi diulang sesudah perubahan visual; typecheck, contracts, format, build modes, check-build, ruff, manifest dan diff check.
 - PR #64 tetap draft menunggu CI SHA terbaru. Tidak merge/deploy; login runtime Odoo dan acceptance perangkat tetap terpisah.
 - Task managed by agent codex-pwa at 2026-11-01T08:32:39+07:00
+
+[2026-11-01T09:09:44+07:00] [INFO] PR #64 P2: binding evidence replacement pada retry
+- Membaca review issuecomment-6552060391 dan menjalankan whats_new.sh codex; branch remote tetap adbe2f7 sebelum patch.
+- Bukti red/green: regresi unit baru gagal 7 kasus pada fungsi produksi lama (paket SHA256 valid), lalu seluruh 341 unit lulus setelah fix.
+- Pending attendance menerima B hanya setelah validasi paket/owner/hari; retry foto sama mempertahankan referensi/waktu; invalid B tidak memakai A diam-diam. Sesi aktif idempoten, foto berbeda ditolak, clock-out tidak direopen.
+- 148 browser phone/tablet PASS, termasuk foto yang tampil dibandingkan via SHA256 ke referensi sesi dan readback setelah reload; typecheck, format, contracts, build/check-build, ruff, manifest, diff check PASS.
+- Dokumentasi/HANDOFF diperbarui. PR tetap draft untuk review ulang; CI SHA baru menyusul. Tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-01T09:09:44+07:00
