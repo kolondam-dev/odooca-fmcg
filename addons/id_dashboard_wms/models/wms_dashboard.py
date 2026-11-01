@@ -1,41 +1,49 @@
 # Part of odooca-fmcg. License LGPL-3.
-"""Aggregation service for the Warehouse & Logistics (WMS) Executive Dashboard."""
+"""WMS & Logistics Executive Dashboard aggregator service."""
 
-from odoo import _, api, models
+from odoo import api, fields, models, _
 from odoo.exceptions import AccessError
 
 REJECT_LABELS = {
-    "packaging_damaged": _("Kemasan Basah / Rusak di Perjalanan"),
-    "near_expiry": _("Produk Mendekati Kadaluwarsa"),
-    "wrong_sku_qty": _("Salah SKU / Kuantitas Tidak Sesuai"),
-    "store_closed": _("Toko Tutup / Tolak Surat Jalan"),
-    "not_recorded": _("Belum Dicatat / Lainnya"),
+    "not_recorded": _("Tidak Tercatat"),
+    "toko_tutup": _("Toko Tutup / Pemilik Tidak Ada"),
+    "tolak_toko": _("Tolak Toko / Tidak Merasa Pesan"),
+    "barang_rusak": _("Barang Rusak / Bocor"),
+    "salah_item": _("Salah Barang / Varian"),
+    "overdue_limit": _("Masalah Pembayaran / Limit Kredit"),
+    "kemasan_rusak": _("Kemasan Rusak / Segel Terbuka"),
+    "lainnya": _("Alasan Operasional Lainnya"),
 }
 
 
-class WmsDashboard(models.AbstractModel):
+class WmsDashboard(models.TransientModel):
     _name = "id.wms.dashboard"
-    _description = "Warehouse & Logistics Executive Dashboard Service"
+    _description = "WMS & Logistics Dashboard Service"
 
-    @api.model
+    name = fields.Char(default="WMS Dashboard Service", readonly=True)
+
     def _check_access(self):
         user = self.env.user
-        if not (user.has_group("stock.group_stock_user")
-                or user.has_group("sales_team.group_sale_salesman")
-                or user.has_group("base.group_system")):
-            raise AccessError(_("Akses dashboard WMS memerlukan hak akses Gudang atau Penjualan."))
+        if not (
+            user.has_group("stock.group_stock_user")
+            or user.has_group("stock.group_stock_manager")
+            or user.has_group("base.group_system")
+        ):
+            raise AccessError(_("Anda tidak memiliki izin untuk melihat Dashboard Logistik & Gudang."))
 
     @api.model
     def get_filters(self):
         self._check_access()
-        # FMCG Categories from product template selection
-        cat_field = self.env["product.template"]._fields.get("fmcg_category")
+        # FMCG Categories
         categories = []
-        if cat_field and hasattr(cat_field, "selection"):
-            selection = cat_field.selection
-            if callable(selection):
-                selection = selection(self.env["product.template"])
-            categories = [{"key": k, "label": label} for k, label in selection]
+        if "id.wms.stock.category" in self.env:
+            cat_groups = self.env["id.wms.stock.category"].read_group(
+                [], ["fmcg_category"], ["fmcg_category"]
+            )
+            for cg in cat_groups:
+                c_val = cg.get("fmcg_category")
+                if c_val:
+                    categories.append({"id": c_val, "name": c_val})
 
         # Fleet vehicles
         vehicles = []
@@ -155,24 +163,26 @@ class WmsDashboard(models.AbstractModel):
 
         fulfillment_rate = (delivered_count / total_deliveries * 100.0) if total_deliveries > 0 else 100.0
 
-        # Rejection breakdown
+        # Rejection breakdown from id.wms.reject
         RejectModel = self.env["id.wms.reject"]
         reject_recs = RejectModel.search_read(
             [("company_id", "in", company_ids)],
-            ["reject_reason", "rejection_count", "rejection_share_percent"]
+            ["reason", "picking_count", "rejected_value"]
         )
 
-        total_rejections = sum(r["rejection_count"] for r in reject_recs if r["reject_reason"] != "not_recorded")
+        total_rejections = sum(r["picking_count"] for r in reject_recs)
         rejection_rate = (total_rejections / total_deliveries * 100.0) if total_deliveries > 0 else 0.0
 
         reject_list = []
         for r in reject_recs:
-            reason = r["reject_reason"]
+            reason = r["reason"]
+            count = r["picking_count"]
+            share = (count / total_rejections * 100.0) if total_rejections > 0 else 0.0
             reject_list.append({
                 "reason": reason,
                 "label": REJECT_LABELS.get(reason, reason),
-                "count": r["rejection_count"],
-                "share": float(r["rejection_share_percent"] or 0.0),
+                "count": count,
+                "share": round(share, 1),
             })
         reject_list.sort(key=lambda x: x["count"], reverse=True)
 
@@ -184,42 +194,47 @@ class WmsDashboard(models.AbstractModel):
         FleetCostModel = self.env["id.wms.fleet.cost"]
         fleet_recs = FleetCostModel.search_read(
             fleet_domain,
-            ["vehicle_id", "period_month", "total_cost", "total_delivered_value", "cost_ratio_percent"]
+            ["vehicle_id", "period_month", "fuel_cost", "helper_cost", "total_cost", "delivered_value"]
         )
 
-        total_trip_cost = sum(float(f["total_cost"] or 0.0) for f in fleet_recs)
-        total_fleet_delivered = sum(float(f["total_delivered_value"] or 0.0) for f in fleet_recs)
-        fleet_ratio = (total_trip_cost / total_fleet_delivered * 100.0) if total_fleet_delivered > 0 else 0.0
+        total_fleet_cost = sum(float(r["total_cost"] or 0.0) for r in fleet_recs)
+        fleet_ratio = (total_fleet_cost / delivered_value * 100.0) if delivered_value > 0 else 0.0
 
         fleet_list = []
-        for f in fleet_recs:
+        for r in fleet_recs:
+            veh = r["vehicle_id"]
+            delivered = float(r["delivered_value"] or 0.0)
+            tcost = float(r["total_cost"] or 0.0)
+            ratio = (tcost / delivered * 100.0) if delivered > 0 else 0.0
             fleet_list.append({
-                "vehicle": f["vehicle_id"][1] if f["vehicle_id"] else "-",
-                "month": f["period_month"] or "-",
-                "cost": float(f["total_cost"] or 0.0),
-                "delivered_value": float(f["total_delivered_value"] or 0.0),
-                "ratio": float(f["cost_ratio_percent"] or 0.0),
+                "vehicle_id": veh[0] if veh else 0,
+                "name": veh[1] if veh else "-",
+                "fuel_cost": float(r["fuel_cost"] or 0.0),
+                "helper_cost": float(r["helper_cost"] or 0.0),
+                "total_cost": tcost,
+                "delivered_value": delivered,
+                "cost_ratio": round(ratio, 2),
             })
+        fleet_list.sort(key=lambda x: x["cost_ratio"], reverse=True)
 
         return {
             "kpi": {
                 "total_stock_value": total_stock_value,
                 "total_stock_qty": total_stock_qty,
-                "critical_expiry_val": critical_val,
-                "critical_expiry_count": critical_count,
+                "critical_stock_value": critical_val,
+                "critical_stock_count": critical_count,
+                "critical_stock_share": (critical_val / total_stock_value * 100.0) if total_stock_value > 0 else 0.0,
                 "total_deliveries": total_deliveries,
                 "delivered_count": delivered_count,
-                "delivered_value": delivered_value,
-                "fulfillment_rate": fulfillment_rate,
                 "late_count": late_count,
-                "total_rejections": total_rejections,
-                "rejection_rate": rejection_rate,
-                "total_trip_cost": total_trip_cost,
-                "fleet_cost_ratio": fleet_ratio,
+                "delivered_value": delivered_value,
+                "fulfillment_rate": round(fulfillment_rate, 1),
+                "rejection_rate": round(rejection_rate, 1),
+                "total_fleet_cost": total_fleet_cost,
+                "fleet_cost_ratio": round(fleet_ratio, 2),
             },
             "expiry_buckets": expiry_buckets,
             "rejections": reject_list,
             "categories": cat_list,
             "fleet": fleet_list,
         }
-

@@ -1,3 +1,14 @@
+## 2026-11-01T08:50:00+07:00 — antigravity agent — Penyelarasan Nama Field ORM di Service Dashboard Moneter & WMS
+**Branch:** agen/unify-fmcg-dashboards (PR #65)
+**Status:** PASS (Static, Manifest) -> Siap Push & CI
+
+### Diagnosa & Perbaikan Test Failure
+1. **Penyebab:** Pada `test_monetary_dashboard_service`, pemanggilan `search_read` pada `id.ar.aging` meminta `invoice_date_due` dan `amount_total` yang tidak ada (nama field asli: `date_due` dan `amount_residual`). Begitu pula pada `test_wms_dashboard_service`, pemanggilan `search_read` pada `id.wms.reject` meminta `reject_reason` dan `rejection_count` (nama field asli: `reason` dan `picking_count`).
+2. **Perbaikan:**
+   - Menyelaraskan seluruh nama field pada `id.monetary.dashboard` (`date_due`, `amount_residual`, `collection` stage key) dan lookup profil partner untuk credit limit.
+   - Menyelaraskan nama field pada `id.wms.dashboard` (`reason`, `picking_count`, `rejected_value`).
+3. **Verifikasi:** ruff check PASS, check_manifests.py PASS (10 addons ok).
+
 ## 2026-11-01T08:42:00+07:00 — antigravity agent — Perbaikan External ID ParseError di id_base menu_views
 **Branch:** agen/unify-fmcg-dashboards (PR #65)
 **Status:** PASS (Static, XML, Manifest) -> Siap Push & CI

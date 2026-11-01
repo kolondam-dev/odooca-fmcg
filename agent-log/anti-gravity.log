@@ -1520,3 +1520,14 @@
 - Cleaned addons/id_base/views/menu_views.xml to match origin/main and cleanly add menu_fmcg_dashboard.
 - Verified XML parsing and static linters (ruff check PASS, check_manifests PASS).
 - Task managed by antigravity-agent at 2026-11-01T08:42:00+07:00
+
+[2026-11-01T08:50:00+07:00] [INFO] Align ORM Field Names in id_dashboard_monetary & id_dashboard_wms Services
+- id_dashboard_monetary:
+  * Replaced nonexistent invoice_date_due and amount_total with date_due and amount_residual on id.ar.aging search_read.
+  * Corrected id.ar.customer.balance search_read fields (partner_id, salesman_id, area_id, invoice_count, amount_residual, max_days_overdue, worst_bucket) and resolved partner credit_limit/channel dynamically.
+  * Corrected funnel stage stage key mapping to collection and achievement_percent.
+- id_dashboard_wms:
+  * Corrected id.wms.reject search_read fields from reject_reason, rejection_count to reason, picking_count, rejected_value.
+  * Fixed fleet cost calculation directly from total_cost and delivered_value.
+- Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-11-01T08:50:00+07:00
