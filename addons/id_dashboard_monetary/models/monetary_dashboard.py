@@ -43,11 +43,11 @@ class MonetaryDashboard(models.TransientModel):
         # Salesmen
         salesmen = []
         sales_group = self.env.ref("sales_team.group_sale_salesman", raise_if_not_found=False)
-        if sales_group:
+        if sales_group and getattr(sales_group, "users", None):
+            salesmen = [{"id": u.id, "name": u.name} for u in sales_group.users if not u.share]
+        if not salesmen:
             user_recs = self.env["res.users"].search_read(
-                [("groups_id", "in", [sales_group.id]), ("share", "=", False)],
-                ["id", "name"],
-                order="name"
+                [("share", "=", False)], ["id", "name"], order="name", limit=20
             )
             salesmen = [{"id": u["id"], "name": u["name"]} for u in user_recs]
 

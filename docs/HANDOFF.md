@@ -1,3 +1,12 @@
+## 2026-11-01T08:57:00+07:00 — antigravity agent — Perbaikan Filter User Groups pada id.monetary.dashboard
+**Branch:** agen/unify-fmcg-dashboards (PR #65)
+**Status:** PASS (Static, Manifest) -> Siap Push & CI
+
+### Diagnosa & Perbaikan CI KeyError: 'groups_id'
+1. **Penyebab:** Pada `get_filters()` di `id.monetary.dashboard`, query `res.users` mencari field `groups_id` yang di Odoo 19 telah direstrukturisasi menjadi `group_ids` / `res.groups.users`.
+2. **Perbaikan:** Menggunakan relasi langsung `sales_group.users` dengan fallback aman ke `res.users` non-share.
+3. **Verifikasi:** ruff check PASS, check_manifests.py PASS (10 addons ok).
+
 ## 2026-11-01T08:50:00+07:00 — antigravity agent — Penyelarasan Nama Field ORM di Service Dashboard Moneter & WMS
 **Branch:** agen/unify-fmcg-dashboards (PR #65)
 **Status:** PASS (Static, Manifest) -> Siap Push & CI

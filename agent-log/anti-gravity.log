@@ -1531,3 +1531,8 @@
   * Fixed fleet cost calculation directly from total_cost and delivered_value.
 - Static checks: ruff check PASS, check_manifests.py PASS (10 addons ok).
 - Task managed by antigravity-agent at 2026-11-01T08:50:00+07:00
+
+[2026-11-01T08:57:00+07:00] [INFO] Fix User Groups Filter on res.users in id_monetary_dashboard
+- Replaced domain on non-existent groups_id with sales_group.users access and safe fallback to non-share users.
+- Verification: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by antigravity-agent at 2026-11-01T08:57:00+07:00
