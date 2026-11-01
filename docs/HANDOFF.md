@@ -1,3 +1,29 @@
+## 2026-11-02T01:18:00+07:00 — anti-gravity agent — Address Supervisor Re-review on PR #70 (P1-A, P1-B, and Playwright Clock Fixture)
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (P1-A, P1-B, and Playwright browser clock fixture addressed)
+
+### Detail Perbaikan:
+1. **P1-A — Validasi Order Tanpa Snapshot, SKU Hidden, UoM Whitelist:**
+   - Mewajibkan `snapshot_version` pada `sales.order.submit`: snapshot missing ditolak fail-closed dengan `UserError`, snapshot stale ditolak dengan `MobileReadConflict` (HTTP 409).
+   - Validasi visibilitas katalog SKU menggunakan hak akses actor (`self.env["product.product"].check_access("read")`) sebelum pembuatan SO (menolak SKU yang disembunyikan record rule actor dengan `AccessError`).
+   - Penegakan UoM whitelist `{"carton", "pack", "pcs"}`: UoM tak dikenal (seperti `PALLET-HACK`) ditolak dengan `UserError`.
+   - Validasi kuantitas finite positif (> 0) dan batas diskon (0-100%).
+2. **P1-B — Freshness Bukti, Keselarasan DTO Frontend Wire & Batasan Dispatcher:**
+   - Menyelaraskan DTO adapter wire frontend untuk `sales.visit.check_in` (`VisitCheckInSchema` dengan `evidence.id`, `packageHash`) dan `delivery.pod.submit` (`DeliveryPodSchema` dengan `source.trip`, `source.id`, `evidence.id`, `recipient`, `lines`).
+   - Validasi ketat `id.mobile.evidence` persisten: wajib cocok dengan actor, active company (bukan foreign company), outlet, dan hari kerja aktif hari ini (`day.isoformat()`, menolak seed lama bulan Juli dan foto kosong).
+   - Penegakan `sales.visit.check_out` wajib mengikat sesi check-in aktif yang sah pada hari ini untuk outlet yang sama.
+   - Penegakan `delivery.pod.submit` wajib terdaftar pada manifest operasional `stock.picking`; `delivery.trip.close` wajib membuktikan seluruh POD milik manifest trip hari ini.
+   - Command domain yang belum diimplementasikan di backend operasional (`collection`, `hris`, `field_expense`) dikeluarkan dari `SUPPORTED_COMMANDS` dan ditolak fail-closed dengan `UserError`.
+3. **Playwright Browser Test Clock & Geolocation Alignment:**
+   - Menyinkronkan timestamp `navigator.geolocation.getCurrentPosition` dan `watchPosition` di `session-fixture.ts` ke `window.Date.now()` (mengeliminasi future fix skew).
+   - Evaluasi kalender hari Minggu dilakukan secara ketat pada zona waktu `Asia/Makassar` (WITA).
+4. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+   - PWA Unit Tests: 352 tests PASS (100%)
+   - Baseline Upgrade Unit Tests: 9 tests PASS
+
 ## 2026-11-01T23:55:00+07:00 — anti-gravity agent — Fix CSRF Token Boolean Validation on /api/v1/sync/commands
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

@@ -1762,3 +1762,26 @@
   * PWA Unit Tests (352 tests): 100% PASS
   * Upgrade runner unit tests: 9 tests PASS
 - Task managed by antigravity agent at 2026-11-01T23:55:00+07:00
+
+[2026-11-02T01:18:00+07:00] [INFO] Fix Supervisor Review Findings on PR #70: P1-A, P1-B, and Playwright Clock Fixture
+- Addressed supervisor re-review comment 6561745551:
+- P1-A: Order Scope & Field Validation:
+  * Made snapshot_version mandatory in sales.order.submit; missing snapshot raises UserError, stale raises MobileReadConflict.
+  * Validated SKU catalog visibility via actor's environment (self.env['product.product'].check_access('read')) preventing access to record-rule-hidden SKUs before sudo SO creation.
+  * Enforced UoM whitelist {"carton", "pack", "pcs"}; unknown UoMs (e.g. PALLET-HACK) fail-closed with UserError.
+  * Enforced positive finite quantity (> 0) and validated line/order discount ranges (0-100%).
+- P1-B: Evidence Freshness, Frontend Wire DTO Alignment & Dispatcher Boundaries:
+  * Aligned wire DTO deserialization for VisitCheckInSchema (evidence.id, packageHash) and DeliveryPodSchema (source.trip, source.id, recipient, lines, evidence.id).
+  * Validated persistent evidence in id.mobile.evidence matching actor, active company, outlet, and current business_date (rejecting legacy July seed rows and empty media).
+  * Enforced checkout binding to an active accepted check-in session for the same outlet on current business day.
+  * Enforced delivery POD resolution against operational pickings (stock.picking); trip closure requires proving all PODs belong to the trip on current day.
+  * Fail-closed unimplemented domains (collection, hris, expense) from SUPPORTED_COMMANDS with UserError.
+- Browser Test Clock & Geolocation Alignment:
+  * Proxy navigator.geolocation.getCurrentPosition/watchPosition in session-fixture.ts to return timestamp: window.Date.now().
+  * Evaluated Sunday shift strictly against Asia/Makassar WITA calendar, keeping page clock, provider, and geolocation in exact zero-skew sync.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+  * PWA Unit Tests (352 tests): 100% PASS
+  * Upgrade runner unit tests: 9 tests PASS
+- Task managed by antigravity agent at 2026-11-02T01:18:00+07:00

@@ -15,23 +15,89 @@ export const test = base.extend({
         actors.set(page, "sales");
         await page.addInitScript(() => {
             const RealDate = window.Date;
-            const now = new RealDate();
-            if (now.getDay() === 0) {
-                const shiftMs = -3 * 24 * 60 * 60 * 1000;
+            const witaDateStr = new RealDate().toLocaleDateString("en-CA", {
+                timeZone: "Asia/Makassar",
+            });
+            const parts = witaDateStr.split("-").map(Number);
+            const witaDay = new RealDate(
+                Date.UTC(parts[0], parts[1] - 1, parts[2], 12, 0, 0),
+            ).getUTCDay();
+            const shiftMs = witaDay === 0 ? -3 * 24 * 60 * 60 * 1000 : 0;
+
+            if (shiftMs !== 0) {
                 class ShiftedDate extends RealDate {
                     constructor(...args: unknown[]) {
                         if (args.length === 0) {
                             super(RealDate.now() + shiftMs);
+                        } else if (args.length === 1) {
+                            super(args[0] as string | number | Date);
                         } else {
-                            super(...(args as [string | number | Date]));
+                            super(...(args as [number, number, ...number[]]));
                         }
                     }
                     static now() {
                         return RealDate.now() + shiftMs;
                     }
                 }
-                // @ts-expect-error Mock date for Sunday determinism
+                // @ts-expect-error Mock Date methods
+                ShiftedDate.UTC = RealDate.UTC;
+                // @ts-expect-error Mock Date methods
+                ShiftedDate.parse = RealDate.parse;
+                // @ts-expect-error Assign shifted date
                 window.Date = ShiftedDate;
+            }
+
+            // Sync geolocation timestamp directly with window.Date.now()
+            if (navigator.geolocation) {
+                const origGet = navigator.geolocation.getCurrentPosition.bind(
+                    navigator.geolocation,
+                );
+                navigator.geolocation.getCurrentPosition = function (
+                    success,
+                    error,
+                    options,
+                ) {
+                    origGet(
+                        function (pos) {
+                            try {
+                                const proxyPos = {
+                                    coords: pos.coords,
+                                    timestamp: window.Date.now(),
+                                };
+                                success(proxyPos);
+                            } catch {
+                                success(pos);
+                            }
+                        },
+                        error,
+                        options,
+                    );
+                };
+
+                const origWatch = navigator.geolocation.watchPosition.bind(
+                    navigator.geolocation,
+                );
+                navigator.geolocation.watchPosition = function (
+                    success,
+                    error,
+                    options,
+                ) {
+                    return origWatch(
+                        function (pos) {
+                            try {
+                                const proxyPos = {
+                                    coords: pos.coords,
+                                    timestamp: window.Date.now(),
+                                };
+                                success(proxyPos);
+                            } catch {
+                                success(pos);
+                            }
+                        },
+                        error,
+                        options,
+                    );
+                };
             }
         });
         await page.context().setGeolocation({

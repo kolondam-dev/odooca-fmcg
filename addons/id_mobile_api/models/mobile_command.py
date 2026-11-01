@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+import math
 import uuid
 from psycopg2 import IntegrityError
 from odoo import api, fields, models, _
@@ -16,11 +17,6 @@ SUPPORTED_COMMANDS = {
     "delivery.pod.submit",
     "delivery.trip.close",
     "delivery.proof.submit",
-    "collection.receipt.submit",
-    "hris.attendance.capture",
-    "hris.leave.request",
-    "field_expense.request",
-    "field_expense.realization.submit",
 }
 
 
@@ -128,12 +124,6 @@ class MobileCommand(models.Model):
                     status, message, reference = self._handle_visit(cmd_type, payload, client_uuid)
                 elif cmd_type in ("delivery.pod.submit", "delivery.trip.close", "delivery.proof.submit"):
                     status, message, reference = self._handle_delivery(cmd_type, payload, client_uuid)
-                elif cmd_type == "collection.receipt.submit":
-                    status, message, reference = self._handle_collection(payload, client_uuid)
-                elif cmd_type in ("hris.attendance.capture", "hris.leave.request"):
-                    status, message, reference = self._handle_hris(cmd_type, payload, client_uuid)
-                elif cmd_type in ("field_expense.request", "field_expense.realization.submit"):
-                    status, message, reference = self._handle_expense(cmd_type, payload, client_uuid)
                 else:
                     raise UserError(_("Unsupported command handler for %s") % cmd_type)
 
@@ -170,14 +160,18 @@ class MobileCommand(models.Model):
         if day.weekday() == 6:
             raise UserError(_("Operasional sales order libur pada hari Minggu."))
 
-        # Snapshot version validation
+        # Snapshot version validation (mandatory)
         snapshot_version = payload.get("snapshot_version")
-        if snapshot_version:
-            current_snapshot = Workday._snapshot_payload()
-            if snapshot_version != current_snapshot.get("version"):
-                raise MobileReadConflict(_("Stale catalog snapshot version."))
+        if not snapshot_version:
+            raise UserError(_("Snapshot version wajib disertakan."))
+        current_snapshot = Workday._snapshot_payload()
+        if snapshot_version != current_snapshot.get("version"):
+            raise MobileReadConflict(_("Stale catalog snapshot version."))
 
-        outlet_id = int(payload.get("outlet_id", 0))
+        try:
+            outlet_id = int(payload.get("outlet_id", 0))
+        except (ValueError, TypeError):
+            outlet_id = 0
         if not outlet_id:
             raise UserError(_("Outlet wajib ditentukan."))
 
@@ -189,7 +183,7 @@ class MobileCommand(models.Model):
             raise UserError(_("Outlet tidak ditemukan atau tidak aktif."))
         partner.check_access("read")
         if partner.company_id and partner.company_id != company:
-            raise UserError(_("Outlet milik company yang berbeda."))
+            raise AccessError(_("Outlet milik company yang berbeda."))
 
         raw_lines = payload.get("lines", [])
         if not raw_lines:
@@ -197,17 +191,25 @@ class MobileCommand(models.Model):
 
         assigned_product_ids = set(assignment.product_ids.ids)
         lines_by_principal = {}
-        Product = self.env["product.product"].sudo()
+        # Validate SKU visibility and catalog access via actor's permissions (no sudo bypass)
+        ActorProduct = self.env["product.product"]
 
         for line in raw_lines:
-            pid = int(line.get("product_id", 0))
+            try:
+                pid = int(line.get("product_id", 0))
+            except (ValueError, TypeError):
+                pid = 0
             if not pid or pid not in assigned_product_ids:
                 raise UserError(_("Produk %s tidak termasuk dalam scope assignment aktif hari ini.") % pid)
-            product = Product.browse(pid)
-            if not product.exists() or not product.active or not product.sale_ok:
-                raise UserError(_("Produk %s tidak valid atau tidak aktif.") % pid)
+
+            product = ActorProduct.browse(pid)
+            if not product.exists():
+                raise AccessError(_("Produk %s tidak ditemukan atau tidak dapat diakses.") % pid)
+            product.check_access("read")
+            if not product.active or not product.sale_ok:
+                raise UserError(_("Produk %s tidak aktif atau bukan barang dagangan.") % pid)
             if product.company_id and product.company_id != company:
-                raise UserError(_("Produk %s milik company lain.") % pid)
+                raise AccessError(_("Produk %s milik company lain.") % pid)
 
             principal_id = product.principal_id.id if product.principal_id else 0
             lines_by_principal.setdefault(principal_id, []).append((product, line))
@@ -217,27 +219,54 @@ class MobileCommand(models.Model):
 
         created_orders = []
         discount_req = payload.get("discount_request") or {}
-        discount_pct = float(discount_req.get("percent", 0.0))
-        discount_reason = discount_req.get("reason", "")
-        customer_po = payload.get("customer_po_number") or payload.get("note") or ""
+        try:
+            discount_pct = float(discount_req.get("percent", 0.0))
+        except (ValueError, TypeError):
+            raise UserError(_("Persentase diskon order tidak valid."))
+        if math.isnan(discount_pct) or math.isinf(discount_pct) or discount_pct < 0.0 or discount_pct > 100.0:
+            raise UserError(_("Persentase diskon order harus antara 0 dan 100."))
+        discount_reason = str(discount_req.get("reason", "")).strip()
+        if discount_pct > 0.0 and len(discount_reason) < 3:
+            raise UserError(_("Alasan pengajuan diskon order wajib minimal 3 karakter."))
+
+        customer_po = str(payload.get("customer_po_number") or payload.get("note") or "").strip()
 
         needs_approval = False
         SaleOrder = self.env["sale.order"].sudo()
+        UOM_WHITELIST = {"carton", "pack", "pcs"}
 
         for principal_id, items in lines_by_principal.items():
             order_lines = []
             for product, item in items:
-                qty_val = float(item.get("qty", 1))
-                if qty_val <= 0:
-                    raise UserError(_("Jumlah pesanan produk %s harus lebih dari 0.") % product.name)
-                uom_tier = item.get("uom", "carton")
-                qty_in_unit = qty_val
-                if uom_tier == "carton" and product.carton_qty:
-                    qty_in_unit = qty_val * product.carton_qty
-                elif uom_tier == "pack" and product.inner_qty:
-                    qty_in_unit = qty_val * product.inner_qty
+                try:
+                    qty_val = float(item.get("qty", 1))
+                except (ValueError, TypeError):
+                    raise UserError(_("Kuantitas produk %s tidak valid.") % product.name)
+                if math.isnan(qty_val) or math.isinf(qty_val) or qty_val <= 0:
+                    raise UserError(_("Jumlah pesanan produk %s harus bilangan positif lebih dari 0.") % product.name)
 
-                line_disc = float(item.get("discount", 0.0)) or discount_pct
+                uom_tier = str(item.get("uom", "carton")).strip().lower()
+                if uom_tier not in UOM_WHITELIST:
+                    raise UserError(_("Satuan UoM '%s' tidak didukung (hanya carton, pack, pcs).") % uom_tier)
+
+                if uom_tier == "carton":
+                    qty_in_unit = qty_val * (product.carton_qty or 1)
+                elif uom_tier == "pack":
+                    if not product.inner_qty:
+                        raise UserError(_("Produk %s tidak mendukung satuan pack.") % product.name)
+                    qty_in_unit = qty_val * product.inner_qty
+                elif uom_tier == "pcs":
+                    qty_in_unit = qty_val
+                else:
+                    raise UserError(_("Satuan UoM '%s' tidak valid.") % uom_tier)
+
+                try:
+                    line_disc = float(item.get("discount", 0.0)) or discount_pct
+                except (ValueError, TypeError):
+                    raise UserError(_("Diskon produk %s tidak valid.") % product.name)
+                if math.isnan(line_disc) or math.isinf(line_disc) or line_disc < 0.0 or line_disc > 100.0:
+                    raise UserError(_("Diskon produk %s harus antara 0 dan 100.") % product.name)
+
                 order_lines.append((0, 0, {
                     "product_id": product.id,
                     "product_uom_qty": qty_in_unit,
@@ -275,7 +304,10 @@ class MobileCommand(models.Model):
         Workday = self.env["id.mobile.workday"]
         assignment, day = Workday._current_assignment()
 
-        outlet_id = int(payload.get("outlet_id", 0))
+        try:
+            outlet_id = int(payload.get("outlet_id", 0))
+        except (ValueError, TypeError):
+            outlet_id = 0
         if not outlet_id:
             raise UserError(_("Outlet wajib ditentukan untuk kunjungan."))
 
@@ -286,22 +318,74 @@ class MobileCommand(models.Model):
             if day.weekday() == 6:
                 raise UserError(_("Kunjungan operasional libur pada hari Minggu."))
 
-            evidence_uuid = payload.get("evidence_uuid") or payload.get("evidence_receipt", {}).get("client_uuid")
+            evidence_uuid = (
+                payload.get("evidence", {}).get("id")
+                or payload.get("evidence_uuid")
+                or payload.get("evidence_receipt", {}).get("client_uuid")
+            )
             if not evidence_uuid:
                 raise UserError(_("Check-in wajib menyertakan bukti foto dan lokasi yang valid."))
 
             evidence = self.env["id.mobile.evidence"].sudo().search([
                 ("user_id", "=", user.id),
+                ("company_id", "=", company.id),
                 ("client_uuid", "=", evidence_uuid),
                 ("outlet_id", "=", outlet_id),
             ], limit=1)
-            if not evidence:
+            if not evidence or not evidence.original:
                 raise UserError(_("Bukti foto kunjungan tidak ditemukan atau tidak valid untuk outlet ini."))
+
+            receipt_data = json.loads(evidence.receipt_json or "{}")
+            if receipt_data.get("business_date") != day.isoformat():
+                raise UserError(_("Bukti foto kunjungan bukan untuk hari kerja hari ini (%s).") % day.isoformat())
+
+            package_hash = payload.get("evidence", {}).get("packageHash")
+            if package_hash:
+                valid_hashes = {
+                    receipt_data.get("original_sha256"),
+                    receipt_data.get("watermarked_sha256"),
+                    receipt_data.get("binding_sha256"),
+                }
+                if package_hash not in valid_hashes:
+                    raise UserError(_("Hash paket bukti foto kunjungan tidak cocok dengan media tersimpan."))
 
             ref = f"VISIT-{client_uuid[:8]}"
             return "accepted", f"Check-in kunjungan outlet {outlet_id} tercatat dengan bukti {evidence_uuid[:8]}.", ref
 
         elif cmd_type == "sales.visit.check_out":
+            # Checkout must bind to an active check-in session for this outlet on the same day
+            prior_checkin = self.sudo().search([
+                ("user_id", "=", user.id),
+                ("company_id", "=", company.id),
+                ("command_type", "=", "sales.visit.check_in"),
+                ("status", "=", "accepted"),
+            ], order="id desc")
+            has_valid_checkin = False
+            for cmd in prior_checkin:
+                p = json.loads(cmd.payload_json or "{}")
+                if str(p.get("outlet_id")) == str(outlet_id) and cmd.create_date.date() == day:
+                    has_valid_checkin = True
+                    break
+            if not has_valid_checkin:
+                raise UserError(
+                    _("Check-out ditolak: belum ada sesi check-in yang sah untuk outlet ini pada hari ini.")
+                )
+
+            # If checkout provides closing evidence (e.g. store closed/unavailable)
+            closing_evidence_uuid = payload.get("evidence", {}).get("id") or payload.get("evidence_uuid")
+            if closing_evidence_uuid:
+                closing_ev = self.env["id.mobile.evidence"].sudo().search([
+                    ("user_id", "=", user.id),
+                    ("company_id", "=", company.id),
+                    ("client_uuid", "=", closing_evidence_uuid),
+                    ("outlet_id", "=", outlet_id),
+                ], limit=1)
+                if not closing_ev or not closing_ev.original:
+                    raise UserError(_("Bukti foto closing checkout tidak ditemukan atau tidak memiliki media valid."))
+                ev_receipt = json.loads(closing_ev.receipt_json or "{}")
+                if ev_receipt.get("business_date") != day.isoformat():
+                    raise UserError(_("Bukti foto closing checkout bukan untuk hari kerja hari ini."))
+
             ref = f"VISIT-{client_uuid[:8]}"
             return "accepted", f"Check-out kunjungan outlet {outlet_id} tercatat.", ref
         else:
@@ -309,63 +393,107 @@ class MobileCommand(models.Model):
 
     def _handle_delivery(self, cmd_type, payload, client_uuid):
         user, company = self._actor()
+        Workday = self.env["id.mobile.workday"]
+        assignment, day = Workday._current_assignment()
+
         if not payload:
             raise UserError(_("Payload bukti pengiriman tidak boleh kosong."))
 
-        trip_id = payload.get("trip_id") or payload.get("manifest_id")
-        if not trip_id:
-            raise UserError(_("Trip ID atau Manifest ID wajib disertakan untuk pengiriman."))
-
         if cmd_type in ("delivery.pod.submit", "delivery.proof.submit"):
-            evidence_uuid = payload.get("evidence_uuid") or payload.get("proof_uuid")
+            source = payload.get("source") or {}
+            trip_id = str(source.get("trip") or payload.get("trip_id") or payload.get("manifest_id") or "").strip()
+            do_id = str(source.get("id") or payload.get("do_id") or "").strip()
+            evidence_data = payload.get("evidence") or {}
+            ev_id = evidence_data.get("id") or payload.get("evidence_uuid") or payload.get("proof_uuid")
+            evidence_uuid = str(ev_id or "").strip()
+            package_hash = evidence_data.get("packageHash")
+            recipient = str(payload.get("recipient") or "").strip()
+
+            if not trip_id:
+                raise UserError(_("Trip ID atau Manifest ID wajib disertakan untuk pengiriman."))
             if not evidence_uuid:
                 raise UserError(_("POD submit wajib menyertakan bukti foto atau tanda tangan penerima."))
+            if not recipient or len(recipient) < 2:
+                raise UserError(_("Nama penerima POD wajib diisi (minimal 2 karakter)."))
+
+            # Verify persistent evidence existence, ownership, active date, and media
+            evidence = self.env["id.mobile.evidence"].sudo().search([
+                ("client_uuid", "=", evidence_uuid),
+                ("user_id", "=", user.id),
+                ("company_id", "=", company.id),
+            ], limit=1)
+            if not evidence or not evidence.original:
+                raise UserError(_("Bukti POD %s tidak ditemukan atau tidak memiliki media valid.") % evidence_uuid)
+
+            receipt_data = json.loads(evidence.receipt_json or "{}")
+            if receipt_data.get("business_date") != day.isoformat():
+                raise UserError(_("Bukti POD bukan untuk hari kerja hari ini (%s).") % day.isoformat())
+
+            if package_hash:
+                valid_hashes = {
+                    receipt_data.get("original_sha256"),
+                    receipt_data.get("watermarked_sha256"),
+                    receipt_data.get("binding_sha256"),
+                }
+                if package_hash not in valid_hashes:
+                    raise UserError(_("Hash paket bukti foto POD tidak cocok dengan media tersimpan."))
+
+            # Resolve trip / DO against operational picking manifest
+            picking = self.env["stock.picking"].sudo().search([
+                ("company_id", "=", company.id),
+                "|", ("origin", "=", trip_id), ("name", "=", do_id or trip_id),
+            ], limit=1)
+            if not picking:
+                raise UserError(_("Trip pengiriman %s tidak ditemukan dalam manifest operasional.") % trip_id)
+
             ref = f"POD-{client_uuid[:8]}"
             return "accepted", f"Bukti serah terima pengiriman trip {trip_id} berhasil disimpan.", ref
 
         elif cmd_type == "delivery.trip.close":
+            trip_id = str(payload.get("trip_id") or "").strip()
+            if not trip_id:
+                raise UserError(_("Trip ID wajib disertakan untuk menutup trip pengiriman."))
+
+            business_date_str = payload.get("business_date")
+            if business_date_str and business_date_str != day.isoformat():
+                raise UserError(_("Trip closure hanya dapat dilakukan untuk hari kerja hari ini."))
+
+            pod_uuids = payload.get("pod_uuids") or []
+            if not pod_uuids:
+                raise UserError(_("Trip closure wajib membuktikan POD milik manifest trip hari ini."))
+
+            # Trip must exist in operational pickings
+            picking = self.env["stock.picking"].sudo().search([
+                ("company_id", "=", company.id),
+                "|", ("origin", "=", trip_id), ("name", "=", trip_id),
+            ], limit=1)
+            if not picking:
+                raise UserError(_("Trip pengiriman %s tidak ditemukan dalam manifest operasional.") % trip_id)
+
+            # Prove all PODs belong to this trip and were accepted on this day
+            submitted_pods = self.sudo().search([
+                ("user_id", "=", user.id),
+                ("company_id", "=", company.id),
+                ("command_type", "=", "delivery.pod.submit"),
+                ("status", "=", "accepted"),
+            ])
+            valid_pod_uuids = set()
+            for pod_cmd in submitted_pods:
+                if pod_cmd.create_date.date() == day:
+                    p = json.loads(pod_cmd.payload_json or "{}")
+                    p_src = p.get("source") or {}
+                    p_trip = str(p_src.get("trip") or p.get("trip_id") or p.get("manifest_id") or "")
+                    if p_trip == trip_id:
+                        valid_pod_uuids.add(pod_cmd.client_uuid)
+
+            for pid in pod_uuids:
+                if pid not in valid_pod_uuids:
+                    raise UserError(
+                        _("POD %s bukan milik manifest trip %s pada hari ini atau belum diterima.") % (pid, trip_id)
+                    )
+
             ref = f"TRIP-{client_uuid[:8]}"
-            return "accepted", f"Trip {trip_id} berhasil ditutup.", ref
+            msg = f"Trip pengiriman {trip_id} berhasil ditutup dengan {len(pod_uuids)} POD terverifikasi."
+            return "accepted", msg, ref
 
         raise UserError(_("Unsupported delivery command: %s") % cmd_type)
-
-    def _handle_collection(self, payload, client_uuid):
-        user, company = self._actor()
-        if not payload:
-            raise UserError(_("Payload penerimaan kas tidak boleh kosong."))
-
-        try:
-            amount = float(payload.get("amount", 0))
-        except (ValueError, TypeError):
-            raise UserError(_("Nilai penerimaan kas tidak valid."))
-        if amount <= 0:
-            raise UserError(_("Nilai pembayaran harus lebih besar dari 0."))
-
-        outlet_id = payload.get("outlet_id")
-        invoice_id = payload.get("invoice_id")
-        if not outlet_id and not invoice_id:
-            raise UserError(_("Penerimaan kas harus terkait outlet atau faktur tagihan."))
-
-        method = payload.get("method", "cash")
-        ref = f"PAY-{client_uuid[:8]}"
-        return "accepted", f"Penerimaan kas/transfer Rp {amount:,.0f} ({method}) tercatat.", ref
-
-    def _handle_hris(self, cmd_type, payload, client_uuid):
-        user, company = self._actor()
-        if not payload:
-            raise UserError(_("Payload absensi atau perizinan tidak boleh kosong."))
-        ref = f"HR-{client_uuid[:8]}"
-        return "accepted", "Absensi/kehadiran kerja berhasil dicatat.", ref
-
-    def _handle_expense(self, cmd_type, payload, client_uuid):
-        user, company = self._actor()
-        if not payload:
-            raise UserError(_("Payload biaya operasional tidak boleh kosong."))
-        try:
-            amount = float(payload.get("amount", 0))
-        except (ValueError, TypeError):
-            raise UserError(_("Jumlah biaya tidak valid."))
-        if amount <= 0:
-            raise UserError(_("Jumlah biaya harus lebih dari 0."))
-        ref = f"EXP-{client_uuid[:8]}"
-        return "needs_approval", "Pengajuan biaya lapangan dikirim ke supervisor.", ref

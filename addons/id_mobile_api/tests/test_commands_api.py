@@ -6,7 +6,7 @@ from unittest.mock import patch
 from odoo import Command
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
-from ..models.mobile_workday import MobileReadConflict
+from ..models.mobile_workday import MobileReadConflict, business_date
 from .test_read_api import MobileFixture
 
 
@@ -18,21 +18,30 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         self.assignment.write({
             "outlet_radius": 100,
         })
+        snapshot_payload = self.env["id.mobile.workday"].with_user(self.mobile).with_context(
+            allowed_company_ids=self.mobile.company_ids.ids
+        )._snapshot_payload()
+        self.snapshot_version = snapshot_payload["version"]
 
     def _command_model(self, user=None):
         target_user = user or self.mobile
         return self.env["id.mobile.command"].with_user(target_user).with_company(self.company)
 
+    def _valid_order_payload(self, **overrides):
+        payload = {
+            "outlet_id": str(self.outlet.id),
+            "snapshot_version": self.snapshot_version,
+            "lines": [{"product_id": str(self.product.id), "qty": "1", "uom": "carton"}],
+        }
+        payload.update(overrides)
+        return payload
+
     def test_actor_model_guard(self):
         """Direct ORM/RPC call without mobile sales privileges must fail closed."""
-        valid_uuid = str(uuid.uuid4())
         cmd = {
-            "client_uuid": valid_uuid,
+            "client_uuid": str(uuid.uuid4()),
             "type": "sales.order.submit",
-            "payload": {
-                "outlet_id": str(self.outlet.id),
-                "lines": [{"product_id": str(self.product.id), "qty": "1", "uom": "carton"}],
-            },
+            "payload": self._valid_order_payload(),
         }
         # Portal user
         with self.assertRaises(AccessError):
@@ -51,10 +60,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         cmd = {
             "client_uuid": valid_uuid,
             "type": "sales.order.submit",
-            "payload": {
-                "outlet_id": str(self.outlet.id),
-                "lines": [{"product_id": str(self.product.id), "qty": "1", "uom": "carton"}],
-            },
+            "payload": self._valid_order_payload(),
         }
         self._command_model(self.mobile).process_command(cmd)
 
@@ -112,10 +118,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         command = {
             "client_uuid": cmd_uuid,
             "type": "sales.order.submit",
-            "payload": {
-                "outlet_id": str(self.outlet.id),
-                "lines": [{"product_id": str(self.product.id), "qty": "1", "uom": "carton"}],
-            },
+            "payload": self._valid_order_payload(),
         }
         model = self._command_model()
         rc1 = model.process_command(command)
@@ -129,10 +132,9 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         tampered = {
             "client_uuid": cmd_uuid,
             "type": "sales.order.submit",
-            "payload": {
-                "outlet_id": str(self.outlet.id),
-                "lines": [{"product_id": str(self.product.id), "qty": "99", "uom": "carton"}],
-            },
+            "payload": self._valid_order_payload(
+                lines=[{"product_id": str(self.product.id), "qty": "99", "uom": "carton"}]
+            ),
         }
         with self.assertRaises(MobileReadConflict):
             model.process_command(tampered)
@@ -150,6 +152,25 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         """Orders outside scheduled outlet, unassigned SKU, or with stale snapshot must be rejected."""
         model = self._command_model()
 
+        # Missing snapshot_version (mandatory per P1-A)
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.order.submit",
+                "payload": {
+                    "outlet_id": str(self.outlet.id),
+                    "lines": [{"product_id": str(self.product.id), "qty": "1", "uom": "carton"}],
+                },
+            })
+
+        # Stale snapshot version
+        with self.assertRaises(MobileReadConflict):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.order.submit",
+                "payload": self._valid_order_payload(snapshot_version="odoo-read-v1:stale-version-hash"),
+            })
+
         # Unassigned outlet
         unassigned_outlet = self.env["res.partner"].create({
             "name": "Unassigned Outlet",
@@ -159,10 +180,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
                 "type": "sales.order.submit",
-                "payload": {
-                    "outlet_id": str(unassigned_outlet.id),
-                    "lines": [{"product_id": str(self.product.id), "qty": "1", "uom": "carton"}],
-                },
+                "payload": self._valid_order_payload(outlet_id=str(unassigned_outlet.id)),
             })
 
         # Unassigned SKU
@@ -181,22 +199,70 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
                 "type": "sales.order.submit",
-                "payload": {
-                    "outlet_id": str(self.outlet.id),
-                    "lines": [{"product_id": str(unassigned_product.id), "qty": "1", "uom": "carton"}],
-                },
+                "payload": self._valid_order_payload(
+                    lines=[{"product_id": str(unassigned_product.id), "qty": "1", "uom": "carton"}]
+                ),
             })
 
-        # Stale snapshot version
-        with self.assertRaises(MobileReadConflict):
+        # Assigned SKU but hidden from actor (inactive / non-saleable or access restricted)
+        hidden_product = self.env["product.product"].create({
+            "name": "Hidden Product",
+            "default_code": "HIDDEN-SKU",
+            "principal_id": self.principal.id,
+            "uom_id": unit.id,
+            "carton_qty": 10,
+            "inner_qty": 2,
+            "type": "consu",
+            "active": False,
+            "is_storable": True,
+        })
+        self.assignment.product_ids = [Command.link(hidden_product.id)]
+        with self.assertRaises(AccessError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
                 "type": "sales.order.submit",
-                "payload": {
-                    "outlet_id": str(self.outlet.id),
-                    "snapshot_version": "odoo-read-v1:stale-version-hash",
-                    "lines": [{"product_id": str(self.product.id), "qty": "1", "uom": "carton"}],
-                },
+                "payload": self._valid_order_payload(
+                    lines=[{"product_id": str(hidden_product.id), "qty": "1", "uom": "carton"}]
+                ),
+            })
+
+        # Invalid UoM (e.g. PALLET-HACK must be rejected fail-closed)
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.order.submit",
+                "payload": self._valid_order_payload(
+                    lines=[{"product_id": str(self.product.id), "qty": "1", "uom": "PALLET-HACK"}]
+                ),
+            })
+
+        # Invalid Quantity (zero, negative or non-finite)
+        for bad_qty in ("0", "-5", "NaN"):
+            with self.assertRaises(UserError):
+                model.process_command({
+                    "client_uuid": str(uuid.uuid4()),
+                    "type": "sales.order.submit",
+                    "payload": self._valid_order_payload(
+                        lines=[{"product_id": str(self.product.id), "qty": bad_qty, "uom": "carton"}]
+                    ),
+                })
+
+        # Invalid Discount (> 100 or reason too short)
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.order.submit",
+                "payload": self._valid_order_payload(
+                    discount_request={"percent": 150, "reason": "Too big"}
+                ),
+            })
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.order.submit",
+                "payload": self._valid_order_payload(
+                    discount_request={"percent": 10, "reason": "ab"}
+                ),
             })
 
     def test_atomic_split_so_savepoint_rollback(self):
@@ -219,13 +285,12 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         command = {
             "client_uuid": cmd_uuid,
             "type": "sales.order.submit",
-            "payload": {
-                "outlet_id": str(self.outlet.id),
-                "lines": [
+            "payload": self._valid_order_payload(
+                lines=[
                     {"product_id": str(self.product.id), "qty": "1", "uom": "carton"},
                     {"product_id": str(product2.id), "qty": "2", "uom": "carton"},
-                ],
-            },
+                ]
+            ),
         }
 
         orig_create = self.env["sale.order"].create
@@ -267,14 +332,13 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         command = {
             "client_uuid": cmd_uuid,
             "type": "sales.order.submit",
-            "payload": {
-                "outlet_id": str(self.outlet.id),
-                "customer_po_number": "PO-SPLIT-001",
-                "lines": [
+            "payload": self._valid_order_payload(
+                customer_po_number="PO-SPLIT-001",
+                lines=[
                     {"product_id": str(self.product.id), "qty": "2", "uom": "carton", "discount": 10},
                     {"product_id": str(product2.id), "qty": "3", "uom": "carton", "discount": 5},
                 ],
-            },
+            ),
         }
 
         model = self._command_model()
@@ -285,11 +349,12 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         self.assertEqual(len(orders), 2, "Must create 2 distinct SOs for 2 principals.")
         self.assertTrue(all(so.client_order_ref == "PO-SPLIT-001" for so in orders))
 
-    def test_visit_checkin_requires_evidence(self):
-        """Visit check-in without evidence or invalid evidence is rejected fail-closed."""
+    def test_visit_checkin_and_checkout_validation(self):
+        """Visit check-in requires fresh valid evidence; check-out requires prior active check-in."""
         model = self._command_model()
+        day_str = business_date().isoformat()
 
-        # Check-in without evidence
+        # 1. Check-in without evidence -> rejected
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
@@ -297,77 +362,250 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                 "payload": {"outlet_id": str(self.outlet.id)},
             })
 
-        # Check-in with nonexistent evidence
+        # 2. Check-in with nonexistent evidence -> rejected
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
                 "type": "sales.visit.check_in",
                 "payload": {
                     "outlet_id": str(self.outlet.id),
-                    "evidence_uuid": str(uuid.uuid4()),
+                    "evidence": {"id": str(uuid.uuid4())},
                 },
             })
 
-        # Positive check-in with stored evidence
-        evidence_uuid = str(uuid.uuid4())
-        dummy_base64 = base64.b64encode(b"dummy-image-binary-payload")
+        # 3. Check-in with evidence from other company -> rejected
+        foreign_company = self.env["res.company"].create({
+            "name": "Foreign Company",
+            "currency_id": self.company.currency_id.id,
+        })
+        foreign_evidence_uuid = str(uuid.uuid4())
+        dummy_base64 = base64.b64encode(b"valid-image-bytes")
+        self.env["id.mobile.evidence"].sudo().create({
+            "user_id": self.mobile.id,
+            "company_id": foreign_company.id,
+            "outlet_id": self.outlet.id,
+            "client_uuid": foreign_evidence_uuid,
+            "fingerprint": "foreign-fingerprint",
+            "receipt_json": json.dumps({"business_date": day_str}),
+            "original": dummy_base64,
+            "watermarked": dummy_base64,
+        })
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.visit.check_in",
+                "payload": {
+                    "outlet_id": str(self.outlet.id),
+                    "evidence": {"id": foreign_evidence_uuid},
+                },
+            })
+
+        # 4. Check-in with stale seed date (e.g. July 2026) -> rejected
+        stale_evidence_uuid = str(uuid.uuid4())
         self.env["id.mobile.evidence"].sudo().create({
             "user_id": self.mobile.id,
             "company_id": self.company.id,
             "outlet_id": self.outlet.id,
-            "client_uuid": evidence_uuid,
-            "fingerprint": "fake-evidence-fingerprint",
-            "receipt_json": json.dumps({"status": "accepted"}),
+            "client_uuid": stale_evidence_uuid,
+            "fingerprint": "stale-fingerprint",
+            "receipt_json": json.dumps({"business_date": "2026-07-15"}),
             "original": dummy_base64,
             "watermarked": dummy_base64,
         })
-        rc = model.process_command({
-            "client_uuid": str(uuid.uuid4()),
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.visit.check_in",
+                "payload": {
+                    "outlet_id": str(self.outlet.id),
+                    "evidence": {"id": stale_evidence_uuid},
+                },
+            })
+
+        # 5. Check-out without prior check-in -> rejected fail-closed
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.visit.check_out",
+                "payload": {
+                    "outlet_id": str(self.outlet.id),
+                    "outcome": "order_requested",
+                },
+            })
+
+        # 6. Valid check-in using frontend wire DTO format (VisitCheckInSchema)
+        valid_evidence_uuid = str(uuid.uuid4())
+        self.env["id.mobile.evidence"].sudo().create({
+            "user_id": self.mobile.id,
+            "company_id": self.company.id,
+            "outlet_id": self.outlet.id,
+            "client_uuid": valid_evidence_uuid,
+            "fingerprint": "valid-evidence-fingerprint",
+            "receipt_json": json.dumps({
+                "business_date": day_str,
+                "original_sha256": "fake-photo-hash",
+            }),
+            "original": dummy_base64,
+            "watermarked": dummy_base64,
+        })
+        checkin_uuid = str(uuid.uuid4())
+        rc_checkin = model.process_command({
+            "client_uuid": checkin_uuid,
             "type": "sales.visit.check_in",
             "payload": {
                 "outlet_id": str(self.outlet.id),
-                "evidence_uuid": evidence_uuid,
+                "visit_uuid": str(uuid.uuid4()),
+                "work_session_id": str(uuid.uuid4()),
+                "business_date": day_str,
+                "snapshot_version": self.snapshot_version,
+                "evidence": {
+                    "id": valid_evidence_uuid,
+                    "packageHash": "fake-photo-hash",
+                },
             },
         })
-        self.assertEqual(rc["status"], "accepted")
+        self.assertEqual(rc_checkin["status"], "accepted")
 
-    def test_delivery_pod_validation(self):
-        """Delivery POD submit requires trip identity and proof."""
+        # 7. Check-out after valid check-in -> accepted
+        checkout_uuid = str(uuid.uuid4())
+        rc_checkout = model.process_command({
+            "client_uuid": checkout_uuid,
+            "type": "sales.visit.check_out",
+            "payload": {
+                "outlet_id": str(self.outlet.id),
+                "outcome": "order_requested",
+                "notes": "Visit completed successfully.",
+            },
+        })
+        self.assertEqual(rc_checkout["status"], "accepted")
+
+    def test_delivery_pod_and_trip_close_validation(self):
+        """Delivery POD submit requires valid picking manifest and persistent evidence; trip close binds PODs."""
         model = self._command_model()
+        day_str = business_date().isoformat()
+        dummy_base64 = base64.b64encode(b"valid-pod-photo")
 
-        # Empty payload
+        # 1. POD with nonexistent trip / manifest -> rejected
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
                 "type": "delivery.pod.submit",
-                "payload": {},
+                "payload": {
+                    "source": {"trip": "NONEXISTENT-TRIP", "id": "DO-NONE"},
+                    "evidence": {"id": str(uuid.uuid4())},
+                    "recipient": "Pak Budi",
+                },
             })
 
-        # Missing trip_id
-        with self.assertRaises(UserError):
-            model.process_command({
-                "client_uuid": str(uuid.uuid4()),
-                "type": "delivery.pod.submit",
-                "payload": {"evidence_uuid": str(uuid.uuid4())},
+        # 2. Prepare valid picking manifest and evidence in database
+        picking_type = self.env["stock.picking.type"].search([("company_id", "=", self.company.id)], limit=1)
+        if not picking_type:
+            picking_type = self.env["stock.picking.type"].create({
+                "name": "Delivery Orders",
+                "sequence_code": "OUT",
+                "code": "outgoing",
+                "company_id": self.company.id,
             })
-
-        # Missing evidence
-        with self.assertRaises(UserError):
-            model.process_command({
-                "client_uuid": str(uuid.uuid4()),
-                "type": "delivery.pod.submit",
-                "payload": {"trip_id": "TRIP-123"},
+        location_src = self.env["stock.location"].search([("company_id", "=", self.company.id)], limit=1)
+        if not location_src:
+            location_src = self.env["stock.location"].create({
+                "name": "Stock Location",
+                "usage": "internal",
+                "company_id": self.company.id,
             })
+        location_dest = self.env.ref("stock.stock_location_customers")
 
-        # Valid POD
+        picking = self.env["stock.picking"].sudo().create({
+            "name": "DO-FMCG-001",
+            "origin": "TRIP-01",
+            "partner_id": self.outlet.id,
+            "picking_type_id": picking_type.id,
+            "location_id": location_src.id,
+            "location_dest_id": location_dest.id,
+            "company_id": self.company.id,
+        })
+
+        pod_evidence_uuid = str(uuid.uuid4())
+        self.env["id.mobile.evidence"].sudo().create({
+            "user_id": self.mobile.id,
+            "company_id": self.company.id,
+            "outlet_id": self.outlet.id,
+            "client_uuid": pod_evidence_uuid,
+            "fingerprint": "pod-evidence-fingerprint",
+            "receipt_json": json.dumps({
+                "business_date": day_str,
+                "original_sha256": "pod-hash-01",
+            }),
+            "original": dummy_base64,
+            "watermarked": dummy_base64,
+        })
+
+        # 3. Positive POD submission matching frontend DeliveryPodSchema
         pod_uuid = str(uuid.uuid4())
-        rc = model.process_command({
+        rc_pod = model.process_command({
             "client_uuid": pod_uuid,
             "type": "delivery.pod.submit",
-            "payload": {"trip_id": "TRIP-123", "evidence_uuid": str(uuid.uuid4())},
+            "payload": {
+                "pod_version": 1,
+                "source": {
+                    "id": picking.name,
+                    "trip": "TRIP-01",
+                    "outlet_id": str(self.outlet.id),
+                },
+                "recipient": "Budi Santoso",
+                "outcome": "delivered",
+                "lines": [{"id": "1", "received": 2}],
+                "evidence": {
+                    "id": pod_evidence_uuid,
+                    "packageHash": "pod-hash-01",
+                },
+            },
         })
-        self.assertEqual(rc["status"], "accepted")
-        self.assertEqual(rc["reference"], f"POD-{pod_uuid[:8]}")
+        self.assertEqual(rc_pod["status"], "accepted")
+        self.assertEqual(rc_pod["reference"], f"POD-{pod_uuid[:8]}")
+
+        # 4. Trip close without PODs or nonexistent trip -> rejected
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "delivery.trip.close",
+                "payload": {"trip_id": "NONEXISTENT-TRIP"},
+            })
+
+        # 5. Trip close with invalid/foreign POD UUID -> rejected
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "delivery.trip.close",
+                "payload": {
+                    "trip_id": "TRIP-01",
+                    "pod_uuids": [str(uuid.uuid4())],
+                },
+            })
+
+        # 6. Positive trip close proving all submitted PODs
+        close_uuid = str(uuid.uuid4())
+        rc_close = model.process_command({
+            "client_uuid": close_uuid,
+            "type": "delivery.trip.close",
+            "payload": {
+                "trip_id": "TRIP-01",
+                "business_date": day_str,
+                "pod_uuids": [pod_uuid],
+            },
+        })
+        self.assertEqual(rc_close["status"], "accepted")
+
+    def test_unsupported_commands_fail_closed(self):
+        """Unimplemented domains (collection, hris, expense) fail closed with UserError."""
+        model = self._command_model()
+        for cmd_type in ("collection.receipt.submit", "hris.attendance.capture", "field_expense.request"):
+            with self.assertRaises(UserError):
+                model.process_command({
+                    "client_uuid": str(uuid.uuid4()),
+                    "type": cmd_type,
+                    "payload": {},
+                })
 
 
 @tagged("post_install", "-at_install")
@@ -376,11 +614,17 @@ class TestMobileCommandsHttp(MobileFixture, HttpCase):
     def test_http_csrf_and_role_protection(self):
         """Validates CSRF token verification, auth gates, and command HTTP route responses."""
         url = "/api/v1/sync/commands"
+        snapshot_payload = self.env["id.mobile.workday"].with_user(self.mobile).with_context(
+            allowed_company_ids=self.mobile.company_ids.ids
+        )._snapshot_payload()
+        snapshot_version = snapshot_payload["version"]
+
         cmd = {
             "client_uuid": str(uuid.uuid4()),
             "type": "sales.order.submit",
             "payload": {
                 "outlet_id": str(self.outlet.id),
+                "snapshot_version": snapshot_version,
                 "lines": [{"product_id": str(self.product.id), "qty": "1", "uom": "carton"}],
             },
         }
