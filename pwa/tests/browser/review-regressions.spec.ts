@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./session-fixture";
 import {
     ensureDaily,
     switchPersona,
@@ -182,18 +182,11 @@ test("daily helper waits for deliberately held attendance persistence before syn
     });
     const pending = ensureDaily(page);
     await page.waitForFunction(() => (window as any).__attendanceHeld === true);
+    await expect(page.getByRole("dialog")).toBeVisible();
     await expect(
-        page.getByRole("region", {
-            name: "Sesi kerja",
-            exact: true,
-        }),
-    ).toHaveAttribute("aria-busy", "true");
-    await expect(
-        page.getByRole("button", {
-            name: "Memproses…",
-            exact: true,
-        }),
+        page.getByRole("button", { name: "Menyimpan…", exact: true }),
     ).toBeDisabled();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toHaveCount(0);
     await page.evaluate(() => (window as any).__releaseAttendance());
     await pending;
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();

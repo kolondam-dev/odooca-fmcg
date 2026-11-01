@@ -79,7 +79,7 @@ export function MorningSession({
         setBusy(true);
         setError("");
         try {
-            const next = await service.openDay();
+            const next = await service.open();
             setRecord(next);
             changed.current(next);
         } catch (e) {
@@ -112,7 +112,11 @@ export function MorningSession({
                     </p>
                 </div>
                 <span class={`pill ${ready ? "success" : "neutral"}`}>
-                    {ready ? "Sesi aktif" : "Belum dibuka"}
+                    {today?.clockOutAt
+                        ? "Sesi selesai"
+                        : ready
+                          ? "Sesi aktif"
+                          : "Belum dibuka"}
                 </span>
             </div>
             {ready ? (
@@ -123,7 +127,7 @@ export function MorningSession({
             ) : (
                 <button
                     class="secondary full"
-                    disabled={!loaded || busy}
+                    disabled={!loaded || busy || !today || !!today.clockOutAt}
                     onClick={() => void advance()}
                 >
                     {busy ? "Memproses…" : "Buka sesi kerja"}

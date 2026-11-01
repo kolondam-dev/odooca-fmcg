@@ -4552,6 +4552,9 @@
             "type": "string",
             "minLength": 1
           },
+          "companyName": {
+            "type": "string"
+          },
           "name": {
             "type": "string",
             "minLength": 1

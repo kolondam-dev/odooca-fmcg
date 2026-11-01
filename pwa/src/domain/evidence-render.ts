@@ -55,12 +55,14 @@ export async function renderEvidencePackage(
     selectedAt: string,
     fixSampledAt: string,
     relaxed = false,
+    caption?: { company: string; employee: string; address: string },
 ): Promise<Evidence> {
     validateEvidenceTime(ref, selectedAt, fixSampledAt, relaxed);
     const bitmap = await createImageBitmap(photo);
     const width = Math.max(640, bitmap.width),
         height = bitmap.height;
-    const { c, ctx } = canvas(width, height + 126);
+    const bannerHeight = caption ? 220 : 126;
+    const { c, ctx } = canvas(width, height + bannerHeight);
     try {
         ctx.fillStyle = "#fff";
         ctx.fillRect(0, 0, width, height);
@@ -75,7 +77,7 @@ export async function renderEvidencePackage(
         bitmap.close();
     }
     ctx.fillStyle = "#102746";
-    ctx.fillRect(0, height, width, 126);
+    ctx.fillRect(0, height, width, bannerHeight);
     ctx.fillStyle = "#fff";
     ctx.font = "16px sans-serif";
     const when = new Date(ref.capturedAt).toLocaleString("id-ID", {
@@ -95,6 +97,40 @@ export async function renderEvidencePackage(
         16,
         height + 101,
     );
+    if (caption) {
+        ctx.fillStyle = "#102746";
+        ctx.fillRect(0, height, width, bannerHeight);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 18px sans-serif";
+        ctx.fillText(caption.company, 16, height + 28, width - 32);
+        ctx.font = "16px sans-serif";
+        ctx.fillText(caption.employee, 16, height + 56, width - 32);
+        ctx.fillText(
+            `${when} WITA · waktu perangkat`,
+            16,
+            height + 84,
+            width - 32,
+        );
+        const words = caption.address.split(/\s+/);
+        let line = "",
+            y = height + 112;
+        for (const word of words) {
+            if (ctx.measureText(`${line} ${word}`).width > width - 32 && line) {
+                ctx.fillText(line, 16, y, width - 32);
+                y += 22;
+                line = word;
+            } else line = `${line} ${word}`.trim();
+        }
+        ctx.fillText(line, 16, Math.min(y, height + 156), width - 32);
+        ctx.fillText(coordinates, 16, height + 184, width - 32);
+        ctx.font = "12px sans-serif";
+        ctx.fillText(
+            "Bukti lokal · alamat diisi pengguna · belum diverifikasi server",
+            16,
+            height + 207,
+            width - 32,
+        );
+    }
     const blob = await encode(c, "image/jpeg", 1024 * 1024);
     const { c: m, ctx: g } = canvas(480, 320);
     g.fillStyle = "#edf3f9";

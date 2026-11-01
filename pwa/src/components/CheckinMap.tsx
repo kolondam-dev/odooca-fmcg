@@ -3,7 +3,15 @@ import { checkinMap, type MapFix, type MapSite } from "../domain/checkin-map";
 import { distanceMeters } from "../domain/format";
 
 // Display-only: this component never authorizes a check-in or changes evidence.
-export function CheckinMap({ site, fix }: { site: MapSite; fix?: MapFix }) {
+export function CheckinMap({
+    site,
+    fix,
+    compact = false,
+}: {
+    site: MapSite;
+    fix?: MapFix;
+    compact?: boolean;
+}) {
     const scope = JSON.stringify([site, fix]);
     const [enabled, setEnabled] = useState(false);
     const [zoom, setZoom] = useState<number>();
@@ -51,7 +59,10 @@ export function CheckinMap({ site, fix }: { site: MapSite; fix?: MapFix }) {
             ? "Di luar radius"
             : "Akurasi belum pasti";
     return (
-        <section class="checkin-map" aria-label={`Preview peta ${site.name}`}>
+        <section
+            class={`checkin-map${compact ? " compact-map" : ""}`}
+            aria-label={`Preview peta ${site.name}`}
+        >
             <strong>Preview peta · {site.name}</strong>
             {(site.simulated || fix?.simulated) && (
                 <p class="notice">
@@ -164,9 +175,9 @@ export function CheckinMap({ site, fix }: { site: MapSite; fix?: MapFix }) {
             {!enabled ? (
                 <>
                     <p class="footnote">
-                        Muat peta jalan menghubungi OpenStreetMap dan membagikan
-                        area peta serta alamat IP. Foto dan identitas tidak
-                        dikirim. Diagram titik tetap tersedia tanpa jaringan.
+                        {compact
+                            ? "Memuat OpenStreetMap membagikan IP dan area peta."
+                            : "Muat peta jalan menghubungi OpenStreetMap dan membagikan area peta serta alamat IP. Foto dan identitas tidak dikirim. Diagram titik tetap tersedia tanpa jaringan."}
                     </p>
                     <button
                         type="button"

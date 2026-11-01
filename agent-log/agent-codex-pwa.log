@@ -194,3 +194,10 @@
 - Added temporary/diagnostic-only field-name report for changed pre-existing stock.location IDs; values are never logged. Next CI run will identify exact native side-effect before any policy exception is considered.
 - No deploy or Railway mutation.
 - Task managed by agent-codex-pwa at 2026-10-30T16:15:31.361+07:00
+[2026-11-01T08:20:33+07:00] [INFO] Login nyata, beranda dan halaman absensi penuh
+- Branch agen/pwa-login-attendance-ux dari main 628f603; provisioning lama diambil alih opencode/antigravity sesuai instruksi pemilik.
+- Protokol, HANDOFF dan log terkait diperiksa; native Odoo/CSRF/cookie dan bootstrap/snapshot nyata menggantikan persona pada aplikasi penuh.
+- Quick action bergantung check-in; clock in/out dan bukti paket lokal persisten; kantor dari snapshot; watermark perusahaan/karyawan/waktu WITA/alamat pengguna/koordinat; form penuh dan navbar empat kolom.
+- PASS lokal: 330 unit, 144 browser phone/tablet, typecheck, contracts, format, tiga build/check-build, ruff, manifest, diff check. Login server dan perangkat nyata belum diuji. Tidak merge/deploy.
+- Absensi/transaksi tetap lokal demo; evidence resmi, ACL, CSRF dan geofence backend tidak dilonggarkan. Detail: docs/ui/PWA_LOGIN_ATTENDANCE_UX.md.
+- Task managed by agent codex-pwa at 2026-11-01T08:20:33+07:00

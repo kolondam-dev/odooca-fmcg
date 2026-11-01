@@ -279,3 +279,37 @@ it("rejects a snapshot newer than its session even if both timestamps are in the
     expect(morningReady(invalid, ownerKey(identity))).toBe(false);
     expect(await service.restore()).toBeUndefined();
 });
+
+it("clock-out is durable, revokes session readiness and cannot be repeated", async () => {
+    const { service, identity } = await setup();
+    await service.openDay();
+    vi.setSystemTime(new Date("2026-10-27T09:00:00Z"));
+    const closed = await service.clockOut();
+    expect(closed.clockOutAt).toBe("2026-10-27T09:00:00.000Z");
+    expect(morningReady(closed, ownerKey(identity))).toBe(false);
+    expect((await service.restore())?.clockOutAt).toBe(closed.clockOutAt);
+    await expect(service.clockOut()).rejects.toThrow("Sesi aktif");
+});
+it("clock-out rejects missing, foreign-owner or stale-day photo evidence", async () => {
+    const { service } = await setup();
+    await service.openDay();
+    await expect(
+        service.clockOut({
+            id: crypto.randomUUID(),
+            latitude: 1.4,
+            longitude: 124.8,
+            accuracy: 5,
+            capturedAt: "2026-10-26T00:00:00.000Z",
+        }),
+    ).rejects.toThrow("Foto lokal");
+    expect((await service.restore())?.clockOutAt).toBeUndefined();
+});
+it("corrupt clock-out timestamp never restores a ready session", async () => {
+    const { service, identity } = await setup();
+    const record = await service.openDay();
+    await store.draft(ownerKey(identity), MORNING_KEY, {
+        ...record,
+        clockOutAt: "2026-10-28T00:00:00.000Z",
+    });
+    expect(await service.restore()).toBeUndefined();
+});

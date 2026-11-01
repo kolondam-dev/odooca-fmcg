@@ -1,13 +1,9 @@
+import { checkIn } from "./session-fixture";
 import { switchPersona } from "./delivery-helpers";
 import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./session-fixture";
 async function openMorning(page: Page) {
-    await page
-        .getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        })
-        .click();
+    await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
 }
 async function visitOrder(page: Page, first = true) {
@@ -113,7 +109,7 @@ test("stacked roles and persona switch never show another persona queue", async 
         page
             .getByRole("navigation")
             .getByRole("button", { name: "Delivery", exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
 });
 test("offline order survives reload, syncs on reconnect, stays separate across accounts", async ({
     page,
@@ -172,6 +168,7 @@ test("expense request is an approval request, not disbursement", async ({
     page,
 }) => {
     await page.goto("./");
+    await checkIn(page);
     await page
         .getByRole("button", { name: "Uang lapangan", exact: false })
         .click();
@@ -204,11 +201,10 @@ test("missing evidence is not accepted as attendance", async ({
 }) => {
     await context.clearPermissions();
     await page.goto("./");
-    await page.getByRole("button", { name: /^Absensi Foto/ }).click();
-    await page.getByRole("button", { name: "Simpan absensi" }).click();
-    await expect(page.getByRole("alert")).toContainText(
-        "Simpan foto dan lokasi dahulu.",
-    );
+    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await expect(
+        page.getByRole("button", { name: "Check in", exact: true }),
+    ).toBeDisabled();
 });
 test("live build is fail-closed with no simulation selector or data", async ({
     page,
@@ -225,6 +221,7 @@ test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
     page,
 }) => {
     await page.goto("./");
+    await checkIn(page);
     await page
         .getByRole("button", { name: "Uang lapangan", exact: false })
         .click();
@@ -252,57 +249,32 @@ test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
     await expect(page.locator(".activity")).toHaveCount(1);
 });
 
-test("morning gate requires online sync, persists per persona and expires next day WITA", async ({
+test("morning gate requires attendance, preserves account separation and expires next WITA day", async ({
     page,
-    context,
 }) => {
     await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
     await page.goto("./");
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
     await expect(
-        page.getByRole("button", { name: /Toko Sinar Pagi/ }),
-    ).toHaveCount(0);
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-    await context.setOffline(true);
-    await page
-        .getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        })
-        .click();
-    await expect(page.getByRole("alert")).toContainText("wajib dibuka online");
-    await context.setOffline(false);
-    await page
-        .getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        })
-        .click();
+        page.getByRole("button", { name: /Buat order/ }),
+    ).toBeDisabled();
+    await expect(
+        page.getByRole("button", { name: "Buka sesi kerja", exact: true }),
+    ).toBeDisabled();
+    await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.reload();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await switchPersona(page, "canvass");
-    await expect(page.getByText("Sesi aktif", { exact: true })).toHaveCount(0);
     await expect(
-        page.getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        }),
-    ).toBeVisible();
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+        page.getByRole("button", { name: /Buat order/ }),
+    ).toBeDisabled();
     await switchPersona(page, "sales");
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.clock.setSystemTime(new Date("2026-10-27T16:00:01Z"));
     await page.reload();
     await expect(
-        page.getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        }),
-    ).toBeVisible();
+        page.getByRole("button", { name: /Buat order/ }),
+    ).toBeDisabled();
     await expect(page.getByText("Sesi aktif", { exact: true })).toHaveCount(0);
 });
 
@@ -420,9 +392,9 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
         }),
     ).toBeVisible();
     await expect(page.getByText("Sesi aktif", { exact: true })).toHaveCount(0);
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await expect(
+        page.getByRole("button", { name: "Buat order", exact: false }),
+    ).toBeDisabled();
     await expect(
         page.getByRole("button", { name: /Toko Sinar Pagi/ }),
     ).toHaveCount(0);

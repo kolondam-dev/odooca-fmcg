@@ -1,5 +1,11 @@
+import { checkIn } from "./session-fixture";
 import { switchPersona } from "./delivery-helpers";
-import { expect, test, type Page, type BrowserContext } from "@playwright/test";
+import {
+    expect,
+    test,
+    type Page,
+    type BrowserContext,
+} from "./session-fixture";
 async function requestAdvance(page: Page, category = "meal") {
     await page.addInitScript(() => {
         const original = navigator.geolocation.getCurrentPosition.bind(
@@ -21,6 +27,7 @@ async function requestAdvance(page: Page, category = "meal") {
     });
     await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
     await page.goto("./");
+    await checkIn(page);
     await page
         .getByRole("button", { name: "Uang lapangan", exact: false })
         .click();
@@ -441,8 +448,19 @@ test("visual evidence package restores offline and rejects changed photo bytes",
                 .getAll();
             r.onsuccess = () => resolve(r.result);
         });
+        const morning = await new Promise<any>((resolve) => {
+            const request = db
+                .transaction("drafts")
+                .objectStore("drafts")
+                .get("demo-mdu:DEMO-ANDRE:morning-session-v1");
+            request.onsuccess = () => resolve(request.result);
+        });
         db.close();
-        const e = rows[0],
+        const e = rows.find(
+                (row) =>
+                    row.key !==
+                    `demo-mdu:DEMO-ANDRE:${morning.value.attendanceEvidence.id}`,
+            ),
             digest = async (b: Blob) =>
                 [
                     ...new Uint8Array(
@@ -455,6 +473,7 @@ test("visual evidence package restores offline and rejects changed photo bytes",
                     .map((n) => n.toString(16).padStart(2, "0"))
                     .join("");
         return {
+            key: e.key,
             kind: e.visual.kind,
             photoOk: (await digest(e.blob)) === e.visual.photoSha256,
             mapOk: (await digest(e.visual.map)) === e.visual.mapSha256,
@@ -485,15 +504,15 @@ test("visual evidence package restores offline and rejects changed photo bytes",
     await expect(
         group.getByAltText("Pratinjau foto bukti lokal"),
     ).toBeVisible();
-    await page.evaluate(async () => {
+    await page.evaluate(async (evidenceKey) => {
         const db = await new Promise<IDBDatabase>((resolve) => {
             const r = indexedDB.open("fmcg-field-demo-v1");
             r.onsuccess = () => resolve(r.result);
         });
         const tx = db.transaction("evidence", "readwrite");
-        const r = tx.objectStore("evidence").getAll();
+        const r = tx.objectStore("evidence").get(evidenceKey);
         r.onsuccess = () => {
-            const e = r.result[0];
+            const e = r.result;
             e.blob = new Blob(["changed photo bytes"], { type: "image/jpeg" });
             tx.objectStore("evidence").put(e);
         };
@@ -502,7 +521,7 @@ test("visual evidence package restores offline and rejects changed photo bytes",
             tx.onerror = () => reject(tx.error);
         });
         db.close();
-    });
+    }, meta.key);
     await page
         .getByRole("button", { name: "Kembali ke akun", exact: true })
         .click();

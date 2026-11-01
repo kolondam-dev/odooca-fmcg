@@ -1,3 +1,6 @@
+import { LocalExpenseEvidenceSchema } from "./settlement-contracts";
+import type { EvidenceReference } from "./evidence-package";
+import { assertLocalEvidence } from "./evidence-package";
 import { DeliveryTaskSchema } from "./delivery-contracts";
 import { z } from "zod";
 import {
@@ -14,6 +17,9 @@ export const MorningRecordSchema = z
         businessDate: z.iso.date(),
         attendanceReference: z.string().min(1),
         attendanceAt: z.iso.datetime(),
+        clockOutAt: z.iso.datetime().optional(),
+        attendanceEvidence: LocalExpenseEvidenceSchema.optional(),
+        clockOutEvidence: LocalExpenseEvidenceSchema.optional(),
         sessionId: z.string().uuid().nullable(),
         openedAt: z.iso.datetime().nullable(),
         snapshot: SnapshotSchema.nullable(),
@@ -55,6 +61,13 @@ function validMorningRecord(
         Date.parse(record.attendanceAt) > Date.now()
     )
         return undefined;
+    if (
+        record.clockOutAt &&
+        (Date.parse(record.clockOutAt) < Date.parse(record.attendanceAt) ||
+            Date.parse(record.clockOutAt) > Date.now() ||
+            fieldBusinessDate(new Date(record.clockOutAt)) !== date)
+    )
+        return undefined;
     // Attendance-only is a valid intermediate state, but never a ready session.
     if (
         record.sessionId === null &&
@@ -85,7 +98,8 @@ export function morningReady(
     owner: string,
     date = fieldBusinessDate(),
 ): boolean {
-    return !!validMorningRecord(record, owner, date)?.sessionId;
+    const valid = validMorningRecord(record, owner, date);
+    return !!valid?.sessionId && !valid.clockOutAt;
 }
 export class MorningSimulation {
     constructor(
@@ -128,15 +142,44 @@ export class MorningSimulation {
      * then the daily bundle is opened. Attendance evidence captured elsewhere in
      * the app is already durable before this call.
      */
-    async openDay() {
+    async openDay(evidence?: EvidenceReference) {
         const current = await this.restore();
         if (!current || current.businessDate !== fieldBusinessDate())
-            await this.acceptAttendance();
+            await this.acceptAttendance(evidence);
         return this.open();
     }
-    async acceptAttendance() {
+    async clockOut(evidence?: EvidenceReference) {
+        await this.checkConnection();
+        const record = await this.restore();
+        if (!record?.sessionId || record.clockOutAt)
+            throw new Error("Sesi aktif tidak tersedia.");
+        await this.checkEvidence(evidence);
+        const next = {
+            ...record,
+            clockOutAt: new Date().toISOString(),
+            ...(evidence ? { clockOutEvidence: evidence } : {}),
+        };
+        await this.store.draft(next.owner, MORNING_KEY, next);
+        return next;
+    }
+    private async checkEvidence(evidence?: EvidenceReference) {
+        if (!evidence) return;
+        const owner = ownerKey(this.identity);
+        const row = (await this.store.listEvidence(owner)).find(
+            (row) => row.key === `${owner}:${evidence.id}`,
+        );
+        await assertLocalEvidence(row, evidence, owner);
+        if (
+            fieldBusinessDate(new Date(evidence.capturedAt)) !==
+            fieldBusinessDate()
+        )
+            throw new Error("Foto absensi harus diambil hari ini.");
+    }
+    async acceptAttendance(evidence?: EvidenceReference) {
         const businessDate = await this.checkConnection();
+        await this.checkEvidence(evidence);
         const record: MorningRecord = {
+            ...(evidence ? { attendanceEvidence: evidence } : {}),
             mode: "simulation",
             owner: ownerKey(this.identity),
             businessDate,

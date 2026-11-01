@@ -15,6 +15,7 @@ interface CameraViewfinderProps {
     outletName?: string;
     salespersonName?: string;
     defaultCoordinates?: { latitude: number; longitude: number };
+    rawCapture?: boolean;
     onCapture: (result: CameraCaptureResult) => void;
     onClose: () => void;
 }
@@ -26,6 +27,7 @@ export function CameraViewfinder({
     defaultCoordinates,
     onCapture,
     onClose,
+    rawCapture = false,
 }: CameraViewfinderProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
@@ -236,7 +238,7 @@ export function CameraViewfinder({
         const scale = targetWidth / sourceWidth;
         const targetHeight = Math.round(sourceHeight * scale);
 
-        const bannerHeight = 110;
+        const bannerHeight = rawCapture ? 0 : 110;
         const totalHeight = targetHeight + bannerHeight;
 
         const canvas = document.createElement("canvas");
@@ -249,42 +251,47 @@ export function CameraViewfinder({
         // Draw image frame
         ctx.drawImage(source, 0, 0, targetWidth, targetHeight);
 
-        // Watermark Banner Background (Dark FMCG theme)
-        ctx.fillStyle = "#0a192f";
-        ctx.fillRect(0, targetHeight, targetWidth, bannerHeight);
+        if (!rawCapture) {
+            // Watermark Banner Background (Dark FMCG theme)
+            ctx.fillStyle = "#0a192f";
+            ctx.fillRect(0, targetHeight, targetWidth, bannerHeight);
 
-        // Top accent line in gold/amber
-        ctx.fillStyle = "#f59e0b";
-        ctx.fillRect(0, targetHeight, targetWidth, 4);
+            // Top accent line in gold/amber
+            ctx.fillStyle = "#f59e0b";
+            ctx.fillRect(0, targetHeight, targetWidth, 4);
 
-        // Text styling
-        ctx.fillStyle = "#ffffff";
-        ctx.textBaseline = "middle";
+            // Text styling
+            ctx.fillStyle = "#ffffff";
+            ctx.textBaseline = "middle";
 
-        // Line 1: outlet & document context
-        ctx.font =
-            "bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-        const outletText = outletName
-            ? `BUKTI DISPLAY · ${outletName}`
-            : "BUKTI KUNJUNGAN LAPANGAN";
-        ctx.fillText(outletText, 20, targetHeight + 28);
+            // Line 1: outlet & document context
+            ctx.font =
+                "bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            const outletText = outletName
+                ? `BUKTI DISPLAY · ${outletName}`
+                : "BUKTI KUNJUNGAN LAPANGAN";
+            ctx.fillText(outletText, 20, targetHeight + 28);
 
-        // Line 2: Timestamp & GPS Coordinates
-        ctx.font =
-            "16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-        ctx.fillStyle = "#cbd5e1";
-        const timeText =
-            currentTime || `${new Date().toLocaleTimeString("id-ID")} WITA`;
-        const coordText = `GPS: ${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)} (±${Math.round(coords.accuracy)}m)`;
-        ctx.fillText(`${timeText}   |   ${coordText}`, 20, targetHeight + 58);
+            // Line 2: Timestamp & GPS Coordinates
+            ctx.font =
+                "16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            ctx.fillStyle = "#cbd5e1";
+            const timeText =
+                currentTime || `${new Date().toLocaleTimeString("id-ID")} WITA`;
+            const coordText = `GPS: ${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)} (±${Math.round(coords.accuracy)}m)`;
+            ctx.fillText(
+                `${timeText}   |   ${coordText}`,
+                20,
+                targetHeight + 58,
+            );
 
-        // Line 3: Officer Name & Verification Badge
-        ctx.font =
-            "14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-        ctx.fillStyle = "#94a3b8";
-        const officerText = `Petugas: ${salespersonName}   |   Status: bukti lokal, belum diverifikasi`;
-        ctx.fillText(officerText, 20, targetHeight + 86);
-
+            // Line 3: Officer Name & Verification Badge
+            ctx.font =
+                "14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            ctx.fillStyle = "#94a3b8";
+            const officerText = `Petugas: ${salespersonName}   |   Status: bukti lokal, belum diverifikasi`;
+            ctx.fillText(officerText, 20, targetHeight + 86);
+        }
         // Convert to Blob
         return new Promise<Blob>((resolve, reject) => {
             canvas.toBlob(
@@ -319,7 +326,7 @@ export function CameraViewfinder({
 
             onCapture({
                 blob,
-                timestamp: coords.timestamp,
+                timestamp: Date.now(),
                 latitude: coords.latitude,
                 longitude: coords.longitude,
                 accuracy: coords.accuracy,
@@ -353,7 +360,7 @@ export function CameraViewfinder({
 
             onCapture({
                 blob,
-                timestamp: coords.timestamp,
+                timestamp: Date.now(),
                 latitude: coords.latitude,
                 longitude: coords.longitude,
                 accuracy: coords.accuracy,

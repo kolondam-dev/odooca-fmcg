@@ -89,6 +89,7 @@ class MobileWorkday(models.Model):
         user = self.env.user
         result = {
             "id": str(user.id), "companyId": str(assignment.company_id.id),
+            "companyName": assignment.company_id.name,
             "name": user.name, "title": user.partner_id.function or "",
             "roles": ["sales"], "businessDate": day.isoformat(),
         }

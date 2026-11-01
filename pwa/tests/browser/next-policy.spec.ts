@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./session-fixture";
 import {
     ensureDaily,
     switchPersona,
@@ -200,6 +200,16 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             expect(await readSoState(page)).toEqual(before);
             await context.setOffline(false);
             await ensureDaily(page);
+            await page
+                .getByRole("button", { name: "Lainnya", exact: true })
+                .click();
+            await page.getByText(/Riwayat SO ·/).click();
+            await page
+                .getByRole("button", {
+                    name: "Lihat draft koreksi lewat hari",
+                    exact: true,
+                })
+                .click();
             await expect(
                 page.getByRole("button", {
                     name: "Ajukan revisi SO",
@@ -263,6 +273,9 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             expect(await readSoState(page)).toEqual(before);
             await context.setOffline(false);
             await ensureDaily(page);
+            await page
+                .getByRole("button", { name: "Lainnya", exact: true })
+                .click();
             await expect(
                 page.getByRole("button", {
                     name: "Setujui diskon",

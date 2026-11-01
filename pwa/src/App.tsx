@@ -7,7 +7,9 @@ import { OrderCatalog, OrderSummary } from "./components/OrderSheet";
 import { DisplayPhoto } from "./components/DisplayPhoto";
 import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { createProvider } from "./data/provider";
+import { HttpProvider } from "./data/provider";
+import { AttendanceCapture } from "./components/AttendanceCapture";
+import { Login } from "./components/Login";
 import {
     canOpen,
     ownerKey,
@@ -44,7 +46,7 @@ type Dialog =
     | { type: "extra" }
     | { type: "proof"; delivery: string }
     | { type: "expense"; trip?: string }
-    | { type: "attendance" }
+    | { type: "attendance"; event?: "check_in" | "check_out" }
     | { type: "leave" }
     | { type: "profile" };
 const pages: { id: Page; name: string; icon: IconName }[] = [
@@ -60,6 +62,10 @@ const dateLabel = () =>
         weekday: "long",
         day: "numeric",
         month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
         timeZone: "Asia/Makassar",
     }).format(new Date());
 function Pill({
@@ -106,115 +112,134 @@ export function App() {
                 </p>
             </main>
         );
-    const [actor, setActor] = useState("sales");
-    const [attempt, setAttempt] = useState(0);
     const [boot, setBoot] = useState<{
         identity: Identity;
         snapshot: Snapshot;
         provider: FieldProvider;
     }>();
-    const [error, setError] = useState("");
+    const [checking, setChecking] = useState(true);
+    const [loginError, setLoginError] = useState("");
+    const generation = useRef(0);
+    async function connect() {
+        const ticket = ++generation.current;
+        const source = new HttpProvider({ readOnly: true });
+        const identity = await source.bootstrap();
+        const snapshot = await source.snapshot();
+        const { MockProvider } = await import("./data/mock");
+        // Authentication, identity and work data are real. Existing transaction
+        // simulation stays local until the command API has its own acceptance.
+        const provider = new MockProvider("sales", true, source);
+        if (ticket === generation.current)
+            setBoot({ identity, snapshot, provider });
+    }
     useEffect(() => {
         let active = true;
-        setBoot(undefined);
-        setError("");
-        void (async () => {
-            try {
-                const provider = await createProvider(actor);
-                const identity = await provider.bootstrap();
-                const snapshot = await provider.snapshot();
-                if (active) setBoot({ provider, identity, snapshot });
-            } catch (e) {
-                if (active)
-                    setError(
-                        e instanceof Error
-                            ? e.message
-                            : "Layanan belum tersedia.",
+        void connect()
+            .catch((error) => {
+                if (active && error?.status !== 401)
+                    setLoginError(
+                        "Ruang kerja belum tersedia. Periksa koneksi atau hubungi admin.",
                     );
-            }
-        })();
+            })
+            .finally(() => {
+                if (active) setChecking(false);
+            });
         return () => {
             active = false;
+            generation.current++;
         };
-    }, [actor, attempt]);
-    if (!boot)
+    }, []);
+    useEffect(() => {
+        if (!boot) return;
+        let active = true;
+        const validate = async () => {
+            if (document.visibilityState === "hidden" || !navigator.onLine)
+                return;
+            try {
+                const identity = await new HttpProvider({
+                    readOnly: true,
+                }).bootstrap();
+                if (active && ownerKey(identity) !== ownerKey(boot.identity)) {
+                    generation.current++;
+                    setBoot(undefined);
+                    setLoginError("Memuat sesi akun…");
+                    await connect();
+                } else if (
+                    active &&
+                    identity.businessDate !== boot.identity.businessDate
+                ) {
+                    setBoot({ ...boot, identity });
+                }
+            } catch (failure) {
+                if (
+                    active &&
+                    failure instanceof Error &&
+                    "status" in failure &&
+                    [401, 403, 409].includes(Number(failure.status))
+                ) {
+                    generation.current++;
+                    setBoot(undefined);
+                    setLoginError("Sesi berakhir. Silakan masuk kembali.");
+                }
+            }
+        };
+        window.addEventListener("focus", validate);
+        window.addEventListener("online", validate);
+        document.addEventListener("visibilitychange", validate);
+        return () => {
+            active = false;
+            window.removeEventListener("focus", validate);
+            window.removeEventListener("online", validate);
+            document.removeEventListener("visibilitychange", validate);
+        };
+    }, [boot]);
+    if (checking)
         return (
-            <main class="boot">
-                <Brand large />
-                <h1 class="sr-only">Odoo FMCG Mobile</h1>
-                <p role="status">{error || "Menyiapkan ruang kerja…"}</p>
-                {error && (
-                    <>
-                        <p class="muted">
-                            {__DEMO__
-                                ? "Simulator gagal dimuat."
-                                : error.includes("Sesi resmi") ||
-                                    error.includes("login") ||
-                                    error.includes("401")
-                                  ? "Sesi login Odoo diperlukan untuk menyinkronkan rute kunjungan dan katalog produk FMCG."
-                                  : error}
-                        </p>
-                        <div
-                            style={{
-                                display: "flex",
-                                gap: "10px",
-                                marginTop: "16px",
-                                justifyContent: "center",
-                            }}
-                        >
-                            {!__DEMO__ && (
-                                <a
-                                    href="/web/login?redirect=/field/"
-                                    class="button primary"
-                                    style={{
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: "6px",
-                                        padding: "10px 18px",
-                                        background: "#102746",
-                                        color: "#ffffff",
-                                        borderRadius: "10px",
-                                        textDecoration: "none",
-                                        fontWeight: "600",
-                                        fontSize: "0.95rem",
-                                    }}
-                                >
-                                    Masuk ke Akun Odoo
-                                </a>
-                            )}
-                            <button
-                                type="button"
-                                onClick={() => setAttempt((x) => x + 1)}
-                            >
-                                Coba lagi
-                            </button>
-                        </div>
-                    </>
-                )}
+            <main class="login-page">
+                <Brand />
+                <p role="status">Memeriksa sesi…</p>
             </main>
         );
-    return (
-        <Workspace
-            key={boot.identity.id}
-            {...boot}
-            actor={actor}
-            changeActor={setActor}
-        />
-    );
+    if (!boot)
+        return (
+            <Login
+                message={loginError}
+                onSuccess={async () => {
+                    setLoginError("");
+                    try {
+                        await connect();
+                    } catch (failure) {
+                        const status =
+                            failure &&
+                            typeof failure === "object" &&
+                            "status" in failure
+                                ? Number(failure.status)
+                                : 0;
+                        throw new Error(
+                            status === 403 || status === 422
+                                ? "Akun belum memiliki akses atau penugasan yang sesuai. Hubungi admin atau line manager."
+                                : "Ruang kerja belum dapat dibuka. Periksa koneksi dan coba kembali.",
+                        );
+                    }
+                }}
+            />
+        );
+    return <Workspace key={ownerKey(boot.identity)} {...boot} />;
 }
 function Workspace({
     identity,
     snapshot: initialSnapshot,
     provider,
-    actor,
-    changeActor,
 }: {
     identity: Identity;
     snapshot: Snapshot;
     provider: FieldProvider;
-    actor: string;
-    changeActor: (actor: string) => void;
 }) {
+    const [now, setNow] = useState(Date.now());
+    useEffect(() => {
+        const timer = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, []);
     const [page, setPage] = useState<Page>("home");
     const [dialog, setDialog] = useState<Dialog>();
     const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -231,16 +256,33 @@ function Workspace({
         morningReady(morning, owner) &&
         (!identity.roles.includes("delivery") ||
             !!morning?.deliveryManifest?.length);
+    const attended =
+        !!morning &&
+        morning.businessDate ===
+            new Date(now).toLocaleDateString("en-CA", {
+                timeZone: "Asia/Makassar",
+            });
+    const checkedOut = attended && !!morning?.clockOutAt;
     const snapshot = dailyReady ? morning!.snapshot! : initialSnapshot;
     const morningService = useMemo(
         () => new MorningSimulation(store, identity, provider),
         [identity, provider],
     );
-    async function startSession() {
-        const record = await morningService.openDay();
+    async function startSession(
+        event: "check_in" | "check_out",
+        evidence: EvidenceRef,
+    ) {
+        const record =
+            event === "check_out"
+                ? await morningService.clockOut(evidence)
+                : await morningService.openDay(evidence);
         setMorning(record);
         setMorningRevision((value) => value + 1);
-        setToast("Sesi kerja aktif. Daftar outlet siap.");
+        setToast(
+            event === "check_out"
+                ? "Clock out tersimpan di perangkat."
+                : "Check-in tersimpan di perangkat. Sesi kerja aktif.",
+        );
         haptic();
     }
     function openOrder(outlet: string) {
@@ -385,7 +427,11 @@ function Workspace({
             setSyncing(false);
         }
     }
-    const nav = pages.filter((p) => canOpen(identity.roles, p.id));
+    const nav = pages.filter(
+        (p) =>
+            canOpen(identity.roles, p.id) &&
+            !(p.id === "delivery" && identity.roles.includes("sales")),
+    );
     return (
         <div class="app-shell">
             <div class="header-fixed">
@@ -401,6 +447,13 @@ function Workspace({
                         <Brand />
                     </a>
                     <div class="top-actions">
+                        <span
+                            class={`connection-badge ${online ? "" : "is-offline"}`}
+                            role="status"
+                        >
+                            <Icon name="signal" size={16} />
+                            <span>{online ? "Online" : "Offline"}</span>
+                        </span>
                         <button
                             class="icon-button"
                             aria-label="Lihat antrean sinkronisasi"
@@ -421,17 +474,6 @@ function Workspace({
                 </header>
             </div>
             <main id="main-content" class="content">
-                {identity.roles.some(
-                    (r) => r === "sales" || r === "delivery",
-                ) && (
-                    <MorningSession
-                        key={`morning:${morningRevision}`}
-                        identity={identity}
-                        provider={provider}
-                        store={store}
-                        onChange={setMorning}
-                    />
-                )}
                 {page === "home" && (
                     <>
                         <div class="greeting">
@@ -443,14 +485,25 @@ function Workspace({
                                     <span>{identity.name}.</span>
                                 </h1>
                             </div>
-                            <span class="weather">
-                                <Icon name="signal" size={18} />
-                                {online ? "Online" : "Offline"}
-                            </span>
                         </div>
+                        {identity.roles.some(
+                            (r) => r === "sales" || r === "delivery",
+                        ) && (
+                            <MorningSession
+                                key={`morning:${morningRevision}`}
+                                identity={identity}
+                                provider={provider}
+                                store={store}
+                                onChange={setMorning}
+                            />
+                        )}
                         <div class="quick-grid">
                             {identity.roles.includes("sales") && (
-                                <button onClick={() => go("sales")}>
+                                <button
+                                    class="quick-sales"
+                                    disabled={!attended || checkedOut}
+                                    onClick={() => go("sales")}
+                                >
                                     <span class="quick-icon">
                                         <Icon name="bag" size={26} />
                                     </span>
@@ -461,7 +514,11 @@ function Workspace({
                                 </button>
                             )}
                             {identity.roles.includes("delivery") && (
-                                <button onClick={() => go("delivery")}>
+                                <button
+                                    class="quick-delivery"
+                                    disabled={!attended || checkedOut}
+                                    onClick={() => go("delivery")}
+                                >
                                     <span class="quick-icon">
                                         <Icon name="truck" size={26} />
                                     </span>
@@ -471,18 +528,53 @@ function Workspace({
                                     </small>
                                 </button>
                             )}
+                            {attended ? (
+                                <div class="quick-attendance-record">
+                                    <div>
+                                        <Icon name="user" size={22} />
+                                        <strong>Clock in</strong>
+                                        <time>
+                                            {new Date(morning!.attendanceAt)
+                                                .toLocaleTimeString("id-ID", {
+                                                    timeZone: "Asia/Makassar",
+                                                    hour12: false,
+                                                })
+                                                .replaceAll(".", ":")}{" "}
+                                            WITA
+                                        </time>
+                                        <small>Tersimpan di perangkat</small>
+                                    </div>
+                                    <button
+                                        disabled={checkedOut}
+                                        onClick={() =>
+                                            setDialog({
+                                                type: "attendance",
+                                                event: "check_out",
+                                            })
+                                        }
+                                    >
+                                        {checkedOut
+                                            ? `Clock out ${new Date(morning!.clockOutAt!).toLocaleTimeString("id-ID", { timeZone: "Asia/Makassar" })}`
+                                            : "Clock out"}
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    class="quick-attendance"
+                                    onClick={() =>
+                                        setDialog({ type: "attendance" })
+                                    }
+                                >
+                                    <span class="quick-icon">
+                                        <Icon name="user" size={26} />
+                                    </span>
+                                    <strong>Absensi</strong>
+                                    <small>Check-in</small>
+                                </button>
+                            )}
                             <button
-                                onClick={() =>
-                                    setDialog({ type: "attendance" })
-                                }
-                            >
-                                <span class="quick-icon">
-                                    <Icon name="user" size={26} />
-                                </span>
-                                <strong>Absensi</strong>
-                                <small>Foto & lokasi</small>
-                            </button>
-                            <button
+                                class="quick-expense"
+                                disabled={!attended || checkedOut}
                                 onClick={() => setDialog({ type: "expense" })}
                             >
                                 <span class="quick-icon">
@@ -704,9 +796,15 @@ function Workspace({
                         </section>
                         <div class="hris-actions">
                             <button
+                                disabled={checkedOut}
                                 class="card-row"
                                 onClick={() =>
-                                    setDialog({ type: "attendance" })
+                                    setDialog({
+                                        type: "attendance",
+                                        event: attended
+                                            ? "check_out"
+                                            : "check_in",
+                                    })
                                 }
                             >
                                 <span class="metric-icon blue">
@@ -866,62 +964,6 @@ function Workspace({
                                 <Icon name="close" size={16} /> Keluar (Logout)
                             </a>
                         </div>
-                        {__DEMO__ && (
-                            <section class="paper-card demo-controls">
-                                <h3>Lingkungan & peran</h3>
-                                <p class="muted">
-                                    Beralih peran tidak memindahkan antrean.
-                                </p>
-                                <label>
-                                    Peran
-                                    <select
-                                        aria-label="Peran"
-                                        value={actor}
-                                        onChange={(e) =>
-                                            changeActor(e.currentTarget.value)
-                                        }
-                                    >
-                                        <option value="sales">
-                                            Salesman — Andre
-                                        </option>
-                                        <option value="delivery">
-                                            Driver — Novry
-                                        </option>
-                                        <option value="canvass">
-                                            Canvasser — Steven
-                                        </option>
-                                    </select>
-                                </label>
-                                <label>
-                                    Mode respons
-                                    <select
-                                        aria-label="Mode respons"
-                                        value={scenario}
-                                        onChange={(e) =>
-                                            setScenario(
-                                                e.currentTarget
-                                                    .value as Scenario,
-                                            )
-                                        }
-                                    >
-                                        <option value="normal">Normal</option>
-
-                                        <option value="approval">
-                                            Menunggu approval
-                                        </option>
-                                        <option value="rejected">
-                                            Ditolak
-                                        </option>
-                                        <option value="timeout">
-                                            Jaringan gagal / 503
-                                        </option>
-                                        <option value="expired">
-                                            Sesi habis / 401
-                                        </option>
-                                    </select>
-                                </label>
-                            </section>
-                        )}
                         <button
                             class="secondary full"
                             onClick={() => go("expenses")}
@@ -929,6 +971,30 @@ function Workspace({
                             <Icon name="wallet" size={20} /> Realisasi & saldo
                             uang lapangan
                         </button>
+                        <label class="local-mode-control">
+                            Mode respons transaksi lokal
+                            <select
+                                aria-label="Mode respons"
+                                value={scenario}
+                                onChange={(event) =>
+                                    setScenario(
+                                        event.currentTarget.value as Scenario,
+                                    )
+                                }
+                            >
+                                <option value="normal">Normal</option>
+                                <option value="approval">
+                                    Menunggu approval
+                                </option>
+                                <option value="rejected">Ditolak</option>
+                                <option value="timeout">
+                                    Jaringan gagal / 503
+                                </option>
+                                <option value="expired">
+                                    Sesi habis / 401
+                                </option>
+                            </select>
+                        </label>
                         <Heading
                             title="Aktivitas perangkat ini"
                             note="Terkirim berbeda dengan disetujui atau diposting."
@@ -955,11 +1021,17 @@ function Workspace({
                         key={p.id}
                         class={
                             page === p.id ||
-                            (page === "expenses" && p.id === "more")
+                            (page === "expenses" && p.id === "more") ||
+                            (page === "delivery" && p.id === "sales")
                                 ? "active"
                                 : ""
                         }
-                        aria-current={page === p.id ? "page" : undefined}
+                        aria-current={
+                            page === p.id ||
+                            (p.id === "sales" && page === "delivery")
+                                ? "page"
+                                : undefined
+                        }
                         onClick={() => go(p.id)}
                     >
                         <span class="nav-icon">
@@ -1050,9 +1122,13 @@ function FormDialog({
         payload: Record<string, unknown>,
         label: string,
     ) => Promise<QueueItem>;
-    startSession: () => Promise<void>;
+    startSession: (
+        event: "check_in" | "check_out",
+        evidence: EvidenceRef,
+    ) => Promise<void>;
     close: () => void;
 }) {
+    const focusOrigin = useRef(document.activeElement as HTMLElement | null);
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [qty, setQty] = useState<Record<string, number>>({});
@@ -1120,7 +1196,7 @@ function FormDialog({
     useEffect(() => {
         const old = document.body.style.overflow;
         document.body.style.overflow = "hidden";
-        const previousFocus = document.activeElement as HTMLElement | null;
+        const previousFocus = focusOrigin.current;
         const sheet = document.querySelector<HTMLElement>(".sheet");
         const behind = [
             ...document.querySelectorAll<HTMLElement>(
@@ -1157,7 +1233,9 @@ function FormDialog({
             behind.forEach((el) => {
                 el.inert = false;
             });
-            previousFocus?.focus();
+            requestAnimationFrame(() => {
+                if (previousFocus?.isConnected) previousFocus.focus();
+            });
             document.removeEventListener("keydown", keys);
         };
     }, []);
@@ -1277,7 +1355,7 @@ function FormDialog({
                 if (!evidence)
                     throw new Error("Simpan foto dan lokasi dahulu.");
                 if (dialog.type === "attendance") {
-                    await startSession();
+                    await startSession(dialog.event ?? "check_in", evidence);
                     close();
                     return;
                 }
@@ -1316,9 +1394,9 @@ function FormDialog({
         }
     }
     return (
-        <div class="modal-backdrop">
+        <div class="modal-backdrop page-backdrop">
             <section
-                class="sheet"
+                class="sheet full-page-form"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="dialog-title"
@@ -1568,31 +1646,39 @@ function FormDialog({
                             <>
                                 <label>
                                     Aktivitas
-                                    <select name="event">
+                                    <select
+                                        name="event"
+                                        value={dialog.event ?? "check_in"}
+                                        disabled
+                                    >
                                         <option value="check_in">
-                                            Absen masuk
+                                            Absensi Masuk (Checkin)
                                         </option>
                                         <option value="check_out">
-                                            Absen keluar
+                                            Absensi Keluar (Checkout)
                                         </option>
                                     </select>
                                 </label>
-                                <p class="notice">
-                                    Foto dan lokasi disimpan lokal. Validasi
-                                    employee, geofence kantor/gudang, perangkat
-                                    dan sesi resmi menunggu server.
-                                </p>
-                                <EvidenceCapture
+                                <AttendanceCapture
                                     store={store}
                                     owner={owner}
                                     onChange={setEvidence}
-                                    mapSite={{
-                                        name: "Kantor Pusat",
-                                        latitude: 1.465,
-                                        longitude: 124.833,
-                                        radius: 15,
-                                        simulated: true,
-                                    }}
+                                    employeeName={identity.name}
+                                    companyName={
+                                        identity.companyName ??
+                                        `Perusahaan #${identity.companyId}`
+                                    }
+                                    mapSite={
+                                        snapshot.office
+                                            ? {
+                                                  ...snapshot.office,
+                                                  simulated:
+                                                      snapshot.office
+                                                          .coordinate_status !==
+                                                      "verified",
+                                              }
+                                            : undefined
+                                    }
                                 />
                             </>
                         )}
@@ -1849,12 +1935,19 @@ function FormDialog({
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={busy || !restored}
+                                        disabled={
+                                            busy ||
+                                            !restored ||
+                                            (dialog.type === "attendance" &&
+                                                !evidence)
+                                        }
                                     >
                                         {busy
                                             ? "Menyimpan…"
                                             : dialog.type === "attendance"
-                                              ? "Simpan absensi"
+                                              ? dialog.event === "check_out"
+                                                  ? "Check out"
+                                                  : "Check in"
                                               : "Simpan ke antrean"}
                                     </button>
                                 </>

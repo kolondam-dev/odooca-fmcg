@@ -1,6 +1,6 @@
 import { switchPersona } from "./delivery-helpers";
 import { ensureDaily, startDelivery } from "./delivery-helpers";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./session-fixture";
 async function openDelivery(page: Page) {
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await switchPersona(page, "delivery");

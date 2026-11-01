@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./session-fixture";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 test.use({
