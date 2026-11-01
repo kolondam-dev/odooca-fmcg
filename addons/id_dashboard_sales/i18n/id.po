@@ -215,3 +215,95 @@ msgstr "Tidak ada data untuk periode dan filter ini."
 #. module: id_dashboard_sales
 msgid "No SKU sold for this period and filter."
 msgstr "Tidak ada SKU terjual untuk periode dan filter ini."
+
+#. module: id_dashboard_sales
+msgid "vs previous period"
+msgstr "dibanding periode sebelumnya"
+
+#. module: id_dashboard_sales
+msgid "orders"
+msgstr "pesanan"
+
+#. module: id_dashboard_sales
+msgid "of gross"
+msgstr "dari omset kotor"
+
+#. module: id_dashboard_sales
+msgid "ex-tax (DPP)"
+msgstr "belum pajak (DPP)"
+
+#. module: id_dashboard_sales
+msgid "by delivery date"
+msgstr "menurut tanggal kirim"
+
+#. module: id_dashboard_sales
+msgid "planned outlets"
+msgstr "outlet terencana"
+
+#. module: id_dashboard_sales
+msgid "visits with order"
+msgstr "kunjungan beromzet"
+
+#. module: id_dashboard_sales
+msgid "Target ≥"
+msgstr "Target ≥"
+
+#. module: id_dashboard_sales
+msgid "SKU/order"
+msgstr "SKU/pesanan"
+
+#. module: id_dashboard_sales
+msgid "distinct SKU"
+msgstr "SKU unik"
+
+#. module: id_dashboard_sales
+msgid "delivered and posted-invoiced value"
+msgstr "nilai terkirim dan terfaktur (posted)"
+
+#. module: id_dashboard_sales
+msgid "Net revenue by salesman"
+msgstr "Omset bersih per salesman"
+
+#. module: id_dashboard_sales
+msgid "Net revenue by channel"
+msgstr "Omset bersih per channel"
+
+#. module: id_dashboard_sales
+msgid "Lines per order vs target"
+msgstr "Lines per order vs target"
+
+#. module: id_dashboard_sales
+msgid "Fulfillment-to-invoice"
+msgstr "Fulfillment-ke-faktur"
+
+#. module: id_dashboard_sales
+msgid "Sales"
+msgstr "Penjualan"
+
+#. module: id_dashboard_sales
+msgid "Field productivity"
+msgstr "Produktivitas lapangan"
+
+#. module: id_dashboard_sales
+msgid "No data"
+msgstr "Tidak ada data"
+
+#. module: id_dashboard_sales
+msgid "Previous"
+msgstr "Sebelumnya"
+
+#. module: id_dashboard_sales
+msgid "Next"
+msgstr "Berikutnya"
+
+#. module: id_dashboard_sales
+msgid "PJP figures cover your own visits only (access scope)."
+msgstr "Angka PJP hanya mencakup kunjungan Anda sendiri (lingkup akses)."
+
+#. module: id_dashboard_sales
+msgid "Vertical line = target ≥"
+msgstr "Garis vertikal = target ≥"
+
+#. module: id_dashboard_sales
+msgid "Max"
+msgstr "Maks"
