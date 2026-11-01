@@ -1501,3 +1501,4 @@
   * Registered all 3 dashboards under FMCG Distribution -> Dashboards menu group, and as the primary executive landing view in their respective modules.
 - Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), XML/JS syntax checks PASS.
 - Task managed by antigravity-agent at 2026-11-01T08:25:00+07:00
+- Dispatched PR #65: https://github.com/kolondam-dev/odooca-fmcg/pull/65
