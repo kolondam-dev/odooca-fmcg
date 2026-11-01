@@ -13,6 +13,11 @@
      * Query harian (`lo=target_ev.create_date 00:00:00`, `hi=23:59:59`): `assert completed == 1`.
      * Query bulanan (`lo=2026-07-01 00:00:00`, `hi=2026-07-31 23:59:59`): `assert completed == 3`.
 
+## 2026-11-01T18:00:11+07:00 — agent codex-pwa — Penguatan cleanup dialog PR69
+**Berubah:** body scroll lock dimiliki stack dialog, bukan overflow per dialog. Pergantian akun saat kamera di dalam form terbuka membersihkan kedua dialog dan tidak meninggalkan body terkunci; history akun lama tidak membuka dialog pemilik sebelumnya.
+**[F] Verifikasi:** 16 browser UX terfokus (phone/tablet) dan typecheck lulus; baseline implementasi sebelumnya 346 unit/168 browser lulus. Rerun penuh mencakup 170 browser pada HEAD baru.
+**[BU] Menunggu:** CI final; PR69 tetap draft, tidak merge/deploy. Batas perangkat fisik/staging pada entri sebelumnya tetap berlaku.
+
 ## 2026-11-01T17:55:00+07:00 — anti-gravity agent — Resolusi 3 Blocker P1 Re-Review PR #68 (ORM Cache Invalidation, Preflight Workday Collision, Atomic Legacy Migration)
 **Branch:** `agen/pjp-master-and-workday`
 **Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Test Boundaries Suite) -> Siap Re-Review PR #68
@@ -50,6 +55,11 @@
    - `test_08`: Verifikasi migrasi atomik record legacy (timestamp lama 08:10Z diperbaiki ke 00:10:10Z, foto dan binding terbarui).
    - `test_09`: Verifikasi penolakan foreign batch collision (record batch lain tidak termutasi).
 
+## 2026-11-01T17:53:45+07:00 — agent codex-pwa — Perbaikan audit UX PWA
+**Branch:** agen/pwa-ux-improvements, basis main f3d9a72.
+**Berubah:** Back/history dan state daftar, shell/scroll/sticky konsisten, toast tanpa overlap CTA, POS compact/44px/500 SKU bertahap, biaya kontekstual/tanggal Indonesia, kontrol QA build-only, GPS otomatis Sales/Delivery, kamera autosave paket/hash, Leaflet gesture lokal dan consent/zoom stabil, dialog/fokus bersama, profil gudang/status sesi aktual. Rincian UX01–UX13: `docs/reviews/PWA_UX_IMPROVEMENTS.md`.
+**[F] Lokal:** 346 unit dan 168 browser phone/tablet lulus; typecheck/format/kontrak, hosting, semua mode build/budget, boundary QA off/on, Ruff dan manifest lulus. Screenshot alur toko/preview POS ditinjau. Tidak ada kredensial/media pengguna dalam repo.
+**[BU] Menunggu:** CI pada HEAD publikasi, termasuk Odoo native/upgrade/Docker; acceptance perangkat fisik dan staging bisnis tetap terpisah. Source sendiri bukan verdict supervisor independen. Tidak merge/deploy; tidak mengubah master/PJP atau data server.
 ## 2026-11-01T17:15:00+07:00 — anti-gravity agent — Resolusi 4 Blocker Review PR #68 (Commit di Test, Fixture Ref, Proteksi Backdate Non-Seed, Preservasi Workday, Timezone Sync 8 Jam)
 **Branch:** `agen/pjp-master-and-workday`
 **Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Test Boundaries Suite) -> Siap Re-Review PR #68

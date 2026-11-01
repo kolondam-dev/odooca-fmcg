@@ -525,7 +525,7 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
     await expect(page.locator(".delivery-task")).toHaveCount(2);
     for (const task of await page.locator(".delivery-task").all()) {
         await expect(task.locator("summary")).toContainText("Belum dimulai");
-        await task.locator("summary").click();
+        await task.locator(":scope > summary").click();
         await expect(task.getByRole("status")).toContainText(
             "POD berbeda sumber manifest",
         );

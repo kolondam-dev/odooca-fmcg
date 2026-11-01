@@ -19,7 +19,7 @@ test("visit location guards, offline restore and checkout sync", async ({
         .click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     const locate = page.getByRole("button", {
-        name: "Ambil lokasi outlet",
+        name: "Perbarui lokasi outlet",
         exact: true,
     });
     const start = page.getByRole("button", {
@@ -57,6 +57,7 @@ test("visit location guards, offline restore and checkout sync", async ({
         page.getByText("Kunjungan lokal aktif", { exact: true }),
     ).toBeVisible();
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
@@ -110,7 +111,7 @@ test("denied GPS permits demo coordinates but photo is still mandatory", async (
         .click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await page
-        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })
         .click();
     await expect(
         page.getByRole("button", { name: "Open session", exact: true }),
@@ -139,7 +140,7 @@ test("denied GPS permits demo coordinates but photo is still mandatory", async (
         }),
     ).toBeVisible();
     await page
-        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })
         .click();
     await expect(
         page.getByRole("button", { name: "Mulai kunjungan", exact: true }),
@@ -164,7 +165,7 @@ test("corrupt offline check-in remains held after reload, reconnect and manual r
         .click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await page
-        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })
         .click();
     await expect(
         page.getByText("Di dalam geofence", { exact: true }),
@@ -202,11 +203,13 @@ test("corrupt offline check-in remains held after reload, reconnect and manual r
         return result;
     });
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await context.setOffline(false);
     // Reload online too: setOffline may fire before Preact's post-paint
     // connectivity effect attaches during boot. Test the persisted sync guard.
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(
         page.getByText(

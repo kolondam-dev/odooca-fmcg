@@ -1640,3 +1640,8 @@
 - Guard deploy/init.sh step 5c when id_mobile_api is not installed
 - Update test_01 assertion to check both daily (1) and monthly (3) completed visits
 - Task managed by antigravity-agent at 2026-11-01T11:19:22+00:00
+
+[2026-11-01T11:59:32+00:00] [INFO] Resolve conflict in docs/HANDOFF.md and sync origin/main into PR #68
+- Integrated origin/main (PR #69 UX improvements)
+- Preserved all PR #68 and PR #69 handoff entries chronologically
+- Task managed by antigravity-agent at 2026-11-01T11:59:32+00:00

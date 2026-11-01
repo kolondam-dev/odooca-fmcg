@@ -24,7 +24,7 @@ async function prepare(page: Page, context: BrowserContext) {
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await openVisit(page);
     await page
-        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })
         .click();
     await expect(
         page.getByText("Di dalam geofence", { exact: true }),
@@ -46,6 +46,7 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
     await expect(start).toBeEnabled();
     await context.setOffline(true);
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await openVisit(page);
     const photo = page.getByRole("group", {
         name: "Foto check-in kunjungan",
@@ -58,7 +59,7 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
         }),
     ).toBeVisible();
     await page
-        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })
         .click();
     await expect(start).toBeEnabled();
     await photo.screenshot({
@@ -76,7 +77,7 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
     await page
         .getByRole("button", { name: "Close session", exact: true })
         .click();
-    await history.locator("summary").click();
+    await history.locator(":scope > summary").click();
     await expect(history.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await expect(history.getByLabel("Foto bukti")).toHaveCount(0);
     const close = page.getByRole("button", {
@@ -181,6 +182,7 @@ test("tampered persisted parent media blocks restore and both queued actions aft
         db.close();
     });
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await openVisit(page);
     await expect(
         page

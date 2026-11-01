@@ -9,7 +9,7 @@ async function openDelivery(page: Page) {
     const task = page
         .locator("details")
         .filter({ has: page.locator("summary", { hasText: "DEMO-DO-001" }) });
-    await task.locator("summary").click();
+    await task.locator(":scope > summary").click();
     await expect(
         task.getByText("Memulihkan data…", { exact: true }),
     ).toHaveCount(0);
@@ -53,10 +53,7 @@ test("POD draft restores offline and queues only for review, with read-only proo
         .getByRole("button", { name: "Simpan bukti lokal", exact: true })
         .click();
     await expect(
-        task.getByText(
-            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
-            { exact: false },
-        ),
+        task.getByText("Foto dan lokasi tersimpan.", { exact: false }),
     ).toBeVisible();
     await task
         .getByRole("button", { name: "Simpan draft POD", exact: true })
@@ -119,11 +116,7 @@ test("corrupt offline POD media blocks restore and reconnect sync", async ({
     await task
         .getByRole("button", { name: "Simpan bukti lokal", exact: true })
         .click();
-    await expect(
-        task.getByText(
-            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
-        ),
-    ).toBeVisible();
+    await expect(task.getByText("Foto dan lokasi tersimpan.")).toBeVisible();
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
@@ -182,11 +175,7 @@ async function savePodPhoto(task: ReturnType<Page["locator"]>) {
     await task
         .getByRole("button", { name: "Simpan bukti lokal", exact: true })
         .click();
-    await expect(
-        task.getByText(
-            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
-        ),
-    ).toBeVisible();
+    await expect(task.getByText("Foto dan lokasi tersimpan.")).toBeVisible();
 }
 test("business rejection opens offline correction draft and preserves immutable parent", async ({
     page,

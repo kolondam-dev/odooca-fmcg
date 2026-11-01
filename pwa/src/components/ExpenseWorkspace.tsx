@@ -204,28 +204,35 @@ export function ExpenseWorkspace({
                             "Biaya lapangan"}
                     </p>
                     {!advance ? (
-                        <div class="demo-controls">
-                            <p>
-                                Penerimaan request bukan approval/pencairan.
-                                Laboratorium berikut memakai persetujuan dan
-                                uang muka fiktif untuk menguji form realisasi;
-                                tidak memverifikasi bukti pengajuan.
+                        __QA_TOOLS__ ? (
+                            <div class="demo-controls">
+                                <p>
+                                    Penerimaan request bukan approval/pencairan.
+                                    Laboratorium berikut memakai persetujuan dan
+                                    uang muka fiktif untuk menguji form
+                                    realisasi; tidak memverifikasi bukti
+                                    pengajuan.
+                                </p>
+                                <button
+                                    class="secondary full"
+                                    disabled={
+                                        busy || item.state !== "needs_approval"
+                                    }
+                                    onClick={() => void disburse()}
+                                >
+                                    Proses approval & pencairan
+                                </button>
+                                <p class="footnote">
+                                    Hanya online + respons Normal. Limit contoh
+                                    simulator berasal dari policy fixture, bukan
+                                    limit perusahaan.
+                                </p>
+                            </div>
+                        ) : (
+                            <p role="status">
+                                Menunggu approval dan pencairan.
                             </p>
-                            <button
-                                class="secondary full"
-                                disabled={
-                                    busy || item.state !== "needs_approval"
-                                }
-                                onClick={() => void disburse()}
-                            >
-                                Proses approval & pencairan
-                            </button>
-                            <p class="footnote">
-                                Hanya online + respons Normal. Limit contoh
-                                simulator berasal dari policy fixture, bukan
-                                limit perusahaan.
-                            </p>
-                        </div>
+                        )
                     ) : (
                         <>
                             <p class="notice">

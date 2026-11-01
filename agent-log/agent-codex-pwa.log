@@ -228,3 +228,14 @@
 - 345 unit, 154 browser phone/tablet, typecheck/format/contracts, semua build/check-build, hosting, 3 probe Werkzeug, ruff/manifest/diff PASS.
 - Native Odoo dan transport Docker menunggu CI pada HEAD baru; runtime staging/perangkat nyata terpisah. Tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-01T11:30:55+07:00
+
+[2026-11-01T17:53:45+07:00] [INFO] Tindak lanjut lengkap audit UX PWA pada branch agen/pwa-ux-improvements
+- History/Back, shell/scroll/sticky, POS compact dan katalog bertahap, biaya/tanggal, pemisahan QA, GPS/foto, Leaflet, fokus dialog dan profil data server.
+- Lokal: 346 unit, 168 browser, typecheck/format/contracts, hosting, semua mode build/budget, QA boundary off/on, Ruff/manifest/diff lulus.
+- CI native/upgrade/Docker pada HEAD publikasi masih menunggu; perangkat fisik/staging bisnis terpisah. Tidak merge/deploy atau perubahan master/live.
+- Task managed by agent codex-pwa at 2026-11-01T17:53:45+07:00
+
+[2026-11-01T18:00:11+07:00] [INFO] Penguatan cleanup dialog bertingkat pada pergantian akun PR69
+- Body overflow dikelola stack agar urutan unmount parent/child tidak meninggalkan scroll terkunci.
+- 16 browser UX terfokus dan typecheck lulus; full suite 170 browser/CI final menunggu. Tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-01T18:00:11+07:00

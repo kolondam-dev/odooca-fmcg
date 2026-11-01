@@ -1,3 +1,4 @@
+import { useRememberedState, useRememberedScroll } from "../ui/viewMemory";
 import { useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
 import { OutletAvatar } from "./OutletAvatar";
@@ -20,7 +21,8 @@ export function OutletDirectory({
         setSearch(false);
     };
     const [search, setSearch] = useState(false),
-        [query, setQuery] = useState("");
+        [query, setQuery] = useRememberedState("outlet-query", "");
+    const listScroll = useRememberedScroll<HTMLDivElement>("outlet-list");
     const filtered = outlets.filter((outlet) =>
         `${outlet.name} ${outlet.address}`
             .toLocaleLowerCase("id")
@@ -69,7 +71,9 @@ export function OutletDirectory({
                     Extra call
                 </button>
             </div>
-            <div class="outlet-list">{rows(outlets)}</div>
+            <div class="outlet-list" ref={listScroll}>
+                {rows(outlets)}
+            </div>
             {search && (
                 <FullDrawer title="Pencarian outlet" close={dismiss}>
                     <label class="search compact-search">

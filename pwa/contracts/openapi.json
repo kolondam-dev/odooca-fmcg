@@ -4788,6 +4788,9 @@
             ],
             "additionalProperties": false
           },
+          "warehouseName": {
+            "type": "string"
+          },
           "version": {
             "type": "string"
           },

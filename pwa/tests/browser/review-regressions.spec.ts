@@ -318,7 +318,7 @@ for (const legacy of [false, true])
         const history = task.locator("details").filter({
             has: page.locator("summary", { hasText: "Riwayat POD (2)" }),
         });
-        await history.locator("summary").click();
+        await history.locator(":scope > summary").click();
         for (const paragraph of await history.locator("p").all()) {
             await expect(paragraph).toContainText(
                 `Biskuit Kelapa 300 g (contoh): ${legacy ? 1 : 1440} ${legacy ? "karton" : "pcs"}`,
