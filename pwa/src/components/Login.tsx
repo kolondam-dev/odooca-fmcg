@@ -91,6 +91,12 @@ export function Login({
                     >
                         Opsi login perusahaan / verifikasi akun
                     </a>
+                    <a
+                        class="text-button"
+                        href="/web/session/logout?redirect=%2Ffield%2F"
+                    >
+                        Ganti akun / keluar dari sesi sebelumnya
+                    </a>
                 </form>
             </div>
         </main>

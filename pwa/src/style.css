@@ -2363,3 +2363,12 @@ textarea {
     border-top: 0;
     box-shadow: none;
 }
+.login-box .form-error {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 10px;
+    background: #fff1ef;
+    color: #a32318;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}

@@ -13,7 +13,8 @@ pengujian integrasi backend secara intensif menyusul.
 - Login mandiri menggunakan form native `/web/login`: token CSRF dibaca dari form
   server, kredensial dikirim same-origin lewat POST, lalu sesi native dan akses
   mobile diperiksa. Kata sandi tidak disimpan di browser atau log. MFA/SSO tetap
-  menggunakan halaman login native yang ditautkan. Gagal login menampilkan pesan
+  menggunakan halaman login native yang ditautkan. Tautan keluar/ganti akun juga
+  tersedia bila browser masih memiliki sesi akun lama yang tidak berhak. Gagal login menampilkan pesan
   umum dan bantuan admin/line manager.
 - Nama perusahaan untuk watermark ditambahkan secara aditif pada bootstrap dari
   company assignment; `id_mobile_api` menjadi versi 19.0.1.2.2. Backend lama yang
@@ -57,7 +58,9 @@ lokal demo**, belum posting HR atau transaksi resmi Odoo. Label bukti lokal teta
 ada; tidak ada klaim server telah memverifikasi kehadiran. Referensi foto absensi
 kini ikut tersimpan pada record sesi lokal dan dicek terhadap paket lokal sebelum
 sesi dibuka/ditutup. Mode respons transaksi lokal tetap berada di Lainnya; ini tidak
-memilih atau mengganti identitas pengguna.
+memilih atau mengganti identitas pengguna. Pengecualian jarak untuk remote demo
+tetap diproyeksikan hanya pada workflow lokal aplikasi penuh; snapshot HTTP asli
+tidak dimutasi dan layanan evidence resmi tetap strict.
 
 Build production tetap terkunci dan build staging baca saja tetap terpisah. Tidak
 ada perubahan pada gate evidence resmi, CSRF server, ACL, validasi GPS resmi, maupun

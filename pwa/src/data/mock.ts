@@ -53,7 +53,20 @@ export class MockProvider implements FieldProvider {
         };
     }
     async snapshot(): Promise<Snapshot> {
-        if (this.authenticated) return this.authenticated.snapshot();
+        if (this.authenticated) {
+            const snapshot = await this.authenticated.snapshot();
+            // Preserve the existing remote-demo allowance only in the local
+            // workflow. The HTTP payload and official evidence gates stay strict.
+            return this.relaxedLocation
+                ? {
+                      ...snapshot,
+                      outlets: snapshot.outlets.map((outlet) => ({
+                          ...outlet,
+                          demo_unrestricted: true as const,
+                      })),
+                  }
+                : snapshot;
+        }
         const identity = await this.bootstrap();
         return {
             catalog_version: 2,

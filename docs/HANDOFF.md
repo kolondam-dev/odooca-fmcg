@@ -1,7 +1,7 @@
 ## 2026-11-01T08:20:33+07:00 — agent codex-pwa — Login nyata dan refinement beranda/absensi PWA
 **Branch:** `agen/pwa-login-attendance-ux` dari `main` 628f603.
 **Berubah:** login mandiri native Odoo + CSRF/cookie, identitas/snapshot nyata tanpa selector persona; navbar/logo/status/jam WITA; sesi kerja setelah sapaan; quick action menunggu check-in; kartu clock in/out persisten; form halaman penuh; preview GPS/geofence kantor dari snapshot, foto watermark perusahaan/karyawan/waktu/alamat/koordinat, referensi foto terikat sesi lokal. Bootstrap menambah companyName (addon 19.0.1.2.2).
-**Diverifikasi lokal:** 330/330 unit; 144/144 browser (72 phone + 72 tablet, Chromium 153); typecheck, contracts:check, format:check, build demo/live/staging, check:build, ruff, manifest, diff whitespace PASS. Pemeriksaan screenshot login/beranda/form dilakukan.
+**Diverifikasi lokal:** 332/332 unit; 144/144 browser (72 phone + 72 tablet, Chromium 153); typecheck, contracts:check, format:check, build demo/live/staging, check:build, ruff, manifest, diff whitespace PASS. Pemeriksaan screenshot login/beranda/form dilakukan.
 **Batas:** login/identitas/snapshot dari server; absensi, clock out dan transaksi aplikasi penuh masih lokal demo, bukan posting HR/transaksi resmi. Alamat diisi pengguna; belum reverse geocoder. Build live terkunci dan staging baca saja tetap terpisah. Detail: docs/ui/PWA_LOGIN_ATTENDANCE_UX.md.
 **Belum diuji [BU]:** runtime login/upgrade Odoo server nyata, acceptance perangkat/kamera nyata; CI pada commit baru menyusul. Tidak merge/deploy.
 **Menunggu:** reviewer dan pengujian perangkat pemilik setelah integrasi/deployment yang sesuai.

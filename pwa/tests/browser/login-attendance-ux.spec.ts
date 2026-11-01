@@ -33,6 +33,11 @@ test("login stands alone, rejects wrong credentials and never exposes mock perso
     );
     await expect(page.getByLabel("Peran", { exact: true })).toHaveCount(0);
     await expect(page.locator(".greeting")).toHaveCount(0);
+    await expect(
+        page.getByRole("link", {
+            name: "Ganti akun / keluar dari sesi sebelumnya",
+        }),
+    ).toHaveAttribute("href", "/web/session/logout?redirect=%2Ffield%2F");
     await page.screenshot({
         path: `test-results/login-${test.info().project.name}.png`,
         fullPage: true,

@@ -206,3 +206,10 @@
 - Pemeriksaan screenshot akhir menunjukkan viewport masih berada di peta setelah foto selesai. Preview kini otomatis digulir ke dalam viewport tanpa animasi, agar watermark hasil capture langsung terlihat.
 - Regresi baru memastikan foto berada dalam viewport; 10/10 browser login/absensi phone+tablet dan typecheck PASS. Suite sebelumnya 144/144 PASS. PR #64 tetap draft menunggu CI pada SHA terakhir; tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-01T08:23:44+07:00
+
+[2026-11-01T08:32:39+07:00] [INFO] Finalisasi pergantian akun dan preservasi remote demo
+- Login menyediakan tautan logout/ganti akun untuk browser yang masih memiliki sesi lama tanpa akses mobile; pesan gagal diberi penekanan visual.
+- Provider aplikasi penuh tetap memakai identitas dan data HTTP nyata tanpa fallback. Pengecualian jarak remote demo diproyeksikan hanya pada workflow lokal; snapshot HTTP asli dan evidence resmi tidak dimutasi/dilonggarkan. Dua unit regresi membuktikan delegasi identitas, kegagalan tanpa fallback, dan preservasi snapshot asli.
+- PASS lokal final: 332 unit, 144 browser (phone/tablet), serta 10 tes login/absensi diulang sesudah perubahan visual; typecheck, contracts, format, build modes, check-build, ruff, manifest dan diff check.
+- PR #64 tetap draft menunggu CI SHA terbaru. Tidak merge/deploy; login runtime Odoo dan acceptance perangkat tetap terpisah.
+- Task managed by agent codex-pwa at 2026-11-01T08:32:39+07:00
