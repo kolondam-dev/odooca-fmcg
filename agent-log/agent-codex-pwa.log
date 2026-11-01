@@ -201,3 +201,8 @@
 - PASS lokal: 330 unit, 144 browser phone/tablet, typecheck, contracts, format, tiga build/check-build, ruff, manifest, diff check. Login server dan perangkat nyata belum diuji. Tidak merge/deploy.
 - Absensi/transaksi tetap lokal demo; evidence resmi, ACL, CSRF dan geofence backend tidak dilonggarkan. Detail: docs/ui/PWA_LOGIN_ATTENDANCE_UX.md.
 - Task managed by agent codex-pwa at 2026-11-01T08:20:33+07:00
+
+[2026-11-01T08:23:44+07:00] [INFO] Preview hasil foto langsung terlihat setelah capture
+- Pemeriksaan screenshot akhir menunjukkan viewport masih berada di peta setelah foto selesai. Preview kini otomatis digulir ke dalam viewport tanpa animasi, agar watermark hasil capture langsung terlihat.
+- Regresi baru memastikan foto berada dalam viewport; 10/10 browser login/absensi phone+tablet dan typecheck PASS. Suite sebelumnya 144/144 PASS. PR #64 tetap draft menunggu CI pada SHA terakhir; tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-01T08:23:44+07:00

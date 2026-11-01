@@ -29,6 +29,7 @@ export function AttendanceCapture({
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const [captured, setCaptured] = useState("");
+    const resultView = useRef<HTMLDivElement>(null);
     const generation = useRef(0);
     const changed = useRef(onChange);
     changed.current = onChange;
@@ -87,6 +88,16 @@ export function AttendanceCapture({
         setPreview(url);
         return () => URL.revokeObjectURL(url);
     }, [photo]);
+    useEffect(() => {
+        if (!preview) return;
+        const frame = requestAnimationFrame(() =>
+            resultView.current?.scrollIntoView({
+                block: "start",
+                behavior: "instant",
+            }),
+        );
+        return () => cancelAnimationFrame(frame);
+    }, [preview]);
     async function capture(result: CameraCaptureResult) {
         setCamera(false);
         if (!fix) return;
@@ -144,7 +155,7 @@ export function AttendanceCapture({
             aria-busy={busy}
         >
             {preview && (
-                <div class="attendance-result">
+                <div class="attendance-result" ref={resultView}>
                     <img
                         src={preview}
                         class="photo-preview"

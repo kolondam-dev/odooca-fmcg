@@ -170,6 +170,9 @@ test("check-in is a full page with map, bound watermark photo and clock-out", as
     await expect(page.locator(".attendance-result")).toContainText(
         "PT. Demo FMCG · Andre",
     );
+    await expect(
+        page.getByAltText("Foto absensi dengan watermark"),
+    ).toBeInViewport();
     await expect(page.locator(".attendance-result")).toContainText("Manado");
     await page.screenshot({
         path: `test-results/attendance-${test.info().project.name}.png`,
