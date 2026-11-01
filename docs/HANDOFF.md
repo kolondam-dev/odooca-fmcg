@@ -1,3 +1,18 @@
+## 2026-11-01T23:55:00+07:00 — anti-gravity agent — Fix CSRF Token Boolean Validation on /api/v1/sync/commands
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (P1-1 CSRF validation fix pushed, closing the last remaining CI failure)
+
+### Detail Perbaikan:
+1. **Validasi Boolean CSRF Token di `commands_api.py`:**
+   - Menyempurnakan pengecekan CSRF token pada endpoint `POST /api/v1/sync/commands`. Di Odoo 19, `request.validate_csrf(token)` mengembalikan nilai boolean (`True` jika valid, `False` jika tidak valid).
+   - Penanganan disempurnakan dengan mengevaluasi return boolean `bool(request.validate_csrf(csrf_token))` serta fallback token matching `(csrf_token == request.csrf_token())`. Token invalid atau tidak cocok kini secara konsisten mengembalikan HTTP 400 `invalid_or_missing_csrf_token`.
+2. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+   - PWA Unit Tests: 352 tests PASS (100%)
+   - Baseline Upgrade Unit Tests: 9 tests PASS
+
 ## 2026-11-01T23:30:00+07:00 — anti-gravity agent — Address Supervisor Review on PR #70 (P1-1, P1-2, P1-3, P2-4, P2-5)
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

@@ -22,11 +22,17 @@ class MobileCommandsApi(MobileReadApi):
         if not csrf_token:
             return self._response({"error": "invalid_or_missing_csrf_token"}, 400)
 
+        is_valid = False
         if hasattr(request, "validate_csrf"):
             try:
-                request.validate_csrf(csrf_token)
+                is_valid = bool(request.validate_csrf(csrf_token))
             except Exception:
-                return self._response({"error": "invalid_or_missing_csrf_token"}, 400)
+                is_valid = False
+        else:
+            is_valid = (csrf_token == request.csrf_token())
+
+        if not is_valid:
+            return self._response({"error": "invalid_or_missing_csrf_token"}, 400)
 
         try:
             body = request.httprequest.get_data()

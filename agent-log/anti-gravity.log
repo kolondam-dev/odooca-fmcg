@@ -1750,3 +1750,15 @@
   * PWA Unit Tests (352 tests): 100% PASS
   * PWA Triple Build (demo, staging, live): PASS
 - Task managed by antigravity agent at 2026-11-01T23:30:00+07:00
+
+[2026-11-01T23:55:00+07:00] [INFO] Fix CSRF Token Boolean Validation on /api/v1/sync/commands
+- Root cause: In Odoo 19, request.validate_csrf(token) returns a boolean (True/False) rather than raising an exception.
+- Updated MobileCommandsApi.submit_command:
+  * Handled both request.validate_csrf(csrf_token) returning False and fallback token comparison (csrf_token == request.csrf_token()).
+  * Invalid or mismatching tokens now properly return HTTP 400 invalid_or_missing_csrf_token.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+  * PWA Unit Tests (352 tests): 100% PASS
+  * Upgrade runner unit tests: 9 tests PASS
+- Task managed by antigravity agent at 2026-11-01T23:55:00+07:00
