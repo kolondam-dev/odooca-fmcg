@@ -10,7 +10,10 @@ async function openMorning(page: Page) {
 async function visitOrder(page: Page, first = true) {
     if (first) {
         await page
-            .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+            .getByRole("button", {
+                name: "Perbarui lokasi outlet",
+                exact: true,
+            })
             .click();
         await expect(
             page.getByText("Di dalam geofence", { exact: true }),
@@ -27,7 +30,10 @@ async function visitOrder(page: Page, first = true) {
             .getByRole("button", { name: "Check-in toko", exact: true })
             .click();
         await page
-            .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+            .getByRole("button", {
+                name: "Perbarui lokasi outlet",
+                exact: true,
+            })
             .click();
     }
     await page
@@ -130,6 +136,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("2");
     await page.getByRole("button", { name: "Tutup form", exact: true }).click();
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
@@ -148,6 +155,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
         page.getByText("Menunggu koneksi", { exact: true }),
     ).toBeVisible();
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await expect(
         page.getByRole("heading", { name: /Selamat bekerja/ }),
     ).toBeVisible();
@@ -184,7 +192,9 @@ test("expense request is an approval request, not disbursement", async ({
             "BBM insidentil: Supervisor + Branch Manager, berapa pun nominalnya.",
         ),
     ).toBeVisible();
-    await page.getByLabel("Referensi trip / perjalanan").fill("TRIP-01");
+    await page
+        .getByLabel("Referensi trip / perjalanan")
+        .selectOption("TRIP-01");
     await page.getByLabel("Tanggal perjalanan").fill("2026-10-28");
     await page.getByLabel("Nominal pengajuan (Rp)").fill("100000");
     await page.getByLabel("KM / odometer awal").fill("15000");
@@ -229,7 +239,9 @@ test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
     await page
         .getByRole("button", { name: "Uang lapangan", exact: false })
         .click();
-    await page.getByLabel("Referensi trip / perjalanan").fill("TRIP-01");
+    await page
+        .getByLabel("Referensi trip / perjalanan")
+        .selectOption("TRIP-01");
     await page.getByLabel("Tanggal perjalanan").fill("2000-01-01");
     await page.getByLabel("Nominal pengajuan (Rp)").fill("100000");
     await page.getByLabel("KM / odometer awal").fill("15000");
@@ -241,12 +253,14 @@ test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
     await page.getByLabel("Kategori", { exact: true }).selectOption("meal");
     await page.getByLabel("Lingkup biaya").selectOption("delivery");
     await page.getByRole("button", { name: "Simpan ke antrean" }).click();
-    await expect(
-        page.getByText("Biaya per pengiriman wajib memiliki referensi DO."),
-    ).toBeVisible();
+    expect(
+        await page
+            .getByLabel("Referensi DO (untuk biaya per pengiriman)")
+            .evaluate((el) => (el as HTMLSelectElement).validity.valueMissing),
+    ).toBe(true);
     await page
         .getByLabel("Referensi DO (untuk biaya per pengiriman)")
-        .fill("DEMO-DO-001");
+        .selectOption("DEMO-DO-001");
     await page.getByRole("button", { name: "Simpan ke antrean" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
@@ -267,6 +281,7 @@ test("morning gate requires attendance, preserves account separation and expires
     await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await switchPersona(page, "canvass");
     await expect(
@@ -276,6 +291,7 @@ test("morning gate requires attendance, preserves account separation and expires
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.clock.setSystemTime(new Date("2026-10-27T16:00:01Z"));
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await expect(
         page.getByRole("button", { name: /Buat order/ }),
     ).toBeDisabled();
@@ -392,6 +408,7 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
         return value;
     });
     await page.reload();
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     await expect(
         page.getByRole("button", {
             name: "Buka sesi kerja",

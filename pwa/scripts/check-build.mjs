@@ -18,6 +18,7 @@ for (const mode of ["demo", "live", "staging"]) {
     assert(fonts <= 100 * 1024, `${mode}: font budget exceeded`);
     const info = JSON.parse(readFileSync(`${dir}/build-info.json`, "utf8"));
     assert.equal(info.mode, mode);
+    if (mode !== "demo") assert.equal(info.qaTools, false);
     assert(
         info.assets.every(
             (p) => p.startsWith("/field/") && !p.startsWith("/api/"),

@@ -208,6 +208,7 @@ class MobileWorkday(models.Model):
             "scope": {"company_id": str(company.id), "user_id": str(self.env.uid),
                       "warehouse_id": str(assignment.warehouse_id.id), "business_date": day.isoformat()},
             "products": catalog, "outlets": outlets, "deliveries": [],
+            "warehouseName": assignment.warehouse_id.name,
         }
         if assignment.office_id:
             result["office"] = assignment.office_id._map_payload()

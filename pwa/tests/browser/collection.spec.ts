@@ -9,7 +9,7 @@ async function open(page: Page) {
     const task = page
         .locator(".collection-task")
         .filter({ has: page.locator("summary", { hasText: "SIM-TAGIHAN-1" }) });
-    await task.locator("summary").click();
+    await task.locator(":scope > summary").click();
     return task;
 }
 async function photo(task: Locator) {
@@ -21,11 +21,7 @@ async function photo(task: Locator) {
     await task
         .getByRole("button", { name: "Simpan bukti lokal", exact: true })
         .click();
-    await expect(
-        task.getByText(
-            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
-        ),
-    ).toBeVisible();
+    await expect(task.getByText("Foto dan lokasi tersimpan.")).toBeVisible();
 }
 async function form(task: Locator) {
     await task.getByLabel("Pembayar", { exact: true }).fill("Budi Outlet");
@@ -123,7 +119,7 @@ test("transfer requires reference and prevents excessive or duplicate collection
     const second = page
         .locator(".collection-task")
         .filter({ has: page.locator("summary", { hasText: "SIM-TAGIHAN-2" }) });
-    await second.locator("summary").click();
+    await second.locator(":scope > summary").click();
     await context.setGeolocation({
         latitude: 1.447,
         longitude: 124.825,

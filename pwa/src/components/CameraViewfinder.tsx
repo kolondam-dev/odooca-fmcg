@@ -1,9 +1,12 @@
+import { useDialog } from "../ui/useDialog";
+import { useBackLayer } from "../ui/navigation";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Icon } from "./Icon";
 
 export interface CameraCaptureResult {
     blob: Blob;
     timestamp: number;
+    fixTimestamp: number;
     latitude: number;
     longitude: number;
     accuracy: number;
@@ -23,12 +26,14 @@ interface CameraViewfinderProps {
 export function CameraViewfinder({
     title = "Kamera Bukti Lapangan",
     outletName,
-    salespersonName = "Salesman MDU",
+    salespersonName = "Petugas",
     defaultCoordinates,
     onCapture,
     onClose,
     rawCapture = false,
 }: CameraViewfinderProps) {
+    const dialogRef = useDialog<HTMLDivElement>(onClose);
+    useBackLayer(true, onClose);
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const [cameraActive, setCameraActive] = useState(false);
@@ -51,7 +56,7 @@ export function CameraViewfinder({
         longitude: defaultCoordinates?.longitude ?? 124.8428,
         accuracy: 10,
         timestamp: Date.now(),
-        simulated: !defaultCoordinates,
+        simulated: true,
     }));
     const [gpsStatus, setGpsStatus] = useState<
         "acquiring" | "locked" | "fallback"
@@ -200,11 +205,14 @@ export function CameraViewfinder({
                     );
                 } else if (
                     message.includes("NotFound") ||
+                    message.includes("Requested device not found") ||
                     message.includes("DevicesNotFoundError")
                 ) {
                     setCameraError("Tidak ditemukan perangkat kamera fisik.");
                 } else {
-                    setCameraError("Gagal mengakses kamera: " + message);
+                    setCameraError(
+                        "Kamera belum dapat dibuka. Tutup aplikasi kamera lain dan coba kembali.",
+                    );
                 }
                 setCameraActive(false);
             }
@@ -327,6 +335,7 @@ export function CameraViewfinder({
             onCapture({
                 blob,
                 timestamp: Date.now(),
+                fixTimestamp: coords.timestamp,
                 latitude: coords.latitude,
                 longitude: coords.longitude,
                 accuracy: coords.accuracy,
@@ -361,6 +370,7 @@ export function CameraViewfinder({
             onCapture({
                 blob,
                 timestamp: Date.now(),
+                fixTimestamp: coords.timestamp,
                 latitude: coords.latitude,
                 longitude: coords.longitude,
                 accuracy: coords.accuracy,
@@ -377,6 +387,7 @@ export function CameraViewfinder({
     return (
         <div
             class="camera-modal-backdrop"
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label={title}
@@ -454,7 +465,7 @@ export function CameraViewfinder({
                                         {gpsStatus === "locked"
                                             ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)} (±${Math.round(coords.accuracy)}m)`
                                             : gpsStatus === "fallback"
-                                              ? "GPS belum tersedia · titik outlet"
+                                              ? "GPS belum tersedia · titik simulasi"
                                               : "Mencari GPS…"}
                                     </span>
                                 </div>

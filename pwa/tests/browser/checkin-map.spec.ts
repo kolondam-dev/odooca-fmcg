@@ -33,7 +33,7 @@ test("office check-in previews real fix and handles failed road tiles without au
         .getByRole("button", { name: "Muat peta jalan", exact: true })
         .click();
     await expect(map.getByRole("status")).toContainText("Peta jalan gagal");
-    await expect(map.getByRole("img")).toBeVisible();
+    await expect(map.locator("svg[role=img]")).toBeVisible();
     await expect(
         page.getByRole("button", { name: "Check in", exact: true }),
     ).toBeDisabled();
@@ -94,7 +94,7 @@ test("outlet check-in renders attributed road preview, zoom and scope reset with
         exact: true,
     });
     await page
-        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })
         .click();
     await expect(map).toContainText("Di luar radius");
     await expect(
@@ -127,12 +127,12 @@ test("outlet check-in renders attributed road preview, zoom and scope reset with
         .getByRole("button", { name: "Tampilkan kedua titik", exact: true })
         .click();
     await page
-        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })
         .click();
     await expect(
-        map.getByRole("button", { name: "Muat peta jalan", exact: true }),
+        map.getByRole("button", { name: "Tutup peta jalan", exact: true }),
     ).toBeVisible();
-    await expect(map.locator("img")).toHaveCount(0);
+    await expect(map.locator(".leaflet-container")).toHaveCount(1);
     expect(
         await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth,
@@ -152,7 +152,7 @@ test("denied outlet GPS labels fallback as simulation", async ({ page }) => {
         .click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await page
-        .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })
         .click();
     await expect(
         page.getByRole("region", {

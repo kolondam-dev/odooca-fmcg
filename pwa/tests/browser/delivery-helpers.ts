@@ -60,11 +60,7 @@ export async function saveDeliveryPhoto(task: Locator) {
     await task
         .getByRole("button", { name: "Simpan bukti lokal", exact: true })
         .click();
-    await expect(
-        task.getByText(
-            "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
-        ),
-    ).toBeVisible();
+    await expect(task.getByText("Foto dan lokasi tersimpan.")).toBeVisible();
 }
 export async function startDelivery(task: Locator) {
     await expect(task).toHaveAttribute("aria-busy", "false");
@@ -75,7 +71,10 @@ export async function startDelivery(task: Locator) {
     ) {
         await saveDeliveryPhoto(task);
         await task
-            .getByRole("button", { name: "Set pinpoint delivery", exact: true })
+            .getByRole("button", {
+                name: "Perbarui lokasi delivery",
+                exact: true,
+            })
             .click();
         await task
             .getByRole("button", { name: "Mulai sesi delivery", exact: true })

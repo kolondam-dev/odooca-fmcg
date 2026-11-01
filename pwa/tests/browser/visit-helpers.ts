@@ -28,7 +28,10 @@ export async function saveVisitPhoto(
     ).toBeVisible();
     if (phase === "check-in")
         await page
-            .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+            .getByRole("button", {
+                name: "Perbarui lokasi outlet",
+                exact: true,
+            })
             .click();
 }
 /** Store-display proof required before an order can leave the sheet. */

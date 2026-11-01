@@ -1,27 +1,26 @@
+import { EvidenceIdentityContext } from "./ui/evidenceIdentity";
+import { ViewMemoryContext, useRememberedScroll } from "./ui/viewMemory";
+import { TaskForm } from "./components/TaskForm";
+import { LiveClock } from "./components/LiveClock";
+import { useNavigation, type Page, type Dialog } from "./ui/navigation";
 import { OutletDirectory } from "./components/OutletDirectory";
 import { TripClosing } from "./components/TripClosing";
 import { OrderCorrections } from "./components/OrderCorrections";
 import { DeliveryApproval } from "./components/DeliveryApproval";
 import { DiscountApproval } from "./components/DiscountApproval";
-import { orderQuote, type OrderUom } from "./domain/order-pricing";
-import { OrderCatalog, OrderSummary } from "./components/OrderSheet";
-import { DisplayPhoto } from "./components/DisplayPhoto";
 import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { HttpProvider } from "./data/provider";
-import { AttendanceCapture } from "./components/AttendanceCapture";
 import { Login } from "./components/Login";
 import {
     canOpen,
     ownerKey,
-    validateOrder,
     type Command,
     type FieldProvider,
     type Identity,
     type Scenario,
     type Snapshot,
 } from "./domain/contracts";
-import { validateExpense } from "./domain/expense";
 import { SyncDiagnostics } from "./components/SyncDiagnostics";
 import { VisitPanel } from "./components/VisitPanel";
 import { SalesVisits, captureVisitLocation } from "./domain/visits";
@@ -36,20 +35,11 @@ import {
     type MorningRecord,
 } from "./domain/morning";
 import { Outbox } from "./domain/outbox";
-import { haptic, money } from "./domain/format";
+import { haptic } from "./domain/format";
 import { FieldStore, type QueueItem } from "./storage/store";
 import { Icon, type IconName } from "./components/Icon";
-import { EvidenceCapture, type EvidenceRef } from "./components/Evidence";
+import { type EvidenceRef } from "./components/Evidence";
 
-type Page = "home" | "sales" | "delivery" | "hris" | "more" | "expenses";
-type Dialog =
-    | { type: "order"; outlet: string }
-    | { type: "extra" }
-    | { type: "proof"; delivery: string }
-    | { type: "expense"; trip?: string }
-    | { type: "attendance"; event?: "check_in" | "check_out" }
-    | { type: "leave" }
-    | { type: "profile" };
 const pages: { id: Page; name: string; icon: IconName }[] = [
     { id: "home", name: "Beranda", icon: "house" },
     { id: "sales", name: "Sales", icon: "store" },
@@ -58,17 +48,6 @@ const pages: { id: Page; name: string; icon: IconName }[] = [
     { id: "more", name: "Lainnya", icon: "grid" },
 ];
 const store = new FieldStore();
-const dateLabel = () =>
-    new Intl.DateTimeFormat("id-ID", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        timeZone: "Asia/Makassar",
-    }).format(new Date());
 function Pill({
     children,
     tone = "",
@@ -250,27 +229,75 @@ function Workspace({
                 `${nav?.offsetHeight ?? 70}px`,
             );
         };
+        const viewport = window.visualViewport;
+        const resize = () => {
+            if (viewport && Math.abs(viewport.scale - 1) < 0.01)
+                app?.style.setProperty(
+                    "--field-viewport-height",
+                    `${viewport.height}px`,
+                );
+            else app?.style.removeProperty("--field-viewport-height");
+        };
+        resize();
+        viewport?.addEventListener("resize", resize);
         measure();
         const observer = new ResizeObserver(measure);
         if (header) observer.observe(header);
         if (nav) observer.observe(nav);
-        return () => observer.disconnect();
+        return () => {
+            observer.disconnect();
+            viewport?.removeEventListener("resize", resize);
+        };
     }, []);
     const [now, setNow] = useState(Date.now());
     useEffect(() => {
-        const timer = setInterval(() => setNow(Date.now()), 1000);
+        const timer = setInterval(() => setNow(Date.now()), 10000);
         return () => clearInterval(timer);
     }, []);
-    const [page, setPage] = useState<Page>("home");
-    const [dialog, setDialog] = useState<Dialog>();
     const [queue, setQueue] = useState<QueueItem[]>([]);
     const [online, setOnline] = useState(navigator.onLine);
     const [toast, setToast] = useState("");
     const [syncing, setSyncing] = useState(false);
     const [scenario, setScenario] = useState<Scenario>("normal");
     const owner = ownerKey(identity);
-    const [visitOutlet, setVisitOutlet] = useState<string>();
+    const assignedOutlets = useRef(initialSnapshot.outlets);
+    const navigation = useNavigation(
+        `${owner}:${identity.businessDate}`,
+        (route) => {
+            const order =
+                route.dialog?.type === "order" ? route.dialog : undefined;
+            return (
+                canOpen(identity.roles, route.page) &&
+                (!route.outlet || route.page === "sales") &&
+                (route.dialog?.type !== "extra" ||
+                    identity.roles.includes("sales")) &&
+                (route.dialog?.type !== "proof" ||
+                    identity.roles.includes("delivery")) &&
+                (!route.outlet ||
+                    assignedOutlets.current.some(
+                        (o) => o.id === route.outlet,
+                    )) &&
+                (!order ||
+                    (identity.roles.includes("sales") &&
+                        assignedOutlets.current.some(
+                            (o) => o.id === order.outlet,
+                        )))
+            );
+        },
+    );
+    const { page, dialog, outlet: visitOutlet } = navigation.route;
+    const viewMemory = useMemo(
+        () => new Map<string, unknown>(),
+        [owner, identity.businessDate],
+    );
+    const mainScroll = useRememberedScroll(page, viewMemory);
+    const setPage = (page: Page) => navigation.navigate({ page });
+    const setDialog = (dialog?: Dialog) => navigation.dialog(dialog);
+    const setVisitOutlet = (outlet?: string) =>
+        navigation.navigate({ page: "sales", outlet });
     const [morning, setMorning] = useState<MorningRecord>();
+    const [morningLoaded, setMorningLoaded] = useState(false);
+    const [morningError, setMorningError] = useState("");
     const [morningRevision, setMorningRevision] = useState(0);
     const dailyReady =
         morningReady(morning, owner) &&
@@ -284,10 +311,35 @@ function Workspace({
             });
     const checkedOut = attended && !!morning?.clockOutAt;
     const snapshot = dailyReady ? morning!.snapshot! : initialSnapshot;
+    assignedOutlets.current = snapshot.outlets;
     const morningService = useMemo(
         () => new MorningSimulation(store, identity, provider),
         [identity, provider],
     );
+    useEffect(() => {
+        let active = true;
+        setMorningLoaded(false);
+        setMorningError("");
+        void morningService
+            .restore()
+            .then((record) => {
+                if (active) setMorning(record);
+            })
+            .catch(() => {
+                if (active) {
+                    setMorning(undefined);
+                    setMorningError(
+                        "Penyimpanan sesi tidak tersedia. Kunjungan tetap terkunci.",
+                    );
+                }
+            })
+            .finally(() => {
+                if (active) setMorningLoaded(true);
+            });
+        return () => {
+            active = false;
+        };
+    }, [morningService, morningRevision]);
     async function startSession(
         event: "check_in" | "check_out",
         evidence: EvidenceRef,
@@ -331,8 +383,8 @@ function Workspace({
             return;
         }
         setToast("");
-        setVisitOutlet(outlet);
-        go("sales");
+        navigation.navigate({ page: "sales", outlet });
+        haptic();
     }
     async function refresh() {
         try {
@@ -376,7 +428,7 @@ function Workspace({
     }, [online, engine]);
     useEffect(() => {
         if (!toast) return;
-        const id = setTimeout(() => setToast(""), 6000);
+        const id = setTimeout(() => setToast(""), 3000);
         return () => clearTimeout(id);
     }, [toast]);
     // Accidental reload must not drop an open form or an unsent queue.
@@ -454,611 +506,712 @@ function Workspace({
             !(p.id === "delivery" && identity.roles.includes("sales")),
     );
     return (
-        <div class="app-shell">
-            <div class="header-fixed">
-                <header class="topbar">
-                    <a
-                        class="wordmark"
-                        href="#"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            go("home");
-                        }}
-                    >
-                        <Brand />
-                    </a>
-                    <div class="top-actions">
-                        <span
-                            class={`connection-badge ${online ? "" : "is-offline"}`}
-                            role="status"
-                        >
-                            <Icon name="signal" size={16} />
-                            <span>{online ? "Online" : "Offline"}</span>
-                        </span>
-                        <button
-                            class="icon-button"
-                            aria-label="Lihat antrean sinkronisasi"
-                            onClick={() => go("more")}
-                        >
-                            <Icon name="sync" />
-                            {pending > 0 && <b class="counter">{pending}</b>}
-                        </button>
-                        <button
-                            class="avatar"
-                            aria-label="Profil dan Sesi Akun"
-                            title="Buka status akun & sesi"
-                            onClick={() => setDialog({ type: "profile" })}
-                        >
-                            {identity.name[0]}
-                        </button>
-                    </div>
-                </header>
-            </div>
-            <main
-                id="main-content"
-                class={`content${page === "sales" ? " sales-content" : ""}`}
-            >
-                {page === "home" && (
-                    <>
-                        <div class="greeting">
-                            <div>
-                                <p class="eyebrow">{dateLabel()} · WITA</p>
-                                <h1>
-                                    Selamat bekerja,
-                                    <br />
-                                    <span>{identity.name}.</span>
-                                </h1>
+        <EvidenceIdentityContext.Provider
+            value={{
+                company: identity.companyName ?? identity.companyId,
+                employee: identity.name,
+            }}
+        >
+            <ViewMemoryContext.Provider value={viewMemory}>
+                <div class="app-shell">
+                    <div class="header-fixed">
+                        <header class="topbar">
+                            <a
+                                class="wordmark"
+                                href="#"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    go("home");
+                                }}
+                            >
+                                <Brand />
+                            </a>
+                            <div class="top-actions">
+                                <span
+                                    class={`connection-badge ${online ? "" : "is-offline"}`}
+                                    role="status"
+                                >
+                                    <Icon name="signal" size={16} />
+                                    <span>{online ? "Online" : "Offline"}</span>
+                                </span>
+                                <button
+                                    class="icon-button"
+                                    aria-label="Lihat antrean sinkronisasi"
+                                    onClick={() => go("more")}
+                                >
+                                    <Icon name="sync" />
+                                    {pending > 0 && (
+                                        <b class="counter">{pending}</b>
+                                    )}
+                                </button>
+                                <button
+                                    class="avatar"
+                                    aria-label="Profil dan Sesi Akun"
+                                    title="Buka status akun & sesi"
+                                    onClick={() =>
+                                        setDialog({ type: "profile" })
+                                    }
+                                >
+                                    {identity.name[0]}
+                                </button>
                             </div>
+                        </header>
+                        <div class="mode-indicator" role="note">
+                            Mode uji · transaksi tersimpan lokal
                         </div>
-                        {identity.roles.some(
-                            (r) => r === "sales" || r === "delivery",
-                        ) && (
-                            <MorningSession
-                                key={`morning:${morningRevision}`}
-                                identity={identity}
-                                provider={provider}
-                                store={store}
-                                onChange={setMorning}
-                            />
-                        )}
-                        <div class="quick-grid">
-                            {identity.roles.includes("sales") && (
-                                <button
-                                    class="quick-sales"
-                                    disabled={!attended || checkedOut}
-                                    onClick={() => go("sales")}
-                                >
-                                    <span class="quick-icon">
-                                        <Icon name="bag" size={26} />
-                                    </span>
-                                    <strong>Buat order</strong>
-                                    <small>
-                                        {snapshot.outlets.length} outlet
-                                    </small>
-                                </button>
-                            )}
-                            {identity.roles.includes("delivery") && (
-                                <button
-                                    class="quick-delivery"
-                                    disabled={!attended || checkedOut}
-                                    onClick={() => go("delivery")}
-                                >
-                                    <span class="quick-icon">
-                                        <Icon name="truck" size={26} />
-                                    </span>
-                                    <strong>Pengiriman</strong>
-                                    <small>
-                                        {snapshot.deliveries.length} manifest
-                                    </small>
-                                </button>
-                            )}
-                            {attended ? (
-                                <div class="quick-attendance-record">
+                    </div>
+                    <main
+                        ref={mainScroll}
+                        id="main-content"
+                        class={`content${page === "sales" ? " sales-content" : ""}`}
+                    >
+                        {page === "home" && (
+                            <>
+                                <div class="greeting">
                                     <div>
-                                        <Icon name="user" size={22} />
-                                        <strong>Clock in</strong>
-                                        <time>
-                                            {new Date(morning!.attendanceAt)
-                                                .toLocaleTimeString("id-ID", {
-                                                    timeZone: "Asia/Makassar",
-                                                    hour12: false,
-                                                })
-                                                .replaceAll(".", ":")}{" "}
-                                            WITA
-                                        </time>
-                                        <small>Tersimpan di perangkat</small>
+                                        <p class="eyebrow">
+                                            <LiveClock />
+                                        </p>
+                                        <h1>
+                                            Selamat bekerja,
+                                            <br />
+                                            <span>{identity.name}.</span>
+                                        </h1>
                                     </div>
+                                </div>
+                                {identity.roles.some(
+                                    (r) => r === "sales" || r === "delivery",
+                                ) && (
+                                    <MorningSession
+                                        key={`morning:${morningRevision}`}
+                                        identity={identity}
+                                        provider={provider}
+                                        store={store}
+                                        onChange={setMorning}
+                                        record={morning}
+                                        loaded={morningLoaded}
+                                        restoreError={morningError}
+                                    />
+                                )}
+                                <div class="quick-grid">
+                                    {identity.roles.includes("sales") && (
+                                        <button
+                                            class="quick-sales"
+                                            disabled={!attended || checkedOut}
+                                            onClick={() => go("sales")}
+                                        >
+                                            <span class="quick-icon">
+                                                <Icon name="bag" size={26} />
+                                            </span>
+                                            <strong>Buat order</strong>
+                                            <small>
+                                                {snapshot.outlets.length} outlet
+                                            </small>
+                                        </button>
+                                    )}
+                                    {identity.roles.includes("delivery") && (
+                                        <button
+                                            class="quick-delivery"
+                                            disabled={!attended || checkedOut}
+                                            onClick={() => go("delivery")}
+                                        >
+                                            <span class="quick-icon">
+                                                <Icon name="truck" size={26} />
+                                            </span>
+                                            <strong>Pengiriman</strong>
+                                            <small>
+                                                {snapshot.deliveries.length}{" "}
+                                                manifest
+                                            </small>
+                                        </button>
+                                    )}
+                                    {attended ? (
+                                        <div class="quick-attendance-record">
+                                            <div>
+                                                <Icon name="user" size={22} />
+                                                <strong>Clock in</strong>
+                                                <time>
+                                                    {new Date(
+                                                        morning!.attendanceAt,
+                                                    )
+                                                        .toLocaleTimeString(
+                                                            "id-ID",
+                                                            {
+                                                                timeZone:
+                                                                    "Asia/Makassar",
+                                                                hour12: false,
+                                                            },
+                                                        )
+                                                        .replaceAll(
+                                                            ".",
+                                                            ":",
+                                                        )}{" "}
+                                                    WITA
+                                                </time>
+                                                <small>
+                                                    Tersimpan di perangkat
+                                                </small>
+                                            </div>
+                                            <button
+                                                disabled={checkedOut}
+                                                onClick={() =>
+                                                    setDialog({
+                                                        type: "attendance",
+                                                        event: "check_out",
+                                                    })
+                                                }
+                                            >
+                                                {checkedOut
+                                                    ? `Clock out ${new Date(morning!.clockOutAt!).toLocaleTimeString("id-ID", { timeZone: "Asia/Makassar" })}`
+                                                    : "Clock out"}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            class="quick-attendance"
+                                            onClick={() =>
+                                                setDialog({
+                                                    type: "attendance",
+                                                })
+                                            }
+                                        >
+                                            <span class="quick-icon">
+                                                <Icon name="user" size={26} />
+                                            </span>
+                                            <strong>Absensi</strong>
+                                            <small>Check-in</small>
+                                        </button>
+                                    )}
                                     <button
-                                        disabled={checkedOut}
+                                        class="quick-expense"
+                                        disabled={!attended || checkedOut}
                                         onClick={() =>
-                                            setDialog({
-                                                type: "attendance",
-                                                event: "check_out",
-                                            })
+                                            setDialog({ type: "expense" })
                                         }
                                     >
-                                        {checkedOut
-                                            ? `Clock out ${new Date(morning!.clockOutAt!).toLocaleTimeString("id-ID", { timeZone: "Asia/Makassar" })}`
-                                            : "Clock out"}
+                                        <span class="quick-icon">
+                                            <Icon name="wallet" size={26} />
+                                        </span>
+                                        <strong>Uang lapangan</strong>
+                                        <small>
+                                            {pending + review} pending
+                                        </small>
                                     </button>
                                 </div>
-                            ) : (
+                                {identity.roles.includes("sales") &&
+                                dailyReady ? (
+                                    <>
+                                        <Heading
+                                            title="Kunjungan berikutnya"
+                                            action={
+                                                <button
+                                                    class="text-button"
+                                                    onClick={() => go("sales")}
+                                                >
+                                                    Semua{" "}
+                                                    <Icon
+                                                        name="arrow"
+                                                        size={16}
+                                                    />
+                                                </button>
+                                            }
+                                        />
+                                        <OutletCard
+                                            outlet={snapshot.outlets[0]}
+                                            open={() =>
+                                                openVisit(
+                                                    snapshot.outlets[0].id,
+                                                )
+                                            }
+                                        />
+                                    </>
+                                ) : (
+                                    !identity.roles.includes("sales") && (
+                                        <button
+                                            class="outlet-card"
+                                            onClick={() => go("delivery")}
+                                        >
+                                            Buka manifest pengiriman
+                                        </button>
+                                    )
+                                )}
+                            </>
+                        )}
+                        {page === "sales" && !dailyReady && (
+                            <p class="notice">
+                                Buka sesi kerja sebelum membuka daftar outlet.
                                 <button
-                                    class="quick-attendance"
                                     onClick={() =>
                                         setDialog({ type: "attendance" })
                                     }
                                 >
-                                    <span class="quick-icon">
-                                        <Icon name="user" size={26} />
-                                    </span>
-                                    <strong>Absensi</strong>
-                                    <small>Check-in</small>
+                                    Absensi masuk
                                 </button>
-                            )}
-                            <button
-                                class="quick-expense"
-                                disabled={!attended || checkedOut}
-                                onClick={() => setDialog({ type: "expense" })}
-                            >
-                                <span class="quick-icon">
-                                    <Icon name="wallet" size={26} />
-                                </span>
-                                <strong>Uang lapangan</strong>
-                                <small>{pending + review} pending</small>
-                            </button>
-                        </div>
-                        {identity.roles.includes("sales") && dailyReady ? (
+                            </p>
+                        )}
+                        {page === "sales" && dailyReady && (
+                            <>
+                                {!visitOutlet && (
+                                    <>
+                                        <Heading
+                                            title="Outlet"
+                                            action={
+                                                <button
+                                                    class="text-button"
+                                                    onClick={() => go("home")}
+                                                >
+                                                    Beranda
+                                                </button>
+                                            }
+                                        />
+                                    </>
+                                )}
+                                {visitOutlet &&
+                                    dailyReady &&
+                                    snapshot.outlets.some(
+                                        (o) => o.id === visitOutlet,
+                                    ) && (
+                                        <VisitPanel
+                                            key={`${owner}:${morning?.sessionId}:${visitOutlet}`}
+                                            outlet={
+                                                snapshot.outlets.find(
+                                                    (o) => o.id === visitOutlet,
+                                                )!
+                                            }
+                                            service={visits}
+                                            store={store}
+                                            owner={owner}
+                                            sessionId={morning!.sessionId!}
+                                            queue={queue}
+                                            changed={() => {
+                                                void refresh();
+                                                if (navigator.onLine)
+                                                    void engine.flush();
+                                            }}
+                                            order={() => openOrder(visitOutlet)}
+                                            back={() =>
+                                                setVisitOutlet(undefined)
+                                            }
+                                        />
+                                    )}
+                                {!visitOutlet && (
+                                    <OutletDirectory
+                                        outlets={snapshot.outlets}
+                                        open={openVisit}
+                                        extra={() =>
+                                            setDialog({ type: "extra" })
+                                        }
+                                        status={(id) =>
+                                            queue.some(
+                                                (q) =>
+                                                    q.command.type ===
+                                                        "sales.visit.check_out" &&
+                                                    q.command.payload
+                                                        .outlet_id === id &&
+                                                    q.command.payload
+                                                        .business_date ===
+                                                        identity.businessDate,
+                                            )
+                                                ? "Session closed"
+                                                : "Belum ditutup"
+                                        }
+                                    />
+                                )}
+                            </>
+                        )}
+                        {page === "delivery" && !dailyReady && (
+                            <p class="notice">
+                                Daily sync wajib sebelum membuka list Delivery.
+                            </p>
+                        )}
+                        {page === "delivery" && dailyReady && (
                             <>
                                 <Heading
-                                    title="Kunjungan berikutnya"
-                                    action={
-                                        <button
-                                            class="text-button"
-                                            onClick={() => go("sales")}
-                                        >
-                                            Semua{" "}
-                                            <Icon name="arrow" size={16} />
-                                        </button>
-                                    }
+                                    title="Delivery"
+                                    note="Manifest contoh · Maumbi — Manado"
                                 />
-                                <OutletCard
-                                    outlet={snapshot.outlets[0]}
-                                    open={() =>
-                                        openVisit(snapshot.outlets[0].id)
-                                    }
-                                />
-                            </>
-                        ) : (
-                            !identity.roles.includes("sales") && (
-                                <button
-                                    class="outlet-card"
-                                    onClick={() => go("delivery")}
-                                >
-                                    Buka manifest pengiriman
-                                </button>
-                            )
-                        )}
-                    </>
-                )}
-                {page === "sales" && !dailyReady && (
-                    <p class="notice">
-                        Buka sesi kerja sebelum membuka daftar outlet.
-                    </p>
-                )}
-                {page === "sales" && dailyReady && (
-                    <>
-                        {!visitOutlet && (
-                            <>
-                                <Heading
-                                    title="Outlet"
-                                    action={
-                                        <button
-                                            class="text-button"
-                                            onClick={() => go("home")}
-                                        >
-                                            Beranda
-                                        </button>
-                                    }
-                                />
-                            </>
-                        )}
-                        {visitOutlet &&
-                            dailyReady &&
-                            snapshot.outlets.some(
-                                (o) => o.id === visitOutlet,
-                            ) && (
-                                <VisitPanel
-                                    key={`${owner}:${morning?.sessionId}:${visitOutlet}`}
-                                    outlet={
-                                        snapshot.outlets.find(
-                                            (o) => o.id === visitOutlet,
-                                        )!
-                                    }
-                                    service={visits}
+                                <section class="trip-card">
+                                    <Icon name="truck" size={36} />
+                                    <div>
+                                        <strong>TRIP-DEMO-01</strong>
+                                        <p>
+                                            2 pengiriman · 20 karton · DB • DEMO
+                                        </p>
+                                    </div>
+                                </section>
+                                <DeliveryWorkspace
+                                    key={owner}
                                     store={store}
-                                    owner={owner}
-                                    sessionId={morning!.sessionId!}
+                                    identity={identity}
+                                    provider={provider}
+                                    engine={engine}
                                     queue={queue}
-                                    changed={() => {
-                                        void refresh();
-                                        if (navigator.onLine)
-                                            void engine.flush();
-                                    }}
-                                    order={() => openOrder(visitOutlet)}
-                                    back={() => setVisitOutlet(undefined)}
+                                    changed={() => void refresh()}
                                 />
-                            )}
-                        {!visitOutlet && (
-                            <OutletDirectory
-                                outlets={snapshot.outlets}
-                                open={openVisit}
-                                extra={() => setDialog({ type: "extra" })}
-                                status={(id) =>
-                                    queue.some(
-                                        (q) =>
-                                            q.command.type ===
-                                                "sales.visit.check_out" &&
-                                            q.command.payload.outlet_id ===
-                                                id &&
-                                            q.command.payload.business_date ===
-                                                identity.businessDate,
-                                    )
-                                        ? "Session closed"
-                                        : "Belum ditutup"
-                                }
+                                <TripClosing
+                                    store={store}
+                                    identity={identity}
+                                    morning={morning}
+                                    queue={queue}
+                                    engine={engine}
+                                    changed={() => void refresh()}
+                                />
+                                <CollectionWorkspace
+                                    key={owner}
+                                    identity={identity}
+                                    provider={provider}
+                                    store={store}
+                                    engine={engine}
+                                    queue={queue}
+                                    changed={() => void refresh()}
+                                />
+                                <button
+                                    class="secondary full"
+                                    onClick={() =>
+                                        setDialog({
+                                            type: "expense",
+                                            trip: "TRIP-01",
+                                        })
+                                    }
+                                >
+                                    <Icon name="gas" />
+                                    Biaya trip / pengajuan BBM
+                                </button>
+                                <p class="notice">
+                                    Bukti POD tidak otomatis menjadikan picking
+                                    selesai. Posting stok dan settlement tetap
+                                    di Odoo.
+                                </p>
+                            </>
+                        )}
+                        {page === "hris" && (
+                            <>
+                                <Heading
+                                    title="Personal HRIS"
+                                    note="Ruang personal, untuk kebutuhan Anda."
+                                />
+                                <section class="profile-card">
+                                    <span class="avatar large">
+                                        {identity.name[0]}
+                                    </span>
+                                    <div>
+                                        <h2>{identity.name}</h2>
+                                        <p>{identity.title}</p>
+                                        <Pill>Employee</Pill>
+                                    </div>
+                                </section>
+                                <div class="hris-actions">
+                                    <button
+                                        disabled={checkedOut}
+                                        class="card-row"
+                                        onClick={() =>
+                                            setDialog({
+                                                type: "attendance",
+                                                event: attended
+                                                    ? "check_out"
+                                                    : "check_in",
+                                            })
+                                        }
+                                    >
+                                        <span class="metric-icon blue">
+                                            <Icon name="camera" />
+                                        </span>
+                                        <div>
+                                            <strong>Absensi hari ini</strong>
+                                            <small>
+                                                Foto, lokasi & hasil validasi
+                                            </small>
+                                        </div>
+                                        <Icon name="caret" />
+                                    </button>
+                                    <button
+                                        class="card-row"
+                                        onClick={() =>
+                                            setDialog({ type: "leave" })
+                                        }
+                                    >
+                                        <span class="metric-icon purple">
+                                            <Icon name="clock" />
+                                        </span>
+                                        <div>
+                                            <strong>Pengajuan cuti</strong>
+                                            <small>Draft & review atasan</small>
+                                        </div>
+                                        <Icon name="caret" />
+                                    </button>
+                                    <button
+                                        class="card-row"
+                                        onClick={() =>
+                                            setDialog({ type: "expense" })
+                                        }
+                                    >
+                                        <span class="metric-icon amber">
+                                            <Icon name="wallet" />
+                                        </span>
+                                        <div>
+                                            <strong>
+                                                Petty cash luar kota
+                                            </strong>
+                                            <small>
+                                                Makan, BBM & penginapan
+                                            </small>
+                                        </div>
+                                        <Icon name="caret" />
+                                    </button>
+                                </div>
+                                <section class="paper-card">
+                                    <Icon name="receipt" size={30} />
+                                    <h3>Slip gaji & dokumen pribadi</h3>
+                                    <p class="muted">
+                                        Belum terintegrasi. Dokumen personal
+                                        hanya dibuka online setelah
+                                        dipublikasikan backend.
+                                    </p>
+                                    <Pill tone="neutral">Menunggu backend</Pill>
+                                </section>
+                            </>
+                        )}
+                        {page === "expenses" && (
+                            <ExpenseWorkspace
+                                identity={identity}
+                                provider={provider}
+                                store={store}
+                                engine={engine}
+                                queue={queue}
+                                create={() => setDialog({ type: "expense" })}
+                                back={() => go("more")}
+                                queued={() => {
+                                    void refresh();
+                                    if (navigator.onLine) void engine.flush();
+                                }}
                             />
                         )}
-                    </>
-                )}
-                {page === "delivery" && !dailyReady && (
-                    <p class="notice">
-                        Daily sync wajib sebelum membuka list Delivery.
-                    </p>
-                )}
-                {page === "delivery" && dailyReady && (
-                    <>
-                        <Heading
-                            title="Delivery"
-                            note="Manifest contoh · Maumbi — Manado"
-                        />
-                        <section class="trip-card">
-                            <Icon name="truck" size={36} />
-                            <div>
-                                <strong>TRIP-DEMO-01</strong>
-                                <p>2 pengiriman · 20 karton · DB • DEMO</p>
-                            </div>
-                        </section>
-                        <DeliveryWorkspace
-                            key={owner}
+                        {page === "more" && (
+                            <>
+                                <OrderCorrections
+                                    store={store}
+                                    owner={owner}
+                                    morning={morning}
+                                    queue={queue}
+                                    engine={engine}
+                                    changed={() => void refresh()}
+                                />
+                                {__QA_TOOLS__ && (
+                                    <DeliveryApproval
+                                        store={store}
+                                        owner={owner}
+                                        queue={queue}
+                                        changed={() => void refresh()}
+                                    />
+                                )}
+                                {__QA_TOOLS__ && (
+                                    <DiscountApproval
+                                        store={store}
+                                        owner={owner}
+                                        queue={queue}
+                                        changed={() => void refresh()}
+                                    />
+                                )}
+                                <Heading
+                                    title="Akun & sinkronisasi"
+                                    note={identity.title}
+                                />
+                                <section class="sync-card">
+                                    <div>
+                                        <span class="metric-icon blue">
+                                            <Icon name="sync" />
+                                        </span>
+                                        <h3>{pending} aktivitas menunggu</h3>
+                                        <p class="muted">
+                                            {online
+                                                ? "Koneksi tersedia"
+                                                : "Offline • antrean disimpan di perangkat"}
+                                        </p>
+                                    </div>
+                                    <button
+                                        disabled={!online || syncing}
+                                        onClick={() => void sync()}
+                                    >
+                                        {syncing ? "Mengirim…" : "Sinkronkan"}
+                                    </button>
+                                </section>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        gap: "10px",
+                                        margin: "14px 0",
+                                    }}
+                                >
+                                    <a
+                                        href="/web/login?redirect=/field/"
+                                        class="button secondary"
+                                        style={{
+                                            flex: 1,
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "6px",
+                                            padding: "10px",
+                                            borderRadius: "10px",
+                                            textDecoration: "none",
+                                            fontWeight: "600",
+                                            fontSize: "0.85rem",
+                                            color: "var(--navy)",
+                                            border: "1px solid var(--border)",
+                                            background: "#fff",
+                                        }}
+                                    >
+                                        <Icon name="user" size={16} /> Ganti
+                                        Akun Odoo
+                                    </a>
+                                    <a
+                                        href="/web/session/logout?redirect=/field/"
+                                        class="button secondary"
+                                        style={{
+                                            flex: 1,
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "6px",
+                                            padding: "10px",
+                                            borderRadius: "10px",
+                                            textDecoration: "none",
+                                            fontWeight: "600",
+                                            fontSize: "0.85rem",
+                                            color: "#dc2626",
+                                            border: "1px solid #fecaca",
+                                            background: "#fff5f5",
+                                        }}
+                                    >
+                                        <Icon name="close" size={16} /> Keluar
+                                        (Logout)
+                                    </a>
+                                </div>
+                                <button
+                                    class="secondary full"
+                                    onClick={() => go("expenses")}
+                                >
+                                    <Icon name="wallet" size={20} /> Realisasi &
+                                    saldo uang lapangan
+                                </button>
+                                {__QA_TOOLS__ && (
+                                    <label class="local-mode-control">
+                                        Mode respons transaksi lokal
+                                        <select
+                                            aria-label="Mode respons"
+                                            value={scenario}
+                                            onChange={(event) =>
+                                                setScenario(
+                                                    event.currentTarget
+                                                        .value as Scenario,
+                                                )
+                                            }
+                                        >
+                                            <option value="normal">
+                                                Normal
+                                            </option>
+                                            <option value="approval">
+                                                Menunggu approval
+                                            </option>
+                                            <option value="rejected">
+                                                Ditolak
+                                            </option>
+                                            <option value="timeout">
+                                                Jaringan gagal / 503
+                                            </option>
+                                            <option value="expired">
+                                                Sesi habis / 401
+                                            </option>
+                                        </select>
+                                    </label>
+                                )}
+                                <Heading
+                                    title="Aktivitas perangkat ini"
+                                    note="Terkirim berbeda dengan disetujui atau diposting."
+                                />
+                                <SyncDiagnostics
+                                    key={owner}
+                                    store={store}
+                                    owner={owner}
+                                    queue={queue}
+                                    online={online}
+                                />
+                                <details>
+                                    <summary>Status integrasi</summary>
+                                    <p class="footnote">
+                                        Binding perangkat, approval resmi,
+                                        notifikasi backend dan pengiriman
+                                        evidence menunggu integrasi API. Tidak
+                                        ada token atau dokumen gaji di cache
+                                        lokal.
+                                    </p>
+                                </details>
+                            </>
+                        )}
+                    </main>
+                    <nav class="bottom-nav" aria-label="Navigasi utama">
+                        {nav.map((p) => (
+                            <button
+                                key={p.id}
+                                class={
+                                    page === p.id ||
+                                    (page === "expenses" && p.id === "more") ||
+                                    (page === "delivery" && p.id === "sales")
+                                        ? "active"
+                                        : ""
+                                }
+                                aria-current={
+                                    page === p.id ||
+                                    (p.id === "sales" && page === "delivery")
+                                        ? "page"
+                                        : undefined
+                                }
+                                onClick={() => go(p.id)}
+                            >
+                                <span class="nav-icon">
+                                    <Icon name={p.icon} size={24} />
+                                    {p.id === "more" && pending > 0 && (
+                                        <span class="nav-dot" />
+                                    )}
+                                </span>
+                                <span>{p.name}</span>
+                            </button>
+                        ))}
+                    </nav>
+                    <div class="sr-only" aria-live="polite">
+                        {online
+                            ? ""
+                            : "Offline · aktivitas disimpan di perangkat"}
+                    </div>
+                    {toast && (
+                        <div class="toast" role="status">
+                            <Icon name="check" size={22} />
+                            {toast}
+                        </div>
+                    )}
+                    {dialog && (
+                        <TaskForm
+                            key={JSON.stringify(dialog)}
+                            dialog={dialog}
                             store={store}
                             identity={identity}
-                            provider={provider}
-                            engine={engine}
-                            queue={queue}
-                            changed={() => void refresh()}
-                        />
-                        <TripClosing
-                            store={store}
-                            identity={identity}
-                            morning={morning}
-                            queue={queue}
-                            engine={engine}
-                            changed={() => void refresh()}
-                        />
-                        <CollectionWorkspace
-                            key={owner}
-                            identity={identity}
-                            provider={provider}
-                            store={store}
-                            engine={engine}
-                            queue={queue}
-                            changed={() => void refresh()}
-                        />
-                        <button
-                            class="secondary full"
-                            onClick={() =>
-                                setDialog({
-                                    type: "expense",
-                                    trip: "TRIP-01",
-                                })
+                            snapshot={snapshot}
+                            owner={owner}
+                            workStatus={
+                                checkedOut
+                                    ? "Sesi kerja selesai"
+                                    : dailyReady
+                                      ? "Sesi kerja aktif"
+                                      : "Sesi kerja belum dibuka"
                             }
-                        >
-                            <Icon name="gas" />
-                            Biaya trip / pengajuan BBM
-                        </button>
-                        <p class="notice">
-                            Bukti POD tidak otomatis menjadikan picking selesai.
-                            Posting stok dan settlement tetap di Odoo.
-                        </p>
-                    </>
-                )}
-                {page === "hris" && (
-                    <>
-                        <Heading
-                            title="Personal HRIS"
-                            note="Ruang personal, untuk kebutuhan Anda."
+                            submit={submit}
+                            startSession={startSession}
+                            close={() => setDialog(undefined)}
                         />
-                        <section class="profile-card">
-                            <span class="avatar large">{identity.name[0]}</span>
-                            <div>
-                                <h2>{identity.name}</h2>
-                                <p>{identity.title}</p>
-                                <Pill>Employee</Pill>
-                            </div>
-                        </section>
-                        <div class="hris-actions">
-                            <button
-                                disabled={checkedOut}
-                                class="card-row"
-                                onClick={() =>
-                                    setDialog({
-                                        type: "attendance",
-                                        event: attended
-                                            ? "check_out"
-                                            : "check_in",
-                                    })
-                                }
-                            >
-                                <span class="metric-icon blue">
-                                    <Icon name="camera" />
-                                </span>
-                                <div>
-                                    <strong>Absensi hari ini</strong>
-                                    <small>Foto, lokasi & hasil validasi</small>
-                                </div>
-                                <Icon name="caret" />
-                            </button>
-                            <button
-                                class="card-row"
-                                onClick={() => setDialog({ type: "leave" })}
-                            >
-                                <span class="metric-icon purple">
-                                    <Icon name="clock" />
-                                </span>
-                                <div>
-                                    <strong>Pengajuan cuti</strong>
-                                    <small>Draft & review atasan</small>
-                                </div>
-                                <Icon name="caret" />
-                            </button>
-                            <button
-                                class="card-row"
-                                onClick={() => setDialog({ type: "expense" })}
-                            >
-                                <span class="metric-icon amber">
-                                    <Icon name="wallet" />
-                                </span>
-                                <div>
-                                    <strong>Petty cash luar kota</strong>
-                                    <small>Makan, BBM & penginapan</small>
-                                </div>
-                                <Icon name="caret" />
-                            </button>
-                        </div>
-                        <section class="paper-card">
-                            <Icon name="receipt" size={30} />
-                            <h3>Slip gaji & dokumen pribadi</h3>
-                            <p class="muted">
-                                Belum terintegrasi. Dokumen personal hanya
-                                dibuka online setelah dipublikasikan backend.
-                            </p>
-                            <Pill tone="neutral">Menunggu backend</Pill>
-                        </section>
-                    </>
-                )}
-                {page === "expenses" && (
-                    <ExpenseWorkspace
-                        identity={identity}
-                        provider={provider}
-                        store={store}
-                        engine={engine}
-                        queue={queue}
-                        create={() => setDialog({ type: "expense" })}
-                        back={() => go("more")}
-                        queued={() => {
-                            void refresh();
-                            if (navigator.onLine) void engine.flush();
-                        }}
-                    />
-                )}
-                {page === "more" && (
-                    <>
-                        <OrderCorrections
-                            store={store}
-                            owner={owner}
-                            morning={morning}
-                            queue={queue}
-                            engine={engine}
-                            changed={() => void refresh()}
-                        />
-                        <DeliveryApproval
-                            store={store}
-                            owner={owner}
-                            queue={queue}
-                            changed={() => void refresh()}
-                        />
-                        <DiscountApproval
-                            store={store}
-                            owner={owner}
-                            queue={queue}
-                            changed={() => void refresh()}
-                        />
-                        <Heading
-                            title="Akun & sinkronisasi"
-                            note={identity.title}
-                        />
-                        <section class="sync-card">
-                            <div>
-                                <span class="metric-icon blue">
-                                    <Icon name="sync" />
-                                </span>
-                                <h3>{pending} aktivitas menunggu</h3>
-                                <p class="muted">
-                                    {online
-                                        ? "Koneksi tersedia"
-                                        : "Offline • antrean disimpan di perangkat"}
-                                </p>
-                            </div>
-                            <button
-                                disabled={!online || syncing}
-                                onClick={() => void sync()}
-                            >
-                                {syncing ? "Mengirim…" : "Sinkronkan"}
-                            </button>
-                        </section>
-                        <div
-                            style={{
-                                display: "flex",
-                                gap: "10px",
-                                margin: "14px 0",
-                            }}
-                        >
-                            <a
-                                href="/web/login?redirect=/field/"
-                                class="button secondary"
-                                style={{
-                                    flex: 1,
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: "6px",
-                                    padding: "10px",
-                                    borderRadius: "10px",
-                                    textDecoration: "none",
-                                    fontWeight: "600",
-                                    fontSize: "0.85rem",
-                                    color: "var(--navy)",
-                                    border: "1px solid var(--border)",
-                                    background: "#fff",
-                                }}
-                            >
-                                <Icon name="user" size={16} /> Ganti Akun Odoo
-                            </a>
-                            <a
-                                href="/web/session/logout?redirect=/field/"
-                                class="button secondary"
-                                style={{
-                                    flex: 1,
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: "6px",
-                                    padding: "10px",
-                                    borderRadius: "10px",
-                                    textDecoration: "none",
-                                    fontWeight: "600",
-                                    fontSize: "0.85rem",
-                                    color: "#dc2626",
-                                    border: "1px solid #fecaca",
-                                    background: "#fff5f5",
-                                }}
-                            >
-                                <Icon name="close" size={16} /> Keluar (Logout)
-                            </a>
-                        </div>
-                        <button
-                            class="secondary full"
-                            onClick={() => go("expenses")}
-                        >
-                            <Icon name="wallet" size={20} /> Realisasi & saldo
-                            uang lapangan
-                        </button>
-                        <label class="local-mode-control">
-                            Mode respons transaksi lokal
-                            <select
-                                aria-label="Mode respons"
-                                value={scenario}
-                                onChange={(event) =>
-                                    setScenario(
-                                        event.currentTarget.value as Scenario,
-                                    )
-                                }
-                            >
-                                <option value="normal">Normal</option>
-                                <option value="approval">
-                                    Menunggu approval
-                                </option>
-                                <option value="rejected">Ditolak</option>
-                                <option value="timeout">
-                                    Jaringan gagal / 503
-                                </option>
-                                <option value="expired">
-                                    Sesi habis / 401
-                                </option>
-                            </select>
-                        </label>
-                        <Heading
-                            title="Aktivitas perangkat ini"
-                            note="Terkirim berbeda dengan disetujui atau diposting."
-                        />
-                        <SyncDiagnostics
-                            key={owner}
-                            store={store}
-                            owner={owner}
-                            queue={queue}
-                            online={online}
-                        />
-                        <p class="footnote">
-                            Binding perangkat, approval resmi, notifikasi
-                            backend dan pengiriman evidence menunggu integrasi
-                            API. Tidak ada token atau dokumen gaji di cache
-                            lokal.
-                        </p>
-                    </>
-                )}
-            </main>
-            <nav class="bottom-nav" aria-label="Navigasi utama">
-                {nav.map((p) => (
-                    <button
-                        key={p.id}
-                        class={
-                            page === p.id ||
-                            (page === "expenses" && p.id === "more") ||
-                            (page === "delivery" && p.id === "sales")
-                                ? "active"
-                                : ""
-                        }
-                        aria-current={
-                            page === p.id ||
-                            (p.id === "sales" && page === "delivery")
-                                ? "page"
-                                : undefined
-                        }
-                        onClick={() => go(p.id)}
-                    >
-                        <span class="nav-icon">
-                            <Icon name={p.icon} size={24} />
-                            {p.id === "more" && pending > 0 && (
-                                <span class="nav-dot" />
-                            )}
-                        </span>
-                        <span>{p.name}</span>
-                    </button>
-                ))}
-            </nav>
-            <div class="sr-only" aria-live="polite">
-                {online ? "" : "Offline · aktivitas disimpan di perangkat"}
-            </div>
-            {toast && (
-                <div class="toast" role="status">
-                    <Icon name="check" size={22} />
-                    {toast}
+                    )}
                 </div>
-            )}
-            {dialog && (
-                <FormDialog
-                    key={JSON.stringify(dialog)}
-                    dialog={dialog}
-                    identity={identity}
-                    snapshot={snapshot}
-                    owner={owner}
-                    submit={submit}
-                    startSession={startSession}
-                    close={() => setDialog(undefined)}
-                />
-            )}
-        </div>
+            </ViewMemoryContext.Provider>
+        </EvidenceIdentityContext.Provider>
     );
 }
 function OutletCard({
@@ -1092,982 +1245,5 @@ function OutletCard({
             </div>
             <Icon name="caret" size={18} />
         </button>
-    );
-}
-function FormDialog({
-    dialog,
-    identity,
-    snapshot,
-    owner,
-    submit,
-    startSession,
-    close,
-}: {
-    dialog: Dialog;
-    identity: Identity;
-    snapshot: Snapshot;
-    owner: string;
-    submit: (
-        type: Command["type"],
-        payload: Record<string, unknown>,
-        label: string,
-    ) => Promise<QueueItem>;
-    startSession: (
-        event: "check_in" | "check_out",
-        evidence: EvidenceRef,
-    ) => Promise<void>;
-    close: () => void;
-}) {
-    const focusOrigin = useRef(document.activeElement as HTMLElement | null);
-    const [error, setError] = useState("");
-    const [busy, setBusy] = useState(false);
-    const [orderPreview, setOrderPreview] = useState(false);
-    const [qty, setQty] = useState<Record<string, number>>({});
-    const [principal, setPrincipal] = useState(
-        () => snapshot.products[0]?.principal ?? "mayora",
-    );
-    const [units, setUnits] = useState<Record<string, OrderUom>>({});
-    const [discount, setDiscount] = useState(0);
-    const [discountReason, setDiscountReason] = useState("");
-    const [evidence, setEvidence] = useState<EvidenceRef>();
-    const [restored, setRestored] = useState(false);
-    const [category, setCategory] = useState("fuel_planned");
-    const busyRef = useRef(false);
-    busyRef.current = busy;
-    const key = dialog.type === "order" ? `order:${dialog.outlet}` : "";
-    useEffect(() => {
-        if (!key) {
-            setRestored(true);
-            return;
-        }
-        let active = true;
-        void store
-            .draft(owner, key)
-            .then((value) => {
-                if (active && value && typeof value === "object") {
-                    const v = value as {
-                        quantities: Record<string, number>;
-                        principal: string;
-                        units?: Record<string, OrderUom>;
-                        discount?: number;
-                        discountReason?: string;
-                        evidence?: EvidenceRef;
-                    };
-                    setQty(v.quantities ?? {});
-                    setPrincipal(v.principal ?? "mayora");
-                    setUnits(v.units ?? {});
-                    setDiscount(v.discount ?? 0);
-                    setDiscountReason(v.discountReason ?? "");
-                    if (v.evidence) setEvidence(v.evidence);
-                }
-                if (active) setRestored(true);
-            })
-            .catch(() => {
-                setError("Draft tidak dapat dibaca.");
-            });
-        return () => {
-            active = false;
-        };
-    }, []);
-    useEffect(() => {
-        if (restored && key)
-            void store
-                .draft(owner, key, {
-                    quantities: qty,
-                    principal,
-                    units,
-                    discount,
-                    discountReason,
-                    ...(evidence ? { evidence } : {}),
-                })
-                .catch(() =>
-                    setError("Draft gagal disimpan. Periksa penyimpanan."),
-                );
-    }, [qty, principal, units, discount, discountReason, evidence, restored]);
-    useEffect(() => {
-        const old = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
-        const previousFocus = focusOrigin.current;
-        const sheet = document.querySelector<HTMLElement>(".sheet");
-        const behind = [
-            ...document.querySelectorAll<HTMLElement>(
-                ".content, .topbar, .bottom-nav",
-            ),
-        ];
-        behind.forEach((el) => {
-            el.inert = true;
-        });
-        sheet
-            ?.querySelector<HTMLElement>("input, select, textarea, button")
-            ?.focus();
-        const keys = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && !busyRef.current) close();
-            if (e.key !== "Tab" || !sheet) return;
-            const items = [
-                ...sheet.querySelectorAll<HTMLElement>(
-                    "button:not([disabled]), input:not([disabled]), select, textarea",
-                ),
-            ].filter((el) => el.getClientRects().length);
-            const first = items[0],
-                last = items.at(-1);
-            if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault();
-                last?.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-                e.preventDefault();
-                first?.focus();
-            }
-        };
-        document.addEventListener("keydown", keys);
-        return () => {
-            document.body.style.overflow = old;
-            behind.forEach((el) => {
-                el.inert = false;
-            });
-            requestAnimationFrame(() => {
-                if (previousFocus?.isConnected) previousFocus.focus();
-            });
-            document.removeEventListener("keydown", keys);
-        };
-    }, []);
-    const orderLines = Object.entries(qty).filter(([, q]) => q > 0);
-    const title = {
-        order: "Buat Sales Order",
-        extra: "Ajukan extra call",
-        proof: "Bukti pengiriman",
-        expense: "Uang lapangan",
-        attendance: "Absensi foto & lokasi",
-        leave: "Pengajuan cuti",
-        profile: "Profil & Sesi Akun",
-    }[dialog.type];
-    async function send(e: SubmitEvent) {
-        e.preventDefault();
-        if (busy) return;
-        if (dialog.type === "order" && !orderPreview) {
-            if (orderLines.length && evidence) setOrderPreview(true);
-            else setError("Lengkapi item dan foto display sebelum preview.");
-            return;
-        }
-        setError("");
-        const f = new FormData(e.currentTarget as HTMLFormElement);
-        setBusy(true);
-        try {
-            let type: Command["type"];
-            let payload: Record<string, unknown>;
-            let label: string;
-            if (dialog.type === "order") {
-                if (!evidence)
-                    throw new Error(
-                        "Ambil foto display outlet sebelum mengirim order.",
-                    );
-                const lines = Object.entries(qty)
-                    .filter(([, q]) => q > 0)
-                    .map(([productId, quantity]) => ({ productId, quantity }));
-                const invalid = validateOrder(lines, snapshot);
-                if (invalid) throw new Error(invalid);
-                type = "sales.order.submit";
-                payload = {
-                    outlet_id: dialog.outlet,
-                    snapshot_version: snapshot.version,
-                    lines: lines.map((l) => ({
-                        product_id: l.productId,
-                        qty: String(l.quantity),
-                        uom: units[l.productId] ?? "carton",
-                    })),
-                    pricing_version: 1,
-                    ...(discount > 0
-                        ? {
-                              discount_request: {
-                                  percent: discount,
-                                  reason: discountReason,
-                              },
-                          }
-                        : {}),
-                    note: String(f.get("note") ?? ""),
-                    observed_total: String(
-                        orderQuote(
-                            lines.map((l) => ({
-                                product_id: l.productId,
-                                qty: String(l.quantity),
-                                uom: units[l.productId] ?? "carton",
-                            })),
-                            snapshot,
-                            discount > 0
-                                ? { percent: discount, reason: discountReason }
-                                : undefined,
-                        ).requestedTotal,
-                    ),
-                };
-                label = `Order • ${snapshot.outlets.find((o) => o.id === dialog.outlet)?.name}`;
-            } else if (dialog.type === "extra") {
-                type = "sales.extra_call.request";
-                payload = {
-                    outlet_name: f.get("outlet"),
-                    reason: f.get("reason"),
-                };
-                label = `Extra call • ${f.get("outlet")}`;
-            } else if (dialog.type === "expense") {
-                const amount = Number(f.get("amount"));
-                if (!Number.isFinite(amount) || amount < 1)
-                    throw new Error("Nominal harus lebih dari nol.");
-                type = "field_expense.request";
-                payload = validateExpense(
-                    {
-                        category,
-                        amount: String(amount),
-                        trip_id: String(f.get("trip") ?? ""),
-                        delivery_id:
-                            f.get("scope") === "delivery"
-                                ? String(f.get("delivery") ?? "").trim() || null
-                                : null,
-                        expense_scope: f.get("scope"),
-                        scheduled_date: f.get("date"),
-                        odometer:
-                            f.get("odometer") === null ||
-                            f.get("odometer") === ""
-                                ? null
-                                : Number(f.get("odometer")),
-                        reason: f.get("reason"),
-                        evidence: evidence ?? null,
-                    },
-                    identity.businessDate,
-                );
-                label = `Petty cash • ${money(amount)}`;
-            } else if (dialog.type === "leave") {
-                const from = String(f.get("from")),
-                    to = String(f.get("to"));
-                if (to < from)
-                    throw new Error(
-                        "Tanggal selesai tidak boleh sebelum mulai.",
-                    );
-                type = "hris.leave.request";
-                payload = {
-                    date_from: from,
-                    date_to: to,
-                    reason: f.get("reason"),
-                };
-                label = "Pengajuan cuti";
-            } else {
-                if (!evidence)
-                    throw new Error("Simpan foto dan lokasi dahulu.");
-                if (dialog.type === "attendance") {
-                    await startSession(dialog.event ?? "check_in", evidence);
-                    close();
-                    return;
-                }
-                if (dialog.type !== "proof")
-                    throw new Error("Form bukti tidak dikenal.");
-                type = "delivery.proof.submit";
-                payload = {
-                    event: f.get("event"),
-                    delivery_id: dialog.delivery,
-                    result: f.get("result"),
-                    evidence,
-                    map_status: "pending",
-                };
-                label = `POD • ${dialog.delivery}`;
-            }
-            // Evidence remains local: receipts must not claim the backend has verified it.
-            if (
-                evidence &&
-                ["hris.attendance.capture", "delivery.proof.submit"].includes(
-                    type,
-                )
-            )
-                throw new Error(
-                    "Bukti tersimpan lokal. Pengiriman resmi menunggu API evidence & snapshot peta.",
-                );
-            await submit(type, payload, label);
-            if (key) await store.removeDraft(owner, key);
-        } catch (x) {
-            setError(
-                x instanceof Error
-                    ? x.message
-                    : "Penyimpanan gagal. Form tetap tersedia.",
-            );
-        } finally {
-            setBusy(false);
-        }
-    }
-    return (
-        <div class="modal-backdrop page-backdrop">
-            <section
-                class="sheet full-page-form"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="dialog-title"
-            >
-                <header class="sheet-head">
-                    <div>
-                        <p class="eyebrow">{identity.name}</p>
-                        <h2 id="dialog-title">{title}</h2>
-                    </div>
-                    <button
-                        class="icon-button"
-                        type="button"
-                        onClick={close}
-                        aria-label="Tutup form"
-                        disabled={busy}
-                    >
-                        <Icon name="close" />
-                    </button>
-                </header>
-                <form onSubmit={(e) => void send(e)}>
-                    <div class="sheet-body">
-                        {dialog.type === "order" && (
-                            <>
-                                <nav
-                                    class="workflow-tabs"
-                                    aria-label="Tahap order"
-                                >
-                                    <button
-                                        type="button"
-                                        aria-pressed={!orderPreview}
-                                        onClick={() => setOrderPreview(false)}
-                                    >
-                                        Produk & cart
-                                    </button>
-                                    <button
-                                        type="button"
-                                        aria-pressed={orderPreview}
-                                        disabled={
-                                            !orderLines.length || !evidence
-                                        }
-                                        onClick={() => setOrderPreview(true)}
-                                    >
-                                        Preview order
-                                    </button>
-                                </nav>
-                                {orderPreview && (
-                                    <section
-                                        class="order-preview"
-                                        aria-label="Preview order"
-                                    >
-                                        <h3>
-                                            {
-                                                snapshot.outlets.find(
-                                                    (o) =>
-                                                        o.id === dialog.outlet,
-                                                )?.name
-                                            }
-                                        </h3>
-                                        {orderLines.map(([id, quantity]) => (
-                                            <div class="preview-line" key={id}>
-                                                <span>
-                                                    {
-                                                        snapshot.products.find(
-                                                            (p) => p.id === id,
-                                                        )?.name
-                                                    }
-                                                    <small>
-                                                        {quantity}{" "}
-                                                        {units[id] ?? "carton"}
-                                                    </small>
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    class="secondary"
-                                                    aria-label={`Hapus ${snapshot.products.find((p) => p.id === id)?.name}`}
-                                                    onClick={() =>
-                                                        setQty({
-                                                            ...qty,
-                                                            [id]: 0,
-                                                        })
-                                                    }
-                                                >
-                                                    Hapus
-                                                </button>
-                                            </div>
-                                        ))}
-                                        <p>
-                                            {discount > 0
-                                                ? `Diskon ${discount}% • menunggu approval`
-                                                : "Harga sesuai snapshot"}
-                                        </p>
-                                    </section>
-                                )}
-                                <div hidden={orderPreview}>
-                                    <p class="sheet-subtitle">
-                                        {
-                                            snapshot.outlets.find(
-                                                (o) => o.id === dialog.outlet,
-                                            )?.name
-                                        }{" "}
-                                        · satu principal per order
-                                    </p>
-                                    <OrderCatalog
-                                        snapshot={snapshot}
-                                        principal={principal}
-                                        onPrincipal={setPrincipal}
-                                        qty={qty}
-                                        onQty={setQty}
-                                        units={units}
-                                        onUnits={setUnits}
-                                    />
-                                    <details class="order-extra">
-                                        <summary>Catatan & diskon</summary>
-                                        <label>
-                                            Diskon diminta (%)
-                                            <input
-                                                aria-label="Diskon diminta (%)"
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                step="1"
-                                                inputMode="numeric"
-                                                value={discount}
-                                                onInput={(e) =>
-                                                    setDiscount(
-                                                        Number(
-                                                            e.currentTarget
-                                                                .value,
-                                                        ),
-                                                    )
-                                                }
-                                            />
-                                        </label>
-                                        {discount > 0 && (
-                                            <label>
-                                                Alasan permintaan diskon
-                                                <textarea
-                                                    required
-                                                    minLength={3}
-                                                    maxLength={500}
-                                                    value={discountReason}
-                                                    onInput={(e) =>
-                                                        setDiscountReason(
-                                                            e.currentTarget
-                                                                .value,
-                                                        )
-                                                    }
-                                                />
-                                            </label>
-                                        )}
-                                        <label>
-                                            Catatan order
-                                            <textarea
-                                                name="note"
-                                                maxLength={500}
-                                                placeholder="Permintaan outlet (opsional)"
-                                            />
-                                        </label>
-                                    </details>
-                                    <DisplayPhoto
-                                        store={store}
-                                        owner={owner}
-                                        value={evidence}
-                                        outletName={
-                                            snapshot.outlets.find(
-                                                (o) => o.id === dialog.outlet,
-                                            )?.name ?? "Outlet"
-                                        }
-                                        coordinates={(() => {
-                                            const outlet =
-                                                snapshot.outlets.find(
-                                                    (o) =>
-                                                        o.id === dialog.outlet,
-                                                );
-                                            return outlet
-                                                ? {
-                                                      latitude: outlet.latitude,
-                                                      longitude:
-                                                          outlet.longitude,
-                                                  }
-                                                : undefined;
-                                        })()}
-                                        onChange={setEvidence}
-                                    />
-                                </div>
-                            </>
-                        )}
-                        {dialog.type === "extra" && (
-                            <>
-                                <p class="notice">
-                                    Kunjungan di luar PJP baru sah setelah
-                                    supervisor menyetujui.
-                                </p>
-                                <label>
-                                    Nama outlet
-                                    <input
-                                        name="outlet"
-                                        required
-                                        maxLength={100}
-                                    />
-                                </label>
-                                <label>
-                                    Alasan extra call
-                                    <textarea
-                                        name="reason"
-                                        required
-                                        maxLength={500}
-                                    />
-                                </label>
-                            </>
-                        )}
-                        {dialog.type === "expense" && (
-                            <>
-                                <label>
-                                    Kategori
-                                    <select
-                                        aria-label="Kategori"
-                                        value={category}
-                                        onChange={(e) =>
-                                            setCategory(e.currentTarget.value)
-                                        }
-                                    >
-                                        <option value="fuel_planned">
-                                            BBM terencana (H-1)
-                                        </option>
-                                        <option value="fuel_emergency">
-                                            BBM insidentil
-                                        </option>
-                                        <option value="meal">
-                                            Uang makan luar kota
-                                        </option>
-                                        <option value="lodging">
-                                            Penginapan luar kota
-                                        </option>
-                                        <option value="repair">
-                                            Perbaikan darurat / derek
-                                        </option>
-                                    </select>
-                                </label>
-                                <label>
-                                    Lingkup biaya
-                                    <select name="scope">
-                                        <option value="trip">
-                                            Biaya perjalanan / trip
-                                        </option>
-                                        <option value="delivery">
-                                            Biaya per pengiriman / DO
-                                        </option>
-                                    </select>
-                                </label>
-                                <label>
-                                    Referensi trip / perjalanan
-                                    <input
-                                        name="trip"
-                                        required
-                                        maxLength={100}
-                                        defaultValue={dialog.trip ?? ""}
-                                    />
-                                </label>
-                                <label>
-                                    Referensi DO (untuk biaya per pengiriman)
-                                    <input name="delivery" maxLength={100} />
-                                </label>
-                                <p class="notice">
-                                    {category === "fuel_emergency"
-                                        ? "BBM insidentil: Supervisor + Branch Manager, berapa pun nominalnya."
-                                        : "Wajib approval supervisor. Di atas limit kewenangan diteruskan ke Branch Manager."}
-                                </p>
-                                <label>
-                                    Tanggal perjalanan
-                                    <input name="date" type="date" required />
-                                </label>
-                                <label>
-                                    Nominal pengajuan (Rp)
-                                    <input
-                                        name="amount"
-                                        type="number"
-                                        min="1"
-                                        max="100000000"
-                                        inputMode="numeric"
-                                        required
-                                    />
-                                </label>
-                                {category.startsWith("fuel") && (
-                                    <>
-                                        <label>
-                                            KM / odometer awal
-                                            <input
-                                                name="odometer"
-                                                type="number"
-                                                min="0"
-                                                required
-                                            />
-                                        </label>
-                                        <p class="footnote">
-                                            Tanggal bisnis:{" "}
-                                            {identity.businessDate}. Pengajuan
-                                            BBM H-1 memerlukan foto odometer;
-                                            realisasi memerlukan struk dan foto
-                                            odometer setelah isi.
-                                        </p>
-                                    </>
-                                )}
-                                <label>
-                                    Tujuan / alasan
-                                    <textarea
-                                        name="reason"
-                                        required
-                                        maxLength={500}
-                                    />
-                                </label>
-                                <EvidenceCapture
-                                    store={store}
-                                    owner={owner}
-                                    onChange={setEvidence}
-                                />
-                            </>
-                        )}
-                        {dialog.type === "attendance" && (
-                            <>
-                                <label>
-                                    Aktivitas
-                                    <select
-                                        name="event"
-                                        value={dialog.event ?? "check_in"}
-                                        disabled
-                                    >
-                                        <option value="check_in">
-                                            Absensi Masuk (Checkin)
-                                        </option>
-                                        <option value="check_out">
-                                            Absensi Keluar (Checkout)
-                                        </option>
-                                    </select>
-                                </label>
-                                <AttendanceCapture
-                                    store={store}
-                                    owner={owner}
-                                    onChange={setEvidence}
-                                    employeeName={identity.name}
-                                    companyName={
-                                        identity.companyName ??
-                                        `Perusahaan #${identity.companyId}`
-                                    }
-                                    mapSite={
-                                        snapshot.office
-                                            ? {
-                                                  ...snapshot.office,
-                                                  simulated:
-                                                      snapshot.office
-                                                          .coordinate_status !==
-                                                      "verified",
-                                              }
-                                            : undefined
-                                    }
-                                />
-                            </>
-                        )}
-                        {dialog.type === "proof" && (
-                            <>
-                                <p class="muted">{dialog.delivery}</p>
-                                <label>
-                                    Hasil serah terima
-                                    <select name="result">
-                                        <option value="accepted">
-                                            Diterima lengkap
-                                        </option>
-                                        <option value="partial">
-                                            Diterima sebagian / retur
-                                        </option>
-                                    </select>
-                                </label>
-                                <p class="notice">
-                                    Realisasi qty/lot dan posting stok
-                                    memerlukan API domain. Ini capture bukti
-                                    lokal, bukan validasi DO.
-                                </p>
-                                <EvidenceCapture
-                                    store={store}
-                                    owner={owner}
-                                    onChange={setEvidence}
-                                />
-                            </>
-                        )}
-                        {dialog.type === "leave" && (
-                            <>
-                                <label>
-                                    Tanggal mulai
-                                    <input name="from" type="date" required />
-                                </label>
-                                <label>
-                                    Tanggal selesai
-                                    <input name="to" type="date" required />
-                                </label>
-                                <label>
-                                    Alasan
-                                    <textarea
-                                        name="reason"
-                                        required
-                                        maxLength={500}
-                                    />
-                                </label>
-                                <p class="footnote">
-                                    Saldo cuti dan keputusan atasan divalidasi
-                                    server. Tidak ada saldo resmi dalam
-                                    simulator.
-                                </p>
-                            </>
-                        )}
-                        {dialog.type === "profile" && (
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: "16px",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "14px",
-                                        padding: "14px",
-                                        background: "#f8fafc",
-                                        borderRadius: "14px",
-                                        border: "1px solid #e2e8f0",
-                                    }}
-                                >
-                                    <span class="avatar large">
-                                        {identity.name[0]}
-                                    </span>
-                                    <div>
-                                        <h3
-                                            style={{
-                                                fontSize: "1.1rem",
-                                                fontWeight: "700",
-                                                margin: 0,
-                                            }}
-                                        >
-                                            {identity.name}
-                                        </h3>
-                                        <p
-                                            class="muted"
-                                            style={{ margin: "2px 0 0" }}
-                                        >
-                                            {identity.title}
-                                        </p>
-                                        <small
-                                            style={{
-                                                color: "#004ecc",
-                                                fontWeight: "600",
-                                                display: "block",
-                                                marginTop: "2px",
-                                            }}
-                                        >
-                                            PT Manado Distribusi Utama
-                                        </small>
-                                    </div>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: "8px",
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            fontSize: "0.85rem",
-                                            padding: "8px 0",
-                                            borderBottom: "1px solid #f1f5f9",
-                                        }}
-                                    >
-                                        <span class="muted">Perusahaan</span>
-                                        <strong>
-                                            PT Manado Distribusi Utama
-                                        </strong>
-                                    </div>
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            fontSize: "0.85rem",
-                                            padding: "8px 0",
-                                            borderBottom: "1px solid #f1f5f9",
-                                        }}
-                                    >
-                                        <span class="muted">Gudang & Hub</span>
-                                        <strong>
-                                            Interchange Maumbi, Manado
-                                        </strong>
-                                    </div>
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            fontSize: "0.85rem",
-                                            padding: "8px 0",
-                                            borderBottom: "1px solid #f1f5f9",
-                                        }}
-                                    >
-                                        <span class="muted">Rute & Sesi</span>
-                                        <strong>WITA (GMT+8) Active</strong>
-                                    </div>
-                                </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: "10px",
-                                        marginTop: "10px",
-                                    }}
-                                >
-                                    <a
-                                        href="/web/login?redirect=/field/"
-                                        class="button primary"
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: "8px",
-                                            padding: "12px",
-                                            background: "#001a57",
-                                            color: "#ffffff",
-                                            borderRadius: "10px",
-                                            textDecoration: "none",
-                                            fontWeight: "600",
-                                            fontSize: "0.95rem",
-                                        }}
-                                    >
-                                        <Icon name="user" size={18} /> Masuk
-                                        Akun Odoo / Ganti Akun
-                                    </a>
-                                    <a
-                                        href="/web/session/logout?redirect=/field/"
-                                        class="button secondary"
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: "8px",
-                                            padding: "12px",
-                                            background: "#fff0f0",
-                                            color: "#dc2626",
-                                            border: "1px solid #fecaca",
-                                            borderRadius: "10px",
-                                            textDecoration: "none",
-                                            fontWeight: "600",
-                                            fontSize: "0.95rem",
-                                        }}
-                                    >
-                                        <Icon name="close" size={18} /> Keluar
-                                        dari Sesi (Logout)
-                                    </a>
-                                </div>
-                            </div>
-                        )}
-                        {error && (
-                            <div class="error-box" role="alert">
-                                <Icon name="warning" size={20} />
-                                {error}
-                            </div>
-                        )}
-                    </div>
-                    {dialog.type !== "profile" ? (
-                        <footer
-                            class={`sheet-footer${dialog.type === "order" ? " order-footer" : ""}`}
-                        >
-                            {dialog.type === "order" ? (
-                                <>
-                                    <OrderSummary
-                                        snapshot={snapshot}
-                                        qty={qty}
-                                        units={units}
-                                        discount={discount}
-                                    />
-                                    {!evidence && (
-                                        <p class="summary-hint">
-                                            Foto display outlet wajib sebelum
-                                            order dikirim.
-                                        </p>
-                                    )}
-                                    {orderPreview ? (
-                                        <>
-                                            <button
-                                                type="button"
-                                                class="secondary"
-                                                onClick={() =>
-                                                    setOrderPreview(false)
-                                                }
-                                            >
-                                                Ubah order
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                class="order-submit"
-                                                disabled={
-                                                    busy ||
-                                                    !restored ||
-                                                    !orderLines.length ||
-                                                    !evidence
-                                                }
-                                            >
-                                                {busy
-                                                    ? "Mengirim…"
-                                                    : "Kirim order"}
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            class="order-submit"
-                                            disabled={
-                                                busy ||
-                                                !restored ||
-                                                !orderLines.length ||
-                                                !evidence
-                                            }
-                                            onClick={() =>
-                                                setOrderPreview(true)
-                                            }
-                                        >
-                                            Preview order
-                                        </button>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    <button
-                                        type="button"
-                                        class="secondary"
-                                        onClick={close}
-                                        disabled={busy}
-                                    >
-                                        Kembali
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={
-                                            busy ||
-                                            !restored ||
-                                            (dialog.type === "attendance" &&
-                                                !evidence)
-                                        }
-                                    >
-                                        {busy
-                                            ? "Menyimpan…"
-                                            : dialog.type === "attendance"
-                                              ? dialog.event === "check_out"
-                                                  ? "Check out"
-                                                  : "Check in"
-                                              : "Simpan ke antrean"}
-                                    </button>
-                                </>
-                            )}
-                        </footer>
-                    ) : (
-                        <footer
-                            class="sheet-footer"
-                            style={{ justifyContent: "center" }}
-                        >
-                            <button
-                                type="button"
-                                class="secondary full"
-                                onClick={close}
-                                style={{ margin: 0 }}
-                            >
-                                Tutup
-                            </button>
-                        </footer>
-                    )}
-                </form>
-            </section>
-        </div>
     );
 }

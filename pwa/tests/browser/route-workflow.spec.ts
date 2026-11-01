@@ -84,6 +84,14 @@ test("outlet list alone scrolls, full search filters dynamically and dismissal r
         path: `test-results/store-flow-${test.info().project.name}.png`,
         fullPage: true,
     });
+    await page.goBack();
+    await expect(page.locator(".outlet-list")).toBeVisible();
+    await expect
+        .poll(() => page.locator(".outlet-list").evaluate((el) => el.scrollTop))
+        .toBe(1500);
+    await expect(page.getByLabel("Cari outlet", { exact: true })).toHaveValue(
+        "Alamat 87",
+    );
 });
 
 test("sales check-in unlocks mini POS, preview submits through outbox then closes visit", async ({

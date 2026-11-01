@@ -34,7 +34,10 @@ for (const approved of [true, false])
         await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
         await saveVisitPhoto(page, "check-in");
         await page
-            .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
+            .getByRole("button", {
+                name: "Perbarui lokasi outlet",
+                exact: true,
+            })
             .click();
         await page
             .getByRole("button", { name: "Mulai kunjungan", exact: true })

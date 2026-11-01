@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => {
         base: "/field/",
         define: {
             __DEMO__: JSON.stringify(demo),
+            __QA_TOOLS__: JSON.stringify(
+                demo && process.env.VITE_QA_TOOLS === "true",
+            ),
             __READ_ONLY__: JSON.stringify(mode === "staging"),
         },
         build: {
@@ -57,6 +60,8 @@ if(URLS.includes(u.pathname))e.respondWith(caches.match(u.pathname,{ignoreVary:t
                         resolve(dir, "build-info.json"),
                         JSON.stringify({
                             mode: target,
+                            qaTools:
+                                demo && process.env.VITE_QA_TOOLS === "true",
                             cache: name,
                             assets: urls,
                         }),

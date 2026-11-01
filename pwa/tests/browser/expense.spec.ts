@@ -32,7 +32,9 @@ async function requestAdvance(page: Page, category = "meal") {
         .getByRole("button", { name: "Uang lapangan", exact: false })
         .click();
     await page.getByLabel("Kategori", { exact: true }).selectOption(category);
-    await page.getByLabel("Referensi trip / perjalanan").fill("TRIP-01");
+    await page
+        .getByLabel("Referensi trip / perjalanan")
+        .selectOption("TRIP-01");
     await page.getByLabel("Tanggal perjalanan").fill("2026-10-28");
     await page.getByLabel("Nominal pengajuan (Rp)").fill("200000");
     if (category.startsWith("fuel"))
