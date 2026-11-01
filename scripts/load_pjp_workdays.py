@@ -311,6 +311,11 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None):
     updated_wd = 0
     workday_id_map = {}
 
+    Office = env["id.mobile.office"].sudo() if "id.mobile.office" in env else None
+    office_rec = Office.search([("company_id", "=", company.id), ("active", "=", True)], limit=1) if Office else None
+    if not office_rec and Office:
+        office_rec = Office.search([("active", "=", True)], limit=1)
+
     for (uid, tgl), outlets in workday_groups.items():
         existing = Workday.search([
             ("user_id", "=", uid),
@@ -326,6 +331,7 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None):
             "warehouse_id": wh.id,
             "pricelist_id": pl.id,
             "outlet_radius": 10,
+            "office_id": office_rec.id if office_rec else False,
             "outlet_ids": [(6, 0, outlets_unique)],
             "product_ids": [(6, 0, product_ids)],
         }
