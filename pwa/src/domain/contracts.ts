@@ -135,6 +135,7 @@ export const SnapshotSchema = z
         catalog_version: z.literal(2).optional(),
         scope: SnapshotScopeSchema.optional(),
         office: OfficeMapSchema.optional(),
+        warehouseName: z.string().optional(),
         version: z.string(),
         updatedAt: z.string(),
         outlets: z.array(

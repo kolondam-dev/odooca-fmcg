@@ -1,3 +1,4 @@
+import { InteractiveMap } from "./InteractiveMap";
 import { useEffect, useState } from "preact/hooks";
 import { checkinMap, type MapFix, type MapSite } from "../domain/checkin-map";
 import { distanceMeters } from "../domain/format";
@@ -12,16 +13,17 @@ export function CheckinMap({
     fix?: MapFix;
     compact?: boolean;
 }) {
-    const scope = JSON.stringify([site, fix]);
+    const scope = JSON.stringify(site);
     const [enabled, setEnabled] = useState(false);
     const [zoom, setZoom] = useState<number>();
+    const [recenter, setRecenter] = useState(0);
     const [failed, setFailed] = useState(false);
-    const [loaded, setLoaded] = useState<string[]>([]);
+    const [ready, setReady] = useState(false);
     useEffect(() => {
         setZoom(undefined);
         setEnabled(false);
         setFailed(false);
-        setLoaded([]);
+        setReady(false);
     }, [scope]);
     let map: ReturnType<typeof checkinMap> | undefined;
     try {
@@ -30,7 +32,6 @@ export function CheckinMap({
         /* Keep hook order stable even for corrupt coordinates. */
     }
     const tileKey = map?.tiles.map((t) => t.key).join(",") ?? "";
-    const ready = map?.tiles.every((t) => loaded.includes(t.key)) ?? false;
     useEffect(() => {
         if (!enabled || ready) return;
         const id = setTimeout(() => setFailed(true), 10000);
@@ -65,7 +66,7 @@ export function CheckinMap({
         >
             <strong>Preview peta · {site.name}</strong>
             {(site.simulated || fix?.simulated) && (
-                <p class="notice">
+                <p class="map-simulation-label">
                     {site.simulated
                         ? "Titik tujuan simulasi"
                         : "Titik tujuan paket"}
@@ -84,30 +85,21 @@ export function CheckinMap({
                 )}
             </p>
             <div class="checkin-map-canvas">
-                {enabled &&
-                    map.tiles.map((t) => (
-                        <img
-                            key={t.key}
-                            src={t.url}
-                            alt=""
-                            referrerPolicy="strict-origin-when-cross-origin"
-                            style={{
-                                position: "absolute",
-                                left: `${(t.x / 512) * 100}%`,
-                                top: `${(t.y / 320) * 100}%`,
-                                width: "50%",
-                                height: "80%",
-                                maxWidth: "none",
-                            }}
-                            onLoad={() =>
-                                setLoaded((v) =>
-                                    v.includes(t.key) ? v : [...v, t.key],
-                                )
-                            }
-                            onError={() => setFailed(true)}
-                        />
-                    ))}
+                {enabled && (
+                    <InteractiveMap
+                        key={scope}
+                        site={site}
+                        fix={fix}
+                        zoom={zoom}
+                        recenter={recenter}
+                        loading={() => setReady(false)}
+                        ready={() => setReady(true)}
+                        failed={() => setFailed(true)}
+                        changed={setZoom}
+                    />
+                )}
                 <svg
+                    hidden={enabled && !failed}
                     viewBox="0 0 512 320"
                     role="img"
                     aria-label="Titik tujuan hijau, posisi perangkat biru, lingkaran radius dan akurasi"
@@ -161,9 +153,8 @@ export function CheckinMap({
                 </svg>
             </div>
             <small>
-                Status jarak geometris, bukan izin check-in. Hijau:
-                tujuan/radius · Biru: posisi/akurasi. {site.latitude.toFixed(6)}
-                , {site.longitude.toFixed(6)}
+                Hijau: tujuan · Biru: perangkat. {site.latitude.toFixed(6)},{" "}
+                {site.longitude.toFixed(6)}
                 {fix && (
                     <>
                         {" "}
@@ -184,7 +175,7 @@ export function CheckinMap({
                         class="secondary"
                         onClick={() => {
                             setFailed(false);
-                            setLoaded([]);
+                            setReady(false);
                             setEnabled(true);
                         }}
                     >
@@ -223,6 +214,7 @@ export function CheckinMap({
                             class="secondary"
                             onClick={() => {
                                 setFailed(false);
+                                setRecenter((value) => value + 1);
                                 setZoom(undefined);
                             }}
                         >

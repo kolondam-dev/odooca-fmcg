@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
 import {
     lineQuote,
@@ -140,14 +140,33 @@ export function OrderCatalog({
     const active = principals.includes(principal)
         ? principal
         : (principals[0] ?? principal);
-    const products = snapshot.products.filter(
-        (p) =>
-            p.principal === active &&
-            (!term ||
-                `${p.name} ${p.sku_code ?? ""} ${p.brand}`
-                    .toLowerCase()
-                    .includes(term)),
+    const products = useMemo(
+        () =>
+            snapshot.products.filter(
+                (p) =>
+                    p.principal === active &&
+                    (!term ||
+                        `${p.name} ${p.sku_code ?? ""} ${p.brand}`
+                            .toLowerCase()
+                            .includes(term)),
+            ),
+        [snapshot.products, active, term],
     );
+    const [limit, setLimit] = useState(60);
+    const more = useRef<HTMLButtonElement>(null);
+    useEffect(() => setLimit(60), [active, term]);
+    useEffect(() => {
+        if (!more.current || !globalThis.IntersectionObserver) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((entry) => entry.isIntersecting))
+                    setLimit((value) => value + 60);
+            },
+            { rootMargin: "120px" },
+        );
+        observer.observe(more.current);
+        return () => observer.disconnect();
+    }, [products, limit]);
     return (
         <>
             <div class="pos-toolbar">
@@ -184,7 +203,7 @@ export function OrderCatalog({
                 {products.length === 0 && (
                     <p class="empty">Tidak ada produk yang cocok.</p>
                 )}
-                {products.map((product) => (
+                {products.slice(0, limit).map((product) => (
                     <ProductRow
                         key={product.id}
                         product={product}
@@ -199,6 +218,17 @@ export function OrderCatalog({
                         }
                     />
                 ))}
+                {limit < products.length && (
+                    <button
+                        ref={more}
+                        type="button"
+                        class="secondary"
+                        onClick={() => setLimit((value) => value + 60)}
+                    >
+                        Tampilkan produk berikutnya (
+                        {Math.min(limit, products.length)}/{products.length})
+                    </button>
+                )}
             </div>
         </>
     );
@@ -231,11 +261,11 @@ export function OrderSummary({
         <div class="order-summary" aria-label="Ringkasan order">
             <dl>
                 <div>
-                    <dt>Item</dt>
-                    <dd>{summary.items}</dd>
+                    <dt>SKU</dt>
+                    <dd>{lines.length}</dd>
                 </div>
                 <div>
-                    <dt>Karton</dt>
+                    <dt>Karton setara</dt>
                     <dd>{cartonText(summary.cartons)}</dd>
                 </div>
                 <div class="total">

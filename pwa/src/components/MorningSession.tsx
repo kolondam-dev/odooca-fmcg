@@ -13,7 +13,13 @@ export function MorningSession({
     provider,
     store,
     onChange,
+    record: restored,
+    loaded,
+    restoreError,
 }: {
+    record?: MorningRecord;
+    loaded: boolean;
+    restoreError?: string;
     identity: Identity;
     provider: FieldProvider;
     store: FieldStore;
@@ -23,8 +29,7 @@ export function MorningSession({
         () => new MorningSimulation(store, identity, provider),
         [store, identity, provider],
     );
-    const [record, setRecord] = useState<MorningRecord>();
-    const [loaded, setLoaded] = useState(false);
+    const record = restored;
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const [date, setDate] = useState(fieldBusinessDate());
@@ -32,30 +37,11 @@ export function MorningSession({
     const changed = useRef(onChange);
     changed.current = onChange;
     useEffect(() => {
-        let active = true;
-        void service
-            .restore()
-            .then((value) => {
-                if (active) {
-                    setRecord(value);
-                    changed.current(value);
-                    setLoaded(true);
-                }
-            })
-            .catch(() => {
-                if (active) {
-                    setError(
-                        "Penyimpanan sesi tidak tersedia. Kunjungan tetap terkunci.",
-                    );
-                    setLoaded(true);
-                }
-            });
         const checkDate = () => setDate(fieldBusinessDate());
         const timer = setInterval(checkDate, 15000);
         window.addEventListener("focus", checkDate);
         document.addEventListener("visibilitychange", checkDate);
         return () => {
-            active = false;
             clearInterval(timer);
             window.removeEventListener("focus", checkDate);
             document.removeEventListener("visibilitychange", checkDate);
@@ -80,7 +66,6 @@ export function MorningSession({
         setError("");
         try {
             const next = await service.open();
-            setRecord(next);
             changed.current(next);
         } catch (e) {
             setError(
@@ -133,9 +118,9 @@ export function MorningSession({
                     {busy ? "Memproses…" : "Buka sesi kerja"}
                 </button>
             )}
-            {error && (
+            {(error || restoreError) && (
                 <p role="alert" class="form-error">
-                    {error}
+                    {error || restoreError}
                 </p>
             )}
         </section>

@@ -1,3 +1,5 @@
+import { useContext } from "preact/hooks";
+import { EvidenceIdentityContext } from "../ui/evidenceIdentity";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { FieldStore } from "../storage/store";
 import type { EvidenceRef } from "./Evidence";
@@ -30,6 +32,7 @@ export function DisplayPhoto({
     onChange: (ref?: EvidenceRef) => void;
     required?: boolean;
 }) {
+    const identity = useContext(EvidenceIdentityContext);
     const [open, setOpen] = useState(false);
     const [preview, setPreview] = useState("");
     const [busy, setBusy] = useState(false);
@@ -94,12 +97,15 @@ export function DisplayPhoto({
                 next,
                 shotAt,
                 shotAt,
-                true,
+                __DEMO__,
+                identity
+                    ? { ...identity, address: `Tujuan: ${outletName}` }
+                    : undefined,
             );
             if (generation.current !== ticket) return;
             await store.saveEvidence(packaged);
             if (generation.current !== ticket) return;
-            onChange(next);
+            onChange({ ...next, packageHash: packaged.visual!.bindingSha256 });
         } catch (e) {
             if (generation.current === ticket) {
                 setError(
@@ -199,6 +205,8 @@ export function DisplayPhoto({
                 <CameraViewfinder
                     title="Foto Display Outlet"
                     outletName={outletName}
+                    salespersonName={identity?.employee}
+                    rawCapture
                     defaultCoordinates={coordinates}
                     onCapture={fromCamera}
                     onClose={() => setOpen(false)}

@@ -132,10 +132,7 @@ export function VisitPhotoField({
                     ? "Foto check-in kunjungan"
                     : "Foto check-out kunjungan"}
             </legend>
-            <p class="footnote">
-                Wajib foto baru untuk aksi ini. Lokasi foto harus di geofence
-                outlet dan masih segar (maksimal 60 detik) saat aksi dilakukan.
-            </p>
+            <small>Foto baru · lokasi outlet · maksimal 60 detik</small>
             {loading ? (
                 <p role="status">Memulihkan draft foto…</p>
             ) : (

@@ -1,3 +1,9 @@
+## 2026-11-01T17:53:45+07:00 — agent codex-pwa — Perbaikan audit UX PWA
+**Branch:** agen/pwa-ux-improvements, basis main f3d9a72.
+**Berubah:** Back/history dan state daftar, shell/scroll/sticky konsisten, toast tanpa overlap CTA, POS compact/44px/500 SKU bertahap, biaya kontekstual/tanggal Indonesia, kontrol QA build-only, GPS otomatis Sales/Delivery, kamera autosave paket/hash, Leaflet gesture lokal dan consent/zoom stabil, dialog/fokus bersama, profil gudang/status sesi aktual. Rincian UX01–UX13: `docs/reviews/PWA_UX_IMPROVEMENTS.md`.
+**[F] Lokal:** 346 unit dan 168 browser phone/tablet lulus; typecheck/format/kontrak, hosting, semua mode build/budget, boundary QA off/on, Ruff dan manifest lulus. Screenshot alur toko/preview POS ditinjau. Tidak ada kredensial/media pengguna dalam repo.
+**[BU] Menunggu:** CI pada HEAD publikasi, termasuk Odoo native/upgrade/Docker; acceptance perangkat fisik dan staging bisnis tetap terpisah. Source sendiri bukan verdict supervisor independen. Tidak merge/deploy; tidak mengubah master/PJP atau data server.
+
 ## 2026-11-01T12:45:31+07:00 — codex — Re-review PR66 dan sinkronisasi main
 **Verdict source:** P2 kartu tolakan CLOSED pada 794b852; reproduksi fungsi produksi + OWL Odoo19/JSDOM menunjukkan 0→0, 3→3, 3+2→5. Tes baru implementer memeriksa payload; probe supervisor turut memeriksa kartu yang dirender.
 **Integrasi:** merge main 1b38463 (PR67); konflik HANDOFF diselesaikan dengan mempertahankan kedua blok riwayat. Kode dashboard reviewed tetap utuh; kode PWA/API main diadopsi utuh.

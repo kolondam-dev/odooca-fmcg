@@ -1,3 +1,4 @@
+import { useRememberedState, useRememberedScroll } from "../ui/viewMemory";
 import { CustomerSummary } from "./CustomerSummary";
 import { VisitPhotoField } from "./VisitPhotoField";
 import { EvidenceCapture } from "./Evidence";
@@ -32,8 +33,14 @@ export function VisitPanel({
     order: () => void;
     back: () => void;
 }) {
-    const [phase, setPhase] = useState<"checkin" | "open" | "close">("checkin");
+    const [phase, setPhase] = useRememberedState<"checkin" | "open" | "close">(
+        `visit-phase:${sessionId}:${outlet.id}`,
+        "checkin",
+    );
     const previousOrders = useRef(0);
+    const panelScroll = useRememberedScroll(
+        `visit-scroll:${sessionId}:${outlet.id}`,
+    );
     const [info, setInfo] =
         useState<Awaited<ReturnType<SalesVisits["restore"]>>>();
     const [inPhoto, setInPhoto] = useState<VisitEvidence>();
@@ -128,6 +135,9 @@ export function VisitPanel({
             }
         }
     }
+    useEffect(() => {
+        void locate();
+    }, [service, outlet.id]);
     async function start() {
         if (running.current) return;
         running.current = true;
@@ -153,6 +163,7 @@ export function VisitPanel({
             const restored = await service.restore(outlet.id);
             if (ticket !== generation.current) return;
             setInfo(restored);
+            setPhase("open");
             changed();
         } catch (e) {
             if (ticket === generation.current)
@@ -223,6 +234,7 @@ export function VisitPanel({
     };
     return (
         <section
+            ref={panelScroll}
             class="visit-panel visit-workflow"
             aria-label="Kunjungan outlet"
         >
@@ -271,35 +283,11 @@ export function VisitPanel({
                         : "Belum check-in kunjungan"}
             </p>
             <div hidden={phase !== "checkin"}>
-                <button
-                    class="secondary full"
-                    onClick={() => void locate()}
-                    disabled={busy}
-                >
-                    <Icon name="pin" size={18} />
-                    {busy ? "Memproses lokasi…" : "Ambil lokasi outlet"}
-                </button>
                 {assessment && (
-                    <div class="geo-assessment" role="status">
-                        <strong>{labels[assessment.status]}</strong>
-                        <p>
-                            {Number.isFinite(assessment.distance)
-                                ? `Jarak ${assessment.distance.toFixed(1)} m · `
-                                : ""}
-                            Akurasi ±{fix!.accuracy.toFixed(1)} m
-                        </p>
-                        <small>
-                            {fix!.latitude.toFixed(6)},{" "}
-                            {fix!.longitude.toFixed(6)} ·{" "}
-                            {new Date(fix!.sampled_at).toLocaleTimeString(
-                                "id-ID",
-                                {
-                                    timeZone: "Asia/Makassar",
-                                },
-                            )}{" "}
-                            WITA
-                        </small>
-                    </div>
+                    <p class="geo-summary" role="status">
+                        <strong>{labels[assessment.status]}</strong> · Akurasi ±
+                        {Math.round(fix!.accuracy)} m
+                    </p>
                 )}
                 <CheckinMap
                     key={`${sessionId}:${outlet.id}`}
@@ -317,6 +305,14 @@ export function VisitPanel({
                             : undefined
                     }
                 />
+                <button
+                    class="text-button location-retry"
+                    onClick={() => void locate()}
+                    disabled={busy}
+                >
+                    <Icon name="pin" size={18} />
+                    {busy ? "Memproses lokasi…" : "Perbarui lokasi outlet"}
+                </button>
                 {!active && !closed && (
                     <VisitPhotoField
                         key={`in:${sessionId}:${outlet.id}`}
@@ -434,8 +430,7 @@ export function VisitPanel({
                                 >
                                     {info?.orders ? (
                                         <option value="order_requested">
-                                            Pengajuan order dibuat (belum tentu
-                                            diterima)
+                                            Order diajukan
                                         </option>
                                     ) : (
                                         <>

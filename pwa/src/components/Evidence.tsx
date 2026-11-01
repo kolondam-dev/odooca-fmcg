@@ -1,3 +1,5 @@
+import { useContext } from "preact/hooks";
+import { EvidenceIdentityContext } from "../ui/evidenceIdentity";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { FieldStore } from "../storage/store";
 import { Icon } from "./Icon";
@@ -38,6 +40,15 @@ export function EvidenceCapture({
     readOnly?: boolean;
     mapSite?: MapSite;
 }) {
+    const identity = useContext(EvidenceIdentityContext);
+    const caption = identity
+        ? {
+              ...identity,
+              address: mapSite
+                  ? `Tujuan: ${mapSite.name}`
+                  : "Lokasi perangkat (lihat koordinat)",
+          }
+        : undefined;
     const [file, setFile] = useState<Blob>();
     const [display, setDisplay] = useState<Blob>();
     const [map, setMap] = useState<Blob>();
@@ -66,7 +77,7 @@ export function EvidenceCapture({
                 heading: null,
                 speed: null,
             },
-            timestamp: res.timestamp,
+            timestamp: res.fixTimestamp,
         } as GeolocationPosition);
         setError("");
         setBusy(true);
@@ -74,6 +85,10 @@ export function EvidenceCapture({
         const id = crypto.randomUUID();
         const capturedAt = new Date().toISOString();
         try {
+            if (!__DEMO__ && res.simulated)
+                throw new Error(
+                    "Lokasi perangkat belum tersedia. Ambil ulang foto setelah GPS siap.",
+                );
             const ref = {
                 id,
                 latitude: res.latitude,
@@ -86,14 +101,16 @@ export function EvidenceCapture({
                 owner,
                 ref,
                 new Date(res.timestamp).toISOString(),
-                new Date(res.timestamp).toISOString(),
-                true,
+                new Date(res.fixTimestamp).toISOString(),
+                __DEMO__,
+                caption,
             );
             if (generation.current === ticket) {
                 await store.saveEvidence(packaged);
+                if (generation.current !== ticket) return;
                 setMap(packaged.visual?.map);
                 setDisplay(packaged.blob);
-                report(ref);
+                report({ ...ref, packageHash: packaged.visual!.bindingSha256 });
             }
         } catch (e) {
             if (generation.current === ticket) {
@@ -267,6 +284,7 @@ export function EvidenceCapture({
                 selectedAt,
                 new Date(location.timestamp).toISOString(),
                 __DEMO__,
+                caption,
             );
             if (generation.current !== ticket) return;
             await store.saveEvidence(row);
@@ -274,9 +292,7 @@ export function EvidenceCapture({
                 setDisplay(row.blob);
                 setMap(row.visual!.map);
                 report({ ...ref, packageHash: row.visual!.bindingSha256 });
-                setError(
-                    "Foto dan lokasi tersimpan di perangkat. Peta resmi belum tersedia.",
-                );
+                setError("Foto dan lokasi tersimpan.");
             }
         } catch (error) {
             if (generation.current === ticket) {
@@ -294,11 +310,14 @@ export function EvidenceCapture({
     return (
         <div class="evidence">
             <strong>Bukti foto & lokasi</strong>
-            <p class="muted">
-                Capture browser belum membuktikan kamera asli atau bebas mock
-                GPS.
-            </p>
-            {!readOnly && __DEMO__ && (
+            <details>
+                <summary>Tentang bukti</summary>
+                <p>
+                    Foto dan lokasi disimpan sebagai bukti perangkat; validasi
+                    resmi dilakukan server.
+                </p>
+            </details>
+            {!readOnly && __QA_TOOLS__ && (
                 <button
                     class="secondary"
                     disabled={busy}
@@ -352,6 +371,8 @@ export function EvidenceCapture({
                     {showCamera && (
                         <CameraViewfinder
                             title="Ambil Foto Bukti Lapangan"
+                            salespersonName={identity?.employee}
+                            rawCapture
                             outletName={mapSite?.name}
                             defaultCoordinates={
                                 mapSite
@@ -386,7 +407,7 @@ export function EvidenceCapture({
                     </figcaption>
                 </figure>
             )}
-            {!readOnly && (
+            {!readOnly && !existingRef && file && (
                 <button
                     class="secondary"
                     type="button"
@@ -437,7 +458,7 @@ export function EvidenceCapture({
                     }
                 />
             )}
-            {!readOnly && (
+            {!readOnly && !existingRef && file && (
                 <button
                     type="button"
                     class="secondary"
@@ -458,10 +479,7 @@ export function EvidenceCapture({
                     Pilih foto baru untuk membuat paket baru.
                 </small>
             )}
-            <small>
-                Map pending · foto baru memiliki watermark waktu pencatatan dan
-                koordinat. Pinpoint lokal tidak memenuhi gate peta resmi.
-            </small>
+            <small>Bukti lokal · belum divalidasi server.</small>
         </div>
     );
 }
