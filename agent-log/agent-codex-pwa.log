@@ -245,3 +245,8 @@
 - Lokal Ruff/10manifest/compile/XML/YAML/diff/9unit runner/10RPC PASS. Counterexamples produksi dengan fake ORM PASS; bukan native.
 - Native Odoo/upgrade/visual fixtures CI ditambahkan; hasil dan screenshot menunggu CI, cloud browser transport timeout. Tidak merge/deploy atau menulis data server.
 - Task managed by agent-codex-pwa at 2026-11-01T23:17:20+07:00
+
+[2026-11-01T23:24:41+07:00] [INFO] PR71 native fixture dan visual scroll
+- CI3585636: install-test1fail/130, computed quant.company_id belum flush sebelum SQL view; env.flush_all ditambahkan tanpa mengurangi negative ACL/company test.
+- Capture internal scroll atas/tengah/bawah+tabs, SQL-backed finance assertions, category keys/labels multi-company. Lokal Ruff/diff PASS; CI ulang menunggu. Tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-11-01T23:24:41+07:00

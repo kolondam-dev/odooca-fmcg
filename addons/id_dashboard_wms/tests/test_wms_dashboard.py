@@ -117,6 +117,7 @@ class TestWmsDashboard(TransactionCase):
         product = self.env["product.product"].create({
             "name": "Foreign stock probe", "type": "consu", "is_storable": True})
         self.env["stock.quant"].with_company(other)._update_available_quantity(product, location, 5)
+        self.env.flush_all()
         view = self.env["id.wms.stock.category"]
         self.assertTrue(view.sudo().search([("company_id", "=", other.id)]))
         user = self.env["res.users"].with_context(no_reset_password=True).create({"name": "Stock access probe",
@@ -127,3 +128,15 @@ class TestWmsDashboard(TransactionCase):
             view.with_user(user).search([])
         user.group_ids = [(4, self.env.ref("stock.group_stock_user").id)]
         self.assertFalse(view.with_user(user).search([("company_id", "=", other.id)]))
+
+    def test_category_rows_keep_company_identity(self):
+        model = self.env["id.wms.stock.category"]
+        rows = [{"id": 11, "company_id": [1, "A"], "fmcg_category": "food",
+                 "qty_on_hand": 2, "stock_value": 20, "product_count": 1},
+                {"id": 22, "company_id": [2, "B"], "fmcg_category": "food",
+                 "qty_on_hand": 3, "stock_value": 30, "product_count": 1}]
+        with patch.object(type(model), "search_read", return_value=rows):
+            data = self.env["id.wms.dashboard"].get_data()
+        self.assertEqual(data["kpi"]["total_stock_value"], 50)
+        self.assertEqual({c["key"] for c in data["categories"]}, {11, 22})
+        self.assertEqual({c["company"] for c in data["categories"]}, {"A", "B"})

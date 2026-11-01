@@ -16,6 +16,22 @@ ACTIONS = [
 ]
 
 
+async def capture_scroll(page, root, name):
+    # Dashboard owns an internal scroll area: full_page alone cannot expose its lower sections.
+    positions = await root.evaluate('''el => [0, Math.max(0, (el.scrollHeight-el.clientHeight)/2),
+        Math.max(0, el.scrollHeight-el.clientHeight)]''')
+    seen = set()
+    for index, position in enumerate(positions):
+        position = round(position)
+        if position in seen:
+            continue
+        seen.add(position)
+        await root.evaluate('(el, top) => {el.scrollTop=top;}', position)
+        await page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+        await page.screenshot(path=str(OUTPUT / f'{name}-scroll-{index}.png'))
+    await root.evaluate('el => {el.scrollTop=0;}')
+
+
 async def main():
     OUTPUT.mkdir(exist_ok=True)
     observations = []
@@ -41,6 +57,7 @@ async def main():
                 if not await page.locator('.o_main_navbar').is_visible():
                     raise AssertionError('Native Odoo navigation must remain visible')
                 await page.screenshot(path=str(OUTPUT / f'{name}-{size["width"]}.png'), full_page=True)
+                await capture_scroll(page, root, f'{name}-{size["width"]}')
                 metrics = await root.evaluate('''el => ({width:el.clientWidth,scrollWidth:el.scrollWidth,
                     height:el.clientHeight,scrollHeight:el.scrollHeight,
                     title:el.querySelector('h1')?.textContent,
@@ -49,10 +66,12 @@ async def main():
                 for button in await root.locator('button').all():
                     # Capture additional analytical tabs, not transaction actions.
                     text = (await button.inner_text()).strip()
-                    if text in ['Sebaran per Wilayah', 'Sebaran per Salesman', 'Alasan Tolakan', 'Stok per Kategori', 'Efisiensi Armada']:
+                    if text in ['Sebaran per Wilayah', 'Sebaran per Salesman',
+                                'Alasan Tolakan', 'Stok per Kategori', 'Efisiensi Armada']:
                         await button.click()
-                        await page.screenshot(path=str(OUTPUT / f'{name}-{size["width"]}-{text.replace(" ", "-")}.png'), full_page=True)
-        (OUTPUT / 'observations.json').write_text(json.dumps({'observations': observations, 'errors': errors}, indent=2))
+                        await capture_scroll(page, root, f'{name}-{size["width"]}-{text.replace(" ", "-")}')
+        report = {'observations': observations, 'errors': errors}
+        (OUTPUT / 'observations.json').write_text(json.dumps(report, indent=2))
         if errors:
             raise AssertionError(errors)
         await browser.close()

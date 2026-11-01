@@ -1,3 +1,8 @@
+## 2026-11-01T23:24:41+07:00 — agent codex-pwa — PR71 native fixture dan scroll capture
+**[F] CI `3585636`:** static, seed supervision dan PWA quality/container lulus; install-test gagal 1 assertion dari 130 tes native karena fixture quant belum flush computed company sebelum SQL view. Perbaikan memakai env.flush_all; tidak melemahkan assertion isolasi.
+**Berubah:** capture atas/tengah/bawah internal scroll dan tab; fixture finance memeriksa payload SQL terhadap invoice posted; key kategori WMS unik per company dan label company untuk mencegah tabrakan OWL multi-company.
+**[BU] Menunggu:** CI ulang pada HEAD final, screenshot dan review; tidak merge/deploy.
+
 ## 2026-11-01T23:17:20+07:00 — agent codex-pwa — Fondasi dashboard dan roadmap terintegrasi
 **Branch:** `agen/dashboard-data-foundation`, basis main `13b2ee0`.
 **Berubah:** overdue pelanggan dari populasi invoice yang sama; target exact period lintas company dijumlahkan, duplikat/mixed currency ditolak; invoice DPP dan label pembayaran tercatat; tolakan sesuai kendaraan; ACL peran/company pada SQL views; latest-request guard dan drill-down scope. Roadmap `docs/dashboard/ENHANCEMENT_PLAN.md` mempertahankan seluruh rekomendasi analitis awal serta utilisasi gudang/armada, warehouse detail dan Three.js bertahap.

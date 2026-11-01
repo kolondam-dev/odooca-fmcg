@@ -287,9 +287,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr t-foreach="state.data.categories" t-as="cat" t-key="cat.category"
+                                    <tr t-foreach="state.data.categories" t-as="cat" t-key="cat.key"
                                         t-on-click="openStockCategories" style="cursor: pointer;">
-                                        <td class="name text-capitalize" t-out="cat.category"/>
+                                        <td class="name text-capitalize"><t t-out="cat.category"/><small class="d-block text-muted" t-out="cat.company"/></td>
                                         <td class="num" t-out="int(cat.product_count)"/>
                                         <td class="num" t-out="int(cat.qty)"/>
                                         <td class="num font-weight-bold" t-out="money(cat.value)"/>

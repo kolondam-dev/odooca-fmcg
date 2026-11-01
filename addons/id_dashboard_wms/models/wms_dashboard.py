@@ -70,7 +70,7 @@ class WmsDashboard(models.TransientModel):
         CategoryModel = self.env["id.wms.stock.category"]
         category_recs = CategoryModel.search_read(
             cat_domain,
-            ["fmcg_category", "qty_on_hand", "stock_value", "product_count"]
+            ["id", "company_id", "fmcg_category", "qty_on_hand", "stock_value", "product_count"]
         )
 
         total_stock_value = sum(float(r["stock_value"] or 0.0) for r in category_recs)
@@ -80,6 +80,7 @@ class WmsDashboard(models.TransientModel):
         for r in category_recs:
             val = float(r["stock_value"] or 0.0)
             cat_list.append({
+                "key": r["id"], "company": r["company_id"][1],
                 "category": r["fmcg_category"] or _("Lainnya"),
                 "product_count": r["product_count"],
                 "qty": float(r["qty_on_hand"] or 0.0),

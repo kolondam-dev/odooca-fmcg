@@ -24,6 +24,16 @@ order.date_order = datetime(2026, 7, 15, 3, 0)
 invoices = order._create_invoices()
 invoices.write({'invoice_date': fields.Date.today(), 'invoice_date_due': fields.Date.today() - timedelta(days=5)})
 invoices.action_post()
+# Assert actual SQL-backed finance payload, not just a populated-looking screen.
+period_start = fields.Date.today().replace(day=1)
+period_end = (period_start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+env['id.monetary.target'].create({'name': 'Dashboard QA Current Period',  # noqa: F821
+    'date_from': period_start, 'date_to': period_end, 'target_revenue': 10000000,
+    'company_id': company.id, 'currency_id': company.currency_id.id})
+finance = env['id.monetary.dashboard'].get_data(period_key=f'{period_start}/{period_end}')  # noqa: F821
+exposure = next(c for c in finance['top_customers'] if c['id'] == partner.id)
+assert exposure['overdue_balance'] == invoices.amount_residual_signed > 0
+assert finance['kpi']['realized_revenue'] == invoices.amount_untaxed_signed
 brand = env['fleet.vehicle.model.brand'].create({'name': 'Dashboard QA'})  # noqa: F821
 model = env['fleet.vehicle.model'].create({'name': 'Box QA', 'brand_id': brand.id})  # noqa: F821
 vehicle = env['fleet.vehicle'].create({'model_id': model.id, 'license_plate': 'QA-ONLY',  # noqa: F821
@@ -40,5 +50,6 @@ picking = env['stock.picking'].create({'picking_type_id': warehouse.out_type_id.
     'location_id': warehouse.lot_stock_id.id, 'location_dest_id': partner.property_stock_customer.id,
     'partner_id': partner.id, 'fmcg_vehicle_id': vehicle.id, 'fmcg_reject_reason': 'store_closed'})
 picking.action_cancel()
+env.flush_all()  # noqa: F821
 env.cr.commit()  # noqa: F821
 print('DASHBOARD_VISUAL_FIXTURE=PASS')
