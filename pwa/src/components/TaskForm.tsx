@@ -417,7 +417,9 @@ export function TaskForm({
                                         onUnits={setUnits}
                                     />
                                     <details class="order-extra">
-                                        <summary>Catatan, diskon & Nomor PO</summary>
+                                        <summary>
+                                            Catatan, diskon & Nomor PO
+                                        </summary>
                                         <label>
                                             Nomor PO Outlet (opsional)
                                             <input
@@ -426,7 +428,11 @@ export function TaskForm({
                                                 maxLength={64}
                                                 placeholder="Contoh: PO/2026/10/099"
                                                 value={poNumber}
-                                                onInput={(e) => setPoNumber(e.currentTarget.value)}
+                                                onInput={(e) =>
+                                                    setPoNumber(
+                                                        e.currentTarget.value,
+                                                    )
+                                                }
                                             />
                                         </label>
                                         <label>

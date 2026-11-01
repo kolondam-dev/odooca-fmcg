@@ -318,7 +318,7 @@ export function CameraViewfinder({
                         );
                 },
                 "image/jpeg",
-                0.80,
+                0.8,
             );
         });
     }

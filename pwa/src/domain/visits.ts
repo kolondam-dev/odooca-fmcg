@@ -132,7 +132,9 @@ export class SalesVisits {
             throw new Error(
                 "Hari Minggu adalah hari libur operasional distributor FMCG. Kunjungan PJP tidak aktif.",
             );
-        const outlet = s.morning.snapshot!.outlets.find((o) => o.id === outletId);
+        const outlet = s.morning.snapshot!.outlets.find(
+            (o) => o.id === outletId,
+        );
         if (!outlet)
             throw new Error(
                 "Outlet tidak ada di PJP. Extra call memerlukan approval supervisor.",

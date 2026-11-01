@@ -405,7 +405,8 @@ export function VisitPanel({
                                 order();
                             }}
                         >
-                            <Icon name="bag" size={16} /> + Tambah order lagi untuk outlet ini
+                            <Icon name="bag" size={16} /> + Tambah order lagi
+                            untuk outlet ini
                         </button>
                         <VisitPhotoField
                             key={`out:${info?.active?.context.visit_uuid}`}

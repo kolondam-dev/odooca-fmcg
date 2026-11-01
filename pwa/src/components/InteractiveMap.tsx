@@ -36,9 +36,18 @@ export function InteractiveMap({
     latest.current = { site, fix, zoom, ready, loading, failed, changed };
     const center = (map: Leaflet.Map) => {
         const { site, fix } = latest.current;
-        if (!site || !Number.isFinite(site.latitude) || !Number.isFinite(site.longitude)) return;
+        if (
+            !site ||
+            !Number.isFinite(site.latitude) ||
+            !Number.isFinite(site.longitude)
+        )
+            return;
         const points: Leaflet.LatLngTuple[] = [[site.latitude, site.longitude]];
-        if (fix && Number.isFinite(fix.latitude) && Number.isFinite(fix.longitude)) {
+        if (
+            fix &&
+            Number.isFinite(fix.latitude) &&
+            Number.isFinite(fix.longitude)
+        ) {
             points.push([fix.latitude, fix.longitude]);
         }
         try {
@@ -49,7 +58,9 @@ export function InteractiveMap({
             });
         } catch {
             // fallback safe center
-            map.setView([site.latitude, site.longitude], 16, { animate: false });
+            map.setView([site.latitude, site.longitude], 16, {
+                animate: false,
+            });
         }
     };
     useEffect(() => {

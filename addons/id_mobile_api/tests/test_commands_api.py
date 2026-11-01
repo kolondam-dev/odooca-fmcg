@@ -1,5 +1,4 @@
 import uuid
-from odoo import fields
 from odoo.tests import TransactionCase, tagged
 from .test_read_api import MobileFixture
 
@@ -9,20 +8,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
 
     def setUp(self):
         super().setUp()
-        self.outlet = self.env["res.partner"].create({
-            "name": "Outlet Test Command",
-            "company_id": self.company.id,
-            "partner_latitude": 1.487,
-            "partner_longitude": 124.842,
-        })
-        self.assignment = self.env["id.mobile.workday"].create({
-            "user_id": self.mobile.id,
-            "company_id": self.company.id,
-            "business_date": fields.Date.today(),
-            "warehouse_id": self.warehouse.id,
-            "pricelist_id": self.pricelist.id,
-            "outlet_ids": [(6, 0, [self.outlet.id])],
-            "product_ids": [(6, 0, [self.product.id])],
+        self.assignment.write({
             "outlet_radius": 100,
         })
 
@@ -55,7 +41,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                     {"product_id": str(self.product.id), "qty": "2", "uom": "carton"}
                 ],
                 "discount_request": {"percent": 5, "reason": "Promo Opening"},
-            }
+            },
         }
 
         CommandModel = self.env["id.mobile.command"].with_user(self.mobile).with_company(self.company)
@@ -89,7 +75,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         rc_in = CommandModel.process_command({
             "client_uuid": checkin_uuid,
             "type": "sales.visit.check_in",
-            "payload": {"outlet_id": str(self.outlet.id)}
+            "payload": {"outlet_id": str(self.outlet.id)},
         })
         self.assertEqual(rc_in["status"], "accepted")
 
@@ -98,7 +84,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         rc_pod = CommandModel.process_command({
             "client_uuid": pod_uuid,
             "type": "delivery.pod.submit",
-            "payload": {"outcome": "delivered", "recipient": "Ko Freddy"}
+            "payload": {"outcome": "delivered", "recipient": "Ko Freddy"},
         })
         self.assertEqual(rc_pod["status"], "accepted")
         self.assertEqual(rc_pod["reference"], f"POD-{pod_uuid[:8]}")

@@ -1,3 +1,16 @@
+## 2026-11-01T22:15:00+07:00 — anti-gravity agent — Fix CI Failures on PR #70
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**Status:** In Progress (PR #70 opened, Prettier formatting and id_mobile_api test assertions resolved)
+
+### Ringkasan Perbaikan CI:
+1. **PWA Quality (Prettier Format Check):**
+   - Memperbaiki style code formatting pada 6 file frontend (`CameraViewfinder.tsx`, `CheckinMap.tsx`, `InteractiveMap.tsx`, `TaskForm.tsx`, `VisitPanel.tsx`, `visits.ts`) menggunakan aturan Prettier repo.
+   - Verifikasi `format:check` lolos 100%.
+2. **Install-Test (Odoo Backend Tests):**
+   - `test_commands_api.py`: Menghapus duplikasi instansiasi `id.mobile.workday` di `setUp()` yang bentrok dengan assignment dari fixture superclass untuk user/date yang sama (`UniqueViolation`).
+   - `test_read_api.py`: Menyesuaikan assertion endpoint boundary: rute tak dikenal `/api/v1/sync/unknown` menghasilkan 404, dan endpoint baru `/api/v1/sync/commands` dengan payload kosong menghasilkan 422 (Unprocessable Entity).
+   - `mobile_evidence.py`: Menyelaraskan evaluasi geofence (`distance + accuracy >= outlet_radius`) sehingga status `geofence_uncertain` terdeteksi presisi saat ketidakpastian GPS bersinggungan dengan batas radius 100m.
+
 ## 2026-11-01T21:40:00+07:00 — anti-gravity agent — Operational Readiness PWA Frontend & Odoo 19 Backend Integration
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **Status:** PASS (Ruff, Check Manifests, PWA Vitest 346 Tests, PWA Check Build, Contracts OpenAPI Gate)

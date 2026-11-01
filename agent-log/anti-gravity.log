@@ -1673,3 +1673,17 @@
   * PWA build (demo, live, staging): PASS.
   * PWA test suite (346 tests): PASS.
 - Task managed by antigravity agent at 2026-11-01T21:40:00+07:00
+
+[2026-11-01T22:15:00+07:00] [INFO] Fix CI Failures on PR #70 (Prettier formatting & id_mobile_api test assertions)
+- Opened PR #70: https://github.com/kolondam-dev/odooca-fmcg/pull/70
+- Fixed PWA Quality CI failure:
+  * Formatted 6 modified frontend files with Prettier (CameraViewfinder.tsx, CheckinMap.tsx, InteractiveMap.tsx, TaskForm.tsx, VisitPanel.tsx, visits.ts).
+  * Prettier code style verified locally: PASS.
+- Fixed Install-Test CI failure:
+  * test_commands_api.py: Removed duplicate id.mobile.workday creation that collided with MobileFixture assignment for the same user/date.
+  * test_read_api.py: Updated route boundary assertion (/api/v1/sync/unknown -> 404, /api/v1/sync/commands with empty payload -> 422).
+  * mobile_evidence.py: Realigned geofence calculation with distance + accuracy >= outlet_radius to accurately flag uncertainty at boundary while supporting relaxed 100m radius.
+- Verification:
+  * python -m ruff check .: PASS.
+  * python scripts/check_manifests.py: PASS.
+- Task managed by antigravity agent at 2026-11-01T22:15:00+07:00
