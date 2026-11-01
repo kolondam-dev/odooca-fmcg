@@ -1536,3 +1536,38 @@
 - Replaced domain on non-existent groups_id with sales_group.users access and safe fallback to non-share users.
 - Verification: ruff check PASS, check_manifests.py PASS (10 addons ok).
 - Task managed by antigravity-agent at 2026-11-01T08:57:00+07:00
+
+[2026-11-01T10:35:00+07:00] [INFO] Comprehensive Review of FMCG Dashboards & Fix Parameter Handling
+- Conducted end-to-end evaluation of FMCG dashboards (id_dashboard_sales, id_dashboard_monetary, id_dashboard_wms) as Data Analyst, ERP Implementor, and FMCG Distribution Business Expert.
+- Live Railway verification (https://odooca-fmcg-demo.up.railway.app):
+  * Diagnosed runtime exception on Monetary filter: TypeError on area_ids keyword argument.
+  * Identified temporal drift trap: hardcoded CURRENT_DATE in PostgreSQL SQL views causing 100% bad debt on historical dataset (July 2026).
+  * Discovered data gaps: stock.lot expiration_date is False in seed, disabling FEFO expiry monitoring; empty id_delivery_trip_cost.
+- Applied fixes:
+  * Updated addons/id_dashboard_monetary/models/monetary_dashboard.py to accept area_ids, salesman_ids, and **kwargs cleanly.
+  * Updated addons/id_dashboard_wms/models/wms_dashboard.py to accept **kwargs cleanly.
+  * Added regression test in addons/id_dashboard_monetary/tests/test_monetary_dashboard.py.
+- Authored comprehensive architectural review document: docs/reviews/FMCG_DASHBOARD_COMPREHENSIVE_REVIEW.md covering problem framing, end-to-end analysis, 4-compartment POV classification (Necessary, Nice to Have, Redundant), actionable exception queues, and unified multi-principal control tower roadmap.
+- Verification: ruff check PASS, check_manifests.py PASS (10 addons ok).
+- Task managed by anti-gravity at 2026-11-01T10:35:00+07:00
+
+[2026-11-01T11:05:00+07:00] [INFO] FMCG Dashboard UX/UI Redesign & Narrative Restructuring
+- Executed comprehensive UX/UI redesign across all 3 dashboards (id_dashboard_sales, id_dashboard_monetary, id_dashboard_wms) based on user approval:
+  * Metric Cards: Removed heavy solid-colored 40x40 icon blocks; replaced with 28x28 subtle micro-badges with soft tint backgrounds; aligned baselines, improved typography with tabular numbers, and added soft delta pills.
+  * Whitespace & Rhythm: Replaced rigid tight hairline-caged layout with generous whitespace (20px-24px padding, 16px grid gaps, subtle 6px rounded card elevations).
+  * Filter Bar: Unified into 3 distinct functional clusters across all dashboards (Time/Period, Field/Territory/Sales, Channel/Category, and Quick Reset Action).
+  * Narrative Storytelling: Implemented the 3-Act Structure (Act 1: Executive Pulse, Act 2: Drivers & Variance Diagnostics, Act 3: Operational Action & Exception Queues).
+  * Bugfix: Fixed fleet cost ratio key binding in wms_dashboard.xml.
+- Authored blueprint: docs/ui/FMCG_DASHBOARD_UX_REDESIGN_BLUEPRINT.md.
+- Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax checks PASS.
+- Task managed by anti-gravity at 2026-11-01T11:05:00+07:00
+
+
+[2026-11-01T12:45:00+07:00] [INFO] Fix WMS Dashboard Rejection Count Aggregation (PR #66 HOLD P2)
+- Diagnosed root cause: WMS delivery rejection card rendered state.data.rejections.length (group count of distinct reasons) instead of sum of picking rejections.
+- Backend fix: Added "total_rejections": total_rejections to KPI dictionary in addons/id_dashboard_wms/models/wms_dashboard.py.
+- Frontend JS: Added totalRejections getter in WmsDashboard component (addons/id_dashboard_wms/static/src/js/wms_dashboard.js) with safe fallback to summing reason counts.
+- Frontend XML: Updated line 192 in addons/id_dashboard_wms/static/src/js/wms_dashboard.xml to bind int(totalRejections).
+- Verification & Test Cases: Added test_rejection_count_aggregation in addons/id_dashboard_wms/tests/test_wms_dashboard.py verifying 0 -> 0, 1 group with count 3 -> 3, and 2 groups with counts 3 and 2 -> 5 (3 + 2 = 5).
+- Quality checks: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax valid.
+- Task managed by anti-gravity at 2026-11-01T12:45:00+07:00

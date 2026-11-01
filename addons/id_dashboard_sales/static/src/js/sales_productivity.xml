@@ -3,176 +3,245 @@
     <t t-name="id_dashboard_sales.SalesProductivity">
         <div class="o_action id-sp">
             <div class="id-sp__sheet">
-                <section class="id-sp__section id-sp__filters" aria-label="Filters">
-                    <div class="id-sp__head">
-                        <h1 class="id-sp__title"><i class="fa fa-bar-chart"/> Sales Productivity</h1>
-                        <span class="id-sp__period" t-out="periodLabel"/>
+                <!-- Header & Unified Grouped Filter Bar -->
+                <header class="id-sp__header">
+                    <div class="id-sp__header-main">
+                        <div class="id-sp__header-title-wrap">
+                            <span class="id-sp__badge-dept"><i class="fa fa-briefcase"/> DIVISI PENJUALAN &amp; KOMERSIAL</span>
+                            <h1 class="id-sp__title">Sales &amp; Field Productivity Cockpit</h1>
+                            <span class="id-sp__subtitle">Monitoring efektivitas omzet, kepatuhan kunjungan rute PJP, dan penetrasi produk FMCG.</span>
+                        </div>
+                        <div class="id-sp__header-status">
+                            <span class="id-sp__period-pill"><i class="fa fa-calendar"/> <t t-out="periodLabel"/></span>
+                        </div>
                     </div>
-                    <div class="id-sp__seg" role="group">
-                        <t t-foreach="modes" t-as="m" t-key="m.key">
-                            <button type="button" class="id-sp__seg-btn"
-                                    t-att-class="{'is-active': state.mode === m.key}"
-                                    t-on-click="() => this.setMode(m.key)" t-out="m.label"/>
-                        </t>
+
+                    <!-- 3 Logical Filter Clusters -->
+                    <div class="id-sp__filter-bar">
+                        <!-- Cluster 1: Time & Period -->
+                        <div class="id-sp__filter-cluster">
+                            <span class="id-sp__cluster-label"><i class="fa fa-clock-o"/> Periode Waktu</span>
+                            <div class="id-sp__cluster-content">
+                                <div class="id-sp__seg" role="group">
+                                    <t t-foreach="modes" t-as="m" t-key="m.key">
+                                        <button type="button" class="id-sp__seg-btn"
+                                                t-att-class="{'is-active': state.mode === m.key}"
+                                                t-on-click="() => this.setMode(m.key)" t-out="m.label"/>
+                                    </t>
+                                </div>
+                                <div class="id-sp__date-nav">
+                                    <button type="button" class="id-sp__icon-btn" title="Previous" aria-label="Previous"
+                                            t-att-disabled="!canPrev" t-on-click="() => this.shift(-1)"><i class="fa fa-chevron-left"/></button>
+                                    <input type="date" class="id-sp__input" t-att-value="state.anchor"
+                                           t-att-min="state.filters.period_min" t-att-max="state.filters.period_max"
+                                           t-on-change="setAnchor"/>
+                                    <button type="button" class="id-sp__icon-btn" title="Next" aria-label="Next"
+                                            t-att-disabled="!canNext" t-on-click="() => this.shift(1)"><i class="fa fa-chevron-right"/></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cluster 2: Salesperson -->
+                        <div class="id-sp__filter-cluster">
+                            <span class="id-sp__cluster-label"><i class="fa fa-user"/> Salesperson (<t t-out="state.salesmanIds.length ? state.salesmanIds.length : 'Semua'"/>)</span>
+                            <div class="id-sp__cluster-content id-sp__chips-wrap">
+                                <t t-foreach="state.filters.salesmen" t-as="s" t-key="s.id">
+                                    <button type="button" class="id-sp__chip"
+                                            t-att-class="{'is-active': state.salesmanIds.includes(s.id)}"
+                                            t-on-click="() => this.toggle('salesmanIds', s.id)" t-out="s.name"/>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Cluster 3: Channel -->
+                        <div class="id-sp__filter-cluster">
+                            <span class="id-sp__cluster-label"><i class="fa fa-sitemap"/> Channel Saluran (<t t-out="state.channelIds.length ? state.channelIds.length : 'Semua'"/>)</span>
+                            <div class="id-sp__cluster-content id-sp__chips-wrap">
+                                <t t-foreach="state.filters.channels" t-as="c" t-key="c.id">
+                                    <button type="button" class="id-sp__chip" t-att-title="c.name"
+                                            t-att-class="{'is-active': state.channelIds.includes(c.id)}"
+                                            t-on-click="() => this.toggle('channelIds', c.id)" t-out="c.code"/>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Cluster 4: Actions -->
+                        <div class="id-sp__filter-actions">
+                            <button type="button" class="id-sp__btn-reset" t-on-click="reset">
+                                <i class="fa fa-undo"/> Reset
+                            </button>
+                        </div>
                     </div>
-                    <button type="button" class="id-sp__icon-btn" title="Previous" aria-label="Previous"
-                            t-att-disabled="!canPrev" t-on-click="() => this.shift(-1)"><i class="fa fa-chevron-left"/></button>
-                    <input type="date" class="id-sp__input" t-att-value="state.anchor"
-                           t-att-min="state.filters.period_min" t-att-max="state.filters.period_max"
-                           t-on-change="setAnchor"/>
-                    <button type="button" class="id-sp__icon-btn" title="Next" aria-label="Next"
-                            t-att-disabled="!canNext" t-on-click="() => this.shift(1)"><i class="fa fa-chevron-right"/></button>
-                    <span class="id-sp__label"><i class="fa fa-user"/> Salesman</span>
-                    <t t-foreach="state.filters.salesmen" t-as="s" t-key="s.id">
-                        <button type="button" class="id-sp__chip"
-                                t-att-class="{'is-active': state.salesmanIds.includes(s.id)}"
-                                t-on-click="() => this.toggle('salesmanIds', s.id)" t-out="s.name"/>
-                    </t>
-                    <span class="id-sp__label"><i class="fa fa-sitemap"/> Channel</span>
-                    <t t-foreach="state.filters.channels" t-as="c" t-key="c.id">
-                        <button type="button" class="id-sp__chip" t-att-title="c.name"
-                                t-att-class="{'is-active': state.channelIds.includes(c.id)}"
-                                t-on-click="() => this.toggle('channelIds', c.id)" t-out="c.code"/>
-                    </t>
-                    <button type="button" class="id-sp__link" t-on-click="reset"><i class="fa fa-undo"/> Reset</button>
-                </section>
+                </header>
 
                 <div t-if="state.error" class="id-sp__alert" role="alert" t-out="state.error"/>
-                <div t-if="state.loading and !state.data" class="id-sp__empty">Loading…</div>
+                <div t-if="state.loading and !state.data" class="id-sp__empty"><i class="fa fa-circle-o-notch fa-spin"/> Memuat data produktivitas…</div>
 
                 <t t-if="state.data">
                     <div t-if="!state.data.total.orders" class="id-sp__notice">
-                        <i class="fa fa-info-circle"/> No confirmed sales orders for this period and filter.
+                        <i class="fa fa-info-circle"/> Tidak ada pesanan penjualan (SO) tervalidasi pada periode dan filter terpilih.
                     </div>
 
+                    <!-- BABAK 1: COMMERCIAL & FIELD PULSE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
-                        <h2 class="id-sp__section-title">Sales</h2>
-                        <div class="id-sp__scorecards id-sp__scorecards--4">
+                        <div class="id-sp__head">
+                            <h2 class="id-sp__section-title"><i class="fa fa-line-chart"/> Babak 1: Ringkasan Kinerja Penjualan (Commercial Engine)</h2>
+                            <span class="id-sp__section-sub">Pendapatan kotor, kontrol diskon nota, omzet bersih (DPP), dan realisasi pengiriman.</span>
+                        </div>
+                        <div class="id-sp__cards">
                             <t t-foreach="salesCards" t-as="card" t-key="card.key">
-                                <button type="button" class="id-sp__score" t-on-click="card.action">
-                                    <span class="id-sp__icon" t-att-class="'is-' + card.tone"><i t-att-class="'fa ' + card.icon"/></span>
-                                    <span class="id-sp__score-title" t-out="card.title"/>
-                                    <span class="id-sp__score-value" t-out="card.value"/>
-                                    <span class="id-sp__delta" t-att-class="card.delta.cls">
-                                        <t t-out="card.delta.text"/>
-                                    </span>
-                                    <span class="id-sp__score-meta" t-out="card.meta"/>
+                                <button type="button" class="id-sp__card" t-on-click="card.action">
+                                    <div class="id-sp__card-header">
+                                        <span class="id-sp__card-title" t-out="card.title"/>
+                                        <span class="id-sp__micro-badge" t-att-class="'is-' + card.tone">
+                                            <i t-att-class="'fa ' + card.icon"/>
+                                        </span>
+                                    </div>
+                                    <div class="id-sp__card-body">
+                                        <span class="id-sp__card-value" t-out="card.value"/>
+                                        <span t-if="card.delta.text" class="id-sp__pill-delta" t-att-class="card.delta.cls">
+                                            <t t-out="card.delta.text"/>
+                                        </span>
+                                    </div>
+                                    <div class="id-sp__card-footer">
+                                        <span class="id-sp__card-meta" t-out="card.meta"/>
+                                    </div>
                                 </button>
                             </t>
                         </div>
                     </section>
 
+                    <!-- BABAK 1B: FIELD PRODUCTIVITY PULSE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
-                        <h2 class="id-sp__section-title">Field productivity</h2>
-                        <div class="id-sp__scorecards id-sp__scorecards--5">
+                        <div class="id-sp__head">
+                            <h2 class="id-sp__section-title"><i class="fa fa-map-marker"/> Produktivitas Lapangan &amp; Kualitas Pesanan</h2>
+                            <span class="id-sp__section-sub">Kepatuhan rute PJP, rasio kunjungan efektif, variasi SKU per order (LPO), dan pemenuhan faktur.</span>
+                        </div>
+                        <div class="id-sp__cards id-sp__cards--5">
                             <t t-foreach="fieldCards" t-as="card" t-key="card.key">
-                                <div class="id-sp__score">
-                                    <span class="id-sp__icon" t-att-class="'is-' + card.tone"><i t-att-class="'fa ' + card.icon"/></span>
-                                    <span class="id-sp__score-title" t-out="card.title"/>
-                                    <span class="id-sp__score-value" t-att-class="card.cls" t-out="card.value"/>
-                                    <span class="id-sp__delta" t-att-class="card.delta.cls">
-                                        <t t-out="card.delta.text"/>
-                                    </span>
-                                    <span class="id-sp__score-meta" t-out="card.meta"/>
+                                <div class="id-sp__card">
+                                    <div class="id-sp__card-header">
+                                        <span class="id-sp__card-title" t-out="card.title"/>
+                                        <span class="id-sp__micro-badge" t-att-class="'is-' + card.tone">
+                                            <i t-att-class="'fa ' + card.icon"/>
+                                        </span>
+                                    </div>
+                                    <div class="id-sp__card-body">
+                                        <span class="id-sp__card-value" t-att-class="card.cls" t-out="card.value"/>
+                                        <span t-if="card.delta.text" class="id-sp__pill-delta" t-att-class="card.delta.cls">
+                                            <t t-out="card.delta.text"/>
+                                        </span>
+                                    </div>
+                                    <div class="id-sp__card-footer">
+                                        <span class="id-sp__card-meta" t-out="card.meta"/>
+                                    </div>
                                 </div>
                             </t>
                         </div>
                         <p t-if="pjp.available and pjpScopeOwn" class="id-sp__note">
-                            PJP figures cover your own visits only (access scope).
+                            * Data PJP mencakup rute kunjungan Anda sendiri sesuai hak akses role salesman.
                         </p>
                     </section>
 
-                    <section class="id-sp__section id-sp__charts" t-att-class="{'is-loading': state.loading}">
-                        <div class="id-sp__chart id-sp__chart--wide">
-                            <h2 class="id-sp__section-title"><i class="fa fa-line-chart"/> Net revenue trend</h2>
-                            <svg class="id-sp__trend" viewBox="0 0 100 100" preserveAspectRatio="none" role="img"
-                                 aria-label="Net revenue per day">
-                                <line x1="0" y1="10" x2="100" y2="10" class="id-sp__grid"/>
-                                <line x1="0" y1="55" x2="100" y2="55" class="id-sp__grid"/>
-                                <line x1="0" y1="100" x2="100" y2="100" class="id-sp__grid"/>
-                                <t t-foreach="trendBars" t-as="bar" t-key="bar.date">
-                                    <rect t-att-x="bar.x" t-att-y="bar.y" t-att-width="bar.w" t-att-height="bar.h"
-                                          class="id-sp__rect">
-                                        <title><t t-out="bar.date"/> · <t t-out="money(bar.net)"/> · <t t-out="bar.orders"/> orders</title>
-                                    </rect>
-                                </t>
-                            </svg>
-                            <div class="id-sp__axis">
-                                <span t-out="state.data.trend[0]?.date"/>
-                                <span>Max <t t-out="moneyShort(trendMax)"/></span>
-                                <span t-out="state.data.trend[state.data.trend.length - 1]?.date"/>
+                    <!-- BABAK 2: VARIANCE DIAGNOSTICS & DRIVERS -->
+                    <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
+                        <div class="id-sp__head">
+                            <h2 class="id-sp__section-title"><i class="fa fa-bar-chart"/> Babak 2: Analisis Distribusi &amp; Penggerak Pendapatan (Drivers)</h2>
+                            <span class="id-sp__section-sub">Tren harian dan komparasi produktivitas antar-salesman serta saluran distribusi.</span>
+                        </div>
+                        <div class="id-sp__charts">
+                            <div class="id-sp__chart-card id-sp__chart-card--wide">
+                                <h3 class="id-sp__section-title"><i class="fa fa-line-chart"/> Tren Pendapatan Bersih Harian (DPP)</h3>
+                                <svg class="id-sp__trend" viewBox="0 0 100 100" preserveAspectRatio="none" role="img"
+                                     aria-label="Net revenue per day">
+                                    <line x1="0" y1="10" x2="100" y2="10" class="id-sp__grid"/>
+                                    <line x1="0" y1="55" x2="100" y2="55" class="id-sp__grid"/>
+                                    <line x1="0" y1="100" x2="100" y2="100" class="id-sp__grid"/>
+                                    <t t-foreach="trendBars" t-as="bar" t-key="bar.date">
+                                        <rect t-att-x="bar.x" t-att-y="bar.y" t-att-width="bar.w" t-att-height="bar.h"
+                                              class="id-sp__rect">
+                                            <title><t t-out="bar.date"/> · <t t-out="money(bar.net)"/> · <t t-out="bar.orders"/> orders</title>
+                                        </rect>
+                                    </t>
+                                </svg>
+                                <div class="id-sp__axis">
+                                    <span t-out="state.data.trend[0]?.date"/>
+                                    <span>Puncak Harian: <t t-out="moneyShort(trendMax)"/></span>
+                                    <span t-out="state.data.trend[state.data.trend.length - 1]?.date"/>
+                                </div>
                             </div>
-                        </div>
-                        <div class="id-sp__chart">
-                            <h2 class="id-sp__section-title"><i class="fa fa-user"/> Net revenue by salesman</h2>
-                            <t t-foreach="salesmanBars" t-as="bar" t-key="bar.id">
-                                <div class="id-sp__hbar">
-                                    <span class="id-sp__hbar-label" t-out="bar.name"/>
-                                    <span class="id-sp__hbar-track"><span class="id-sp__hbar-fill is-blue" t-att-style="'width:' + bar.width + '%'"/></span>
-                                    <span class="id-sp__hbar-value" t-out="moneyShort(bar.net)"/>
-                                </div>
-                            </t>
-                            <div t-if="!salesmanBars.length" class="id-sp__empty">No data</div>
-                        </div>
-                        <div class="id-sp__chart">
-                            <h2 class="id-sp__section-title"><i class="fa fa-sitemap"/> Net revenue by channel</h2>
-                            <t t-foreach="channelBars" t-as="bar" t-key="bar.id">
-                                <div class="id-sp__hbar">
-                                    <span class="id-sp__hbar-label" t-out="bar.name"/>
-                                    <span class="id-sp__hbar-track"><span class="id-sp__hbar-fill is-emerald" t-att-style="'width:' + bar.width + '%'"/></span>
-                                    <span class="id-sp__hbar-value" t-out="moneyShort(bar.net)"/>
-                                </div>
-                            </t>
-                            <div t-if="!channelBars.length" class="id-sp__empty">No data</div>
-                        </div>
-                        <div class="id-sp__chart">
-                            <h2 class="id-sp__section-title"><i class="fa fa-list-ol"/> Lines per order vs target</h2>
-                            <t t-foreach="lpoBars" t-as="bar" t-key="bar.id">
-                                <div class="id-sp__hbar">
-                                    <span class="id-sp__hbar-label" t-out="bar.name"/>
-                                    <span class="id-sp__hbar-track">
-                                        <span class="id-sp__hbar-fill" t-att-class="bar.ok ? 'is-emerald' : 'is-amber'" t-att-style="'width:' + bar.width + '%'"/>
-                                        <span class="id-sp__target" t-att-style="'left:' + lpoTargetPos + '%'"/>
-                                    </span>
-                                    <span class="id-sp__hbar-value" t-out="num1(bar.lpo)"/>
-                                </div>
-                            </t>
-                            <p class="id-sp__note">Vertical line = target ≥ <t t-out="num1(state.data.lpo_target)"/> SKU/order.</p>
-                        </div>
-                        <div class="id-sp__chart">
-                            <h2 class="id-sp__section-title"><i class="fa fa-file-text-o"/> Fulfillment-to-invoice</h2>
-                            <t t-foreach="fulfillmentBars" t-as="bar" t-key="bar.id">
-                                <div class="id-sp__hbar">
-                                    <span class="id-sp__hbar-label" t-out="bar.name"/>
-                                    <span class="id-sp__hbar-track"><span class="id-sp__hbar-fill is-navy" t-att-style="'width:' + bar.width + '%'"/></span>
-                                    <span class="id-sp__hbar-value" t-out="pct(bar.value)"/>
-                                </div>
-                            </t>
-                            <div t-if="!fulfillmentBars.length" class="id-sp__empty">No data</div>
+                            <div class="id-sp__chart-card">
+                                <h3 class="id-sp__section-title"><i class="fa fa-user"/> Omzet Bersih per Salesperson</h3>
+                                <t t-foreach="salesmanBars" t-as="bar" t-key="bar.id">
+                                    <div class="id-sp__hbar">
+                                        <span class="id-sp__hbar-label" t-out="bar.name"/>
+                                        <span class="id-sp__hbar-track"><span class="id-sp__hbar-fill is-blue" t-att-style="'width:' + bar.width + '%'"/></span>
+                                        <span class="id-sp__hbar-value" t-out="moneyShort(bar.net)"/>
+                                    </div>
+                                </t>
+                                <div t-if="!salesmanBars.length" class="id-sp__empty">Tidak ada data salesman</div>
+                            </div>
+                            <div class="id-sp__chart-card">
+                                <h3 class="id-sp__section-title"><i class="fa fa-sitemap"/> Omzet Bersih per Saluran (Channel)</h3>
+                                <t t-foreach="channelBars" t-as="bar" t-key="bar.id">
+                                    <div class="id-sp__hbar">
+                                        <span class="id-sp__hbar-label" t-out="bar.name"/>
+                                        <span class="id-sp__hbar-track"><span class="id-sp__hbar-fill is-emerald" t-att-style="'width:' + bar.width + '%'"/></span>
+                                        <span class="id-sp__hbar-value" t-out="moneyShort(bar.net)"/>
+                                    </div>
+                                </t>
+                                <div t-if="!channelBars.length" class="id-sp__empty">Tidak ada data channel</div>
+                            </div>
+                            <div class="id-sp__chart-card">
+                                <h3 class="id-sp__section-title"><i class="fa fa-list-ol"/> Lines per Order (LPO) vs Target</h3>
+                                <t t-foreach="lpoBars" t-as="bar" t-key="bar.id">
+                                    <div class="id-sp__hbar">
+                                        <span class="id-sp__hbar-label" t-out="bar.name"/>
+                                        <span class="id-sp__hbar-track">
+                                            <span class="id-sp__hbar-fill" t-att-class="bar.ok ? 'is-emerald' : 'is-amber'" t-att-style="'width:' + bar.width + '%'"/>
+                                            <span class="id-sp__target" t-att-style="'left:' + lpoTargetPos + '%'"/>
+                                        </span>
+                                        <span class="id-sp__hbar-value" t-out="num1(bar.lpo)"/>
+                                    </div>
+                                </t>
+                                <p class="id-sp__note">Garis tegak hitam = target minimal ≥ <t t-out="num1(state.data.lpo_target)"/> SKU per nota pesanan.</p>
+                            </div>
+                            <div class="id-sp__chart-card">
+                                <h3 class="id-sp__section-title"><i class="fa fa-file-text-o"/> Tingkat Pemenuhan Faktur (Fulfillment)</h3>
+                                <t t-foreach="fulfillmentBars" t-as="bar" t-key="bar.id">
+                                    <div class="id-sp__hbar">
+                                        <span class="id-sp__hbar-label" t-out="bar.name"/>
+                                        <span class="id-sp__hbar-track"><span class="id-sp__hbar-fill is-navy" t-att-style="'width:' + bar.width + '%'"/></span>
+                                        <span class="id-sp__hbar-value" t-out="pct(bar.value)"/>
+                                    </div>
+                                </t>
+                                <div t-if="!fulfillmentBars.length" class="id-sp__empty">Tidak ada data fulfillment</div>
+                            </div>
                         </div>
                     </section>
 
+                    <!-- BABAK 3: FIELD ACTION & PRODUCTIVITY TABLE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
-                            <h2 class="id-sp__section-title"><i class="fa fa-table"/> Productivity</h2>
+                            <h2 class="id-sp__section-title"><i class="fa fa-table"/> Babak 3: Matriks Rincian Produktivitas</h2>
                             <div class="id-sp__seg" role="group">
                                 <button type="button" class="id-sp__seg-btn"
                                         t-att-class="{'is-active': state.dimension === 'salesman'}"
                                         t-on-click="() => state.dimension = 'salesman'">Per Salesman</button>
                                 <button type="button" class="id-sp__seg-btn"
                                         t-att-class="{'is-active': state.dimension === 'channel'}"
-                                        t-on-click="() => state.dimension = 'channel'">Per Channel</button>
+                                        t-on-click="() => state.dimension = 'channel'">Per Saluran (Channel)</button>
                             </div>
                         </div>
                         <div class="id-sp__table-wrap">
                             <table class="id-sp__table">
                                 <thead>
                                     <tr>
-                                        <th t-out="state.dimension === 'salesman' ? 'Salesman' : 'Channel'"/>
-                                        <th class="num">Orders</th>
+                                        <th t-out="state.dimension === 'salesman' ? 'Salesperson' : 'Saluran (Channel)'"/>
+                                        <th class="num">Order</th>
                                         <th class="num">Gross</th>
-                                        <th class="num">Discount</th>
-                                        <th class="num">Net</th>
+                                        <th class="num">Diskon</th>
+                                        <th class="num">Net DPP</th>
                                         <th class="num">DO</th>
                                         <th class="num">PJP Compliance</th>
                                         <th class="num">EC Ratio</th>
@@ -182,8 +251,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr t-foreach="rows" t-as="row" t-key="row.id" t-on-click="() => this.openRow(row)"
-                                        class="id-sp__row">
+                                    <tr t-foreach="rows" t-as="row" t-key="row.id" t-on-click="() => this.openRow(row)">
                                         <td class="name" t-out="row.name"/>
                                         <td class="num" t-out="int(row.orders)"/>
                                         <td class="num" t-out="moneyShort(row.gross)"/>
@@ -201,17 +269,17 @@
                                         <td class="num" t-out="pct(row.fulfillment)"/>
                                     </tr>
                                     <tr t-if="!rows.length">
-                                        <td colspan="11" class="id-sp__empty">No data for this period and filter.</td>
+                                        <td colspan="11" class="id-sp__empty">Tidak ada data untuk periode dan filter terpilih.</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <p class="id-sp__note">"–" means the metric has no data source for that row; N/A means the source is not available.</p>
                     </section>
 
+                    <!-- BABAK 3B: SKU PENETRATION MATRIX -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
-                            <h2 class="id-sp__section-title"><i class="fa fa-cubes"/> SKU penetration</h2>
+                            <h2 class="id-sp__section-title"><i class="fa fa-cubes"/> Penetrasi SKU FMCG (Penyebaran Brand di Saluran)</h2>
                             <div class="id-sp__seg" role="group">
                                 <button type="button" class="id-sp__seg-btn"
                                         t-att-class="{'is-active': state.penKind === 'principal'}"
@@ -226,7 +294,7 @@
                                 <thead>
                                     <tr>
                                         <th t-out="state.penKind === 'principal' ? 'Principal' : 'Brand'"/>
-                                        <th class="num">Catalog SKU</th>
+                                        <th class="num">Katalog SKU</th>
                                         <th class="num" t-foreach="rows" t-as="row" t-key="row.id" t-out="row.name"/>
                                     </tr>
                                 </thead>
@@ -242,9 +310,9 @@
                                     </tr>
                                 </tbody>
                             </table>
-                            <div t-else="" class="id-sp__empty">No SKU sold for this period and filter.</div>
+                            <div t-else="" class="id-sp__empty">Tidak ada data SKU terjual untuk filter ini.</div>
                         </div>
-                        <p class="id-sp__note">Cell = distinct SKU sold (share of saleable catalogue SKU of that principal/brand).</p>
+                        <p class="id-sp__note">Warna biru menandai tingkat penetrasi SKU terjual terhadap total katalog aktif prinsipal/brand.</p>
                     </section>
                 </t>
             </div>

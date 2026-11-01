@@ -1,3 +1,69 @@
+## 2026-11-01T12:45:31+07:00 — codex — Re-review PR66 dan sinkronisasi main
+**Verdict source:** P2 kartu tolakan CLOSED pada 794b852; reproduksi fungsi produksi + OWL Odoo19/JSDOM menunjukkan 0→0, 3→3, 3+2→5. Tes baru implementer memeriksa payload; probe supervisor turut memeriksa kartu yang dirender.
+**Integrasi:** merge main 1b38463 (PR67); konflik HANDOFF diselesaikan dengan mempertahankan kedua blok riwayat. Kode dashboard reviewed tetap utuh; kode PWA/API main diadopsi utuh.
+**Gate:** CI final HEAD harus lulus sebelum merge berotorisasi. Tidak ada deployment/provisioning langsung.
+
+## 2026-11-01T12:45:00+07:00 — anti-gravity agent — Perbaikan Agregasi Kartu Tolakan Pengantaran WMS (PR #66 HOLD P2 Resolusi)
+**Branch:** agen/review-fmcg-dashboards
+**Status:** PASS (Ruff, Check Manifests, XML Valid, Unit Regression Test) -> Siap Review Ulang PR #66
+
+### Ringkasan Perbaikan
+1. **Penyebab & Gap:**
+   - Template `addons/id_dashboard_wms/static/src/js/wms_dashboard.xml` baris 192 sebelumnya merender `state.data.rejections.length` yang hanya menghitung jumlah kategori alasan (alasan kelompok), bukan akumulasi pengantaran yang ditolak.
+   - Contoh: 3 pengantaran ditolak karena alasan "Toko Tutup" menghasilkan 1 kelompok dengan `count: 3`, namun kartu menampilkan angka 1 bukannya 3.
+2. **Solusi Teknis:**
+   - **Backend (`addons/id_dashboard_wms/models/wms_dashboard.py`):** Menambahkan field `"total_rejections": total_rejections` pada payload dictionary `kpi` (sebelumnya nilai sudah dihitung via `sum(r["picking_count"] for r in reject_recs)` tetapi belum disertakan di dictionary kembalian).
+   - **Frontend JS (`addons/id_dashboard_wms/static/src/js/wms_dashboard.js`):** Menambahkan getter `totalRejections` pada komponen `WmsDashboard` yang memprioritaskan `this.state.data?.kpi?.total_rejections` dan menyediakan fallback aman `(this.state.data?.rejections || []).reduce((sum, r) => sum + (r.count || 0), 0)`.
+   - **Frontend XML (`addons/id_dashboard_wms/static/src/js/wms_dashboard.xml`):** Mengganti baris 192 menjadi `<span class="id-wms__card-value is-danger" t-out="int(totalRejections)"/>`.
+3. **Uji Kasus & Regresi:**
+   - Menambahkan test case komprehensif pada `addons/id_dashboard_wms/tests/test_wms_dashboard.py` (`test_rejection_count_aggregation`):
+     * Kasus 0 tolakan -> 0
+     * Kasus 1 kelompok alasan dengan count 3 -> 3 (bukan 1)
+     * Kasus 2 kelompok alasan dengan count 3 dan 2 -> 5 (3 + 2 = 5)
+4. **Verifikasi:**
+   - `python -m ruff check .` -> PASS (All checks passed)
+   - `python scripts/check_manifests.py` -> PASS (10 addon ok)
+   - Validasi struktur XML ElementTree -> PASS
+
+## 2026-11-01T11:05:00+07:00 — anti-gravity agent — Redesain UX/UI & Restrukturisasi Narasi Dashboard FMCG
+**Branch:** agen/review-fmcg-dashboards
+**Status:** PASS (Static, Manifest, XML, Ruff) -> Siap Push/CI
+
+### Ringkasan Eksekusi Redesain UX/UI & Pengorganisasian View
+1. **Pembersihan Visual & Metric Cards Modern:**
+   - Menghapus blok ikon padat 40x40 yang berat dan agresif; menggantinya dengan micro-badge halus 28x28px dengan latar soft-tint dan ikon glyph senada di pojok kanan atas.
+   - Merapikan tipografi angka utama (24px tabular-nums), menyelaraskan baseline kartu, dan membungkus delta komparasi dalam pill badge hijau/merah transparan.
+   - Memberikan whitespace lega (margin 20px 24px, card gap 16px, padding kartu 16px 18px, subtle elevation).
+2. **Standarisasi Unified Grouped Filter Bar:**
+   - Mengorganisasi parameter filtering ke dalam 3 klaster logis yang seragam di ketiga dashboard: Klaster Waktu/Periode, Klaster Tim & Teritori, Klaster Produk/Saluran, dan Klaster Aksi (Reset Filter).
+3. **Penyusunan Alur Narasi Bisnis (The 3-Act Structure):**
+   - Babak 1: Makro Pulse (Hero Cards Kinerja Utama).
+   - Babak 2: Drivers & Variance Analysis (Tren Harian, Sebaran Wilayah/Channel, FEFO Expiry Bar, AR Aging Bar).
+   - Babak 3: Operational Action & Exception Queues (Credit Hold Queue, Penetrasi SKU, Pareto Tolakan Pengantaran, Efisiensi Armada).
+4. **Verifikasi:**
+   - ruff check PASS (addons/id_dashboard_sales, addons/id_dashboard_monetary, addons/id_dashboard_wms).
+   - check_manifests.py PASS (10 addons ok).
+   - Seluruh 3 template XML teruji valid via ElementTree.
+
+## 2026-11-01T10:35:00+07:00 — anti-gravity agent — Review Komprehensif Dashboard FMCG & Perbaikan Parameter Handling
+**Branch:** agen/review-fmcg-dashboards
+**Status:** PASS (Static, Manifest, Ruff) -> Siap Review
+
+### Ringkasan Misi Review & Analisis End-to-End
+1. **Analisis Lintas Disiplin (Data Analyst + ERP Implementor + FMCG Expert):**
+   - Menganalisis 3 modul dashboard aktif: id_dashboard_sales, id_dashboard_monetary, dan id_dashboard_wms, didukung probe langsung pada live instance Railway (https://odooca-fmcg-demo.up.railway.app).
+   - Menemukan akar penyebab mengapa dashboard terasa "kurang sreg": keterpisahan menjadi 3 silo terisolasi (bukan unified Control Tower), belum adanya dimensi komparasi tingkat pertama per Principal FMCG, angka bersifat pasif tanpa Actionable Exception Queues, dan adanya temporal drift akibat hardcoded CURRENT_DATE pada PostgreSQL SQL views.
+   - Mengklasifikasikan kebutuhan dashboard ke dalam 4 kompartemen disiplin FMCG (Executive Control Tower, Sales & Commercial, Finance & Credit Control, Warehouse & Logistics) dengan kategori Necessary, Nice to Have, dan Not Necessary.
+2. **Perbaikan Kode & Technical Defect Closes:**
+   - Memperbaiki method get_data pada id_dashboard_monetary agar menerima area_ids, salesman_ids, dan **kwargs secara aman, mengeliminasi TypeError crash saat filter diklik di UI.
+   - Menyelaraskan get_data pada id_dashboard_wms dengan **kwargs.
+   - Menambahkan automated regression test pada addons/id_dashboard_monetary/tests/test_monetary_dashboard.py.
+3. **Dokumen Arsitektur & Rekomendasi:**
+   - Menyusun dokumen komprehensif docs/reviews/FMCG_DASHBOARD_COMPREHENSIVE_REVIEW.md sebagai panduan arsitektur dan roadmap pengembangan dashboard FMCG berikutnya.
+4. **Verifikasi:**
+   - ruff check PASS (addons/id_dashboard_monetary, addons/id_dashboard_wms).
+   - check_manifests.py PASS (10 addons ok).
+
 ## 2026-11-01T11:30:55+07:00 — agent codex-pwa — Alur Sales/Delivery PWA
 **Branch:** `agen/pwa-sales-delivery-workflow`, basis main merge PR64 `6901d9e`. PR64 sudah merged oleh sesi lain, diverifikasi tanpa deployment.
 **Berubah:** daftar outlet datar dengan scroll sendiri dan pencarian drawer penuh; halaman toko dengan gambar privat native Odoo, ringkasan tiga kolom/TOP/limit/PIC; Check-in → Open session mini POS → preview/kirim → Close session. Delivery menambah wizard qty, tiga status tampilan, alasan DO/item, tanggal pending, catatan item terpisah dan biaya DO/toko ber-scope. Draft item terikat sumber/SKU; pengajuan biaya atomik/CAS. Header status offline menggantikan banner yang menutup tombol; hasil restore order tidak mengambil alih tab yang sudah dipilih pengguna. Gateway mengizinkan GET image numerik secara khusus, header terpercaya tetap dipakai.

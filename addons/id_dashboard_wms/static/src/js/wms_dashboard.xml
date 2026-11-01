@@ -3,16 +3,20 @@
     <t t-name="id_dashboard_wms.WmsDashboard">
         <div class="o_action id-wms">
             <div class="id-wms__sheet">
-                <!-- Header & Filters Section -->
-                <section class="id-wms__section id-wms__filters" aria-label="Filters">
-                    <div class="id-wms__head">
-                        <h1 class="id-wms__title"><i class="fa fa-truck"/> Warehouse &amp; Logistics (WMS)</h1>
-                        <div class="id-wms__quick-links">
+                <!-- Header & Unified Grouped Filter Bar -->
+                <header class="id-wms__header">
+                    <div class="id-wms__header-main">
+                        <div class="id-wms__header-title-wrap">
+                            <span class="id-wms__badge-dept"><i class="fa fa-truck"/> DIVISI LOGISTIK &amp; GUDANG (WMS)</span>
+                            <h1 class="id-wms__title">Warehouse &amp; Logistics Execution Cockpit</h1>
+                            <span class="id-wms__subtitle">Monitoring ketahanan kadaluwarsa FEFO, pemenuhan pesanan pengiriman (DO), dan efisiensi armada.</span>
+                        </div>
+                        <div class="id-wms__header-quick">
                             <button type="button" class="id-wms__quick-btn" t-on-click="openExpiryMatrix">
                                 <i class="fa fa-hourglass-half"/> FEFO Expiry
                             </button>
                             <button type="button" class="id-wms__quick-btn" t-on-click="openDeliveryFulfillment">
-                                <i class="fa fa-check-square-o"/> Delivery Fulfillment
+                                <i class="fa fa-check-square-o"/> Pemenuhan DO
                             </button>
                             <button type="button" class="id-wms__quick-btn" t-on-click="openRejectAnalysis">
                                 <i class="fa fa-ban"/> Analisis Retur/Reject
@@ -25,61 +29,112 @@
                             </button>
                         </div>
                     </div>
-                    <span class="id-wms__label"><i class="fa fa-tags"/> Kategori FMCG</span>
-                    <select class="id-wms__select" t-att-value="state.fmcgCategory" t-on-change="onCategoryChange">
-                        <option value="">Semua Kategori</option>
-                        <t t-foreach="state.filters.categories" t-as="c" t-key="c.key">
-                            <option t-att-value="c.key" t-out="c.label"/>
-                        </t>
-                    </select>
-                    <span class="id-wms__label"><i class="fa fa-car"/> Kendaraan Armada</span>
-                    <select class="id-wms__select" t-att-value="state.vehicleId || ''" t-on-change="onVehicleChange">
-                        <option value="">Semua Armada</option>
-                        <t t-foreach="state.filters.vehicles" t-as="v" t-key="v.id">
-                            <option t-att-value="v.id" t-out="v.name"/>
-                        </t>
-                    </select>
-                    <button type="button" class="id-wms__link" t-on-click="reset"><i class="fa fa-undo"/> Reset</button>
-                </section>
+
+                    <!-- Filter Bar Clusters -->
+                    <div class="id-wms__filter-bar">
+                        <!-- Cluster 1: Category -->
+                        <div class="id-wms__filter-cluster">
+                            <span class="id-wms__cluster-label"><i class="fa fa-tags"/> Kategori FMCG</span>
+                            <div class="id-wms__cluster-content">
+                                <select class="id-wms__select" t-att-value="state.fmcgCategory" t-on-change="onCategoryChange">
+                                    <option value="">Semua Kategori</option>
+                                    <t t-foreach="state.filters.categories" t-as="c" t-key="c.id">
+                                        <option t-att-value="c.id" t-out="c.name"/>
+                                    </t>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Cluster 2: Vehicle -->
+                        <div class="id-wms__filter-cluster">
+                            <span class="id-wms__cluster-label"><i class="fa fa-car"/> Kendaraan Armada</span>
+                            <div class="id-wms__cluster-content">
+                                <select class="id-wms__select" t-att-value="state.vehicleId || ''" t-on-change="onVehicleChange">
+                                    <option value="">Semua Armada</option>
+                                    <t t-foreach="state.filters.vehicles" t-as="v" t-key="v.id">
+                                        <option t-att-value="v.id" t-out="v.name"/>
+                                    </t>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Cluster 3: Action -->
+                        <div class="id-wms__filter-actions">
+                            <button type="button" class="id-wms__btn-reset" t-on-click="reset">
+                                <i class="fa fa-undo"/> Reset Filter
+                            </button>
+                        </div>
+                    </div>
+                </header>
 
                 <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-out="state.error"/>
                 <div t-if="state.loading and !state.data" class="id-wms__empty"><i class="fa fa-circle-o-notch fa-spin"/> Memuat data gudang &amp; logistik…</div>
 
                 <t t-if="state.data">
-                    <!-- Primary WMS Scorecards -->
+                    <!-- BABAK 1: STORAGE & DISPATCH PULSE -->
                     <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
-                        <h2 class="id-wms__section-title"><i class="fa fa-archive"/> Status Persediaan &amp; Pemenuhan DO</h2>
-                        <div class="id-wms__scorecards">
-                            <button type="button" class="id-wms__score" t-on-click="openStockCategories">
-                                <span class="id-wms__icon is-navy"><i class="fa fa-cubes"/></span>
-                                <span class="id-wms__score-title">Nilai Persediaan Gudang</span>
-                                <span class="id-wms__score-value" t-out="moneyShort(state.data.kpi.total_stock_value)"/>
-                                <span class="id-wms__score-meta"><t t-out="int(state.data.kpi.total_stock_qty)"/> unit produk fisik aktif</span>
+                        <div class="id-wms__head">
+                            <h2 class="id-wms__section-title"><i class="fa fa-archive"/> Babak 1: Status Persediaan Gudang &amp; Tingkat Layanan Pengiriman</h2>
+                            <span class="id-wms__section-sub">Valuasi stok aktif, deteksi dini kadaluwarsa FEFO, pemenuhan DO, dan rasio biaya armada logistik.</span>
+                        </div>
+                        <div class="id-wms__cards">
+                            <button type="button" class="id-wms__card" t-on-click="openStockCategories">
+                                <div class="id-wms__card-header">
+                                    <span class="id-wms__card-title">Nilai Persediaan Gudang</span>
+                                    <span class="id-wms__micro-badge is-navy"><i class="fa fa-cubes"/></span>
+                                </div>
+                                <div class="id-wms__card-body">
+                                    <span class="id-wms__card-value" t-out="moneyShort(state.data.kpi.total_stock_value)"/>
+                                </div>
+                                <div class="id-wms__card-footer">
+                                    <t t-out="int(state.data.kpi.total_stock_qty)"/> unit fisik aktif di gudang
+                                </div>
                             </button>
-                            <button type="button" class="id-wms__score" t-on-click="openExpiryMatrix">
-                                <span class="id-wms__icon is-red"><i class="fa fa-exclamation-triangle"/></span>
-                                <span class="id-wms__score-title">Stok Kritis FEFO (&lt;30 Hari)</span>
-                                <span class="id-wms__score-value is-danger" t-out="moneyShort(state.data.kpi.critical_expiry_val)"/>
-                                <span class="id-wms__score-meta"><t t-out="int(state.data.kpi.critical_expiry_count)"/> batch/lot wajib retur principal</span>
+                            <button type="button" class="id-wms__card" t-on-click="openExpiryMatrix">
+                                <div class="id-wms__card-header">
+                                    <span class="id-wms__card-title">Stok Kritis FEFO (&lt;30 Hari)</span>
+                                    <span class="id-wms__micro-badge is-red"><i class="fa fa-exclamation-triangle"/></span>
+                                </div>
+                                <div class="id-wms__card-body">
+                                    <span class="id-wms__card-value is-danger" t-out="moneyShort(state.data.kpi.critical_stock_value)"/>
+                                </div>
+                                <div class="id-wms__card-footer">
+                                    <t t-out="int(state.data.kpi.critical_stock_count)"/> batch/lot wajib retur vendor
+                                </div>
                             </button>
-                            <button type="button" class="id-wms__score" t-on-click="openDeliveryFulfillment">
-                                <span class="id-wms__icon is-emerald"><i class="fa fa-check-circle-o"/></span>
-                                <span class="id-wms__score-title">Tingkat Pemenuhan DO</span>
-                                <span class="id-wms__score-value is-ok" t-out="pct(state.data.kpi.fulfillment_rate)"/>
-                                <span class="id-wms__score-meta"><t t-out="int(state.data.kpi.delivered_count)"/> dari <t t-out="int(state.data.kpi.total_deliveries)"/> pesanan terkirim</span>
+                            <button type="button" class="id-wms__card" t-on-click="openDeliveryFulfillment">
+                                <div class="id-wms__card-header">
+                                    <span class="id-wms__card-title">Tingkat Pemenuhan DO</span>
+                                    <span class="id-wms__micro-badge is-emerald"><i class="fa fa-check-circle-o"/></span>
+                                </div>
+                                <div class="id-wms__card-body">
+                                    <span class="id-wms__card-value is-ok" t-out="pct(state.data.kpi.fulfillment_rate)"/>
+                                </div>
+                                <div class="id-wms__card-footer">
+                                    <t t-out="int(state.data.kpi.delivered_count)"/> dari <t t-out="int(state.data.kpi.total_deliveries)"/> pesanan terkirim
+                                </div>
                             </button>
-                            <button type="button" class="id-wms__score" t-on-click="openFleetCostAnalysis">
-                                <span class="id-wms__icon is-amber"><i class="fa fa-money"/></span>
-                                <span class="id-wms__score-title">Rasio Biaya Armada Logistik</span>
-                                <span class="id-wms__score-value is-warn" t-out="pct(state.data.kpi.fleet_cost_ratio)"/>
-                                <span class="id-wms__score-meta">Total Biaya: <t t-out="moneyShort(state.data.kpi.total_trip_cost)"/></span>
+                            <button type="button" class="id-wms__card" t-on-click="openFleetCostAnalysis">
+                                <div class="id-wms__card-header">
+                                    <span class="id-wms__card-title">Rasio Biaya Armada Logistik</span>
+                                    <span class="id-wms__micro-badge is-amber"><i class="fa fa-money"/></span>
+                                </div>
+                                <div class="id-wms__card-body">
+                                    <span class="id-wms__card-value is-warn" t-out="pct(state.data.kpi.fleet_cost_ratio)"/>
+                                </div>
+                                <div class="id-wms__card-footer">
+                                    Total Biaya: <t t-out="moneyShort(state.data.kpi.total_fleet_cost)"/>
+                                </div>
                             </button>
                         </div>
                     </section>
 
-                    <!-- FEFO Health Distribution Bar -->
+                    <!-- BABAK 2: FEFO HEALTH & DELIVERY OVERVIEW -->
                     <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
-                        <h2 class="id-wms__section-title"><i class="fa fa-hourglass-start"/> Monitoring Ketahanan Stok FEFO (First-Expired, First-Out)</h2>
+                        <div class="id-wms__head">
+                            <h2 class="id-wms__section-title"><i class="fa fa-hourglass-start"/> Babak 2: Monitoring Ketahanan Stok FEFO (First-Expired, First-Out)</h2>
+                            <span class="id-wms__section-sub">Klasifikasi stok berdasarkan umur simpan: Kritis (&lt;30h: Retur), Waspada (30-90h: Bundling), Aman (&gt;90h).</span>
+                        </div>
                         <div class="id-wms__fefo-bar-wrap">
                             <t t-foreach="state.data.expiry_buckets" t-as="b" t-key="b.key">
                                 <div t-attf-class="id-wms__fefo-bar-segment seg-#{b.key}"
@@ -97,35 +152,59 @@
                         </div>
                     </section>
 
-                    <!-- Secondary Delivery Performance Scorecards -->
+                    <!-- BABAK 2B: DELIVERY SUMMARY -->
                     <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
-                        <h2 class="id-wms__section-title"><i class="fa fa-road"/> Ringkasan Operasional Logistik</h2>
-                        <div class="id-wms__scorecards id-wms__scorecards--3">
-                            <div class="id-wms__score">
-                                <span class="id-wms__icon is-blue"><i class="fa fa-truck"/></span>
-                                <span class="id-wms__score-title">Nilai DO Terkirim Sukses</span>
-                                <span class="id-wms__score-value" t-out="moneyShort(state.data.kpi.delivered_value)"/>
-                                <span class="id-wms__score-meta"><t t-out="int(state.data.kpi.delivered_count)"/> pengantaran sukses</span>
+                        <div class="id-wms__head">
+                            <h2 class="id-wms__section-title"><i class="fa fa-road"/> Ringkasan Operasional Pengiriman (Delivery Performance)</h2>
+                            <span class="id-wms__section-sub">Nilai pesanan sukses terkirim, tingkat keterlambatan jadwal, dan jumlah retur/tolakan toko.</span>
+                        </div>
+                        <div class="id-wms__cards id-wms__cards--3">
+                            <div class="id-wms__card">
+                                <div class="id-wms__card-header">
+                                    <span class="id-wms__card-title">Nilai DO Terkirim Sukses</span>
+                                    <span class="id-wms__micro-badge is-blue"><i class="fa fa-truck"/></span>
+                                </div>
+                                <div class="id-wms__card-body">
+                                    <span class="id-wms__card-value" t-out="moneyShort(state.data.kpi.delivered_value)"/>
+                                </div>
+                                <div class="id-wms__card-footer">
+                                    <t t-out="int(state.data.kpi.delivered_count)"/> pengantaran sukses di outlet
+                                </div>
                             </div>
-                            <div class="id-wms__score">
-                                <span class="id-wms__icon is-amber"><i class="fa fa-clock-o"/></span>
-                                <span class="id-wms__score-title">Pengiriman Terlambat</span>
-                                <span class="id-wms__score-value is-warn" t-out="int(state.data.kpi.late_count)"/>
-                                <span class="id-wms__score-meta">Lewat jadwal pengantaran</span>
+                            <div class="id-wms__card">
+                                <div class="id-wms__card-header">
+                                    <span class="id-wms__card-title">Pengiriman Terlambat</span>
+                                    <span class="id-wms__micro-badge is-amber"><i class="fa fa-clock-o"/></span>
+                                </div>
+                                <div class="id-wms__card-body">
+                                    <span class="id-wms__card-value is-warn" t-out="int(state.data.kpi.late_count)"/>
+                                </div>
+                                <div class="id-wms__card-footer">
+                                    Melewati jadwal komitmen pengantaran
+                                </div>
                             </div>
-                            <div class="id-wms__score">
-                                <span class="id-wms__icon is-red"><i class="fa fa-undo"/></span>
-                                <span class="id-wms__score-title">Tolakan / Retur Pengantaran</span>
-                                <span class="id-wms__score-value is-danger" t-out="int(state.data.kpi.total_rejections)"/>
-                                <span class="id-wms__score-meta">Tingkat Tolakan: <t t-out="pct(state.data.kpi.rejection_rate)"/></span>
+                            <div class="id-wms__card">
+                                <div class="id-wms__card-header">
+                                    <span class="id-wms__card-title">Tolakan / Retur Pengantaran</span>
+                                    <span class="id-wms__micro-badge is-red"><i class="fa fa-undo"/></span>
+                                </div>
+                                <div class="id-wms__card-body">
+                                    <span class="id-wms__card-value is-danger" t-out="int(totalRejections)"/>
+                                </div>
+                                <div class="id-wms__card-footer">
+                                    Tingkat Tolakan: <strong><t t-out="pct(state.data.kpi.rejection_rate)"/></strong>
+                                </div>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Detail Tables -->
+                    <!-- BABAK 3: DETAIL TABS & ACTION QUEUES -->
                     <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h2 class="id-wms__section-title mb-0"><i class="fa fa-table"/> Rincian Operasional Detail</h2>
+                            <div>
+                                <h2 class="id-wms__section-title mb-0"><i class="fa fa-table"/> Babak 3: Antrean Detail Operasional &amp; Investigasi</h2>
+                                <span class="id-wms__section-sub">Detail lot FEFO, analisis penyebab tolakan toko, komposisi stok kategori, dan biaya armada.</span>
+                            </div>
                             <div class="btn-group btn-group-sm" role="group">
                                 <button type="button" class="btn"
                                         t-att-class="state.activeTab === 'expiry' ? 'btn-primary' : 'btn-outline-secondary'"
@@ -162,9 +241,9 @@
                                         <td class="num font-weight-bold" t-out="money(b.value)"/>
                                         <td class="num" t-out="pct(b.share)"/>
                                         <td>
-                                            <span t-if="b.key === 'critical'" class="badge bg-danger">Wajib Retur ke Principal</span>
-                                            <span t-elif="b.key === 'warning'" class="badge bg-warning text-dark">Program Bundling / Diskon Cepat</span>
-                                            <span t-else="" class="badge bg-success">Rotasi Penjualan Normal</span>
+                                            <span t-if="b.key === 'critical'" class="id-wms__status-pill is-critical">Wajib Retur ke Principal</span>
+                                            <span t-elif="b.key === 'warning'" class="id-wms__status-pill is-warning">Program Bundling / Diskon Cepat</span>
+                                            <span t-else="" class="id-wms__status-pill is-good">Rotasi Penjualan Normal</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -229,23 +308,25 @@
                                 <thead>
                                     <tr>
                                         <th>Kendaraan Armada</th>
-                                        <th>Periode Bulan</th>
+                                        <th class="num">Biaya BBM</th>
+                                        <th class="num">Biaya Helper</th>
                                         <th class="num">Total Biaya Operasional</th>
-                                        <th class="num">Nilai Pengiriman Berhasil</th>
+                                        <th class="num">Nilai DO Terkirim</th>
                                         <th class="num">Rasio Biaya / Nilai</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr t-foreach="state.data.fleet" t-as="f" t-key="f.vehicle + f.month"
+                                    <tr t-foreach="state.data.fleet" t-as="f" t-key="f.vehicle_id"
                                         t-on-click="openFleetCostAnalysis" style="cursor: pointer;">
-                                        <td class="name" t-out="f.vehicle"/>
-                                        <td t-out="f.month"/>
-                                        <td class="num text-danger" t-out="money(f.cost)"/>
+                                        <td class="name" t-out="f.name"/>
+                                        <td class="num" t-out="money(f.fuel_cost)"/>
+                                        <td class="num" t-out="money(f.helper_cost)"/>
+                                        <td class="num text-danger font-weight-bold" t-out="money(f.total_cost)"/>
                                         <td class="num font-weight-bold" t-out="money(f.delivered_value)"/>
-                                        <td class="num" t-out="pct(f.ratio)"/>
+                                        <td class="num" t-out="pct(f.cost_ratio)"/>
                                     </tr>
                                     <tr t-if="!state.data.fleet.length">
-                                        <td colspan="5" class="id-wms__empty">Tidak ada data biaya armada untuk filter terpilih.</td>
+                                        <td colspan="6" class="id-wms__empty">Tidak ada data biaya armada untuk filter terpilih.</td>
                                     </tr>
                                 </tbody>
                             </table>

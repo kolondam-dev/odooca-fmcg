@@ -73,3 +73,6 @@ class TestMonetaryDashboard(TransactionCase):
         self.assertIn("buckets", data)
         self.assertIn("top_customers", data)
         self.assertEqual(len(data["buckets"]), 5)
+        # Verify plural list parameters sent by JS client do not crash
+        data_filtered = service.get_data(area_ids=[1], salesman_ids=[2])
+        self.assertIn("kpi", data_filtered)

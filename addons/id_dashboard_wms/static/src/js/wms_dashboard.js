@@ -91,6 +91,13 @@ export class WmsDashboard extends Component {
         this.load();
     }
 
+    get totalRejections() {
+        if (this.state.data?.kpi?.total_rejections !== undefined) {
+            return this.state.data.kpi.total_rejections;
+        }
+        return (this.state.data?.rejections || []).reduce((sum, r) => sum + (r.count || 0), 0);
+    }
+
     // Formatting helpers
     money(v) { return money(v); }
     moneyShort(v) { return moneyShort(v); }
