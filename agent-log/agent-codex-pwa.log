@@ -255,3 +255,8 @@
 - b05f955: 131 native Odoo PASS, dashboard upgrade/preservation/init PASS. Fixture visual posting invoice ditolak currency IDR archived; aktifkan IDR dalam ci_db saja, company currency dipertahankan.
 - Lokal Ruff PASS, CI final/visual/review menunggu. Tidak merge/deploy/data server.
 - Task managed by agent-codex-pwa at 2026-11-01T23:32:04+07:00
+
+[2026-11-01T23:42:07+07:00] [INFO] PR71 isolasi fixture dashboard dari native form smoke
+- 19fb11b:131 native/SQLfixture/170 PWA browser PASS. First posted invoice mengubah native draft name_placeholder, menggagalkan precondition keyboard title existing.
+- Reorder fixture dashboard setelah form smoke sebelum visual audit; tidak melemahkan assertion/production. CI final menunggu, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-11-01T23:42:07+07:00

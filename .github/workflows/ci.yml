@@ -105,14 +105,6 @@ jobs:
           ' < scripts/ui/smoke_fixture.py | tee fixture.log
           python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["order"])' > ui-order.txt
           python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["invoice"])' > ui-invoice.txt
-      - name: Prepare native dashboard visual fixtures
-        run: |
-          set -o pipefail
-          docker run --rm -i -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
-            odoo shell -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
-              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
-          ' < scripts/ui/dashboard_fixture.py | tee dashboard-fixture.log
-          grep -q 'DASHBOARD_VISUAL_FIXTURE=PASS' dashboard-fixture.log
       - name: Start Odoo for browser smoke
         run: |
           docker run -d --name ui-smoke -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -132,6 +124,16 @@ jobs:
           python -m playwright install --with-deps chromium
           python -m unittest discover -s docs/ui/e2e -p 'test_*.py' -v
           python docs/ui/e2e/smoke_ui.py http://localhost:8069 "$(cat ui-order.txt)" "$(cat ui-invoice.txt)"
+      # Posting the first invoice changes Odoo's native draft-number placeholder.
+      # Keep dashboard fixtures after keyboard/title smoke to preserve its isolated precondition.
+      - name: Prepare native dashboard visual fixtures
+        run: |
+          set -o pipefail
+          docker run --rm -i -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
+            odoo shell -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ui/dashboard_fixture.py | tee dashboard-fixture.log
+          grep -q 'DASHBOARD_VISUAL_FIXTURE=PASS' dashboard-fixture.log
       - name: Native dashboard visual audit
         env:
           UI_TEST_PASSWORD: ci-ui

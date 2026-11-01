@@ -1,3 +1,7 @@
+## 2026-11-01T23:42:07+07:00 — agent codex-pwa — PR71 isolasi urutan fixture visual
+**[F] `19fb11b`:** 131 native Odoo dan fixture finance SQL PASS; 170 browser PWA PASS. UI smoke existing gagal keyboard title draft invoice karena fixture dashboard sudah membuat sequence posted pada jurnal yang sama; Odoo `_compute_name_placeholder` menghilangkan input ketika sequence sudah ada. Bukan perubahan produksi form.
+**Berubah:** jalankan fixture dashboard sesudah UI form smoke dan sebelum audit dashboard. Assertion keyboard/native production tetap utuh. CI final dan screenshot menunggu; tidak merge/deploy.
+
 ## 2026-11-01T23:32:04+07:00 — agent codex-pwa — PR71 currency fixture CI
 **[F] `b05f955`:** 131 tes native Odoo lulus; upgrade dashboard persisten, staging/demo preservation dan init-test lulus. Visual fixture gagal saat posting invoice karena default pricelist IDR memakai currency archived pada DB kosong. IDR diaktifkan hanya di fixture ci_db; tidak mengubah company currency/data server atau melemahkan validasi posting.
 **[BU] Menunggu:** CI final, screenshot native dan review; tidak merge/deploy.
