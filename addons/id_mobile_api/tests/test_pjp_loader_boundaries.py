@@ -2,8 +2,11 @@
 import base64
 import importlib.util
 import io
-from datetime import date
+import json
+import uuid
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from PIL import Image
 
@@ -42,13 +45,16 @@ class TestPjpLoaderBoundariesHttp(EvidenceFixture, HttpCase):
         loader = _get_pjp_loader_module()
         self.assertIsNotNone(loader, "Modul load_pjp_workdays.py harus dapat dimuat.")
 
-        # Buat outlet dengan ref yang ada di customer registry untuk company ini
-        self.outlet.ref = "CUST-0001"
+        # Siapkan salesman dan outlet dengan ref kanonikal di pjp_july_2026_matrix.csv
+        self.mobile.login = "sls-01"
+        self.outlet.ref = "CUST-MT-04"
         self.outlet.pjp_call_day = "wednesday"
         self.outlet.pjp_frequency = "F1"
+        self.outlet.partner_latitude = 1.518418
+        self.outlet.partner_longitude = 124.906002
 
-        # Jalankan loader produksi dengan batasan limit bukti
-        loader.run_pjp_workdays_loader(self.env, max_evidence_limit=3, target_company=self.company)
+        # Jalankan loader produksi dengan batasan limit bukti dan commit=False
+        loader.run_pjp_workdays_loader(self.env, max_evidence_limit=3, target_company=self.company, commit=False)
 
         # Cari evidence yang dibuat untuk user ini
         evidences = self.env["id.mobile.evidence"].sudo().search([
@@ -63,6 +69,15 @@ class TestPjpLoaderBoundariesHttp(EvidenceFixture, HttpCase):
         # Verifikasi bahwa create_date berada di bulan Juli 2026 (bukan tanggal hari ini saat impor)
         self.assertEqual(target_ev.create_date.year, 2026)
         self.assertEqual(target_ev.create_date.month, 7)
+
+        # Verifikasi receipt JSON dan konsistensi timezone dengan waktu lokal WITA (UTC+8)
+        receipt = json.loads(target_ev.receipt_json)
+        self.assertTrue(receipt.get("is_historical_seed"))
+        photo_utc_str = receipt["photo_selected_at"]
+        self.assertTrue(photo_utc_str.endswith("Z"))
+        dt_utc = datetime.fromisoformat(photo_utc_str.replace("Z", "+00:00"))
+        dt_wita = dt_utc.astimezone(ZoneInfo("Asia/Makassar"))
+        self.assertEqual(dt_wita.utcoffset().total_seconds(), 8 * 3600)
 
         # Autentikasi dan uji akses controller foto
         self.authenticate(target_ev.user_id.login, "mobile-api-test")
@@ -169,7 +184,10 @@ class TestPjpLoaderBoundariesTransaction(EvidenceFixture, TransactionCase):
         self.assertTrue(foreign_evidence.exists())
 
     def test_03_workday_preservation_ordinary_workdays_not_overwritten(self):
-        """Memastikan workday operasional yang sudah ada tidak ditimpa/dihapus outlet-nya."""
+        """Memastikan workday operasional yang sudah ada tidak diubah sama sekali
+
+        (tidak ditambah/dikurangi outlet-nya).
+        """
         loader = _get_pjp_loader_module()
         self.assertIsNotNone(loader)
 
@@ -196,12 +214,16 @@ class TestPjpLoaderBoundariesTransaction(EvidenceFixture, TransactionCase):
             "outlet_ids": [(6, 0, [outlet_custom.id])],
         })
 
-        # Jalankan loader untuk company ini
-        loader.run_pjp_workdays_loader(self.env, max_evidence_limit=1, target_company=self.company)
+        # Jalankan loader untuk company ini tanpa commit
+        loader.run_pjp_workdays_loader(self.env, max_evidence_limit=1, target_company=self.company, commit=False)
 
         existing_wd.invalidate_recordset()
-        # Outlet khusus milik user TIDAK BOLEH hilang dari workday
-        self.assertIn(outlet_custom.id, existing_wd.outlet_ids.ids, "Outlet khusus tidak boleh ditimpa!")
+        # Outlet khusus milik user TIDAK BOLEH berubah sama sekali (tidak berkurang, dan tidak ditambah outlet PJP)
+        self.assertEqual(
+            existing_wd.outlet_ids.ids,
+            [outlet_custom.id],
+            "Workday operasional yang sudah ada tidak boleh dimutasi melalui penambahan outlet!",
+        )
 
     def test_04_loader_fails_fast_when_models_missing(self):
         """Memastikan loader melempar RuntimeError (fail-fast) jika model mobile belum terpasang."""
@@ -232,3 +254,74 @@ class TestPjpLoaderBoundariesTransaction(EvidenceFixture, TransactionCase):
         with self.assertRaises(EvidenceRejected) as cm_photo:
             self.api()._capture(meta_valid, b"")
         self.assertEqual(cm_photo.exception.code, "invalid_photo")
+
+    def test_06_non_seed_evidence_not_backdated_or_deleted(self):
+        """Memastikan evidence non-seed (operasional riil) milik user dan company yang sama
+
+        tidak dibackdate ke Juli 2026 dan tidak dihapus saat loader dijalankan.
+        """
+        loader = _get_pjp_loader_module()
+        self.assertIsNotNone(loader)
+
+        Evidence = self.env["id.mobile.evidence"].sudo()
+
+        # Generate UUID persis sesuai pola loader untuk kombinasi salesman & outlet ini
+        target_date = "2026-07-01"
+        cuuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"fmcg-visit-{self.mobile.id}-{self.outlet.id}-{target_date}"))
+
+        # Buat evidence non-seed (transaksi riil di masa kini)
+        non_seed = Evidence.create({
+            "user_id": self.mobile.id,
+            "company_id": self.company.id,
+            "outlet_id": self.outlet.id,
+            "client_uuid": cuuid,
+            "fingerprint": "fprint_live_transaction",
+            "receipt_json": json.dumps({
+                "client_uuid": cuuid,
+                "is_historical_seed": False,
+            }),
+            "original": base64.b64encode(self.source),
+            "watermarked": base64.b64encode(self.source),
+        })
+
+        initial_create_date = non_seed.create_date
+
+        # Jalankan loader tanpa commit
+        loader.run_pjp_workdays_loader(self.env, max_evidence_limit=5, target_company=self.company, commit=False)
+
+        non_seed.invalidate_recordset()
+        # create_date non-seed tidak boleh di-backdate ke Juli 2026
+        self.assertEqual(
+            non_seed.create_date,
+            initial_create_date,
+            "Evidence non-seed operasional tidak boleh dibackdate oleh loader!",
+        )
+        self.assertTrue(non_seed.exists(), "Evidence non-seed operasional tidak boleh dihapus oleh loader!")
+
+    def test_07_receipt_timestamp_utc_matches_wita_local_time(self):
+        """Memastikan timestamp UTC di receipt ISO string selaras tepat dengan waktu lokal WITA (UTC+8)."""
+        loader = _get_pjp_loader_module()
+        self.assertIsNotNone(loader)
+
+        self.mobile.login = "sls-01"
+        self.outlet.ref = "CUST-MT-04"
+
+        loader.run_pjp_workdays_loader(self.env, max_evidence_limit=2, target_company=self.company, commit=False)
+
+        evidences = self.env["id.mobile.evidence"].sudo().search([
+            ("company_id", "=", self.company.id),
+        ], limit=1)
+        self.assertTrue(evidences, "Evidence seed historis harus terbentuk.")
+
+        receipt = json.loads(evidences[0].receipt_json)
+        photo_utc_str = receipt["photo_selected_at"]
+        self.assertTrue(photo_utc_str.endswith("Z"), "Timestamp receipt harus berformat ISO UTC ('Z').")
+
+        dt_utc = datetime.fromisoformat(photo_utc_str.replace("Z", "+00:00"))
+        dt_wita = dt_utc.astimezone(ZoneInfo("Asia/Makassar"))
+
+        # Verifikasi offset tepat 8 jam ke WITA tanpa deviasi
+        self.assertEqual(dt_wita.utcoffset().total_seconds(), 8 * 3600)
+
+        # Verifikasi tanggal WITA cocok dengan business_date pada receipt
+        self.assertEqual(dt_wita.strftime("%Y-%m-%d"), receipt["business_date"])

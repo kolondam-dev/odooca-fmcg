@@ -163,7 +163,7 @@ def render_historical_watermark(
             return result.getvalue()
 
 
-def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None):
+def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None, commit=True):
     # -------------------------------------------------------------------------
     # 0. Verifikasi Kesiapan Modul & Model (Fail-Fast: Mencegah Sukses Palsu)
     # -------------------------------------------------------------------------
@@ -337,38 +337,26 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None):
         outlets_unique = list(dict.fromkeys(outlets))[:500]
 
         if existing:
-            # Preservasi Workday Biasa: Gabungkan outlet PJP tanpa menghapus outlet yang sudah ada
-            current_outlets = set(existing.outlet_ids.ids)
-            outlets_to_add = [oid for oid in outlets_unique if oid not in current_outlets]
-            write_vals = {}
-            if outlets_to_add:
-                write_vals["outlet_ids"] = [(4, oid) for oid in outlets_to_add]
-            if office_rec and not existing.office_id:
-                write_vals["office_id"] = office_rec.id
-            if not existing.warehouse_id and wh:
-                write_vals["warehouse_id"] = wh.id
-            if not existing.pricelist_id and pl:
-                write_vals["pricelist_id"] = pl.id
-            if write_vals:
-                existing.write(write_vals)
-                updated_wd += 1
+            # Preservasi Workday Biasa: Workday operasional yang sudah ada tidak boleh diubah
+            # (tidak menambah/mengurangi outlet) demi integritas data operasional harian
             workday_id_map[(uid, tgl)] = existing.id
-        else:
-            vals = {
-                "active": True,
-                "business_date": tgl,
-                "user_id": uid,
-                "company_id": company.id,
-                "warehouse_id": wh.id,
-                "pricelist_id": pl.id,
-                "outlet_radius": 10,
-                "office_id": office_rec.id if office_rec else False,
-                "outlet_ids": [(6, 0, outlets_unique)],
-                "product_ids": [(6, 0, product_ids)],
-            }
-            new_wd = Workday.create(vals)
-            created_wd += 1
-            workday_id_map[(uid, tgl)] = new_wd.id
+            continue
+
+        vals = {
+            "active": True,
+            "business_date": tgl,
+            "user_id": uid,
+            "company_id": company.id,
+            "warehouse_id": wh.id,
+            "pricelist_id": pl.id,
+            "outlet_radius": 10,
+            "office_id": office_rec.id if office_rec else False,
+            "outlet_ids": [(6, 0, outlets_unique)],
+            "product_ids": [(6, 0, product_ids)],
+        }
+        new_wd = Workday.create(vals)
+        created_wd += 1
+        workday_id_map[(uid, tgl)] = new_wd.id
 
     print(
         f" -> id.mobile.workday: {created_wd} dibuat, {updated_wd} diperbarui "
@@ -426,14 +414,22 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None):
 
         cuuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"fmcg-visit-{uid}-{pid}-{tgl}"))
 
-        hour = 8 + (idx % 6)
-        minute = 10 + ((idx * 7) % 50)
-        visit_timestamp_str = f"{tgl} {hour:02d}:{minute:02d}:00"
+        # Waktu kunjungan lokal WITA (UTC+8): jam kerja 08:00 - 16:00 WITA
+        wita_hour = 8 + (idx % 8)
+        minute = 10 + ((idx * 7) % 45)
+        sec = 10 + ((idx * 11) % 40)
+        visit_timestamp_str = f"{tgl} {wita_hour:02d}:{minute:02d}:{sec:02d}"
         wd_id = workday_id_map.get((uid, tgl), False)
 
-        # Naive UTC timestamp untuk create_date & write_date di database Odoo (WITA UTC+8 -> UTC naive)
-        utc_hour = hour - 8
-        visit_utc_str = f"{tgl} {utc_hour:02d}:{minute:02d}:00"
+        # Naive UTC timestamp untuk create_date & write_date di database Odoo serta ISO UTC ('Z') di receipt
+        # Karena WITA = UTC+8, maka utc_hour = wita_hour - 8 (antara 00:00 - 08:00 UTC pada hari yang sama)
+        utc_hour = wita_hour - 8
+        visit_utc_str = f"{tgl} {utc_hour:02d}:{minute:02d}:{sec:02d}"
+
+        photo_selected_at_iso = f"{tgl}T{utc_hour:02d}:{minute:02d}:{sec:02d}Z"
+        fix_sampled_at_iso = f"{tgl}T{utc_hour:02d}:{minute:02d}:{sec + 2:02d}Z"
+        device_recorded_at_iso = f"{tgl}T{utc_hour:02d}:{minute:02d}:{sec + 5:02d}Z"
+        received_at_iso = f"{tgl}T{utc_hour:02d}:{minute:02d}:{sec + 6:02d}Z"
 
         lat = p_rec.partner_latitude or 1.482187
         lon = p_rec.partner_longitude or 124.848921
@@ -446,7 +442,22 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None):
             ("company_id", "=", company.id),
         ], limit=1)
         if existing:
-            # Pastikan create_date & write_date sinkron dengan tanggal historis UTC
+            # Proteksi Evidence Non-Seed: verifikasi apakah record adalah seed historis
+            receipt_data = {}
+            if existing.receipt_json:
+                try:
+                    receipt_data = json.loads(existing.receipt_json)
+                except Exception:
+                    receipt_data = {}
+            is_seed = (
+                receipt_data.get("is_historical_seed") is True
+                or receipt_data.get("seed_batch") == "pjp_workdays_july_2026_v1"
+            )
+            if not is_seed:
+                # Evidence non-seed operasional tidak boleh disentuh, dibackdate, atau dihapus oleh loader
+                continue
+
+            # Pastikan create_date & write_date seed historis sinkron dengan tanggal historis UTC
             cr.execute("""
                 UPDATE id_mobile_evidence
                 SET create_date = %s, write_date = %s
@@ -455,7 +466,7 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None):
 
             if existing.original and existing.watermarked:
                 continue
-            # Self-healing terisolasi: hanya hapus record cacat milik user dan company ini
+            # Self-healing terisolasi: hanya hapus record seed cacat milik user dan company ini
             existing.unlink()
             healed_ev += 1
 
@@ -480,9 +491,9 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None):
             "outlet_id": str(pid),
             "business_date": tgl,
             "snapshot_version": "v1-canonical-july-2026",
-            "photo_selected_at": f"{tgl}T{hour:02d}:{minute:02d}:00Z",
-            "device_recorded_at": f"{tgl}T{hour:02d}:{minute:02d}:05Z",
-            "fix_sampled_at": f"{tgl}T{hour:02d}:{minute:02d}:02Z",
+            "photo_selected_at": photo_selected_at_iso,
+            "device_recorded_at": device_recorded_at_iso,
+            "fix_sampled_at": fix_sampled_at_iso,
             "latitude": lat,
             "longitude": lon,
             "accuracy": acc,
@@ -502,10 +513,10 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None):
             "assignment_id": str(wd_id) if wd_id else "0",
             "business_date": tgl,
             "snapshot_version": "v1-canonical-july-2026",
-            "received_at": f"{tgl}T{hour:02d}:{minute:02d}:06Z",
-            "device_recorded_at": f"{tgl}T{hour:02d}:{minute:02d}:05Z",
-            "photo_selected_at": f"{tgl}T{hour:02d}:{minute:02d}:00Z",
-            "fix_sampled_at": f"{tgl}T{hour:02d}:{minute:02d}:02Z",
+            "received_at": received_at_iso,
+            "device_recorded_at": device_recorded_at_iso,
+            "photo_selected_at": photo_selected_at_iso,
+            "fix_sampled_at": fix_sampled_at_iso,
             "latitude": lat,
             "longitude": lon,
             "accuracy": acc,
@@ -549,7 +560,8 @@ def run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None):
         f"(Self-healed: {healed_ev})."
     )
 
-    env.cr.commit()
+    if commit and hasattr(env.cr, "commit"):
+        env.cr.commit()
     print("[pjp_loader] Selesai: Seluruh matriks PJP, Workdays, dan Evidence berhasil diselaraskan.")
 
 

@@ -1620,3 +1620,11 @@
 - Test Suite: Memperluas test_pjp_loader_boundaries.py dengan eksekusi loader produksi utuh, verifikasi tanggal Juli 2026, probe controller 200 JPEG, preservasi workday biasa, isolasi self-healing, fail-fast, dan validasi ketat transaksi baru.
 - Verifikasi Kualitas: ruff check PASS, check_manifests.py PASS, bash syntax PASS.
 - Task managed by anti-gravity at 2026-11-01T16:25:00+07:00
+
+[2026-11-01T10:10:44+00:00] [INFO] Resolusi 4 Blocker Review PR #68 (Commit di Test, Fixture Ref, Proteksi Backdate Non-Seed, Preservasi Workday Biasa, Sinkronisasi Waktu 8 Jam)
+- CI & Fixture: Tambahkan parameter commit=False pada run_pjp_workdays_loader saat dipanggil dari test Odoo untuk mencegah transaksi rusak; gunakan ref kanonikal CUST-MT-04 dan login sls-01 agar test_01 menghasilkan workday dan evidence (>0)
+- Proteksi Backdate Evidence Non-Seed: Validasi is_historical_seed/seed_batch pada existing evidence sehingga evidence non-seed operasional tidak pernah dibackdate atau dihapus oleh loader
+- Preservasi Penuh Workday Biasa: Workday operasional yang sudah ada tidak lagi dimutasi atau ditambah outlet-nya oleh loader, menjaga integritas penugasan harian
+- Sinkronisasi Timezone WITA vs UTC (8 Jam): Format ISO UTC Z di receipt metadata (photo_selected_at, device_recorded_at, received_at, fix_sampled_at) diselaraskan presisi dengan waktu lokal WITA (UTC+8) pada teks watermark dan create_date
+- Test Suite: Menambahkan test_06 (proteksi non-seed) dan test_07 (sinkronisasi timezone UTC vs WITA 8 jam), serta memperbarui test_01 dan test_03
+- Task managed by antigravity-agent at 2026-11-01T10:10:44+00:00

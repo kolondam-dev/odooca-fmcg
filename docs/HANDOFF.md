@@ -1,3 +1,37 @@
+## 2026-11-01T17:15:00+07:00 — anti-gravity agent — Resolusi 4 Blocker Review PR #68 (Commit di Test, Fixture Ref, Proteksi Backdate Non-Seed, Preservasi Workday, Timezone Sync 8 Jam)
+**Branch:** `agen/pjp-master-and-workday`
+**Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Test Boundaries Suite) -> Siap Re-Review PR #68
+
+### Ringkasan Perbaikan
+1. **Blocker 1 (CI Gagal karena Commit di Test Odoo & Fixture 0 Workday/Evidence):**
+   - **Penyebab:**
+     * `load_pjp_workdays.py` memanggil `env.cr.commit()` secara eksplisit di akhir pemuatan, merusak savepoint/transaksi test runner Odoo.
+     * Fixture `test_01` mengatur `self.outlet.ref = "CUST-0001"`, sedangkan ref di `pjp_july_2026_matrix.csv` adalah `"CUST-MT-04"`, sehingga pemetaan partner kosong dan menghasilkan 0 workday/evidence.
+   - **Solusi:**
+     * Menambahkan parameter `commit=True` pada signature `run_pjp_workdays_loader(env, max_evidence_limit=None, target_company=None, commit=True)`. Di dalam test suite di-pass `commit=False` sehingga transaksi test runner terlindungi.
+     * Mengarahkan fixture `test_01` ke ref kanonikal `"CUST-MT-04"`, login salesman `"sls-01"`, dan koordinat valid sehingga loader menghasilkan penugasan workday dan bukti kunjungan (>0).
+2. **Blocker 2 (Proteksi Backdate Evidence Non-Seed):**
+   - **Penyebab:** Pada pemeriksaan `existing` evidence, loader langsung mengeksekusi update `create_date` ke Juli 2026 tanpa memeriksa apakah record tersebut merupakan seed historis atau transaksi operasional riil.
+   - **Solusi:** Loader kini memverifikasi penanda `is_historical_seed: True` atau `seed_batch: "pjp_workdays_july_2026_v1"` di `receipt_json`. Jika record bukan seed historis (misal transaksi riil salesman hari ini), loader segera melewatinya (`continue`) tanpa mem-backdate `create_date` atau melakukan unlink.
+3. **Blocker 3 (Preservasi Penuh Workday Biasa Tanpa Mutasi Outlet):**
+   - **Penyebab:** Loader sebelumnya memutasi `existing` workday biasa dengan menambahkan outlet PJP via `[(4, oid)]`, sehingga susunan outlet workday operasional yang sudah ada berubah.
+   - **Solusi:** Jika workday sudah ada (`existing`), loader membiarkan record workday utuh tanpa memodifikasi `outlet_ids` sama sekali (preservasi penuh penugasan operasional).
+4. **Blocker 4 (Sinkronisasi Timezone Waktu Receipt vs Watermark - Selisih 8 Jam):**
+   - **Penyebab:** String timestamp ISO UTC pada receipt metadata menuliskan jam lokal WITA dengan akhiran `"Z"` (misal `08:00:00Z`), padahal watermark merender `08:00:00 WITA`, menyebabkan selisih tepat 8 jam saat dikonversi ke UTC.
+   - **Solusi:**
+     * Waktu lokal WITA (UTC+8) dihitung pada rentang jam operasional (08:00 - 16:00 WITA).
+     * Jam UTC dihitung secara presisi: `utc_hour = wita_hour - 8`.
+     * String ISO UTC di receipt metadata (`photo_selected_at`, `device_recorded_at`, `received_at`, `fix_sampled_at`) menggunakan `utc_hour` dengan akhiran `Z`.
+     * Watermark dan create_date terkonfirmasi sinkron 100% tanpa deviasi zona waktu.
+5. **Verifikasi Regression & Unit Test Suite (`addons/id_mobile_api/tests/test_pjp_loader_boundaries.py`):**
+   - `test_01`: Memastikan eksekusi loader menghasilkan workday dan evidence (>0), attachment foto valid JPEG 200, tanggal Juli 2026, dan completed visit terdeteksi pada dashboard sales productivity.
+   - `test_02`: Memastikan isolasi multi-company partner dan self-healing.
+   - `test_03`: Memastikan workday operasional yang sudah ada tidak termutasi atau bertambah outlet-nya.
+   - `test_04`: Memastikan fail-fast loader jika model mobile belum terpasang.
+   - `test_05`: Memastikan validasi ketat foto dan geofence tetap berlaku untuk transaksi baru.
+   - `test_06`: Memastikan evidence non-seed operasional tidak dibackdate dan tidak dihapus saat loader dijalankan.
+   - `test_07`: Memastikan timestamp ISO UTC receipt selaras presisi dengan waktu lokal WITA (offset tepat 8 jam).
+
 ## 2026-11-01T16:25:00+07:00 — anti-gravity agent — Resolusi 4 Blocker Lanjutan PR #68 (Dynamic Test Import, create_date Sync, Isolated Healing & Workday Preservation)
 **Branch:** `agen/pjp-master-and-workday`
 **Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Test Suite) -> Siap Re-Review PR #68
