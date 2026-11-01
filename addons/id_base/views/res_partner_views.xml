@@ -32,7 +32,38 @@
                             <field name="principal_ids" widget="many2many_tags" placeholder="Select authorized principals for this outlet..."/>
                         </group>
                     </group>
+                    <group string="Permanent Journey Plan (PJP) &amp; Logistik Rute">
+                        <group>
+                            <field name="pjp_call_day"/>
+                            <field name="pjp_frequency"/>
+                        </group>
+                        <group>
+                            <field name="delivery_route"/>
+                        </group>
+                    </group>
                 </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_res_partner_filter_fmcg_pjp" model="ir.ui.view">
+        <field name="name">res.partner.select.fmcg.pjp</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='customer']" position="after">
+                <separator/>
+                <filter string="PJP Senin" name="pjp_monday" domain="[('pjp_call_day', '=', 'monday')]"/>
+                <filter string="PJP Selasa" name="pjp_tuesday" domain="[('pjp_call_day', '=', 'tuesday')]"/>
+                <filter string="PJP Rabu" name="pjp_wednesday" domain="[('pjp_call_day', '=', 'wednesday')]"/>
+                <filter string="PJP Kamis" name="pjp_thursday" domain="[('pjp_call_day', '=', 'thursday')]"/>
+                <filter string="PJP Jumat" name="pjp_friday" domain="[('pjp_call_day', '=', 'friday')]"/>
+                <filter string="PJP Sabtu" name="pjp_saturday" domain="[('pjp_call_day', '=', 'saturday')]"/>
+            </xpath>
+            <xpath expr="//group[@name='group_by']" position="inside">
+                <filter string="PJP Call Day" name="group_by_pjp_call_day" context="{'group_by': 'pjp_call_day'}"/>
+                <filter string="PJP Frequency" name="group_by_pjp_frequency" context="{'group_by': 'pjp_frequency'}"/>
+                <filter string="Delivery Route" name="group_by_delivery_route" context="{'group_by': 'delivery_route'}"/>
             </xpath>
         </field>
     </record>

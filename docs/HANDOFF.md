@@ -1,3 +1,36 @@
+## 2026-11-01T13:55:00+07:00 — anti-gravity agent — Integrasi Master PJP Partner & Ingestion Workday Juli 2026
+**Branch:** `agen/pjp-master-and-workday` (dari `main` `f3d9a72`)
+**Status:** PASS (Ruff, Check Manifests, XML Valid, Live Railway Verified 100%) -> Siap Review & Merge
+
+### Ringkasan Eksekusi & Solusi
+1. **Penyebab & Gap:**
+   - Jadwal PJP (Personal Journey Plan) sebelumnya hanya berada di artefak CSV offline (`customer_registry_354.csv`), belum dipetakan ke field model Odoo `res.partner`, penugasan harian `id.mobile.workday`, maupun catatan kunjungan `id.mobile.evidence`.
+   - Akibatnya, pada dashboard Sales Productivity (`id.sales.productivity`), kartu PJP Compliance dan Effective Call ratio tidak memiliki data referensi (`pjp_status: {'available': False}`).
+2. **Solusi Teknis:**
+   - **Schema Partner (`addons/id_base/models/res_partner.py`):** Menambahkan field `pjp_call_day` (Selection: monday-saturday), `pjp_frequency` (Selection: F1, F2, F4), dan `delivery_route` (Char).
+   - **Views Partner (`addons/id_base/views/res_partner_views.xml`):** Menambahkan field grup PJP pada form view dan filter/group-by pencarian pada search view.
+   - **Menu Master Partner PJP (`addons/id_base/views/menu_views.xml`):** Menambahkan action & menu `Outlet & Pelanggan PJP` di bawah `Master Data`.
+   - **Menu Rencana Rute Kunjungan PJP (`addons/id_mobile_api/views/mobile_workday_views.xml`):** Menambahkan menu navigasi bisnis `Rencana Rute Kunjungan PJP` di bawah `FMCG Distribution` (`menu_fmcg_root`) untuk kemudahan akses operasional sales & manajemen.
+   - **Seed Loader (`scripts/load_fmcg_seed.py`):** Memetakan kolom PJP dari CSV ke partner saat proses seeding master data.
+   - **Workday & Evidence Loader (`scripts/load_pjp_workdays.py`):** Script mandiri idempoten untuk memuat 133 workday assignments Juli 2026 (7 salesmen) dan 419 visit check-in records pada `id.mobile.evidence` yang sinkron 100% dengan transaksi SO.
+   - **Init Deployment (`deploy/init.sh`):** Menambahkan step `5c` (`seed_pjp_workdays_v1`) agar otomatis tereksekusi pada saat container inisialisasi di server baru/redeploy.
+   - **Unit Tests (`addons/id_base/tests/test_partner_pjp.py`):** Menambahkan pengujian `TransactionCase` untuk persistensi field PJP dan integritas selection keys.
+3. **Validasi Live Railway (https://odooca-fmcg-demo.up.railway.app):**
+   - 354 partner terisi data PJP call day, frequency, dan delivery route secara valid.
+   - 133 workdays dan 419 bukti kunjungan berhasil dimuat dengan company context yang tepat.
+   - Endpoint `id.sales.productivity` `get_data(mode='month', anchor='2026-07-01')` live menghasilkan:
+     * `pjp_status`: `available=True`
+     * `planned`: `419`
+     * `completed`: `419`
+     * `compliance`: `100%`
+     * `effective`: `419`
+     * `ec_ratio`: `100%`
+   - Terverifikasi aturan bisnis FMCG: 419 kunjungan efektif menghasilkan 1.324 SO karena pemisahan single-principal (Kapal Api, Mayora, Unilever, Wings) per kunjungan.
+4. **Verifikasi Kualitas:**
+   - `python -m ruff check .` -> PASS (All checks passed)
+   - `python scripts/check_manifests.py` -> PASS (10 addons ok)
+   - Validasi ElementTree XML -> PASS
+
 ## 2026-11-01T12:45:31+07:00 — codex — Re-review PR66 dan sinkronisasi main
 **Verdict source:** P2 kartu tolakan CLOSED pada 794b852; reproduksi fungsi produksi + OWL Odoo19/JSDOM menunjukkan 0→0, 3→3, 3+2→5. Tes baru implementer memeriksa payload; probe supervisor turut memeriksa kartu yang dirender.
 **Integrasi:** merge main 1b38463 (PR67); konflik HANDOFF diselesaikan dengan mempertahankan kedua blok riwayat. Kode dashboard reviewed tetap utuh; kode PWA/API main diadopsi utuh.

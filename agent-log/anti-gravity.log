@@ -1571,3 +1571,24 @@
 - Verification & Test Cases: Added test_rejection_count_aggregation in addons/id_dashboard_wms/tests/test_wms_dashboard.py verifying 0 -> 0, 1 group with count 3 -> 3, and 2 groups with counts 3 and 2 -> 5 (3 + 2 = 5).
 - Quality checks: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax valid.
 - Task managed by anti-gravity at 2026-11-01T12:45:00+07:00
+
+
+[2026-11-01T13:55:00+07:00] [INFO] FMCG PJP Master Integration, Workday Ingestion & Live Verification
+- Root cause analysis: PJP schedules existed in offline CSV artifacts (customer_registry_354.csv) but were not mapped to res.partner fields, id.mobile.workday assignments, or id.mobile.evidence check-in records.
+- Partner Schema Enrichment:
+  * Added pjp_call_day (Selection: monday-saturday), pjp_frequency (Selection: F1, F2, F4), and delivery_route (Char) to res.partner in addons/id_base/models/res_partner.py.
+  * Extended partner form and search views in addons/id_base/views/res_partner_views.xml with dedicated PJP group and filters.
+  * Added menu item "Outlet & Pelanggan PJP" in addons/id_base/views/menu_views.xml under Master Data.
+  * Added comprehensive TransactionCase unit test suite in addons/id_base/tests/test_partner_pjp.py.
+- Workday Business Navigation:
+  * Added "Rencana Rute Kunjungan PJP" menu item in addons/id_mobile_api/views/mobile_workday_views.xml under FMCG Distribution root menu for field sales & manager navigation.
+- Ingestion & Deployment Scripts:
+  * Updated scripts/load_fmcg_seed.py to map PJP columns from customer_registry_354.csv into res.partner.
+  * Authored standalone idempotent loader scripts/load_pjp_workdays.py to populate 133 July 2026 workdays across 7 salesmen and 419 visit check-in records in id.mobile.evidence.
+  * Updated deploy/init.sh with step 5c seed_pjp_workdays_v1 to guarantee container startup idempotency.
+- Live Railway Verification:
+  * Executed live database update on Railway production: 354 partner PJP schedules, 133 workday records, and 419 visit evidence records successfully loaded.
+  * Verified id.sales.productivity get_data(mode='month', anchor='2026-07-01'): pjp_status available=True, planned=419, completed=419, compliance=100%, effective=419, ec_ratio=100%.
+  * Confirmed single-principal FMCG distributor logic: 419 effective customer visits generated 1,324 individual single-principal SOs (Kapal Api, Mayora, Unilever, Wings) with 100% PJP match.
+- Static & Quality Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax valid.
+- Task managed by anti-gravity at 2026-11-01T13:55:00+07:00
