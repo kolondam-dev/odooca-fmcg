@@ -29,6 +29,7 @@ const categories: Record<string, string> = {
     meal: "Uang makan luar kota",
     lodging: "Penginapan",
     repair: "Perbaikan darurat",
+    delivery_fee: "Biaya pengiriman / toko",
 };
 const approvers = (roles: string[]) =>
     roles

@@ -149,6 +149,25 @@ export const SnapshotSchema = z
                 longitude: z.number(),
                 radius: z.number().min(5).max(15),
                 demo_unrestricted: z.literal(true).optional(),
+                image_url: z
+                    .string()
+                    .regex(/^\/api\/v1\/outlets\/\d+\/image$/)
+                    .nullable()
+                    .optional(),
+                commercial: z
+                    .object({
+                        max_order: z.number().finite().nullable(),
+                        currency: z.string().length(3).optional(),
+                        previous_visit_total: z
+                            .number()
+                            .nonnegative()
+                            .nullable(),
+                        top_sku: z.string().nullable(),
+                        payment_terms: z.string().nullable(),
+                        credit_limit: z.number().nonnegative().nullable(),
+                        contact: z.string().nullable(),
+                    })
+                    .optional(),
             }),
         ),
         products: z.array(
@@ -157,6 +176,7 @@ export const SnapshotSchema = z
                 name: z.string(),
                 brand: z.string(),
                 principal: z.string(),
+                principal_name: z.string().optional(),
                 unit: z.string(),
                 price: z.number().nonnegative(),
                 stock: z.number().nonnegative(),

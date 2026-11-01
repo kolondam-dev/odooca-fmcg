@@ -28,10 +28,22 @@ test("POD draft restores offline and queues only for review, with read-only proo
     });
     await page.goto("./");
     let task = await openDelivery(page);
+    await task.getByRole("button", { name: /^Tutup / }).click();
+    await task
+        .getByRole("button", { name: "Close session", exact: true })
+        .click();
     await expect(
         task.getByRole("button", { name: "Ajukan POD untuk review" }),
     ).toBeDisabled();
+    await task
+        .getByRole("button", { name: "Ubah penerimaan", exact: true })
+        .click();
     await task.getByLabel("Penerima", { exact: true }).fill("Budi Outlet");
+    if (await task.getByRole("dialog").isVisible())
+        await task.getByRole("button", { name: /^Tutup / }).click();
+    await task
+        .getByRole("button", { name: "Close session", exact: true })
+        .click();
     await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
     await expect(task.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
     await task
@@ -58,6 +70,10 @@ test("POD draft restores offline and queues only for review, with read-only proo
     await expect(task.getByLabel("Penerima", { exact: true })).toHaveValue(
         "Budi Outlet",
     );
+    await task.getByRole("button", { name: /^Tutup / }).click();
+    await task
+        .getByRole("button", { name: "Close session", exact: true })
+        .click();
     await expect(task.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
     await expect(task.getByText(/POD tersimpan ·/)).toBeVisible();
@@ -90,6 +106,11 @@ test("corrupt offline POD media blocks restore and reconnect sync", async ({
     await page.goto("./");
     const task = await openDelivery(page);
     await task.getByLabel("Penerima", { exact: true }).fill("Budi Outlet");
+    if (await task.getByRole("dialog").isVisible())
+        await task.getByRole("button", { name: /^Tutup / }).click();
+    await task
+        .getByRole("button", { name: "Close session", exact: true })
+        .click();
     await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
     await expect(task.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
     await task
@@ -148,6 +169,11 @@ test("corrupt offline POD media blocks restore and reconnect sync", async ({
     ).toHaveCount(0);
 });
 async function savePodPhoto(task: ReturnType<Page["locator"]>) {
+    if (await task.getByRole("dialog").isVisible())
+        await task.getByRole("button", { name: /^Tutup / }).click();
+    await task
+        .getByRole("button", { name: "Close session", exact: true })
+        .click();
     await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
     await expect(task.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
     await task
@@ -173,7 +199,11 @@ test("business rejection opens offline correction draft and preserves immutable 
         accuracy: 3,
     });
     await page.goto("./");
-    await openDelivery(page);
+    const initial = await openDelivery(page);
+    await initial.getByRole("button", { name: /^Tutup / }).click();
+    await initial
+        .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
+        .click();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await page.getByLabel("Mode respons").selectOption("rejected");
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
@@ -193,9 +223,16 @@ test("business rejection opens offline correction draft and preserves immutable 
     await context.setOffline(true);
     await task.getByRole("button", { name: "Koreksi POD ditolak" }).click();
     await startDelivery(task);
+    await task.getByRole("button", { name: /^Tutup / }).click();
+    await task
+        .getByRole("button", { name: "Close session", exact: true })
+        .click();
     await expect(
         task.getByRole("button", { name: "Ajukan POD untuk review" }),
     ).toBeDisabled();
+    await task
+        .getByRole("button", { name: "Ubah penerimaan", exact: true })
+        .click();
     await task.getByLabel("Penerima", { exact: true }).fill("Siti Benar");
     await task
         .getByLabel("Alasan koreksi", { exact: true })
@@ -215,6 +252,10 @@ test("business rejection opens offline correction draft and preserves immutable 
     await expect(
         task.getByLabel("Alasan koreksi", { exact: true }),
     ).toHaveValue("Nama penerima diperbaiki");
+    await task.getByRole("button", { name: /^Tutup / }).click();
+    await task
+        .getByRole("button", { name: "Close session", exact: true })
+        .click();
     await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
     await expect(
         task.getByText("Riwayat POD (2)", { exact: true }),

@@ -1,3 +1,4 @@
+import { sendOrder } from "./visit-helpers";
 import { switchPersona } from "./delivery-helpers";
 import { expect, test } from "./session-fixture";
 import {
@@ -39,7 +40,7 @@ for (const approved of [true, false])
             .getByRole("button", { name: "Mulai kunjungan", exact: true })
             .click();
         await page
-            .getByRole("button", { name: "Buat order di outlet", exact: true })
+            .getByRole("button", { name: "Open session", exact: true })
             .click();
         const units = page.getByRole("group", {
             name: "Satuan Biskuit Kelapa 300 g",
@@ -77,12 +78,7 @@ for (const approved of [true, false])
                 () => document.documentElement.scrollWidth <= innerWidth,
             ),
         ).toBe(true);
-        await page
-            .getByRole("button", {
-                name: "Simpan ke antrean",
-                exact: true,
-            })
-            .click();
+        await sendOrder(page);
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
@@ -145,10 +141,14 @@ test("multi-SKU partial requires line reasons, closes session offline and update
         }),
     ).toBeVisible();
     await task
+        .getByRole("button", { name: "Ubah penerimaan", exact: true })
+        .click();
+    await task
         .getByLabel("Alasan item Biskuit Kelapa 300 g (contoh)", {
             exact: true,
         })
         .fill("Kemasan rusak");
+    await task.getByRole("button", { name: /^Tutup / }).click();
     await task
         .getByRole("button", { name: "Simpan draft POD", exact: true })
         .click();
@@ -165,11 +165,15 @@ test("multi-SKU partial requires line reasons, closes session offline and update
         .locator(".delivery-task")
         .filter({ hasText: "DEMO-DO-001" });
     await restored.locator("summary").first().click();
+    await restored
+        .getByRole("button", { name: "Open session", exact: true })
+        .click();
     await expect(
         restored.getByLabel("Alasan item Biskuit Kelapa 300 g (contoh)", {
             exact: true,
         }),
     ).toHaveValue("Kemasan rusak");
+    await restored.getByRole("button", { name: /^Tutup / }).click();
     await restored
         .getByRole("button", { name: "Ajukan POD untuk review", exact: true })
         .click();
@@ -190,6 +194,9 @@ test("multi-SKU partial requires line reasons, closes session offline and update
     const next = page
         .locator(".delivery-task")
         .filter({ hasText: "DEMO-DO-002" });
+    await task
+        .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
+        .click();
     await next.locator("summary").first().click();
     await startDelivery(next);
     await expect(next.getByText(/Sesi delivery aktif/)).toBeVisible();
@@ -211,7 +218,7 @@ test("SKU packaging drives new order and offline correction prices independently
         .getByRole("button", { name: "Mulai kunjungan", exact: true })
         .click();
     await page
-        .getByRole("button", { name: "Buat order di outlet", exact: true })
+        .getByRole("button", { name: "Open session", exact: true })
         .click();
     const units = page.getByRole("group", {
         name: "Satuan Biskuit Mini 24 pcs",
@@ -248,9 +255,7 @@ test("SKU packaging drives new order and offline correction prices independently
         .getByLabel("Alasan permintaan diskon", { exact: true })
         .fill("Promo kemasan SKU");
     await saveDisplayPhoto(page);
-    await page
-        .getByRole("button", { name: "Simpan ke antrean", exact: true })
-        .click();
+    await sendOrder(page);
     await saveVisitPhoto(page, "check-out");
     await page
         .getByRole("button", { name: "Tutup kunjungan", exact: true })

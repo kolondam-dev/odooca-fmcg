@@ -54,7 +54,7 @@ for scheme in http https; do
   grep -qi 'Location: /field/' "$fixture_dir/headers"
   grep -qi "X-Fixture-Origin: $base" "$fixture_dir/headers"
   if [ "$scheme" = https ]; then grep -qi 'Set-Cookie: .*Secure' "$fixture_dir/headers"; fi
-  for route in api/v1/me/bootstrap api/v1/sync/snapshot web/proxy-probe; do
+  for route in api/v1/me/bootstrap api/v1/sync/snapshot api/v1/outlets/1/image web/proxy-probe; do
     for spoof in no yes; do
       spoof_args=()
       if [ "$spoof" = yes ]; then
@@ -99,7 +99,7 @@ assert payload['effective']['origin'] == sys.argv[2]
 assert payload['raw']['forwarded_host'] == sys.argv[2].split('://')[1]
 PYCODE
   test "$(curl "${curl_args[@]}" -s -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/evidence")" = 403
-  for route in me/bootstrap sync/snapshot; do
+  for route in me/bootstrap sync/snapshot outlets/1/image; do
     test "$(curl "${curl_args[@]}" -s -X POST -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/$route")" = 403
   done
   test "$(curl "${curl_args[@]}" -s -X POST -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/sync/commands")" = 404

@@ -1,4 +1,10 @@
-import { CancelReasonSchema } from "../domain/delivery-approval";
+import {
+    deliveryWorkKey,
+    restoreDeliveryWork,
+    receivedOutcome,
+} from "../domain/delivery-work";
+import { FullDrawer } from "./FullDrawer";
+import { DeliveryFee } from "./DeliveryFee";
 import {
     MORNING_KEY,
     morningReady,
@@ -20,6 +26,8 @@ import { useEffect, useState } from "preact/hooks";
 import { z } from "zod";
 import {
     DeliveryTaskSchema,
+    DeliveryDoReasonSchema,
+    DeliveryItemReasonSchema,
     DeliveryPodSchema,
     podKey,
     type DeliveryTask,
@@ -103,10 +111,7 @@ export function DeliveryWorkspace({
     return (
         <section>
             <h2>Serah terima pengiriman</h2>
-            <p class="notice">
-                POD · manifest multi-SKU dalam pcs (karton 144 / pack 12). Tidak
-                memposting stok, picking, retur atau penerimaan uang.
-            </p>
+
             {error && <p role="alert">{error}</p>}
             {tasks?.map((task) => (
                 <PodForm
@@ -132,11 +137,35 @@ function PodForm({
     changed: () => void;
     queue: QueueItem[];
 }) {
+    const [phase, setPhase] = useState<"checkin" | "items" | "close">(
+        "checkin",
+    );
+    const [posOpen, setPosOpen] = useState(false);
+    function wizard(mode: "full" | "half" | "reject") {
+        const values = task.lines.map((line) => ({
+            id: line.id,
+            received:
+                mode === "full"
+                    ? line.quantity
+                    : mode === "half"
+                      ? Math.floor(line.quantity / 2)
+                      : 0,
+            reason: "",
+        }));
+        const total = values.reduce((sum, line) => sum + line.received, 0);
+        setDoReason("");
+        setLines(values);
+        setOutcome(
+            mode === "full" ? "delivered" : total ? "partial" : "rejected",
+        );
+        setReason(mode === "full" ? "Diterima semua" : "");
+    }
     const key = podKey(task);
     const [session, setSession] = useState<DeliveryPod["session"]>();
     const [opening, setOpening] = useState<EvidenceRef>();
     const [pinpoint, setPinpoint] = useState<VisitFix>();
     const [pinpointSetAt, setPinpointSetAt] = useState<string>();
+    const [doReason, setDoReason] = useState("");
     const [requestedDate, setRequestedDate] = useState("");
     const [cancelReason, setCancelReason] = useState("Toko Tutup");
     const [revision, setRevision] = useState<QueueItem>();
@@ -146,7 +175,15 @@ function PodForm({
     const [recipient, setRecipient] = useState(""),
         [outcome, setOutcome] = useState<DeliveryPod["outcome"]>("delivered"),
         [reason, setReason] = useState("");
-    const [lines, setLines] = useState(
+    const [lines, setLines] = useState<
+            {
+                id: string;
+                received: number;
+                reason: string;
+                item_reason?: string;
+                item_note?: string;
+            }[]
+        >(
             task.lines.map((l) => ({
                 id: l.id,
                 received: l.quantity,
@@ -228,6 +265,7 @@ function PodForm({
                         setRecipient(p.recipient);
                         setOutcome(p.outcome);
                         setReason(p.reason);
+                        setDoReason(p.do_reason ?? "");
                         setRequestedDate(
                             p.request?.kind === "reschedule"
                                 ? p.request.requested_date
@@ -241,10 +279,28 @@ function PodForm({
                         setLines(
                             p.lines.map((l) => ({
                                 ...l,
-                                reason: l.reason ?? "",
+                                reason: l.item_note ?? l.reason ?? "",
                             })),
                         );
                         setPhoto(p.evidence);
+                    }
+                }
+            }
+            if (
+                !command &&
+                (await store.draft(owner, draftKey)) === undefined
+            ) {
+                const scratch = await store.draft(owner, deliveryWorkKey(task));
+                if (scratch !== undefined) {
+                    const value = restoreDeliveryWork(scratch, task);
+                    if (active) {
+                        setRecipient(value.recipient);
+                        setOutcome(value.outcome);
+                        setLines(value.lines);
+                        setReason(value.reason);
+                        setDoReason(value.doReason);
+                        setRequestedDate(value.requestedDate);
+                        setCancelReason(value.cancelReason);
                     }
                 }
             }
@@ -265,6 +321,54 @@ function PodForm({
             );
         }
     }, [queue, saved?.key]);
+    useEffect(() => {
+        if (ready && !saved && !revision)
+            void store
+                .draft(owner, deliveryWorkKey(task), {
+                    source: task,
+                    recipient,
+                    outcome,
+                    reason,
+                    doReason,
+                    requestedDate,
+                    cancelReason,
+                    lines,
+                })
+                .catch(() => setMessage("Draft penerimaan gagal disimpan."));
+    }, [
+        ready,
+        saved,
+        revision,
+        recipient,
+        outcome,
+        reason,
+        doReason,
+        requestedDate,
+        cancelReason,
+        lines,
+    ]);
+    function receive(index: number, value: number) {
+        const next = lines.map((line, i) =>
+            i === index
+                ? {
+                      ...line,
+                      received: Math.max(
+                          0,
+                          Math.min(
+                              task.lines[i].quantity,
+                              Math.trunc(value) || 0,
+                          ),
+                      ),
+                  }
+                : line,
+        );
+        const status = receivedOutcome(next, task.lines);
+        setLines(next);
+        setOutcome(status);
+        if (status === "delivered") setDoReason("");
+        if (status === "delivered" && !reason.trim())
+            setReason("Diterima semua");
+    }
     async function startCorrection() {
         if (!saved) return;
         setBusy(true);
@@ -300,8 +404,14 @@ function PodForm({
             }
             setRecipient(p.recipient);
             setOutcome(p.outcome);
-            setLines(p.lines.map((l) => ({ ...l, reason: l.reason ?? "" })));
+            setLines(
+                p.lines.map((l) => ({
+                    ...l,
+                    reason: l.item_note ?? l.reason ?? "",
+                })),
+            );
             setReason(p.reason);
+            setDoReason(p.do_reason ?? "");
             setRequestedDate(
                 p.request?.kind === "reschedule"
                     ? p.request.requested_date
@@ -329,6 +439,7 @@ function PodForm({
             setOpening(undefined);
             setPinpoint(undefined);
             setRevision(current);
+            setPhase("checkin");
             setReady(true);
             setMessage("");
         } catch (e) {
@@ -338,6 +449,39 @@ function PodForm({
         } finally {
             setBusy(false);
         }
+    }
+    function previewReceipt() {
+        if (recipient.trim().length < 2) {
+            setMessage("Lengkapi nama penerima.");
+            return;
+        }
+        if (
+            outcome === "partial" &&
+            lines.some(
+                (line, index) =>
+                    line.received < task.lines[index].quantity &&
+                    (line.reason.trim() || line.item_reason || "").length < 3,
+            )
+        ) {
+            setMessage(
+                "Pilih alasan untuk setiap item yang tidak diterima lengkap.",
+            );
+            return;
+        }
+        if (outcome !== "partial" && reason.trim().length < 3) {
+            setMessage("Lengkapi alasan status DO.");
+            return;
+        }
+        if (
+            outcome === "pending_requested" &&
+            !z.iso.date().safeParse(requestedDate).success
+        ) {
+            setMessage("Tentukan estimasi tanggal kirim.");
+            return;
+        }
+        setMessage("");
+        setPosOpen(false);
+        setPhase("close");
     }
     async function action(send: boolean) {
         setBusy(true);
@@ -352,6 +496,7 @@ function PodForm({
                       }
                     : {}),
                 source: task,
+                ...(doReason ? { do_reason: doReason } : {}),
                 ...(task.site.demo_unrestricted &&
                 outcome === "pending_requested"
                     ? {
@@ -374,8 +519,11 @@ function PodForm({
                 reason: reason.trim(),
                 lines: lines.map((l) => ({
                     ...l,
+                    item_note: l.reason.trim() || undefined,
                     reason:
-                        outcome === "partial" ? l.reason.trim() : reason.trim(),
+                        outcome === "partial"
+                            ? l.reason.trim() || l.item_reason || ""
+                            : reason.trim(),
                 })),
                 ...(task.workflow_version === 2
                     ? {
@@ -446,19 +594,56 @@ function PodForm({
     return (
         <details class="delivery-task" aria-busy={(!ready && !message) || busy}>
             <summary>
-                <Icon name="truck" size={20} /> {task.id} · {task.outlet}{" "}
+                <Icon name="store" size={20} /> {task.id} · {task.outlet}{" "}
                 {saved && !revision
                     ? "· Session closed"
                     : session
                       ? "· Sesi aktif"
                       : "· Belum dimulai"}
             </summary>
-            <p>
-                {task.trip} · {task.vehicle} · {task.business_date}
-            </p>
-            <p>
-                {task.address} · radius {task.site.radius} m
-            </p>
+            <button
+                type="button"
+                class="secondary delivery-back"
+                onClick={(event) => {
+                    const details = event.currentTarget.closest("details");
+                    if (details) details.open = false;
+                }}
+            >
+                Kembali ke daftar DO
+            </button>
+            <p class="delivery-address">{task.address}</p>
+            <nav class="workflow-tabs" aria-label={`Tahap ${task.id}`}>
+                <button
+                    aria-pressed={phase === "checkin"}
+                    onClick={() => setPhase("checkin")}
+                >
+                    Check-in toko
+                </button>
+                <button
+                    aria-pressed={phase === "items"}
+                    disabled={
+                        (task.workflow_version === 2 && !session) ||
+                        (!!saved && !revision)
+                    }
+                    onClick={() => {
+                        setPhase("items");
+                        setPosOpen(true);
+                    }}
+                >
+                    Open session
+                </button>
+                <button
+                    aria-pressed={phase === "close"}
+                    disabled={
+                        task.workflow_version === 2 &&
+                        !session &&
+                        (!saved || !!revision)
+                    }
+                    onClick={() => setPhase("close")}
+                >
+                    Close session
+                </button>
+            </nav>
             {message && <p role="status">{message}</p>}
             {saved && !revision ? (
                 <>
@@ -560,7 +745,14 @@ function PodForm({
                                                 (l) => l.id === line.id,
                                             )?.unit
                                         }{" "}
-                                        · alasan: {line.reason ?? "legacy"}
+                                        · alasan:{" "}
+                                        {line.item_reason ??
+                                            line.reason ??
+                                            "legacy"}
+                                        {line.item_note &&
+                                        line.item_note !== line.item_reason
+                                            ? ` · ${line.item_note}`
+                                            : ""}
                                     </li>
                                 ))}
                             </ul>
@@ -580,8 +772,8 @@ function PodForm({
             ) : ready ? (
                 <>
                     {task.workflow_version === 2 && !session && (
-                        <fieldset disabled={busy}>
-                            <h3>Open sesi delivery</h3>
+                        <fieldset disabled={busy} hidden={phase !== "checkin"}>
+                            <h3>Check-in toko</h3>
                             <p>
                                 Foto toko → set pinpoint → mulai sesi. Tutup
                                 sesi aktif sebelum pindah DO.
@@ -663,232 +855,474 @@ function PodForm({
                         </fieldset>
                     )}
                     {(task.workflow_version !== 2 || session) && (
-                        <fieldset disabled={busy}>
-                            {revision && (
-                                <>
-                                    <p>
-                                        Koreksi atas{" "}
-                                        {revision.command.client_uuid.slice(
-                                            0,
-                                            8,
-                                        )}
-                                        . Pengajuan sebelumnya tetap tersimpan.
-                                        Foto baru wajib.
-                                    </p>
-                                    <label>
-                                        Alasan koreksi
-                                        <textarea
-                                            value={correctionReason}
-                                            maxLength={500}
-                                            onInput={(e) =>
-                                                setCorrectionReason(
-                                                    e.currentTarget.value,
-                                                )
-                                            }
-                                        />
-                                    </label>
-                                    <button
-                                        class="secondary"
-                                        onClick={() => setRevision(undefined)}
-                                    >
-                                        Kembali ke POD tersimpan
-                                    </button>
-                                </>
-                            )}
-                            {session && (
-                                <p>
-                                    Sesi delivery aktif ·{" "}
-                                    {session.id.slice(0, 8)}. Proses intra sesi,
-                                    lalu foto closing serah-terima
-                                    barang/faktur/uang.
-                                </p>
-                            )}
-                            <label>
-                                Penerima
-                                <input
-                                    value={recipient}
-                                    maxLength={100}
-                                    onInput={(e) =>
-                                        setRecipient(e.currentTarget.value)
-                                    }
-                                />
-                            </label>
-                            <label>
-                                Hasil serah terima
-                                <select
-                                    aria-label="Hasil serah terima"
-                                    value={outcome}
-                                    onChange={(e) => {
-                                        const next = e.currentTarget
-                                            .value as typeof outcome;
-                                        setOutcome(next);
-                                        if (next === "delivered")
-                                            setLines(
-                                                task.lines.map((l) => ({
-                                                    id: l.id,
-                                                    received: l.quantity,
-                                                    reason: "",
-                                                })),
-                                            );
-                                        else if (next !== "partial")
-                                            setLines(
-                                                task.lines.map((l) => ({
-                                                    id: l.id,
-                                                    received: 0,
-                                                    reason: "",
-                                                })),
-                                            );
+                        <div>
+                            {posOpen && (
+                                <FullDrawer
+                                    title={`Items ${task.id}`}
+                                    close={() => {
+                                        setPosOpen(false);
+                                        setPhase("close");
                                     }}
                                 >
-                                    <option value="delivered">
-                                        Fully Received
-                                    </option>
-                                    <option value="partial">
-                                        Received Partial
-                                    </option>
-                                    <option value="rejected">Rejected</option>
-                                    <option value="cancel_delivery">
-                                        Cancel Delivery
-                                    </option>
-                                    <option value="pending_requested">
-                                        Pending Requested
-                                    </option>
-                                </select>
-                            </label>
-                            {outcome === "pending_requested" && (
-                                <label>
-                                    Tanggal kirim ulang
-                                    <input
-                                        aria-label="Tanggal kirim ulang"
-                                        type="date"
-                                        value={requestedDate}
-                                        onInput={(e) =>
-                                            setRequestedDate(
-                                                e.currentTarget.value,
-                                            )
-                                        }
-                                    />
-                                    <small>
-                                        Kurang dari3 hari: SPV; 3 hari atau
-                                        lebih: SPV + Branch Manager.
-                                    </small>
-                                </label>
-                            )}
-                            {outcome === "cancel_delivery" && (
-                                <label>
-                                    Subreason cancel delivery
-                                    <select
-                                        aria-label="Subreason cancel delivery"
-                                        value={cancelReason}
-                                        onChange={(e) =>
-                                            setCancelReason(
-                                                e.currentTarget.value,
-                                            )
-                                        }
-                                    >
-                                        {CancelReasonSchema.options.map((r) => (
-                                            <option key={r} value={r}>
-                                                {r}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <small>Wajib approval SPV.</small>
-                                </label>
-                            )}
-                            {task.lines.map((l, i) => (
-                                <label key={l.id}>
-                                    {l.name} · dikirim {l.quantity} {l.unit}
-                                    <input
-                                        disabled={outcome !== "partial"}
-                                        aria-label={`Diterima ${l.name}`}
-                                        type="number"
-                                        min={0}
-                                        max={l.quantity}
-                                        value={lines[i].received}
-                                        onInput={(e) =>
-                                            setLines(
-                                                lines.map((a, j) =>
-                                                    j === i
-                                                        ? {
-                                                              ...a,
-                                                              received: Number(
-                                                                  e
-                                                                      .currentTarget
-                                                                      .value,
-                                                              ),
-                                                          }
-                                                        : a,
-                                                ),
-                                            )
-                                        }
-                                    />
-                                    <small>
-                                        {outcome === "cancel_delivery" ||
-                                        outcome === "pending_requested"
-                                            ? "Belum diterima"
-                                            : "Ditolak"}{" "}
-                                        {l.quantity - lines[i].received}{" "}
-                                        {l.unit}
-                                    </small>
-                                    {outcome === "partial" &&
-                                        lines[i].received < l.quantity && (
-                                            <textarea
-                                                aria-label={`Alasan item ${l.name}`}
-                                                required
-                                                minLength={3}
-                                                maxLength={500}
-                                                value={lines[i].reason}
+                                    <fieldset disabled={busy}>
+                                        {message && (
+                                            <p role="alert">{message}</p>
+                                        )}
+                                        <div class="delivery-wizard">
+                                            <button
+                                                type="button"
+                                                onClick={() => wizard("full")}
+                                            >
+                                                Terima semua
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => wizard("half")}
+                                            >
+                                                Terima setengah
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => wizard("reject")}
+                                            >
+                                                Tolak semua
+                                            </button>
+                                        </div>
+                                        {revision && (
+                                            <>
+                                                <p>
+                                                    Koreksi atas{" "}
+                                                    {revision.command.client_uuid.slice(
+                                                        0,
+                                                        8,
+                                                    )}
+                                                    . Pengajuan sebelumnya tetap
+                                                    tersimpan. Foto baru wajib.
+                                                </p>
+                                                <label>
+                                                    Alasan koreksi
+                                                    <textarea
+                                                        value={correctionReason}
+                                                        maxLength={500}
+                                                        onInput={(e) =>
+                                                            setCorrectionReason(
+                                                                e.currentTarget
+                                                                    .value,
+                                                            )
+                                                        }
+                                                    />
+                                                </label>
+                                                <button
+                                                    class="secondary"
+                                                    onClick={() =>
+                                                        setRevision(undefined)
+                                                    }
+                                                >
+                                                    Kembali ke POD tersimpan
+                                                </button>
+                                            </>
+                                        )}
+                                        {session && (
+                                            <p>
+                                                Sesi delivery aktif ·{" "}
+                                                {session.id.slice(0, 8)}. Proses
+                                                intra sesi, lalu foto closing
+                                                serah-terima barang/faktur/uang.
+                                            </p>
+                                        )}
+                                        <label>
+                                            Penerima
+                                            <input
+                                                value={recipient}
+                                                maxLength={100}
                                                 onInput={(e) =>
-                                                    setLines(
-                                                        lines.map((a, j) =>
-                                                            j === i
-                                                                ? {
-                                                                      ...a,
-                                                                      reason: e
-                                                                          .currentTarget
-                                                                          .value,
-                                                                  }
-                                                                : a,
-                                                        ),
+                                                    setRecipient(
+                                                        e.currentTarget.value,
                                                     )
                                                 }
                                             />
+                                        </label>
+                                        <label>
+                                            Hasil serah terima
+                                            <select
+                                                aria-label="Hasil serah terima"
+                                                value={
+                                                    outcome ===
+                                                        "cancel_delivery" ||
+                                                    outcome ===
+                                                        "pending_requested"
+                                                        ? "rejected"
+                                                        : outcome
+                                                }
+                                                onChange={(e) => {
+                                                    const next = e.currentTarget
+                                                        .value as typeof outcome;
+                                                    setOutcome(next);
+                                                    setDoReason("");
+                                                    if (next === "delivered")
+                                                        setLines(
+                                                            task.lines.map(
+                                                                (l) => ({
+                                                                    id: l.id,
+                                                                    received:
+                                                                        l.quantity,
+                                                                    reason: "",
+                                                                }),
+                                                            ),
+                                                        );
+                                                    else if (next !== "partial")
+                                                        setLines(
+                                                            task.lines.map(
+                                                                (l) => ({
+                                                                    id: l.id,
+                                                                    received: 0,
+                                                                    reason: "",
+                                                                }),
+                                                            ),
+                                                        );
+                                                }}
+                                            >
+                                                <option value="delivered">
+                                                    DITERIMA SEMUA
+                                                </option>
+                                                <option value="partial">
+                                                    DITERIMA PARSIAL
+                                                </option>
+                                                <option value="rejected">
+                                                    DITOLAK SEMUA
+                                                </option>
+                                            </select>
+                                        </label>
+                                        {outcome !== "delivered" && (
+                                            <label>
+                                                Alasan DO
+                                                <select
+                                                    aria-label="Alasan DO"
+                                                    value={doReason}
+                                                    onChange={(event) => {
+                                                        const selected =
+                                                            event.currentTarget
+                                                                .value;
+                                                        setDoReason(selected);
+                                                        setReason(selected);
+                                                        if (
+                                                            selected ===
+                                                            "REQUEST PENDING KIRIM"
+                                                        ) {
+                                                            setOutcome(
+                                                                "pending_requested",
+                                                            );
+                                                            setLines(
+                                                                task.lines.map(
+                                                                    (line) => ({
+                                                                        id: line.id,
+                                                                        received: 0,
+                                                                        reason: "",
+                                                                    }),
+                                                                ),
+                                                            );
+                                                        } else if (
+                                                            outcome !==
+                                                            "partial"
+                                                        ) {
+                                                            const mapped: Record<
+                                                                string,
+                                                                string
+                                                            > = {
+                                                                "TOKO TUTUP":
+                                                                    "Toko Tutup",
+                                                                "TOKO TIDAK PUNYA UANG":
+                                                                    "Tidak bisa bayar",
+                                                                "TOKO TIDAK DAPAT DIAKSES":
+                                                                    "Toko tidak dapat diakses",
+                                                                "TOKO TIDAK ORDER":
+                                                                    "Kesalahan Order",
+                                                            };
+                                                            setOutcome(
+                                                                mapped[selected]
+                                                                    ? "cancel_delivery"
+                                                                    : "rejected",
+                                                            );
+                                                            if (
+                                                                mapped[selected]
+                                                            )
+                                                                setCancelReason(
+                                                                    mapped[
+                                                                        selected
+                                                                    ],
+                                                                );
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="">
+                                                        Pilih alasan DO
+                                                    </option>
+                                                    {DeliveryDoReasonSchema.options.map(
+                                                        (reason) => (
+                                                            <option
+                                                                key={reason}
+                                                            >
+                                                                {reason}
+                                                            </option>
+                                                        ),
+                                                    )}
+                                                </select>
+                                            </label>
                                         )}
+                                        {outcome === "pending_requested" && (
+                                            <label>
+                                                Tanggal kirim ulang
+                                                <input
+                                                    aria-label="Tanggal kirim ulang"
+                                                    type="date"
+                                                    value={requestedDate}
+                                                    onInput={(e) =>
+                                                        setRequestedDate(
+                                                            e.currentTarget
+                                                                .value,
+                                                        )
+                                                    }
+                                                />
+                                                <small>
+                                                    Kurang dari3 hari: SPV; 3
+                                                    hari atau lebih: SPV +
+                                                    Branch Manager.
+                                                </small>
+                                            </label>
+                                        )}
+                                        {task.lines.map((l, i) => (
+                                            <label key={l.id}>
+                                                {l.name} · dikirim {l.quantity}{" "}
+                                                {l.unit}
+                                                <input
+                                                    disabled={
+                                                        outcome ===
+                                                            "pending_requested" ||
+                                                        outcome ===
+                                                            "cancel_delivery"
+                                                    }
+                                                    aria-label={`Diterima ${l.name}`}
+                                                    type="number"
+                                                    min={0}
+                                                    max={l.quantity}
+                                                    value={lines[i].received}
+                                                    onInput={(event) =>
+                                                        receive(
+                                                            i,
+                                                            Number(
+                                                                event
+                                                                    .currentTarget
+                                                                    .value,
+                                                            ),
+                                                        )
+                                                    }
+                                                />
+                                                <small>
+                                                    {outcome ===
+                                                        "cancel_delivery" ||
+                                                    outcome ===
+                                                        "pending_requested"
+                                                        ? "Belum diterima"
+                                                        : "Ditolak"}{" "}
+                                                    {l.quantity -
+                                                        lines[i].received}{" "}
+                                                    {l.unit}
+                                                </small>
+                                                {(outcome === "partial" ||
+                                                    outcome === "rejected") &&
+                                                    lines[i].received <
+                                                        l.quantity && (
+                                                        <>
+                                                            <select
+                                                                aria-label={`Pilihan alasan item ${l.name}`}
+                                                                value={
+                                                                    lines[i]
+                                                                        .item_reason ??
+                                                                    ""
+                                                                }
+                                                                onChange={(
+                                                                    event,
+                                                                ) =>
+                                                                    setLines(
+                                                                        lines.map(
+                                                                            (
+                                                                                line,
+                                                                                j,
+                                                                            ) =>
+                                                                                j ===
+                                                                                i
+                                                                                    ? {
+                                                                                          ...line,
+                                                                                          item_reason:
+                                                                                              event
+                                                                                                  .currentTarget
+                                                                                                  .value ||
+                                                                                              undefined,
+                                                                                          reason:
+                                                                                              event
+                                                                                                  .currentTarget
+                                                                                                  .value ||
+                                                                                              line.reason,
+                                                                                      }
+                                                                                    : line,
+                                                                        ),
+                                                                    )
+                                                                }
+                                                            >
+                                                                <option value="">
+                                                                    Pilih alasan
+                                                                    item
+                                                                </option>
+                                                                {DeliveryItemReasonSchema.options.map(
+                                                                    (
+                                                                        reason,
+                                                                    ) => (
+                                                                        <option
+                                                                            key={
+                                                                                reason
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                reason
+                                                                            }
+                                                                        </option>
+                                                                    ),
+                                                                )}
+                                                            </select>
+                                                            <textarea
+                                                                aria-label={`Alasan item ${l.name}`}
+                                                                required
+                                                                minLength={3}
+                                                                maxLength={500}
+                                                                value={
+                                                                    lines[i]
+                                                                        .reason
+                                                                }
+                                                                onInput={(e) =>
+                                                                    setLines(
+                                                                        lines.map(
+                                                                            (
+                                                                                a,
+                                                                                j,
+                                                                            ) =>
+                                                                                j ===
+                                                                                i
+                                                                                    ? {
+                                                                                          ...a,
+                                                                                          reason: e
+                                                                                              .currentTarget
+                                                                                              .value,
+                                                                                      }
+                                                                                    : a,
+                                                                        ),
+                                                                    )
+                                                                }
+                                                            />
+                                                        </>
+                                                    )}
+                                            </label>
+                                        ))}
+                                        <label>
+                                            {outcome === "partial"
+                                                ? "Catatan umum (alasan wajib per item terdampak)"
+                                                : "Alasan status (direkam ke semua item)"}
+                                            <textarea
+                                                value={reason}
+                                                maxLength={500}
+                                                onInput={(e) =>
+                                                    setReason(
+                                                        e.currentTarget.value,
+                                                    )
+                                                }
+                                            />
+                                        </label>
+                                        <button
+                                            type="button"
+                                            class="primary full"
+                                            onClick={previewReceipt}
+                                        >
+                                            Preview penerimaan
+                                        </button>
+                                    </fieldset>
+                                </FullDrawer>
+                            )}
+                            <div
+                                hidden={phase !== "close"}
+                                class="delivery-closing"
+                            >
+                                <h3>Ringkasan penerimaan</h3>
+                                <p>
+                                    {outcome === "delivered"
+                                        ? "DITERIMA SEMUA"
+                                        : outcome === "partial"
+                                          ? "DITERIMA PARSIAL"
+                                          : "DITOLAK SEMUA"}
+                                </p>
+                                <ul>
+                                    {task.lines.map((line, index) => (
+                                        <li key={line.id}>
+                                            {line.name}: {lines[index].received}{" "}
+                                            / {line.quantity} {line.unit}
+                                            {lines[index].item_reason &&
+                                                ` · ${lines[index].item_reason}`}
+                                            {lines[index].reason &&
+                                                lines[index].reason !==
+                                                    lines[index].item_reason &&
+                                                ` · ${lines[index].reason}`}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button
+                                    type="button"
+                                    class="secondary"
+                                    onClick={() => {
+                                        setPhase("items");
+                                        setPosOpen(true);
+                                    }}
+                                >
+                                    Ubah penerimaan
+                                </button>
+                                <label>
+                                    Catatan penutupan DO
+                                    <textarea
+                                        aria-label="Catatan penutupan DO"
+                                        maxLength={500}
+                                        value={reason}
+                                        onInput={(event) =>
+                                            setReason(event.currentTarget.value)
+                                        }
+                                    />
                                 </label>
-                            ))}
-                            <label>
-                                {outcome === "partial"
-                                    ? "Catatan umum (alasan wajib per item terdampak)"
-                                    : "Alasan status (direkam ke semua item)"}
-                                <textarea
-                                    value={reason}
-                                    maxLength={500}
-                                    onInput={(e) =>
-                                        setReason(e.currentTarget.value)
-                                    }
+                                <DeliveryFee
+                                    {...{ task, store, owner, engine, changed }}
+                                    scope="delivery"
                                 />
-                            </label>
-                            <EvidenceCapture
-                                store={store}
-                                owner={owner}
-                                existingRef={photo}
-                                onChange={setPhoto}
-                            />
-                            <button
-                                class="secondary"
-                                disabled={!photo}
-                                onClick={() => void action(false)}
-                            >
-                                Simpan draft POD
-                            </button>
-                            <button
-                                class="primary"
-                                disabled={!photo}
-                                onClick={() => void action(true)}
-                            >
-                                Ajukan POD untuk review
-                            </button>
-                        </fieldset>
+                                <DeliveryFee
+                                    {...{ task, store, owner, engine, changed }}
+                                    scope="outlet"
+                                />
+                                <EvidenceCapture
+                                    store={store}
+                                    owner={owner}
+                                    existingRef={photo}
+                                    onChange={setPhoto}
+                                />
+                                <button
+                                    class="secondary"
+                                    disabled={!photo}
+                                    onClick={() => void action(false)}
+                                >
+                                    Simpan draft POD
+                                </button>
+                                <button
+                                    class="primary"
+                                    disabled={!photo}
+                                    onClick={() => void action(true)}
+                                >
+                                    Ajukan POD untuk review
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </>
             ) : (

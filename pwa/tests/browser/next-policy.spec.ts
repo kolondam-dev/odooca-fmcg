@@ -1,3 +1,4 @@
+import { sendOrder } from "./visit-helpers";
 import { expect, test, type Page } from "./session-fixture";
 import {
     ensureDaily,
@@ -82,7 +83,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             page.getByText("Kunjungan lokal aktif", { exact: true }),
         ).toBeVisible();
         await page
-            .getByRole("button", { name: "Buat order di outlet", exact: true })
+            .getByRole("button", { name: "Open session", exact: true })
             .click();
         await page
             .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
@@ -93,12 +94,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             .getByLabel("Alasan permintaan diskon", { exact: true })
             .fill("Promo pertama");
         await saveDisplayPhoto(page);
-        await page
-            .getByRole("button", {
-                name: "Simpan ke antrean",
-                exact: true,
-            })
-            .click();
+        await sendOrder(page);
         await saveVisitPhoto(page, "check-out");
         await page
             .getByRole("button", { name: "Tutup kunjungan", exact: true })
@@ -315,7 +311,10 @@ for (const days of [2, 3])
         const task = await openDo(page);
         await task
             .getByLabel("Hasil serah terima", { exact: true })
-            .selectOption("pending_requested");
+            .selectOption("rejected");
+        await task
+            .getByLabel("Alasan DO", { exact: true })
+            .selectOption("REQUEST PENDING KIRIM");
         const date = await page.evaluate((n) => {
             const date = new Date().toLocaleDateString("en-CA", {
                 timeZone: "Asia/Makassar",
@@ -390,10 +389,10 @@ test("Cancel Delivery has the required subreason and SPV rejection keeps origina
     const task = await openDo(page);
     await task
         .getByLabel("Hasil serah terima", { exact: true })
-        .selectOption("cancel_delivery");
+        .selectOption("rejected");
     await task
-        .getByLabel("Subreason cancel delivery", { exact: true })
-        .selectOption("Waktu pengiriman tidak cukup");
+        .getByLabel("Alasan DO", { exact: true })
+        .selectOption("TOKO TIDAK DAPAT DIAKSES");
     await task
         .getByLabel("Alasan status (direkam ke semua item)", { exact: true })
         .fill("Rute melebihi waktu kerja");
@@ -416,7 +415,7 @@ test("Cancel Delivery has the required subreason and SPV rejection keeps origina
         .click();
     await expect(approval.getByText(/spv: ditolak/)).toBeVisible();
     await expect(
-        approval.getByText(/Cancel Waktu pengiriman tidak cukup/),
+        approval.getByText(/Cancel Toko tidak dapat diakses/),
     ).toBeVisible();
 });
 test("closing trip at office uses recorded location, accepts demo outside office, and does not settle cashier", async ({
@@ -443,6 +442,9 @@ test("closing trip at office uses recorded location, accepts demo outside office
             })
             .click();
         await expect(task.getByText(/Session closed/).first()).toBeVisible();
+        await task
+            .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
+            .click();
     }
     await closing
         .getByRole("button", { name: "Tutup trip", exact: true })
@@ -473,6 +475,9 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
             })
             .click();
         await expect(task.getByText(/Session closed/).first()).toBeVisible();
+        await task
+            .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
+            .click();
     }
     const closing = page
         .getByRole("heading", {
@@ -524,6 +529,9 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
         await expect(task.getByRole("status")).toContainText(
             "POD berbeda sumber manifest",
         );
+        await task
+            .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
+            .click();
         await expect(task.getByText(/Session closed/)).toHaveCount(0);
     }
     await closing

@@ -5,6 +5,21 @@ import {
     VisitSiteSchema,
     VisitFixSchema,
 } from "./visit-contracts.ts";
+export const DeliveryDoReasonSchema = z.enum([
+    "TOKO TUTUP",
+    "TOKO TIDAK PUNYA UANG",
+    "TOKO TIDAK DAPAT DIAKSES",
+    "TOKO TIDAK ORDER",
+    "ORDER MELEBIHI KEMAMPUAN TOKO",
+    "SKU TIDAK SESUAI ORDER",
+    "REQUEST PENDING KIRIM",
+]);
+export const DeliveryItemReasonSchema = z.enum([
+    "ITEM RUSAK",
+    "ITEM EXPIRED",
+    "SALAH SKU",
+    "QTY TERLALU BANYAK",
+]);
 export const DeliveryStatusSchema = z.enum([
     "Fully Received",
     "Received Partial",
@@ -69,6 +84,7 @@ export const DeliveryPodSchema = z
         delivery_status: DeliveryStatusSchema.optional(),
         session: DeliverySessionSchema.optional(),
         reason: z.string().trim().max(500),
+        do_reason: DeliveryDoReasonSchema.optional(),
         request: DeliveryRequestSchema.optional(),
         lines: z
             .array(
@@ -77,6 +93,8 @@ export const DeliveryPodSchema = z
                         id: z.string().min(1),
                         received: z.number().int().nonnegative().max(9999),
                         reason: z.string().trim().max(500).optional(),
+                        item_reason: DeliveryItemReasonSchema.optional(),
+                        item_note: z.string().trim().max(500).optional(),
                     })
                     .strict(),
             )
@@ -85,6 +103,16 @@ export const DeliveryPodSchema = z
     })
     .strict()
     .superRefine((p, ctx) => {
+        if (
+            p.do_reason &&
+            (p.outcome === "delivered" ||
+                (p.do_reason === "REQUEST PENDING KIRIM" &&
+                    p.outcome !== "pending_requested"))
+        )
+            ctx.addIssue({
+                code: "custom",
+                message: "Alasan DO tidak sesuai status.",
+            });
         if (
             p.source.workflow_version === 2 &&
             (!p.session || !p.delivery_status)

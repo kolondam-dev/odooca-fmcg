@@ -98,6 +98,38 @@ class MobileWorkday(models.Model):
         assignment._assert_day(day)
         return result
 
+    def _outlet_commercial(self, partner, company):
+        """Assigned outlet only; native model/field ACLs remain authoritative."""
+        visible = partner.fields_get(["property_payment_term_id", "credit_limit", "pic_name"])
+        result = {"currency": company.currency_id.name, "max_order": None,
+                  "previous_visit_total": None, "top_sku": None,
+                  "payment_terms": None, "credit_limit": None, "contact": None}
+        if "pic_name" in visible:
+            result["contact"] = partner.pic_name or None
+        if "property_payment_term_id" in visible:
+            result["payment_terms"] = partner.with_company(company).property_payment_term_id.name or None
+        if "credit_limit" in visible:
+            limit = partner.with_company(company).credit_limit
+            result["credit_limit"] = limit if limit > 0 else None
+        try:
+            orders = self.env["sale.order"].with_company(company)
+            domain = [("company_id", "=", company.id), ("partner_id", "=", partner.id),
+                      ("state", "in", ["sale", "done"]), ("currency_id", "=", company.currency_id.id)]
+            largest = orders.search(domain, order="amount_untaxed desc, id desc", limit=1)
+            if largest:
+                result["max_order"] = largest.amount_untaxed
+            lines = self.env["sale.order.line"].with_company(company)._read_group(
+                [("order_id.company_id", "=", company.id), ("order_id.partner_id", "=", partner.id),
+                 ("order_id.state", "in", ["sale", "done"]), ("order_id.currency_id", "=", company.currency_id.id),
+                 ("display_type", "=", False)], ["product_id"], ["price_subtotal:sum"])
+            if lines:
+                product, _amount = max(lines, key=lambda row: row[1])
+                result["top_sku"] = product.default_code or product.name if product else None
+        except AccessError:
+            # A mobile-read account is not automatically a sales-history account.
+            result["max_order"] = result["top_sku"] = None
+        return result
+
     @api.model
     def _snapshot_payload(self):
         assignment, day = self._current_assignment()
@@ -149,6 +181,7 @@ class MobileWorkday(models.Model):
             catalog.append({
                 "id": str(product.id), "sku_code": code, "name": product.name,
                 "brand": product.brand_id.name or "", "principal": str(product.principal_id.id),
+                "principal_name": product.principal_id.name,
                 "unit": f"karton {carton} pcs / pack {pack} pcs",
                 "packaging": {"carton": carton, "pack": pack, "pcs": 1},
                 "price": price, "stock": available.get(product.id, 0.0) / carton,
@@ -167,6 +200,8 @@ class MobileWorkday(models.Model):
                 "address": ", ".join(filter(None, [partner.street, partner.street2, partner.city])),
                 "distance": "", "time": "", "latitude": latitude, "longitude": longitude,
                 "radius": assignment.outlet_radius,
+                "image_url": f"/api/v1/outlets/{partner.id}/image" if partner.image_128 else None,
+                "commercial": self._outlet_commercial(partner, company),
             })
         result = {
             "catalog_version": 2,
