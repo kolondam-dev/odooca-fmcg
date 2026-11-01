@@ -1696,3 +1696,12 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-01T22:21:00+07:00
+
+[2026-11-01T22:28:00+07:00] [INFO] Fix Odoo 19 Field Name product_uom_id on sale.order.line
+- Fixed KeyError: 'product_uom' in id.mobile.command:
+  * In Odoo 19, the sale.order.line UoM relational field is named product_uom_id.
+  * Updated order line construction in _handle_sales_order_submit to use product_uom_id.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-01T22:28:00+07:00

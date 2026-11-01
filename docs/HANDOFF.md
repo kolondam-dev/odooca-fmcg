@@ -1,3 +1,11 @@
+## 2026-11-01T22:28:00+07:00 — anti-gravity agent — Fix Odoo 19 Field Name product_uom_id
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**Status:** In Progress (Seed supervision PASS, PWA quality PASS, fixing sale.order.line field name)
+
+### Ringkasan Perbaikan:
+1. **Odoo 19 Relational Field `product_uom_id`:**
+   - Memperbaiki `KeyError: 'product_uom'` pada `id.mobile.command._handle_sales_order_submit`. Pada Odoo 19, nama field Many2one satuan unit di `sale.order.line` adalah `product_uom_id`.
+
 ## 2026-11-01T22:21:00+07:00 — anti-gravity agent — Sudo Elevation for Mobile Command Ingestion
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **Status:** In Progress (Fixed AccessError on command ingestion for mobile sales role)

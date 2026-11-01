@@ -165,7 +165,7 @@ class MobileCommand(models.Model):
                 order_lines.append((0, 0, {
                     "product_id": product.id,
                     "product_uom_qty": qty_in_unit,
-                    "product_uom": product.uom_id.id,
+                    "product_uom_id": product.uom_id.id,
                     "discount": line_disc,
                 }))
 
