@@ -221,3 +221,10 @@
 - 148 browser phone/tablet PASS, termasuk foto yang tampil dibandingkan via SHA256 ke referensi sesi dan readback setelah reload; typecheck, format, contracts, build/check-build, ruff, manifest, diff check PASS.
 - Dokumentasi/HANDOFF diperbarui. PR tetap draft untuk review ulang; CI SHA baru menyusul. Tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-01T09:09:44+07:00
+
+[2026-11-01T11:30:55+07:00] [INFO] Alur Sales/Delivery PWA — branch baru dari merge PR64
+- Daftar datar/scroll sendiri, pencarian penuh, ringkasan toko native ACL dan foto privat; tahapan check-in, mini POS/preview order, penutupan.
+- Delivery qty/wizard, alasan DO/item, pending date, item_note terpisah, draft terikat SKU/sumber, biaya scope DO/toko dengan CAS; approval/posting tidak dilonggarkan.
+- 345 unit, 154 browser phone/tablet, typecheck/format/contracts, semua build/check-build, hosting, 3 probe Werkzeug, ruff/manifest/diff PASS.
+- Native Odoo dan transport Docker menunggu CI pada HEAD baru; runtime staging/perangkat nyata terpisah. Tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-01T11:30:55+07:00

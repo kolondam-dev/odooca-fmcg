@@ -1,3 +1,4 @@
+import { sendOrder } from "./visit-helpers";
 import { checkIn } from "./session-fixture";
 import { switchPersona } from "./delivery-helpers";
 import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
@@ -23,11 +24,14 @@ async function visitOrder(page: Page, first = true) {
         ).toBeVisible();
     } else {
         await page
+            .getByRole("button", { name: "Check-in toko", exact: true })
+            .click();
+        await page
             .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
             .click();
     }
     await page
-        .getByRole("button", { name: "Buat order di outlet", exact: true })
+        .getByRole("button", { name: "Open session", exact: true })
         .click();
 }
 async function demoGps(page: Page) {
@@ -138,7 +142,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
-    await page.getByRole("button", { name: "Simpan ke antrean" }).click();
+    await sendOrder(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(
         page.getByText("Menunggu koneksi", { exact: true }),
@@ -289,11 +293,14 @@ test("branding uses the same name, local logo and install icons in demo/live", a
             exact: true,
         });
         await expect(logo).toBeVisible();
-        expect(
-            await logo.evaluate(
-                (el: HTMLImageElement) => el.complete && el.naturalWidth > 0,
-            ),
-        ).toBe(true);
+        await expect
+            .poll(() =>
+                logo.evaluate(
+                    (el: HTMLImageElement) =>
+                        el.complete && el.naturalWidth > 0,
+                ),
+            )
+            .toBe(true);
         const result = await page.evaluate(async () => {
             const manifest = await (
                 await fetch("/field/manifest.webmanifest")
@@ -347,7 +354,7 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
-    await page.getByRole("button", { name: "Simpan ke antrean" }).click();
+    await sendOrder(page);
     await visitOrder(page, false);
     await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("3");
     await page.getByRole("button", { name: "Tutup form", exact: true }).click();

@@ -25,7 +25,7 @@ curl -fsS -D "$fixture_dir/headers" -H 'Host: staging.test' -H 'X-Forwarded-Host
   -H 'X-Forwarded-Proto: http' "$base/web/login" -o /dev/null
 grep -qi 'X-Fixture-Origin: https://staging.test' "$fixture_dir/headers"
 grep -qi 'Set-Cookie: .*Secure' "$fixture_dir/headers"
-for route in me/bootstrap sync/snapshot; do
+for route in me/bootstrap sync/snapshot outlets/1/image; do
   curl -fsS -H 'Host: staging.test' -H 'Origin: https://staging.test' -H 'Cookie: session_id=gateway-test' \
     -H 'X-Forwarded-Host: evil.invalid' -H 'X-Forwarded-Proto: http' \
     "$base/api/v1/$route" -o "$fixture_dir/payload"

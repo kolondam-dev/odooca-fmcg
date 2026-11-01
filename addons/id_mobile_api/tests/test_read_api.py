@@ -108,9 +108,38 @@ class TestMobileRead(MobileFixture, TransactionCase):
         self.assertEqual([p["id"] for p in snapshot["outlets"]], [str(self.outlet.id)])
         self.assertEqual(snapshot["deliveries"], [])
         serialized = str(snapshot)
-        for secret in ("standard_price", "credit_limit", "vat", "phone", "amount_residual", "demo_unrestricted"):
+        for secret in ("standard_price", "vat", "phone", "amount_residual", "demo_unrestricted"):
             self.assertNotIn(secret, serialized)
         self.assertEqual(snapshot["version"], self.service()._snapshot_payload()["version"])
+
+    def test_outlet_summary_respects_native_sales_acl_and_assigned_scope(self):
+        self.outlet.pic_name = "Outlet contact"
+        self.outlet.with_company(self.company).credit_limit = 1000000
+        self.company.currency_id.active = True
+        order = self.env["sale.order"].with_company(self.company).create({
+            "partner_id": self.outlet.id, "company_id": self.company.id,
+            "warehouse_id": self.warehouse.id, "pricelist_id": self.pricelist.id,
+            "user_id": self.mobile.id,
+            "order_line": [Command.create({"product_id": self.product.id, "product_uom_qty": 2,
+                                           "price_unit": 1250, "tax_ids": [Command.clear()]})],
+        })
+        order.action_confirm()
+        first = self.service()._snapshot_payload()["outlets"][0]["commercial"]
+        self.assertIsNone(first["max_order"])
+        self.assertIsNone(first["top_sku"])
+        self.assertEqual(first["contact"], "Outlet contact")
+        self.assertIsNone(first["previous_visit_total"])
+        self.mobile.group_ids = [Command.link(self.env.ref("sales_team.group_sale_salesman").id)]
+        summary = self.service()._snapshot_payload()["outlets"][0]["commercial"]
+        self.assertEqual(summary["max_order"], order.amount_untaxed)
+        self.assertEqual(summary["top_sku"], self.product.default_code)
+        other_partner = self.env["res.partner"].create({"name": "Unassigned outlet", "company_id": self.company.id})
+        other_order = order.copy({"partner_id": other_partner.id})
+        other_order.order_line.write({"price_unit": 999999})
+        other_order.action_confirm()
+        scoped = self.service()._snapshot_payload()["outlets"]
+        self.assertNotIn(str(other_partner.id), [row["id"] for row in scoped])
+        self.assertEqual(scoped[0]["commercial"]["max_order"], order.amount_untaxed)
 
     def test_missing_role_assignment_and_portal_are_denied(self):
         for user in (self.other, self.internal, self.portal):
@@ -225,6 +254,31 @@ class TestMobileReadHttp(MobileFixture, HttpCase):
         self.authenticate(self.mobile.login, "mobile-api-test")
         for query in ("?company_id=1", "?user_id=1", "?warehouse_id=1", "?db=other"):
             self.assertEqual(self.url_open("/api/v1/sync/snapshot" + query).status_code, 400)
+
+    def test_outlet_image_is_private_and_assignment_scoped(self):
+        import base64
+        from io import BytesIO
+
+        from PIL import Image
+        buffer = BytesIO()
+        Image.new("RGB", (8, 8), "blue").save(buffer, format="PNG")
+        self.outlet.image_1920 = base64.b64encode(buffer.getvalue())
+        unassigned = self.env["res.partner"].create({"name": "Other image", "company_id": self.company.id,
+                                                   "image_1920": self.outlet.image_1920})
+        path = f"/api/v1/outlets/{self.outlet.id}/image"
+        self.assertEqual(self.url_open(path).status_code, 401)
+        self.authenticate(self.other.login, "mobile-api-other")
+        self.assertEqual(self.url_open(path).status_code, 403)
+        self.authenticate(self.mobile.login, "mobile-api-test")
+        response = self.url_open(path)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.content.startswith(b"\x89PNG"))
+        self.assertIn("no-store", response.headers["Cache-Control"])
+        self.assertIn("Cookie", response.headers["Vary"])
+        self.assertNotIn("Access-Control-Allow-Origin", response.headers)
+        self.assertEqual(self.url_open(f"/api/v1/outlets/{unassigned.id}/image").status_code, 403)
+        self.assertEqual(self.url_open(path + "?company_id=1").status_code, 400)
+        self.assertEqual(self.url_open(path, headers={"Origin": "https://other.invalid"}).status_code, 400)
 
     def test_session_response_cache_boundary_and_read_only_routes(self):
         self.authenticate(self.mobile.login, "mobile-api-test")

@@ -20,7 +20,8 @@ def serve(request):
         response = Response(status=302, headers={"Location": "/field/", "X-Fixture-Origin": origin})
         response.set_cookie("session_id", "gateway-test", httponly=True, samesite="Lax", secure=request.is_secure)
         return response
-    if request.path not in ("/api/v1/me/bootstrap", "/api/v1/sync/snapshot", "/web/proxy-probe", "/api/v1/evidence"):
+    if request.path not in ("/api/v1/me/bootstrap", "/api/v1/sync/snapshot", "/api/v1/outlets/1/image",
+                            "/web/proxy-probe", "/api/v1/evidence"):
         return Response(status=404)
     if request.cookies.get("session_id") != "gateway-test":
         return Response('{"error":"not_authenticated"}', status=401, content_type="application/json")

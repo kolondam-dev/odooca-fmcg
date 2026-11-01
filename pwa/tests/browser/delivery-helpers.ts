@@ -35,6 +35,23 @@ export async function ensureDaily(page: Page) {
     await expect(ready).toBeVisible();
 }
 export async function saveDeliveryPhoto(task: Locator) {
+    const preview = task.getByRole("button", {
+        name: "Preview penerimaan",
+        exact: true,
+    });
+    if (await preview.isVisible())
+        await task.getByRole("button", { name: /^Tutup / }).click();
+    const close = task.getByRole("button", {
+        name: "Close session",
+        exact: true,
+    });
+    if (
+        !(await task
+            .getByRole("button", { name: "Mulai sesi delivery", exact: true })
+            .isVisible()) &&
+        (await close.isEnabled())
+    )
+        await close.click();
     await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
     await expect(task.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
     await task
@@ -63,6 +80,9 @@ export async function startDelivery(task: Locator) {
         await task
             .getByRole("button", { name: "Mulai sesi delivery", exact: true })
             .click();
+        await task
+            .getByRole("button", { name: "Open session", exact: true })
+            .click();
         await expect(task.getByText(/Sesi delivery aktif/)).toBeVisible();
         await task
             .getByLabel("Alasan status (direkam ke semua item)", {
@@ -70,6 +90,15 @@ export async function startDelivery(task: Locator) {
             })
             .fill("Diterima sesuai dokumen");
     }
+    const open = task.getByRole("button", {
+        name: "Open session",
+        exact: true,
+    });
+    if (
+        !(await task.getByRole("dialog").isVisible()) &&
+        (await open.isEnabled())
+    )
+        await open.click();
     const reason = task.getByLabel("Alasan status (direkam ke semua item)", {
         exact: true,
     });

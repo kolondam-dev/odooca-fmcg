@@ -113,10 +113,8 @@ test("denied GPS permits demo coordinates but photo is still mandatory", async (
         .getByRole("button", { name: "Ambil lokasi outlet", exact: true })
         .click();
     await expect(
-        page.getByText(
-            "Lokasi dan foto dicatat perangkat; geofence outlet ini tidak memblokir kunjungan.",
-        ),
-    ).toBeVisible();
+        page.getByRole("button", { name: "Open session", exact: true }),
+    ).toBeDisabled();
     await expect(page.getByRole("alert")).toHaveCount(0);
     await expect(
         page.getByRole("button", { name: "Mulai kunjungan", exact: true }),
