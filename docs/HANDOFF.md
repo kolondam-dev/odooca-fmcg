@@ -1,3 +1,34 @@
+## 2026-11-01T15:20:00+07:00 — anti-gravity agent — Resolusi 3 Blocker P1 Review PR #68 (Evidence Attachments, Multi-Company Scope & Fail-Fast)
+**Branch:** `agen/pjp-master-and-workday`
+**Status:** PASS (Ruff, Check Manifests, Shell Syntax, Unit Boundary Tests) -> Siap Re-Review PR #68
+
+### Ringkasan Perbaikan
+1. **Blocker 1: Evidence Foto Attachment & Watermark Kunjungan Historis (Resolusi Kesepakatan Supervisor & Pemilik)**
+   - **Penyebab:** Loader `scripts/load_pjp_workdays.py` sebelumnya melakukan raw SQL insert tanpa mengisi field Binary `original` dan `watermarked`, sehingga pembacaan field di controller `MobileEvidenceApi.photo(client_uuid, variant)` menghasilkan `False` dan melempar `TypeError: a bytes-like object is required, not 'bool'`.
+   - **Solusi:**
+     * Menghasilkan attachment foto asli valid (`get_or_create_sample_fmcg_photo`) sebagai base photo demo.
+     * Membuat fungsi `render_historical_watermark` yang menghasilkan watermark per kunjungan memuat: label resmi `"DATA AWAL DEMO — FOTO ILUSTRASI (INJECT HISTORIS JULI 2026)"`, outlet ref & nama, nama & login salesman, timestamp kunjungan WITA, koordinat GPS terverifikasi, dan UUID bukti.
+     * Menggunakan ORM `Evidence.sudo().create({...})` dengan base64 bytes untuk `original` dan `watermarked`, sehingga Odoo otomatis membuat record di `ir.attachment`.
+     * Memastikan receipt JSON konsisten dengan `original_sha256`, `watermarked_sha256`, `binding_sha256`, dan penanda `is_historical_seed: True`.
+     * Menerapkan self-healing: record lama yang cacat/tanpa attachment dihapus dan diganti dengan record ber-attachment lengkap.
+2. **Blocker 2: Isolasi Multi-Company pada Pembaruan Partner**
+   - **Penyebab:** Query `UPDATE res_partner SET ... WHERE ref = %s` sebelumnya tidak memfilter `company_id`, sehingga jika ada partner di company lain dengan ref yang sama, record tersebut ikut terupdate.
+   - **Solusi:**
+     * Membatasi query SQL: `WHERE ref = %s AND (company_id = %s OR company_id IS NULL)` dengan parameter company target.
+     * Mengisolasi pencarian partner ref mapping: `Partner.search([('ref', '!=', False), '|', ('company_id', '=', company.id), ('company_id', '=', False)])`.
+3. **Blocker 3: Pencegahan Sukses Palsu (Fail-Fast Anti False Success)**
+   - **Penyebab:** Loader sebelumnya mengabaikan model jika belum terpasang (`if "id.mobile.workday" in env`), sehingga keluar dengan exit code 0 dan memungkinkan `deploy/init.sh` memasang mark `seed_pjp_workdays_v1` padahal data belum dibuat, mengakibatkan backfill di masa mendatang terlewati.
+   - **Solusi:**
+     * Menambahkan fail-fast check di awal `scripts/load_pjp_workdays.py`: melempar `RuntimeError` jika `id.mobile.workday` atau `id.mobile.evidence` belum ada di registry Odoo.
+     * Mencegah `deploy/init.sh` memasang success mark jika modul belum lengkap.
+     * Menambahkan `id_mobile_api` ke default `INIT_MODULES` di `deploy/init.sh`.
+4. **Unit Test & Regression Suite:**
+   - Menambahkan `addons/id_mobile_api/tests/test_pjp_loader_boundaries.py` (terdaftar di `__init__.py`):
+     * `test_01_loader_evidence_attachments_and_watermark_viewable`: Memverifikasi controller `/api/v1/evidence/<uuid>/original` dan `/watermarked` merespons 200, Content-Type `image/jpeg`, bytes valid diawali `\xff\xd8`, dan dapat dibuka oleh PIL tanpa TypeError.
+     * `test_02_loader_multi_company_partner_isolation`: Memverifikasi partner company lain dengan ref yang sama tidak berubah saat pembaruan partner PJP.
+     * `test_03_loader_fails_fast_when_models_missing`: Memverifikasi loader melempar `RuntimeError` saat model tidak tersedia.
+     * `test_04_new_evidence_transactions_still_strictly_enforced`: Memverifikasi transaksi baru tetap wajib melewati validasi ketat geofence, waktu, dan foto.
+
 ## 2026-11-01T13:55:00+07:00 — anti-gravity agent — Integrasi Master PJP Partner & Ingestion Workday Juli 2026
 **Branch:** `agen/pjp-master-and-workday` (dari `main` `f3d9a72`)
 **Status:** PASS (Ruff, Check Manifests, XML Valid, Live Railway Verified 100%) -> Siap Review & Merge

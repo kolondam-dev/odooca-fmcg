@@ -1592,3 +1592,21 @@
   * Confirmed single-principal FMCG distributor logic: 419 effective customer visits generated 1,324 individual single-principal SOs (Kapal Api, Mayora, Unilever, Wings) with 100% PJP match.
 - Static & Quality Verification: ruff check PASS, check_manifests.py PASS (10 addons ok), XML syntax valid.
 - Task managed by anti-gravity at 2026-11-01T13:55:00+07:00
+
+
+[2026-11-01T15:20:00+07:00] [INFO] Resolusi 3 Blocker P1 Review PR #68
+- Blocker 1: Evidence Foto Attachment & Watermark Kunjungan Historis
+  * Root Cause: scripts/load_pjp_workdays.py sebelumnya menggunakan raw SQL INSERT tanpa mengisi field Binary original dan watermarked, menyebabkan handler photo() melempar TypeError saat decode False.
+  * Perbaikan: Menyediakan base photo contoh JPEG toko FMCG yang valid dan fungsi render_historical_watermark dengan label resmi 'DATA AWAL DEMO — FOTO ILUSTRASI (INJECT HISTORIS JULI 2026)', metadata kunjungan WITA, GPS, dan UUID.
+  * Persistensi: Menggunakan Evidence.sudo().create() sehingga Odoo ORM otomatis membuat record ir.attachment.
+  * Self-healing: Record lama yang cacat/tanpa attachment dihapus dan diganti dengan record ber-attachment lengkap.
+- Blocker 2: Update Lintas Company
+  * Root Cause: Update res_partner hanya berdasarkan ref tanpa isolasi company_id.
+  * Perbaikan: Menambahkan filter WHERE ref = %s AND (company_id = %s OR company_id IS NULL) dan mengisolasi partner_ref_map pada company target.
+- Blocker 3: Sukses Palsu Saat Modul Mobile Belum Terpasang
+  * Root Cause: Loader mengabaikan ketiadaan model id.mobile.workday secara diam-diam dan mengembalikan exit code 0, menyebabkan deploy/init.sh menandai seed_pjp_workdays_v1 selesai.
+  * Perbaikan: Menambahkan fail-fast check di awal scripts/load_pjp_workdays.py yang melempar RuntimeError jika model mobile belum terpasang, serta menambahkan id_mobile_api ke INIT_MODULES default di deploy/init.sh.
+- Regression & Unit Tests:
+  * Menambahkan addons/id_mobile_api/tests/test_pjp_loader_boundaries.py dengan 4 skenario uji (HttpCase probe photo controller 200 JPEG, multi-company partner isolation, fail-fast missing models, dan enforcement transaksi baru).
+- Verifikasi Kualitas: ruff check PASS, check_manifests.py PASS, bash syntax deploy/init.sh PASS.
+- Task managed by anti-gravity at 2026-11-01T15:20:00+07:00
