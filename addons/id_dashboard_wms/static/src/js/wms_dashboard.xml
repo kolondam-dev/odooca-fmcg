@@ -34,7 +34,7 @@
                     <div class="id-wms__filter-bar">
                         <!-- Cluster 1: Category -->
                         <div class="id-wms__filter-cluster">
-                            <span class="id-wms__cluster-label"><i class="fa fa-tags"/> Kategori FMCG</span>
+                            <span class="id-wms__cluster-label"><i class="fa fa-tags"/> Kategori Stok FMCG</span>
                             <div class="id-wms__cluster-content">
                                 <select class="id-wms__select" t-att-value="state.fmcgCategory" t-on-change="onCategoryChange">
                                     <option value="">Semua Kategori</option>
@@ -108,7 +108,7 @@
                                     <span class="id-wms__micro-badge is-emerald"><i class="fa fa-check-circle-o"/></span>
                                 </div>
                                 <div class="id-wms__card-body">
-                                    <span class="id-wms__card-value is-ok" t-out="pct(state.data.kpi.fulfillment_rate)"/>
+                                    <span class="id-wms__card-value" t-out="pct(state.data.kpi.fulfillment_rate)"/>
                                 </div>
                                 <div class="id-wms__card-footer">
                                     <t t-out="int(state.data.kpi.delivered_count)"/> dari <t t-out="int(state.data.kpi.total_deliveries)"/> pesanan terkirim
@@ -287,9 +287,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr t-foreach="state.data.categories" t-as="cat" t-key="cat.category"
+                                    <tr t-foreach="state.data.categories" t-as="cat" t-key="cat.key"
                                         t-on-click="openStockCategories" style="cursor: pointer;">
-                                        <td class="name text-capitalize" t-out="cat.category"/>
+                                        <td class="name text-capitalize"><t t-out="cat.category"/><small class="d-block text-muted" t-out="cat.company"/></td>
                                         <td class="num" t-out="int(cat.product_count)"/>
                                         <td class="num" t-out="int(cat.qty)"/>
                                         <td class="num font-weight-bold" t-out="money(cat.value)"/>
@@ -310,15 +310,15 @@
                                         <th>Kendaraan Armada</th>
                                         <th class="num">Biaya BBM</th>
                                         <th class="num">Biaya Helper</th>
-                                        <th class="num">Total Biaya Operasional</th>
+                                        <th class="num">Biaya BBM + Helper</th>
                                         <th class="num">Nilai DO Terkirim</th>
                                         <th class="num">Rasio Biaya / Nilai</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr t-foreach="state.data.fleet" t-as="f" t-key="f.vehicle_id"
+                                    <tr t-foreach="state.data.fleet" t-as="f" t-key="f.key"
                                         t-on-click="openFleetCostAnalysis" style="cursor: pointer;">
-                                        <td class="name" t-out="f.name"/>
+                                        <td class="name" t-out="f.name + ' · ' + f.period_month"/>
                                         <td class="num" t-out="money(f.fuel_cost)"/>
                                         <td class="num" t-out="money(f.helper_cost)"/>
                                         <td class="num text-danger font-weight-bold" t-out="money(f.total_cost)"/>

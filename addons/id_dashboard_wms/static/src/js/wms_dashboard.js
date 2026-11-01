@@ -1,5 +1,5 @@
 /** @odoo-module **/
-import { Component, onWillStart, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillUnmount, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
@@ -7,28 +7,30 @@ import { _t } from "@web/core/l10n/translation";
 const NF = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 });
 const NF1 = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1, minimumFractionDigits: 1 });
 
-function money(n) {
-    if (n === null || n === undefined) return "Rp 0";
-    return `Rp ${NF.format(Math.round(n))}`;
+function money(n, currency = "IDR") {
+    const prefix = currency === "IDR" ? "Rp" : currency;
+    if (n === null || n === undefined) return "—";
+    return `${prefix} ${NF.format(Math.round(n))}`;
 }
 
-function moneyShort(n) {
-    if (n === null || n === undefined) return "Rp 0";
+function moneyShort(n, currency = "IDR") {
+    const prefix = currency === "IDR" ? "Rp" : currency;
+    if (n === null || n === undefined) return "—";
     const abs = Math.abs(n);
     if (abs >= 1e9) {
-        return `Rp ${NF1.format(n / 1e9)} M`;
+        return `${prefix} ${NF1.format(n / 1e9)} M`;
     }
     if (abs >= 1e6) {
-        return `Rp ${NF1.format(n / 1e6)} jt`;
+        return `${prefix} ${NF1.format(n / 1e6)} jt`;
     }
     if (abs >= 1e3) {
-        return `Rp ${NF.format(Math.round(n / 1e3))} rb`;
+        return `${prefix} ${NF.format(Math.round(n / 1e3))} rb`;
     }
-    return `Rp ${NF.format(Math.round(n))}`;
+    return `${prefix} ${NF.format(Math.round(n))}`;
 }
 
 function pct(n) {
-    if (n === null || n === undefined) return "0%";
+    if (n === null || n === undefined) return "—";
     return `${NF1.format(n)}%`;
 }
 
@@ -37,6 +39,8 @@ export class WmsDashboard extends Component {
     static props = ["*"];
 
     setup() {
+        this.requestVersion = 0;
+        onWillUnmount(() => { this.requestVersion++; });
         this.orm = useService("orm");
         this.action = useService("action");
         this.state = useState({
@@ -61,17 +65,19 @@ export class WmsDashboard extends Component {
     }
 
     async load() {
+        const version = ++this.requestVersion;
         this.state.loading = true;
         this.state.error = null;
         try {
-            this.state.data = await this.orm.call("id.wms.dashboard", "get_data", [], {
+            const data = await this.orm.call("id.wms.dashboard", "get_data", [], {
                 fmcg_category: this.state.fmcgCategory || false,
                 vehicle_id: this.state.vehicleId || false,
             });
+            if (version === this.requestVersion) this.state.data = data;
         } catch (err) {
-            this.state.error = err?.data?.message || err?.message || String(err);
+            if (version === this.requestVersion) { this.state.data = null; this.state.error = err?.data?.message || err?.message || String(err); }
         } finally {
-            this.state.loading = false;
+            if (version === this.requestVersion) this.state.loading = false;
         }
     }
 
@@ -99,30 +105,35 @@ export class WmsDashboard extends Component {
     }
 
     // Formatting helpers
-    money(v) { return money(v); }
-    moneyShort(v) { return moneyShort(v); }
+    money(v) { return money(v, this.state.data?.currency); }
+    moneyShort(v) { return moneyShort(v, this.state.data?.currency); }
     pct(v) { return pct(v); }
     int(v) { return NF.format(v || 0); }
 
     // Drilldowns
     openExpiryMatrix() {
-        this.action.doAction("id_dashboard_wms.action_id_wms_expiry");
+        if (this.state.loading || !this.state.data) return;
+        this.action.doAction({type:"ir.actions.act_window",name:_t("Dashboard Details"),res_model:"id.wms.expiry",views:[[false,"list"],[false,"form"]],domain:this.state.data.domains.expiry});
     }
 
     openDeliveryFulfillment() {
-        this.action.doAction("id_dashboard_wms.action_id_wms_delivery");
+        if (this.state.loading || !this.state.data) return;
+        this.action.doAction({type:"ir.actions.act_window",name:_t("Dashboard Details"),res_model:"id.wms.delivery",views:[[false,"list"],[false,"form"]],domain:this.state.data.domains.deliveries});
     }
 
     openRejectAnalysis() {
-        this.action.doAction("id_dashboard_wms.action_id_wms_reject");
+        if (this.state.loading || !this.state.data) return;
+        this.action.doAction({type:"ir.actions.act_window",name:_t("Dashboard Details"),res_model:"id.wms.delivery",views:[[false,"list"],[false,"form"]],domain:this.state.data.domains.rejections});
     }
 
     openFleetCostAnalysis() {
-        this.action.doAction("id_dashboard_wms.action_id_wms_fleet_cost");
+        if (this.state.loading || !this.state.data) return;
+        this.action.doAction({type:"ir.actions.act_window",name:_t("Dashboard Details"),res_model:"id.wms.fleet.cost",views:[[false,"list"],[false,"form"]],domain:this.state.data.domains.fleet});
     }
 
     openStockCategories() {
-        this.action.doAction("id_dashboard_wms.action_id_wms_stock_category");
+        if (this.state.loading || !this.state.data) return;
+        this.action.doAction({type:"ir.actions.act_window",name:_t("Dashboard Details"),res_model:"id.wms.stock.category",views:[[false,"list"],[false,"form"]],domain:this.state.data.domains.stock});
     }
 }
 

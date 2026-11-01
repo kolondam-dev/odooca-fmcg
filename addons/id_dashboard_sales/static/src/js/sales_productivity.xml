@@ -304,8 +304,8 @@
                                         <td class="num" t-out="int(item.catalog)"/>
                                         <td t-foreach="rows" t-as="row" t-key="row.id" class="num"
                                             t-att-class="heat(penCell(item, row).penetration)">
-                                            <t t-out="int(penCell(item, row).sold)"/>
-                                            <small t-out="pct(penCell(item, row).penetration)"/>
+                                            <span><t t-out="int(penCell(item, row).sold)"/> SKU</span>
+                                            <small class="d-block" t-out="pct(penCell(item, row).penetration)"/>
                                         </td>
                                     </tr>
                                 </tbody>

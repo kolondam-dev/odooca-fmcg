@@ -72,14 +72,14 @@
                         <div class="id-md__cards">
                             <button type="button" class="id-md__card" t-on-click="openAllInvoices">
                                 <div class="id-md__card-header">
-                                    <span class="id-md__card-title">Total Piutang Beredar</span>
+                                    <span class="id-md__card-title">Piutang Faktur Terbuka</span>
                                     <span class="id-md__micro-badge is-navy"><i class="fa fa-balance-scale"/></span>
                                 </div>
                                 <div class="id-md__card-body">
                                     <span class="id-md__card-value" t-out="moneyShort(state.data.kpi.total_ar)"/>
                                 </div>
                                 <div class="id-md__card-footer">
-                                    <t t-out="int(state.data.kpi.invoices_count)"/> faktur terbuka aktif
+                                    <t t-out="int(state.data.kpi.invoices_count)"/> faktur terbuka · aging <t t-out="state.data.as_of"/>
                                 </div>
                             </button>
                             <button type="button" class="id-md__card" t-on-click="openOverdueInvoices">
@@ -108,14 +108,14 @@
                             </button>
                             <button type="button" class="id-md__card" t-on-click="openFunnel">
                                 <div class="id-md__card-header">
-                                    <span class="id-md__card-title">Kas Pelunasan Masuk</span>
+                                    <span class="id-md__card-title">Pembayaran Masuk Tercatat</span>
                                     <span class="id-md__micro-badge is-emerald"><i class="fa fa-check-circle"/></span>
                                 </div>
                                 <div class="id-md__card-body">
                                     <span class="id-md__card-value is-ok" t-out="moneyShort(state.data.kpi.cash_collected)"/>
                                 </div>
                                 <div class="id-md__card-footer">
-                                    Pelunasan kas terkonfirmasi di bank
+                                    Termasuk pembayaran dalam proses; bukan verifikasi bank
                                 </div>
                             </button>
                         </div>
@@ -147,8 +147,14 @@
                     <!-- BABAK 2B: FINANCIAL TARGET & CONVERSION -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-md__head">
-                            <h2 class="id-md__section-title"><i class="fa fa-bullseye"/> Corong Target &amp; Realisasi Keuangan (Financial Funnel)</h2>
-                            <span class="id-md__section-sub">Target penjualan, faktur terbit resmi, piutang beredar, dan tingkat pencairan kas bersih.</span>
+                            <h2 class="id-md__section-title"><i class="fa fa-bullseye"/> Target &amp; Realisasi Periode</h2>
+                            <label>Periode target
+                                <select class="form-select form-select-sm" t-on-change="onPeriodChange" t-att-value="state.periodKey">
+                                    <option t-if="!state.filters.periods.length" value="">Belum ada target</option>
+                                    <option t-foreach="state.filters.periods" t-as="p" t-key="p.key" t-att-value="p.key" t-out="p.label"/>
+                                </select>
+                            </label>
+                            <span class="id-md__section-sub">Realisasi invoice bersih DPP dan pembayaran periode terpilih. Filter area/salesman hanya berlaku pada piutang.</span>
                         </div>
                         <div class="id-md__cards id-md__cards--3">
                             <div class="id-md__card">
@@ -160,7 +166,7 @@
                                     <span class="id-md__card-value" t-out="moneyShort(state.data.kpi.target_revenue)"/>
                                 </div>
                                 <div class="id-md__card-footer">
-                                    Target anggaran periode aktif
+                                    Target company pada periode terpilih
                                 </div>
                             </div>
                             <div class="id-md__card">
@@ -177,14 +183,14 @@
                             </div>
                             <div class="id-md__card">
                                 <div class="id-md__card-header">
-                                    <span class="id-md__card-title">Pencairan Kas (Collection)</span>
+                                    <span class="id-md__card-title">Pembayaran Periode</span>
                                     <span class="id-md__micro-badge is-emerald"><i class="fa fa-money"/></span>
                                 </div>
                                 <div class="id-md__card-body">
                                     <span class="id-md__card-value is-ok" t-out="moneyShort(state.data.kpi.cash_collected)"/>
                                 </div>
                                 <div class="id-md__card-footer">
-                                    Kas pelunasan berhasil dikonfirmasi
+                                    Pembayaran tercatat, termasuk dalam proses; bukan verifikasi bank
                                 </div>
                             </div>
                         </div>
@@ -228,8 +234,8 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr t-foreach="state.data.top_customers" t-as="c" t-key="c.id"
-                                        t-on-click="() => this.openCustomerInvoices(c.id, c.name)">
+                                    <tr t-foreach="state.data.top_customers" t-as="c" t-key="c.key"
+                                        t-on-click="() => this.openCustomerInvoices(c.id, c.name, c.company_id)">
                                         <td class="name" t-out="c.name"/>
                                         <td t-out="c.channel"/>
                                         <td t-out="c.area"/>

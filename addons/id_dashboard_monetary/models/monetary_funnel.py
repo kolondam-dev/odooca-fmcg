@@ -38,7 +38,7 @@ CREATE OR REPLACE VIEW id_monetary_funnel_stage AS (
            t.company_id,
            rc.currency_id,
            COALESCE((
-               SELECT SUM(am.amount_total_signed)
+               SELECT SUM(am.amount_untaxed_signed)
                  FROM account_move am
                 WHERE am.state = 'posted'
                   AND am.move_type IN ('out_invoice', 'out_refund')

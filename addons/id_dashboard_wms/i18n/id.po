@@ -400,3 +400,8 @@ msgstr "Dashboard Gudang & Logistik"
 #. module: id_dashboard_wms
 msgid "Executive Dashboard"
 msgstr "Dashboard Eksekutif"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/wms_dashboard.py:0
+msgid "Select companies with the same currency before aggregating monetary values."
+msgstr "Pilih company dengan mata uang yang sama sebelum menjumlahkan nilai moneter."

@@ -239,3 +239,30 @@
 - Body overflow dikelola stack agar urutan unmount parent/child tidak meninggalkan scroll terkunci.
 - 16 browser UX terfokus dan typecheck lulus; full suite 170 browser/CI final menunggu. Tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-01T18:00:11+07:00
+
+[2026-11-01T23:17:20+07:00] [INFO] Fondasi dashboard dan roadmap enhancement
+- Basis13b2ee0; branch agen/dashboard-data-foundation. Overdue/target/reject/ACL/company/RPC/drill-down diperbaiki, roadmap mempertahankan rekomendasi bisnis+visual+asset+3D.
+- Lokal Ruff/10manifest/compile/XML/YAML/diff/9unit runner/10RPC PASS. Counterexamples produksi dengan fake ORM PASS; bukan native.
+- Native Odoo/upgrade/visual fixtures CI ditambahkan; hasil dan screenshot menunggu CI, cloud browser transport timeout. Tidak merge/deploy atau menulis data server.
+- Task managed by agent-codex-pwa at 2026-11-01T23:17:20+07:00
+
+[2026-11-01T23:24:41+07:00] [INFO] PR71 native fixture dan visual scroll
+- CI3585636: install-test1fail/130, computed quant.company_id belum flush sebelum SQL view; env.flush_all ditambahkan tanpa mengurangi negative ACL/company test.
+- Capture internal scroll atas/tengah/bawah+tabs, SQL-backed finance assertions, category keys/labels multi-company. Lokal Ruff/diff PASS; CI ulang menunggu. Tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-11-01T23:24:41+07:00
+
+[2026-11-01T23:32:04+07:00] [INFO] PR71 IDR activation hanya fixture CI
+- b05f955: 131 native Odoo PASS, dashboard upgrade/preservation/init PASS. Fixture visual posting invoice ditolak currency IDR archived; aktifkan IDR dalam ci_db saja, company currency dipertahankan.
+- Lokal Ruff PASS, CI final/visual/review menunggu. Tidak merge/deploy/data server.
+- Task managed by agent-codex-pwa at 2026-11-01T23:32:04+07:00
+
+[2026-11-01T23:42:07+07:00] [INFO] PR71 isolasi fixture dashboard dari native form smoke
+- 19fb11b:131 native/SQLfixture/170 PWA browser PASS. First posted invoice mengubah native draft name_placeholder, menggagalkan precondition keyboard title existing.
+- Reorder fixture dashboard setelah form smoke sebelum visual audit; tidak melemahkan assertion/production. CI final menunggu, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-11-01T23:42:07+07:00
+
+[2026-11-01T23:54:01+07:00] [INFO] PR71 visual native dan koreksi caption
+- cef3fa5 install-test131 native/upgrade/SQLfixture/visual PASS, 54 PNG. Review native top/bottom/tab desktop-tablet: content tablet568px, double sidebar456px, overflow91/23px, KPI/navigasi perlu redesign tahap2.
+- Pisahkan3SKU dan42,9% yang menempel, caption collection kedua bukan bank, hilangkan hijau pada fulfillment0%.
+- PWA attemptawal167pass/1fail/2flaky helperfoto-lokasi, pwa diff kosong; artifact13091882456 disimpan, satu rerunjob SHA sama. CI final menunggu; tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-11-01T23:54:01+07:00

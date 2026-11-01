@@ -12,7 +12,7 @@
               parent="spreadsheet_dashboard.spreadsheet_dashboard_menu_root"
               action="action_wms_dashboard"
               sequence="30"
-              groups="stock.group_stock_user,sales_team.group_sale_salesman"/>
+              groups="stock.group_stock_user,base.group_system"/>
 
     <!-- Group Dashboards under FMCG Distribution -->
     <menuitem id="menu_fmcg_dash_wms"
@@ -20,10 +20,11 @@
               parent="id_base.menu_fmcg_dashboard"
               action="action_wms_dashboard"
               sequence="30"
-              groups="stock.group_stock_user,sales_team.group_sale_salesman"/>
+              groups="stock.group_stock_user,base.group_system"/>
 
     <!-- Warehouse & Logistics Menu Section in FMCG Distribution -->
     <menuitem id="menu_fmcg_wms"
+              groups="stock.group_stock_user,base.group_system"
               name="Warehouse &amp; Logistics"
               parent="id_base.menu_fmcg_root"
               sequence="30"/>

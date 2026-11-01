@@ -1,0 +1,22 @@
+<odoo>
+    <record id="model_id_ar_aging_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_ar_aging</field>
+        <field name="model_id" ref="model_id_ar_aging"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="model_id_ar_customer_balance_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_ar_customer_balance</field>
+        <field name="model_id" ref="model_id_ar_customer_balance"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="model_id_monetary_funnel_stage_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_monetary_funnel_stage</field>
+        <field name="model_id" ref="model_id_monetary_funnel_stage"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="model_id_monetary_target_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_monetary_target</field>
+        <field name="model_id" ref="model_id_monetary_target"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>
