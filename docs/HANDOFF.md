@@ -1,3 +1,30 @@
+## 2026-11-01T09:29:21+07:00 — codex — Integrasi PR64 dengan main untuk merge berotorisasi
+**Otorisasi:** pemilik meminta merge PR64 jika ready. P2 foto retry telah ditutup pada7b55883.
+**Integrasi:** gabungkan main6fcb328 (dashboard PR65); konflik hanya HANDOFF, kedua blok riwayat dipertahankan. Source PWA perbaikan tetap identik dengan reviewed7b55883; perubahan dashboard main diadopsi utuh.
+**Verifikasi:**341unit dan probe supervisor sebelumnya PASS; CI integrasi pada HEAD sinkronisasi wajib lulus sebelum merge. Tidak memutasi database/Railway dalam aksi sinkronisasi ini.
+
+## 2026-11-01T09:09:44+07:00 — agent codex-pwa — PR #64: perbaikan binding foto pengganti saat retry
+**Branch:** `agen/pwa-login-attendance-ux`, basis reviewed adbe2f7; temuan P2 issuecomment-6552060391.
+**Berubah:** openDay memvalidasi foto retry walaupun attendance-only sudah persisten. Foto B valid mengganti record sementara A sebelum pembukaan sesi; foto sama mempertahankan referensi/waktu. Sesi aktif idempoten dan tidak menerima foto berbeda; clock-out tidak dapat di-reopen. Kebijakan retry dijelaskan di docs/ui/PWA_LOGIN_ATTENDANCE_UX.md.
+**Diverifikasi:** regresi baru sebelum fix 7 gagal/34 lulus pada morning.test.ts; setelah fix 341/341 unit dan 148/148 browser phone/tablet lulus. Paket unit memakai photo/map/binding SHA256 valid; kasus B missing/corrupt/foreign-owner/stale-day menolak tanpa fallback A dan mempertahankan record awal. Browser membandingkan hash foto yang tampil dengan referensi sesi, termasuk setelah reload dan retry foto sama. Typecheck, format, contracts, build modes/check-build, ruff, manifest dan diff check PASS.
+**Belum diuji [BU]:** CI final HEAD menyusul; acceptance server/perangkat nyata tetap terpisah. Tidak merge/deploy.
+**Menunggu:** reviewer mengulang supervisi pada HEAD baru; PR tetap draft.
+
+## 2026-11-01T08:20:33+07:00 — agent codex-pwa — Login nyata dan refinement beranda/absensi PWA
+**Branch:** `agen/pwa-login-attendance-ux` dari `main` 628f603.
+**Berubah:** login mandiri native Odoo + CSRF/cookie, identitas/snapshot nyata tanpa selector persona; navbar/logo/status/jam WITA; sesi kerja setelah sapaan; quick action menunggu check-in; kartu clock in/out persisten; form halaman penuh; preview GPS/geofence kantor dari snapshot, foto watermark perusahaan/karyawan/waktu/alamat/koordinat, referensi foto terikat sesi lokal. Bootstrap menambah companyName (addon 19.0.1.2.2).
+**Diverifikasi lokal:** 332/332 unit; 144/144 browser (72 phone + 72 tablet, Chromium 153); typecheck, contracts:check, format:check, build demo/live/staging, check:build, ruff, manifest, diff whitespace PASS. Pemeriksaan screenshot login/beranda/form dilakukan.
+**Batas:** login/identitas/snapshot dari server; absensi, clock out dan transaksi aplikasi penuh masih lokal demo, bukan posting HR/transaksi resmi. Alamat diisi pengguna; belum reverse geocoder. Build live terkunci dan staging baca saja tetap terpisah. Detail: docs/ui/PWA_LOGIN_ATTENDANCE_UX.md.
+**Belum diuji [BU]:** runtime login/upgrade Odoo server nyata, acceptance perangkat/kamera nyata; CI pada commit baru menyusul. Tidak merge/deploy.
+**Menunggu:** reviewer dan pengujian perangkat pemilik setelah integrasi/deployment yang sesuai.
+
+## 2026-11-01T06:38:38+07:00 — claude-design2 — Redesain Sales Productivity (flat, scorecard ikon)
+**Branch:** `agen/claude-design2-sales-productivity-redesign`
+**Berubah:** template OWL, SCSS, getter JS; backend `get_data` kini menambah `previous`/`previous_period` (periode sebelumnya, mode ringan); id.po; 1 tes baru.
+**Diverifikasi (bagaimana):** ruff, check_manifests, node --check; render mock DOM Chromium 1280/820px. **[BU]** runtime Odoo dan CI; tampilan dashboard bawaan tidak dibandingkan langsung.
+**Butir terbuka:** 1. Dashboard ini client action OWL, bukan spreadsheet_dashboard (metrik LPO/penetrasi/PJP tak bisa dinyatakan sebagai pivot). 2. Tak ada delta PJP/EC (periode sebelumnya tidak dihitung).
+**Menunggu:** pemilik (review visual di instance demo), CI.
+
 ## 2026-11-01T08:57:00+07:00 — antigravity agent — Perbaikan Filter User Groups pada id.monetary.dashboard
 **Branch:** agen/unify-fmcg-dashboards (PR #65)
 **Status:** PASS (Static, Manifest) -> Siap Push & CI

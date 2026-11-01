@@ -97,6 +97,7 @@ class TestMobileRead(MobileFixture, TransactionCase):
         bootstrap = self.service()._bootstrap_payload()
         self.assertEqual(bootstrap["id"], str(self.mobile.id))
         self.assertEqual(bootstrap["companyId"], str(self.company.id))
+        self.assertEqual(bootstrap["companyName"], self.company.name)
         self.assertEqual(bootstrap["roles"], ["sales"])
         snapshot = self.service()._snapshot_payload()
         self.assertEqual(snapshot["scope"]["warehouse_id"], str(self.warehouse.id))

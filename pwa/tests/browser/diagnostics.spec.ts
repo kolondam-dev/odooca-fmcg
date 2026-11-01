@@ -1,5 +1,5 @@
 import { switchPersona } from "./delivery-helpers";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./session-fixture";
 test("diagnosis filters, safe detail and persona isolation preserve offline data", async ({
     page,
     context,

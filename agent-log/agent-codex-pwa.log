@@ -194,3 +194,30 @@
 - Added temporary/diagnostic-only field-name report for changed pre-existing stock.location IDs; values are never logged. Next CI run will identify exact native side-effect before any policy exception is considered.
 - No deploy or Railway mutation.
 - Task managed by agent-codex-pwa at 2026-10-30T16:15:31.361+07:00
+[2026-11-01T08:20:33+07:00] [INFO] Login nyata, beranda dan halaman absensi penuh
+- Branch agen/pwa-login-attendance-ux dari main 628f603; provisioning lama diambil alih opencode/antigravity sesuai instruksi pemilik.
+- Protokol, HANDOFF dan log terkait diperiksa; native Odoo/CSRF/cookie dan bootstrap/snapshot nyata menggantikan persona pada aplikasi penuh.
+- Quick action bergantung check-in; clock in/out dan bukti paket lokal persisten; kantor dari snapshot; watermark perusahaan/karyawan/waktu WITA/alamat pengguna/koordinat; form penuh dan navbar empat kolom.
+- PASS lokal: 330 unit, 144 browser phone/tablet, typecheck, contracts, format, tiga build/check-build, ruff, manifest, diff check. Login server dan perangkat nyata belum diuji. Tidak merge/deploy.
+- Absensi/transaksi tetap lokal demo; evidence resmi, ACL, CSRF dan geofence backend tidak dilonggarkan. Detail: docs/ui/PWA_LOGIN_ATTENDANCE_UX.md.
+- Task managed by agent codex-pwa at 2026-11-01T08:20:33+07:00
+
+[2026-11-01T08:23:44+07:00] [INFO] Preview hasil foto langsung terlihat setelah capture
+- Pemeriksaan screenshot akhir menunjukkan viewport masih berada di peta setelah foto selesai. Preview kini otomatis digulir ke dalam viewport tanpa animasi, agar watermark hasil capture langsung terlihat.
+- Regresi baru memastikan foto berada dalam viewport; 10/10 browser login/absensi phone+tablet dan typecheck PASS. Suite sebelumnya 144/144 PASS. PR #64 tetap draft menunggu CI pada SHA terakhir; tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-01T08:23:44+07:00
+
+[2026-11-01T08:32:39+07:00] [INFO] Finalisasi pergantian akun dan preservasi remote demo
+- Login menyediakan tautan logout/ganti akun untuk browser yang masih memiliki sesi lama tanpa akses mobile; pesan gagal diberi penekanan visual.
+- Provider aplikasi penuh tetap memakai identitas dan data HTTP nyata tanpa fallback. Pengecualian jarak remote demo diproyeksikan hanya pada workflow lokal; snapshot HTTP asli dan evidence resmi tidak dimutasi/dilonggarkan. Dua unit regresi membuktikan delegasi identitas, kegagalan tanpa fallback, dan preservasi snapshot asli.
+- PASS lokal final: 332 unit, 144 browser (phone/tablet), serta 10 tes login/absensi diulang sesudah perubahan visual; typecheck, contracts, format, build modes, check-build, ruff, manifest dan diff check.
+- PR #64 tetap draft menunggu CI SHA terbaru. Tidak merge/deploy; login runtime Odoo dan acceptance perangkat tetap terpisah.
+- Task managed by agent codex-pwa at 2026-11-01T08:32:39+07:00
+
+[2026-11-01T09:09:44+07:00] [INFO] PR #64 P2: binding evidence replacement pada retry
+- Membaca review issuecomment-6552060391 dan menjalankan whats_new.sh codex; branch remote tetap adbe2f7 sebelum patch.
+- Bukti red/green: regresi unit baru gagal 7 kasus pada fungsi produksi lama (paket SHA256 valid), lalu seluruh 341 unit lulus setelah fix.
+- Pending attendance menerima B hanya setelah validasi paket/owner/hari; retry foto sama mempertahankan referensi/waktu; invalid B tidak memakai A diam-diam. Sesi aktif idempoten, foto berbeda ditolak, clock-out tidak direopen.
+- 148 browser phone/tablet PASS, termasuk foto yang tampil dibandingkan via SHA256 ke referensi sesi dan readback setelah reload; typecheck, format, contracts, build/check-build, ruff, manifest, diff check PASS.
+- Dokumentasi/HANDOFF diperbarui. PR tetap draft untuk review ulang; CI SHA baru menyusul. Tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-01T09:09:44+07:00

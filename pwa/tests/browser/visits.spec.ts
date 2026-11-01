@@ -1,5 +1,6 @@
+import { checkIn } from "./session-fixture";
 import { saveVisitPhoto } from "./visit-helpers";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./session-fixture";
 test("visit location guards, offline restore and checkout sync", async ({
     page,
     context,
@@ -11,12 +12,7 @@ test("visit location guards, offline restore and checkout sync", async ({
         accuracy: 3,
     });
     await page.goto("./");
-    await page
-        .getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        })
-        .click();
+    await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
@@ -96,7 +92,9 @@ test("visit location guards, offline restore and checkout sync", async ({
 test("denied GPS permits demo coordinates but photo is still mandatory", async ({
     page,
 }) => {
-    await page.addInitScript(() => {
+    await page.goto("./");
+    await checkIn(page);
+    await page.evaluate(() => {
         navigator.geolocation.getCurrentPosition = (_ok, fail) =>
             fail?.({
                 code: 1,
@@ -106,13 +104,6 @@ test("denied GPS permits demo coordinates but photo is still mandatory", async (
                 TIMEOUT: 3,
             });
     });
-    await page.goto("./");
-    await page
-        .getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        })
-        .click();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
@@ -168,12 +159,7 @@ test("corrupt offline check-in remains held after reload, reconnect and manual r
         accuracy: 3,
     });
     await page.goto("./");
-    await page
-        .getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        })
-        .click();
+    await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })

@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { checkIn } from "./session-fixture";
+import { expect, test } from "./session-fixture";
 test("office check-in previews real fix and handles failed road tiles without authorizing attendance", async ({
     page,
     context,
@@ -15,15 +16,15 @@ test("office check-in previews real fix and handles failed road tiles without au
         return route.abort();
     });
     await page.goto("./");
-    await page.getByRole("button", { name: /^Absensi Foto/ }).click();
+    await page.getByRole("button", { name: /^Absensi/ }).click();
     const map = page.getByRole("region", {
         name: "Preview peta Kantor Pusat",
         exact: true,
     });
-    await expect(map).toContainText("Posisi perangkat belum tersedia");
+    await expect(map).toContainText("Di luar radius");
     await expect(map).toContainText("Titik tujuan simulasi");
     await page
-        .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
+        .getByRole("button", { name: "Ambil Lokasi Presisi", exact: true })
         .click();
     await expect(map).toContainText("Di luar radius");
     await expect(map).toContainText("-6.200000, 106.800000");
@@ -33,10 +34,9 @@ test("office check-in previews real fix and handles failed road tiles without au
         .click();
     await expect(map.getByRole("status")).toContainText("Peta jalan gagal");
     await expect(map.getByRole("img")).toBeVisible();
-    await page.getByRole("button", { name: "Simpan absensi" }).click();
-    await expect(page.getByRole("alert")).toContainText(
-        "Simpan foto dan lokasi dahulu.",
-    );
+    await expect(
+        page.getByRole("button", { name: "Check in", exact: true }),
+    ).toBeDisabled();
     expect(tiles).toBeGreaterThan(0);
     expect(
         await page.evaluate(
@@ -44,7 +44,7 @@ test("office check-in previews real fix and handles failed road tiles without au
         ),
     ).toBe(true);
 });
-test("office simulated position is labeled and new real fix clears simulated label", async ({
+test("office preview keeps test master labeled and actual device fix separate", async ({
     page,
     context,
 }) => {
@@ -55,20 +55,16 @@ test("office simulated position is labeled and new real fix clears simulated lab
         accuracy: 3,
     });
     await page.goto("./");
-    await page.getByRole("button", { name: /^Absensi Foto/ }).click();
+    await page.getByRole("button", { name: /^Absensi/ }).click();
     const map = page.getByRole("region", {
         name: "Preview peta Kantor Pusat",
         exact: true,
     });
-    await page
-        .getByRole("button", { name: "Gunakan lokasi acuan", exact: true })
-        .click();
-    await expect(map).toContainText("posisi simulasi");
-    await page
-        .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
-        .click();
+    await expect(map).toContainText("Titik tujuan simulasi");
     await expect(map).toContainText("Di dalam radius");
-    await expect(map).not.toContainText("posisi simulasi");
+    await expect(
+        page.getByRole("button", { name: "Gunakan lokasi acuan", exact: true }),
+    ).toHaveCount(0);
 });
 test("outlet check-in renders attributed road preview, zoom and scope reset with strict guard intact", async ({
     page,
@@ -87,12 +83,7 @@ test("outlet check-in renders attributed road preview, zoom and scope reset with
         }),
     );
     await page.goto("./");
-    await page
-        .getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        })
-        .click();
+    await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
@@ -149,17 +140,12 @@ test("outlet check-in renders attributed road preview, zoom and scope reset with
     ).toBe(true);
 });
 test("denied outlet GPS labels fallback as simulation", async ({ page }) => {
-    await page.addInitScript(() => {
+    await page.goto("./");
+    await checkIn(page);
+    await page.evaluate(() => {
         navigator.geolocation.getCurrentPosition = (_ok, fail) =>
             fail?.({ code: 1, message: "denied" } as GeolocationPositionError);
     });
-    await page.goto("./");
-    await page
-        .getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        })
-        .click();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page
         .getByRole("button", { name: "Buat order", exact: false })

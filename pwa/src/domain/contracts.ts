@@ -17,6 +17,7 @@ export const Role = z.enum(["sales", "delivery", "hris"]);
 export const IdentitySchema = z.object({
     id: z.string().min(1),
     companyId: z.string().min(1),
+    companyName: z.string().optional(),
     name: z.string().min(1),
     title: z.string(),
     roles: z.array(Role),

@@ -1,4 +1,10 @@
-import { expect, test, type Page, type BrowserContext } from "@playwright/test";
+import { checkIn } from "./session-fixture";
+import {
+    expect,
+    test,
+    type Page,
+    type BrowserContext,
+} from "./session-fixture";
 import { saveVisitPhoto } from "./visit-helpers";
 async function openVisit(page: Page) {
     await page
@@ -14,12 +20,7 @@ async function prepare(page: Page, context: BrowserContext) {
         accuracy: 3,
     });
     await page.goto("./");
-    await page
-        .getByRole("button", {
-            name: "Buka sesi kerja",
-            exact: true,
-        })
-        .click();
+    await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await openVisit(page);
     await page

@@ -41,8 +41,10 @@ export class MockProvider implements FieldProvider {
     constructor(
         private actor: string,
         private relaxedLocation = false,
+        private authenticated?: Pick<FieldProvider, "bootstrap" | "snapshot">,
     ) {}
     async bootstrap() {
+        if (this.authenticated) return this.authenticated.bootstrap();
         return {
             ...(actors[this.actor] ?? actors.sales),
             businessDate: new Date().toLocaleDateString("en-CA", {
@@ -51,6 +53,20 @@ export class MockProvider implements FieldProvider {
         };
     }
     async snapshot(): Promise<Snapshot> {
+        if (this.authenticated) {
+            const snapshot = await this.authenticated.snapshot();
+            // Preserve the existing remote-demo allowance only in the local
+            // workflow. The HTTP payload and official evidence gates stay strict.
+            return this.relaxedLocation
+                ? {
+                      ...snapshot,
+                      outlets: snapshot.outlets.map((outlet) => ({
+                          ...outlet,
+                          demo_unrestricted: true as const,
+                      })),
+                  }
+                : snapshot;
+        }
         const identity = await this.bootstrap();
         return {
             catalog_version: 2,

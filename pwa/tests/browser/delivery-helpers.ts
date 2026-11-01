@@ -1,3 +1,4 @@
+import { changeTestAccount, checkIn } from "./session-fixture";
 import { expect, type Locator, type Page } from "@playwright/test";
 const owners = {
     sales: "demo-mdu:DEMO-ANDRE",
@@ -5,7 +6,8 @@ const owners = {
     canvass: "demo-mdu:DEMO-STEVEN",
 };
 export async function switchPersona(page: Page, actor: keyof typeof owners) {
-    await page.getByLabel("Peran").selectOption(actor);
+    await changeTestAccount(page, actor);
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
     const region = page.getByRole("region", {
         name: "Sesi kerja",
         exact: true,
@@ -14,6 +16,8 @@ export async function switchPersona(page: Page, actor: keyof typeof owners) {
     await expect(region).toHaveAttribute("aria-busy", "false");
 }
 export async function ensureDaily(page: Page) {
+    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await checkIn(page);
     const region = page.getByRole("region", {
         name: "Sesi kerja",
         exact: true,

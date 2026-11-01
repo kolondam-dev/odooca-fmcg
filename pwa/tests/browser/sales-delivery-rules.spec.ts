@@ -1,5 +1,5 @@
 import { switchPersona } from "./delivery-helpers";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./session-fixture";
 import {
     ensureDaily,
     saveDeliveryPhoto,
@@ -119,6 +119,7 @@ test("multi-SKU partial requires line reasons, closes session offline and update
         page.getByText("Daily sync wajib sebelum membuka list Delivery."),
     ).toBeVisible();
     await ensureDaily(page);
+    await page.getByRole("button", { name: "Delivery", exact: true }).click();
     const task = page
         .locator(".delivery-task")
         .filter({ hasText: "DEMO-DO-001" });

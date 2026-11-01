@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./session-fixture";
 test.use({ baseURL: "http://127.0.0.1:4175/field/" });
 const identity = {
     id: "41",
