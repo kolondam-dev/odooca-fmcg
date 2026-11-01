@@ -1,3 +1,10 @@
+## 2026-11-01T23:17:20+07:00 — agent codex-pwa — Fondasi dashboard dan roadmap terintegrasi
+**Branch:** `agen/dashboard-data-foundation`, basis main `13b2ee0`.
+**Berubah:** overdue pelanggan dari populasi invoice yang sama; target exact period lintas company dijumlahkan, duplikat/mixed currency ditolak; invoice DPP dan label pembayaran tercatat; tolakan sesuai kendaraan; ACL peran/company pada SQL views; latest-request guard dan drill-down scope. Roadmap `docs/dashboard/ENHANCEMENT_PLAN.md` mempertahankan seluruh rekomendasi analitis awal serta utilisasi gudang/armada, warehouse detail dan Three.js bertahap.
+**[F] Lokal:** Ruff, 10 manifest, compile/XML/YAML/diff, 9 unit runner upgrade dan 10 regresi RPC lulus. Probe fungsi produksi: overdue 1 juta (bukan 11 juta), target 30 juta (bukan 20 juta), tolakan kendaraan A 0 (bukan 200%). Probe memakai fake ORM dan bukan bukti native Odoo.
+**[BU] Native/visual:** ditambahkan tes ORM/SQL/ACL, upgrade dashboard persisten, fixture sintetis ci_db dan screenshot dashboard Odoo asli desktop/tablet. Menunggu CI dan peninjauan artifact. Browser cloud timeout transport; tidak mengklaim audit live berhasil. Postgres lokal terhalang permission runtime. Redesign menyeluruh/ledger/asset/3D belum diimplementasikan pada tahap ini.
+**Menunggu:** CI/review; tidak merge/deploy atau mengubah data server.
+
 ## 2026-11-01T18:20:00+07:00 — anti-gravity agent — Fix CI init-test guard dan test_01 dashboard query boundary
 **Branch:** `agen/pjp-master-and-workday`
 **Status:** PASS (Ruff, Check Manifests, Shell Syntax) -> Push ke PR #68

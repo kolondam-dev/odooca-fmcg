@@ -239,3 +239,9 @@
 - Body overflow dikelola stack agar urutan unmount parent/child tidak meninggalkan scroll terkunci.
 - 16 browser UX terfokus dan typecheck lulus; full suite 170 browser/CI final menunggu. Tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-01T18:00:11+07:00
+
+[2026-11-01T23:17:20+07:00] [INFO] Fondasi dashboard dan roadmap enhancement
+- Basis13b2ee0; branch agen/dashboard-data-foundation. Overdue/target/reject/ACL/company/RPC/drill-down diperbaiki, roadmap mempertahankan rekomendasi bisnis+visual+asset+3D.
+- Lokal Ruff/10manifest/compile/XML/YAML/diff/9unit runner/10RPC PASS. Counterexamples produksi dengan fake ORM PASS; bukan native.
+- Native Odoo/upgrade/visual fixtures CI ditambahkan; hasil dan screenshot menunggu CI, cloud browser transport timeout. Tidak merge/deploy atau menulis data server.
+- Task managed by agent-codex-pwa at 2026-11-01T23:17:20+07:00

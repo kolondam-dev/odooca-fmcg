@@ -34,7 +34,7 @@
                     <div class="id-wms__filter-bar">
                         <!-- Cluster 1: Category -->
                         <div class="id-wms__filter-cluster">
-                            <span class="id-wms__cluster-label"><i class="fa fa-tags"/> Kategori FMCG</span>
+                            <span class="id-wms__cluster-label"><i class="fa fa-tags"/> Kategori Stok FMCG</span>
                             <div class="id-wms__cluster-content">
                                 <select class="id-wms__select" t-att-value="state.fmcgCategory" t-on-change="onCategoryChange">
                                     <option value="">Semua Kategori</option>
@@ -310,15 +310,15 @@
                                         <th>Kendaraan Armada</th>
                                         <th class="num">Biaya BBM</th>
                                         <th class="num">Biaya Helper</th>
-                                        <th class="num">Total Biaya Operasional</th>
+                                        <th class="num">Biaya BBM + Helper</th>
                                         <th class="num">Nilai DO Terkirim</th>
                                         <th class="num">Rasio Biaya / Nilai</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr t-foreach="state.data.fleet" t-as="f" t-key="f.vehicle_id"
+                                    <tr t-foreach="state.data.fleet" t-as="f" t-key="f.key"
                                         t-on-click="openFleetCostAnalysis" style="cursor: pointer;">
-                                        <td class="name" t-out="f.name"/>
+                                        <td class="name" t-out="f.name + ' · ' + f.period_month"/>
                                         <td class="num" t-out="money(f.fuel_cost)"/>
                                         <td class="num" t-out="money(f.helper_cost)"/>
                                         <td class="num text-danger font-weight-bold" t-out="money(f.total_cost)"/>

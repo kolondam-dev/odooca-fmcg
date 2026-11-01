@@ -2,17 +2,14 @@
 """WMS & Logistics Executive Dashboard aggregator service."""
 
 from odoo import api, fields, models, _
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, UserError
 
 REJECT_LABELS = {
-    "not_recorded": _("Tidak Tercatat"),
-    "toko_tutup": _("Toko Tutup / Pemilik Tidak Ada"),
-    "tolak_toko": _("Tolak Toko / Tidak Merasa Pesan"),
-    "barang_rusak": _("Barang Rusak / Bocor"),
-    "salah_item": _("Salah Barang / Varian"),
-    "overdue_limit": _("Masalah Pembayaran / Limit Kredit"),
-    "kemasan_rusak": _("Kemasan Rusak / Segel Terbuka"),
-    "lainnya": _("Alasan Operasional Lainnya"),
+    "not_recorded": _("Tidak tercatat"),
+    "store_closed": _("Toko tutup / menolak surat jalan"),
+    "packaging_damaged": _("Kemasan rusak dalam perjalanan"),
+    "near_expiry": _("Mendekati kedaluwarsa"),
+    "wrong_sku_qty": _("SKU atau kuantitas tidak sesuai"),
 }
 
 
@@ -62,6 +59,8 @@ class WmsDashboard(models.TransientModel):
     def get_data(self, fmcg_category=None, vehicle_id=None, **kwargs):
         self._check_access()
         company_ids = self.env.companies.ids
+        if len(self.env.companies.currency_id) != 1:
+            raise UserError(_("Select companies with the same currency before aggregating monetary values."))
 
         # ----------------------------------------------------------- 1. Stock by FMCG Category
         cat_domain = [("company_id", "in", company_ids)]
@@ -153,7 +152,7 @@ class WmsDashboard(models.TransientModel):
         DeliveryModel = self.env["id.wms.delivery"]
         deliv_recs = DeliveryModel.search_read(
             deliv_domain,
-            ["picking_name", "partner_id", "is_delivered", "is_late", "reject_reason", "delivered_value"]
+            ["picking_name", "partner_id", "state", "is_delivered", "is_late", "reject_reason", "delivered_value"]
         )
 
         total_deliveries = len(deliv_recs)
@@ -161,17 +160,18 @@ class WmsDashboard(models.TransientModel):
         late_count = sum(1 for d in deliv_recs if d["is_late"])
         delivered_value = sum(float(d["delivered_value"] or 0.0) for d in deliv_recs if d["is_delivered"])
 
-        fulfillment_rate = (delivered_count / total_deliveries * 100.0) if total_deliveries > 0 else 100.0
+        fulfillment_rate = (delivered_count / total_deliveries * 100.0) if total_deliveries > 0 else None
 
-        # Rejection breakdown from id.wms.reject
-        RejectModel = self.env["id.wms.reject"]
-        reject_recs = RejectModel.search_read(
-            [("company_id", "in", company_ids)],
-            ["reason", "picking_count", "rejected_value"]
-        )
+        # Use the filtered DO population for BOTH numerator and denominator.
+        reject_groups = {}
+        for delivery in deliv_recs:
+            reason = delivery["reject_reason"] or "not_recorded"
+            if reason != "not_recorded" or delivery["state"] == "cancel":
+                reject_groups[reason] = reject_groups.get(reason, 0) + 1
+        reject_recs = [{"reason": reason, "picking_count": count} for reason, count in reject_groups.items()]
 
         total_rejections = sum(r["picking_count"] for r in reject_recs)
-        rejection_rate = (total_rejections / total_deliveries * 100.0) if total_deliveries > 0 else 0.0
+        rejection_rate = (total_rejections / total_deliveries * 100.0) if total_deliveries > 0 else None
 
         reject_list = []
         for r in reject_recs:
@@ -194,30 +194,36 @@ class WmsDashboard(models.TransientModel):
         FleetCostModel = self.env["id.wms.fleet.cost"]
         fleet_recs = FleetCostModel.search_read(
             fleet_domain,
-            ["vehicle_id", "period_month", "fuel_cost", "helper_cost", "total_cost", "delivered_value"]
+            ["id", "vehicle_id", "period_month", "fuel_cost", "helper_cost", "total_cost", "delivered_value"]
         )
 
         total_fleet_cost = sum(float(r["total_cost"] or 0.0) for r in fleet_recs)
-        fleet_ratio = (total_fleet_cost / delivered_value * 100.0) if delivered_value > 0 else 0.0
+        fleet_ratio = (total_fleet_cost / delivered_value * 100.0) if delivered_value > 0 and fleet_recs else None
 
         fleet_list = []
         for r in fleet_recs:
             veh = r["vehicle_id"]
             delivered = float(r["delivered_value"] or 0.0)
             tcost = float(r["total_cost"] or 0.0)
-            ratio = (tcost / delivered * 100.0) if delivered > 0 else 0.0
+            ratio = (tcost / delivered * 100.0) if delivered > 0 else None
             fleet_list.append({
+                "key": r["id"],
+                "period_month": str(r["period_month"]),
                 "vehicle_id": veh[0] if veh else 0,
                 "name": veh[1] if veh else "-",
                 "fuel_cost": float(r["fuel_cost"] or 0.0),
                 "helper_cost": float(r["helper_cost"] or 0.0),
                 "total_cost": tcost,
                 "delivered_value": delivered,
-                "cost_ratio": round(ratio, 2),
+                "cost_ratio": round(ratio, 2) if ratio is not None else None,
             })
-        fleet_list.sort(key=lambda x: x["cost_ratio"], reverse=True)
+        fleet_list.sort(key=lambda x: x["cost_ratio"] if x["cost_ratio"] is not None else -1, reverse=True)
 
         return {
+            "currency": self.env.company.currency_id.name,
+            "domains": {"stock": cat_domain, "expiry": expiry_domain, "deliveries": deliv_domain,
+                        "fleet": fleet_domain, "rejections": deliv_domain +
+                        ["|", ("reject_reason", "!=", "not_recorded"), ("state", "=", "cancel")]},
             "kpi": {
                 "total_stock_value": total_stock_value,
                 "total_stock_qty": total_stock_qty,
@@ -229,10 +235,10 @@ class WmsDashboard(models.TransientModel):
                 "late_count": late_count,
                 "total_rejections": total_rejections,
                 "delivered_value": delivered_value,
-                "fulfillment_rate": round(fulfillment_rate, 1),
-                "rejection_rate": round(rejection_rate, 1),
+                "fulfillment_rate": round(fulfillment_rate, 1) if fulfillment_rate is not None else None,
+                "rejection_rate": round(rejection_rate, 1) if rejection_rate is not None else None,
                 "total_fleet_cost": total_fleet_cost,
-                "fleet_cost_ratio": round(fleet_ratio, 2),
+                "fleet_cost_ratio": round(fleet_ratio, 2) if fleet_ratio is not None else None,
             },
             "expiry_buckets": expiry_buckets,
             "rejections": reject_list,

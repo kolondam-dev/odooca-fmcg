@@ -1,5 +1,5 @@
 /** @odoo-module **/
-import { Component, onWillStart, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillUnmount, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
@@ -28,6 +28,8 @@ export class SalesProductivity extends Component {
     static props = ["*"];
 
     setup() {
+        this.requestVersion = 0;
+        onWillUnmount(() => { this.requestVersion++; });
         this.orm = useService("orm");
         this.action = useService("action");
         this.modes = MODES;
@@ -51,19 +53,21 @@ export class SalesProductivity extends Component {
     }
 
     async load() {
+        const version = ++this.requestVersion;
         this.state.loading = true;
         this.state.error = null;
         try {
-            this.state.data = await this.orm.call("id.sales.productivity", "get_data", [], {
+            const data = await this.orm.call("id.sales.productivity", "get_data", [], {
                 mode: this.state.mode,
                 anchor: this.state.anchor,
                 salesman_ids: this.state.salesmanIds,
                 channel_ids: this.state.channelIds,
             });
+            if (version === this.requestVersion) this.state.data = data;
         } catch (error) {
-            this.state.error = error?.data?.message || error?.message || String(error);
+            if (version === this.requestVersion) { this.state.data = null; this.state.error = error?.data?.message || error?.message || String(error); }
         } finally {
-            this.state.loading = false;
+            if (version === this.requestVersion) this.state.loading = false;
         }
     }
 
@@ -335,6 +339,7 @@ export class SalesProductivity extends Component {
 
     // ---- drill-down
     openOrders(extra = []) {
+        if (this.state.loading || !this.state.data) return;
         const domain = [...this.state.data.domains.orders, ...extra];
         this.action.doAction({
             type: "ir.actions.act_window",
@@ -345,9 +350,11 @@ export class SalesProductivity extends Component {
         });
     }
     openDiscounted() {
+        if (this.state.loading || !this.state.data) return;
         this.openOrders([["order_line.discount", ">", 0]]);
     }
     openPickings() {
+        if (this.state.loading || !this.state.data) return;
         this.action.doAction({
             type: "ir.actions.act_window",
             name: _t("Delivered DO"),
@@ -357,6 +364,7 @@ export class SalesProductivity extends Component {
         });
     }
     openRow(row) {
+        if (this.state.loading || !this.state.data) return;
         if (!row.id) {
             return;
         }

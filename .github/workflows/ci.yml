@@ -27,6 +27,8 @@ jobs:
         run: python scripts/check_manifests.py
       - name: Kontrak runner upgrade modul (unit)
         run: python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner -v
+      - name: Dashboard RPC regression
+        run: node --test docs/ui/e2e/dashboard_rpc.test.cjs
       - name: Sintaks shell
         run: bash -n deploy/init.sh deploy/addons_path.sh scripts/fetch_oca.sh scripts/oca_bump.sh scripts/agent/*.sh scripts/sandbox/*.sh
       - name: Validitas YAML
@@ -85,6 +87,15 @@ jobs:
           ' 2>&1 | tee existing-demo.log
           grep -q 'EXISTING_DEMO_PROVISION=PASS' existing-demo.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' existing-demo.log; then exit 1; fi
+      - name: Upgrade dashboard addons on persisted database
+        run: |
+          set -o pipefail
+          docker run --rm -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
+            odoo -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" \
+              -u id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales --stop-after-init
+          ' 2>&1 | tee dashboard-upgrade.log
+          if grep -E ' (ERROR|CRITICAL) |Traceback' dashboard-upgrade.log; then exit 1; fi
       - name: Prepare disposable UI fixtures
         run: |
           set -o pipefail
@@ -94,6 +105,14 @@ jobs:
           ' < scripts/ui/smoke_fixture.py | tee fixture.log
           python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["order"])' > ui-order.txt
           python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["invoice"])' > ui-invoice.txt
+      - name: Prepare native dashboard visual fixtures
+        run: |
+          set -o pipefail
+          docker run --rm -i -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
+            odoo shell -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ui/dashboard_fixture.py | tee dashboard-fixture.log
+          grep -q 'DASHBOARD_VISUAL_FIXTURE=PASS' dashboard-fixture.log
       - name: Start Odoo for browser smoke
         run: |
           docker run -d --name ui-smoke -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -113,6 +132,10 @@ jobs:
           python -m playwright install --with-deps chromium
           python -m unittest discover -s docs/ui/e2e -p 'test_*.py' -v
           python docs/ui/e2e/smoke_ui.py http://localhost:8069 "$(cat ui-order.txt)" "$(cat ui-invoice.txt)"
+      - name: Native dashboard visual audit
+        env:
+          UI_TEST_PASSWORD: ci-ui
+        run: python docs/ui/e2e/dashboard_visual.py http://localhost:8069
       - name: UI runtime diagnostics
         if: always()
         run: |
@@ -128,6 +151,9 @@ jobs:
             odoo.log
             ui-runtime.log
             ui-smoke-failure.png
+            dashboard-visual/
+            dashboard-fixture.log
+            dashboard-upgrade.log
 
   init-test:
     # Meniru uji sandbox A dan B: init.sh pada DB kosong (build penuh) lalu restart (semua langkah dilewati).

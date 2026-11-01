@@ -1,0 +1,37 @@
+<odoo>
+    <record id="model_id_wms_stock_category_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_wms_stock_category</field>
+        <field name="model_id" ref="model_id_wms_stock_category"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="model_id_wms_expiry_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_wms_expiry</field>
+        <field name="model_id" ref="model_id_wms_expiry"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="model_id_wms_delivery_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_wms_delivery</field>
+        <field name="model_id" ref="model_id_wms_delivery"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="model_id_wms_delivery_summary_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_wms_delivery_summary</field>
+        <field name="model_id" ref="model_id_wms_delivery_summary"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="model_id_wms_reject_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_wms_reject</field>
+        <field name="model_id" ref="model_id_wms_reject"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="model_id_wms_fleet_cost_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_wms_fleet_cost</field>
+        <field name="model_id" ref="model_id_wms_fleet_cost"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="model_id_delivery_trip_cost_company_rule" model="ir.rule">
+        <field name="name">Dashboard company isolation: model_id_delivery_trip_cost</field>
+        <field name="model_id" ref="model_id_delivery_trip_cost"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>
