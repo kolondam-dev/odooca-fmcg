@@ -22,11 +22,13 @@ import {
 } from "./visit-contracts";
 import type { FieldStore } from "../storage/store";
 import type { Outbox } from "./outbox";
+import { isDemoMode } from "./running-mode";
 export function captureVisitLocation(
     source?: (value: "device" | "demo") => void,
 ): Promise<VisitFix> {
     return new Promise((resolve, reject) => {
-        if (!navigator.geolocation && __DEMO__) {
+        const demo = isDemoMode();
+        if (!navigator.geolocation && demo) {
             source?.("demo");
             resolve({
                 latitude: 1.465,
@@ -40,37 +42,53 @@ export function captureVisitLocation(
             reject(new Error("Geolocation tidak tersedia pada perangkat ini."));
             return;
         }
-        navigator.geolocation.getCurrentPosition(
-            (p) => {
-                source?.("device");
-                resolve({
-                    latitude: p.coords.latitude,
-                    longitude: p.coords.longitude,
-                    accuracy: p.coords.accuracy,
-                    sampled_at: new Date(p.timestamp).toISOString(),
-                });
-            },
-            (e) => {
+        try {
+            navigator.geolocation.getCurrentPosition(
+                (p) => {
+                    source?.("device");
+                    resolve({
+                        latitude: p.coords.latitude,
+                        longitude: p.coords.longitude,
+                        accuracy: p.coords.accuracy,
+                        sampled_at: new Date(p.timestamp).toISOString(),
+                    });
+                },
+                (e) => {
+                    if (demo) {
+                        source?.("demo");
+                        resolve({
+                            latitude: 1.465,
+                            longitude: 124.833,
+                            accuracy: 1,
+                            sampled_at: new Date().toISOString(),
+                        });
+                        return;
+                    }
+                    reject(
+                        new Error(
+                            e.code === 1
+                                ? "Izin lokasi ditolak. Aktifkan izin lokasi untuk kunjungan."
+                                : e.code === 3
+                                  ? "Pengambilan lokasi timeout. Coba lagi di tempat aman."
+                                  : "Lokasi belum tersedia. Coba lagi.",
+                        ),
+                    );
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 },
+            );
+        } catch (err) {
+            if (demo) {
                 source?.("demo");
-                return __DEMO__
-                    ? resolve({
-                          latitude: 1.465,
-                          longitude: 124.833,
-                          accuracy: 1,
-                          sampled_at: new Date().toISOString(),
-                      })
-                    : reject(
-                          new Error(
-                              e.code === 1
-                                  ? "Izin lokasi ditolak. Aktifkan izin lokasi untuk kunjungan."
-                                  : e.code === 3
-                                    ? "Pengambilan lokasi timeout. Coba lagi di tempat aman."
-                                    : "Lokasi belum tersedia. Coba lagi.",
-                          ),
-                      );
-            },
-            { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 },
-        );
+                resolve({
+                    latitude: 1.465,
+                    longitude: 124.833,
+                    accuracy: 1,
+                    sampled_at: new Date().toISOString(),
+                });
+                return;
+            }
+            reject(err instanceof Error ? err : new Error(String(err)));
+        }
     });
 }
 export class SalesVisits {

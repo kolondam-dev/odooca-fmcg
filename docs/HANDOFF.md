@@ -1,3 +1,36 @@
+## 2026-11-02T13:58:00+07:00 — anti-gravity agent — Fix Runtime Demo Fallback, Stale Evidence Validation, and Prettier Formatting
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (Addressed supervisor review findings on PR #74)
+
+### Detail Perbaikan:
+1. **Fallback Lokasi Runtime DEMO (`visits.ts`):**
+   - Mengubah `captureVisitLocation` agar mengacu langsung pada runtime `isDemoMode()` (bukan konstanta build `__DEMO__`).
+   - Pada mode DEMO: saat izin geolocation ditolak (`code === 1`), timeout, atau `navigator.geolocation` tidak tersedia, fungsi me-resolve koordinat simulasi (1.465, 124.833) berlabel `"demo"`.
+   - Pada mode LIVE: tetap me-reject kegagalan GPS sesuai pesan resmi ("Izin lokasi ditolak...", dll.).
+2. **Penyelarasan Bypass Timestamp Paket Bukti (`evidence-package.ts`, `evidence-render.ts`, `VisitPanel.tsx`, dll.):**
+   - `evidence-package.ts`: `validateEvidenceTime` mengecek parameter `relaxed`; `assertLocalEvidence` menyuplai `isRelaxed = Boolean(visual.demo_unrestricted || isDemoMode())`. Timestamp >60s diizinkan pada mode DEMO serta saat me-restore riwayat bukti berflag `demo_unrestricted` di mode LIVE tanpa mengunci workspace.
+   - `evidence-render.ts`: menyematkan `demo_unrestricted: true` pada paket visual saat `isRelaxed` aktif.
+   - `AttendanceCapture.tsx` & `DisplayPhoto.tsx`: menyelaraskan parameter relaksasi bukti dengan `isDemoMode()`.
+   - `VisitPanel.tsx`: tombol "Tutup kunjungan" tidak lagi disabled karena foto kedaluwarsa saat mode DEMO aktif (`disabled={busy || (!isDemo && !fresh(outPhoto))}`).
+   - `delivery.ts` & `trip-close.ts`: menyelaraskan pengecekan geofence kantor dan opening session dengan `isDemoMode()`.
+3. **Format Prettier & Penambahan Pengujian:**
+   - Memperbaiki pemformatan Prettier pada `pwa/src/App.tsx` dan seluruh file yang disentuh.
+   - Menambahkan 3 unit test di `pwa/tests/running-mode.test.ts` (total 8 unit tests di file ini, 360 unit tests di 23 files seluruhnya lulus).
+   - Menambahkan pengujian browser Playwright di `pwa/tests/browser/running-mode.spec.ts` untuk verifikasi toggle header DEMO/LIVE, asersi banner persis, dan alur check-in dengan koordinat fallback.
+4. **Verifikasi:**
+   - `npm --prefix pwa run format:check`: PASS pada file-file yang dimodifikasi.
+   - `npm --prefix pwa run typecheck`: PASS (0 errors).
+   - `npm --prefix pwa run contracts:check`: PASS.
+   - `npm --prefix pwa test`: PASS (23 files, 360 unit tests).
+   - `npm --prefix pwa run build:staging`: PASS.
+   - `npm --prefix pwa run build`: PASS.
+   - `npm --prefix pwa run build:demo`: PASS.
+   - `npm --prefix pwa run check:build`: PASS.
+   - `npm --prefix pwa run test:hosting`: PASS.
+   - `python -m ruff check .`: PASS.
+   - `python scripts/check_manifests.py`: PASS (10 addons OK).
+
 ## 2026-11-02T11:25:00+07:00 — anti-gravity agent — Implement Running Mode Gate (DEMO | LIVE) with Geofence & Photo Bypass
 **Branch:** `agen/running-mode-gate`
 **Status:** In Progress (Added running mode gate: DEMO banner, geofence, timestamp & photo validation bypass)

@@ -1975,3 +1975,27 @@
   * npm --prefix pwa run typecheck: PASS
   * npm --prefix pwa test: PASS (23 files, 357 unit tests)
 - Task managed by antigravity agent at 2026-11-02T11:25:00+07:00
+
+[2026-11-02T13:58:00+07:00] [INFO] Fix Staging Runtime Demo Location Fallback, Stale Evidence Validation, and Prettier Formatting
+- Resolved supervisor review findings on PR #74 (checkpoint 17f7487):
+  * [P2] captureVisitLocation now adheres directly to runtime isDemoMode(): provides simulated fallback coordinates (1.465, 124.833) labeled "demo" when geolocation is denied (code: 1), times out, or is unavailable in DEMO mode; LIVE mode continues to strictly reject GPS failure.
+  * [P2] Stale evidence validation bypass across creators, validators, and restore paths:
+    - In evidence-package.ts: validateEvidenceTime checks relaxed boolean directly; assertLocalEvidence passes isRelaxed = Boolean(visual.demo_unrestricted || isDemoMode()). Stale timestamps (>60s) are bypassed in DEMO mode and during restore of historical DEMO packages, without locking the workspace upon switching back to LIVE mode.
+    - In evidence-render.ts: renderEvidencePackage sets demo_unrestricted when relaxed or in DEMO mode.
+    - In AttendanceCapture.tsx, DisplayPhoto.tsx, and VisitPanel.tsx: aligned evidence relaxation and checkout button with isDemoMode().
+    - In delivery.ts and trip-close.ts: aligned opening session and office geofence checks with isDemoMode().
+  * [CI] Fixed Prettier code formatting on src/App.tsx and all updated files.
+  * Added 3 unit tests in tests/running-mode.test.ts verifying GPS fallback, LIVE rejection, and historical DEMO package restore in LIVE mode (360 tests pass).
+  * Added browser test in tests/browser/running-mode.spec.ts verifying header toggle, exact banner visibility, and check-in with fallback coordinates.
+- Verification:
+  * npm --prefix pwa run typecheck: PASS
+  * npm --prefix pwa run contracts:check: PASS
+  * npm --prefix pwa test: PASS (23 files, 360 unit tests)
+  * npm --prefix pwa run build:staging: PASS
+  * npm --prefix pwa run build: PASS
+  * npm --prefix pwa run build:demo: PASS
+  * npm --prefix pwa run check:build: PASS
+  * npm --prefix pwa run test:hosting: PASS
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS (10 addons OK)
+- Task managed by antigravity agent at 2026-11-02T13:58:00+07:00

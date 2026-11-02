@@ -494,7 +494,7 @@ export function VisitPanel({
                             <button
                                 class="secondary full"
                                 type="submit"
-                                disabled={busy || !fresh(outPhoto)}
+                                disabled={busy || (!isDemo && !fresh(outPhoto))}
                             >
                                 Tutup kunjungan
                             </button>
