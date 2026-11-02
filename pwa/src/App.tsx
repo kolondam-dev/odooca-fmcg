@@ -11,7 +11,11 @@ import { DiscountApproval } from "./components/DiscountApproval";
 import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { HttpProvider } from "./data/provider";
-import { useRunningMode, DEMO_BANNER_TEXT } from "./domain/running-mode";
+import {
+    useRunningMode,
+    DEMO_BANNER_TEXT,
+    isDemoMode,
+} from "./domain/running-mode";
 import { Login } from "./components/Login";
 import {
     canOpen,
@@ -307,10 +311,12 @@ function Workspace({
             !!morning?.deliveryManifest?.length);
     const attended =
         !!morning &&
-        morning.businessDate ===
-            new Date(now).toLocaleDateString("en-CA", {
-                timeZone: "Asia/Makassar",
-            });
+        (isDemoMode() ||
+            Boolean(morning.demo_unrestricted) ||
+            morning.businessDate ===
+                new Date(now).toLocaleDateString("en-CA", {
+                    timeZone: "Asia/Makassar",
+                }));
     const checkedOut = attended && !!morning?.clockOutAt;
     const snapshot = dailyReady ? morning!.snapshot! : initialSnapshot;
     assignedOutlets.current = snapshot.outlets;

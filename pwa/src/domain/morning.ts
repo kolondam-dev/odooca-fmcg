@@ -10,6 +10,7 @@ import {
     type Identity,
 } from "./contracts";
 import type { FieldStore } from "../storage/store";
+import { isDemoMode } from "./running-mode";
 export const MorningRecordSchema = z
     .object({
         mode: z.literal("simulation"),
@@ -24,6 +25,7 @@ export const MorningRecordSchema = z
         openedAt: z.iso.datetime().nullable(),
         snapshot: SnapshotSchema.nullable(),
         deliveryManifest: z.array(DeliveryTaskSchema).min(1).optional(),
+        demo_unrestricted: z.boolean().optional(),
     })
     .strict();
 export type MorningRecord = z.infer<typeof MorningRecordSchema>;
@@ -39,15 +41,22 @@ export function isSundayBusinessDate(dateStr = fieldBusinessDate()): boolean {
 }
 // Structural DTO checks alone are insufficient for persisted bundles. All entry
 // points (sync, restore and readiness) share these semantic checks.
-function validMorningSnapshot(value: unknown, date: string): boolean {
+function validMorningSnapshot(
+    value: unknown,
+    date: string,
+    isRelaxed = isDemoMode(),
+): boolean {
     const parsed = SnapshotSchema.safeParse(value);
     if (!parsed.success) return false;
     const snapshot = parsed.data;
+    const maxSkewMs = isRelaxed ? Infinity : 10_000;
     return (
         !!snapshot.version.trim() &&
         z.iso.datetime().safeParse(snapshot.updatedAt).success &&
-        fieldBusinessDate(new Date(snapshot.updatedAt)) === date &&
-        Date.parse(snapshot.updatedAt) <= Date.now() &&
+        (isRelaxed ||
+            fieldBusinessDate(new Date(snapshot.updatedAt)) === date) &&
+        (isRelaxed ||
+            Date.parse(snapshot.updatedAt) <= Date.now() + maxSkewMs) &&
         snapshot.outlets.length > 0 &&
         snapshot.products.length > 0
     );
@@ -60,18 +69,21 @@ function validMorningRecord(
     const parsed = MorningRecordSchema.safeParse(value);
     if (!parsed.success) return undefined;
     const record = parsed.data;
+    const isRelaxed = Boolean(record.demo_unrestricted || isDemoMode());
     if (
         record.owner !== owner ||
-        record.businessDate !== date ||
-        fieldBusinessDate(new Date(record.attendanceAt)) !== date ||
-        Date.parse(record.attendanceAt) > Date.now()
+        (!isRelaxed && record.businessDate !== date) ||
+        (!isRelaxed &&
+            fieldBusinessDate(new Date(record.attendanceAt)) !== date) ||
+        (!isRelaxed && Date.parse(record.attendanceAt) > Date.now())
     )
         return undefined;
     if (
         record.clockOutAt &&
         (Date.parse(record.clockOutAt) < Date.parse(record.attendanceAt) ||
-            Date.parse(record.clockOutAt) > Date.now() ||
-            fieldBusinessDate(new Date(record.clockOutAt)) !== date)
+            (!isRelaxed && Date.parse(record.clockOutAt) > Date.now()) ||
+            (!isRelaxed &&
+                fieldBusinessDate(new Date(record.clockOutAt)) !== date))
     )
         return undefined;
     // Attendance-only is a valid intermediate state, but never a ready session.
@@ -85,16 +97,19 @@ function validMorningRecord(
         !record.sessionId ||
         !record.openedAt ||
         !record.snapshot ||
-        fieldBusinessDate(new Date(record.openedAt)) !== date ||
+        (!isRelaxed && fieldBusinessDate(new Date(record.openedAt)) !== date) ||
         Date.parse(record.openedAt) < Date.parse(record.attendanceAt) ||
-        Date.parse(record.openedAt) > Date.now() ||
-        !validMorningSnapshot(record.snapshot, date) ||
+        (!isRelaxed && Date.parse(record.openedAt) > Date.now()) ||
+        !validMorningSnapshot(record.snapshot, date, isRelaxed) ||
         (record.snapshot.catalog_version === 2 &&
             (!record.snapshot.scope ||
                 `${record.snapshot.scope.company_id}:${record.snapshot.scope.user_id}` !==
                     owner ||
-                record.snapshot.scope.business_date !== date)) ||
-        Date.parse(record.snapshot.updatedAt) > Date.parse(record.openedAt)
+                (!isRelaxed &&
+                    record.snapshot.scope.business_date !== date))) ||
+        (!isRelaxed &&
+            Date.parse(record.snapshot.updatedAt) >
+                Date.parse(record.openedAt) + 10_000)
     )
         return undefined;
     return record;
@@ -134,7 +149,7 @@ export class MorningSimulation {
         const current = await this.provider.bootstrap();
         if (
             ownerKey(current) !== ownerKey(this.identity) ||
-            current.businessDate !== fieldBusinessDate()
+            (!isDemoMode() && current.businessDate !== fieldBusinessDate())
         )
             throw new Error(
                 "Identitas atau tanggal bisnis berubah. Muat ulang aplikasi.",
@@ -209,8 +224,9 @@ export class MorningSimulation {
         );
         await assertLocalEvidence(row, evidence, owner);
         if (
+            !isDemoMode() &&
             fieldBusinessDate(new Date(evidence.capturedAt)) !==
-            fieldBusinessDate()
+                fieldBusinessDate()
         )
             throw new Error("Foto absensi harus diambil hari ini.");
     }
@@ -227,6 +243,7 @@ export class MorningSimulation {
             sessionId: null,
             openedAt: null,
             snapshot: null,
+            ...(isDemoMode() ? { demo_unrestricted: true } : {}),
         };
         await this.store.draft(record.owner, MORNING_KEY, record);
         return record;
@@ -234,7 +251,8 @@ export class MorningSimulation {
     async open() {
         const date = await this.checkConnection();
         const attendance = await this.restore();
-        if (!attendance || attendance.businessDate !== date)
+        const isDemo = isDemoMode();
+        if (!attendance || (!isDemo && attendance.businessDate !== date))
             throw new Error("Absensi belum diterima. Buka sesi kerja dahulu.");
         const snapshot = SnapshotSchema.parse(await this.provider.snapshot());
         const deliveryManifest = this.identity.roles.includes("delivery")
@@ -244,6 +262,7 @@ export class MorningSimulation {
                   .parse(await this.provider.deliveryTasks?.())
             : undefined;
         if (
+            !isDemo &&
             deliveryManifest?.some(
                 (t) =>
                     t.owner !== ownerKey(this.identity) ||
@@ -251,13 +270,13 @@ export class MorningSimulation {
             )
         )
             throw new Error("Manifest daily sync tidak cocok.");
-        if (!validMorningSnapshot(snapshot, date))
+        if (!validMorningSnapshot(snapshot, date, isDemo))
             throw new Error(
                 "Paket PJP, stok dan harga belum lengkap atau tanggalnya tidak sesuai. Sesi belum dibuka.",
             );
         // Recheck after the request: midnight/offline must never unlock a stale session.
         await this.checkConnection();
-        if (fieldBusinessDate() !== date)
+        if (!isDemo && fieldBusinessDate() !== date)
             throw new Error("Tanggal bisnis berganti. Mulai sesi pagi baru.");
         const record: MorningRecord = {
             ...attendance,
@@ -265,6 +284,9 @@ export class MorningSimulation {
             openedAt: new Date().toISOString(),
             snapshot,
             ...(deliveryManifest ? { deliveryManifest } : {}),
+            ...(isDemo || attendance.demo_unrestricted
+                ? { demo_unrestricted: true }
+                : {}),
         };
         if (!morningReady(record, ownerKey(this.identity), date))
             throw new Error("Paket sesi tidak valid. Sesi belum dibuka.");

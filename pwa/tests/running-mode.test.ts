@@ -475,4 +475,61 @@ describe("Running Mode Gate (DEMO | LIVE)", () => {
             vi.unstubAllGlobals();
         }
     });
+
+    it("preserves DEMO morning session provenance across DEMO to LIVE mode switch and tolerates network skew", async () => {
+        vi.stubGlobal("navigator", { onLine: true });
+        const testStore = new FieldStore();
+        try {
+            // 1. In DEMO mode, accept attendance and open morning session
+            setRunningMode("demo");
+            expect(isDemoMode()).toBe(true);
+
+            const provider = new MockProvider("sales");
+            const identity = await provider.bootstrap();
+            const service = new MorningSimulation(
+                testStore,
+                identity,
+                provider,
+            );
+
+            await service.acceptAttendance();
+            const session = await service.open();
+            expect(session.demo_unrestricted).toBe(true);
+            expect(session.sessionId).toBeTruthy();
+
+            // 2. Switch mode to LIVE
+            setRunningMode("live");
+            expect(isDemoMode()).toBe(false);
+
+            // 3. Restore in LIVE mode: must succeed and remain ready
+            const restored = await service.restore();
+            expect(restored).toBeDefined();
+            expect(restored?.sessionId).toBe(session.sessionId);
+            expect(restored?.demo_unrestricted).toBe(true);
+
+            // 4. Test network skew tolerance (e.g. 2 seconds server timestamp ahead of client openedAt)
+            const skewedSnapshot = {
+                ...session.snapshot!,
+                updatedAt: new Date(
+                    Date.parse(session.openedAt!) + 2000,
+                ).toISOString(),
+            };
+            const skewedRecord = {
+                ...session,
+                snapshot: skewedSnapshot,
+                demo_unrestricted: undefined, // strictly LIVE record
+            };
+            await testStore.draft(
+                ownerKey(identity),
+                "morning-session-v1",
+                skewedRecord,
+            );
+            const restoredLive = await service.restore();
+            expect(restoredLive).toBeDefined();
+            expect(restoredLive?.sessionId).toBe(session.sessionId);
+        } finally {
+            await testStore.close();
+            vi.unstubAllGlobals();
+        }
+    });
 });

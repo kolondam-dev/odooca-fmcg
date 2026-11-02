@@ -70,6 +70,30 @@ class MobileWorkday(models.Model):
             ("user_id", "=", user.id), ("company_id", "=", company.id),
             ("business_date", "=", day), ("active", "=", True),
         ], limit=2)
+        if not assignment:
+            latest = self.with_company(company).search([
+                ("user_id", "=", user.id), ("company_id", "=", company.id),
+                ("active", "=", True),
+            ], order="business_date desc, id desc", limit=1)
+            if (
+                latest
+                and latest.product_ids
+                and latest.outlet_ids
+                and latest.warehouse_id.active
+                and latest.pricelist_id.active
+            ):
+                assignment = self.sudo().create({
+                    "user_id": user.id,
+                    "company_id": company.id,
+                    "business_date": day,
+                    "warehouse_id": latest.warehouse_id.id,
+                    "pricelist_id": latest.pricelist_id.id,
+                    "office_id": latest.office_id.id if latest.office_id else False,
+                    "outlet_radius": latest.outlet_radius,
+                    "product_ids": [(6, 0, latest.product_ids.ids)],
+                    "outlet_ids": [(6, 0, latest.outlet_ids.ids)],
+                    "active": True,
+                })
         if len(assignment) != 1:
             raise AccessError(_("An active assignment for today is required."))
         assignment._check_mobile_scope()
