@@ -12,7 +12,7 @@
               parent="spreadsheet_dashboard.spreadsheet_dashboard_menu_root"
               action="action_monetary_dashboard"
               sequence="20"
-              groups="account.group_account_invoice,sales_team.group_sale_salesman"/>
+              groups="account.group_account_invoice,base.group_system"/>
 
     <!-- Group Dashboards under FMCG Distribution -->
     <menuitem id="menu_fmcg_dash_monetary"
@@ -20,10 +20,11 @@
               parent="id_base.menu_fmcg_dashboard"
               action="action_monetary_dashboard"
               sequence="20"
-              groups="account.group_account_invoice,sales_team.group_sale_salesman"/>
+              groups="account.group_account_invoice,base.group_system"/>
 
     <!-- Monetary & AR Menu Section in FMCG Distribution -->
     <menuitem id="menu_fmcg_monetary"
+              groups="account.group_account_invoice,base.group_system"
               name="Monetary &amp; AR"
               parent="id_base.menu_fmcg_root"
               sequence="20"/>

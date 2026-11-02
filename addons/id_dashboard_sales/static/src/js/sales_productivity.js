@@ -1,9 +1,10 @@
 /** @odoo-module **/
-import { Component, onWillStart, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillDestroy, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 
+const MONEY_FORMATTERS = new Map();
 const MODES = [
     { key: "day", label: _t("Daily") },
     { key: "week", label: _t("Weekly") },
@@ -28,6 +29,9 @@ export class SalesProductivity extends Component {
     static props = ["*"];
 
     setup() {
+        const releaseWorkspace = this.env.services.id_shell?.enterDashboard?.();
+        this.requestVersion = 0;
+        onWillDestroy(() => { this.requestVersion++; releaseWorkspace?.(); });
         this.orm = useService("orm");
         this.action = useService("action");
         this.modes = MODES;
@@ -51,19 +55,21 @@ export class SalesProductivity extends Component {
     }
 
     async load() {
+        const version = ++this.requestVersion;
         this.state.loading = true;
         this.state.error = null;
         try {
-            this.state.data = await this.orm.call("id.sales.productivity", "get_data", [], {
+            const data = await this.orm.call("id.sales.productivity", "get_data", [], {
                 mode: this.state.mode,
                 anchor: this.state.anchor,
                 salesman_ids: this.state.salesmanIds,
                 channel_ids: this.state.channelIds,
             });
+            if (version === this.requestVersion) this.state.data = data;
         } catch (error) {
-            this.state.error = error?.data?.message || error?.message || String(error);
+            if (version === this.requestVersion) { this.state.data = null; this.state.error = error?.data?.message || error?.message || String(error); }
         } finally {
-            this.state.loading = false;
+            if (version === this.requestVersion) this.state.loading = false;
         }
     }
 
@@ -119,8 +125,20 @@ export class SalesProductivity extends Component {
     }
 
     // ---- formatting
+    get currencyLabel() {
+        const currency = this.state.data?.currency || "IDR";
+        return currency === "IDR" ? "Rp" : currency;
+    }
+    targetDimension(value) {
+        return {salesman: _t("Salesperson"), channel: _t("Channel"), area: _t("Coverage area"),
+            principal: _t("Principal")}[value] || value;
+    }
     money(value) {
-        return value === null || value === undefined ? "–" : `Rp ${NF.format(value)}`;
+        if (value === null || value === undefined) return "–";
+        const digits = this.state.data?.currency_digits ?? 0;
+        if (!MONEY_FORMATTERS.has(digits)) MONEY_FORMATTERS.set(digits,
+            new Intl.NumberFormat("id-ID", {minimumFractionDigits: digits, maximumFractionDigits: digits}));
+        return `${this.currencyLabel} ${MONEY_FORMATTERS.get(digits).format(value)}`;
     }
     moneyShort(value) {
         if (value === null || value === undefined) {
@@ -128,12 +146,12 @@ export class SalesProductivity extends Component {
         }
         const abs = Math.abs(value);
         if (abs >= 1e9) {
-            return `Rp ${NF1.format(value / 1e9)} M`;
+            return `${this.currencyLabel} ${NF1.format(value / 1e9)} M`;
         }
         if (abs >= 1e6) {
-            return `Rp ${NF1.format(value / 1e6)} jt`;
+            return `${this.currencyLabel} ${NF1.format(value / 1e6)} jt`;
         }
-        return `Rp ${NF.format(value)}`;
+        return this.money(value);
     }
     int(value) {
         return value === null || value === undefined ? "–" : NF.format(value);
@@ -244,17 +262,17 @@ export class SalesProductivity extends Component {
         const t = this.state.data.total;
         const gross = t.gross;
         return [
-            { key: "gross", title: _t("Gross Revenue"), icon: "fa-line-chart", tone: "navy",
+            { key: "gross", title: _t("Gross SO value"), icon: "fa-line-chart", tone: "navy",
               value: this.moneyShort(t.gross), meta: `${this.int(t.orders)} ${_t("orders")} · ${this.money(t.gross)}`,
               delta: this.delta("gross"), action: () => this.openOrders() },
-            { key: "discount", title: _t("Discount Given"), icon: "fa-percent", tone: "amber",
+            { key: "discount", title: _t("SO discount"), icon: "fa-percent", tone: "amber",
               value: this.moneyShort(t.discount),
               meta: `${this.pct(gross ? t.discount / gross : null)} ${_t("of gross")}`,
               delta: this.delta("discount", "change", true), action: () => this.openDiscounted() },
-            { key: "net", title: _t("Net Revenue"), icon: "fa-money", tone: "emerald",
+            { key: "net", title: _t("Net SO value"), icon: "fa-money", tone: "emerald",
               value: this.moneyShort(t.net), meta: `${_t("ex-tax (DPP)")} · ${this.money(t.net)}`,
               delta: this.delta("net"), action: () => this.openOrders() },
-            { key: "do", title: _t("Delivered DO"), icon: "fa-truck", tone: "blue",
+            { key: "do", title: _t("Completed deliveries"), icon: "fa-truck", tone: "blue",
               value: this.int(t.do_count), meta: _t("by delivery date"),
               delta: this.delta("do_count"), action: () => this.openPickings() },
         ];
@@ -265,13 +283,13 @@ export class SalesProductivity extends Component {
         const pjp = this.pjp;
         const na = { text: "", cls: "" };
         return [
-            { key: "pjp", title: _t("PJP Call Compliance"), icon: "fa-map-marker", tone: "blue",
+            { key: "pjp", title: _t("Accepted PJP Check-ins"), icon: "fa-map-marker", tone: "blue",
               value: pjp.available ? this.pct(pjp.compliance) : "N/A", cls: pjp.available ? "" : "is-na",
               meta: pjp.available ? `${this.int(pjp.completed)} / ${this.int(pjp.planned)} ${_t("planned outlets")}` : this.pjpReason,
               delta: na },
             { key: "ec", title: _t("Effective Call Ratio"), icon: "fa-check-circle", tone: "emerald",
               value: pjp.available ? this.pct(pjp.ec_ratio) : "N/A", cls: pjp.available ? "" : "is-na",
-              meta: pjp.available ? `${this.int(pjp.effective)} / ${this.int(pjp.visits)} ${_t("visits with order")}` : this.pjpReason,
+              meta: pjp.available ? `${this.int(pjp.effective)} / ${this.int(pjp.visits)} ${_t("check-ins followed by an order")}` : this.pjpReason,
               delta: na },
             { key: "lpo", title: _t("Lines per Order"), icon: "fa-list-ol", tone: "navy",
               value: this.num1(t.lpo), cls: this.lpoClass,
@@ -281,7 +299,7 @@ export class SalesProductivity extends Component {
               value: this.int(t.sku_sold), cls: "", meta: _t("distinct SKU"),
               delta: this.delta("sku_sold") },
             { key: "ful", title: _t("Fulfillment-to-Invoice"), icon: "fa-file-text-o", tone: "emerald",
-              value: this.pct(t.fulfillment), cls: "", meta: _t("delivered and posted-invoiced value"),
+              value: this.pct(t.fulfillment), cls: "", meta: _t("positive order value delivered and posted-invoiced"),
               delta: this.delta("fulfillment", "pp") },
         ];
     }
@@ -335,6 +353,7 @@ export class SalesProductivity extends Component {
 
     // ---- drill-down
     openOrders(extra = []) {
+        if (this.state.loading || !this.state.data) return;
         const domain = [...this.state.data.domains.orders, ...extra];
         this.action.doAction({
             type: "ir.actions.act_window",
@@ -345,9 +364,11 @@ export class SalesProductivity extends Component {
         });
     }
     openDiscounted() {
+        if (this.state.loading || !this.state.data) return;
         this.openOrders([["order_line.discount", ">", 0]]);
     }
     openPickings() {
+        if (this.state.loading || !this.state.data) return;
         this.action.doAction({
             type: "ir.actions.act_window",
             name: _t("Delivered DO"),
@@ -357,6 +378,7 @@ export class SalesProductivity extends Component {
         });
     }
     openRow(row) {
+        if (this.state.loading || !this.state.data) return;
         if (!row.id) {
             return;
         }

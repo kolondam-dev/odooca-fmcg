@@ -13,6 +13,7 @@ export async function makeVisitPhoto(
     store: FieldStore,
     owner: string,
     fix: VisitFix,
+    relaxed = false,
 ): Promise<VisitEvidence> {
     const ref = {
         id: crypto.randomUUID(),
@@ -32,6 +33,7 @@ export async function makeVisitPhoto(
     const visual = {
         version: 1 as const,
         kind: "simulation_grid" as const,
+        ...(relaxed ? { demo_unrestricted: true as const } : {}),
         selectedAt: ref.capturedAt,
         fixSampledAt: ref.capturedAt,
         photoSha256: await sha256(row.blob),

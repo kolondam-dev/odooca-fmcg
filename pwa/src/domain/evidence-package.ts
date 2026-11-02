@@ -3,6 +3,7 @@ import { z } from "zod";
 import { LocalExpenseEvidenceSchema } from "./settlement-contracts";
 import type { Evidence, FieldStore } from "../storage/store";
 import type { Command } from "./contracts";
+import { isDemoMode } from "./running-mode";
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
 export const VisualEvidenceSchema = z
     .object({
@@ -59,7 +60,7 @@ export function validateEvidenceTime(
         fix = Date.parse(fixSampledAt);
     if (
         ![saved, selected, fix].every(Number.isFinite) ||
-        (!(__DEMO__ && relaxed) &&
+        (!relaxed &&
             (ref.accuracy <= 0 ||
                 ref.accuracy > 10000 ||
                 saved - selected < 0 ||
@@ -99,11 +100,14 @@ export async function assertLocalEvidence(
     if (!parsed.success)
         throw new Error("Metadata paket bukti tidak valid; perlu review.");
     const visual = parsed.data;
+    const isRelaxed = Boolean(
+        visual.demo_unrestricted || isDemoMode() || __DEMO__,
+    );
     validateEvidenceTime(
         ref,
         visual.selectedAt,
         visual.fixSampledAt,
-        !!visual.demo_unrestricted,
+        isRelaxed,
     );
     if (
         row.blob.type !== "image/jpeg" ||
@@ -112,7 +116,7 @@ export async function assertLocalEvidence(
         map.type !== "image/png" ||
         !map.size ||
         map.size > 128 * 1024 ||
-        Date.parse(ref.capturedAt) > Date.now() + 1000
+        (!isRelaxed && Date.parse(ref.capturedAt) > Date.now() + 1000)
     )
         throw new Error("Format/waktu paket bukti tidak valid; perlu review.");
     const { bindingSha256, ...source } = visual;

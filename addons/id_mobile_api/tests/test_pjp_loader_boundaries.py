@@ -113,7 +113,8 @@ class TestPjpLoaderBoundariesHttp(EvidenceFixture, HttpCase):
             order_info={},
         )
         self.assertTrue(pjp_data_day.get("status", {}).get("available"), "PJP status harian harus available.")
-        self.assertEqual(pjp_data_day.get("total", {}).get("completed"), 1, "Completed visits hari ini harus tepat 1.")
+        self.assertEqual(pjp_data_day["total"]["proof_completed"], 1,
+                         "Assignment-bound proof hari ini harus tepat 1.")
 
         # Query bulanan untuk seluruh bulan Juli 2026 -> completed: 3 (sesuai max_evidence_limit=3)
         pjp_data_month = SalesProd._pjp(
@@ -127,10 +128,13 @@ class TestPjpLoaderBoundariesHttp(EvidenceFixture, HttpCase):
         )
         self.assertTrue(pjp_data_month.get("status", {}).get("available"), "PJP status bulanan harus available.")
         self.assertEqual(
-            pjp_data_month.get("total", {}).get("completed"),
+            pjp_data_month.get("total", {}).get("proof_completed"),
             3,
-            "Completed visits seluruh bulan Juli harus tepat 3.",
+            "Assignment-bound proof seluruh bulan Juli harus tepat 3.",
         )
+        self.assertEqual(pjp_data_day["total"]["completed"], 0, "A photo is not an accepted check-in")
+        self.assertEqual(pjp_data_month["total"]["completed"], 0, "Historical photos must not fabricate visits")
+
 
 
 @tagged("post_install", "-at_install")

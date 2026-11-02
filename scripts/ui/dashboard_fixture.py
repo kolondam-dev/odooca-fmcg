@@ -1,0 +1,78 @@
+"""Disposable ci_db only: meaningful, synthetic native dashboard screenshot data."""
+from datetime import datetime, timedelta
+from odoo import fields
+
+if env.cr.dbname != 'ci_db':  # noqa: F821
+    raise RuntimeError('Dashboard visual fixtures are restricted to disposable ci_db')
+company = env.company  # noqa: F821
+# id_base supplies an IDR pricelist; a blank CI database can still have IDR archived.
+# Activate its currency only inside the disposable fixture; preserve company currency.
+env.ref('base.IDR').active = True  # noqa: F821
+admin = env.ref('base.user_admin')  # noqa: F821
+admin.group_ids = [(4, env.ref('sales_team.group_sale_manager').id)]  # noqa: F821
+partner = env['res.partner'].create({'name': 'Dashboard QA Outlet', 'user_id': admin.id})  # noqa: F821
+principal = env['id.principal'].create({'name': 'Dashboard QA Principal', 'code': 'DQA1'})  # noqa: F821
+unsold = env['id.principal'].create({'name': 'QA No Sales', 'code': 'DQAZ'})  # noqa: F821
+env['product.product'].create({'name': 'QA Unsold SKU', 'type': 'service', 'principal_id': unsold.id})  # noqa: F821
+products = env['product.product']  # noqa: F821
+for index in range(3):
+    products |= env['product.product'].create({  # noqa: F821
+        'name': f'Dashboard QA SKU {index + 1}', 'type': 'service', 'invoice_policy': 'order',
+        'list_price': 100000, 'fmcg_category': 'food', 'principal_id': principal.id,
+    })
+order = env['sale.order'].create({  # noqa: F821
+    'partner_id': partner.id, 'user_id': admin.id,
+    'pricelist_id': env['product.pricelist'].create({'name': 'QA company currency',  # noqa: F821
+        'currency_id': company.currency_id.id}).id,
+    'order_line': [(0, 0, {'product_id': p.id, 'product_uom_qty': 5, 'price_unit': 100000,
+                           'discount': 10}) for p in products],
+})
+order.action_confirm()
+order.date_order = datetime(2026, 7, 15, 3, 0)
+invoices = order._create_invoices()
+invoices.write({'invoice_date': fields.Date.today(), 'invoice_date_due': fields.Date.today() - timedelta(days=5)})
+invoices.action_post()
+# Assert actual SQL-backed finance payload, not just a populated-looking screen.
+period_start = fields.Date.today().replace(day=1)
+period_end = (period_start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+env['id.monetary.target'].create({'name': 'Dashboard QA Current Period',  # noqa: F821
+    'date_from': period_start, 'date_to': period_end, 'target_revenue': 10000000,
+    'company_id': company.id, 'currency_id': company.currency_id.id})
+finance = env['id.monetary.dashboard'].get_data(period_key=f'{period_start}/{period_end}')  # noqa: F821
+exposure = next(c for c in finance['top_customers'] if c['id'] == partner.id)
+assert exposure['overdue_balance'] == invoices.amount_residual_signed > 0
+assert finance['kpi']['realized_revenue'] == invoices.amount_untaxed_signed
+# Distinct authoritative synthetic ledger cost for a positive book-margin visual case.
+cost_account = env['account.account'].create({'name': 'QA Direct Cost', 'code': '990301',  # noqa: F821
+    'account_type': 'expense_direct_cost', 'company_ids': [(6, 0, [company.id])]})
+offset = env['account.account'].create({'name': 'QA Cost Clearing', 'code': '990302',  # noqa: F821
+    'account_type': 'asset_current', 'company_ids': [(6, 0, [company.id])]})
+journal = env['account.journal'].create({'name': 'QA Book Cost', 'code': 'QBC', 'type': 'general'})  # noqa: F821
+env['account.move'].create({'date': fields.Date.today(), 'journal_id': journal.id,  # noqa: F821
+    'line_ids': [(0, 0, {'account_id': cost_account.id, 'debit': 100000}),
+                 (0, 0, {'account_id': offset.id, 'credit': 100000})]}).action_post()
+for dimension, ident in [('salesman', admin.id), ('principal', principal.id)]:
+    env['id.sales.segment.target'].create({'name': 'QA SO target', 'dimension': dimension,  # noqa: F821
+        f'{dimension}_id': ident, 'date_from': '2026-07-01', 'date_to': '2026-07-31', 'target_amount': 4000000})
+brand = env['fleet.vehicle.model.brand'].create({'name': 'Dashboard QA'})  # noqa: F821
+model = env['fleet.vehicle.model'].create({'name': 'Box QA', 'brand_id': brand.id})  # noqa: F821
+vehicle = env['fleet.vehicle'].create({'model_id': model.id, 'license_plate': 'QA-ONLY',  # noqa: F821
+    'capacity_cbm': 12, 'capacity_ton': 3})
+env['id.delivery.trip.cost'].create({'vehicle_id': vehicle.id, 'fuel_cost': 200000, 'helper_cost': 50000})  # noqa: F821
+warehouse = env['stock.warehouse'].search([('company_id', '=', company.id)], limit=1)  # noqa: F821
+stock_product = env['product.product'].create({'name': 'Dashboard QA Physical Stock',  # noqa: F821
+    'type': 'consu', 'is_storable': True, 'tracking': 'lot', 'fmcg_category': 'food', 'standard_price': 10000,
+    'carton_qty': 12, 'carton_length_cm': 30, 'carton_width_cm': 20, 'carton_height_cm': 20})
+lot = env['stock.lot'].create({'name': 'QA-EXPIRY', 'product_id': stock_product.id,  # noqa: F821
+    'company_id': company.id, 'expiration_date': fields.Datetime.now() + timedelta(days=10)})
+env['stock.quant']._update_available_quantity(stock_product, warehouse.lot_stock_id, 120, lot_id=lot)  # noqa: F821
+picking = env['stock.picking'].create({'picking_type_id': warehouse.out_type_id.id,  # noqa: F821
+    'location_id': warehouse.lot_stock_id.id, 'location_dest_id': partner.property_stock_customer.id,
+    'partner_id': partner.id, 'fmcg_vehicle_id': vehicle.id, 'fmcg_reject_reason': 'store_closed'})
+picking.action_cancel()
+env.flush_all()  # noqa: F821
+book = env['id.monetary.book.margin']._for_period(finance['period'])  # noqa: F821
+assert book['available'] and book['direct_cost'] == 100000
+assert book['margin'] == invoices.amount_untaxed_signed - 100000
+env.cr.commit()  # noqa: F821
+print('DASHBOARD_VISUAL_FIXTURE=PASS')

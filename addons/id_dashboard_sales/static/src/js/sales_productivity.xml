@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="id_dashboard_sales.SalesProductivity">
-        <div class="o_action id-sp">
+        <div class="o_action id-sp id-dashboard-workspace">
             <div class="id-sp__sheet">
                 <!-- Header & Unified Grouped Filter Bar -->
                 <header class="id-sp__header">
                     <div class="id-sp__header-main">
                         <div class="id-sp__header-title-wrap">
-                            <span class="id-sp__badge-dept"><i class="fa fa-briefcase"/> DIVISI PENJUALAN &amp; KOMERSIAL</span>
-                            <h1 class="id-sp__title">Sales &amp; Field Productivity Cockpit</h1>
+                            <span class="id-sp__badge-dept"><i class="fa fa-briefcase"/> PENJUALAN</span>
+                            <h1 class="id-sp__title">Kinerja Penjualan</h1>
                             <span class="id-sp__subtitle">Monitoring efektivitas omzet, kepatuhan kunjungan rute PJP, dan penetrasi produk FMCG.</span>
                         </div>
                         <div class="id-sp__header-status">
@@ -17,7 +17,7 @@
                     </div>
 
                     <!-- 3 Logical Filter Clusters -->
-                    <div class="id-sp__filter-bar">
+                    <details class="dashboard-filters"><summary>Filter · Salesperson: <t t-out="state.salesmanIds.length || 'Semua'"/> · Channel: <t t-out="state.channelIds.length || 'Semua'"/></summary><div class="id-sp__filter-bar">
                         <!-- Cluster 1: Time & Period -->
                         <div class="id-sp__filter-cluster">
                             <span class="id-sp__cluster-label"><i class="fa fa-clock-o"/> Periode Waktu</span>
@@ -71,13 +71,14 @@
                                 <i class="fa fa-undo"/> Reset
                             </button>
                         </div>
-                    </div>
+                    </div></details>
                 </header>
 
                 <div t-if="state.error" class="id-sp__alert" role="alert" t-out="state.error"/>
                 <div t-if="state.loading and !state.data" class="id-sp__empty"><i class="fa fa-circle-o-notch fa-spin"/> Memuat data produktivitas…</div>
 
                 <t t-if="state.data">
+                    <p class="text-muted small mb-0">Nilai SO dalam <t t-out="state.data.currency"/> · kurs tanggal SO (WITA). Check-in hanya command server accepted; foto tersendiri bukan kunjungan.</p>
                     <div t-if="!state.data.total.orders" class="id-sp__notice">
                         <i class="fa fa-info-circle"/> Tidak ada pesanan penjualan (SO) tervalidasi pada periode dan filter terpilih.
                     </div>
@@ -85,7 +86,7 @@
                     <!-- BABAK 1: COMMERCIAL & FIELD PULSE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
-                            <h2 class="id-sp__section-title"><i class="fa fa-line-chart"/> Babak 1: Ringkasan Kinerja Penjualan (Commercial Engine)</h2>
+                            <h2 class="id-sp__section-title"><i class="fa fa-line-chart"/> Ringkasan Kinerja Penjualan (Commercial Engine)</h2>
                             <span class="id-sp__section-sub">Pendapatan kotor, kontrol diskon nota, omzet bersih (DPP), dan realisasi pengiriman.</span>
                         </div>
                         <div class="id-sp__cards">
@@ -110,12 +111,34 @@
                             </t>
                         </div>
                     </section>
+                    <section class="id-sp__section" t-if="state.data.outlet_activity">
+                        <h2 class="id-sp__section-title">Aktivitas outlet &amp; target segmen SO</h2>
+                        <p class="id-sp__note">Outlet = company + partner SO. Masuk/keluar membandingkan dua periode ini, bukan pelanggan baru/hilang permanen.</p>
+                        <div class="id-sp__cards">
+                            <div class="id-sp__card"><span class="id-sp__card-title">Outlet dengan SO</span><strong class="id-sp__card-value" t-out="int(state.data.outlet_activity.current)"/></div>
+                            <div class="id-sp__card"><span class="id-sp__card-title">Berulang</span><strong class="id-sp__card-value" t-out="int(state.data.outlet_activity.retained)"/></div>
+                            <div class="id-sp__card"><span class="id-sp__card-title">Masuk periode ini</span><strong class="id-sp__card-value" t-out="int(state.data.outlet_activity.entered)"/></div>
+                            <div class="id-sp__card"><span class="id-sp__card-title">Tidak berulang</span><strong class="id-sp__card-value" t-out="int(state.data.outlet_activity.exited)"/></div>
+                        </div>
+                        <p class="id-sp__note">Target = SO bersih, bukan realisasi faktur. Target lintas dimensi tidak dijumlahkan; perbandingan disembunyikan bila filter hanya mencakup sebagian segmen.</p>
+                        <div class="id-sp__table-wrap" tabindex="0" role="region" aria-label="Target segmen SO" t-if="state.data.segment_targets.length">
+                            <table class="id-sp__table"><thead><tr><th>Segmen</th><th>Company</th><th>Dimensi</th><th class="num">Target</th><th class="num">SO bersih</th><th class="num">Capaian</th></tr></thead>
+                                <tbody><tr t-foreach="state.data.segment_targets" t-as="target" t-key="target.id">
+                                    <td t-out="target.segment"/><td t-out="target.company"/><td t-out="targetDimension(target.dimension)"/>
+                                    <td class="num" t-out="money(target.target)"/><td class="num" t-out="money(target.actual)"/>
+                                    <td class="num"><t t-out="pct(target.achievement)"/><small t-if="!target.scope_complete">Filter parsial</small></td>
+                                </tr></tbody>
+                            </table>
+                        </div>
+                        <p t-else="" class="id-sp__note">Belum ada target segmen yang dapat dibaca untuk rentang tanggal ini.</p>
+                    </section>
+
 
                     <!-- BABAK 1B: FIELD PRODUCTIVITY PULSE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
                             <h2 class="id-sp__section-title"><i class="fa fa-map-marker"/> Produktivitas Lapangan &amp; Kualitas Pesanan</h2>
-                            <span class="id-sp__section-sub">Kepatuhan rute PJP, rasio kunjungan efektif, variasi SKU per order (LPO), dan pemenuhan faktur.</span>
+                            <span class="id-sp__section-sub">PJP dan EC memakai check-in accepted yang sesuai assignment. EC memerlukan SO terkonfirmasi setelah check-in pada outlet/company/hari WITA yang sama.</span>
                         </div>
                         <div class="id-sp__cards id-sp__cards--5">
                             <t t-foreach="fieldCards" t-as="card" t-key="card.key">
@@ -143,10 +166,11 @@
                         </p>
                     </section>
 
+                    <p class="id-sp__note" t-if="state.data.total.pjp.proof_completed !== undefined">Bukti foto/GPS sesuai assignment: <strong t-out="int(state.data.total.pjp.proof_completed)"/> dari <t t-out="int(state.data.total.pjp.planned)"/> slot · bukan jumlah check-in. Scope PJP: <t t-out="state.data.pjp_status.scope"/>.</p>
                     <!-- BABAK 2: VARIANCE DIAGNOSTICS & DRIVERS -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
-                            <h2 class="id-sp__section-title"><i class="fa fa-bar-chart"/> Babak 2: Analisis Distribusi &amp; Penggerak Pendapatan (Drivers)</h2>
+                            <h2 class="id-sp__section-title"><i class="fa fa-bar-chart"/> Analisis Distribusi &amp; Penggerak Pendapatan (Drivers)</h2>
                             <span class="id-sp__section-sub">Tren harian dan komparasi produktivitas antar-salesman serta saluran distribusi.</span>
                         </div>
                         <div class="id-sp__charts">
@@ -223,7 +247,7 @@
                     <!-- BABAK 3: FIELD ACTION & PRODUCTIVITY TABLE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
-                            <h2 class="id-sp__section-title"><i class="fa fa-table"/> Babak 3: Matriks Rincian Produktivitas</h2>
+                            <h2 class="id-sp__section-title"><i class="fa fa-table"/> Matriks Rincian Produktivitas</h2>
                             <div class="id-sp__seg" role="group">
                                 <button type="button" class="id-sp__seg-btn"
                                         t-att-class="{'is-active': state.dimension === 'salesman'}"
@@ -233,7 +257,7 @@
                                         t-on-click="() => state.dimension = 'channel'">Per Saluran (Channel)</button>
                             </div>
                         </div>
-                        <div class="id-sp__table-wrap">
+                        <div class="id-sp__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-sp__table">
                                 <thead>
                                     <tr>
@@ -289,7 +313,7 @@
                                         t-on-click="() => state.penKind = 'brand'">Per Brand</button>
                             </div>
                         </div>
-                        <div class="id-sp__table-wrap">
+                        <div class="id-sp__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-sp__table" t-if="penetration.length">
                                 <thead>
                                     <tr>
@@ -304,15 +328,16 @@
                                         <td class="num" t-out="int(item.catalog)"/>
                                         <td t-foreach="rows" t-as="row" t-key="row.id" class="num"
                                             t-att-class="heat(penCell(item, row).penetration)">
-                                            <t t-out="int(penCell(item, row).sold)"/>
-                                            <small t-out="pct(penCell(item, row).penetration)"/>
+                                            <span><t t-out="int(penCell(item, row).sold)"/> SKU</span>
+                                            <small class="d-block" t-out="pct(penCell(item, row).penetration)"/>
+                                            <small t-if="penCell(item, row).outside_catalog" class="d-block text-warning"><t t-out="int(penCell(item, row).outside_catalog)"/> di luar katalog aktif</small>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                             <div t-else="" class="id-sp__empty">Tidak ada data SKU terjual untuk filter ini.</div>
                         </div>
-                        <p class="id-sp__note">Warna biru menandai tingkat penetrasi SKU terjual terhadap total katalog aktif prinsipal/brand.</p>
+                        <p class="id-sp__note">Persentase = SKU terjual yang masih eligible / katalog aktif saat query yang dapat dibaca akun (bukan snapshot historis); kelompok tanpa penjualan tetap tampil. SKU arsip/non-saleable ditandai terpisah.</p>
                     </section>
                 </t>
             </div>

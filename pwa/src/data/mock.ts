@@ -9,6 +9,7 @@ import {
 } from "../domain/contracts";
 import { ExpenseRealizationSchema } from "../domain/settlement-contracts";
 import { FieldStore } from "../storage/store";
+import { isDemoMode } from "../domain/running-mode";
 const actors: Record<string, Omit<Identity, "businessDate">> = {
     sales: {
         id: "DEMO-ANDRE",
@@ -40,9 +41,14 @@ export class MockProvider implements FieldProvider {
     private store = new FieldStore();
     constructor(
         private actor: string,
-        private relaxedLocation = false,
+        private _relaxedLocation?: boolean,
         private authenticated?: Pick<FieldProvider, "bootstrap" | "snapshot">,
     ) {}
+    get relaxedLocation(): boolean {
+        return this._relaxedLocation !== undefined
+            ? this._relaxedLocation
+            : isDemoMode();
+    }
     async bootstrap() {
         if (this.authenticated) return this.authenticated.bootstrap();
         return {
