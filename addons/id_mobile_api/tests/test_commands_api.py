@@ -682,17 +682,22 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         })
 
         def _add_picking_move(picking, state="assigned"):
-            move = self.env["stock.move"].sudo().create({
+            StockMove = self.env["stock.move"].sudo()
+            candidate = {
                 "name": picking.name,
+                "description_picking": picking.name,
                 "product_id": self.product.id,
                 "product_uom_qty": 2,
                 "product_uom": self.product.uom_id.id,
+                "product_uom_id": self.product.uom_id.id,
                 "picking_id": picking.id,
                 "location_id": picking.location_id.id,
                 "location_dest_id": picking.location_dest_id.id,
                 "company_id": self.company.id,
                 "state": state,
-            })
+            }
+            mv_vals = {k: v for k, v in candidate.items() if k in StockMove._fields}
+            move = StockMove.create(mv_vals)
             self.env.cr.execute(
                 "UPDATE stock_move SET state = %s WHERE id = %s",
                 (state, move.id),

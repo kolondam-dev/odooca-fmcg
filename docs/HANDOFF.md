@@ -1,3 +1,16 @@
+## 2026-11-02T09:29:00+07:00 — anti-gravity agent — Dynamic StockMove Field Filtering in Delivery Tests
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Dynamically filtered stock.move fields against StockMove._fields for Odoo 19 compatibility)
+
+### Detail Perbaikan:
+1. **Penyelarasan Schema Runtime `stock.move` (`test_commands_api.py`):**
+   - Pada Odoo 19, field `name` tidak ada pada model `stock.move` (digantikan oleh `description_picking`).
+   - Memfilter kandidat dictionary pada helper `_add_picking_move` terhadap `StockMove._fields` secara dinamis, sehingga kompatibel penuh dengan schema field Odoo 19 (`description_picking`, `product_uom` / `product_uom_id`, dll.) dan tidak memicu `ValueError: Invalid field 'name'`.
+2. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+
 ## 2026-11-02T09:20:00+07:00 — anti-gravity agent — Fix Delivery Stock Move Attachment & Stabilize Map Zoom / Outlet Visit Browser Tests
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

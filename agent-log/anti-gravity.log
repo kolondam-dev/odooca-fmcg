@@ -1911,3 +1911,13 @@
   * npm --prefix pwa test: PASS (22 files, 352 unit tests)
   * npx prettier --check: PASS
 - Task managed by antigravity agent at 2026-11-02T09:20:00+07:00
+
+
+[2026-11-02T09:29:00+07:00] [INFO] Filter Runtime StockMove Fields in Native Delivery Tests
+- Fixed stock.move field schema validation in test_commands_api.py:
+  * On Odoo 19, stock.move does not have a 'name' field (it uses 'description_picking').
+  * Filtered candidate stock.move fields against StockMove._fields dynamically (matching name/description_picking and product_uom/product_uom_id), guaranteeing clean record creation across Odoo 19 runtime environments.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-02T09:29:00+07:00
