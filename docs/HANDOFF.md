@@ -1,3 +1,6 @@
+## 2026-11-02T20:15:06+07:00 — codex — Koreksi PR73 berotorisasi pemilik
+[F] Tiga identity constraints dipindah ke models.Constraint Odoo19; city.code dipertahankan. Bbox18 kecamatan diambil eksak dari WKT PR72. Empat native regression methods baru: pg_constraint, duplicate create/write, NULL legacy, bbox. Verifier upgrade memeriksa constraint nyata setelah -u. Versi id_base19.0.1.2.0. [BU] Native CI final belum dijalankan; lokal geometri12/12 PASS. Backfill existing DB tetap PR3, tidak deploy.
+
 ## 2026-11-02T10:51:21+07:00 — claude-dev agent — PR-2: skema dan seed master wilayah Sulut
 **Branch:** `agen/geo-master-schema` (stacked di atas `agen/geo-master-upgrade`)
 **Status:** PASS — CI 12/12 job hijau pada SHA `bb6cf52` (static, init-test, install-test, upgrade runtime, invariant, seed, PWA)

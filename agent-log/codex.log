@@ -199,3 +199,9 @@
 - Probe produksi + render OWL/JSDOM 0/3/5 PASS pada 794b852.
 - Gabungkan main 1b38463; pertahankan kedua riwayat HANDOFF. CI integrasi final wajib lulus sebelum merge berotorisasi.
 - Task managed by codex at 2026-11-01T12:45:31+07:00
+
+[2026-11-02T20:15:06+07:00] [INFO] Corrected PR73 geo identities and bbox
+- Otorisasi pemilik: perbaiki PR73 lalu merge jika CI passed; commit diakhiri corrected by codex.
+- models.Constraint pada tiga kode Kemendagri dan city.code; bbox18 kecamatan dihitung dari WKT kanonikal PR72.
+- Native tests memeriksa pg_constraint, duplicate create/write, multiple NULL, dan bbox. Verifier persisted upgrade memeriksa ketiga unique constraint.
+- Versi id_base 19.0.1.2.0. Tidak mengubah noupdate backfill existing yang tetap scope PR3; tidak deploy.

@@ -10,6 +10,10 @@
         <field name="latitude">1.485666</field>
         <field name="longitude">124.83979</field>
         <field name="area_km2">3.392</field>
+        <field name="bbox_xmin">124.830102</field>
+        <field name="bbox_ymin">1.471376</field>
+        <field name="bbox_xmax">124.850901</field>
+        <field name="bbox_ymax">1.499840</field>
         <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
     </record>
 
@@ -22,6 +26,10 @@
         <field name="latitude">1.468109</field>
         <field name="longitude">124.834536</field>
         <field name="area_km2">1.79</field>
+        <field name="bbox_xmin">124.826464</field>
+        <field name="bbox_ymin">1.457524</field>
+        <field name="bbox_xmax">124.839555</field>
+        <field name="bbox_ymax">1.478636</field>
         <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
     </record>
 
@@ -34,6 +42,10 @@
         <field name="latitude">1.446232</field>
         <field name="longitude">124.814665</field>
         <field name="area_km2">17.885</field>
+        <field name="bbox_xmin">124.783701</field>
+        <field name="bbox_ymin">1.428023</field>
+        <field name="bbox_xmax">124.852271</field>
+        <field name="bbox_ymax">1.464137</field>
         <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
     </record>
 
@@ -46,6 +58,10 @@
         <field name="latitude">1.455241</field>
         <field name="longitude">124.846338</field>
         <field name="area_km2">8.609</field>
+        <field name="bbox_xmin">124.831783</field>
+        <field name="bbox_ymin">1.433815</field>
+        <field name="bbox_xmax">124.861889</field>
+        <field name="bbox_ymax">1.476189</field>
         <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
     </record>
 
@@ -58,6 +74,10 @@
         <field name="latitude">1.468209</field>
         <field name="longitude">124.863856</field>
         <field name="area_km2">6.707</field>
+        <field name="bbox_xmin">124.844002</field>
+        <field name="bbox_ymin">1.447396</field>
+        <field name="bbox_xmax">124.876445</field>
+        <field name="bbox_ymax">1.488847</field>
         <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
     </record>
 
@@ -70,6 +90,10 @@
         <field name="latitude">1.4801</field>
         <field name="longitude">124.874594</field>
         <field name="area_km2">9.413</field>
+        <field name="bbox_xmin">124.851274</field>
+        <field name="bbox_ymin">1.462502</field>
+        <field name="bbox_xmax">124.891911</field>
+        <field name="bbox_ymax">1.497648</field>
         <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
     </record>
 
@@ -82,6 +106,10 @@
         <field name="latitude">1.511086</field>
         <field name="longitude">124.852945</field>
         <field name="area_km2">5.291</field>
+        <field name="bbox_xmin">124.839261</field>
+        <field name="bbox_ymin">1.496449</field>
+        <field name="bbox_xmax">124.880146</field>
+        <field name="bbox_ymax">1.525782</field>
         <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
     </record>
 
@@ -94,6 +122,10 @@
         <field name="latitude">1.500551</field>
         <field name="longitude">124.857666</field>
         <field name="area_km2">4.908</field>
+        <field name="bbox_xmin">124.844874</field>
+        <field name="bbox_ymin">1.487441</field>
+        <field name="bbox_xmax">124.871449</field>
+        <field name="bbox_ymax">1.513667</field>
         <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
     </record>
 
@@ -106,6 +138,10 @@
         <field name="latitude">1.529116</field>
         <field name="longitude">124.893134</field>
         <field name="area_km2">53.838</field>
+        <field name="bbox_xmin">124.860729</field>
+        <field name="bbox_ymin">1.480329</field>
+        <field name="bbox_xmax">124.934043</field>
+        <field name="bbox_ymax">1.578383</field>
         <field name="coverage_area_id" ref="id_base.area_mnd_urban"/>
     </record>
 
@@ -118,6 +154,10 @@
         <field name="latitude">1.462941</field>
         <field name="longitude">125.189155</field>
         <field name="area_km2">8.98</field>
+        <field name="bbox_xmin">125.178952</field>
+        <field name="bbox_ymin">1.438224</field>
+        <field name="bbox_xmax">125.199055</field>
+        <field name="bbox_ymax">1.487478</field>
         <field name="coverage_area_id" ref="id_base.area_btg_port"/>
     </record>
 
@@ -130,6 +170,10 @@
         <field name="latitude">1.461248</field>
         <field name="longitude">125.16132</field>
         <field name="area_km2">19.884</field>
+        <field name="bbox_xmin">125.138429</field>
+        <field name="bbox_ymin">1.436146</field>
+        <field name="bbox_xmax">125.181480</field>
+        <field name="bbox_ymax">1.486337</field>
         <field name="coverage_area_id" ref="id_base.area_btg_port"/>
     </record>
 
@@ -142,6 +186,10 @@
         <field name="latitude">1.44688</field>
         <field name="longitude">125.131538</field>
         <field name="area_km2">5.026</field>
+        <field name="bbox_xmin">125.120386</field>
+        <field name="bbox_ymin">1.430658</field>
+        <field name="bbox_xmax">125.143122</field>
+        <field name="bbox_ymax">1.462946</field>
         <field name="coverage_area_id" ref="id_base.area_btg_port"/>
     </record>
 
@@ -154,6 +202,10 @@
         <field name="latitude">1.490746</field>
         <field name="longitude">125.206136</field>
         <field name="area_km2">48.747</field>
+        <field name="bbox_xmin">125.173077</field>
+        <field name="bbox_ymin">1.438652</field>
+        <field name="bbox_xmax">125.248555</field>
+        <field name="bbox_ymax">1.542132</field>
         <field name="coverage_area_id" ref="id_base.area_btg_port"/>
     </record>
 
@@ -166,6 +218,10 @@
         <field name="latitude">1.31947</field>
         <field name="longitude">124.833858</field>
         <field name="area_km2">15.998</field>
+        <field name="bbox_xmin">124.820485</field>
+        <field name="bbox_ymin">1.287083</field>
+        <field name="bbox_xmax">124.874635</field>
+        <field name="bbox_ymax">1.352007</field>
         <field name="coverage_area_id" ref="id_base.area_tmh_hinterland"/>
     </record>
 
@@ -178,6 +234,10 @@
         <field name="latitude">1.301472</field>
         <field name="longitude">124.892189</field>
         <field name="area_km2">22.785</field>
+        <field name="bbox_xmin">124.871327</field>
+        <field name="bbox_ymin">1.254119</field>
+        <field name="bbox_xmax">124.917354</field>
+        <field name="bbox_ymax">1.335922</field>
         <field name="coverage_area_id" ref="id_base.area_tmh_hinterland"/>
     </record>
 
@@ -190,6 +250,10 @@
         <field name="latitude">1.21161</field>
         <field name="longitude">124.816278</field>
         <field name="area_km2">13.758</field>
+        <field name="bbox_xmin">124.774785</field>
+        <field name="bbox_ymin">1.185832</field>
+        <field name="bbox_xmax">124.835777</field>
+        <field name="bbox_ymax">1.237358</field>
         <field name="coverage_area_id" ref="id_base.area_tmh_hinterland"/>
     </record>
 
@@ -202,6 +266,10 @@
         <field name="latitude">1.392492</field>
         <field name="longitude">124.951782</field>
         <field name="area_km2">92.665</field>
+        <field name="bbox_xmin">124.907688</field>
+        <field name="bbox_ymin">1.319064</field>
+        <field name="bbox_xmax">125.030284</field>
+        <field name="bbox_ymax">1.466138</field>
         <field name="coverage_area_id" ref="id_base.area_minut_rural"/>
     </record>
 
@@ -214,6 +282,10 @@
         <field name="latitude">1.151114</field>
         <field name="longitude">124.603384</field>
         <field name="area_km2">66.691</field>
+        <field name="bbox_xmin">124.562832</field>
+        <field name="bbox_ymin">1.105177</field>
+        <field name="bbox_xmax">124.736716</field>
+        <field name="bbox_ymax">1.196949</field>
         <field name="coverage_area_id" ref="id_base.area_minut_rural"/>
     </record>
 

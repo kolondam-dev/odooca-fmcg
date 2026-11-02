@@ -1,4 +1,8 @@
+from psycopg2 import IntegrityError
+
+from odoo.exceptions import ValidationError
 from odoo.tests.common import TransactionCase
+from odoo.tools import mute_logger
 
 # Expected identities after PR-2 (see docs/reviews/GEO_BASELINE_2026-11-01.md).
 CITY_KODE = {
@@ -146,3 +150,60 @@ class TestGeoMaster(TransactionCase):
         view = self.env.ref("id_base.view_id_district_form")
         self.assertNotIn("geojson_polygon", view.arch)
         self.assertIn('name="city_id"', view.arch)
+
+    def _constraint_models(self):
+        return [
+            (self.City, {"name": "Geo constraint city"}),
+            (self.District, {"name": "Geo constraint district", "city_id": self.env.ref("id_base.city_mnd").id}),
+            (self.Subdistrict, {"name": "Geo constraint village",
+                               "district_id": self.env.ref("id_base.district_mnd_wenang").id}),
+        ]
+
+    def test_06_unique_constraints_exist_in_postgres(self):
+        for model, _values in self._constraint_models():
+            with self.subTest(model=model._name):
+                self.cr.execute("""
+                    SELECT EXISTS (
+                        SELECT 1 FROM pg_constraint c
+                        JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = c.conkey[1]
+                        WHERE c.conrelid = %s::regclass AND c.contype = 'u'
+                          AND cardinality(c.conkey) = 1 AND a.attname = 'kode_kemendagri'
+                    )
+                """, [model._table])
+                self.assertTrue(self.cr.fetchone()[0], model._name)
+
+    @mute_logger("odoo.sql_db")
+    def test_07_duplicate_create_and_write_are_rejected(self):
+        for model, values in self._constraint_models():
+            with self.subTest(model=model._name):
+                first_code = f"TEST-{model._table}-A"
+                model.create(dict(values, kode_kemendagri=first_code))
+                other = model.create(dict(values, kode_kemendagri=f"TEST-{model._table}-B"))
+                with self.assertRaises((IntegrityError, ValidationError)), self.cr.savepoint():
+                    model.create(dict(values, kode_kemendagri=first_code))
+                    self.env.flush_all()
+                with self.assertRaises((IntegrityError, ValidationError)), self.cr.savepoint():
+                    other.write({"kode_kemendagri": first_code})
+                    self.env.flush_all()
+                other.invalidate_recordset(["kode_kemendagri"])
+                self.assertEqual(other.kode_kemendagri, f"TEST-{model._table}-B")
+
+    def test_08_multiple_null_codes_remain_allowed(self):
+        for model, values in self._constraint_models():
+            with self.subTest(model=model._name):
+                records = model.create([dict(values, kode_kemendagri=False), dict(values, kode_kemendagri=False)])
+                self.assertEqual(len(records), 2)
+                self.assertTrue(all(not record.kode_kemendagri for record in records))
+
+    def test_09_seed_bbox_contains_representative_point(self):
+        districts = self._by_code(self.District, DISTRICT_KODE)
+        for code, record in districts.items():
+            self.assertLess(record.bbox_xmin, record.bbox_xmax, code)
+            self.assertLess(record.bbox_ymin, record.bbox_ymax, code)
+            self.assertLessEqual(record.bbox_xmin, record.longitude, code)
+            self.assertLessEqual(record.longitude, record.bbox_xmax, code)
+            self.assertLessEqual(record.bbox_ymin, record.latitude, code)
+            self.assertLessEqual(record.latitude, record.bbox_ymax, code)
+        wenang = districts["KEC-MND-WNG"]
+        self.assertAlmostEqual(wenang.bbox_xmin, 124.830102, places=6)
+        self.assertAlmostEqual(wenang.bbox_ymax, 1.499840, places=6)

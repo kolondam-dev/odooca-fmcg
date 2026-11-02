@@ -79,14 +79,10 @@ class IdCity(models.Model):
     area_km2 = fields.Float(string="Area (km2)", digits=(12, 3))
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
-        ("code_uniq", "unique(code)", "City code must be unique!"),
-        (
-            "id_city_kode_kemendagri_uniq",
-            "unique(kode_kemendagri)",
-            "Kemendagri code must be unique!",
-        ),
-    ]
+    _code_uniq = models.Constraint("UNIQUE(code)", "City code must be unique!")
+    _kode_kemendagri_uniq = models.Constraint(
+        "UNIQUE(kode_kemendagri)", "Kemendagri code must be unique!"
+    )
 
 
 class IdDistrict(models.Model):
@@ -116,13 +112,9 @@ class IdDistrict(models.Model):
     geom_updated_at = fields.Datetime(string="Geometry Updated At", readonly=True)
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
-        (
-            "id_district_kode_kemendagri_uniq",
-            "unique(kode_kemendagri)",
-            "Kemendagri code must be unique!",
-        ),
-    ]
+    _kode_kemendagri_uniq = models.Constraint(
+        "UNIQUE(kode_kemendagri)", "Kemendagri code must be unique!"
+    )
 
 
 class IdSubdistrict(models.Model):
@@ -141,10 +133,6 @@ class IdSubdistrict(models.Model):
     is_legacy = fields.Boolean(string="Legacy Demo Record", default=False)
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
-        (
-            "id_subdistrict_kode_kemendagri_uniq",
-            "unique(kode_kemendagri)",
-            "Kemendagri code must be unique!",
-        ),
-    ]
+    _kode_kemendagri_uniq = models.Constraint(
+        "UNIQUE(kode_kemendagri)", "Kemendagri code must be unique!"
+    )

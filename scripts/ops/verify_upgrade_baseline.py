@@ -481,6 +481,25 @@ def assert_schema_integrity(env) -> dict:
     }
 
 
+def assert_geo_code_constraints(env) -> dict:
+    """Geo identities must stay database-unique after a persisted module upgrade."""
+    checked = []
+    for model_name in ("id.city", "id.district", "id.subdistrict"):
+        model = env[model_name]
+        env.cr.execute("""
+            SELECT EXISTS (
+                SELECT 1 FROM pg_constraint c
+                JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = c.conkey[1]
+                WHERE c.conrelid = %s::regclass AND c.contype = 'u'
+                  AND cardinality(c.conkey) = 1 AND a.attname = 'kode_kemendagri'
+            )
+        """, [model._table])
+        if not env.cr.fetchone()[0]:
+            raise AssertionError(f"[UPGRADE-GEO] Missing database unique constraint: {model_name}.kode_kemendagri")
+        checked.append(model_name)
+    return {"status": "PASS", "models": checked}
+
+
 def assert_foreign_key_integrity(env) -> dict:
     """Tidak boleh ada baris orphan pada field many2one milik modul id_*."""
     modules = set(UPGRADE_MODULES)
@@ -1040,6 +1059,8 @@ def run_upgrade_baseline_verification(env, baseline_state_path=None, output_dir=
 
         # 3. Integritas DDL & pemulihan drift skema terkontrol.
         schema = assert_schema_integrity(env)
+        report["checks"]["geo_code_constraints"] = assert_geo_code_constraints(env)
+        print(" -> [Geo uniqueness PASS] Three PostgreSQL constraints exist after upgrade")
         drift_repair = repair_schema_drift_targets(env)
         schema["drift_repair"] = drift_repair
         report["checks"]["schema"] = schema
