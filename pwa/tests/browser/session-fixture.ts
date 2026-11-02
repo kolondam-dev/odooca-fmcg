@@ -13,6 +13,91 @@ export async function changeTestAccount(page: Page, actor: string) {
 export const test = base.extend({
     page: async ({ page }, use) => {
         actors.set(page, "sales");
+        await page.addInitScript(() => {
+            const RealDate = window.Date;
+            const witaDateStr = new RealDate().toLocaleDateString("en-CA", {
+                timeZone: "Asia/Makassar",
+            });
+            const parts = witaDateStr.split("-").map(Number);
+            const witaDay = new RealDate(
+                Date.UTC(parts[0], parts[1] - 1, parts[2], 12, 0, 0),
+            ).getUTCDay();
+            const shiftMs = witaDay === 0 ? -3 * 24 * 60 * 60 * 1000 : 0;
+
+            if (shiftMs !== 0) {
+                class ShiftedDate extends RealDate {
+                    constructor(...args: unknown[]) {
+                        if (args.length === 0) {
+                            super(RealDate.now() + shiftMs);
+                        } else if (args.length === 1) {
+                            super(args[0] as string | number | Date);
+                        } else {
+                            super(...(args as [number, number, ...number[]]));
+                        }
+                    }
+                    static now() {
+                        return RealDate.now() + shiftMs;
+                    }
+                }
+                // @ts-expect-error Assign shifted date constructor
+                window.Date = ShiftedDate;
+            }
+
+            // Sync geolocation timestamp directly with window.Date.now()
+            if (navigator.geolocation) {
+                const origGet = navigator.geolocation.getCurrentPosition.bind(
+                    navigator.geolocation,
+                );
+                navigator.geolocation.getCurrentPosition = function (
+                    success,
+                    error,
+                    options,
+                ) {
+                    origGet(
+                        function (pos) {
+                            try {
+                                Object.defineProperty(pos, "timestamp", {
+                                    value: window.Date.now(),
+                                    configurable: true,
+                                    writable: true,
+                                });
+                            } catch {
+                                // Ignore definition error and proceed
+                            }
+                            success(pos);
+                        },
+                        error,
+                        options,
+                    );
+                };
+
+                const origWatch = navigator.geolocation.watchPosition.bind(
+                    navigator.geolocation,
+                );
+                navigator.geolocation.watchPosition = function (
+                    success,
+                    error,
+                    options,
+                ) {
+                    return origWatch(
+                        function (pos) {
+                            try {
+                                Object.defineProperty(pos, "timestamp", {
+                                    value: window.Date.now(),
+                                    configurable: true,
+                                    writable: true,
+                                });
+                            } catch {
+                                // Ignore definition error and proceed
+                            }
+                            success(pos);
+                        },
+                        error,
+                        options,
+                    );
+                };
+            }
+        });
         await page.context().setGeolocation({
             latitude: 1.465,
             longitude: 124.833,

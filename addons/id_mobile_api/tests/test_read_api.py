@@ -297,4 +297,7 @@ class TestMobileReadHttp(MobileFixture, HttpCase):
         self.assertEqual(self.url_open("/api/v1/me/bootstrap", data="{}").status_code, 405)
         cross = self.url_open("/api/v1/sync/snapshot", headers={"Origin": "https://other.invalid"})
         self.assertEqual(cross.status_code, 400)
-        self.assertEqual(self.url_open("/api/v1/sync/commands", data="{}").status_code, 404)
+        self.assertEqual(self.url_open("/api/v1/sync/unknown", data="{}").status_code, 404)
+        csrf = bootstrap.json()["csrfToken"]
+        res = self.url_open("/api/v1/sync/commands", data="{}", headers={"X-CSRF-Token": csrf})
+        self.assertEqual(res.status_code, 422)

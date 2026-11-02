@@ -2846,9 +2846,14 @@ body:has(.delivery-task[open]) {
     padding: 8px 0;
 }
 .display-photo > .photo-preview {
-    max-height: 96px;
-    width: 96px;
-    object-fit: cover;
+    max-height: 200px;
+    width: 100%;
+    max-width: 320px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    margin: 8px 0;
 }
 
 .workflow-tabs > button {
