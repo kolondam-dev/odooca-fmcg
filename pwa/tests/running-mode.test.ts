@@ -1,3 +1,12 @@
+import { assertVisitEvidence } from "../src/domain/visit-evidence";
+import { type VisitContext } from "../src/domain/visit-contracts";
+import { SalesVisits } from "../src/domain/visits";
+import { FieldStore } from "../src/storage/store";
+import { Outbox } from "../src/domain/outbox";
+import { MockProvider } from "../src/data/mock";
+import { MorningSimulation } from "../src/domain/morning";
+import { ownerKey } from "../src/domain/contracts";
+import { makeVisitPhoto } from "./visit-fixtures";
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import {
     getRunningMode,
@@ -264,5 +273,206 @@ describe("Running Mode Gate (DEMO | LIVE)", () => {
         await expect(
             assertLocalEvidence(row, ref, owner),
         ).resolves.toBeUndefined();
+    });
+
+    it("respects demo_unrestricted provenance during DEMO -> LIVE mode switch (supervisor counterexample probe)", async () => {
+        const now = Date.now();
+        const capturedAt = new Date(now).toISOString();
+
+        // 1. context.site is normal WITHOUT demo_unrestricted flag (as when synced in LIVE)
+        const context: VisitContext = {
+            visit_uuid: crypto.randomUUID(),
+            work_session_id: crypto.randomUUID(),
+            business_date: "2026-10-27",
+            snapshot_version: "v1",
+            outlet_id: "outlet-1",
+            site: {
+                latitude: 1.48,
+                longitude: 124.84,
+                radius: 100, // 100m radius
+            },
+            fix: {
+                latitude: 1.49, // ~1.1 km away (outside geofence)
+                longitude: 124.84,
+                accuracy: 5,
+                sampled_at: capturedAt,
+            },
+        };
+
+        const ref: EvidenceReference = {
+            id: crypto.randomUUID(),
+            latitude: 1.49, // 1.1 km outside
+            longitude: 124.84,
+            accuracy: 5,
+            capturedAt,
+        };
+
+        const blob = new Blob(["test-photo"], { type: "image/jpeg" });
+        const map = new Blob(["test-map"], { type: "image/png" });
+        const photoSha256 = await sha256(blob);
+        const mapSha256 = await sha256(map);
+
+        const visual = {
+            version: 1 as const,
+            kind: "simulation_grid" as const,
+            demo_unrestricted: true as const, // Created in DEMO mode
+            selectedAt: capturedAt,
+            fixSampledAt: capturedAt,
+            photoSha256,
+            mapSha256,
+        };
+
+        const dummyRow = {
+            key: `sales:${ref.id}`,
+            owner: "sales",
+            blob,
+            ...ref,
+            mapStatus: "pending" as const,
+        };
+
+        const bindingSha256 = await sha256(evidenceBinding(dummyRow, visual));
+        ref.packageHash = bindingSha256;
+
+        const row: Evidence = {
+            ...dummyRow,
+            visual: { ...visual, bindingSha256, map },
+        };
+
+        const mockStore = {
+            getEvidence: async (_owner: string, _id: string) => row,
+        } as unknown as FieldStore;
+
+        // In DEMO mode: assertVisitEvidence succeeds
+        setRunningMode("demo");
+        await expect(
+            assertVisitEvidence(ref, context, capturedAt, "sales", mockStore),
+        ).resolves.toBeUndefined();
+
+        // Switch to LIVE mode: assertVisitEvidence MUST STILL SUCCEED for valid DEMO history!
+        setRunningMode("live");
+        await expect(
+            assertVisitEvidence(ref, context, capturedAt, "sales", mockStore),
+        ).resolves.toBeUndefined();
+
+        // Counterexample check: if the package was NOT demo_unrestricted, LIVE mode MUST reject out-of-geofence fix!
+        const strictVisual = {
+            version: 1 as const,
+            kind: "simulation_grid" as const,
+            selectedAt: capturedAt,
+            fixSampledAt: capturedAt,
+            photoSha256,
+            mapSha256,
+        };
+        const strictBinding = await sha256(
+            evidenceBinding(dummyRow, strictVisual),
+        );
+        const strictRef: EvidenceReference = {
+            ...ref,
+            packageHash: strictBinding,
+        };
+        const strictRow: Evidence = {
+            ...dummyRow,
+            visual: { ...strictVisual, bindingSha256: strictBinding, map },
+        };
+        const strictStore = {
+            getEvidence: async (_owner: string, _id: string) => strictRow,
+        } as unknown as FieldStore;
+
+        await expect(
+            assertVisitEvidence(
+                strictRef,
+                context,
+                capturedAt,
+                "sales",
+                strictStore,
+            ),
+        ).rejects.toThrow("Lokasi berada di luar geofence outlet.");
+    });
+
+    it("restores visits created in DEMO after switching to LIVE without locking workspace or allowing new invalid LIVE actions", async () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(new Date("2026-10-27T08:00:00Z"));
+        vi.stubGlobal("navigator", { onLine: true });
+
+        const storeName = crypto.randomUUID();
+        const testStore = new FieldStore(storeName);
+
+        try {
+            const provider = new MockProvider("sales");
+            const identity = await provider.bootstrap();
+            const owner = ownerKey(identity);
+            const engine = new Outbox(testStore, owner, provider);
+            const morning = new MorningSimulation(
+                testStore,
+                identity,
+                provider,
+            );
+
+            await morning.acceptAttendance();
+            const morningState = await morning.open();
+            const outlet = morningState.snapshot!.outlets[0];
+
+            const visitsService = new SalesVisits(
+                testStore,
+                identity,
+                provider,
+                engine,
+            );
+
+            // 1. User is in DEMO mode: creates visit with fix outside radius (e.g. +0.01 lat ~1.1 km)
+            setRunningMode("demo");
+            const farFix: VisitFix = {
+                latitude: outlet.latitude + 0.01,
+                longitude: outlet.longitude,
+                accuracy: 3,
+                sampled_at: new Date().toISOString(),
+            };
+
+            const inPhoto = await makeVisitPhoto(
+                testStore,
+                owner,
+                farFix,
+                true,
+            );
+            await visitsService.checkIn(outlet.id, farFix, inPhoto);
+
+            const outPhoto = await makeVisitPhoto(
+                testStore,
+                owner,
+                farFix,
+                true,
+            );
+            await visitsService.checkOut(
+                outlet.id,
+                farFix,
+                "no_order",
+                "Outlet visited in demo mode",
+                outPhoto,
+            );
+
+            // 2. Switch mode to LIVE
+            setRunningMode("live");
+
+            // 3. Restore and validate media in LIVE mode: must succeed and not lock workspace!
+            const restored = await visitsService.restore(outlet.id);
+            expect(restored.history.length).toBe(1);
+            expect(restored.history[0].check_out).not.toBeNull();
+
+            // 4. In LIVE mode, attempting a NEW visit with out-of-geofence fix is strictly rejected!
+            const anotherOutlet = morningState.snapshot!.outlets[1];
+            const livePhoto = await makeVisitPhoto(
+                testStore,
+                owner,
+                farFix,
+                false,
+            );
+            await expect(
+                visitsService.checkIn(anotherOutlet.id, farFix, livePhoto),
+            ).rejects.toThrow("Lokasi berada di luar geofence outlet.");
+        } finally {
+            await testStore.close();
+            vi.useRealTimers();
+            vi.unstubAllGlobals();
+        }
     });
 });

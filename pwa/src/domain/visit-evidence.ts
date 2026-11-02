@@ -9,6 +9,7 @@ import {
 } from "./evidence-package";
 import { requireVisitFix } from "./visit-validation";
 import { CommandSchema, type Command } from "./contracts";
+import { isDemoMode } from "./running-mode";
 import type { FieldStore, QueueItem } from "../storage/store";
 export function bindVisitEvidence(
     value: unknown,
@@ -27,6 +28,7 @@ export function bindVisitEvidence(
         throw new Error(
             "Waktu foto tidak sesuai sesi/aksi kunjungan. Ambil foto baru.",
         );
+    const isRelaxed = Boolean(context.site.demo_unrestricted || isDemoMode());
     requireVisitFix(
         {
             latitude: ref.latitude,
@@ -36,6 +38,7 @@ export function bindVisitEvidence(
         },
         context.site,
         Date.parse(at),
+        isRelaxed,
     );
     return ref;
 }
@@ -52,6 +55,11 @@ export async function assertVisitEvidence(
         throw new Error(
             "Kunjungan baru wajib paket foto lengkap; perlu review.",
         );
+    const isRelaxed = Boolean(
+        row.visual.demo_unrestricted ||
+        context.site.demo_unrestricted ||
+        isDemoMode(),
+    );
     requireVisitFix(
         {
             latitude: ref.latitude,
@@ -61,6 +69,7 @@ export async function assertVisitEvidence(
         },
         context.site,
         Date.parse(at),
+        isRelaxed,
     );
 }
 // Include accepted ancestors: a receipt never exempts damaged local media.

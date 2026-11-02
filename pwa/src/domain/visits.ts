@@ -22,7 +22,7 @@ import {
 } from "./visit-contracts";
 import type { FieldStore } from "../storage/store";
 import type { Outbox } from "./outbox";
-import { getStoredRunningMode } from "./running-mode";
+import { getStoredRunningMode, isDemoMode } from "./running-mode";
 export function captureVisitLocation(
     source?: (value: "device" | "demo") => void,
 ): Promise<VisitFix> {
@@ -159,6 +159,7 @@ export class SalesVisits {
                 "Outlet tidak ada di PJP. Extra call memerlukan approval supervisor.",
             );
         const id = crypto.randomUUID(),
+            isDemo = isDemoMode(),
             context: VisitContext = {
                 visit_uuid: id,
                 work_session_id: s.morning.sessionId!,
@@ -169,7 +170,7 @@ export class SalesVisits {
                     latitude: outlet.latitude,
                     longitude: outlet.longitude,
                     radius: outlet.radius,
-                    ...(outlet.demo_unrestricted
+                    ...(outlet.demo_unrestricted || isDemo
                         ? { demo_unrestricted: true as const }
                         : {}),
                 },

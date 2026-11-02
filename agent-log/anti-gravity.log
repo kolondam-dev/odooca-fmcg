@@ -2018,3 +2018,10 @@
 - Menjaga selector Playwright browser test pada .demo-running-banner
 - Typecheck dan test verifikasi lokal lulus
 - Task managed by antigravity-agent at 2026-11-02T07:37:41+00:00
+
+[2026-11-02T10:32:02+00:00] [INFO] Preserve DEMO visit history provenance across DEMO to LIVE switch
+- Menyimpan provenance demo_unrestricted pada context.site saat kunjungan dibuat di mode DEMO
+- Meneruskan relaxed status berbasis visual/site demo_unrestricted pada assertVisitEvidence dan requireVisitFix
+- Memperpanjang test browser staging dan unit test sesuai probe counterexample supervisor
+- 362 unit tests dan seluruh checks lulus lokal
+- Task managed by antigravity-agent at 2026-11-02T10:32:02+00:00

@@ -41,9 +41,19 @@ export function assessVisitFix(value: unknown, site: unknown, at = Date.now()) {
         distance,
     };
 }
-export function requireVisitFix(fix: VisitFix, site: unknown, at = Date.now()) {
+export function requireVisitFix(
+    fix: VisitFix,
+    site: unknown,
+    at = Date.now(),
+    isRelaxed = false,
+) {
     const parsedSite = VisitSiteSchema.parse(site);
-    if (isDemoMode() || (__DEMO__ && parsedSite.demo_unrestricted)) {
+    if (
+        isRelaxed ||
+        isDemoMode() ||
+        parsedSite.demo_unrestricted ||
+        (__DEMO__ && parsedSite.demo_unrestricted)
+    ) {
         VisitFixSchema.parse(fix);
         return;
     }
@@ -97,17 +107,17 @@ export function bindVisitContext(
     const outlet = morning.snapshot!.outlets.find(
         (o) => o.id === context.outlet_id,
     );
-    if (
-        !outlet ||
-        !same(context.site, {
-            latitude: outlet.latitude,
-            longitude: outlet.longitude,
-            radius: outlet.radius,
-            ...(outlet.demo_unrestricted
-                ? { demo_unrestricted: true as const }
-                : {}),
-        })
-    )
+    if (!outlet)
+        throw new Error("Outlet/geofence tidak sesuai paket PJP pagi.");
+    const expectedSite = {
+        latitude: outlet.latitude,
+        longitude: outlet.longitude,
+        radius: outlet.radius,
+        ...(outlet.demo_unrestricted || context.site.demo_unrestricted
+            ? { demo_unrestricted: true as const }
+            : {}),
+    };
+    if (!same(context.site, expectedSite))
         throw new Error("Outlet/geofence tidak sesuai paket PJP pagi.");
 }
 export function visitOrders(rows: QueueItem[], visitId: string) {
@@ -168,7 +178,12 @@ export function visitLedger(
                 "Owner/tanggal/urutan riwayat kunjungan tidak valid.",
             );
         ids.add(c.visit_uuid);
-        requireVisitFix(c.fix, c.site, Date.parse(record.check_in_at));
+        requireVisitFix(
+            c.fix,
+            c.site,
+            Date.parse(record.check_in_at),
+            Boolean(c.site.demo_unrestricted || isDemoMode()),
+        );
         const start = rows.find((q) => q.command.client_uuid === c.visit_uuid);
         if (
             !start ||
@@ -227,6 +242,7 @@ export function visitLedger(
                 end.payload.fix,
                 c.site,
                 Date.parse(end.occurred_at),
+                Boolean(c.site.demo_unrestricted || isDemoMode()),
             );
             if (record.photo_required && !end.payload.evidence_version)
                 throw new Error(
@@ -318,7 +334,12 @@ export function visitLedger(
             source.snapshot!,
         );
         if (invalid) throw new Error(invalid);
-        requireVisitFix(c.fix, c.site, Date.parse(q.command.occurred_at));
+        requireVisitFix(
+            c.fix,
+            c.site,
+            Date.parse(q.command.occurred_at),
+            Boolean(c.site.demo_unrestricted || isDemoMode()),
+        );
     }
     for (const q of rows) {
         if (
@@ -354,7 +375,12 @@ export function validateVisitCommit(
             : item.command.payload,
     );
     bindVisitContext(c, morning, item.owner);
-    requireVisitFix(c.fix, c.site);
+    requireVisitFix(
+        c.fix,
+        c.site,
+        Date.now(),
+        Boolean(c.site.demo_unrestricted || isDemoMode()),
+    );
     if (item.command.type === "sales.visit.check_in") {
         if (
             c.visit_uuid !== item.command.client_uuid ||

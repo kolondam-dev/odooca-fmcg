@@ -1,18 +1,31 @@
-## 2026-11-02T14:38:00+07:00 — anti-gravity agent — Restore App.tsx Clean Format and Keep Test Selector on Demo Running Banner
+## 2026-11-02T17:32:00+07:00 — anti-gravity agent — Preserve DEMO Visit History Provenance Across DEMO to LIVE Mode Switch
 **Branch:** `agen/running-mode-gate`
 **PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
-**Status:** In Progress (CI browser test banner selector alignment)
+**Status:** In Progress (Addressed supervisor counterexample on DEMO -> LIVE visit history preservation)
 
 ### Detail Perbaikan:
-1. **Restorasi Format `App.tsx`:**
-   - Mengembalikan `App.tsx` ke format bersih 100% dari commit `16164e6` yang telah diverifikasi lulus `pwa-quality` di CI (22s).
-   - Menjaga class banner di `App.tsx` sebagai `class="mode-indicator demo-running-banner"`.
-2. **Penyelarasan Selector Browser Test (`running-mode.spec.ts`):**
-   - Selector banner pada Playwright test diselaraskan secara akurat mencari `.demo-running-banner`.
+1. **Penyimpanan & Pengakuan Provenance Mode Kunjungan (`visits.ts`, `visit-evidence.ts`, `visit-validation.ts`):**
+   - `pwa/src/domain/visits.ts`: Saat kunjungan dibuat dalam mode DEMO (`checkIn`), `context.site` menyematkan `demo_unrestricted: true` (`...(outlet.demo_unrestricted || isDemo ? { demo_unrestricted: true as const } : {})`).
+   - `pwa/src/domain/visit-evidence.ts`: `assertVisitEvidence` mengecek provenance riwayat bukti `isRelaxed = Boolean(row.visual.demo_unrestricted || context.site.demo_unrestricted || isDemoMode())` dan meneruskannya ke `requireVisitFix`.
+   - `pwa/src/domain/visit-validation.ts`:
+     - `requireVisitFix` menerima parameter `isRelaxed = false`. Jika `isRelaxed || isDemoMode() || parsedSite.demo_unrestricted`, pemeriksaan geofence dilewati secara sah.
+     - `bindVisitContext`: memperbolehkan `context.site.demo_unrestricted: true` dicocokkan dengan snapshot outlet pagi tanpa menolak struktur PJP.
+     - `visitLedger`: memvalidasi riwayat check-in/check-out/order dengan relaksasi berbasis provenance `Boolean(c.site.demo_unrestricted || isDemoMode())`.
+   - Aksi LIVE baru di luar radius tetap diperiksa secara ketat dan ditolak ("Lokasi berada di luar geofence outlet.").
+2. **Pengujian Unit & Browser Playwright (`running-mode.test.ts`, `running-mode.spec.ts`, `visit-fixtures.ts`):**
+   - Menambahkan unit test spesifik counterexample supervisor: `assertVisitEvidence` dengan `__DEMO__ = false`, `context.site` normal tanpa flag unrestricted, `row.visual.demo_unrestricted = true`, dan fix 1 km di luar geofence. Pada mode LIVE, fungsi tetap meloloskan bukti DEMO historis tanpa throw geofence, sedangkan bukti tanpa provenance ditolak secara ketat.
+   - Menambahkan unit test siklus hidup lengkap `SalesVisits.restore` & `validateVisitMedia` untuk kunjungan DEMO saat mode aktif adalah LIVE.
+   - Memperpanjang browser test Playwright di `running-mode.spec.ts`: daily sync LIVE → toggle DEMO → foto contoh + fix luar radius → check-in & checkout → toggle LIVE → navigasi keluar/masuk & reload → history tetap terbaca tanpa terkunci → aksi LIVE baru di luar radius tetap ditolak.
 3. **Verifikasi:**
+   - `npm --prefix pwa run format:check`: PASS pada seluruh file yang disentuh.
    - `npm --prefix pwa run typecheck`: PASS (0 errors).
-   - `npm --prefix pwa test`: PASS (23 files, 360 unit tests).
-   - Seluruh 11 job backend Odoo & CI inti lulus pada commit `16164e6`.
+   - `npm --prefix pwa run contracts:check`: PASS.
+   - `npm --prefix pwa test`: PASS (23 files, 362 unit tests).
+   - `npm --prefix pwa run build:staging`: PASS.
+   - `npm --prefix pwa run build`: PASS.
+   - `npm --prefix pwa run build:demo`: PASS.
+   - `python -m ruff check .`: PASS.
+   - `python scripts/check_manifests.py`: PASS (10 addons OK).
 
 ## 2026-11-02T14:34:00+07:00 — anti-gravity agent — Align Demo Banner Class and Browser Test Selector
 **Branch:** `agen/running-mode-gate`
