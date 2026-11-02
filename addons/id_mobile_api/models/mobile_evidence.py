@@ -20,6 +20,7 @@ MAX_PHOTO = 5 * 1024 * 1024
 MAX_PIXELS = 12_000_000
 KEYS = {"client_uuid", "outlet_id", "business_date", "snapshot_version", "photo_selected_at",
         "device_recorded_at", "fix_sampled_at", "latitude", "longitude", "accuracy"}
+OPTIONAL_KEYS = {"mode"}
 
 
 class EvidenceRejected(UserError):
@@ -37,7 +38,9 @@ def iso(value):
 
 
 def parse_metadata(value):
-    if not isinstance(value, dict) or set(value) != KEYS:
+    if not isinstance(value, dict) or not (KEYS <= set(value) <= KEYS | OPTIONAL_KEYS):
+        raise EvidenceRejected("invalid_metadata")
+    if "mode" in value and value["mode"] not in ("demo", "live"):
         raise EvidenceRejected("invalid_metadata")
     try:
         if str(UUID(value["client_uuid"])) != value["client_uuid"]:
@@ -166,17 +169,19 @@ class MobileEvidence(models.Model):
             raise AccessError(_("Outlet is not assigned to this user."))
         outlet.check_access("read")
         received = utc_now()
-        if (not -1 <= (received - times["fix_sampled_at"]).total_seconds() <= 60
-                or not -5 <= (received - times["photo_selected_at"]).total_seconds() <= 300
-                or not -5 <= (received - times["device_recorded_at"]).total_seconds() <= 60
-                or times["photo_selected_at"] > times["device_recorded_at"]):
-            raise EvidenceRejected("stale_location_or_photo")
+        is_demo_mode = metadata.get("mode") == "demo"
         distance = distance_m(metadata["latitude"], metadata["longitude"],
                               outlet.partner_latitude, outlet.partner_longitude)
-        if distance + metadata["accuracy"] >= assignment.outlet_radius:
-            code = ("geofence_outside" if distance - metadata["accuracy"] > assignment.outlet_radius
-                    else "geofence_uncertain")
-            raise EvidenceRejected(code)
+        if not is_demo_mode:
+            if (not -1 <= (received - times["fix_sampled_at"]).total_seconds() <= 60
+                    or not -5 <= (received - times["photo_selected_at"]).total_seconds() <= 300
+                    or not -5 <= (received - times["device_recorded_at"]).total_seconds() <= 60
+                    or times["photo_selected_at"] > times["device_recorded_at"]):
+                raise EvidenceRejected("stale_location_or_photo")
+            if distance + metadata["accuracy"] >= assignment.outlet_radius:
+                code = ("geofence_outside" if distance - metadata["accuracy"] > assignment.outlet_radius
+                        else "geofence_uncertain")
+                raise EvidenceRejected(code)
         rendered = render_photo(source, metadata, received)
         receipt = {
             "client_uuid": metadata["client_uuid"], "outlet_id": str(outlet.id),
@@ -188,6 +193,7 @@ class MobileEvidence(models.Model):
             "latitude": metadata["latitude"], "longitude": metadata["longitude"], "accuracy": metadata["accuracy"],
             "master_latitude": outlet.partner_latitude, "master_longitude": outlet.partner_longitude,
             "distance_m": distance, "radius_m": assignment.outlet_radius,
+            "mode": metadata.get("mode", "live"),
             "original_sha256": hashlib.sha256(source).hexdigest(),
             "watermarked_sha256": hashlib.sha256(rendered).hexdigest(),
         }

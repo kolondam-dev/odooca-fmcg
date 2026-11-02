@@ -11,6 +11,7 @@ export const OfficialEvidenceMetadataSchema = z
         latitude: z.number().min(-90).max(90),
         longitude: z.number().min(-180).max(180),
         accuracy: z.number().positive().max(10000),
+        mode: z.enum(["demo", "live"]).optional(),
     })
     .strict();
 export type OfficialEvidenceMetadata = z.infer<
