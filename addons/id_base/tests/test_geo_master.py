@@ -1,6 +1,5 @@
 from psycopg2 import IntegrityError
 
-from odoo.exceptions import ValidationError
 from odoo.tests.common import TransactionCase
 from odoo.tools import mute_logger
 
@@ -179,10 +178,10 @@ class TestGeoMaster(TransactionCase):
                 first_code = f"TEST-{model._table}-A"
                 model.create(dict(values, kode_kemendagri=first_code))
                 other = model.create(dict(values, kode_kemendagri=f"TEST-{model._table}-B"))
-                with self.assertRaises((IntegrityError, ValidationError)), self.cr.savepoint():
+                with self.assertRaises(IntegrityError), self.cr.savepoint():
                     model.create(dict(values, kode_kemendagri=first_code))
                     self.env.flush_all()
-                with self.assertRaises((IntegrityError, ValidationError)), self.cr.savepoint():
+                with self.assertRaises(IntegrityError), self.cr.savepoint():
                     other.write({"kode_kemendagri": first_code})
                     self.env.flush_all()
                 other.invalidate_recordset(["kode_kemendagri"])

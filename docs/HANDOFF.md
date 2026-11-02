@@ -1,3 +1,6 @@
+## 2026-11-03T06:15:27.495+07:00 — codex — PR73 assertion compatibility Odoo19
+[F] install-test d6895a9 gagal sebelum menjalankan duplicate create/write karena Odoo19 assertRaises tidak mendukung tuple exception. Dikoreksi menjadi satu kelas IntegrityError, sesuai jenis SQL unique violation dan pola tes native evidence yang sudah lulus. Constraint, bbox, dan assertion penolakan tetap dipertahankan. [BU] CI HEAD perbaikan harus lulus sebelum merge; tidak deploy.
+
 ## 2026-11-02T20:15:06+07:00 — codex — Koreksi PR73 berotorisasi pemilik
 [F] Tiga identity constraints dipindah ke models.Constraint Odoo19; city.code dipertahankan. Bbox18 kecamatan diambil eksak dari WKT PR72. Empat native regression methods baru: pg_constraint, duplicate create/write, NULL legacy, bbox. Verifier upgrade memeriksa constraint nyata setelah -u. Versi id_base19.0.1.2.0. [BU] Native CI final belum dijalankan; lokal geometri12/12 PASS. Backfill existing DB tetap PR3, tidak deploy.
 

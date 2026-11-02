@@ -213,3 +213,7 @@
 - Main 006dd9a digabungkan tanpa konflik source; HANDOFF kedua cabang dipertahankan.
 - Dependency Shapely/Numpy dipasang pada invariant-tests agar 4 tes spasial tidak lagi skipped.
 - Lokal 12 geo tests PASS dengan Shapely; CI integrasi wajib selesai sebelum merge. Tidak deploy.
+
+[2026-11-03T06:15:27.495+07:00] [INFO] PR73 fix Odoo19 assertRaises API compatibility
+- Ganti tuple exception menjadi IntegrityError spesifik pada duplicate create/write; hapus import ValidationError tak terpakai.
+- Error lama berasal dari test wrapper, bukan bukti constraint gagal. CI final wajib lulus sebelum merge; tidak deploy.
