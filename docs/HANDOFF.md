@@ -1,3 +1,17 @@
+## 2026-11-02T07:13:00+07:00 — anti-gravity agent — Invalidate ORM Cache for Assigned Products in Hidden SKU Guard
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Addressed final install-test failure via ORM cache invalidation)
+
+### Detail Perbaikan:
+1. **Invalidate ORM Cache Relasi Assignment (`mobile_command.py`):**
+   - Menambahkan `assignment.sudo().invalidate_recordset(['product_ids'])` sebelum mengekstrak `assigned_product_ids`. Ini membersihkan cache field relasional Many2many yang terlanjur terfilter saat query snapshot actor sebelumnya, sehingga penugasan supervisor dibaca utuh dari database dengan `sudo()` dan pengujian visibilitas katalog actor memicu `AccessError` secara akurat pada level produk.
+2. **Fresh Snapshot Version di `test_order_hidden_sku_rule_guard` (`test_commands_api.py`):**
+   - Mengambil versi snapshot segar pasca-pembuatan rule dan link produk dinamis.
+3. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+
 ## 2026-11-02T07:06:00+07:00 — anti-gravity agent — Fix Hidden SKU Scope Evaluation, Fresh Snapshot in Multi-Principal Tests & Tablet Browser Timing
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

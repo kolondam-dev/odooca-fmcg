@@ -215,6 +215,7 @@ class MobileCommand(models.Model):
         if not raw_lines:
             raise UserError(_("Order kosong tanpa produk."))
 
+        assignment.sudo().invalidate_recordset(["product_ids"])
         assigned_product_ids = set(assignment.sudo().product_ids.ids)
         lines_by_principal = {}
         # Validate SKU visibility and catalog access via actor's permissions (no sudo bypass)

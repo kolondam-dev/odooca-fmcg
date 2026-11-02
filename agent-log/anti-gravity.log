@@ -1828,3 +1828,13 @@
   * python scripts/check_manifests.py: PASS
   * npm --prefix pwa run typecheck: PASS
 - Task managed by antigravity agent at 2026-11-02T07:06:00+07:00
+
+
+[2026-11-02T07:13:00+07:00] [INFO] Fix ORM Cache Invalidation for Assigned Products in Hidden SKU Guard
+- Resolved the last install-test failure in id_mobile_api (test_order_hidden_sku_rule_guard):
+  * Invalidated ORM cache for product_ids on assignment (assignment.sudo().invalidate_recordset(['product_ids'])) before reading assigned_product_ids with sudo(). This ensures authoritative supervisor assignment scope is not skewed by previous cached queries filtered under actor's restricted ir.rule.
+  * In test_order_hidden_sku_rule_guard: computed fresh snapshot version after linking dynamic SKU and ir.rule to ensure snapshot validity.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-02T07:13:00+07:00

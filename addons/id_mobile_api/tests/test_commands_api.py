@@ -250,12 +250,16 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "model_id": self.env.ref("product.model_product_product").id,
             "domain_force": f"[('id', '!=', {hidden_product.id})]",
         })
+        fresh_snapshot = self.env["id.mobile.workday"].with_user(self.mobile).with_context(
+            allowed_company_ids=self.mobile.company_ids.ids
+        )._snapshot_payload()["version"]
         try:
             with self.assertRaises(AccessError):
                 model.process_command({
                     "client_uuid": str(uuid.uuid4()),
                     "type": "sales.order.submit",
                     "payload": self._valid_order_payload(
+                        snapshot_version=fresh_snapshot,
                         lines=[{"product_id": str(hidden_product.id), "qty": "1", "uom": "carton"}]
                     ),
                 })
