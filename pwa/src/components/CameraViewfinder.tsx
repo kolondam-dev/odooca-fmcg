@@ -23,6 +23,52 @@ interface CameraViewfinderProps {
     onClose: () => void;
 }
 
+export const MAX_CANVAS_DIM = 1280;
+export const BANNER_HEIGHT = 110;
+
+export function computeWatermarkedDimensions(
+    sourceWidth: number,
+    sourceHeight: number,
+    rawCapture = false,
+): {
+    targetWidth: number;
+    targetHeight: number;
+    bannerHeight: number;
+    totalWidth: number;
+    totalHeight: number;
+} {
+    const banner = rawCapture ? 0 : BANNER_HEIGHT;
+    const maxAvailableHeight = MAX_CANVAS_DIM - banner;
+    const maxAvailableWidth = MAX_CANVAS_DIM;
+
+    // Batas skala maksimal yang diizinkan agar seluruh dimensi kanvas <= MAX_CANVAS_DIM
+    const maxAllowedScale = Math.min(
+        maxAvailableWidth / sourceWidth,
+        maxAvailableHeight / sourceHeight,
+    );
+
+    // Baseline scale: jika gambar kecil (lebar < 800), coba perbesar ke lebar 800 jika memungkinkan
+    let desiredScale = 1;
+    if (sourceWidth < 800) {
+        desiredScale = 800 / sourceWidth;
+    }
+
+    // Skala akhir adalah minimum dari desiredScale dan maxAllowedScale
+    const finalScale = Math.min(desiredScale, maxAllowedScale);
+
+    const targetWidth = Math.max(1, Math.round(sourceWidth * finalScale));
+    const targetHeight = Math.max(1, Math.round(sourceHeight * finalScale));
+    const totalHeight = targetHeight + banner;
+
+    return {
+        targetWidth,
+        targetHeight,
+        bannerHeight: banner,
+        totalWidth: targetWidth,
+        totalHeight,
+    };
+}
+
 export function CameraViewfinder({
     title = "Kamera Bukti Lapangan",
     outletName,
@@ -242,12 +288,13 @@ export function CameraViewfinder({
         sourceWidth: number,
         sourceHeight: number,
     ): Promise<Blob> {
-        const targetWidth = Math.max(800, sourceWidth);
-        const scale = targetWidth / sourceWidth;
-        const targetHeight = Math.round(sourceHeight * scale);
-
-        const bannerHeight = rawCapture ? 0 : 110;
-        const totalHeight = targetHeight + bannerHeight;
+        // Batasi resolusi maksimal 1280px proporsional agar hemat memori & kuota
+        const dims = computeWatermarkedDimensions(
+            sourceWidth,
+            sourceHeight,
+            rawCapture,
+        );
+        const { targetWidth, targetHeight, bannerHeight, totalHeight } = dims;
 
         const canvas = document.createElement("canvas");
         canvas.width = targetWidth;
@@ -311,7 +358,7 @@ export function CameraViewfinder({
                         );
                 },
                 "image/jpeg",
-                0.86,
+                0.8,
             );
         });
     }

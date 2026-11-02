@@ -36,15 +36,35 @@ export function InteractiveMap({
     latest.current = { site, fix, zoom, ready, loading, failed, changed };
     const center = (map: Leaflet.Map) => {
         const { site, fix } = latest.current;
-        const bounds = [
-            [site.latitude, site.longitude],
-            ...(fix ? [[fix.latitude, fix.longitude]] : []),
-        ] as Leaflet.LatLngTuple[];
-        map.fitBounds(bounds, {
-            padding: [35, 35],
-            maxZoom: 18,
-            animate: false,
-        });
+        if (
+            !site ||
+            !Number.isFinite(site.latitude) ||
+            !Number.isFinite(site.longitude)
+        )
+            return;
+        const points: Leaflet.LatLngTuple[] = [[site.latitude, site.longitude]];
+        if (
+            fix &&
+            Number.isFinite(fix.latitude) &&
+            Number.isFinite(fix.longitude)
+        ) {
+            points.push([fix.latitude, fix.longitude]);
+        }
+        try {
+            map.fitBounds(points, {
+                padding: [35, 35],
+                maxZoom: 18,
+                animate: false,
+            });
+            if (latest.current.zoom !== undefined) {
+                map.setZoom(latest.current.zoom, { animate: false });
+            }
+        } catch {
+            // fallback safe center
+            map.setView([site.latitude, site.longitude], 16, {
+                animate: false,
+            });
+        }
     };
     useEffect(() => {
         let cancelled = false;
@@ -112,6 +132,14 @@ export function InteractiveMap({
                 center(map);
                 if (latest.current.zoom !== undefined)
                     map.setZoom(latest.current.zoom, { animate: false });
+                setTimeout(() => {
+                    if (!cancelled && root.current) {
+                        map.invalidateSize({ pan: false });
+                        if (latest.current.zoom === undefined) {
+                            center(map);
+                        }
+                    }
+                }, 150);
                 map.on("zoomend", () => {
                     root.current?.setAttribute(
                         "data-zoom",

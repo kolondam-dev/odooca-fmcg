@@ -148,7 +148,7 @@ export const SnapshotSchema = z
                 time: z.string(),
                 latitude: z.number(),
                 longitude: z.number(),
-                radius: z.number().min(5).max(15),
+                radius: z.number().min(5).max(150),
                 demo_unrestricted: z.literal(true).optional(),
                 image_url: z
                     .string()

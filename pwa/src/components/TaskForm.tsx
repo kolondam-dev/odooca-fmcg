@@ -59,6 +59,7 @@ export function TaskForm({
     const [units, setUnits] = useState<Record<string, OrderUom>>({});
     const [discount, setDiscount] = useState(0);
     const [discountReason, setDiscountReason] = useState("");
+    const [poNumber, setPoNumber] = useState("");
     const [evidence, setEvidence] = useState<EvidenceRef>();
     const [restored, setRestored] = useState(false);
     const [category, setCategory] = useState("fuel_planned");
@@ -128,8 +129,8 @@ export function TaskForm({
         e.preventDefault();
         if (busy) return;
         if (dialog.type === "order" && !orderPreview) {
-            if (orderLines.length && evidence) setOrderPreview(true);
-            else setError("Lengkapi item dan foto display sebelum preview.");
+            if (orderLines.length) setOrderPreview(true);
+            else setError("Pilih minimal 1 item produk sebelum preview.");
             return;
         }
         setError("");
@@ -158,6 +159,7 @@ export function TaskForm({
                         qty: String(l.quantity),
                         uom: units[l.productId] ?? "carton",
                     })),
+                    customer_po_number: poNumber.trim() || undefined,
                     pricing_version: 1,
                     ...(discount > 0
                         ? {
@@ -415,7 +417,24 @@ export function TaskForm({
                                         onUnits={setUnits}
                                     />
                                     <details class="order-extra">
-                                        <summary>Catatan & diskon</summary>
+                                        <summary>
+                                            Catatan, diskon & Nomor PO
+                                        </summary>
+                                        <label>
+                                            Nomor PO Outlet (opsional)
+                                            <input
+                                                name="customer_po_number"
+                                                type="text"
+                                                maxLength={64}
+                                                placeholder="Contoh: PO/2026/10/099"
+                                                value={poNumber}
+                                                onInput={(e) =>
+                                                    setPoNumber(
+                                                        e.currentTarget.value,
+                                                    )
+                                                }
+                                            />
+                                        </label>
                                         <label>
                                             Diskon diminta (%)
                                             <input
@@ -876,8 +895,7 @@ export function TaskForm({
                                             disabled={
                                                 busy ||
                                                 !restored ||
-                                                !orderLines.length ||
-                                                !evidence
+                                                !orderLines.length
                                             }
                                             onClick={() =>
                                                 setOrderPreview(true)

@@ -29,12 +29,12 @@ async function visitOrder(page: Page, first = true) {
         await page
             .getByRole("button", { name: "Check-in toko", exact: true })
             .click();
-        await page
-            .getByRole("button", {
-                name: "Perbarui lokasi outlet",
-                exact: true,
-            })
-            .click();
+        const refreshBtn = page.getByRole("button", {
+            name: "Perbarui lokasi outlet",
+            exact: true,
+        });
+        await expect(refreshBtn).toBeVisible();
+        await refreshBtn.click();
     }
     await page
         .getByRole("button", { name: "Open session", exact: true })
@@ -136,7 +136,13 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("2");
     await page.getByRole("button", { name: "Tutup form", exact: true }).click();
     await page.reload();
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await expect(
+        page.getByRole("navigation", { name: "Navigasi utama" }),
+    ).toBeVisible();
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();
@@ -155,7 +161,13 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
         page.getByText("Menunggu koneksi", { exact: true }),
     ).toBeVisible();
     await page.reload();
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await expect(
+        page.getByRole("navigation", { name: "Navigasi utama" }),
+    ).toBeVisible();
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await expect(
         page.getByRole("heading", { name: /Selamat bekerja/ }),
     ).toBeVisible();
@@ -281,7 +293,13 @@ test("morning gate requires attendance, preserves account separation and expires
     await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.reload();
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await expect(
+        page.getByRole("navigation", { name: "Navigasi utama" }),
+    ).toBeVisible();
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await switchPersona(page, "canvass");
     await expect(
@@ -291,7 +309,13 @@ test("morning gate requires attendance, preserves account separation and expires
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.clock.setSystemTime(new Date("2026-10-27T16:00:01Z"));
     await page.reload();
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await expect(
+        page.getByRole("navigation", { name: "Navigasi utama" }),
+    ).toBeVisible();
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await expect(
         page.getByRole("button", { name: /Buat order/ }),
     ).toBeDisabled();
@@ -374,6 +398,7 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
     await visitOrder(page, false);
     await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("3");
     await page.getByRole("button", { name: "Tutup form", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     const before = await page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve, reject) => {
             const r = indexedDB.open("fmcg-field-demo-v1");
@@ -408,7 +433,13 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
         return value;
     });
     await page.reload();
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await expect(
+        page.getByRole("navigation", { name: "Navigasi utama" }),
+    ).toBeVisible();
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await expect(
         page.getByRole("button", {
             name: "Buka sesi kerja",
