@@ -680,12 +680,33 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": fields.Datetime.now(),
             "user_id": self.mobile.id,
         })
-        self.env.cr.execute(
-            "UPDATE stock_picking SET state = 'assigned' WHERE id IN %s",
-            (tuple([picking1.id, picking2.id]),),
-        )
-        picking1.invalidate_recordset(["state"])
-        picking2.invalidate_recordset(["state"])
+
+        def _add_picking_move(picking, state="assigned"):
+            move = self.env["stock.move"].sudo().create({
+                "name": picking.name,
+                "product_id": self.product.id,
+                "product_uom_qty": 2,
+                "product_uom": self.product.uom_id.id,
+                "picking_id": picking.id,
+                "location_id": picking.location_id.id,
+                "location_dest_id": picking.location_dest_id.id,
+                "company_id": self.company.id,
+                "state": state,
+            })
+            self.env.cr.execute(
+                "UPDATE stock_move SET state = %s WHERE id = %s",
+                (state, move.id),
+            )
+            move.invalidate_recordset(["state"])
+            self.env.cr.execute(
+                "UPDATE stock_picking SET state = %s WHERE id = %s",
+                (state, picking.id),
+            )
+            picking.invalidate_recordset(["state"])
+            return move
+
+        _add_picking_move(picking1, "assigned")
+        _add_picking_move(picking2, "assigned")
 
         pod_evidence_uuid1 = str(uuid.uuid4())
         self.env["id.mobile.evidence"].sudo().create({
@@ -754,11 +775,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": fields.Datetime.now(),
             "user_id": self.mobile.id,
         })
-        self.env.cr.execute(
-            "UPDATE stock_picking SET state = 'cancel' WHERE id = %s",
-            (picking_cancelled.id,),
-        )
-        picking_cancelled.invalidate_recordset(["state"])
+        _add_picking_move(picking_cancelled, "cancel")
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
@@ -807,11 +824,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": datetime(2026, 7, 15, 8, 0, 0),
             "user_id": self.mobile.id,
         })
-        self.env.cr.execute(
-            "UPDATE stock_picking SET state = 'assigned' WHERE id = %s",
-            (picking_stale.id,),
-        )
-        picking_stale.invalidate_recordset(["state"])
+        _add_picking_move(picking_stale, "assigned")
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
@@ -842,11 +855,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": fields.Datetime.now(),
             "user_id": self.mobile.id,
         })
-        self.env.cr.execute(
-            "UPDATE stock_picking SET state = 'assigned' WHERE id = %s",
-            (picking_incoming.id,),
-        )
-        picking_incoming.invalidate_recordset(["state"])
+        _add_picking_move(picking_incoming, "assigned")
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
@@ -877,11 +886,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": fields.Datetime.now(),
             "user_id": other_courier.id,
         })
-        self.env.cr.execute(
-            "UPDATE stock_picking SET state = 'assigned' WHERE id = %s",
-            (picking_other_courier.id,),
-        )
-        picking_other_courier.invalidate_recordset(["state"])
+        _add_picking_move(picking_other_courier, "assigned")
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),

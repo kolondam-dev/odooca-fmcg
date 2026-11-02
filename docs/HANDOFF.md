@@ -1,3 +1,22 @@
+## 2026-11-02T09:20:00+07:00 — anti-gravity agent — Fix Delivery Stock Move Attachment & Stabilize Map Zoom / Outlet Visit Browser Tests
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Attached stock moves to pickings in Odoo tests and eliminated Leaflet zoom race & visit button flakiness)
+
+### Detail Perbaikan:
+1. **Attachment Stock Move pada Uji DO Odoo (`test_commands_api.py`):**
+   - Di Odoo 19, field `state` pada `stock.picking` dihitung dari `move_ids.state`. Jika picking tidak memiliki move, `_compute_state` mengembalikan nilai ke `draft`.
+   - Menambahkan helper `_add_picking_move` untuk menautkan record `stock.move` dengan status `assigned` (atau `cancel`) pada seluruh picking uji pengiriman (`picking1`, `picking2`, `picking_cancelled`, `picking_stale`, `picking_incoming`, `picking_other_courier`), menjamin field computed `state` terisolasi permanen dan konsisten dengan guard manifest delivery.
+2. **Stabilisasi Peta Interaktif & Test Browser (`InteractiveMap.tsx`, `field.spec.ts`):**
+   - Pada `InteractiveMap.tsx`: menambahkan pengecekan `if (latest.current.zoom === undefined)` sebelum memanggil `center(map)` dalam timeout pasca-mount (150ms). Hal ini mencegah `fitBounds` menimpa aksi perubahan zoom yang dilakukan pengguna/tes secara asinkron.
+   - Pada `field.spec.ts`: menambahkan assertion `await expect(refreshBtn).toBeVisible()` sebelum mengklik tombol `Perbarui lokasi outlet` pada alur pesanan kedua untuk menghindari klik saat dialog masih dalam transisi.
+3. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+   - `npm --prefix pwa run typecheck`: PASS
+   - `npm --prefix pwa test`: PASS (22 files, 352 unit tests passed)
+   - `npx prettier --check`: PASS
+
 ## 2026-11-02T08:50:00+07:00 — anti-gravity agent — Authoritative Picking Manifest Guards, Visit Session Checkout Closure & Browser Test Stabilization
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

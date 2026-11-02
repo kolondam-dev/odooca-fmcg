@@ -1896,3 +1896,18 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-02T09:06:30+07:00
+
+
+[2026-11-02T09:20:00+07:00] [INFO] Fix Delivery Stock Move Attachment & Stabilize Map Zoom / Outlet Visit Browser Tests
+- Fixed computed picking state in test_commands_api.py:
+  * In test_delivery_pod_and_trip_close_validation: attached stock.move records with state='assigned' (or 'cancel') to each delivery picking, ensuring Odoo's _compute_state calculates picking.state accurately and permanently without reverting to draft.
+- Stabilized PWA map zoom & field browser tests:
+  * In pwa/src/components/InteractiveMap.tsx: guarded 150ms post-mount setTimeout center(map) so it only centers when latest.current.zoom === undefined, preventing fitBounds from clobbering user zoom actions during test interaction.
+  * In pwa/tests/browser/field.spec.ts: added explicit visibility expectation for 'Perbarui lokasi outlet' button prior to clicking during secondary visit order tests.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+  * npm --prefix pwa run typecheck: PASS
+  * npm --prefix pwa test: PASS (22 files, 352 unit tests)
+  * npx prettier --check: PASS
+- Task managed by antigravity agent at 2026-11-02T09:20:00+07:00

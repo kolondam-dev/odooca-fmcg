@@ -56,6 +56,9 @@ export function InteractiveMap({
                 maxZoom: 18,
                 animate: false,
             });
+            if (latest.current.zoom !== undefined) {
+                map.setZoom(latest.current.zoom, { animate: false });
+            }
         } catch {
             // fallback safe center
             map.setView([site.latitude, site.longitude], 16, {
@@ -132,7 +135,9 @@ export function InteractiveMap({
                 setTimeout(() => {
                     if (!cancelled && root.current) {
                         map.invalidateSize({ pan: false });
-                        center(map);
+                        if (latest.current.zoom === undefined) {
+                            center(map);
+                        }
                     }
                 }, 150);
                 map.on("zoomend", () => {

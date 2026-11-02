@@ -29,12 +29,12 @@ async function visitOrder(page: Page, first = true) {
         await page
             .getByRole("button", { name: "Check-in toko", exact: true })
             .click();
-        await page
-            .getByRole("button", {
-                name: "Perbarui lokasi outlet",
-                exact: true,
-            })
-            .click();
+        const refreshBtn = page.getByRole("button", {
+            name: "Perbarui lokasi outlet",
+            exact: true,
+        });
+        await expect(refreshBtn).toBeVisible();
+        await refreshBtn.click();
     }
     await page
         .getByRole("button", { name: "Open session", exact: true })
