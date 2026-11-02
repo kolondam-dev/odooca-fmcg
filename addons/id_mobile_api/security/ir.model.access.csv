@@ -5,3 +5,5 @@ access_mobile_evidence_user,Mobile evidence own read,model_id_mobile_evidence,gr
 access_mobile_evidence_admin,Mobile evidence audit and retention,model_id_mobile_evidence,base.group_system,1,0,0,1
 access_mobile_office_admin,Mobile office administration,model_id_mobile_office,base.group_system,1,1,1,1
 access_mobile_office_user,Mobile office read,model_id_mobile_office,group_mobile_sales,1,0,0,0
+access_mobile_command_user,Mobile command submission,model_id_mobile_command,group_mobile_sales,1,0,1,0
+access_mobile_command_admin,Mobile command administration,model_id_mobile_command,base.group_system,1,1,1,1

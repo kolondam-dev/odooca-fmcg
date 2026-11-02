@@ -46,4 +46,21 @@
         <field name="groups" eval="[(4, ref('base.group_system'))]"/>
         <field name="domain_force">[(1, '=', 1)]</field>
     </record>
+    <record id="command_company_rule" model="ir.rule">
+        <field name="name">Mobile command company isolation</field>
+        <field name="model_id" ref="model_id_mobile_command"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="command_own_rule" model="ir.rule">
+        <field name="name">Mobile users read only their commands</field>
+        <field name="model_id" ref="model_id_mobile_command"/>
+        <field name="groups" eval="[(4, ref('group_mobile_sales'))]"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+    </record>
+    <record id="command_admin_rule" model="ir.rule">
+        <field name="name">Administrators audit mobile commands</field>
+        <field name="model_id" ref="model_id_mobile_command"/>
+        <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
 </odoo>

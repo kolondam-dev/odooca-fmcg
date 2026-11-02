@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="id_dashboard_monetary.MonetaryDashboard">
-        <div class="o_action id-md">
+        <div class="o_action id-md id-dashboard-workspace">
             <div class="id-md__sheet">
                 <!-- Header & Unified Grouped Filter Bar -->
                 <header class="id-md__header">
                     <div class="id-md__header-main">
                         <div class="id-md__header-title-wrap">
-                            <span class="id-md__badge-dept"><i class="fa fa-money"/> DIVISI KEUANGAN &amp; KONTROL PIUTANG</span>
-                            <h1 class="id-md__title">Monetary &amp; Accounts Receivable Cockpit</h1>
+                            <span class="id-md__badge-dept"><i class="fa fa-money"/> KEUANGAN</span>
+                            <h1 class="id-md__title">Keuangan &amp; Piutang</h1>
                             <span class="id-md__subtitle">Monitoring likuiditas kas, mitigasi risiko gagal bayar (bad debt), dan penegakan batas kredit outlet.</span>
                         </div>
                         <div class="id-md__header-quick">
                             <button type="button" class="id-md__quick-btn" t-on-click="openAgingMatrix">
-                                <i class="fa fa-table"/> AR Aging Matrix
+                                <i class="fa fa-table"/> Umur Piutang
                             </button>
                             <button type="button" class="id-md__quick-btn" t-on-click="openFunnel">
-                                <i class="fa fa-filter"/> Financial Funnel
+                                <i class="fa fa-filter"/> Target &amp; Realisasi
                             </button>
                             <button type="button" class="id-md__quick-btn" t-on-click="openAllInvoices">
                                 <i class="fa fa-list"/> Semua Piutang
@@ -24,6 +24,15 @@
                         </div>
                     </div>
 
+                    <div class="dashboard-context">
+                            <label>Periode target
+                                <select class="form-select form-select-sm" t-on-change="onPeriodChange" t-att-value="state.periodKey">
+                                    <option t-if="!state.filters.periods.length" value="">Belum ada target</option>
+                                    <option t-foreach="state.filters.periods" t-as="p" t-key="p.key" t-att-value="p.key" t-out="p.label"/>
+                                </select>
+                            </label>
+                        <span t-if="state.data">Piutang per <t t-out="state.data.as_of"/> · <t t-out="state.data.currency"/></span>
+                    </div>
                     <!-- Filter Bar Clusters -->
                     <div class="id-md__filter-bar">
                         <!-- Cluster 1: Area -->
@@ -66,7 +75,7 @@
                     <!-- BABAK 1: LIQUIDITY & AR SAFETY PULSE -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-md__head">
-                            <h2 class="id-md__section-title"><i class="fa fa-credit-card"/> Babak 1: Saldo Piutang Beredar &amp; Likuiditas Kas</h2>
+                            <h2 class="id-md__section-title"><i class="fa fa-credit-card"/> Saldo Piutang Beredar &amp; Likuiditas Kas</h2>
                             <span class="id-md__section-sub">Total saldo piutang berjalan, rasio jatuh tempo, eksposur risiko macet, dan kas tertagih.</span>
                         </div>
                         <div class="id-md__cards">
@@ -120,11 +129,26 @@
                             </button>
                         </div>
                     </section>
+                    <section class="dashboard-priorities" aria-label="Prioritas penagihan">
+                        <h2>Prioritas penagihan</h2>
+                        <p>Dari 10 outlet dengan eksposur faktur terbuka terbesar. PIC mengikuti salesperson faktur.</p>
+                        <ul>
+                            <li t-foreach="priorityCustomers" t-as="c" t-key="c.key">
+                                <strong t-out="c.name"/>
+                                <span t-out="moneyShort(c.overdue_balance)"/>
+                                <span>PIC: <t t-out="c.salesman === '-' ? 'Belum ditetapkan' : c.salesman"/></span>
+                                <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.openCustomerInvoices(c.id, c.name, c.company_id)">Faktur</button>
+                            </li>
+                        </ul>
+                        <p t-if="!priorityCustomers.length">Tidak ada overdue dalam kelompok outlet ini.</p>
+                        <button class="btn btn-sm btn-link" t-on-click="openOverdueInvoices">Seluruh faktur overdue</button>
+                    </section>
+
 
                     <!-- BABAK 2: AGING DISTRIBUTION & CONVERSION FUNNEL -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-md__head">
-                            <h2 class="id-md__section-title"><i class="fa fa-clock-o"/> Babak 2: Komposisi Umur Piutang (FMCG Aging Matrix)</h2>
+                            <h2 class="id-md__section-title"><i class="fa fa-clock-o"/> Komposisi Umur Piutang (FMCG Aging Matrix)</h2>
                             <span class="id-md__section-sub">Proporsi faktur belum jatuh tempo vs peringatan dini (1-7h), credit hold (8-14h), dan potensi macet.</span>
                         </div>
                         <div class="id-md__aging-bar-wrap">
@@ -148,12 +172,7 @@
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-md__head">
                             <h2 class="id-md__section-title"><i class="fa fa-bullseye"/> Target &amp; Realisasi Periode</h2>
-                            <label>Periode target
-                                <select class="form-select form-select-sm" t-on-change="onPeriodChange" t-att-value="state.periodKey">
-                                    <option t-if="!state.filters.periods.length" value="">Belum ada target</option>
-                                    <option t-foreach="state.filters.periods" t-as="p" t-key="p.key" t-att-value="p.key" t-out="p.label"/>
-                                </select>
-                            </label>
+                            <span class="text-muted" t-out="state.data.period?.label || 'Tanpa target'"/>
                             <span class="id-md__section-sub">Realisasi invoice bersih DPP dan pembayaran periode terpilih. Filter area/salesman hanya berlaku pada piutang.</span>
                         </div>
                         <div class="id-md__cards id-md__cards--3">
@@ -200,7 +219,7 @@
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
-                                <h2 class="id-md__section-title mb-0"><i class="fa fa-list-alt"/> Babak 3: Antrean Mitigasi Risiko Kredit (Credit Hold Queue)</h2>
+                                <h2 class="id-md__section-title mb-0"><i class="fa fa-list-alt"/> Antrean Mitigasi Risiko Kredit (Credit Hold Queue)</h2>
                                 <span class="id-md__section-sub">Daftar outlet mendekati plafon dan evaluasi eksposur per wilayah atau salesman.</span>
                             </div>
                             <div class="btn-group btn-group-sm" role="group">
@@ -217,7 +236,7 @@
                         </div>
 
                         <!-- SubTab 1: Customers / Credit Hold -->
-                        <div t-if="state.subTab === 'customers'" class="id-md__table-wrap">
+                        <div t-if="state.subTab === 'customers'" class="id-md__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-md__table">
                                 <thead>
                                     <tr>
@@ -258,7 +277,7 @@
                         </div>
 
                         <!-- SubTab 2: Areas -->
-                        <div t-if="state.subTab === 'areas'" class="id-md__table-wrap">
+                        <div t-if="state.subTab === 'areas'" class="id-md__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-md__table">
                                 <thead>
                                     <tr>
@@ -282,7 +301,7 @@
                         </div>
 
                         <!-- SubTab 3: Salesmen -->
-                        <div t-if="state.subTab === 'salesmen'" class="id-md__table-wrap">
+                        <div t-if="state.subTab === 'salesmen'" class="id-md__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-md__table">
                                 <thead>
                                     <tr>

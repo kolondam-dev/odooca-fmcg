@@ -31,6 +31,12 @@ export const MORNING_KEY = "morning-session-v1";
 export function fieldBusinessDate(now = new Date()): string {
     return now.toLocaleDateString("en-CA", { timeZone: "Asia/Makassar" });
 }
+export function isSundayBusinessDate(dateStr = fieldBusinessDate()): boolean {
+    const parts = dateStr.split("-").map(Number);
+    if (parts.length !== 3) return false;
+    const dt = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 12, 0, 0));
+    return dt.getUTCDay() === 0;
+}
 // Structural DTO checks alone are insufficient for persisted bundles. All entry
 // points (sync, restore and readiness) share these semantic checks.
 function validMorningSnapshot(value: unknown, date: string): boolean {

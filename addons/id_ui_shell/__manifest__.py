@@ -3,7 +3,7 @@
     'name': 'ID UI Shell: Sidebar and Keyboard Navigation',
     'summary': 'Sidebar-based backend shell (side by side with the classic layout, '
                'chosen per user), keyboard navigation, viewport-sized layout',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.1.0',
     'category': 'Hidden/Tools',
     'author': 'kolondam-dev',
     'license': 'LGPL-3',

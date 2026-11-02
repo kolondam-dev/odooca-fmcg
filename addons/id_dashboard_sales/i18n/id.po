@@ -307,3 +307,23 @@ msgstr "Garis vertikal = target ≥"
 #. module: id_dashboard_sales
 msgid "Max"
 msgstr "Maks"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "Gross SO value"
+msgstr "Nilai SO bruto"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "SO discount"
+msgstr "Diskon SO"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "Net SO value"
+msgstr "Nilai SO bersih"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "Completed deliveries"
+msgstr "DO selesai"

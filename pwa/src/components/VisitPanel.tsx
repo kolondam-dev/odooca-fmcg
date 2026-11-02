@@ -395,6 +395,19 @@ export function VisitPanel({
                     <div hidden={phase !== "close"}>
                         <h3>Ringkasan kunjungan</h3>
                         <p>{info?.orders ?? 0} pengajuan order</p>
+                        <button
+                            type="button"
+                            class="secondary full"
+                            style={{ margin: "8px 0 14px" }}
+                            disabled={busy}
+                            onClick={() => {
+                                setPhase("open");
+                                order();
+                            }}
+                        >
+                            <Icon name="bag" size={16} /> + Tambah order lagi
+                            untuk outlet ini
+                        </button>
                         <VisitPhotoField
                             key={`out:${info?.active?.context.visit_uuid}`}
                             store={store}

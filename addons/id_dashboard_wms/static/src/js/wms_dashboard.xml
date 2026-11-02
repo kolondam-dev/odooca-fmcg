@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="id_dashboard_wms.WmsDashboard">
-        <div class="o_action id-wms">
+        <div class="o_action id-wms id-dashboard-workspace">
             <div class="id-wms__sheet">
                 <!-- Header & Unified Grouped Filter Bar -->
                 <header class="id-wms__header">
                     <div class="id-wms__header-main">
                         <div class="id-wms__header-title-wrap">
-                            <span class="id-wms__badge-dept"><i class="fa fa-truck"/> DIVISI LOGISTIK &amp; GUDANG (WMS)</span>
-                            <h1 class="id-wms__title">Warehouse &amp; Logistics Execution Cockpit</h1>
+                            <span class="id-wms__badge-dept"><i class="fa fa-truck"/> GUDANG &amp; PENGIRIMAN</span>
+                            <h1 class="id-wms__title">Gudang &amp; Pengiriman</h1>
                             <span class="id-wms__subtitle">Monitoring ketahanan kadaluwarsa FEFO, pemenuhan pesanan pengiriman (DO), dan efisiensi armada.</span>
                         </div>
                         <div class="id-wms__header-quick">
@@ -65,6 +65,7 @@
                             </button>
                         </div>
                     </div>
+                <p class="dashboard-context">Kategori berlaku pada stok; armada pada pengiriman dan biaya.</p>
                 </header>
 
                 <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-out="state.error"/>
@@ -74,7 +75,7 @@
                     <!-- BABAK 1: STORAGE & DISPATCH PULSE -->
                     <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-wms__head">
-                            <h2 class="id-wms__section-title"><i class="fa fa-archive"/> Babak 1: Status Persediaan Gudang &amp; Tingkat Layanan Pengiriman</h2>
+                            <h2 class="id-wms__section-title"><i class="fa fa-archive"/> Status Persediaan Gudang &amp; Tingkat Layanan Pengiriman</h2>
                             <span class="id-wms__section-sub">Valuasi stok aktif, deteksi dini kadaluwarsa FEFO, pemenuhan DO, dan rasio biaya armada logistik.</span>
                         </div>
                         <div class="id-wms__cards">
@@ -128,11 +129,24 @@
                             </button>
                         </div>
                     </section>
+                    <section class="dashboard-priorities" aria-label="Prioritas gudang dan pengiriman">
+                        <h2>Prioritas operasional</h2>
+                        <ul>
+                            <li><strong><t t-out="int(state.data.kpi.critical_stock_count)"/> lot expiry kritis (&lt;30 hari)</strong>
+                                <span t-out="moneyShort(state.data.kpi.critical_stock_value)"/>
+                                <button class="btn btn-sm btn-outline-secondary" t-on-click="openCriticalStock">Periksa lot</button>
+                            </li>
+                            <li><strong><t t-out="int(state.data.kpi.total_rejections)"/> pengiriman ditolak / dibatalkan</strong>
+                                <button class="btn btn-sm btn-outline-secondary" t-on-click="openRejectAnalysis">Periksa pengiriman</button>
+                            </li>
+                        </ul>
+                    </section>
+
 
                     <!-- BABAK 2: FEFO HEALTH & DELIVERY OVERVIEW -->
                     <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-wms__head">
-                            <h2 class="id-wms__section-title"><i class="fa fa-hourglass-start"/> Babak 2: Monitoring Ketahanan Stok FEFO (First-Expired, First-Out)</h2>
+                            <h2 class="id-wms__section-title"><i class="fa fa-hourglass-start"/> Monitoring Ketahanan Stok FEFO (First-Expired, First-Out)</h2>
                             <span class="id-wms__section-sub">Klasifikasi stok berdasarkan umur simpan: Kritis (&lt;30h: Retur), Waspada (30-90h: Bundling), Aman (&gt;90h).</span>
                         </div>
                         <div class="id-wms__fefo-bar-wrap">
@@ -202,7 +216,7 @@
                     <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
-                                <h2 class="id-wms__section-title mb-0"><i class="fa fa-table"/> Babak 3: Antrean Detail Operasional &amp; Investigasi</h2>
+                                <h2 class="id-wms__section-title mb-0"><i class="fa fa-table"/> Antrean Detail Operasional &amp; Investigasi</h2>
                                 <span class="id-wms__section-sub">Detail lot FEFO, analisis penyebab tolakan toko, komposisi stok kategori, dan biaya armada.</span>
                             </div>
                             <div class="btn-group btn-group-sm" role="group">
@@ -222,7 +236,7 @@
                         </div>
 
                         <!-- Tab 1: FEFO Detail -->
-                        <div t-if="state.activeTab === 'expiry'" class="id-wms__table-wrap">
+                        <div t-if="state.activeTab === 'expiry'" class="id-wms__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-wms__table">
                                 <thead>
                                     <tr>
@@ -251,7 +265,7 @@
                         </div>
 
                         <!-- Tab 2: Rejections Breakdown -->
-                        <div t-if="state.activeTab === 'rejections'" class="id-wms__table-wrap">
+                        <div t-if="state.activeTab === 'rejections'" class="id-wms__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-wms__table">
                                 <thead>
                                     <tr>
@@ -275,7 +289,7 @@
                         </div>
 
                         <!-- Tab 3: Stock Categories -->
-                        <div t-if="state.activeTab === 'categories'" class="id-wms__table-wrap">
+                        <div t-if="state.activeTab === 'categories'" class="id-wms__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-wms__table">
                                 <thead>
                                     <tr>
@@ -303,7 +317,7 @@
                         </div>
 
                         <!-- Tab 4: Fleet Efficiency -->
-                        <div t-if="state.activeTab === 'fleet'" class="id-wms__table-wrap">
+                        <div t-if="state.activeTab === 'fleet'" class="id-wms__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-wms__table">
                                 <thead>
                                     <tr>

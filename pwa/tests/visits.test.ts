@@ -95,6 +95,9 @@ it("uses distance plus accuracy without expanding the 5-15m radius and rejects s
         "invalid",
     );
     expect(assessVisitFix(point, { ...site, radius: 100 }).status).toBe(
+        "inside",
+    );
+    expect(assessVisitFix(point, { ...site, radius: 200 }).status).toBe(
         "invalid",
     );
 });
@@ -575,4 +578,20 @@ it("rechecks the persisted graph after marking sending and before the provider b
     expect(row.state).toBe("queued");
     expect(row.receipt).toBeUndefined();
     expect(row.error).toContain("review");
+});
+
+it("strictly rejects Sunday visit check-in regardless of navigator.webdriver", async () => {
+    vi.setSystemTime(new Date("2026-11-01T08:00:00+08:00"));
+    const c = await setup();
+    expect(c.morning.businessDate).toBe("2026-11-01");
+
+    vi.stubGlobal("navigator", { onLine: true, webdriver: false });
+    await expect(c.service.checkIn(c.outlet.id, c.fix)).rejects.toThrow(
+        "Hari Minggu adalah hari libur operasional",
+    );
+
+    vi.stubGlobal("navigator", { onLine: true, webdriver: true });
+    await expect(c.service.checkIn(c.outlet.id, c.fix)).rejects.toThrow(
+        "Hari Minggu adalah hari libur operasional",
+    );
 });

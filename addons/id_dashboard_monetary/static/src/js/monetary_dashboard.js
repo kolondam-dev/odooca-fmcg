@@ -1,5 +1,5 @@
 /** @odoo-module **/
-import { Component, onWillStart, onWillUnmount, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillDestroy, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
@@ -39,8 +39,9 @@ export class MonetaryDashboard extends Component {
     static props = ["*"];
 
     setup() {
+        const releaseWorkspace = this.env.services.id_shell?.enterDashboard?.();
         this.requestVersion = 0;
-        onWillUnmount(() => { this.requestVersion++; });
+        onWillDestroy(() => { this.requestVersion++; releaseWorkspace?.(); });
         this.orm = useService("orm");
         this.action = useService("action");
         this.state = useState({
@@ -48,7 +49,7 @@ export class MonetaryDashboard extends Component {
             error: null,
             areaIds: [],
             salesmanIds: [],
-            filters: { areas: [], salesmen: [], today: null },
+            filters: { areas: [], salesmen: [], today: null, periods: [] },
             data: null,
             periodKey: null,
             subTab: "customers", // 'customers', 'areas', 'salesmen'
@@ -110,6 +111,11 @@ export class MonetaryDashboard extends Component {
         this.state.areaIds = [];
         this.state.salesmanIds = [];
         this.load();
+    }
+
+    get priorityCustomers() {
+        return (this.state.data?.top_customers || []).filter(c => c.overdue_balance > 0)
+            .slice().sort((a, b) => b.overdue_balance - a.overdue_balance).slice(0, 3);
     }
 
     // Formatting helpers

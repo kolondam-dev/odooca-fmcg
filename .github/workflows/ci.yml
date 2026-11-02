@@ -28,7 +28,7 @@ jobs:
       - name: Kontrak runner upgrade modul (unit)
         run: python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner -v
       - name: Dashboard RPC regression
-        run: node --test docs/ui/e2e/dashboard_rpc.test.cjs
+        run: node --test docs/ui/e2e/dashboard*.test.cjs
       - name: Sintaks shell
         run: bash -n deploy/init.sh deploy/addons_path.sh scripts/fetch_oca.sh scripts/oca_bump.sh scripts/agent/*.sh scripts/sandbox/*.sh
       - name: Validitas YAML
@@ -93,7 +93,7 @@ jobs:
           docker run --rm -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             odoo -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
               --addons-path "$(/opt/deploy/addons_path.sh)" \
-              -u id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales --stop-after-init
+              -u id_base,id_ui_shell,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales --stop-after-init
           ' 2>&1 | tee dashboard-upgrade.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' dashboard-upgrade.log; then exit 1; fi
       - name: Prepare disposable UI fixtures

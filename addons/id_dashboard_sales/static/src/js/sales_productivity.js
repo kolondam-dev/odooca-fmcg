@@ -1,5 +1,5 @@
 /** @odoo-module **/
-import { Component, onWillStart, onWillUnmount, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillDestroy, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
@@ -28,8 +28,9 @@ export class SalesProductivity extends Component {
     static props = ["*"];
 
     setup() {
+        const releaseWorkspace = this.env.services.id_shell?.enterDashboard?.();
         this.requestVersion = 0;
-        onWillUnmount(() => { this.requestVersion++; });
+        onWillDestroy(() => { this.requestVersion++; releaseWorkspace?.(); });
         this.orm = useService("orm");
         this.action = useService("action");
         this.modes = MODES;
@@ -248,17 +249,17 @@ export class SalesProductivity extends Component {
         const t = this.state.data.total;
         const gross = t.gross;
         return [
-            { key: "gross", title: _t("Gross Revenue"), icon: "fa-line-chart", tone: "navy",
+            { key: "gross", title: _t("Gross SO value"), icon: "fa-line-chart", tone: "navy",
               value: this.moneyShort(t.gross), meta: `${this.int(t.orders)} ${_t("orders")} · ${this.money(t.gross)}`,
               delta: this.delta("gross"), action: () => this.openOrders() },
-            { key: "discount", title: _t("Discount Given"), icon: "fa-percent", tone: "amber",
+            { key: "discount", title: _t("SO discount"), icon: "fa-percent", tone: "amber",
               value: this.moneyShort(t.discount),
               meta: `${this.pct(gross ? t.discount / gross : null)} ${_t("of gross")}`,
               delta: this.delta("discount", "change", true), action: () => this.openDiscounted() },
-            { key: "net", title: _t("Net Revenue"), icon: "fa-money", tone: "emerald",
+            { key: "net", title: _t("Net SO value"), icon: "fa-money", tone: "emerald",
               value: this.moneyShort(t.net), meta: `${_t("ex-tax (DPP)")} · ${this.money(t.net)}`,
               delta: this.delta("net"), action: () => this.openOrders() },
-            { key: "do", title: _t("Delivered DO"), icon: "fa-truck", tone: "blue",
+            { key: "do", title: _t("Completed deliveries"), icon: "fa-truck", tone: "blue",
               value: this.int(t.do_count), meta: _t("by delivery date"),
               delta: this.delta("do_count"), action: () => this.openPickings() },
         ];

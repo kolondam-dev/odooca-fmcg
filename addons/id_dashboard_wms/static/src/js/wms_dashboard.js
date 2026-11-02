@@ -1,5 +1,5 @@
 /** @odoo-module **/
-import { Component, onWillStart, onWillUnmount, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillDestroy, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
@@ -39,8 +39,9 @@ export class WmsDashboard extends Component {
     static props = ["*"];
 
     setup() {
+        const releaseWorkspace = this.env.services.id_shell?.enterDashboard?.();
         this.requestVersion = 0;
-        onWillUnmount(() => { this.requestVersion++; });
+        onWillDestroy(() => { this.requestVersion++; releaseWorkspace?.(); });
         this.orm = useService("orm");
         this.action = useService("action");
         this.state = useState({
@@ -111,6 +112,13 @@ export class WmsDashboard extends Component {
     int(v) { return NF.format(v || 0); }
 
     // Drilldowns
+    openCriticalStock() {
+        if (this.state.loading || !this.state.data) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Critical expiry lots"),
+            res_model: "id.wms.expiry", views: [[false, "list"], [false, "form"]],
+            domain: [...this.state.data.domains.expiry, ["bucket", "=", "critical"]]});
+    }
+
     openExpiryMatrix() {
         if (this.state.loading || !this.state.data) return;
         this.action.doAction({type:"ir.actions.act_window",name:_t("Dashboard Details"),res_model:"id.wms.expiry",views:[[false,"list"],[false,"form"]],domain:this.state.data.domains.expiry});

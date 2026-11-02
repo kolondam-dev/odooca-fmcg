@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="id_dashboard_sales.SalesProductivity">
-        <div class="o_action id-sp">
+        <div class="o_action id-sp id-dashboard-workspace">
             <div class="id-sp__sheet">
                 <!-- Header & Unified Grouped Filter Bar -->
                 <header class="id-sp__header">
                     <div class="id-sp__header-main">
                         <div class="id-sp__header-title-wrap">
-                            <span class="id-sp__badge-dept"><i class="fa fa-briefcase"/> DIVISI PENJUALAN &amp; KOMERSIAL</span>
-                            <h1 class="id-sp__title">Sales &amp; Field Productivity Cockpit</h1>
+                            <span class="id-sp__badge-dept"><i class="fa fa-briefcase"/> PENJUALAN</span>
+                            <h1 class="id-sp__title">Kinerja Penjualan</h1>
                             <span class="id-sp__subtitle">Monitoring efektivitas omzet, kepatuhan kunjungan rute PJP, dan penetrasi produk FMCG.</span>
                         </div>
                         <div class="id-sp__header-status">
@@ -85,7 +85,7 @@
                     <!-- BABAK 1: COMMERCIAL & FIELD PULSE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
-                            <h2 class="id-sp__section-title"><i class="fa fa-line-chart"/> Babak 1: Ringkasan Kinerja Penjualan (Commercial Engine)</h2>
+                            <h2 class="id-sp__section-title"><i class="fa fa-line-chart"/> Ringkasan Kinerja Penjualan (Commercial Engine)</h2>
                             <span class="id-sp__section-sub">Pendapatan kotor, kontrol diskon nota, omzet bersih (DPP), dan realisasi pengiriman.</span>
                         </div>
                         <div class="id-sp__cards">
@@ -146,7 +146,7 @@
                     <!-- BABAK 2: VARIANCE DIAGNOSTICS & DRIVERS -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
-                            <h2 class="id-sp__section-title"><i class="fa fa-bar-chart"/> Babak 2: Analisis Distribusi &amp; Penggerak Pendapatan (Drivers)</h2>
+                            <h2 class="id-sp__section-title"><i class="fa fa-bar-chart"/> Analisis Distribusi &amp; Penggerak Pendapatan (Drivers)</h2>
                             <span class="id-sp__section-sub">Tren harian dan komparasi produktivitas antar-salesman serta saluran distribusi.</span>
                         </div>
                         <div class="id-sp__charts">
@@ -223,7 +223,7 @@
                     <!-- BABAK 3: FIELD ACTION & PRODUCTIVITY TABLE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
-                            <h2 class="id-sp__section-title"><i class="fa fa-table"/> Babak 3: Matriks Rincian Produktivitas</h2>
+                            <h2 class="id-sp__section-title"><i class="fa fa-table"/> Matriks Rincian Produktivitas</h2>
                             <div class="id-sp__seg" role="group">
                                 <button type="button" class="id-sp__seg-btn"
                                         t-att-class="{'is-active': state.dimension === 'salesman'}"
@@ -233,7 +233,7 @@
                                         t-on-click="() => state.dimension = 'channel'">Per Saluran (Channel)</button>
                             </div>
                         </div>
-                        <div class="id-sp__table-wrap">
+                        <div class="id-sp__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-sp__table">
                                 <thead>
                                     <tr>
@@ -289,7 +289,7 @@
                                         t-on-click="() => state.penKind = 'brand'">Per Brand</button>
                             </div>
                         </div>
-                        <div class="id-sp__table-wrap">
+                        <div class="id-sp__table-wrap" tabindex="0" role="region" aria-label="Tabel rincian dashboard">
                             <table class="id-sp__table" t-if="penetration.length">
                                 <thead>
                                     <tr>

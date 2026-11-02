@@ -29,7 +29,7 @@ export const OfficialEvidenceReceiptSchema =
             master_latitude: z.number(),
             master_longitude: z.number(),
             distance_m: z.number().nonnegative(),
-            radius_m: z.number().min(5).max(15),
+            radius_m: z.number().min(5).max(150),
             original_sha256: hash,
             watermarked_sha256: hash,
             binding_sha256: hash,

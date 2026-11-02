@@ -1,0 +1,127 @@
+// Shared decision workspace. Scoped to dashboard actions; native forms keep their layout.
+.id-dashboard-workspace:is(.id-sp, .id-md, .id-wms) {
+    container: dashboard / inline-size;
+    min-width: 0;
+    background: #f5f6f8;
+    color: #243342;
+    font-variant-numeric: tabular-nums;
+    scroll-padding-top: 200px;
+
+    :is(.id-sp__sheet, .id-md__sheet, .id-wms__sheet) {
+        margin: 0 16px 32px;
+        gap: 16px;
+    }
+    :is(.id-sp__header, .id-md__header, .id-wms__header) {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        margin: 0 -16px;
+        padding: 12px 16px;
+        border: 0;
+        border-bottom: 1px solid #d8dee5;
+        border-radius: 0;
+        box-shadow: 0 2px 3px #24334208;
+        background: #fff;
+        gap: 8px;
+    }
+    :is(.id-sp__title, .id-md__title, .id-wms__title) { font-size: 1.2rem; margin: 0; }
+    :is(.id-sp__badge-dept, .id-md__badge-dept, .id-wms__badge-dept,
+        .id-sp__subtitle, .id-md__subtitle, .id-wms__subtitle) { display: none; }
+    :is(.id-sp__filter-bar, .id-md__filter-bar, .id-wms__filter-bar) {
+        gap: 8px 16px;
+        padding-top: 8px;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+    :is(.id-sp__cluster-content, .id-md__cluster-content, .id-wms__cluster-content) {
+        max-height: 74px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    :is(.id-sp__section, .id-md__section, .id-wms__section) {
+        padding: 16px;
+        border-radius: 4px;
+        box-shadow: none;
+    }
+    :is(.id-sp__section-title, .id-md__section-title, .id-wms__section-title) {
+        font-size: .9rem;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+    :is(.id-sp__cards, .id-md__cards, .id-wms__cards) {
+        grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+        gap: 12px;
+    }
+    :is(.id-sp__card, .id-md__card, .id-wms__card) {
+        min-width: 0;
+        padding: 14px;
+        gap: 8px;
+        box-shadow: none;
+        border-radius: 4px;
+    }
+    :is(.id-sp__card-header, .id-md__card-header, .id-wms__card-header) { gap: 8px; }
+    :is(.id-sp__card-title, .id-md__card-title, .id-wms__card-title) {
+        font-size: .75rem;
+        text-transform: none;
+        overflow-wrap: anywhere;
+    }
+    :is(.id-sp__card-value, .id-md__card-value, .id-wms__card-value) {
+        font-size: 1.4rem;
+        white-space: nowrap;
+    }
+    :is(.id-sp__card-footer, .id-md__card-footer, .id-wms__card-footer) { font-size: .75rem; }
+    :is(.id-sp__table-wrap, .id-md__table-wrap, .id-wms__table-wrap) {
+        overflow: auto;
+        max-width: 100%;
+        overscroll-behavior: contain;
+        border-radius: 3px;
+        &:focus-visible { outline: 2px solid #71639e; outline-offset: 2px; }
+    }
+    :is(.id-sp__table, .id-md__table, .id-wms__table) {
+        min-width: 720px;
+        th { text-transform: none; letter-spacing: 0; font-size: .75rem; }
+        td.num { white-space: nowrap; }
+        th:first-child, td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            background: #fff;
+            min-width: 145px;
+            max-width: 210px;
+            box-shadow: 1px 0 0 #d8dee5;
+        }
+    }
+    .dashboard-context { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; font-size: .75rem; margin: 0; color: #66737e; }
+    .dashboard-priorities {
+        border-left: 3px solid #a46a13;
+        padding: 12px 16px;
+        background: #fff;
+        h2 { font-size: .9rem; margin: 0 0 8px; }
+        ul { padding: 0; margin: 0; list-style: none; }
+        li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 5px 0; }
+        button { margin-left: auto; }
+        p { margin: 0; color: #66737e; font-size: .8rem; }
+    }
+}
+@container dashboard (max-width: 760px) {
+    .id-dashboard-workspace :is(.id-sp__charts) { grid-template-columns: 1fr; }
+    .id-dashboard-workspace :is(.id-sp__header-main, .id-md__header-main, .id-wms__header-main) { gap: 6px; }
+    .id-dashboard-workspace :is(.id-sp__head, .id-md__head, .id-wms__head) { flex-wrap: wrap; gap: 8px; }
+}
+// Native topbar must shrink with the workspace, rather than overflow the document.
+body.id-shell-sidebar:has(.id-dashboard-workspace) .o_main_navbar {
+    .o_menu_brand { min-width: 0; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .id_menu_search { flex: 0 1 220px; min-width: 100px; width: 180px; }
+    .o_menu_systray { flex-shrink: 0; }
+}
+
+@container dashboard (max-width: 900px) {
+    .id-dashboard-workspace:is(.id-sp, .id-md, .id-wms) :is(.id-sp__cards, .id-md__cards, .id-wms__cards) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@container dashboard (max-width: 460px) {
+    .id-dashboard-workspace:is(.id-sp, .id-md, .id-wms) :is(.id-sp__cards, .id-md__cards, .id-wms__cards) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

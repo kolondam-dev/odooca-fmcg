@@ -67,3 +67,10 @@ Exception memerlukan nilai dampak, umur, alasan, PIC, tenggat, status dan tautan
 - [F] Tahap 1 membatasi direct read SQL view berdasarkan peran/company dan menolak mixed currency finance/WMS. Record rules tidak menggantikan pengujian role/ACL pada service dan underlying views.
 - [A] Kasus wajib: populated, empty, invalid master, partial coverage, cross-company, wrong-role, late success/error RPC, filter drill-down, upgrade existing DB, readonly/source preservation.
 - [BU] Periode WMS global, revisi margin/EC/penetrasi, full AR ledger, historical snapshot, cost-to-serve dan redesign menyeluruh tetap backlog. Jangan menyatakan seluruh program selesai hanya karena tahap fondasi lulus.
+
+
+## Iterasi penyajian tahap 2 (2026-11-02)
+
+[F] Kode iterasi awal: grid mengikuti container konten, konteks sticky, tabel ber-scroll terlokalisasi dan kolom identitas sticky; panel native memakai lease transient agar preference pengguna tidak tertimpa. Native menu dan shortcut tetap tersedia. Prioritas penagihan berasal dari subset 10 outlet eksposur terbesar dan diberi label batas populasi; tautan seluruh overdue tetap tersedia. Prioritas gudang memakai nilai/count critical lot dan rejected/cancelled DO dari scope existing. PIC AR mengikuti salesperson invoice, bukan assignment penagih baru; deadline tugas dan PIC warehouse belum tersedia sehingga tidak diciptakan.
+
+[BU] Penerimaan layout memerlukan screenshot native baru dan geometry desktop/tablet/portrait. Kesuksesan screenshot tahap 1 tidak berlaku otomatis untuk tahap 2. Canonical entry menu, filter lintas modul global, exception task assignment/deadline, perluasan metrik aset dan Three.js tetap terpisah; iterasi ini belum menyelesaikan seluruh roadmap.
