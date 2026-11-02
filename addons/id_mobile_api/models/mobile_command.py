@@ -25,9 +25,14 @@ SUPPORTED_COMMANDS = {
 
 
 def to_wita_date(dt):
-    """Converts a UTC datetime from PostgreSQL to a calendar date in Asia/Makassar (WITA)."""
+    """Converts a UTC datetime from PostgreSQL or ISO string to a calendar date in Asia/Makassar (WITA)."""
     if not dt:
         return None
+    if isinstance(dt, str):
+        try:
+            dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+        except Exception:
+            return None
     if isinstance(dt, datetime):
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
@@ -345,6 +350,35 @@ class MobileCommand(models.Model):
             if day.weekday() == 6:
                 raise UserError(_("Kunjungan operasional libur pada hari Minggu."))
 
+            business_date_str = payload.get("business_date")
+            if business_date_str and business_date_str != day.isoformat():
+                raise UserError(
+                    _("Tanggal bisnis kunjungan (%s) tidak cocok dengan hari ini (%s).")
+                    % (business_date_str, day.isoformat())
+                )
+
+            sampled_at = payload.get("fix", {}).get("sampled_at")
+            if sampled_at:
+                sampled_wita = to_wita_date(sampled_at)
+                if sampled_wita and sampled_wita != day:
+                    raise UserError(
+                        _("Waktu sampel GPS (%s) bukan pada hari kerja hari ini (%s).")
+                        % (sampled_at, day.isoformat())
+                    )
+
+            checkin_visit_uuid = str(payload.get("visit_uuid") or "").strip()
+            if checkin_visit_uuid:
+                prior_with_same_visit = self.sudo().search([
+                    ("user_id", "=", user.id),
+                    ("company_id", "=", company.id),
+                    ("command_type", "=", "sales.visit.check_in"),
+                    ("status", "=", "accepted"),
+                ])
+                for cmd in prior_with_same_visit:
+                    p = extract_cmd_payload(cmd)
+                    if str(p.get("visit_uuid") or "").strip() == checkin_visit_uuid:
+                        raise UserError(_("Sesi check-in %s sudah pernah dibuat.") % checkin_visit_uuid)
+
             evidence_uuid = (
                 payload.get("evidence", {}).get("id")
                 or payload.get("evidence_uuid")
@@ -380,24 +414,97 @@ class MobileCommand(models.Model):
             return "accepted", f"Check-in kunjungan outlet {outlet_id} tercatat dengan bukti {evidence_uuid[:8]}.", ref
 
         elif cmd_type == "sales.visit.check_out":
-            # Checkout must bind to an active check-in session for this outlet on the same WITA business day
-            prior_checkin = self.sudo().search([
+            business_date_str = payload.get("business_date")
+            if business_date_str and business_date_str != day.isoformat():
+                raise UserError(
+                    _("Tanggal bisnis kunjungan (%s) tidak cocok dengan hari ini (%s).")
+                    % (business_date_str, day.isoformat())
+                )
+
+            sampled_at = payload.get("fix", {}).get("sampled_at")
+            if sampled_at:
+                sampled_wita = to_wita_date(sampled_at)
+                if sampled_wita and sampled_wita != day:
+                    raise UserError(
+                        _("Waktu sampel GPS (%s) bukan pada hari kerja hari ini (%s).")
+                        % (sampled_at, day.isoformat())
+                    )
+
+            checkout_visit_uuid = str(payload.get("visit_uuid") or "").strip()
+            checkout_session_id = str(payload.get("work_session_id") or payload.get("session_id") or "").strip()
+
+            # Retrieve prior visit commands for this actor, company, and WITA business day
+            prior_visit_cmds = self.sudo().search([
                 ("user_id", "=", user.id),
                 ("company_id", "=", company.id),
-                ("command_type", "=", "sales.visit.check_in"),
+                ("command_type", "in", ("sales.visit.check_in", "sales.visit.check_out")),
                 ("status", "=", "accepted"),
-            ], order="id desc")
-            has_valid_checkin = False
-            for cmd in prior_checkin:
-                p = extract_cmd_payload(cmd)
-                cmd_outlet = str(p.get("outlet_id") or "")
-                if cmd_outlet == str(outlet_id) and to_wita_date(cmd.create_date) == day:
-                    has_valid_checkin = True
-                    break
-            if not has_valid_checkin:
+            ], order="id asc")
+
+            checkins_today = []
+            checkouts_today = []
+            for cmd in prior_visit_cmds:
+                if to_wita_date(cmd.create_date) == day:
+                    p = extract_cmd_payload(cmd)
+                    cmd_outlet = str(p.get("outlet_id") or "")
+                    if cmd_outlet == str(outlet_id):
+                        if cmd.command_type == "sales.visit.check_in":
+                            checkins_today.append((cmd, p))
+                        elif cmd.command_type == "sales.visit.check_out":
+                            checkouts_today.append((cmd, p))
+
+            if not checkins_today:
                 raise UserError(
                     _("Check-out ditolak: belum ada sesi check-in yang sah untuk outlet ini pada hari ini.")
                 )
+
+            # Map which sessions have already been closed
+            closed_visit_uuids = set()
+            closed_session_ids = set()
+            for cmd, p in checkouts_today:
+                v_uuid = str(p.get("visit_uuid") or "").strip()
+                s_id = str(p.get("work_session_id") or p.get("session_id") or "").strip()
+                if v_uuid:
+                    closed_visit_uuids.add(v_uuid)
+                if s_id:
+                    closed_session_ids.add(s_id)
+
+            if checkout_visit_uuid:
+                matching_checkin = next(
+                    (p for _cmd, p in checkins_today if str(p.get("visit_uuid") or "").strip() == checkout_visit_uuid),
+                    None,
+                )
+                if not matching_checkin:
+                    raise UserError(
+                        _("Check-out ditolak: tidak ditemukan sesi check-in aktif dengan ID sesi %s.")
+                        % checkout_visit_uuid
+                    )
+                if checkout_visit_uuid in closed_visit_uuids:
+                    raise UserError(
+                        _("Check-out ditolak: sesi kunjungan %s sudah ditutup sebelumnya.") % checkout_visit_uuid
+                    )
+            elif checkout_session_id:
+                matching_checkin = next(
+                    (
+                        p for _cmd, p in checkins_today
+                        if str(p.get("work_session_id") or p.get("session_id") or "").strip() == checkout_session_id
+                    ),
+                    None,
+                )
+                if not matching_checkin:
+                    raise UserError(
+                        _("Check-out ditolak: tidak ditemukan sesi check-in aktif dengan ID sesi kerja %s.")
+                        % checkout_session_id
+                    )
+                if checkout_session_id in closed_session_ids:
+                    raise UserError(
+                        _("Check-out ditolak: sesi kunjungan %s sudah ditutup sebelumnya.") % checkout_session_id
+                    )
+            else:
+                if len(checkouts_today) >= len(checkins_today):
+                    raise UserError(
+                        _("Check-out ditolak: seluruh sesi kunjungan untuk outlet ini pada hari ini sudah ditutup.")
+                    )
 
             # If checkout provides closing evidence (e.g. store closed/unavailable)
             closing_evidence_uuid = payload.get("evidence", {}).get("id") or payload.get("evidence_uuid")
@@ -463,6 +570,36 @@ class MobileCommand(models.Model):
                     _("DO %s dengan trip %s tidak ditemukan dalam manifest operasional.") % (do_id, trip_id)
                 )
 
+            # Validasi tipe picking: wajib outgoing delivery
+            if picking.picking_type_id.code != "outgoing":
+                raise UserError(_("Dokumen %s bukan dokumen pengiriman barang (outgoing delivery).") % do_id)
+
+            # Validasi state: hanya state operasional valid ('assigned', 'done') yang diterima
+            if picking.state == "cancel":
+                raise UserError(_("DO %s telah dibatalkan (cancelled) dan tidak dapat diproses.") % do_id)
+            if picking.state == "draft":
+                raise UserError(_("DO %s masih berstatus draft dan belum siap untuk pengiriman.") % do_id)
+            if picking.state not in ("assigned", "done"):
+                raise UserError(_("DO %s berstatus '%s', belum siap untuk pengiriman.") % (do_id, picking.state))
+
+            # Validasi tanggal operasional pengiriman: wajib hari kerja hari ini (WITA)
+            picking_date = picking.scheduled_date or picking.date_deadline or picking.date_done
+            if not picking_date:
+                raise UserError(_("DO %s tidak memiliki jadwal pengiriman yang valid.") % do_id)
+            picking_wita_date = to_wita_date(picking_date)
+            if picking_wita_date != day:
+                raise UserError(
+                    _("DO %s dijadwalkan pada %s, bukan untuk pengiriman hari ini (%s).")
+                    % (do_id, picking_wita_date.isoformat(), day.isoformat())
+                )
+
+            # Validasi kurir penanggung jawab jika picking ditugaskan secara spesifik
+            if picking.user_id and picking.user_id != user:
+                raise UserError(
+                    _("DO %s ditugaskan kepada kurir lain (%s), bukan %s.")
+                    % (do_id, picking.user_id.name, user.name)
+                )
+
             # 2. DO outlet binding: must match DO partner and active workday assignment
             do_partner_id = picking.partner_id.id
             if outlet_id and do_partner_id != outlet_id:
@@ -512,7 +649,13 @@ class MobileCommand(models.Model):
             manifest_pickings = self.env["stock.picking"].sudo().search([
                 ("company_id", "=", company.id),
                 ("origin", "=", trip_id),
+                ("picking_type_id.code", "=", "outgoing"),
+                ("state", "not in", ("cancel", "draft")),
             ])
+            manifest_pickings = manifest_pickings.filtered(
+                lambda p: to_wita_date(p.scheduled_date or p.date_deadline or p.date_done) == day
+                and (not p.user_id or p.user_id == user)
+            )
             if not manifest_pickings:
                 raise UserError(_("Trip pengiriman %s tidak ditemukan dalam manifest operasional.") % trip_id)
 

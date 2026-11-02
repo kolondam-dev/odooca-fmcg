@@ -1,3 +1,34 @@
+## 2026-11-02T08:50:00+07:00 — anti-gravity agent — Authoritative Picking Manifest Guards, Visit Session Checkout Closure & Browser Test Stabilization
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Addressed supervisor blockers: historical/cancelled DO rejection, visit session checkout closure & browser test flaky)
+
+### Detail Perbaikan:
+1. **Authoritative Delivery Manifest & Picking Guards (`mobile_command.py`):**
+   - Menambahkan guard fail-closed untuk `delivery.pod.submit`, `delivery.proof.submit`, dan `delivery.trip.close`:
+     * Wajib outgoing delivery order (`picking.picking_type_id.code == 'outgoing'`).
+     * Wajib status operasional valid (`state in ('assigned', 'done')`), menolak `cancel` dan `draft` dengan `UserError`.
+     * Wajib tanggal operasional pengiriman terikat hari kerja hari ini dalam WITA (`to_wita_date(picking.scheduled_date or picking.date_deadline or picking.date_done) == day`), menolak DO historis/stale (seperti Juli 2026).
+     * Wajib kurir penanggung jawab sesuai actor jika ditugaskan (`not picking.user_id or picking.user_id == user`).
+2. **Visit Session Check-in and Checkout Binding (`mobile_command.py`):**
+   - Mendukung parsing timestamp string ISO pada `to_wita_date` (misal `sampled_at`, `check_in_at`).
+   - Mencocokkan identitas sesi checkout secara otoritatif dengan check-in aktif yang diterima pada hari kerja WITA hari ini:
+     * Menolak checkout untuk sesi yang tidak pernah check-in (`UserError`).
+     * Menolak checkout kedua untuk sesi yang sudah pernah ditutup jika dikirim dengan UUID command baru (`UserError`).
+     * Menjaga idempotensi: pengiriman ulang dengan UUID command dan payload yang sama tetap mengembalikan cached accepted receipt.
+     * Mendukung validasi waktu boundary 00:30 WITA (16:30 UTC H-1) dan 08:30 WITA (00:30 UTC H) dengan DTO frontend sebenarnya.
+3. **Stabilisasi Playwright Browser Test (`field.spec.ts`):**
+   - Menambahkan `await expect(page.getByRole("dialog")).toHaveCount(0)` setelah menutup form sebelum inspeksi draft IndexedDB.
+   - Mengarahkan penekanan tombol navigasi "Beranda" secara spesifik pada scope navigasi utama (`page.getByRole("navigation", { name: "Navigasi utama" }).getByRole("button", { name: "Beranda", exact: true })`) setelah reload untuk mencegah keambiguan dengan tombol heading serta mengeliminasi flaky pada mobile viewport.
+4. **Native Odoo Verification Tests (`test_commands_api.py`):**
+   - Menambahkan counterexample pengujian DO: cancelled DO, draft DO, stale historical DO (July 2026), incoming picking type, dan other courier assignment.
+   - Menambahkan pengujian alur sesi kunjungan: Sesi A sah, Sesi B tanpa check-in ditolak, checkout kedua Sesi A dengan UUID baru ditolak, retry identik menghasilkan receipt accepted yang sama, serta boundary 00:30 dan 08:30 WITA.
+5. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+   - `npm --prefix pwa run typecheck`: PASS
+   - `npm --prefix pwa test`: PASS (22 files, 352 unit tests passed)
+
 ## 2026-11-02T07:23:00+07:00 — anti-gravity agent — Fix Prettier Code Formatting on visit-helpers.ts
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

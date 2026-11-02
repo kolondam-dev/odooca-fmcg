@@ -1852,3 +1852,30 @@
 [2026-11-02T07:23:00+07:00] [INFO] Fix Prettier Code Formatting on visit-helpers.ts
 - Ran prettier --write --end-of-line lf on pwa/tests/browser/visit-helpers.ts to align with formatting rules and pass pwa-quality CI gate.
 - Task managed by antigravity agent at 2026-11-02T07:23:00+07:00
+
+[2026-11-02T08:50:00+07:00] [INFO] Fix Delivery Manifest Picking Guards & Visit Session Checkout Closure
+- Addressed supervisor re-review blocker findings for PR #70:
+  1. Authoritative Delivery Manifest & Picking Guards in _handle_delivery (mobile_command.py):
+     * Strictly enforced picking_type_id.code == 'outgoing' (reject non-outgoing pickings fail-closed with UserError).
+     * Enforced operational state in ('assigned', 'done') (reject 'cancel', 'draft', etc. with UserError).
+     * Enforced business date binding: picking scheduled/deadline/done date converted to WITA must match workday business date (reject historical/stale DOs like July 2026).
+     * Enforced courier assignment: picking.user_id must match current actor user if assigned.
+     * Enforced the same strict operational manifest filters in delivery.trip.close.
+  2. Visit Session Check-in and Checkout Binding in _handle_visit (mobile_command.py):
+     * Supported ISO string parsing in to_wita_date for wire DTO sampled_at / check_in_at timestamps.
+     * Enforced session identity matching: checkout visit_uuid / work_session_id must match an active accepted check-in session for the same actor/company/outlet on the current WITA business day.
+     * Enforced session closure: closing a session already closed or closing without matching check-in rejected fail-closed with UserError.
+     * Supported idempotency: exact retry with identical client_uuid and payload returns cached accepted receipt.
+     * Supported boundary testing at 00:30 WITA (16:30 UTC previous day) and 08:30 WITA (00:30 UTC current day).
+  3. Stabilized browser test field.spec.ts:
+     * Awaited dialog dismiss (toHaveCount(0)) after clicking 'Tutup form' before inspecting IndexedDB drafts.
+     * Targeted 'Beranda' navigation button specifically within 'Navigasi utama' after reload to prevent strict mode ambiguity or unmounted click race on mobile viewport.
+  4. Native Odoo Tests (test_commands_api.py):
+     * Added comprehensive tests for cancelled DO, draft DO, historical DO (July 2026), incoming picking type, and other courier picking.
+     * Added comprehensive tests for Session A check-in -> check-out, unstarted Session B checkout rejection, second checkout for Session A rejection with new UUID, identical retry receipt caching, and 00:30 / 08:30 WITA boundaries.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+  * npm --prefix pwa run typecheck: PASS
+  * npm --prefix pwa test: PASS (22 files, 352 tests)
+- Task managed by antigravity agent at 2026-11-02T08:50:00+07:00

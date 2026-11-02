@@ -1,9 +1,10 @@
 import base64
+from datetime import datetime
 import json
 import uuid
 from unittest.mock import patch
 
-from odoo import Command
+from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
 from ..models.mobile_workday import MobileReadConflict, business_date
@@ -499,36 +500,102 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "original": dummy_base64,
             "watermarked": dummy_base64,
         })
-        checkin_uuid = str(uuid.uuid4())
-        rc_checkin = model.process_command({
-            "client_uuid": checkin_uuid,
+        # 6. Valid check-in for Session A using frontend wire DTO format (VisitCheckInSchema)
+        session_a_visit_uuid = str(uuid.uuid4())
+        session_a_work_session_id = str(uuid.uuid4())
+        checkin_uuid_a = str(uuid.uuid4())
+        rc_checkin_a = model.process_command({
+            "client_uuid": checkin_uuid_a,
             "type": "sales.visit.check_in",
             "payload": {
                 "outlet_id": str(self.outlet.id),
-                "visit_uuid": str(uuid.uuid4()),
-                "work_session_id": str(uuid.uuid4()),
+                "visit_uuid": session_a_visit_uuid,
+                "work_session_id": session_a_work_session_id,
                 "business_date": day_str,
                 "snapshot_version": self.snapshot_version,
+                "site": {"latitude": 1.465, "longitude": 124.833, "radius": 100},
+                "fix": {
+                    "latitude": 1.465,
+                    "longitude": 124.833,
+                    "accuracy": 3.0,
+                    "sampled_at": "2026-10-26T16:30:00Z",  # Boundary 00:30 WITA
+                },
                 "evidence": {
                     "id": valid_evidence_uuid,
                     "packageHash": "fake-photo-hash",
                 },
             },
         })
-        self.assertEqual(rc_checkin["status"], "accepted")
+        self.assertEqual(rc_checkin_a["status"], "accepted")
 
-        # 7. Check-out after valid check-in -> accepted
-        checkout_uuid = str(uuid.uuid4())
-        rc_checkout = model.process_command({
-            "client_uuid": checkout_uuid,
-            "type": "sales.visit.check_out",
-            "payload": {
-                "outlet_id": str(self.outlet.id),
-                "outcome": "order_requested",
-                "notes": "Visit completed successfully.",
+        # Counterexample: Check-out with nonexistent/unstarted Session B -> UserError
+        session_b_visit_uuid = str(uuid.uuid4())
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.visit.check_out",
+                "payload": {
+                    "outlet_id": str(self.outlet.id),
+                    "visit_uuid": session_b_visit_uuid,
+                    "work_session_id": session_a_work_session_id,
+                    "business_date": day_str,
+                    "snapshot_version": self.snapshot_version,
+                    "site": {"latitude": 1.465, "longitude": 124.833, "radius": 100},
+                    "fix": {
+                        "latitude": 1.465,
+                        "longitude": 124.833,
+                        "accuracy": 3.0,
+                        "sampled_at": "2026-10-27T00:30:00Z",  # Boundary 08:30 WITA
+                    },
+                    "outcome": "order_requested",
+                    "notes": "Attempting invalid session B checkout",
+                    "order_uuids": [],
+                },
+            })
+
+        # 7. Valid check-out for Session A with boundary 08:30 WITA (00:30 UTC)
+        checkout_uuid_a = str(uuid.uuid4())
+        checkout_payload_a = {
+            "outlet_id": str(self.outlet.id),
+            "visit_uuid": session_a_visit_uuid,
+            "work_session_id": session_a_work_session_id,
+            "business_date": day_str,
+            "snapshot_version": self.snapshot_version,
+            "site": {"latitude": 1.465, "longitude": 124.833, "radius": 100},
+            "fix": {
+                "latitude": 1.465,
+                "longitude": 124.833,
+                "accuracy": 3.0,
+                "sampled_at": "2026-10-27T00:30:00Z",  # Boundary 08:30 WITA
             },
+            "outcome": "order_requested",
+            "notes": "Visit session A completed successfully.",
+            "order_uuids": [],
+        }
+        rc_checkout_a = model.process_command({
+            "client_uuid": checkout_uuid_a,
+            "type": "sales.visit.check_out",
+            "payload": checkout_payload_a,
         })
-        self.assertEqual(rc_checkout["status"], "accepted")
+        self.assertEqual(rc_checkout_a["status"], "accepted")
+        self.assertEqual(rc_checkout_a["reference"], f"VISIT-{checkout_uuid_a[:8]}")
+
+        # Counterexample: Second checkout for Session A with NEW command UUID -> UserError (session already closed)
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.visit.check_out",
+                "payload": checkout_payload_a,
+            })
+
+        # Idempotency: Identical retry with same client_uuid and payload -> returns cached accepted receipt
+        rc_checkout_retry = model.process_command({
+            "client_uuid": checkout_uuid_a,
+            "type": "sales.visit.check_out",
+            "payload": checkout_payload_a,
+        })
+        self.assertEqual(rc_checkout_retry["status"], "accepted")
+        self.assertEqual(rc_checkout_retry["reference"], f"VISIT-{checkout_uuid_a[:8]}")
 
     def test_delivery_pod_and_trip_close_validation(self):
         """Delivery POD submit requires valid picking manifest and persistent evidence; trip close binds PODs."""
@@ -575,6 +642,9 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_id": location_src.id,
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
+            "state": "assigned",
+            "scheduled_date": fields.Datetime.now(),
+            "user_id": self.mobile.id,
         })
 
         outlet2 = self.env["res.partner"].create({
@@ -590,6 +660,9 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_id": location_src.id,
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
+            "state": "assigned",
+            "scheduled_date": fields.Datetime.now(),
+            "user_id": self.mobile.id,
         })
 
         pod_evidence_uuid1 = str(uuid.uuid4())
@@ -642,6 +715,138 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                 "payload": {
                     "source": {"trip": "TRIP-01", "id": picking2.name, "outlet_id": str(outlet2.id)},
                     "recipient": "Andi",
+                    "evidence": {"id": pod_evidence_uuid1, "packageHash": "pod-hash-01"},
+                },
+            })
+
+        # Counterexample: DO cancelled -> UserError
+        picking_cancelled = self.env["stock.picking"].sudo().create({
+            "name": "DO-FMCG-CANCELLED",
+            "origin": "TRIP-01",
+            "partner_id": self.outlet.id,
+            "picking_type_id": picking_type.id,
+            "location_id": location_src.id,
+            "location_dest_id": location_dest.id,
+            "company_id": self.company.id,
+            "state": "cancel",
+            "scheduled_date": fields.Datetime.now(),
+            "user_id": self.mobile.id,
+        })
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "delivery.pod.submit",
+                "payload": {
+                    "source": {"trip": "TRIP-01", "id": picking_cancelled.name, "outlet_id": str(self.outlet.id)},
+                    "recipient": "Budi",
+                    "evidence": {"id": pod_evidence_uuid1, "packageHash": "pod-hash-01"},
+                },
+            })
+
+        # Counterexample: DO draft -> UserError
+        picking_draft = self.env["stock.picking"].sudo().create({
+            "name": "DO-FMCG-DRAFT",
+            "origin": "TRIP-01",
+            "partner_id": self.outlet.id,
+            "picking_type_id": picking_type.id,
+            "location_id": location_src.id,
+            "location_dest_id": location_dest.id,
+            "company_id": self.company.id,
+            "state": "draft",
+            "scheduled_date": fields.Datetime.now(),
+            "user_id": self.mobile.id,
+        })
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "delivery.pod.submit",
+                "payload": {
+                    "source": {"trip": "TRIP-01", "id": picking_draft.name, "outlet_id": str(self.outlet.id)},
+                    "recipient": "Budi",
+                    "evidence": {"id": pod_evidence_uuid1, "packageHash": "pod-hash-01"},
+                },
+            })
+
+        # Counterexample: Stale / historical scheduled date (July 2026) -> UserError
+        picking_stale = self.env["stock.picking"].sudo().create({
+            "name": "DO-FMCG-HISTORIS",
+            "origin": "TRIP-01",
+            "partner_id": self.outlet.id,
+            "picking_type_id": picking_type.id,
+            "location_id": location_src.id,
+            "location_dest_id": location_dest.id,
+            "company_id": self.company.id,
+            "state": "assigned",
+            "scheduled_date": datetime(2026, 7, 15, 8, 0, 0),
+            "user_id": self.mobile.id,
+        })
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "delivery.pod.submit",
+                "payload": {
+                    "source": {"trip": "TRIP-01", "id": picking_stale.name, "outlet_id": str(self.outlet.id)},
+                    "recipient": "Budi",
+                    "evidence": {"id": pod_evidence_uuid1, "packageHash": "pod-hash-01"},
+                },
+            })
+
+        # Counterexample: Non-outgoing picking type (e.g. incoming) -> UserError
+        picking_type_in = self.env["stock.picking.type"].create({
+            "name": "Incoming Receipts",
+            "sequence_code": "IN",
+            "code": "incoming",
+            "company_id": self.company.id,
+        })
+        picking_incoming = self.env["stock.picking"].sudo().create({
+            "name": "IN-FMCG-001",
+            "origin": "TRIP-01",
+            "partner_id": self.outlet.id,
+            "picking_type_id": picking_type_in.id,
+            "location_id": location_src.id,
+            "location_dest_id": location_dest.id,
+            "company_id": self.company.id,
+            "state": "assigned",
+            "scheduled_date": fields.Datetime.now(),
+            "user_id": self.mobile.id,
+        })
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "delivery.pod.submit",
+                "payload": {
+                    "source": {"trip": "TRIP-01", "id": picking_incoming.name, "outlet_id": str(self.outlet.id)},
+                    "recipient": "Budi",
+                    "evidence": {"id": pod_evidence_uuid1, "packageHash": "pod-hash-01"},
+                },
+            })
+
+        # Counterexample: DO assigned to another courier -> UserError
+        other_courier = self.env["res.users"].create({
+            "name": "Other Courier",
+            "login": "courier2@fmcg.example",
+            "company_id": self.company.id,
+            "company_ids": [(6, 0, [self.company.id])],
+        })
+        picking_other_courier = self.env["stock.picking"].sudo().create({
+            "name": "DO-FMCG-COURIER2",
+            "origin": "TRIP-01",
+            "partner_id": self.outlet.id,
+            "picking_type_id": picking_type.id,
+            "location_id": location_src.id,
+            "location_dest_id": location_dest.id,
+            "company_id": self.company.id,
+            "state": "assigned",
+            "scheduled_date": fields.Datetime.now(),
+            "user_id": other_courier.id,
+        })
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "delivery.pod.submit",
+                "payload": {
+                    "source": {"trip": "TRIP-01", "id": picking_other_courier.name, "outlet_id": str(self.outlet.id)},
+                    "recipient": "Budi",
                     "evidence": {"id": pod_evidence_uuid1, "packageHash": "pod-hash-01"},
                 },
             })
