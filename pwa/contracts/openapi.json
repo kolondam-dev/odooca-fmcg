@@ -320,6 +320,13 @@
             "type": "number",
             "exclusiveMinimum": 0,
             "maximum": 10000
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "demo",
+              "live"
+            ]
           }
         },
         "required": [
@@ -380,6 +387,13 @@
             "type": "number",
             "exclusiveMinimum": 0,
             "maximum": 10000
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "demo",
+              "live"
+            ]
           },
           "snapshot_version": {
             "type": "string"

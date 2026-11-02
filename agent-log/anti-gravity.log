@@ -1950,3 +1950,28 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-02T09:56:00+07:00
+
+
+[2026-11-02T11:25:00+07:00] [INFO] Implement Running Mode Gate (DEMO | LIVE) with Geofence & Photo Validation Bypass
+- Added pwa/src/domain/running-mode.ts:
+  * Managed running mode (DEMO | LIVE) persisted in localStorage with reactive state hook useRunningMode.
+  * Defined exact banner text requested by owner: "Aplikasi running pada mode demo, validasi geofence dan timestamp diabaikan".
+- Added Running Mode UI Controls:
+  * Top header: interactive pill toggle showing current mode (DEMO / LIVE).
+  * Sub-header: thin warning banner displayed exclusively in DEMO mode below top header.
+  * Profile dialog: dedicated running mode selector with mode descriptions.
+- Bypassed Geofence, Timestamp & Photo Constraints in DEMO Mode:
+  * In pwa/src/domain/visit-validation.ts: requireVisitFix and assessVisitFix ignore geofence boundaries and stale/future timestamp checks.
+  * In pwa/src/components/VisitPanel.tsx: start visit, new order creation, and transaction opening buttons remain enabled from anywhere; photo freshness checks relaxed.
+  * In pwa/src/components/Evidence.tsx: added secondary file upload button ("Pilih Foto dari Galeri / Berkas") allowing uploading any image from gallery/files with safe fallback coordinates.
+  * In pwa/src/data/mock.ts: relaxedLocation dynamically checks isDemoMode() to provide demo_unrestricted on outlets in demo mode.
+  * In addons/id_mobile_api/models/mobile_evidence.py: permitted optional "mode" metadata key and skipped distance and timestamp checks in _capture when mode == "demo".
+  * In addons/id_mobile_api/tests/test_evidence_api.py: added test_demo_mode_bypasses_geofence_and_stale_timestamp.
+  * In pwa/tests/running-mode.test.ts: added 5 unit tests verifying defaults, mode switching, exact banner text, and geofence bypass.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS (10 addons OK)
+  * npm --prefix pwa run contracts:check: PASS
+  * npm --prefix pwa run typecheck: PASS
+  * npm --prefix pwa test: PASS (23 files, 357 unit tests)
+- Task managed by antigravity agent at 2026-11-02T11:25:00+07:00

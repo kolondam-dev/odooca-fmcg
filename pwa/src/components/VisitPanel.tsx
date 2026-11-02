@@ -8,6 +8,7 @@ import type { VisitEvidence } from "../domain/visit-contracts";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
 import { assessVisitFix } from "../domain/visit-validation";
+import { useRunningMode } from "../domain/running-mode";
 import { captureVisitLocation, type SalesVisits } from "../domain/visits";
 import type { VisitFix, VisitCheckout } from "../domain/visit-contracts";
 import type { QueueItem } from "../storage/store";
@@ -41,15 +42,18 @@ export function VisitPanel({
     const panelScroll = useRememberedScroll(
         `visit-scroll:${sessionId}:${outlet.id}`,
     );
+    const [runningMode] = useRunningMode();
+    const isDemo = runningMode === "demo";
     const [info, setInfo] =
         useState<Awaited<ReturnType<SalesVisits["restore"]>>>();
     const [inPhoto, setInPhoto] = useState<VisitEvidence>();
     const [outPhoto, setOutPhoto] = useState<VisitEvidence>();
     const fresh = (photo?: VisitEvidence) =>
-        !!photo &&
-        (outlet.demo_unrestricted ||
-            (Date.now() - Date.parse(photo.capturedAt) <= 60000 &&
-                Date.now() >= Date.parse(photo.capturedAt)));
+        isDemo ||
+        (!!photo &&
+            (outlet.demo_unrestricted ||
+                (Date.now() - Date.parse(photo.capturedAt) <= 60000 &&
+                    Date.now() >= Date.parse(photo.capturedAt))));
     const [fix, setFix] = useState<VisitFix>();
     const [fixSource, setFixSource] = useState<"device" | "demo">("device");
     const [pinpointSetAt, setPinpointSetAt] = useState(0);
@@ -226,10 +230,18 @@ export function VisitPanel({
     }, [info?.orders, closed, phase]);
     const labels = {
         inside: "Di dalam geofence",
-        outside: "Di luar geofence",
-        uncertain: "Akurasi belum pasti",
-        stale: "Lokasi kedaluwarsa",
-        future: "Waktu lokasi tidak valid",
+        outside: isDemo
+            ? "Di luar geofence (diabaikan: mode demo)"
+            : "Di luar geofence",
+        uncertain: isDemo
+            ? "Akurasi belum pasti (diabaikan: mode demo)"
+            : "Akurasi belum pasti",
+        stale: isDemo
+            ? "Lokasi kedaluwarsa (diabaikan: mode demo)"
+            : "Lokasi kedaluwarsa",
+        future: isDemo
+            ? "Waktu tidak valid (diabaikan: mode demo)"
+            : "Waktu lokasi tidak valid",
         invalid: "Lokasi tidak valid",
     };
     return (
@@ -255,7 +267,8 @@ export function VisitPanel({
                         !active ||
                         closed ||
                         busy ||
-                        (!outlet.demo_unrestricted &&
+                        (!isDemo &&
+                            !outlet.demo_unrestricted &&
                             assessment?.status !== "inside")
                     }
                     onClick={() => {
@@ -325,12 +338,16 @@ export function VisitPanel({
                         disabled={busy}
                     />
                 )}
-                {!active && !closed && inPhoto && !fresh(inPhoto) && (
-                    <p role="status" class="notice">
-                        Foto check-in sudah kedaluwarsa. Ambil foto dan lokasi
-                        baru.
-                    </p>
-                )}
+                {!active &&
+                    !closed &&
+                    inPhoto &&
+                    !fresh(inPhoto) &&
+                    !isDemo && (
+                        <p role="status" class="notice">
+                            Foto check-in sudah kedaluwarsa. Ambil foto dan
+                            lokasi baru.
+                        </p>
+                    )}
                 {!active && !closed && (
                     <button
                         class="primary full"
@@ -338,10 +355,11 @@ export function VisitPanel({
                             !info ||
                             !!info.active ||
                             busy ||
-                            (!outlet.demo_unrestricted &&
+                            (!isDemo &&
+                                !outlet.demo_unrestricted &&
                                 !!fix &&
                                 assessment?.status !== "inside") ||
-                            !fresh(inPhoto)
+                            (!isDemo && !fresh(inPhoto))
                         }
                         onClick={() => void start()}
                     >
@@ -384,7 +402,8 @@ export function VisitPanel({
                             class="primary full"
                             disabled={
                                 busy ||
-                                (!outlet.demo_unrestricted &&
+                                (!isDemo &&
+                                    !outlet.demo_unrestricted &&
                                     assessment?.status !== "inside")
                             }
                             onClick={order}
@@ -419,7 +438,7 @@ export function VisitPanel({
                             ready={setOutPhoto}
                             disabled={busy}
                         />
-                        {outPhoto && !fresh(outPhoto) && (
+                        {outPhoto && !fresh(outPhoto) && !isDemo && (
                             <p role="status" class="notice">
                                 Foto check-out sudah kedaluwarsa. Ambil foto dan
                                 lokasi baru.

@@ -1,3 +1,30 @@
+## 2026-11-02T11:25:00+07:00 — anti-gravity agent — Implement Running Mode Gate (DEMO | LIVE) with Geofence & Photo Bypass
+**Branch:** `agen/running-mode-gate`
+**Status:** In Progress (Added running mode gate: DEMO banner, geofence, timestamp & photo validation bypass)
+
+### Detail Perbaikan:
+1. **Running Mode Management & UI Controls (`running-mode.ts`, `App.tsx`, `style.css`):**
+   - Menambahkan domain `pwa/src/domain/running-mode.ts` untuk mengelola mode `demo` dan `live` dengan penyimpanan di `localStorage` dan event reaktif `useRunningMode`.
+   - Menambahkan pill toggle `DEMO` | `LIVE` di header atas (topbar) aplikasi.
+   - Menampilkan section tipis di bawah top header khusus pada mode demo: `"Aplikasi running pada mode demo, validasi geofence dan timestamp diabaikan"`. Pada mode live, section ini disembunyikan.
+   - Menyediakan panel pengatur mode operasi di dalam dialog Profil akun.
+2. **Pelepasan Validasi Geofence & Timestamp pada Mode DEMO:**
+   - `visit-validation.ts`: `requireVisitFix` dan `assessVisitFix` mengabaikan batasan radius geofence outlet/kantor serta batasan kedaluwarsa waktu (stale/future). Pengguna dapat check-in dan menginput transaksi dari lokasi mana pun.
+   - `VisitPanel.tsx`: Tombol "Mulai kunjungan", "Buat order di outlet", dan tab "Buka transaksi" tetap aktif terlepas dari jarak lokasi ke outlet. Status badge menginformasikan geofence diabaikan pada mode demo.
+   - `mock.ts`: `relaxedLocation` mengaktifkan flag `demo_unrestricted` pada seluruh outlet saat aplikasi berada pada mode demo.
+3. **Pelepasan Validasi Foto Lapangan & Pilihan Unggah Berkas:**
+   - `Evidence.tsx`: Menambahkan tombol "Pilih Foto dari Galeri / Berkas" agar pengguna dapat mengunggah foto apa pun dari penyimpanan perangkat jika kamera tidak tersedia, dengan koordinat fallback yang aman.
+   - `VisitPanel.tsx`: Pengecekan kesegaran foto check-in dan check-out (`fresh(inPhoto)` / `fresh(outPhoto)`) tidak kedaluwarsa pada mode demo.
+   - `mobile_evidence.py`: Backend Odoo mengizinkan metadata opsional `"mode": "demo"`, melewati pemeriksaan jarak geofence dan waktu usang, serta menyimpan bukti foto dan lokasi secara sah.
+4. **Unit Test & Verifikasi:**
+   - `pwa/tests/running-mode.test.ts`: Menambahkan 5 tes unit untuk verifikasi default live, peralihan ke demo, asersi teks banner persis, dan pelepasan geofence.
+   - `test_evidence_api.py`: Menambahkan `test_demo_mode_bypasses_geofence_and_stale_timestamp`.
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+   - `npm --prefix pwa run contracts:check`: PASS
+   - `npm --prefix pwa run typecheck`: PASS
+   - `npm --prefix pwa test`: PASS (23 files, 357 unit tests)
+
 ## 2026-11-02T09:56:00+07:00 — anti-gravity agent — Full Environment Cache Invalidation for Assigned Pickings
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

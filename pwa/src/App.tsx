@@ -11,6 +11,7 @@ import { DiscountApproval } from "./components/DiscountApproval";
 import type { ComponentChildren } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { HttpProvider } from "./data/provider";
+import { useRunningMode, DEMO_BANNER_TEXT } from "./domain/running-mode";
 import { Login } from "./components/Login";
 import {
     canOpen,
@@ -215,6 +216,7 @@ function Workspace({
     snapshot: Snapshot;
     provider: FieldProvider;
 }) {
+    const [runningMode, setRunningMode] = useRunningMode();
     useEffect(() => {
         const app = document.querySelector<HTMLElement>(".app-shell");
         const header = document.querySelector<HTMLElement>(".header-fixed"),
@@ -527,6 +529,21 @@ function Workspace({
                                 <Brand />
                             </a>
                             <div class="top-actions">
+                                <button
+                                    type="button"
+                                    class={`running-mode-pill ${runningMode}`}
+                                    aria-label={`Mode Operasi: ${runningMode.toUpperCase()}`}
+                                    title={`Mode ${runningMode.toUpperCase()} aktif (klik untuk beralih)`}
+                                    onClick={() =>
+                                        setRunningMode(
+                                            runningMode === "demo"
+                                                ? "live"
+                                                : "demo",
+                                        )
+                                    }
+                                >
+                                    {runningMode.toUpperCase()}
+                                </button>
                                 <span
                                     class={`connection-badge ${online ? "" : "is-offline"}`}
                                     role="status"
@@ -556,9 +573,14 @@ function Workspace({
                                 </button>
                             </div>
                         </header>
-                        <div class="mode-indicator" role="note">
-                            Mode uji · transaksi tersimpan lokal
-                        </div>
+                        {runningMode === "demo" && (
+                            <div
+                                class="mode-indicator demo-running-banner"
+                                role="note"
+                            >
+                                {DEMO_BANNER_TEXT}
+                            </div>
+                        )}
                     </div>
                     <main
                         ref={mainScroll}
@@ -773,11 +795,9 @@ function Workspace({
                                     ) && (
                                         <VisitPanel
                                             key={`${owner}:${morning?.sessionId}:${visitOutlet}`}
-                                            outlet={
-                                                snapshot.outlets.find(
-                                                    (o) => o.id === visitOutlet,
-                                                )!
-                                            }
+                                            outlet={snapshot.outlets.find(
+                                                (o) => o.id === visitOutlet,
+                                            )!}
                                             service={visits}
                                             store={store}
                                             owner={owner}
@@ -1086,6 +1106,43 @@ function Workspace({
                                         <Icon name="close" size={16} /> Keluar
                                         (Logout)
                                     </a>
+                                </div>
+                                <div class="running-mode-section">
+                                    <div class="running-mode-header">
+                                        <label>Mode Operasi Aplikasi</label>
+                                        <span class={`mode-tag ${runningMode}`}>
+                                            {runningMode.toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div
+                                        class="running-mode-toggle"
+                                        role="group"
+                                        aria-label="Pilih mode operasi"
+                                    >
+                                        <button
+                                            type="button"
+                                            class={`mode-choice ${runningMode === "demo" ? "active" : ""}`}
+                                            onClick={() =>
+                                                setRunningMode("demo")
+                                            }
+                                        >
+                                            DEMO
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class={`mode-choice ${runningMode === "live" ? "active" : ""}`}
+                                            onClick={() =>
+                                                setRunningMode("live")
+                                            }
+                                        >
+                                            LIVE
+                                        </button>
+                                    </div>
+                                    <p class="mode-desc">
+                                        {runningMode === "demo"
+                                            ? "Mode DEMO: Validasi geofence, waktu, dan foto diabaikan. Transaksi dapat diinput dari mana saja."
+                                            : "Mode LIVE: Validasi ketat geofence, waktu GPS, dan foto resmi diberlakukan."}
+                                    </p>
                                 </div>
                                 <button
                                     class="secondary full"

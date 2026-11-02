@@ -7,6 +7,7 @@ import {
     MorningRecordSchema,
 } from "./morning";
 import { distanceMeters, geofence } from "./format";
+import { isDemoMode } from "./running-mode";
 import {
     VisitContextSchema,
     VisitOrderSchema,
@@ -25,8 +26,10 @@ export function assessVisitFix(value: unknown, site: unknown, at = Date.now()) {
     if (!fix.success || !anchor.success)
         return { status: "invalid" as const, distance: NaN };
     const age = at - Date.parse(fix.data.sampled_at);
-    if (age < -1000) return { status: "future" as const, distance: NaN };
-    if (age > 60000) return { status: "stale" as const, distance: NaN };
+    if (!isDemoMode()) {
+        if (age < -1000) return { status: "future" as const, distance: NaN };
+        if (age > 60000) return { status: "stale" as const, distance: NaN };
+    }
     const distance = distanceMeters(
         fix.data.latitude,
         fix.data.longitude,
@@ -40,7 +43,7 @@ export function assessVisitFix(value: unknown, site: unknown, at = Date.now()) {
 }
 export function requireVisitFix(fix: VisitFix, site: unknown, at = Date.now()) {
     const parsedSite = VisitSiteSchema.parse(site);
-    if (__DEMO__ && parsedSite.demo_unrestricted) {
+    if (isDemoMode() || (__DEMO__ && parsedSite.demo_unrestricted)) {
         VisitFixSchema.parse(fix);
         return;
     }
