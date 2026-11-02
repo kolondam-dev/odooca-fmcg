@@ -1,3 +1,4 @@
+import { isDemoMode } from "../domain/running-mode";
 import { useContext } from "preact/hooks";
 import { EvidenceIdentityContext } from "../ui/evidenceIdentity";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -97,7 +98,7 @@ export function DisplayPhoto({
                 next,
                 shotAt,
                 shotAt,
-                __DEMO__,
+                __DEMO__ || isDemoMode(),
                 identity
                     ? { ...identity, address: `Tujuan: ${outletName}` }
                     : undefined,

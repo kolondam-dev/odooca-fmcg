@@ -29,7 +29,7 @@ export function validateDeliverySession(
         Date.parse(session.opened_at) > Date.parse(at) ||
         Date.parse(session.opened_at) - Date.parse(session.opening.capturedAt) <
             0 ||
-        (!(__DEMO__ && source.site.demo_unrestricted) &&
+        (!(isDemoMode() || (__DEMO__ && source.site.demo_unrestricted)) &&
             Date.parse(session.opened_at) -
                 Date.parse(session.opening.capturedAt) >
                 60000)
@@ -66,6 +66,7 @@ import {
 } from "./delivery-contracts";
 import { businessRejected } from "./outbox-state";
 import { requireVisitFix } from "./visit-validation";
+import { isDemoMode } from "./running-mode";
 import {
     assertLocalEvidence,
     EvidenceIntegrityError,

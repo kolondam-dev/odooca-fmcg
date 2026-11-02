@@ -1,4 +1,5 @@
 import { ApiError } from "../domain/contracts";
+import { isDemoMode } from "../domain/running-mode";
 import {
     OfficialEvidenceMetadataSchema,
     OfficialEvidenceReceiptSchema,
@@ -25,7 +26,11 @@ export async function uploadOfficialEvidence(
         );
     const originalHash = await photoHash(photo);
     const form = new FormData();
-    form.set("metadata", JSON.stringify(metadata));
+    const finalMetadata: OfficialEvidenceMetadata = {
+        ...metadata,
+        ...(isDemoMode() ? { mode: "demo" as const } : {}),
+    };
+    form.set("metadata", JSON.stringify(finalMetadata));
     form.set("csrf_token", csrf);
     form.set("photo", photo);
     const response = await fetch("/api/v1/evidence", {

@@ -44,6 +44,19 @@ class EvidenceFixture(MobileFixture):
 
 @tagged("post_install", "-at_install")
 class TestEvidenceCapture(EvidenceFixture, TransactionCase):
+    def test_demo_mode_bypasses_geofence_and_stale_timestamp(self):
+        metadata = self.metadata()
+        metadata["mode"] = "demo"
+        metadata["fix_sampled_at"] = (utc_now() - timedelta(hours=2)).isoformat()
+        metadata["device_recorded_at"] = metadata["fix_sampled_at"]
+        metadata["photo_selected_at"] = metadata["fix_sampled_at"]
+        metadata["latitude"] = 0.0
+        metadata["longitude"] = 0.0
+        metadata["accuracy"] = 100.0
+        receipt, created = self.api()._capture(metadata, self.source)
+        self.assertTrue(created)
+        self.assertEqual(receipt["mode"], "demo")
+
     def test_original_derivative_receipt_and_idempotency_are_immutable(self):
         metadata = self.metadata()
         receipt, created = self.api()._capture(metadata, self.source)

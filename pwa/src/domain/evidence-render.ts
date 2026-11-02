@@ -1,3 +1,4 @@
+import { isDemoMode } from "./running-mode";
 import {
     sha256,
     evidenceBinding,
@@ -57,7 +58,8 @@ export async function renderEvidencePackage(
     relaxed = false,
     caption?: { company: string; employee: string; address: string },
 ): Promise<Evidence> {
-    validateEvidenceTime(ref, selectedAt, fixSampledAt, relaxed);
+    const isRelaxed = Boolean(relaxed || isDemoMode());
+    validateEvidenceTime(ref, selectedAt, fixSampledAt, isRelaxed);
     const bitmap = await createImageBitmap(photo);
     const width = Math.max(640, bitmap.width),
         height = bitmap.height;
@@ -181,7 +183,7 @@ export async function renderEvidencePackage(
     const source = {
         version: 1 as const,
         kind: "simulation_grid" as const,
-        ...(__DEMO__ && relaxed ? { demo_unrestricted: true as const } : {}),
+        ...(isRelaxed ? { demo_unrestricted: true as const } : {}),
         selectedAt,
         fixSampledAt,
         photoSha256: await sha256(blob),
