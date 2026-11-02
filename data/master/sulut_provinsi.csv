@@ -1,2 +1,2 @@
-kode_kemendagri,kode_nodot,nama,jenis,lat_sentral,lng_sentral,centroid_sumber_di_dalam_poligon,lat_titik_dalam,lng_titik_dalam,luas_km2_approx,qa_persen_di_dalam_induk,qa_flag,src_kode_nama,src_lat_lng
-71,71,Sulawesi Utara,Provinsi,1.26112,124.522731,false,1.071122,124.641028,14514.941,,geometri_diperbaiki,S1,S3
+kode_kemendagri,kode_nodot,nama,jenis,lat_sentral,lng_sentral,centroid_sumber_di_dalam_poligon,lat_titik_dalam,lng_titik_dalam,luas_km2_approx,asal_poligon,qa_persen_di_dalam_induk,qa_flag,src_kode_nama,src_lat_lng
+71,71,Sulawesi Utara,Provinsi,1.26112,124.522731,false,1.021676,124.61038,14564.914,gabungan_desa,,ok,S1,S3

@@ -78,6 +78,9 @@ OVERLAP_FLAG = 0.05        # tumpang tindih > 5% luas poligon terkecil dianggap 
 CONTAIN_FLAG = 0.90        # < 90% luas anak berada di dalam induk -> 'batas_tidak_presisi'
 CONTAIN_SEVERE = 0.50      # < 50% -> 'periksa_lokasi'
 # Rentang koordinat Sulut: ~0.2-5.7 LU (Pulau Miangas, Talaud, di ~5.56 LU) dan 122.8-127.2 BT.
+DISSOLVE_EPS = 10 / 111000.0   # ~10 m (derajat): menutup celah sempit antar desa saat digabung
+# Lubang < 0,05 km2 dianggap celah poligon dan ditutup; yang lebih besar (mis. danau) dipertahankan.
+HOLE_MIN_KM2 = 0.05
 BBOX_LAT = (0.0, 6.0)
 BBOX_LNG = (122.5, 128.0)
 
@@ -278,6 +281,63 @@ def normalize(g, repair: bool, notes: list):
     return MultiPolygon([orient(p, 1.0) for p in ps]), valid_src  # RFC 7946: luar CCW, lubang CW
 
 
+def _fill_small_holes(g):
+    min_deg2 = HOLE_MIN_KM2 / (111.0 ** 2)
+    out = []
+    for p in polygons_of(g):
+        out.append(Polygon(p.exterior, [i for i in p.interiors if Polygon(i).area >= min_deg2]))
+    return unary_union(out) if out else g
+
+
+def union_closed(geoms):
+    """Gabungkan poligon, tutup celah sempit (closing ~10 m), tutup lubang kecil, bulatkan ke 1e-6 derajat."""
+    u = unary_union([g if g.is_valid else make_valid(g) for g in geoms])
+    u = u.buffer(DISSOLVE_EPS, join_style="mitre").buffer(-DISSOLVE_EPS, join_style="mitre")
+    u = shapely.set_precision(_fill_small_holes(u), 1e-6)
+    ps = polygons_of(u)
+    return MultiPolygon([orient(x, 1.0) for x in ps]) if ps else None
+
+
+def dissolve_hierarchy(recs, by_level):
+    """Bentuk ulang poligon kecamatan, kab/kota, dan provinsi dari gabungan poligon desa/kelurahan.
+
+    Alasan: di sumber, poligon desa jauh lebih rinci (median ~61 titik) daripada poligon kecamatan
+    (median ~19 titik; mis. Kec. Wenang hanya 6 titik). Desa yang jelas salah letak di sumber
+    (titik dalamnya berada di kecamatan lain; qa_flag=periksa_lokasi) tidak ikut menggabung
+    ke kecamatan/kabupaten yang salah.
+    Mengembalikan daftar kode desa yang dikecualikan.
+    """
+    drop_kec, drop_kab = set(), set()
+    for d in by_level["desa_kelurahan"]:
+        other = d.get("kec_lain") or []
+        if other:
+            drop_kec.add(d["kode"])
+            if any(recs[k]["induk"] != d["induk"][:5] for k in other):
+                drop_kab.add(d["kode"])
+    desa_by_kec, desa_by_kab = {}, {}
+    for d in by_level["desa_kelurahan"]:
+        if d["geom_src"] is None:
+            continue
+        if d["kode"] not in drop_kec:
+            desa_by_kec.setdefault(d["induk"], []).append(d["geom_src"])
+        if d["kode"] not in drop_kab:
+            desa_by_kab.setdefault(d["induk"][:5], []).append(d["geom_src"])
+    for lvl, groups in (("kecamatan", desa_by_kec), ("kab_kota", desa_by_kab)):
+        for r in by_level[lvl]:
+            gs = groups.get(r["kode"])
+            if not gs:
+                continue
+            g = union_closed(gs)
+            if g is not None:
+                r["geom"], r["asal"], r["valid_src"] = g, "gabungan_desa", True
+    kabs = [r["geom"] for r in by_level["kab_kota"] if r["geom"] is not None]
+    prov = by_level["provinsi"][0]
+    g = union_closed(kabs) if kabs else None
+    if g is not None:
+        prov["geom"], prov["asal"], prov["valid_src"] = g, "gabungan_desa", True
+    return sorted(drop_kec)
+
+
 def area_km2(g) -> float:
     def f(a):
         out = np.empty_like(a, dtype=float)
@@ -327,6 +387,9 @@ def main() -> int:
     ap.add_argument("--refresh", action="store_true", help="unduh ulang semua sumber")
     ap.add_argument("--no-repair", action="store_true",
                     help="jangan perbaiki geometri tidak valid dari sumber (default: diperbaiki)")
+    ap.add_argument("--no-dissolve", action="store_true",
+                    help="pakai poligon kecamatan/kab/provinsi apa adanya dari sumber (kasar) "
+                         "alih-alih gabungan poligon desa/kelurahan")
     ap.add_argument("--strict", action="store_true", help="exit 1 jika ada temuan kritis")
     args = ap.parse_args()
 
@@ -393,15 +456,43 @@ def main() -> int:
 
     by_level = {lvl: [r for r in recs.values() if r["level"] == lvl] for lvl in LEVELS}
 
-    # ---- turunan geometri
+    # ---- QA hierarki terhadap geometri SUMBER: berapa % luas poligon berada di dalam poligon induknya
+    # (dihitung sebelum poligon level atas dibentuk ulang, supaya tetap menjadi pemeriksaan independen)
+    for r in recs.values():
+        r["geom_src"] = r["geom"]
+        r["asal"] = "sumber" if r["geom"] is not None else ""
+        r["contain"] = None
+        r["qa"] = [] if r["geom"] is not None else ["tanpa_poligon"]
+    kec_geoms = [(r["kode"], r["geom_src"]) for r in by_level["kecamatan"] if r["geom_src"] is not None]
+    kec_tree = STRtree([g if g.is_valid else make_valid(g) for _, g in kec_geoms])
+    for lvl in ["kab_kota", "kecamatan", "desa_kelurahan"]:
+        for r in by_level[lvl]:
+            par = recs.get(r["induk"])
+            if r["geom_src"] is None or par is None or par["geom_src"] is None:
+                continue
+            c = r["geom_src"] if r["geom_src"].is_valid else make_valid(r["geom_src"])
+            p = par["geom_src"] if par["geom_src"].is_valid else make_valid(par["geom_src"])
+            r["contain"] = c.intersection(p).area / c.area if c.area else 0.0
+            if r["contain"] < CONTAIN_SEVERE:
+                r["qa"].append("periksa_lokasi")
+                hit = [kec_geoms[i][0] for i in kec_tree.query(c.representative_point(),
+                                                              predicate="intersects")]
+                r["kec_lain"] = [k for k in hit if k != r["induk"]]
+            elif r["contain"] < CONTAIN_FLAG:
+                r["qa"].append("batas_tidak_presisi")
+
+    # ---- bentuk ulang poligon level atas dari gabungan desa/kelurahan (kecuali --no-dissolve)
+    dropped_desa = [] if args.no_dissolve else dissolve_hierarchy(recs, by_level)
+    if dropped_desa:
+        print(f" -> {len(dropped_desa)} desa dikecualikan dari gabungan kecamatan (salah letak di sumber): "
+              + ", ".join(dropped_desa))
+
+    # ---- turunan geometri dari geometri FINAL
     for r in recs.values():
         g = r["geom"]
-        r["contain"] = None
-        r["qa"] = []
         if g is None:
             r.update(rep_lat=None, rep_lng=None, luas=None, n_poly=0, n_pts=0, valid=None,
                      centroid_inside=None)
-            r["qa"].append("tanpa_poligon")
             continue
         rp = g.representative_point()
         r["rep_lat"], r["rep_lng"] = rp.y, rp.x
@@ -413,25 +504,6 @@ def main() -> int:
         r["centroid_inside"] = (g.covers(Point(r["lng"], r["lat"])) if r["lat"] is not None else None)
         if not r["valid_src"]:
             r["qa"].append("geometri_diperbaiki" if not args.no_repair else "geometri_tidak_valid")
-
-    # ---- QA hierarki: berapa % luas poligon berada di dalam poligon induknya
-    kec_geoms = [(r["kode"], r["geom"]) for r in by_level["kecamatan"] if r["geom"] is not None]
-    kec_tree = STRtree([g for _, g in kec_geoms])
-    for lvl in ["kab_kota", "kecamatan", "desa_kelurahan"]:
-        for r in by_level[lvl]:
-            par = recs.get(r["induk"])
-            if r["geom"] is None or par is None or par["geom"] is None:
-                continue
-            c = r["geom"] if r["geom"].is_valid else make_valid(r["geom"])
-            p = par["geom"] if par["geom"].is_valid else make_valid(par["geom"])
-            r["contain"] = c.intersection(p).area / c.area if c.area else 0.0
-            if r["contain"] < CONTAIN_SEVERE:
-                r["qa"].append("periksa_lokasi")
-                hit = [kec_geoms[i][0] for i in kec_tree.query(c.representative_point(),
-                                                              predicate="intersects")]
-                r["kec_lain"] = [k for k in hit if k != r["induk"]]
-            elif r["contain"] < CONTAIN_FLAG:
-                r["qa"].append("batas_tidak_presisi")
     for r in recs.values():
         r["qa_flag"] = ";".join(r["qa"]) if r["qa"] else "ok"
 
@@ -445,14 +517,14 @@ def main() -> int:
 
     # ---- CSV atribut
     common_tail = ["lat_sentral", "lng_sentral", "centroid_sumber_di_dalam_poligon",
-                   "lat_titik_dalam", "lng_titik_dalam", "luas_km2_approx",
+                   "lat_titik_dalam", "lng_titik_dalam", "luas_km2_approx", "asal_poligon",
                    "qa_persen_di_dalam_induk", "qa_flag", "src_kode_nama", "src_lat_lng"]
 
     def tail(r):
         ci = r.get("centroid_inside")
         pct = "" if r.get("contain") is None else round(100 * r["contain"], 1)
         return [r6(r["lat"]), r6(r["lng"]), "" if ci is None else str(ci).lower(),
-                r6(r.get("rep_lat")), r6(r.get("rep_lng")), r3(r.get("luas")),
+                r6(r.get("rep_lat")), r6(r.get("rep_lng")), r3(r.get("luas")), r["asal"],
                 pct, r["qa_flag"], SRC_KN, SRC_LL]
 
     write_csv(MASTER_DIR / "sulut_provinsi.csv",
@@ -508,13 +580,13 @@ def main() -> int:
             if not shapely.from_wkt(w).is_valid:  # cek hasil tulis, bukan objek di memori
                 roundtrip_bad.append(r["kode"])
             rows.append([r["kode"], r["nama"], "MultiPolygon", r["n_poly"], r["n_pts"],
-                         str(r["valid_src"]).lower(), str(r["valid"]).lower(), r["qa_flag"],
+                         str(r["valid_src"]).lower(), str(r["valid"]).lower(), r["asal"], r["qa_flag"],
                          SRC_GEO, w])
             props = {"code": r["kode"], "code_compact": r["kode_nodot"], "name": r["nama"],
                      "type": r["jenis"], "parent_code": r["induk"],
                      "center_latitude": r6(r["lat"]), "center_longitude": r6(r["lng"]),
                      "inside_latitude": r6(r["rep_lat"]), "inside_longitude": r6(r["rep_lng"]),
-                     "area_km2_approx": r3(r["luas"]), "qa_flag": r["qa_flag"],
+                     "area_km2_approx": r3(r["luas"]), "polygon_origin": r["asal"], "qa_flag": r["qa_flag"],
                      "source": "cahyadsn/wilayah_boundaries (S3)"}
             if lvl == "desa_kelurahan":
                 kec = recs[r["induk"]]
@@ -529,7 +601,7 @@ def main() -> int:
                           "geometry": json.loads(json.dumps(mapping(g)))})
         write_csv(MASTER_DIR / f"sulut_poligon_{lvl}.csv",
                   ["kode_kemendagri", "nama", "geom_type", "jumlah_poligon", "jumlah_titik",
-                   "geom_valid_di_sumber", "geom_valid_di_output", "qa_flag", "src_poligon",
+                   "geom_valid_di_sumber", "geom_valid_di_output", "asal_poligon", "qa_flag", "src_poligon",
                    "wkt_epsg4326_lng_lat"], rows)
 
         def rnd(c):

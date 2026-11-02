@@ -18,15 +18,3 @@ kode_kemendagri,level,nama,jenis_anomali,keterangan
 71.72.04.1003,desa_kelurahan,Pateten Satu,periksa_lokasi,hanya 46.4% luas di dalam induk 71.72.04; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
 71.72.04.1005,desa_kelurahan,Aertembaga Satu,periksa_lokasi,hanya 45.0% luas di dalam induk 71.72.04; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
 71.72.08.1005,desa_kelurahan,Lirang,periksa_lokasi,hanya 46.9% luas di dalam induk 71.72.08; titik dalam berada di: tidak ada kecamatan memuat titik dalam (kemungkinan pesisir)
-71.02.07,kecamatan,Tompaso,tumpang_tindih,14.5% luas poligon terkecil tumpang tindih dengan 71.02.19 Langowan Utara
-71.02.09,kecamatan,Langowan Timur,tumpang_tindih,6.1% luas poligon terkecil tumpang tindih dengan 71.02.19 Langowan Utara
-71.02.10,kecamatan,Langowan Barat,tumpang_tindih,11.6% luas poligon terkecil tumpang tindih dengan 71.02.19 Langowan Utara
-71.03.08,kecamatan,Tabukan Utara,tumpang_tindih,7.8% luas poligon terkecil tumpang tindih dengan 71.03.17 Tahuna
-71.10.04,kecamatan,Modayag,tumpang_tindih,5.1% luas poligon terkecil tumpang tindih dengan 71.10.05 Modayag Barat
-71.71.02,kecamatan,Tuminting,tumpang_tindih,7.3% luas poligon terkecil tumpang tindih dengan 71.71.03 Singkil
-71.71.05,kecamatan,Tikala,tumpang_tindih,5.6% luas poligon terkecil tumpang tindih dengan 71.71.11 Paal Dua
-71.71.05,kecamatan,Tikala,tumpang_tindih,11.2% luas poligon terkecil tumpang tindih dengan 71.71.07 Wanea
-71.71.06,kecamatan,Sario,tumpang_tindih,9.1% luas poligon terkecil tumpang tindih dengan 71.71.09 Malalayang
-71.71.06,kecamatan,Sario,tumpang_tindih,30.2% luas poligon terkecil tumpang tindih dengan 71.71.07 Wanea
-71.72.03,kecamatan,Ranowulu,tumpang_tindih,7.0% luas poligon terkecil tumpang tindih dengan 71.72.06 Girian
-71.72.04,kecamatan,Aertembaga,tumpang_tindih,7.2% luas poligon terkecil tumpang tindih dengan 71.72.07 Maesa
