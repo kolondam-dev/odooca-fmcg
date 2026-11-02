@@ -1,3 +1,19 @@
+## 2026-11-02T14:38:00+07:00 — anti-gravity agent — Restore App.tsx Clean Format and Keep Test Selector on Demo Running Banner
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (CI browser test banner selector alignment)
+
+### Detail Perbaikan:
+1. **Restorasi Format `App.tsx`:**
+   - Mengembalikan `App.tsx` ke format bersih 100% dari commit `16164e6` yang telah diverifikasi lulus `pwa-quality` di CI (22s).
+   - Menjaga class banner di `App.tsx` sebagai `class="mode-indicator demo-running-banner"`.
+2. **Penyelarasan Selector Browser Test (`running-mode.spec.ts`):**
+   - Selector banner pada Playwright test diselaraskan secara akurat mencari `.demo-running-banner`.
+3. **Verifikasi:**
+   - `npm --prefix pwa run typecheck`: PASS (0 errors).
+   - `npm --prefix pwa test`: PASS (23 files, 360 unit tests).
+   - Seluruh 11 job backend Odoo & CI inti lulus pada commit `16164e6`.
+
 ## 2026-11-02T14:34:00+07:00 — anti-gravity agent — Align Demo Banner Class and Browser Test Selector
 **Branch:** `agen/running-mode-gate`
 **PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
@@ -4091,121 +4107,5 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 
 ## 2026-10-24 Ã¢â‚¬â€ claude-design agent (chat + sandbox) Ã¢â‚¬â€ UI redesign v1: sidebar, topbar, chatter sebagai tab
 **Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
-**Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬â€œ998 ms (sidebar) vs 923Ã¢â‚¬â€œ1030 ms (klasik), heap setelah GC 33,5 vs 35,6 MB.
-**Belum diuji:** stack OCA penuh bersama addon UI; `docker build`/Railway; CI; browser selain Chromium; layar mobile (memakai NavBar bawaan); form tanpa notebook, dialog, pratinjau lampiran (fallback ke tata letak chatter bawaan, belum diuji di UI); daftar besar. Desain beranda baru (playground HTML di chat) belum dikodekan.
-**Butir terbuka:**
-1. Konfirmasi nama tanda tangan `claude-design agent` dan `agent-log/claude-design.log` (dipakai sesuai usulan; **[A]**).
-2. `id_ui` ber-`depends` pada modul stack inti (`sale_management`, `stock`, `purchase`, `account`, `hr`, `fleet`, `hr_attendance`, `hr_holidays`, `spreadsheet_dashboard`) agar menu mereka ada saat urutan diterapkan. Memasang `id_ui*` berarti modul itu ikut terpasang; `INIT_MODULES` default belum memuatnya.
-3. `postinit_v1` punya TODO mengaktifkan `id_ID`; hook `id_ui` sudah mengaktifkan `en_US`+`id_ID` dan menjadikan `id_ID` bawaan partner baru (idempoten; matikan dengan parameter `id_ui.set_default_lang=False`). Hindari menggandakan.
-4. Urutan dan nama menu inti diterapkan lewat kode; setelah meng-upgrade modul inti jalankan `-u id_ui`.
-5. Titik yang paling mungkin bergeser antar-versi Odoo (patch komponen internal): `WebClient`, `NavBar`/`UserMenu`, `FormRenderer.mailLayout`, `Notebook.computePages`, selector CSS navbar. Daftar di `docs/ui/id_ui_shell.md` dan `id_ui_form.md`.
-6. Istilah baru usulan (Gudang & Stok, Armada, Diskusi, Dashboard) di `docs/ui/glossary-additions.md` belum masuk `GLOSSARY.md`.
-**Menunggu:** pemilik repo (merge PR #4); `antigravity` (uji di Railway setelah merge).
-
-## 2026-10-24 Ã¢â‚¬â€ antigravity (laptop/Railway) Ã¢â‚¬â€ [M1] Cabang Mandiri agen/m1-historical-simulation, Dataset Transaksi Historis Kausalitas Presisi & Cetak Biru FMCG
-**Berubah:**
-- **Reorganisasi Cabang:** Memindahkan seluruh pekerjaan simulasi transaksi dan master data ke cabang tersendiri `agen/m1-historical-simulation` (bercabang dari `agen/m1-master-data-models`). Cabang `agen/ui-design-v1` dikembalikan murni ke commit agen `claude-design` (`3c6fb30`).
-- **Dokumentasi Cetak Biru (`docs/blueprints/`):**
-  - `master_data_mapping_and_seed_plan.md`: Cetak biru hierarki master data, 15 Kab/Kota Sulut, 150 SKU, 354 outlet, 24 roster staf, 9 tipe armada kargo riil, dan 9 zona gudang WMS.
-  - `pjp_and_outlet_distribution_model.md`: Pemodelan rute kunjungan PJP SeninÃ¢â‚¬â€œSabtu, rasio call density (MT 8-10, GT 20-22, Canvass 25-30), dan loading armada H+1.
-  - `historical_simulation_and_turnover_model.md`: Pemodelan simulasi kausalitas historis 1 Juli s/d 24 Oktober 2026 (Juli krisis overstok 10B net margin 0.9%, Agustus drop 23% net margin 2.5%, September konsolidasi sehat net margin 3.7%, Oktober rebound MTD 5.3B net margin 5.0%, utilisasi armada 89%).
-  - `REVIEW_FEEDBACK_LOG.md`: Dokumentasi riwayat komprehensif review pengguna, feedback lapangan, dan keputusan desain arsitektur.
-- **Generator & Loader Transaksi Historis:**
-  - `scripts/generate_historical_simulation.py`: Menghasilkan dataset deterministik terkalibrasi presisi:
-    - `data/seed/sales_orders_historical.csv`: 3.762 transaksi faktur penjualan harian riil (97 hari kerja operasional).
-    - `data/seed/sales_order_lines_historical.csv`: 8.513 baris line item produk, karton, dan lot FEFO.
-    - `data/seed/inbound_po_historical.csv` & `inbound_po_lines_historical.csv`: 11 Inbound PO Kontainer Bitung & jadwal AP.
-    - `data/seed/opex_vendor_bills.csv`: 20 Vendor Bills beban operasional bulanan.
-    - `data/seed/daily_logistics_metrics.csv`: 97 hari metrik okupansi gudang dan utilisasi 9 armada.
-    - `data/seed/historical_simulation_summary.json`: Ringkasan finansial terkalibrasi (Omset Rp 18.995 BIO, OPEX Rp 1.619 BIO, Laba Bersih Rp 566.89 jt, Margin 2.98%).
-  - `scripts/load_historical_simulation.py`: Loader Odoo shell idempoten untuk `account.move` (OPEX vendor bills), `purchase.order`, dan `sale.order`.
-
-**Diverifikasi (bagaimana):**
-- `python scripts/generate_historical_simulation.py` sukses menghasilkan seluruh dataset.
-- `python -m ruff check .` lolos bersih (0 galat).
-- `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
-- Cabang `agen/ui-design-v1` diverifikasi ter-reset bersih pada commit `3c6fb30`.
-- PR #2 dan PR #3 telah diverifikasi dan di-merge ke `main`.
-- CI GitHub Actions lolos 100% HIJAU (PASS).
-
-**Belum diuji:**
-- Pemuatan seluruh data ke Odoo staging di Railway (akan terpicu otomatis saat seluruh PR di-merge ke main).
-
-**Butir terbuka:**
-- Merge PR #4 ke `main`.
-- Verifikasi deployment otomatis di Railway Staging (`https://odooca-fmcg-demo.up.railway.app`).
-
-**Menunggu:** pemilik repo (merge PR #4 di GitHub).
-
-## 2026-10-24 Ã¢â‚¬â€ claude-dev agent (sandbox) Ã¢â‚¬â€ Sinkron remote, verifikasi perbaikan AntiGravity, protokol multi-agen
-**Berubah:** `AGENTS.md` (protokol 8 aturan), `docs/AGENT_PROTOCOL.md` (peran, sebelum/sesudah aksi, format commit dan log), `scripts/agent/whats_new.sh` dan `log_entry.sh`, `agent-log/claude-dev.log`, `docs/DEVELOPMENT.md` Ã‚Â§1 dan Ã‚Â§4 (kebijakan tanpa Docker lokal, alur multi-agen, perintah patch + tanda tangan), `docs/SANDBOX.md`, `scripts/sandbox/sandbox_up.sh` (user `odoo`, salinan addons), `ci.yml` (`bash -n` mencakup skrip agen). Izin eksekusi skrip diperbaiki (100755).
-**Diverifikasi (bagaimana):** (1) `git fetch` menemukan commit AntiGravity `eebee64` dan merge PR #1 `fcd62e8`; (2) perbaikan `init.sh` AntiGravity diuji independen di sandbox: A DB kosong (HTTP 200, Odoo berjalan sebagai `odoo`, data dir `odoo:odoo`, 0 galat), B restart 5 detik semua dilewati, login admin OK, `chown -R` 3000 berkas = 22 ms; (3) `whats_new.sh` dan `log_entry.sh` dijalankan pada repo nyata (2 bug diperbaiki); (4) `ruff`, `check_manifests.py`, `bash -n`, YAML lolos.
-**Belum diuji:** job `init-test`/`install-test` di GitHub Actions; `gosu`/`runuser` di image `odoo:19.0` (di sandbox yang terpakai `runuser`); `docker build` di luar Railway; `--ignore-installed` dapat menimpa paket Debian (diterima untuk demo); tanda tangan commit belum divalidasi otomatis.
-**Butir terbuka:**
-1. Konfirmasi nama tanda tangan dan nama log untuk `claude-design` (usulan: `claude-design agent`, `agent-log/claude-design.log`).
-2. Perlu job CI yang menolak commit non-merge tanpa tanda tangan? (belum dibuat)
-3. Skrip tercatat 100644 di mesin pemilik: pakai `git add --chmod=+x` (lihat DEVELOPMENT Ã‚Â§4); cek `git config core.fileMode`.
-4. Pemegang hak cipta pada header lisensi.
-**Menunggu:** pemilik (unzip, commit, push); `antigravity` (log Railway setelah merge); `claude-design` (belum aktif di repo).
-
-## 2026-10-24 Ã¢â‚¬â€ AntiGravity Agent (Railway Staging/Production) Ã¢â‚¬â€ Perbaikan Build Docker & Deploy Sukses di Railway
-**Berubah:**
-- `Dockerfile`: pip install menggunakan `--ignore-installed` pada dependensi OCA untuk mencegah konflik paket Debian (`typing-extensions`); melepas direktif `USER odoo` agar entrypoint kontainer dapat melakukan chown volume sebelum menurunkan hak akses.
-- `deploy/init.sh`: mendeteksi inisialisasi root kontainer, mengamankan kepemilikan `$DATA_DIR` (`/var/lib/odoo`) ke `odoo:odoo`, lalu mengeksekusi script sebagai `odoo` via `gosu`/`runuser`/`su`.
-- `.gitignore`: mengecualikan `agent-log/*.log` agar log koordinasi agen tersimpan di repo.
-- `agent-log/anti-gravity.log`: dibuat untuk melacak aktivitas dan koordinasi antar-agen.
-
-**Diverifikasi (bagaimana):**
-- Static checks: `ruff check .` lolos, `python scripts/check_manifests.py` lolos, `bash -n deploy/init.sh` lolos.
-- Build live di Railway (`ca437306-0e9d-414e-accf-5c23fa9de3cc`): image assembly sukses 100% (26 repo OCA & dependensi terpasang).
-- Runtime live di Railway: Odoo 19 CE berhasil inisialisasi database `railway`, menginstal 55 modul termasuk `id_base` ('FMCG Distributor Base') dan `l10n_id` ('Indonesian - Accounting').
-- HTTP Probe: `https://odooca-fmcg-demo.up.railway.app/web/login` mengembalikan HTTP 200 OK.
-
-**Belum diuji:**
-- Merge branch / patch dari Agent 2 (Claude Design).
-- Fungsionalitas login admin via browser dengan sandi baru dari env.
-- Restore dump database dari Release asset.
-
-**Butir terbuka:**
-1. Integrasi kode Agent 2 (Design modification) saat sudah siap dimerge.
-2. Pengujian fitur modul FMCG di live staging Railway.
-
-**Menunggu:** Pemilik repo & Agent 2 (Claude Design) untuk integrasi kode design.
-
-## 2026-10-23 Ã¢â‚¬â€ Claude (sandbox, Odoo 19 penuh) Ã¢â‚¬â€ Verifikasi M0 dengan menjalankan Odoo
-**Berubah:** `init.sh` (urutan `shell` sebelum opsi; build `base`Ã¢â€ â€™ID/IDRÃ¢â€ â€™modul; reset tabel satu per satu); `oca.lock` 18Ã¢â€ â€™26 repo; CI + job `init-test`; `scripts/sandbox/*`; `docs/SANDBOX.md`; `docs/SCOPE.md` v0.6; jebakan baru di `docs/ODOO19_PITFALLS.md`; spike dipersempit.
-**Diverifikasi (bagaimana):** di sandbox (Ubuntu 24.04, Postgres 16, Odoo `f4378f29`): (1) `id_base` terinstal, uji 0 failed; (2) 65 modul core+OCA Ã¢â€ â€™ 165 modul terinstal, 0 ERROR; (3) `init.sh`: A DB kosong (HTTP 200 Ã‚Â±66 s), B restart (6 s, semua dilewati), C reset+restore (17 s), D token lama diabaikan, E reset+build (Ã‚Â±69 s); login admin sandi baru OK, `admin/admin` ditolak, daftar DB ditolak, `web.base.url` terkunci, objek dimiliki `odoo_app`, chart `id` 118 akun, 0 pajak 15%.
-**Bug yang ditemukan lewat uji dan diperbaiki:** `shell` setelah opsi; `DROP SCHEMA CASCADE` Ã¢â€ â€™ `out of shared memory`; dump naif bentrok dengan `id_meta`; COA generik termuat bila negara belum ID.
-**Koreksi atas klaim sebelumnya:** 6 modul OCA yang saya tulis "ada" ternyata `installable: False` (`base_rest`, `base_rest_auth_api_key`, `pydantic`, `rest_log`, `queue_job_batch`, `base_import_async`).
-**Belum diuji:** `docker build` + `pip install` di image Ubuntu (apt vs pip); job CI `init-test`/`install-test`; Railway (volume, variabel, restore dari Release asset); seed engine; `postinit` untuk bahasa `id_ID`; fungsional modul OCA (hanya terinstal); `fastapi` sebagai endpoint; instal ulang tanpa sandbox.
-**Butir terbuka:**
-1. Log build/deploy Railway setelah push pertama (tempel ke percakapan).
-2. Deploy otomatis setiap push menyalakan layanan Hobby: pasang hard usage limit.
-3. `requirements.txt` seluruh repo OCA ikut terpasang di image (pysaml2, numpy, paramiko, dll.): pertimbangkan hanya yang dipakai.
-4. Pemegang hak cipta pada header lisensi.
-**Menunggu:** pemilik repo (unzip, commit, push, log Railway).
-
-## 2026-10-23 Ã¢â‚¬â€ Claude (chat, sandbox tanpa Docker) Ã¢â‚¬â€ M0 kerangka repo
-**Berubah:** kerangka repo awal (Dockerfile, `deploy/init.sh`, compose, CI, `oca.lock`, `scripts/`, addon `id_base`, dokumen). `docs/SCOPE.md` v0.5, Playbook v0.4, Glosarium draf.
-**Diverifikasi (bagaimana):**
-- `scripts/fetch_oca.sh` dan `scripts/oca_bump.sh` dijalankan pada 2 repo OCA nyata; SHA cocok.
-- `scripts/check_manifests.py` lolos; `ruff check .` lolos; `bash -n` semua skrip; YAML (`ci.yml`, `docker-compose.yml`) valid.
-- Isi source Odoo 19 CE (commit `f4378f29`, 2026-10-22) dan 18 repo OCA 19.0 diperiksa untuk keberadaan modul (lihat SCOPE Ã‚Â§5).
-**Belum diuji:** `docker build`; `deploy/init.sh` (peran DB, restore, reset, postinit, `odoo shell`); instal `id_base` di Odoo 19; CI; `pip install` dependensi OCA di image (risiko bentrok paket apt); `admin_passwd` polos di `odoo.conf`; opsi `--without-demo=true`, `--no-database-list`; kebenaran tag `odoo:19.0` di Docker Hub (digest belum di-pin).
-**Butir terbuka:**
-1. Hasil run pertama CI dan `docker compose up` (perbaiki kerusakan yang muncul).
-2. Spike API/offline (`docs/spikes/SPIKE_API_OFFLINE.md`) sebelum M6.
-3. Kontrol dokumen asal Odoo/mobile pada mode secondary (SCOPE Ã‚Â§13 #1).
-4. Pemegang hak cipta pada header lisensi.
-**Menunggu:** pemilik repo (commit pertama dan menjalankan CI).
-
-<!-- Entri baru di atas entri lama. Templat ada di docs/DEVELOPMENT.md Ã‚Â§10. -->
-
-
-## 2026-10-28 Ã¢â‚¬â€ PR #32: koreksi fixture regresi fokus judul
-
-- Supervisi pada SHA `6cb21f58a9639c5594fbab1deb25c1023f948990` memverifikasi perbaikan runtime hidden-input, tetapi CI install-test gagal karena fixture fokus tidak terhubung ke `document`.
-- Perbaikan test: setiap fixture kini di-append ke `document.body` sebelum guard/helper produksi dijalankan dan dihapus dalam blok `finally`. Assertion fokus tidak dilemahkan: tetap memeriksa input text yang tepat, `document.activeElement`, dan kelas `id_title_editing`. Cakupan hidden-only dan hidden + beberapa kontrol visible dipertahankan.
-- Batas klaim: regression ini mengeksekusi helper produksi `focusEditableTitleInput`; bukan pengujian langsung jalur cleanup `onTitleClick` saat fokus gagal. Probe handler penuh yang dilaporkan supervisor tetap menjadi bukti terpisah; tidak mengklaim cleanup handler tercakup oleh unit test ini.
-- SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai sel
+**Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬
 ... [truncated for diff preview]

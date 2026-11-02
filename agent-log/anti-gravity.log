@@ -2012,3 +2012,9 @@
 - Memperbaiki Prettier LF formatting pada App.tsx
 - Typecheck dan test verifikasi lokal lulus
 - Task managed by antigravity-agent at 2026-11-02T07:34:05+00:00
+
+[2026-11-02T07:37:41+00:00] [INFO] Restore App.tsx format and keep test selector on demo-running-banner
+- Mengembalikan App.tsx ke format bersih 16164e6 yang lulus pwa-quality CI
+- Menjaga selector Playwright browser test pada .demo-running-banner
+- Typecheck dan test verifikasi lokal lulus
+- Task managed by antigravity-agent at 2026-11-02T07:37:41+00:00
