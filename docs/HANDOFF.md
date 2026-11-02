@@ -1,3 +1,16 @@
+## 2026-11-02T09:47:30+07:00 — anti-gravity agent — Decouple StockMove Create from Picking ID & Bind via SQL
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Decoupled stock.move creation from picking_id lifecycle and linked picking via SQL update)
+
+### Detail Perbaikan:
+1. **Isolasi Pembuatan `stock.move` (`test_commands_api.py`):**
+   - Menghindari intersep hook `create()` pada modul `stock` yang mengakses `vals.get('picking_id')` secara ambigu antara int ID dan recordset.
+   - Membuat `stock.move` dasar secara murni (produk, kuantitas, lokasi sumber/tujuan, perusahaan), kemudian menautkan `picking_id` dan `state` (`assigned` / `cancel`) melalui SQL UPDATE langsung dengan invalidasi cache recordset `move_ids` dan `state` pada picking.
+2. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+
 ## 2026-11-02T09:37:30+07:00 — anti-gravity agent — Convert Many2one Move Values to Recordsets for Odoo 19 Create
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
@@ -4047,14 +4060,5 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - Supervisi pada SHA `6cb21f58a9639c5594fbab1deb25c1023f948990` memverifikasi perbaikan runtime hidden-input, tetapi CI install-test gagal karena fixture fokus tidak terhubung ke `document`.
 - Perbaikan test: setiap fixture kini di-append ke `document.body` sebelum guard/helper produksi dijalankan dan dihapus dalam blok `finally`. Assertion fokus tidak dilemahkan: tetap memeriksa input text yang tepat, `document.activeElement`, dan kelas `id_title_editing`. Cakupan hidden-only dan hidden + beberapa kontrol visible dipertahankan.
 - Batas klaim: regression ini mengeksekusi helper produksi `focusEditableTitleInput`; bukan pengujian langsung jalur cleanup `onTitleClick` saat fokus gagal. Probe handler penuh yang dilaporkan supervisor tetap menjadi bukti terpisah; tidak mengklaim cleanup handler tercakup oleh unit test ini.
-- SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai seluruh job selesai sebelum verdict. Hasil belum diklaim.
-- Scope tetap UI/tests/docs. PR #32 tetap draft; tidak merge dan tidak deploy.
-- Task Managed by agent claude-design-takeoverby-codex at 2026-10-28T11:26:00+07:00
-
-
-
-
-
-
-
-
+- SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai sel
+... [truncated for diff preview]

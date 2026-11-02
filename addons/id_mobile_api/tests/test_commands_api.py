@@ -682,38 +682,23 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         })
 
         def _add_picking_move(picking, state="assigned"):
-            StockMove = self.env["stock.move"].sudo()
-            candidate = {
-                "name": picking.name,
-                "description_picking": picking.name,
-                "product_id": self.product,
+            move = self.env["stock.move"].sudo().create({
+                "product_id": self.product.id,
                 "product_uom_qty": 2.0,
-                "product_uom": self.product.uom_id,
-                "product_uom_id": self.product.uom_id,
-                "picking_id": picking,
-                "location_id": picking.location_id,
-                "location_dest_id": picking.location_dest_id,
-                "company_id": self.company,
-                "state": state,
-            }
-            mv_vals = {}
-            for k, v in candidate.items():
-                if k in StockMove._fields:
-                    f = StockMove._fields[k]
-                    if f.type == "many2one" and isinstance(v, int):
-                        v = self.env[f.comodel_name].browse(v)
-                    mv_vals[k] = v
-            move = StockMove.create(mv_vals)
+                "location_id": picking.location_id.id,
+                "location_dest_id": picking.location_dest_id.id,
+                "company_id": self.company.id,
+            })
             self.env.cr.execute(
-                "UPDATE stock_move SET state = %s WHERE id = %s",
-                (state, move.id),
+                "UPDATE stock_move SET picking_id = %s, state = %s WHERE id = %s",
+                (picking.id, state, move.id),
             )
-            move.invalidate_recordset(["state"])
+            move.invalidate_recordset(["picking_id", "state"])
             self.env.cr.execute(
                 "UPDATE stock_picking SET state = %s WHERE id = %s",
                 (state, picking.id),
             )
-            picking.invalidate_recordset(["state"])
+            picking.invalidate_recordset(["move_ids", "state"])
             return move
 
         _add_picking_move(picking1, "assigned")

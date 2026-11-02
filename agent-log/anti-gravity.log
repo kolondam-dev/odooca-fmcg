@@ -1931,3 +1931,13 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-02T09:37:30+07:00
+
+
+[2026-11-02T09:47:30+07:00] [INFO] Decouple StockMove Create from Picking ID & Bind via SQL
+- Fixed move creation in test_commands_api._add_picking_move:
+  * In stock.move.create, passing picking_id directly triggers internal validation hook in stock addon that expects integer ID while ORM passes recordset.
+  * Created minimal unlinked stock.move with product, quantity, locations, and company, then linked to picking and persisted assigned/cancel state via direct SQL update and cache invalidation.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-02T09:47:30+07:00
