@@ -1921,3 +1921,13 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-02T09:29:00+07:00
+
+
+[2026-11-02T09:37:30+07:00] [INFO] Convert Many2one Move Values to Recordsets for Odoo 19 Create
+- Fixed Many2one field value type in test_commands_api._add_picking_move:
+  * In Odoo 19, Many2one convert_to_column expects recordset instances with .id attributes during _create.
+  * Passed recordsets directly for product_id, uom, picking_id, locations, and company_id, with automatic browse conversion if integer IDs are supplied.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-02T09:37:30+07:00

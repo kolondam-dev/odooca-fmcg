@@ -686,17 +686,23 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             candidate = {
                 "name": picking.name,
                 "description_picking": picking.name,
-                "product_id": self.product.id,
-                "product_uom_qty": 2,
-                "product_uom": self.product.uom_id.id,
-                "product_uom_id": self.product.uom_id.id,
-                "picking_id": picking.id,
-                "location_id": picking.location_id.id,
-                "location_dest_id": picking.location_dest_id.id,
-                "company_id": self.company.id,
+                "product_id": self.product,
+                "product_uom_qty": 2.0,
+                "product_uom": self.product.uom_id,
+                "product_uom_id": self.product.uom_id,
+                "picking_id": picking,
+                "location_id": picking.location_id,
+                "location_dest_id": picking.location_dest_id,
+                "company_id": self.company,
                 "state": state,
             }
-            mv_vals = {k: v for k, v in candidate.items() if k in StockMove._fields}
+            mv_vals = {}
+            for k, v in candidate.items():
+                if k in StockMove._fields:
+                    f = StockMove._fields[k]
+                    if f.type == "many2one" and isinstance(v, int):
+                        v = self.env[f.comodel_name].browse(v)
+                    mv_vals[k] = v
             move = StockMove.create(mv_vals)
             self.env.cr.execute(
                 "UPDATE stock_move SET state = %s WHERE id = %s",

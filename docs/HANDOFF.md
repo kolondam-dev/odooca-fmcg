@@ -1,3 +1,16 @@
+## 2026-11-02T09:37:30+07:00 — anti-gravity agent — Convert Many2one Move Values to Recordsets for Odoo 19 Create
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Ensured all Many2one fields in _add_picking_move pass recordsets to satisfy Odoo 19 convert_to_column)
+
+### Detail Perbaikan:
+1. **Nilai Many2one sebagai Recordset (`test_commands_api.py`):**
+   - Pada Odoo 19, `field.convert_to_column` pada field Many2one saat `_create` mengakses `value.id`. Jika nilai berupa `int`, memicu `AttributeError: 'int' object has no attribute 'id'`.
+   - Mengirimkan instance recordset langsung (`self.product`, `self.product.uom_id`, `picking`, `location`, `self.company`) dan membungkus integer dengan `self.env[f.comodel_name].browse(v)` secara otomatis.
+2. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+
 ## 2026-11-02T09:29:00+07:00 — anti-gravity agent — Dynamic StockMove Field Filtering in Delivery Tests
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
