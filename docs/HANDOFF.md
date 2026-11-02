@@ -1,3 +1,28 @@
+## 2026-11-02T10:51:21+07:00 — claude-dev agent — PR-2: skema dan seed master wilayah Sulut
+**Branch:** `agen/geo-master-schema` (stacked di atas `agen/geo-master-upgrade`)
+**Status:** PASS — CI 12/12 job hijau pada SHA `bb6cf52` (static, init-test, install-test, upgrade runtime, invariant, seed, PWA)
+
+### 1. Skema
+- `id.city`: `kode_kemendagri`, `state_id`, `latitude`, `longitude`, `area_km2`; unique `kode_kemendagri`.
+- `id.district`: `city_id`, `kode_kemendagri`, `state_id` (related stored ke `city_id.state_id`), lat/lng, `area_km2`, 4 kolom bbox, `geom_source`, `geom_quality`, `geom_updated_at`; unique kode.
+- `id.subdistrict`: `kode_kemendagri`, `area_km2`, `is_legacy`; unique kode.
+
+### 2. Seed XML
+- 15 kab/kota: kode Kemendagri, provinsi `base.state_id_sa`, titik di dalam poligon (`lat_titik_dalam`/`lng_titik_dalam`), luas dari build PR-1.
+- 18 kecamatan: relasi `city_id`, kode Kemendagri, koordinat, luas; kolom teks `city` legacy dipertahankan agar `MASTER-GEO` tetap resolve.
+- D5=B terbatas: 17 kelurahan dipetakan ke kode Kemendagri kanonik; `KEL-BTG-GRW` dan `KEL-TMH-PSL` ditandai `is_legacy=True` tanpa kode (tidak menebak wilayah transaksi).
+
+### 3. Views & uji
+- List/search/form untuk city, district, subdistrict; filter legacy dan group by kab/kota + provinsi.
+- Form kecamatan tidak memuat `geojson_polygon` (sampai 1,3 MB per record).
+- `addons/id_base/tests/test_geo_master.py`: 5 uji (identitas + provinsi, hierarki, pemetaan/legacy, stabilitas kode `KEC-*`/`KEL-*`, form tanpa poligon).
+
+### 4. Verifikasi
+- PASS: `ruff check .`; `check_manifests.py` (10 addon); `unittest tests.test_geo_master_data` (12/12); `verify_seed_invariants.py` (PASS, 0 violation).
+- PASS CI pada SHA `bb6cf52`: `init-test` + `install-test` (5 uji `TestGeoMaster` berjalan), upgrade runtime, invariant, seed, PWA.
+- Perbaikan saat CI: search view Odoo 19 tidak menerima atribut `expand`/`string` pada `<group>`; filter group-by dipindah langsung (pola sama dengan `id_approval`/`id_dashboard_monetary`). Ketiga search view + 9 list view divalidasi terhadap RNG Odoo 19 via `lxml` → 0 error.
+- Catatan: data XML `noupdate="1"` hanya terisi pada instalasi baru; backfill DB existing dikerjakan loader PR-3.
+
 ## 2026-11-02T09:56:00+07:00 — anti-gravity agent — Full Environment Cache Invalidation for Assigned Pickings
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
