@@ -23,6 +23,7 @@
 4. **Native Odoo Verification Tests (`test_commands_api.py`):**
    - Menambahkan counterexample pengujian DO: cancelled DO, draft DO, stale historical DO (July 2026), incoming picking type, dan other courier assignment.
    - Mengikat pencarian `picking_type` secara eksplisit pada `code == 'outgoing'` agar manifest DO tidak mengambil tipe incoming/internal yang ada di DB.
+   - Menyetel state picking operasional (`assigned` dan `cancel`) lewat raw SQL dan invalidate recordset agar nilai field computed `state` terisolasi dengan andal tanpa moves.
    - Menambahkan pengujian alur sesi kunjungan: Sesi A sah, Sesi B tanpa check-in ditolak, checkout kedua Sesi A dengan UUID baru ditolak, retry identik menghasilkan receipt accepted yang sama.
    - Menghitung waktu sampel boundary 00:30 WITA dan 08:30 WITA secara dinamis relatif terhadap `business_date()` saat runtime CI berjalan.
 5. **Verifikasi:**

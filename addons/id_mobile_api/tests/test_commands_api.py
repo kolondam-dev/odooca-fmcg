@@ -680,6 +680,12 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": fields.Datetime.now(),
             "user_id": self.mobile.id,
         })
+        self.env.cr.execute(
+            "UPDATE stock_picking SET state = 'assigned' WHERE id IN %s",
+            (tuple([picking1.id, picking2.id]),),
+        )
+        picking1.invalidate_recordset(["state"])
+        picking2.invalidate_recordset(["state"])
 
         pod_evidence_uuid1 = str(uuid.uuid4())
         self.env["id.mobile.evidence"].sudo().create({
@@ -748,6 +754,11 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": fields.Datetime.now(),
             "user_id": self.mobile.id,
         })
+        self.env.cr.execute(
+            "UPDATE stock_picking SET state = 'cancel' WHERE id = %s",
+            (picking_cancelled.id,),
+        )
+        picking_cancelled.invalidate_recordset(["state"])
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
@@ -796,6 +807,11 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": datetime(2026, 7, 15, 8, 0, 0),
             "user_id": self.mobile.id,
         })
+        self.env.cr.execute(
+            "UPDATE stock_picking SET state = 'assigned' WHERE id = %s",
+            (picking_stale.id,),
+        )
+        picking_stale.invalidate_recordset(["state"])
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
@@ -826,6 +842,11 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": fields.Datetime.now(),
             "user_id": self.mobile.id,
         })
+        self.env.cr.execute(
+            "UPDATE stock_picking SET state = 'assigned' WHERE id = %s",
+            (picking_incoming.id,),
+        )
+        picking_incoming.invalidate_recordset(["state"])
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),
@@ -856,6 +877,11 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "scheduled_date": fields.Datetime.now(),
             "user_id": other_courier.id,
         })
+        self.env.cr.execute(
+            "UPDATE stock_picking SET state = 'assigned' WHERE id = %s",
+            (picking_other_courier.id,),
+        )
+        picking_other_courier.invalidate_recordset(["state"])
         with self.assertRaises(UserError):
             model.process_command({
                 "client_uuid": str(uuid.uuid4()),

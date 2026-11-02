@@ -1888,3 +1888,11 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-02T08:58:30+07:00
+
+[2026-11-02T09:06:30+07:00] [INFO] Explicit Picking State Persistence in Delivery Tests
+- Fixed computed/readonly state reset on stock.picking in test_commands_api.py:
+  * In test_delivery_pod_and_trip_close_validation: stock.picking.create does not persist state directly without moves. Applied raw SQL UPDATE and invalidate_recordset(['state']) to reliably set picking state to 'assigned' or 'cancel' in database, ensuring picking state guards evaluate accurately.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-02T09:06:30+07:00
