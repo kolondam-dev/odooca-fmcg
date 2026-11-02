@@ -75,11 +75,60 @@
         <field name="arch" type="xml">
             <list string="Kabupaten / Kota">
                 <field name="code"/>
+                <field name="kode_kemendagri" optional="show"/>
                 <field name="name"/>
                 <field name="type"/>
-                <field name="is_out_of_town"/>
+                <field name="state_id" optional="hide"/>
+                <field name="area_km2" optional="hide" sum="Total Area (km2)"/>
+                <field name="is_out_of_town" optional="hide"/>
                 <field name="active" widget="boolean_toggle"/>
             </list>
+        </field>
+    </record>
+
+    <record id="view_id_city_search" model="ir.ui.view">
+        <field name="name">id.city.search</field>
+        <field name="model">id.city</field>
+        <field name="arch" type="xml">
+            <search string="Kabupaten / Kota">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="kode_kemendagri"/>
+                <separator/>
+                <filter name="filter_kota" string="Kota" domain="[('type', '=', 'kota')]"/>
+                <filter name="filter_kabupaten" string="Kabupaten" domain="[('type', '=', 'kabupaten')]"/>
+                <separator/>
+                <filter name="filter_out_of_town" string="Luar Kota" domain="[('is_out_of_town', '=', True)]"/>
+                <separator/>
+                <filter name="group_by_type" string="Tipe" context="{'group_by': 'type'}"/>
+                <filter name="group_by_state" string="Provinsi" context="{'group_by': 'state_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_id_city_form" model="ir.ui.view">
+        <field name="name">id.city.form</field>
+        <field name="model">id.city</field>
+        <field name="arch" type="xml">
+            <form string="Kabupaten / Kota">
+                <sheet>
+                    <group>
+                        <group string="Identitas">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="kode_kemendagri"/>
+                            <field name="type"/>
+                            <field name="state_id"/>
+                            <field name="is_out_of_town"/>
+                        </group>
+                        <group string="Geografi">
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                            <field name="area_km2"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
         </field>
     </record>
 
@@ -87,6 +136,7 @@
         <field name="name">Kabupaten / Kota</field>
         <field name="res_model">id.city</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_id_city_search"/>
     </record>
 
 
@@ -97,11 +147,71 @@
         <field name="arch" type="xml">
             <list string="Kecamatan (Districts)">
                 <field name="code"/>
+                <field name="kode_kemendagri" optional="show"/>
                 <field name="name"/>
-                <field name="city"/>
-                <field name="coverage_area_id"/>
+                <field name="city_id"/>
+                <field name="coverage_area_id" optional="hide"/>
+                <field name="area_km2" optional="hide" sum="Total Area (km2)"/>
                 <field name="active" widget="boolean_toggle"/>
             </list>
+        </field>
+    </record>
+
+    <record id="view_id_district_search" model="ir.ui.view">
+        <field name="name">id.district.search</field>
+        <field name="model">id.district</field>
+        <field name="arch" type="xml">
+            <search string="Kecamatan">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="kode_kemendagri"/>
+                <field name="city_id"/>
+                <separator/>
+                <filter name="group_by_city" string="Kabupaten / Kota" context="{'group_by': 'city_id'}"/>
+                <filter name="group_by_state" string="Provinsi" context="{'group_by': 'state_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Polygon batas wilayah (geojson_polygon) sengaja tidak dimuat di form:
+         ukurannya sampai >1 MB per kecamatan. Gunakan laporan/ekspor bila perlu. -->
+    <record id="view_id_district_form" model="ir.ui.view">
+        <field name="name">id.district.form</field>
+        <field name="model">id.district</field>
+        <field name="arch" type="xml">
+            <form string="Kecamatan">
+                <sheet>
+                    <group>
+                        <group string="Identitas">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="kode_kemendagri"/>
+                            <field name="city_id"/>
+                            <field name="city"/>
+                            <field name="state_id"/>
+                            <field name="coverage_area_id"/>
+                        </group>
+                        <group string="Geografi">
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                            <field name="area_km2"/>
+                            <field name="geom_source"/>
+                            <field name="geom_quality"/>
+                            <field name="geom_updated_at"/>
+                        </group>
+                    </group>
+                    <group string="Bounding Box (derajat)">
+                        <group>
+                            <field name="bbox_xmin"/>
+                            <field name="bbox_ymin"/>
+                        </group>
+                        <group>
+                            <field name="bbox_xmax"/>
+                            <field name="bbox_ymax"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
         </field>
     </record>
 
@@ -109,6 +219,7 @@
         <field name="name">Kecamatan (Districts)</field>
         <field name="res_model">id.district</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_id_district_search"/>
     </record>
 
     <!-- Subdistrict (Kelurahan / Desa) Views -->
@@ -118,13 +229,58 @@
         <field name="arch" type="xml">
             <list string="Kelurahan / Desa">
                 <field name="code"/>
+                <field name="kode_kemendagri" optional="show"/>
                 <field name="name"/>
                 <field name="district_id"/>
-                <field name="postal_code"/>
-                <field name="latitude"/>
-                <field name="longitude"/>
+                <field name="postal_code" optional="show"/>
+                <field name="latitude" optional="hide"/>
+                <field name="longitude" optional="hide"/>
+                <field name="is_legacy" optional="hide"/>
                 <field name="active" widget="boolean_toggle"/>
             </list>
+        </field>
+    </record>
+
+    <record id="view_id_subdistrict_search" model="ir.ui.view">
+        <field name="name">id.subdistrict.search</field>
+        <field name="model">id.subdistrict</field>
+        <field name="arch" type="xml">
+            <search string="Kelurahan / Desa">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="kode_kemendagri"/>
+                <field name="postal_code"/>
+                <field name="district_id"/>
+                <filter name="filter_legacy" string="Legacy (belum dipetakan)" domain="[('is_legacy', '=', True)]"/>
+                <separator/>
+                <filter name="group_by_district" string="Kecamatan" context="{'group_by': 'district_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_id_subdistrict_form" model="ir.ui.view">
+        <field name="name">id.subdistrict.form</field>
+        <field name="model">id.subdistrict</field>
+        <field name="arch" type="xml">
+            <form string="Kelurahan / Desa">
+                <sheet>
+                    <group>
+                        <group string="Identitas">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="kode_kemendagri"/>
+                            <field name="district_id"/>
+                            <field name="postal_code"/>
+                            <field name="is_legacy" readonly="1"/>
+                        </group>
+                        <group string="Geografi">
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                            <field name="area_km2"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
         </field>
     </record>
 
@@ -132,5 +288,6 @@
         <field name="name">Kelurahan / Desa &amp; Kode Pos</field>
         <field name="res_model">id.subdistrict</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_id_subdistrict_search"/>
     </record>
 </odoo>

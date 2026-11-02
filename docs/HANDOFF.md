@@ -1,3 +1,34 @@
+## 2026-11-03T06:15:27.495+07:00 — codex — PR73 assertion compatibility Odoo19
+[F] install-test d6895a9 gagal sebelum menjalankan duplicate create/write karena Odoo19 assertRaises tidak mendukung tuple exception. Dikoreksi menjadi satu kelas IntegrityError, sesuai jenis SQL unique violation dan pola tes native evidence yang sudah lulus. Constraint, bbox, dan assertion penolakan tetap dipertahankan. [BU] CI HEAD perbaikan harus lulus sebelum merge; tidak deploy.
+
+## 2026-11-02T20:15:06+07:00 — codex — Koreksi PR73 berotorisasi pemilik
+[F] Tiga identity constraints dipindah ke models.Constraint Odoo19; city.code dipertahankan. Bbox18 kecamatan diambil eksak dari WKT PR72. Empat native regression methods baru: pg_constraint, duplicate create/write, NULL legacy, bbox. Verifier upgrade memeriksa constraint nyata setelah -u. Versi id_base19.0.1.2.0. [BU] Native CI final belum dijalankan; lokal geometri12/12 PASS. Backfill existing DB tetap PR3, tidak deploy.
+
+## 2026-11-02T10:51:21+07:00 — claude-dev agent — PR-2: skema dan seed master wilayah Sulut
+**Branch:** `agen/geo-master-schema` (stacked di atas `agen/geo-master-upgrade`)
+**Status:** PASS — CI 12/12 job hijau pada SHA `bb6cf52` (static, init-test, install-test, upgrade runtime, invariant, seed, PWA)
+
+### 1. Skema
+- `id.city`: `kode_kemendagri`, `state_id`, `latitude`, `longitude`, `area_km2`; unique `kode_kemendagri`.
+- `id.district`: `city_id`, `kode_kemendagri`, `state_id` (related stored ke `city_id.state_id`), lat/lng, `area_km2`, 4 kolom bbox, `geom_source`, `geom_quality`, `geom_updated_at`; unique kode.
+- `id.subdistrict`: `kode_kemendagri`, `area_km2`, `is_legacy`; unique kode.
+
+### 2. Seed XML
+- 15 kab/kota: kode Kemendagri, provinsi `base.state_id_sa`, titik di dalam poligon (`lat_titik_dalam`/`lng_titik_dalam`), luas dari build PR-1.
+- 18 kecamatan: relasi `city_id`, kode Kemendagri, koordinat, luas; kolom teks `city` legacy dipertahankan agar `MASTER-GEO` tetap resolve.
+- D5=B terbatas: 17 kelurahan dipetakan ke kode Kemendagri kanonik; `KEL-BTG-GRW` dan `KEL-TMH-PSL` ditandai `is_legacy=True` tanpa kode (tidak menebak wilayah transaksi).
+
+### 3. Views & uji
+- List/search/form untuk city, district, subdistrict; filter legacy dan group by kab/kota + provinsi.
+- Form kecamatan tidak memuat `geojson_polygon` (sampai 1,3 MB per record).
+- `addons/id_base/tests/test_geo_master.py`: 5 uji (identitas + provinsi, hierarki, pemetaan/legacy, stabilitas kode `KEC-*`/`KEL-*`, form tanpa poligon).
+
+### 4. Verifikasi
+- PASS: `ruff check .`; `check_manifests.py` (10 addon); `unittest tests.test_geo_master_data` (12/12); `verify_seed_invariants.py` (PASS, 0 violation).
+- PASS CI pada SHA `bb6cf52`: `init-test` + `install-test` (5 uji `TestGeoMaster` berjalan), upgrade runtime, invariant, seed, PWA.
+- Perbaikan saat CI: search view Odoo 19 tidak menerima atribut `expand`/`string` pada `<group>`; filter group-by dipindah langsung (pola sama dengan `id_approval`/`id_dashboard_monetary`). Ketiga search view + 9 list view divalidasi terhadap RNG Odoo 19 via `lxml` → 0 error.
+- Catatan: data XML `noupdate="1"` hanya terisi pada instalasi baru; backfill DB existing dikerjakan loader PR-3.
+
 ## 2026-11-02T20:09:09+07:00 — codex — PR72 integrasi main dan gate geometri
 [F] Otorisasi pemilik untuk merge PR72. Main 006dd9a terintegrasi, riwayat HANDOFF dipertahankan. Shapely 2.2.0/Numpy 2.5.4 ditambahkan ke invariant-tests agar pengujian geometri tidak skipped. [F] Lokal 12/12 tes geo PASS. [BU] CI integrasi masih harus lulus. Tidak deploy.
 

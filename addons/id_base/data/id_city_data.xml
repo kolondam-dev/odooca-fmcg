@@ -5,120 +5,195 @@
     <!-- 1. Kota Manado -->
     <record id="city_mnd" model="id.city">
         <field name="code">7171</field>
+        <field name="kode_kemendagri">71.71</field>
         <field name="name">Kota Manado</field>
         <field name="type">kota</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="False"/>
+        <field name="latitude">1.505024</field>
+        <field name="longitude">124.885471</field>
+        <field name="area_km2">163.077</field>
     </record>
 
     <!-- 2. Kota Bitung -->
     <record id="city_btg" model="id.city">
         <field name="code">7172</field>
+        <field name="kode_kemendagri">71.72</field>
         <field name="name">Kota Bitung</field>
         <field name="type">kota</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">1.49683</field>
+        <field name="longitude">125.159164</field>
+        <field name="area_km2">331.205</field>
     </record>
 
     <!-- 3. Kota Tomohon -->
     <record id="city_tmh" model="id.city">
         <field name="code">7173</field>
+        <field name="kode_kemendagri">71.73</field>
         <field name="name">Kota Tomohon</field>
         <field name="type">kota</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">1.323981</field>
+        <field name="longitude">124.805232</field>
+        <field name="area_km2">169.816</field>
     </record>
 
     <!-- 4. Kota Kotamobagu -->
     <record id="city_ktg" model="id.city">
         <field name="code">7174</field>
+        <field name="kode_kemendagri">71.74</field>
         <field name="name">Kota Kotamobagu</field>
         <field name="type">kota</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">0.711878</field>
+        <field name="longitude">124.314198</field>
+        <field name="area_km2">109.398</field>
     </record>
 
     <!-- 5. Kabupaten Minahasa -->
     <record id="city_mnh" model="id.city">
         <field name="code">7102</field>
+        <field name="kode_kemendagri">71.02</field>
         <field name="name">Kabupaten Minahasa</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">1.241944</field>
+        <field name="longitude">124.904278</field>
+        <field name="area_km2">1133.506</field>
     </record>
 
     <!-- 6. Kabupaten Minahasa Utara -->
     <record id="city_mnt" model="id.city">
         <field name="code">7106</field>
+        <field name="kode_kemendagri">71.06</field>
         <field name="name">Kabupaten Minahasa Utara</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">1.518365</field>
+        <field name="longitude">125.000422</field>
+        <field name="area_km2">999.946</field>
     </record>
 
     <!-- 7. Kabupaten Minahasa Selatan -->
     <record id="city_mns" model="id.city">
         <field name="code">7105</field>
+        <field name="kode_kemendagri">71.05</field>
         <field name="name">Kabupaten Minahasa Selatan</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">1.070787</field>
+        <field name="longitude">124.435574</field>
+        <field name="area_km2">1463.187</field>
     </record>
 
     <!-- 8. Kabupaten Minahasa Tenggara -->
     <record id="city_mtr" model="id.city">
         <field name="code">7107</field>
+        <field name="kode_kemendagri">71.07</field>
         <field name="name">Kabupaten Minahasa Tenggara</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">0.988212</field>
+        <field name="longitude">124.730646</field>
+        <field name="area_km2">756.281</field>
     </record>
 
     <!-- 9. Kabupaten Bolaang Mongondow -->
     <record id="city_blm" model="id.city">
         <field name="code">7101</field>
+        <field name="kode_kemendagri">71.01</field>
         <field name="name">Kabupaten Bolaang Mongondow</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">0.72077</field>
+        <field name="longitude">123.987025</field>
+        <field name="area_km2">3306.277</field>
     </record>
 
     <!-- 10. Kabupaten Bolaang Mongondow Utara -->
     <record id="city_bmu" model="id.city">
         <field name="code">7108</field>
+        <field name="kode_kemendagri">71.08</field>
         <field name="name">Kabupaten Bolaang Mongondow Utara</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">0.759913</field>
+        <field name="longitude">123.483636</field>
+        <field name="area_km2">1651.73</field>
     </record>
 
     <!-- 11. Kabupaten Bolaang Mongondow Selatan -->
     <record id="city_bms" model="id.city">
         <field name="code">7111</field>
+        <field name="kode_kemendagri">71.11</field>
         <field name="name">Kabupaten Bolaang Mongondow Selatan</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">0.453669</field>
+        <field name="longitude">124.179932</field>
+        <field name="area_km2">1781.89</field>
     </record>
 
     <!-- 12. Kabupaten Bolaang Mongondow Timur -->
     <record id="city_bmt" model="id.city">
         <field name="code">7110</field>
+        <field name="kode_kemendagri">71.10</field>
         <field name="name">Kabupaten Bolaang Mongondow Timur</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">0.711532</field>
+        <field name="longitude">124.489524</field>
+        <field name="area_km2">863.885</field>
     </record>
 
     <!-- 13. Kabupaten Kepulauan Sangihe -->
     <record id="city_sgh" model="id.city">
         <field name="code">7103</field>
+        <field name="kode_kemendagri">71.03</field>
         <field name="name">Kabupaten Kepulauan Sangihe</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">3.552797</field>
+        <field name="longitude">125.546542</field>
+        <field name="area_km2">599.89</field>
     </record>
 
     <!-- 14. Kabupaten Kepulauan Siau Tagulandang Biaro (Sitaro) -->
     <record id="city_str" model="id.city">
         <field name="code">7109</field>
+        <field name="kode_kemendagri">71.09</field>
         <field name="name">Kabupaten Kepulauan Siau Tagulandang Biaro</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">2.349571</field>
+        <field name="longitude">125.420351</field>
+        <field name="area_km2">218.251</field>
     </record>
 
     <!-- 15. Kabupaten Kepulauan Talaud -->
     <record id="city_tld" model="id.city">
         <field name="code">7104</field>
+        <field name="kode_kemendagri">71.04</field>
         <field name="name">Kabupaten Kepulauan Talaud</field>
         <field name="type">kabupaten</field>
+        <field name="state_id" ref="base.state_id_sa"/>
         <field name="is_out_of_town" eval="True"/>
+        <field name="latitude">4.269573</field>
+        <field name="longitude">126.813539</field>
+        <field name="area_km2">1016.601</field>
     </record>
 </odoo>

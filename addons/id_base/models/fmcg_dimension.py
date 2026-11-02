@@ -70,14 +70,19 @@ class IdCity(models.Model):
 
     name = fields.Char(string="Kabupaten / Kota", required=True)
     code = fields.Char(string="Kode Wilayah / BPS", copy=False)
+    kode_kemendagri = fields.Char(string="Kode Kemendagri", copy=False, index=True)
     state_id = fields.Many2one("res.country.state", string="Provinsi")
     type = fields.Selection([("kota", "Kota"), ("kabupaten", "Kabupaten")], string="Tipe", default="kabupaten")
     is_out_of_town = fields.Boolean(string="Luar Kota", default=False)
+    latitude = fields.Float(string="Latitude", digits=(10, 7))
+    longitude = fields.Float(string="Longitude", digits=(10, 7))
+    area_km2 = fields.Float(string="Area (km2)", digits=(12, 3))
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
-        ("code_uniq", "unique(code)", "City code must be unique!"),
-    ]
+    _code_uniq = models.Constraint("UNIQUE(code)", "City code must be unique!")
+    _kode_kemendagri_uniq = models.Constraint(
+        "UNIQUE(kode_kemendagri)", "Kemendagri code must be unique!"
+    )
 
 
 class IdDistrict(models.Model):
@@ -87,12 +92,29 @@ class IdDistrict(models.Model):
 
     name = fields.Char(string="Nama Kecamatan", required=True)
     code = fields.Char(string="Kode Kecamatan", copy=False)
+    kode_kemendagri = fields.Char(string="Kode Kemendagri", copy=False, index=True)
     city_id = fields.Many2one("id.city", string="Kabupaten / Kota")
     city = fields.Char(string="Nama Kota / Regency (Teks)")
-    state_id = fields.Many2one("res.country.state", string="Provinsi")
+    state_id = fields.Many2one(
+        "res.country.state", string="Provinsi", related="city_id.state_id", store=True, readonly=True
+    )
     coverage_area_id = fields.Many2one("id.coverage.area", string="Zona Coverage")
     geojson_polygon = fields.Text(string="GeoJSON Boundary Polygon")
+    latitude = fields.Float(string="Latitude", digits=(10, 7))
+    longitude = fields.Float(string="Longitude", digits=(10, 7))
+    area_km2 = fields.Float(string="Area (km2)", digits=(12, 3))
+    bbox_xmin = fields.Float(string="BBox Min Longitude", digits=(10, 7))
+    bbox_ymin = fields.Float(string="BBox Min Latitude", digits=(10, 7))
+    bbox_xmax = fields.Float(string="BBox Max Longitude", digits=(10, 7))
+    bbox_ymax = fields.Float(string="BBox Max Latitude", digits=(10, 7))
+    geom_source = fields.Char(string="Geometry Source", readonly=True)
+    geom_quality = fields.Char(string="Geometry QA Flag", readonly=True)
+    geom_updated_at = fields.Datetime(string="Geometry Updated At", readonly=True)
     active = fields.Boolean(default=True)
+
+    _kode_kemendagri_uniq = models.Constraint(
+        "UNIQUE(kode_kemendagri)", "Kemendagri code must be unique!"
+    )
 
 
 class IdSubdistrict(models.Model):
@@ -102,8 +124,15 @@ class IdSubdistrict(models.Model):
 
     name = fields.Char(string="Nama Kelurahan / Desa", required=True)
     code = fields.Char(string="Kode Kelurahan", copy=False)
+    kode_kemendagri = fields.Char(string="Kode Kemendagri", copy=False, index=True)
     district_id = fields.Many2one("id.district", string="Kecamatan", required=True, ondelete="cascade")
     postal_code = fields.Char(string="Kode Pos", index=True)
     latitude = fields.Float(string="Latitude", digits=(10, 7))
     longitude = fields.Float(string="Longitude", digits=(10, 7))
+    area_km2 = fields.Float(string="Area (km2)", digits=(12, 3))
+    is_legacy = fields.Boolean(string="Legacy Demo Record", default=False)
     active = fields.Boolean(default=True)
+
+    _kode_kemendagri_uniq = models.Constraint(
+        "UNIQUE(kode_kemendagri)", "Kemendagri code must be unique!"
+    )

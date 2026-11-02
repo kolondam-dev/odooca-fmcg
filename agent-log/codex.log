@@ -200,6 +200,11 @@
 - Gabungkan main 1b38463; pertahankan kedua riwayat HANDOFF. CI integrasi final wajib lulus sebelum merge berotorisasi.
 - Task managed by codex at 2026-11-01T12:45:31+07:00
 
+[2026-11-02T20:15:06+07:00] [INFO] Corrected PR73 geo identities and bbox
+- Otorisasi pemilik: perbaiki PR73 lalu merge jika CI passed; commit diakhiri corrected by codex.
+- models.Constraint pada tiga kode Kemendagri dan city.code; bbox18 kecamatan dihitung dari WKT kanonikal PR72.
+- Native tests memeriksa pg_constraint, duplicate create/write, multiple NULL, dan bbox. Verifier persisted upgrade memeriksa ketiga unique constraint.
+- Versi id_base 19.0.1.2.0. Tidak mengubah noupdate backfill existing yang tetap scope PR3; tidak deploy.
 [2026-11-02T12:07:07.525Z] [INFO] Integrasi PR75 untuk merge berotorisasi
 - Reviewed HEAD 99494b02a4f6d76df33232b5a35c80843aed383a; merged main 6918c5ef016b1f12e4cd93acba86d77cbfc11617; hanya HANDOFF overlap, kedua riwayat dipertahankan.
 - Source dashboard sama dengan reviewed branch; source PWA/evidence sama dengan main PR74. CI gabungan wajib lulus; belum deploy.
@@ -208,3 +213,7 @@
 - Main 006dd9a digabungkan tanpa konflik source; HANDOFF kedua cabang dipertahankan.
 - Dependency Shapely/Numpy dipasang pada invariant-tests agar 4 tes spasial tidak lagi skipped.
 - Lokal 12 geo tests PASS dengan Shapely; CI integrasi wajib selesai sebelum merge. Tidak deploy.
+
+[2026-11-03T06:15:27.495+07:00] [INFO] PR73 fix Odoo19 assertRaises API compatibility
+- Ganti tuple exception menjadi IntegrityError spesifik pada duplicate create/write; hapus import ValidationError tak terpakai.
+- Error lama berasal dari test wrapper, bukan bukti constraint gagal. CI final wajib lulus sebelum merge; tidak deploy.
