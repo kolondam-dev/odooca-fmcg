@@ -1,3 +1,12 @@
+## 2026-11-03T06:24:00+07:00 — antigravity — Pemulihan format kanonikal openapi.json untuk CI gate PR #76
+**Branch:** `agen/permanent-demo-session-fix`
+**PR:** [#76](https://github.com/kolondam-dev/odooca-fmcg/pull/76)
+**Status:** CI in progress (`ba82d42`)
+
+### Pembaruan:
+- Memulihkan `pwa/contracts/openapi.json` ke format kanonikal persis yang diexport oleh `node scripts/export-contracts.mjs` (tanpa override whitespace dari Prettier).
+- Gate `npm run contracts:check` PASS secara lokal dan siap meloloskan job `pwa-quality` di CI.
+
 ## 2026-11-02T21:30:00+07:00 — antigravity — Solusi permanen absensi pagi dan rollover penugasan sales
 **Branch:** `agen/permanent-demo-session-fix`
 **PR:** [#76](https://github.com/kolondam-dev/odooca-fmcg/pull/76)

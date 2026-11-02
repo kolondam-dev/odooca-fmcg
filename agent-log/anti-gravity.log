@@ -2037,3 +2037,9 @@
 - PWA: presisi demo_unrestricted dipertahankan saat transisi DEMO ke LIVE
 - PR #76 dibuka untuk integrasi ke main
 - Task managed by antigravity-agent at 2026-11-02T21:31:28+07:00
+
+[2026-11-03T06:24:25+07:00] [INFO] Fix CI OpenAPI contract drift gate pada PR #76
+- openapi.json dipulihkan ke format kanonikal persis dari generator export-contracts.mjs (tanpa Prettier override)
+- Lokal npm run contracts:check PASS
+- Commit ba82d42 di-push ke agen/permanent-demo-session-fix
+- Task managed by antigravity-agent at 2026-11-03T06:24:25+07:00
