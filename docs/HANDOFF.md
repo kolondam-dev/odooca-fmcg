@@ -1,3 +1,8 @@
+## 2026-11-02T17:51:30+07:00 — agent codex-pwa — PR75 fixture company dan signed SO
+**[F] `866426a`:** static PASS; native0failed/1error dari151 tests. Error pada fixture PJP: pricelist default company utama, bukan company assignment baru. Explicit company_id diperbaiki; validasi assignment tidak dilemahkan.
+**Berubah:** baris SO signed termasuk penyesuaian negatif masuk nilai/tren/target; SKU/LPO hanya kuantitas positif. Fulfillment denominator positive ordered value. Regresi native tambahan untuk signed adjustment dan rekonsiliasi tren. Tidak menyentuh PWA/workflow/seed.
+**[F] Lokal:**13 Node, Ruff/compile/diff PASS. **[BU]** native temporalPJP, visual dan CI final menunggu; tidak merge/deploy.
+
 ## 2026-11-02T17:42:33+07:00 — agent codex-pwa — Tahap 3A analisis bisnis
 **Branch:** agen/dashboard-business-depth dari main e4aa776 (PR71 merged).
 **Berubah:** currency SO/tren normalized dengan kurs eksplisit; universe assortment mencakup grup nol/outside-catalog; outlet set comparison; konfigurasi target SO empat dimensi dengan ACL/company/scope; PJP accepted-command terpisah dari photo evidence dan EC order-after-checkin exact outlet/company/WITA; margin bruto buku posted-ledger untuk accounting role. Source dan batas kontrak di docs/dashboard/BUSINESS_DEPTH.md.

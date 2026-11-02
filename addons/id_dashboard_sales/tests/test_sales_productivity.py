@@ -243,7 +243,8 @@ class TestSalesProductivity(TransactionCase):
         if not warehouse:
             warehouse = self.env["stock.warehouse"].create({
                 "name": "PJP warehouse", "code": "DP3", "company_id": company.id})
-        pricelist = self.env["product.pricelist"].create({"name": "PJP IDR", "currency_id": company.currency_id.id})
+        pricelist = self.env["product.pricelist"].create({
+            "name": "PJP IDR", "currency_id": company.currency_id.id, "company_id": company.id})
         self.outlet_gt.parent_id = self.outlet_mt
         assignment = self.env["id.mobile.workday"].create({"company_id": company.id, "user_id": self.salesman.id,
             "business_date": "2026-07-15", "warehouse_id": warehouse.id, "pricelist_id": pricelist.id,
@@ -287,3 +288,16 @@ class TestSalesProductivity(TransactionCase):
         assignment.active = False
         archived = service.get_data("month", "2026-07-01")["total"]["pjp"]
         self.assertEqual(archived["completed"], 2, "Archiving a plan must not erase historical check-ins")
+
+
+    def test_signed_so_adjustments_reconcile_with_trend_without_inflating_skus(self):
+        order = self._order(self.outlet_mt, self.salesman, self.products[:2], datetime(2026, 7, 15, 3))
+        self.env["sale.order.line"].create({"order_id": order.id, "product_id": self.products[0].id,
+            "product_uom_qty": -5, "price_unit": 1000, "tax_ids": [(5, 0, 0)]})
+        result = self._service().get_data("month", "2026-07-01", [self.salesman.id], [])
+        self.assertEqual(result["total"]["net"], 15000)
+        self.assertEqual(result["total"]["orders"], 1)
+        self.assertEqual(result["total"]["sku_sold"], 2)
+        self.assertEqual(result["total"]["lpo"], 2)
+        self.assertEqual(sum(p["net"] for p in result["trend"]), 15000)
+        self.assertEqual(result["total"]["fulfillment"], 0)

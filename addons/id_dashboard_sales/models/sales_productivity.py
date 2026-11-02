@@ -50,7 +50,7 @@ def _local_date(value):
 
 def _bucket():
     return {"orders": set(), "lines": 0, "gross": 0.0, "discount": 0.0, "net": 0.0,
-            "fulfilled": 0.0, "pickings": set(), "skus": set()}
+            "fulfilled": 0.0, "fulfillment_base": 0.0, "pickings": set(), "skus": set()}
 
 
 class SalesProductivity(models.AbstractModel):
@@ -181,18 +181,21 @@ class SalesProductivity(models.AbstractModel):
         conversion = {o.id: self._conversion(o, fx_cache) for o in orders}
         segment_amounts = defaultdict(float)
         outlet_keys = {(o.company_id.id, o.partner_id.id) for o in orders}
+        for order in orders:
+            uid, channel, _outlet, _day, _at, _company = order_info[order.id]
+            for dim, key in (("salesman", uid), ("channel", channel), ("total", 0)):
+                keys_by_dim[dim][key]["orders"].add(order.id)
         for line in lines:
             qty = line.product_uom_qty
-            if qty <= 0:
-                continue
             oid = line.order_id.id
             user_id, channel_id, _outlet, _day, _time, company_id = order_info[oid]
             discount = line.price_unit * qty * line.discount / 100.0 * conversion[oid]
             net = line.price_subtotal * conversion[oid]
-            done_qty = min(line.qty_delivered, invoiced.get(line.id, 0.0), qty)
-            fulfilled = net * max(done_qty, 0.0) / qty
+            done_qty = min(line.qty_delivered, invoiced.get(line.id, 0.0), qty) if qty > 0 else 0
+            fulfilled = net * max(done_qty, 0.0) / qty if qty > 0 and net > 0 else 0.0
             pid = line.product_id.id
-            order_skus[oid].add(pid)
+            if qty > 0:
+                order_skus[oid].add(pid)
             principal_id, brand_id = product_dims[pid]
             for dimension, ident in (("salesman", user_id), ("channel", channel_id),
                                       ("area", line.order_id.partner_id.coverage_area_id.id),
@@ -206,8 +209,10 @@ class SalesProductivity(models.AbstractModel):
                 b["discount"] += discount
                 b["net"] += net
                 b["fulfilled"] += fulfilled
-                b["skus"].add(pid)
-                if dim != "total":
+                b["fulfillment_base"] += net if qty > 0 and net > 0 else 0.0
+                if qty > 0:
+                    b["skus"].add(pid)
+                if dim != "total" and qty > 0:
                     dim_skus[dim][key]["principal"][principal_id].add(pid)
                     dim_skus[dim][key]["brand"][brand_id].add(pid)
 
@@ -233,7 +238,7 @@ class SalesProductivity(models.AbstractModel):
                 "lpo": lpo,
                 "lpo_ok": None if lpo is None else lpo >= lpo_target,
                 "sku_sold": len(b["skus"]),
-                "fulfillment": _ratio(b["fulfilled"], b["net"]),
+                "fulfillment": _ratio(b["fulfilled"], b["fulfillment_base"]),
             }
 
         if light:
@@ -395,9 +400,13 @@ class SalesProductivity(models.AbstractModel):
             raise UserError(_("Too many orders for one query; narrow the period or filters."))
         found = defaultdict(lambda: [0.0, 0])
         fx_cache = {}
-        for order in Order.search_fetch(domain, ["date_order", "amount_untaxed", "company_id", "currency_id"]):
+        orders = Order.search_fetch(domain, ["date_order", "company_id", "currency_id"])
+        subtotals = {order.id: amount for order, amount in self.env["sale.order.line"]._read_group(
+            [("order_id", "in", orders.ids), ("display_type", "=", False), ("product_id", "!=", False)],
+            ["order_id"], ["price_subtotal:sum"])}
+        for order in orders:
             point = found[_local_date(order.date_order)]
-            point[0] += order.amount_untaxed * self._conversion(order, fx_cache)
+            point[0] += subtotals.get(order.id, 0.0) * self._conversion(order, fx_cache)
             point[1] += 1
         points = []
         day = t_start

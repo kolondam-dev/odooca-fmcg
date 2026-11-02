@@ -299,7 +299,7 @@ export class SalesProductivity extends Component {
               value: this.int(t.sku_sold), cls: "", meta: _t("distinct SKU"),
               delta: this.delta("sku_sold") },
             { key: "ful", title: _t("Fulfillment-to-Invoice"), icon: "fa-file-text-o", tone: "emerald",
-              value: this.pct(t.fulfillment), cls: "", meta: _t("delivered and posted-invoiced value"),
+              value: this.pct(t.fulfillment), cls: "", meta: _t("positive order value delivered and posted-invoiced"),
               delta: this.delta("fulfillment", "pp") },
         ];
     }

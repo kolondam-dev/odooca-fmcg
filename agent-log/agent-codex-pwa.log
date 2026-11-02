@@ -284,3 +284,8 @@
 - Kontrak/source/gaps dan asset master readiness pada BUSINESS_DEPTH.md; tidak mengklaim seluruh tahap3/asset/3D selesai.
 - Lokal13Node/Ruff/manifest/XML/compile/diff PASS; native tests/fixture/source assertions ditambahkan, CI/visual menunggu. Historical PJP photos tetap proof, bukan kunjungan fiktif. Tidak merge/deploy/data server/PWA workflow/seed changes.
 - Task managed by agent-codex-pwa at 2026-11-02T17:42:33+07:00
+
+[2026-11-02T17:51:30+07:00] [INFO] PR75 fixture company dan signed adjustments
+- 866426a0failed/1error/151 native: fixture pricelist salah company; explicitcompany ditambahkan tanpa melemahkan assignment validation.
+- Signed SO lines cocok dengan tren/target, SKU positive-only, fulfillment positive-value denominator; regresi native ditambah. Lokal13Node/Ruff/compile/diff PASS; CI final menunggu, tidak merge/deploy.
+- Task managed by agent-codex-pwa at 2026-11-02T17:51:30+07:00
