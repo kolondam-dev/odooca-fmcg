@@ -13,9 +13,9 @@ export async function saveVisitPhoto(
     });
     await group.scrollIntoViewIfNeeded();
     await group.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
-    await expect(
-        group.getByAltText("Pratinjau foto bukti lokal"),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(group.getByAltText("Pratinjau foto bukti lokal")).toBeVisible({
+        timeout: 15000,
+    });
     await group
         .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
         .click();

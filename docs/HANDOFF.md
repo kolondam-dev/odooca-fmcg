@@ -1,3 +1,15 @@
+## 2026-11-02T07:23:00+07:00 — anti-gravity agent — Fix Prettier Code Formatting on visit-helpers.ts
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Formatted visit-helpers.ts to satisfy pwa-quality CI gate)
+
+### Detail Perbaikan:
+1. **Penyelarasan Format Prettier (`visit-helpers.ts`):**
+   - Menjalankan `prettier --write --end-of-line lf` pada file `pwa/tests/browser/visit-helpers.ts` agar lulus pengecekan `format:check` pada workflow `PWA quality`.
+2. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+
 ## 2026-11-02T07:20:00+07:00 — anti-gravity agent — Fix Hidden SKU Test Assertion & Scroll Viewport on Local Photo Input
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

@@ -1847,3 +1847,8 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-02T07:20:00+07:00
+
+
+[2026-11-02T07:23:00+07:00] [INFO] Fix Prettier Code Formatting on visit-helpers.ts
+- Ran prettier --write --end-of-line lf on pwa/tests/browser/visit-helpers.ts to align with formatting rules and pass pwa-quality CI gate.
+- Task managed by antigravity agent at 2026-11-02T07:23:00+07:00
