@@ -53,16 +53,15 @@ class TestWmsDashboard(TransactionCase):
         self.assertEqual(selection, REASONS)
 
     def test_trip_cost_total_and_fleet_ratio(self):
-        vehicle = self.env["fleet.vehicle"].search([], limit=1)
-        if not vehicle:
-            self.skipTest("No fleet vehicle available in this database")
+        brand = self.env["fleet.vehicle.model.brand"].create({"name": "Cost test brand"})
+        model = self.env["fleet.vehicle.model"].create({"name": "Cost test model", "brand_id": brand.id})
+        vehicle = self.env["fleet.vehicle"].create({"model_id": model.id})
         cost = self.env["id.delivery.trip.cost"].create(
             {
                 "date": date.today(),
                 "vehicle_id": vehicle.id,
                 "fuel_cost": 100000.0,
-                "driver_allowance": 50000.0,
-                "toll_cost": 25000.0,
+                "helper_cost": 75000.0,
             }
         )
         self.assertAlmostEqual(cost.total_cost, 175000.0, places=2)
@@ -84,37 +83,60 @@ class TestWmsDashboard(TransactionCase):
         self.assertIn("total_rejections", data["kpi"])
 
     def test_rejection_count_aggregation(self):
-        """Verify delivery rejection count aggregation:
-        - Case 1: 0 rejections -> total is 0
-        - Case 2: 1 reason with count 3 -> total is 3 (not 1)
-        - Case 3: 2 reasons with count 3 and 2 -> total is 5 (3 + 2 = 5)
-        """
         service = self.env["id.wms.dashboard"]
-        RejectModel = self.env["id.wms.reject"]
+        delivery = self.env["id.wms.delivery"]
+        for reasons, expected in [([], 0), (["store_closed"] * 3, 3),
+                                  (["store_closed"] * 3 + ["packaging_damaged"] * 2, 5)]:
+            rows = [{"reject_reason": reason, "state": "cancel", "is_delivered": False,
+                     "is_late": False, "delivered_value": 0} for reason in reasons]
+            with patch.object(type(delivery), "search_read", return_value=rows):
+                data = service.get_data()
+            self.assertEqual(data["kpi"]["total_rejections"], expected)
+            self.assertEqual(sum(r["count"] for r in data["rejections"]), expected)
+        with patch.object(type(delivery), "search_read", return_value=[]):
+            self.assertIsNone(service.get_data()["kpi"]["fulfillment_rate"])
 
-        # Case 1: 0 rejections -> 0
-        with patch.object(type(RejectModel), "search_read", return_value=[]):
-            data = service.get_data()
-            self.assertEqual(data["kpi"]["total_rejections"], 0)
-            self.assertEqual(len(data["rejections"]), 0)
+    def test_vehicle_rejection_numerator_uses_same_delivery_population(self):
+        delivery = self.env["id.wms.delivery"]
+        reject = self.env["id.wms.reject"]
+        accepted = [{"reject_reason": "not_recorded", "state": "done", "is_delivered": True,
+                     "is_late": False, "delivered_value": 1000000}]
+        with patch.object(type(delivery), "search_read", return_value=accepted) as read, \
+             patch.object(type(reject), "search_read", return_value=[{"reason": "store_closed", "picking_count": 2}]):
+            data = self.env["id.wms.dashboard"].get_data(vehicle_id=99)
+        self.assertIn(("vehicle_id", "=", 99), read.call_args.args[0])
+        self.assertEqual(data["kpi"]["total_deliveries"], 1)
+        self.assertEqual(data["kpi"]["total_rejections"], 0)
+        self.assertEqual(data["kpi"]["rejection_rate"], 0)
 
-        # Case 2: 1 reason group with count 3 -> total is 3 (not 1)
-        mock_data_1 = [
-            {"reason": "store_closed", "picking_count": 3, "rejected_value": 300000.0}
-        ]
-        with patch.object(type(RejectModel), "search_read", return_value=mock_data_1):
-            data = service.get_data()
-            self.assertEqual(data["kpi"]["total_rejections"], 3)
-            self.assertEqual(len(data["rejections"]), 1)
-            self.assertEqual(data["rejections"][0]["count"], 3)
+    def test_direct_stock_view_isolated_by_role_and_company(self):
+        from odoo.exceptions import AccessError
+        other = self.env["res.company"].create({"name": "Foreign stock company"})
+        location = self.env["stock.location"].create({
+            "name": "Foreign internal", "usage": "internal", "company_id": other.id})
+        product = self.env["product.product"].create({
+            "name": "Foreign stock probe", "type": "consu", "is_storable": True})
+        self.env["stock.quant"].with_company(other)._update_available_quantity(product, location, 5)
+        self.env.flush_all()
+        view = self.env["id.wms.stock.category"]
+        self.assertTrue(view.sudo().search([("company_id", "=", other.id)]))
+        user = self.env["res.users"].with_context(no_reset_password=True).create({"name": "Stock access probe",
+            "login": "stock_dashboard_probe", "company_id": self.env.company.id,
+            "company_ids": [(6, 0, [self.env.company.id])],
+            "group_ids": [(6, 0, [self.env.ref("base.group_user").id])]})
+        with self.assertRaises(AccessError):
+            view.with_user(user).search([])
+        user.group_ids = [(4, self.env.ref("stock.group_stock_user").id)]
+        self.assertFalse(view.with_user(user).search([("company_id", "=", other.id)]))
 
-        # Case 3: 2 reason groups with counts 3 and 2 -> total is 5 (3 + 2 = 5)
-        mock_data_2 = [
-            {"reason": "store_closed", "picking_count": 3, "rejected_value": 300000.0},
-            {"reason": "packaging_damaged", "picking_count": 2, "rejected_value": 200000.0},
-        ]
-        with patch.object(type(RejectModel), "search_read", return_value=mock_data_2):
-            data = service.get_data()
-            self.assertEqual(data["kpi"]["total_rejections"], 5)
-            self.assertEqual(len(data["rejections"]), 2)
-            self.assertEqual(sum(r["count"] for r in data["rejections"]), 5)
+    def test_category_rows_keep_company_identity(self):
+        model = self.env["id.wms.stock.category"]
+        rows = [{"id": 11, "company_id": [1, "A"], "fmcg_category": "food",
+                 "qty_on_hand": 2, "stock_value": 20, "product_count": 1},
+                {"id": 22, "company_id": [2, "B"], "fmcg_category": "food",
+                 "qty_on_hand": 3, "stock_value": 30, "product_count": 1}]
+        with patch.object(type(model), "search_read", return_value=rows):
+            data = self.env["id.wms.dashboard"].get_data()
+        self.assertEqual(data["kpi"]["total_stock_value"], 50)
+        self.assertEqual({c["key"] for c in data["categories"]}, {11, 22})
+        self.assertEqual({c["company"] for c in data["categories"]}, {"A", "B"})

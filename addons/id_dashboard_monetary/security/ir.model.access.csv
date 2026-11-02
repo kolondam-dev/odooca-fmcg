@@ -1,6 +1,10 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_id_ar_aging_user,id.ar.aging.user,model_id_ar_aging,base.group_user,1,0,0,0
-access_id_ar_customer_balance_user,id.ar.customer.balance.user,model_id_ar_customer_balance,base.group_user,1,0,0,0
-access_id_monetary_funnel_stage_user,id.monetary.funnel.stage.user,model_id_monetary_funnel_stage,base.group_user,1,0,0,0
-access_id_monetary_target_user,id.monetary.target.user,model_id_monetary_target,base.group_user,1,0,0,0
+access_id_ar_aging_user,id.ar.aging.user,model_id_ar_aging,account.group_account_invoice,1,0,0,0
+access_id_ar_customer_balance_user,id.ar.customer.balance.user,model_id_ar_customer_balance,account.group_account_invoice,1,0,0,0
+access_id_monetary_funnel_stage_user,id.monetary.funnel.stage.user,model_id_monetary_funnel_stage,account.group_account_invoice,1,0,0,0
+access_id_monetary_target_user,id.monetary.target.user,model_id_monetary_target,account.group_account_invoice,1,0,0,0
 access_id_monetary_target_manager,id.monetary.target.manager,model_id_monetary_target,base.group_system,1,1,1,1
+access_id_ar_aging_user_system,id.ar.aging.user.system,model_id_ar_aging,base.group_system,1,0,0,0
+access_id_ar_customer_balance_user_system,id.ar.customer.balance.user.system,model_id_ar_customer_balance,base.group_system,1,0,0,0
+access_id_monetary_funnel_stage_user_system,id.monetary.funnel.stage.user.system,model_id_monetary_funnel_stage,base.group_system,1,0,0,0
+access_id_monetary_target_user_system,id.monetary.target.user.system,model_id_monetary_target,base.group_system,1,0,0,0
