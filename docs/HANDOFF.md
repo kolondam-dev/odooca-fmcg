@@ -1,3 +1,38 @@
+## 2026-11-02T11:22:36+07:00 — agent codex-pwa — PR71 perbaikan geometri portrait
+**[F] `81062b1`:** static/init/seed/gate PWA PASS,144 native Odoo dan form smoke PASS. Screenshot desktop/tablet dan sticky geometry lolos; assertion portrait768 gagal: root492px sudah pas tetapi topbar membuat document917px. Artifact13116415891 ditinjau (Sales/WMS tablet, finance scroll dan Sales portrait).
+**Berubah:** topbar native dua baris khusus dashboard pada viewport<=900px, tanpa menghilangkan kontrol. Filter tambahan memakai details native dengan ringkasan scope; periode/as-of tetap terlihat, header tidak menghabiskan ruang konten. Assertion overflow tetap, audit membuka/menutup filter sebelum capture.
+**[F] Lokal:**12Node/Ruff/XML/SCSS/diff PASS. **[BU]** CI/screenshot HEAD baru dan upgrade penuh menunggu; tidak merge/deploy. Tidak ada perubahan file pwa vs main.
+
+## 2026-11-02T11:08:28+07:00 — agent codex-pwa — PR71 penyajian dashboard tahap 2
+**Basis:** gabungkan main `2c18174` ke branch dashboard; konflik HANDOFF diselesaikan dengan mempertahankan kedua rangkaian entri. Tidak ada diff file pwa terhadap main; perubahan PWA/API hanya berasal dari merge main.
+**Berubah:** stylesheet workspace bersama di id_base, container-query KPI, header/filter sticky, tabel region keyboard dengan kolom identitas sticky, judul singkat dan ringkasan prioritas AR/gudang dari payload existing. Periode finance dipindah ke konteks atas. Panel native dicuitkan selama lifecycle dashboard dengan lease transient; tombol/Alt+P tetap bekerja, preferensi tersimpan kembali setelah keluar. Tidak mengisi PIC/deadline yang tidak bersumber.
+**[F] Lokal:** 12 regresi Node (race RPC+lease shell), Ruff, manifest, XML, SCSS libsass dan diff PASS. Asset versi dinaikkan. Main terbaru sudah memuat perbaikan agen lain; tidak memperbaiki PWA dalam task dashboard.
+**[BU] CI/visual:** perlu screenshot Odoo actual desktop/tablet/portrait, assert sticky geometry/no document overflow, panel toggle/pref restoration dan drill-down. Dashboard lama 131 native/screenshot PASS; bukan bukti layout baru. Belum merge/deploy; redesign iterasi ini menunggu CI dan inspeksi screenshot.
+
+## 2026-11-01T23:54:01+07:00 — agent codex-pwa — PR71 temuan screenshot native
+**[F] `cef3fa5`:** install-test lulus (131 native, upgrade dashboard, fixture SQL dan visual); 54 PNG desktop/tablet, tanpa pageerror. Inspeksi top/bottom ketiga dashboard dan tab kategori/armada menemukan dua sidebar memakai 456px, content tablet 568px, document overflow 91px Sales/23px finance-WMS, KPI sempit, context filter hilang saat scroll, tabel lebar. Data CI sintetis/currency company USD; bukan review live.
+**Perbaikan:** penetrasi menempel 3 + 42,9% diberi unit SKU dan baris persentase terpisah; caption collection kedua diperjelas tercatat/bukan bank; 0% fulfillment tidak lagi diberi warna hijau. Redesign layout responsif, canonical app context dan exception-first tetap tahap 2.
+**[F/BU] PWA:** attempt awal cef3fa5 =167 pass/1 fail/2 flaky pada helper foto/lokasi, tanpa perubahan file PWA; artifact13091882456 tersimpan, rerun job satu kali pada SHA yang sama. Hasil akhir/CI HEAD baru menunggu; tidak menghapus kegagalan awal, tidak merge/deploy.
+
+## 2026-11-01T23:42:07+07:00 — agent codex-pwa — PR71 isolasi urutan fixture visual
+**[F] `19fb11b`:** 131 native Odoo dan fixture finance SQL PASS; 170 browser PWA PASS. UI smoke existing gagal keyboard title draft invoice karena fixture dashboard sudah membuat sequence posted pada jurnal yang sama; Odoo `_compute_name_placeholder` menghilangkan input ketika sequence sudah ada. Bukan perubahan produksi form.
+**Berubah:** jalankan fixture dashboard sesudah UI form smoke dan sebelum audit dashboard. Assertion keyboard/native production tetap utuh. CI final dan screenshot menunggu; tidak merge/deploy.
+
+## 2026-11-01T23:32:04+07:00 — agent codex-pwa — PR71 currency fixture CI
+**[F] `b05f955`:** 131 tes native Odoo lulus; upgrade dashboard persisten, staging/demo preservation dan init-test lulus. Visual fixture gagal saat posting invoice karena default pricelist IDR memakai currency archived pada DB kosong. IDR diaktifkan hanya di fixture ci_db; tidak mengubah company currency/data server atau melemahkan validasi posting.
+**[BU] Menunggu:** CI final, screenshot native dan review; tidak merge/deploy.
+
+## 2026-11-01T23:24:41+07:00 — agent codex-pwa — PR71 native fixture dan scroll capture
+**[F] CI `3585636`:** static, seed supervision dan PWA quality/container lulus; install-test gagal 1 assertion dari 130 tes native karena fixture quant belum flush computed company sebelum SQL view. Perbaikan memakai env.flush_all; tidak melemahkan assertion isolasi.
+**Berubah:** capture atas/tengah/bawah internal scroll dan tab; fixture finance memeriksa payload SQL terhadap invoice posted; key kategori WMS unik per company dan label company untuk mencegah tabrakan OWL multi-company.
+**[BU] Menunggu:** CI ulang pada HEAD final, screenshot dan review; tidak merge/deploy.
+
+## 2026-11-01T23:17:20+07:00 — agent codex-pwa — Fondasi dashboard dan roadmap terintegrasi
+**Branch:** `agen/dashboard-data-foundation`, basis main `13b2ee0`.
+**Berubah:** overdue pelanggan dari populasi invoice yang sama; target exact period lintas company dijumlahkan, duplikat/mixed currency ditolak; invoice DPP dan label pembayaran tercatat; tolakan sesuai kendaraan; ACL peran/company pada SQL views; latest-request guard dan drill-down scope. Roadmap `docs/dashboard/ENHANCEMENT_PLAN.md` mempertahankan seluruh rekomendasi analitis awal serta utilisasi gudang/armada, warehouse detail dan Three.js bertahap.
+**[F] Lokal:** Ruff, 10 manifest, compile/XML/YAML/diff, 9 unit runner upgrade dan 10 regresi RPC lulus. Probe fungsi produksi: overdue 1 juta (bukan 11 juta), target 30 juta (bukan 20 juta), tolakan kendaraan A 0 (bukan 200%). Probe memakai fake ORM dan bukan bukti native Odoo.
+**[BU] Native/visual:** ditambahkan tes ORM/SQL/ACL, upgrade dashboard persisten, fixture sintetis ci_db dan screenshot dashboard Odoo asli desktop/tablet. Menunggu CI dan peninjauan artifact. Browser cloud timeout transport; tidak mengklaim audit live berhasil. Postgres lokal terhalang permission runtime. Redesign menyeluruh/ledger/asset/3D belum diimplementasikan pada tahap ini.
+**Menunggu:** CI/review; tidak merge/deploy atau mengubah data server.
 ## 2026-11-02T09:56:00+07:00 — anti-gravity agent — Full Environment Cache Invalidation for Assigned Pickings
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

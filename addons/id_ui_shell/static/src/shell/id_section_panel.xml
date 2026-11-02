@@ -3,16 +3,18 @@
 
     <t t-name="id_ui_shell.SectionPanel">
         <nav t-if="visible" class="id_panel" t-ref="root"
-             t-att-class="{'id_panel--collapsed': shell.panelCollapsed}"
+             t-att-class="{'id_panel--collapsed': collapsed}"
              aria-label="Sections" t-on-keydown="onKeydown">
             <div class="id_panel__head">
-                <button type="button" class="id_panel__toggle" tabindex="-1"
+                <button type="button" class="id_panel__toggle" tabindex="0"
+                        t-att-aria-expanded="collapsed ? 'false' : 'true'"
+                        aria-label="Toggle application sections"
                         t-att-title="toggleTitle"
                         t-on-click="() => shellService.togglePanel()">
                     <span class="id_icon"><t t-out="toggleIcon"/></span>
                 </button>
             </div>
-            <div class="id_panel__body" t-if="!shell.panelCollapsed">
+            <div class="id_panel__body" t-if="!collapsed">
                 <t t-foreach="tree" t-as="node" t-key="node.id">
                     <t t-call="id_ui_shell.PanelNode"><t t-set="depth" t-value="0"/></t>
                 </t>

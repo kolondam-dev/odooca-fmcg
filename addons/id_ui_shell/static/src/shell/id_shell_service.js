@@ -36,6 +36,8 @@ export const idShellService = {
             mode: user.settings.id_ui_shell || "classic",
             collapsed: readFlag(COLLAPSED_KEY),
             panelCollapsed: readFlag(PANEL_KEY),
+            dashboardCount: 0,
+            dashboardPanelExpanded: false,
         });
         const api = {
             state,
@@ -47,7 +49,21 @@ export const idShellService = {
                 state.collapsed = !state.collapsed;
                 writeFlag(COLLAPSED_KEY, state.collapsed);
             },
+            enterDashboard() {
+                if (!state.dashboardCount) state.dashboardPanelExpanded = false;
+                state.dashboardCount++;
+                let released = false;
+                return () => {
+                    if (released) return;
+                    released = true;
+                    state.dashboardCount--;
+                };
+            },
             togglePanel() {
+                if (state.dashboardCount) {
+                    state.dashboardPanelExpanded = !state.dashboardPanelExpanded;
+                    return;
+                }
                 state.panelCollapsed = !state.panelCollapsed;
                 writeFlag(PANEL_KEY, state.panelCollapsed);
             },

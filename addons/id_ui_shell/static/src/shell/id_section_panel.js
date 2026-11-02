@@ -42,7 +42,7 @@ export class IdSectionPanel extends Component {
                 document.body.classList.toggle("id-shell-panel-collapsed", visible && collapsed);
                 return () => document.body.classList.remove("id-shell-panel", "id-shell-panel-collapsed");
             },
-            () => [this.visible, this.shell.panelCollapsed]
+            () => [this.visible, this.collapsed]
         );
     }
 
@@ -60,12 +60,16 @@ export class IdSectionPanel extends Component {
         return this.isActive && this.tree.length > 0;
     }
 
+    get collapsed() {
+        return this.shell.dashboardCount ? !this.shell.dashboardPanelExpanded : this.shell.panelCollapsed;
+    }
+
     get toggleTitle() {
-        return this.shell.panelCollapsed ? _t("Expand panel (Alt+P)") : _t("Collapse panel (Alt+P)");
+        return this.collapsed ? _t("Expand panel (Alt+P)") : _t("Collapse panel (Alt+P)");
     }
 
     get toggleIcon() {
-        return this.shell.panelCollapsed ? this.icons.chevronsRight : this.icons.chevronsLeft;
+        return this.collapsed ? this.icons.chevronsRight : this.icons.chevronsLeft;
     }
 
     findByAction(nodes, actionId) {

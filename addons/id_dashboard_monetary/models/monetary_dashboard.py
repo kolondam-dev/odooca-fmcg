@@ -3,7 +3,7 @@
 
 from collections import defaultdict
 from odoo import api, fields, models, _
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, UserError
 
 BUCKET_ORDER = ["not_due", "overdue_1_7", "overdue_8_14", "overdue_15_30", "overdue_over_30"]
 BUCKET_LABELS = {
@@ -32,6 +32,26 @@ class MonetaryDashboard(models.TransientModel):
             raise AccessError(_("Anda tidak memiliki izin untuk melihat Dashboard Moneter & Piutang."))
 
     @api.model
+    def _periods(self):
+        targets = self.env["id.monetary.target"].search_read(
+            [("company_id", "in", self.env.companies.ids), ("active", "=", True)],
+            ["date_from", "date_to", "company_id", "currency_id"], order="date_to desc, date_from desc, id desc")
+        periods = {}
+        company_currencies = {c.id: c.currency_id.id for c in self.env.companies}
+        for target in targets:
+            if target["currency_id"][0] != company_currencies[target["company_id"][0]]:
+                raise UserError(_("Target currency must match its company currency."))
+            key = f"{target['date_from']}/{target['date_to']}"
+            period = periods.setdefault(key, {"key": key, "label": key.replace("/", " → "),
+                                               "target_ids": [], "companies": []})
+            company = target["company_id"][0]
+            if company in period["companies"]:
+                raise UserError(_("More than one active target exists for the same company and period."))
+            period["companies"].append(company)
+            period["target_ids"].append(target["id"])
+        return list(periods.values())
+
+    @api.model
     def get_filters(self):
         self._check_access()
         # Coverage areas
@@ -54,12 +74,15 @@ class MonetaryDashboard(models.TransientModel):
         return {
             "areas": areas,
             "salesmen": salesmen,
+            "periods": self._periods(),
         }
 
     @api.model
     def get_data(self, area_id=None, salesman_id=None, **kwargs):
         self._check_access()
         company_ids = self.env.companies.ids
+        if len(self.env.companies.currency_id) != 1:
+            raise UserError(_("Select companies with the same currency before aggregating monetary values."))
 
         raw_areas = kwargs.get('area_ids') or (area_id and [area_id]) or []
         if isinstance(raw_areas, (int, str)):
@@ -83,7 +106,7 @@ class MonetaryDashboard(models.TransientModel):
             aging_domain,
             ["id", "move_id", "invoice_number", "partner_id", "salesman_id", "area_id",
              "invoice_date", "date_due", "amount_residual",
-             "bucket", "days_overdue", "currency_id"]
+             "bucket", "days_overdue", "currency_id", "company_id"]
         )
 
         total_ar = 0.0
@@ -156,69 +179,69 @@ class MonetaryDashboard(models.TransientModel):
             })
         salesman_list.sort(key=lambda x: x["total_ar"], reverse=True)
 
-        # ----------------------------------------------------------- Top 10 Customers
-        cust_domain = [("company_id", "in", company_ids)]
-        if area_ids:
-            cust_domain.append(("area_id", "in", area_ids))
-        if salesman_ids:
-            cust_domain.append(("salesman_id", "in", salesman_ids))
-
-        top_customers = self.env["id.ar.customer.balance"].search_read(
-            cust_domain,
-            ["partner_id", "salesman_id", "area_id", "invoice_count",
-             "amount_residual", "max_days_overdue", "worst_bucket"],
-            order="amount_residual desc",
-            limit=10,
-        )
-        partner_ids = [c["partner_id"][0] for c in top_customers if c["partner_id"]]
-        partners = {
-            p.id: p for p in self.env["res.partner"].browse(partner_ids).exists()
-        }
+        # Customer totals use the SAME filtered invoice population as the KPI.
+        customers = {}
+        for invoice in aging_records:
+            pid = invoice["partner_id"][0]
+            cid = invoice["company_id"][0]
+            c = customers.setdefault((cid, pid), {"id": pid, "company_id": cid,
+                "key": f"{cid}:{pid}", "name": invoice["partner_id"][1], "balance": 0.0,
+                "overdue": 0.0, "count": 0, "bucket": "not_due", "salesmen": set(), "areas": set()})
+            amount = float(invoice["amount_residual"] or 0)
+            c["balance"] += amount
+            c["count"] += 1
+            if invoice["bucket"] != "not_due":
+                c["overdue"] += amount
+            if BUCKET_ORDER.index(invoice["bucket"]) > BUCKET_ORDER.index(c["bucket"]):
+                c["bucket"] = invoice["bucket"]
+            if invoice["salesman_id"]:
+                c["salesmen"].add(invoice["salesman_id"][1])
+            if invoice["area_id"]:
+                c["areas"].add(invoice["area_id"][1])
+        selected = sorted(customers.values(), key=lambda c: (-c["balance"], c["key"]))[:10]
+        partners = {p.id: p for p in self.env["res.partner"].browse([c["id"] for c in selected]).exists()}
         top_cust_list = []
-        for c in top_customers:
-            pid = c["partner_id"][0] if c["partner_id"] else None
-            partner = partners.get(pid)
-            credit_limit = float(partner.credit_limit) if partner and hasattr(partner, "credit_limit") else 0.0
-            channel_name = (
-                partner.channel_id.name
-                if partner and hasattr(partner, "channel_id") and partner.channel_id
-                else "-"
-            )
-            balance = float(c["amount_residual"] or 0.0)
-            utilization = (balance / credit_limit * 100.0) if credit_limit > 0 else 0.0
-            worst_b = c["worst_bucket"]
-            is_credit_hold = worst_b in ("overdue_8_14", "overdue_15_30", "overdue_over_30") or (
-                credit_limit > 0 and balance > credit_limit
-            )
-
+        for c in selected:
+            partner = partners.get(c["id"])
+            partner = partner.with_company(c["company_id"]) if partner else partner
+            limit = float(partner.credit_limit or 0) if partner else 0.0
             top_cust_list.append({
-                "id": pid or 0,
-                "name": c["partner_id"][1] if c["partner_id"] else "-",
-                "salesman": c["salesman_id"][1] if c["salesman_id"] else "-",
-                "area": c["area_id"][1] if c["area_id"] else "-",
-                "channel": channel_name,
-                "open_count": c["invoice_count"],
-                "total_balance": balance,
-                "overdue_balance": balance if worst_b != "not_due" else 0.0,
-                "credit_limit": credit_limit,
-                "credit_hold": is_credit_hold,
-                "utilization": round(utilization, 1),
+                "id": c["id"], "company_id": c["company_id"], "key": c["key"], "name": c["name"],
+                "salesman": ", ".join(sorted(c["salesmen"])) or "-",
+                "area": ", ".join(sorted(c["areas"])) or "-",
+                "channel": partner.channel_id.name if partner and partner.channel_id else "-",
+                "open_count": c["count"], "total_balance": c["balance"], "overdue_balance": c["overdue"],
+                "credit_limit": limit,
+                "credit_hold": c["bucket"] in ("overdue_8_14", "overdue_15_30", "overdue_over_30") or
+                               (limit > 0 and c["balance"] > limit),
+                "utilization": round(c["balance"] / limit * 100, 1) if limit > 0 else None,
             })
 
         # ----------------------------------------------------------- Financial Funnel & Target
+        periods = self._periods()
+        key = kwargs.get("period_key") or (periods[0]["key"] if periods else None)
+        period = next((p for p in periods if p["key"] == key), None)
+        if key and not period:
+            raise UserError(_("The selected target period is not available in these companies."))
+        funnel_domain = [("company_id", "in", company_ids),
+                         ("target_id", "in", period["target_ids"] if period else [])]
         funnel_stages = self.env["id.monetary.funnel.stage"].search_read(
-            [("company_id", "in", company_ids)],
-            ["stage", "period_name", "amount", "target_amount", "achievement_percent"],
-            order="sequence asc",
-        )
-        funnel_dict = {s["stage"]: float(s["amount"] or 0.0) for s in funnel_stages}
-        target_val = funnel_dict.get("target", 0.0)
-        realized_val = funnel_dict.get("realized", 0.0)
-        cash_val = funnel_dict.get("collection", 0.0)
+            funnel_domain, ["stage", "amount"], order="sequence asc")
+        funnel = defaultdict(float)
+        for stage in funnel_stages:
+            funnel[stage["stage"]] += float(stage["amount"] or 0)
+        target_val = funnel.get("target")
+        realized_val = funnel.get("realized")
+        cash_val = funnel.get("collection")
+        achievement_rate = realized_val / target_val * 100 if target_val else None
 
-        achievement_rate = (realized_val / target_val * 100.0) if target_val > 0 else 0.0
-
+        self.env.cr.execute("SELECT CURRENT_DATE")
+        aging_date = str(self.env.cr.fetchone()[0])
         return {
+            "currency": self.env.company.currency_id.name,
+            "period": period,
+            "domains": {"aging": aging_domain, "funnel": funnel_domain},
+            "as_of": aging_date,
             "kpi": {
                 "total_ar": total_ar,
                 "overdue_ar": overdue_ar,
