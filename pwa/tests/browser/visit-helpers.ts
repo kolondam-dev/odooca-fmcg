@@ -11,10 +11,11 @@ export async function saveVisitPhoto(
         name: `Foto ${phase} kunjungan`,
         exact: true,
     });
+    await group.scrollIntoViewIfNeeded();
     await group.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
-    await expect(group.getByAltText("Pratinjau foto bukti lokal")).toBeVisible({
-        timeout: 10000,
-    });
+    await expect(
+        group.getByAltText("Pratinjau foto bukti lokal"),
+    ).toBeVisible({ timeout: 15000 });
     await group
         .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
         .click();

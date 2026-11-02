@@ -1,3 +1,17 @@
+## 2026-11-02T07:20:00+07:00 — anti-gravity agent — Fix Hidden SKU Test Assertion & Scroll Viewport on Local Photo Input
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Addressed hidden SKU test assertion and photo preview viewport)
+
+### Detail Perbaikan:
+1. **Assertion Guard Hidden SKU (`test_commands_api.py`):**
+   - Menghapus pemanggilan manual `_snapshot_payload()` di dalam body tes `test_order_hidden_sku_rule_guard`. Menyerahkan pembacaan snapshot kepada dispatcher `process_command` sehingga `AccessError` teruji secara sah di dalam blok `with self.assertRaises(AccessError):`.
+2. **PWA Browser Photo Preview Viewport & Timeout (`visit-helpers.ts`):**
+   - Menambahkan `await group.scrollIntoViewIfNeeded()` sebelum `setInputFiles` dan meningkatkan timeout visibilitas pratinjau menjadi 15000ms guna menjamin kelulusan pada runner CI yang memiliki latensi decoding gambar.
+3. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+
 ## 2026-11-02T07:13:00+07:00 — anti-gravity agent — Invalidate ORM Cache for Assigned Products in Hidden SKU Guard
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

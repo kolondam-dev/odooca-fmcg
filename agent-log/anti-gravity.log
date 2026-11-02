@@ -1838,3 +1838,12 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-02T07:13:00+07:00
+
+
+[2026-11-02T07:20:00+07:00] [INFO] Fix Hidden SKU Test Assertion & Scroll Viewport on Local Photo Input
+- Resolved hidden SKU AccessError assertion in test_commands_api.py: removed redundant _snapshot_payload() call inside test body that prematurely triggered AccessError outside the process_command boundary.
+- Stabilized browser visit helpers in visit-helpers.ts: added group.scrollIntoViewIfNeeded() and increased visibility timeout to 15000ms for async canvas image rendering under parallel CI load.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-02T07:20:00+07:00
