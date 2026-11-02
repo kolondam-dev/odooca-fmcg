@@ -62,6 +62,11 @@ async def main():
                     raise AssertionError(await root.locator('[role=alert]').all_text_contents())
                 if not await page.locator('.o_main_navbar').is_visible():
                     raise AssertionError('Native Odoo navigation must remain visible')
+                if name == 'sales':
+                    await root.get_by_text('QA No Sales', exact=True).wait_for(state='visible')
+                    await root.locator('[aria-label="Target segmen SO"]').wait_for(state='visible')
+                if name == 'monetary':
+                    await root.get_by_role('button', name='Jurnal sumber', exact=True).wait_for(state='visible')
                 filters = root.locator('.dashboard-filters')
                 await filters.locator('summary').click()
                 await root.locator('[class$=__filter-bar]').wait_for(state='visible')

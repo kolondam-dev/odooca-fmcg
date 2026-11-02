@@ -4,6 +4,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 
+const MONEY_FORMATTERS = new Map();
 const MODES = [
     { key: "day", label: _t("Daily") },
     { key: "week", label: _t("Weekly") },
@@ -124,8 +125,20 @@ export class SalesProductivity extends Component {
     }
 
     // ---- formatting
+    get currencyLabel() {
+        const currency = this.state.data?.currency || "IDR";
+        return currency === "IDR" ? "Rp" : currency;
+    }
+    targetDimension(value) {
+        return {salesman: _t("Salesperson"), channel: _t("Channel"), area: _t("Coverage area"),
+            principal: _t("Principal")}[value] || value;
+    }
     money(value) {
-        return value === null || value === undefined ? "–" : `Rp ${NF.format(value)}`;
+        if (value === null || value === undefined) return "–";
+        const digits = this.state.data?.currency_digits ?? 0;
+        if (!MONEY_FORMATTERS.has(digits)) MONEY_FORMATTERS.set(digits,
+            new Intl.NumberFormat("id-ID", {minimumFractionDigits: digits, maximumFractionDigits: digits}));
+        return `${this.currencyLabel} ${MONEY_FORMATTERS.get(digits).format(value)}`;
     }
     moneyShort(value) {
         if (value === null || value === undefined) {
@@ -133,12 +146,12 @@ export class SalesProductivity extends Component {
         }
         const abs = Math.abs(value);
         if (abs >= 1e9) {
-            return `Rp ${NF1.format(value / 1e9)} M`;
+            return `${this.currencyLabel} ${NF1.format(value / 1e9)} M`;
         }
         if (abs >= 1e6) {
-            return `Rp ${NF1.format(value / 1e6)} jt`;
+            return `${this.currencyLabel} ${NF1.format(value / 1e6)} jt`;
         }
-        return `Rp ${NF.format(value)}`;
+        return this.money(value);
     }
     int(value) {
         return value === null || value === undefined ? "–" : NF.format(value);
@@ -270,13 +283,13 @@ export class SalesProductivity extends Component {
         const pjp = this.pjp;
         const na = { text: "", cls: "" };
         return [
-            { key: "pjp", title: _t("PJP Call Compliance"), icon: "fa-map-marker", tone: "blue",
+            { key: "pjp", title: _t("Accepted PJP Check-ins"), icon: "fa-map-marker", tone: "blue",
               value: pjp.available ? this.pct(pjp.compliance) : "N/A", cls: pjp.available ? "" : "is-na",
               meta: pjp.available ? `${this.int(pjp.completed)} / ${this.int(pjp.planned)} ${_t("planned outlets")}` : this.pjpReason,
               delta: na },
             { key: "ec", title: _t("Effective Call Ratio"), icon: "fa-check-circle", tone: "emerald",
               value: pjp.available ? this.pct(pjp.ec_ratio) : "N/A", cls: pjp.available ? "" : "is-na",
-              meta: pjp.available ? `${this.int(pjp.effective)} / ${this.int(pjp.visits)} ${_t("visits with order")}` : this.pjpReason,
+              meta: pjp.available ? `${this.int(pjp.effective)} / ${this.int(pjp.visits)} ${_t("check-ins followed by an order")}` : this.pjpReason,
               delta: na },
             { key: "lpo", title: _t("Lines per Order"), icon: "fa-list-ol", tone: "navy",
               value: this.num1(t.lpo), cls: this.lpoClass,

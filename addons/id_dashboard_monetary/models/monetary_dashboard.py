@@ -238,6 +238,7 @@ class MonetaryDashboard(models.TransientModel):
         self.env.cr.execute("SELECT CURRENT_DATE")
         aging_date = str(self.env.cr.fetchone()[0])
         return {
+            "book_margin": self.env["id.monetary.book.margin"]._for_period(period),
             "currency": self.env.company.currency_id.name,
             "period": period,
             "domains": {"aging": aging_domain, "funnel": funnel_domain},

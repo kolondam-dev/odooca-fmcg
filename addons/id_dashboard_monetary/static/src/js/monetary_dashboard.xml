@@ -215,6 +215,18 @@
                         </div>
                     </section>
 
+                    <section class="id-md__section" t-if="state.data.book_margin">
+                        <h2 class="id-md__section-title">Margin bruto buku · scope company target</h2>
+                        <p class="id-md__section-sub">Jurnal terposting menurut tanggal akuntansi pada periode terpilih: Pendapatan Usaha dikurangi HPP/Biaya Langsung. Bukan margin per SO/invoice dan bukan margin bersih.</p>
+                        <div class="id-md__cards">
+                            <div class="id-md__card"><span class="id-md__card-title">Pendapatan operasi buku</span><strong class="id-md__card-value" t-out="moneyShort(state.data.book_margin.revenue)"/></div>
+                            <div class="id-md__card"><span class="id-md__card-title">Biaya langsung buku</span><strong class="id-md__card-value" t-out="moneyShort(state.data.book_margin.direct_cost)"/></div>
+                            <div class="id-md__card"><span class="id-md__card-title">Margin bruto</span><strong class="id-md__card-value" t-out="moneyShort(state.data.book_margin.margin)"/></div>
+                            <div class="id-md__card"><span class="id-md__card-title">Rasio margin bruto</span><strong class="id-md__card-value" t-out="pct(state.data.book_margin.rate === null ? null : state.data.book_margin.rate * 100)"/></div>
+                        </div>
+                        <p t-if="!state.data.book_margin.available" class="text-muted small">Belum tersedia: <t t-out="bookMarginReason"/>. Data tidak lengkap tidak dianggap margin 100%.</p>
+                        <button t-if="state.data.book_margin.domain.length" class="btn btn-sm btn-outline-secondary" t-on-click="openBookMargin">Jurnal sumber</button>
+                    </section>
                     <!-- BABAK 3: ACTION QUEUE & TOP CUSTOMER EXPOSURE -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
                         <div class="d-flex justify-content-between align-items-center mb-2">

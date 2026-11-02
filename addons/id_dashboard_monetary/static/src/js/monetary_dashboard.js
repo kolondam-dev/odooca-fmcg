@@ -130,6 +130,20 @@ export class MonetaryDashboard extends Component {
         this.action.doAction("id_dashboard_monetary.action_id_ar_aging");
     }
 
+    get bookMarginReason() {
+        return {accounting_role_required: _t("Available to accounting roles"),
+            period_required: _t("Select a target period"),
+            incomplete_ledger_coverage: _t("Operating-income and direct-cost entries are incomplete")}
+            [this.state.data?.book_margin?.reason] || _t("Not available");
+    }
+
+    openBookMargin() {
+        if (this.state.loading || !this.state.data?.book_margin?.domain?.length) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Book margin source entries"),
+            res_model: "account.move.line", views: [[false, "list"], [false, "pivot"]],
+            domain: this.state.data.book_margin.domain});
+    }
+
     openFunnel() {
         if (this.state.loading || !this.state.data) return;
         this.action.doAction({type:"ir.actions.act_window", name:_t("Target Period"),

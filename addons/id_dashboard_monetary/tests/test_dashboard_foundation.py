@@ -52,3 +52,48 @@ class TestMonetaryFoundation(TransactionCase):
         self.assertEqual(view.sudo().search_count([("target_id", "=", foreign.id)]), 4)
         self.assertFalse(view.with_user(basic).search([("target_id", "=", foreign.id)]))
         self.assertFalse(self.env["id.monetary.target"].with_user(basic).search([("id", "=", foreign.id)]))
+
+
+    def test_book_margin_uses_posted_accounting_date_and_signed_ledger(self):
+        accounts = {}
+        for key, kind, code in [("income", "income", "990101"), ("cost", "expense_direct_cost", "990102"),
+                                 ("offset", "asset_current", "990103")]:
+            accounts[key] = self.env["account.account"].create({
+                "name": "Book margin " + key, "code": code, "account_type": kind,
+                "company_ids": [(6, 0, [self.env.company.id])]})
+        journal = self.env["account.journal"].create({"name": "Book margin test", "code": "BM3", "type": "general"})
+        def entry(day, revenue, cost, posted=True):
+            move = self.env["account.move"].create({"date": day, "journal_id": journal.id, "move_type": "entry",
+                "line_ids": [(0, 0, {"account_id": accounts["income"].id, "credit": max(revenue, 0),
+                                      "debit": max(-revenue, 0)}),
+                             (0, 0, {"account_id": accounts["cost"].id, "debit": max(cost, 0),
+                                      "credit": max(-cost, 0)}),
+                             (0, 0, {"account_id": accounts["offset"].id, "debit": max(revenue-cost, 0),
+                                      "credit": max(cost-revenue, 0)})]})
+            if posted:
+                move.action_post()
+        entry("2025-01-15", 2000, 1200)
+        entry("2025-01-16", -100, -60)
+        entry("2025-01-17", 500, 100, posted=False)
+        entry("2025-02-01", 9999, 1)
+        self.env.flush_all()
+        period = {"key": "2025-01-01/2025-01-31", "companies": [self.env.company.id]}
+        margin = self.env["id.monetary.book.margin"]._for_period(period)
+        self.assertTrue(margin["available"])
+        self.assertEqual((margin["revenue"], margin["direct_cost"], margin["margin"]), (1900, 1140, 760))
+        self.assertEqual(margin["rate"], 0.4)
+        empty = self.env["id.monetary.book.margin"]._for_period({
+            "key": "1900-01-01/1900-01-31", "companies": [self.env.company.id]})
+        self.assertFalse(empty["available"])
+        self.assertIsNone(empty["margin"])
+
+    def test_book_margin_does_not_expose_cost_to_invoice_only_role(self):
+        user = self.env["res.users"].with_context(no_reset_password=True).create({
+            "name": "Invoice only", "login": "margin_invoice_only",
+            "group_ids": [(6, 0, [self.env.ref("account.group_account_invoice").id])]})
+        result = self.env["id.monetary.book.margin"].with_user(user)._for_period({
+            "key": "2025-01-01/2025-01-31", "companies": [self.env.company.id]})
+        self.assertFalse(result["available"])
+        self.assertEqual(result["reason"], "accounting_role_required")
+        self.assertIsNone(result["direct_cost"])
+        self.assertEqual(result["domain"], [])

@@ -78,6 +78,7 @@
                 <div t-if="state.loading and !state.data" class="id-sp__empty"><i class="fa fa-circle-o-notch fa-spin"/> Memuat data produktivitas…</div>
 
                 <t t-if="state.data">
+                    <p class="text-muted small mb-0">Nilai SO dalam <t t-out="state.data.currency"/> · kurs tanggal SO (WITA). Check-in hanya command server accepted; foto tersendiri bukan kunjungan.</p>
                     <div t-if="!state.data.total.orders" class="id-sp__notice">
                         <i class="fa fa-info-circle"/> Tidak ada pesanan penjualan (SO) tervalidasi pada periode dan filter terpilih.
                     </div>
@@ -110,12 +111,34 @@
                             </t>
                         </div>
                     </section>
+                    <section class="id-sp__section" t-if="state.data.outlet_activity">
+                        <h2 class="id-sp__section-title">Aktivitas outlet &amp; target segmen SO</h2>
+                        <p class="id-sp__note">Outlet = company + partner SO. Masuk/keluar membandingkan dua periode ini, bukan pelanggan baru/hilang permanen.</p>
+                        <div class="id-sp__cards">
+                            <div class="id-sp__card"><span class="id-sp__card-title">Outlet dengan SO</span><strong class="id-sp__card-value" t-out="int(state.data.outlet_activity.current)"/></div>
+                            <div class="id-sp__card"><span class="id-sp__card-title">Berulang</span><strong class="id-sp__card-value" t-out="int(state.data.outlet_activity.retained)"/></div>
+                            <div class="id-sp__card"><span class="id-sp__card-title">Masuk periode ini</span><strong class="id-sp__card-value" t-out="int(state.data.outlet_activity.entered)"/></div>
+                            <div class="id-sp__card"><span class="id-sp__card-title">Tidak berulang</span><strong class="id-sp__card-value" t-out="int(state.data.outlet_activity.exited)"/></div>
+                        </div>
+                        <p class="id-sp__note">Target = SO bersih, bukan realisasi faktur. Target lintas dimensi tidak dijumlahkan; perbandingan disembunyikan bila filter hanya mencakup sebagian segmen.</p>
+                        <div class="id-sp__table-wrap" tabindex="0" role="region" aria-label="Target segmen SO" t-if="state.data.segment_targets.length">
+                            <table class="id-sp__table"><thead><tr><th>Segmen</th><th>Company</th><th>Dimensi</th><th class="num">Target</th><th class="num">SO bersih</th><th class="num">Capaian</th></tr></thead>
+                                <tbody><tr t-foreach="state.data.segment_targets" t-as="target" t-key="target.id">
+                                    <td t-out="target.segment"/><td t-out="target.company"/><td t-out="targetDimension(target.dimension)"/>
+                                    <td class="num" t-out="money(target.target)"/><td class="num" t-out="money(target.actual)"/>
+                                    <td class="num"><t t-out="pct(target.achievement)"/><small t-if="!target.scope_complete">Filter parsial</small></td>
+                                </tr></tbody>
+                            </table>
+                        </div>
+                        <p t-else="" class="id-sp__note">Belum ada target segmen yang dapat dibaca untuk rentang tanggal ini.</p>
+                    </section>
+
 
                     <!-- BABAK 1B: FIELD PRODUCTIVITY PULSE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
                             <h2 class="id-sp__section-title"><i class="fa fa-map-marker"/> Produktivitas Lapangan &amp; Kualitas Pesanan</h2>
-                            <span class="id-sp__section-sub">Kepatuhan rute PJP, rasio kunjungan efektif, variasi SKU per order (LPO), dan pemenuhan faktur.</span>
+                            <span class="id-sp__section-sub">PJP dan EC memakai check-in accepted yang sesuai assignment. EC memerlukan SO terkonfirmasi setelah check-in pada outlet/company/hari WITA yang sama.</span>
                         </div>
                         <div class="id-sp__cards id-sp__cards--5">
                             <t t-foreach="fieldCards" t-as="card" t-key="card.key">
@@ -143,6 +166,7 @@
                         </p>
                     </section>
 
+                    <p class="id-sp__note" t-if="state.data.total.pjp.proof_completed !== undefined">Bukti foto/GPS sesuai assignment: <strong t-out="int(state.data.total.pjp.proof_completed)"/> dari <t t-out="int(state.data.total.pjp.planned)"/> slot · bukan jumlah check-in. Scope PJP: <t t-out="state.data.pjp_status.scope"/>.</p>
                     <!-- BABAK 2: VARIANCE DIAGNOSTICS & DRIVERS -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
@@ -306,13 +330,14 @@
                                             t-att-class="heat(penCell(item, row).penetration)">
                                             <span><t t-out="int(penCell(item, row).sold)"/> SKU</span>
                                             <small class="d-block" t-out="pct(penCell(item, row).penetration)"/>
+                                            <small t-if="penCell(item, row).outside_catalog" class="d-block text-warning"><t t-out="int(penCell(item, row).outside_catalog)"/> di luar katalog aktif</small>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                             <div t-else="" class="id-sp__empty">Tidak ada data SKU terjual untuk filter ini.</div>
                         </div>
-                        <p class="id-sp__note">Warna biru menandai tingkat penetrasi SKU terjual terhadap total katalog aktif prinsipal/brand.</p>
+                        <p class="id-sp__note">Persentase = SKU terjual yang masih eligible / katalog aktif saat query yang dapat dibaca akun (bukan snapshot historis); kelompok tanpa penjualan tetap tampil. SKU arsip/non-saleable ditandai terpisah.</p>
                     </section>
                 </t>
             </div>

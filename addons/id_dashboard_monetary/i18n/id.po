@@ -262,3 +262,28 @@ msgstr "Pilih company dengan mata uang yang sama sebelum menjumlahkan nilai mone
 #: code:addons/id_dashboard_monetary/models/monetary_dashboard.py:0
 msgid "Target currency must match its company currency."
 msgstr "Mata uang target harus sama dengan mata uang company."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/monetary_dashboard.py:0
+msgid "Available to accounting roles"
+msgstr "Tersedia untuk peran akuntansi"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/monetary_dashboard.py:0
+msgid "Select a target period"
+msgstr "Pilih periode target"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/monetary_dashboard.py:0
+msgid "Operating-income and direct-cost entries are incomplete"
+msgstr "Jurnal Pendapatan Usaha atau Biaya Langsung belum lengkap"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/monetary_dashboard.py:0
+msgid "Not available"
+msgstr "Belum tersedia"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/monetary_dashboard.py:0
+msgid "Book margin source entries"
+msgstr "Jurnal sumber margin buku"

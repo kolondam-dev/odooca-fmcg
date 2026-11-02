@@ -1,3 +1,9 @@
+## 2026-11-02T17:42:33+07:00 — agent codex-pwa — Tahap 3A analisis bisnis
+**Branch:** agen/dashboard-business-depth dari main e4aa776 (PR71 merged).
+**Berubah:** currency SO/tren normalized dengan kurs eksplisit; universe assortment mencakup grup nol/outside-catalog; outlet set comparison; konfigurasi target SO empat dimensi dengan ACL/company/scope; PJP accepted-command terpisah dari photo evidence dan EC order-after-checkin exact outlet/company/WITA; margin bruto buku posted-ledger untuk accounting role. Source dan batas kontrak di docs/dashboard/BUSINESS_DEPTH.md.
+**[F] Lokal:** Ruff/manifest/XML/compile/diff dan13 Node PASS. Tes native baru ditulis, fixture visual menambah target/unsold principal/GL cost dengan assertion sumber. Historical loader test tetap membuktikan proof1/3, plus memastikan proof bukan accepted check-in.
+**[BU] Menunggu:** native Odoo, upgrade existing DB, 3 ukuran screenshot, seluruh CI/review. Sisa tahap3B finance aging/cohort-delivery dan audit runtime master aset belum selesai. Tidak merge/deploy atau menulis data server/PWA workflow/seed.
+
 ## 2026-11-02T11:22:36+07:00 — agent codex-pwa — PR71 perbaikan geometri portrait
 **[F] `81062b1`:** static/init/seed/gate PWA PASS,144 native Odoo dan form smoke PASS. Screenshot desktop/tablet dan sticky geometry lolos; assertion portrait768 gagal: root492px sudah pas tetapi topbar membuat document917px. Artifact13116415891 ditinjau (Sales/WMS tablet, finance scroll dan Sales portrait).
 **Berubah:** topbar native dua baris khusus dashboard pada viewport<=900px, tanpa menghilangkan kontrol. Filter tambahan memakai details native dengan ringkasan scope; periode/as-of tetap terlihat, header tidak menghabiskan ruang konten. Assertion overflow tetap, audit membuka/menutup filter sebelum capture.
