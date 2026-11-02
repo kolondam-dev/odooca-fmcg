@@ -1,3 +1,17 @@
+## 2026-11-02T12:07:07.525Z — codex — Integrasi PR #75 dengan main PR #74
+[F] Otorisasi pemilik: merge PR #75 setelah review PASS. Sinkronisasi main 6918c5ef016b1f12e4cd93acba86d77cbfc11617 ke HEAD reviewed 99494b02a4f6d76df33232b5a35c80843aed383a. Satu overlap docs/HANDOFF.md diselesaikan dengan mempertahankan entri baru PR75 dan isi main; source dashboard dan PWA tidak bertumpang tindih. [BU] CI gabungan pada commit integrasi masih harus selesai sebelum merge. Tidak deploy atau mengubah data server.
+
+## 2026-11-02T17:51:30+07:00 — agent codex-pwa — PR75 fixture company dan signed SO
+**[F] `866426a`:** static PASS; native0failed/1error dari151 tests. Error pada fixture PJP: pricelist default company utama, bukan company assignment baru. Explicit company_id diperbaiki; validasi assignment tidak dilemahkan.
+**Berubah:** baris SO signed termasuk penyesuaian negatif masuk nilai/tren/target; SKU/LPO hanya kuantitas positif. Fulfillment denominator positive ordered value. Regresi native tambahan untuk signed adjustment dan rekonsiliasi tren. Tidak menyentuh PWA/workflow/seed.
+**[F] Lokal:**13 Node, Ruff/compile/diff PASS. **[BU]** native temporalPJP, visual dan CI final menunggu; tidak merge/deploy.
+
+## 2026-11-02T17:42:33+07:00 — agent codex-pwa — Tahap 3A analisis bisnis
+**Branch:** agen/dashboard-business-depth dari main e4aa776 (PR71 merged).
+**Berubah:** currency SO/tren normalized dengan kurs eksplisit; universe assortment mencakup grup nol/outside-catalog; outlet set comparison; konfigurasi target SO empat dimensi dengan ACL/company/scope; PJP accepted-command terpisah dari photo evidence dan EC order-after-checkin exact outlet/company/WITA; margin bruto buku posted-ledger untuk accounting role. Source dan batas kontrak di docs/dashboard/BUSINESS_DEPTH.md.
+**[F] Lokal:** Ruff/manifest/XML/compile/diff dan13 Node PASS. Tes native baru ditulis, fixture visual menambah target/unsold principal/GL cost dengan assertion sumber. Historical loader test tetap membuktikan proof1/3, plus memastikan proof bukan accepted check-in.
+**[BU] Menunggu:** native Odoo, upgrade existing DB, 3 ukuran screenshot, seluruh CI/review. Sisa tahap3B finance aging/cohort-delivery dan audit runtime master aset belum selesai. Tidak merge/deploy atau menulis data server/PWA workflow/seed.
+
 ## 2026-11-02T17:35:00+07:00 — anti-gravity agent — Fix Prettier Formatting on visit-evidence.ts
 **Branch:** `agen/running-mode-gate`
 **PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)

@@ -1,0 +1,27 @@
+<odoo>
+    <record id="view_segment_target_list" model="ir.ui.view">
+        <field name="name">id.sales.segment.target.list</field><field name="model">id.sales.segment.target</field>
+        <field name="arch" type="xml"><list><field name="name"/><field name="company_id"/>
+            <field name="date_from"/><field name="date_to"/><field name="dimension"/>
+            <field name="salesman_id" optional="show"/><field name="channel_id" optional="show"/>
+            <field name="area_id" optional="hide"/><field name="principal_id" optional="hide"/>
+            <field name="currency_id" column_invisible="True"/><field name="target_amount"/></list></field>
+    </record>
+    <record id="view_segment_target_form" model="ir.ui.view">
+        <field name="name">id.sales.segment.target.form</field><field name="model">id.sales.segment.target</field>
+        <field name="arch" type="xml"><form><sheet><group><field name="name"/><field name="company_id"/>
+            <field name="date_from"/><field name="date_to"/><field name="dimension"/>
+            <field name="salesman_id" invisible="dimension != 'salesman'" required="dimension == 'salesman'"/>
+            <field name="channel_id" invisible="dimension != 'channel'" required="dimension == 'channel'"/>
+            <field name="area_id" invisible="dimension != 'area'" required="dimension == 'area'"/>
+            <field name="principal_id" invisible="dimension != 'principal'" required="dimension == 'principal'"/>
+            <field name="currency_id" readonly="True"/><field name="target_amount"/><field name="active"/>
+            <field name="note"/></group></sheet></form></field>
+    </record>
+    <record id="action_segment_targets" model="ir.actions.act_window">
+        <field name="name">Net SO Segment Targets</field><field name="res_model">id.sales.segment.target</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_segment_targets" name="Net SO Segment Targets" parent="id_base.menu_fmcg_dashboard"
+              action="action_segment_targets" sequence="15" groups="sales_team.group_sale_manager"/>
+</odoo>

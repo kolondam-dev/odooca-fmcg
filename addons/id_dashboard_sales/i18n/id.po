@@ -327,3 +327,48 @@ msgstr "Nilai SO bersih"
 #: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
 msgid "Completed deliveries"
 msgstr "DO selesai"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/sales_productivity.py:0
+msgid "Accepted PJP Check-ins"
+msgstr "Check-in PJP diterima server"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/sales_productivity.py:0
+msgid "check-ins followed by an order"
+msgstr "check-in yang diikuti order"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/sales_productivity.py:0
+msgid "Select companies with the same currency before aggregating sales."
+msgstr "Pilih company dengan mata uang yang sama sebelum menjumlahkan penjualan."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/sales_productivity.py:0
+msgid "An explicit exchange rate is required for foreign-currency sales."
+msgstr "Penjualan valuta asing memerlukan kurs bertanggal yang tersedia."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/sales_productivity.py:0
+msgid "A target requires a valid date range and a positive amount."
+msgstr "Target memerlukan rentang tanggal yang valid dan nilai positif."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/sales_productivity.py:0
+msgid "Select exactly one segment matching the target dimension."
+msgstr "Pilih satu segmen sesuai dimensi target."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/sales_productivity.py:0
+msgid "The salesperson must belong to the target company."
+msgstr "Salesperson harus terdaftar pada company target."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/sales_productivity.py:0
+msgid "Active target periods for the same company and segment must not overlap."
+msgstr "Periode target aktif untuk company dan segmen yang sama tidak boleh tumpang tindih."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/sales_productivity.py:0
+msgid "Net SO Segment Targets"
+msgstr "Target SO Bersih per Segmen"

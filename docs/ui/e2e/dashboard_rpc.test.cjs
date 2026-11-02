@@ -49,3 +49,10 @@ test('monetary drill-down preserves invoice scope and customer company',()=>{
     assert.deepEqual(Array.from(action.domain,x=>Array.from(x)),[...scope,['partner_id','=',12],['company_id','=',1]]);
     action=null;d.state.loading=true;d.openAllInvoices();assert.equal(action,null);
 });
+
+test('Sales money uses normalized company currency and preserves decimal precision',()=>{
+    const {d}=dashboard('SalesProductivity','id_dashboard_sales/static/src/js/sales_productivity.js');
+    d.state.data={currency:'USD',currency_digits:2};
+    assert.equal(d.money(12.5),'USD 12,50');
+    d.state.data={currency:'IDR',currency_digits:0};assert.equal(d.money(12500),'Rp 12.500');
+});
