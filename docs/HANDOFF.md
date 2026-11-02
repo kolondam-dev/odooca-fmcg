@@ -1,3 +1,16 @@
+## 2026-11-02T09:56:00+07:00 — anti-gravity agent — Full Environment Cache Invalidation for Assigned Pickings
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Invalidated entire ORM cache via env.invalidate_all() before positive POD submission)
+
+### Detail Perbaikan:
+1. **Invalidasi Cache Lingkungan Menyeluruh (`test_commands_api.py`):**
+   - Menjalankan `self.env.invalidate_all()` di dalam `_add_picking_move` serta tepat sebelum pengujian positif pengiriman DO 1 (`delivery.pod.submit`).
+   - Memastikan cache Odoo ORM membuang seluruh state perantara `to_compute` yang tertinggal pasca pembuatan record counterexample dan memuat ulang status `assigned` pickings langsung dari PostgreSQL.
+2. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+
 ## 2026-11-02T09:47:30+07:00 — anti-gravity agent — Decouple StockMove Create from Picking ID & Bind via SQL
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

@@ -1941,3 +1941,12 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-02T09:47:30+07:00
+
+
+[2026-11-02T09:56:00+07:00] [INFO] Full Environment Cache Invalidation for Assigned Pickings
+- Fixed picking state evaluation in test_commands_api.py:
+  * In test_delivery_pod_and_trip_close_validation: invoked self.env.invalidate_all() across move updates and immediately prior to positive POD submission to ensure ORM cache drops any intermediate dirty state and re-reads assigned stock_picking and stock_move rows directly from database.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-02T09:56:00+07:00

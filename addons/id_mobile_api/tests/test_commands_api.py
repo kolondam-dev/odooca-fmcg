@@ -693,12 +693,11 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                 "UPDATE stock_move SET picking_id = %s, state = %s WHERE id = %s",
                 (picking.id, state, move.id),
             )
-            move.invalidate_recordset(["picking_id", "state"])
             self.env.cr.execute(
                 "UPDATE stock_picking SET state = %s WHERE id = %s",
                 (state, picking.id),
             )
-            picking.invalidate_recordset(["move_ids", "state"])
+            self.env.invalidate_all()
             return move
 
         _add_picking_move(picking1, "assigned")
@@ -895,6 +894,11 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             })
 
         # 3. Positive POD submission for DO 1 matching frontend DeliveryPodSchema
+        self.env.cr.execute(
+            "UPDATE stock_picking SET state = 'assigned' WHERE id IN %s",
+            (tuple([picking1.id, picking2.id]),),
+        )
+        self.env.invalidate_all()
         pod_uuid1 = str(uuid.uuid4())
         rc_pod1 = model.process_command({
             "client_uuid": pod_uuid1,
