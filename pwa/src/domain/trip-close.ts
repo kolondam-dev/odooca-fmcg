@@ -1,3 +1,4 @@
+import { isDemoMode } from "./running-mode";
 import {
     TripCloseSchema,
     tripCloseKey,
@@ -61,13 +62,15 @@ export function validateTripClose(
         .sort();
     if (JSON.stringify([...p.pod_uuids].sort()) !== JSON.stringify(expected))
         throw new Error("Trip belum lengkap/POD berubah.");
-    const relaxed = daily
-        .deliveryManifest!.filter((t) => t.trip === p.trip_id)
-        .every((t) => t.site.demo_unrestricted);
+    const relaxed =
+        isDemoMode() ||
+        daily
+            .deliveryManifest!.filter((t) => t.trip === p.trip_id)
+            .every((t) => t.site.demo_unrestricted);
     if (!!p.demo_unrestricted !== relaxed)
         throw new Error("Kebijakan closing tidak sesuai sumber.");
     if (
-        !(__DEMO__ && p.demo_unrestricted) &&
+        !(isDemoMode() || (__DEMO__ && p.demo_unrestricted)) &&
         (distanceMeters(
             p.fix.latitude,
             p.fix.longitude,

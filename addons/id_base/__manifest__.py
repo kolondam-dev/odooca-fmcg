@@ -32,6 +32,7 @@
         "views/account_move_views.xml",
         "views/menu_views.xml",
     ],
+    "assets": {"web.assets_backend": ["id_base/static/src/scss/dashboard_workspace.scss"]},
     "installable": True,
     "application": True,
 }

@@ -205,3 +205,11 @@
 - models.Constraint pada tiga kode Kemendagri dan city.code; bbox18 kecamatan dihitung dari WKT kanonikal PR72.
 - Native tests memeriksa pg_constraint, duplicate create/write, multiple NULL, dan bbox. Verifier persisted upgrade memeriksa ketiga unique constraint.
 - Versi id_base 19.0.1.2.0. Tidak mengubah noupdate backfill existing yang tetap scope PR3; tidak deploy.
+[2026-11-02T12:07:07.525Z] [INFO] Integrasi PR75 untuk merge berotorisasi
+- Reviewed HEAD 99494b02a4f6d76df33232b5a35c80843aed383a; merged main 6918c5ef016b1f12e4cd93acba86d77cbfc11617; hanya HANDOFF overlap, kedua riwayat dipertahankan.
+- Source dashboard sama dengan reviewed branch; source PWA/evidence sama dengan main PR74. CI gabungan wajib lulus; belum deploy.
+
+[2026-11-02T20:09:09+07:00] [INFO] Integrasi PR72 untuk merge berotorisasi
+- Main 006dd9a digabungkan tanpa konflik source; HANDOFF kedua cabang dipertahankan.
+- Dependency Shapely/Numpy dipasang pada invariant-tests agar 4 tes spasial tidak lagi skipped.
+- Lokal 12 geo tests PASS dengan Shapely; CI integrasi wajib selesai sebelum merge. Tidak deploy.

@@ -1950,3 +1950,83 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS
 - Task managed by antigravity agent at 2026-11-02T09:56:00+07:00
+
+
+[2026-11-02T11:25:00+07:00] [INFO] Implement Running Mode Gate (DEMO | LIVE) with Geofence & Photo Validation Bypass
+- Added pwa/src/domain/running-mode.ts:
+  * Managed running mode (DEMO | LIVE) persisted in localStorage with reactive state hook useRunningMode.
+  * Defined exact banner text requested by owner: "Aplikasi running pada mode demo, validasi geofence dan timestamp diabaikan".
+- Added Running Mode UI Controls:
+  * Top header: interactive pill toggle showing current mode (DEMO / LIVE).
+  * Sub-header: thin warning banner displayed exclusively in DEMO mode below top header.
+  * Profile dialog: dedicated running mode selector with mode descriptions.
+- Bypassed Geofence, Timestamp & Photo Constraints in DEMO Mode:
+  * In pwa/src/domain/visit-validation.ts: requireVisitFix and assessVisitFix ignore geofence boundaries and stale/future timestamp checks.
+  * In pwa/src/components/VisitPanel.tsx: start visit, new order creation, and transaction opening buttons remain enabled from anywhere; photo freshness checks relaxed.
+  * In pwa/src/components/Evidence.tsx: added secondary file upload button ("Pilih Foto dari Galeri / Berkas") allowing uploading any image from gallery/files with safe fallback coordinates.
+  * In pwa/src/data/mock.ts: relaxedLocation dynamically checks isDemoMode() to provide demo_unrestricted on outlets in demo mode.
+  * In addons/id_mobile_api/models/mobile_evidence.py: permitted optional "mode" metadata key and skipped distance and timestamp checks in _capture when mode == "demo".
+  * In addons/id_mobile_api/tests/test_evidence_api.py: added test_demo_mode_bypasses_geofence_and_stale_timestamp.
+  * In pwa/tests/running-mode.test.ts: added 5 unit tests verifying defaults, mode switching, exact banner text, and geofence bypass.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS (10 addons OK)
+  * npm --prefix pwa run contracts:check: PASS
+  * npm --prefix pwa run typecheck: PASS
+  * npm --prefix pwa test: PASS (23 files, 357 unit tests)
+- Task managed by antigravity agent at 2026-11-02T11:25:00+07:00
+
+[2026-11-02T13:58:00+07:00] [INFO] Fix Staging Runtime Demo Location Fallback, Stale Evidence Validation, and Prettier Formatting
+- Resolved supervisor review findings on PR #74 (checkpoint 17f7487):
+  * [P2] captureVisitLocation now adheres directly to runtime isDemoMode(): provides simulated fallback coordinates (1.465, 124.833) labeled "demo" when geolocation is denied (code: 1), times out, or is unavailable in DEMO mode; LIVE mode continues to strictly reject GPS failure.
+  * [P2] Stale evidence validation bypass across creators, validators, and restore paths:
+    - In evidence-package.ts: validateEvidenceTime checks relaxed boolean directly; assertLocalEvidence passes isRelaxed = Boolean(visual.demo_unrestricted || isDemoMode()). Stale timestamps (>60s) are bypassed in DEMO mode and during restore of historical DEMO packages, without locking the workspace upon switching back to LIVE mode.
+    - In evidence-render.ts: renderEvidencePackage sets demo_unrestricted when relaxed or in DEMO mode.
+    - In AttendanceCapture.tsx, DisplayPhoto.tsx, and VisitPanel.tsx: aligned evidence relaxation and checkout button with isDemoMode().
+    - In delivery.ts and trip-close.ts: aligned opening session and office geofence checks with isDemoMode().
+  * [CI] Fixed Prettier code formatting on src/App.tsx and all updated files.
+  * Added 3 unit tests in tests/running-mode.test.ts verifying GPS fallback, LIVE rejection, and historical DEMO package restore in LIVE mode (360 tests pass).
+  * Added browser test in tests/browser/running-mode.spec.ts verifying header toggle, exact banner visibility, and check-in with fallback coordinates.
+- Verification:
+  * npm --prefix pwa run typecheck: PASS
+  * npm --prefix pwa run contracts:check: PASS
+  * npm --prefix pwa test: PASS (23 files, 360 unit tests)
+  * npm --prefix pwa run build:staging: PASS
+  * npm --prefix pwa run build: PASS
+  * npm --prefix pwa run build:demo: PASS
+  * npm --prefix pwa run check:build: PASS
+  * npm --prefix pwa run test:hosting: PASS
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS (10 addons OK)
+- Task managed by antigravity agent at 2026-11-02T13:58:00+07:00
+
+[2026-11-02T07:25:31+00:00] [INFO] Refine running mode pill selector and unconfigured demo fallback
+- Memperbaiki selector Playwright browser test dari .running-mode-toggle ke .running-mode-pill
+- Menyelaraskan captureVisitLocation dengan getStoredRunningMode() dan __DEMO__ unconfigured fallback
+- Membersihkan import isDemoMode yang tidak terpakai dan mock __DEMO__ di unit tests
+- Seluruh verifikasi lokal lulus: typecheck, contracts, 360 unit tests, ruff, manifest
+- Task managed by antigravity-agent at 2026-11-02T07:25:31+00:00
+
+[2026-11-02T07:34:05+00:00] [INFO] Fix banner class and selector in App.tsx and running-mode browser spec
+- Menyelaraskan class banner di App.tsx (demo-running-banner demo-mode-banner) dan selector test
+- Memperbaiki Prettier LF formatting pada App.tsx
+- Typecheck dan test verifikasi lokal lulus
+- Task managed by antigravity-agent at 2026-11-02T07:34:05+00:00
+
+[2026-11-02T07:37:41+00:00] [INFO] Restore App.tsx format and keep test selector on demo-running-banner
+- Mengembalikan App.tsx ke format bersih 16164e6 yang lulus pwa-quality CI
+- Menjaga selector Playwright browser test pada .demo-running-banner
+- Typecheck dan test verifikasi lokal lulus
+- Task managed by antigravity-agent at 2026-11-02T07:37:41+00:00
+
+[2026-11-02T10:32:02+00:00] [INFO] Preserve DEMO visit history provenance across DEMO to LIVE switch
+- Menyimpan provenance demo_unrestricted pada context.site saat kunjungan dibuat di mode DEMO
+- Meneruskan relaxed status berbasis visual/site demo_unrestricted pada assertVisitEvidence dan requireVisitFix
+- Memperpanjang test browser staging dan unit test sesuai probe counterexample supervisor
+- 362 unit tests dan seluruh checks lulus lokal
+- Task managed by antigravity-agent at 2026-11-02T10:32:02+00:00
+
+[2026-11-02T10:35:08+00:00] [INFO] Fix prettier indentation on visit-evidence.ts
+- Memperbaiki indentasi multiline boolean pada assertVisitEvidence di visit-evidence.ts
+- Prettier check lulus bersih
+- Task managed by antigravity-agent at 2026-11-02T10:35:08+00:00

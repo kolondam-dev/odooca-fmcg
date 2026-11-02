@@ -24,12 +24,12 @@ CREATE OR REPLACE VIEW id_wms_fleet_cost AS (
          GROUP BY c.vehicle_id, date_trunc('month', c.date)::date, c.company_id, rc.currency_id
     ),
     monthly_delivery AS (
-        SELECT d.vehicle_id,
+        SELECT d.vehicle_id, d.company_id,
                date_trunc('month', d.date_done)::date AS period_month,
                SUM(d.delivered_value) AS delivered_value
           FROM id_wms_delivery d
          WHERE d.is_delivered AND d.vehicle_id IS NOT NULL AND d.date_done IS NOT NULL
-         GROUP BY d.vehicle_id, date_trunc('month', d.date_done)::date
+         GROUP BY d.vehicle_id, d.company_id, date_trunc('month', d.date_done)::date
     )
     SELECT ROW_NUMBER() OVER (ORDER BY mc.vehicle_id, mc.period_month) AS id,
            mc.vehicle_id AS vehicle_id,
@@ -41,7 +41,8 @@ CREATE OR REPLACE VIEW id_wms_fleet_cost AS (
            mc.total_cost AS total_cost,
            COALESCE(md.delivered_value, 0) AS delivered_value
       FROM monthly_cost mc
-      LEFT JOIN monthly_delivery md ON md.vehicle_id = mc.vehicle_id AND md.period_month = mc.period_month
+      LEFT JOIN monthly_delivery md ON md.vehicle_id = mc.vehicle_id
+           AND md.period_month = mc.period_month AND md.company_id = mc.company_id
 )
 """
 

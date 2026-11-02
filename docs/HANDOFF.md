@@ -26,6 +26,195 @@
 - Perbaikan saat CI: search view Odoo 19 tidak menerima atribut `expand`/`string` pada `<group>`; filter group-by dipindah langsung (pola sama dengan `id_approval`/`id_dashboard_monetary`). Ketiga search view + 9 list view divalidasi terhadap RNG Odoo 19 via `lxml` → 0 error.
 - Catatan: data XML `noupdate="1"` hanya terisi pada instalasi baru; backfill DB existing dikerjakan loader PR-3.
 
+## 2026-11-02T20:09:09+07:00 — codex — PR72 integrasi main dan gate geometri
+[F] Otorisasi pemilik untuk merge PR72. Main 006dd9a terintegrasi, riwayat HANDOFF dipertahankan. Shapely 2.2.0/Numpy 2.5.4 ditambahkan ke invariant-tests agar pengujian geometri tidak skipped. [F] Lokal 12/12 tes geo PASS. [BU] CI integrasi masih harus lulus. Tidak deploy.
+
+## 2026-11-02T12:07:07.525Z — codex — Integrasi PR #75 dengan main PR #74
+[F] Otorisasi pemilik: merge PR #75 setelah review PASS. Sinkronisasi main 6918c5ef016b1f12e4cd93acba86d77cbfc11617 ke HEAD reviewed 99494b02a4f6d76df33232b5a35c80843aed383a. Satu overlap docs/HANDOFF.md diselesaikan dengan mempertahankan entri baru PR75 dan isi main; source dashboard dan PWA tidak bertumpang tindih. [BU] CI gabungan pada commit integrasi masih harus selesai sebelum merge. Tidak deploy atau mengubah data server.
+
+## 2026-11-02T17:51:30+07:00 — agent codex-pwa — PR75 fixture company dan signed SO
+**[F] `866426a`:** static PASS; native0failed/1error dari151 tests. Error pada fixture PJP: pricelist default company utama, bukan company assignment baru. Explicit company_id diperbaiki; validasi assignment tidak dilemahkan.
+**Berubah:** baris SO signed termasuk penyesuaian negatif masuk nilai/tren/target; SKU/LPO hanya kuantitas positif. Fulfillment denominator positive ordered value. Regresi native tambahan untuk signed adjustment dan rekonsiliasi tren. Tidak menyentuh PWA/workflow/seed.
+**[F] Lokal:**13 Node, Ruff/compile/diff PASS. **[BU]** native temporalPJP, visual dan CI final menunggu; tidak merge/deploy.
+
+## 2026-11-02T17:42:33+07:00 — agent codex-pwa — Tahap 3A analisis bisnis
+**Branch:** agen/dashboard-business-depth dari main e4aa776 (PR71 merged).
+**Berubah:** currency SO/tren normalized dengan kurs eksplisit; universe assortment mencakup grup nol/outside-catalog; outlet set comparison; konfigurasi target SO empat dimensi dengan ACL/company/scope; PJP accepted-command terpisah dari photo evidence dan EC order-after-checkin exact outlet/company/WITA; margin bruto buku posted-ledger untuk accounting role. Source dan batas kontrak di docs/dashboard/BUSINESS_DEPTH.md.
+**[F] Lokal:** Ruff/manifest/XML/compile/diff dan13 Node PASS. Tes native baru ditulis, fixture visual menambah target/unsold principal/GL cost dengan assertion sumber. Historical loader test tetap membuktikan proof1/3, plus memastikan proof bukan accepted check-in.
+**[BU] Menunggu:** native Odoo, upgrade existing DB, 3 ukuran screenshot, seluruh CI/review. Sisa tahap3B finance aging/cohort-delivery dan audit runtime master aset belum selesai. Tidak merge/deploy atau menulis data server/PWA workflow/seed.
+
+## 2026-11-02T17:35:00+07:00 — anti-gravity agent — Fix Prettier Formatting on visit-evidence.ts
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (Addressed supervisor counterexample on DEMO -> LIVE visit history preservation)
+
+### Detail Perbaikan:
+1. **Format Prettier:** Menyelaraskan indentasi ekspresi boolean multiline pada `assertVisitEvidence` di `pwa/src/domain/visit-evidence.ts`.
+2. **Verifikasi:** Prettier check PASS dengan LF pada seluruh berkas domain dan pengujian yang dimodifikasi.
+
+## 2026-11-02T17:32:00+07:00 — anti-gravity agent — Preserve DEMO Visit History Provenance Across DEMO to LIVE Mode Switch
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (Addressed supervisor counterexample on DEMO -> LIVE visit history preservation)
+
+### Detail Perbaikan:
+1. **Penyimpanan & Pengakuan Provenance Mode Kunjungan (`visits.ts`, `visit-evidence.ts`, `visit-validation.ts`):**
+   - `pwa/src/domain/visits.ts`: Saat kunjungan dibuat dalam mode DEMO (`checkIn`), `context.site` menyematkan `demo_unrestricted: true` (`...(outlet.demo_unrestricted || isDemo ? { demo_unrestricted: true as const } : {})`).
+   - `pwa/src/domain/visit-evidence.ts`: `assertVisitEvidence` mengecek provenance riwayat bukti `isRelaxed = Boolean(row.visual.demo_unrestricted || context.site.demo_unrestricted || isDemoMode())` dan meneruskannya ke `requireVisitFix`.
+   - `pwa/src/domain/visit-validation.ts`:
+     - `requireVisitFix` menerima parameter `isRelaxed = false`. Jika `isRelaxed || isDemoMode() || parsedSite.demo_unrestricted`, pemeriksaan geofence dilewati secara sah.
+     - `bindVisitContext`: memperbolehkan `context.site.demo_unrestricted: true` dicocokkan dengan snapshot outlet pagi tanpa menolak struktur PJP.
+     - `visitLedger`: memvalidasi riwayat check-in/check-out/order dengan relaksasi berbasis provenance `Boolean(c.site.demo_unrestricted || isDemoMode())`.
+   - Aksi LIVE baru di luar radius tetap diperiksa secara ketat dan ditolak ("Lokasi berada di luar geofence outlet.").
+2. **Pengujian Unit & Browser Playwright (`running-mode.test.ts`, `running-mode.spec.ts`, `visit-fixtures.ts`):**
+   - Menambahkan unit test spesifik counterexample supervisor: `assertVisitEvidence` dengan `__DEMO__ = false`, `context.site` normal tanpa flag unrestricted, `row.visual.demo_unrestricted = true`, dan fix 1 km di luar geofence. Pada mode LIVE, fungsi tetap meloloskan bukti DEMO historis tanpa throw geofence, sedangkan bukti tanpa provenance ditolak secara ketat.
+   - Menambahkan unit test siklus hidup lengkap `SalesVisits.restore` & `validateVisitMedia` untuk kunjungan DEMO saat mode aktif adalah LIVE.
+   - Memperpanjang browser test Playwright di `running-mode.spec.ts`: daily sync LIVE → toggle DEMO → foto contoh + fix luar radius → check-in & checkout → toggle LIVE → navigasi keluar/masuk & reload → history tetap terbaca tanpa terkunci → aksi LIVE baru di luar radius tetap ditolak.
+3. **Verifikasi:**
+   - `npm --prefix pwa run format:check`: PASS pada seluruh file yang disentuh.
+   - `npm --prefix pwa run typecheck`: PASS (0 errors).
+   - `npm --prefix pwa run contracts:check`: PASS.
+   - `npm --prefix pwa test`: PASS (23 files, 362 unit tests).
+   - `npm --prefix pwa run build:staging`: PASS.
+   - `npm --prefix pwa run build`: PASS.
+   - `npm --prefix pwa run build:demo`: PASS.
+   - `python -m ruff check .`: PASS.
+   - `python scripts/check_manifests.py`: PASS (10 addons OK).
+
+## 2026-11-02T14:34:00+07:00 — anti-gravity agent — Align Demo Banner Class and Browser Test Selector
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (CI browser test banner selector alignment)
+
+### Detail Perbaikan:
+1. **Penyelarasan Class Banner & Test Selector:**
+   - Menambahkan class `.demo-mode-banner` pada elemen indikator demo di `pwa/src/App.tsx` (`class="mode-indicator demo-running-banner demo-mode-banner"`).
+   - Menyelaraskan selector Playwright browser test di `pwa/tests/browser/running-mode.spec.ts` menjadi `.demo-running-banner`.
+   - Memperbaiki format Prettier dengan LF pada `App.tsx` dan `running-mode.spec.ts`.
+2. **Verifikasi CI Sebelumnya (Commit `16164e6`):**
+   - Seluruh 11 backend/core checks lulus: `install-test` (PASS, 7m2s), `init-test` (PASS, 3m42s), `invariant-tests` (PASS, 2x), `seed-invariants` (PASS, 2x), `pwa-quality` (PASS, 22s), `pwa-container` (PASS, 35s), `static` (PASS, 7s).
+   - Pada `pwa-browser`: 170 tests lulus dari total 172; 2 kegagalan semata-mata berasal dari locator `.demo-mode-banner` yang kini terselesaikan.
+
+## 2026-11-02T14:26:00+07:00 — anti-gravity agent — Refine Running Mode Pill Selector and Unconfigured Demo Fallback
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (CI browser tests & demo build alignment ready for verification)
+
+### Detail Perbaikan:
+1. **Penyelarasan Selector Playwright Browser Test (`running-mode.spec.ts`):**
+   - Memperbaiki selector topbar dari `.running-mode-toggle` ke `.running-mode-pill` yang sesuai dengan markup komponen header `App.tsx`.
+   - Menguji interaksi klik toggle LIVE -> DEMO, verifikasi asersi banner teks persis `Aplikasi running pada mode demo, validasi geofence dan timestamp diabaikan`, check-in dengan koordinat simulasi fallback, dan toggle kembali ke LIVE.
+2. **Formula Fallback Lokasi Unconfigured (`running-mode.ts` & `visits.ts`):**
+   - Menambahkan helper `getStoredRunningMode(): RunningMode | null` untuk mendeteksi pilihan eksplisit pengguna.
+   - Pada `captureVisitLocation`, menggunakan formula `stored === "demo" || (stored === null && __DEMO__)`:
+     - Staging/Live build (`__DEMO__ = false`): default unconfigured bertindak sebagai LIVE (menolak kegagalan GPS secara ketat), sedangkan mode DEMO eksplisit mengaktifkan fallback simulasi GPS.
+     - Demo build (`__DEMO__ = true`): default unconfigured mengaktifkan fallback simulasi GPS untuk kestabilan browser test suite demo (`dist/demo`), sementara jika diset LIVE maka penolakan GPS tetap ditegakkan.
+3. **Verifikasi:**
+   - `npm --prefix pwa run format:check`: PASS pada file-file yang dimodifikasi.
+   - `npm --prefix pwa run typecheck`: PASS (0 errors).
+   - `npm --prefix pwa run contracts:check`: PASS.
+   - `npm --prefix pwa test`: PASS (23 files, 360 unit tests).
+   - `npm --prefix pwa run build:staging`: PASS.
+   - `npm --prefix pwa run build`: PASS.
+   - `npm --prefix pwa run build:demo`: PASS.
+   - `python -m ruff check .`: PASS.
+   - `python scripts/check_manifests.py`: PASS (10 addons OK).
+
+## 2026-11-02T13:58:00+07:00 — anti-gravity agent — Fix Runtime Demo Fallback, Stale Evidence Validation, and Prettier Formatting
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (Addressed supervisor review findings on PR #74)
+
+### Detail Perbaikan:
+1. **Fallback Lokasi Runtime DEMO (`visits.ts`):**
+   - Mengubah `captureVisitLocation` agar mengacu langsung pada runtime `isDemoMode()` (bukan konstanta build `__DEMO__`).
+   - Pada mode DEMO: saat izin geolocation ditolak (`code === 1`), timeout, atau `navigator.geolocation` tidak tersedia, fungsi me-resolve koordinat simulasi (1.465, 124.833) berlabel `"demo"`.
+   - Pada mode LIVE: tetap me-reject kegagalan GPS sesuai pesan resmi ("Izin lokasi ditolak...", dll.).
+2. **Penyelarasan Bypass Timestamp Paket Bukti (`evidence-package.ts`, `evidence-render.ts`, `VisitPanel.tsx`, dll.):**
+   - `evidence-package.ts`: `validateEvidenceTime` mengecek parameter `relaxed`; `assertLocalEvidence` menyuplai `isRelaxed = Boolean(visual.demo_unrestricted || isDemoMode())`. Timestamp >60s diizinkan pada mode DEMO serta saat me-restore riwayat bukti berflag `demo_unrestricted` di mode LIVE tanpa mengunci workspace.
+   - `evidence-render.ts`: menyematkan `demo_unrestricted: true` pada paket visual saat `isRelaxed` aktif.
+   - `AttendanceCapture.tsx` & `DisplayPhoto.tsx`: menyelaraskan parameter relaksasi bukti dengan `isDemoMode()`.
+   - `VisitPanel.tsx`: tombol "Tutup kunjungan" tidak lagi disabled karena foto kedaluwarsa saat mode DEMO aktif (`disabled={busy || (!isDemo && !fresh(outPhoto))}`).
+   - `delivery.ts` & `trip-close.ts`: menyelaraskan pengecekan geofence kantor dan opening session dengan `isDemoMode()`.
+3. **Format Prettier & Penambahan Pengujian:**
+   - Memperbaiki pemformatan Prettier pada `pwa/src/App.tsx` dan seluruh file yang disentuh.
+   - Menambahkan 3 unit test di `pwa/tests/running-mode.test.ts` (total 8 unit tests di file ini, 360 unit tests di 23 files seluruhnya lulus).
+   - Menambahkan pengujian browser Playwright di `pwa/tests/browser/running-mode.spec.ts` untuk verifikasi toggle header DEMO/LIVE, asersi banner persis, dan alur check-in dengan koordinat fallback.
+4. **Verifikasi:**
+   - `npm --prefix pwa run format:check`: PASS pada file-file yang dimodifikasi.
+   - `npm --prefix pwa run typecheck`: PASS (0 errors).
+   - `npm --prefix pwa run contracts:check`: PASS.
+   - `npm --prefix pwa test`: PASS (23 files, 360 unit tests).
+   - `npm --prefix pwa run build:staging`: PASS.
+   - `npm --prefix pwa run build`: PASS.
+   - `npm --prefix pwa run build:demo`: PASS.
+   - `npm --prefix pwa run check:build`: PASS.
+   - `npm --prefix pwa run test:hosting`: PASS.
+   - `python -m ruff check .`: PASS.
+   - `python scripts/check_manifests.py`: PASS (10 addons OK).
+
+## 2026-11-02T11:25:00+07:00 — anti-gravity agent — Implement Running Mode Gate (DEMO | LIVE) with Geofence & Photo Bypass
+**Branch:** `agen/running-mode-gate`
+**Status:** In Progress (Added running mode gate: DEMO banner, geofence, timestamp & photo validation bypass)
+
+### Detail Perbaikan:
+1. **Running Mode Management & UI Controls (`running-mode.ts`, `App.tsx`, `style.css`):**
+   - Menambahkan domain `pwa/src/domain/running-mode.ts` untuk mengelola mode `demo` dan `live` dengan penyimpanan di `localStorage` dan event reaktif `useRunningMode`.
+   - Menambahkan pill toggle `DEMO` | `LIVE` di header atas (topbar) aplikasi.
+   - Menampilkan section tipis di bawah top header khusus pada mode demo: `"Aplikasi running pada mode demo, validasi geofence dan timestamp diabaikan"`. Pada mode live, section ini disembunyikan.
+   - Menyediakan panel pengatur mode operasi di dalam dialog Profil akun.
+2. **Pelepasan Validasi Geofence & Timestamp pada Mode DEMO:**
+   - `visit-validation.ts`: `requireVisitFix` dan `assessVisitFix` mengabaikan batasan radius geofence outlet/kantor serta batasan kedaluwarsa waktu (stale/future). Pengguna dapat check-in dan menginput transaksi dari lokasi mana pun.
+   - `VisitPanel.tsx`: Tombol "Mulai kunjungan", "Buat order di outlet", dan tab "Buka transaksi" tetap aktif terlepas dari jarak lokasi ke outlet. Status badge menginformasikan geofence diabaikan pada mode demo.
+   - `mock.ts`: `relaxedLocation` mengaktifkan flag `demo_unrestricted` pada seluruh outlet saat aplikasi berada pada mode demo.
+3. **Pelepasan Validasi Foto Lapangan & Pilihan Unggah Berkas:**
+   - `Evidence.tsx`: Menambahkan tombol "Pilih Foto dari Galeri / Berkas" agar pengguna dapat mengunggah foto apa pun dari penyimpanan perangkat jika kamera tidak tersedia, dengan koordinat fallback yang aman.
+   - `VisitPanel.tsx`: Pengecekan kesegaran foto check-in dan check-out (`fresh(inPhoto)` / `fresh(outPhoto)`) tidak kedaluwarsa pada mode demo.
+   - `mobile_evidence.py`: Backend Odoo mengizinkan metadata opsional `"mode": "demo"`, melewati pemeriksaan jarak geofence dan waktu usang, serta menyimpan bukti foto dan lokasi secara sah.
+4. **Unit Test & Verifikasi:**
+   - `pwa/tests/running-mode.test.ts`: Menambahkan 5 tes unit untuk verifikasi default live, peralihan ke demo, asersi teks banner persis, dan pelepasan geofence.
+   - `test_evidence_api.py`: Menambahkan `test_demo_mode_bypasses_geofence_and_stale_timestamp`.
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+   - `npm --prefix pwa run contracts:check`: PASS
+   - `npm --prefix pwa run typecheck`: PASS
+   - `npm --prefix pwa test`: PASS (23 files, 357 unit tests)
+
+## 2026-11-02T11:22:36+07:00 — agent codex-pwa — PR71 perbaikan geometri portrait
+**[F] `81062b1`:** static/init/seed/gate PWA PASS,144 native Odoo dan form smoke PASS. Screenshot desktop/tablet dan sticky geometry lolos; assertion portrait768 gagal: root492px sudah pas tetapi topbar membuat document917px. Artifact13116415891 ditinjau (Sales/WMS tablet, finance scroll dan Sales portrait).
+**Berubah:** topbar native dua baris khusus dashboard pada viewport<=900px, tanpa menghilangkan kontrol. Filter tambahan memakai details native dengan ringkasan scope; periode/as-of tetap terlihat, header tidak menghabiskan ruang konten. Assertion overflow tetap, audit membuka/menutup filter sebelum capture.
+**[F] Lokal:**12Node/Ruff/XML/SCSS/diff PASS. **[BU]** CI/screenshot HEAD baru dan upgrade penuh menunggu; tidak merge/deploy. Tidak ada perubahan file pwa vs main.
+
+## 2026-11-02T11:08:28+07:00 — agent codex-pwa — PR71 penyajian dashboard tahap 2
+**Basis:** gabungkan main `2c18174` ke branch dashboard; konflik HANDOFF diselesaikan dengan mempertahankan kedua rangkaian entri. Tidak ada diff file pwa terhadap main; perubahan PWA/API hanya berasal dari merge main.
+**Berubah:** stylesheet workspace bersama di id_base, container-query KPI, header/filter sticky, tabel region keyboard dengan kolom identitas sticky, judul singkat dan ringkasan prioritas AR/gudang dari payload existing. Periode finance dipindah ke konteks atas. Panel native dicuitkan selama lifecycle dashboard dengan lease transient; tombol/Alt+P tetap bekerja, preferensi tersimpan kembali setelah keluar. Tidak mengisi PIC/deadline yang tidak bersumber.
+**[F] Lokal:** 12 regresi Node (race RPC+lease shell), Ruff, manifest, XML, SCSS libsass dan diff PASS. Asset versi dinaikkan. Main terbaru sudah memuat perbaikan agen lain; tidak memperbaiki PWA dalam task dashboard.
+**[BU] CI/visual:** perlu screenshot Odoo actual desktop/tablet/portrait, assert sticky geometry/no document overflow, panel toggle/pref restoration dan drill-down. Dashboard lama 131 native/screenshot PASS; bukan bukti layout baru. Belum merge/deploy; redesign iterasi ini menunggu CI dan inspeksi screenshot.
+
+## 2026-11-01T23:54:01+07:00 — agent codex-pwa — PR71 temuan screenshot native
+**[F] `cef3fa5`:** install-test lulus (131 native, upgrade dashboard, fixture SQL dan visual); 54 PNG desktop/tablet, tanpa pageerror. Inspeksi top/bottom ketiga dashboard dan tab kategori/armada menemukan dua sidebar memakai 456px, content tablet 568px, document overflow 91px Sales/23px finance-WMS, KPI sempit, context filter hilang saat scroll, tabel lebar. Data CI sintetis/currency company USD; bukan review live.
+**Perbaikan:** penetrasi menempel 3 + 42,9% diberi unit SKU dan baris persentase terpisah; caption collection kedua diperjelas tercatat/bukan bank; 0% fulfillment tidak lagi diberi warna hijau. Redesign layout responsif, canonical app context dan exception-first tetap tahap 2.
+**[F/BU] PWA:** attempt awal cef3fa5 =167 pass/1 fail/2 flaky pada helper foto/lokasi, tanpa perubahan file PWA; artifact13091882456 tersimpan, rerun job satu kali pada SHA yang sama. Hasil akhir/CI HEAD baru menunggu; tidak menghapus kegagalan awal, tidak merge/deploy.
+
+## 2026-11-01T23:42:07+07:00 — agent codex-pwa — PR71 isolasi urutan fixture visual
+**[F] `19fb11b`:** 131 native Odoo dan fixture finance SQL PASS; 170 browser PWA PASS. UI smoke existing gagal keyboard title draft invoice karena fixture dashboard sudah membuat sequence posted pada jurnal yang sama; Odoo `_compute_name_placeholder` menghilangkan input ketika sequence sudah ada. Bukan perubahan produksi form.
+**Berubah:** jalankan fixture dashboard sesudah UI form smoke dan sebelum audit dashboard. Assertion keyboard/native production tetap utuh. CI final dan screenshot menunggu; tidak merge/deploy.
+
+## 2026-11-01T23:32:04+07:00 — agent codex-pwa — PR71 currency fixture CI
+**[F] `b05f955`:** 131 tes native Odoo lulus; upgrade dashboard persisten, staging/demo preservation dan init-test lulus. Visual fixture gagal saat posting invoice karena default pricelist IDR memakai currency archived pada DB kosong. IDR diaktifkan hanya di fixture ci_db; tidak mengubah company currency/data server atau melemahkan validasi posting.
+**[BU] Menunggu:** CI final, screenshot native dan review; tidak merge/deploy.
+
+## 2026-11-01T23:24:41+07:00 — agent codex-pwa — PR71 native fixture dan scroll capture
+**[F] CI `3585636`:** static, seed supervision dan PWA quality/container lulus; install-test gagal 1 assertion dari 130 tes native karena fixture quant belum flush computed company sebelum SQL view. Perbaikan memakai env.flush_all; tidak melemahkan assertion isolasi.
+**Berubah:** capture atas/tengah/bawah internal scroll dan tab; fixture finance memeriksa payload SQL terhadap invoice posted; key kategori WMS unik per company dan label company untuk mencegah tabrakan OWL multi-company.
+**[BU] Menunggu:** CI ulang pada HEAD final, screenshot dan review; tidak merge/deploy.
+
+## 2026-11-01T23:17:20+07:00 — agent codex-pwa — Fondasi dashboard dan roadmap terintegrasi
+**Branch:** `agen/dashboard-data-foundation`, basis main `13b2ee0`.
+**Berubah:** overdue pelanggan dari populasi invoice yang sama; target exact period lintas company dijumlahkan, duplikat/mixed currency ditolak; invoice DPP dan label pembayaran tercatat; tolakan sesuai kendaraan; ACL peran/company pada SQL views; latest-request guard dan drill-down scope. Roadmap `docs/dashboard/ENHANCEMENT_PLAN.md` mempertahankan seluruh rekomendasi analitis awal serta utilisasi gudang/armada, warehouse detail dan Three.js bertahap.
+**[F] Lokal:** Ruff, 10 manifest, compile/XML/YAML/diff, 9 unit runner upgrade dan 10 regresi RPC lulus. Probe fungsi produksi: overdue 1 juta (bukan 11 juta), target 30 juta (bukan 20 juta), tolakan kendaraan A 0 (bukan 200%). Probe memakai fake ORM dan bukan bukti native Odoo.
+**[BU] Native/visual:** ditambahkan tes ORM/SQL/ACL, upgrade dashboard persisten, fixture sintetis ci_db dan screenshot dashboard Odoo asli desktop/tablet. Menunggu CI dan peninjauan artifact. Browser cloud timeout transport; tidak mengklaim audit live berhasil. Postgres lokal terhalang permission runtime. Redesign menyeluruh/ledger/asset/3D belum diimplementasikan pada tahap ini.
+**Menunggu:** CI/review; tidak merge/deploy atau mengubah data server.
 ## 2026-11-02T09:56:00+07:00 — anti-gravity agent — Full Environment Cache Invalidation for Assigned Pickings
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
@@ -4011,121 +4200,5 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 
 ## 2026-10-24 Ã¢â‚¬â€ claude-design agent (chat + sandbox) Ã¢â‚¬â€ UI redesign v1: sidebar, topbar, chatter sebagai tab
 **Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
-**Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬â€œ998 ms (sidebar) vs 923Ã¢â‚¬â€œ1030 ms (klasik), heap setelah GC 33,5 vs 35,6 MB.
-**Belum diuji:** stack OCA penuh bersama addon UI; `docker build`/Railway; CI; browser selain Chromium; layar mobile (memakai NavBar bawaan); form tanpa notebook, dialog, pratinjau lampiran (fallback ke tata letak chatter bawaan, belum diuji di UI); daftar besar. Desain beranda baru (playground HTML di chat) belum dikodekan.
-**Butir terbuka:**
-1. Konfirmasi nama tanda tangan `claude-design agent` dan `agent-log/claude-design.log` (dipakai sesuai usulan; **[A]**).
-2. `id_ui` ber-`depends` pada modul stack inti (`sale_management`, `stock`, `purchase`, `account`, `hr`, `fleet`, `hr_attendance`, `hr_holidays`, `spreadsheet_dashboard`) agar menu mereka ada saat urutan diterapkan. Memasang `id_ui*` berarti modul itu ikut terpasang; `INIT_MODULES` default belum memuatnya.
-3. `postinit_v1` punya TODO mengaktifkan `id_ID`; hook `id_ui` sudah mengaktifkan `en_US`+`id_ID` dan menjadikan `id_ID` bawaan partner baru (idempoten; matikan dengan parameter `id_ui.set_default_lang=False`). Hindari menggandakan.
-4. Urutan dan nama menu inti diterapkan lewat kode; setelah meng-upgrade modul inti jalankan `-u id_ui`.
-5. Titik yang paling mungkin bergeser antar-versi Odoo (patch komponen internal): `WebClient`, `NavBar`/`UserMenu`, `FormRenderer.mailLayout`, `Notebook.computePages`, selector CSS navbar. Daftar di `docs/ui/id_ui_shell.md` dan `id_ui_form.md`.
-6. Istilah baru usulan (Gudang & Stok, Armada, Diskusi, Dashboard) di `docs/ui/glossary-additions.md` belum masuk `GLOSSARY.md`.
-**Menunggu:** pemilik repo (merge PR #4); `antigravity` (uji di Railway setelah merge).
-
-## 2026-10-24 Ã¢â‚¬â€ antigravity (laptop/Railway) Ã¢â‚¬â€ [M1] Cabang Mandiri agen/m1-historical-simulation, Dataset Transaksi Historis Kausalitas Presisi & Cetak Biru FMCG
-**Berubah:**
-- **Reorganisasi Cabang:** Memindahkan seluruh pekerjaan simulasi transaksi dan master data ke cabang tersendiri `agen/m1-historical-simulation` (bercabang dari `agen/m1-master-data-models`). Cabang `agen/ui-design-v1` dikembalikan murni ke commit agen `claude-design` (`3c6fb30`).
-- **Dokumentasi Cetak Biru (`docs/blueprints/`):**
-  - `master_data_mapping_and_seed_plan.md`: Cetak biru hierarki master data, 15 Kab/Kota Sulut, 150 SKU, 354 outlet, 24 roster staf, 9 tipe armada kargo riil, dan 9 zona gudang WMS.
-  - `pjp_and_outlet_distribution_model.md`: Pemodelan rute kunjungan PJP SeninÃ¢â‚¬â€œSabtu, rasio call density (MT 8-10, GT 20-22, Canvass 25-30), dan loading armada H+1.
-  - `historical_simulation_and_turnover_model.md`: Pemodelan simulasi kausalitas historis 1 Juli s/d 24 Oktober 2026 (Juli krisis overstok 10B net margin 0.9%, Agustus drop 23% net margin 2.5%, September konsolidasi sehat net margin 3.7%, Oktober rebound MTD 5.3B net margin 5.0%, utilisasi armada 89%).
-  - `REVIEW_FEEDBACK_LOG.md`: Dokumentasi riwayat komprehensif review pengguna, feedback lapangan, dan keputusan desain arsitektur.
-- **Generator & Loader Transaksi Historis:**
-  - `scripts/generate_historical_simulation.py`: Menghasilkan dataset deterministik terkalibrasi presisi:
-    - `data/seed/sales_orders_historical.csv`: 3.762 transaksi faktur penjualan harian riil (97 hari kerja operasional).
-    - `data/seed/sales_order_lines_historical.csv`: 8.513 baris line item produk, karton, dan lot FEFO.
-    - `data/seed/inbound_po_historical.csv` & `inbound_po_lines_historical.csv`: 11 Inbound PO Kontainer Bitung & jadwal AP.
-    - `data/seed/opex_vendor_bills.csv`: 20 Vendor Bills beban operasional bulanan.
-    - `data/seed/daily_logistics_metrics.csv`: 97 hari metrik okupansi gudang dan utilisasi 9 armada.
-    - `data/seed/historical_simulation_summary.json`: Ringkasan finansial terkalibrasi (Omset Rp 18.995 BIO, OPEX Rp 1.619 BIO, Laba Bersih Rp 566.89 jt, Margin 2.98%).
-  - `scripts/load_historical_simulation.py`: Loader Odoo shell idempoten untuk `account.move` (OPEX vendor bills), `purchase.order`, dan `sale.order`.
-
-**Diverifikasi (bagaimana):**
-- `python scripts/generate_historical_simulation.py` sukses menghasilkan seluruh dataset.
-- `python -m ruff check .` lolos bersih (0 galat).
-- `python scripts/check_manifests.py` lolos (`manifest ok: 4 addon`).
-- Cabang `agen/ui-design-v1` diverifikasi ter-reset bersih pada commit `3c6fb30`.
-- PR #2 dan PR #3 telah diverifikasi dan di-merge ke `main`.
-- CI GitHub Actions lolos 100% HIJAU (PASS).
-
-**Belum diuji:**
-- Pemuatan seluruh data ke Odoo staging di Railway (akan terpicu otomatis saat seluruh PR di-merge ke main).
-
-**Butir terbuka:**
-- Merge PR #4 ke `main`.
-- Verifikasi deployment otomatis di Railway Staging (`https://odooca-fmcg-demo.up.railway.app`).
-
-**Menunggu:** pemilik repo (merge PR #4 di GitHub).
-
-## 2026-10-24 Ã¢â‚¬â€ claude-dev agent (sandbox) Ã¢â‚¬â€ Sinkron remote, verifikasi perbaikan AntiGravity, protokol multi-agen
-**Berubah:** `AGENTS.md` (protokol 8 aturan), `docs/AGENT_PROTOCOL.md` (peran, sebelum/sesudah aksi, format commit dan log), `scripts/agent/whats_new.sh` dan `log_entry.sh`, `agent-log/claude-dev.log`, `docs/DEVELOPMENT.md` Ã‚Â§1 dan Ã‚Â§4 (kebijakan tanpa Docker lokal, alur multi-agen, perintah patch + tanda tangan), `docs/SANDBOX.md`, `scripts/sandbox/sandbox_up.sh` (user `odoo`, salinan addons), `ci.yml` (`bash -n` mencakup skrip agen). Izin eksekusi skrip diperbaiki (100755).
-**Diverifikasi (bagaimana):** (1) `git fetch` menemukan commit AntiGravity `eebee64` dan merge PR #1 `fcd62e8`; (2) perbaikan `init.sh` AntiGravity diuji independen di sandbox: A DB kosong (HTTP 200, Odoo berjalan sebagai `odoo`, data dir `odoo:odoo`, 0 galat), B restart 5 detik semua dilewati, login admin OK, `chown -R` 3000 berkas = 22 ms; (3) `whats_new.sh` dan `log_entry.sh` dijalankan pada repo nyata (2 bug diperbaiki); (4) `ruff`, `check_manifests.py`, `bash -n`, YAML lolos.
-**Belum diuji:** job `init-test`/`install-test` di GitHub Actions; `gosu`/`runuser` di image `odoo:19.0` (di sandbox yang terpakai `runuser`); `docker build` di luar Railway; `--ignore-installed` dapat menimpa paket Debian (diterima untuk demo); tanda tangan commit belum divalidasi otomatis.
-**Butir terbuka:**
-1. Konfirmasi nama tanda tangan dan nama log untuk `claude-design` (usulan: `claude-design agent`, `agent-log/claude-design.log`).
-2. Perlu job CI yang menolak commit non-merge tanpa tanda tangan? (belum dibuat)
-3. Skrip tercatat 100644 di mesin pemilik: pakai `git add --chmod=+x` (lihat DEVELOPMENT Ã‚Â§4); cek `git config core.fileMode`.
-4. Pemegang hak cipta pada header lisensi.
-**Menunggu:** pemilik (unzip, commit, push); `antigravity` (log Railway setelah merge); `claude-design` (belum aktif di repo).
-
-## 2026-10-24 Ã¢â‚¬â€ AntiGravity Agent (Railway Staging/Production) Ã¢â‚¬â€ Perbaikan Build Docker & Deploy Sukses di Railway
-**Berubah:**
-- `Dockerfile`: pip install menggunakan `--ignore-installed` pada dependensi OCA untuk mencegah konflik paket Debian (`typing-extensions`); melepas direktif `USER odoo` agar entrypoint kontainer dapat melakukan chown volume sebelum menurunkan hak akses.
-- `deploy/init.sh`: mendeteksi inisialisasi root kontainer, mengamankan kepemilikan `$DATA_DIR` (`/var/lib/odoo`) ke `odoo:odoo`, lalu mengeksekusi script sebagai `odoo` via `gosu`/`runuser`/`su`.
-- `.gitignore`: mengecualikan `agent-log/*.log` agar log koordinasi agen tersimpan di repo.
-- `agent-log/anti-gravity.log`: dibuat untuk melacak aktivitas dan koordinasi antar-agen.
-
-**Diverifikasi (bagaimana):**
-- Static checks: `ruff check .` lolos, `python scripts/check_manifests.py` lolos, `bash -n deploy/init.sh` lolos.
-- Build live di Railway (`ca437306-0e9d-414e-accf-5c23fa9de3cc`): image assembly sukses 100% (26 repo OCA & dependensi terpasang).
-- Runtime live di Railway: Odoo 19 CE berhasil inisialisasi database `railway`, menginstal 55 modul termasuk `id_base` ('FMCG Distributor Base') dan `l10n_id` ('Indonesian - Accounting').
-- HTTP Probe: `https://odooca-fmcg-demo.up.railway.app/web/login` mengembalikan HTTP 200 OK.
-
-**Belum diuji:**
-- Merge branch / patch dari Agent 2 (Claude Design).
-- Fungsionalitas login admin via browser dengan sandi baru dari env.
-- Restore dump database dari Release asset.
-
-**Butir terbuka:**
-1. Integrasi kode Agent 2 (Design modification) saat sudah siap dimerge.
-2. Pengujian fitur modul FMCG di live staging Railway.
-
-**Menunggu:** Pemilik repo & Agent 2 (Claude Design) untuk integrasi kode design.
-
-## 2026-10-23 Ã¢â‚¬â€ Claude (sandbox, Odoo 19 penuh) Ã¢â‚¬â€ Verifikasi M0 dengan menjalankan Odoo
-**Berubah:** `init.sh` (urutan `shell` sebelum opsi; build `base`Ã¢â€ â€™ID/IDRÃ¢â€ â€™modul; reset tabel satu per satu); `oca.lock` 18Ã¢â€ â€™26 repo; CI + job `init-test`; `scripts/sandbox/*`; `docs/SANDBOX.md`; `docs/SCOPE.md` v0.6; jebakan baru di `docs/ODOO19_PITFALLS.md`; spike dipersempit.
-**Diverifikasi (bagaimana):** di sandbox (Ubuntu 24.04, Postgres 16, Odoo `f4378f29`): (1) `id_base` terinstal, uji 0 failed; (2) 65 modul core+OCA Ã¢â€ â€™ 165 modul terinstal, 0 ERROR; (3) `init.sh`: A DB kosong (HTTP 200 Ã‚Â±66 s), B restart (6 s, semua dilewati), C reset+restore (17 s), D token lama diabaikan, E reset+build (Ã‚Â±69 s); login admin sandi baru OK, `admin/admin` ditolak, daftar DB ditolak, `web.base.url` terkunci, objek dimiliki `odoo_app`, chart `id` 118 akun, 0 pajak 15%.
-**Bug yang ditemukan lewat uji dan diperbaiki:** `shell` setelah opsi; `DROP SCHEMA CASCADE` Ã¢â€ â€™ `out of shared memory`; dump naif bentrok dengan `id_meta`; COA generik termuat bila negara belum ID.
-**Koreksi atas klaim sebelumnya:** 6 modul OCA yang saya tulis "ada" ternyata `installable: False` (`base_rest`, `base_rest_auth_api_key`, `pydantic`, `rest_log`, `queue_job_batch`, `base_import_async`).
-**Belum diuji:** `docker build` + `pip install` di image Ubuntu (apt vs pip); job CI `init-test`/`install-test`; Railway (volume, variabel, restore dari Release asset); seed engine; `postinit` untuk bahasa `id_ID`; fungsional modul OCA (hanya terinstal); `fastapi` sebagai endpoint; instal ulang tanpa sandbox.
-**Butir terbuka:**
-1. Log build/deploy Railway setelah push pertama (tempel ke percakapan).
-2. Deploy otomatis setiap push menyalakan layanan Hobby: pasang hard usage limit.
-3. `requirements.txt` seluruh repo OCA ikut terpasang di image (pysaml2, numpy, paramiko, dll.): pertimbangkan hanya yang dipakai.
-4. Pemegang hak cipta pada header lisensi.
-**Menunggu:** pemilik repo (unzip, commit, push, log Railway).
-
-## 2026-10-23 Ã¢â‚¬â€ Claude (chat, sandbox tanpa Docker) Ã¢â‚¬â€ M0 kerangka repo
-**Berubah:** kerangka repo awal (Dockerfile, `deploy/init.sh`, compose, CI, `oca.lock`, `scripts/`, addon `id_base`, dokumen). `docs/SCOPE.md` v0.5, Playbook v0.4, Glosarium draf.
-**Diverifikasi (bagaimana):**
-- `scripts/fetch_oca.sh` dan `scripts/oca_bump.sh` dijalankan pada 2 repo OCA nyata; SHA cocok.
-- `scripts/check_manifests.py` lolos; `ruff check .` lolos; `bash -n` semua skrip; YAML (`ci.yml`, `docker-compose.yml`) valid.
-- Isi source Odoo 19 CE (commit `f4378f29`, 2026-10-22) dan 18 repo OCA 19.0 diperiksa untuk keberadaan modul (lihat SCOPE Ã‚Â§5).
-**Belum diuji:** `docker build`; `deploy/init.sh` (peran DB, restore, reset, postinit, `odoo shell`); instal `id_base` di Odoo 19; CI; `pip install` dependensi OCA di image (risiko bentrok paket apt); `admin_passwd` polos di `odoo.conf`; opsi `--without-demo=true`, `--no-database-list`; kebenaran tag `odoo:19.0` di Docker Hub (digest belum di-pin).
-**Butir terbuka:**
-1. Hasil run pertama CI dan `docker compose up` (perbaiki kerusakan yang muncul).
-2. Spike API/offline (`docs/spikes/SPIKE_API_OFFLINE.md`) sebelum M6.
-3. Kontrol dokumen asal Odoo/mobile pada mode secondary (SCOPE Ã‚Â§13 #1).
-4. Pemegang hak cipta pada header lisensi.
-**Menunggu:** pemilik repo (commit pertama dan menjalankan CI).
-
-<!-- Entri baru di atas entri lama. Templat ada di docs/DEVELOPMENT.md Ã‚Â§10. -->
-
-
-## 2026-10-28 Ã¢â‚¬â€ PR #32: koreksi fixture regresi fokus judul
-
-- Supervisi pada SHA `6cb21f58a9639c5594fbab1deb25c1023f948990` memverifikasi perbaikan runtime hidden-input, tetapi CI install-test gagal karena fixture fokus tidak terhubung ke `document`.
-- Perbaikan test: setiap fixture kini di-append ke `document.body` sebelum guard/helper produksi dijalankan dan dihapus dalam blok `finally`. Assertion fokus tidak dilemahkan: tetap memeriksa input text yang tepat, `document.activeElement`, dan kelas `id_title_editing`. Cakupan hidden-only dan hidden + beberapa kontrol visible dipertahankan.
-- Batas klaim: regression ini mengeksekusi helper produksi `focusEditableTitleInput`; bukan pengujian langsung jalur cleanup `onTitleClick` saat fokus gagal. Probe handler penuh yang dilaporkan supervisor tetap menjadi bukti terpisah; tidak mengklaim cleanup handler tercakup oleh unit test ini.
-- SHA perbaikan test: `7b1b80967acd273c87516c874b424d5e82a99197`. CI pada SHA ini harus ditunggu sampai sel
+**Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬
 ... [truncated for diff preview]

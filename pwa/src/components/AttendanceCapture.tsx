@@ -5,6 +5,7 @@ import { Icon } from "./Icon";
 import type { MapFix, MapSite } from "../domain/checkin-map";
 import type { EvidenceRef } from "./Evidence";
 import { renderEvidencePackage } from "../domain/evidence-render";
+import { isDemoMode } from "../domain/running-mode";
 import type { FieldStore } from "../storage/store";
 export function AttendanceCapture({
     store,
@@ -124,7 +125,7 @@ export function AttendanceCapture({
                 ref,
                 at,
                 new Date(fix.timestamp).toISOString(),
-                __DEMO__,
+                __DEMO__ || isDemoMode(),
                 {
                     company: companyName,
                     employee: employeeName,

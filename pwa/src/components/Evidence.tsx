@@ -2,6 +2,7 @@ import { useContext } from "preact/hooks";
 import { EvidenceIdentityContext } from "../ui/evidenceIdentity";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { FieldStore } from "../storage/store";
+import { isDemoMode } from "../domain/running-mode";
 import { Icon } from "./Icon";
 import { CheckinMap } from "./CheckinMap";
 import type { MapSite } from "../domain/checkin-map";
@@ -60,6 +61,7 @@ export function EvidenceCapture({
     const [busy, setBusy] = useState(false);
     const [preview, setPreview] = useState("");
     const [showCamera, setShowCamera] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     async function onCameraCapture(res: CameraCaptureResult) {
         const ticket = ++generation.current;
@@ -85,7 +87,7 @@ export function EvidenceCapture({
         const id = crypto.randomUUID();
         const capturedAt = new Date().toISOString();
         try {
-            if (!__DEMO__ && res.simulated)
+            if (!__DEMO__ && !isDemoMode() && res.simulated)
                 throw new Error(
                     "Lokasi perangkat belum tersedia. Ambil ulang foto setelah GPS siap.",
                 );
@@ -102,7 +104,7 @@ export function EvidenceCapture({
                 ref,
                 new Date(res.timestamp).toISOString(),
                 new Date(res.fixTimestamp).toISOString(),
-                __DEMO__,
+                __DEMO__ || isDemoMode(),
                 caption,
             );
             if (generation.current === ticket) {
@@ -245,6 +247,22 @@ export function EvidenceCapture({
             },
             (e) => {
                 if (generation.current === ticket) {
+                    if (isDemoMode()) {
+                        setLocation({
+                            coords: {
+                                latitude: mapSite?.latitude ?? 1.48,
+                                longitude: mapSite?.longitude ?? 124.84,
+                                accuracy: 15,
+                                altitude: null,
+                                altitudeAccuracy: null,
+                                heading: null,
+                                speed: null,
+                            },
+                            timestamp: Date.now(),
+                        } as GeolocationPosition);
+                        setBusy(false);
+                        return;
+                    }
                     setError(
                         e.code === 1
                             ? "Izin lokasi ditolak. Bukti belum lengkap."
@@ -258,7 +276,11 @@ export function EvidenceCapture({
     }
     async function save() {
         if (!file || !location || !selectedAt || busy) return;
-        if (!__DEMO__ && Date.now() - location.timestamp > 60000) {
+        if (
+            !__DEMO__ &&
+            !isDemoMode() &&
+            Date.now() - location.timestamp > 60000
+        ) {
             setError("Lokasi sudah kedaluwarsa. Ambil lokasi baru.");
             report(undefined);
             return;
@@ -283,7 +305,7 @@ export function EvidenceCapture({
                 ref,
                 selectedAt,
                 new Date(location.timestamp).toISOString(),
-                __DEMO__,
+                __DEMO__ || isDemoMode(),
                 caption,
             );
             if (generation.current !== ticket) return;
@@ -358,11 +380,21 @@ export function EvidenceCapture({
                         <Icon name="camera" size={20} />
                         <span>Buka Kamera Bukti</span>
                     </button>
+                    <button
+                        type="button"
+                        class="secondary file-upload-btn"
+                        style={{ width: "100%", marginTop: "6px" }}
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={busy}
+                    >
+                        <Icon name="receipt" size={18} />
+                        <span>Pilih Foto dari Galeri / Berkas</span>
+                    </button>
                     <input
-                        aria-label="Foto bukti"
+                        ref={fileInputRef}
+                        aria-label="Foto bukti dari berkas"
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
-                        capture="environment"
                         style={{ display: "none" }}
                         onChange={(e) =>
                             void selectFile(e.currentTarget.files?.[0])
