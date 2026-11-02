@@ -14,7 +14,7 @@ class MobileOffice(models.Model):
     company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company)
     latitude = fields.Float(required=True, digits=(10, 7))
     longitude = fields.Float(required=True, digits=(10, 7))
-    radius = fields.Integer(string="Office Radius (m)", default=50, required=True)
+    radius = fields.Integer(string="Office Radius (m)", default=150, required=True)
     coordinate_status = fields.Selection(
         [
             ("test", "Test Coordinates"),
