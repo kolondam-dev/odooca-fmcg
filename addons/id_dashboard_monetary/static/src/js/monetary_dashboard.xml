@@ -34,7 +34,7 @@
                         <span t-if="state.data">Piutang per <t t-out="state.data.as_of"/> · <t t-out="state.data.currency"/></span>
                     </div>
                     <!-- Filter Bar Clusters -->
-                    <div class="id-md__filter-bar">
+                    <details class="dashboard-filters"><summary>Filter piutang · Area: <t t-out="state.areaIds.length || 'Semua'"/> · Salesperson: <t t-out="state.salesmanIds.length || 'Semua'"/></summary><div class="id-md__filter-bar">
                         <!-- Cluster 1: Area -->
                         <div class="id-md__filter-cluster">
                             <span class="id-md__cluster-label"><i class="fa fa-map-marker"/> Coverage Area (<t t-out="state.areaIds.length ? state.areaIds.length : 'Semua'"/>)</span>
@@ -65,7 +65,7 @@
                                 <i class="fa fa-undo"/> Reset Filter
                             </button>
                         </div>
-                    </div>
+                    </div></details>
                 </header>
 
                 <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-out="state.error"/>

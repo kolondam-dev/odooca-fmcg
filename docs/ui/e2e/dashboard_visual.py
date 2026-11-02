@@ -62,6 +62,11 @@ async def main():
                     raise AssertionError(await root.locator('[role=alert]').all_text_contents())
                 if not await page.locator('.o_main_navbar').is_visible():
                     raise AssertionError('Native Odoo navigation must remain visible')
+                filters = root.locator('.dashboard-filters')
+                await filters.locator('summary').click()
+                await root.locator('[class$=__filter-bar]').wait_for(state='visible')
+                await filters.locator('summary').click()
+                await root.locator('[class$=__filter-bar]').wait_for(state='hidden')
                 panel = page.locator('.id_panel__toggle')
                 if await panel.is_visible() and await panel.get_attribute('aria-expanded') != 'false':
                     raise AssertionError('Dashboard should start with a compact native section panel')

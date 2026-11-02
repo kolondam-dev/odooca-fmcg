@@ -91,6 +91,8 @@
             box-shadow: 1px 0 0 #d8dee5;
         }
     }
+    .dashboard-filters > summary { cursor: pointer; padding: 4px 0; color: #536574; font-size: .8rem; }
+    .dashboard-filters > summary:focus-visible { outline: 2px solid #71639e; }
     .dashboard-context { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; font-size: .75rem; margin: 0; color: #66737e; }
     .dashboard-priorities {
         border-left: 3px solid #a46a13;
@@ -123,5 +125,20 @@ body.id-shell-sidebar:has(.id-dashboard-workspace) .o_main_navbar {
 @container dashboard (max-width: 460px) {
     .id-dashboard-workspace:is(.id-sp, .id-md, .id-wms) :is(.id-sp__cards, .id-md__cards, .id-wms__cards) {
         grid-template-columns: minmax(0, 1fr);
+    }
+}
+// Portrait: keep every native control available; let the systray use its own row.
+@media (max-width: 900px) {
+    body.id-shell-sidebar:has(.id-dashboard-workspace) {
+        .o_navbar { height: auto; }
+        .o_main_navbar {
+            height: auto;
+            min-height: 58px;
+            flex-wrap: wrap;
+            padding-block: 6px;
+            .o_menu_systray { flex: 1 0 100%; height: 36px; justify-content: flex-end; }
+            .o_menu_brand { flex: 1 1 120px; }
+            .id_menu_search__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        }
     }
 }

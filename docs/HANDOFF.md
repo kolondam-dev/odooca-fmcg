@@ -1,3 +1,8 @@
+## 2026-11-02T11:22:36+07:00 — agent codex-pwa — PR71 perbaikan geometri portrait
+**[F] `81062b1`:** static/init/seed/gate PWA PASS,144 native Odoo dan form smoke PASS. Screenshot desktop/tablet dan sticky geometry lolos; assertion portrait768 gagal: root492px sudah pas tetapi topbar membuat document917px. Artifact13116415891 ditinjau (Sales/WMS tablet, finance scroll dan Sales portrait).
+**Berubah:** topbar native dua baris khusus dashboard pada viewport<=900px, tanpa menghilangkan kontrol. Filter tambahan memakai details native dengan ringkasan scope; periode/as-of tetap terlihat, header tidak menghabiskan ruang konten. Assertion overflow tetap, audit membuka/menutup filter sebelum capture.
+**[F] Lokal:**12Node/Ruff/XML/SCSS/diff PASS. **[BU]** CI/screenshot HEAD baru dan upgrade penuh menunggu; tidak merge/deploy. Tidak ada perubahan file pwa vs main.
+
 ## 2026-11-02T11:08:28+07:00 — agent codex-pwa — PR71 penyajian dashboard tahap 2
 **Basis:** gabungkan main `2c18174` ke branch dashboard; konflik HANDOFF diselesaikan dengan mempertahankan kedua rangkaian entri. Tidak ada diff file pwa terhadap main; perubahan PWA/API hanya berasal dari merge main.
 **Berubah:** stylesheet workspace bersama di id_base, container-query KPI, header/filter sticky, tabel region keyboard dengan kolom identitas sticky, judul singkat dan ringkasan prioritas AR/gudang dari payload existing. Periode finance dipindah ke konteks atas. Panel native dicuitkan selama lifecycle dashboard dengan lease transient; tombol/Alt+P tetap bekerja, preferensi tersimpan kembali setelah keluar. Tidak mengisi PIC/deadline yang tidak bersumber.

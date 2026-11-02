@@ -17,7 +17,7 @@
                     </div>
 
                     <!-- 3 Logical Filter Clusters -->
-                    <div class="id-sp__filter-bar">
+                    <details class="dashboard-filters"><summary>Filter · Salesperson: <t t-out="state.salesmanIds.length || 'Semua'"/> · Channel: <t t-out="state.channelIds.length || 'Semua'"/></summary><div class="id-sp__filter-bar">
                         <!-- Cluster 1: Time & Period -->
                         <div class="id-sp__filter-cluster">
                             <span class="id-sp__cluster-label"><i class="fa fa-clock-o"/> Periode Waktu</span>
@@ -71,7 +71,7 @@
                                 <i class="fa fa-undo"/> Reset
                             </button>
                         </div>
-                    </div>
+                    </div></details>
                 </header>
 
                 <div t-if="state.error" class="id-sp__alert" role="alert" t-out="state.error"/>

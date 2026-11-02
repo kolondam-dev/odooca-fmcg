@@ -31,7 +31,7 @@
                     </div>
 
                     <!-- Filter Bar Clusters -->
-                    <div class="id-wms__filter-bar">
+                    <details class="dashboard-filters"><summary>Filter · Kategori: <t t-out="state.fmcgCategory || 'Semua'"/> · Armada: <t t-out="state.filters.vehicles.find(v => v.id === state.vehicleId)?.name || 'Semua'"/></summary><div class="id-wms__filter-bar">
                         <!-- Cluster 1: Category -->
                         <div class="id-wms__filter-cluster">
                             <span class="id-wms__cluster-label"><i class="fa fa-tags"/> Kategori Stok FMCG</span>
@@ -64,8 +64,8 @@
                                 <i class="fa fa-undo"/> Reset Filter
                             </button>
                         </div>
-                    </div>
-                <p class="dashboard-context">Kategori berlaku pada stok; armada pada pengiriman dan biaya.</p>
+                    </div></details>
+                <p class="dashboard-context">Stok terkini · pengiriman seluruh periode. Kategori untuk stok; armada untuk pengiriman dan biaya.</p>
                 </header>
 
                 <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-out="state.error"/>
