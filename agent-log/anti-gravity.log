@@ -2030,3 +2030,19 @@
 - Memperbaiki indentasi multiline boolean pada assertVisitEvidence di visit-evidence.ts
 - Prettier check lulus bersih
 - Task managed by antigravity-agent at 2026-11-02T10:35:08+00:00
+
+
+[2026-11-02T19:50:00+07:00] [SUCCESS] PWA Login & Workday Ingestion Resolution
+- Mengidentifikasi akar masalah berganti-gantinya pesan error login ("Form login belum tersedia", "Akun belum memiliki penugasan", "Ruang kerja belum tersedia"):
+  1. Rollover tanggal WITA (Asia/Makassar) ke 2026-11-02 menyebabkan ketiadaan record penugasan id.mobile.workday aktif untuk hari ini.
+  2. Akibatnya GET /api/v1/me/bootstrap melempar AccessError (HTTP 403 Forbidden).
+  3. Session cookie Odoo tersangkut di browser sehingga POST /web/login me-redirect ke PWA dan memicu ketiadaan form CSRF.
+  4. Nginx demo-gateway menyimpan stale IP odooca-fmcg setelah deployment merge PR #75.
+- Melakukan pemulihan menyeluruh:
+  1. Restart demo-gateway untuk merefresh DNS resolution container Odoo live.
+  2. Melakukan bulk ingestion 60 record id.mobile.workday aktif untuk seluruh bulan November 2026 (2026-11-01 s/d 2026-11-30) untuk user sales1 (ID 7) dan sls-01 (ID 34) lengkap dengan 150 SKU FMCG dan 354 outlet Manado.
+  3. Memastikan password kedua akun tersinkronisasi menjadi 'DemoSales2026!'.
+- Verifikasi E2E via HTTP probe live demo-gateway:
+  * User 'sales1': Login 200, Bootstrap 200, Snapshot 200 (150 produk, 354 outlet).
+  * User 'sls-01': Login 200, Bootstrap 200, Snapshot 200 (150 produk, 354 outlet).
+- Task managed by antigravity-agent at 2026-11-02T19:50:00+07:00

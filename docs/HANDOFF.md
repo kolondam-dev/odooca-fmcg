@@ -1,3 +1,26 @@
+## 2026-11-02T19:50:00+07:00 — anti-gravity agent — Resolusi Login PWA & Ingestion Workday November 2026
+**Branch:** `main`
+**Status:** Live & Verified 100% OK
+
+### Akar Masalah Error Login Beruntun:
+1. **Rollover Tanggal Bisnis:** Sistem Odoo menghitung tanggal bisnis harian berbasis WITA (`Asia/Makassar`). Saat kalender berganti ke `2026-11-02` (hari ini), tabel `id.mobile.workday` belum memiliki record penugasan rute untuk tanggal `2026-11-02`.
+2. **Cascading Failure pada Frontend:**
+   - Karena belum ada penugasan hari ini, endpoint `/api/v1/me/bootstrap` menolak dengan HTTP `403 Forbidden` (`AccessError: An active assignment for today is required`).
+   - Penolakan ini memicu throw di frontend: *"Akun belum memiliki akses atau penugasan yang sesuai"* saat submit, atau *"Ruang kerja belum tersedia"* saat refresh.
+   - Sesi Odoo sudah terbuat sebelum bootstrap dipanggil, sehingga percobaan login berikutnya langsung di-redirect oleh Odoo dan memunculkan error *"Form login belum tersedia"*.
+3. **Stale Upstream IP Nginx:** Deploy otomatis merge PR #75 membuat container Odoo memiliki IP privat baru, sementara proxy Nginx `demo-gateway` belum merefresh upstream.
+
+### Tindakan Pemulihan:
+1. **Penyegaran Nginx Gateway:** Melakukan restart container `demo-gateway` pada Railway, memulihkan koneksi proxy ke Odoo.
+2. **Injeksi Matriks Workday November 2026:**
+   - Memasukkan penugasan aktif harian untuk seluruh bulan November 2026 (`2026-11-01` s/d `2026-11-30`) bagi akun `sales1` (User 7) dan `sls-01` (User 34).
+   - Menautkan seluruh 150 produk katalog SKU FMCG dan seluruh 354 outlet retail Manado pada setiap penugasan.
+3. **Penyelarasan Kredensial:**
+   - Menyetel kata sandi kedua akun salesman demo (`sales1` dan `sls-01`) menjadi `DemoSales2026!`.
+4. **Verifikasi E2E HTTP Probe:**
+   - Login `sales1`: HTTP 200 -> Bootstrap: HTTP 200 -> Snapshot: HTTP 200 (150 SKU, 354 outlet).
+   - Login `sls-01`: HTTP 200 -> Bootstrap: HTTP 200 -> Snapshot: HTTP 200 (150 SKU, 354 outlet).
+
 ## 2026-11-02T12:07:07.525Z — codex — Integrasi PR #75 dengan main PR #74
 [F] Otorisasi pemilik: merge PR #75 setelah review PASS. Sinkronisasi main 6918c5ef016b1f12e4cd93acba86d77cbfc11617 ke HEAD reviewed 99494b02a4f6d76df33232b5a35c80843aed383a. Satu overlap docs/HANDOFF.md diselesaikan dengan mempertahankan entri baru PR75 dan isi main; source dashboard dan PWA tidak bertumpang tindih. [BU] CI gabungan pada commit integrasi masih harus selesai sebelum merge. Tidak deploy atau mengubah data server.
 
