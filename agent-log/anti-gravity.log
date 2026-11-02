@@ -1879,3 +1879,12 @@
   * npm --prefix pwa run typecheck: PASS
   * npm --prefix pwa test: PASS (22 files, 352 tests)
 - Task managed by antigravity agent at 2026-11-02T08:50:00+07:00
+
+[2026-11-02T08:58:30+07:00] [INFO] Fix Outgoing Picking Type Resolution & Dynamic WITA Boundary Timestamps in Native Tests
+- Fixed install-test failures in test_commands_api.py:
+  * In test_delivery_pod_and_trip_close_validation: filtered picking_type lookup specifically with ("code", "=", "outgoing") to prevent picking types with incoming/internal code from being assigned to outgoing DO tests.
+  * In test_visit_checkin_and_checkout_validation: computed boundary timestamps dynamically relative to current test workday business_date() (day - 1 day at 16:30 UTC for 00:30 WITA; day at 00:30 UTC for 08:30 WITA) instead of static dates, aligning exactly with runtime business day.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+- Task managed by antigravity agent at 2026-11-02T08:58:30+07:00

@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import uuid
 from unittest.mock import patch
@@ -404,7 +404,20 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
     def test_visit_checkin_and_checkout_validation(self):
         """Visit check-in requires fresh valid evidence; check-out requires prior active check-in."""
         model = self._command_model()
-        day_str = business_date().isoformat()
+        day = business_date()
+        day_str = day.isoformat()
+        # Boundary 00:30 WITA = (day - 1 day) at 16:30 UTC
+        sampled_0030 = (
+            datetime.combine(day - timedelta(days=1), datetime.min.time())
+            .replace(hour=16, minute=30)
+            .strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
+        # Boundary 08:30 WITA = day at 00:30 UTC
+        sampled_0830 = (
+            datetime.combine(day, datetime.min.time())
+            .replace(hour=0, minute=30)
+            .strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
 
         # 1. Check-in without evidence -> rejected
         with self.assertRaises(UserError):
@@ -518,7 +531,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                     "latitude": 1.465,
                     "longitude": 124.833,
                     "accuracy": 3.0,
-                    "sampled_at": "2026-10-26T16:30:00Z",  # Boundary 00:30 WITA
+                    "sampled_at": sampled_0030,  # Boundary 00:30 WITA
                 },
                 "evidence": {
                     "id": valid_evidence_uuid,
@@ -545,7 +558,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                         "latitude": 1.465,
                         "longitude": 124.833,
                         "accuracy": 3.0,
-                        "sampled_at": "2026-10-27T00:30:00Z",  # Boundary 08:30 WITA
+                        "sampled_at": sampled_0830,  # Boundary 08:30 WITA
                     },
                     "outcome": "order_requested",
                     "notes": "Attempting invalid session B checkout",
@@ -566,7 +579,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                 "latitude": 1.465,
                 "longitude": 124.833,
                 "accuracy": 3.0,
-                "sampled_at": "2026-10-27T00:30:00Z",  # Boundary 08:30 WITA
+                "sampled_at": sampled_0830,  # Boundary 08:30 WITA
             },
             "outcome": "order_requested",
             "notes": "Visit session A completed successfully.",
@@ -616,7 +629,10 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             })
 
         # 2. Prepare valid picking manifest and evidence in database
-        picking_type = self.env["stock.picking.type"].search([("company_id", "=", self.company.id)], limit=1)
+        picking_type = self.env["stock.picking.type"].search([
+            ("company_id", "=", self.company.id),
+            ("code", "=", "outgoing"),
+        ], limit=1)
         if not picking_type:
             picking_type = self.env["stock.picking.type"].create({
                 "name": "Delivery Orders",
