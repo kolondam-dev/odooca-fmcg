@@ -2030,3 +2030,10 @@
 - Memperbaiki indentasi multiline boolean pada assertVisitEvidence di visit-evidence.ts
 - Prettier check lulus bersih
 - Task managed by antigravity-agent at 2026-11-02T10:35:08+00:00
+
+[2026-11-02T21:31:28+07:00] [INFO] Solusi permanen absensi pagi dan rollover penugasan sales
+- Backend: auto-provision id.mobile.workday mengklon rute aktif terakhir saat pergantian hari kalender
+- Frontend: morning.ts mengintegrasikan isDemoMode dan toleransi clock skew 10s untuk mode LIVE
+- PWA: presisi demo_unrestricted dipertahankan saat transisi DEMO ke LIVE
+- PR #76 dibuka untuk integrasi ke main
+- Task managed by antigravity-agent at 2026-11-02T21:31:28+07:00

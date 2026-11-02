@@ -1,3 +1,24 @@
+## 2026-11-02T21:30:00+07:00 — antigravity — Solusi permanen absensi pagi dan rollover penugasan sales
+**Branch:** `agen/permanent-demo-session-fix`
+**PR:** [#76](https://github.com/kolondam-dev/odooca-fmcg/pull/76)
+**Status:** In Progress / PR Created for CI & Merge Review
+
+### Ringkasan Perbaikan:
+1. **Odoo Backend Auto-Provisioning (`addons/id_mobile_api/models/mobile_workday.py`):**
+   - Menambahkan mekanisme auto-provisioning cerdas pada `_current_assignment`: saat hari kalender WITA berganti dan belum ada jadwal baru yang diinput admin, sistem secara otomatis mengklon konfigurasi aktif terakhir salesman (pricelist, warehouse, office, daftar 150 SKU FMCG, dan outlet PJP) ke `business_date = day` dengan `sudo().create(...)`.
+   - Menjamin salesman tidak akan pernah terblokir login / HTTP 403 Forbidden akibat pergantian tanggal kalender di masa depan.
+2. **Frontend PWA Running Mode DEMO Bypass & Clock Skew Tolerance (`pwa/src/domain/morning.ts`, `AttendanceCapture.tsx`, `App.tsx`):**
+   - Mengintegrasikan `isDemoMode()` ke `morning.ts`: saat running mode DEMO aktif, validasi tanggal snapshot dan clock skew dilonggarkan sehingga pengujian di luar Manado (jarak ratusan km) dan di luar jam kerja dapat berjalan tanpa hambatan.
+   - Menambahkan toleransi clock skew 10 detik (`maxSkewMs = 10_000`) pada mode LIVE normal agar perbedaan microsecond antara server Railway (UTC) dan jam HP pengguna tidak lagi menolak pembukaan sesi pagi ("Paket PJP, stok dan harga belum lengkap atau tanggalnya tidak sesuai. Sesi belum dibuka.").
+   - Menyematkan `demo_unrestricted: true` pada record sesi pagi saat DEMO aktif, sehingga jika pengguna beralih mode ke LIVE di tengah hari, integritas sesi absensi pagi tetap terjaga (`morningReady = true`).
+   - Melonggarkan batas usia lokasi GPS di `AttendanceCapture.tsx` saat mode DEMO aktif.
+3. **Verifikasi:**
+   - Unit tests vitest PASS (23 files, 363 tests lulus, termasuk tes baru toleransi clock skew dan transisi mode sesi pagi).
+   - TypeScript `tsc --noEmit` PASS (0 errors).
+   - Contracts OpenAPI drift check PASS.
+   - Vite Staging Build PASS.
+   - Ruff linting & manifest check PASS (10 addons).
+
 ## 2026-11-02T20:09:09+07:00 — codex — PR72 integrasi main dan gate geometri
 [F] Otorisasi pemilik untuk merge PR72. Main 006dd9a terintegrasi, riwayat HANDOFF dipertahankan. Shapely 2.2.0/Numpy 2.5.4 ditambahkan ke invariant-tests agar pengujian geometri tidak skipped. [F] Lokal 12/12 tes geo PASS. [BU] CI integrasi masih harus lulus. Tidak deploy.
 
