@@ -57,8 +57,8 @@ export async function assertVisitEvidence(
         );
     const isRelaxed = Boolean(
         row.visual.demo_unrestricted ||
-        context.site.demo_unrestricted ||
-        isDemoMode(),
+            context.site.demo_unrestricted ||
+            isDemoMode(),
     );
     requireVisitFix(
         {

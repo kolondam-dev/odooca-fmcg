@@ -1,3 +1,12 @@
+## 2026-11-02T17:35:00+07:00 — anti-gravity agent — Fix Prettier Formatting on visit-evidence.ts
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (Addressed supervisor counterexample on DEMO -> LIVE visit history preservation)
+
+### Detail Perbaikan:
+1. **Format Prettier:** Menyelaraskan indentasi ekspresi boolean multiline pada `assertVisitEvidence` di `pwa/src/domain/visit-evidence.ts`.
+2. **Verifikasi:** Prettier check PASS dengan LF pada seluruh berkas domain dan pengujian yang dimodifikasi.
+
 ## 2026-11-02T17:32:00+07:00 — anti-gravity agent — Preserve DEMO Visit History Provenance Across DEMO to LIVE Mode Switch
 **Branch:** `agen/running-mode-gate`
 **PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
