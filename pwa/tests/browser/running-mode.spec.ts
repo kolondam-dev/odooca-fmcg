@@ -9,26 +9,23 @@ test("running mode toggle and demo mode geofence/gps bypass", async ({
     await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
 
-    // 2. Toggle button in topbar
-    const modeToggle = page.locator(".running-mode-toggle");
-    await expect(modeToggle).toBeVisible();
+    // 2. Pill button in topbar
+    const modePill = page.locator(".running-mode-pill");
+    await expect(modePill).toBeVisible();
 
     const banner = page.locator(".demo-mode-banner");
 
-    // Initially or click to toggle to DEMO
-    const isLive = await modeToggle.evaluate((el) =>
-        el.classList.contains("live"),
-    );
-    if (isLive) {
-        await expect(banner).toHaveCount(0);
-        await modeToggle.click();
-    }
+    // Initially starts in LIVE mode: banner is hidden
+    await expect(banner).toHaveCount(0);
+    await expect(modePill).toHaveText("LIVE");
 
-    // Now in DEMO mode: banner must be visible with exact text
+    // Click pill to toggle to DEMO mode: banner appears
+    await modePill.click();
     await expect(banner).toBeVisible();
     await expect(banner).toHaveText(
         "Aplikasi running pada mode demo, validasi geofence dan timestamp diabaikan",
     );
+    await expect(modePill).toHaveText("DEMO");
 
     // Open visit panel
     await page
@@ -53,6 +50,7 @@ test("running mode toggle and demo mode geofence/gps bypass", async ({
     ).toBeVisible();
 
     // Switch back to LIVE mode: banner disappears
-    await modeToggle.click();
+    await modePill.click();
     await expect(banner).toHaveCount(0);
+    await expect(modePill).toHaveText("LIVE");
 });

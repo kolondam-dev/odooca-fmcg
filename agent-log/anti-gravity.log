@@ -1999,3 +1999,10 @@
   * python -m ruff check .: PASS
   * python scripts/check_manifests.py: PASS (10 addons OK)
 - Task managed by antigravity agent at 2026-11-02T13:58:00+07:00
+
+[2026-11-02T07:25:31+00:00] [INFO] Refine running mode pill selector and unconfigured demo fallback
+- Memperbaiki selector Playwright browser test dari .running-mode-toggle ke .running-mode-pill
+- Menyelaraskan captureVisitLocation dengan getStoredRunningMode() dan __DEMO__ unconfigured fallback
+- Membersihkan import isDemoMode yang tidak terpakai dan mock __DEMO__ di unit tests
+- Seluruh verifikasi lokal lulus: typecheck, contracts, 360 unit tests, ruff, manifest
+- Task managed by antigravity-agent at 2026-11-02T07:25:31+00:00

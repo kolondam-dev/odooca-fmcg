@@ -22,12 +22,13 @@ import {
 } from "./visit-contracts";
 import type { FieldStore } from "../storage/store";
 import type { Outbox } from "./outbox";
-import { isDemoMode } from "./running-mode";
+import { getStoredRunningMode } from "./running-mode";
 export function captureVisitLocation(
     source?: (value: "device" | "demo") => void,
 ): Promise<VisitFix> {
     return new Promise((resolve, reject) => {
-        const demo = isDemoMode();
+        const stored = getStoredRunningMode();
+        const demo = stored === "demo" || (stored === null && __DEMO__);
         if (!navigator.geolocation && demo) {
             source?.("demo");
             resolve({

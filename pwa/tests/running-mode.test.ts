@@ -49,12 +49,6 @@ globalThis.window = {
     removeEventListener: () => {},
 } as unknown as Window & typeof globalThis;
 
-// @ts-ignore
-if (typeof globalThis.__DEMO__ === "undefined") {
-    // @ts-ignore
-    globalThis.__DEMO__ = false;
-}
-
 describe("Running Mode Gate (DEMO | LIVE)", () => {
     beforeEach(() => {
         storeMap.clear();

@@ -6,16 +6,21 @@ export const RUNNING_MODE_KEY = "fmcg:running-mode";
 export const DEMO_BANNER_TEXT =
     "Aplikasi running pada mode demo, validasi geofence dan timestamp diabaikan";
 
-export function getRunningMode(): RunningMode {
+export function getStoredRunningMode(): RunningMode | null {
     try {
         if (typeof window !== "undefined" && window.localStorage) {
             const stored = window.localStorage.getItem(RUNNING_MODE_KEY);
-            if (stored === "demo") return "demo";
-            if (stored === "live") return "live";
+            if (stored === "demo" || stored === "live") return stored;
         }
     } catch {
-        // Storage might be restricted in some sandboxes
+        // Storage might be restricted
     }
+    return null;
+}
+
+export function getRunningMode(): RunningMode {
+    const stored = getStoredRunningMode();
+    if (stored) return stored;
     return "live";
 }
 
@@ -33,7 +38,7 @@ export function setRunningMode(mode: RunningMode): void {
 }
 
 export function isDemoMode(): boolean {
-    return getRunningMode() === "demo";
+    return getStoredRunningMode() === "demo";
 }
 
 export function useRunningMode(): [RunningMode, (mode: RunningMode) => void] {
@@ -63,10 +68,5 @@ export function useRunningMode(): [RunningMode, (mode: RunningMode) => void] {
         };
     }, []);
 
-    const updateMode = (newMode: RunningMode) => {
-        setRunningMode(newMode);
-        setModeState(newMode);
-    };
-
-    return [mode, updateMode];
+    return [mode, setRunningMode];
 }

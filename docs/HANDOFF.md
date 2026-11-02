@@ -1,3 +1,28 @@
+## 2026-11-02T14:26:00+07:00 — anti-gravity agent — Refine Running Mode Pill Selector and Unconfigured Demo Fallback
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (CI browser tests & demo build alignment ready for verification)
+
+### Detail Perbaikan:
+1. **Penyelarasan Selector Playwright Browser Test (`running-mode.spec.ts`):**
+   - Memperbaiki selector topbar dari `.running-mode-toggle` ke `.running-mode-pill` yang sesuai dengan markup komponen header `App.tsx`.
+   - Menguji interaksi klik toggle LIVE -> DEMO, verifikasi asersi banner teks persis `Aplikasi running pada mode demo, validasi geofence dan timestamp diabaikan`, check-in dengan koordinat simulasi fallback, dan toggle kembali ke LIVE.
+2. **Formula Fallback Lokasi Unconfigured (`running-mode.ts` & `visits.ts`):**
+   - Menambahkan helper `getStoredRunningMode(): RunningMode | null` untuk mendeteksi pilihan eksplisit pengguna.
+   - Pada `captureVisitLocation`, menggunakan formula `stored === "demo" || (stored === null && __DEMO__)`:
+     - Staging/Live build (`__DEMO__ = false`): default unconfigured bertindak sebagai LIVE (menolak kegagalan GPS secara ketat), sedangkan mode DEMO eksplisit mengaktifkan fallback simulasi GPS.
+     - Demo build (`__DEMO__ = true`): default unconfigured mengaktifkan fallback simulasi GPS untuk kestabilan browser test suite demo (`dist/demo`), sementara jika diset LIVE maka penolakan GPS tetap ditegakkan.
+3. **Verifikasi:**
+   - `npm --prefix pwa run format:check`: PASS pada file-file yang dimodifikasi.
+   - `npm --prefix pwa run typecheck`: PASS (0 errors).
+   - `npm --prefix pwa run contracts:check`: PASS.
+   - `npm --prefix pwa test`: PASS (23 files, 360 unit tests).
+   - `npm --prefix pwa run build:staging`: PASS.
+   - `npm --prefix pwa run build`: PASS.
+   - `npm --prefix pwa run build:demo`: PASS.
+   - `python -m ruff check .`: PASS.
+   - `python scripts/check_manifests.py`: PASS (10 addons OK).
+
 ## 2026-11-02T13:58:00+07:00 — anti-gravity agent — Fix Runtime Demo Fallback, Stale Evidence Validation, and Prettier Formatting
 **Branch:** `agen/running-mode-gate`
 **PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
