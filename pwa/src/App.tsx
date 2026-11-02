@@ -575,7 +575,7 @@ function Workspace({
                         </header>
                         {runningMode === "demo" && (
                             <div
-                                class="mode-indicator demo-running-banner"
+                                class="mode-indicator demo-running-banner demo-mode-banner"
                                 role="note"
                             >
                                 {DEMO_BANNER_TEXT}
@@ -795,11 +795,9 @@ function Workspace({
                                     ) && (
                                         <VisitPanel
                                             key={`${owner}:${morning?.sessionId}:${visitOutlet}`}
-                                            outlet={
-                                                snapshot.outlets.find(
-                                                    (o) => o.id === visitOutlet,
-                                                )!
-                                            }
+                                            outlet={snapshot.outlets.find(
+                                                (o) => o.id === visitOutlet,
+                                            )!}
                                             service={visits}
                                             store={store}
                                             owner={owner}

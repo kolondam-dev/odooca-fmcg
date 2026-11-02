@@ -13,7 +13,7 @@ test("running mode toggle and demo mode geofence/gps bypass", async ({
     const modePill = page.locator(".running-mode-pill");
     await expect(modePill).toBeVisible();
 
-    const banner = page.locator(".demo-mode-banner");
+    const banner = page.locator(".demo-running-banner");
 
     // Initially starts in LIVE mode: banner is hidden
     await expect(banner).toHaveCount(0);

@@ -2006,3 +2006,9 @@
 - Membersihkan import isDemoMode yang tidak terpakai dan mock __DEMO__ di unit tests
 - Seluruh verifikasi lokal lulus: typecheck, contracts, 360 unit tests, ruff, manifest
 - Task managed by antigravity-agent at 2026-11-02T07:25:31+00:00
+
+[2026-11-02T07:34:05+00:00] [INFO] Fix banner class and selector in App.tsx and running-mode browser spec
+- Menyelaraskan class banner di App.tsx (demo-running-banner demo-mode-banner) dan selector test
+- Memperbaiki Prettier LF formatting pada App.tsx
+- Typecheck dan test verifikasi lokal lulus
+- Task managed by antigravity-agent at 2026-11-02T07:34:05+00:00

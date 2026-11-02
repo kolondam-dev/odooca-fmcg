@@ -1,3 +1,17 @@
+## 2026-11-02T14:34:00+07:00 — anti-gravity agent — Align Demo Banner Class and Browser Test Selector
+**Branch:** `agen/running-mode-gate`
+**PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
+**Status:** In Progress (CI browser test banner selector alignment)
+
+### Detail Perbaikan:
+1. **Penyelarasan Class Banner & Test Selector:**
+   - Menambahkan class `.demo-mode-banner` pada elemen indikator demo di `pwa/src/App.tsx` (`class="mode-indicator demo-running-banner demo-mode-banner"`).
+   - Menyelaraskan selector Playwright browser test di `pwa/tests/browser/running-mode.spec.ts` menjadi `.demo-running-banner`.
+   - Memperbaiki format Prettier dengan LF pada `App.tsx` dan `running-mode.spec.ts`.
+2. **Verifikasi CI Sebelumnya (Commit `16164e6`):**
+   - Seluruh 11 backend/core checks lulus: `install-test` (PASS, 7m2s), `init-test` (PASS, 3m42s), `invariant-tests` (PASS, 2x), `seed-invariants` (PASS, 2x), `pwa-quality` (PASS, 22s), `pwa-container` (PASS, 35s), `static` (PASS, 7s).
+   - Pada `pwa-browser`: 170 tests lulus dari total 172; 2 kegagalan semata-mata berasal dari locator `.demo-mode-banner` yang kini terselesaikan.
+
 ## 2026-11-02T14:26:00+07:00 — anti-gravity agent — Refine Running Mode Pill Selector and Unconfigured Demo Fallback
 **Branch:** `agen/running-mode-gate`
 **PR:** [#74](https://github.com/kolondam-dev/odooca-fmcg/pull/74)
