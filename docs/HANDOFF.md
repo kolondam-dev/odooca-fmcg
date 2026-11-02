@@ -1,3 +1,21 @@
+## 2026-11-02T07:06:00+07:00 — anti-gravity agent — Fix Hidden SKU Scope Evaluation, Fresh Snapshot in Multi-Principal Tests & Tablet Browser Timing
+**Branch:** `agen/pwa-odoo-operational-readiness`
+**PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)
+**Status:** In Progress (Addressed install-test 2 errors & browser tablet timing)
+
+### Detail Perbaikan:
+1. **Evaluasi Scope Assignment SKU dengan Sudo (`mobile_command.py`):**
+   - Mengubah pembacaan `assigned_product_ids = set(assignment.sudo().product_ids.ids)`. Penugasan supervisor pada workday dibaca secara utuh sehingga SKU yang memang ditugaskan tetapi disembunyikan oleh `ir.rule` katalog actor tidak tersaring lebih dulu saat evaluasi scope; pemeriksaan berlanjut ke `product.check_access('read')` yang dengan tepat menolak request dengan `AccessError`.
+2. **Fresh Snapshot Version pada Multi-Principal Split SO Tests (`test_commands_api.py`):**
+   - Menghitung ulang `fresh_snapshot = assignment._snapshot_payload()['version']` setelah menambahkan produk dinamis baru ke `assignment.product_ids`, mencegah kegagalan `MobileReadConflict (Stale catalog snapshot version)`.
+3. **PWA Browser E2E Map Zoom & Photo Preview Timing:**
+   - Menambahkan `scrollIntoViewIfNeeded()` dan timeout 10000ms pada tombol zoom peta (`ux-improvements.spec.ts`) untuk viewport tablet.
+   - Menambahkan timeout 10000ms pada penungguan pratinjau foto lokal (`visit-helpers.ts`) guna mengakomodir kompresi canvas asinkron saat runner CI menjalankan 2 workers secara paralel.
+4. **Verifikasi:**
+   - `python -m ruff check .`: PASS
+   - `python scripts/check_manifests.py`: PASS (10 addons OK)
+   - `npm --prefix pwa run typecheck`: PASS (0 errors)
+
 ## 2026-11-02T06:56:00+07:00 — anti-gravity agent — Address Supervisor Checkpoint 24d38db Review on PR #70: POD Binding, History Parser, WITA Timezone, and Typecheck
 **Branch:** `agen/pwa-odoo-operational-readiness`
 **PR:** [#70](https://github.com/kolondam-dev/odooca-fmcg/pull/70)

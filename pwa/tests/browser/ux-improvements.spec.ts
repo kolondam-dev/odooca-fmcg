@@ -159,11 +159,16 @@ test("map zoom and consent survive a new GPS fix, touch affects only the map", a
     const map = region.locator(".interactive-map");
     await expect(map).toHaveAttribute("data-zoom", /\d+/);
     const initialZoom = Number(await map.getAttribute("data-zoom"));
-    await region
-        .getByRole("button", { name: "Perkecil peta", exact: true })
-        .click();
+    const zoomOutBtn = region.getByRole("button", {
+        name: "Perkecil peta",
+        exact: true,
+    });
+    await zoomOutBtn.scrollIntoViewIfNeeded();
+    await zoomOutBtn.click();
     await expect
-        .poll(async () => Number(await map.getAttribute("data-zoom")))
+        .poll(async () => Number(await map.getAttribute("data-zoom")), {
+            timeout: 10000,
+        })
         .toBeLessThan(initialZoom);
     const zoom = await map.getAttribute("data-zoom");
     await page.context().setGeolocation({

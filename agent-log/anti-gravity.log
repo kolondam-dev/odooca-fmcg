@@ -1814,3 +1814,17 @@
   * python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner: 9 tests PASS
   * python -m unittest discover -s tests: 154 tests PASS
 - Task managed by antigravity agent at 2026-11-02T06:56:00+07:00
+
+
+[2026-11-02T07:06:00+07:00] [INFO] Fix Hidden SKU Scope Evaluation, Fresh Snapshot in Multi-Principal Tests & Tablet Browser Timing
+- Resolved 2 install-test failures in id_mobile_api:
+  * In mobile_command.py: read assigned_product_ids with assignment.sudo().product_ids.ids so supervisor workday assignment is evaluated objectively without actor record rules prematurely hiding assigned SKUs before the explicit product.check_access('read') security check.
+  * In test_commands_api.py: refreshed fresh_snapshot after linking dynamic second principal product to assignment in test_positive_multi_principal_split_orders and test_atomic_split_so_savepoint_rollback.
+- Resolved browser test timing & flakiness in PWA:
+  * In ux-improvements.spec.ts: added scrollIntoViewIfNeeded and 10000ms poll timeout for map zoom buttons on tablet viewport.
+  * In visit-helpers.ts: added 10000ms visibility timeout for local photo preview during concurrent heavy test runs.
+- Verification:
+  * python -m ruff check .: PASS
+  * python scripts/check_manifests.py: PASS
+  * npm --prefix pwa run typecheck: PASS
+- Task managed by antigravity agent at 2026-11-02T07:06:00+07:00

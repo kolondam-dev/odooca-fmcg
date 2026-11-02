@@ -320,12 +320,16 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "is_storable": True,
         })
         self.assignment.product_ids = [Command.link(product2.id)]
+        fresh_snapshot = self.env["id.mobile.workday"].with_user(self.mobile).with_context(
+            allowed_company_ids=self.mobile.company_ids.ids
+        )._snapshot_payload()["version"]
 
         cmd_uuid = str(uuid.uuid4())
         command = {
             "client_uuid": cmd_uuid,
             "type": "sales.order.submit",
             "payload": self._valid_order_payload(
+                snapshot_version=fresh_snapshot,
                 lines=[
                     {"product_id": str(self.product.id), "qty": "1", "uom": "carton"},
                     {"product_id": str(product2.id), "qty": "2", "uom": "carton"},
@@ -369,12 +373,16 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "taxes_id": [Command.clear()],
         })
         self.assignment.product_ids = [Command.link(product2.id)]
+        fresh_snapshot = self.env["id.mobile.workday"].with_user(self.mobile).with_context(
+            allowed_company_ids=self.mobile.company_ids.ids
+        )._snapshot_payload()["version"]
 
         cmd_uuid = str(uuid.uuid4())
         command = {
             "client_uuid": cmd_uuid,
             "type": "sales.order.submit",
             "payload": self._valid_order_payload(
+                snapshot_version=fresh_snapshot,
                 customer_po_number="PO-SPLIT-001",
                 lines=[
                     {"product_id": str(self.product.id), "qty": "2", "uom": "carton", "discount": 10},
