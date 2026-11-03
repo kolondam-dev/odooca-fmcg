@@ -146,3 +146,90 @@ it("preserves a nonempty server manifest and does not supply sales fallback DOs"
         (await new MockProvider("sales", true, source).snapshot()).deliveries,
     ).toEqual([]);
 });
+
+it("forwards live sales.order.submit to authenticated.submit when available", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    try {
+        const fixture = new MockProvider("sales");
+        const mockReceipt = {
+            client_uuid: "client-order-1",
+            status: "accepted" as const,
+            message: "Pesanan SO0042 berhasil diajukan.",
+            reference: "SO0042",
+        };
+        const submitSpy = vi.fn(async () => mockReceipt);
+        const source = {
+            bootstrap: () => fixture.bootstrap(),
+            snapshot: () => fixture.snapshot(),
+            submit: submitSpy,
+        };
+        const provider = new MockProvider("sales", true, source as any);
+        const cmd = {
+            schema_version: 1 as const,
+            client_uuid: "client-order-1",
+            type: "sales.order.submit" as const,
+            occurred_at: new Date().toISOString(),
+            payload: {
+                outlet_id: "10",
+                lines: [{ product_id: "1", qty: "5", uom: "carton" }],
+            },
+        };
+        const receipt = await provider.submit(cmd);
+        expect(submitSpy).toHaveBeenCalledWith(cmd);
+        expect(receipt).toEqual(mockReceipt);
+    } finally {
+        vi.unstubAllGlobals();
+    }
+});
+
+it("keeps local simulation for demo delivery DO while forwarding live non-demo DO", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    try {
+        const fixture = new MockProvider("delivery");
+        const liveReceipt = {
+            client_uuid: "pod-1",
+            status: "accepted" as const,
+            message: "POD WH/OUT/001 diterima.",
+            reference: "WH/OUT/001",
+        };
+        const submitSpy = vi.fn(async () => liveReceipt);
+        const source = {
+            bootstrap: () => fixture.bootstrap(),
+            snapshot: () => fixture.snapshot(),
+            submit: submitSpy,
+        };
+        const provider = new MockProvider("delivery", true, source as any);
+
+        // 1. Demo DO should be handled locally without calling backend
+        const demoCmd = {
+            schema_version: 1 as const,
+            client_uuid: "pod-demo-1",
+            type: "delivery.pod.submit" as const,
+            occurred_at: new Date().toISOString(),
+            payload: {
+                source: { id: "DEMO-DO-001", trip: "TRIP-01" },
+                recipient: "Budi",
+            },
+        };
+        const demoReceipt = await provider.submit(demoCmd as any);
+        expect(submitSpy).not.toHaveBeenCalled();
+        expect(demoReceipt.reference).toBe("DEMO-POD-DEMO");
+
+        // 2. Real DO (non-demo) should forward to backend submit
+        const realCmd = {
+            schema_version: 1 as const,
+            client_uuid: "pod-real-1",
+            type: "delivery.pod.submit" as const,
+            occurred_at: new Date().toISOString(),
+            payload: {
+                source: { id: "WH/OUT/00099", trip: "TRIP-MANADO-1" },
+                recipient: "Budi",
+            },
+        };
+        const realReceipt = await provider.submit(realCmd as any);
+        expect(submitSpy).toHaveBeenCalledWith(realCmd);
+        expect(realReceipt).toEqual(liveReceipt);
+    } finally {
+        vi.unstubAllGlobals();
+    }
+});

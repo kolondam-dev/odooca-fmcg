@@ -106,4 +106,10 @@ upload offline. Mode default/read-only serta demo tetap terpisah.
 GET tepat `/api/v1/outlets/<id numerik>/image` diteruskan oleh gateway dengan
 header authority yang sama seperti bootstrap/snapshot. POST diblokir. Odoo
 memvalidasi assignment/company dan mengembalikan PNG/JPEG/WebP privat tanpa cache.
-Tidak membuka `/api/v1/sync/commands` atau endpoint bisnis lainnya.
+### Perintah bisnis (`/api/v1/sync/commands`)
+
+POST tepat `/api/v1/sync/commands` (body maks 2MiB) diteruskan oleh gateway ke
+Odoo dengan header authority, cookie session, dan header `X-CSRF-Token`. Endpoint ini
+memproses transaksi operasional resmi (`sales.order.submit`, `delivery.pod.submit`,
+`delivery.trip.close`) dengan idempotensi client_uuid dan otentikasi user Odoo aktif.
+Endpoint bisnis lain di luar whitelist tetap mengembalikan 404.

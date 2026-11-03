@@ -102,6 +102,8 @@ PYCODE
   for route in me/bootstrap sync/snapshot outlets/1/image; do
     test "$(curl "${curl_args[@]}" -s -X POST -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/$route")" = 403
   done
-  test "$(curl "${curl_args[@]}" -s -X POST -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/sync/commands")" = 404
-  echo "PASS: staging $scheme gateway trusted headers, effective origin/port, spoof rejection, cookie, evidence upload and business-command boundary (Werkzeug transport fixture)"
+  test "$(curl "${curl_args[@]}" -s -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/sync/commands")" = 403
+  test "$(curl "${curl_args[@]}" -s -X POST -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/sync/commands")" = 200
+  test "$(curl "${curl_args[@]}" -s -X POST -b "$fixture_dir/cookies-$scheme" -o /dev/null -w '%{http_code}' "$base/api/v1/sync/unknown-route")" = 404
+  echo "PASS: staging $scheme gateway trusted headers, effective origin/port, spoof rejection, cookie, evidence upload and sync-commands dispatch (Werkzeug transport fixture)"
 done

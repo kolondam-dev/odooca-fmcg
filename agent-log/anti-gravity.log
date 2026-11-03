@@ -2049,3 +2049,17 @@
 - Frontend: App.tsx memilih actor MockProvider delivery dan mock.ts menyuplai manifest pengiriman
 - PR #77 dibuka untuk integrasi ke main
 - Task managed by antigravity-agent at 2026-11-03T08:12:57+07:00
+
+[2026-11-03T19:12:19+07:00] [INFO] Verifikasi Deployment PR #77 dan Status Tasks
+- PR #77 terverifikasi merged di main (7ae8a65) dan live di Railway
+- Gateway demo-gateway di-restart untuk menyegarkan upstream field-pwa (HTTP 200 OK)
+- Pemetaan akun driver-01 aktif dan menu Delivery live di PWA
+- PR aktif: PR #78 (CI 13/13 PASS), PR #79 (CI 13/13 PASS), PR #80 (dashboard stage 3B in progress)
+- Task managed by antigravity-agent at 2026-11-03T19:12:19+07:00
+
+[2026-11-03T22:52:57+07:00] [INFO] Implementasi Integrasi Live Sales Order & Delivery Sync
+- Membuka route POST /api/v1/sync/commands di gateway Nginx (staging-locations.conf)
+- Menghubungkan HttpProvider aktif ke MockProvider submit untuk sales.order.submit dan delivery.pod.submit
+- Menyesuaikan gateway fixture & transport tests untuk sync commands
+- 376 unit tests vitest, tsc --noEmit, format, contracts, build, ruff, dan 10 manifests PASS
+- Task managed by antigravity-agent at 2026-11-03T22:52:57+07:00

@@ -1,3 +1,44 @@
+## 2026-11-03T22:50:00+07:00 — antigravity — Integrasi live Sales Order & Delivery sync dari PWA ke backend
+**Branch:** `agen/pwa-live-sales-and-delivery-sync`
+**Status:** In Progress / PR Preparation
+**Komponen:** `pwa/hosting/staging-locations.conf`, `pwa/src/App.tsx`, `pwa/src/data/mock.ts`, `pwa/hosting/test-*.sh`
+
+### Ringkasan Perubahan:
+1. **Gateway Nginx (`pwa/hosting/staging-locations.conf`):**
+   - Menambahkan proxy pass untuk `location = /api/v1/sync/commands` dengan metode `POST` dan pembatasan body 2MiB.
+   - Mengalirkan header otentikasi session cookie, `X-CSRF-Token`, dan reverse proxy headers ke Odoo backend.
+   - Rute di luar whitelist tetap mengembalikan 404.
+2. **PWA Frontend Dispatch (`pwa/src/App.tsx`, `pwa/src/data/mock.ts`):**
+   - `App.tsx`: menginisialisasi `HttpProvider` aktif (menghapus batasan `readOnly: true`).
+   - `mock.ts`: `MockProvider.submit()` secara otomatis meneruskan perintah operasional `sales.order.submit` dan `delivery.pod.submit` (untuk DO non-demo) ke `authenticated.submit()` backend Odoo.
+   - Perintah simulasi (seperti DEMO DO `DEMO-DO-*`, petty cash, cuti) tetap di-handle lokal secara aman tanpa error.
+3. **Transport Fixtures & Documentation (`gateway-fixture.py`, `test-gateway.sh`, `test-railway-gateway.sh`, `STAGING_READ.md`):**
+   - Memutakhirkan tes boundary gateway untuk memvalidasi pembukaan `POST /api/v1/sync/commands` (200), penolakan `GET` (403), dan proteksi route tak terdaftar (404).
+4. **Verifikasi:**
+   - 376 tests lulus di 23 file vitest PWA (termasuk unit test baru forward live command).
+   - TypeScript `tsc --noEmit` PASS (0 errors).
+   - Prettier formatting check PASS.
+   - OpenAPI schema drift check PASS.
+   - Build production, staging, dan demo PASS.
+   - Ruff linting PASS & 10 addons manifests check PASS.
+
+## 2026-11-03T19:15:00+07:00 — antigravity — Verifikasi deployment PR #77 & kesiapan akun driver
+**Status:** PR #77 Merged ke `main` (commit `7ae8a65`) dan Live di Railway
+**Layanan Terkait:** `field-pwa`, `demo-gateway`, `odooca-fmcg`
+
+### Hasil Verifikasi & Aksi:
+1. **Verifikasi PR #77:**
+   - Commit `7ae8a65` (Merge pull request #77) telah aktif di branch `main`.
+   - Railway auto-deploy sukses pada service `field-pwa` (deployment `ee060ed0-cf92-4ce4-acd0-81d707679044`) dan `odooca-fmcg` (`c60b232d-8578-4211-97b9-2384a6844cef`).
+   - Reverse proxy Nginx pada `demo-gateway` di-restart untuk menyegarkan resolusi private DNS container `field-pwa` (probe HTTP `/field/` mengembalikan `200 OK` langsung).
+2. **Kesiapan Akun Driver:**
+   - User `driver-01` (Eko Prasetyo) kini memetakan role `["delivery"]` secara dinamis.
+   - PWA menampilkan antarmuka driver (kartu Pengiriman 2 manifest dan tab Delivery di bottom nav; menu Sales disembunyikan).
+3. **Peta Tasks Berjalan (Active PRs):**
+   - **PR #78 (`agen/geo-master-loader`):** Backfill master wilayah Sulut (15 kab/kota, 171 kecamatan, 1.839 desa) — CI 13/13 PASS hijau penuh, menunggu review & merge pemilik.
+   - **PR #79 (`agen/geo-coverage-audit`):** Laporan audit baca-saja cakupan geometri outlet vs poligon — CI 13/13 PASS hijau penuh, menunggu review & merge pemilik.
+   - **PR #80 (`agen/dashboard-stage3b`):** Historical AR subledger, delivery cohorts, order margin — CI tahap akhir sedang berjalan.
+
 ## 2026-11-03T08:12:00+07:00 — antigravity — Fitur menu Delivery untuk login driver-01
 **Branch:** `agen/pwa-driver-role-menu`
 **PR:** [#77](https://github.com/kolondam-dev/odooca-fmcg/pull/77)
