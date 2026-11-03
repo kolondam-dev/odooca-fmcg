@@ -56,8 +56,13 @@ class TestPodAttempt(TransactionCase):
         cmd = self.env["id.mobile.command"].create({"client_uuid": str(uuid.uuid4()),
             "command_type": "delivery.pod.submit", "fingerprint": "malformed", "user_id": self.env.uid,
             "company_id": foreign.id, "payload_json": "not JSON", "status": "accepted"})
-        view = self.env["id.delivery.attempt"]
+        self.env.flush_all()
+        reader = self.env["res.users"].with_context(no_reset_password=True).create({
+            "name": "POD company reader", "login": "pod_company_reader",
+            "company_id": self.env.company.id, "company_ids": [(6, 0, self.env.company.ids)],
+            "group_ids": [(6, 0, [self.env.ref("stock.group_stock_user").id])]})
+        view = self.env["id.delivery.attempt"].with_user(reader)
         self.assertFalse(view.with_context(allowed_company_ids=self.env.company.ids).search([("id", "=", cmd.id)]))
-        row = view.with_context(allowed_company_ids=foreign.ids).browse(cmd.id)
+        row = self.env["id.delivery.attempt"].with_context(allowed_company_ids=foreign.ids).browse(cmd.id)
         self.assertFalse(row.binding_valid)
         self.assertEqual(row.outcome, "unclassified")

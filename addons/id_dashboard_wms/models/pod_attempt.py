@@ -66,6 +66,9 @@ class DeliveryAttempt(models.Model):
 
     @api.model
     def _for_deliveries(self, picking_ids):
+        # SQL projections must observe pending ORM inserts and updates in this transaction.
+        self.env["id.mobile.command"].flush_model()
+        self.env["stock.picking"].flush_model()
         domain = [("company_id", "in", self.env.companies.ids), ("picking_id", "in", picking_ids)]
         if self.search_count(domain, limit=50001) > 50000:
             raise UserError(_("Too many POD events; narrow the delivery cohort."))
