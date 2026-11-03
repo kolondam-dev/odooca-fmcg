@@ -61,17 +61,45 @@ export class MockProvider implements FieldProvider {
     async snapshot(): Promise<Snapshot> {
         if (this.authenticated) {
             const snapshot = await this.authenticated.snapshot();
+            const fallbackDeliveries =
+                this.actor === "delivery" || this.actor === "canvass"
+                    ? [
+                          {
+                              id: "DEMO-DO-001",
+                              outlet: "Toko Sinar Pagi",
+                              address: "Sario, Manado",
+                              items: 3,
+                              cartons: 12,
+                              trip: "TRIP-01",
+                              vehicle: "DB 8471 MD",
+                          },
+                          {
+                              id: "DEMO-DO-002",
+                              outlet: "Toko Berkat Bahu",
+                              address: "Bahu, Manado",
+                              items: 3,
+                              cartons: 8,
+                              trip: "TRIP-01",
+                              vehicle: "DB 8471 MD",
+                          },
+                      ]
+                    : [];
+            const deliveries =
+                snapshot.deliveries && snapshot.deliveries.length > 0
+                    ? snapshot.deliveries
+                    : fallbackDeliveries;
             // Preserve the existing remote-demo allowance only in the local
             // workflow. The HTTP payload and official evidence gates stay strict.
-            return this.relaxedLocation
-                ? {
-                      ...snapshot,
-                      outlets: snapshot.outlets.map((outlet) => ({
+            return {
+                ...snapshot,
+                deliveries,
+                outlets: this.relaxedLocation
+                    ? snapshot.outlets.map((outlet) => ({
                           ...outlet,
                           demo_unrestricted: true as const,
-                      })),
-                  }
-                : snapshot;
+                      }))
+                    : snapshot.outlets,
+            };
         }
         const identity = await this.bootstrap();
         return {

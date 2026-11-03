@@ -49,3 +49,26 @@ it("never falls back to a persona or catalog when authenticated reads fail", asy
     await expect(workflow.bootstrap()).rejects.toThrow("Session ended");
     await expect(workflow.snapshot()).rejects.toThrow("Session ended");
 });
+it("supplies demo delivery manifest when authenticated driver has empty server deliveries", async () => {
+    const fixture = new MockProvider("delivery");
+    const raw = await fixture.snapshot();
+    const rawWithoutDeliveries = { ...raw, deliveries: [] };
+    const identity = {
+        ...(await fixture.bootstrap()),
+        id: "server-driver",
+        companyId: "server-company",
+        name: "Eko Driver",
+        roles: ["delivery" as const],
+    };
+    const source = {
+        bootstrap: vi.fn(async () => identity),
+        snapshot: vi.fn(async () => rawWithoutDeliveries),
+    };
+    const workflow = new MockProvider("delivery", true, source);
+    const snapshot = await workflow.snapshot();
+    expect(snapshot.deliveries.length).toBeGreaterThan(0);
+    expect(snapshot.deliveries[0].id).toBe("DEMO-DO-001");
+    const tasks = await workflow.deliveryTasks();
+    expect(tasks.length).toBe(2);
+    expect(tasks[0].id).toBe("DEMO-DO-001");
+});
