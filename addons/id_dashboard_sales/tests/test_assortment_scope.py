@@ -45,6 +45,13 @@ class TestEligibleDistribution(TransactionCase):
         zero = next(row for row in rows if row["sku"] == self.products[2].display_name)
         self.assertEqual((first["numeric"], first["weighted"]), (50, 25))
         self.assertEqual((zero["numeric"], zero["weighted"]), (0, 0))
+        self.outlet_gt.active = False
+        self.products[2].active = False
+        archived = self._service().get_data("month", "2026-07-15")["distribution"]
+        self.assertTrue(archived["available"])
+        again = next(row for row in archived["rows"] if row["sku"] == self.products[0].display_name)
+        self.assertEqual((again["numeric"], again["weighted"]), (50, 25))
+        self.assertEqual(len(archived["rows"]), 2)
         filtered = self._service().get_data("month", "2026-07-15", [self.salesman.id])
         self.assertFalse(filtered["distribution"]["available"])
         with self.assertRaises(AccessError):
