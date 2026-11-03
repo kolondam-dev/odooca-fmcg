@@ -140,7 +140,7 @@ class WarehouseDepth(models.AbstractModel):
                         risk["expired_positions"] += 1
                     elif days <= 30:
                         risk["expiry_30_positions"] += 1
-                elif quant.product_id.use_expiration:
+                elif quant.product_id.use_expiration_date:
                     risk["missing_expected_expiry"] += 1
             for pid, positions in by_product.items():
                 product = positions[0].product_id

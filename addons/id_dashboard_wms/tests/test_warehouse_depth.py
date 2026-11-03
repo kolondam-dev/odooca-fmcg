@@ -99,12 +99,14 @@ class TestWarehouseDepth(TransactionCase):
         self.env["stock.quant"]._update_available_quantity(product, zone, 24)
         quant = self.env["stock.quant"].search([("product_id", "=", product.id), ("location_id", "=", zone.id)])
         quant.in_date = fields.Datetime.now()-timedelta(days=200)
+        product.use_expiration_date = True
         data = self.env["id.warehouse.depth"]._data(day, day, wh.id)
         sku = next(r for r in data["skus"] if r["product_id"] == product.id)
         self.assertEqual((sku["quantity"], sku["available"], sku["inactive"]), (24, 24, True))
+        self.assertEqual(data["risk"]["missing_expected_expiry"], 1)
         # Native done movement line, not a fabricated quantity aggregate across unrelated SKUs.
         move = self.env["stock.move"].create({"product_id": product.id, "product_uom": product.uom_id.id,
-            "product_uom_qty": 1, "quantity": 1, "location_id": zone.id,
+            "product_uom_qty": 1, "location_id": zone.id,
             "location_dest_id": self.env.ref("stock.stock_location_customers").id, "state": "done"})
         self.env["stock.move.line"].create({"move_id": move.id, "product_id": product.id,
             "product_uom_id": product.uom_id.id, "quantity": 1, "location_id": zone.id,
