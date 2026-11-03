@@ -95,3 +95,62 @@ test("running mode toggle, demo mode geofence bypass, and preservation on switch
     });
     await expect(liveStart).toBeDisabled();
 });
+
+for (const closed of [false, true]) {
+    test(`DEMO opens a new WITA day after ${closed ? "closed" : "active"} attendance`, async ({
+        page,
+    }) => {
+        await page.clock.install({ time: new Date("2026-11-03T00:00:00Z") });
+        await page.goto("./");
+        await page.locator(".running-mode-pill").click();
+        await expect(page.locator(".running-mode-pill")).toHaveText("DEMO");
+        await checkIn(page);
+        if (closed) {
+            await page
+                .getByRole("button", { name: "Clock out", exact: true })
+                .click();
+            await page
+                .getByRole("button", {
+                    name: "Ambil Lokasi Presisi",
+                    exact: true,
+                })
+                .click();
+            await expect(
+                page.getByRole("region", { name: "Lokasi dan foto absensi" }),
+            ).toHaveAttribute("aria-busy", "false");
+            await page
+                .getByLabel("Alamat / nama lokasi")
+                .fill("Kantor demo Manado");
+            await page
+                .getByRole("button", { name: "Buka Kamera", exact: true })
+                .click();
+            await page
+                .getByLabel("Buka Kamera Perangkat")
+                .setInputFiles("public/icon-192.png");
+            await expect(
+                page.getByAltText("Foto absensi dengan watermark"),
+            ).toBeVisible();
+            await page
+                .getByRole("button", { name: "Check out", exact: true })
+                .click();
+            await expect(page.getByRole("dialog")).toHaveCount(0);
+            await expect(
+                page.getByRole("button", { name: /Buat order/ }),
+            ).toBeDisabled();
+        }
+        await page.clock.setFixedTime(new Date("2026-11-03T16:00:01Z"));
+        await page.reload();
+        await expect(page.locator(".quick-attendance-record")).toHaveCount(0);
+        await checkIn(page);
+        await expect(
+            page.getByText("Sesi aktif", { exact: true }),
+        ).toBeVisible();
+        await expect(
+            page.getByRole("button", { name: /Buat order/ }),
+        ).toBeEnabled();
+        await page.reload();
+        await expect(
+            page.getByText("Sesi aktif", { exact: true }),
+        ).toBeVisible();
+    });
+}

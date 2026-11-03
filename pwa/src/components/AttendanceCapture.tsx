@@ -107,7 +107,7 @@ export function AttendanceCapture({
         setError("");
         changed.current(undefined);
         try {
-            if (Date.now() - fix.timestamp > 60000)
+            if (!isDemoMode() && Date.now() - fix.timestamp > 60000)
                 throw new Error(
                     "Lokasi kedaluwarsa. Ambil lokasi presisi, lalu foto ulang.",
                 );

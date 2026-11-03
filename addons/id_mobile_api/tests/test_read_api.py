@@ -1,3 +1,4 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 from odoo import Command
@@ -74,6 +75,55 @@ class TestMobileRead(MobileFixture, TransactionCase):
     def service(self, user=None):
         actor = user or self.mobile
         return self.env["id.mobile.workday"].with_user(actor).with_context(allowed_company_ids=actor.company_ids.ids)
+
+    def test_rollover_uses_past_plan_instead_of_future(self):
+        day = business_date()
+        self.assignment.business_date = day - timedelta(days=1)
+        future_outlet = self.env["res.partner"].create({
+            "name": "Future route only", "company_id": self.company.id,
+        })
+        future = self.assignment.copy({
+            "business_date": day + timedelta(days=2), "outlet_ids": [Command.set(future_outlet.ids)],
+        })
+        current, actual_day = self.service()._current_assignment()
+        self.assertEqual(actual_day, day)
+        self.assertEqual(current.outlet_ids, self.outlet)
+        self.assertEqual(current.product_ids, self.assignment.product_ids)
+        self.assertEqual(current.warehouse_id, self.warehouse)
+        self.assertEqual(current.pricelist_id, self.pricelist)
+        self.assertEqual(current.company_id, self.company)
+        self.assertEqual(current.user_id, self.mobile)
+        again, _day = self.service()._current_assignment()
+        self.assertEqual(again, current)
+        self.assertEqual(future.business_date, day + timedelta(days=2))
+        self.assertEqual(future.outlet_ids, future_outlet)
+
+    def test_rollover_future_only_does_not_create_today(self):
+        day = business_date()
+        self.assignment.business_date = day + timedelta(days=2)
+        with self.assertRaises(AccessError):
+            self.service()._current_assignment()
+        self.assertEqual(self.env["id.mobile.workday"].search_count([
+            ("user_id", "=", self.mobile.id), ("company_id", "=", self.company.id),
+            ("business_date", "=", day),
+        ]), 0)
+
+    def test_rollover_preserves_existing_today(self):
+        current, _day = self.service()._current_assignment()
+        self.assertEqual(current, self.assignment)
+        self.assertEqual(self.service()._current_assignment()[0], self.assignment)
+
+    def test_rollover_inactive_today_is_not_recreated_or_reenabled(self):
+        day = business_date()
+        self.assignment.copy({"business_date": day - timedelta(days=1)})
+        self.assignment.active = False
+        with self.assertRaisesRegex(AccessError, "inactive"):
+            self.service()._current_assignment()
+        self.assertFalse(self.assignment.active)
+        self.assertEqual(self.env["id.mobile.workday"].with_context(active_test=False).search_count([
+            ("user_id", "=", self.mobile.id), ("company_id", "=", self.company.id),
+            ("business_date", "=", day),
+        ]), 1)
 
     def extra_product(self, code):
         # Create a persisted second variant explicitly. product.product.copy()

@@ -4,7 +4,12 @@ import { SalesVisits } from "../src/domain/visits";
 import { FieldStore } from "../src/storage/store";
 import { Outbox } from "../src/domain/outbox";
 import { MockProvider } from "../src/data/mock";
-import { MorningSimulation } from "../src/domain/morning";
+import {
+    MorningSimulation,
+    MORNING_KEY,
+    MORNING_HISTORY_PREFIX,
+    morningReady,
+} from "../src/domain/morning";
 import { ownerKey } from "../src/domain/contracts";
 import { makeVisitPhoto } from "./visit-fixtures";
 import { describe, expect, it, beforeEach, vi } from "vitest";
@@ -59,6 +64,108 @@ globalThis.window = {
 } as unknown as Window & typeof globalThis;
 
 describe("Running Mode Gate (DEMO | LIVE)", () => {
+    it.each([
+        [true, "live"],
+        [false, "live"],
+        [true, "demo"],
+        [false, "demo"],
+    ] as const)(
+        "rolls a DEMO day forward (closed=%s, nextMode=%s) without losing history or pending commands",
+        async (closed, nextMode) => {
+            vi.useFakeTimers({ toFake: ["Date"] });
+            vi.setSystemTime(new Date("2026-10-27T00:00:00Z"));
+            vi.stubGlobal("navigator", { onLine: true });
+            const testStore = new FieldStore(crypto.randomUUID());
+            try {
+                setRunningMode("demo");
+                const provider = new MockProvider("sales");
+                const identity = await provider.bootstrap();
+                const owner = ownerKey(identity);
+                const service = new MorningSimulation(
+                    testStore,
+                    identity,
+                    provider,
+                );
+                const first = await service.openDay();
+                if (closed) await service.clockOut();
+                const prior = await testStore.draft(owner, MORNING_KEY);
+                const engine = new Outbox(testStore, owner, provider);
+                await engine.enqueue(
+                    "hris.leave.request",
+                    { reason: "Pending day one" },
+                    "Pending day one",
+                );
+                const pending = await testStore.list(owner);
+                expect(pending).toHaveLength(1);
+
+                vi.setSystemTime(new Date("2026-10-27T16:00:01Z"));
+                setRunningMode(nextMode);
+                expect(await service.restore()).toBeUndefined();
+                expect(morningReady(first, owner)).toBe(false);
+                const next = await service.openDay();
+                expect(next.businessDate).toBe("2026-10-28");
+                expect(next.clockOutAt).toBeUndefined();
+                expect(next.sessionId).not.toBe(first.sessionId);
+                expect(morningReady(next, owner)).toBe(true);
+                expect(
+                    await testStore.draft(
+                        owner,
+                        `${MORNING_HISTORY_PREFIX}2026-10-27:${first.sessionId}`,
+                    ),
+                ).toEqual(prior);
+                expect(await testStore.list(owner)).toEqual(pending);
+            } finally {
+                await testStore.close();
+                vi.useRealTimers();
+                vi.unstubAllGlobals();
+            }
+        },
+    );
+
+    it.each([9_999, 10_001])(
+        "LIVE snapshot future skew boundary: %s ms",
+        async (ahead) => {
+            vi.useFakeTimers({ toFake: ["Date"] });
+            vi.setSystemTime(new Date("2026-10-27T00:00:00Z"));
+            vi.stubGlobal("navigator", { onLine: true });
+            setRunningMode("live");
+            const testStore = new FieldStore(crypto.randomUUID());
+            try {
+                const provider = new MockProvider("sales");
+                const identity = await provider.bootstrap();
+                const service = new MorningSimulation(
+                    testStore,
+                    identity,
+                    provider,
+                );
+                await service.acceptAttendance();
+                const snapshot = await provider.snapshot();
+                vi.spyOn(provider, "snapshot").mockResolvedValueOnce({
+                    ...snapshot,
+                    updatedAt: new Date(Date.now() + ahead).toISOString(),
+                });
+                if (ahead <= 10_000) {
+                    expect(
+                        morningReady(await service.open(), ownerKey(identity)),
+                    ).toBe(true);
+                } else {
+                    await expect(service.open()).rejects.toThrow(
+                        "belum lengkap",
+                    );
+                    expect(
+                        morningReady(
+                            await service.restore(),
+                            ownerKey(identity),
+                        ),
+                    ).toBe(false);
+                }
+            } finally {
+                await testStore.close();
+                vi.useRealTimers();
+                vi.unstubAllGlobals();
+            }
+        },
+    );
     beforeEach(() => {
         storeMap.clear();
         vi.restoreAllMocks();
@@ -472,6 +579,63 @@ describe("Running Mode Gate (DEMO | LIVE)", () => {
         } finally {
             await testStore.close();
             vi.useRealTimers();
+            vi.unstubAllGlobals();
+        }
+    });
+
+    it("preserves DEMO morning session provenance across DEMO to LIVE mode switch and tolerates network skew", async () => {
+        vi.stubGlobal("navigator", { onLine: true });
+        const testStore = new FieldStore();
+        try {
+            // 1. In DEMO mode, accept attendance and open morning session
+            setRunningMode("demo");
+            expect(isDemoMode()).toBe(true);
+
+            const provider = new MockProvider("sales");
+            const identity = await provider.bootstrap();
+            const service = new MorningSimulation(
+                testStore,
+                identity,
+                provider,
+            );
+
+            await service.acceptAttendance();
+            const session = await service.open();
+            expect(session.demo_unrestricted).toBe(true);
+            expect(session.sessionId).toBeTruthy();
+
+            // 2. Switch mode to LIVE
+            setRunningMode("live");
+            expect(isDemoMode()).toBe(false);
+
+            // 3. Restore in LIVE mode: must succeed and remain ready
+            const restored = await service.restore();
+            expect(restored).toBeDefined();
+            expect(restored?.sessionId).toBe(session.sessionId);
+            expect(restored?.demo_unrestricted).toBe(true);
+
+            // 4. Test network skew tolerance (e.g. 2 seconds server timestamp ahead of client openedAt)
+            const skewedSnapshot = {
+                ...session.snapshot!,
+                updatedAt: new Date(
+                    Date.parse(session.openedAt!) + 2000,
+                ).toISOString(),
+            };
+            const skewedRecord = {
+                ...session,
+                snapshot: skewedSnapshot,
+                demo_unrestricted: undefined, // strictly LIVE record
+            };
+            await testStore.draft(
+                ownerKey(identity),
+                "morning-session-v1",
+                skewedRecord,
+            );
+            const restoredLive = await service.restore();
+            expect(restoredLive).toBeDefined();
+            expect(restoredLive?.sessionId).toBe(session.sessionId);
+        } finally {
+            await testStore.close();
             vi.unstubAllGlobals();
         }
     });

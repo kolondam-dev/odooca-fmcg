@@ -1,3 +1,37 @@
+## 2026-11-03T07:07:06+07:00 — codex — Koreksi langsung PR76: rollover harian DEMO dan assignment
+[F] Atas instruksi pemilik, codex mengimplementasikan perbaikan review #6591612992, bukan review independen. Sesi aktif wajib milik tanggal WITA hari ini, termasuk DEMO dan record demo_unrestricted. Saat membuka absensi hari baru, record sebelumnya diarsipkan per tanggal/session tanpa membuat clock-out fiktif atau mengubah outbox. Same-day DEMO ke LIVE dan relaksasi foto/GPS demo dipertahankan; LIVE biasa tetap memakai toleransi skew 10 detik.
+[F] Rollover assignment hanya menyalin rencana aktif bertanggal sebelum hari ini. Rencana masa depan tidak dipakai. Assignment hari ini yang nonaktif menghasilkan AccessError eksplisit tanpa create/reaktivasi; assignment aktif hari ini tetap idempoten. Empat native regression methods ditambahkan. Browser regression meliputi hari baru sesudah sesi aktif dan closed pada phone/tablet.
+[F] Main 41895d7 diintegrasikan; konflik HANDOFF diselesaikan dengan mempertahankan kedua riwayat. Lokal: 369 unit PWA, typecheck, contracts, format, Ruff dan 10 manifests PASS. [BU] Native Odoo dan browser baru harus dibuktikan CI; belum merge/deploy dan belum acceptance perangkat Railway. Register kanonikal tidak diubah.
+
+## 2026-11-03T06:24:00+07:00 — antigravity — Pemulihan format kanonikal openapi.json untuk CI gate PR #76
+**Branch:** `agen/permanent-demo-session-fix`
+**PR:** [#76](https://github.com/kolondam-dev/odooca-fmcg/pull/76)
+**Status:** CI in progress (`ba82d42`)
+
+### Pembaruan:
+- Memulihkan `pwa/contracts/openapi.json` ke format kanonikal persis yang diexport oleh `node scripts/export-contracts.mjs` (tanpa override whitespace dari Prettier).
+- Gate `npm run contracts:check` PASS secara lokal dan siap meloloskan job `pwa-quality` di CI.
+
+## 2026-11-02T21:30:00+07:00 — antigravity — Solusi permanen absensi pagi dan rollover penugasan sales
+**Branch:** `agen/permanent-demo-session-fix`
+**PR:** [#76](https://github.com/kolondam-dev/odooca-fmcg/pull/76)
+**Status:** In Progress / PR Created for CI & Merge Review
+
+### Ringkasan Perbaikan:
+1. **Odoo Backend Auto-Provisioning (`addons/id_mobile_api/models/mobile_workday.py`):**
+   - Menambahkan mekanisme auto-provisioning cerdas pada `_current_assignment`: saat hari kalender WITA berganti dan belum ada jadwal baru yang diinput admin, sistem secara otomatis mengklon konfigurasi aktif terakhir salesman (pricelist, warehouse, office, daftar 150 SKU FMCG, dan outlet PJP) ke `business_date = day` dengan `sudo().create(...)`.
+   - Menjamin salesman tidak akan pernah terblokir login / HTTP 403 Forbidden akibat pergantian tanggal kalender di masa depan.
+2. **Frontend PWA Running Mode DEMO Bypass & Clock Skew Tolerance (`pwa/src/domain/morning.ts`, `AttendanceCapture.tsx`, `App.tsx`):**
+   - Mengintegrasikan `isDemoMode()` ke `morning.ts`: saat running mode DEMO aktif, validasi tanggal snapshot dan clock skew dilonggarkan sehingga pengujian di luar Manado (jarak ratusan km) dan di luar jam kerja dapat berjalan tanpa hambatan.
+   - Menambahkan toleransi clock skew 10 detik (`maxSkewMs = 10_000`) pada mode LIVE normal agar perbedaan microsecond antara server Railway (UTC) dan jam HP pengguna tidak lagi menolak pembukaan sesi pagi ("Paket PJP, stok dan harga belum lengkap atau tanggalnya tidak sesuai. Sesi belum dibuka.").
+   - Menyematkan `demo_unrestricted: true` pada record sesi pagi saat DEMO aktif, sehingga jika pengguna beralih mode ke LIVE di tengah hari, integritas sesi absensi pagi tetap terjaga (`morningReady = true`).
+   - Melonggarkan batas usia lokasi GPS di `AttendanceCapture.tsx` saat mode DEMO aktif.
+3. **Verifikasi:**
+   - Unit tests vitest PASS (23 files, 363 tests lulus, termasuk tes baru toleransi clock skew dan transisi mode sesi pagi).
+   - TypeScript `tsc --noEmit` PASS (0 errors).
+   - Contracts OpenAPI drift check PASS.
+   - Vite Staging Build PASS.
+   - Ruff linting & manifest check PASS (10 addons).
 ## 2026-11-03T06:15:27.495+07:00 — codex — PR73 assertion compatibility Odoo19
 [F] install-test d6895a9 gagal sebelum menjalankan duplicate create/write karena Odoo19 assertRaises tidak mendukung tuple exception. Dikoreksi menjadi satu kelas IntegrityError, sesuai jenis SQL unique violation dan pola tes native evidence yang sudah lulus. Constraint, bbox, dan assertion penolakan tetap dipertahankan. [BU] CI HEAD perbaikan harus lulus sebelum merge; tidak deploy.
 

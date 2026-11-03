@@ -217,3 +217,8 @@
 [2026-11-03T06:15:27.495+07:00] [INFO] PR73 fix Odoo19 assertRaises API compatibility
 - Ganti tuple exception menjadi IntegrityError spesifik pada duplicate create/write; hapus import ValidationError tak terpakai.
 - Error lama berasal dari test wrapper, bukan bukti constraint gagal. CI final wajib lulus sebelum merge; tidak deploy.
+
+[2026-11-03T07:07:06+07:00] [INFO] Koreksi langsung PR76 berotorisasi pemilik
+- Batasi sesi ke hari WITA, arsipkan record hari sebelumnya tanpa mutasi antrean/clock-out; tambahkan 6 unit dan 2 browser scenarios (phone/tablet).
+- Assignment hanya rollover dari masa lalu; inactive-today ditolak eksplisit; tambah 4 native regression methods dan terjemahan.
+- Integrasikan main 41895d7, pertahankan riwayat HANDOFF kedua cabang. 369 unit PWA/typecheck/contracts/format/Ruff/manifests PASS; CI native/browser/upgrade menunggu. Tidak merge/deploy.

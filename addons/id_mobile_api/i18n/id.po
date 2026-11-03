@@ -148,3 +148,8 @@ msgstr "Kantor memerlukan koordinat valid, catatan sumber, dan radius antara 5 d
 #: code:addons/id_mobile_api/models/mobile_office.py:0
 msgid "The assigned office is inactive."
 msgstr "Kantor pada penugasan tidak aktif."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_workday.py:0
+msgid "Today's assignment is inactive; contact your supervisor."
+msgstr "Penugasan hari ini tidak aktif; hubungi supervisor Anda."
