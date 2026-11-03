@@ -128,6 +128,7 @@ class SalesProductivity(models.AbstractModel):
         data["outlet_activity"] = {"current": len(current), "previous": len(prior),
             "retained": len(current & prior), "entered": len(current - prior), "exited": len(prior - current),
             "retention": _ratio(len(current & prior), len(prior))}
+        data["order_margin"] = self.env["id.sales.order.margin"]._for_orders(data["domains"]["orders"])
         data["segment_targets"] = self._segment_targets(data["period"], data.pop("segment_amounts"),
                                                         salesman_ids or [], channel_ids or [])
         return data

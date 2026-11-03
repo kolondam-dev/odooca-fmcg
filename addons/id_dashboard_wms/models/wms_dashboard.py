@@ -220,8 +220,13 @@ class WmsDashboard(models.TransientModel):
             })
         fleet_list.sort(key=lambda x: x["cost_ratio"] if x["cost_ratio"] is not None else -1, reverse=True)
 
+        cohort = self.env["id.delivery.cohort"]._data(
+            kwargs.get("cohort_start"), kwargs.get("cohort_end"), vehicle_id)
         return {
+            "assets": self.env["id.asset.utilization"]._data(cohort["start"], cohort["end"], vehicle_id),
+            "cohort": cohort,
             "currency": self.env.company.currency_id.name,
+            "currency_digits": self.env.company.currency_id.decimal_places,
             "domains": {"stock": cat_domain, "expiry": expiry_domain, "deliveries": deliv_domain,
                         "fleet": fleet_domain, "rejections": deliv_domain +
                         ["|", ("reject_reason", "!=", "not_recorded"), ("state", "=", "cancel")]},

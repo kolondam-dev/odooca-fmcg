@@ -372,3 +372,116 @@ msgstr "Periode target aktif untuk company dan segmen yang sama tidak boleh tump
 #: code:addons/id_dashboard_sales/models/sales_productivity.py:0
 msgid "Net SO Segment Targets"
 msgstr "Target SO Bersih per Segmen"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "To"
+msgstr "Ke"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Available to accounting roles"
+msgstr "Tersedia untuk peran akuntansi"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Traceable closed-order margin"
+msgstr "Margin order selesai yang dapat ditelusuri"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Order-date cohort; current posted invoice revenue in company currency versus linked delivery cost journals. Only fully delivered and invoiced stock orders without returns, credits, service lines or ambiguous shared journals qualify. No standard-cost fallback. Delivery expenses and fleet maintenance are not included."
+msgstr "Cohort tanggal order; pendapatan invoice terposting dalam mata uang perusahaan dibanding jurnal biaya pengiriman terkait. Hanya order stok terkirim dan tertagih penuh tanpa retur, kredit, jasa atau jurnal bersama yang ambigu. Tanpa substitusi biaya standar. Biaya operasional pengiriman dan perawatan armada belum termasuk."
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Covered orders:"
+msgstr "Order tercakup:"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Covered margin:"
+msgstr "Margin tercakup:"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Order"
+msgstr "Order"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Posted revenue"
+msgstr "Pendapatan terposting"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Delivery COGS"
+msgstr "HPP pengiriman"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Margin"
+msgstr "Margin"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Coverage"
+msgstr "Cakupan"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Linked posted sources"
+msgstr "Sumber terposting terkait"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Rows shown:"
+msgstr "Baris ditampilkan:"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid ". Totals cover all qualifying orders in the selected cohort."
+msgstr ". Total mencakup seluruh order yang memenuhi syarat pada cohort terpilih."
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "Order margin journal sources"
+msgstr "Jurnal sumber margin order"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "Requires fully delivered/invoiced stock lines without credits"
+msgstr "Memerlukan baris stok terkirim/tertagih penuh tanpa kredit"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "Missing or ambiguous posted delivery cost source"
+msgstr "Sumber biaya pengiriman terposting kosong atau ambigu"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "Not available"
+msgstr "Belum tersedia"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/order_margin.py:0
+msgid "Too many orders for cost attribution; narrow the period."
+msgstr "Terlalu banyak order untuk atribusi biaya; persempit periode."

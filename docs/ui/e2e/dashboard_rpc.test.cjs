@@ -56,3 +56,40 @@ test('Sales money uses normalized company currency and preserves decimal precisi
     assert.equal(d.money(12.5),'USD 12,50');
     d.state.data={currency:'IDR',currency_digits:0};assert.equal(d.money(12500),'Rp 12.500');
 });
+
+test('historical ledger drilldown uses server snapshot scope and blocks stale clicks',()=>{
+    const {d}=dashboard('MonetaryDashboard','id_dashboard_monetary/static/src/js/monetary_dashboard.js');
+    const domain=[['date','<=','2025-01-31'],['company_id','in',[1]]];
+    d.state.data={ar_history:{available:true,domain}};
+    let action;d.action={doAction:a=>{action=a;}};
+    d.openHistoricalLedger();assert.equal(action.domain,domain);
+    action=null;d.state.loading=true;d.openHistoricalLedger();assert.equal(action,null);
+});
+test('cohort and margin source drilldowns preserve exact server record ids',()=>{
+    const {d}=dashboard('WmsDashboard','id_dashboard_wms/static/src/js/wms_dashboard.js');
+    d.state.data={cohort:{source_ids:[2,3]}};let action;d.action={doAction:a=>{action=a;}};
+    d.openCohort();assert.equal(JSON.stringify(action.domain),'[["id","in",[2,3]]]');
+    const {d:s}=dashboard('SalesProductivity','id_dashboard_sales/static/src/js/sales_productivity.js');
+    s.action=d.action;s.openMarginSources({available:true,invoice_ids:[4],journal_ids:[5]});
+    assert.equal(JSON.stringify(action.domain),'[["id","in",[4,5]]]');
+    action=null;s.openMarginSources({available:false});assert.equal(action,null);
+});
+test('historical AR amounts preserve company-currency precision',()=>{
+    const {d}=dashboard('MonetaryDashboard','id_dashboard_monetary/static/src/js/monetary_dashboard.js');
+    d.state.data={currency:'USD',currency_digits:2};assert.equal(d.money(12.34),'USD 12,34');
+    d.state.data={currency:'IDR',currency_digits:0};assert.equal(d.money(12),'Rp 12');
+});
+test('asset units preserve small volumes and fractional currency',()=>{
+    const {d}=dashboard('WmsDashboard','id_dashboard_wms/static/src/js/wms_dashboard.js');
+    d.state.data={currency:'USD',currency_digits:2};
+    assert.equal(d.physical(.0123),'0,0123');assert.equal(d.physical(.00001),'<0,0001');
+    assert.equal(d.assetMoney(.6),'USD 0,60');assert.equal(d.physical(null),'—');
+});
+test('asset source drilldowns preserve scope and block stale clicks',()=>{
+    const {d}=dashboard('WmsDashboard','id_dashboard_wms/static/src/js/wms_dashboard.js');
+    let a;d.action={doAction:v=>{a=v;}};
+    const domain=[['company_id','=',1],['location_id','child_of',3]];
+    d.state.data={assets:{trip_domain:domain}};d.openAssetQuants({domain});assert.equal(a.domain,domain);
+    d.openAssetTrip();assert.equal(a.domain,domain);
+    a=null;d.state.loading=true;d.openAssetTrip(3);assert.equal(a,null);
+});

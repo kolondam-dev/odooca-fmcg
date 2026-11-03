@@ -49,6 +49,7 @@ export class WmsDashboard extends Component {
             error: null,
             fmcgCategory: "",
             vehicleId: null,
+            cohortStart: "", cohortEnd: "",
             filters: { categories: [], vehicles: [] },
             data: null,
             activeTab: "expiry", // 'expiry', 'rejections', 'categories', 'fleet'
@@ -73,6 +74,7 @@ export class WmsDashboard extends Component {
             const data = await this.orm.call("id.wms.dashboard", "get_data", [], {
                 fmcg_category: this.state.fmcgCategory || false,
                 vehicle_id: this.state.vehicleId || false,
+                cohort_start: this.state.cohortStart || null, cohort_end: this.state.cohortEnd || null,
             });
             if (version === this.requestVersion) this.state.data = data;
         } catch (err) {
@@ -81,6 +83,47 @@ export class WmsDashboard extends Component {
             if (version === this.requestVersion) this.state.loading = false;
         }
     }
+
+    onCohortDate(ev) { this.state[ev.target.dataset.field] = ev.target.value; this.load(); }
+    assetState(value) {
+        return {draft: _t("Draft"), departed: _t("Departed"), closed: _t("Closed")}[value] || _t("Not recorded");
+    }
+    physical(v) {
+        if (v === null || v === undefined) return "—";
+        if (v > 0 && v < 0.0001) return "<0,0001";
+        return new Intl.NumberFormat("id-ID", {maximumFractionDigits: 4}).format(v);
+    }
+    assetMoney(v) {
+        if (v === null || v === undefined) return "—";
+        const c = this.state.data?.currency || "IDR", digits = this.state.data?.currency_digits ?? 2;
+        return `${c === "IDR" ? "Rp" : c} ${new Intl.NumberFormat("id-ID", {
+            minimumFractionDigits: digits, maximumFractionDigits: digits}).format(v)}`;
+    }
+    openAssetTrip(id) {
+        if (this.state.loading || !this.state.data?.assets) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Load and Trip Records"),
+            res_model: "id.asset.trip", views: id ? [[false, "form"]] : [[false, "list"], [false, "form"]],
+            ...(id ? {res_id: id} : {domain: this.state.data.assets.trip_domain})});
+    }
+    openAssetQuants(row) {
+        if (this.state.loading || !this.state.data?.assets) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Physical stock positions"),
+            res_model: "stock.quant", views: [[false, "list"]], domain: row.domain});
+    }
+    openAssetCapacity() {
+        if (!this.state.loading) this.action.doAction("id_dashboard_wms.action_asset_warehouses");
+    }
+    openCohort() {
+        if (this.state.loading || !this.state.data?.cohort) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Delivery cohort source"),
+            res_model: "stock.picking", views: [[false, "list"], [false, "form"]],
+            domain: [["id", "in", this.state.data.cohort.source_ids]]});
+    }
+    cohortReason(key) {
+        return {store_closed: _t("Store closed / delivery refused"), packaging_damaged: _t("Packaging damaged"),
+            near_expiry: _t("Near expiry"), wrong_sku_qty: _t("Wrong SKU or quantity")}[key] || _t("Not recorded");
+    }
+    hours(value) { return value === null || value === undefined ? "—" : NF1.format(value); }
 
     onCategoryChange(ev) {
         this.state.fmcgCategory = ev.target.value;
