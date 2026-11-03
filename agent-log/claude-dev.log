@@ -95,3 +95,11 @@
 
 [2026-11-02T11:40:32+07:00] [INFO] PR-2
 - Task managed by claude-dev agent at 2026-11-02T11:40:32+07:00
+
+[2026-11-03T08:24:05+07:00] [INFO] PR-4 audit coverage outlet vs poligon kecamatan
+- scripts/ops/audit_geo_coverage.py (baru, baca-saja): 354 outlet diuji terhadap 171 poligon; 44 di luar (Kawangkoan 4, Wenang 11, Wanea 29), tidak ada yang jatuh ke poligon kecamatan lain.
+- Pemetaan kode legacy diambil dari seed id_district_data.xml dan dicek silang dengan data/master/legacy_geo_mapping.csv bila ada; 0 konflik.
+- Temuan kode pos dilaporkan tanpa diubah: 40 dari 354 zip partner dan 9 dari 17 kode pos kelurahan legacy berbeda dari master (D4=A).
+- docs/reviews/GEO_COVERAGE_AUDIT_2026-11-03.md dihasilkan skrip; tests/test_geo_coverage_audit.py 7/7 PASS termasuk uji laporan tidak basi dan masukan tidak berubah.
+- Tidak ada perubahan data seed/registry/DB; tidak merge/deploy.
+- Task managed by claude-dev agent at 2026-11-03T08:24:05+07:00
