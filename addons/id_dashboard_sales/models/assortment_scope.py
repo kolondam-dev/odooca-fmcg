@@ -68,7 +68,8 @@ class AssortmentScope(models.Model):
         from datetime import date, timedelta
         for scope in scopes:
             frozen = json.loads(scope.frozen_json)
-            outlets = self.env["res.partner"].with_context(active_test=False).search([("id", "in", frozen["outlets"])]).ids
+            outlets = self.env["res.partner"].with_context(active_test=False).search([
+                ("id", "in", frozen["outlets"])]).ids
             products = self.env["product.product"].with_context(active_test=False).search([
                 ("id", "in", frozen["products"])]).ids
             if len(outlets) != len(frozen["outlets"]) or len(products) != len(frozen["products"]):
