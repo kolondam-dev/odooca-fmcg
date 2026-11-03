@@ -175,7 +175,7 @@ def audit(root, with_geometry=True):
         point = point_factory(longitude, latitude)
         if polygons[index[kode]].covers(point):
             continue
-        containers = [codes[position] for position in tree.query(point, predicate="covers")]
+        containers = sorted(codes[position] for position in tree.query(point, predicate="covered_by"))
         report["outside"].append(
             {
                 "ref": partner["ref"],

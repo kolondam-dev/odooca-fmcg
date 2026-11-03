@@ -3,8 +3,8 @@
 Yang dijaga:
 
 1. Audit dapat direproduksi: 354 outlet, semuanya punya pemetaan kode, 44 di luar
-   poligon kecamatan yang ditugaskan (sebaran 4/11/29), tidak ada yang jatuh ke
-   poligon kecamatan lain.
+   poligon kecamatan yang ditugaskan (sebaran 4/11/29): 38 di kecamatan lain,
+   6 di luar seluruh poligon.
 2. Audit **tidak menulis** apa pun ke berkas masukan (D4=A: laporan saja).
 3. Laporan markdown yang di-commit identik dengan hasil generator, sehingga tidak
    pernah basi.
@@ -17,6 +17,7 @@ Butuh `shapely`; tanpa pustaka itu uji geometri di-skip (bukan gagal).
 import hashlib
 import importlib.util
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,8 +68,8 @@ class GeoCoverageAuditTests(unittest.TestCase):
             self.report["outside_by_district"],
             {"71.02.12": 4, "71.71.04": 11, "71.71.07": 29},
         )
-        self.assertEqual(self.report["outside_without_any_polygon"], 44)
-        self.assertEqual(self.report["outside_inside_other_district"], 0)
+        self.assertEqual(self.report["outside_without_any_polygon"], 6)
+        self.assertEqual(self.report["outside_inside_other_district"], 38)
         refs = {row["ref"] for row in outside}
         self.assertEqual(len(refs), 44)
         self.assertIn("CUST-GT-69", refs)
@@ -101,6 +102,52 @@ class GeoCoverageAuditTests(unittest.TestCase):
         self.assertEqual(report["partners_mapped"], 354)
         self.assertEqual(report["outside"], [])
         self.assertEqual(len(report["postal_mismatch"]), 40)
+
+    def test_08_other_district_and_boundary_are_not_outside_all(self):
+        from shapely.geometry import Point, shape
+        features = self.audit.load_geometry(ROOT / self.audit.GEOJSON)
+        other = next(f for f in features if f["properties"]["code"] == "71.71.06")
+        geometry = shape(other["geometry"])
+        part = max(geometry.geoms, key=lambda g: g.area) if hasattr(geometry, "geoms") else geometry
+        boundary = Point(part.exterior.coords[0])
+        original = self.audit.read_csv
+        for point in (geometry.representative_point(), boundary):
+            self.assertTrue(geometry.covers(point))
+            rows = original(ROOT / self.audit.PARTNERS)
+            target = next(r for r in rows if r["ref"] == "CUST-GT-69")
+            target.update(latitude=str(point.y), longitude=str(point.x))
+            with patch.object(self.audit, "read_csv", side_effect=lambda path:
+                    rows if Path(path) == ROOT / self.audit.PARTNERS else original(path)):
+                result = self.audit.audit(ROOT)
+            finding = next(r for r in result["outside"] if r["ref"] == target["ref"])
+            self.assertIn("71.71.06", finding["containers"])
+            self.assertEqual(result["outside_inside_other_district"], 38)
+            self.assertEqual(result["outside_without_any_polygon"], 6)
+
+    def test_09_assigned_interior_and_boundary_are_covered(self):
+        from shapely.geometry import Point, shape
+        features = self.audit.load_geometry(ROOT / self.audit.GEOJSON)
+        own = shape(next(f for f in features if f["properties"]["code"] == "71.02.12")["geometry"])
+        part = max(own.geoms, key=lambda g: g.area) if hasattr(own, "geoms") else own
+        original = self.audit.read_csv
+        for point in (own.representative_point(), Point(part.exterior.coords[0])):
+            rows = original(ROOT / self.audit.PARTNERS)
+            next(r for r in rows if r["ref"] == "CUST-GT-69").update(
+                latitude=str(point.y), longitude=str(point.x))
+            with patch.object(self.audit, "read_csv", side_effect=lambda path:
+                    rows if Path(path) == ROOT / self.audit.PARTNERS else original(path)):
+                result = self.audit.audit(ROOT)
+            self.assertNotIn("CUST-GT-69", {r["ref"] for r in result["outside"]})
+            self.assertEqual(len(result["outside"]), 43)
+
+    def test_10_containers_match_direct_polygon_oracle(self):
+        from shapely.geometry import Point, shape
+        features = self.audit.load_geometry(ROOT / self.audit.GEOJSON)
+        polygons = [(f["properties"]["code"], shape(f["geometry"])) for f in features]
+        for row in self.report["outside"]:
+            point = Point(row["longitude"], row["latitude"])
+            expected = {code for code, polygon in polygons if polygon.covers(point)}
+            self.assertEqual(set(row["containers"]), expected, row["ref"])
 
 
 if __name__ == "__main__":

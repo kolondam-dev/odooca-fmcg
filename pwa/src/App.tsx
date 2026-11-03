@@ -105,11 +105,19 @@ export function App() {
         const ticket = ++generation.current;
         const source = new HttpProvider({ readOnly: true });
         const identity = await source.bootstrap();
-        const snapshot = await source.snapshot();
         const { MockProvider } = await import("./data/mock");
         // Authentication, identity and work data are real. Existing transaction
         // simulation stays local until the command API has its own acceptance.
-        const provider = new MockProvider("sales", true, source);
+        const actor =
+            identity.roles.includes("delivery") &&
+            !identity.roles.includes("sales")
+                ? "delivery"
+                : identity.roles.includes("delivery") &&
+                    identity.roles.includes("sales")
+                  ? "canvass"
+                  : "sales";
+        const provider = new MockProvider(actor, true, source);
+        const snapshot = await provider.snapshot();
         if (ticket === generation.current)
             setBoot({ identity, snapshot, provider });
     }

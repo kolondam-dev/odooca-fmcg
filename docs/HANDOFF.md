@@ -1,22 +1,22 @@
-## 2026-11-03T08:24:05+07:00 — claude-dev — PR-4: audit coverage outlet vs poligon kecamatan (laporan)
-**Branch:** `agen/geo-coverage-audit` (basis `origin/main` = `69149f6`)
-**Status:** siap PR; menunggu PR-3 (#78) untuk rujukan loader
+## 2026-11-03T08:12:00+07:00 — antigravity — Fitur menu Delivery untuk login driver-01
+**Branch:** `agen/pwa-driver-role-menu`
+**PR:** [#77](https://github.com/kolondam-dev/odooca-fmcg/pull/77)
+**Status:** In Progress / PR Created for CI & Merge Review
 
-### Perubahan:
-- `scripts/ops/audit_geo_coverage.py` (baru, baca-saja): menguji 354 outlet `data/seed/partners_354.csv` terhadap 171 poligon `data/geo/sulut_districts.geojson` (shapely + STRtree). Menghasilkan markdown dan JSON opsional; `--fail-on-outside` tersedia untuk gate opsional.
-- `docs/reviews/GEO_COVERAGE_AUDIT_2026-11-03.md` (baru): laporan 44 outlet di luar poligon — Kawangkoan 4, Wenang 11, Wanea 29 — dan **0** yang jatuh ke poligon kecamatan lain. Semua 44 berada di luar seluruh poligon Sulut (koordinat sintetis).
-- `tests/test_geo_coverage_audit.py` (baru, 7 uji): angka baseline, 0 konflik pemetaan, laporan yang di-commit identik dengan generator, masukan tidak berubah (sha256), mode tanpa geometri.
-
-### Keputusan yang dijaga:
-- [F] D4=A: temuan dilaporkan, **tidak ada** auto-edit koordinat outlet maupun kode pos.
-- [F] Pemetaan kode legacy diambil dari seed `id_district_data.xml` (ada di `main`) dan dicek silang dengan `data/master/legacy_geo_mapping.csv` (PR-3) bila tersedia — laporan identik sebelum/sesudah PR-3 mendarat.
-- [F] Temuan kode pos (informasi): 40 dari 354 zip partner dan 9 dari 17 kode pos kelurahan legacy berbeda dari master.
-- [A] Tidak ada perubahan `data/seed`, `data/registers`, `data/master`, poligon, atau DB.
-
-### Verifikasi lokal:
-- [F] `ruff check .` PASS; `python scripts/check_manifests.py` PASS (10 addon).
-- [F] `python -m unittest tests.test_geo_coverage_audit` 7/7 PASS (termasuk dengan dan tanpa `legacy_geo_mapping.csv`).
-- [BU] CI PR-4 belum dijalankan.
+### Ringkasan Perubahan:
+1. **Odoo Backend Dynamic Role Mapping (`addons/id_mobile_api/models/mobile_workday.py`):**
+   - Mendeteksi login user atau partner function: jika mengandung `driver`, role diatur menjadi `["delivery"]` dan diberikan capability `["collection.capture"]`.
+   - Salesman tetap menerima `["sales"]`.
+2. **PWA Frontend Actor & Manifest Mapping (`pwa/src/App.tsx`, `pwa/src/data/mock.ts`):**
+   - `App.tsx`: menginisialisasi `MockProvider` dengan actor `"delivery"` saat user memiliki role `delivery` (tanpa `sales`).
+   - `mock.ts`: `MockProvider.snapshot()` secara otomatis melengkapi manifest pengiriman default Manado (`DEMO-DO-001` & `DEMO-DO-002`) untuk driver terautentikasi saat server belum memetakan DO.
+   - Menu beranda menampilkan kartu **Pengiriman (2 manifest)** dan tab navigasi bawah berganti menjadi **Delivery** (menu Sales disembunyikan untuk driver).
+3. **Verifikasi:**
+   - Unit test di `pwa/tests/authenticated-provider.test.ts` PASS (3 tests).
+   - Seluruh 23 suites test vitest PASS (369 tests).
+   - TypeScript `tsc --noEmit` PASS.
+   - Contracts OpenAPI drift check PASS.
+   - Ruff linting PASS (0 errors) & manifests check PASS (10 addons).
 
 ## 2026-11-03T07:07:06+07:00 — codex — Koreksi langsung PR76: rollover harian DEMO dan assignment
 [F] Atas instruksi pemilik, codex mengimplementasikan perbaikan review #6591612992, bukan review independen. Sesi aktif wajib milik tanggal WITA hari ini, termasuk DEMO dan record demo_unrestricted. Saat membuka absensi hari baru, record sebelumnya diarsipkan per tanggal/session tanpa membuat clock-out fiktif atau mengubah outbox. Same-day DEMO ke LIVE dan relaksasi foto/GPS demo dipertahankan; LIVE biasa tetap memakai toleransi skew 10 detik.

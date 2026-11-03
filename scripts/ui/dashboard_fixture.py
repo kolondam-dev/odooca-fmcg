@@ -74,5 +74,29 @@ env.flush_all()  # noqa: F821
 book = env['id.monetary.book.margin']._for_period(finance['period'])  # noqa: F821
 assert book['available'] and book['direct_cost'] == 100000
 assert book['margin'] == invoices.amount_untaxed_signed - 100000
+# Explicit read-model fixture for the closed-order bridge (not an E2E stock-posting claim).
+margin_product = env['product.product'].create({'name': 'QA Margin Stock', 'type': 'consu',  # noqa: F821
+    'is_storable': True, 'invoice_policy': 'delivery'})
+margin_order = env['sale.order'].create({'partner_id': partner.id,  # noqa: F821
+    'pricelist_id': order.pricelist_id.id,
+    'order_line': [(0, 0, {'product_id': margin_product.id, 'product_uom_qty': 2,
+        'price_unit': 1000, 'tax_ids': [(5, 0, 0)]})]})
+margin_order.action_confirm()
+margin_order.date_order = datetime(2026, 7, 16, 3, 0)
+margin_moves = margin_order.order_line.move_ids
+margin_moves.write({'quantity': 2, 'state': 'done'})
+margin_invoice = margin_order._create_invoices()
+margin_invoice.invoice_date = fields.Date.today()
+margin_invoice.action_post()
+margin_cost = env['account.move'].create({'date': fields.Date.today(), 'journal_id': journal.id,  # noqa: F821
+    'line_ids': [(0, 0, {'account_id': cost_account.id, 'product_id': margin_product.id, 'debit': 1200}),
+                 (0, 0, {'account_id': offset.id, 'product_id': margin_product.id, 'credit': 1200})]})
+margin_cost.action_post()
+margin_moves.account_move_id = margin_cost
+bridge = env['id.sales.order.margin']._for_orders([('id', '=', margin_order.id)])  # noqa: F821
+assert bridge['covered'] == 1 and bridge['margin'] == 800
+history = env['id.ar.history']._snapshot()  # noqa: F821
+assert history['available'] and abs(history['cross_scope_allocation']) < .01
+assert abs(sum(row['net'] for row in history['buckets']) - history['net']) < .01
 env.cr.commit()  # noqa: F821
 print('DASHBOARD_VISUAL_FIXTURE=PASS')
