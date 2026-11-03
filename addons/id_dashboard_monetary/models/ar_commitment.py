@@ -127,6 +127,8 @@ class ArPromise(models.Model):
             self.env.cr.execute("UPDATE account_move_line SET write_date=write_date WHERE id=%s", [rec.line_id.id])
             others = self.search([("line_id", "=", rec.line_id.id), ("state", "=", "committed"),
                                   ("due_date", ">=", fields.Date.context_today(rec))])
+            if any(p.currency_id.compare_amounts(p.amount, p.settled_amount) > 0 for p in others):
+                raise UserError(_("This receivable already has an unfulfilled current promise."))
             outstanding = sum(max(p.amount-p.settled_amount, 0) for p in others)
             if rec.amount + outstanding > rec.line_id.amount_residual + rec.currency_id.rounding/2:
                 raise UserError(_("Promises exceed the currently open receivable."))
