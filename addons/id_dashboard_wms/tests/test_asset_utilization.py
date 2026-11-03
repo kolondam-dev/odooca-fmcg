@@ -46,6 +46,14 @@ class TestAssetUtilization(TransactionCase):
         self.assertEqual((result["volume_pct"], result["weight_pct"], result["km"]), (50, 24, 100))
         self.assertEqual(result["cost_per_km"], .6)
         self.assertIsNone(result["cost_per_delivered_dpp"])  # No SO linkage, never manufacture revenue.
+        _, product2, vehicle2, picking2, trip2 = self._source()
+        vehicle2.capacity_cbm = 10
+        product2.carton_weight_kg = 0
+        trip2.action_depart()
+        aggregate = self.env["id.asset.utilization"]._data(day, day)
+        self.assertAlmostEqual(aggregate["volume_pct"], 100/6)
+        self.assertEqual(aggregate["weight_covered"], 1)
+        self.assertIsNone(aggregate["cost_per_km"])  # Open trip prevents partial cost efficiency.
         with self.assertRaises(AccessError):
             trip.write({"fuel_cost": 0})
         with self.assertRaises(AccessError):

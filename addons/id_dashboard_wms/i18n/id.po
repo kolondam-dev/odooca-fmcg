@@ -862,3 +862,69 @@ msgstr "Biaya Langsung Pengiriman Lain"
 #: code:addons/id_dashboard_wms/models/asset_trip.py:0
 msgid "Cost Receipt / Source"
 msgstr "Bukti / Sumber Biaya"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Trip vehicle must belong to the trip company."
+msgstr "Armada harus milik perusahaan trip."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "The vehicle already has an open trip."
+msgstr "Armada sudah memiliki trip yang belum ditutup."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Departure odometer cannot precede the last closed trip reading."
+msgstr "Odometer awal tidak boleh di bawah pembacaan trip terakhir yang ditutup."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Frozen Load Source"
+msgstr "Sumber Muatan Keberangkatan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Direct Order Processing Cost"
+msgstr "Biaya Langsung Pemrosesan Order"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Capacity: %(volume)s m³ / %(weight)s kg"
+msgstr "Kapasitas: %(volume)s m³ / %(weight)s kg"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Unknown"
+msgstr "Belum diketahui"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Departed"
+msgstr "Berangkat"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Closed"
+msgstr "Ditutup"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Whole-warehouse capacity ignores the category filter. Storage includes reserved and consigned goods under each warehouse stock root, excludes receiving/output areas. Missing dimensions and negative stock prevent a complete occupancy ratio."
+msgstr "Kapasitas seluruh gudang tidak memakai filter kategori. Stok mencakup barang reserved dan konsinyasi di bawah root stok gudang, di luar area receiving/output. Dimensi kosong atau stok negatif membuat rasio okupansi belum lengkap."
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Departure cohort follows the delivery date controls and vehicle filter; stock category does not apply. Carton-equivalent volume is not actual stacking geometry. Fleet ratios use summed load / summed capacity only for fully measured trips; no average of percentages."
+msgstr "Cohort keberangkatan mengikuti kontrol tanggal pengiriman dan filter armada; kategori stok tidak berlaku. Volume ekuivalen karton bukan geometri tumpukan aktual. Rasio armada memakai total muatan / total kapasitas trip terukur lengkap, bukan rata-rata persentase."
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Distance is operator-entered return minus departure odometer in km, not inferred GPS mileage. Costs are recorded trip expenses plus completed fleet services dated in the period, not a reconciled GL total. Maintenance is not allocated again to trips. Legacy unlinked trip-cost rows remain in the existing fleet report and are not added here. Ratios require every cohort trip closed; missing service access or delivery-price linkage produces unavailable. Foreign-currency SO values are not relabelled as company currency. Delivery DPP is physical gross delivery value at closure, not invoice revenue or net margin."
+msgstr "Jarak adalah odometer kembali dikurangi keberangkatan dalam km yang diinput operator, bukan inferensi GPS. Biaya berasal dari catatan trip dan service armada selesai bertanggal pada periode, bukan saldo GL yang direkonsiliasi. Maintenance tidak dialokasikan ulang ke trip. Biaya trip lama tanpa relasi tetap di laporan lama dan tidak ditambahkan di sini. Rasio memerlukan semua trip cohort ditutup; akses service atau relasi harga pengiriman yang kosong menghasilkan unavailable. Nilai SO valuta asing tidak diberi label mata uang perusahaan. DPP pengiriman adalah nilai fisik bruto saat penutupan, bukan pendapatan invoice atau margin bersih."

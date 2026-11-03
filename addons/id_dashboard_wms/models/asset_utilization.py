@@ -78,7 +78,7 @@ class AssetUtilization(models.AbstractModel):
             if trip.state == "closed":
                 closed += 1
                 closed_km += distance
-                direct_cost += trip.fuel_cost + trip.helper_cost + trip.other_delivery_cost
+                direct_cost += trip.fuel_cost + trip.helper_cost + trip.order_processing_cost + trip.other_delivery_cost
                 dpp_unknown += int(snap.get("delivered_dpp") is None)
                 delivered_dpp += snap.get("delivered_dpp") or 0
             rows.append({"id": trip.id, "name": trip.name, "state": trip.state, "volume": vol, "kg": kg,

@@ -85,6 +85,9 @@ export class WmsDashboard extends Component {
     }
 
     onCohortDate(ev) { this.state[ev.target.dataset.field] = ev.target.value; this.load(); }
+    assetState(value) {
+        return {draft: _t("Draft"), departed: _t("Departed"), closed: _t("Closed")}[value] || _t("Not recorded");
+    }
     physical(v) {
         if (v === null || v === undefined) return "—";
         if (v > 0 && v < 0.0001) return "<0,0001";

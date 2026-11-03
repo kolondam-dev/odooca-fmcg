@@ -35,7 +35,7 @@ class AssetTrip(models.Model):
     company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company, index=True)
     currency_id = fields.Many2one(related="company_id.currency_id")
     vehicle_id = fields.Many2one("fleet.vehicle", required=True, check_company=True)
-    picking_ids = fields.Many2many("stock.picking", check_company=True, string="Loaded Deliveries")
+    picking_ids = fields.Many2many("stock.picking", check_company=True, string="Loaded Deliveries", copy=False)
     state = fields.Selection([("draft", "Draft"), ("departed", "Departed"), ("closed", "Closed")],
                              default="draft", readonly=True, required=True, copy=False)
     departed_at = fields.Datetime(readonly=True, index=True, copy=False)
@@ -43,12 +43,31 @@ class AssetTrip(models.Model):
     closed_at = fields.Datetime(readonly=True, copy=False)
     closed_by = fields.Many2one("res.users", readonly=True, copy=False)
     snapshot_json = fields.Text(readonly=True, copy=False)
+    load_summary = fields.Text(string="Frozen Load Source", compute="_compute_load_summary")
+
+    @api.depends("snapshot_json")
+    def _compute_load_summary(self):
+        for rec in self:
+            if not rec.snapshot_json:
+                rec.load_summary = False
+                continue
+            snap = json.loads(rec.snapshot_json)
+            header = _("Capacity: %(volume)s m³ / %(weight)s kg") % {
+                "volume": snap["capacity_volume"] if snap["capacity_volume"] is not None else _("Unknown"),
+                "weight": snap["capacity_kg"] if snap["capacity_kg"] is not None else _("Unknown")}
+            lines = ["%s | %s %s | %s m³ | %s kg" % (
+                line.get("product_name", line["product_id"]), line["quantity"], line.get("uom", ""),
+                line["volume"] if line["volume"] is not None else _("Unknown"),
+                line["kg"] if line["kg"] is not None else _("Unknown")) for line in snap["lines"]]
+            rec.load_summary = "\n".join([header]+lines)
+
     odometer_start_km = fields.Float(string="Departure Odometer (km)")
     odometer_end_km = fields.Float(string="Return Odometer (km)")
-    fuel_cost = fields.Monetary()
-    helper_cost = fields.Monetary()
-    other_delivery_cost = fields.Monetary(string="Other Direct Delivery Cost")
-    cost_basis = fields.Char(string="Cost Receipt / Source")
+    fuel_cost = fields.Monetary(copy=False)
+    helper_cost = fields.Monetary(copy=False)
+    order_processing_cost = fields.Monetary(string="Direct Order Processing Cost", copy=False)
+    other_delivery_cost = fields.Monetary(string="Other Direct Delivery Cost", copy=False)
+    cost_basis = fields.Char(string="Cost Receipt / Source", copy=False)
     note = fields.Text()
 
     @api.model_create_multi
@@ -65,7 +84,8 @@ class AssetTrip(models.Model):
             raise AccessError(_("Trip facts are written by departure and closure actions only."))
         for rec in self:
             if rec.state == "closed" or (rec.state == "departed" and set(vals) - {
-                    "odometer_end_km", "fuel_cost", "helper_cost", "other_delivery_cost", "cost_basis", "note"}):
+                    "odometer_end_km", "fuel_cost", "helper_cost", "order_processing_cost",
+                    "other_delivery_cost", "cost_basis", "note"}):
                 raise AccessError(_("Departure facts and closed trips are immutable."))
         return super().write(vals)
 
@@ -74,11 +94,12 @@ class AssetTrip(models.Model):
             raise AccessError(_("Departed trips cannot be deleted."))
         return super().unlink()
 
-    @api.constrains("odometer_start_km", "odometer_end_km", "fuel_cost", "helper_cost", "other_delivery_cost")
+    @api.constrains("odometer_start_km", "odometer_end_km", "fuel_cost", "helper_cost",
+                    "order_processing_cost", "other_delivery_cost")
     def _check_numbers(self):
         for rec in self:
             values = [rec.odometer_start_km, rec.odometer_end_km, rec.fuel_cost,
-                      rec.helper_cost, rec.other_delivery_cost]
+                      rec.helper_cost, rec.order_processing_cost, rec.other_delivery_cost]
             if any(not isfinite(v) or v < 0 for v in values):
                 raise ValidationError(_("Trip readings and costs must be finite and nonnegative."))
 
@@ -122,7 +143,8 @@ class AssetTrip(models.Model):
                 qty = move.product_uom._compute_quantity(move.quantity, move.product_id.uom_id, round=False)
                 vol, kg = measure(move.product_id, qty)
                 rows.append({"move_id": move.id, "picking_id": move.picking_id.id,
-                             "product_id": move.product_id.id, "quantity": qty, "volume": vol, "kg": kg})
+                             "product_id": move.product_id.id, "product_name": move.product_id.display_name,
+                             "uom": move.product_id.uom_id.name, "quantity": qty, "volume": vol, "kg": kg})
             vehicle = rec.vehicle_id
             snapshot = {"lines": rows, "capacity_volume": (vehicle.capacity_cbm
                         if isfinite(vehicle.capacity_cbm) and vehicle.capacity_cbm > 0 else None),

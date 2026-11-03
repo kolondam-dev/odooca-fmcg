@@ -295,3 +295,8 @@
 - FACTS create/write/context spoof guard, company/global rules/role ACL, departure RR row conflicts, no duplicate DO/open vehicle trip, monotonic readings, unavailable coverage. Tidak mengisi data historis/seed/server/PWA. Kontrak ASSET_UTILIZATION.md menjaga backlog3B dan readiness5/6.
 - Lokal Ruff/10manifests/XML/compile/18Node/diff PASS. Native4methods/CI populated warehouse/no-invented-trip fixture+screenshots ditambah; native/upgrade/visual/review menunggu, runtime lokal Postgres unavailable. Tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-03T20:47:51+07:00
+
+[2026-11-03T20:59:41+07:00] [INFO] PR81 native175PASS dan explicit fixture source
+- 31a2220:175 native Odoo0failed/0error, init/static PASS; visual fixture gagal warehouse occupancy expectation setelah stock margin fixture tanpa initial physical balance/dimensions. Tambah initial stock+dimensions hanya produk QA baru, diagnostic row, assertion completeness dipertahankan.
+- Human frozen source summary, input selector scope, order-processing cost, copy-safe receipts/DOs, weighted unequal-capacity/unknown-weight+open-trip regression, explicit new QA departure/closure+DPP assertions. Lokal18Node/Ruff/manifest/XML/compile/diff PASS; native/visual/upgrade HEAD final menunggu. Tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-03T20:59:41+07:00
