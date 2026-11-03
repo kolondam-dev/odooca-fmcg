@@ -70,17 +70,26 @@ ulang tidak menghasilkan diff palsu.
 
 | Model | Aksi |
 |---|---|
-| `res.company` | `state_id = base.state_id_sa` |
-| `id.city` | `state_id = Sulawesi Utara` |
-| `id.district` | `state_id` related stored → dipaksa hitung ulang bila kosong (`env.add_to_compute`) |
-| `id.coverage.area` | `state_id = Sulawesi Utara` |
-| `res.partner` | hanya partner yang punya `district_id`/`subdistrict_id` Sulut |
+| `res.company` | Isi provinsi kosong pada company aktif dengan wilayah partner terverifikasi; tanpa relasi wilayah wajib `GEO_PROVINCE_COMPANY_IDS` eksplisit |
+| `id.city` | Hanya kode Kemendagri dalam CSV kanonikal Sulut, aktif, provinsi kosong |
+| `id.district` | Hanya identitas kecamatan kanonikal aktif dengan parent Sulut; recompute related kosong bila city berprovinsi Sulut |
+| `id.coverage.area` | Hanya empat XMLID area seed Sulut, aktif, provinsi kosong |
+| `res.partner` | Hanya wilayah aktif yang terverifikasi pada CSV/parent; provinsi kosong dan negara kosong/Indonesia |
 
-Partner tanpa wilayah Sulut (prinsipal/vendor luar daerah) **tidak** disentuh; jumlahnya
-hanya dilaporkan sebagai `partners_without_geo`.
+Provinsi yang sudah terisi **tidak ditimpa**, termasuk konflik pada identitas Sulut.
+Record arsip, wilayah luar Sulut, negara lain dan identitas tak dikenal dipertahankan.
+Company tanpa bukti wilayah dilaporkan `companies_unverified`; operator dapat memilih
+ID company secara eksplisit lewat `GEO_PROVINCE_COMPANY_IDS=1,2`. Flag ini tidak
+mengizinkan penimpaan provinsi terisi atau perubahan company arsip/negara lain.
+ID hanya bermakna di database target; tentukan dari inventaris operator, jangan menyalin ID dari contoh.
 
-Tidak ada constraint keras pada `state_id` (keputusan D3=A): provinsi adalah data-fix +
-laporan, bukan aturan yang memblokir input.
+FK `district_id` dan `subdistrict_id` partner tidak ditulis. Untuk village-only,
+provinsi dibaca dari hierarki tanpa melengkapi FK. Relasi district/village yang
+bertentangan dilewati. Dry-run memakai cakupan dan aturan yang sama tanpa write/commit.
+Report `*_preserved`, `*_unverified` dan `partners_without_geo` menjelaskan record
+tertahan; jumlah ini bukan jumlah perubahan dan tidak harus nol pada putaran kedua.
+Loader master juga mempertahankan `state_id` city yang sudah terisi. Konflik
+memerlukan keputusan data-fix terpisah. D3=A tetap tanpa constraint keras.
 
 ## 5. Menjalankan manual
 

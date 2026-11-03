@@ -114,14 +114,21 @@ class MobileWorkday(models.Model):
     def _bootstrap_payload(self):
         assignment, day = self._current_assignment()
         user = self.env.user
+        is_driver = (
+            "driver" in user.login.lower()
+            or bool(user.partner_id.function and "driver" in user.partner_id.function.lower())
+        )
+        roles = ["delivery"] if is_driver else ["sales"]
         result = {
             "id": str(user.id), "companyId": str(assignment.company_id.id),
             "companyName": assignment.company_id.name,
             "name": user.name, "title": user.partner_id.function or "",
-            "roles": ["sales"], "businessDate": day.isoformat(),
+            "roles": roles, "businessDate": day.isoformat(),
         }
         if user.has_group("id_mobile_api.group_mobile_evidence"):
             result["capabilities"] = ["evidence.capture"]
+        if "delivery" in roles:
+            result.setdefault("capabilities", []).append("collection.capture")
         assignment._assert_day(day)
         return result
 

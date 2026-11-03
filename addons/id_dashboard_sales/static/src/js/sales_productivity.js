@@ -28,6 +28,17 @@ export class SalesProductivity extends Component {
     static template = "id_dashboard_sales.SalesProductivity";
     static props = ["*"];
 
+    openMarginSources(row) {
+        if (this.state.loading || !row.available) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Order margin journal sources"),
+            res_model: "account.move", views: [[false, "list"], [false, "form"]],
+            domain: [["id", "in", [...row.invoice_ids, ...row.journal_ids]]]});
+    }
+    marginReason(key) {
+        return {incomplete_quantity: _t("Requires fully delivered/invoiced stock lines without credits"),
+            missing_cogs_link: _t("Missing or ambiguous posted delivery cost source")}[key] || _t("Not available");
+    }
+
     setup() {
         const releaseWorkspace = this.env.services.id_shell?.enterDashboard?.();
         this.requestVersion = 0;

@@ -10,21 +10,15 @@ provinsi, sehingga `state_id` kosong pada company, partner outlet, coverage area
 dan `id.city`. Master provinsi sudah ada di Odoo core: `base.state_id_sa`
 ("Sulawesi Utara", kode `SA`).
 
-Cakupan (idempoten, hanya menulis bila berbeda):
-
-- `res.company` (semua perusahaan aktif) -> Sulawesi Utara
-- `id.city` (semua) -> Sulawesi Utara
-- `id.district`: `state_id` adalah related stored dari `city_id.state_id`; record
-  yang masih kosong dipaksa hitung ulang (tanpa menulis field related langsung)
-- `id.coverage.area` (semua) -> Sulawesi Utara
-- `res.partner` yang punya `district_id`/`subdistrict_id` Sulut -> provinsi wilayahnya
-
-Partner tanpa wilayah Sulut (mis. prinsipal/vendor luar daerah) **tidak** disentuh;
-hanya dilaporkan jumlahnya.
+Cakupan: hanya state_id kosong pada identitas aktif yang terverifikasi dari
+kode master Sulut. Provinsi terisi, negara lain, record arsip dan identitas tidak
+terverifikasi dipertahankan. Tidak mengubah district_id/subdistrict_id partner.
+Area dibatasi XMLID seed Sulut. Company memakai wilayah partner yang terverifikasi,
+atau ID operator eksplisit (tetap tidak menimpa state_id yang terisi).
 
 Variabel lingkungan:
-
-    GEO_PROVINCE_DRY_RUN=1   hitung perubahan tanpa menulis ke DB
+    GEO_PROVINCE_DRY_RUN=1       hitung tanpa menulis
+    GEO_PROVINCE_COMPANY_IDS=1,2 target company eksplisit tanpa relasi wilayah
 """
 
 import os
@@ -44,70 +38,100 @@ class ProvinceFixer:
         self.province = env.ref(PROVINCE_XMLID, raise_if_not_found=False)
         self.report = {}
 
-    def _write(self, records, values, key):
-        if not records:
-            self.report[key] = 0
-            return 0
-        self.report[key] = len(records)
-        if not self.dry_run:
-            records.write(values)
-        return len(records)
+    def _scope(self):
+        """Canonical identities, never a blanket province/name assumption."""
+        import csv
+        from pathlib import Path
+
+        candidates = [Path("data/master"), Path("/opt/data/master")]
+        if "__file__" in globals():
+            candidates.append(Path(__file__).resolve().parents[2] / "data/master")
+        root = next((p for p in candidates if (p / "sulut_kab_kota.csv").is_file()), None)
+        if root is None:
+            raise RuntimeError("[geo_province] canonical Sulut master not found")
+        def codes(filename):
+            with (root / filename).open(encoding="utf-8-sig", newline="") as handle:
+                return [row["kode_kemendagri"] for row in csv.DictReader(handle)]
+        cities = self.env["id.city"].sudo().search([
+            ("active", "=", True), ("kode_kemendagri", "in", codes("sulut_kab_kota.csv"))])
+        cities = cities.filtered(lambda r: not r.state_id or r.state_id == self.province)
+        self.districts = self.env["id.district"].sudo().search([
+            ("active", "=", True), ("city_id", "in", cities.ids),
+            ("kode_kemendagri", "in", codes("sulut_kecamatan.csv"))])
+        self.villages = self.env["id.subdistrict"].sudo().search([
+            ("active", "=", True), ("district_id", "in", self.districts.ids),
+            ("kode_kemendagri", "in", codes("sulut_desa_kelurahan.csv"))])
+        self.cities = cities
+
+    def _fill(self, records, key):
+        # Existing states (including conflicts) and archived records are not corrected implicitly.
+        eligible = records.filtered(lambda r: r.active and not r.state_id)
+        self.report[key] = len(eligible)
+        self.report[key + "_preserved"] = len(records) - len(eligible)
+        if eligible and not self.dry_run:
+            eligible.write({"state_id": self.province.id})
+
+    def _partner_in_scope(self, partner):
+        if partner.country_id and partner.country_id != self.province.country_id:
+            return False
+        if partner.subdistrict_id:
+            if partner.subdistrict_id not in self.villages:
+                return False
+            if partner.district_id and partner.district_id != partner.subdistrict_id.district_id:
+                return False
+            return True
+        return partner.district_id in self.districts
 
     def _companies(self):
-        Company = self.env["res.company"].sudo().with_context(active_test=False)
-        records = Company.search([]).filtered(lambda record: record.state_id != self.province)
-        return self._write(records, {"state_id": self.province.id}, "companies")
+        raw_ids = os.environ.get("GEO_PROVINCE_COMPANY_IDS", "").strip()
+        try:
+            explicit = {int(v.strip()) for v in raw_ids.split(",") if v.strip()}
+            if any(v <= 0 for v in explicit):
+                raise ValueError("nonpositive company ID")
+        except ValueError as exc:
+            raise ValueError("[geo_province] invalid GEO_PROVINCE_COMPANY_IDS") from exc
+        companies = self.env["res.company"].sudo().with_context(active_test=False).search([])
+        scoped = companies.filtered(lambda r: r.active and
+            (not r.country_id or r.country_id == self.province.country_id) and
+            (r.id in explicit or self._partner_in_scope(r.partner_id)))
+        self.report["companies_unverified"] = len(companies - scoped)
+        self._fill(scoped, "companies")
 
     def _cities(self):
-        City = self.env["id.city"].sudo().with_context(active_test=False)
-        records = City.search([]).filtered(lambda record: record.state_id != self.province)
-        return self._write(records, {"state_id": self.province.id}, "cities")
+        self._fill(self.cities, "cities")
 
     def _districts(self):
-        """`state_id` related stored: hitung ulang record yang masih kosong."""
-        District = self.env["id.district"].sudo().with_context(active_test=False)
-        stale = District.search([("city_id", "!=", False), ("state_id", "=", False)])
+        # Only verified, active Sulut districts whose stored relation needs recomputation.
+        stale = self.districts.filtered(lambda r: not r.state_id and r.city_id.state_id == self.province)
         self.report["districts"] = len(stale)
         if stale and not self.dry_run:
-            self.env.add_to_compute(District._fields["state_id"], stale)
+            self.env.add_to_compute(self.districts._fields["state_id"], stale)
             self.env.flush_all()
-        return len(stale)
 
     def _coverage_areas(self):
-        Area = self.env["id.coverage.area"].sudo().with_context(active_test=False)
-        records = Area.search([]).filtered(lambda record: record.state_id != self.province)
-        return self._write(records, {"state_id": self.province.id}, "coverage_areas")
+        Area = self.env["id.coverage.area"].sudo()
+        verified = Area.browse()
+        for xmlid in ("area_mnd_urban", "area_tmh_hinterland", "area_btg_port", "area_minut_rural"):
+            record = self.env.ref("id_base." + xmlid, raise_if_not_found=False)
+            if record:
+                verified |= record
+        self._fill(verified, "coverage_areas")
 
     def _partners(self):
         Partner = self.env["res.partner"].sudo().with_context(active_test=False, tracking_disable=True)
-        with_village_only = Partner.search([("district_id", "=", False), ("subdistrict_id", "!=", False)])
-        self.report["partners_village_only"] = len(with_village_only)
-        attached = Partner.browse()
-        for partner in with_village_only:
-            district = partner.subdistrict_id.district_id
-            if not district:
-                continue
-            if not self.dry_run:
-                partner.write({"district_id": district.id})
-            attached |= partner
-
-        # `attached` melengkapi hasil search saat dry-run (penulisan belum terjadi).
-        candidates = Partner.search([("district_id", "!=", False)]) | attached
-        stale = candidates.filtered(
-            lambda record: record.state_id != (record.district_id.city_id.state_id or self.province)
-        )
-        self.report["partners"] = len(stale)
-        if stale and not self.dry_run:
-            # Semua kecamatan pada master ini berada di Sulawesi Utara; filter di atas
-            # memakai provinsi sebagai fallback saat city belum punya provinsi.
-            stale.write({"state_id": self.province.id})
+        candidates = Partner.search(["|", ("district_id", "!=", False), ("subdistrict_id", "!=", False)])
+        scoped = candidates.filtered(lambda r: r.active and self._partner_in_scope(r))
+        self.report["partners_unverified"] = len(candidates - scoped)
+        # Read village-only geography without assigning district_id or changing any geographic FK.
+        self.report["partners_village_only"] = len(scoped.filtered(lambda r: not r.district_id))
+        self._fill(scoped, "partners")
         self.report["partners_without_geo"] = Partner.search_count(
-            [("district_id", "=", False), ("subdistrict_id", "=", False)]
-        )
+            [("district_id", "=", False), ("subdistrict_id", "=", False)])
 
     def run(self):
-        if self.province is None:
-            raise RuntimeError(f"[geo_province] provinsi {PROVINCE_XMLID} tidak ditemukan")
+        if not self.province:
+            raise RuntimeError(f"[geo_province] province {PROVINCE_XMLID} not found")
+        self._scope()
         self._companies()
         self._cities()
         self._districts()

@@ -239,6 +239,8 @@ class GeoLoader:
                 )
                 self._create(City, values, stats)
             else:
+                if record.state_id or not record.active:
+                    values.pop("state_id")  # Province backfill never overwrites an existing state.
                 self._update(record, values, stats)
 
     # ---------------------------------------------------------------- districts

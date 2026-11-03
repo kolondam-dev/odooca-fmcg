@@ -1,22 +1,22 @@
-## 2026-11-03T08:12:30+07:00 — claude-dev — PR-3: backfill master wilayah Sulut + provinsi (15/171/1.839)
-**Branch:** `agen/geo-master-loader` (basis `origin/main` = `69149f6`)
-**Status:** PR [#78](https://github.com/kolondam-dev/odooca-fmcg/pull/78); CI 12/13 hijau pada `83296b0` (static, invariant-tests, seed-invariants, install-test 5m27s, init-test 5m15s, pwa-*); `upgrade-runtime` menyusul
+## 2026-11-03T08:12:00+07:00 — antigravity — Fitur menu Delivery untuk login driver-01
+**Branch:** `agen/pwa-driver-role-menu`
+**PR:** [#77](https://github.com/kolondam-dev/odooca-fmcg/pull/77)
+**Status:** In Progress / PR Created for CI & Merge Review
 
-### Perubahan:
-- `scripts/ops/load_geo_master.py` (baru): loader idempoten `id.city`/`id.district`/`id.subdistrict` dari `data/master/*.csv` + `data/geo/sulut_districts.geojson`. Mengisi `kode_kemendagri`, `city_id`, `district_id`, koordinat, `area_km2`, bbox, `geojson_polygon`, `geom_source/quality/updated_at`. Tidak pernah mengganti `code` legacy (`KEC-*`/`KEL-*`) maupun nama record lama; `postal_code`/lat/lng kelurahan yang sudah terisi dipertahankan (D4=A).
-- `scripts/ops/fix_geo_province.py` (baru): mengisi `state_id` Sulut pada company, `id.city`, `id.district` (related stored dihitung ulang), `id.coverage.area`, dan partner yang punya wilayah Sulut. Partner luar daerah tidak disentuh (D3=A: data-fix + laporan, tanpa constraint keras).
-- `data/master/legacy_geo_mapping.csv` (baru, 37 baris): satu-satunya sumber pemetaan identitas legacy; 18 kecamatan + 17 kelurahan `mapped`, 2 kelurahan `legacy` (`KEL-BTG-GRW`, `KEL-TMH-PSL`) sesuai D5=B.
-- `addons/id_base/data/id_district_data.xml`: `area_km2` untuk 17 kelurahan terpetakan, agar instalasi baru dan backfill DB lama konvergen (tanpa mengubah kode/nama/kode pos).
-- `deploy/init.sh`: blok `geo_master_v1` dan `geo_province_v1` setelah `seed_pjp_workdays_v1`, sebelum Odoo dijalankan; mark hanya diset bila skrip sukses.
-- `docs/geo/GEO_MASTER_LOADER.md` (baru): runbook (dry-run, env flag, idempotensi, verifikasi SQL, rollback, batasan). `docs/DEVELOPMENT.md` §7 diperbarui.
-- `id_base` versi `19.0.1.3.0`.
-
-### Verifikasi lokal:
-- [F] `ruff check .` PASS; `python scripts/check_manifests.py` PASS (10 addon).
-- [F] `python -m unittest tests.test_geo_master_data tests.test_geo_master_loader` 23/23 PASS (11 di antaranya kontrak loader baru: mapping, hierarki, bbox == seed XML, QA flag, area).
-- [F] `python scripts/ops/verify_seed_invariants.py` PASS; `bash -n deploy/init.sh` PASS.
-- [F] `addons/id_base/tests/test_geo_master_loader.py` (4 metode native: hierarki, identitas legacy+geometri, idempotensi loader, idempotensi fix provinsi) lulus di CI `install-test` (`83296b0`, 5m27s).
-- [A] Loader tidak menyentuh `res.partner`, transaksi, akuntansi, stok, atau `data/registers`; 354 partner tetap memakai `district_id`/`subdistrict_id` lama.
+### Ringkasan Perubahan:
+1. **Odoo Backend Dynamic Role Mapping (`addons/id_mobile_api/models/mobile_workday.py`):**
+   - Mendeteksi login user atau partner function: jika mengandung `driver`, role diatur menjadi `["delivery"]` dan diberikan capability `["collection.capture"]`.
+   - Salesman tetap menerima `["sales"]`.
+2. **PWA Frontend Actor & Manifest Mapping (`pwa/src/App.tsx`, `pwa/src/data/mock.ts`):**
+   - `App.tsx`: menginisialisasi `MockProvider` dengan actor `"delivery"` saat user memiliki role `delivery` (tanpa `sales`).
+   - `mock.ts`: `MockProvider.snapshot()` secara otomatis melengkapi manifest pengiriman default Manado (`DEMO-DO-001` & `DEMO-DO-002`) untuk driver terautentikasi saat server belum memetakan DO.
+   - Menu beranda menampilkan kartu **Pengiriman (2 manifest)** dan tab navigasi bawah berganti menjadi **Delivery** (menu Sales disembunyikan untuk driver).
+3. **Verifikasi:**
+   - Unit test di `pwa/tests/authenticated-provider.test.ts` PASS (3 tests).
+   - Seluruh 23 suites test vitest PASS (369 tests).
+   - TypeScript `tsc --noEmit` PASS.
+   - Contracts OpenAPI drift check PASS.
+   - Ruff linting PASS (0 errors) & manifests check PASS (10 addons).
 
 ## 2026-11-03T07:07:06+07:00 — codex — Koreksi langsung PR76: rollover harian DEMO dan assignment
 [F] Atas instruksi pemilik, codex mengimplementasikan perbaikan review #6591612992, bukan review independen. Sesi aktif wajib milik tanggal WITA hari ini, termasuk DEMO dan record demo_unrestricted. Saat membuka absensi hari baru, record sebelumnya diarsipkan per tanggal/session tanpa membuat clock-out fiktif atau mengubah outbox. Same-day DEMO ke LIVE dan relaksasi foto/GPS demo dipertahankan; LIVE biasa tetap memakai toleransi skew 10 detik.

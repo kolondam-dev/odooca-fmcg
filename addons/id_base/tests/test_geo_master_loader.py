@@ -87,18 +87,95 @@ class TestGeoMasterLoader(TransactionCase):
 
     def test_04_province_fix_fills_and_is_idempotent(self):
         self.fixer.ProvinceFixer(self.env).run()
-        for company in self.env["res.company"].with_context(active_test=False).search([]):
-            self.assertEqual(company.state_id, self.province, company.name)
-        self.assertEqual(self.env.company.state_id, self.province)
-        for area in self.env["id.coverage.area"].with_context(active_test=False).search([]):
-            self.assertEqual(area.state_id, self.province, area.code)
-        for partner in self.env["res.partner"].with_context(active_test=False).search(
-            [("district_id", "!=", False)]
-        ):
-            self.assertEqual(partner.state_id, self.province, partner.name)
-
+        for city in self.env["id.city"].search([("kode_kemendagri", "like", "71.%")]):
+            self.assertEqual(city.state_id, self.province)
+        for xmlid in ("area_mnd_urban", "area_tmh_hinterland", "area_btg_port", "area_minut_rural"):
+            self.assertEqual(self.env.ref("id_base." + xmlid).state_id, self.province)
         # Putaran kedua tidak boleh menemukan sisa pekerjaan.
         second = self.fixer.ProvinceFixer(self.env).run()
         for key in ("companies", "cities", "districts", "coverage_areas", "partners"):
             self.assertEqual(second[key], 0, key)
-        self.assertEqual(second["partners_village_only"], 0)
+
+
+    def test_05_mixed_region_province_fill_preserves_scope_and_fks(self):
+        other_state = self.env["res.country.state"].search([
+            ("country_id", "=", self.province.country_id.id), ("id", "!=", self.province.id)], limit=1)
+        self.assertTrue(other_state)
+        Partner = self.env["res.partner"]
+        district = self.env.ref("id_base.district_mnd_wenang")
+        village = self.env.ref("id_base.subdistrict_calaca")
+        empty = Partner.create({"name": "Verified Sulut blank",
+            "country_id": self.province.country_id.id, "district_id": district.id})
+        village_only = Partner.create({"name": "Village only",
+            "country_id": self.province.country_id.id, "subdistrict_id": village.id})
+        conflict = Partner.create({"name": "Existing province",
+            "country_id": self.province.country_id.id, "district_id": district.id,
+                                   "state_id": other_state.id})
+        archived = Partner.create({"name": "Archived Sulut",
+            "country_id": self.province.country_id.id, "district_id": district.id, "active": False})
+        unknown = Partner.create({"name": "Unknown blank"})
+        Company = self.env["res.company"]
+        foreign_company = Company.create({"name": "Java company preserved", "state_id": other_state.id,
+                                          "country_id": other_state.country_id.id})
+        unknown_company = Company.create({"name": "Unknown company preserved"})
+        scoped_company = Company.create({"name": "Verified company", "country_id": self.province.country_id.id})
+        scoped_company.partner_id.write({"district_id": district.id, "state_id": False})
+        outside_city = self.env["id.city"].create({"name": "Outside city", "code": "3201-review",
+            "kode_kemendagri": "32.01", "state_id": other_state.id})
+        outside_area = self.env["id.coverage.area"].create({"name": "Outside area", "code": "AREA-OTHER"})
+        records = empty | village_only | conflict | archived | unknown
+        before = {r.id: (r.state_id.id, r.district_id.id, r.subdistrict_id.id) for r in records}
+        self.fixer.ProvinceFixer(self.env, dry_run=True).run()
+        self.assertEqual(before, {r.id: (r.state_id.id, r.district_id.id, r.subdistrict_id.id) for r in records})
+        self.fixer.ProvinceFixer(self.env).run()
+        self.assertEqual(empty.state_id, self.province)
+        self.assertEqual(village_only.state_id, self.province)
+        self.assertFalse(village_only.district_id)
+        self.assertEqual(conflict.state_id, other_state)
+        self.assertFalse(archived.state_id)
+        self.assertFalse(unknown.state_id)
+        self.assertEqual(foreign_company.state_id, other_state)
+        self.assertFalse(unknown_company.state_id)
+        self.assertEqual(scoped_company.state_id, self.province)
+        self.assertEqual(outside_city.state_id, other_state)
+        self.assertFalse(outside_area.state_id)
+        self.assertEqual({r.id: v[1:] for r, v in ((r, before[r.id]) for r in records)},
+                         {r.id: (r.district_id.id, r.subdistrict_id.id) for r in records})
+        second = self.fixer.ProvinceFixer(self.env).run()
+        for key in ("companies", "cities", "districts", "coverage_areas", "partners"):
+            self.assertEqual(second[key], 0)
+
+    def test_06_explicit_company_target_is_fill_only(self):
+        from unittest.mock import patch
+        company = self.env["res.company"].create({"name": "Explicit company",
+            "country_id": self.province.country_id.id})
+        with patch.dict("os.environ", {"GEO_PROVINCE_COMPANY_IDS": str(company.id)}):
+            self.fixer.ProvinceFixer(self.env, dry_run=True).run()
+            self.assertFalse(company.state_id)
+            self.fixer.ProvinceFixer(self.env).run()
+            self.assertEqual(company.state_id, self.province)
+            self.assertEqual(self.fixer.ProvinceFixer(self.env).run()["companies"], 0)
+
+    def test_07_loader_preserves_existing_province_and_fixer_skips_conflicts(self):
+        other = self.env["res.country.state"].search([
+            ("country_id", "=", self.province.country_id.id), ("id", "!=", self.province.id)], limit=1)
+        city = self.env.ref("id_base.city_mnd")
+        city.state_id = other
+        self.loader.GeoLoader(self.env, self.dataset).run()
+        self.assertEqual(city.state_id, other)
+        district = self.env.ref("id_base.district_mnd_wenang")
+        partner = self.env["res.partner"].create({"name": "Conflicting city province",
+            "country_id": self.province.country_id.id, "district_id": district.id})
+        self.fixer.ProvinceFixer(self.env).run()
+        self.assertFalse(partner.state_id)
+        self.assertEqual(city.state_id, other)
+
+    def test_08_archived_verified_city_and_area_are_preserved(self):
+        city = self.env.ref("id_base.city_mnd")
+        area = self.env.ref("id_base.area_mnd_urban")
+        city.write({"state_id": False, "active": False})
+        area.write({"state_id": False, "active": False})
+        self.loader.GeoLoader(self.env, self.dataset).run()
+        self.fixer.ProvinceFixer(self.env).run()
+        self.assertFalse(city.state_id)
+        self.assertFalse(area.state_id)

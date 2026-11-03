@@ -61,17 +61,34 @@ export class MockProvider implements FieldProvider {
     async snapshot(): Promise<Snapshot> {
         if (this.authenticated) {
             const snapshot = await this.authenticated.snapshot();
+            const fallbackDeliveries =
+                this.actor === "delivery" || this.actor === "canvass"
+                    ? snapshot.outlets.map((outlet) => ({
+                          id: `DEMO-DO-OUTLET-${encodeURIComponent(outlet.id)}`,
+                          outlet: outlet.name,
+                          address: outlet.address,
+                          items: 3,
+                          cartons: 12,
+                          trip: "TRIP-01",
+                          vehicle: "DB 8471 MD",
+                      }))
+                    : [];
+            const deliveries =
+                snapshot.deliveries && snapshot.deliveries.length > 0
+                    ? snapshot.deliveries
+                    : fallbackDeliveries;
             // Preserve the existing remote-demo allowance only in the local
             // workflow. The HTTP payload and official evidence gates stay strict.
-            return this.relaxedLocation
-                ? {
-                      ...snapshot,
-                      outlets: snapshot.outlets.map((outlet) => ({
+            return {
+                ...snapshot,
+                deliveries,
+                outlets: this.relaxedLocation
+                    ? snapshot.outlets.map((outlet) => ({
                           ...outlet,
                           demo_unrestricted: true as const,
-                      })),
-                  }
-                : snapshot;
+                      }))
+                    : snapshot.outlets,
+            };
         }
         const identity = await this.bootstrap();
         return {
@@ -219,46 +236,62 @@ export class MockProvider implements FieldProvider {
     async deliveryTasks() {
         const owner = await this.bootstrap();
         const snapshot = await this.snapshot();
-        return snapshot.deliveries.map((d, i) => ({
-            workflow_version: 2 as const,
-            id: d.id,
-            trip: d.trip,
-            vehicle: d.vehicle,
-            outlet: d.outlet,
-            address: d.address,
-            owner: `${owner.companyId}:${owner.id}`,
-            business_date: owner.businessDate,
-            version: "SIM-MANIFEST-1",
-            outlet_id: snapshot.outlets[i].id,
-            site: {
-                latitude: snapshot.outlets[i].latitude,
-                longitude: snapshot.outlets[i].longitude,
-                radius: snapshot.outlets[i].radius,
-                ...(snapshot.outlets[i].demo_unrestricted
-                    ? { demo_unrestricted: true as const }
-                    : {}),
-            },
-            lines: [
-                {
-                    id: `${d.id}-1`,
-                    name: "Biskuit Kelapa 300 g (contoh)",
-                    quantity: (d.cartons - 2) * 144,
-                    unit: "pcs",
+        return snapshot.deliveries.map((d, i) => {
+            // Generated DO identity carries its assignment relation, so array
+            // reordering cannot bind a simulated delivery to another outlet.
+            const outlet = d.id.startsWith("DEMO-DO-OUTLET-")
+                ? snapshot.outlets.find(
+                      (candidate) =>
+                          d.id ===
+                          `DEMO-DO-OUTLET-${encodeURIComponent(candidate.id)}`,
+                  )
+                : snapshot.outlets[i];
+            if (!outlet)
+                throw new ApiError(
+                    409,
+                    "Outlet manifest tidak tersedia dalam penugasan.",
+                );
+            return {
+                workflow_version: 2 as const,
+                id: d.id,
+                trip: d.trip,
+                vehicle: d.vehicle,
+                outlet: d.outlet,
+                address: d.address,
+                owner: `${owner.companyId}:${owner.id}`,
+                business_date: owner.businessDate,
+                version: "SIM-MANIFEST-1",
+                outlet_id: outlet.id,
+                site: {
+                    latitude: outlet.latitude,
+                    longitude: outlet.longitude,
+                    radius: outlet.radius,
+                    ...(outlet.demo_unrestricted
+                        ? { demo_unrestricted: true as const }
+                        : {}),
                 },
-                {
-                    id: `${d.id}-2`,
-                    name: "Wafer Cokelat (contoh)",
-                    quantity: 144,
-                    unit: "pcs",
-                },
-                {
-                    id: `${d.id}-3`,
-                    name: "Kopi Bubuk (contoh)",
-                    quantity: 144,
-                    unit: "pcs",
-                },
-            ],
-        }));
+                lines: [
+                    {
+                        id: `${d.id}-1`,
+                        name: "Biskuit Kelapa 300 g (contoh)",
+                        quantity: (d.cartons - 2) * 144,
+                        unit: "pcs",
+                    },
+                    {
+                        id: `${d.id}-2`,
+                        name: "Wafer Cokelat (contoh)",
+                        quantity: 144,
+                        unit: "pcs",
+                    },
+                    {
+                        id: `${d.id}-3`,
+                        name: "Kopi Bubuk (contoh)",
+                        quantity: 144,
+                        unit: "pcs",
+                    },
+                ],
+            };
+        });
     }
     async collectionTasks() {
         return (await this.deliveryTasks()).map((delivery, i) => ({
