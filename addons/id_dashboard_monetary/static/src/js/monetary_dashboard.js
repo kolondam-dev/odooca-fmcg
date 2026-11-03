@@ -52,6 +52,7 @@ export class MonetaryDashboard extends Component {
             filters: { areas: [], salesmen: [], today: null, periods: [] },
             data: null,
             periodKey: null,
+            arAsOf: "", arComparison: "",
             subTab: "customers", // 'customers', 'areas', 'salesmen'
         });
 
@@ -74,6 +75,7 @@ export class MonetaryDashboard extends Component {
         try {
             const data = await this.orm.call("id.monetary.dashboard", "get_data", [], {
                 period_key: this.state.periodKey,
+                ar_as_of: this.state.arAsOf || null, ar_comparison: this.state.arComparison || null,
                 area_ids: this.state.areaIds,
                 salesman_ids: this.state.salesmanIds,
             });
@@ -105,6 +107,19 @@ export class MonetaryDashboard extends Component {
         this.load();
     }
 
+    onHistoryDate(ev) { this.state[ev.target.dataset.field] = ev.target.value; this.load(); }
+    historyBucket(key) {
+        return {not_due: _t("Not due"), overdue_1_7: "1–7", overdue_8_14: "8–14",
+            overdue_15_30: "15–30", overdue_over_30: ">30", credit: _t("Credit"),
+            new: _t("New item"), settled: _t("Settled")}[key] || key;
+    }
+    openHistoricalLedger() {
+        if (this.state.loading || !this.state.data?.ar_history?.available) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Snapshot source journal items"),
+            res_model: "account.move.line", views: [[false, "list"], [false, "pivot"]],
+            domain: this.state.data.ar_history.domain});
+    }
+
     onPeriodChange(ev) { this.state.periodKey = ev.target.value; this.load(); }
 
     reset() {
@@ -119,7 +134,12 @@ export class MonetaryDashboard extends Component {
     }
 
     // Formatting helpers
-    money(v) { return money(v, this.state.data?.currency); }
+    money(v) {
+        if (v === null || v === undefined) return "—";
+        const currency = this.state.data?.currency || "IDR", digits = this.state.data?.currency_digits ?? 0;
+        return `${currency === "IDR" ? "Rp" : currency} ${new Intl.NumberFormat("id-ID", {
+            minimumFractionDigits: digits, maximumFractionDigits: digits}).format(v)}`;
+    }
     moneyShort(v) { return moneyShort(v, this.state.data?.currency); }
     pct(v) { return pct(v); }
     int(v) { return NF.format(v || 0); }

@@ -405,3 +405,179 @@ msgstr "Dashboard Eksekutif"
 #: code:addons/id_dashboard_wms/models/wms_dashboard.py:0
 msgid "Select companies with the same currency before aggregating monetary values."
 msgstr "Pilih company dengan mata uang yang sama sebelum menjumlahkan nilai moneter."
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "To"
+msgstr "Ke"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Scheduled delivery cohort"
+msgstr "Cohort pengiriman terjadwal"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Root outgoing DOs, including backorders and cancellations. Current scheduled date is the promise; H+1/H+2 use WITA calendar days after that date, not order acceptance. Only fully elapsed H+1/H+2 days enter the denominator. Category filter does not apply; vehicle follows the root DO."
+msgstr "DO keluar awal beserta backorder dan pembatalannya. Jadwal saat ini menjadi janji; H+1/H+2 memakai hari kalender WITA setelah jadwal, bukan tanggal penerimaan order. Denominator H+1/H+2 hanya mencakup hari yang telah berlalu penuh. Filter kategori tidak berlaku; armada mengikuti DO awal."
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Scheduled from"
+msgstr "Jadwal dari"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Scheduled through"
+msgstr "Jadwal sampai"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "root DOs"
+msgstr "DO awal"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "OTIF at scheduled timestamp"
+msgstr "OTIF pada waktu terjadwal"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Due DOs:"
+msgstr "DO jatuh tempo:"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Completed by H+1"
+msgstr "Selesai paling lambat H+1"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Completed by H+2"
+msgstr "Selesai paling lambat H+2"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Mature cohort:"
+msgstr "Cohort matang:"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Open backlog"
+msgstr "Backlog terbuka"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "p90 age (days):"
+msgstr "p90 umur (hari):"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Completion offset from schedule (hours): median"
+msgstr "Selisih penyelesaian dari jadwal (jam): median"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid ". Cancelled chains:"
+msgstr ". Rangkaian dibatalkan:"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid ". Unknown demand:"
+msgstr ". Permintaan tidak diketahui:"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "A cancellation remains in the cohort and cannot count as success. Closed partial chains are failures, not open backlog. Return receipts and first-attempt/POD reasons are separate sources."
+msgstr "Pembatalan tetap dalam cohort dan tidak dihitung sukses. Rangkaian parsial yang ditutup merupakan kegagalan, bukan backlog terbuka. Retur serta alasan percobaan pertama/POD memakai sumber terpisah."
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Delivery cohort source"
+msgstr "Sumber cohort pengiriman"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Recorded DO rejection reasons"
+msgstr "Alasan tolakan DO tercatat"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Distinct root DOs per reason; one root may have multiple reasons across backorders."
+msgstr "DO awal unik per alasan; satu DO awal dapat memiliki beberapa alasan pada backorder."
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Store closed / delivery refused"
+msgstr "Toko tutup / pengiriman ditolak"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Packaging damaged"
+msgstr "Kemasan rusak"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Near expiry"
+msgstr "Mendekati kedaluwarsa"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Wrong SKU or quantity"
+msgstr "SKU atau kuantitas salah"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Not recorded"
+msgstr "Tidak tercatat"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/delivery_cohort.py:0
+msgid "Invalid delivery cohort dates."
+msgstr "Tanggal cohort pengiriman tidak valid."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/delivery_cohort.py:0
+msgid "The delivery cohort must end on or before today."
+msgstr "Cohort pengiriman harus berakhir paling lambat hari ini."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/delivery_cohort.py:0
+msgid "Too many deliveries; narrow the cohort."
+msgstr "Terlalu banyak pengiriman; persempit cohort."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/delivery_cohort.py:0
+msgid "Too many backorders; narrow the cohort."
+msgstr "Terlalu banyak backorder; persempit cohort."
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Delivery cohort dates"
+msgstr "Tanggal cohort pengiriman"

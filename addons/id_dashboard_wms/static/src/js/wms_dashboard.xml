@@ -66,6 +66,10 @@
                         </div>
                     </div></details>
                 <p class="dashboard-context">Stok terkini · pengiriman seluruh periode. Kategori untuk stok; armada untuk pengiriman dan biaya.</p>
+                    <details class="small"><summary>Delivery cohort dates</summary>    <div class="d-flex flex-wrap gap-3 my-2">
+        <label>Scheduled from<input type="date" class="form-control form-control-sm" data-field="cohortStart" t-att-value="state.cohortStart" t-on-change="onCohortDate"/></label>
+        <label>Scheduled through<input type="date" class="form-control form-control-sm" data-field="cohortEnd" t-att-value="state.cohortEnd" t-on-change="onCohortDate"/></label>
+    </div></details>
                 </header>
 
                 <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-out="state.error"/>
@@ -211,6 +215,24 @@
                             </div>
                         </div>
                     </section>
+
+
+<section class="id-wms__section" t-if="state.data.cohort" aria-label="Scheduled delivery cohort">
+    <h2 class="id-wms__section-title">Scheduled delivery cohort</h2>
+    <p class="text-muted small">Root outgoing DOs, including backorders and cancellations. Current scheduled date is the promise; H+1/H+2 use WITA calendar days after that date, not order acceptance. Only fully elapsed H+1/H+2 days enter the denominator. Category filter does not apply; vehicle follows the root DO.</p>
+
+    <p class="small"><t t-out="state.data.cohort.start"/> → <t t-out="state.data.cohort.end"/> · WITA · <t t-out="state.data.cohort.count"/> root DOs</p>
+    <div class="id-wms__cards">
+        <div class="id-wms__card"><span class="id-wms__card-title">OTIF at scheduled timestamp</span><strong class="id-wms__card-value" t-out="pct(state.data.cohort.otif)"/><span class="small">Due DOs: <t t-out="state.data.cohort.otif_due"/></span></div>
+        <div class="id-wms__card"><span class="id-wms__card-title">Completed by H+1</span><strong class="id-wms__card-value" t-out="pct(state.data.cohort.h1)"/><span class="small">Mature cohort: <t t-out="state.data.cohort.h1_due"/></span></div>
+        <div class="id-wms__card"><span class="id-wms__card-title">Completed by H+2</span><strong class="id-wms__card-value" t-out="pct(state.data.cohort.h2)"/><span class="small">Mature cohort: <t t-out="state.data.cohort.h2_due"/></span></div>
+        <div class="id-wms__card"><span class="id-wms__card-title">Open backlog</span><strong class="id-wms__card-value" t-out="state.data.cohort.backlog"/><span class="small">p90 age (days): <t t-out="state.data.cohort.backlog_p90_days ?? '—'"/></span></div>
+    </div>
+    <p class="small">Completion offset from schedule (hours): median <t t-out="hours(state.data.cohort.lead_median_hours)"/> · p90 <t t-out="hours(state.data.cohort.lead_p90_hours)"/>. Cancelled chains: <t t-out="state.data.cohort.cancelled"/> (<t t-out="pct(state.data.cohort.cancel_rate)"/>). Unknown demand: <t t-out="state.data.cohort.unknown_demand"/>.</p>
+    <p class="text-muted small">A cancellation remains in the cohort and cannot count as success. Closed partial chains are failures, not open backlog. Return receipts and first-attempt/POD reasons are separate sources.</p>
+    <button class="btn btn-sm btn-outline-secondary" t-on-click="openCohort">Delivery cohort source</button>
+    <details><summary>Recorded DO rejection reasons</summary><p class="small">Distinct root DOs per reason; one root may have multiple reasons across backorders.</p><ul><li t-foreach="state.data.cohort.reasons" t-as="r" t-key="r.reason"><t t-out="cohortReason(r.reason)"/>: <t t-out="r.count"/></li></ul></details>
+</section>
 
                     <!-- BABAK 3: DETAIL TABS & ACTION QUEUES -->
                     <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">

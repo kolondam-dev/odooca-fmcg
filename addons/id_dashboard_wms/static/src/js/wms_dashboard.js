@@ -49,6 +49,7 @@ export class WmsDashboard extends Component {
             error: null,
             fmcgCategory: "",
             vehicleId: null,
+            cohortStart: "", cohortEnd: "",
             filters: { categories: [], vehicles: [] },
             data: null,
             activeTab: "expiry", // 'expiry', 'rejections', 'categories', 'fleet'
@@ -73,6 +74,7 @@ export class WmsDashboard extends Component {
             const data = await this.orm.call("id.wms.dashboard", "get_data", [], {
                 fmcg_category: this.state.fmcgCategory || false,
                 vehicle_id: this.state.vehicleId || false,
+                cohort_start: this.state.cohortStart || null, cohort_end: this.state.cohortEnd || null,
             });
             if (version === this.requestVersion) this.state.data = data;
         } catch (err) {
@@ -81,6 +83,19 @@ export class WmsDashboard extends Component {
             if (version === this.requestVersion) this.state.loading = false;
         }
     }
+
+    onCohortDate(ev) { this.state[ev.target.dataset.field] = ev.target.value; this.load(); }
+    openCohort() {
+        if (this.state.loading || !this.state.data?.cohort) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Delivery cohort source"),
+            res_model: "stock.picking", views: [[false, "list"], [false, "form"]],
+            domain: [["id", "in", this.state.data.cohort.source_ids]]});
+    }
+    cohortReason(key) {
+        return {store_closed: _t("Store closed / delivery refused"), packaging_damaged: _t("Packaging damaged"),
+            near_expiry: _t("Near expiry"), wrong_sku_qty: _t("Wrong SKU or quantity")}[key] || _t("Not recorded");
+    }
+    hours(value) { return value === null || value === undefined ? "—" : NF1.format(value); }
 
     onCategoryChange(ev) {
         this.state.fmcgCategory = ev.target.value;

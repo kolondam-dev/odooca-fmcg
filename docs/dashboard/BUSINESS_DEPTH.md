@@ -21,7 +21,7 @@ Tes native mencakup nol penjualan, outside-catalog, target empat dimensi dan fil
 
 ## Sisa tahap 3 dan kesiapan aset
 
-Tetap dilanjutkan: AR subledger penuh/as-of dan aging migration, promise-to-pay, bridge invoice/delivery dan actual margin per-order dengan mapping COGS, backlog/OTIF/H+1/H+2 dengan cohort/calendar/cutoff yang eksplisit, reasons per line/DO, distribusi assortment eligible per outlet dan weighted distribution. Tidak membuat metrik kosong dengan angka perkiraan untuk menyatakan semuanya selesai.
+Implementasi read-model berikutnya dijelaskan di [STAGE3B.md](STAGE3B.md), dengan batas rekonstruksi dan coverage yang eksplisit. Backlog lanjutan: audit historis immutable, promise-to-pay, bridge invoice/delivery dan actual margin per-order dengan mapping COGS, backlog/OTIF/H+1/H+2 dengan cohort/calendar/cutoff yang eksplisit, reasons per line/DO, distribusi assortment eligible per outlet dan weighted distribution. Tidak membuat metrik kosong dengan angka perkiraan untuk menyatakan semuanya selesai.
 
 [F] Audit sumber master aset: product.carton_qty, carton_length_cm/width_cm/height_cm, carton_volume_cbm, carton_weight_kg; fleet.vehicle.capacity_cbm/capacity_ton dan box_length/width/height; id.fleet.type kapasitas default. Sumber `addons/id_base/models/product_template.py`, `fleet_vehicle.py`, `fmcg_dimension.py`.
 

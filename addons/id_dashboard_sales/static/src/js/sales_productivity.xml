@@ -134,6 +134,20 @@
                     </section>
 
 
+
+<section class="id-sp__section" t-if="state.data.order_margin" aria-label="Traceable order margin">
+    <h2 class="id-sp__section-title">Traceable closed-order margin</h2>
+    <p class="text-muted small">Order-date cohort; current posted invoice revenue in company currency versus linked delivery cost journals. Only fully delivered and invoiced stock orders without returns, credits, service lines or ambiguous shared journals qualify. No standard-cost fallback. Delivery expenses and fleet maintenance are not included.</p>
+    <t t-if="state.data.order_margin.available">
+        <p>Covered orders: <t t-out="state.data.order_margin.covered"/> / <t t-out="state.data.order_margin.count"/> · Covered margin: <strong t-out="money(state.data.order_margin.margin)"/></p>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Order margin sources"><table class="table table-sm">
+            <thead><tr><th>Order</th><th>Posted revenue</th><th>Delivery COGS</th><th>Margin</th><th>Coverage</th></tr></thead><tbody>
+                <tr t-foreach="state.data.order_margin.rows" t-as="m" t-key="m.id"><td><button t-if="m.available" class="btn btn-sm btn-link" t-on-click="() => this.openMarginSources(m)" t-out="m.name"/><span t-else="" t-out="m.name"/></td><td t-out="money(m.revenue)"/><td t-out="money(m.cost)"/><td t-out="money(m.margin)"/><td><t t-if="m.available">Linked posted sources</t><t t-else="" t-out="marginReason(m.reason)"/></td></tr>
+            </tbody></table></div>
+        <p class="text-muted small">Rows shown: <t t-out="state.data.order_margin.rows.length"/> / <t t-out="state.data.order_margin.rows_total"/>. Totals cover all qualifying orders in the selected cohort.</p>
+    </t><p t-else="" class="text-muted">Available to accounting roles</p>
+</section>
+
                     <!-- BABAK 1B: FIELD PRODUCTIVITY PULSE -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">
