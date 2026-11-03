@@ -52,6 +52,7 @@ export class MonetaryDashboard extends Component {
             filters: { areas: [], salesmen: [], today: null, periods: [] },
             data: null,
             periodKey: null,
+            arAsOf: "", arComparison: "",
             subTab: "customers", // 'customers', 'areas', 'salesmen'
         });
 
@@ -74,6 +75,7 @@ export class MonetaryDashboard extends Component {
         try {
             const data = await this.orm.call("id.monetary.dashboard", "get_data", [], {
                 period_key: this.state.periodKey,
+                ar_as_of: this.state.arAsOf || null, ar_comparison: this.state.arComparison || null,
                 area_ids: this.state.areaIds,
                 salesman_ids: this.state.salesmanIds,
             });
@@ -103,6 +105,19 @@ export class MonetaryDashboard extends Component {
             this.state.salesmanIds.push(id);
         }
         this.load();
+    }
+
+    onHistoryDate(ev) { this.state[ev.target.dataset.field] = ev.target.value; this.load(); }
+    historyBucket(key) {
+        return {not_due: _t("Not due"), overdue_1_7: "1–7", overdue_8_14: "8–14",
+            overdue_15_30: "15–30", overdue_over_30: ">30", credit: _t("Credit"),
+            new: _t("New item"), settled: _t("Settled")}[key] || key;
+    }
+    openHistoricalLedger() {
+        if (this.state.loading || !this.state.data?.ar_history?.available) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Snapshot source journal items"),
+            res_model: "account.move.line", views: [[false, "list"], [false, "pivot"]],
+            domain: this.state.data.ar_history.domain});
     }
 
     onPeriodChange(ev) { this.state.periodKey = ev.target.value; this.load(); }

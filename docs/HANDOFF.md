@@ -1,3 +1,9 @@
+## 2026-11-03T13:43:45+07:00 — agent codex-pwa — Dashboard tahap3B
+**Berubah:** subledger AR per accounting cutoff+aging migration, scheduled root DO/backorder cohort+H1/H2/OTIF/backlog, margin closed order dari linked invoice/delivery cost journals. Kontrak dan batas sumber: docs/dashboard/STAGE3B.md. Native ACL/company/cost role, unavailable coverage dan bounded queries; tidak mengubah PWA/seed/posting/server.
+**Diverifikasi:** lokal Ruff/10manifest/compile/XML/13Node/diff PASS. Native fixtures/tests dan visual capture panel1440/1024/768 ditambah.
+**Belum diuji:** Odoo lokal terhalang setup Postgres setgroups/seteuid; native CI, upgrade persisted baseline, screenshot dan review HEAD final menunggu. Bukan acceptance staging/perangkat.
+**Butir terbuka:** partial/refund generic COGS, immutable AR audit/promise-to-pay, POD event bridge dan seluruh asset/3D roadmap tetap eksplisit terpisah. Tidak merge/deploy.
+
 ## 2026-11-03T07:07:06+07:00 — codex — Koreksi langsung PR76: rollover harian DEMO dan assignment
 [F] Atas instruksi pemilik, codex mengimplementasikan perbaikan review #6591612992, bukan review independen. Sesi aktif wajib milik tanggal WITA hari ini, termasuk DEMO dan record demo_unrestricted. Saat membuka absensi hari baru, record sebelumnya diarsipkan per tanggal/session tanpa membuat clock-out fiktif atau mengubah outbox. Same-day DEMO ke LIVE dan relaksasi foto/GPS demo dipertahankan; LIVE biasa tetap memakai toleransi skew 10 detik.
 [F] Rollover assignment hanya menyalin rencana aktif bertanggal sebelum hari ini. Rencana masa depan tidak dipakai. Assignment hari ini yang nonaktif menghasilkan AccessError eksplisit tanpa create/reaktivasi; assignment aktif hari ini tetap idempoten. Empat native regression methods ditambahkan. Browser regression meliputi hari baru sesudah sesi aktif dan closed pada phone/tablet.

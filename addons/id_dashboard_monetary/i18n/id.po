@@ -287,3 +287,179 @@ msgstr "Belum tersedia"
 #: code:addons/id_dashboard_monetary/models/monetary_dashboard.py:0
 msgid "Book margin source entries"
 msgstr "Jurnal sumber margin buku"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Historical AR subledger"
+msgstr "Subledger piutang historis"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Accounting-date reconstruction from current posted journal items and current reconciliation links; not an immutable historical audit snapshot. Current-invoice KPIs above remain separate. Area and salesperson use current attribution."
+msgstr "Rekonstruksi tanggal akuntansi dari jurnal terposting dan relasi rekonsiliasi saat ini; bukan arsip audit historis yang terkunci. KPI invoice terkini di atas tetap terpisah. Area dan salesperson mengikuti atribusi saat ini."
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "As of"
+msgstr "Per tanggal"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Compare from"
+msgstr "Bandingkan sejak"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Open debit items"
+msgstr "Pos debit terbuka"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Credits and unallocated receipts"
+msgstr "Kredit dan penerimaan belum dialokasikan"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Net receivable"
+msgstr "Piutang bersih"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Net movement"
+msgstr "Perubahan bersih"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Missing maturity dates:"
+msgstr "Tanggal jatuh tempo kosong:"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid ". These items are classified as not due. Credits are shown separately; negative movement is not automatically cash collection."
+msgstr ". Pos ini dikelompokkan belum jatuh tempo. Kredit ditampilkan terpisah; penurunan saldo tidak otomatis berarti penagihan tunai."
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Days overdue"
+msgstr "Hari lewat jatuh tempo"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Debit"
+msgstr "Debit"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Credit"
+msgstr "Kredit"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Net"
+msgstr "Bersih"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Aging migration by journal item"
+msgstr "Migrasi aging per pos jurnal"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "From"
+msgstr "Dari"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "To"
+msgstr "Ke"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Items"
+msgstr "Pos"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Opening"
+msgstr "Awal"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Closing"
+msgstr "Akhir"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Snapshot source journal items"
+msgstr "Pos jurnal sumber snapshot"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Margin"
+msgstr "Margin"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Coverage"
+msgstr "Cakupan"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.js:0
+msgid "Not due"
+msgstr "Belum jatuh tempo"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.js:0
+msgid "New item"
+msgstr "Pos baru"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.js:0
+msgid "Settled"
+msgstr "Selesai"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_history.py:0
+msgid "Invalid accounting snapshot date."
+msgstr "Tanggal snapshot akuntansi tidak valid."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_history.py:0
+msgid "Comparison must precede the snapshot; future snapshots are not supported."
+msgstr "Tanggal pembanding harus sebelum snapshot; snapshot masa depan tidak didukung."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_history.py:0
+msgid "Too many ledger lines; narrow the scope."
+msgstr "Terlalu banyak pos jurnal; persempit cakupan."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_history.py:0
+msgid "Too many reconciliations; narrow the scope."
+msgstr "Terlalu banyak rekonsiliasi; persempit cakupan."

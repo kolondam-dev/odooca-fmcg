@@ -56,3 +56,21 @@ test('Sales money uses normalized company currency and preserves decimal precisi
     assert.equal(d.money(12.5),'USD 12,50');
     d.state.data={currency:'IDR',currency_digits:0};assert.equal(d.money(12500),'Rp 12.500');
 });
+
+test('historical ledger drilldown uses server snapshot scope and blocks stale clicks',()=>{
+    const {d}=dashboard('MonetaryDashboard','id_dashboard_monetary/static/src/js/monetary_dashboard.js');
+    const domain=[['date','<=','2025-01-31'],['company_id','in',[1]]];
+    d.state.data={ar_history:{available:true,domain}};
+    let action;d.action={doAction:a=>{action=a;}};
+    d.openHistoricalLedger();assert.equal(action.domain,domain);
+    action=null;d.state.loading=true;d.openHistoricalLedger();assert.equal(action,null);
+});
+test('cohort and margin source drilldowns preserve exact server record ids',()=>{
+    const {d}=dashboard('WmsDashboard','id_dashboard_wms/static/src/js/wms_dashboard.js');
+    d.state.data={cohort:{source_ids:[2,3]}};let action;d.action={doAction:a=>{action=a;}};
+    d.openCohort();assert.equal(JSON.stringify(action.domain),'[["id","in",[2,3]]]');
+    const {d:s}=dashboard('SalesProductivity','id_dashboard_sales/static/src/js/sales_productivity.js');
+    s.action=d.action;s.openMarginSources({available:true,invoice_ids:[4],journal_ids:[5]});
+    assert.equal(JSON.stringify(action.domain),'[["id","in",[4,5]]]');
+    action=null;s.openMarginSources({available:false});assert.equal(action,null);
+});

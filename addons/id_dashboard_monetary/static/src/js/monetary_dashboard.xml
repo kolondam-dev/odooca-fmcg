@@ -66,6 +66,10 @@
                             </button>
                         </div>
                     </div></details>
+                    <details class="small"><summary>Historical AR dates</summary>    <div class="d-flex flex-wrap gap-3 my-2">
+        <label>As of<input type="date" class="form-control form-control-sm" data-field="arAsOf" t-att-value="state.arAsOf" t-on-change="onHistoryDate"/></label>
+        <label>Compare from<input type="date" class="form-control form-control-sm" data-field="arComparison" t-att-value="state.arComparison" t-on-change="onHistoryDate"/></label>
+    </div></details>
                 </header>
 
                 <div t-if="state.error" class="alert alert-danger mb-0" role="alert" t-out="state.error"/>
@@ -227,6 +231,32 @@
                         <p t-if="!state.data.book_margin.available" class="text-muted small">Belum tersedia: <t t-out="bookMarginReason"/>. Data tidak lengkap tidak dianggap margin 100%.</p>
                         <button t-if="state.data.book_margin.domain.length" class="btn btn-sm btn-outline-secondary" t-on-click="openBookMargin">Jurnal sumber</button>
                     </section>
+
+<section class="id-md__section" t-if="state.data.ar_history" aria-label="Historical AR subledger">
+    <h2 class="id-md__section-title">Historical AR subledger</h2>
+    <p class="text-muted small">Accounting-date reconstruction from current posted journal items and current reconciliation links; not an immutable historical audit snapshot. Current-invoice KPIs above remain separate. Area and salesperson use current attribution.</p>
+
+    <t t-if="state.data.ar_history.available">
+        <p class="small"><t t-out="state.data.ar_history.comparison"/> → <t t-out="state.data.ar_history.as_of"/> · <t t-out="state.data.currency"/></p>
+        <div class="id-md__cards">
+            <div class="id-md__card"><span class="id-md__card-title">Open debit items</span><strong class="id-md__card-value" t-out="moneyShort(state.data.ar_history.debit_open)"/></div>
+            <div class="id-md__card"><span class="id-md__card-title">Credits and unallocated receipts</span><strong class="id-md__card-value" t-out="moneyShort(state.data.ar_history.credits)"/></div>
+            <div class="id-md__card"><span class="id-md__card-title">Net receivable</span><strong class="id-md__card-value" t-out="moneyShort(state.data.ar_history.net)"/></div>
+            <div class="id-md__card"><span class="id-md__card-title">Net movement</span><strong class="id-md__card-value" t-out="moneyShort(state.data.ar_history.movement)"/></div>
+        </div>
+        <p class="text-muted small">Missing maturity dates: <t t-out="state.data.ar_history.missing_maturity"/>. These items are classified as not due. Credits are shown separately; negative movement is not automatically cash collection.</p>
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Historical aging buckets"><table class="table table-sm">
+            <thead><tr><th>Days overdue</th><th>Debit</th><th>Credit</th><th>Net</th></tr></thead><tbody>
+                <tr t-foreach="state.data.ar_history.buckets" t-as="b" t-key="b.key"><td t-out="historyBucket(b.key)"/><td t-out="money(b.debit)"/><td t-out="money(b.credit)"/><td t-out="money(b.net)"/></tr>
+            </tbody></table></div>
+        <details><summary>Aging migration by journal item</summary><div class="table-responsive" tabindex="0" role="region" aria-label="Aging migration"><table class="table table-sm">
+            <thead><tr><th>From</th><th>To</th><th>Items</th><th>Opening</th><th>Closing</th></tr></thead><tbody>
+                <tr t-foreach="state.data.ar_history.migration" t-as="m" t-key="m.from + ':' + m.to"><td t-out="historyBucket(m.from)"/><td t-out="historyBucket(m.to)"/><td t-out="m.count"/><td t-out="money(m.opening)"/><td t-out="money(m.closing)"/></tr>
+            </tbody></table></div></details>
+        <button class="btn btn-sm btn-outline-secondary" t-on-click="openHistoricalLedger">Snapshot source journal items</button>
+    </t><p t-else="" class="text-muted">Available to accounting roles</p>
+</section>
+
                     <!-- BABAK 3: ACTION QUEUE & TOP CUSTOMER EXPOSURE -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
                         <div class="d-flex justify-content-between align-items-center mb-2">
