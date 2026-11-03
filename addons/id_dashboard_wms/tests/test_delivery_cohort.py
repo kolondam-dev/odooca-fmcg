@@ -23,8 +23,11 @@ class TestDeliveryCohort(TransactionCase):
                     "product_uom": product.uom_id.id, "product_uom_qty": demand, "quantity": actual,
                     "location_id": warehouse.lot_stock_id.id, "location_dest_id": customer.id})]})
             # Read-model fixture: native records with explicit states/times, not a warehouse workflow test.
-            rec.move_ids.write({"state": state, "date": done or scheduled})
             rec.scheduled_date = scheduled
+            rec.move_ids.write({"state": state, "date": done or scheduled})
+            self.assertEqual(rec.scheduled_date, fields.Datetime.to_datetime(scheduled))
+            if state in ("done", "cancel"):
+                self.assertEqual(rec.state, state)
             return rec
 
         partial = picking(6, 6, "done", "2025-07-15 01:00:00")

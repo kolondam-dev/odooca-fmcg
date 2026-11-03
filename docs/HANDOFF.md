@@ -1,3 +1,6 @@
+## 2026-11-03T16:22:53+07:00 — agent codex-pwa — PR80 cancelled fixture ordering
+[F] Atas permintaan pemilik, memperbaiki install-test HEAD53fe147 (0failed/1error/171). Fixture menulis jadwal sesudah cancelled, dilarang inverse native Odoo19. Schedule kini ditetapkan saat draft sebelum terminal state/actual date; assertion jadwal tersimpan dan state terminal ditambah, assertion H1/H2/OTIF/backlog tetap. Production service tidak diubah. [BU] CI native/visual/upgrade HEAD baru dan review menunggu; tidak merge/deploy/server mutation.
+
 ## 2026-11-03T13:51:40+07:00 — agent codex-pwa — PR80 fixture Odoo19 dan kontrol sumber
 [F] Run ce8872a:0failed/1error/171 native tests, hanya obsolete stock.move.name pada fixture delivery; field dihapus. Assertion root/backorder/cancel/backlog/OTIF tetap ketat. Coverage HPP diwajibkan perjournal+product, kontrol AR ledger/cross-scope serta precision currency diperkuat. Fixture ci_db margin positif + source assertions ditambahkan. Lokal16Node/Ruff/10manifest/XML/compile/diff PASS. [BU] Native/visual/upgrade/review HEAD final menunggu, tidak merge/deploy/server mutation.
 

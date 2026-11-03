@@ -300,3 +300,8 @@
 - ce8872a:0failed/1error dari171 native tests; stock.move.name dihapus pada Odoo19, hapus field obsolete fixture tanpa melemahkan assertion cohort. AR history dan margin native berjalan tanpa error.
 - Coverage HPP diperketat perjournal+product, precision company currency, AR cross-scope reconciliation control, fixture visual margin positif, 16Node/Ruff/XML/manifests/compile/diff PASS. CI final/visual/upgrade menunggu; tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-03T13:51:40+07:00
+
+[2026-11-03T16:22:53+07:00] [INFO] PR80 perbaikan urutan fixture cancelled picking
+- HEAD53fe147 install-test0failed/1error/171: native Odoo menolak schedule write pada transfer cancelled. Jadwal kini ditetapkan sebelum terminal state, lalu actual move.date; assertion schedule dan terminal state ditambah. Tidak mengubah guard native atau assertion KPI.
+- Sumber primer Odoo19 stock_picking._set_scheduled_date dan _compute_scheduled_date diperiksa. Lokal Ruff/manifests/compile/diff dan16Node PASS; CI HEAD baru/review/visual menunggu. Tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-03T16:22:53+07:00
