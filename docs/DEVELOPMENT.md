@@ -80,7 +80,7 @@ Lihat `docs/SCOPE.md` §10. Menjadi uji audit dan snapshot di M2.
 | `RESET_DB` | tidak | Token **baru** untuk reset; hapus variabel setelah selesai |
 | `ODOO_WORKERS` `ODOO_MAX_CRON` `PORT` | tidak | Default 0 / 1 / 8069 |
 
-Urutan `deploy/init.sh` (diuji 5 skenario di sandbox, `docs/SANDBOX.md`): tunggu Postgres → peran & kepemilikan → skema `id_meta` → `/tmp/odoo.conf` → reset (token baru; tabel dihapus satu per satu) → restore dump **atau** build penuh (`base` → perusahaan ID/IDR → `INIT_MODULES`; mark `init.base`) → `postinit_v1` → jalankan Odoo. Semua langkah ber-mark; restart aman (±6 s).
+Urutan `deploy/init.sh` (diuji 5 skenario di sandbox, `docs/SANDBOX.md`): tunggu Postgres → peran & kepemilikan → skema `id_meta` → `/tmp/odoo.conf` → reset (token baru; tabel dihapus satu per satu) → restore dump **atau** build penuh (`base` → perusahaan ID/IDR → `INIT_MODULES`; mark `init.base`) → `postinit_v1` → `geo_master_v1` (backfill 15 kab/kota + 171 kecamatan + 1.839 desa/kelurahan) → `geo_province_v1` (isi `state_id` Sulut yang kosong) → jalankan Odoo. Semua langkah ber-mark; restart aman (±6 s). Kedua langkah geo dijelaskan di `docs/geo/GEO_MASTER_LOADER.md`.
 
 **Railway Hobby:** nyalakan layanan hanya saat perlu; pasang hard usage limit; matikan auto-deploy dari git (push tidak boleh menyalakan layanan). Biaya dan batas: `docs/SCOPE.md` §4B.
 
