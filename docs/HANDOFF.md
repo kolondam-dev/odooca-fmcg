@@ -1,3 +1,23 @@
+## 2026-11-03T08:12:00+07:00 — antigravity — Fitur menu Delivery untuk login driver-01
+**Branch:** `agen/pwa-driver-role-menu`
+**PR:** [#77](https://github.com/kolondam-dev/odooca-fmcg/pull/77)
+**Status:** In Progress / PR Created for CI & Merge Review
+
+### Ringkasan Perubahan:
+1. **Odoo Backend Dynamic Role Mapping (`addons/id_mobile_api/models/mobile_workday.py`):**
+   - Mendeteksi login user atau partner function: jika mengandung `driver`, role diatur menjadi `["delivery"]` dan diberikan capability `["collection.capture"]`.
+   - Salesman tetap menerima `["sales"]`.
+2. **PWA Frontend Actor & Manifest Mapping (`pwa/src/App.tsx`, `pwa/src/data/mock.ts`):**
+   - `App.tsx`: menginisialisasi `MockProvider` dengan actor `"delivery"` saat user memiliki role `delivery` (tanpa `sales`).
+   - `mock.ts`: `MockProvider.snapshot()` secara otomatis melengkapi manifest pengiriman default Manado (`DEMO-DO-001` & `DEMO-DO-002`) untuk driver terautentikasi saat server belum memetakan DO.
+   - Menu beranda menampilkan kartu **Pengiriman (2 manifest)** dan tab navigasi bawah berganti menjadi **Delivery** (menu Sales disembunyikan untuk driver).
+3. **Verifikasi:**
+   - Unit test di `pwa/tests/authenticated-provider.test.ts` PASS (3 tests).
+   - Seluruh 23 suites test vitest PASS (369 tests).
+   - TypeScript `tsc --noEmit` PASS.
+   - Contracts OpenAPI drift check PASS.
+   - Ruff linting PASS (0 errors) & manifests check PASS (10 addons).
+
 ## 2026-11-03T07:07:06+07:00 — codex — Koreksi langsung PR76: rollover harian DEMO dan assignment
 [F] Atas instruksi pemilik, codex mengimplementasikan perbaikan review #6591612992, bukan review independen. Sesi aktif wajib milik tanggal WITA hari ini, termasuk DEMO dan record demo_unrestricted. Saat membuka absensi hari baru, record sebelumnya diarsipkan per tanggal/session tanpa membuat clock-out fiktif atau mengubah outbox. Same-day DEMO ke LIVE dan relaksasi foto/GPS demo dipertahankan; LIVE biasa tetap memakai toleransi skew 10 detik.
 [F] Rollover assignment hanya menyalin rencana aktif bertanggal sebelum hari ini. Rencana masa depan tidak dipakai. Assignment hari ini yang nonaktif menghasilkan AccessError eksplisit tanpa create/reaktivasi; assignment aktif hari ini tetap idempoten. Empat native regression methods ditambahkan. Browser regression meliputi hari baru sesudah sesi aktif dan closed pada phone/tablet.

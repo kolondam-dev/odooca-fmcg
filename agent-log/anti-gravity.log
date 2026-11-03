@@ -2043,3 +2043,9 @@
 - Lokal npm run contracts:check PASS
 - Commit ba82d42 di-push ke agen/permanent-demo-session-fix
 - Task managed by antigravity-agent at 2026-11-03T06:24:25+07:00
+
+[2026-11-03T08:12:57+07:00] [INFO] Menu Delivery untuk akun driver-01
+- Backend: mapping role delivery untuk user login/fungsi driver di _bootstrap_payload
+- Frontend: App.tsx memilih actor MockProvider delivery dan mock.ts menyuplai manifest pengiriman
+- PR #77 dibuka untuk integrasi ke main
+- Task managed by antigravity-agent at 2026-11-03T08:12:57+07:00
