@@ -84,22 +84,27 @@ laporan, bukan aturan yang memblokir input.
 
 ## 5. Menjalankan manual
 
-Di kontainer (sama seperti `deploy/init.sh`):
+Di kontainer (sama seperti `deploy/init.sh`). Perhatikan: `$PGDATABASE`, `$PGUSER`, dan
+`$PGPASSWORD` diekspansi **di dalam** kontainer, jadi perintah dibungkus `sh -c`.
 
 ```bash
 # 1) Pratinjau: hitung perubahan tanpa menulis
 docker compose exec -e GEO_LOAD_DRY_RUN=1 -T odoo \
-  odoo shell -c /tmp/odoo.conf -d "$PGDATABASE" --no-http < /opt/scripts/ops/load_geo_master.py
+  sh -c 'odoo shell -c /tmp/odoo.conf -d "$PGDATABASE" --no-http' \
+  < scripts/ops/load_geo_master.py
 
 # 2) Terapkan
 docker compose exec -T odoo \
-  odoo shell -c /tmp/odoo.conf -d "$PGDATABASE" --no-http < /opt/scripts/ops/load_geo_master.py
+  sh -c 'odoo shell -c /tmp/odoo.conf -d "$PGDATABASE" --no-http' \
+  < scripts/ops/load_geo_master.py
 
 # 3) Provinsi (pratinjau lalu terapkan)
 docker compose exec -e GEO_PROVINCE_DRY_RUN=1 -T odoo \
-  odoo shell -c /tmp/odoo.conf -d "$PGDATABASE" --no-http < /opt/scripts/ops/fix_geo_province.py
+  sh -c 'odoo shell -c /tmp/odoo.conf -d "$PGDATABASE" --no-http' \
+  < scripts/ops/fix_geo_province.py
 docker compose exec -T odoo \
-  odoo shell -c /tmp/odoo.conf -d "$PGDATABASE" --no-http < /opt/scripts/ops/fix_geo_province.py
+  sh -c 'odoo shell -c /tmp/odoo.conf -d "$PGDATABASE" --no-http' \
+  < scripts/ops/fix_geo_province.py
 ```
 
 Kredensial peran Odoo (`PGUSER`/`PGPASSWORD`) harus diset seperti `odoo_run` di

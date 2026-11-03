@@ -1,6 +1,6 @@
 ## 2026-11-03T08:12:30+07:00 — claude-dev — PR-3: backfill master wilayah Sulut + provinsi (15/171/1.839)
 **Branch:** `agen/geo-master-loader` (basis `origin/main` = `69149f6`)
-**Status:** siap PR; [BU] uji native Odoo + CI belum dijalankan
+**Status:** PR [#78](https://github.com/kolondam-dev/odooca-fmcg/pull/78); CI 12/13 hijau pada `83296b0` (static, invariant-tests, seed-invariants, install-test 5m27s, init-test 5m15s, pwa-*); `upgrade-runtime` menyusul
 
 ### Perubahan:
 - `scripts/ops/load_geo_master.py` (baru): loader idempoten `id.city`/`id.district`/`id.subdistrict` dari `data/master/*.csv` + `data/geo/sulut_districts.geojson`. Mengisi `kode_kemendagri`, `city_id`, `district_id`, koordinat, `area_km2`, bbox, `geojson_polygon`, `geom_source/quality/updated_at`. Tidak pernah mengganti `code` legacy (`KEC-*`/`KEL-*`) maupun nama record lama; `postal_code`/lat/lng kelurahan yang sudah terisi dipertahankan (D4=A).
@@ -15,7 +15,7 @@
 - [F] `ruff check .` PASS; `python scripts/check_manifests.py` PASS (10 addon).
 - [F] `python -m unittest tests.test_geo_master_data tests.test_geo_master_loader` 23/23 PASS (11 di antaranya kontrak loader baru: mapping, hierarki, bbox == seed XML, QA flag, area).
 - [F] `python scripts/ops/verify_seed_invariants.py` PASS; `bash -n deploy/init.sh` PASS.
-- [BU] `addons/id_base/tests/test_geo_master_loader.py` (4 metode native: hierarki, identitas legacy+geometri, idempotensi loader, idempotensi fix provinsi) baru berjalan di CI `install-test`.
+- [F] `addons/id_base/tests/test_geo_master_loader.py` (4 metode native: hierarki, identitas legacy+geometri, idempotensi loader, idempotensi fix provinsi) lulus di CI `install-test` (`83296b0`, 5m27s).
 - [A] Loader tidak menyentuh `res.partner`, transaksi, akuntansi, stok, atau `data/registers`; 354 partner tetap memakai `district_id`/`subdistrict_id` lama.
 
 ## 2026-11-03T07:07:06+07:00 — codex — Koreksi langsung PR76: rollover harian DEMO dan assignment
