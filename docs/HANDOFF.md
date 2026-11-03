@@ -1,3 +1,23 @@
+## 2026-11-03T08:12:30+07:00 — claude-dev — PR-3: backfill master wilayah Sulut + provinsi (15/171/1.839)
+**Branch:** `agen/geo-master-loader` (basis `origin/main` = `69149f6`)
+**Status:** siap PR; [BU] uji native Odoo + CI belum dijalankan
+
+### Perubahan:
+- `scripts/ops/load_geo_master.py` (baru): loader idempoten `id.city`/`id.district`/`id.subdistrict` dari `data/master/*.csv` + `data/geo/sulut_districts.geojson`. Mengisi `kode_kemendagri`, `city_id`, `district_id`, koordinat, `area_km2`, bbox, `geojson_polygon`, `geom_source/quality/updated_at`. Tidak pernah mengganti `code` legacy (`KEC-*`/`KEL-*`) maupun nama record lama; `postal_code`/lat/lng kelurahan yang sudah terisi dipertahankan (D4=A).
+- `scripts/ops/fix_geo_province.py` (baru): mengisi `state_id` Sulut pada company, `id.city`, `id.district` (related stored dihitung ulang), `id.coverage.area`, dan partner yang punya wilayah Sulut. Partner luar daerah tidak disentuh (D3=A: data-fix + laporan, tanpa constraint keras).
+- `data/master/legacy_geo_mapping.csv` (baru, 37 baris): satu-satunya sumber pemetaan identitas legacy; 18 kecamatan + 17 kelurahan `mapped`, 2 kelurahan `legacy` (`KEL-BTG-GRW`, `KEL-TMH-PSL`) sesuai D5=B.
+- `addons/id_base/data/id_district_data.xml`: `area_km2` untuk 17 kelurahan terpetakan, agar instalasi baru dan backfill DB lama konvergen (tanpa mengubah kode/nama/kode pos).
+- `deploy/init.sh`: blok `geo_master_v1` dan `geo_province_v1` setelah `seed_pjp_workdays_v1`, sebelum Odoo dijalankan; mark hanya diset bila skrip sukses.
+- `docs/geo/GEO_MASTER_LOADER.md` (baru): runbook (dry-run, env flag, idempotensi, verifikasi SQL, rollback, batasan). `docs/DEVELOPMENT.md` §7 diperbarui.
+- `id_base` versi `19.0.1.3.0`.
+
+### Verifikasi lokal:
+- [F] `ruff check .` PASS; `python scripts/check_manifests.py` PASS (10 addon).
+- [F] `python -m unittest tests.test_geo_master_data tests.test_geo_master_loader` 23/23 PASS (11 di antaranya kontrak loader baru: mapping, hierarki, bbox == seed XML, QA flag, area).
+- [F] `python scripts/ops/verify_seed_invariants.py` PASS; `bash -n deploy/init.sh` PASS.
+- [BU] `addons/id_base/tests/test_geo_master_loader.py` (4 metode native: hierarki, identitas legacy+geometri, idempotensi loader, idempotensi fix provinsi) baru berjalan di CI `install-test`.
+- [A] Loader tidak menyentuh `res.partner`, transaksi, akuntansi, stok, atau `data/registers`; 354 partner tetap memakai `district_id`/`subdistrict_id` lama.
+
 ## 2026-11-03T07:07:06+07:00 — codex — Koreksi langsung PR76: rollover harian DEMO dan assignment
 [F] Atas instruksi pemilik, codex mengimplementasikan perbaikan review #6591612992, bukan review independen. Sesi aktif wajib milik tanggal WITA hari ini, termasuk DEMO dan record demo_unrestricted. Saat membuka absensi hari baru, record sebelumnya diarsipkan per tanggal/session tanpa membuat clock-out fiktif atau mengubah outbox. Same-day DEMO ke LIVE dan relaksasi foto/GPS demo dipertahankan; LIVE biasa tetap memakai toleransi skew 10 detik.
 [F] Rollover assignment hanya menyalin rencana aktif bertanggal sebelum hari ini. Rencana masa depan tidak dipakai. Assignment hari ini yang nonaktif menghasilkan AccessError eksplisit tanpa create/reaktivasi; assignment aktif hari ini tetap idempoten. Empat native regression methods ditambahkan. Browser regression meliputi hari baru sesudah sesi aktif dan closed pada phone/tablet.

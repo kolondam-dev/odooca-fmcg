@@ -95,3 +95,13 @@
 
 [2026-11-02T11:40:32+07:00] [INFO] PR-2
 - Task managed by claude-dev agent at 2026-11-02T11:40:32+07:00
+
+[2026-11-03T08:13:02+07:00] [INFO] PR-3 backfill master wilayah Sulut + provinsi
+- Loader idempoten scripts/ops/load_geo_master.py: 15 kota / 171 kecamatan / 1.839 desa dari data/master + geojson; kode dan nama legacy tidak diubah.
+- scripts/ops/fix_geo_province.py mengisi state_id company, id.city, id.district (related stored), coverage area, dan partner Sulut; partner luar daerah tidak disentuh.
+- data/master/legacy_geo_mapping.csv (37 baris) menjadi satu-satunya sumber pemetaan legacy; 17 kelurahan mapped, 2 legacy (KEL-BTG-GRW, KEL-TMH-PSL) sesuai D5=B.
+- Seed id_district_data.xml mendapat area_km2 untuk 17 kelurahan terpetakan agar instalasi baru dan backfill konvergen.
+- deploy/init.sh: mark geo_master_v1 dan geo_province_v1 setelah seed_pjp_workdays_v1; mark hanya diset bila skrip sukses.
+- Verifikasi lokal: ruff PASS, 10 manifest PASS, 22 unittest (12 data + 11 loader + 1 lama) PASS, verify_seed_invariants PASS, bash -n PASS.
+- Uji native addons/id_base/tests/test_geo_master_loader.py (4 metode) menunggu CI install-test; belum merge/deploy.
+- Task managed by claude-dev agent at 2026-11-03T08:13:02+07:00

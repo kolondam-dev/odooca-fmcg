@@ -248,6 +248,34 @@ if ! has_mark seed_pjp_workdays_v1; then
   fi
 fi
 
+# 5d. Master Wilayah Sulut: backfill id.city/id.district/id.subdistrict (15/171/1.839).
+# XML seed memakai noupdate="1", jadi instalasi lama tidak ikut terisi oleh upgrade modul;
+# skrip ini yang menyelaraskan DB lama dan melengkapi sisa hierarki di instalasi baru.
+if ! has_mark geo_master_v1; then
+  if [ -f "/opt/scripts/ops/load_geo_master.py" ]; then
+    log "geo_master_v1: memuat master wilayah Sulut (kecamatan + desa/kelurahan)..."
+    if odoo_run shell --no-http < /opt/scripts/ops/load_geo_master.py; then
+      set_mark geo_master_v1
+      log "geo_master_v1: berhasil dimuat dan ditandai."
+    else
+      log "geo_master_v1 error: pemuatan gagal, mark tidak diset agar dapat diulang pada boot berikutnya."
+    fi
+  fi
+fi
+
+# 5e. Provinsi (state_id) untuk company, partner Sulut, coverage area, dan id.city.
+if ! has_mark geo_province_v1; then
+  if [ -f "/opt/scripts/ops/fix_geo_province.py" ]; then
+    log "geo_province_v1: mengisi state_id Sulawesi Utara yang kosong..."
+    if odoo_run shell --no-http < /opt/scripts/ops/fix_geo_province.py; then
+      set_mark geo_province_v1
+      log "geo_province_v1: berhasil diisi dan ditandai."
+    else
+      log "geo_province_v1 error: pengisian gagal, mark tidak diset agar dapat diulang pada boot berikutnya."
+    fi
+  fi
+fi
+
 # 6. Jalankan Odoo (hemat RAM untuk Railway Hobby; sesuaikan lewat env)
 log "menjalankan Odoo"
 exec env PGUSER="$ODOO_DB_USER" PGPASSWORD="$ODOO_DB_PASSWORD" \
