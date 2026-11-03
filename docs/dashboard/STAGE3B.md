@@ -33,3 +33,7 @@ Regresi native ditambahkan: installment, unallocated credit, current full reconc
 [F] Lokal: Ruff/manifests/compile/XML/16 Node/diff dijalankan. [BU] Odoo lokal tidak tersedia: setup Postgres gagal pada sandbox setgroups/seteuid. Native Odoo, upgrade database persisten dan visual nyata harus dibuktikan CI HEAD final. Tidak menyatakan hasil CI atau deployment sebelum bukti tersedia.
 
 Sisa roadmap tetap dipertahankan: promise-to-pay, immutable snapshots/audit, collection settlement, weighted/outlet-eligible distribution, first-attempt/POD bridge, generic partial/refund cost attribution, stock valuation/slow stock/retur/expiry enrichment, asset capacity/occupancy/mileage/cost allocation, warehouse detail dan Three.js. Panel3B ini bukan klaim seluruh program enhancement selesai.
+
+
+## Penyelesaian lanjutan
+Implementasi backlog kapabilitas pada [3B_CLOSURE.md](3B_CLOSURE.md): frozen audit captures, payment promises/settlement, recognized partial/refund/return COGS, redacted POD corrections/first-evidence, dan published eligible/numeric/weighted distribution. Status PASS mengikuti bukti exact-SHA CI dan review, bukan checklist ini.

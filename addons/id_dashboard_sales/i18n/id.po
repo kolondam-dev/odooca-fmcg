@@ -485,3 +485,100 @@ msgstr "Belum tersedia"
 #: code:addons/id_dashboard_sales/models/order_margin.py:0
 msgid "Too many orders for cost attribution; narrow the period."
 msgstr "Terlalu banyak order untuk atribusi biaya; persempit periode."
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Eligible Outlet Distribution"
+msgstr "Distribusi Outlet Eligible"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/assortment_scope.py:0
+msgid "Outlet and SKU Eligibility"
+msgstr "Eligibility Outlet dan SKU"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/views/assortment_scope_views.xml:0
+msgid "Publish Eligibility"
+msgstr "Sahkan Eligibility"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/assortment_scope.py:0
+msgid "Scope"
+msgstr "Cakupan"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Selling / eligible"
+msgstr "Menjual / eligible"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Numeric %"
+msgstr "Numerik %"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Weighted %"
+msgstr "Berbobot %"
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/order_margin.py:0
+msgid "Too many return movements; narrow the scope."
+msgstr "Terlalu banyak pergerakan retur; persempit cakupan."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/assortment_scope.py:0
+msgid "Publish eligibility through the action."
+msgstr "Sahkan eligibility melalui aksi yang tersedia."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/assortment_scope.py:0
+msgid "Published eligibility is immutable."
+msgstr "Eligibility yang disahkan tidak dapat diubah."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/assortment_scope.py:0
+msgid "Published eligibility cannot be deleted."
+msgstr "Eligibility yang disahkan tidak dapat dihapus."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/assortment_scope.py:0
+msgid "Eligibility period is invalid."
+msgstr "Periode eligibility tidak valid."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/assortment_scope.py:0
+msgid "Select eligible outlets and SKUs before publishing."
+msgstr "Pilih outlet dan SKU eligible sebelum pengesahan."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/assortment_scope.py:0
+msgid "Too many eligibility scopes; narrow the company selection."
+msgstr "Terlalu banyak cakupan eligibility; persempit pilihan perusahaan."
+
+#. module: id_dashboard_sales
+#: code:addons/id_dashboard_sales/models/assortment_scope.py:0
+msgid "Too many distribution lines; narrow the period."
+msgstr "Terlalu banyak baris distribusi; persempit periode."
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "Posted net invoice quantity must match delivered less returned stock"
+msgstr "Kuantitas net faktur terposting harus cocok dengan stok terkirim dikurangi retur"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.js:0
+msgid "Missing, duplicate, or ambiguous posted COGS source"
+msgstr "Sumber HPP terposting kosong, ganda, atau ambigu"
+
+#. module: id_dashboard_sales
+#. odoo-javascript
+#: code:addons/id_dashboard_sales/static/src/js/sales_productivity.xml:0
+msgid "Traceable recognized-order margin"
+msgstr "Margin order diakui yang dapat ditelusuri"

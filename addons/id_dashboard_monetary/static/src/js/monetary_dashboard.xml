@@ -254,10 +254,16 @@
             <thead><tr><th>From</th><th>To</th><th>Items</th><th>Opening</th><th>Closing</th></tr></thead><tbody>
                 <tr t-foreach="state.data.ar_history.migration" t-as="m" t-key="m.from + ':' + m.to"><td t-out="historyBucket(m.from)"/><td t-out="historyBucket(m.to)"/><td t-out="m.count"/><td t-out="money(m.opening)"/><td t-out="money(m.closing)"/></tr>
             </tbody></table></div></details>
+        <button class="btn btn-sm btn-outline-secondary" t-on-click="captureArEvidence">Freeze Current AR Evidence</button>
         <button class="btn btn-sm btn-outline-secondary" t-on-click="openHistoricalLedger">Snapshot source journal items</button>
     </t><p t-else="" class="text-muted">Available to accounting roles</p>
 </section>
 
+<section class="id-md__section" t-if="state.data.settlement?.available" aria-label="Collection settlement">
+<h2 class="id-md__section-title">Recorded Collection Settlement</h2><p class="small">Target-period company scope; posted customer inbound bank/cash payments only. Current native paid/matched flags do not prove the historical date of bank clearing. Payments without posted entries remain a coverage exception.</p><div class="id-md__cards"><div class="id-md__card"><span>Paid and matched</span><strong class="id-md__card-value" t-out="money(state.data.settlement.settled)"/></div><div class="id-md__card"><span>In process or unmatched</span><strong class="id-md__card-value" t-out="money(state.data.settlement.pending)"/></div><div class="id-md__card"><span>Without posted entry</span><strong class="id-md__card-value" t-out="state.data.settlement.without_posted_move"/></div></div></section>
+<section class="id-md__section" t-if="state.data.commitments?.available" aria-label="Payment promises">
+<h2 class="id-md__section-title">Customer Payment Promises</h2><p class="small text-muted">Company-wide commitments; area/salesperson invoice filters do not apply. Outcomes use current settled allocations by accounting date; a frozen assessment preserves what was observed.</p>
+<div class="table-responsive" tabindex="0" role="region" aria-label="Commitment outcomes"><table class="table table-sm"><thead><tr><th>Promise</th><th>Owner</th><th>Due date</th><th>Promised</th><th>Settled</th><th>Outcome</th></tr></thead><tbody><tr t-foreach="state.data.commitments.rows" t-as="p" t-key="p.id"><td t-out="p.name"/><td t-out="p.owner"/><td t-out="p.due"/><td t-out="money(p.amount)"/><td t-out="money(p.settled)"/><td t-out="promiseOutcome(p.outcome)"/></tr></tbody></table></div><button class="btn btn-sm btn-outline-secondary" t-on-click="openArPromises">Customer Payment Promises</button></section>
                     <!-- BABAK 3: ACTION QUEUE & TOP CUSTOMER EXPOSURE -->
                     <section class="id-md__section" t-att-class="{'is-loading': state.loading}">
                         <div class="d-flex justify-content-between align-items-center mb-2">

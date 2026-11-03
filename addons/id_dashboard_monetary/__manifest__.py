@@ -3,7 +3,7 @@
     "name": "FMCG Monetary and AR Monitoring Dashboard",
     "summary": "Financial funnel, receivable aging matrix, and AR breakdown by salesperson, "
                "coverage area, and customer.",
-    "version": "19.0.1.4.0",
+    "version": "19.0.1.5.0",
     "category": "Accounting/Reporting",
     "author": "kolondam-dev",
     "license": "LGPL-3",
@@ -16,6 +16,7 @@
         "views/monetary_funnel_views.xml",
         "views/ar_aging_views.xml",
         "views/menu_views.xml",
+        "views/ar_commitment_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

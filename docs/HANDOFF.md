@@ -1,3 +1,8 @@
+## 2026-11-04T00:00:59+07:00 — agent codex-pwa — Backlog3B capability closure
+**Berubah:** audit snapshot immutable + AML/partial provenance/digest; promise-to-pay dan frozen assessment/bank matched allocation; settlement split; recognized partial/returns/refunds COGS; redacted POD projection/lineage/reasons; immutable eligible outlet/SKU period universe dan numeric/observed-turnover weighted distribution. Kontrak docs/dashboard/3B_CLOSURE.md.
+**Diverifikasi:** lokal Ruff/10manifest/XML/compile/20Node/diff PASS; native/source/role/cross-company/payment/bank/return/eligibility/POD regressions dan visual source fixtures ditambah.
+**Belum diuji:** native CI/upgrade/visual/review HEAD final. Runtime lokal Postgres unavailable. Belum menyatakan backlog PASS; tahap5 dikerjakan di PR berikut. Tidak posting/seed/server/PWA mutation, merge atau deployment.
+
 ## 2026-11-03T20:59:41+07:00 — agent codex-pwa — PR81 sumber fisik dan frozen trip UI
 [F] 31a2220 native175 tanpa error/init/static PASS. Fixture warehouse complete occupancy gagal; fixture produk margin fisik kini mempunyai initial stock dan dimensi eksplisit, tanpa melonggarkan assertion completeness/negative guard. Trip UI menampilkan human frozen line/capacity source dan selector scoped; order-processing cost terpisah, clone tidak membawa receipt/DO lama. Regresi weighted unequal-capacity/missing weight/open-trip dan fixture QA explicit departure/closure ditambah. Lokal18Node/Ruff/10manifest/XML/compile/diff PASS. [BU] CI/visual/upgrade/review HEAD final menunggu, tidak merge/deploy/server mutation.
 

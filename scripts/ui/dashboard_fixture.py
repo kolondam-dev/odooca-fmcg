@@ -129,3 +129,17 @@ assert assets['trip_count'] == 1 and assets['closed_count'] == 1 and assets['km'
 assert assets['cost_per_delivered_dpp'] == 10
 env.cr.commit()  # noqa: F821
 print('DASHBOARD_VISUAL_FIXTURE=PASS')
+# 3B closure: immutable evidence and explicit period eligibility, disposable ci_db only.
+audit_id = env['id.ar.audit.snapshot'].capture_ledger()  # noqa: F821
+assert env['id.ar.audit.snapshot'].browse(audit_id).digest  # noqa: F821
+extra_outlet = env['res.partner'].create({'name': 'QA Eligible No Order'})  # noqa: F821
+eligible = env['id.sales.assortment.scope'].create({'name': 'QA Approved Assortment',  # noqa: F821
+    'date_from': '2026-07-01', 'date_to': '2026-07-31', 'source': 'QA approved period catalogue',
+    'outlet_ids': [(6, 0, [partner.id, extra_outlet.id])],
+    'product_ids': [(6, 0, (products[:1] | env['product.product'].search(  # noqa: F821
+        [('principal_id', '=', unsold.id)], limit=1)).ids)]})
+eligible.action_publish()
+dist = env['id.sales.assortment.scope']._distribution({'start': '2026-07-01', 'end': '2026-07-31'}, False)  # noqa: F821
+assert dist['available'] and any(r['numeric'] == 50 and r['weighted'] == 100 for r in dist['rows'])
+env.cr.commit()  # noqa: F821
+print('DASHBOARD_3B_CLOSURE_FIXTURE=PASS')

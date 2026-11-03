@@ -8,3 +8,7 @@ access_id_ar_aging_user_system,id.ar.aging.user.system,model_id_ar_aging,base.gr
 access_id_ar_customer_balance_user_system,id.ar.customer.balance.user.system,model_id_ar_customer_balance,base.group_system,1,0,0,0
 access_id_monetary_funnel_stage_user_system,id.monetary.funnel.stage.user.system,model_id_monetary_funnel_stage,base.group_system,1,0,0,0
 access_id_monetary_target_user_system,id.monetary.target.user.system,model_id_monetary_target,base.group_system,1,0,0,0
+access_ar_audit_snapshot_finance,ar_audit_snapshot.finance,model_id_ar_audit_snapshot,account.group_account_user,1,0,1,0
+access_ar_audit_snapshot_system,ar_audit_snapshot.system,model_id_ar_audit_snapshot,base.group_system,1,0,1,0
+access_ar_promise_finance,ar_promise.finance,model_id_ar_promise,account.group_account_user,1,1,1,1
+access_ar_promise_system,ar_promise.system,model_id_ar_promise,base.group_system,1,1,1,1

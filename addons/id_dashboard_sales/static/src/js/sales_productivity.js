@@ -35,8 +35,8 @@ export class SalesProductivity extends Component {
             domain: [["id", "in", [...row.invoice_ids, ...row.journal_ids]]]});
     }
     marginReason(key) {
-        return {incomplete_quantity: _t("Requires fully delivered/invoiced stock lines without credits"),
-            missing_cogs_link: _t("Missing or ambiguous posted delivery cost source")}[key] || _t("Not available");
+        return {incomplete_quantity: _t("Posted net invoice quantity must match delivered less returned stock"),
+            missing_cogs_link: _t("Missing, duplicate, or ambiguous posted COGS source")}[key] || _t("Not available");
     }
 
     setup() {

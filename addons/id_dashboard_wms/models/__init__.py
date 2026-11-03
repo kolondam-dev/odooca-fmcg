@@ -11,3 +11,5 @@ from . import wms_dashboard
 from . import delivery_cohort
 
 from . import asset_trip, asset_utilization
+
+from . import pod_attempt
