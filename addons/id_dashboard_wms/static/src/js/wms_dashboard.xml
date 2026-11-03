@@ -234,6 +234,30 @@
     <details><summary>Recorded DO rejection reasons</summary><p class="small">Distinct root DOs per reason; one root may have multiple reasons across backorders.</p><ul><li t-foreach="state.data.cohort.reasons" t-as="r" t-key="r.reason"><t t-out="cohortReason(r.reason)"/>: <t t-out="r.count"/></li></ul></details>
 </section>
 
+
+<section class="id-wms__section" t-if="state.data.assets" aria-label="Physical asset utilization">
+    <h2 class="id-wms__section-title">Physical asset utilization</h2>
+    <p class="small text-muted">Stock snapshot: <t t-out="state.data.assets.as_of"/> UTC. Whole-warehouse capacity ignores the category filter. Storage includes reserved and consigned goods under each warehouse stock root, excludes receiving/output areas. Missing dimensions and negative stock prevent a complete occupancy ratio.</p>
+    <div class="table-responsive" tabindex="0" role="region" aria-label="Warehouse occupancy"><table class="table table-sm"><thead><tr><th>Warehouse</th><th>Known m³</th><th>Known kg</th><th>Usable m³</th><th>Occupancy</th><th>Quality exceptions</th></tr></thead><tbody>
+        <tr t-foreach="state.data.assets.warehouses" t-as="w" t-key="w.id"><td><button class="btn btn-sm btn-link" t-on-click="() => this.openAssetQuants(w)" t-out="w.name"/></td><td t-out="physical(w.volume)"/><td t-out="physical(w.kg)"/><td t-out="physical(w.capacity)"/><td t-out="pct(w.occupancy)"/><td><t t-out="w.missing_volume"/> missing volume · <t t-out="w.missing_weight"/> missing weight · <t t-out="w.negative"/> negative positions</td></tr>
+    </tbody></table></div>
+    <button class="btn btn-sm btn-outline-secondary" t-on-click="openAssetCapacity">Usable Storage Capacity</button>
+    <h3 class="h6 mt-3">Frozen departure loads</h3>
+    <p class="small">Departure cohort follows the delivery date controls and vehicle filter; stock category does not apply. Carton-equivalent volume is not actual stacking geometry. Fleet ratios use summed load / summed capacity only for fully measured trips; no average of percentages.</p>
+    <div class="id-wms__cards">
+        <div class="id-wms__card"><span class="id-wms__card-title">Volume utilization</span><strong class="id-wms__card-value" t-out="pct(state.data.assets.volume_pct)"/><span>Coverage: <t t-out="state.data.assets.volume_covered"/> / <t t-out="state.data.assets.trip_count"/></span></div>
+        <div class="id-wms__card"><span class="id-wms__card-title">Weight utilization</span><strong class="id-wms__card-value" t-out="pct(state.data.assets.weight_pct)"/><span>Coverage: <t t-out="state.data.assets.weight_covered"/> / <t t-out="state.data.assets.trip_count"/></span></div>
+        <div class="id-wms__card"><span class="id-wms__card-title">Closed-trip distance (km)</span><strong class="id-wms__card-value" t-out="hours(state.data.assets.km)"/><span>Closed: <t t-out="state.data.assets.closed_count"/> / <t t-out="state.data.assets.trip_count"/></span></div>
+        <div class="id-wms__card"><span class="id-wms__card-title">Recorded cost / km</span><strong class="id-wms__card-value" t-out="assetMoney(state.data.assets.cost_per_km)"/></div>
+    </div>
+    <p class="small">Recorded direct trip cost: <t t-out="assetMoney(state.data.assets.direct_cost)"/> · Native completed maintenance: <t t-out="assetMoney(state.data.assets.maintenance)"/> · Recorded cost / delivered DPP: <t t-out="pct(state.data.assets.cost_per_delivered_dpp)"/>.</p>
+    <details><summary>Asset metric basis and coverage</summary><p class="small">Distance is operator-entered return minus departure odometer in km, not inferred GPS mileage. Costs are recorded trip expenses plus completed fleet services dated in the period, not a reconciled GL total. Maintenance is not allocated again to trips. Legacy unlinked trip-cost rows remain in the existing fleet report and are not added here. Ratios require every cohort trip closed; missing service access or delivery-price linkage produces unavailable. Foreign-currency SO values are not relabelled as company currency. Delivery DPP is physical gross delivery value at closure, not invoice revenue or net margin.</p></details>
+    <div class="table-responsive" tabindex="0" role="region" aria-label="Frozen trip loads"><table class="table table-sm"><thead><tr><th>Trip</th><th>State</th><th>Known m³</th><th>Known kg</th><th>Volume %</th><th>Weight %</th><th>km</th></tr></thead><tbody>
+        <tr t-foreach="state.data.assets.trips" t-as="t" t-key="t.id"><td><button class="btn btn-sm btn-link" t-on-click="() => this.openAssetTrip(t.id)" t-out="t.name"/></td><td t-out="assetState(t.state)"/><td t-out="physical(t.volume)"/><td t-out="physical(t.kg)"/><td t-out="pct(t.volume_pct)"/><td t-out="pct(t.weight_pct)"/><td t-out="hours(t.km)"/></tr>
+    </tbody></table></div>
+    <p class="small">Trips shown: <t t-out="state.data.assets.trips.length"/> / <t t-out="state.data.assets.trip_count"/>. Totals include the full selected cohort.</p>
+    <button class="btn btn-sm btn-outline-secondary" t-on-click="() => this.openAssetTrip()">Load and Trip Records</button>
+</section>
                     <!-- BABAK 3: DETAIL TABS & ACTION QUEUES -->
                     <section class="id-wms__section" t-att-class="{'is-loading': state.loading}">
                         <div class="d-flex justify-content-between align-items-center mb-2">

@@ -74,6 +74,12 @@ async def main():
                 await new_panel.scroll_into_view_if_needed()
                 await page.screenshot(path=str(OUTPUT / f'{name}-{size["width"]}-stage3b.png'))
                 await root.evaluate('el => {el.scrollTop=0;}')
+                if name == 'wms':
+                    assets = root.locator('section[aria-label="Physical asset utilization"]')
+                    await assets.wait_for(state='visible')
+                    await assets.scroll_into_view_if_needed()
+                    await page.screenshot(path=str(OUTPUT / f'wms-{size["width"]}-assets.png'))
+                    await root.evaluate('el => {el.scrollTop=0;}')
                 filters = root.locator('.dashboard-filters')
                 await filters.locator('summary').click()
                 await root.locator('[class$=__filter-bar]').wait_for(state='visible')

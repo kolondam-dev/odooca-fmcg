@@ -14,3 +14,6 @@ access_id_wms_delivery_summary_user_system,id.wms.delivery.summary.user.system,m
 access_id_wms_reject_user_system,id.wms.reject.user.system,model_id_wms_reject,base.group_system,1,0,0,0
 access_id_wms_fleet_cost_user_system,id.wms.fleet.cost.user.system,model_id_wms_fleet_cost,base.group_system,1,0,0,0
 access_id_delivery_trip_cost_user_system,id.delivery.trip.cost.user.system,model_id_delivery_trip_cost,base.group_system,1,0,0,0
+access_asset_trip_stock,asset.trip.stock,model_id_asset_trip,stock.group_stock_user,1,0,0,0
+access_asset_trip_manager,asset.trip.manager,model_id_asset_trip,stock.group_stock_manager,1,1,1,1
+access_asset_trip_system,asset.trip.system,model_id_asset_trip,base.group_system,1,1,1,1

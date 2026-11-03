@@ -76,7 +76,9 @@ assert book['available'] and book['direct_cost'] == 100000
 assert book['margin'] == invoices.amount_untaxed_signed - 100000
 # Explicit read-model fixture for the closed-order bridge (not an E2E stock-posting claim).
 margin_product = env['product.product'].create({'name': 'QA Margin Stock', 'type': 'consu',  # noqa: F821
-    'is_storable': True, 'invoice_policy': 'delivery'})
+    'is_storable': True, 'invoice_policy': 'delivery', 'carton_qty': 1,
+    'carton_length_cm': 100, 'carton_width_cm': 100, 'carton_height_cm': 100, 'carton_weight_kg': 5})
+env['stock.quant']._update_available_quantity(margin_product, warehouse.lot_stock_id, 5)  # noqa: F821
 margin_order = env['sale.order'].create({'partner_id': partner.id,  # noqa: F821
     'pricelist_id': order.pricelist_id.id,
     'order_line': [(0, 0, {'product_id': margin_product.id, 'product_uom_qty': 2,
@@ -98,5 +100,32 @@ assert bridge['covered'] == 1 and bridge['margin'] == 800
 history = env['id.ar.history']._snapshot()  # noqa: F821
 assert history['available'] and abs(history['cross_scope_allocation']) < .01
 assert abs(sum(row['net'] for row in history['buckets']) - history['net']) < .01
+warehouse.write({'usable_volume_cbm': 20, 'capacity_basis': 'QA usable storage survey'})
+asset_day = env['id.delivery.cohort']._data()['end']  # noqa: F821
+assets = env['id.asset.utilization']._data(asset_day, asset_day)  # noqa: F821
+warehouse_row = next(w for w in assets['warehouses'] if w['id'] == warehouse.id)
+assert warehouse_row['volume'] > 0 and warehouse_row['occupancy'] is not None, warehouse_row
+assert assets['trip_count'] == 0 and assets['volume_pct'] is None  # no invented historical trips
+# New explicit QA departure event; never retrofit a trip to historical done DOs.
+margin_product.write({'carton_qty': 1, 'carton_length_cm': 100, 'carton_width_cm': 100,
+    'carton_height_cm': 100, 'carton_weight_kg': 5})
+trip_order = env['sale.order'].create({'partner_id': partner.id,  # noqa: F821
+    'pricelist_id': order.pricelist_id.id,
+    'order_line': [(0, 0, {'product_id': margin_product.id, 'product_uom_qty': 2,
+        'price_unit': 1000, 'tax_ids': [(5, 0, 0)]})]})
+trip_order.action_confirm()
+trip_picking = trip_order.picking_ids
+trip_picking.fmcg_vehicle_id = vehicle
+trip_picking.move_ids.write({'quantity': 2, 'state': 'assigned', 'picked': True})
+asset_trip = env['id.asset.trip'].create({'name': 'QA Explicit Departure', 'vehicle_id': vehicle.id,  # noqa: F821
+    'picking_ids': [(6, 0, trip_picking.ids)], 'odometer_start_km': 100})
+asset_trip.action_depart()
+trip_picking.move_ids.state = 'done'
+asset_trip.write({'odometer_end_km': 110, 'fuel_cost': 200, 'cost_basis': 'QA synthetic receipt'})
+asset_trip.action_close()
+asset_day = env['id.delivery.cohort']._data()['end']  # noqa: F821
+assets = env['id.asset.utilization']._data(asset_day, asset_day)  # noqa: F821
+assert assets['trip_count'] == 1 and assets['closed_count'] == 1 and assets['km'] == 10
+assert assets['cost_per_delivered_dpp'] == 10
 env.cr.commit()  # noqa: F821
 print('DASHBOARD_VISUAL_FIXTURE=PASS')
