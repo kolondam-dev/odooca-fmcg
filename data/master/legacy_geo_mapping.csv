@@ -1,0 +1,38 @@
+level,legacy_code,legacy_name,kode_kemendagri,canonical_name,status,note
+district,KEC-BTG-ATB,Aertembaga,71.72.04,Aertembaga,mapped,
+district,KEC-BTG-GRN,Girian,71.72.06,Girian,mapped,
+district,KEC-BTG-MAS,Maesa,71.72.07,Maesa,mapped,
+district,KEC-BTG-MDR,Madidir,71.72.02,Madidir,mapped,
+district,KEC-MND-MLY,Malalayang,71.71.09,Malalayang,mapped,
+district,KEC-MND-MPG,Mapanget,71.71.08,Mapanget,mapped,
+district,KEC-MND-PLD,Paal Dua,71.71.11,Paal Dua,mapped,
+district,KEC-MND-SKL,Singkil,71.71.03,Singkil,mapped,
+district,KEC-MND-SRO,Sario,71.71.06,Sario,mapped,
+district,KEC-MND-TKL,Tikala,71.71.05,Tikala,mapped,
+district,KEC-MND-TMT,Tuminting,71.71.02,Tuminting,mapped,
+district,KEC-MND-WNA,Wanea,71.71.07,Wanea,mapped,
+district,KEC-MND-WNG,Wenang,71.71.04,Wenang,mapped,
+district,KEC-MNH-KWG,Kawangkoan,71.02.12,Kawangkoan,mapped,
+district,KEC-MNH-TDN,Tondano Barat,71.02.01,Tondano Barat,mapped,
+district,KEC-MNS-AMR,Amurang,71.05.10,Amurang,mapped,
+district,KEC-MNT-AMD,Airmadidi,71.06.03,Airmadidi,mapped,
+district,KEC-TMH-TGH,Tomohon Tengah,71.73.02,Tomohon Tengah,mapped,
+subdistrict,KEL-BTG-ATB,Aertembaga Satu,71.72.04.1005,Aertembaga Satu,mapped,
+subdistrict,KEL-BTG-BTM,Bitung Timur (Maesa Pasar),71.72.07.1005,Bitung Timur,mapped,nama legacy berdekorasi; nama kanonik Bitung Timur
+subdistrict,KEL-BTG-GRW,Girian Weru,,,legacy,master hanya punya Girian Weru Satu dan Girian Weru Dua (1:2); koordinat partner tersebar di Girian Indah/Girian Permai
+subdistrict,KEL-BTG-MDU,Madidir Ure,71.72.02.1003,Madidir Ure,mapped,
+subdistrict,KEL-MND-BAH,Bahu (FreshMart Bahu Mall),71.71.09.1002,Bahu,mapped,nama legacy berdekorasi; nama kanonik Bahu
+subdistrict,KEL-MND-CLC,Calaca (Pasar 45),71.71.04.1008,Calaca,mapped,nama legacy berdekorasi; nama kanonik Calaca
+subdistrict,KEL-MND-KRM,Karame,71.71.03.1004,Karame,mapped,
+subdistrict,KEL-MND-PKB,Paniki Bawah,71.71.08.1001,Paniki Bawah,mapped,
+subdistrict,KEL-MND-PKW,Pakowa,71.71.07.1003,Pakowa,mapped,
+subdistrict,KEL-MND-PLD,Paal Dua,71.71.11.1003,Paal Dua,mapped,
+subdistrict,KEL-MND-SKB,Sario Kotabaru,71.71.06.1002,Sario Kotabaru,mapped,
+subdistrict,KEL-MND-TKB,Tikala Baru,71.71.05.1008,Tikala Baru,mapped,
+subdistrict,KEL-MND-TMT,Tuminting,71.71.02.1002,Tuminting,mapped,
+subdistrict,KEL-MND-WNS,Wenang Selatan,71.71.04.1006,Wenang Selatan,mapped,
+subdistrict,KEL-MNH-RNG,Rinegetan,71.02.01.1008,Rinegetan,mapped,
+subdistrict,KEL-MNH-SDG,Sendangan,71.02.12.1005,Sendangan,mapped,
+subdistrict,KEL-MNS-BYG,Buyungon,71.05.10.1004,Buyungon,mapped,
+subdistrict,KEL-MNT-AMA,Airmadidi Atas,71.06.03.1008,Airmadidi Atas,mapped,
+subdistrict,KEL-TMH-PSL,Paslaten Satu,,,legacy,"satu-satunya Paslaten Satu di Kemendagri berada di Tomohon Timur, sedangkan record legacy berada di Tomohon Tengah"
