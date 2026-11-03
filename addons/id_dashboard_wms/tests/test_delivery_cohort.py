@@ -19,7 +19,7 @@ class TestDeliveryCohort(TransactionCase):
             rec = self.env["stock.picking"].create({"picking_type_id": warehouse.out_type_id.id,
                 "location_id": warehouse.lot_stock_id.id, "location_dest_id": customer.id,
                 "fmcg_vehicle_id": vehicle.id, "backorder_id": parent.id if parent else False,
-                "move_ids": [(0, 0, {"name": "Cohort fixture", "product_id": product.id,
+                "move_ids": [(0, 0, {"product_id": product.id,
                     "product_uom": product.uom_id.id, "product_uom_qty": demand, "quantity": actual,
                     "location_id": warehouse.lot_stock_id.id, "location_dest_id": customer.id})]})
             # Read-model fixture: native records with explicit states/times, not a warehouse workflow test.

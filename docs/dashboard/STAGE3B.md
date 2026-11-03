@@ -8,7 +8,7 @@ Grain adalah AML receivable terposting, termasuk termin, jurnal manual, credit n
 
 Filter company/area/salesperson berlaku native ORM/ACL, tanpa sudo. Area dan fallback PIC mengikuti master saat query, bukan atribusi historis immutable. Current invoice KPI tidak diganti atau diberi tanggal historis palsu. Periode target finance berbeda dari tanggal snapshot. Mata uang campuran ditolak.
 
-Migrasi memakai pos jurnal yang sama pada dua cutoff: bucket awal → bucket akhir, opening/closing signed serta jumlah pos; new dan settled dipisahkan. Jumlah opening/closing cell harus merekonsiliasi total snapshot. Movement bukan klaim cash collection (dapat mencakup credit, write-off, FX).
+Migrasi memakai pos jurnal yang sama pada dua cutoff: bucket awal → bucket akhir, opening/closing signed serta jumlah pos; new dan settled dipisahkan. Jumlah opening/closing cell harus merekonsiliasi total snapshot. Control total saldo ledger dan alokasi rekonsiliasi melintasi filter ditampilkan; pada full scope selisih harus nol. Movement bukan klaim cash collection (dapat mencakup credit, write-off, FX).
 
 Batas rekonstruksi: memakai *current posted documents dan current reconciliation links*, bukan audit sistem "apa yang diketahui saat itu". Unreconcile/deletion/backdating/reclassification dapat mengubah hasil historis. Tidak membuat snapshot immutable atau promise-to-pay fiktif. Source drill-down memperlihatkan jurnal saat ini, bukan residual historis tersimpan. Maksimum 50k AML/200k partial, ditolak eksplisit bila terlampaui.
 
@@ -22,7 +22,7 @@ Completion offset median/p90 memakai jam relatif ke scheduled timestamp (negatif
 
 ## Margin order yang dapat ditelusuri
 
-Cohort confirmed SO tanggal order mengikuti filter Sales/WITA. Native posted invoice income AML (company balance signed) versus **singular stock.move.account_move_id** posted expense_direct_cost; tanpa standard_price/SVL/pro-rata fallback. Hanya order stock dengan quantity ordered=delivered=posted-invoiced, baris positif tanpa downpayment/service/refund/return dan tanpa shared valuation journal lintas order yang masuk total. Currency sudah company currency pada ledger, bukan konversi ulang SO. Margin ini gross margin sumber terpilih, belum cost-to-serve/net margin; biaya DO/outlet/trip/maintenance tetap tahap4.
+Cohort confirmed SO tanggal order mengikuti filter Sales/WITA. Native posted invoice income AML (company balance signed) versus **singular stock.move.account_move_id** posted expense_direct_cost; tanpa standard_price/SVL/pro-rata fallback. Hanya order stock dengan quantity ordered=delivered=posted-invoiced, baris positif tanpa downpayment/service/refund/return dan tanpa shared valuation journal lintas order yang masuk total. Coverage juga harus cocok per pasangan journal+product; tanpa produk sumber yang lengkap margin unavailable. Currency sudah company currency pada ledger, bukan konversi ulang SO. Margin ini gross margin sumber terpilih, belum cost-to-serve/net margin; biaya DO/outlet/trip/maintenance tetap tahap4.
 
 Coverage wajib: covered/all orders, alasan unavailable per order, source invoice dan journal IDs. Hilang COGS tidak menjadi cost0/margin100%. Peran Sales tanpa accounting tidak menerima biaya atau source IDs. Maksimum 5k SO; tabel100 baris pertama dilabeli, total dihitung seluruh cohort eligible. Partial order, layanan, return/refund dan generic native invoice-only COGS tanpa delivery link belum dialokasikan: sengaja unavailable sampai bridge lebih luas dapat direkonsiliasi. Tidak mengubah cost/posting hook canonical.
 
@@ -30,6 +30,6 @@ Coverage wajib: covered/all orders, alasan unavailable per order, source invoice
 
 Regresi native ditambahkan: installment, unallocated credit, current full reconciliation dengan cutoff terdahulu, migration reconciliation; root/backorder, cancel, backlog, mature denominator dan OTIF; invoice+posted delivery cost versus missing link, no-cost role. Tes JS: date payload/stale response dan drill-down server scope. Screenshot native mencakup panel baru pada1440/1024/768. Fixture/test state eksplisit merupakan pengujian read-model, bukan acceptance end-to-end posting gudang.
 
-[F] Lokal: Ruff/manifests/compile/XML/Node/diff dijalankan. [BU] Odoo lokal tidak tersedia: setup Postgres gagal pada sandbox setgroups/seteuid. Native Odoo, upgrade database persisten dan visual nyata harus dibuktikan CI HEAD final. Tidak menyatakan hasil CI atau deployment sebelum bukti tersedia.
+[F] Lokal: Ruff/manifests/compile/XML/16 Node/diff dijalankan. [BU] Odoo lokal tidak tersedia: setup Postgres gagal pada sandbox setgroups/seteuid. Native Odoo, upgrade database persisten dan visual nyata harus dibuktikan CI HEAD final. Tidak menyatakan hasil CI atau deployment sebelum bukti tersedia.
 
 Sisa roadmap tetap dipertahankan: promise-to-pay, immutable snapshots/audit, collection settlement, weighted/outlet-eligible distribution, first-attempt/POD bridge, generic partial/refund cost attribution, stock valuation/slow stock/retur/expiry enrichment, asset capacity/occupancy/mileage/cost allocation, warehouse detail dan Three.js. Panel3B ini bukan klaim seluruh program enhancement selesai.

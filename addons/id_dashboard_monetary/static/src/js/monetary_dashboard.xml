@@ -244,6 +244,7 @@
             <div class="id-md__card"><span class="id-md__card-title">Net receivable</span><strong class="id-md__card-value" t-out="moneyShort(state.data.ar_history.net)"/></div>
             <div class="id-md__card"><span class="id-md__card-title">Net movement</span><strong class="id-md__card-value" t-out="moneyShort(state.data.ar_history.movement)"/></div>
         </div>
+        <p class="small">Posted AR balance: <t t-out="money(state.data.ar_history.ledger_balance)"/> · Reconciliation across filter scope: <t t-out="money(state.data.ar_history.cross_scope_allocation)"/>.</p>
         <p class="text-muted small">Missing maturity dates: <t t-out="state.data.ar_history.missing_maturity"/>. These items are classified as not due. Credits are shown separately; negative movement is not automatically cash collection.</p>
         <div class="table-responsive" tabindex="0" role="region" aria-label="Historical aging buckets"><table class="table table-sm">
             <thead><tr><th>Days overdue</th><th>Debit</th><th>Credit</th><th>Net</th></tr></thead><tbody>

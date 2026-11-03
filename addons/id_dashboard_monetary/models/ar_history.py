@@ -86,6 +86,7 @@ class ArHistory(models.AbstractModel):
         return {"available": True, "as_of": str(day), "comparison": str(prior), "domain": domain,
                 "basis": "current_posted_ledger_and_current_reconciliation_links",
                 "net": net, "debit_open": sum(positives.values()), "credits": sum(credits.values()),
+                "cross_scope_allocation": net-sum(lines.mapped("balance")),
                 "opening": opening_total, "movement": net-opening_total, "open_items": open_count,
                 "missing_maturity": missing_maturity, "ledger_balance": sum(lines.mapped("balance")),
                 "buckets": [{"key": key, "debit": positives[key], "credit": credits[key], "net": totals[key]}

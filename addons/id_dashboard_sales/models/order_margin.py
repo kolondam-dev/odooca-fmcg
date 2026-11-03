@@ -72,7 +72,10 @@ class OrderMargin(models.AbstractModel):
                         valid = set(linked.ids) == set(moves.ids)
                     costs = self.env["account.move.line"].search([
                         ("move_id", "in", journals.ids), ("account_id.account_type", "=", "expense_direct_cost")])
-                    covered = set(costs.move_id.ids) == set(journals.ids)
+                    expected_pairs = ({(move.account_move_id.id, move.product_id.id) for move in moves}
+                                      if valid else set())
+                    cost_pairs = {(line.move_id.id, line.product_id.id) for line in costs}
+                    covered = bool(expected_pairs) and cost_pairs == expected_pairs
                     # A hidden/deleted cost source is unavailable. Never substitute product standard_price.
                     if valid and covered and journals:
                         revenue = -sum(invoice_lines.mapped("balance"))

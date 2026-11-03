@@ -74,3 +74,8 @@ test('cohort and margin source drilldowns preserve exact server record ids',()=>
     assert.equal(JSON.stringify(action.domain),'[["id","in",[4,5]]]');
     action=null;s.openMarginSources({available:false});assert.equal(action,null);
 });
+test('historical AR amounts preserve company-currency precision',()=>{
+    const {d}=dashboard('MonetaryDashboard','id_dashboard_monetary/static/src/js/monetary_dashboard.js');
+    d.state.data={currency:'USD',currency_digits:2};assert.equal(d.money(12.34),'USD 12,34');
+    d.state.data={currency:'IDR',currency_digits:0};assert.equal(d.money(12),'Rp 12');
+});

@@ -1,3 +1,6 @@
+## 2026-11-03T13:51:40+07:00 — agent codex-pwa — PR80 fixture Odoo19 dan kontrol sumber
+[F] Run ce8872a:0failed/1error/171 native tests, hanya obsolete stock.move.name pada fixture delivery; field dihapus. Assertion root/backorder/cancel/backlog/OTIF tetap ketat. Coverage HPP diwajibkan perjournal+product, kontrol AR ledger/cross-scope serta precision currency diperkuat. Fixture ci_db margin positif + source assertions ditambahkan. Lokal16Node/Ruff/10manifest/XML/compile/diff PASS. [BU] Native/visual/upgrade/review HEAD final menunggu, tidak merge/deploy/server mutation.
+
 ## 2026-11-03T13:43:45+07:00 — agent codex-pwa — Dashboard tahap3B
 **Berubah:** subledger AR per accounting cutoff+aging migration, scheduled root DO/backorder cohort+H1/H2/OTIF/backlog, margin closed order dari linked invoice/delivery cost journals. Kontrak dan batas sumber: docs/dashboard/STAGE3B.md. Native ACL/company/cost role, unavailable coverage dan bounded queries; tidak mengubah PWA/seed/posting/server.
 **Diverifikasi:** lokal Ruff/10manifest/compile/XML/13Node/diff PASS. Native fixtures/tests dan visual capture panel1440/1024/768 ditambah.

@@ -36,6 +36,12 @@ class TestOrderMargin(TransactionCase):
         self.assertEqual(result["covered"], 1)
         self.assertEqual((result["revenue"], result["cost"], result["margin"]), (1000, 600, 400))
         self.assertEqual(result["rows"][0]["journal_ids"], cost.ids)
+        cost_line = cost.line_ids.filtered(lambda line: line.account_id == accounts["cost"])
+        cost_line.product_id = False
+        ambiguous = self.env["id.sales.order.margin"]._for_orders([("id", "=", order.id)])
+        self.assertEqual(ambiguous["covered"], 0)
+        self.assertIsNone(ambiguous["margin"])
+        cost_line.product_id = product
         moves.account_move_id = False
         missing = self.env["id.sales.order.margin"]._for_orders([("id", "=", order.id)])
         self.assertEqual(missing["covered"], 0)

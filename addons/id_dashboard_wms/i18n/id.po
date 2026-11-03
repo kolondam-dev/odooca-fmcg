@@ -575,3 +575,9 @@ msgstr "Terlalu banyak pengiriman; persempit cohort."
 #: code:addons/id_dashboard_wms/models/delivery_cohort.py:0
 msgid "Too many backorders; narrow the cohort."
 msgstr "Terlalu banyak backorder; persempit cohort."
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Delivery cohort dates"
+msgstr "Tanggal cohort pengiriman"

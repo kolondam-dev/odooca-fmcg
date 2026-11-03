@@ -134,7 +134,12 @@ export class MonetaryDashboard extends Component {
     }
 
     // Formatting helpers
-    money(v) { return money(v, this.state.data?.currency); }
+    money(v) {
+        if (v === null || v === undefined) return "—";
+        const currency = this.state.data?.currency || "IDR", digits = this.state.data?.currency_digits ?? 0;
+        return `${currency === "IDR" ? "Rp" : currency} ${new Intl.NumberFormat("id-ID", {
+            minimumFractionDigits: digits, maximumFractionDigits: digits}).format(v)}`;
+    }
     moneyShort(v) { return moneyShort(v, this.state.data?.currency); }
     pct(v) { return pct(v); }
     int(v) { return NF.format(v || 0); }

@@ -463,3 +463,21 @@ msgstr "Terlalu banyak pos jurnal; persempit cakupan."
 #: code:addons/id_dashboard_monetary/models/ar_history.py:0
 msgid "Too many reconciliations; narrow the scope."
 msgstr "Terlalu banyak rekonsiliasi; persempit cakupan."
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Historical AR dates"
+msgstr "Tanggal piutang historis"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Posted AR balance:"
+msgstr "Saldo buku piutang:"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Reconciliation across filter scope:"
+msgstr "Rekonsiliasi melintasi cakupan filter:"

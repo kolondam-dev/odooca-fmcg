@@ -295,3 +295,8 @@
 - Kontrak STAGE3B.md membatasi historical reconstruction current links, WITA scheduled calendar cohort, closed-order native posted delivery COGS coverage; unavailable bukan0.
 - Lokal Ruff/10manifests/compile/XML/13Node/diff PASS. Setup runtime lokal gagal setgroups/seteuid, bukan bukti native PASS. Native regressions/visual panel capture ditambahkan, CI/upgrade/visual/review menunggu. Tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-03T13:43:45+07:00
+
+[2026-11-03T13:51:40+07:00] [INFO] PR80 native fixture Odoo19 dan cost coverage
+- ce8872a:0failed/1error dari171 native tests; stock.move.name dihapus pada Odoo19, hapus field obsolete fixture tanpa melemahkan assertion cohort. AR history dan margin native berjalan tanpa error.
+- Coverage HPP diperketat perjournal+product, precision company currency, AR cross-scope reconciliation control, fixture visual margin positif, 16Node/Ruff/XML/manifests/compile/diff PASS. CI final/visual/upgrade menunggu; tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-03T13:51:40+07:00
