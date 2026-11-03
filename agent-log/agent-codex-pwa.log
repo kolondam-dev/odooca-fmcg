@@ -305,3 +305,6 @@
 - Main90c622d/PR81; branch agen/dashboard-3b-completion. Immutable AR ledger+source/hash capture, customer payment commitments/baseline/new paid-matched allocations/frozen assessment, collection settlement split; matched partial/return/refund/native COGS bridge; redacted SQL POD projection/corrections; published eligible numeric/observed-turnover weighted distribution.
 - Kontrak3B_CLOSURE.md. Tidak mengubah posting/seed/PWA/server, WMS menambahkan dependency mobile agar SQL projection terikat modul sumber. Native ACL/company/privilege guard, source ambiguity unavailable. Lokal Ruff/10manifest/XML/compile/20Node/diff PASS. Native/bank integration/visual/upgrade/review HEAD final menunggu; tahap5 berikutnya PR terpisah. Tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-04T00:00:59+07:00
+
+[2026-11-04T00:29:46+07:00] [INFO] Tahap5 warehouse detail; native locations/packages/storage categories, explicit server event clocks, age/expiry/flow and company GL control. WAREHOUSE_DEPTH.md,21Node plus native/source/visual regressions. CI/review HEAD final pending; no merge/deploy/server mutation.
+- task managed by agent codex-pwa at 2026-11-04T00:29:46+07:00

@@ -143,3 +143,30 @@ dist = env['id.sales.assortment.scope']._distribution({'start': '2026-07-01', 'e
 assert dist['available'] and any(r['numeric'] == 50 and r['weighted'] == 100 for r in dist['rows'])
 env.cr.commit()  # noqa: F821
 print('DASHBOARD_3B_CLOSURE_FIXTURE=PASS')
+# Stage 5 sourced location hierarchy and new explicit clock event in disposable ci_db.
+zone = env['stock.location'].create({'name': 'QA Surveyed Zone', 'location_id': warehouse.lot_stock_id.id,  # noqa: F821
+    'company_id': company.id, 'usage': 'internal', 'fmcg_storage_kind': 'zone',
+    'fmcg_usable_cbm': 10, 'fmcg_capacity_source': 'QA synthetic survey', 'fmcg_length_m': 5,
+    'fmcg_width_m': 5, 'fmcg_height_m': 3, 'fmcg_frame': 'QA local frame', 'fmcg_spatial_verified': True,
+    'fmcg_pallet_slots': 4})
+pallet_type = env['stock.package.type'].create({'name': 'QA Pallet Type', 'is_fmcg_pallet': True})  # noqa: F821
+pallet = env['stock.package'].create({'name': 'QA Physical Pallet', 'package_type_id': pallet_type.id})  # noqa: F821
+margin_product.carton_weight_kg = 5
+env['stock.quant']._update_available_quantity(margin_product, zone, 2, package_id=pallet)  # noqa: F821
+clock_picking = env['stock.picking'].create({'picking_type_id': warehouse.out_type_id.id,  # noqa: F821
+    'location_id': zone.id, 'location_dest_id': partner.property_stock_customer.id,
+    'move_ids': [(0, 0, {'product_id': margin_product.id, 'product_uom': margin_product.uom_id.id,
+        'product_uom_qty': 1, 'quantity': 1, 'location_id': zone.id,
+        'location_dest_id': partner.property_stock_customer.id})]})
+clock_picking.move_ids.write({'state': 'assigned', 'picked': True})
+clock = env['id.warehouse.clock'].create({'name': 'QA Explicit Picking Clock',  # noqa: F821
+    'picking_id': clock_picking.id, 'kind': 'picking'})
+clock.action_start()
+clock_picking.move_ids.state = 'done'
+clock.action_complete()
+depth = env['id.warehouse.depth']._data(asset_day, asset_day, warehouse.id)  # noqa: F821
+zone_row = next(row for row in depth['locations'] if row['id'] == zone.id)
+assert zone_row['volume_pct'] == 20 and zone_row['slot_pct'] == 25
+assert next(row for row in depth['clocks'] if row['kind'] == 'picking')['count'] == 1
+env.cr.commit()  # noqa: F821
+print('DASHBOARD_WAREHOUSE_DEPTH_FIXTURE=PASS')

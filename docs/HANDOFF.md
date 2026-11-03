@@ -1,3 +1,8 @@
+## 2026-11-04T00:29:46+07:00 — agent codex-pwa — Tahap5 warehouse detail
+**Berubah:** native stock.location physical roles/capacity/geometry/source; package nesting and pallet classification; stock-category capacity constraints, SKU/lot expiry/aging/slow-inactive, native movement throughput, controlled operation clocks, accounting-gated native valuation/GL diagnostic. Kontrak WAREHOUSE_DEPTH.md; tahap6 tetap terpisah.
+**Diverifikasi:** lokal21Node/Ruff/10manifest/XML/compile/diff; native regression/CI visual fixture ditambah. PR83 cbf7b42 memperbaiki source flush SQL POD dan test company-rule nonsudo; CI ulang berjalan.
+**Belum diuji:** native/source/upgrade/visual HEAD tahap5 dan review. Branch stacked pada PR83 agar review terpisah. Tidak seed/posting/server/PWA mutation, merge atau deployment.
+
 ## 2026-11-04T00:00:59+07:00 — agent codex-pwa — Backlog3B capability closure
 **Berubah:** audit snapshot immutable + AML/partial provenance/digest; promise-to-pay dan frozen assessment/bank matched allocation; settlement split; recognized partial/returns/refunds COGS; redacted POD projection/lineage/reasons; immutable eligible outlet/SKU period universe dan numeric/observed-turnover weighted distribution. Kontrak docs/dashboard/3B_CLOSURE.md.
 **Diverifikasi:** lokal Ruff/10manifest/XML/compile/20Node/diff PASS; native/source/role/cross-company/payment/bank/return/eligibility/POD regressions dan visual source fixtures ditambah.

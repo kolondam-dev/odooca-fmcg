@@ -1015,3 +1015,223 @@ msgstr "SKU"
 #: code:addons/id_dashboard_wms/models/pod_attempt.py:0
 msgid "Too many POD events; narrow the delivery cohort."
 msgstr "Terlalu banyak event POD; persempit cohort pengiriman."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Warehouse operational detail"
+msgstr "Detail operasional gudang"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Storage master"
+msgstr "Master penyimpanan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Movement sources"
+msgstr "Sumber pergerakan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Operation clocks"
+msgstr "Pencatatan waktu operasi"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Warehouse detail"
+msgstr "Detail gudang"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "All warehouses"
+msgstr "Semua gudang"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Location capacity and layout readiness"
+msgstr "Kapasitas lokasi dan kesiapan tata letak"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Movement throughput and operation time"
+msgstr "Arus pergerakan dan waktu operasi"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "SKU stock health and availability"
+msgstr "Kondisi dan ketersediaan stok SKU"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Native inventory valuation / ledger control"
+msgstr "Kontrol valuasi persediaan native / buku besar"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Physical Storage Master"
+msgstr "Master Penyimpanan Fisik"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Physical Pallet Types"
+msgstr "Jenis Pallet Fisik"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Stock Observation Policy"
+msgstr "Kebijakan Pengamatan Stok"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Warehouse Operation Clocks"
+msgstr "Pencatatan Waktu Operasi Gudang"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Start Operation Clock"
+msgstr "Mulai Pencatatan Waktu"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Complete Operation Clock"
+msgstr "Selesaikan Pencatatan Waktu"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Cancel Clock"
+msgstr "Batalkan Pencatatan Waktu"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Warehouse Source Documents"
+msgstr "Dokumen Sumber Gudang"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Receipt to Storage Dwell"
+msgstr "Waktu Penerimaan hingga Penyimpanan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Received"
+msgstr "Diterima"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Shipped"
+msgstr "Dikirim"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Putaway"
+msgstr "Penempatan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Picking"
+msgstr "Pengambilan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Other Transfer / Adjustment"
+msgstr "Transfer Lain / Penyesuaian"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Slow"
+msgstr "Lambat"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Inactive"
+msgstr "Tidak Aktif"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "No completed movements in this period."
+msgstr "Tidak ada pergerakan selesai pada periode ini."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "No stock positions in scope."
+msgstr "Tidak ada posisi stok pada cakupan ini."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Accounting access required."
+msgstr "Memerlukan akses akuntansi."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Posted valuation entries"
+msgstr "Jurnal valuasi terposting"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Expired / expires within 30 days"
+msgstr "Kedaluwarsa / kedaluwarsa dalam 30 hari"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Slow / inactive SKUs"
+msgstr "SKU lambat / tidak aktif"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Stock position age · median / p90 days"
+msgstr "Umur posisi stok · median / p90 hari"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Missing expected expiry / unknown age"
+msgstr "Tanggal kedaluwarsa wajib kosong / umur tidak diketahui"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "On hand"
+msgstr "Tersedia fisik"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Reserved"
+msgstr "Direservasi"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Available"
+msgstr "Dapat digunakan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Oldest days"
+msgstr "Umur tertua (hari)"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Observed last outbound"
+msgstr "Pengiriman terakhir teramati"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Observation"
+msgstr "Pengamatan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Completed"
+msgstr "Selesai"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Clock"
+msgstr "Pencatatan waktu"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Median min"
+msgstr "Median menit"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "p90 min"
+msgstr "p90 menit"

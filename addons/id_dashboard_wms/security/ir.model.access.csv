@@ -19,3 +19,6 @@ access_asset_trip_manager,asset.trip.manager,model_id_asset_trip,stock.group_sto
 access_asset_trip_system,asset.trip.system,model_id_asset_trip,base.group_system,1,1,1,1
 access_delivery_attempt_stock,delivery.attempt.stock,model_id_delivery_attempt,stock.group_stock_user,1,0,0,0
 access_delivery_attempt_system,delivery.attempt.system,model_id_delivery_attempt,base.group_system,1,0,0,0
+
+access_warehouse_clock_user,Warehouse operation clock user,model_id_warehouse_clock,stock.group_stock_user,1,1,1,1
+access_warehouse_clock_system,Warehouse operation clock system,model_id_warehouse_clock,base.group_system,1,1,1,1

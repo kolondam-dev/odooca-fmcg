@@ -107,3 +107,13 @@ test('AR evidence capture preserves explicit dates and successful source action'
     const save=d.captureArEvidence();assert.equal(pending[0].filters.as_of,'2026-07-31');
     pending[0].resolve(7);await save;assert.equal(action.res_id,7);
 });
+test('warehouse detail selector and document actions retain server scope and reject stale clicks',async()=>{
+    const {d,pending}=dashboard('WmsDashboard','id_dashboard_wms/static/src/js/wms_dashboard.js');
+    d.state.warehouseId=7;const request=d.load();assert.equal(pending[0].filters.warehouse_id,7);
+    pending[0].resolve({warehouse_depth:{}});await request;
+    const domain=[['company_id','in',[1]],['location_id','child_of',8]];
+    let action;d.action={doAction:a=>{action=a;}};
+    d.openWarehouseSource('stock.quant',domain);assert.equal(action.domain,domain);
+    assert.equal(action.res_model,'stock.quant');action=null;d.state.loading=true;
+    d.openWarehouseSource('stock.quant',domain);assert.equal(action,null);
+});
