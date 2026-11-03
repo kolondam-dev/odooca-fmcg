@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from odoo import fields
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -74,6 +74,9 @@ class TestArCommitment(TransactionCase):
     def test_paid_and_bank_matched_allocation_fulfils_promise(self):
         accounts, partner, line, entry = self._ledger()
         promise = self._promise(line)
+        # A single future payment must not fulfil two simultaneously committed promises.
+        with self.assertRaises(UserError):
+            self._promise(line, 30)
         journal = self.env["account.journal"].create({"name": "Promise bank", "code": "PB3", "type": "bank",
             "default_account_id": accounts["bank"].id, "suspense_account_id": accounts["outstanding"].id,
             "inbound_payment_method_line_ids": [(0, 0, {
