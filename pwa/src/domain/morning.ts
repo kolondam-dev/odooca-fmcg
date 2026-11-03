@@ -30,6 +30,7 @@ export const MorningRecordSchema = z
     .strict();
 export type MorningRecord = z.infer<typeof MorningRecordSchema>;
 export const MORNING_KEY = "morning-session-v1";
+export const MORNING_HISTORY_PREFIX = "morning-session-history-v1:";
 export function fieldBusinessDate(now = new Date()): string {
     return now.toLocaleDateString("en-CA", { timeZone: "Asia/Makassar" });
 }
@@ -72,7 +73,7 @@ function validMorningRecord(
     const isRelaxed = Boolean(record.demo_unrestricted || isDemoMode());
     if (
         record.owner !== owner ||
-        (!isRelaxed && record.businessDate !== date) ||
+        record.businessDate !== date ||
         (!isRelaxed &&
             fieldBusinessDate(new Date(record.attendanceAt)) !== date) ||
         (!isRelaxed && Date.parse(record.attendanceAt) > Date.now())
@@ -156,7 +157,9 @@ export class MorningSimulation {
             );
         if (!current.roles.some((r) => r === "sales" || r === "delivery"))
             throw new Error("Sesi kunjungan hanya untuk Sales/Canvasser.");
-        return current.businessDate;
+        // DEMO may use a stale snapshot, but an active session still belongs to
+        // one explicit WITA day. Relaxed media never makes yesterday current.
+        return isDemoMode() ? fieldBusinessDate() : current.businessDate;
     }
     /**
      * Open a day using durable evidence. Pending attendance may adopt a validated
@@ -233,6 +236,20 @@ export class MorningSimulation {
     async acceptAttendance(evidence?: EvidenceReference) {
         const businessDate = await this.checkConnection();
         await this.checkEvidence(evidence);
+        const owner = ownerKey(this.identity);
+        const prior = MorningRecordSchema.safeParse(
+            await this.store.draft(owner, MORNING_KEY),
+        );
+        if (
+            prior.success &&
+            prior.data.owner === owner &&
+            prior.data.businessDate !== businessDate
+        ) {
+            // Preserve the old attendance/session before replacing the current
+            // slot. Do not fabricate a clock-out or touch pending commands.
+            const key = `${MORNING_HISTORY_PREFIX}${prior.data.businessDate}:${prior.data.sessionId ?? prior.data.attendanceReference}`;
+            await this.store.createDraftIfAbsent(owner, key, prior.data);
+        }
         const record: MorningRecord = {
             ...(evidence ? { attendanceEvidence: evidence } : {}),
             mode: "simulation",

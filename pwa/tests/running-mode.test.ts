@@ -4,7 +4,12 @@ import { SalesVisits } from "../src/domain/visits";
 import { FieldStore } from "../src/storage/store";
 import { Outbox } from "../src/domain/outbox";
 import { MockProvider } from "../src/data/mock";
-import { MorningSimulation } from "../src/domain/morning";
+import {
+    MorningSimulation,
+    MORNING_KEY,
+    MORNING_HISTORY_PREFIX,
+    morningReady,
+} from "../src/domain/morning";
 import { ownerKey } from "../src/domain/contracts";
 import { makeVisitPhoto } from "./visit-fixtures";
 import { describe, expect, it, beforeEach, vi } from "vitest";
@@ -59,6 +64,108 @@ globalThis.window = {
 } as unknown as Window & typeof globalThis;
 
 describe("Running Mode Gate (DEMO | LIVE)", () => {
+    it.each([
+        [true, "live"],
+        [false, "live"],
+        [true, "demo"],
+        [false, "demo"],
+    ] as const)(
+        "rolls a DEMO day forward (closed=%s, nextMode=%s) without losing history or pending commands",
+        async (closed, nextMode) => {
+            vi.useFakeTimers({ toFake: ["Date"] });
+            vi.setSystemTime(new Date("2026-10-27T00:00:00Z"));
+            vi.stubGlobal("navigator", { onLine: true });
+            const testStore = new FieldStore(crypto.randomUUID());
+            try {
+                setRunningMode("demo");
+                const provider = new MockProvider("sales");
+                const identity = await provider.bootstrap();
+                const owner = ownerKey(identity);
+                const service = new MorningSimulation(
+                    testStore,
+                    identity,
+                    provider,
+                );
+                const first = await service.openDay();
+                if (closed) await service.clockOut();
+                const prior = await testStore.draft(owner, MORNING_KEY);
+                const engine = new Outbox(testStore, owner, provider);
+                await engine.enqueue(
+                    "hris.leave.request",
+                    { reason: "Pending day one" },
+                    "Pending day one",
+                );
+                const pending = await testStore.list(owner);
+                expect(pending).toHaveLength(1);
+
+                vi.setSystemTime(new Date("2026-10-27T16:00:01Z"));
+                setRunningMode(nextMode);
+                expect(await service.restore()).toBeUndefined();
+                expect(morningReady(first, owner)).toBe(false);
+                const next = await service.openDay();
+                expect(next.businessDate).toBe("2026-10-28");
+                expect(next.clockOutAt).toBeUndefined();
+                expect(next.sessionId).not.toBe(first.sessionId);
+                expect(morningReady(next, owner)).toBe(true);
+                expect(
+                    await testStore.draft(
+                        owner,
+                        `${MORNING_HISTORY_PREFIX}2026-10-27:${first.sessionId}`,
+                    ),
+                ).toEqual(prior);
+                expect(await testStore.list(owner)).toEqual(pending);
+            } finally {
+                await testStore.close();
+                vi.useRealTimers();
+                vi.unstubAllGlobals();
+            }
+        },
+    );
+
+    it.each([9_999, 10_001])(
+        "LIVE snapshot future skew boundary: %s ms",
+        async (ahead) => {
+            vi.useFakeTimers({ toFake: ["Date"] });
+            vi.setSystemTime(new Date("2026-10-27T00:00:00Z"));
+            vi.stubGlobal("navigator", { onLine: true });
+            setRunningMode("live");
+            const testStore = new FieldStore(crypto.randomUUID());
+            try {
+                const provider = new MockProvider("sales");
+                const identity = await provider.bootstrap();
+                const service = new MorningSimulation(
+                    testStore,
+                    identity,
+                    provider,
+                );
+                await service.acceptAttendance();
+                const snapshot = await provider.snapshot();
+                vi.spyOn(provider, "snapshot").mockResolvedValueOnce({
+                    ...snapshot,
+                    updatedAt: new Date(Date.now() + ahead).toISOString(),
+                });
+                if (ahead <= 10_000) {
+                    expect(
+                        morningReady(await service.open(), ownerKey(identity)),
+                    ).toBe(true);
+                } else {
+                    await expect(service.open()).rejects.toThrow(
+                        "belum lengkap",
+                    );
+                    expect(
+                        morningReady(
+                            await service.restore(),
+                            ownerKey(identity),
+                        ),
+                    ).toBe(false);
+                }
+            } finally {
+                await testStore.close();
+                vi.useRealTimers();
+                vi.unstubAllGlobals();
+            }
+        },
+    );
     beforeEach(() => {
         storeMap.clear();
         vi.restoreAllMocks();

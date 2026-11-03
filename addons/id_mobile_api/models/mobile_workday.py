@@ -66,13 +66,16 @@ class MobileWorkday(models.Model):
         if company not in user.company_ids:
             raise AccessError(_("Company access is not available."))
         day = business_date()
-        assignment = self.with_company(company).search([
+        assignment = self.with_company(company).with_context(active_test=False).search([
             ("user_id", "=", user.id), ("company_id", "=", company.id),
-            ("business_date", "=", day), ("active", "=", True),
+            ("business_date", "=", day),
         ], limit=2)
+        if len(assignment) == 1 and not assignment.active:
+            raise AccessError(_("Today's assignment is inactive; contact your supervisor."))
         if not assignment:
             latest = self.with_company(company).search([
                 ("user_id", "=", user.id), ("company_id", "=", company.id),
+                ("business_date", "<", day),
                 ("active", "=", True),
             ], order="business_date desc, id desc", limit=1)
             if (
