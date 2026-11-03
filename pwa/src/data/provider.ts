@@ -7,6 +7,7 @@ import {
     type FieldProvider,
     type Identity,
 } from "../domain/contracts";
+import { setServerClockOffset } from "../domain/morning";
 export class HttpProvider implements FieldProvider {
     readonly mode = "live" as const;
     constructor(private options: { readOnly?: boolean } = {}) {}
@@ -43,6 +44,13 @@ export class HttpProvider implements FieldProvider {
                     ? "Sesi resmi belum tersedia. Silakan login melalui layanan perusahaan."
                     : `Layanan belum siap (${response.status}).`,
             );
+        const serverDate = response.headers.get("Date");
+        if (serverDate) {
+            const serverMs = Date.parse(serverDate);
+            if (!Number.isNaN(serverMs)) {
+                setServerClockOffset(serverMs - Date.now());
+            }
+        }
         return response.json();
     }
     async bootstrap() {
@@ -81,6 +89,7 @@ export class HttpProvider implements FieldProvider {
         );
         if (this.identity !== identity)
             throw new ApiError(409, "Sesi berubah saat snapshot dibaca.");
+
         if (
             snapshot.catalog_version !== 2 ||
             !snapshot.scope ||

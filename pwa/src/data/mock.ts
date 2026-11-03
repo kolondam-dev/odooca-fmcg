@@ -325,24 +325,9 @@ export class MockProvider implements FieldProvider {
             this.authenticated &&
             typeof this.authenticated.submit === "function"
         ) {
-            const isLiveOrder = command.type === "sales.order.submit";
-            const payload = command.payload as
-                | Record<string, unknown>
-                | undefined;
-            const sourceId =
-                payload &&
-                typeof payload.source === "object" &&
-                payload.source !== null
-                    ? (payload.source as Record<string, unknown>).id
-                    : (payload?.do_id ?? "");
-            const tripId = payload?.trip_id ?? "";
-            const isLiveDelivery =
-                (command.type === "delivery.pod.submit" ||
-                    command.type === "delivery.trip.close") &&
-                !String(sourceId).startsWith("DEMO-") &&
-                !String(tripId).startsWith("DEMO-");
-
-            if (isLiveOrder || isLiveDelivery) {
+            // Forward live sales orders to backend. Delivery commands (POD and trip closure)
+            // remain simulated locally because deliveries in current snapshot are local fallback DOs.
+            if (command.type === "sales.order.submit") {
                 return await this.authenticated.submit(command);
             }
         }

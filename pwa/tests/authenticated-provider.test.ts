@@ -182,17 +182,11 @@ it("forwards live sales.order.submit to authenticated.submit when available", as
     }
 });
 
-it("keeps local simulation for demo delivery DO while forwarding live non-demo DO", async () => {
+it("keeps local simulation for delivery workflow while deliveries [] is unassigned on backend", async () => {
     vi.stubGlobal("navigator", { onLine: true });
     try {
         const fixture = new MockProvider("delivery");
-        const liveReceipt = {
-            client_uuid: "pod-1",
-            status: "accepted" as const,
-            message: "POD WH/OUT/001 diterima.",
-            reference: "WH/OUT/001",
-        };
-        const submitSpy = vi.fn(async () => liveReceipt);
+        const submitSpy = vi.fn();
         const source = {
             bootstrap: () => fixture.bootstrap(),
             snapshot: () => fixture.snapshot(),
@@ -200,8 +194,8 @@ it("keeps local simulation for demo delivery DO while forwarding live non-demo D
         };
         const provider = new MockProvider("delivery", true, source as any);
 
-        // 1. Demo DO should be handled locally without calling backend
-        const demoCmd = {
+        // 1. POD should be handled locally in simulator without calling backend
+        const podCmd = {
             schema_version: 1 as const,
             client_uuid: "pod-demo-1",
             type: "delivery.pod.submit" as const,
@@ -211,24 +205,24 @@ it("keeps local simulation for demo delivery DO while forwarding live non-demo D
                 recipient: "Budi",
             },
         };
-        const demoReceipt = await provider.submit(demoCmd as any);
+        const podReceipt = await provider.submit(podCmd as any);
         expect(submitSpy).not.toHaveBeenCalled();
-        expect(demoReceipt.reference).toBe("DEMO-POD-DEMO");
+        expect(podReceipt.reference).toBe("DEMO-POD-DEMO");
 
-        // 2. Real DO (non-demo) should forward to backend submit
-        const realCmd = {
+        // 2. Trip close should also be simulated locally so trip closes reliably
+        const closeCmd = {
             schema_version: 1 as const,
-            client_uuid: "pod-real-1",
-            type: "delivery.pod.submit" as const,
+            client_uuid: "trip-close-1",
+            type: "delivery.trip.close" as const,
             occurred_at: new Date().toISOString(),
             payload: {
-                source: { id: "WH/OUT/00099", trip: "TRIP-MANADO-1" },
-                recipient: "Budi",
+                trip_id: "TRIP-01",
+                vehicle: "DB 8471 MD",
             },
         };
-        const realReceipt = await provider.submit(realCmd as any);
-        expect(submitSpy).toHaveBeenCalledWith(realCmd);
-        expect(realReceipt).toEqual(liveReceipt);
+        const closeReceipt = await provider.submit(closeCmd as any);
+        expect(submitSpy).not.toHaveBeenCalled();
+        expect(closeReceipt.reference).toBe("DEMO-TRIP-CLO");
     } finally {
         vi.unstubAllGlobals();
     }

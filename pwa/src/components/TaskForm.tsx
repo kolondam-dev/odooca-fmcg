@@ -12,6 +12,7 @@ import { orderQuote, type OrderUom } from "../domain/order-pricing";
 import {
     validateOrder,
     type Command,
+    type FieldProvider,
     type Identity,
     type Snapshot,
 } from "../domain/contracts";
@@ -21,13 +22,14 @@ import type { FieldStore, QueueItem } from "../storage/store";
 export function TaskForm({
     dialog,
     identity,
-    snapshot,
+    snapshot: initialSnapshot,
     owner,
     submit,
     startSession,
     close,
     workStatus,
     store,
+    provider,
 }: {
     workStatus: string;
     store: FieldStore;
@@ -45,6 +47,7 @@ export function TaskForm({
         evidence: EvidenceRef,
     ) => Promise<void>;
     close: () => void;
+    provider?: FieldProvider;
 }) {
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
@@ -63,6 +66,46 @@ export function TaskForm({
     const [evidence, setEvidence] = useState<EvidenceRef>();
     const [restored, setRestored] = useState(false);
     const [category, setCategory] = useState("fuel_planned");
+    const [snapshot, setSnapshot] = useState<Snapshot>(initialSnapshot);
+    const [refreshingStock, setRefreshingStock] = useState(false);
+    const [stockSyncedAt, setStockSyncedAt] = useState<Date>(() => new Date());
+
+    const handleRefreshStock = async () => {
+        if (!provider || refreshingStock) return;
+        setRefreshingStock(true);
+        try {
+            const fresh = await provider.snapshot();
+            if (fresh?.products?.length) {
+                setSnapshot(fresh);
+                setStockSyncedAt(new Date());
+            }
+        } catch {
+            // Keep last known snapshot on network failure
+        } finally {
+            setRefreshingStock(false);
+        }
+    };
+
+    useEffect(() => {
+        if (dialog.type !== "order" || !provider) return;
+        let active = true;
+        void provider
+            .snapshot()
+            .then((fresh: Snapshot) => {
+                if (active && fresh?.products?.length) {
+                    setSnapshot(fresh);
+                    setStockSyncedAt(new Date());
+                }
+            })
+            .catch(() => {});
+        const timer = setInterval(() => {
+            if (active) void handleRefreshStock();
+        }, 20_000);
+        return () => {
+            active = false;
+            clearInterval(timer);
+        };
+    }, [dialog.type, provider]);
     const busyRef = useRef(false);
     busyRef.current = busy;
     const key = dialog.type === "order" ? `order:${dialog.outlet}` : "";
@@ -415,6 +458,9 @@ export function TaskForm({
                                         onQty={setQty}
                                         units={units}
                                         onUnits={setUnits}
+                                        onRefreshStock={handleRefreshStock}
+                                        refreshingStock={refreshingStock}
+                                        stockSyncedAt={stockSyncedAt}
                                     />
                                     <details class="order-extra">
                                         <summary>

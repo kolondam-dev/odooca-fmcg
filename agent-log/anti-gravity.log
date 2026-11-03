@@ -2063,3 +2063,27 @@
 - Menyesuaikan gateway fixture & transport tests untuk sync commands
 - 376 unit tests vitest, tsc --noEmit, format, contracts, build, ruff, dan 10 manifests PASS
 - Task managed by antigravity-agent at 2026-11-03T22:52:57+07:00
+
+[2026-11-04T00:47:00+07:00] [INFO] Fix Sesi Absensi PWA, UX 1 Order per Prinsipal & Real-Time Stock Sync
+- Mengatasi temuan Supervisor PR #82 (P1 & P2):
+  * Isolasi workflow delivery (POD dan penutupan trip) tetap pada simulator lokal mock, karena snapshot backend masih mengirim deliveries: [] (belum ada dispatch DO operasional).
+  * Menghindari kegagalan trip closure di backend. Live forwarding difokuskan eksklusif pada sales.order.submit.
+- Mengatasi blocker pembukaan sesi pagi di PWA ("Paket PJP, stok dan harga belum lengkap atau tanggalnya tidak sesuai"):
+  * Implementasi translasi jam client ke server time via HTTP Date header dan sinkronisasi serverClockOffsetMs.
+  * Backend id_mobile_api auto-provisioning temporary untuk masa demo: mengklon penugasan aktif terbaru ke tanggal hari ini secara otomatis jika belum ada penugasan untuk tanggal request.
+  * Menyelaraskan batas validasi clock skew dan boundary WITA.
+- UX Pembuatan Sales Order 1 Order per Prinsipal:
+  * Tombol navigasi prinsipal memberikan konfirmasi reset keranjang yang jelas jika berganti prinsipal.
+  * Toolbar menampilkan badge prinsipal aktif dan aturan 1 order per prinsipal.
+  * Validasi validateOrder menjamin satu order hanya untuk satu prinsipal FMCG.
+- Sinkronisasi Stok Aktual Real-Time pada Sales Order:
+  * TaskForm dan OrderSheet melakukan background sync stok secara berkala (setiap 20s) serta tombol interaktif "↻ Perbarui Stok".
+  * Kartu produk SKU menampilkan badge stok aktual dan peringatan jika kuantitas order melebihi stok gudang yang tersedia.
+- Verifikasi:
+  * 376 tests lulus di 23 file vitest PWA.
+  * tsc --noEmit (TypeScript check) PASS (0 errors).
+  * Prettier formatting PASS.
+  * export-contracts.mjs schema drift gate PASS.
+  * Tiga build Vite (staging, live, demo) PASS.
+  * python -m ruff check . PASS & check_manifests.py 10 addons PASS.
+- Task managed by antigravity agent at 2026-11-04T00:47:00+07:00

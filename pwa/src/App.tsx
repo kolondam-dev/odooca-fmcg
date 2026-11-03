@@ -1274,6 +1274,7 @@ function Workspace({
                             submit={submit}
                             startSession={startSession}
                             close={() => setDialog(undefined)}
+                            provider={provider}
                         />
                     )}
                 </div>

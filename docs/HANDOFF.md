@@ -1,3 +1,33 @@
+## 2026-11-04T00:48:00+07:00 — antigravity — Perbaikan PR #82: Sesi PWA, Single-Principal Order & Real-Time Stock
+**Branch:** `agen/pwa-live-sales-and-delivery-sync`
+**Status:** In Progress / PR #82 Updated
+**Komponen:** `addons/id_mobile_api`, `pwa/src/components/OrderSheet.tsx`, `pwa/src/components/TaskForm.tsx`, `pwa/src/data/mock.ts`, `pwa/src/domain/morning.ts`
+
+### Ringkasan Perubahan:
+1. **Penyelesaian Temuan Supervisor PR #82 (P1 & P2):**
+   - Mengisolasi workflow delivery (POD dan closing trip) tetap di local simulator mock (`MockProvider.submit`).
+   - Mencegah closing trip dikirim ke backend saat backend masih mengembalikan `deliveries: []` (tidak ada picking operasional nyata).
+   - Live command forwarding dikhususkan untuk `sales.order.submit`.
+2. **Translasi Waktu Server & Keandalan Sesi PWA:**
+   - Menghitung offset waktu server (`setServerClockOffset`) dari header HTTP `Date` untuk menyelaraskan jam client HP/laptop dengan server Railway (WITA).
+   - Di Odoo backend (`id.mobile.workday`), menambahkan patch temporary demo untuk mengklon penugasan aktif terbaru ke tanggal hari ini secara otomatis saat salesman/driver login.
+   - Menghilangkan error *"Paket PJP, stok dan harga belum lengkap atau tanggalnya tidak sesuai"* akibat selisih detik atau batas hari.
+3. **UX Sales Order 1 Order per 1 Prinsipal FMCG:**
+   - Navigasi tab prinsipal di `OrderSheet.tsx` menampilkan konfirmasi yang jelas jika berpindah prinsipal saat keranjang terisi (mengosongkan keranjang saat berpindah prinsipal).
+   - Menampilkan badge prinsipal aktif dan aturan 1 order per prinsipal di toolbar pemesanan.
+   - Enforce integritas satu prinsipal pada `validateOrder`.
+4. **Sinkronisasi Stok Aktual Real-Time:**
+   - `TaskForm` dan `OrderSheet` memuat background stock sync berkala (setiap 20 detik) dari `provider.snapshot()` serta tombol manual `↻ Perbarui Stok`.
+   - Kartu produk SKU menampilkan status ketersediaan stok aktual (`Stok aktual: X karton` / `Stok Habis`).
+   - Peringatan visual otomatis muncul jika kuantitas pesanan melebihi stok aktual gudang yang tersedia.
+5. **Verifikasi Kualitas:**
+   - 376 tests lulus di 23 file vitest PWA.
+   - TypeScript `tsc --noEmit` PASS (0 errors).
+   - Prettier formatting PASS.
+   - OpenAPI schema drift check PASS (`export-contracts.mjs --check`).
+   - Tiga build Vite (staging, live, demo) PASS.
+   - `python -m ruff check .` PASS & `check_manifests.py` PASS (10 addons).
+
 ## 2026-11-03T22:50:00+07:00 — antigravity — Integrasi live Sales Order & Delivery sync dari PWA ke backend
 **Branch:** `agen/pwa-live-sales-and-delivery-sync`
 **Status:** In Progress / PR Preparation

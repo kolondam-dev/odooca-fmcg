@@ -73,11 +73,18 @@ class MobileWorkday(models.Model):
         if len(assignment) == 1 and not assignment.active:
             raise AccessError(_("Today's assignment is inactive; contact your supervisor."))
         if not assignment:
+            # Temporary patch for demo: clone latest active assignment for this user,
+            # or fallback to any active assignment in company, ensuring demo salesmen
+            # always have scheduled outlets and catalog for the current business date.
             latest = self.with_company(company).search([
                 ("user_id", "=", user.id), ("company_id", "=", company.id),
-                ("business_date", "<", day),
                 ("active", "=", True),
             ], order="business_date desc, id desc", limit=1)
+            if not latest or not latest.product_ids or not latest.outlet_ids:
+                latest = self.with_company(company).search([
+                    ("company_id", "=", company.id),
+                    ("active", "=", True),
+                ], order="business_date desc, id desc", limit=1)
             if (
                 latest
                 and latest.product_ids
