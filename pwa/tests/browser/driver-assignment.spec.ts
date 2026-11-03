@@ -53,7 +53,10 @@ test("authenticated driver with one assigned outlet opens daily sync and consist
     await expect(page.locator(".delivery-task")).toContainText(
         "Assigned Only Address",
     );
-    await switchPersona(page, "sales");
+});
+
+test("sales account retains its Sales menu", async ({ page }) => {
+    await page.goto("./");
     await expect(
         page.getByRole("button", { name: "Sales", exact: true }),
     ).toBeVisible();
