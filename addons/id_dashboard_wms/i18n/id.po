@@ -581,3 +581,284 @@ msgstr "Terlalu banyak backorder; persempit cohort."
 #: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
 msgid "Delivery cohort dates"
 msgstr "Tanggal cohort pengiriman"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Physical asset utilization"
+msgstr "Utilisasi aset fisik"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Warehouse"
+msgstr "Gudang"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Known m³"
+msgstr "m³ terukur"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Known kg"
+msgstr "kg terukur"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Usable m³"
+msgstr "m³ usable"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Occupancy"
+msgstr "Okupansi"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Quality exceptions"
+msgstr "Kekurangan data"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Usable Storage Capacity"
+msgstr "Kapasitas Penyimpanan Usable"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Frozen departure loads"
+msgstr "Muatan keberangkatan tersimpan"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Volume utilization"
+msgstr "Utilisasi kubikasi"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Weight utilization"
+msgstr "Utilisasi berat"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Closed-trip distance (km)"
+msgstr "Jarak trip selesai (km)"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Recorded cost / km"
+msgstr "Biaya tercatat / km"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Recorded direct trip cost:"
+msgstr "Biaya langsung trip tercatat:"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Native completed maintenance:"
+msgstr "Maintenance native selesai:"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Recorded cost / delivered DPP:"
+msgstr "Biaya tercatat / DPP terkirim:"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Asset metric basis and coverage"
+msgstr "Dasar perhitungan aset dan cakupan"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Trip"
+msgstr "Trip"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "State"
+msgstr "Status"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Volume %"
+msgstr "Kubikasi %"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Weight %"
+msgstr "Berat %"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Trips shown:"
+msgstr "Trip ditampilkan:"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Load and Trip Records"
+msgstr "Catatan Muatan dan Trip"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Physical stock positions"
+msgstr "Posisi stok fisik"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Coverage:"
+msgstr "Cakupan:"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Closed:"
+msgstr "Selesai:"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Capacity must be finite and nonnegative."
+msgstr "Kapasitas harus terbatas dan tidak negatif."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Record the usable capacity source."
+msgstr "Catat sumber kapasitas usable."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Trip facts are written by departure and closure actions only."
+msgstr "Fakta trip hanya dicatat melalui aksi keberangkatan dan penutupan."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Departure facts and closed trips are immutable."
+msgstr "Fakta keberangkatan dan trip yang ditutup tidak dapat diubah."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Departed trips cannot be deleted."
+msgstr "Trip yang sudah berangkat tidak dapat dihapus."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Trip readings and costs must be finite and nonnegative."
+msgstr "Pembacaan dan biaya trip harus terbatas dan tidak negatif."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Select loaded deliveries on a draft trip."
+msgstr "Pilih pengiriman bermuatan pada trip draft."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "A delivery already belongs to a departed trip."
+msgstr "Pengiriman sudah termasuk trip yang berangkat."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Deliveries must be ready, customer-bound, and match company and vehicle."
+msgstr "Pengiriman harus siap, menuju pelanggan dan cocok perusahaan serta armadanya."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Confirm picked quantities before recording departure."
+msgstr "Konfirmasikan kuantitas dipicking sebelum mencatat keberangkatan."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Close all deliveries before closing the trip."
+msgstr "Selesaikan semua pengiriman sebelum menutup trip."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Check return odometer and record the cost source, including zero-cost trips."
+msgstr "Periksa odometer kembali dan catat sumber biaya, termasuk trip tanpa biaya."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_utilization.py:0
+msgid "Too many stock positions; narrow the company scope."
+msgstr "Terlalu banyak posisi stok; persempit cakupan perusahaan."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_utilization.py:0
+msgid "Warehouse storage roots overlap; correct the location master."
+msgstr "Root penyimpanan gudang bertumpang tindih; perbaiki master lokasi."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_utilization.py:0
+msgid "Too many trips; narrow the period."
+msgstr "Terlalu banyak trip; persempit periode."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Usable Stock Capacity (m³)"
+msgstr "Kapasitas Stok Usable (m³)"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Capacity Source / Basis"
+msgstr "Sumber / Dasar Kapasitas"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Loaded Deliveries"
+msgstr "Pengiriman Bermuatan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/views/asset_views.xml:0
+msgid "Record Departure"
+msgstr "Catat Keberangkatan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/views/asset_views.xml:0
+msgid "Close Trip"
+msgstr "Tutup Trip"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/views/asset_views.xml:0
+msgid "Recorded Direct Trip Costs (excludes maintenance)"
+msgstr "Biaya Langsung Trip Tercatat (di luar maintenance)"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Departure Odometer (km)"
+msgstr "Odometer Keberangkatan (km)"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Return Odometer (km)"
+msgstr "Odometer Kembali (km)"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Other Direct Delivery Cost"
+msgstr "Biaya Langsung Pengiriman Lain"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_trip.py:0
+msgid "Cost Receipt / Source"
+msgstr "Bukti / Sumber Biaya"

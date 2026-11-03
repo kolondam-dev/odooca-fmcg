@@ -85,6 +85,31 @@ export class WmsDashboard extends Component {
     }
 
     onCohortDate(ev) { this.state[ev.target.dataset.field] = ev.target.value; this.load(); }
+    physical(v) {
+        if (v === null || v === undefined) return "—";
+        if (v > 0 && v < 0.0001) return "<0,0001";
+        return new Intl.NumberFormat("id-ID", {maximumFractionDigits: 4}).format(v);
+    }
+    assetMoney(v) {
+        if (v === null || v === undefined) return "—";
+        const c = this.state.data?.currency || "IDR", digits = this.state.data?.currency_digits ?? 2;
+        return `${c === "IDR" ? "Rp" : c} ${new Intl.NumberFormat("id-ID", {
+            minimumFractionDigits: digits, maximumFractionDigits: digits}).format(v)}`;
+    }
+    openAssetTrip(id) {
+        if (this.state.loading || !this.state.data?.assets) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Load and Trip Records"),
+            res_model: "id.asset.trip", views: id ? [[false, "form"]] : [[false, "list"], [false, "form"]],
+            ...(id ? {res_id: id} : {domain: this.state.data.assets.trip_domain})});
+    }
+    openAssetQuants(row) {
+        if (this.state.loading || !this.state.data?.assets) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Physical stock positions"),
+            res_model: "stock.quant", views: [[false, "list"]], domain: row.domain});
+    }
+    openAssetCapacity() {
+        if (!this.state.loading) this.action.doAction("id_dashboard_wms.action_asset_warehouses");
+    }
     openCohort() {
         if (this.state.loading || !this.state.data?.cohort) return;
         this.action.doAction({type: "ir.actions.act_window", name: _t("Delivery cohort source"),

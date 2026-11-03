@@ -98,5 +98,10 @@ assert bridge['covered'] == 1 and bridge['margin'] == 800
 history = env['id.ar.history']._snapshot()  # noqa: F821
 assert history['available'] and abs(history['cross_scope_allocation']) < .01
 assert abs(sum(row['net'] for row in history['buckets']) - history['net']) < .01
+warehouse.write({'usable_volume_cbm': 20, 'capacity_basis': 'QA usable storage survey'})
+assets = env['id.asset.utilization']._data(str(fields.Date.today()), str(fields.Date.today()))  # noqa: F821
+warehouse_row = next(w for w in assets['warehouses'] if w['id'] == warehouse.id)
+assert warehouse_row['volume'] > 0 and warehouse_row['occupancy'] is not None
+assert assets['trip_count'] == 0 and assets['volume_pct'] is None  # no invented historical trips
 env.cr.commit()  # noqa: F821
 print('DASHBOARD_VISUAL_FIXTURE=PASS')

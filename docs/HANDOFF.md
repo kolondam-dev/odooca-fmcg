@@ -1,3 +1,9 @@
+## 2026-11-03T20:47:51+07:00 — agent codex-pwa — Tahap4 utilisasi aset
+**Berubah:** warehouse usable capacity+source; physical quant volume/weight/quality; id.asset.trip departure/close snapshot muatan+kapasitas, weighted fleet utilization, odometer km dan recorded delivery/maintenance cost scope. ACL/company/immutable FACTS/RR duplicate DO+open vehicle guards. Kontrak ASSET_UTILIZATION.md; tidak mengarang trip historis atau mengubah PWA/seed/server.
+**Diverifikasi:** lokal Ruff/10manifest/XML/compile/18Node/diff PASS. Empat native regression methods dan visual/source fixture ci_db ditambah.
+**Belum diuji:** Odoo lokal terhalang Postgres setgroups/seteuid; native CI/upgrade/visual/review HEAD final menunggu. Runtime source completeness belum diaudit. Tidak merge/deploy.
+**Butir terbuka:** receipt/GL reconciliation, per-leg capacity/cbm-km, reversible trip corrections dan readiness bin/rack/layout/Three.js; backlog3B terpisah tetap tercatat.
+
 ## 2026-11-03T08:12:00+07:00 — antigravity — Fitur menu Delivery untuk login driver-01
 **Branch:** `agen/pwa-driver-role-menu`
 **PR:** [#77](https://github.com/kolondam-dev/odooca-fmcg/pull/77)

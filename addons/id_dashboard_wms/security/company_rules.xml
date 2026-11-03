@@ -34,4 +34,9 @@
         <field name="model_id" ref="model_id_delivery_trip_cost"/>
         <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
+    <record id="asset_trip_company_rule" model="ir.rule">
+        <field name="name">Asset trip company isolation</field>
+        <field name="model_id" ref="model_id_asset_trip"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
 </odoo>
