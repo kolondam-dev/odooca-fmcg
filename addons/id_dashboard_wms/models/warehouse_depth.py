@@ -221,14 +221,15 @@ class WarehouseDepth(models.AbstractModel):
             mapping = company.with_env(env)._get_accounts_by_product(products)
             missing = sum(not v["valuation"] for v in mapping.values())
             if not mapping or missing:
-                rows.append({"company": company.name, "available": False, "missing_accounts": missing})
+                rows.append({"company_id": company.id, "company": company.name,
+                             "available": False, "missing_accounts": missing})
                 continue
             value = sum(products.with_context(warehouse_id=False, location=False,
                                                to_date=False, at_date=False).mapped("total_value"))
             accounting = company.with_env(env).stock_accounting_value(mapping, fields.Date.context_today(self))
             ledger_value = sum(accounting.values())
             accounts = {record["valuation"].id for record in mapping.values()}
-            rows.append({"company": company.name, "available": True, "native_value": value,
+            rows.append({"company_id": company.id, "company": company.name, "available": True, "native_value": value,
                 "ledger_value": ledger_value, "gap": value-ledger_value,
                 "domain": [("company_id", "=", company.id), ("parent_state", "=", "posted"),
                            ("account_id", "in", list(accounts)), ("date", "<=", fields.Date.context_today(self))]})

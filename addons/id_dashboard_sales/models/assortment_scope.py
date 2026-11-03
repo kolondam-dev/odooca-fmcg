@@ -68,11 +68,13 @@ class AssortmentScope(models.Model):
         from datetime import date, timedelta
         for scope in scopes:
             frozen = json.loads(scope.frozen_json)
-            outlets = self.env["res.partner"].search([("id", "in", frozen["outlets"])]).ids
+            outlets = self.env["res.partner"].with_context(active_test=False).search([
+                ("id", "in", frozen["outlets"])]).ids
             products = self.env["product.product"].with_context(active_test=False).search([
                 ("id", "in", frozen["products"])]).ids
             if len(outlets) != len(frozen["outlets"]) or len(products) != len(frozen["products"]):
-                continue  # ACL-incomplete universe cannot form a trustworthy denominator.
+                return {"available": False, "reason": "incomplete_eligibility_source_scope",
+                        "rows": [], "scope_count": len(scopes)}
             lines = self.env["sale.order.line"].search([("order_id.company_id", "=", scope.company_id.id),
                 ("order_id.state", "in", ["sale", "done"]), ("order_id.partner_id", "in", outlets),
                 ("order_id.date_order", ">=", _to_utc(scope.date_from)),

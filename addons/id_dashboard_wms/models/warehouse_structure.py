@@ -89,8 +89,8 @@ class WarehouseLocation(models.Model):
                     raise ValidationError(_("Physical capacity needs a company-owned storage node and source."))
             if rec.fmcg_spatial_verified:
                 if (rec.usage not in ("internal", "view") or not rec.company_id
-                        or not rec.fmcg_storage_kind or not rec.fmcg_frame
-                        or not rec.fmcg_capacity_source):
+                        or not rec.fmcg_storage_kind or not (rec.fmcg_frame or "").strip()
+                        or not (rec.fmcg_capacity_source or "").strip()):
                     raise ValidationError(_("Verified layout needs company, role, coordinate frame and source."))
                 if not all(rec[key] > 0 for key in GEO[:3]):
                     raise ValidationError(_("Verified layout needs positive length, width and height."))
