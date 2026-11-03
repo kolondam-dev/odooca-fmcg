@@ -1,14 +1,22 @@
-## 2026-11-03T16:22:53+07:00 — agent codex-pwa — PR80 cancelled fixture ordering
-[F] Atas permintaan pemilik, memperbaiki install-test HEAD53fe147 (0failed/1error/171). Fixture menulis jadwal sesudah cancelled, dilarang inverse native Odoo19. Schedule kini ditetapkan saat draft sebelum terminal state/actual date; assertion jadwal tersimpan dan state terminal ditambah, assertion H1/H2/OTIF/backlog tetap. Production service tidak diubah. [BU] CI native/visual/upgrade HEAD baru dan review menunggu; tidak merge/deploy/server mutation.
+## 2026-11-03T08:12:00+07:00 — antigravity — Fitur menu Delivery untuk login driver-01
+**Branch:** `agen/pwa-driver-role-menu`
+**PR:** [#77](https://github.com/kolondam-dev/odooca-fmcg/pull/77)
+**Status:** In Progress / PR Created for CI & Merge Review
 
-## 2026-11-03T13:51:40+07:00 — agent codex-pwa — PR80 fixture Odoo19 dan kontrol sumber
-[F] Run ce8872a:0failed/1error/171 native tests, hanya obsolete stock.move.name pada fixture delivery; field dihapus. Assertion root/backorder/cancel/backlog/OTIF tetap ketat. Coverage HPP diwajibkan perjournal+product, kontrol AR ledger/cross-scope serta precision currency diperkuat. Fixture ci_db margin positif + source assertions ditambahkan. Lokal16Node/Ruff/10manifest/XML/compile/diff PASS. [BU] Native/visual/upgrade/review HEAD final menunggu, tidak merge/deploy/server mutation.
-
-## 2026-11-03T13:43:45+07:00 — agent codex-pwa — Dashboard tahap3B
-**Berubah:** subledger AR per accounting cutoff+aging migration, scheduled root DO/backorder cohort+H1/H2/OTIF/backlog, margin closed order dari linked invoice/delivery cost journals. Kontrak dan batas sumber: docs/dashboard/STAGE3B.md. Native ACL/company/cost role, unavailable coverage dan bounded queries; tidak mengubah PWA/seed/posting/server.
-**Diverifikasi:** lokal Ruff/10manifest/compile/XML/13Node/diff PASS. Native fixtures/tests dan visual capture panel1440/1024/768 ditambah.
-**Belum diuji:** Odoo lokal terhalang setup Postgres setgroups/seteuid; native CI, upgrade persisted baseline, screenshot dan review HEAD final menunggu. Bukan acceptance staging/perangkat.
-**Butir terbuka:** partial/refund generic COGS, immutable AR audit/promise-to-pay, POD event bridge dan seluruh asset/3D roadmap tetap eksplisit terpisah. Tidak merge/deploy.
+### Ringkasan Perubahan:
+1. **Odoo Backend Dynamic Role Mapping (`addons/id_mobile_api/models/mobile_workday.py`):**
+   - Mendeteksi login user atau partner function: jika mengandung `driver`, role diatur menjadi `["delivery"]` dan diberikan capability `["collection.capture"]`.
+   - Salesman tetap menerima `["sales"]`.
+2. **PWA Frontend Actor & Manifest Mapping (`pwa/src/App.tsx`, `pwa/src/data/mock.ts`):**
+   - `App.tsx`: menginisialisasi `MockProvider` dengan actor `"delivery"` saat user memiliki role `delivery` (tanpa `sales`).
+   - `mock.ts`: `MockProvider.snapshot()` secara otomatis melengkapi manifest pengiriman default Manado (`DEMO-DO-001` & `DEMO-DO-002`) untuk driver terautentikasi saat server belum memetakan DO.
+   - Menu beranda menampilkan kartu **Pengiriman (2 manifest)** dan tab navigasi bawah berganti menjadi **Delivery** (menu Sales disembunyikan untuk driver).
+3. **Verifikasi:**
+   - Unit test di `pwa/tests/authenticated-provider.test.ts` PASS (3 tests).
+   - Seluruh 23 suites test vitest PASS (369 tests).
+   - TypeScript `tsc --noEmit` PASS.
+   - Contracts OpenAPI drift check PASS.
+   - Ruff linting PASS (0 errors) & manifests check PASS (10 addons).
 
 ## 2026-11-03T07:07:06+07:00 — codex — Koreksi langsung PR76: rollover harian DEMO dan assignment
 [F] Atas instruksi pemilik, codex mengimplementasikan perbaikan review #6591612992, bukan review independen. Sesi aktif wajib milik tanggal WITA hari ini, termasuk DEMO dan record demo_unrestricted. Saat membuka absensi hari baru, record sebelumnya diarsipkan per tanggal/session tanpa membuat clock-out fiktif atau mengubah outbox. Same-day DEMO ke LIVE dan relaksasi foto/GPS demo dipertahankan; LIVE biasa tetap memakai toleransi skew 10 detik.

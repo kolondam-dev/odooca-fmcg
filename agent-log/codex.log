@@ -222,3 +222,9 @@
 - Batasi sesi ke hari WITA, arsipkan record hari sebelumnya tanpa mutasi antrean/clock-out; tambahkan 6 unit dan 2 browser scenarios (phone/tablet).
 - Assignment hanya rollover dari masa lalu; inactive-today ditolak eksplisit; tambah 4 native regression methods dan terjemahan.
 - Integrasikan main 41895d7, pertahankan riwayat HANDOFF kedua cabang. 369 unit PWA/typecheck/contracts/format/Ruff/manifests PASS; CI native/browser/upgrade menunggu. Tidak merge/deploy.
+
+[2026-11-03T08:58:21+07:00] [INFO] PR77: bind demo driver fallback to assigned outlets
+- Owner authorized direct correction and merge after CI.
+- Generated fallback count follows assignment, stable DO IDs derive from outlet IDs; labels/address/site use the same outlet.
+- Local 374 unit tests, typecheck, three builds and manifests pass; browser/native Odoo deferred to CI.
+- Task managed by codex agent at 2026-11-03T08:58:21+07:00
