@@ -121,6 +121,7 @@ export const test = base.extend({
                     ...identity,
                     businessDate: date,
                     companyName: "PT. Demo FMCG",
+                    csrfToken: "fixture-command-csrf",
                 },
             });
         });
@@ -152,6 +153,35 @@ export const test = base.extend({
                         coordinate_status: "test",
                     },
                 },
+            });
+        });
+        await page.route("**/api/v1/sync/commands", async (route) => {
+            if (new URL(route.request().url()).port !== "4173")
+                return route.fallback();
+            if (
+                route.request().headers()["x-csrf-token"] !==
+                "fixture-command-csrf"
+            ) {
+                return route.fulfill({
+                    status: 403,
+                    body: "Missing fixture CSRF token",
+                });
+            }
+            // Approval simulation belongs to this HTTP fixture, never the live provider.
+            const body = route.request().postDataJSON();
+            const simulator = new MockProvider(
+                actors.get(page) ?? "sales",
+                true,
+            );
+            Object.defineProperty(globalThis, "navigator", {
+                configurable: true,
+                value: { onLine: true },
+            });
+            const receipt = await simulator.submit(body);
+            await route.fulfill({
+                status: 200,
+                contentType: "application/json",
+                json: receipt,
             });
         });
         await use(page);

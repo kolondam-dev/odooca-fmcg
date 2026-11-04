@@ -81,6 +81,7 @@ export class HttpProvider implements FieldProvider {
         );
         if (this.identity !== identity)
             throw new ApiError(409, "Sesi berubah saat snapshot dibaca.");
+
         if (
             snapshot.catalog_version !== 2 ||
             !snapshot.scope ||

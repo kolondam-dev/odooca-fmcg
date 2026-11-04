@@ -1235,3 +1235,38 @@ msgstr "Median menit"
 #: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
 msgid "p90 min"
 msgstr "p90 menit"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/warehouse_clock.py:0
+msgid "Complete every received quantity branch before closing receiving dwell."
+msgstr "Selesaikan setiap cabang kuantitas yang diterima sebelum menutup waktu penerimaan."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/warehouse_clock.py:0
+msgid "Completion must be a first-storage operation from the fully covered receipt chain."
+msgstr "Penyelesaian harus merupakan operasi kedatangan pertama ke penyimpanan dari rantai penerimaan yang tercakup penuh."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/warehouse_clock.py:0
+msgid "Every received branch needs unambiguous completed onward storage movements."
+msgstr "Setiap cabang penerimaan memerlukan pergerakan lanjutan ke penyimpanan yang selesai dan tidak ambigu."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/warehouse_clock.py:0
+msgid "Onward quantities must exactly cover the received branch."
+msgstr "Kuantitas lanjutan harus tepat mencakup kuantitas cabang yang diterima."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/warehouse_clock.py:0
+msgid "Receiving chain is cyclic, shared or too large to attribute safely."
+msgstr "Rantai penerimaan berulang, berbagi sumber, atau terlalu besar untuk diatribusikan secara aman."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/warehouse_clock.py:0
+msgid "Receiving dwell needs a positive completed receipt quantity."
+msgstr "Waktu penerimaan memerlukan kuantitas penerimaan selesai yang positif."
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/warehouse_clock.py:0
+msgid "Receiving movement evidence is missing, mixed or exceeds the query limit."
+msgstr "Bukti pergerakan penerimaan kosong, bercampur, atau melebihi batas kueri."

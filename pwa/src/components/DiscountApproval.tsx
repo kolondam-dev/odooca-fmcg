@@ -26,7 +26,8 @@ export function DiscountApproval({
             (q.command?.type === "sales.order.revise" ||
                 (q.command?.type === "sales.order.submit" &&
                     q.command.payload?.discount_request)) &&
-            q.state === "needs_approval",
+            q.state === "needs_approval" &&
+            !!q.receipt?.reference?.startsWith("DEMO-"),
     );
     async function decide(row: QueueItem, approved: boolean) {
         setBusy(true);

@@ -1,6 +1,7 @@
 """Operator event clocks tied to native ready/completed warehouse operations."""
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError
+from odoo.tools.float_utils import float_compare
 
 PROTECTED = {"state", "started_at", "ended_at", "started_by", "ended_by", "duration_minutes"}
 
@@ -100,36 +101,67 @@ class WarehouseClock(models.Model):
             if rec.kind != "receiving_dwell" and end != rec.picking_id:
                 raise UserError(_("Picking and putaway clocks finish on their starting operation."))
             if rec.kind == "receiving_dwell":
-                if rec.picking_id.state != "done":
-                    raise UserError(_("Complete the native receipt before closing receiving dwell."))
-                frontier, seen = rec.picking_id.move_ids, set()
-                while frontier:
-                    active = frontier.filtered(lambda m: m.state != "cancel")
-                    if any(m.state != "done" for m in active):
-                        raise UserError(_("Complete the active native receipt and putaway chain first."))
-                    seen.update(frontier.ids)
-                    frontier = active.move_dest_ids.filtered(lambda m: m.id not in seen)
-                    if len(seen) > 5000:
-                        raise UserError(_("Operation chain is too large."))
-                if not self.env["stock.location"].search_count([
-                        ("id", "=", end.location_dest_id.id), ("id", "child_of", rec.warehouse_id.lot_stock_id.id)]):
-                    raise UserError(_("Receiving dwell ends only when goods reach warehouse storage."))
-                if end != rec.picking_id:
-                    frontier, seen, linked = end.move_ids, set(), False
-                    while frontier:
-                        if set(frontier.ids).intersection(rec.picking_id.move_ids.ids):
-                            linked = True
-                            break
-                        seen.update(frontier.ids)
-                        frontier = frontier.move_orig_ids.filtered(lambda m: m.id not in seen)
-                        if len(seen) > 5000:
-                            raise UserError(_("Operation chain is too large."))
-                    if not linked:
-                        raise UserError(_("Completion must belong to the same native receipt chain."))
+                rec._validate_receiving_storage(end)
             now = fields.Datetime.now()
             if now < rec.started_at:
                 raise UserError(_("Clock end cannot precede its start."))
             super(WarehouseClock, rec).write({"state": "done", "ended_at": now, "ended_by": self.env.uid})
+        return True
+
+    def _validate_receiving_storage(self, end):
+        """Prove first storage arrival for every actually received quantity branch.
+
+        A receipt backorder is a separate receipt/clock. Shared downstream origins
+        cannot be allocated safely here and require operational follow-up.
+        """
+        self.ensure_one()
+        if self.picking_id.state != "done":
+            raise UserError(_("Complete the native receipt before closing receiving dwell."))
+        storage = self.env["stock.location"].search([
+            ("id", "child_of", self.warehouse_id.lot_stock_id.id),
+            ("usage", "=", "internal"), ("company_id", "=", self.company_id.id)])
+        storage_ids = set(storage.ids)
+        roots = self.picking_id.move_ids.filtered(lambda m: m.state != "cancel" and m.quantity > 0)
+        if not roots:
+            raise UserError(_("Receiving dwell needs a positive completed receipt quantity."))
+        pending, seen, arrived_pickings = list(roots), set(), set()
+        line_count = 0
+        while pending:
+            move = pending.pop()
+            if move.id in seen or len(seen) >= 5000:
+                raise UserError(_("Receiving chain is cyclic, shared or too large to attribute safely."))
+            seen.add(move.id)
+            if move.state != "done" or move.company_id != self.company_id:
+                raise UserError(_("Complete every received quantity branch before closing receiving dwell."))
+            lines = move.move_line_ids.filtered(lambda line: line.quantity > 0)
+            line_count += len(lines)
+            if not lines or line_count > 50000 or any(
+                    line.product_id != move.product_id or line.company_id != self.company_id
+                    or line.location_id != move.location_id or line.location_dest_id != move.location_dest_id
+                    for line in lines):
+                raise UserError(_("Receiving movement evidence is missing, mixed or exceeds the query limit."))
+            if move.location_dest_id.id in storage_ids:
+                arrived_pickings.add(move.picking_id.id)
+                continue  # first storage arrival; later shipment/return is a separate operation
+            children = move.move_dest_ids.filtered(lambda m: m.state != "cancel" and m.quantity > 0)
+            if not children or any(
+                    child.state != "done" or child.company_id != self.company_id
+                    or child.product_id != move.product_id or child.location_id != move.location_dest_id
+                    or child.move_orig_ids != move for child in children):
+                raise UserError(_("Every received branch needs unambiguous completed onward storage movements."))
+            # Reject an uncompleted zero-done-quantity backorder too, rather than
+            # silently dropping it from the graph because quantity is still zero.
+            if any(child.state not in ("done", "cancel") for child in move.move_dest_ids):
+                raise UserError(_("Complete every received quantity branch before closing receiving dwell."))
+            unit = move.product_id.uom_id
+            received = move.product_uom._compute_quantity(move.quantity, unit, round=False)
+            forwarded = sum(child.product_uom._compute_quantity(child.quantity, unit, round=False)
+                            for child in children)
+            if float_compare(received, forwarded, precision_rounding=unit.rounding):
+                raise UserError(_("Onward quantities must exactly cover the received branch."))
+            pending.extend(children)
+        if end.id not in arrived_pickings or end.location_dest_id.id not in storage_ids:
+            raise UserError(_("Completion must be a first-storage operation from the fully covered receipt chain."))
         return True
 
     def action_cancel(self):

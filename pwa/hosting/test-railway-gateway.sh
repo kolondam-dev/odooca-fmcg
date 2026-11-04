@@ -41,7 +41,9 @@ test "$(curl -s -H 'Host: staging.test' -H 'Origin: https://evil.invalid' -H 'Co
   -o /dev/null -w '%{http_code}' "$base/api/v1/me/bootstrap")" = 400
 test "$(curl -s -X POST -H 'Host: staging.test' -H 'Origin: https://staging.test' -H 'Cookie: session_id=gateway-test' \
   -F metadata='{}' -o /dev/null -w '%{http_code}' "$base/api/v1/evidence")" = 200
-test "$(curl -s -X POST -H 'Host: staging.test' -o /dev/null -w '%{http_code}' "$base/api/v1/sync/commands")" = 404
+test "$(curl -s -H 'Host: staging.test' -H 'Cookie: session_id=gateway-test' -o /dev/null -w '%{http_code}' "$base/api/v1/sync/commands")" = 403
+test "$(curl -s -X POST -H 'Host: staging.test' -H 'Origin: https://staging.test' -H 'Cookie: session_id=gateway-test'   -o /dev/null -w '%{http_code}' "$base/api/v1/sync/commands")" = 200
+test "$(curl -s -X POST -H 'Host: staging.test' -o /dev/null -w '%{http_code}' "$base/api/v1/unknown-endpoint")" = 404
 if docker run --rm -e 'STAGING_HOST=staging.test;invalid' -e ODOO_UPSTREAM=odoo:8069 \
   -e FIELD_UPSTREAM=field-pwa:8080 "${network}-gateway"; then
   echo 'Invalid gateway configuration was accepted' >&2; exit 1

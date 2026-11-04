@@ -1,0 +1,1 @@
+2026-11-04T16:19:30+07:00 [INFO] PR84 receiving-dwell coverage fix: every received branch must reach first warehouse storage with exact native-UoM onward quantity coverage. Missing/cancelled/ambiguous chains fail closed. Ten native regressions added. Integrated main2b7cdd2. Local Ruff/manifest/parse/19Node PASS; CI/native pending. No production data or deployment changes.
