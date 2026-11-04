@@ -1,3 +1,9 @@
+## 2026-11-05T00:25:15+07:00 — codex — Finance I0 audit runtime dan containment legacy
+**Berubah:** branch `agen/finance-i0-runtime-audit` dari main `565e8a4`; alat audit read-only, bukti 67 modul/19 manifest OCA cocok pin, `docs/finance/I0_RUNTIME_AUDIT.md`; `id_base` 19.0.1.3.1 menolak RPC generator nomor/CSV legacy dan melabeli field historis unverified.
+**[F]** PR86 sudah merged. Pemilik memilih demo company 1, IDR, chart Indonesia existing dan menjadi pemberi keputusan Finance/Tax demo. Audit Railway melalui transaksi READ ONLY: native Coretax installed; laporan/MIS/reconcile OCA uninstalled; 0 nomor pajak custom/flag ekspor legacy. Tidak mengubah data live.
+**Diverifikasi:** Ruff, 10 manifest, 3 unit audit PASS; source hash dibandingkan upstream exact pin. Regresi native memastikan penolakan generator dan preservasi posted AML/legacy values ditambahkan.
+**[BU]** CI native/upgrade containment dan review independen exact HEAD; I0 keseluruhan HOLD untuk spike kandidat, golden dataset, effective costing/stock ownership dan mapping COA. FIN01–58 belum diterima. Tidak merge/deploy. Detail acceptance dan tindak lanjut ada di dokumen I0.
+
 ## 2026-11-04T21:56:23+07:00 — claude-dev agent — PR #87 merged: verifikasi main dan deploy otomatis
 **Berubah:** hanya catatan (`docs/HANDOFF.md`, `agent-log/claude-dev.log`).
 **[F]** `main` = `7576d18` (merge PR #87), induk `b3c6876` + `15f400d`; `15f400d` adalah HEAD yang diverifikasi supervisor, jadi tidak ada perubahan source antara verifikasi dan merge.

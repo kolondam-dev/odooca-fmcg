@@ -1,0 +1,1503 @@
+{
+  "acceptance": "MANIFEST_AND_REGISTRY_ONLY; no install, ACL, or report acceptance",
+  "candidates": [
+    "account",
+    "l10n_id",
+    "stock_account",
+    "l10n_id_efaktur_coretax",
+    "account_usability",
+    "account_financial_report",
+    "account_tax_balance",
+    "mis_builder",
+    "mis_builder_budget",
+    "mis_builder_cash_flow",
+    "partner_statement",
+    "account_reconcile_oca",
+    "account_statement_import_sheet_file_xlsx",
+    "account_credit_control",
+    "sale_financial_risk",
+    "account_asset_management",
+    "account_cutoff_base",
+    "account_multicurrency_revaluation",
+    "stock_landed_costs",
+    "hr_expense",
+    "payroll",
+    "payroll_account"
+  ],
+  "lock_sha256": "bb27824f8dc76bb60b83bd7ae6857c2ec6b31ea1d2522d7bb1b8b324d9e71f10",
+  "modules": [
+    {
+      "depends": [
+        "base_setup",
+        "onboarding",
+        "product",
+        "analytic",
+        "portal",
+        "digest"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "account",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/account/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "_account_post_init",
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.5",
+      "sha256": "592bfd9c197bfb25f0faf0e5c2cc261bc85a13565802a4e77d2a190c6a270d4a",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.5"
+    },
+    {
+      "module": "account_asset_management",
+      "paths": [],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "registry_state": "NOT_IN_REGISTRY",
+      "registry_version": null,
+      "status": "MISSING_SOURCE"
+    },
+    {
+      "depends": [
+        "base",
+        "account",
+        "mail"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/credit-control/153ffd6aebbc799127dfb3d0cef3b9dd6f66164c/account_credit_control/__manifest__.py",
+      "module": "account_credit_control",
+      "paths": [
+        "/opt/oca/credit-control/account_credit_control/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "credit-control",
+      "sha256": "ea3812c8c550e8d23610fb802ee3dfd6882c4757b2c3d3262df8981587d0ad25",
+      "source_sha": "153ffd6aebbc799127dfb3d0cef3b9dd6f66164c",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.0"
+    },
+    {
+      "module": "account_cutoff_base",
+      "paths": [],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "registry_state": "NOT_IN_REGISTRY",
+      "registry_version": null,
+      "status": "MISSING_SOURCE"
+    },
+    {
+      "depends": [
+        "account",
+        "date_range",
+        "report_xlsx"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/account-financial-reporting/f48b4ea777c444256aa1c215ec3117d604b5feff/account_financial_report/__manifest__.py",
+      "module": "account_financial_report",
+      "paths": [
+        "/opt/oca/account-financial-reporting/account_financial_report/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "account-financial-reporting",
+      "sha256": "137274bf8ce9f25f02fc6f865260b1486f39f429989b8de77688204047460d28",
+      "source_sha": "f48b4ea777c444256aa1c215ec3117d604b5feff",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.0.0.26"
+    },
+    {
+      "depends": [
+        "contacts",
+        "account"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/credit-control/153ffd6aebbc799127dfb3d0cef3b9dd6f66164c/account_financial_risk/__manifest__.py",
+      "module": "account_financial_risk",
+      "paths": [
+        "/opt/oca/credit-control/account_financial_risk/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "credit-control",
+      "sha256": "68ff7005218a54252e2667342a35863558a9c5f3058df077fd49e9ff01fdf7d7",
+      "source_sha": "153ffd6aebbc799127dfb3d0cef3b9dd6f66164c",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.0"
+    },
+    {
+      "module": "account_multicurrency_revaluation",
+      "paths": [],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "registry_state": "NOT_IN_REGISTRY",
+      "registry_version": null,
+      "status": "MISSING_SOURCE"
+    },
+    {
+      "depends": [
+        "account",
+        "payment"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "account_payment",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/account_payment/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "post_init_hook",
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.2.0",
+      "sha256": "a390533acf333e624bfd92ee6792269a342a319f63133d3118894b32ea8d06bf",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": "uninstall_hook",
+      "version": "2.0"
+    },
+    {
+      "depends": [
+        "account_statement_base"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/account-reconcile/14ddec26314e5a8b0470f301b95fa79ca2c2fd7d/account_reconcile_oca/__manifest__.py",
+      "module": "account_reconcile_oca",
+      "paths": [
+        "/opt/oca/account-reconcile/account_reconcile_oca/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": "post_init_hook",
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "account-reconcile",
+      "sha256": "65927619336f2833f857586563ee16511658cdb6921514e2277dc732904f5599",
+      "source_sha": "14ddec26314e5a8b0470f301b95fa79ca2c2fd7d",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.1.0"
+    },
+    {
+      "depends": [
+        "account"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/account-reconcile/14ddec26314e5a8b0470f301b95fa79ca2c2fd7d/account_statement_base/__manifest__.py",
+      "module": "account_statement_base",
+      "paths": [
+        "/opt/oca/account-reconcile/account_statement_base/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "account-reconcile",
+      "sha256": "aa986ce02a58801b1dad12d594b16aab2a9bb346eb4ccecfd8d7dab706ea2651",
+      "source_sha": "14ddec26314e5a8b0470f301b95fa79ca2c2fd7d",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.1"
+    },
+    {
+      "depends": [
+        "account_statement_base"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/bank-statement-import/3a8c86a61232c2888bd94fb32e3ce04a72707807/account_statement_import_base/__manifest__.py",
+      "module": "account_statement_import_base",
+      "paths": [
+        "/opt/oca/bank-statement-import/account_statement_import_base/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "bank-statement-import",
+      "sha256": "f840a66ec37c83657bf77e88b3947e586888b64ee3a29bde25ece3c46a741c78",
+      "source_sha": "3a8c86a61232c2888bd94fb32e3ce04a72707807",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.0"
+    },
+    {
+      "depends": [
+        "account_statement_import_base"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/bank-statement-import/3a8c86a61232c2888bd94fb32e3ce04a72707807/account_statement_import_file/__manifest__.py",
+      "module": "account_statement_import_file",
+      "paths": [
+        "/opt/oca/bank-statement-import/account_statement_import_file/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "bank-statement-import",
+      "sha256": "6ee0a230d30c14f51bcf84d6f7b1be158415e4ac8e7ac921a0c41499672f2bc1",
+      "source_sha": "3a8c86a61232c2888bd94fb32e3ce04a72707807",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.0"
+    },
+    {
+      "depends": [
+        "account_statement_import_file"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/bank-statement-import/3a8c86a61232c2888bd94fb32e3ce04a72707807/account_statement_import_sheet_file/__manifest__.py",
+      "module": "account_statement_import_sheet_file",
+      "paths": [
+        "/opt/oca/bank-statement-import/account_statement_import_sheet_file/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "bank-statement-import",
+      "sha256": "080a7228a672b30e0a8e227d9adf4862e64b9942004e2e8d159efab8a3e40f83",
+      "source_sha": "3a8c86a61232c2888bd94fb32e3ce04a72707807",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.2.0.2"
+    },
+    {
+      "depends": [
+        "account_statement_import_sheet_file"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/bank-statement-import/3a8c86a61232c2888bd94fb32e3ce04a72707807/account_statement_import_sheet_file_xlsx/__manifest__.py",
+      "module": "account_statement_import_sheet_file_xlsx",
+      "paths": [
+        "/opt/oca/bank-statement-import/account_statement_import_sheet_file_xlsx/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "bank-statement-import",
+      "sha256": "6c4bc9bc36f944180452525112630f4f009be2ecb937025ff1ec59dfd70de787",
+      "source_sha": "3a8c86a61232c2888bd94fb32e3ce04a72707807",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.2.0.0"
+    },
+    {
+      "depends": [
+        "account",
+        "date_range"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/account-financial-reporting/f48b4ea777c444256aa1c215ec3117d604b5feff/account_tax_balance/__manifest__.py",
+      "module": "account_tax_balance",
+      "paths": [
+        "/opt/oca/account-financial-reporting/account_tax_balance/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": "pre_init_hook",
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "account-financial-reporting",
+      "sha256": "e8a39ba9e649b68010f61612e8ec9193b7ef1d5f415e03b852a2cf39f75a2885",
+      "source_sha": "f48b4ea777c444256aa1c215ec3117d604b5feff",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.3"
+    },
+    {
+      "module": "account_usability",
+      "paths": [],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "registry_state": "NOT_IN_REGISTRY",
+      "registry_version": null,
+      "status": "MISSING_SOURCE"
+    },
+    {
+      "depends": [
+        "base",
+        "mail",
+        "uom"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "analytic",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/analytic/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.2",
+      "sha256": "74112ba1b9696a6745b1edf911b44b84fe5619741d04f63b725e1ea960c33327",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.2"
+    },
+    {
+      "depends": [
+        "base_setup",
+        "mail",
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "auth_signup",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/auth_signup/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "4e2be94656bf1268acf8b7a10cfe772ac4afc74beeab2ed87b32685956856e46",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "barcodes",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/barcodes/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "_assign_default_nomeclature_id",
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.2.0",
+      "sha256": "f43d8722ab3a8d44428825de94ce0ea1332a5972ba9b24ddc842d11eb58fc7f5",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "2.0"
+    },
+    {
+      "depends": [
+        "barcodes",
+        "uom"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "barcodes_gs1_nomenclature",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/barcodes_gs1_nomenclature/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "289511f12176b73336d669bfe77b529f0a4eaf61ed824447001f223b1b6c3606",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": null,
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "base",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/base/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "post_init",
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.3",
+      "sha256": "0ad4109fd814b9212de92ec35c004669d915df04fb8c54e410be89656b524c36",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.3"
+    },
+    {
+      "depends": [
+        "account",
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "base_iban",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/base_iban/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "fcc305bbf9209d30452fa9d584558cddb133bb033446a685b72c6dd31216812d",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": null
+    },
+    {
+      "depends": [
+        "base",
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "base_setup",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/base_setup/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "07e88ce844c51965b6e976d8df861c2bd3f5844a313cb06892b0e4cbfaf93b05",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "account"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "base_vat",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/base_vat/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.2.0",
+      "sha256": "1b363746f15f714b0b042f4f68c91802421aecf1adc6c88cb4117ce5f078658a",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "2.0"
+    },
+    {
+      "depends": [
+        "spreadsheet_dashboard"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "board",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/board/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "sha256": "96066050abb40eb6bd1197c0792e2f6a9720aa027ee2bdd0eb637e26cfaed41b",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "base",
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "bus",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/bus/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "0da3173c1091b701877f8be0c4c3b8996c0bccb717d68fadd61574a30206331b",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "base",
+        "mail"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "calendar",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/calendar/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.1",
+      "sha256": "95e0c0f556661e6b982db3f645440c02063b56e1b2a3f621771224742cadf035",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.1"
+    },
+    {
+      "depends": [
+        "base",
+        "mail"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "contacts",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/contacts/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "c980712064b9fffbc410e9dfcea09453c5a813264f541add45840cb621724bf1",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": null
+    },
+    {
+      "depends": [
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/server-ux/2e040168c4ed27ac6e732c68516ca47781eb1a0f/date_range/__manifest__.py",
+      "module": "date_range",
+      "paths": [
+        "/opt/oca/server-ux/date_range/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "server-ux",
+      "sha256": "fcd50b7e5c8db7066396a396a50ef196699d906eff4e85e746048dc00d76d725",
+      "source_sha": "2e040168c4ed27ac6e732c68516ca47781eb1a0f",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.1"
+    },
+    {
+      "depends": [
+        "mail",
+        "portal",
+        "resource"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "digest",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/digest/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.1",
+      "sha256": "4e41053e52b9bc1186c1dcae615352fc041789d38a6f1e392dd24070a47a9ce5",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.1"
+    },
+    {
+      "depends": [
+        "base_setup",
+        "digest",
+        "phone_validation",
+        "resource_mail",
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "hr",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/hr/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.1",
+      "sha256": "bf7754f632dd6a72d56ef9bda6cae3793d5c5c80f6aed599522863a653f0e312",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.1"
+    },
+    {
+      "depends": [
+        "account",
+        "web_tour",
+        "hr"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "hr_expense",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/hr_expense/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "sha256": "dce1efe9382aa356671970436719a26defeb583c7a24f006109826f81b85521f",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "2.1"
+    },
+    {
+      "depends": [
+        "hr",
+        "calendar",
+        "resource"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "hr_holidays",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/hr_holidays/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.6",
+      "sha256": "e91f5a076d268b83364f8c6085de8504fdb915fe44e15437b6da657b8e940cbb",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.6"
+    },
+    {
+      "depends": [
+        "base",
+        "bus",
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "html_editor",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/html_editor/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "5cf7d4199fe8c3116b41a57515ab10b76950aa2b4c8c62037194c128044a9e01",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "http_routing",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/http_routing/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "_post_init_hook",
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "3ab78e1de53f3711f9b8bd0cda4362195becb0f9df4a00c6a51e495155b1fb8a",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": null
+    },
+    {
+      "depends": [
+        "account",
+        "base_iban",
+        "base_vat"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "l10n_id",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/l10n_id/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.3",
+      "sha256": "80461d5a5067270adbc303ca1a967430bf1bd461c14c042a839914e24dcf2b15",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.3"
+    },
+    {
+      "depends": [
+        "l10n_id"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "l10n_id_efaktur_coretax",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/l10n_id_efaktur_coretax/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "c9fdfa019a7fd2c901328c6218b1f754f4deac6dd03d0c52dcbf75a236e7390b",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "base",
+        "base_setup",
+        "bus",
+        "web_tour",
+        "html_editor"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "mail",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/mail/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "_mail_post_init",
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.19",
+      "sha256": "aa251bd517b4cf25929fcfdd1c8a05eb8bad46d03de3b246dda8aa33e1db409f",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.19"
+    },
+    {
+      "depends": [
+        "account",
+        "board",
+        "report_xlsx",
+        "date_range"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/mis-builder/7d519f31e1a553d7a5499571a9146f7e3ea49ea4/mis_builder/__manifest__.py",
+      "module": "mis_builder",
+      "paths": [
+        "/opt/oca/mis-builder/mis_builder/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "mis-builder",
+      "sha256": "9303f562b691e1a4f866afead6f635886212539ed21bac6b75bc18b32dfe2717",
+      "source_sha": "7d519f31e1a553d7a5499571a9146f7e3ea49ea4",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.2.1"
+    },
+    {
+      "depends": [
+        "mis_builder",
+        "account"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/mis-builder/7d519f31e1a553d7a5499571a9146f7e3ea49ea4/mis_builder_budget/__manifest__.py",
+      "module": "mis_builder_budget",
+      "paths": [
+        "/opt/oca/mis-builder/mis_builder_budget/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "mis-builder",
+      "sha256": "b653bbbf83f16a8257efe2de8a64409f319a3da9140b85ec71a081580d958fa5",
+      "source_sha": "7d519f31e1a553d7a5499571a9146f7e3ea49ea4",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.1"
+    },
+    {
+      "depends": [
+        "mis_builder"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/account-financial-reporting/f48b4ea777c444256aa1c215ec3117d604b5feff/mis_builder_cash_flow/__manifest__.py",
+      "module": "mis_builder_cash_flow",
+      "paths": [
+        "/opt/oca/account-financial-reporting/mis_builder_cash_flow/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "account-financial-reporting",
+      "sha256": "d283997bf467222ade83149be840d336a1b61eb44ff8ee1403581df39d1a0e5c",
+      "source_sha": "f48b4ea777c444256aa1c215ec3117d604b5feff",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.0"
+    },
+    {
+      "depends": [
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "onboarding",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/onboarding/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.2",
+      "sha256": "3e8369850e20abb5f9ce3141cea3c02be7499302d2f9db36a21ebc5688c17953",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.2"
+    },
+    {
+      "depends": [
+        "account",
+        "report_xlsx",
+        "report_xlsx_helper"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/account-financial-reporting/f48b4ea777c444256aa1c215ec3117d604b5feff/partner_statement/__manifest__.py",
+      "module": "partner_statement",
+      "paths": [
+        "/opt/oca/account-financial-reporting/partner_statement/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "account-financial-reporting",
+      "sha256": "478a1c3900c3a0cc5bd08d7ad95c76f54a3f196bb33dfd8c09ea1afe5212ebdb",
+      "source_sha": "f48b4ea777c444256aa1c215ec3117d604b5feff",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.1.0"
+    },
+    {
+      "depends": [
+        "onboarding",
+        "portal"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "payment",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/payment/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.2.0",
+      "sha256": "de73163d7bb451cd49773ec2878b616512eefdc1f58581b0cd09da948f5e0e11",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "2.0"
+    },
+    {
+      "depends": [
+        "hr_holidays",
+        "mail"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/payroll/58f8a39799383ef98d50097f81f4abcc6dd03782/payroll/__manifest__.py",
+      "module": "payroll",
+      "paths": [
+        "/opt/oca/payroll/payroll/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "payroll",
+      "sha256": "785ae3815b414d7b093b29eafda3ac9500e52d625a786fd4f58bc2dc885265f0",
+      "source_sha": "58f8a39799383ef98d50097f81f4abcc6dd03782",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.2"
+    },
+    {
+      "module": "payroll_account",
+      "paths": [],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "registry_state": "NOT_IN_REGISTRY",
+      "registry_version": null,
+      "status": "MISSING_SOURCE"
+    },
+    {
+      "depends": [
+        "base",
+        "mail"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "phone_validation",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/phone_validation/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.2.1",
+      "sha256": "c9a5b4d3d5c27b4aef697f1bbf89d3886a93b9f10650306e716489a22387775a",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "2.1"
+    },
+    {
+      "depends": [
+        "web",
+        "html_editor",
+        "http_routing",
+        "mail",
+        "auth_signup"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "portal",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/portal/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "4415ca5bfdb7bfe99b9cad263d1b3b360e329abcb55b53c32d68e205caafcfe6",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": null
+    },
+    {
+      "depends": [
+        "base",
+        "mail",
+        "uom"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "product",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/product/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.2",
+      "sha256": "e36045b7a3af91b612e4c6840c24dbbfca466d1036e6fc823fee7794a53f73d5",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.2"
+    },
+    {
+      "depends": [
+        "account"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "purchase",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/purchase/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.2",
+      "sha256": "a34441e3d1ebff546b2b8c582e442e0f5b602cde0a83863e5a19dc0a3b23750b",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.2"
+    },
+    {
+      "depends": [
+        "stock_account",
+        "purchase"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "purchase_stock",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/purchase_stock/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "_create_buy_rules",
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.2",
+      "sha256": "de5da8776888738208e45bdba5a6508030bb423e5bd7ff6d4cecf9b068872a12",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.2"
+    },
+    {
+      "depends": [
+        "base",
+        "web"
+      ],
+      "external_dependencies": {
+        "python": [
+          "xlsxwriter",
+          "xlrd"
+        ]
+      },
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/reporting-engine/b9e8c6cdd2d106614eddaf81bd78f487ae35db45/report_xlsx/__manifest__.py",
+      "module": "report_xlsx",
+      "paths": [
+        "/opt/oca/reporting-engine/report_xlsx/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "reporting-engine",
+      "sha256": "1851068108bb672da5b07ba4ab9ec3a2610e91a3fcf6b1afb0e35b4fae6f39c3",
+      "source_sha": "b9e8c6cdd2d106614eddaf81bd78f487ae35db45",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.2"
+    },
+    {
+      "depends": [
+        "report_xlsx"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/reporting-engine/b9e8c6cdd2d106614eddaf81bd78f487ae35db45/report_xlsx_helper/__manifest__.py",
+      "module": "report_xlsx_helper",
+      "paths": [
+        "/opt/oca/reporting-engine/report_xlsx_helper/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "reporting-engine",
+      "sha256": "7b84c9128614d11d24d06e9e8c00fffb505a6e631e993a9a1f0993159384328c",
+      "source_sha": "b9e8c6cdd2d106614eddaf81bd78f487ae35db45",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.0"
+    },
+    {
+      "depends": [
+        "base",
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "resource",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/resource/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.1",
+      "sha256": "d4afa3a9fbdd0ec6c1630c985a3fca370c5e708d2be3512f0492dd26ec7d008c",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.1"
+    },
+    {
+      "depends": [
+        "resource",
+        "mail"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "resource_mail",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/resource_mail/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "7d5f4a0e44e1c6f6c884af113fc753320cd7aa7e5139f25542a860bda3855849",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "sales_team",
+        "account_payment",
+        "utm"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "sale",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/sale/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "_post_init_hook",
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.2",
+      "sha256": "349c8a4ac364eac0926a1931426a9f22b9b49165a33f52e5d3c084b2cab8aa38",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.2"
+    },
+    {
+      "depends": [
+        "sale",
+        "account_financial_risk"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "AGPL-3",
+      "manifest_url": "https://raw.githubusercontent.com/OCA/credit-control/153ffd6aebbc799127dfb3d0cef3b9dd6f66164c/sale_financial_risk/__manifest__.py",
+      "module": "sale_financial_risk",
+      "paths": [
+        "/opt/oca/credit-control/sale_financial_risk/__manifest__.py"
+      ],
+      "pin_verification": "MATCH",
+      "post_init_hook": null,
+      "pre_init_hook": "pre_init_hook",
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "repository": "credit-control",
+      "sha256": "20a68a3d66921a89b18bf11a4c24f2f702c6ca3dae2c25dfc854b7d6d2f625b1",
+      "source_sha": "153ffd6aebbc799127dfb3d0cef3b9dd6f66164c",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "19.0.1.0.1"
+    },
+    {
+      "depends": [
+        "base",
+        "mail"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "sales_team",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/sales_team/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.1",
+      "sha256": "071e0db44f341d9c171f0ba2f8cebc08876e0de0541a66487bf2c337b3b84fbc",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.1"
+    },
+    {
+      "depends": [
+        "bus",
+        "web",
+        "portal"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "spreadsheet",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/spreadsheet/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "a662d738b5294ac2eddb9ddf1f098ea899716eeab97e321bd0d18efe58d6580e",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "spreadsheet"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "spreadsheet_dashboard",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/spreadsheet_dashboard/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "9f2eefba5c2fb49e205611f85f5a9ab103b3c1875f3c7ecfbf4cad53e92b6bed",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "product",
+        "barcodes_gs1_nomenclature",
+        "digest"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "stock",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/stock/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "_assign_default_mail_template_picking_id",
+      "pre_init_hook": "pre_init_hook",
+      "registry_state": "installed",
+      "registry_version": "19.0.1.1",
+      "sha256": "d5ae42d03f531579bdb42b145aa84f5dfb9857654d719a556e3857a7f9a5c761",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": "uninstall_hook",
+      "version": "1.1"
+    },
+    {
+      "depends": [
+        "stock",
+        "account"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "stock_account",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/stock_account/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": "_post_init_hook",
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.1",
+      "sha256": "469205dfa8db47be15f73d5f066b7239750c44bdafd7c84eee60ffdd9e75bcb0",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.1"
+    },
+    {
+      "depends": [
+        "stock_account",
+        "purchase_stock"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "stock_landed_costs",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/stock_landed_costs/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "uninstalled",
+      "registry_version": null,
+      "sha256": "7fd4bb783d4d145a4867edeebfe81c7fa86f20cf018f4039b94c581ff0e6dda1",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.1"
+    },
+    {
+      "depends": [
+        "base"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "uom",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/uom/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "0660e409a9e97e431adbaef92746678db4e73c63f8d1e8d64bd93790e192bdf6",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "base",
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "utm",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/utm/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.1",
+      "sha256": "c38c68b91300db6175ecdad8963f45b7cfcfc2afe7a6967fad1b4c7a3c694e97",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.1"
+    },
+    {
+      "depends": [
+        "base"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "web",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/web/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "e34b9cf41fb4219f838fba9f7c907d8b7bf45c222bd768177d775614e5e8f2e9",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    },
+    {
+      "depends": [
+        "web"
+      ],
+      "external_dependencies": null,
+      "installable": true,
+      "license": "LGPL-3",
+      "module": "web_tour",
+      "paths": [
+        "/usr/lib/python3/dist-packages/odoo/addons/web_tour/__manifest__.py"
+      ],
+      "pin_verification": "NOT_OCA_OR_NO_SOURCE",
+      "post_init_hook": null,
+      "pre_init_hook": null,
+      "registry_state": "installed",
+      "registry_version": "19.0.1.0",
+      "sha256": "935bdfdc6bb3d8b3dcb4e6b2b443df80493bb9dd902a505c983c43bf7aa0a767",
+      "status": "MANIFEST_ONLY",
+      "uninstall_hook": null,
+      "version": "1.0"
+    }
+  ],
+  "observed_at": "2026-11-04T17:18:34.503227+00:00"
+}

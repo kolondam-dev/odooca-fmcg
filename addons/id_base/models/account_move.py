@@ -23,7 +23,7 @@ Faktur non-seed biasa, vendor bill, refund/reversal, atau invoice tanpa marker s
 menjalankan seluruh alur native _post / _stock_account_prepare_realtime_out_lines_vals secara utuh.
 """
 
-from odoo import fields, models
+from odoo import _, fields, models
 from odoo.exceptions import UserError
 
 
@@ -83,39 +83,34 @@ class AccountMove(models.Model):
             ("08", "08 - Penyerahan BKP/JKP Dibebaskan dari Pengenaan PPN"),
             ("09", "09 - Penyerahan BKP/JKP Tidak Dipungut PPN"),
         ],
-        string="Kode Transaksi CoreTax",
+        string="Legacy Tax Transaction Code (Unverified)",
         default="01",
-        help="Kode transaksi faktur pajak sesuai format CoreTax DJP.",
+        help="Legacy custom value; not the native Coretax transaction code.",
     )
     l10n_id_tax_invoice_number = fields.Char(
-        string="Nomor Seri Faktur Pajak (NSFP)",
+        string="Legacy Tax Reference (Unverified)",
         copy=False,
         index=True,
-        help="Nomor Faktur Pajak resmi atau CoreTax Document Reference.",
+        help="Preserved legacy value; not proof of an official tax invoice number.",
     )
     l10n_id_tax_invoice_date = fields.Date(
-        string="Tanggal Faktur Pajak",
+        string="Legacy Tax Reference Date",
         copy=False,
-        help="Tanggal penerbitan faktur pajak elektronik.",
+        help="Date recorded by the legacy custom tax workflow.",
     )
     l10n_id_coretax_exported = fields.Boolean(
-        string="Sudah Ekspor CoreTax",
+        string="Legacy CSV Exported (Unverified)",
         copy=False,
         default=False,
-        help="Menandakan dokumen faktur pajak ini sudah pernah diekspor ke format CoreTax DJP.",
+        help="Historical CSV generation flag; does not indicate official acceptance.",
     )
 
     def action_generate_nsfp(self):
-        """Menghasilkan nomor seri faktur pajak otomatis jika belum terisi."""
-        for move in self:
-            if not move.l10n_id_tax_invoice_number and move.move_type == "out_invoice":
-                seq_code = move.l10n_id_tax_transaction_code or "01"
-                prefix = f"{seq_code}0.000-26."
-                next_num = str(move.id).zfill(8)
-                move.l10n_id_tax_invoice_number = f"{prefix}{next_num}"
-                if not move.l10n_id_tax_invoice_date:
-                    move.l10n_id_tax_invoice_date = move.invoice_date or fields.Date.today()
-        return True
+        """Retain the RPC entrypoint but never manufacture official identifiers."""
+        raise UserError(_(
+            "Legacy tax number generation is disabled. Use the native Indonesian "
+            "Coretax workflow and verified issuer evidence."
+        ))
 
     def _get_fmcg_seed_company_id(self):
         """Mendapatkan ID company seed yang ditentukan secara eksplisit.
