@@ -138,3 +138,13 @@ class TestReceivingDwell(TransactionCase):
         clock.completion_picking_id = put
         clock.action_complete()
         self.assertEqual(clock.state, "done")
+
+    def test_first_storage_can_be_native_putaway_bin_inside_move_destination(self):
+        receipt, clock = self._receipt(both=False)
+        put = self._put(receipt.move_ids)
+        bin_location = self.env["stock.location"].create({"name": "Dwell destination bin",
+            "location_id": self.wh.lot_stock_id.id, "usage": "internal", "company_id": self.env.company.id})
+        put.move_line_ids.location_dest_id = bin_location
+        clock.completion_picking_id = put
+        clock.action_complete()
+        self.assertEqual(clock.state, "done")

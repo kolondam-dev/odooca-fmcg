@@ -137,7 +137,12 @@ class WarehouseClock(models.Model):
             line_count += len(lines)
             if not lines or line_count > 50000 or any(
                     line.product_id != move.product_id or line.company_id != self.company_id
-                    or line.location_id != move.location_id or line.location_dest_id != move.location_dest_id
+                    or line.location_id != move.location_id
+                    or (line.location_dest_id != move.location_dest_id and not (
+                        move.location_dest_id.id in storage_ids
+                        and line.location_dest_id.id in storage_ids
+                        and move.location_dest_id.parent_path
+                        and (line.location_dest_id.parent_path or "").startswith(move.location_dest_id.parent_path)))
                     for line in lines):
                 raise UserError(_("Receiving movement evidence is missing, mixed or exceeds the query limit."))
             if move.location_dest_id.id in storage_ids:
