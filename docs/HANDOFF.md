@@ -1,3 +1,9 @@
+## 2026-11-04T17:05:00+07:00 — claude-dev agent — Verifikasi live backfill geo + koreksi query runbook
+**Berubah:** `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md` (baru) dan §7 `docs/geo/GEO_MASTER_LOADER.md` (query verifikasi diperbaiki: batas `71.%`, cek duplikat, company lewat `partner_id.state_id`, hitungan partner berprovinsi).
+**[F]** Backfill sudah berjalan otomatis pada deployment `35ea2443` (commit `70f345fe`, merge PR #78) 2026-11-03T14:15:51Z; mark `geo_master_v1` dan `geo_province_v1` terpasang. Query DB read-only: 15/171/1.839 kode dataset lengkap, 0 duplikat, 0 kode luar dataset, 19 `KEL-*` + 18 `KEC-*` legacy utuh, 2 legacy tanpa kode, 354/354 partner punya FK kecamatan dan provinsi, kota/kecamatan/coverage area 0 provinsi kosong.
+**[F]** Kesenjangan: 0/2 company aktif berprovinsi (company 1 PT Manado Distribusi Utama beralamat Manado; company 2 STAGING TEST Company tanpa alamat).
+**Belum dikerjakan:** penulisan provinsi company menunggu keputusan pemilik dan dijalankan lewat skrip (`GEO_PROVINCE_COMPANY_IDS=1`), bukan oleh agen ini. Tidak ada mutasi DB/mark/deployment dari sesi ini.
+
 ## 2026-11-04T00:00:59+07:00 — agent codex-pwa — Backlog3B capability closure
 **Berubah:** audit snapshot immutable + AML/partial provenance/digest; promise-to-pay dan frozen assessment/bank matched allocation; settlement split; recognized partial/returns/refunds COGS; redacted POD projection/lineage/reasons; immutable eligible outlet/SKU period universe dan numeric/observed-turnover weighted distribution. Kontrak docs/dashboard/3B_CLOSURE.md.
 **Diverifikasi:** lokal Ruff/10manifest/XML/compile/20Node/diff PASS; native/source/role/cross-company/payment/bank/return/eligibility/POD regressions dan visual source fixtures ditambah.
