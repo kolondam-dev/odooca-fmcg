@@ -1,3 +1,10 @@
+## 2026-11-04T21:08:47+07:00 — claude-dev agent — PR #87: diagnosis ruleset + penyegaran branch
+**Berubah:** merge `origin/main` ke `agen/geo-live-verification` (HEAD baru), `docs/HANDOFF.md`, `agent-log/claude-dev.log`.
+**[F]** Ruleset `main-quality-gate` (id `25827644`, `refs/heads/main`) memasang 6 required context (`static`, `install-test`, `init-test`, `pwa-gate`, `invariant-tests`, `seed-invariants`, app 15368) dengan `strict_required_status_checks_policy: true`.
+**[F]** Keenam context sudah `SUCCESS` pada head `52ebcf7`; pemetaan nama benar. Blocker sebenarnya `mergeStateStatus: BEHIND` (branch tertinggal 8 commit dari `main` `b3c6876`): GitHub menilai required checks pada merge-ref `refs/pull/87/merge` (`26a5cd7`) yang **0 check run** dan berstatus `pending`, sehingga keenam context tampil "Expected".
+**[F]** `seed-invariants.yml` memicu `push` ke `agen/**` dan `pull_request`, jadi `invariant-tests`/`seed-invariants` muncul 2× per SHA (bukan blocker, tetapi menggandakan runtime). `require_extra_approval_for_unattributed_changes` tidak terpicu karena semua commit diatribusikan ke `kolondam-dev`.
+**[A]** Merge `main` bebas konflik (`git merge-tree` bersih). Ruff/10 manifest/51 unit geo PASS di pohon hasil merge. CI dijalankan ulang pada HEAD baru; merge ke `main` dan deploy tetap menunggu supervisor.
+
 ## 2026-11-04T18:25:34+07:00 — claude-dev agent — PR #87: tes `main()` membuktikan guard memblokir sebelum write
 **Berubah:** `tests/test_geo_ops_guards.py` (7 tes baru `ArchiveMainTests`, total 18 tes).
 **[F]** Tes menjalankan `_documents()` dan `main()` dengan env Odoo palsu (recordset/model/env), bukan hanya helper: reservasi `stock.quant`, move tanpa picking, dan move line terbukti melempar `RuntimeError` **sebelum** `res_company.write`, sebelum user dinonaktifkan, dan sebelum `commit()`.
