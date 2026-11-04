@@ -7,3 +7,5 @@ from . import monetary_dashboard
 from . import book_margin
 
 from . import ar_history
+
+from . import ar_commitment

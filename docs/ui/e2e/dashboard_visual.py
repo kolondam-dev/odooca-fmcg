@@ -74,6 +74,13 @@ async def main():
                 await new_panel.scroll_into_view_if_needed()
                 await page.screenshot(path=str(OUTPUT / f'{name}-{size["width"]}-stage3b.png'))
                 await root.evaluate('el => {el.scrollTop=0;}')
+                extra_labels = {'sales': 'Eligible outlet distribution', 'monetary': 'Payment promises',
+                                'wms': 'Accepted POD bridge'}
+                closure = root.locator('section[aria-label="' + extra_labels[name] + '"]')
+                await closure.wait_for(state='visible')
+                await closure.scroll_into_view_if_needed()
+                await page.screenshot(path=str(OUTPUT / f'{name}-{size["width"]}-3b-closure.png'))
+                await root.evaluate('el => {el.scrollTop=0;}')
                 if name == 'wms':
                     assets = root.locator('section[aria-label="Physical asset utilization"]')
                     await assets.wait_for(state='visible')

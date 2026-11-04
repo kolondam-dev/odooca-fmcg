@@ -237,7 +237,38 @@ class MonetaryDashboard(models.TransientModel):
 
         self.env.cr.execute("SELECT CURRENT_DATE")
         aging_date = str(self.env.cr.fetchone()[0])
+        settlement = {"available": False}
+        if period and (self.env.user.has_group("account.group_account_user")
+                       or self.env.user.has_group("base.group_system")):
+            pay_domain = [("company_id", "in", period["companies"]), ("payment_type", "=", "inbound"),
+                          ("partner_type", "=", "customer"), ("journal_id.type", "in", ["bank", "cash"]),
+                          ("date", ">=", period["key"].split("/")[0]),
+                          ("date", "<=", period["key"].split("/")[1]), ("state", "in", ["in_process", "paid"])]
+            posted = pay_domain + [("move_id.state", "=", "posted")]
+            groups = self.env["account.payment"]._read_group(posted, ["state", "is_matched"],
+                ["amount_company_currency_signed:sum", "__count"])
+            settled = pending = 0.
+            for status, matched, amount, count in groups:
+                if status == "paid" and matched:
+                    settled += amount
+                else:
+                    pending += amount
+            settlement = {"available": True, "settled": settled, "pending": pending, "domain": pay_domain,
+                "without_posted_move": self.env["account.payment"].search_count(
+                    pay_domain + [("move_id.state", "!=", "posted")])}
+        commitments = {"available": False}
+        if self.env.user.has_group("account.group_account_user") or self.env.user.has_group("base.group_system"):
+            promise_domain = [("company_id", "in", company_ids), ("state", "=", "committed")]
+            promises = self.env["id.ar.promise"].search(promise_domain, limit=501)
+            if len(promises) > 500:
+                commitments = {"available": False, "reason": "narrow_scope"}
+            else:
+                commitments = {"available": True, "domain": promise_domain,
+                    "rows": [{"id": p.id, "name": p.name, "owner": p.owner_id.name, "due": str(p.due_date),
+                              "amount": p.amount, "settled": p.settled_amount, "outcome": p.outcome} for p in promises]}
         return {
+            "settlement": settlement,
+            "commitments": commitments,
             "ar_history": self.env["id.ar.history"]._snapshot(
                 kwargs.get("ar_as_of"), kwargs.get("ar_comparison"), area_ids, salesman_ids),
             "book_margin": self.env["id.monetary.book.margin"]._for_period(period),

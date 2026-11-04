@@ -85,6 +85,16 @@ export class WmsDashboard extends Component {
     }
 
     onCohortDate(ev) { this.state[ev.target.dataset.field] = ev.target.value; this.load(); }
+    podOutcome(value) {
+        return {delivered: _t("Fully Received"), partial: _t("Received Partial"), rejected: _t("Rejected"),
+            cancel_delivery: _t("Cancel Delivery"), pending_requested: _t("Pending Requested"),
+            unclassified: _t("Unclassified"), not_recorded: _t("Not recorded")}[value] || value;
+    }
+    openPodAttempts() {
+        if (this.state.loading || !this.state.data?.pod_attempts) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Accepted POD Events"),
+            res_model: "id.delivery.attempt", views: [[false, "list"]], domain: this.state.data.pod_attempts.domain});
+    }
     assetState(value) {
         return {draft: _t("Draft"), departed: _t("Departed"), closed: _t("Closed")}[value] || _t("Not recorded");
     }

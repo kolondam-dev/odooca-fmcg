@@ -19,4 +19,6 @@
         <field name="model_id" ref="model_id_monetary_target"/>
         <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
+<record id="ar_audit_snapshot_company_rule" model="ir.rule"><field name="name">ar_audit_snapshot company isolation</field><field name="model_id" ref="model_id_ar_audit_snapshot"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
+<record id="ar_promise_company_rule" model="ir.rule"><field name="name">ar_promise company isolation</field><field name="model_id" ref="model_id_ar_promise"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
 </odoo>

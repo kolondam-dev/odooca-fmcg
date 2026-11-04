@@ -300,3 +300,8 @@
 - 31a2220:175 native Odoo0failed/0error, init/static PASS; visual fixture gagal warehouse occupancy expectation setelah stock margin fixture tanpa initial physical balance/dimensions. Tambah initial stock+dimensions hanya produk QA baru, diagnostic row, assertion completeness dipertahankan.
 - Human frozen source summary, input selector scope, order-processing cost, copy-safe receipts/DOs, weighted unequal-capacity/unknown-weight+open-trip regression, explicit new QA departure/closure+DPP assertions. Lokal18Node/Ruff/manifest/XML/compile/diff PASS; native/visual/upgrade HEAD final menunggu. Tidak merge/deploy.
 - Task managed by agent codex-pwa at 2026-11-03T20:59:41+07:00
+
+[2026-11-04T00:00:59+07:00] [INFO] Penyelesaian kapabilitas backlog3B
+- Main90c622d/PR81; branch agen/dashboard-3b-completion. Immutable AR ledger+source/hash capture, customer payment commitments/baseline/new paid-matched allocations/frozen assessment, collection settlement split; matched partial/return/refund/native COGS bridge; redacted SQL POD projection/corrections; published eligible numeric/observed-turnover weighted distribution.
+- Kontrak3B_CLOSURE.md. Tidak mengubah posting/seed/PWA/server, WMS menambahkan dependency mobile agar SQL projection terikat modul sumber. Native ACL/company/privilege guard, source ambiguity unavailable. Lokal Ruff/10manifest/XML/compile/20Node/diff PASS. Native/bank integration/visual/upgrade/review HEAD final menunggu; tahap5 berikutnya PR terpisah. Tidak merge/deploy.
+- Task managed by agent codex-pwa at 2026-11-04T00:00:59+07:00

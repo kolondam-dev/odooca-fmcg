@@ -225,6 +225,7 @@ class WmsDashboard(models.TransientModel):
         return {
             "assets": self.env["id.asset.utilization"]._data(cohort["start"], cohort["end"], vehicle_id),
             "cohort": cohort,
+            "pod_attempts": self.env["id.delivery.attempt"]._for_deliveries(cohort["source_ids"]),
             "currency": self.env.company.currency_id.name,
             "currency_digits": self.env.company.currency_id.decimal_places,
             "domains": {"stock": cat_domain, "expiry": expiry_domain, "deliveries": deliv_domain,

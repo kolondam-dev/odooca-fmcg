@@ -93,3 +93,17 @@ test('asset source drilldowns preserve scope and block stale clicks',()=>{
     d.openAssetTrip();assert.equal(a.domain,domain);
     a=null;d.state.loading=true;d.openAssetTrip(3);assert.equal(a,null);
 });
+test('late AR evidence capture does not navigate after filter change',async()=>{
+    const {d,pending}=dashboard('MonetaryDashboard','id_dashboard_monetary/static/src/js/monetary_dashboard.js');
+    d.state.data={ar_history:{available:true,as_of:'2026-07-31',comparison:'2026-07-01'}};
+    let action=null;d.action={doAction:a=>{action=a;}};
+    const save=d.captureArEvidence();d.requestVersion++;pending[0].resolve(7);await save;
+    assert.equal(action,null);assert.equal(d.capturePending,false);
+});
+test('AR evidence capture preserves explicit dates and successful source action',async()=>{
+    const {d,pending}=dashboard('MonetaryDashboard','id_dashboard_monetary/static/src/js/monetary_dashboard.js');
+    d.state.data={ar_history:{available:true,as_of:'2026-07-31',comparison:'2026-07-01'}};
+    let action;d.action={doAction:a=>{action=a;}};
+    const save=d.captureArEvidence();assert.equal(pending[0].filters.as_of,'2026-07-31');
+    pending[0].resolve(7);await save;assert.equal(action.res_id,7);
+});
