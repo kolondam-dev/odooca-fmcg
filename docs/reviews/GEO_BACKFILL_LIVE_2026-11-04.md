@@ -174,7 +174,7 @@ pembelian, atau stok pada company tersebut.
 |---|---|
 | P2: guard arsip melewatkan stok/reservasi atau move tanpa picking | `DOCUMENT_MODELS` ditambah `stock.move`, `stock.move.line`, `stock.scrap`, `mrp.production`; `stock.quant` dihitung bila `quantity != 0` **atau** `reserved_quantity != 0` |
 | P2: query jumlah kode tidak membuktikan kelengkapan dataset | Verifikasi diganti menjadi perbandingan himpunan: `scripts/ops/verify_geo_backfill.py` melaporkan `missing`, `extra`, dan `duplicates` per level; kode karangan yang menggantikan kode kanonik kini gagal |
-| P3: laporan berisi 1.227 byte NUL | Berkas ditulis ulang sebagai UTF-8 tanpa NUL (7.612 byte); `git diff` kembali terbaca sebagai teks |
+| P3: laporan berisi 1.227 byte NUL | Berkas ditulis ulang sebagai UTF-8 tanpa NUL; `git diff` kembali terbaca sebagai teks |
 
 Regresi untuk ketiga butir: `tests/test_geo_ops_guards.py` (11 test) mencakup guard
 stok/reservasi dan kasus tukar-kode dengan jumlah baris tetap sama.
