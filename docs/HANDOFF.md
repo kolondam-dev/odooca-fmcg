@@ -1,3 +1,11 @@
+## 2026-11-04T21:56:23+07:00 — claude-dev agent — PR #87 merged: verifikasi main dan deploy otomatis
+**Berubah:** hanya catatan (`docs/HANDOFF.md`, `agent-log/claude-dev.log`).
+**[F]** `main` = `7576d18` (merge PR #87), induk `b3c6876` + `15f400d`; `15f400d` adalah HEAD yang diverifikasi supervisor, jadi tidak ada perubahan source antara verifikasi dan merge.
+**[F]** Lima workflow push pada `7576d18` `success`: CI, Seed supervision, PWA quality, Upgrade Runtime Verification, Full Dataset Runtime Verification.
+**[F]** Railway auto-deploy `1e8d40c3` untuk commit `7576d18` `SUCCESS` (14:22:44Z → 14:25:10Z, branch `main`, reason `deploy`). Tidak ada deployment manual.
+**[F]** Verifier geo read-only pasca-deploy: PASS — 15/171/1.839 tanpa missing/extra/duplikat, legacy 19/18/2, 1 company aktif berprovinsi, 354/354 partner ber-FK kecamatan dan berprovinsi.
+**Tidak dijalankan:** skrip perubahan data produksi, deploy manual, merge PR tambahan. PR ini hanya catatan; merge-nya akan memicu deploy dokumentasi bila digabung.
+
 ## 2026-11-04T21:08:47+07:00 — claude-dev agent — PR #87: diagnosis ruleset + penyegaran branch
 **Berubah:** merge `origin/main` ke `agen/geo-live-verification` (HEAD baru), `docs/HANDOFF.md`, `agent-log/claude-dev.log`.
 **[F]** Ruleset `main-quality-gate` (id `25827644`, `refs/heads/main`) memasang 6 required context (`static`, `install-test`, `init-test`, `pwa-gate`, `invariant-tests`, `seed-invariants`, app 15368) dengan `strict_required_status_checks_policy: true`.
