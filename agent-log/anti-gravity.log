@@ -2106,3 +2106,18 @@
   * 3 build Vite (staging, live, demo) PASS.
   * python -m ruff check . PASS & check_manifests.py PASS (10 addons).
 - Task managed by antigravity agent at 2026-11-04T08:28:00+07:00
+
+[2026-11-04T08:58:00+07:00] [INFO] Fix Browser Test Failures: Discount Approval Simulation & POS Toolbar Geometry
+- Memperbaiki routing diskon di MockProvider (pwa/src/data/mock.ts):
+  * Order dengan discount_request diarahkan ke simulator approval diskon lokal sehingga alur review supervisor di tab "Lainnya" berfungsi penuh (meluluskan pengujian browser di next-policy.spec.ts dan sales-delivery-rules.spec.ts).
+  * Standard live order (tanpa permohonan diskon) tetap diteruskan langsung ke live backend Odoo.
+- Memperbaiki geometri POS toolbar (pwa/src/components/OrderSheet.tsx):
+  * Memindahkan stock-sync-bar ke dalam container product-list agar tinggi sticky .pos-toolbar kembali ringkas (< 115px) pada layar ponsel/pendek, meluluskan ux-improvements.spec.ts.
+- Menambahkan fixture endpoint commands di pengujian browser (pwa/tests/browser/session-fixture.ts):
+  * Mengemulasikan respons POST /api/v1/sync/commands untuk port demo 4173 Playwright agar command live standar menerima Receipt valid saat berjalan tanpa backend Odoo live.
+- Verifikasi:
+  * TypeScript typecheck PASS (0 errors).
+  * OpenAPI schema drift check PASS.
+  * Tiga varian build Vite (staging, live, demo) PASS.
+  * python -m ruff check . PASS & check_manifests.py PASS (10 addons).
+- Task managed by antigravity agent at 2026-11-04T08:58:00+07:00

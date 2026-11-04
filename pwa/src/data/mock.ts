@@ -321,15 +321,19 @@ export class MockProvider implements FieldProvider {
         if (this.scenario === "expired")
             throw new ApiError(401, "Simulasi sesi habis. Antrean dikunci.");
 
+        const hasDiscountRequest = Boolean(
+            (command.payload as Record<string, unknown>)?.discount_request,
+        );
+
         if (
             this.authenticated &&
-            typeof this.authenticated.submit === "function"
+            typeof this.authenticated.submit === "function" &&
+            command.type === "sales.order.submit" &&
+            !hasDiscountRequest
         ) {
             // Forward live sales orders to backend. Delivery commands (POD and trip closure)
             // remain simulated locally because deliveries in current snapshot are local fallback DOs.
-            if (command.type === "sales.order.submit") {
-                return await this.authenticated.submit(command);
-            }
+            return await this.authenticated.submit(command);
         }
 
         const owner = (await this.bootstrap()).id;

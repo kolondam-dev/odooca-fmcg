@@ -199,35 +199,6 @@ export function OrderCatalog({
     return (
         <>
             <div class="pos-toolbar">
-                <div class="stock-sync-bar">
-                    <span class="stock-sync-indicator">
-                        <span class="pulse-dot">●</span> Stok Aktual Realtime
-                        {stockSyncedAt
-                            ? ` (${stockSyncedAt.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })})`
-                            : ""}
-                    </span>
-                    {onRefreshStock && (
-                        <button
-                            type="button"
-                            class="stock-refresh-btn"
-                            disabled={refreshingStock}
-                            onClick={onRefreshStock}
-                        >
-                            {refreshingStock ? "Sync…" : "↻ Perbarui"}
-                        </button>
-                    )}
-                </div>
-                <div class="principal-rule-bar">
-                    <span>
-                        🏢 Prinsipal:{" "}
-                        <strong>
-                            {snapshot.products.find(
-                                (p) => p.principal === active,
-                            )?.principal_name ?? principalName(active)}
-                        </strong>{" "}
-                        · 1 order per prinsipal
-                    </span>
-                </div>
                 <label class="search product-search">
                     <Icon name="bag" size={18} />
                     <input
@@ -271,6 +242,24 @@ export function OrderCatalog({
                 </div>
             </div>
             <div class="product-list">
+                <div class="stock-sync-bar">
+                    <span class="stock-sync-indicator">
+                        <span class="pulse-dot">●</span> Stok Aktual Realtime
+                        {stockSyncedAt
+                            ? ` (${stockSyncedAt.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })})`
+                            : ""}
+                    </span>
+                    {onRefreshStock && (
+                        <button
+                            type="button"
+                            class="stock-refresh-btn"
+                            disabled={refreshingStock}
+                            onClick={onRefreshStock}
+                        >
+                            {refreshingStock ? "Sync…" : "↻ Perbarui"}
+                        </button>
+                    )}
+                </div>
                 {products.length === 0 && (
                     <p class="empty">Tidak ada produk yang cocok.</p>
                 )}

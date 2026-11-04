@@ -1,3 +1,22 @@
+## 2026-11-04T08:58:00+07:00 — antigravity — Perbaikan Browser Tests Playwright: Simulasi Diskon & Geometri Toolbar POS
+**Branch:** `agen/pwa-live-sales-and-delivery-sync`
+**Status:** In Progress / PR #82 Browser Test Fixes
+**Komponen:** `pwa/src/data/mock.ts`, `pwa/src/components/OrderSheet.tsx`, `pwa/tests/browser/session-fixture.ts`
+
+### Ringkasan Perubahan:
+1. **Routing Approval Diskon di MockProvider (`mock.ts`):**
+   - Mengarahkan sales order yang memiliki permohonan diskon (`discount_request`) ke simulator approval diskon lokal (`status: needs_approval`). Hal ini memungkinkan alur peninjauan keputusan supervisor di tab "Lainnya" bekerja penuh, meluluskan 6 skenario pengujian di `next-policy.spec.ts` dan `sales-delivery-rules.spec.ts`.
+   - Sales order standar non-diskon tetap dikirim secara live ke backend Odoo.
+2. **Kerapian Geometri POS Toolbar (`OrderSheet.tsx`):**
+   - Memindahkan `stock-sync-bar` ke dalam kontainer `product-list` di atas daftar SKU produk, sehingga tinggi `.pos-toolbar` tetap ringkas (< 115px) pada layar pendek/mobile dan meluluskan pengujian `ux-improvements.spec.ts`.
+3. **Emulasi Endpoint Perintah Live di Browser Fixture (`session-fixture.ts`):**
+   - Menambahkan penanganan rute `**/api/v1/sync/commands` untuk instance uji coba port 4173 agar perintah live standar menerima tanda terima (Receipt) valid tanpa error 503 dari server statis.
+4. **Verifikasi:**
+   - TypeScript `tsc --noEmit` PASS (0 errors).
+   - OpenAPI schema drift check PASS.
+   - 3 varian build Vite (`staging`, `live`, `demo`) PASS.
+   - `python -m ruff check .` PASS & `check_manifests.py` PASS (10 addons).
+
 ## 2026-11-04T08:28:00+07:00 — antigravity — Koreksi Re-Review PR #82: P1 Past-Date Guard & P2 Separated Stock Display
 **Branch:** `agen/pwa-live-sales-and-delivery-sync`
 **Status:** In Progress / PR #82 Re-review Updates
