@@ -1,3 +1,10 @@
+## 2026-11-04T17:20:00+07:00 — claude-dev agent — Tindak lanjut company: provinsi company 1 dan arsip company 2
+**Berubah:** `scripts/ops/archive_staging_company.py` (baru) dan `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md` (bagian tindak lanjut + status acceptance company).
+**[F]** Dry-run `fix_geo_province.py` dengan `GEO_PROVINCE_COMPANY_IDS=1` menunjukkan hanya 1 company akan diisi; penerapan berhasil dan company 1 (PT Manado Distribusi Utama) kini `state_id = Sulawesi Utara`.
+**[F]** Odoo menolak arsip company 2 karena masih default company 2 user aktif. Script arsip ter-guard (dry-run default; menolak bila nama tidak tunggal, ada dokumen akuntansi/penjualan/pembelian/stok, atau login bukan `staging.*`) menonaktifkan `staging.capture.1`/`.2` lalu mengarsipkan company 2.
+**[F]** Verifikasi ulang read-only: 1 company aktif, 1 berprovinsi, 0 tanpa provinsi; 354/354 partner tetap berprovinsi dan ber-FK kecamatan; 15/171/1.839 kode dataset lengkap tanpa duplikat.
+**Tidak diubah:** transaksi, akuntansi, stok, seed, mark, dan konfigurasi deployment.
+
 ## 2026-11-04T17:05:00+07:00 — claude-dev agent — Verifikasi live backfill geo + koreksi query runbook
 **Berubah:** `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md` (baru) dan §7 `docs/geo/GEO_MASTER_LOADER.md` (query verifikasi diperbaiki: batas `71.%`, cek duplikat, company lewat `partner_id.state_id`, hitungan partner berprovinsi).
 **[F]** Backfill sudah berjalan otomatis pada deployment `35ea2443` (commit `70f345fe`, merge PR #78) 2026-11-03T14:15:51Z; mark `geo_master_v1` dan `geo_province_v1` terpasang. Query DB read-only: 15/171/1.839 kode dataset lengkap, 0 duplikat, 0 kode luar dataset, 19 `KEL-*` + 18 `KEC-*` legacy utuh, 2 legacy tanpa kode, 354/354 partner punya FK kecamatan dan provinsi, kota/kecamatan/coverage area 0 provinsi kosong.
