@@ -81,7 +81,15 @@ for (const approved of [true, false])
                 () => document.documentElement.scrollWidth <= innerWidth,
             ),
         ).toBe(true);
+        const liveRequest = page.waitForRequest(
+            (request) =>
+                request.url().endsWith("/api/v1/sync/commands") &&
+                !!request.postDataJSON()?.payload?.discount_request,
+        );
         await sendOrder(page);
+        expect((await liveRequest).headers()["x-csrf-token"]).toBe(
+            "fixture-command-csrf",
+        );
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
