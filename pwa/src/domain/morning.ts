@@ -31,19 +31,7 @@ export const MorningRecordSchema = z
 export type MorningRecord = z.infer<typeof MorningRecordSchema>;
 export const MORNING_KEY = "morning-session-v1";
 export const MORNING_HISTORY_PREFIX = "morning-session-history-v1:";
-let serverClockOffsetMs = 0;
-export function setServerClockOffset(offsetMs: number): void {
-    if (Number.isFinite(offsetMs)) {
-        serverClockOffsetMs = offsetMs;
-    }
-}
-export function getServerClockOffset(): number {
-    return serverClockOffsetMs;
-}
-export function nowServer(): Date {
-    return new Date(Date.now() + serverClockOffsetMs);
-}
-export function fieldBusinessDate(now = nowServer()): string {
+export function fieldBusinessDate(now = new Date()): string {
     return now.toLocaleDateString("en-CA", { timeZone: "Asia/Makassar" });
 }
 export function isSundayBusinessDate(dateStr = fieldBusinessDate()): boolean {
@@ -63,13 +51,13 @@ function validMorningSnapshot(
     if (!parsed.success) return false;
     const snapshot = parsed.data;
     const maxSkewMs = isRelaxed ? Infinity : 10_000;
-    const now = nowServer().getTime();
     return (
         !!snapshot.version.trim() &&
         z.iso.datetime().safeParse(snapshot.updatedAt).success &&
         (isRelaxed ||
             fieldBusinessDate(new Date(snapshot.updatedAt)) === date) &&
-        (isRelaxed || Date.parse(snapshot.updatedAt) <= now + maxSkewMs) &&
+        (isRelaxed ||
+            Date.parse(snapshot.updatedAt) <= Date.now() + maxSkewMs) &&
         snapshot.outlets.length > 0 &&
         snapshot.products.length > 0
     );

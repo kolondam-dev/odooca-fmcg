@@ -2087,3 +2087,22 @@
   * Tiga build Vite (staging, live, demo) PASS.
   * python -m ruff check . PASS & check_manifests.py 10 addons PASS.
 - Task managed by antigravity agent at 2026-11-04T00:47:00+07:00
+
+[2026-11-04T08:28:00+07:00] [INFO] Fix Re-review PR #82 HOLD: P1 Workday Rollover & P2 Separated Stock Display
+- Mengatasi temuan P1 Odoo Backend (mobile_workday.py):
+  * Memulihkan filter strictly past plan ("business_date", "<", day) pada _current_assignment.
+  * Menjamin rencana masa depan (future route) tidak diklon ke hari ini, meluluskan test_rollover_future_only_does_not_create_today dan test_rollover_uses_past_plan_instead_of_future.
+- Mengatasi temuan P2 PWA (TaskForm.tsx, OrderSheet.tsx):
+  * Menerapkan kontrak refresh stok terpisah (separated liveStock mapping).
+  * Snapshot sesi pagi (morning.snapshot) tetap menjadi sumber kebenaran tunggal untuk harga, packaging, dan snapshot_version, mencegah order ditolak akibat price/version mismatch.
+  * Menambahkan 4 unit test regresi di pwa/tests/live-stock-sync.test.ts: stock-change, price-change invariance, offline graceful fallback, dan stale response ordering guard.
+- Memulihkan integritas clock browser tests:
+  * Menghapus offset HTTP Date di provider.ts dan mengembalikan fieldBusinessDate(now = new Date()) agar timer mock Playwright (page.clock) dan Vitest (vi.useFakeTimers) tidak tergeser.
+- Memperbarui dokumentasi dan scope PR #82: live sync difokuskan khusus Sales Order (SO-only); alur delivery operasional live ditunda hingga backend Odoo menyediakan picking operasional nyata.
+- Verifikasi:
+  * 380 unit tests lulus di 24 test suites Vitest PWA.
+  * tsc --noEmit PASS (0 errors).
+  * export-contracts.mjs --check PASS.
+  * 3 build Vite (staging, live, demo) PASS.
+  * python -m ruff check . PASS & check_manifests.py PASS (10 addons).
+- Task managed by antigravity agent at 2026-11-04T08:28:00+07:00

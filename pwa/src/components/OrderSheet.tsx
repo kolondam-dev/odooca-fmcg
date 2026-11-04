@@ -25,6 +25,7 @@ function ProductRow({
     catalogVersion,
     quantity,
     uom,
+    stock,
     onQuantity,
     onUom,
 }: {
@@ -32,16 +33,18 @@ function ProductRow({
     catalogVersion?: 2;
     quantity: number;
     uom: OrderUom;
+    stock?: number;
     onQuantity: (value: number) => void;
     onUom: (value: OrderUom) => void;
 }) {
+    const currentStock = stock !== undefined ? stock : product.stock;
     const options = unitOptions(product, catalogVersion);
     const labels = productUnitLabels(product);
     const selected = options.find((o) => o.uom === uom) ?? options[0];
     const line =
         quantity > 0 ? lineQuote(product, quantity, uom, catalogVersion) : null;
-    const isOutOfStock = product.stock <= 0;
-    const isOverStock = Boolean(line && line.cartons > product.stock);
+    const isOutOfStock = currentStock <= 0;
+    const isOverStock = Boolean(line && line.cartons > currentStock);
     const set = (value: number) =>
         onQuantity(Math.min(999, Math.max(0, Math.trunc(value) || 0)));
     return (
@@ -61,17 +64,17 @@ function ProductRow({
             <p class="conversion">{conversionLabel(product, catalogVersion)}</p>
             <div class="stock-status-bar">
                 <span
-                    class={`stock-badge ${isOutOfStock ? "out" : product.stock <= 5 ? "low" : "ok"}`}
+                    class={`stock-badge ${isOutOfStock ? "out" : currentStock <= 5 ? "low" : "ok"}`}
                 >
                     ●{" "}
                     {isOutOfStock
                         ? "Stok Habis"
-                        : `Stok aktual: ${cartonText(product.stock)} ${labels.carton}`}
+                        : `Stok aktual: ${cartonText(currentStock)} ${labels.carton}`}
                 </span>
                 {isOverStock && (
                     <span class="stock-warning-badge">
                         ⚠️ Order ({cartonText(line!.cartons)}) melebihi stok
-                        aktual ({cartonText(product.stock)})
+                        aktual ({cartonText(currentStock)})
                     </span>
                 )}
             </div>
@@ -127,7 +130,7 @@ function ProductRow({
             <small class="line-note">
                 {quantity > 0 && line
                     ? `${quantity} ${selected.label} = ${line.pcs} Pcs · ${cartonText(line.cartons)} ${labels.carton}`
-                    : `Tersedia ${cartonText(product.stock)} ${labels.carton} · harga per ${labels.carton}`}
+                    : `Tersedia ${cartonText(currentStock)} ${labels.carton} · harga per ${labels.carton}`}
             </small>
         </article>
     );
@@ -141,6 +144,7 @@ export function OrderCatalog({
     onQty,
     units,
     onUnits,
+    liveStock,
     onRefreshStock,
     refreshingStock,
     stockSyncedAt,
@@ -152,6 +156,7 @@ export function OrderCatalog({
     onQty: (value: Record<string, number>) => void;
     units: Record<string, OrderUom>;
     onUnits: (value: Record<string, OrderUom>) => void;
+    liveStock?: Record<string, number>;
     onRefreshStock?: () => void;
     refreshingStock?: boolean;
     stockSyncedAt?: Date;
@@ -276,6 +281,7 @@ export function OrderCatalog({
                         catalogVersion={snapshot.catalog_version}
                         quantity={qty[product.id] ?? 0}
                         uom={units[product.id] ?? "carton"}
+                        stock={liveStock?.[product.id]}
                         onQuantity={(value) =>
                             onQty({ ...qty, [product.id]: value })
                         }

@@ -1,3 +1,29 @@
+## 2026-11-04T08:28:00+07:00 — antigravity — Koreksi Re-Review PR #82: P1 Past-Date Guard & P2 Separated Stock Display
+**Branch:** `agen/pwa-live-sales-and-delivery-sync`
+**Status:** In Progress / PR #82 Re-review Updates
+**Komponen:** `addons/id_mobile_api/models/mobile_workday.py`, `pwa/src/components/TaskForm.tsx`, `pwa/src/components/OrderSheet.tsx`, `pwa/tests/live-stock-sync.test.ts`
+
+### Ringkasan Perubahan:
+1. **P1 — Odoo Backend Rollover strictly past-date (`mobile_workday.py`):**
+   - Memulihkan filter `("business_date", "<", day)` pada query rollover auto-provisioning `_current_assignment`.
+   - Mencegah penugasan hari mendatang (`day + 2`) dipakai untuk hari ini, meluluskan `test_rollover_future_only_does_not_create_today` dan `test_rollover_uses_past_plan_instead_of_future` (183/183 tests native Odoo PASS).
+2. **P2 — Kontrak Refresh Stok Terpisah / Separated Stock Display (`TaskForm.tsx`, `OrderSheet.tsx`):**
+   - Mengubah mekanisme refresh: `snapshot` sesi pagi (`morning.snapshot`) dipertahankan sepenuhnya sebagai kontrak otoritatif untuk harga, packaging, dan `snapshot_version`.
+   - Menggunakan state terpisah `liveStock: Record<string, number>` untuk memperbarui ketersediaan kuantitas stok aktual gudang secara real-time pada setiap kartu produk SKU.
+   - Menghindari diskrepansi harga/versi pada saat order dibuat atau dikirim ke backend.
+   - Menambahkan suite pengujian regresi `pwa/tests/live-stock-sync.test.ts` (4 tests: stock change, price invariance, offline fallback, dan stale response ordering guard).
+3. **Integritas Waktu & Playwright Browser Tests:**
+   - Menghapus manipulasi clock offset HTTP `Date` di `provider.ts` dan mengembalikan `fieldBusinessDate(now = new Date())`.
+   - Memastikan pengujian browser Playwright yang mengontrol waktu via `page.clock.install()` berjalan sinkron tanpa lonjakan tanggal akibat waktu wall-clock dev server.
+4. **Klarifikasi Scope PR #82 (SO-Only):**
+   - Mendokumentasikan dan membatasi sinkronisasi live hanya untuk Sales Order (`sales.order.submit`), sementara sinkronisasi delivery live ditunda (*deferred*) sampai backend memiliki picking operasional nyata.
+5. **Verifikasi:**
+   - 380 tests lulus di 24 vitest suites PWA.
+   - `tsc --noEmit` PASS (0 errors).
+   - `export-contracts.mjs --check` PASS.
+   - 3 build Vite (`staging`, `live`, `demo`) PASS.
+   - `python -m ruff check .` PASS & `check_manifests.py` PASS (10 addons).
+
 ## 2026-11-04T00:48:00+07:00 — antigravity — Perbaikan PR #82: Sesi PWA, Single-Principal Order & Real-Time Stock
 **Branch:** `agen/pwa-live-sales-and-delivery-sync`
 **Status:** In Progress / PR #82 Updated
