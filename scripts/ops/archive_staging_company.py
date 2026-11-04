@@ -8,7 +8,9 @@ companies.
 Safety rules:
   * dry-run by default; writes require ARCHIVE_COMPANY_CONFIRM=yes
   * exactly one active company must match the target name
-  * the target must have no accounting, sales or stock documents
+  * the target must have no accounting, sales, purchase, stock or manufacturing
+    activity: invoices, payments, orders, pickings, moves, move lines, scraps,
+    productions, and quants with quantity or reservation
   * the target must not be the last active company
   * users of the target must look like test logins (``staging.*``) unless
     ARCHIVE_COMPANY_ALLOW_USERS=yes is set
@@ -34,7 +36,12 @@ DOCUMENT_MODELS = (
     "sale.order",
     "purchase.order",
     "stock.picking",
+    "stock.move",
+    "stock.move.line",
+    "stock.scrap",
+    "mrp.production",
 )
+QUANT_MODEL = "stock.quant"
 TEST_LOGIN_PREFIX = "staging."
 
 
@@ -46,12 +53,29 @@ def _report(key, value):
     print(f"[archive_staging] {key}: {value}")
 
 
+def blocking_documents(counts):
+    """Return the entries that must block archiving (any non-zero activity)."""
+    return {model: count for model, count in counts.items() if count}
+
+
+def unexpected_logins(logins, prefix=TEST_LOGIN_PREFIX):
+    """Return logins that are not recognised as test accounts."""
+    return sorted(login for login in logins if not login.startswith(prefix))
+
+
 def _documents(company):
     counts = {}
     for model in DOCUMENT_MODELS:
         if model not in company.env.registry:
             continue
         counts[model] = company.env[model].sudo().search_count([("company_id", "=", company.id)])
+    if QUANT_MODEL in company.env.registry:
+        counts["stock.quant"] = company.env[QUANT_MODEL].sudo().search_count([
+            ("company_id", "=", company.id),
+            "|",
+            ("quantity", "!=", 0),
+            ("reserved_quantity", "!=", 0),
+        ])
     return counts
 
 
@@ -84,13 +108,14 @@ def main():
 
     documents = _documents(company)
     _report("documents", documents)
-    if any(documents.values()):
-        raise RuntimeError(f"[archive_staging] target has documents: {documents}")
+    blocking = blocking_documents(documents)
+    if blocking:
+        raise RuntimeError(f"[archive_staging] target has activity: {blocking}")
 
     users = env["res.users"].sudo().with_context(active_test=False).search([("company_id", "=", company.id)])
     logins = sorted(u.login for u in users)
     _report("users", logins)
-    unexpected = [login for login in logins if not login.startswith(TEST_LOGIN_PREFIX)]
+    unexpected = unexpected_logins(logins)
     if unexpected and not allow_users:
         raise RuntimeError(
             f"[archive_staging] non-test logins {unexpected}; set ARCHIVE_COMPANY_ALLOW_USERS=yes to override"
@@ -113,4 +138,5 @@ def main():
     _report("active_companies_after", Company.search_count([("active", "=", True)]))
 
 
-main()
+if globals().get("env") is not None or globals().get("__name__") == "__main__":
+    main()

@@ -1,3 +1,10 @@
+## 2026-11-04T17:54:20+07:00 — claude-dev agent — Koreksi review supervisor PR #87 (HOLD)
+**Berubah:** `scripts/ops/archive_staging_company.py`, `scripts/ops/verify_geo_backfill.py` (baru), `tests/test_geo_ops_guards.py` (baru), `docs/geo/GEO_MASTER_LOADER.md` §7, `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md`.
+**[F]** P2 guard: arsip kini memblokir `stock.move`, `stock.move.line`, `stock.scrap`, `mrp.production`, dan `stock.quant` dengan `quantity` atau `reserved_quantity` bukan nol; helper murni `blocking_documents`/`unexpected_logins` diregresi 11 test.
+**[F]** P2 verifikasi: hitungan diganti perbandingan himpunan (`missing`/`extra`/`duplicates`) terhadap CSV; kode karangan yang menggantikan kode kanonik gagal walau jumlah baris tetap. Dijalankan read-only ke produksi: PASS 15/171/1.839, 1/1 company aktif berprovinsi, 354/354 partner.
+**[F]** P3: laporan live berisi 1.227 byte NUL; ditulis ulang UTF-8 tanpa NUL (8.622 byte).
+**Tidak dijalankan:** skrip arsip produksi, merge, atau deploy. Ruff/10 manifest/44 unit geo/seed-invariants/`bash -n` PASS.
+
 ## 2026-11-04T17:20:00+07:00 — claude-dev agent — Tindak lanjut company: provinsi company 1 dan arsip company 2
 **Berubah:** `scripts/ops/archive_staging_company.py` (baru) dan `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md` (bagian tindak lanjut + status acceptance company).
 **[F]** Dry-run `fix_geo_province.py` dengan `GEO_PROVINCE_COMPANY_IDS=1` menunjukkan hanya 1 company akan diisi; penerapan berhasil dan company 1 (PT Manado Distribusi Utama) kini `state_id = Sulawesi Utara`.

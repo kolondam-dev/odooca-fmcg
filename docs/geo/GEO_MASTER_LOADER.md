@@ -153,68 +153,82 @@ Karena kedua skrip idempoten, mengulang aman.
 
 ## 7. Verifikasi setelah backfill
 
-Semua kode Sulut berawalan `71.`, sehingga hitungan dapat dibatasi ke dataset tanpa
-memasukkan wilayah provinsi lain. Query berikut baca-saja dan boleh dijalankan pada
-koneksi `default_transaction_read_only=on`.
+Hitungan saja tidak cukup: mengganti satu kode kanonik dengan kode palsu tetap
+menghasilkan jumlah baris yang sama. Verifikasi wajib membandingkan **himpunan** kode
+dataset dengan isi database.
+
+### 7a. Verifikasi otomatis (disarankan)
+
+```bash
+# PG* dari container / Railway CLI; sesi read-only
+python scripts/ops/verify_geo_backfill.py --root . --report /tmp/geo_verify.json
+```
+
+Skrip keluar dengan status 0 hanya bila:
+
+- setiap kode dataset ada tepat satu kali (tanpa `missing`, `extra`, `duplicates`);
+- jumlah dataset 15 / 171 / 1.839 dan identitas legacy utuh (19 `KEL-*`, 18 `KEC-*`,
+  2 legacy tanpa kode);
+- kota/kecamatan/coverage area Sulut tidak punya provinsi kosong;
+- company aktif berprovinsi dan 354 partner seed punya FK kecamatan serta provinsi.
+
+### 7b. Query SQL manual (psql)
+
+Muat CSV ke tabel sementara lalu bandingkan dengan `FULL JOIN`; jangan mengandalkan
+`count(*)` saja.
 
 ```sql
--- 1) Kelengkapan dataset: baris harus sama dengan kode unik (15 / 171 / 1839)
-SELECT 'city' AS level, count(*) AS baris, count(DISTINCT kode_kemendagri) AS kode_unik
-FROM id_city WHERE kode_kemendagri LIKE '71.%'
-UNION ALL
-SELECT 'district', count(*), count(DISTINCT kode_kemendagri)
-FROM id_district WHERE kode_kemendagri LIKE '71.%'
-UNION ALL
-SELECT 'village', count(*), count(DISTINCT kode_kemendagri)
-FROM id_subdistrict WHERE kode_kemendagri LIKE '71.%';
+-- ulangi pola ini untuk kota (sulut_kab_kota.csv), kecamatan, dan desa
+CREATE TEMP TABLE ds_district(kode text PRIMARY KEY);
+\copy ds_district FROM '/opt/data/master/sulut_kecamatan.csv' WITH (FORMAT csv, HEADER true)
 
--- 2) Duplikat kode (harus 0 baris)
-SELECT 'city' AS level, kode_kemendagri, count(*) FROM id_city
-WHERE kode_kemendagri LIKE '71.%' GROUP BY 2 HAVING count(*) > 1
-UNION ALL
-SELECT 'district', kode_kemendagri, count(*) FROM id_district
-WHERE kode_kemendagri LIKE '71.%' GROUP BY 2 HAVING count(*) > 1
-UNION ALL
-SELECT 'village', kode_kemendagri, count(*) FROM id_subdistrict
-WHERE kode_kemendagri LIKE '71.%' GROUP BY 2 HAVING count(*) > 1;
+SELECT count(*) FILTER (WHERE ds.kode IS NOT NULL AND i.id IS NULL) AS hilang,
+       count(*) FILTER (WHERE ds.kode IS NULL AND i.id IS NOT NULL) AS kode_asing,
+       count(*) AS total_dataset
+FROM ds_district ds
+FULL JOIN id_district i ON i.kode_kemendagri = ds.kode;
 
--- 3) Provinsi kota/kecamatan/coverage area (harus 0)
+-- duplikat (harus 0 baris)
+SELECT kode_kemendagri, count(*) FROM id_district
+WHERE kode_kemendagri IS NOT NULL GROUP BY 1 HAVING count(*) > 1;
+
+-- provinsi kota/kecamatan/coverage area (harus 0)
 SELECT count(*) FROM id_city WHERE kode_kemendagri LIKE '71.%' AND state_id IS NULL;
 SELECT count(*) FROM id_district WHERE kode_kemendagri LIKE '71.%' AND state_id IS NULL;
 SELECT count(*) FROM id_coverage_area WHERE state_id IS NULL;
 
--- 4) Company: provinsi ada di partner_id.state_id (res_company tidak punya kolom state_id)
+-- company: provinsi ada di partner_id.state_id (res_company tidak punya kolom state_id)
 SELECT c.id, c.name, p.state_id IS NOT NULL AS punya_provinsi
 FROM res_company c JOIN res_partner p ON p.id = c.partner_id
 WHERE c.active ORDER BY c.id;
 
--- 5) Partner: FK kecamatan wajib utuh; provinsi kosong dilaporkan, bukan diperbaiki otomatis
+-- partner: FK kecamatan wajib utuh; provinsi kosong dilaporkan, bukan diperbaiki otomatis
 SELECT count(*) AS total,
        count(*) FILTER (WHERE state_id IS NULL) AS tanpa_provinsi,
        count(*) FILTER (WHERE state_id IS NOT NULL) AS berprovinsi
 FROM res_partner WHERE district_id IS NOT NULL;
 
--- 6) Identitas legacy tetap dan hanya 2 tanpa kode
+-- identitas legacy tetap dan hanya 2 tanpa kode
 SELECT count(*) FROM id_subdistrict WHERE code LIKE 'KEL-%';   -- 19
 SELECT count(*) FROM id_district WHERE code LIKE 'KEC-%';      -- 18
 SELECT count(*) FROM id_subdistrict WHERE is_legacy AND kode_kemendagri IS NULL; -- 2
 
--- 7) Mark terpasang
+-- mark terpasang
 SELECT name, at FROM id_meta.marks
 WHERE name IN ('geo_master_v1', 'geo_province_v1');
 ```
 
 Catatan tafsir:
 
-- Jangan memakai `count(*) ... WHERE kode_kemendagri IS NOT NULL` tanpa batas `71.%`
-  bila database juga memuat wilayah provinsi lain.
+- `hilang` dan `kode_asing` harus 0. `kode_asing` menangkap kode karangan yang
+  menggantikan kode kanonik.
 - `partners_unverified` pada keluaran skrip adalah penghitung cakupan identitas, bukan
   jumlah provinsi kosong; angka `partners: 0` berarti tidak ada yang perlu diisi.
 - Company tanpa relasi wilayah hanya dapat diisi lewat `GEO_PROVINCE_COMPANY_IDS`
   eksplisit, dan tetap tidak menimpa provinsi yang sudah terisi.
 
 Hasil verifikasi produksi 2026-11-04 (15/171/1.839 lengkap, 354/354 partner
-berprovinsi, 0/2 company berprovinsi) tercatat di
+berprovinsi, 1/1 company aktif berprovinsi) tercatat di
 `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md`.
 
 Gate repo yang wajib hijau:
