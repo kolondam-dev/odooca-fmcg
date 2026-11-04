@@ -127,7 +127,8 @@ def collect(connection, roots):
         with connection.cursor() as cursor:
             cursor.execute("SET LOCAL statement_timeout = '20s'")
             cursor.execute("SHOW transaction_read_only")
-            assert cursor.fetchone()[0] == "on"
+            if cursor.fetchone()[0] != "on":
+                raise RuntimeError("Finance inventory requires a read-only transaction")
             for name, query in QUERIES.items():
                 cursor.execute("SAVEPOINT audit_section")
                 try:

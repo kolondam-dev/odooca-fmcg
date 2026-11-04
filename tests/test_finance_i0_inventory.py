@@ -1,6 +1,8 @@
 """Safety and source-discovery regressions for the operator-only I0 audit."""
 
 import importlib.util
+import hashlib
+import io
 from pathlib import Path
 import tempfile
 import unittest
@@ -12,9 +14,31 @@ SPEC = importlib.util.spec_from_file_location(
 )
 audit = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(audit)
+SOURCE_SPEC = importlib.util.spec_from_file_location(
+    "finance_i0_source_evidence", Path(__file__).parents[1] / "scripts/ops/finance_i0_source_evidence.py"
+)
+source_audit = importlib.util.module_from_spec(SOURCE_SPEC)
+SOURCE_SPEC.loader.exec_module(source_audit)
 
 
 class InventoryTests(unittest.TestCase):
+    def test_wrong_runtime_manifest_cannot_match_pinned_source(self):
+        raw = b"{'depends': ['account']}"
+        source = {
+            "paths": ["/opt/oca/reports/example/__manifest__.py"],
+            "sha256": hashlib.sha256(raw).hexdigest(),
+        }
+        with patch.object(source_audit.urllib.request, "urlopen", return_value=io.BytesIO(raw)):
+            baseline = source_audit.verify("example", source, {"reports": "a" * 40})
+        self.assertEqual(baseline["pin_verification"], "MATCH")
+        with patch.object(source_audit.urllib.request, "urlopen", return_value=io.BytesIO(raw + b" ")):
+            changed = source_audit.verify("example", source, {"reports": "a" * 40})
+        self.assertEqual(changed["pin_verification"], "MISMATCH")
+        with patch.object(source_audit.urllib.request, "urlopen", side_effect=OSError("private detail")):
+            unavailable = source_audit.verify("example", source, {"reports": "a" * 40})
+        self.assertEqual(unavailable["pin_verification"], "FETCH_FAILED")
+        self.assertNotIn("private detail", str(unavailable))
+
     def test_dependency_closure_and_ambiguous_source(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

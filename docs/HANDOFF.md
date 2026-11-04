@@ -1,3 +1,8 @@
+## 2026-11-05T05:39:23+07:00 — codex — Finance I0 spike kandidat install/upgrade
+**Berubah:** workflow `finance-i0-spike.yml`, penguatan read-only guard dan tes mismatch manifest; discovery upstream tools pada pin eksplisit dicatat di dokumen I0.
+**[F]** CI PR89 commit awal `2832a26` hijau termasuk native install dan persistent upgrade/replay (run `41877539024`). Ini belum bukti kandidat OCA terpasang. Workflow baru menguji lima profil disposable secara terpisah, install lalu upgrade DB yang sama dan assertion registry installed.
+**Diverifikasi:** 4 tes audit/source, Ruff dan YAML lokal PASS. **[BU]** Workflow spike pada HEAD baru; oracle/ACL dan golden fixture masih terbuka. Tidak mengubah DB demo, merge atau deploy.
+
 ## 2026-11-05T00:25:15+07:00 — codex — Finance I0 audit runtime dan containment legacy
 **Berubah:** branch `agen/finance-i0-runtime-audit` dari main `565e8a4`; alat audit read-only, bukti 67 modul/19 manifest OCA cocok pin, `docs/finance/I0_RUNTIME_AUDIT.md`; `id_base` 19.0.1.3.1 menolak RPC generator nomor/CSV legacy dan melabeli field historis unverified.
 **[F]** PR86 sudah merged. Pemilik memilih demo company 1, IDR, chart Indonesia existing dan menjadi pemberi keputusan Finance/Tax demo. Audit Railway melalui transaksi READ ONLY: native Coretax installed; laporan/MIS/reconcile OCA uninstalled; 0 nomor pajak custom/flag ekspor legacy. Tidak mengubah data live.

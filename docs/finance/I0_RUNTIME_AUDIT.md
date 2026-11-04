@@ -64,6 +64,31 @@ Pemilik teknis discovery/spike: codex; keputusan demo: pemilik repo. FIN36–38,
 55–56 tetap terbuka bila kandidat gagal; cari kandidat exact SHA atau ADR custom
 dengan oracle yang sama. Tidak menandai N/A karena modul absen.
 
+### Discovery upstream tambahan (belum masuk lock/image)
+
+[F] account-financial-tools pada full SHA
+`c23fd09977c870eb3db071fca5958b83f699bc4a` menyediakan:
+
+- `account_usability` 19.0.1.1.0, AGPL-3, depends account, Python
+  openupgradelib. Pre-init menambah alias XMLID menu; post-init memperbarui
+  terjemahan. Manifest/hook dibaca pada SHA tersebut. Aktivasi tidak membenarkan
+  mengubah Anglo-Saxon/costing melalui settings.
+- `account_asset_management` 19.0.1.0.3, AGPL-3, depends account dan
+  report_xlsx_helper, Python python-dateutil; excludes account_asset.
+
+[F] Tree account-closing `8ce0077fd0762d49e928ea7520555341d7936a9e` hanya
+menampilkan account_fiscal_year_closing dan account_invoice_start_end_dates sebagai
+addon. Kandidat cutoff/revaluation belum tersedia pada tree yang diperiksa.
+Tree payroll pada pin proyek hanya memiliki addon payroll, bukan payroll_account.
+I1 perlu proposal pin tools beserta spike; absensi paket belum membenarkan custom
+posting tanpa kajian sumber lebih lanjut.
+
+Workflow `finance-i0-spike.yml` menguji lima profil terpisah (reports, MIS, bank,
+credit, native/payroll) dari lock existing pada DB disposable PostgreSQL 16:
+install -> upgrade DB yang sama -> inventory registry dengan assertion semua
+modul permintaan installed. Artifact log/inventory selalu diunggah. Gate ini
+membuktikan kompatibilitas instal/upgrade, bukan oracle angka atau acceptance ACL.
+
 ## Containment dan migration preview
 
 Patch `id_base` 19.0.1.3.1 menolak kedua RPC legacy sebelum query/write, menghapus
