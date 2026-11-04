@@ -1,3 +1,7 @@
+## 2026-11-05T06:00:46+07:00 — codex — Koreksi quoting healthcheck spike I0
+**[F]** Run `41927243405` gagal di Initialize containers sebelum build/instal: runner memecah single-quoted health command sehingga Docker membaca `-U` sebagai option create. Disamakan dengan double quote pada CI existing; acceptance tidak dilonggarkan.
+**[F]** CI utama commit `162bb8b` hijau termasuk install-test dan upgrade/replay. **[BU]** Spike kandidat menunggu HEAD koreksi; belum merge/deploy atau perubahan data demo.
+
 ## 2026-11-05T05:39:23+07:00 — codex — Finance I0 spike kandidat install/upgrade
 **Berubah:** workflow `finance-i0-spike.yml`, penguatan read-only guard dan tes mismatch manifest; discovery upstream tools pada pin eksplisit dicatat di dokumen I0.
 **[F]** CI PR89 commit awal `2832a26` hijau termasuk native install dan persistent upgrade/replay (run `41877539024`). Ini belum bukti kandidat OCA terpasang. Workflow baru menguji lima profil disposable secara terpisah, install lalu upgrade DB yang sama dan assertion registry installed.

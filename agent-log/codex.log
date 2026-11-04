@@ -243,3 +243,8 @@
 - Upstream tools discovery pinned c23fd09977c870eb3db071fca5958b83f699bc4a; account_usability and assets manifests inspected, not activated.
 - Four local inventory/source tests and Ruff/YAML PASS. No live mutations, merge or deploy.
 - Task managed by codex agent at 2026-11-05T05:39:23+07:00
+
+[2026-11-05T06:00:46+07:00] [INFO] Fix candidate CI PostgreSQL health command quoting
+- Run41927243405 failed before build: docker create parsed -U outside single quotes. Match established ci.yml double quoting; no acceptance relaxed.
+- Main PR checks 162bb8b passed including install and persistent upgrade. Candidate evidence remains pending rerun.
+- Task managed by codex agent at 2026-11-05T06:00:46+07:00
