@@ -1,3 +1,10 @@
+## 2026-11-04T18:25:34+07:00 — claude-dev agent — PR #87: tes `main()` membuktikan guard memblokir sebelum write
+**Berubah:** `tests/test_geo_ops_guards.py` (7 tes baru `ArchiveMainTests`, total 18 tes).
+**[F]** Tes menjalankan `_documents()` dan `main()` dengan env Odoo palsu (recordset/model/env), bukan hanya helper: reservasi `stock.quant`, move tanpa picking, dan move line terbukti melempar `RuntimeError` **sebelum** `res_company.write`, sebelum user dinonaktifkan, dan sebelum `commit()`.
+**[F]** Arsip bersih diuji sampai tuntas (user test dinonaktifkan, `company.write({"active": False})`, `commit()` terpanggil, sisa company aktif 1) dan dry-run tidak menulis apa pun.
+**[F]** Mutation check: mengembalikan `DOCUMENT_MODELS` ke daftar lama dan menonaktifkan guard quant membuat tiga tes blokir GAGAL — tes terbukti load-bearing, bukan hiasan.
+**Tidak dijalankan:** skrip arsip/provinsi produksi, merge, deploy. Ruff PASS, 51 unit geo PASS.
+
 ## 2026-11-04T17:54:20+07:00 — claude-dev agent — Koreksi review supervisor PR #87 (HOLD)
 **Berubah:** `scripts/ops/archive_staging_company.py`, `scripts/ops/verify_geo_backfill.py` (baru), `tests/test_geo_ops_guards.py` (baru), `docs/geo/GEO_MASTER_LOADER.md` §7, `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md`.
 **[F]** P2 guard: arsip kini memblokir `stock.move`, `stock.move.line`, `stock.scrap`, `mrp.production`, dan `stock.quant` dengan `quantity` atau `reserved_quantity` bukan nol; helper murni `blocking_documents`/`unexpected_logins` diregresi 11 test.

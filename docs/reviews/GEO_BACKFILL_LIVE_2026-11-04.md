@@ -176,5 +176,28 @@ pembelian, atau stok pada company tersebut.
 | P2: query jumlah kode tidak membuktikan kelengkapan dataset | Verifikasi diganti menjadi perbandingan himpunan: `scripts/ops/verify_geo_backfill.py` melaporkan `missing`, `extra`, dan `duplicates` per level; kode karangan yang menggantikan kode kanonik kini gagal |
 | P3: laporan berisi 1.227 byte NUL | Berkas ditulis ulang sebagai UTF-8 tanpa NUL; `git diff` kembali terbaca sebagai teks |
 
-Regresi untuk ketiga butir: `tests/test_geo_ops_guards.py` (11 test) mencakup guard
+Regresi untuk ketiga butir: `tests/test_geo_ops_guards.py` mencakup guard
 stok/reservasi dan kasus tukar-kode dengan jumlah baris tetap sama.
+
+### 9.1 Tindak lanjut review kedua: tes pada `_documents()` dan `main()`
+
+Review kedua menilai regresi di atas baru menguji helper murni. Kelas
+`ArchiveMainTests` sekarang menjalankan `_documents()` dan `main()` terhadap env Odoo
+palsu (recordset, model, dan env tiruan) sehingga jalur keputusan nyata ikut dieksekusi:
+
+| Tes | Yang dibuktikan |
+|---|---|
+| `test_documents_reads_every_stock_model` | `_documents()` benar-benar membaca `stock.move`, `stock.move.line`, `stock.scrap`, `mrp.production`, dan `stock.quant` |
+| `test_reservation_blocks_before_write` | reservasi quant (`reserved_quantity`) melempar `RuntimeError` sebelum `res_company.write`, sebelum user dinonaktifkan, dan sebelum `commit()` |
+| `test_move_without_picking_blocks_before_write` | `stock.move` tanpa `stock.picking` memblokir pada titik yang sama |
+| `test_move_line_blocks_before_write` | `stock.move.line` memblokir |
+| `test_non_test_login_blocks_before_write` | login non-`staging.*` memblokir |
+| `test_clean_target_archives_users_and_commits` | target bersih: user test dinonaktifkan, `active = False` ditulis, `commit()` terpanggil, sisa 1 company aktif |
+| `test_dry_run_never_writes` | dry-run tidak menulis dan tidak commit |
+
+Mutation check lokal: mengembalikan `DOCUMENT_MODELS` ke daftar lama dan menonaktifkan
+guard quant membuat tiga tes blokir **gagal**, sehingga tes ini benar-benar menjaga
+perilaku dan bukan sekadar hiasan. Total 18 tes di berkas itu, 51 tes unit geo, `ruff` PASS.
+
+Catatan: blok keluaran arsip pada §6.1 adalah keluaran nyata saat eksekusi 2026-11-04
+(sebelum guard diperluas); guard saat ini memeriksa model tambahan tersebut.
