@@ -534,3 +534,10 @@ $wms-card-bg: #ffffff;
         font-size: 0.875rem;
     }
 }
+
+.id-wms .warehouse-flow { min-height: 1.3rem; }
+.id-wms .warehouse-flow--received { background: var(--bs-primary); }
+.id-wms .warehouse-flow--shipped { background: var(--bs-success); }
+.id-wms .warehouse-flow--putaway { background: var(--bs-info); }
+.id-wms .warehouse-flow--picking { background: var(--bs-warning); }
+.id-wms .warehouse-flow--other_transfer_or_adjustment { background: var(--bs-secondary); }

@@ -53,6 +53,8 @@ class WmsDashboard(models.TransientModel):
         return {
             "categories": categories,
             "vehicles": vehicles,
+            "warehouses": self.env["stock.warehouse"].search_read(
+                [("company_id", "in", self.env.companies.ids)], ["name"], order="name"),
         }
 
     @api.model
@@ -223,6 +225,8 @@ class WmsDashboard(models.TransientModel):
         cohort = self.env["id.delivery.cohort"]._data(
             kwargs.get("cohort_start"), kwargs.get("cohort_end"), vehicle_id)
         return {
+            "warehouse_depth": self.env["id.warehouse.depth"]._data(
+                cohort["start"], cohort["end"], kwargs.get("warehouse_id"), fmcg_category),
             "assets": self.env["id.asset.utilization"]._data(cohort["start"], cohort["end"], vehicle_id),
             "cohort": cohort,
             "pod_attempts": self.env["id.delivery.attempt"]._for_deliveries(cohort["source_ids"]),

@@ -82,6 +82,11 @@ async def main():
                 await page.screenshot(path=str(OUTPUT / f'{name}-{size["width"]}-3b-closure.png'))
                 await root.evaluate('el => {el.scrollTop=0;}')
                 if name == 'wms':
+                    depth = root.locator('section[aria-label="Warehouse operational detail"]')
+                    await depth.wait_for(state='visible')
+                    await depth.scroll_into_view_if_needed()
+                    await page.screenshot(path=str(OUTPUT / f'wms-{size["width"]}-warehouse-depth.png'))
+                    await root.evaluate('el => {el.scrollTop=0;}')
                     assets = root.locator('section[aria-label="Physical asset utilization"]')
                     await assets.wait_for(state='visible')
                     await assets.scroll_into_view_if_needed()

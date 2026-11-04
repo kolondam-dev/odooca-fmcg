@@ -74,3 +74,7 @@ Exception memerlukan nilai dampak, umur, alasan, PIC, tenggat, status dan tautan
 [F] Kode iterasi awal: grid mengikuti container konten, konteks sticky, tabel ber-scroll terlokalisasi dan kolom identitas sticky; panel native memakai lease transient agar preference pengguna tidak tertimpa. Native menu dan shortcut tetap tersedia. Prioritas penagihan berasal dari subset 10 outlet eksposur terbesar dan diberi label batas populasi; tautan seluruh overdue tetap tersedia. Prioritas gudang memakai nilai/count critical lot dan rejected/cancelled DO dari scope existing. PIC AR mengikuti salesperson invoice, bukan assignment penagih baru; deadline tugas dan PIC warehouse belum tersedia sehingga tidak diciptakan.
 
 [BU] Penerimaan layout memerlukan screenshot native baru dan geometry desktop/tablet/portrait. Kesuksesan screenshot tahap 1 tidak berlaku otomatis untuk tahap 2. Canonical entry menu, filter lintas modul global, exception task assignment/deadline, perluasan metrik aset dan Three.js tetap terpisah; iterasi ini belum menyelesaikan seluruh roadmap.
+
+## Implementasi tahap5 dan closure3B (2026-11-04)
+
+PR83 memuat kapabilitas tersisa3B sesuai `3B_CLOSURE.md`; PASS menunggu CI/review final. Tahap5 mengikuti kontrak `WAREHOUSE_DEPTH.md`, memperluas master lokasi/package native dan tidak membuat model pallet paralel. Three.js tahap6 tetap opt-in terpisah setelah data layout nyata tersedia.

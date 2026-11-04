@@ -48,9 +48,9 @@ export class WmsDashboard extends Component {
             loading: true,
             error: null,
             fmcgCategory: "",
-            vehicleId: null,
+            vehicleId: null, warehouseId: null,
             cohortStart: "", cohortEnd: "",
-            filters: { categories: [], vehicles: [] },
+            filters: { categories: [], vehicles: [], warehouses: [] },
             data: null,
             activeTab: "expiry", // 'expiry', 'rejections', 'categories', 'fleet'
         });
@@ -73,7 +73,7 @@ export class WmsDashboard extends Component {
         try {
             const data = await this.orm.call("id.wms.dashboard", "get_data", [], {
                 fmcg_category: this.state.fmcgCategory || false,
-                vehicle_id: this.state.vehicleId || false,
+                vehicle_id: this.state.vehicleId || false, warehouse_id: this.state.warehouseId || false,
                 cohort_start: this.state.cohortStart || null, cohort_end: this.state.cohortEnd || null,
             });
             if (version === this.requestVersion) this.state.data = data;
@@ -84,6 +84,28 @@ export class WmsDashboard extends Component {
         }
     }
 
+    onWarehouseChange(ev) { this.state.warehouseId = Number(ev.target.value) || null; this.load(); }
+    openWarehouseSource(model, domain) {
+        if (this.state.loading || !this.state.data?.warehouse_depth) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Warehouse Source Documents"),
+            res_model: model, views: [[false, "list"], [false, "form"]], domain});
+    }
+    openStorageMaster() {
+        if (!this.state.loading) this.action.doAction("id_dashboard_wms.action_storage_master");
+    }
+    clockKind(value) {
+        return {picking: _t("Picking"), putaway: _t("Putaway"),
+            receiving_dwell: _t("Receipt to Storage Dwell")}[value] || value;
+    }
+    flowKind(value) {
+        return {received: _t("Received"), shipped: _t("Shipped"), putaway: _t("Putaway"),
+            picking: _t("Picking"), other_transfer_or_adjustment: _t("Other Transfer / Adjustment")}[value] || value;
+    }
+    get warehouseFlowMax() {
+        const rows = this.state.data?.warehouse_depth?.daily || [];
+        return Math.max(1, ...rows.map(row => (row.received || 0)+(row.shipped || 0)+
+            (row.putaway || 0)+(row.picking || 0)+(row.other_transfer_or_adjustment || 0)));
+    }
     onCohortDate(ev) { this.state[ev.target.dataset.field] = ev.target.value; this.load(); }
     podOutcome(value) {
         return {delivered: _t("Fully Received"), partial: _t("Received Partial"), rejected: _t("Rejected"),
@@ -148,6 +170,7 @@ export class WmsDashboard extends Component {
     reset() {
         this.state.fmcgCategory = "";
         this.state.vehicleId = null;
+        this.state.warehouseId = null;
         this.load();
     }
 
