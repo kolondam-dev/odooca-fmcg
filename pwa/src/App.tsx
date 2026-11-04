@@ -106,8 +106,8 @@ export function App() {
         const source = new HttpProvider();
         const identity = await source.bootstrap();
         const { MockProvider } = await import("./data/mock");
-        // Authentication, identity and work data are real. Live operational commands
-        // (sales orders and deliveries) are dispatched directly to the backend.
+        // Authentication, identity and work data are real. All sales orders,
+        // including discount requests, go to Odoo. Delivery remains simulated.
         const actor =
             identity.roles.includes("delivery") &&
             !identity.roles.includes("sales")

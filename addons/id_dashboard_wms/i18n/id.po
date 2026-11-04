@@ -928,3 +928,90 @@ msgstr "Cohort keberangkatan mengikuti kontrol tanggal pengiriman dan filter arm
 #: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
 msgid "Distance is operator-entered return minus departure odometer in km, not inferred GPS mileage. Costs are recorded trip expenses plus completed fleet services dated in the period, not a reconciled GL total. Maintenance is not allocated again to trips. Legacy unlinked trip-cost rows remain in the existing fleet report and are not added here. Ratios require every cohort trip closed; missing service access or delivery-price linkage produces unavailable. Foreign-currency SO values are not relabelled as company currency. Delivery DPP is physical gross delivery value at closure, not invoice revenue or net margin."
 msgstr "Jarak adalah odometer kembali dikurangi keberangkatan dalam km yang diinput operator, bukan inferensi GPS. Biaya berasal dari catatan trip dan service armada selesai bertanggal pada periode, bukan saldo GL yang direkonsiliasi. Maintenance tidak dialokasikan ulang ke trip. Biaya trip lama tanpa relasi tetap di laporan lama dan tidak ditambahkan di sini. Rasio memerlukan semua trip cohort ditutup; akses service atau relasi harga pengiriman yang kosong menghasilkan unavailable. Nilai SO valuta asing tidak diberi label mata uang perusahaan. DPP pengiriman adalah nilai fisik bruto saat penutupan, bukan pendapatan invoice atau margin bersih."
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Outcome"
+msgstr "Hasil"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Open"
+msgstr "Terbuka"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Accepted POD Events"
+msgstr "Event POD Diterima"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "DOs with evidence"
+msgstr "DO dengan bukti"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Attempts / Corrections"
+msgstr "Percobaan / Koreksi"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Invalid correction lineage"
+msgstr "Relasi koreksi tidak valid"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.xml:0
+msgid "Reported outcomes and reasons"
+msgstr "Hasil dan alasan yang dilaporkan"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Fully Received"
+msgstr "Diterima semua"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Received Partial"
+msgstr "Diterima parsial"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Cancel Delivery"
+msgstr "Batal kirim"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Pending Requested"
+msgstr "Permintaan tunda"
+
+#. module: id_dashboard_wms
+#. odoo-javascript
+#: code:addons/id_dashboard_wms/static/src/js/wms_dashboard.js:0
+msgid "Unclassified"
+msgstr "Belum diklasifikasikan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/asset_utilization.py:0
+msgid "Scope"
+msgstr "Cakupan"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/wms_dashboard.py:0
+msgid "SKU"
+msgstr "SKU"
+
+#. module: id_dashboard_wms
+#: code:addons/id_dashboard_wms/models/pod_attempt.py:0
+msgid "Too many POD events; narrow the delivery cohort."
+msgstr "Terlalu banyak event POD; persempit cohort pengiriman."

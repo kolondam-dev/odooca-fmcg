@@ -136,8 +136,8 @@
 
 
 <section class="id-sp__section" t-if="state.data.order_margin" aria-label="Traceable order margin">
-    <h2 class="id-sp__section-title">Traceable closed-order margin</h2>
-    <p class="text-muted small">Order-date cohort; current posted invoice revenue in company currency versus linked delivery cost journals. Only fully delivered and invoiced stock orders without returns, credits, service lines or ambiguous shared journals qualify. No standard-cost fallback. Delivery expenses and fleet maintenance are not included.</p>
+    <h2 class="id-sp__section-title">Traceable recognized-order margin</h2>
+    <p class="text-muted small">Order-date cohort; current posted invoices less refunds versus linked delivery/return journals or native invoice COGS. Partial orders qualify when net invoiced quantities match physical delivered less returned quantities. Missing or ambiguous sources stay unavailable. Service costing requires explicit attribution. Delivery expenses and maintenance remain separate.</p>
     <t t-if="state.data.order_margin.available">
         <p>Covered orders: <t t-out="state.data.order_margin.covered"/> / <t t-out="state.data.order_margin.count"/> · Covered margin: <strong t-out="money(state.data.order_margin.margin)"/></p>
         <div class="table-responsive" tabindex="0" role="region" aria-label="Order margin sources"><table class="table table-sm">
@@ -314,6 +314,7 @@
                         </div>
                     </section>
 
+<section class="id-sp__section" t-if="state.data.distribution?.available" aria-label="Eligible outlet distribution"><h2 class="id-sp__section-title">Eligible Outlet Distribution</h2><p class="small">Exact published period and company scope, without salesperson/channel subfilters. Numeric distribution uses eligible outlets. Weighted distribution uses positive net observed SO turnover of eligible outlets, not market turnover.</p><div class="table-responsive" tabindex="0" role="region" aria-label="Numeric and weighted distribution"><table class="table table-sm"><thead><tr><th>Scope</th><th>SKU</th><th>Selling / eligible</th><th>Numeric %</th><th>Weighted %</th></tr></thead><tbody><tr t-foreach="state.data.distribution.rows" t-as="r" t-key="r.key"><td t-out="r.scope"/><td t-out="r.sku"/><td><t t-out="r.selling"/> / <t t-out="r.eligible"/></td><td t-out="num1(r.numeric)"/><td t-out="num1(r.weighted)"/></tr></tbody></table></div></section>
                     <!-- BABAK 3B: SKU PENETRATION MATRIX -->
                     <section class="id-sp__section" t-att-class="{'is-loading': state.loading}">
                         <div class="id-sp__head">

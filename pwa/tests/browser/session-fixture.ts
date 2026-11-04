@@ -157,19 +157,21 @@ export const test = base.extend({
         await page.route("**/api/v1/sync/commands", async (route) => {
             if (new URL(route.request().url()).port !== "4173")
                 return route.fallback();
-            const body = route.request().postDataJSON() as
-                | { client_uuid?: string }
-                | undefined;
+            // Approval simulation belongs to this HTTP fixture, never the live provider.
+            const body = route.request().postDataJSON();
+            const simulator = new MockProvider(
+                actors.get(page) ?? "sales",
+                true,
+            );
+            Object.defineProperty(globalThis, "navigator", {
+                configurable: true,
+                value: { onLine: true },
+            });
+            const receipt = await simulator.submit(body);
             await route.fulfill({
                 status: 200,
                 contentType: "application/json",
-                json: {
-                    client_uuid: body?.client_uuid ?? "mock-client-uuid",
-                    status: "accepted",
-                    message:
-                        "Order live berhasil disinkronkan ke backend (emulated).",
-                    reference: "SO/2026/10/0001",
-                },
+                json: receipt,
             });
         });
         await use(page);

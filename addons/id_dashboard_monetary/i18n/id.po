@@ -481,3 +481,177 @@ msgstr "Saldo buku piutang:"
 #: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
 msgid "Reconciliation across filter scope:"
 msgstr "Rekonsiliasi melintasi cakupan filter:"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Freeze Current AR Evidence"
+msgstr "Bekukan Bukti Piutang Saat Ini"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/views/ar_commitment_views.xml:0
+msgid "Frozen AR Evidence"
+msgstr "Arsip Bukti Piutang"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.js:0
+msgid "Customer Payment Promises"
+msgstr "Janji Bayar Pelanggan"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/views/ar_commitment_views.xml:0
+msgid "Commit Promise"
+msgstr "Catat Komitmen"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/views/ar_commitment_views.xml:0
+msgid "Freeze Assessment"
+msgstr "Bekukan Penilaian"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/views/ar_commitment_views.xml:0
+msgid "Verify Evidence Digest"
+msgstr "Verifikasi Integritas Bukti"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Recorded Collection Settlement"
+msgstr "Settlement Penagihan Tercatat"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Paid and matched"
+msgstr "Paid dan matched"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "In process or unmatched"
+msgstr "Diproses atau belum matched"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Without posted entry"
+msgstr "Tanpa jurnal terposting"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Promise"
+msgstr "Janji bayar"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Owner"
+msgstr "PIC"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.xml:0
+msgid "Due date"
+msgstr "Jatuh tempo"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Promised"
+msgstr "Dijanjikan"
+
+#. module: id_dashboard_monetary
+#. odoo-javascript
+#: code:addons/id_dashboard_monetary/static/src/js/monetary_dashboard.js:0
+msgid "Outcome"
+msgstr "Hasil"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_aging.py:0
+msgid "Open"
+msgstr "Terbuka"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Kept"
+msgstr "Ditepati"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Broken"
+msgstr "Tidak ditepati"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Draft"
+msgstr "Draft"
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Accounting access is required."
+msgstr "Akses akuntansi diperlukan."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Use the capture action to create immutable evidence."
+msgstr "Gunakan aksi pembekuan untuk membuat bukti immutable."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Captured evidence cannot be changed."
+msgstr "Bukti yang dibekukan tidak dapat diubah."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Captured evidence cannot be deleted."
+msgstr "Bukti yang dibekukan tidak dapat dihapus."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Select exactly one company before freezing AR evidence."
+msgstr "Pilih tepat satu perusahaan sebelum membekukan bukti piutang."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Evidence integrity check failed."
+msgstr "Pemeriksaan integritas bukti gagal."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Evidence digest verified."
+msgstr "Integritas bukti terverifikasi."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Promise commitment facts are protected."
+msgstr "Fakta komitmen janji bayar dilindungi."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Committed promises cannot be changed; record a new agreement."
+msgstr "Komitmen tidak dapat diubah; catat perjanjian baru."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Committed promises cannot be deleted."
+msgstr "Komitmen janji bayar tidak dapat dihapus."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Promised amount must be positive and finite."
+msgstr "Nilai janji bayar harus positif dan terbatas."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Choose a posted debit receivable and an owner in its company."
+msgstr "Pilih debit piutang terposting dan PIC dalam perusahaannya."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Use a draft promise with a current or future due date."
+msgstr "Gunakan janji bayar draft dengan jatuh tempo hari ini atau sesudahnya."
+
+#. module: id_dashboard_monetary
+#: code:addons/id_dashboard_monetary/models/ar_commitment.py:0
+msgid "Promises exceed the currently open receivable."
+msgstr "Janji bayar melebihi saldo piutang terbuka saat ini."

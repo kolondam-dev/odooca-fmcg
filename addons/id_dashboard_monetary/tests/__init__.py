@@ -3,3 +3,5 @@ from . import test_monetary_dashboard
 from . import test_dashboard_foundation
 
 from . import test_ar_history
+
+from . import test_ar_commitment

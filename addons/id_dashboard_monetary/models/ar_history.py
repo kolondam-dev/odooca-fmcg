@@ -19,7 +19,7 @@ class ArHistory(models.AbstractModel):
     _description = "Historical Receivable Subledger"
 
     @api.model
-    def _snapshot(self, as_of=None, comparison=None, area_ids=None, salesman_ids=None):
+    def _snapshot(self, as_of=None, comparison=None, area_ids=None, salesman_ids=None, include_sources=False):
         user = self.env.user
         if not (user.has_group("account.group_account_user") or user.has_group("base.group_system")):
             return {"available": False, "reason": "accounting_role_required"}
@@ -83,7 +83,16 @@ class ArHistory(models.AbstractModel):
                 credits[key] += min(after, 0)
                 missing_maturity += int(not line.date_maturity)
         net = sum(totals.values())
-        return {"available": True, "as_of": str(day), "comparison": str(prior), "domain": domain,
+        sources = {}
+        if include_sources:
+            sources = {"ledger_items": [{"id": line.id, "move_id": line.move_id.id,
+                "partner_id": line.partner_id.id, "account_id": line.account_id.id, "date": str(line.date),
+                "maturity": str(line.date_maturity) if line.date_maturity else None, "balance": line.balance,
+                "opening": line.balance+adjustments[prior][line.id] if line.date <= prior else 0,
+                "closing": line.balance+adjustments[day][line.id]} for line in lines],
+                "reconciliations": [{"id": p.id, "debit_id": p.debit_move_id.id, "credit_id": p.credit_move_id.id,
+                    "amount": p.amount, "max_date": str(p.max_date)} for p in partials]}
+        return {"sources": sources, "available": True, "as_of": str(day), "comparison": str(prior), "domain": domain,
                 "basis": "current_posted_ledger_and_current_reconciliation_links",
                 "net": net, "debit_open": sum(positives.values()), "credits": sum(credits.values()),
                 "cross_scope_allocation": net-sum(lines.mapped("balance")),

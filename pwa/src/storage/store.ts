@@ -737,6 +737,8 @@ export class FieldStore {
         reason: string,
     ) {
         if (!__DEMO__) throw new Error("Simulator tidak tersedia di live.");
+        if (!expected.receipt?.reference?.startsWith("DEMO-"))
+            throw new Error("Approval SO resmi harus diproses di Odoo.");
         if (reason.trim().length < 3 || reason.length > 500)
             throw new Error("Alasan keputusan wajib 3–500 karakter.");
         const body =

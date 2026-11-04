@@ -37,6 +37,24 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         payload.update(overrides)
         return payload
 
+    def test_discount_order_persists_official_so_pending_and_replays_once(self):
+        model = self._command_model()
+        command = {"client_uuid": str(uuid.uuid4()), "type": "sales.order.submit",
+                   "payload": self._valid_order_payload(
+                       discount_request={"percent": 5, "reason": "Customer promotion"})}
+        receipt = model.process_command(command)
+        self.assertEqual(receipt["status"], "needs_approval")
+        log = self.env["id.mobile.command"].search([("client_uuid", "=", command["client_uuid"])])
+        order = log.sale_order_ids
+        self.assertEqual(len(order), 1)
+        self.assertEqual(receipt["reference"], order.name)
+        self.assertFalse(order.name.startswith("DEMO-"))
+        self.assertEqual(order.state, "draft")
+        self.assertEqual(order.order_line.discount, 5)
+        self.assertEqual(order.discount_approval_note, "Customer promotion")
+        self.assertEqual(model.process_command(command), receipt)
+        self.assertEqual(log.sale_order_ids, order)
+
     def test_actor_model_guard(self):
         """Direct ORM/RPC call without mobile sales privileges must fail closed."""
         cmd = {

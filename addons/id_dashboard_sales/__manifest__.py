@@ -3,7 +3,7 @@
     "name": "ID Dashboard: Sales Productivity",
     "summary": "Field sales productivity dashboard: KPI cards, PJP compliance, effective call, "
                "lines per order, SKU penetration and fulfillment-to-invoice ratio.",
-    "version": "19.0.1.4.0",
+    "version": "19.0.1.5.0",
     "category": "Distribution",
     "author": "kolondam-dev",
     "license": "LGPL-3",
@@ -13,6 +13,7 @@
         "security/target_rules.xml",
         "views/dashboard_views.xml",
         "views/segment_target_views.xml",
+        "views/assortment_scope_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

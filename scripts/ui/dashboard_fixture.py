@@ -1,4 +1,7 @@
 """Disposable ci_db only: meaningful, synthetic native dashboard screenshot data."""
+import json
+import uuid
+from odoo.addons.id_dashboard_wms.models.delivery_cohort import local_day
 from datetime import datetime, timedelta
 from odoo import fields
 
@@ -129,3 +132,40 @@ assert assets['trip_count'] == 1 and assets['closed_count'] == 1 and assets['km'
 assert assets['cost_per_delivered_dpp'] == 10
 env.cr.commit()  # noqa: F821
 print('DASHBOARD_VISUAL_FIXTURE=PASS')
+# 3B closure: immutable evidence and explicit period eligibility, disposable ci_db only.
+audit_id = env['id.ar.audit.snapshot'].capture_ledger()  # noqa: F821
+assert env['id.ar.audit.snapshot'].browse(audit_id).digest  # noqa: F821
+extra_outlet = env['res.partner'].create({'name': 'QA Eligible No Order'})  # noqa: F821
+eligible = env['id.sales.assortment.scope'].create({'name': 'QA Approved Assortment',  # noqa: F821
+    'date_from': '2026-07-01', 'date_to': '2026-07-31', 'source': 'QA approved period catalogue',
+    'outlet_ids': [(6, 0, [partner.id, extra_outlet.id])],
+    'product_ids': [(6, 0, (products[:1] | env['product.product'].search(  # noqa: F821
+        [('principal_id', '=', unsold.id)], limit=1)).ids)]})
+eligible.action_publish()
+dist = env['id.sales.assortment.scope']._distribution({'start': '2026-07-01', 'end': '2026-07-31'}, False)  # noqa: F821
+assert dist['available'] and any(r['numeric'] == 50 and r['weighted'] == 100 for r in dist['rows'])
+env.cr.commit()  # noqa: F821
+print('DASHBOARD_3B_CLOSURE_FIXTURE=PASS')
+# Positive native promise / POD display cases; these are synthetic accepted-source fixtures.
+promise_line = invoices.line_ids.filtered(lambda line: line.account_id.account_type == 'asset_receivable')[:1]
+promise = env['id.ar.promise'].create({'name': 'QA Confirmed Payment Promise', 'line_id': promise_line.id,  # noqa: F821
+    'amount': 100, 'due_date': fields.Date.today()+timedelta(days=1), 'source': 'QA recorded customer agreement'})
+promise.action_commit()
+first_uuid = str(uuid.uuid4())
+for index, outcome in enumerate(['partial', 'delivered']):
+    at = fields.Datetime.now()+timedelta(seconds=index)
+    payload = {'source': {'id': trip_picking.name, 'trip': trip_picking.origin,
+        'outlet_id': str(partner.id), 'business_date': str(local_day(at)), 'version': 'qa-manifest'},
+        'outcome': outcome, 'lines': []}
+    if index:
+        payload['supersedes_uuid'] = first_uuid
+    else:
+        payload['do_reason'] = 'TOKO TUTUP'
+    env['id.mobile.command'].create({'client_uuid': first_uuid if not index else str(uuid.uuid4()),  # noqa: F821
+        'command_type': 'delivery.pod.submit', 'fingerprint': 'qa-source-fixture', 'user_id': admin.id,
+        'company_id': company.id, 'payload_json': json.dumps({'payload': payload}),
+        'occurred_at': at, 'status': 'accepted'})
+pod = env['id.delivery.attempt']._for_deliveries(trip_picking.ids)  # noqa: F821
+assert pod['attempts'] == 1 and pod['corrections'] == 1 and pod['outcomes'] == {'delivered': 1}
+env.cr.commit()  # noqa: F821
+print('DASHBOARD_3B_POSITIVE_SOURCE_FIXTURE=PASS')

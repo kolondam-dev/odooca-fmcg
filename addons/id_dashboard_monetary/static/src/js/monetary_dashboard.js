@@ -107,6 +107,29 @@ export class MonetaryDashboard extends Component {
         this.load();
     }
 
+    promiseOutcome(value) {
+        return {draft: _t("Draft"), open: _t("Open"), kept: _t("Kept"), broken: _t("Broken")}[value] || _t("Not available");
+    }
+    async captureArEvidence() {
+        if (this.state.loading || !this.state.data?.ar_history?.available || this.capturePending) return;
+        const scope = this.state.data.ar_history, version = this.requestVersion;
+        this.capturePending = true;
+        try {
+            const id = await this.orm.call("id.ar.audit.snapshot", "capture_ledger", [], {
+                as_of: scope.as_of, comparison: scope.comparison,
+                area_ids: [...this.state.areaIds], salesman_ids: [...this.state.salesmanIds]});
+            if (version === this.requestVersion && !this.state.loading) this.action.doAction({
+                type: "ir.actions.act_window", res_model: "id.ar.audit.snapshot", res_id: id, views: [[false, "form"]]});
+        } catch (err) {
+            if (version === this.requestVersion) this.state.error = err?.data?.message || err?.message || String(err);
+        } finally { this.capturePending = false; }
+    }
+    openArPromises() {
+        if (this.state.loading || !this.state.data?.commitments?.available) return;
+        this.action.doAction({type: "ir.actions.act_window", name: _t("Customer Payment Promises"),
+            res_model: "id.ar.promise", views: [[false, "list"], [false, "form"]],
+            domain: this.state.data.commitments.domain});
+    }
     onHistoryDate(ev) { this.state[ev.target.dataset.field] = ev.target.value; this.load(); }
     historyBucket(key) {
         return {not_due: _t("Not due"), overdue_1_7: "1–7", overdue_8_14: "8–14",
