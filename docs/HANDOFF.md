@@ -1,3 +1,37 @@
+## 2026-11-04T21:08:47+07:00 — claude-dev agent — PR #87: diagnosis ruleset + penyegaran branch
+**Berubah:** merge `origin/main` ke `agen/geo-live-verification` (HEAD baru), `docs/HANDOFF.md`, `agent-log/claude-dev.log`.
+**[F]** Ruleset `main-quality-gate` (id `25827644`, `refs/heads/main`) memasang 6 required context (`static`, `install-test`, `init-test`, `pwa-gate`, `invariant-tests`, `seed-invariants`, app 15368) dengan `strict_required_status_checks_policy: true`.
+**[F]** Keenam context sudah `SUCCESS` pada head `52ebcf7`; pemetaan nama benar. Blocker sebenarnya `mergeStateStatus: BEHIND` (branch tertinggal 8 commit dari `main` `b3c6876`): GitHub menilai required checks pada merge-ref `refs/pull/87/merge` (`26a5cd7`) yang **0 check run** dan berstatus `pending`, sehingga keenam context tampil "Expected".
+**[F]** `seed-invariants.yml` memicu `push` ke `agen/**` dan `pull_request`, jadi `invariant-tests`/`seed-invariants` muncul 2× per SHA (bukan blocker, tetapi menggandakan runtime). `require_extra_approval_for_unattributed_changes` tidak terpicu karena semua commit diatribusikan ke `kolondam-dev`.
+**[A]** Merge `main` bebas konflik (`git merge-tree` bersih). Ruff/10 manifest/51 unit geo PASS di pohon hasil merge. CI dijalankan ulang pada HEAD baru; merge ke `main` dan deploy tetap menunggu supervisor.
+
+## 2026-11-04T18:25:34+07:00 — claude-dev agent — PR #87: tes `main()` membuktikan guard memblokir sebelum write
+**Berubah:** `tests/test_geo_ops_guards.py` (7 tes baru `ArchiveMainTests`, total 18 tes).
+**[F]** Tes menjalankan `_documents()` dan `main()` dengan env Odoo palsu (recordset/model/env), bukan hanya helper: reservasi `stock.quant`, move tanpa picking, dan move line terbukti melempar `RuntimeError` **sebelum** `res_company.write`, sebelum user dinonaktifkan, dan sebelum `commit()`.
+**[F]** Arsip bersih diuji sampai tuntas (user test dinonaktifkan, `company.write({"active": False})`, `commit()` terpanggil, sisa company aktif 1) dan dry-run tidak menulis apa pun.
+**[F]** Mutation check: mengembalikan `DOCUMENT_MODELS` ke daftar lama dan menonaktifkan guard quant membuat tiga tes blokir GAGAL — tes terbukti load-bearing, bukan hiasan.
+**Tidak dijalankan:** skrip arsip/provinsi produksi, merge, deploy. Ruff PASS, 51 unit geo PASS.
+
+## 2026-11-04T17:54:20+07:00 — claude-dev agent — Koreksi review supervisor PR #87 (HOLD)
+**Berubah:** `scripts/ops/archive_staging_company.py`, `scripts/ops/verify_geo_backfill.py` (baru), `tests/test_geo_ops_guards.py` (baru), `docs/geo/GEO_MASTER_LOADER.md` §7, `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md`.
+**[F]** P2 guard: arsip kini memblokir `stock.move`, `stock.move.line`, `stock.scrap`, `mrp.production`, dan `stock.quant` dengan `quantity` atau `reserved_quantity` bukan nol; helper murni `blocking_documents`/`unexpected_logins` diregresi 11 test.
+**[F]** P2 verifikasi: hitungan diganti perbandingan himpunan (`missing`/`extra`/`duplicates`) terhadap CSV; kode karangan yang menggantikan kode kanonik gagal walau jumlah baris tetap. Dijalankan read-only ke produksi: PASS 15/171/1.839, 1/1 company aktif berprovinsi, 354/354 partner.
+**[F]** P3: laporan live berisi 1.227 byte NUL; ditulis ulang UTF-8 tanpa NUL (8.622 byte).
+**Tidak dijalankan:** skrip arsip produksi, merge, atau deploy. Ruff/10 manifest/44 unit geo/seed-invariants/`bash -n` PASS.
+
+## 2026-11-04T17:20:00+07:00 — claude-dev agent — Tindak lanjut company: provinsi company 1 dan arsip company 2
+**Berubah:** `scripts/ops/archive_staging_company.py` (baru) dan `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md` (bagian tindak lanjut + status acceptance company).
+**[F]** Dry-run `fix_geo_province.py` dengan `GEO_PROVINCE_COMPANY_IDS=1` menunjukkan hanya 1 company akan diisi; penerapan berhasil dan company 1 (PT Manado Distribusi Utama) kini `state_id = Sulawesi Utara`.
+**[F]** Odoo menolak arsip company 2 karena masih default company 2 user aktif. Script arsip ter-guard (dry-run default; menolak bila nama tidak tunggal, ada dokumen akuntansi/penjualan/pembelian/stok, atau login bukan `staging.*`) menonaktifkan `staging.capture.1`/`.2` lalu mengarsipkan company 2.
+**[F]** Verifikasi ulang read-only: 1 company aktif, 1 berprovinsi, 0 tanpa provinsi; 354/354 partner tetap berprovinsi dan ber-FK kecamatan; 15/171/1.839 kode dataset lengkap tanpa duplikat.
+**Tidak diubah:** transaksi, akuntansi, stok, seed, mark, dan konfigurasi deployment.
+
+## 2026-11-04T17:05:00+07:00 — claude-dev agent — Verifikasi live backfill geo + koreksi query runbook
+**Berubah:** `docs/reviews/GEO_BACKFILL_LIVE_2026-11-04.md` (baru) dan §7 `docs/geo/GEO_MASTER_LOADER.md` (query verifikasi diperbaiki: batas `71.%`, cek duplikat, company lewat `partner_id.state_id`, hitungan partner berprovinsi).
+**[F]** Backfill sudah berjalan otomatis pada deployment `35ea2443` (commit `70f345fe`, merge PR #78) 2026-11-03T14:15:51Z; mark `geo_master_v1` dan `geo_province_v1` terpasang. Query DB read-only: 15/171/1.839 kode dataset lengkap, 0 duplikat, 0 kode luar dataset, 19 `KEL-*` + 18 `KEC-*` legacy utuh, 2 legacy tanpa kode, 354/354 partner punya FK kecamatan dan provinsi, kota/kecamatan/coverage area 0 provinsi kosong.
+**[F]** Kesenjangan: 0/2 company aktif berprovinsi (company 1 PT Manado Distribusi Utama beralamat Manado; company 2 STAGING TEST Company tanpa alamat).
+**Belum dikerjakan:** penulisan provinsi company menunggu keputusan pemilik dan dijalankan lewat skrip (`GEO_PROVINCE_COMPANY_IDS=1`), bukan oleh agen ini. Tidak ada mutasi DB/mark/deployment dari sesi ini.
+
 ## 2026-11-04T00:00:59+07:00 — agent codex-pwa — Backlog3B capability closure
 **Berubah:** audit snapshot immutable + AML/partial provenance/digest; promise-to-pay dan frozen assessment/bank matched allocation; settlement split; recognized partial/returns/refunds COGS; redacted POD projection/lineage/reasons; immutable eligible outlet/SKU period universe dan numeric/observed-turnover weighted distribution. Kontrak docs/dashboard/3B_CLOSURE.md.
 **Diverifikasi:** lokal Ruff/10manifest/XML/compile/20Node/diff PASS; native/source/role/cross-company/payment/bank/return/eligibility/POD regressions dan visual source fixtures ditambah.
