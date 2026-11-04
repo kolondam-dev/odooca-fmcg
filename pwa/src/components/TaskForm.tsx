@@ -12,6 +12,7 @@ import { orderQuote, type OrderUom } from "../domain/order-pricing";
 import {
     validateOrder,
     type Command,
+    type FieldProvider,
     type Identity,
     type Snapshot,
 } from "../domain/contracts";
@@ -28,6 +29,7 @@ export function TaskForm({
     close,
     workStatus,
     store,
+    provider,
 }: {
     workStatus: string;
     store: FieldStore;
@@ -45,6 +47,7 @@ export function TaskForm({
         evidence: EvidenceRef,
     ) => Promise<void>;
     close: () => void;
+    provider?: FieldProvider;
 }) {
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
@@ -63,6 +66,70 @@ export function TaskForm({
     const [evidence, setEvidence] = useState<EvidenceRef>();
     const [restored, setRestored] = useState(false);
     const [category, setCategory] = useState("fuel_planned");
+    // Separated stock display: snapshot remains the authoritative morning session
+    // contract (locking pricing & snapshot_version). liveStock updates dynamically for real-time inventory visibility.
+    const [liveStock, setLiveStock] = useState<Record<string, number>>(() =>
+        Object.fromEntries(snapshot.products.map((p) => [p.id, p.stock])),
+    );
+    const [refreshingStock, setRefreshingStock] = useState(false);
+    const [stockSyncedAt, setStockSyncedAt] = useState<Date>(() => new Date());
+    const stockGeneration = useRef(0);
+
+    const handleRefreshStock = async () => {
+        if (!provider || refreshingStock) return;
+        const currentGen = ++stockGeneration.current;
+        setRefreshingStock(true);
+        try {
+            const fresh = await provider.snapshot();
+            if (
+                currentGen === stockGeneration.current &&
+                fresh?.products?.length
+            ) {
+                const updated: Record<string, number> = {};
+                for (const p of fresh.products) {
+                    updated[p.id] = p.stock;
+                }
+                setLiveStock((prev) => ({ ...prev, ...updated }));
+                setStockSyncedAt(new Date());
+            }
+        } catch {
+            // Graceful fallback: maintain current live stock on offline/network errors
+        } finally {
+            if (currentGen === stockGeneration.current) {
+                setRefreshingStock(false);
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (dialog.type !== "order" || !provider) return;
+        let active = true;
+        const currentGen = ++stockGeneration.current;
+        void provider
+            .snapshot()
+            .then((fresh: Snapshot) => {
+                if (
+                    active &&
+                    currentGen === stockGeneration.current &&
+                    fresh?.products?.length
+                ) {
+                    const updated: Record<string, number> = {};
+                    for (const p of fresh.products) {
+                        updated[p.id] = p.stock;
+                    }
+                    setLiveStock((prev) => ({ ...prev, ...updated }));
+                    setStockSyncedAt(new Date());
+                }
+            })
+            .catch(() => {});
+        const timer = setInterval(() => {
+            if (active) void handleRefreshStock();
+        }, 20_000);
+        return () => {
+            active = false;
+            clearInterval(timer);
+        };
+    }, [dialog.type, provider]);
     const busyRef = useRef(false);
     busyRef.current = busy;
     const key = dialog.type === "order" ? `order:${dialog.outlet}` : "";
@@ -415,6 +482,10 @@ export function TaskForm({
                                         onQty={setQty}
                                         units={units}
                                         onUnits={setUnits}
+                                        liveStock={liveStock}
+                                        onRefreshStock={handleRefreshStock}
+                                        refreshingStock={refreshingStock}
+                                        stockSyncedAt={stockSyncedAt}
                                     />
                                     <details class="order-extra">
                                         <summary>

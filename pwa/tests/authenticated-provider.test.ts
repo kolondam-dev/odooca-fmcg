@@ -146,3 +146,84 @@ it("preserves a nonempty server manifest and does not supply sales fallback DOs"
         (await new MockProvider("sales", true, source).snapshot()).deliveries,
     ).toEqual([]);
 });
+
+it("forwards live sales.order.submit to authenticated.submit when available", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    try {
+        const fixture = new MockProvider("sales");
+        const mockReceipt = {
+            client_uuid: "client-order-1",
+            status: "accepted" as const,
+            message: "Pesanan SO0042 berhasil diajukan.",
+            reference: "SO0042",
+        };
+        const submitSpy = vi.fn(async () => mockReceipt);
+        const source = {
+            bootstrap: () => fixture.bootstrap(),
+            snapshot: () => fixture.snapshot(),
+            submit: submitSpy,
+        };
+        const provider = new MockProvider("sales", true, source as any);
+        const cmd = {
+            schema_version: 1 as const,
+            client_uuid: "client-order-1",
+            type: "sales.order.submit" as const,
+            occurred_at: new Date().toISOString(),
+            payload: {
+                outlet_id: "10",
+                lines: [{ product_id: "1", qty: "5", uom: "carton" }],
+            },
+        };
+        const receipt = await provider.submit(cmd);
+        expect(submitSpy).toHaveBeenCalledWith(cmd);
+        expect(receipt).toEqual(mockReceipt);
+    } finally {
+        vi.unstubAllGlobals();
+    }
+});
+
+it("keeps local simulation for delivery workflow while deliveries [] is unassigned on backend", async () => {
+    vi.stubGlobal("navigator", { onLine: true });
+    try {
+        const fixture = new MockProvider("delivery");
+        const submitSpy = vi.fn();
+        const source = {
+            bootstrap: () => fixture.bootstrap(),
+            snapshot: () => fixture.snapshot(),
+            submit: submitSpy,
+        };
+        const provider = new MockProvider("delivery", true, source as any);
+
+        // 1. POD should be handled locally in simulator without calling backend
+        const podCmd = {
+            schema_version: 1 as const,
+            client_uuid: "pod-demo-1",
+            type: "delivery.pod.submit" as const,
+            occurred_at: new Date().toISOString(),
+            payload: {
+                source: { id: "DEMO-DO-001", trip: "TRIP-01" },
+                recipient: "Budi",
+            },
+        };
+        const podReceipt = await provider.submit(podCmd as any);
+        expect(submitSpy).not.toHaveBeenCalled();
+        expect(podReceipt.reference).toBe("DEMO-POD-DEMO");
+
+        // 2. Trip close should also be simulated locally so trip closes reliably
+        const closeCmd = {
+            schema_version: 1 as const,
+            client_uuid: "trip-close-1",
+            type: "delivery.trip.close" as const,
+            occurred_at: new Date().toISOString(),
+            payload: {
+                trip_id: "TRIP-01",
+                vehicle: "DB 8471 MD",
+            },
+        };
+        const closeReceipt = await provider.submit(closeCmd as any);
+        expect(submitSpy).not.toHaveBeenCalled();
+        expect(closeReceipt.reference).toBe("DEMO-TRIP-CLO");
+    } finally {
+        vi.unstubAllGlobals();
+    }
+});

@@ -103,11 +103,11 @@ export function App() {
     const generation = useRef(0);
     async function connect() {
         const ticket = ++generation.current;
-        const source = new HttpProvider({ readOnly: true });
+        const source = new HttpProvider();
         const identity = await source.bootstrap();
         const { MockProvider } = await import("./data/mock");
-        // Authentication, identity and work data are real. Existing transaction
-        // simulation stays local until the command API has its own acceptance.
+        // Authentication, identity and work data are real. All sales orders,
+        // including discount requests, go to Odoo. Delivery remains simulated.
         const actor =
             identity.roles.includes("delivery") &&
             !identity.roles.includes("sales")
@@ -1274,6 +1274,7 @@ function Workspace({
                             submit={submit}
                             startSession={startSession}
                             close={() => setDialog(undefined)}
+                            provider={provider}
                         />
                     )}
                 </div>

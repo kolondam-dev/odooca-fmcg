@@ -25,6 +25,7 @@ function ProductRow({
     catalogVersion,
     quantity,
     uom,
+    stock,
     onQuantity,
     onUom,
 }: {
@@ -32,14 +33,18 @@ function ProductRow({
     catalogVersion?: 2;
     quantity: number;
     uom: OrderUom;
+    stock?: number;
     onQuantity: (value: number) => void;
     onUom: (value: OrderUom) => void;
 }) {
+    const currentStock = stock !== undefined ? stock : product.stock;
     const options = unitOptions(product, catalogVersion);
     const labels = productUnitLabels(product);
     const selected = options.find((o) => o.uom === uom) ?? options[0];
     const line =
         quantity > 0 ? lineQuote(product, quantity, uom, catalogVersion) : null;
+    const isOutOfStock = currentStock <= 0;
+    const isOverStock = Boolean(line && line.cartons > currentStock);
     const set = (value: number) =>
         onQuantity(Math.min(999, Math.max(0, Math.trunc(value) || 0)));
     return (
@@ -57,6 +62,22 @@ function ProductRow({
                 </span>
             </div>
             <p class="conversion">{conversionLabel(product, catalogVersion)}</p>
+            <div class="stock-status-bar">
+                <span
+                    class={`stock-badge ${isOutOfStock ? "out" : currentStock <= 5 ? "low" : "ok"}`}
+                >
+                    ●{" "}
+                    {isOutOfStock
+                        ? "Stok Habis"
+                        : `Stok aktual: ${cartonText(currentStock)} ${labels.carton}`}
+                </span>
+                {isOverStock && (
+                    <span class="stock-warning-badge">
+                        ⚠️ Order ({cartonText(line!.cartons)}) melebihi stok
+                        aktual ({cartonText(currentStock)})
+                    </span>
+                )}
+            </div>
             <div
                 class="uom-chips"
                 role="group"
@@ -109,7 +130,7 @@ function ProductRow({
             <small class="line-note">
                 {quantity > 0 && line
                     ? `${quantity} ${selected.label} = ${line.pcs} Pcs · ${cartonText(line.cartons)} ${labels.carton}`
-                    : `Stok ${cartonText(product.stock)} ${labels.carton} · harga per ${labels.carton}`}
+                    : `Tersedia ${cartonText(currentStock)} ${labels.carton} · harga per ${labels.carton}`}
             </small>
         </article>
     );
@@ -123,6 +144,10 @@ export function OrderCatalog({
     onQty,
     units,
     onUnits,
+    liveStock,
+    onRefreshStock,
+    refreshingStock,
+    stockSyncedAt,
 }: {
     snapshot: Snapshot;
     principal: string;
@@ -131,6 +156,10 @@ export function OrderCatalog({
     onQty: (value: Record<string, number>) => void;
     units: Record<string, OrderUom>;
     onUnits: (value: Record<string, OrderUom>) => void;
+    liveStock?: Record<string, number>;
+    onRefreshStock?: () => void;
+    refreshingStock?: boolean;
+    stockSyncedAt?: Date;
 }) {
     const [query, setQuery] = useState("");
     const term = query.trim().toLowerCase();
@@ -180,26 +209,57 @@ export function OrderCatalog({
                     />
                 </label>
                 <div class="segmented" role="group" aria-label="Principal">
-                    {principals.map((p) => (
-                        <button
-                            key={p}
-                            type="button"
-                            aria-pressed={p === active}
-                            disabled={
-                                p !== active &&
-                                Object.values(qty).some((value) => value > 0)
-                            }
-                            title="Satu principal per order"
-                            onClick={() => onPrincipal(p)}
-                        >
-                            {snapshot.products.find(
+                    {principals.map((p) => {
+                        const name =
+                            snapshot.products.find(
                                 (product) => product.principal === p,
-                            )?.principal_name ?? principalName(p)}
-                        </button>
-                    ))}
+                            )?.principal_name ?? principalName(p);
+                        return (
+                            <button
+                                key={p}
+                                type="button"
+                                aria-pressed={p === active}
+                                title="1 pesanan hanya untuk 1 prinsipal"
+                                onClick={() => {
+                                    if (p === active) return;
+                                    const currentCount = Object.values(
+                                        qty,
+                                    ).filter((v) => v > 0).length;
+                                    if (currentCount > 0) {
+                                        const confirmed = window.confirm(
+                                            `1 pesanan hanya berlaku untuk 1 prinsipal FMCG. Berpindah prinsipal akan mengosongkan keranjang saat ini (${currentCount} item). Lanjutkan?`,
+                                        );
+                                        if (!confirmed) return;
+                                        onQty({});
+                                    }
+                                    onPrincipal(p);
+                                }}
+                            >
+                                {name}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
             <div class="product-list">
+                <div class="stock-sync-bar">
+                    <span class="stock-sync-indicator">
+                        <span class="pulse-dot">●</span> Stok Aktual Realtime
+                        {stockSyncedAt
+                            ? ` (${stockSyncedAt.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })})`
+                            : ""}
+                    </span>
+                    {onRefreshStock && (
+                        <button
+                            type="button"
+                            class="stock-refresh-btn"
+                            disabled={refreshingStock}
+                            onClick={onRefreshStock}
+                        >
+                            {refreshingStock ? "Sync…" : "↻ Perbarui"}
+                        </button>
+                    )}
+                </div>
                 {products.length === 0 && (
                     <p class="empty">Tidak ada produk yang cocok.</p>
                 )}
@@ -210,6 +270,7 @@ export function OrderCatalog({
                         catalogVersion={snapshot.catalog_version}
                         quantity={qty[product.id] ?? 0}
                         uom={units[product.id] ?? "carton"}
+                        stock={liveStock?.[product.id]}
                         onQuantity={(value) =>
                             onQty({ ...qty, [product.id]: value })
                         }

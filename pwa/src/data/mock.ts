@@ -42,7 +42,12 @@ export class MockProvider implements FieldProvider {
     constructor(
         private actor: string,
         private _relaxedLocation?: boolean,
-        private authenticated?: Pick<FieldProvider, "bootstrap" | "snapshot">,
+        private authenticated?: Pick<
+            FieldProvider,
+            "bootstrap" | "snapshot"
+        > & {
+            submit?: FieldProvider["submit"];
+        },
     ) {}
     get relaxedLocation(): boolean {
         return this._relaxedLocation !== undefined
@@ -315,6 +320,17 @@ export class MockProvider implements FieldProvider {
             throw new ApiError(503, "Simulasi gangguan jaringan.");
         if (this.scenario === "expired")
             throw new ApiError(401, "Simulasi sesi habis. Antrean dikunci.");
+
+        if (
+            this.authenticated &&
+            typeof this.authenticated.submit === "function" &&
+            command.type === "sales.order.submit"
+        ) {
+            // Forward live sales orders to backend. Delivery commands (POD and trip closure)
+            // remain simulated locally because deliveries in current snapshot are local fallback DOs.
+            return await this.authenticated.submit(command);
+        }
+
         const owner = (await this.bootstrap()).id;
         const key = `${owner}:${command.type}:${command.client_uuid}`;
         const payload = JSON.stringify(command);
