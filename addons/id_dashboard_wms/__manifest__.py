@@ -3,7 +3,7 @@
     "name": "FMCG Warehouse and Logistics Dashboard",
     "summary": "Stock by FMCG category, FEFO expiry monitoring, delivery fulfillment, "
                "rejection breakdown, and delivery cost ratio per vehicle.",
-    "version": "19.0.1.6.0",
+    "version": "19.0.1.7.0",
     "category": "Inventory/Reporting",
     "author": "kolondam-dev",
     "license": "LGPL-3",
@@ -20,6 +20,7 @@
         "views/menu_views.xml",
         "views/asset_views.xml",
         "views/pod_attempt_views.xml",
+        "views/warehouse_depth_views.xml",
     ],
     "assets": {
         "web.assets_backend": [
