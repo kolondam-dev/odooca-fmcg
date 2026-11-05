@@ -1,3 +1,18 @@
+## 2026-11-05T06:00:46+07:00 — codex — Koreksi quoting healthcheck spike I0
+**[F]** Run `41927243405` gagal di Initialize containers sebelum build/instal: runner memecah single-quoted health command sehingga Docker membaca `-U` sebagai option create. Disamakan dengan double quote pada CI existing; acceptance tidak dilonggarkan.
+**[F]** CI utama commit `162bb8b` hijau termasuk install-test dan upgrade/replay. **[BU]** Spike kandidat menunggu HEAD koreksi; belum merge/deploy atau perubahan data demo.
+
+## 2026-11-05T05:39:23+07:00 — codex — Finance I0 spike kandidat install/upgrade
+**Berubah:** workflow `finance-i0-spike.yml`, penguatan read-only guard dan tes mismatch manifest; discovery upstream tools pada pin eksplisit dicatat di dokumen I0.
+**[F]** CI PR89 commit awal `2832a26` hijau termasuk native install dan persistent upgrade/replay (run `41877539024`). Ini belum bukti kandidat OCA terpasang. Workflow baru menguji lima profil disposable secara terpisah, install lalu upgrade DB yang sama dan assertion registry installed.
+**Diverifikasi:** 4 tes audit/source, Ruff dan YAML lokal PASS. **[BU]** Workflow spike pada HEAD baru; oracle/ACL dan golden fixture masih terbuka. Tidak mengubah DB demo, merge atau deploy.
+
+## 2026-11-05T00:25:15+07:00 — codex — Finance I0 audit runtime dan containment legacy
+**Berubah:** branch `agen/finance-i0-runtime-audit` dari main `565e8a4`; alat audit read-only, bukti 67 modul/19 manifest OCA cocok pin, `docs/finance/I0_RUNTIME_AUDIT.md`; `id_base` 19.0.1.3.1 menolak RPC generator nomor/CSV legacy dan melabeli field historis unverified.
+**[F]** PR86 sudah merged. Pemilik memilih demo company 1, IDR, chart Indonesia existing dan menjadi pemberi keputusan Finance/Tax demo. Audit Railway melalui transaksi READ ONLY: native Coretax installed; laporan/MIS/reconcile OCA uninstalled; 0 nomor pajak custom/flag ekspor legacy. Tidak mengubah data live.
+**Diverifikasi:** Ruff, 10 manifest, 3 unit audit PASS; source hash dibandingkan upstream exact pin. Regresi native memastikan penolakan generator dan preservasi posted AML/legacy values ditambahkan.
+**[BU]** CI native/upgrade containment dan review independen exact HEAD; I0 keseluruhan HOLD untuk spike kandidat, golden dataset, effective costing/stock ownership dan mapping COA. FIN01–58 belum diterima. Tidak merge/deploy. Detail acceptance dan tindak lanjut ada di dokumen I0.
+
 ## 2026-11-04T21:56:23+07:00 — claude-dev agent — PR #87 merged: verifikasi main dan deploy otomatis
 **Berubah:** hanya catatan (`docs/HANDOFF.md`, `agent-log/claude-dev.log`).
 **[F]** `main` = `7576d18` (merge PR #87), induk `b3c6876` + `15f400d`; `15f400d` adalah HEAD yang diverifikasi supervisor, jadi tidak ada perubahan source antara verifikasi dan merge.
