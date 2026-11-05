@@ -119,6 +119,9 @@ def check_roles_and_scope(env, fixtures):
             raise RollbackFixture()
     except RollbackFixture:
         env.invalidate_all()
+        # ir.rule.create clears registry ormcache, but PostgreSQL rollback does
+        # not evict domains cached while the temporary rule was active.
+        env.registry.clear_cache()
     golden.assert_figures(golden.trial_balance(reader, a, "2026-07-01", "2026-07-31", scoped_filters=False), golden.JULY, a[1])
     evidence.append({"case": "restricted_source_oracle", "result": "REJECTED_BASELINE_RESTORED"})
     return evidence

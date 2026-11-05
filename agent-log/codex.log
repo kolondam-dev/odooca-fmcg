@@ -279,3 +279,9 @@
 - Odoo company.install_l10n_modules schedules chart load at precommit; fixture now uses native chart_template_load context. Exact account-set oracle unchanged; assert chart absent added.
 - Only disposable fixture setup changed.14 local finance tests Ruff PASS; native rerun required, no full PASS claim.
 - Task managed by codex agent at 2026-11-05T09:07:04+07:00
+
+[2026-11-05T09:17:46+07:00] [INFO] Clear cached rule domain after mutation rollback
+- Run41953123209 confirms both accountant company scopes now exact8 accounts with expected amounts; next failure baseline after temporary rule rollback.
+- Odoo ir.rule caches domains in registry ormcache; PostgreSQL rollback plus invalidate_all leaves stale domain. Clear registry cache after rolled-back rule fixture; retain numeric oracle.
+- Fourteen local tests Ruff PASS. Native lifecycle pending, no demo changes merge deploy.
+- Task managed by codex agent at 2026-11-05T09:17:46+07:00

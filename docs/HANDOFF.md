@@ -1,3 +1,7 @@
+## 2026-11-05T09:17:46+07:00 — codex — Pulihkan security-domain cache pasca-mutasi
+**[F]** Run `41953123209`: accountant A/B account set dan nominal kini eksak. Berikutnya baseline setelah rollback global ir.rule gagal karena registry ormcache menyimpan domain restriksi; `invalidate_all` hanya membuang field cache. Fixture kini memanggil `env.registry.clear_cache()` sesudah rollback rule, sesuai cache yang dibersihkan native `ir.rule.create/write/unlink`.
+**Diverifikasi:** 14 tes finance lokal/Ruff PASS; **[BU]** native rerun dan lifecycle invoice yang belum dicapai. Assertion baseline tetap utuh. Tidak live write/merge/deploy; PR91 HOLD.
+
 ## 2026-11-05T09:07:04+07:00 — codex — Stabilkan fixture terhadap chart deferred
 **[F]** Run `41952023071`: semua 8 akun/nominal expected benar, tetapi 118 akun nol ditambahkan setelah actor/savepoint. Source Odoo `company.install_l10n_modules` menjadwalkan chart di precommit untuk company ber-country tanpa chart. Fixture company kini memakai native `chart_template_load=True`; assert exact account set dan chart tetap kosong dipertahankan, bukan menyaring akun ekstra/hide-zero.
 **Diverifikasi:** Ruff/14 local finance tests PASS. **[BU]** Native rerun, invoice lifecycle belum dicapai. Tidak mengubah chart/data demo atau acceptance mapping COA; PR91 tetap HOLD.

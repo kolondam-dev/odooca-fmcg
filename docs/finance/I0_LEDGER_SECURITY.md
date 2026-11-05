@@ -70,6 +70,10 @@ delapan akun. Run `41952023071` membuktikan delapan akun/nominal benar tetapi ad
 118 akun nol tambahan setelah actor/savepoint. Assertion account set tetap eksak;
 tidak menghapus akun ekstra dari hasil dan tidak memakai hide-at-zero sebagai bypass.
 Chart demo existing tidak diubah, dan mapping COA demo belum dianggap diterima.
+Run `41953123209` membuktikan scope Accountant A/B sudah eksak setelah koreksi.
+Rollback mutasi `ir.rule` juga membersihkan registry ormcache (bukan hanya field
+cache), karena PostgreSQL rollback tidak menghapus cached security domains. Baseline
+pasca-rollback tetap diwajibkan, bukan ditandai PASS dari state sebelum mutasi.
 
 Lokal: tes konsistensi angka, residual cutoff, database guard, Ruff/manifest/YAML.
 Runtime Odoo/PostgreSQL nyata wajib dibuktikan CI exact HEAD, bukan tes lokal saja.
