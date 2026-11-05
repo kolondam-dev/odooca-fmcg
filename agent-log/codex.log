@@ -292,3 +292,9 @@
 [2026-11-05T11:24:42+07:00] [INFO] PR91 konflik HANDOFF/log diselesaikan
 - Seluruh entri kedua parent dipertahankan; source/security/fixture tidak berubah dari ccf4530. CI integrasi wajib hijau sebelum merge sesuai izin pemilik.
 - Task managed by codex agent at 2026-11-05T11:24:42+07:00
+
+[2026-11-05T11:54:22+07:00] [INFO] Implement I0 costing ownership stock GL foundation
+- Read-only private API: current effective policies, owner-aware quants, WITA vs posting dates, grouped journal comparisons and unlinked GL.
+- Disposable native fixtures and independent standard AVCO FIFO figures, return internal consignment grouped journals and mutation/security/date probes; native execution pending CI.
+- Local 17 finance oracle tests, python -m ruff check ., 11 manifests PASS. No demo write, seed, merge or deploy; I0 and FIN01-58 remain incomplete.
+- Task managed by codex agent at 2026-11-05T11:54:22+07:00

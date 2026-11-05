@@ -1,3 +1,8 @@
+## 2026-11-05 — codex — Paket I0 costing ownership dan fondasi stok–GL
+**Berubah:** dari main `77a8ccc`, cabang `agen/finance-i0-costing-ownership`; private read-only stock source API, policy efektif sekarang, current quant ownership, WITA/posting scopes, grouped move-to-GL comparisons dan GL tanpa direct link. Fixture disposable dua company/skala, tiga costing methods, return/internal/consignment, grouped journals, balanced mutation, date/link/security probes; CI reports profile menambah purchase_stock. Dokumen `docs/finance/I0_COSTING_OWNERSHIP.md` memisahkan fondasi dari I3 penuh.
+**Diverifikasi:** [F] 17 tes oracle finance lokal, `python -m ruff check .`, 11 manifest dan diff check PASS. [BU] Native install/upgrade/fixture pada exact SHA menunggu CI; belum verdict PASS paket.
+**Batas:** tidak demo write/seed/merge/deploy, tidak aktivasi modul demo, dataset user untracked tetap utuh. I0 tahap 1/9 dan FIN01–58 belum selesai; full invoice COGS/closing dan completeness historic mapping/rule tetap terbuka.
+
 ## 2026-11-05T11:24:42+07:00 — codex — PR91 resolusi konflik dengan main PR92
 **Berubah:** kedua riwayat HANDOFF dan codex.log dipertahankan utuh; merge main `13c43d3` ke PR91. Source/fixture/security sama dengan HEAD review `ccf4530`.
 **Diverifikasi:** preservasi verbatim kedua parent PASS; 14 tes finance dan 11 manifest diperiksa pada pohon hasil integrasi. Bukti native HEAD lama dibedakan dari CI HEAD integrasi yang harus dijalankan ulang.
