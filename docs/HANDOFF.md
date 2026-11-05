@@ -1,3 +1,7 @@
+## 2026-11-05T09:07:04+07:00 — codex — Stabilkan fixture terhadap chart deferred
+**[F]** Run `41952023071`: semua 8 akun/nominal expected benar, tetapi 118 akun nol ditambahkan setelah actor/savepoint. Source Odoo `company.install_l10n_modules` menjadwalkan chart di precommit untuk company ber-country tanpa chart. Fixture company kini memakai native `chart_template_load=True`; assert exact account set dan chart tetap kosong dipertahankan, bukan menyaring akun ekstra/hide-zero.
+**Diverifikasi:** Ruff/14 local finance tests PASS. **[BU]** Native rerun, invoice lifecycle belum dicapai. Tidak mengubah chart/data demo atau acceptance mapping COA; PR91 tetap HOLD.
+
 ## 2026-11-05T08:57:30+07:00 — codex — Diagnosis cakupan accountant
 **[F]** Run `41950898720` lolos lima profil dan golden minimal, extended gagal account coverage pada accountant company switch setelah reader/sales/mobile negative checks. Native invoice lifecycle belum dicapai, tidak diklaim PASS.
 **Berubah:** diagnostics missing/extra account IDs dan payload scope fixture sintetis untuk menemukan sumber mismatch; assertion tidak dilonggarkan. Ruff/14 unit finance PASS, native CI HEAD koreksi menunggu. PR91 HOLD, tidak merge/deploy/live write.

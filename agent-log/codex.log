@@ -273,3 +273,9 @@
 - Native run41950898720 passed module profiles and minimal golden; extended failed accountant company-switch coverage after reader and sales/mobile denial checks.
 - Added explicit missing/extra account IDs and synthetic accountant scope diagnostics; no oracle loosened. Native lifecycle not reached and not claimed PASS.
 - Task managed by codex agent at 2026-11-05T08:57:30+07:00
+
+[2026-11-05T09:07:04+07:00] [INFO] Stabilize synthetic company fixture against deferred chart load
+- Run41952023071 diagnosed exact8 expected account values correct plus118 zero accounts after actor savepoints, not lost ledger source.
+- Odoo company.install_l10n_modules schedules chart load at precommit; fixture now uses native chart_template_load context. Exact account-set oracle unchanged; assert chart absent added.
+- Only disposable fixture setup changed.14 local finance tests Ruff PASS; native rerun required, no full PASS claim.
+- Task managed by codex agent at 2026-11-05T09:07:04+07:00

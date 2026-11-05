@@ -85,7 +85,11 @@ def make_entry(env, fixture, label, date, balances, posted=True):
 def build_fixture(env, suffix, scale, events=EVENTS, draft_noise=True):
     currency = env.ref("base.IDR")
     currency.active = True
-    company = env["res.company"].create({
+    # Odoo's install_l10n_modules schedules a chart load on precommit for a
+    # country-only company. Later savepoint flushes can run that hook and add a
+    # complete chart to this deliberately eight-account synthetic fixture.
+    # Use the native fixture/loading context, not a permissive report assertion.
+    company = env["res.company"].with_context(chart_template_load=True).create({
         "name": f"FINANCE GOLDEN {suffix}", "currency_id": currency.id,
         "country_id": env.ref("base.id").id,
     })

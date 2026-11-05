@@ -63,6 +63,14 @@ per skenario. Artifact `finance-i0-candidate-evidence/ledger-security.log`.
 Semua company/user/dokumen hanya fixture CI dan di-rollback; company/user sets
 sebelum/sesudah wajib identik. Tidak ada commit atau DB demo yang disentuh.
 
+Fixture company memakai native context `chart_template_load=True` agar Odoo tidak
+menjadwalkan pemasangan chart lokal pada precommit saat company ber-country ID
+dibuat. Tanpa ini, savepoint berikut dapat menambahkan chart penuh ke fixture
+delapan akun. Run `41952023071` membuktikan delapan akun/nominal benar tetapi ada
+118 akun nol tambahan setelah actor/savepoint. Assertion account set tetap eksak;
+tidak menghapus akun ekstra dari hasil dan tidak memakai hide-at-zero sebagai bypass.
+Chart demo existing tidak diubah, dan mapping COA demo belum dianggap diterima.
+
 Lokal: tes konsistensi angka, residual cutoff, database guard, Ruff/manifest/YAML.
 Runtime Odoo/PostgreSQL nyata wajib dibuktikan CI exact HEAD, bukan tes lokal saja.
 

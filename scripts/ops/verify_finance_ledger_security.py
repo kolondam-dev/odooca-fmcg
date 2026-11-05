@@ -92,10 +92,11 @@ def check_roles_and_scope(env, fixtures):
         print("FINANCE_ACCOUNTANT_SCOPE=" + json.dumps({
             "company": fixture[0].name, "user_companies": accountant.user.company_ids.ids,
             "context_companies": accountant.context.get("allowed_company_ids"),
-            "account_rows": {str(key): row for key, row in totals.items()},
+            "reported_account_ids": sorted(totals),
             "fixture_accounts": {key: account.id for key, account in fixture[1].items()},
         }, sort_keys=True, default=str))
         golden.assert_figures(totals, golden.JULY, fixture[1], fixture[4])
+        require(not fixture[0].chart_template, "Synthetic fixture unexpectedly loaded a localization chart")
     evidence.append({"case": "accountant_company_switch", "result": "PASS"})
     # Assert role assignment has not inherited system/admin through defaults.
     require(not user.has_group("base.group_system"), "Fixture reader accidentally became administrator")
