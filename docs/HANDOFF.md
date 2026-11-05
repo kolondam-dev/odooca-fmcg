@@ -1,3 +1,24 @@
+## 2026-11-05T14:35:00+07:00 — antigravity — PR94: mewajibkan eksak 15 entri fingerprint register kanonikal
+**Berubah:** scripts/ops/generate_state_20260801.py: mewajibkan eksak 15 entri register kanonikal (CANONICAL_REGISTER_FILES) pada input_dataset_sha256 manifest rekonsiliasi sebelum replay; manifes kosong {} atau tidak lengkap memicu ValueError; tests/test_state_20260801.py: penambahan tes regresi supervisor test_empty_or_incomplete_fingerprint_manifest_fails_fast (total 8 tes).
+**Diverifikasi:** 8 tes unit PASS lokal, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon).
+**Belum diuji:** [BU] Re-review CI PR #94. Tidak ada mutasi/deploy ke database live.
+
+## 2026-11-05T11:50:00+07:00 — antigravity — Koreksi review F0: kuantitas fraksional, fingerprint beku, timezone WITA, dan resolusi main
+**Berubah:**
+- scripts/ops/generate_state_20260801.py: menolak kuantitas non-integral secara fail-closed (mencegah silent truncation pada mutasi 0.5 karton), memverifikasi SHA-256 fingerprint 15 register beku sebelum replay, dan menyelaraskan timezone cutoff dengan WITA (+08:00).
+- data/registers/state_20260801.json: membedakan 309 posted AR Juli dan 48 carry-forward pending AR Agustus; as_of_datetime 2026-08-01T00:00:00+08:00.
+- docs/reviews/SEED_F0_PREFLIGHT_AND_STATE_AUDIT.md: klaim G-05 diturunkan ke hipotesis agregat [A] tanpa klaim atribusi per lot; penyesuaian live dilarang dari selisih agregat; K5 Rp5 M ditegaskan sebagai asumsi perancangan [A] yang belum disahkan.
+- tests/test_state_20260801.py: penambahan regresi mutasi non-integral 0.5 karton dan mismatch fingerprint (total 7 tests PASS).
+- Resolusi merge origin/main (77a8ccc dari PR #91) dengan preservasi penuh entri HANDOFF kedua parent.
+**Diverifikasi:**
+- [F] python -m unittest tests/test_state_20260801.py PASS (7 tests).
+- [F] python -m ruff check . PASS (clean).
+- [F] python scripts/check_manifests.py PASS (10 addons OK).
+- [F] verify_seed_invariants.py & verify_seed_acceptance.py PASS.
+**Belum diuji:**
+- [BU] Eksekusi pack Agustus (menunggu F1–F3). Tidak ada penulisan data/mutasi ke server Railway dan tidak ada restore/reset DB.
+**Berikutnya:**
+- Menyerahkan perbaikan PR #94 untuk re-review CI dan pemilik.
 ## 2026-11-05T15:35:00+07:00 — antigravity — PR93: penolakan klaim sepihak nominal tagihan di baris pembayaran
 **Berubah:** scripts/ops/seed_v2_gates.py: menghapus fallback nominal dari baris pembayaran (ar_collections/ap_payments); nominal expected_total wajib berasal dari sumber terverifikasi (invoices, po_headers, atau opening balances); menolak pelunasan dan mempertahankan dokumen di saldo penutupan replay_closing saat saldo sumber tidak tersedia; tests/test_seed_v2_gates.py: pembaruan tes regresi reproduksi supervisor untuk baris pembayaran yang mengklaim total_dpp / invoice_total_with_ppn sendiri (82 tes); integrasi main PR95.
 **Diverifikasi:** 82 tes unit gates v2 lulus, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon).
@@ -47,6 +68,7 @@
 ## 2026-11-05T09:17:46+07:00 — codex — Pulihkan security-domain cache pasca-mutasi
 **[F]** Run `41953123209`: accountant A/B account set dan nominal kini eksak. Berikutnya baseline setelah rollback global ir.rule gagal karena registry ormcache menyimpan domain restriksi; `invalidate_all` hanya membuang field cache. Fixture kini memanggil `env.registry.clear_cache()` sesudah rollback rule, sesuai cache yang dibersihkan native `ir.rule.create/write/unlink`.
 **Diverifikasi:** 14 tes finance lokal/Ruff PASS; **[BU]** native rerun dan lifecycle invoice yang belum dicapai. Assertion baseline tetap utuh. Tidak live write/merge/deploy; PR91 HOLD.
+
 
 ## 2026-11-05T09:14:45+07:00 — codex — PR92: review rencana dan resolusi konflik main
 **Berubah:** konflik HANDOFF diselesaikan dengan mempertahankan semua entri kedua parent secara utuh; main PR89/90 diintegrasikan. Catatan acuan dokumen menegaskan Bab 9A/batas 5 Nov, K5–K9 belum disahkan, serta scope draft seed vs live/carry-forward.
