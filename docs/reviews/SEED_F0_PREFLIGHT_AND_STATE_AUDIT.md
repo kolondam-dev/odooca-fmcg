@@ -35,7 +35,7 @@ Sesuai kontrak dan plan PR #92, tugas F0 mencakup:
 
 | # | Parameter | Usulan Default F0 | Landasan dan Alasan Teknis |
 |---|---|---|---|
-| **K5** | Saldo Kas/Modal Awal & Target Moneter | **Saldo modal awal Rp5.000.000.000,00** dicatat per 1 Juli (atau 1 Agustus) pada ekuitas/modal disetor ke akun Bank (`BNK1`). Target omzet bulanan dinilai dari **DPP net** setelah diskon baris sebelum tolakan dengan pita **±3%**. Target November ditambahkan ke `id.monetary.target` (Rp6,5 M pro-rata). | Tanpa modal awal, arus kas Juli adalah minus Rp3,163 M saat 31 Juli, dan langsung menolak pelunasan AP Unilever Rp2,9 M pada 8 Agustus. Modal Rp5 M menjamin kas kumulatif harian selalu positif (`CASH-NONNEG`). |
+| **K5** | Saldo Kas/Modal Awal & Target Moneter | **Saldo modal awal Rp5.000.000.000,00 [A]** diusulkan dicatat per 1 Juli (atau 1 Agustus) pada ekuitas/modal disetor ke akun Bank (`BNK1`). Target omzet bulanan dinilai dari **DPP net** setelah diskon baris sebelum tolakan dengan pita **±3%**. Target November ditambahkan ke `id.monetary.target` (Rp6,5 M pro-rata). | **Status K5 tetap asumsi [A] belum disahkan pemilik.** Kemampuan menjaga kas non-negatif di seluruh horizon belum terbukti, terutama pembayaran AP Unilever Rp2,9 M pada 8 Agustus dan pack Agustus belum direplay. Angka Rp5 M adalah usulan awal perancangan untuk diuji saat simulasi F2/F3. |
 | **K6** | Katalog Biaya OPEX & Payroll | Biaya logistik harian proporsional ritase armada; pemeliharaan armada, listrik gudang, penyusutan aset, dan administrasi bank mengikuti rincian blueprint. **Gaji dibayarkan tanggal 30** (atau hari kerja terakhir sebelumnya). | Memenuhi R7, memulihkan defisit OPEX Juli (-Rp150 jt), dan membentuk grafik laba bersih yang realistis. |
 | **K7** | Skenario Operasional Khusus | **Tolakan/retur bertahap** (Agustus ~2,4%, September ~1,8%, Oktober ~0,8%); barang rusak dipindah ke karantina lalu dihapus (scrap); aging AR membentuk bucket 1–30 / 31–60 hari; **1 kasus gagal bayar (kredit macet) di Oktober** untuk outlet GT. | Mendukung materi demo mitigasi risiko kredit dan proses retur PWA/Odoo. |
 | **K8** | PPN Masukan (Vendor Bill) | Faktur vendor menggunakan pajak yang sama dengan konfigurasi PPN Odoo: **`12% (Non-Luxury Good)`** (DPP nilai lain 11/12, tarif efektif 11%). | Menjamin akun PPN Masukan dan PPN Keluaran sinkron di SPT Masa PPN dan laporan akuntansi. |
@@ -109,23 +109,24 @@ Pemeriksaan dilakukan secara langsung terhadap instance produksi Railway via kon
   - Selisih kliring likuiditas = −Rp2.768.823.047,71.
   - Ditambah beban OPEX payroll yang dibukukan lewat jurnal entry sebesar Rp394.350.000,00, posisi kas kumulatif Juli tanpa saldo modal awal adalah **−Rp3.163.173.047,71** (tepat membuktikan temuan G-06).
 
-### 3.8 Audit Persediaan Fisik & Penyelesaian Gap G-05 [F]
+### 3.8 Audit Persediaan Fisik & Status Hipotesis Gap G-05 [F/A]
 Pemeriksaan kuantitatif terhadap tabel `stock_quant` dan lokasi gudang:
 - **Lokasi `WH/Stock` (Internal):**
   - Total kuantitas tersimpan: **3.691.042 pcs**.
   - Jumlah SKU: 150 produk (100% lengkap).
   - Jumlah Lot aktif: 236 lot.
-  - Konversi ke karton (berdasarkan `carton_qty` di master produk): **67.799 karton**.
-- **Dekonstruksi Angka 67.799 Karton (Menjawab Tuntas G-05):**
-  $$\text{Stok Fisik Live} = 67.799\text{ karton}$$
+  - Konversi agregat ke karton (berdasarkan `carton_qty` di master produk): **67.799 karton**.
+- **Analisis Selisih Agregat (Hipotesis G-05) [A]:**
+  $$\text{Stok Fisik Live Agregat} = 67.799\text{ karton}$$
   $$\text{Sisa Stok Kanonikal Juli} = 53.837 - 1.038\text{ (48 DO terkirim 1 Agu)} = 52.799\text{ karton}$$
-  $$\text{Selisih} = 67.799 - 52.799 = \mathbf{15.000\text{ karton}}$$
-  $$\mathbf{15.000\text{ karton}} = 100\text{ karton} \times 150\text{ SKU}$$
-  Ini adalah **fixture mobile staging 30 Oktober 2026** (HANDOFF baris 1590) yang disuntikkan sebelum pemuatan kanonikal dan belum dibersihkan.
+  $$\text{Selisih Agregat} = 67.799 - 52.799 = \mathbf{15.000\text{ karton}}$$
+  Secara aritmatika agregat, $\mathbf{15.000\text{ karton}} = 100\text{ karton} \times 150\text{ SKU}$, bertepatan dengan volume fixture mobile staging 30 Oktober 2026 (HANDOFF baris 1590).
+  **Namun, atribusi ini tetap merupakan HIPOTESIS AGREGAT [A]**, bukan pembuktian identitas per SKU/lot, karena data live tidak memiliki riwayat move/lot individual dari fixture tersebut.
+- **Batasan dan Larangan Operasional:**
+  - **Dilarang melakukan penyesuaian (inventory adjustment) pada database live berdasarkan selisih agregat ini.**
+  - Keputusan penanganan live ditunda sampai rekonsiliasi per SKU/lot dibuktikan atau diputuskan deployment fresh.
+  - Seeding offline dan uji disposable F1–F7 berjalan murni di atas saldo kanonikal beku (52.799 karton available per 1 Agustus).
 - **Lokasi Karantina (`WH/Stock/Karantina FMCG Maumbi`):** 8 quant, 320 pcs = 9 karton reject (Rp1.963.200,00 COGS).
-- **Rekomendasi Penanganan untuk Seeding Lanjutan:**
-  - Pada lingkungan disposable (sandbox CI/lokal), seeding Agustus–November berjalan di atas keadaan murni kanonikal (52.799 karton available).
-  - Pada database live Railway, kuota 100 karton × 150 SKU fixture mobile staging dapat disesuaikan lewat 1 jurnal penyesuaian persediaan balik (Inventory Adjustment minus 100 karton per SKU) bertanggal 31 Juli sebelum eksekusi pack Agustus, atau diperlakukan sebagai safety stock cadangan demo PWA.
 
 ---
 
@@ -137,16 +138,17 @@ Berkas acuan `data/registers/state_20260801.json` telah dibangun secara determin
 
 ```json
 {
-  "as_of_datetime": "2026-08-01T00:00:00+07:00",
+  "as_of_datetime": "2026-08-01T00:00:00+08:00",
+  "timezone": "Asia/Makassar (+08:00 WITA)",
   "summary": {
     "total_physical_cartons": 53837,
     "total_reserved_cartons": 1038,
     "total_available_cartons": 52799,
     "total_quarantine_cartons": 9,
-    "open_july_invoices_count": 309,
-    "open_july_invoices_dpp": "2135470252.80",
-    "carry_forward_august_invoices_count": 48,
-    "carry_forward_august_invoices_dpp": "187858691.40",
+    "open_posted_july_invoices_count": 309,
+    "open_posted_july_invoices_dpp": "2135470252.80",
+    "carry_forward_pending_august_invoices_count": 48,
+    "carry_forward_pending_august_invoices_dpp": "187858691.40",
     "total_open_ar_count": 357,
     "total_open_ar_dpp": "2323328944.20",
     "open_po_count": 1,
@@ -192,3 +194,4 @@ Berkas acuan `data/registers/state_20260801.json` telah dibangun secara determin
 | Kesiapan menuju F1 (Kontrak v2 & Gates) | **SIAP** | Pondasi baseline telah terkunci |
 
 Fase F0 selesai dengan sukses tanpa mutasi data server, tanpa dump di git, dan tanpa menyimpan kredensial.
+
