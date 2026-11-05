@@ -1,3 +1,7 @@
+## 2026-11-05 — codex — Perbaiki incoming operation type fixture PR95
+**[F]** Finance run `41970732989` pada `44b37f5` gagal di quotation pertama: `purchase.order.picking_type_id` NULL karena company disposable belum punya default receipt operation. Fixture kini membuat incoming picking type company-scoped dan mengikat quotation secara eksplisit. Tidak mengubah diagnostik/oracle nominal.
+**Diverifikasi:** job umum termasuk baseline upgrade `41970733046` PASS25m20s; [BU] rerun stock fixture. Full suite lokal sebelumnya timeout120s, bukan PASS. Tidak demo write/seed/merge/deploy; PR95 belum siap merge.
+
 ## 2026-11-05 — codex — Paket I0 costing ownership dan fondasi stok–GL
 **Berubah:** dari main `77a8ccc`, cabang `agen/finance-i0-costing-ownership`; private read-only stock source API, policy efektif sekarang, current quant ownership, WITA/posting scopes, grouped move-to-GL comparisons dan GL tanpa direct link. Fixture disposable dua company/skala, tiga costing methods, return/internal/consignment, grouped journals, balanced mutation, date/link/security probes; CI reports profile menambah purchase_stock. Dokumen `docs/finance/I0_COSTING_OWNERSHIP.md` memisahkan fondasi dari I3 penuh.
 **Diverifikasi:** [F] 17 tes oracle finance lokal, `python -m ruff check .`, 11 manifest dan diff check PASS. [BU] Native install/upgrade/fixture pada exact SHA menunggu CI; belum verdict PASS paket.

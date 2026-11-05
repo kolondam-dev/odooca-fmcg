@@ -298,3 +298,9 @@
 - Disposable native fixtures and independent standard AVCO FIFO figures, return internal consignment grouped journals and mutation/security/date probes; native execution pending CI.
 - Local 17 finance oracle tests, python -m ruff check ., 11 manifests PASS. No demo write, seed, merge or deploy; I0 and FIN01-58 remain incomplete.
 - Task managed by codex agent at 2026-11-05T11:54:22+07:00
+
+[2026-11-05T12:23:33+07:00] [INFO] Fix PR95 disposable receipt operation setup
+- Run41970732989 fails before valuation: purchase quotation picking_type_id NULL on disposable company; explicitly create company-scoped incoming type.
+- 17 finance oracle tests, Ruff, 11 manifests PASS; native rerun pending. Baseline upgrade41970733046 PASS25m20s separately; broad local suite timeout120s not PASS.
+- No oracle weakening, demo writes, merge or deploy.
+- Task managed by codex agent at 2026-11-05T12:23:33+07:00

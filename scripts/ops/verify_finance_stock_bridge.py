@@ -66,6 +66,11 @@ def build(env, suffix, scale):
         })
     vendor = scoped["res.partner"].create({"name": f"Finance vendor {suffix}"})
     owner = scoped["res.partner"].create({"name": f"Finance consignment owner {suffix}"})
+    incoming = scoped["stock.picking.type"].create({
+        "name": f"Finance receipts {suffix}", "code": "incoming", "sequence_code": f"FSR{suffix}",
+        "company_id": company.id, "default_location_src_id": locations["vendor"].id,
+        "default_location_dest_id": locations["shelf"].id,
+    })
     results = []
     for method, wanted in EXPECTED.items():
         category = scoped["product.category"].create({
@@ -79,7 +84,9 @@ def build(env, suffix, scale):
         receipts = []
         for price in (10, 20):
             # Explicit quotation source; not claimed as full PO/bill acceptance.
-            order = scoped["purchase.order"].create({"partner_id": vendor.id, "company_id": company.id})
+            order = scoped["purchase.order"].create({
+                "partner_id": vendor.id, "company_id": company.id, "picking_type_id": incoming.id,
+            })
             line = scoped["purchase.order.line"].create({
                 "order_id": order.id, "product_id": product.id, "name": product.name,
                 "product_qty": 5, "product_uom_id": product.uom_id.id,

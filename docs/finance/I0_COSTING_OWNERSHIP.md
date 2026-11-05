@@ -76,6 +76,11 @@ Gate native juga memeriksa:
 [F] Tes oracle lokal dapat dijalankan dengan
 `python -m unittest discover -s tests -p 'test_finance*.py'`.
 [BU] Native CI exact SHA masih harus dijalankan; definisi workflow bukan bukti PASS.
+Run awal `41970732989` pada `44b37f5`: instal/upgrade kandidat dan ledger lama
+lulus, fixture stock berhenti sebelum valuasi karena company disposable tidak
+memiliki default incoming picking type untuk quotation. Fixture sekarang membuat
+operation type company-scoped secara eksplisit; oracle angka tidak dilonggarkan.
+Upgrade baseline existing run `41970733046` lulus (25m20s), bukan bukti fixture baru.
 Profil reports menambahkan `purchase_stock` hanya pada database disposable.
 Artifact `finance-i0-candidate-evidence/stock-bridge.log` harus memuat JSON bukti
 serta `FINANCE_STOCK_BRIDGE=PASS`.
