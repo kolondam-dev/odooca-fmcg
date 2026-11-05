@@ -1,3 +1,7 @@
+## 2026-11-06T06:55:00+07:00 — claude-dev — F0b: rekonsiliasi stok live per SKU/lot (read-only)
+**Berubah:** scripts/ops/seed_f0b_stock_reconcile_live.py + tests/test_seed_f0b_stock_reconcile.py (5 tes); plan Bab 9C: koreksi G-05 (236 lot kanonikal = 236 lot live; atribusi fixture 15.000 karton belum terbukti).
+**Diverifikasi:** 5 tes lokal lulus. **Belum diuji:** [BU] eksekusi pada DB live (antigravity), ruff/CI. Tidak ada mutasi/deploy.
+
 ## 2026-11-05T15:35:00+07:00 — antigravity — PR93: penolakan klaim sepihak nominal tagihan di baris pembayaran
 **Berubah:** scripts/ops/seed_v2_gates.py: menghapus fallback nominal dari baris pembayaran (ar_collections/ap_payments); nominal expected_total wajib berasal dari sumber terverifikasi (invoices, po_headers, atau opening balances); menolak pelunasan dan mempertahankan dokumen di saldo penutupan replay_closing saat saldo sumber tidak tersedia; tests/test_seed_v2_gates.py: pembaruan tes regresi reproduksi supervisor untuk baris pembayaran yang mengklaim total_dpp / invoice_total_with_ppn sendiri (82 tes); integrasi main PR95.
 **Diverifikasi:** 82 tes unit gates v2 lulus, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon).
