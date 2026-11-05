@@ -1,3 +1,8 @@
+## 2026-11-05 — codex — PR95 merged dan persiapan I1 foundation
+**[F]** Pemilik menerima PR95 pada `b2bd88e`, menutup P2 setelah native4 mutation/rollback dan 12 job hijau; merge `abef7bb` terverifikasi. Permintaan terbaru: implementasi lanjut, deployment sekaligus belakangan.
+**Berubah:** cabang `agen/finance-i1-foundation` dari main `abef7bb`; pin account-financial-tools SHA hasil audit, addon id_finance_foundation (empat role, shortcut lima wizard OCA, render guards), opt-in versioned activation planner/registry attestation full dependency closure, CI persisted source-preservation install/upgrade/replay dan role probes. Lihat `docs/finance/I1_FOUNDATION.md` untuk gate tersisa/runbook.
+**Diverifikasi:** [F] 23 tes finance lokal, 12 manifest dan parsing YAML/XML PASS; [BU] native CI exact HEAD belum dijalankan. Persiapan I1 bukan penutupan I0/FIN01–58; tidak modifikasi default activation/init.sh, chart/costing/demo, seed atau deployment. Snapshot dan COA sign-off tetap gate sebelum aktivasi demo.
+
 ## 2026-11-05 — codex — Koreksi review P2 unmatched stock GL pada PR95
 **[F]** Pemilik HOLD `4bb761c` meskipun 12 job hijau: extra GL key di jurnal tertaut hilang dari loop. Produksi kini memakai union gerakan dan semua GL key pada akun stok current-mapped; unmatched key ditampilkan dengan issue dan GL IDs, termasuk product kosong/net-zero. Oracle menolak anomaly selain selisih nominal.
 **Regresi:** fungsi produksi lokal + mutasi native balanced debit stok/kredit lawan untuk produk lain dan tanpa produk pada skala1/7; rollback wajib mengembalikan grup jurnal persis baseline. [BU] native rerun exact HEAD. Tidak melonggarkan invariant, demo write/seed/merge/deploy; PR95 tetap HOLD untuk review ulang.

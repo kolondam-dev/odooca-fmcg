@@ -5,6 +5,10 @@ on:
     paths:
       - 'addons/id_base/**'
       - 'addons/id_finance_reporting/**'
+      - 'addons/id_finance_foundation/**'
+      - 'scripts/ops/finance_activation.py'
+      - 'scripts/ops/verify_finance_foundation.py'
+      - 'tests/test_finance_activation.py'
       - 'scripts/ops/finance_i0*'
       - 'scripts/ops/verify_finance_golden_ledger.py'
       - 'scripts/ops/verify_finance_ledger_security.py'
@@ -49,6 +53,7 @@ jobs:
             'bank:account_reconcile_oca,account_statement_import_sheet_file_xlsx'
             'credit:account_credit_control,sale_financial_risk'
             'native:l10n_id_efaktur_coretax,stock_landed_costs,hr_expense,payroll'
+            'foundation:id_finance_foundation'
           )
           for profile in "${profiles[@]}"; do
             name="${profile%%:*}"
@@ -78,6 +83,28 @@ jobs:
           assert not report['errors'], report['errors']
           print('FINANCE_I0_PROFILE_INSTALLED_AND_UPGRADED', sys.argv[1])
           PY
+          done
+      - name: Persisted finance foundation activation and upgrade preservation
+        run: |
+          set -euo pipefail
+          index=0
+          for phase in prepare install verify upgrade verify; do
+            index=$((index + 1))
+            if [ "$phase" = install ] || [ "$phase" = upgrade ]; then
+              flag=-i; if [ "$phase" = upgrade ]; then flag=-u; fi
+              docker run --rm --network host --entrypoint bash fmcg-finance:i0 -c '
+                odoo -d finance_i0_reports_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
+                  --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
+                  "$1" id_finance_foundation --stop-after-init --no-http
+              ' -- "$flag" 2>&1 | tee "finance-i0-evidence/foundation-${index}-${phase}.log"
+            else
+              docker run --rm -i --network host --entrypoint bash -e FINANCE_FOUNDATION_PHASE="$phase" fmcg-finance:i0 -c '
+                odoo shell -d finance_i0_reports_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
+                  --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+              ' < scripts/ops/verify_finance_foundation.py 2>&1 | tee "finance-i0-evidence/foundation-${index}-${phase}.log"
+              if [ "$phase" = prepare ]; then marker=FINANCE_FOUNDATION_PREPARE; else marker=FINANCE_FOUNDATION; fi
+              grep -q "^${marker}=PASS$" "finance-i0-evidence/foundation-${index}-${phase}.log"
+            fi
           done
       - name: Minimal golden ledger against actual OCA Trial Balance
         run: |

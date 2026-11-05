@@ -322,3 +322,10 @@
 - Add local production-function counterexamples, no-product/other-mapped-account/net-zero/missing-GL coverage; native balanced extra-product and unset-product mutations at1x/7x require rejection then exact journal baseline restoration.
 - 20 finance tests Ruff 11 manifests diff-check PASS; native exact-SHA rerun pending. PR95 remains HOLD, no demo write seed merge deploy.
 - Task managed by codex agent at 2026-11-05T14:33:37+07:00
+
+[2026-11-05T15:42:55+07:00] [INFO] Prepare I1 finance foundation without demo activation
+- Base main abef7bb after owner PASS and merge PR95. Deployment deferred by owner; no default init activation or demo changes.
+- Pin audited account-financial-tools SHA; new LGPL3 id_finance_foundation roles/navigation and OCA render guards. Explicit profile planner/attestation covers registry dependency closure with replay/drift refusal.
+- CI adds clean foundation install/upgrade and persisted ledger/stock policy fingerprint preservation plus five-role native probes. Local23 finance tests Ruff12 manifests YAML/XML PASS; native exact-SHA pending.
+- I0 latest live sources/approved COA and full I1/I2-I8 remain open; no seed merge deploy.
+- Task managed by codex agent at 2026-11-05T15:42:55+07:00
