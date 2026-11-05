@@ -1,3 +1,7 @@
+## 2026-11-05T08:43:19+07:00 — codex — Paket I0 ledger native dan keamanan
+**Berubah:** branch `agen/finance-i0-ledger-security` dari main `3a96a49`; runner extended, workflow profil reports dengan mobile groups asli, enam tes oracle lokal dan `docs/finance/I0_LEDGER_SECURITY.md`. Sesuai permintaan pemilik, satu PR menggabungkan isolasi company tanpa filter, reader/accountant/sales/mobile ACL, restricted-source mutation, invoice/bill/refund/payment/reconciliation native dua periode, historical partial cutoff, unreconcile rollback dan archived partner.
+**Diverifikasi:** Ruff, 6 tes lokal, 10 manifest dan YAML PASS. **[BU]** Runtime PostgreSQL/OCA CI dan review exact HEAD. Expected angka tidak dilonggarkan; I0/FIN01–58 tetap belum diterima penuh. Semua company tambahan hanya fixture disposable yang di-rollback; tidak mengubah DB demo, merge atau deploy.
+
 ## 2026-11-05T08:11:44+07:00 — codex — I0 lanjutan: golden ledger minimal OCA
 **[F]** PR89 merged ke main `6af00a9`; review pemilik PASS hanya audit awal/containment (HEAD `c3a7a79`, 12 job PR unik, 207 tes Odoo, lima profil kandidat, persistent upgrade/replay). Bukan PASS I0 keseluruhan.
 **Berubah:** branch baru `agen/finance-i0-golden-ledger`, runner disposable dua company/dua periode dengan angka kontrol eksplisit terhadap `_get_data` Trial Balance OCA asli; posted/draft noise, balanced mutation rejection dan baseline-after-rollback; workflow dan docs finance diperbarui.

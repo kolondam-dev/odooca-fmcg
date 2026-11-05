@@ -255,3 +255,10 @@
 - Calls production OCA Trial Balance, no copied report algorithm; source pin API inspected. Local3 oracle tests Ruff manifests YAML PASS; native CI pending.
 - No demo DB writes merge deploy; untracked local full_dataset_runtime artifacts left untouched.
 - Task managed by codex agent at 2026-11-05T08:11:44+07:00
+
+[2026-11-05T08:43:19+07:00] [INFO] Implement broader finance ledger security and native reconciliation package
+- Owner requested larger cohesive next PR. Main3a96a49 branch agen/finance-i0-ledger-security.
+- Added unfiltered company TB, empty periods, real reader/accountant/sales/mobile roles, forbidden writes/foreign company, restricted-source mutation baseline rollback.
+- Added native invoices bills refunds payments partial reconciliation August settlement dated residual oracle unreconcile rollback archived partner, two companies scales1 and7.
+- Six local tests Ruff ten manifests YAML PASS; native CI pending. No demo changes merge deploy. Docs I0_LEDGER_SECURITY records boundaries.
+- Task managed by codex agent at 2026-11-05T08:43:19+07:00
