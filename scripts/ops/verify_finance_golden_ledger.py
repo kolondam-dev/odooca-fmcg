@@ -48,8 +48,12 @@ EVENTS = (
 
 def assert_figures(actual, expected, accounts, scale=1):
     """Fail on missing/extra accounts and every independently specified amount."""
-    if set(actual) != {account.id for account in accounts.values()}:
-        raise AssertionError("Golden ledger account coverage mismatch")
+    expected_ids = {account.id for account in accounts.values()}
+    if set(actual) != expected_ids:
+        raise AssertionError(
+            f"Golden ledger account coverage mismatch: missing={sorted(expected_ids - set(actual))}, "
+            f"extra={sorted(set(actual) - expected_ids)}, scale={scale}"
+        )
     for key, figures in expected.items():
         row = actual[accounts[key].id]
         observed = tuple(row[name] for name in (
@@ -78,10 +82,14 @@ def make_entry(env, fixture, label, date, balances, posted=True):
     return move
 
 
-def build_fixture(env, suffix, scale):
+def build_fixture(env, suffix, scale, events=EVENTS, draft_noise=True):
     currency = env.ref("base.IDR")
     currency.active = True
-    company = env["res.company"].create({
+    # Odoo's install_l10n_modules schedules a chart load on precommit for a
+    # country-only company. Later savepoint flushes can run that hook and add a
+    # complete chart to this deliberately eight-account synthetic fixture.
+    # Use the native fixture/loading context, not a permissive report assertion.
+    company = env["res.company"].with_context(chart_template_load=True).create({
         "name": f"FINANCE GOLDEN {suffix}", "currency_id": currency.id,
         "country_id": env.ref("base.id").id,
     })
@@ -98,17 +106,19 @@ def build_fixture(env, suffix, scale):
     })
     partner = env["res.partner"].create({"name": f"Golden partner {suffix}", "company_id": company.id})
     fixture = company, accounts, journal, partner, scale
-    for label, date, balances in EVENTS:
+    for label, date, balances in events:
         make_entry(env, fixture, label, date, balances)
-    make_entry(env, fixture, "draft_noise", "2026-07-31", {"cash": 999, "equity": -999}, posted=False)
+    if draft_noise:
+        make_entry(env, fixture, "draft_noise", "2026-07-31", {"cash": 999, "equity": -999}, posted=False)
     return fixture
 
 
-def trial_balance(env, fixture, date_from, date_to, posted=True):
+def trial_balance(env, fixture, date_from, date_to, posted=True, scoped_filters=True):
     company, accounts, journal, _partner, _scale = fixture
     report = env["report.account_financial_report.trial_balance"].with_company(company)
     totals, _accounts_data, _partners = report._get_data(
-        account_ids=[account.id for account in accounts.values()], journal_ids=journal.ids,
+        account_ids=[account.id for account in accounts.values()] if scoped_filters else [],
+        journal_ids=journal.ids if scoped_filters else [],
         partner_ids=[], company_id=company.id, date_to=date_to, date_from=date_from,
         foreign_currency=False, only_posted_moves=posted, show_partner_details=False,
         hide_account_at_0=False, unaffected_earnings_account=False,

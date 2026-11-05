@@ -1,14 +1,38 @@
+## 2026-11-05T11:24:42+07:00 — codex — PR91 resolusi konflik dengan main PR92
+**Berubah:** kedua riwayat HANDOFF dan codex.log dipertahankan utuh; merge main `13c43d3` ke PR91. Source/fixture/security sama dengan HEAD review `ccf4530`.
+**Diverifikasi:** preservasi verbatim kedua parent PASS; 14 tes finance dan 11 manifest diperiksa pada pohon hasil integrasi. Bukti native HEAD lama dibedakan dari CI HEAD integrasi yang harus dijalankan ulang.
+**Berikutnya:** pemilik mengotorisasi resolusi dan merge bila CI hijau. Tidak instal modul pada demo, tidak seed/deploy manual atau perubahan produksi. I0/FIN01–58 tetap terbuka.
+
+## 2026-11-05T09:17:46+07:00 — codex — Pulihkan security-domain cache pasca-mutasi
+**[F]** Run `41953123209`: accountant A/B account set dan nominal kini eksak. Berikutnya baseline setelah rollback global ir.rule gagal karena registry ormcache menyimpan domain restriksi; `invalidate_all` hanya membuang field cache. Fixture kini memanggil `env.registry.clear_cache()` sesudah rollback rule, sesuai cache yang dibersihkan native `ir.rule.create/write/unlink`.
+**Diverifikasi:** 14 tes finance lokal/Ruff PASS; **[BU]** native rerun dan lifecycle invoice yang belum dicapai. Assertion baseline tetap utuh. Tidak live write/merge/deploy; PR91 HOLD.
+
 ## 2026-11-05T09:14:45+07:00 — codex — PR92: review rencana dan resolusi konflik main
 **Berubah:** konflik HANDOFF diselesaikan dengan mempertahankan semua entri kedua parent secara utuh; main PR89/90 diintegrasikan. Catatan acuan dokumen menegaskan Bab 9A/batas 5 Nov, K5–K9 belum disahkan, serta scope draft seed vs live/carry-forward.
 **Diverifikasi:** [F] Ruff, 10 manifest, diff whitespace, kalender repo 80/81 hari sampai 4/5 Nov, dan preservasi entri HANDOFF kedua parent PASS. Tidak ada perubahan loader/gate/register/konfigurasi atau data produksi dibanding main.
 **Belum diuji:** CI integrasi HEAD baru menunggu; semua klaim data live/estimasi tetap [BU] sesuai dokumen. Merge rencana bukan izin menjalankan seed live.
 **Berikutnya:** merge PR92 hanya setelah CI HEAD integrasi hijau sesuai izin pemilik; tidak menjalankan deploy manual/seed.
 
+## 2026-11-05T09:07:04+07:00 — codex — Stabilkan fixture terhadap chart deferred
+**[F]** Run `41952023071`: semua 8 akun/nominal expected benar, tetapi 118 akun nol ditambahkan setelah actor/savepoint. Source Odoo `company.install_l10n_modules` menjadwalkan chart di precommit untuk company ber-country tanpa chart. Fixture company kini memakai native `chart_template_load=True`; assert exact account set dan chart tetap kosong dipertahankan, bukan menyaring akun ekstra/hide-zero.
+**Diverifikasi:** Ruff/14 local finance tests PASS. **[BU]** Native rerun, invoice lifecycle belum dicapai. Tidak mengubah chart/data demo atau acceptance mapping COA; PR91 tetap HOLD.
+
 ## 2026-11-05T08:59:14+07:00 — claude-dev agent — Keputusan pemilik K1-K4 dan plan mesin harian
 **Berubah:** docs/blueprints/SEED_AGUSTUS_NOVEMBER_ANALISIS_DAN_PLAN.md: Bab 9A (keputusan + spesifikasi slice presisi), fase F9, catatan perubahan F0/F2/F4/F8. Tidak ada perubahan data/loader/gate/server.
 **Keputusan:** seed s/d 5 Nov; mesin harian hanya 6 Nov+ (shell, dijalankan antigravity); Juli beku, kalibrasi biaya+retur+diskon; opsi A tambah ke DB live dengan micro-slicing atomik/idempoten/presisi; campuran principal organik; dokumen live PWA = fakta.
 **Belum diuji:** [BU] isi DB live, guard loader untuk DB demo, waktu per slice. K5-K9 default [A].
 **Berikutnya:** F1 Kontrak Seed v2 + tes mutasi (merah dulu) setelah persetujuan memulai.
+## 2026-11-05T08:57:30+07:00 — codex — Diagnosis cakupan accountant
+**[F]** Run `41950898720` lolos lima profil dan golden minimal, extended gagal account coverage pada accountant company switch setelah reader/sales/mobile negative checks. Native invoice lifecycle belum dicapai, tidak diklaim PASS.
+**Berubah:** diagnostics missing/extra account IDs dan payload scope fixture sintetis untuk menemukan sumber mismatch; assertion tidak dilonggarkan. Ruff/14 unit finance PASS, native CI HEAD koreksi menunggu. PR91 HOLD, tidak merge/deploy/live write.
+
+## 2026-11-05T08:47:02+07:00 — codex — Boundary report Trial Balance server-side
+**Berubah:** addon `id_finance_reporting` LGPL-3, guard accounting role + explicit active authorized company pada `_get_data`/`_get_report_values`, tanpa menggandakan engine OCA atau sudo. Wizard OCA terbuka base.group_user dan Sales native punya read account/AML; menu bukan boundary cukup. Negative tests mencakup render-data.
+**Diverifikasi:** 14 tes finance lokal, 11 manifest, Ruff PASS. **[BU]** Instal/upgrade addon dan native role/lifecycle pada CI HEAD baru. Addon hanya diaktivasi pada profil disposable, bukan INIT_MODULES atau demo DB. Tidak merge/deploy.
+
+## 2026-11-05T08:43:19+07:00 — codex — Paket I0 ledger native dan keamanan
+**Berubah:** branch `agen/finance-i0-ledger-security` dari main `3a96a49`; runner extended, workflow profil reports dengan mobile groups asli, enam tes oracle lokal dan `docs/finance/I0_LEDGER_SECURITY.md`. Sesuai permintaan pemilik, satu PR menggabungkan isolasi company tanpa filter, reader/accountant/sales/mobile ACL, restricted-source mutation, invoice/bill/refund/payment/reconciliation native dua periode, historical partial cutoff, unreconcile rollback dan archived partner.
+**Diverifikasi:** Ruff, 6 tes lokal, 10 manifest dan YAML PASS. **[BU]** Runtime PostgreSQL/OCA CI dan review exact HEAD. Expected angka tidak dilonggarkan; I0/FIN01–58 tetap belum diterima penuh. Semua company tambahan hanya fixture disposable yang di-rollback; tidak mengubah DB demo, merge atau deploy.
 
 ## 2026-11-05T08:11:44+07:00 — codex — I0 lanjutan: golden ledger minimal OCA
 **[F]** PR89 merged ke main `6af00a9`; review pemilik PASS hanya audit awal/containment (HEAD `c3a7a79`, 12 job PR unik, 207 tes Odoo, lima profil kandidat, persistent upgrade/replay). Bukan PASS I0 keseluruhan.

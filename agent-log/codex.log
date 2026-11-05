@@ -256,6 +256,39 @@
 - No demo DB writes merge deploy; untracked local full_dataset_runtime artifacts left untouched.
 - Task managed by codex agent at 2026-11-05T08:11:44+07:00
 
+[2026-11-05T08:43:19+07:00] [INFO] Implement broader finance ledger security and native reconciliation package
+- Owner requested larger cohesive next PR. Main3a96a49 branch agen/finance-i0-ledger-security.
+- Added unfiltered company TB, empty periods, real reader/accountant/sales/mobile roles, forbidden writes/foreign company, restricted-source mutation baseline rollback.
+- Added native invoices bills refunds payments partial reconciliation August settlement dated residual oracle unreconcile rollback archived partner, two companies scales1 and7.
+- Six local tests Ruff ten manifests YAML PASS; native CI pending. No demo changes merge deploy. Docs I0_LEDGER_SECURITY records boundaries.
+- Task managed by codex agent at 2026-11-05T08:43:19+07:00
+
+[2026-11-05T08:47:02+07:00] [INFO] Enforce Trial Balance role and company boundaries
+- Added id_finance_reporting LGPL3 addon delegating OCA engine with accounting-role explicit-active-company guard at data and render boundaries.
+- Source inspection: OCA wizard ACL base.group_user plus native sale grants read account AML; menus not sufficient boundary. No blanket AML access removed from Sales.
+- Reports disposable profile installs boundary addon; real-user negatives include render path; no production activation. Local14 finance tests eleven manifests Ruff PASS; native CI pending.
+- Task managed by codex agent at 2026-11-05T08:47:02+07:00
+
+[2026-11-05T08:57:30+07:00] [INFO] Diagnose accountant company scope coverage failure
+- Native run41950898720 passed module profiles and minimal golden; extended failed accountant company-switch coverage after reader and sales/mobile denial checks.
+- Added explicit missing/extra account IDs and synthetic accountant scope diagnostics; no oracle loosened. Native lifecycle not reached and not claimed PASS.
+- Task managed by codex agent at 2026-11-05T08:57:30+07:00
+
+[2026-11-05T09:07:04+07:00] [INFO] Stabilize synthetic company fixture against deferred chart load
+- Run41952023071 diagnosed exact8 expected account values correct plus118 zero accounts after actor savepoints, not lost ledger source.
+- Odoo company.install_l10n_modules schedules chart load at precommit; fixture now uses native chart_template_load context. Exact account-set oracle unchanged; assert chart absent added.
+- Only disposable fixture setup changed.14 local finance tests Ruff PASS; native rerun required, no full PASS claim.
+- Task managed by codex agent at 2026-11-05T09:07:04+07:00
+
+[2026-11-05T09:17:46+07:00] [INFO] Clear cached rule domain after mutation rollback
+- Run41953123209 confirms both accountant company scopes now exact8 accounts with expected amounts; next failure baseline after temporary rule rollback.
+- Odoo ir.rule caches domains in registry ormcache; PostgreSQL rollback plus invalidate_all leaves stale domain. Clear registry cache after rolled-back rule fixture; retain numeric oracle.
+- Fourteen local tests Ruff PASS. Native lifecycle pending, no demo changes merge deploy.
+- Task managed by codex agent at 2026-11-05T09:17:46+07:00
 [2026-11-05T09:14:45+07:00] [INFO] PR92 review dan resolusi konflik HANDOFF
 - Semua entri kedua parent dipertahankan; acuan keputusan Bab9A diperjelas tanpa perubahan loader/data. Ruff/10 manifest/preservasi log/kalender PASS; CI integrasi menunggu.
 - Task managed by codex agent at 2026-11-05T09:14:45+07:00
+
+[2026-11-05T11:24:42+07:00] [INFO] PR91 konflik HANDOFF/log diselesaikan
+- Seluruh entri kedua parent dipertahankan; source/security/fixture tidak berubah dari ccf4530. CI integrasi wajib hijau sebelum merge sesuai izin pemilik.
+- Task managed by codex agent at 2026-11-05T11:24:42+07:00
