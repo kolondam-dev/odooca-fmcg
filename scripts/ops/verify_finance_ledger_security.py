@@ -89,6 +89,12 @@ def check_roles_and_scope(env, fixtures):
         evidence.append(denied(env, lambda e=user_env: golden.make_entry(e, a, "forbidden", "2026-07-01", {"cash": 1, "equity": -1}), f"{label}_posting_denied"))
     for fixture in fixtures:
         totals = golden.trial_balance(accountant, fixture, "2026-07-01", "2026-07-31", scoped_filters=False)
+        print("FINANCE_ACCOUNTANT_SCOPE=" + json.dumps({
+            "company": fixture[0].name, "user_companies": accountant.user.company_ids.ids,
+            "context_companies": accountant.context.get("allowed_company_ids"),
+            "account_rows": {str(key): row for key, row in totals.items()},
+            "fixture_accounts": {key: account.id for key, account in fixture[1].items()},
+        }, sort_keys=True, default=str))
         golden.assert_figures(totals, golden.JULY, fixture[1], fixture[4])
     evidence.append({"case": "accountant_company_switch", "result": "PASS"})
     # Assert role assignment has not inherited system/admin through defaults.

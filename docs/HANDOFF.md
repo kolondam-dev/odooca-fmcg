@@ -1,3 +1,7 @@
+## 2026-11-05T08:57:30+07:00 — codex — Diagnosis cakupan accountant
+**[F]** Run `41950898720` lolos lima profil dan golden minimal, extended gagal account coverage pada accountant company switch setelah reader/sales/mobile negative checks. Native invoice lifecycle belum dicapai, tidak diklaim PASS.
+**Berubah:** diagnostics missing/extra account IDs dan payload scope fixture sintetis untuk menemukan sumber mismatch; assertion tidak dilonggarkan. Ruff/14 unit finance PASS, native CI HEAD koreksi menunggu. PR91 HOLD, tidak merge/deploy/live write.
+
 ## 2026-11-05T08:47:02+07:00 — codex — Boundary report Trial Balance server-side
 **Berubah:** addon `id_finance_reporting` LGPL-3, guard accounting role + explicit active authorized company pada `_get_data`/`_get_report_values`, tanpa menggandakan engine OCA atau sudo. Wizard OCA terbuka base.group_user dan Sales native punya read account/AML; menu bukan boundary cukup. Negative tests mencakup render-data.
 **Diverifikasi:** 14 tes finance lokal, 11 manifest, Ruff PASS. **[BU]** Instal/upgrade addon dan native role/lifecycle pada CI HEAD baru. Addon hanya diaktivasi pada profil disposable, bukan INIT_MODULES atau demo DB. Tidak merge/deploy.

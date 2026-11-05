@@ -48,8 +48,12 @@ EVENTS = (
 
 def assert_figures(actual, expected, accounts, scale=1):
     """Fail on missing/extra accounts and every independently specified amount."""
-    if set(actual) != {account.id for account in accounts.values()}:
-        raise AssertionError("Golden ledger account coverage mismatch")
+    expected_ids = {account.id for account in accounts.values()}
+    if set(actual) != expected_ids:
+        raise AssertionError(
+            f"Golden ledger account coverage mismatch: missing={sorted(expected_ids - set(actual))}, "
+            f"extra={sorted(set(actual) - expected_ids)}, scale={scale}"
+        )
     for key, figures in expected.items():
         row = actual[accounts[key].id]
         observed = tuple(row[name] for name in (

@@ -268,3 +268,8 @@
 - Source inspection: OCA wizard ACL base.group_user plus native sale grants read account AML; menus not sufficient boundary. No blanket AML access removed from Sales.
 - Reports disposable profile installs boundary addon; real-user negatives include render path; no production activation. Local14 finance tests eleven manifests Ruff PASS; native CI pending.
 - Task managed by codex agent at 2026-11-05T08:47:02+07:00
+
+[2026-11-05T08:57:30+07:00] [INFO] Diagnose accountant company scope coverage failure
+- Native run41950898720 passed module profiles and minimal golden; extended failed accountant company-switch coverage after reader and sales/mobile denial checks.
+- Added explicit missing/extra account IDs and synthetic accountant scope diagnostics; no oracle loosened. Native lifecycle not reached and not claimed PASS.
+- Task managed by codex agent at 2026-11-05T08:57:30+07:00
