@@ -1,3 +1,22 @@
+## 2026-11-05T11:15:00+07:00 — antigravity — Fase F0: preflight live Railway, rekonsiliasi Juli, dan baseline 1 Agustus
+**Berubah:**
+- Hasil preflight read-only live Railway (`pleasant-caring`) dilaporkan di `docs/reviews/SEED_F0_PREFLIGHT_AND_STATE_AUDIT.md`.
+- Dekonstruksi persediaan G-05 terbukti eksak: 67.799 karton di WH/Stock = 52.799 karton sisa kanonikal Juli (setelah 48 DO 1 Agu terkirim) + 15.000 karton fixture staging 30 Okt (100 karton × 150 SKU).
+- 3 SO live/test 2026-11-04 (S06407 cancel, S06408 cancel, S06409 draft) tercatat tanpa dampak mutasi stok/GL.
+- Keputusan K1–K4 dikunci mengikat; rekomendasi rasional default K5–K9 ditetapkan (modal awal Rp5 M, katalog OPEX, retur bertahap, PPN masukan terpadu, limit kredit strict).
+- Menerbitkan `data/registers/state_20260801.json` via `scripts/ops/generate_state_20260801.py`: 53.837 fisik, 1.038 reservasi, 9 karantina, 357 AR terbuka (DPP Rp2.323.328.944,20), 1 open AP Unilever (DPP Rp2.899.971.200), dan nomor urut terakhir.
+- Uji unit `tests/test_state_20260801.py` (4 tests PASS).
+**Diverifikasi:**
+- [F] Postgres read-only proxy audit PASS.
+- [F] `python -m unittest tests/test_state_20260801.py` PASS (4 tests).
+- [F] `python -m ruff check .` PASS (clean).
+- [F] `python scripts/check_manifests.py` PASS (10 addons OK).
+- [F] `verify_seed_invariants.py` & `verify_seed_acceptance.py` PASS.
+**Belum diuji:**
+- [BU] Eksekusi pack Agustus (menunggu F1–F3). Tidak ada penulisan data/mutasi ke server Railway dan tidak ada restore/reset DB.
+**Berikutnya:**
+- Menyerahkan hasil F0 untuk review dan melanjutkan ke F1 (Kontrak v2 + gates + tes mutasi).
+
 ## 2026-11-05T09:14:45+07:00 — codex — PR92: review rencana dan resolusi konflik main
 **Berubah:** konflik HANDOFF diselesaikan dengan mempertahankan semua entri kedua parent secara utuh; main PR89/90 diintegrasikan. Catatan acuan dokumen menegaskan Bab 9A/batas 5 Nov, K5–K9 belum disahkan, serta scope draft seed vs live/carry-forward.
 **Diverifikasi:** [F] Ruff, 10 manifest, diff whitespace, kalender repo 80/81 hari sampai 4/5 Nov, dan preservasi entri HANDOFF kedua parent PASS. Tidak ada perubahan loader/gate/register/konfigurasi atau data produksi dibanding main.
