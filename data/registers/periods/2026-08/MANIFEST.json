@@ -1,0 +1,113 @@
+{
+  "period": "2026-08",
+  "pack_start": "2026-08-01",
+  "pack_end": "2026-08-31",
+  "generator_commit": "37ef286f9c4a6739e2da513e1675fc525c9527d6",
+  "canonical_july_15_register_fingerprints": {
+    "customer_registry_354.csv": "9303e7fd9aab35134e481611545a9c8704f6e36b66e3e6c10ddf43c386250fb3",
+    "initial_stock_20260701.csv": "6a4539fb978eab00c60ac071f222574a054cfbcff5bfc19e999fd9a3275e6408",
+    "inbound_po_intransit_june_headers.csv": "3643efa63031fac441e68bfb5118ece350415056ffd92f6df1d8bd61d1d6852d",
+    "inbound_po_intransit_june_lines.csv": "fec4f7491fc3b29bfaccac0b98dd7281a304e329c7d3b267753549f35d70a91c",
+    "pjp_july_2026_matrix.csv": "f17fc52b03575b82498062d6dc89baad2c5235a4e09ff3f15524f4a359e3a67e",
+    "perpetual_sales_orders.csv": "fbfc22e86cb8b0678938a9a83485814d64e391b359d2980a9828d4fd9282f35f",
+    "perpetual_order_lines.csv": "a011c8ebb690dc7724b1d9c6fee8ad01fc6bc899cc8df14ba88aac31ede8bf56",
+    "perpetual_deliveries.csv": "dcd62acddbaa1829f343e3f2fde6caa5496b16641687526696499eae49084b19",
+    "perpetual_order_rejections.csv": "ace21a299e0361e4e8838f679e33120592f98fc20e3b66162610b61fea589578",
+    "perpetual_invoices.csv": "b58486598cf69e0aeb4ad9f28c1eb8fadc619fbb3324ac4788ca6982e4aef398",
+    "perpetual_ar_collections.csv": "0214da5d755dacdc004a13b17a9729e436ebfac6467b8253213d961c045bd906",
+    "perpetual_ap_payments.csv": "7a5083096ac0d96795c24972f33946d58989f7a3b1567b2fe649d08f585467f3",
+    "perpetual_opex_payroll.csv": "48017137991dac72f66d785cae67c132603c315f3d93cbd7a09a40daddf60625",
+    "perpetual_daily_stock_cards.csv": "40bc3e2d2fe92d2cb4273a431e6af2090e8832237c302379d24e53ad8314fc7f",
+    "perpetual_stock_event_ledger.csv": "b5a326f8480effcbeba6e130cd290cb2c4de4fad4e721e0e4f6276943422bf86"
+  },
+  "configuration": {
+    "target_net_dpp": "4235000000.00",
+    "target_discount_pct": "2.50",
+    "target_rejection_pct": "2.40",
+    "opening_cash": "5000000000.00",
+    "tax": {
+      "rate": "0.11",
+      "source": "PMK 131/2024 & UU HPP No. 7/2021",
+      "source_date": "2024-12-31",
+      "effective_from": "2025-01-01"
+    },
+    "min_lead_days": {
+      "PRIN-WINGS": 10,
+      "PRIN-SANTOS": 10,
+      "PRIN-MAYORA": 13,
+      "PRIN-UNILEVER": 14
+    },
+    "narrative_bands": {
+      "net_dpp": [
+        "4000000000.00",
+        "4500000000.00"
+      ],
+      "discount_pct": [
+        "2.00",
+        "3.20"
+      ],
+      "rejection_pct": [
+        "1.80",
+        "3.00"
+      ],
+      "active_outlets": [
+        "200",
+        "215"
+      ]
+    }
+  },
+  "metrics_summary": {
+    "gross_dpp": "4256480000.00",
+    "discount_dpp": "106412000.00",
+    "net_dpp": "4150068000.00",
+    "discount_pct": "2.50",
+    "rejection_dpp": "83726600.00",
+    "rejection_pct": "1.97",
+    "active_outlets": 207,
+    "total_sales_orders": 1240,
+    "total_deliveries": 1190,
+    "total_invoices": 1190,
+    "total_ar_collections": 1202,
+    "total_po_headers": 16,
+    "total_ap_payments": 1,
+    "total_opex_entries": 26,
+    "total_stock_events": 4866
+  },
+  "closing_summary": {
+    "total_physical_cartons": 63402,
+    "total_reserved_cartons": 771,
+    "total_available_cartons": 62631,
+    "total_quarantine_cartons": 314,
+    "open_invoices_count": 345,
+    "carry_invoices_count": 0,
+    "open_po_count": 16,
+    "in_transit_po_count": 0,
+    "pending_dos_count": 0
+  },
+  "files_sha256": {
+    "ap_payments.csv": "ca81b087135cccb513632faf1db0705d341952c0eec8b1e5afdd886a1b1c7b1d",
+    "ap_payments.json": "87eac308a05a38768cb3c666ab17df00df68d38e255dc8b54f2fb71aa3cb1874",
+    "ar_collections.csv": "472b375ef833f710dfb96fa83b514cc82566147a649ab14ec4d0c5acde008096",
+    "ar_collections.json": "b3f0a3f3809ed23fa2c46f6800bb926d190f39d462a7eddc33850b50e28ea740",
+    "closing_state_20260831.json": "d4721d9894af6f89c61883c13ca85aa376a226ba77a16c7fb149d0cd65c03c67",
+    "deliveries.csv": "ee9b71c9759cb987f4cc8ad91568506cc2f9a74e14f7ee6a018e5f0d4476f92d",
+    "deliveries.json": "d6742f2c086cea6ed0610384367714713a7848e7d08145f4e8b8697ad25ce943",
+    "invoices.csv": "81bcaf7471ed989ee7be813cf893c9896e80ede17a0af5ffaf51a952c938ab48",
+    "invoices.json": "8c29c5dc1b1e008780f2662b4414a145a59aa07b908e8136c796c26702c61e0a",
+    "narrative_report.json": "119057c637eec3e17c286c1169b82ec79fb19f96e539773fe47a21b3b5b5d313",
+    "opex.csv": "aa88ccfae884f7a2d1f4e19812e1b21035bf75b73d1bb79fde73fb7a18abd33f",
+    "opex.json": "6023c21d7612315b8d58c004c13ac1de667b9d74e072d03b23da6d3a253c6399",
+    "order_lines.csv": "4af6d8ee2d24618c13f2c07b3170e2cffdbb38fd2f4b56b24a24090e67bf013c",
+    "order_lines.json": "5bc86911c03fe24bec2b6a55aa834f2bc5caa9fcf2e0cac3244ebde6ca755e68",
+    "po_headers.csv": "70cc526023495cfde784109f506c0ae44a7f5fc70713b7b154e4293cfb6a2d34",
+    "po_headers.json": "62f49553533945e8155db1962d7acba110d46bc4a3420529d42d0692d717aaba",
+    "po_lines.csv": "857cd07d68568f26ffece61e567458171c5ffe58bf7cb7535d39174924aa11de",
+    "po_lines.json": "30dfedc54886584bc6836303565cddccf191503fe422b0fc409ec66b59f3c066",
+    "rejections.csv": "db4f4d8f4fa1a1cee21fedff3ee34f510e8e93647af78d61d6a1286d13b8b9ef",
+    "rejections.json": "fed82f48cdd978755a88bccd9003d05d4a11d56301a05453b0e809273154566b",
+    "sales_orders.csv": "adc2927aef07714305895d69fec45a40c823794d1575d308f9374439819378fb",
+    "sales_orders.json": "7f34892f76489ebfaffacb1be3a1bfad39f855e8ffb98e350af2aaee46d93dfd",
+    "stock_events.csv": "6016b68189a657374026dd59438249ad0cabb7bfe795bc1bf09ea50b9be6a852",
+    "stock_events.json": "eafc4ca1a3718b6d8471714004ce02305b24fa105c8ad5160e068c320bc5b103"
+  }
+}

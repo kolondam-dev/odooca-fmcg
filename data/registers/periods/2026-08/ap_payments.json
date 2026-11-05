@@ -1,0 +1,10 @@
+[
+  {
+    "ap_payment_id": "PAY-AP-05",
+    "po_number": "PO-2026-06-05",
+    "payment_date": "2026-08-08",
+    "amount_paid_dpp": "2899971200.00",
+    "due_date": "2026-08-08",
+    "bank_source": "Bank Mandiri Rekening Operasional"
+  }
+]

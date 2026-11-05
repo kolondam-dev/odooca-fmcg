@@ -1,3 +1,22 @@
+## 2026-11-05T20:30:00+07:00 — antigravity — F2: Planner murni dan generator pack periode transaksi Agustus 2026
+**Berubah:**
+- scripts/ops/seed_planner.py: implementasi mesin perencanaan deterministik FMCG lintas modul; kebal terhadap PYTHONHASHSEED via SHA-256 seeding; kalender PJP dan off-days (Minggu, 17 & 25 Agustus libur); carry-forward 48 DO dispatch pada 1 Agustus; single-principal SO; FEFO inventory allocation; kalkulasi PPN 11% pembulatan sen; evaluasi ROP dengan lead-time maritim; pelunasan AP PO Unilever pada jatuh tempo 8 Agustus; penomoran bulanan mulai dari 1 dan nomor global berlanjut; helper prepare_gate_opening dan extract_existing_numbers.
+- scripts/ops/generate_period_pack.py: CLI generator pack periode transaksi bulanan; ekspor tabel CSV & JSON ke data/registers/periods/<period>/; replay penutupan ke closing_state_<date>.json; laporan naratif; MANIFEST.json berisi SHA-256 LF kanonikal, commit generator, dan verifikasi fingerprint 15 register kanonikal Juli.
+- scripts/ops/generate_state_20260801.py: alias kunci canonical gate (open_invoices, carry_invoices, in_transit) disematkan pada state_20260801.json.
+- data/registers/periods/2026-08/: direktori pack Agustus 2026 lengkap (1.240 SO, 1.190 DO, 1.190 INV, 1.202 AR collections, 16 PO headers, 1 AP payment, 26 OPEX, 4.866 stock events, closing state 31 Agustus 2026, narrative report, dan MANIFEST).
+- tests/test_seed_planner.py: 8 unit tests mencakup determinisme seed, validasi gates v2 strict=True 0 pelanggaran, kalender kerja & hari libur, penomoran bulanan & global, pita metrik naratif, pelunasan AP Unilever 8 Agustus, dan integritas hash SHA-256 MANIFEST.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 8 tests PASS (0,72 detik).
+- [F] python -m unittest discover -s tests -p 'test_*.py': 323 tests PASS (0 failures).
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (11 addon OK).
+- [F] Validasi validate_pack_report(strict=True) atas pack Agustus 2026: 11 gates run, 0 skipped, 0 violations.
+- [F] Metrik naratif Agustus 2026: net DPP Rp4.150.068.000,00 [4.00-4.50 M], diskon 2,50% [2.00%-3.20%], tolakan 1,97% [1.80%-3.00%], outlet aktif 207 [200-215].
+**Belum diuji:**
+- [BU] CI integrasi branch F2 pada exact-SHA HEAD. Pemuatan ke runtime Odoo live belum dilakukan (menunggu otorisasi pemilik dan F5/F9).
+**Berikutnya:**
+- Menyerahkan PR Fase F2 untuk review supervisor dan persetujuan pemilik.
+
 ## 2026-11-05T14:35:00+07:00 — antigravity — PR94: mewajibkan eksak 15 entri fingerprint register kanonikal
 **Berubah:** scripts/ops/generate_state_20260801.py: mewajibkan eksak 15 entri register kanonikal (CANONICAL_REGISTER_FILES) pada input_dataset_sha256 manifest rekonsiliasi sebelum replay; manifes kosong {} atau tidak lengkap memicu ValueError; tests/test_state_20260801.py: penambahan tes regresi supervisor test_empty_or_incomplete_fingerprint_manifest_fails_fast (total 8 tes).
 **Diverifikasi:** 8 tes unit PASS lokal, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon).

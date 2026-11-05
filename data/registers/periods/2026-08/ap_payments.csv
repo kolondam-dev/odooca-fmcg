@@ -1,0 +1,2 @@
+ap_payment_id,po_number,payment_date,amount_paid_dpp,due_date,bank_source
+PAY-AP-05,PO-2026-06-05,2026-08-08,2899971200.00,2026-08-08,Bank Mandiri Rekening Operasional

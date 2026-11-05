@@ -1,0 +1,1887 @@
+{
+  "as_of_datetime": "2026-09-01T00:00:00+08:00",
+  "timezone": "Asia/Makassar (+08:00 WITA)",
+  "period_closed": "2026-08",
+  "description": "Closing state after completing 2026-08 transactions pack.",
+  "summary": {
+    "total_physical_cartons": 63402,
+    "total_reserved_cartons": 771,
+    "total_available_cartons": 62631,
+    "total_quarantine_cartons": 314,
+    "open_invoices_count": 345,
+    "carry_invoices_count": 0,
+    "open_po_count": 16,
+    "in_transit_po_count": 0,
+    "pending_dos_count": 0
+  },
+  "last_sequences": {
+    "last_so_number": "SO-202608-1240",
+    "last_do_number": "DO-202608-1190",
+    "last_invoice_number": "INV-202608-1190",
+    "last_ar_payment_id": "PAY-AR-02169",
+    "last_ap_payment_id": "PAY-AP-05",
+    "last_rejection_id": "REJ-202608-046",
+    "last_event_id": "EVT-010607"
+  },
+  "stock": {
+    "KPA-ABC-01||LOT-TOS-20260701-13": {
+      "sku_code": "KPA-ABC-01",
+      "lot_number": "LOT-TOS-20260701-13",
+      "physical": 67,
+      "reserved": 14,
+      "quarantine": 0
+    },
+    "KPA-ABC-02||LOT-TOS-20260701-14": {
+      "sku_code": "KPA-ABC-02",
+      "lot_number": "LOT-TOS-20260701-14",
+      "physical": 174,
+      "reserved": 6,
+      "quarantine": 20
+    },
+    "KPA-ABC-03||LOT-TOS-20260701-15": {
+      "sku_code": "KPA-ABC-03",
+      "lot_number": "LOT-TOS-20260701-15",
+      "physical": 91,
+      "reserved": 2,
+      "quarantine": 1
+    },
+    "KPA-ABC-04||LOT-TOS-20260615-INIT-16": {
+      "sku_code": "KPA-ABC-04",
+      "lot_number": "LOT-TOS-20260615-INIT-16",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "KPA-ABC-04||LOT-TOS-20260701-16": {
+      "sku_code": "KPA-ABC-04",
+      "lot_number": "LOT-TOS-20260701-16",
+      "physical": 162,
+      "reserved": 0,
+      "quarantine": 6
+    },
+    "KPA-ABC-05||LOT-TOS-20260701-17": {
+      "sku_code": "KPA-ABC-05",
+      "lot_number": "LOT-TOS-20260701-17",
+      "physical": 177,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-ABC-06||LOT-TOS-20260701-18": {
+      "sku_code": "KPA-ABC-06",
+      "lot_number": "LOT-TOS-20260701-18",
+      "physical": 61,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-01||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-01",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 764,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "KPA-KA-01||LOT-TOS-20260701-01": {
+      "sku_code": "KPA-KA-01",
+      "lot_number": "LOT-TOS-20260701-01",
+      "physical": 151,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-02||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-02",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 768,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-02||LOT-TOS-20260615-INIT-02": {
+      "sku_code": "KPA-KA-02",
+      "lot_number": "LOT-TOS-20260615-INIT-02",
+      "physical": 20,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-02||LOT-TOS-20260701-02": {
+      "sku_code": "KPA-KA-02",
+      "lot_number": "LOT-TOS-20260701-02",
+      "physical": 164,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-03||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-03",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 761,
+      "reserved": 40,
+      "quarantine": 0
+    },
+    "KPA-KA-03||LOT-TOS-20260701-03": {
+      "sku_code": "KPA-KA-03",
+      "lot_number": "LOT-TOS-20260701-03",
+      "physical": 77,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-04||LOT-TOS-20260701-04": {
+      "sku_code": "KPA-KA-04",
+      "lot_number": "LOT-TOS-20260701-04",
+      "physical": 240,
+      "reserved": 10,
+      "quarantine": 0
+    },
+    "KPA-KA-05||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-05",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 780,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-05||LOT-TOS-20260701-05": {
+      "sku_code": "KPA-KA-05",
+      "lot_number": "LOT-TOS-20260701-05",
+      "physical": 178,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-06||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-06",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 745,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-06||LOT-TOS-20260701-06": {
+      "sku_code": "KPA-KA-06",
+      "lot_number": "LOT-TOS-20260701-06",
+      "physical": 107,
+      "reserved": 0,
+      "quarantine": 15
+    },
+    "KPA-KA-07||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-07",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 741,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "KPA-KA-07||LOT-TOS-20260701-07": {
+      "sku_code": "KPA-KA-07",
+      "lot_number": "LOT-TOS-20260701-07",
+      "physical": 175,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-08||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-08",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 757,
+      "reserved": 11,
+      "quarantine": 0
+    },
+    "KPA-KA-08||LOT-TOS-20260701-08": {
+      "sku_code": "KPA-KA-08",
+      "lot_number": "LOT-TOS-20260701-08",
+      "physical": 43,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-09||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-09",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 769,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-09||LOT-TOS-20260615-INIT-09": {
+      "sku_code": "KPA-KA-09",
+      "lot_number": "LOT-TOS-20260615-INIT-09",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 4
+    },
+    "KPA-KA-09||LOT-TOS-20260701-09": {
+      "sku_code": "KPA-KA-09",
+      "lot_number": "LOT-TOS-20260701-09",
+      "physical": 84,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-10||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-10",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 779,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-10||LOT-TOS-20260701-10": {
+      "sku_code": "KPA-KA-10",
+      "lot_number": "LOT-TOS-20260701-10",
+      "physical": 172,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-11||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-11",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 775,
+      "reserved": 27,
+      "quarantine": 0
+    },
+    "KPA-KA-11||LOT-TOS-20260701-11": {
+      "sku_code": "KPA-KA-11",
+      "lot_number": "LOT-TOS-20260701-11",
+      "physical": 110,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-12||LOT-TOS-20260701-12": {
+      "sku_code": "KPA-KA-12",
+      "lot_number": "LOT-TOS-20260701-12",
+      "physical": 111,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KPT-01||LOT-TOS-20260701-21": {
+      "sku_code": "KPA-KPT-01",
+      "lot_number": "LOT-TOS-20260701-21",
+      "physical": 165,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "KPA-KPT-02||LOT-TOS-20260701-22": {
+      "sku_code": "KPA-KPT-02",
+      "lot_number": "LOT-TOS-20260701-22",
+      "physical": 93,
+      "reserved": 10,
+      "quarantine": 0
+    },
+    "KPA-KPT-03||LOT-TOS-20260701-23": {
+      "sku_code": "KPA-KPT-03",
+      "lot_number": "LOT-TOS-20260701-23",
+      "physical": 204,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KPT-04||LOT-TOS-20260701-24": {
+      "sku_code": "KPA-KPT-04",
+      "lot_number": "LOT-TOS-20260701-24",
+      "physical": 229,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-RTD-01||LOT-TOS-20260701-25": {
+      "sku_code": "KPA-RTD-01",
+      "lot_number": "LOT-TOS-20260701-25",
+      "physical": 85,
+      "reserved": 5,
+      "quarantine": 0
+    },
+    "KPA-RTD-02||LOT-TOS-20260701-26": {
+      "sku_code": "KPA-RTD-02",
+      "lot_number": "LOT-TOS-20260701-26",
+      "physical": 215,
+      "reserved": 0,
+      "quarantine": 4
+    },
+    "KPA-RTD-03||LOT-TOS-20260701-27": {
+      "sku_code": "KPA-RTD-03",
+      "lot_number": "LOT-TOS-20260701-27",
+      "physical": 127,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-RTD-04||LOT-TOS-20260701-28": {
+      "sku_code": "KPA-RTD-04",
+      "lot_number": "LOT-TOS-20260701-28",
+      "physical": 66,
+      "reserved": 1,
+      "quarantine": 4
+    },
+    "KPA-RTD-05||LOT-TOS-20260701-29": {
+      "sku_code": "KPA-RTD-05",
+      "lot_number": "LOT-TOS-20260701-29",
+      "physical": 412,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-RTD-06||LOT-TOS-20260701-30": {
+      "sku_code": "KPA-RTD-06",
+      "lot_number": "LOT-TOS-20260701-30",
+      "physical": 385,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-RTD-07||LOT-TOS-20260615-INIT-31": {
+      "sku_code": "KPA-RTD-07",
+      "lot_number": "LOT-TOS-20260615-INIT-31",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "KPA-RTD-07||LOT-TOS-20260701-31": {
+      "sku_code": "KPA-RTD-07",
+      "lot_number": "LOT-TOS-20260701-31",
+      "physical": 226,
+      "reserved": 0,
+      "quarantine": 3
+    },
+    "KPA-RTD-08||LOT-TOS-20260701-32": {
+      "sku_code": "KPA-RTD-08",
+      "lot_number": "LOT-TOS-20260701-32",
+      "physical": 178,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-YA-01||LOT-TOS-20260701-19": {
+      "sku_code": "KPA-YA-01",
+      "lot_number": "LOT-TOS-20260701-19",
+      "physical": 178,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-YA-02||LOT-TOS-20260701-20": {
+      "sku_code": "KPA-YA-02",
+      "lot_number": "LOT-TOS-20260701-20",
+      "physical": 315,
+      "reserved": 11,
+      "quarantine": 0
+    },
+    "MYR-BBG-01||LOT-BBG-202608-NEW-01": {
+      "sku_code": "MYR-BBG-01",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "physical": 787,
+      "reserved": 23,
+      "quarantine": 0
+    },
+    "MYR-BBG-01||LOT-ORA-20260702-15": {
+      "sku_code": "MYR-BBG-01",
+      "lot_number": "LOT-ORA-20260702-15",
+      "physical": 11,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "MYR-BBG-01||LOT-ORA-20260703-15": {
+      "sku_code": "MYR-BBG-01",
+      "lot_number": "LOT-ORA-20260703-15",
+      "physical": 185,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BBG-02||LOT-BBG-202608-NEW-01": {
+      "sku_code": "MYR-BBG-02",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "physical": 795,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BBG-02||LOT-ORA-20260703-16": {
+      "sku_code": "MYR-BBG-02",
+      "lot_number": "LOT-ORA-20260703-16",
+      "physical": 87,
+      "reserved": 0,
+      "quarantine": 13
+    },
+    "MYR-BBG-03||LOT-BBG-202608-NEW-01": {
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "physical": 198,
+      "reserved": 24,
+      "quarantine": 2
+    },
+    "MYR-BBG-03||LOT-ORA-20260615-INIT-17": {
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-ORA-20260615-INIT-17",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 13
+    },
+    "MYR-BBG-03||LOT-ORA-20260702-17": {
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-ORA-20260702-17",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 4
+    },
+    "MYR-BBG-03||LOT-ORA-20260703-17": {
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-ORA-20260703-17",
+      "physical": 196,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BBG-04||LOT-BBG-202608-NEW-01": {
+      "sku_code": "MYR-BBG-04",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "physical": 588,
+      "reserved": 12,
+      "quarantine": 0
+    },
+    "MYR-BBG-04||LOT-ORA-20260703-18": {
+      "sku_code": "MYR-BBG-04",
+      "lot_number": "LOT-ORA-20260703-18",
+      "physical": 113,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BTR-01||LOT-BTR-202608-NEW-01": {
+      "sku_code": "MYR-BTR-01",
+      "lot_number": "LOT-BTR-202608-NEW-01",
+      "physical": 776,
+      "reserved": 1,
+      "quarantine": 0
+    },
+    "MYR-BTR-01||LOT-ORA-20260703-11": {
+      "sku_code": "MYR-BTR-01",
+      "lot_number": "LOT-ORA-20260703-11",
+      "physical": 50,
+      "reserved": 0,
+      "quarantine": 11
+    },
+    "MYR-BTR-02||LOT-BTR-202608-NEW-01": {
+      "sku_code": "MYR-BTR-02",
+      "lot_number": "LOT-BTR-202608-NEW-01",
+      "physical": 400,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BTR-02||LOT-ORA-20260703-12": {
+      "sku_code": "MYR-BTR-02",
+      "lot_number": "LOT-ORA-20260703-12",
+      "physical": 178,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-01||LOT-ORA-20260702-35": {
+      "sku_code": "MYR-CND-01",
+      "lot_number": "LOT-ORA-20260702-35",
+      "physical": 50,
+      "reserved": 23,
+      "quarantine": 3
+    },
+    "MYR-CND-01||LOT-ORA-20260703-35": {
+      "sku_code": "MYR-CND-01",
+      "lot_number": "LOT-ORA-20260703-35",
+      "physical": 328,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-02||LOT-KPK-202608-NEW-01": {
+      "sku_code": "MYR-CND-02",
+      "lot_number": "LOT-KPK-202608-NEW-01",
+      "physical": 358,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-02||LOT-ORA-20260703-36": {
+      "sku_code": "MYR-CND-02",
+      "lot_number": "LOT-ORA-20260703-36",
+      "physical": 188,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-03||LOT-ORA-20260703-37": {
+      "sku_code": "MYR-CND-03",
+      "lot_number": "LOT-ORA-20260703-37",
+      "physical": 238,
+      "reserved": 13,
+      "quarantine": 20
+    },
+    "MYR-CND-04||LOT-ORA-20260615-INIT-38": {
+      "sku_code": "MYR-CND-04",
+      "lot_number": "LOT-ORA-20260615-INIT-38",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 8
+    },
+    "MYR-CND-04||LOT-ORA-20260702-38": {
+      "sku_code": "MYR-CND-04",
+      "lot_number": "LOT-ORA-20260702-38",
+      "physical": 24,
+      "reserved": 4,
+      "quarantine": 10
+    },
+    "MYR-CND-04||LOT-ORA-20260703-38": {
+      "sku_code": "MYR-CND-04",
+      "lot_number": "LOT-ORA-20260703-38",
+      "physical": 362,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-05||LOT-ORA-20260703-39": {
+      "sku_code": "MYR-CND-05",
+      "lot_number": "LOT-ORA-20260703-39",
+      "physical": 264,
+      "reserved": 0,
+      "quarantine": 9
+    },
+    "MYR-CND-06||LOT-ORA-20260703-40": {
+      "sku_code": "MYR-CND-06",
+      "lot_number": "LOT-ORA-20260703-40",
+      "physical": 247,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-07||LOT-ORA-20260703-41": {
+      "sku_code": "MYR-CND-07",
+      "lot_number": "LOT-ORA-20260703-41",
+      "physical": 302,
+      "reserved": 7,
+      "quarantine": 0
+    },
+    "MYR-CND-08||LOT-ORA-20260703-42": {
+      "sku_code": "MYR-CND-08",
+      "lot_number": "LOT-ORA-20260703-42",
+      "physical": 300,
+      "reserved": 9,
+      "quarantine": 0
+    },
+    "MYR-CND-09||LOT-ORA-20260703-43": {
+      "sku_code": "MYR-CND-09",
+      "lot_number": "LOT-ORA-20260703-43",
+      "physical": 188,
+      "reserved": 23,
+      "quarantine": 2
+    },
+    "MYR-CND-10||LOT-ORA-20260703-44": {
+      "sku_code": "MYR-CND-10",
+      "lot_number": "LOT-ORA-20260703-44",
+      "physical": 97,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-10||LOT-TMR-202608-NEW-01": {
+      "sku_code": "MYR-CND-10",
+      "lot_number": "LOT-TMR-202608-NEW-01",
+      "physical": 167,
+      "reserved": 4,
+      "quarantine": 0
+    },
+    "MYR-EGN-01||LOT-EGN-202608-NEW-01": {
+      "sku_code": "MYR-EGN-01",
+      "lot_number": "LOT-EGN-202608-NEW-01",
+      "physical": 400,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-EGN-01||LOT-ORA-20260703-33": {
+      "sku_code": "MYR-EGN-01",
+      "lot_number": "LOT-ORA-20260703-33",
+      "physical": 204,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-EGN-02||LOT-ORA-20260703-34": {
+      "sku_code": "MYR-EGN-02",
+      "lot_number": "LOT-ORA-20260703-34",
+      "physical": 245,
+      "reserved": 9,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-01||LOT-ORA-20260702-29": {
+      "sku_code": "MYR-KPK-RTD-01",
+      "lot_number": "LOT-ORA-20260702-29",
+      "physical": 6,
+      "reserved": 0,
+      "quarantine": 7
+    },
+    "MYR-KPK-RTD-01||LOT-ORA-20260703-29": {
+      "sku_code": "MYR-KPK-RTD-01",
+      "lot_number": "LOT-ORA-20260703-29",
+      "physical": 379,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-02||LOT-ORA-20260703-30": {
+      "sku_code": "MYR-KPK-RTD-02",
+      "lot_number": "LOT-ORA-20260703-30",
+      "physical": 277,
+      "reserved": 18,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-03||LOT-ORA-20260703-31": {
+      "sku_code": "MYR-KPK-RTD-03",
+      "lot_number": "LOT-ORA-20260703-31",
+      "physical": 342,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-04||LOT-ORA-20260702-32": {
+      "sku_code": "MYR-KPK-RTD-04",
+      "lot_number": "LOT-ORA-20260702-32",
+      "physical": 53,
+      "reserved": 8,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-04||LOT-ORA-20260703-32": {
+      "sku_code": "MYR-KPK-RTD-04",
+      "lot_number": "LOT-ORA-20260703-32",
+      "physical": 397,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-01||LOT-ORA-20260702-01": {
+      "sku_code": "MYR-RMA-01",
+      "lot_number": "LOT-ORA-20260702-01",
+      "physical": 36,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-01||LOT-ORA-20260703-01": {
+      "sku_code": "MYR-RMA-01",
+      "lot_number": "LOT-ORA-20260703-01",
+      "physical": 262,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-02||LOT-ORA-20260703-02": {
+      "sku_code": "MYR-RMA-02",
+      "lot_number": "LOT-ORA-20260703-02",
+      "physical": 246,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-03||LOT-ORA-20260702-03": {
+      "sku_code": "MYR-RMA-03",
+      "lot_number": "LOT-ORA-20260702-03",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 5
+    },
+    "MYR-RMA-03||LOT-ORA-20260703-03": {
+      "sku_code": "MYR-RMA-03",
+      "lot_number": "LOT-ORA-20260703-03",
+      "physical": 217,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-03||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-03",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 585,
+      "reserved": 9,
+      "quarantine": 0
+    },
+    "MYR-RMA-04||LOT-ORA-20260703-04": {
+      "sku_code": "MYR-RMA-04",
+      "lot_number": "LOT-ORA-20260703-04",
+      "physical": 200,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-04||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-04",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 792,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-05||LOT-ORA-20260703-05": {
+      "sku_code": "MYR-RMA-05",
+      "lot_number": "LOT-ORA-20260703-05",
+      "physical": 190,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-05||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-05",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 195,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-06||LOT-ORA-20260703-06": {
+      "sku_code": "MYR-RMA-06",
+      "lot_number": "LOT-ORA-20260703-06",
+      "physical": 226,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-07||LOT-ORA-20260703-07": {
+      "sku_code": "MYR-RMA-07",
+      "lot_number": "LOT-ORA-20260703-07",
+      "physical": 167,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-07||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-07",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 784,
+      "reserved": 3,
+      "quarantine": 0
+    },
+    "MYR-RMA-08||LOT-ORA-20260703-08": {
+      "sku_code": "MYR-RMA-08",
+      "lot_number": "LOT-ORA-20260703-08",
+      "physical": 171,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-08||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-08",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 788,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-09||LOT-ORA-20260703-09": {
+      "sku_code": "MYR-RMA-09",
+      "lot_number": "LOT-ORA-20260703-09",
+      "physical": 194,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-10||LOT-ORA-20260703-10": {
+      "sku_code": "MYR-RMA-10",
+      "lot_number": "LOT-ORA-20260703-10",
+      "physical": 176,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-10||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-10",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 190,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "MYR-SLI-01||LOT-ORA-20260703-13": {
+      "sku_code": "MYR-SLI-01",
+      "lot_number": "LOT-ORA-20260703-13",
+      "physical": 376,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-SLI-02||LOT-ORA-20260703-14": {
+      "sku_code": "MYR-SLI-02",
+      "lot_number": "LOT-ORA-20260703-14",
+      "physical": 346,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-01||LOT-ORA-20260703-19": {
+      "sku_code": "MYR-TRB-01",
+      "lot_number": "LOT-ORA-20260703-19",
+      "physical": 245,
+      "reserved": 1,
+      "quarantine": 0
+    },
+    "MYR-TRB-02||LOT-ORA-20260703-20": {
+      "sku_code": "MYR-TRB-02",
+      "lot_number": "LOT-ORA-20260703-20",
+      "physical": 350,
+      "reserved": 8,
+      "quarantine": 0
+    },
+    "MYR-TRB-03||LOT-ORA-20260703-21": {
+      "sku_code": "MYR-TRB-03",
+      "lot_number": "LOT-ORA-20260703-21",
+      "physical": 194,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-04||LOT-ORA-20260703-22": {
+      "sku_code": "MYR-TRB-04",
+      "lot_number": "LOT-ORA-20260703-22",
+      "physical": 420,
+      "reserved": 5,
+      "quarantine": 0
+    },
+    "MYR-TRB-05||LOT-ORA-20260702-23": {
+      "sku_code": "MYR-TRB-05",
+      "lot_number": "LOT-ORA-20260702-23",
+      "physical": 25,
+      "reserved": 13,
+      "quarantine": 0
+    },
+    "MYR-TRB-05||LOT-ORA-20260703-23": {
+      "sku_code": "MYR-TRB-05",
+      "lot_number": "LOT-ORA-20260703-23",
+      "physical": 447,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-06||LOT-ORA-20260703-24": {
+      "sku_code": "MYR-TRB-06",
+      "lot_number": "LOT-ORA-20260703-24",
+      "physical": 303,
+      "reserved": 11,
+      "quarantine": 0
+    },
+    "MYR-TRB-07||LOT-ORA-20260703-25": {
+      "sku_code": "MYR-TRB-07",
+      "lot_number": "LOT-ORA-20260703-25",
+      "physical": 323,
+      "reserved": 16,
+      "quarantine": 0
+    },
+    "MYR-TRB-08||LOT-ORA-20260703-26": {
+      "sku_code": "MYR-TRB-08",
+      "lot_number": "LOT-ORA-20260703-26",
+      "physical": 217,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-09||LOT-ORA-20260703-27": {
+      "sku_code": "MYR-TRB-09",
+      "lot_number": "LOT-ORA-20260703-27",
+      "physical": 224,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-10||LOT-ORA-20260703-28": {
+      "sku_code": "MYR-TRB-10",
+      "lot_number": "LOT-ORA-20260703-28",
+      "physical": 320,
+      "reserved": 25,
+      "quarantine": 0
+    },
+    "ULV-BNG-01||LOT-VER-20260704-41": {
+      "sku_code": "ULV-BNG-01",
+      "lot_number": "LOT-VER-20260704-41",
+      "physical": 29,
+      "reserved": 12,
+      "quarantine": 0
+    },
+    "ULV-BNG-02||LOT-VER-20260704-42": {
+      "sku_code": "ULV-BNG-02",
+      "lot_number": "LOT-VER-20260704-42",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 3
+    },
+    "ULV-CLR-01||LOT-VER-20260704-31": {
+      "sku_code": "ULV-CLR-01",
+      "lot_number": "LOT-VER-20260704-31",
+      "physical": 3,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-CLR-02||LOT-VER-20260704-32": {
+      "sku_code": "ULV-CLR-02",
+      "lot_number": "LOT-VER-20260704-32",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 12
+    },
+    "ULV-CLR-04||LOT-VER-20260704-34": {
+      "sku_code": "ULV-CLR-04",
+      "lot_number": "LOT-VER-20260704-34",
+      "physical": 2,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-LFB-01||LOT-VER-20260704-17": {
+      "sku_code": "ULV-LFB-01",
+      "lot_number": "LOT-VER-20260704-17",
+      "physical": 29,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "ULV-LFB-02||LOT-VER-20260704-18": {
+      "sku_code": "ULV-LFB-02",
+      "lot_number": "LOT-VER-20260704-18",
+      "physical": 101,
+      "reserved": 10,
+      "quarantine": 19
+    },
+    "ULV-LFB-03||LOT-VER-20260704-19": {
+      "sku_code": "ULV-LFB-03",
+      "lot_number": "LOT-VER-20260704-19",
+      "physical": 174,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-LFB-05||LOT-VER-20260704-21": {
+      "sku_code": "ULV-LFB-05",
+      "lot_number": "LOT-VER-20260704-21",
+      "physical": 28,
+      "reserved": 2,
+      "quarantine": 10
+    },
+    "ULV-LFB-06||LOT-VER-20260615-INIT-22": {
+      "sku_code": "ULV-LFB-06",
+      "lot_number": "LOT-VER-20260615-INIT-22",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 2
+    },
+    "ULV-LFB-06||LOT-VER-20260704-22": {
+      "sku_code": "ULV-LFB-06",
+      "lot_number": "LOT-VER-20260704-22",
+      "physical": 57,
+      "reserved": 4,
+      "quarantine": 16
+    },
+    "ULV-LFB-07||LOT-VER-20260704-23": {
+      "sku_code": "ULV-LFB-07",
+      "lot_number": "LOT-VER-20260704-23",
+      "physical": 22,
+      "reserved": 14,
+      "quarantine": 0
+    },
+    "ULV-LFB-08||LOT-VER-20260704-24": {
+      "sku_code": "ULV-LFB-08",
+      "lot_number": "LOT-VER-20260704-24",
+      "physical": 94,
+      "reserved": 3,
+      "quarantine": 0
+    },
+    "ULV-MLT-01||LOT-VER-20260615-INIT-13": {
+      "sku_code": "ULV-MLT-01",
+      "lot_number": "LOT-VER-20260615-INIT-13",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "ULV-MLT-01||LOT-VER-20260704-13": {
+      "sku_code": "ULV-MLT-01",
+      "lot_number": "LOT-VER-20260704-13",
+      "physical": 118,
+      "reserved": 9,
+      "quarantine": 0
+    },
+    "ULV-MLT-02||LOT-VER-20260704-14": {
+      "sku_code": "ULV-MLT-02",
+      "lot_number": "LOT-VER-20260704-14",
+      "physical": 125,
+      "reserved": 0,
+      "quarantine": 15
+    },
+    "ULV-MLT-03||LOT-VER-20260704-15": {
+      "sku_code": "ULV-MLT-03",
+      "lot_number": "LOT-VER-20260704-15",
+      "physical": 155,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-MLT-04||LOT-VER-20260704-16": {
+      "sku_code": "ULV-MLT-04",
+      "lot_number": "LOT-VER-20260704-16",
+      "physical": 226,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-PSD-02||LOT-VER-20260704-26": {
+      "sku_code": "ULV-PSD-02",
+      "lot_number": "LOT-VER-20260704-26",
+      "physical": 33,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-PSD-03||LOT-VER-20260704-27": {
+      "sku_code": "ULV-PSD-03",
+      "lot_number": "LOT-VER-20260704-27",
+      "physical": 44,
+      "reserved": 0,
+      "quarantine": 4
+    },
+    "ULV-RNS-01||LOT-RNS-202608-NEW-01": {
+      "sku_code": "ULV-RNS-01",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "physical": 773,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-01||LOT-VER-20260704-07": {
+      "sku_code": "ULV-RNS-01",
+      "lot_number": "LOT-VER-20260704-07",
+      "physical": 181,
+      "reserved": 0,
+      "quarantine": 3
+    },
+    "ULV-RNS-02||LOT-RNS-202608-NEW-01": {
+      "sku_code": "ULV-RNS-02",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "physical": 800,
+      "reserved": 13,
+      "quarantine": 0
+    },
+    "ULV-RNS-02||LOT-VER-20260704-08": {
+      "sku_code": "ULV-RNS-02",
+      "lot_number": "LOT-VER-20260704-08",
+      "physical": 136,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-03||LOT-RNS-202608-NEW-01": {
+      "sku_code": "ULV-RNS-03",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "physical": 769,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-03||LOT-VER-20260615-INIT-09": {
+      "sku_code": "ULV-RNS-03",
+      "lot_number": "LOT-VER-20260615-INIT-09",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "ULV-RNS-03||LOT-VER-20260704-09": {
+      "sku_code": "ULV-RNS-03",
+      "lot_number": "LOT-VER-20260704-09",
+      "physical": 102,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-04||LOT-RNS-202608-NEW-01": {
+      "sku_code": "ULV-RNS-04",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "physical": 752,
+      "reserved": 3,
+      "quarantine": 0
+    },
+    "ULV-RNS-04||LOT-VER-20260704-10": {
+      "sku_code": "ULV-RNS-04",
+      "lot_number": "LOT-VER-20260704-10",
+      "physical": 172,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-05||LOT-VER-20260704-11": {
+      "sku_code": "ULV-RNS-05",
+      "lot_number": "LOT-VER-20260704-11",
+      "physical": 90,
+      "reserved": 0,
+      "quarantine": 3
+    },
+    "ULV-RNS-06||LOT-VER-20260704-12": {
+      "sku_code": "ULV-RNS-06",
+      "lot_number": "LOT-VER-20260704-12",
+      "physical": 54,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RYC-01||LOT-VER-20260704-37": {
+      "sku_code": "ULV-RYC-01",
+      "lot_number": "LOT-VER-20260704-37",
+      "physical": 117,
+      "reserved": 17,
+      "quarantine": 0
+    },
+    "ULV-RYC-02||LOT-VER-20260704-38": {
+      "sku_code": "ULV-RYC-02",
+      "lot_number": "LOT-VER-20260704-38",
+      "physical": 74,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RYC-03||LOT-VER-20260704-39": {
+      "sku_code": "ULV-RYC-03",
+      "lot_number": "LOT-VER-20260704-39",
+      "physical": 11,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RYC-04||LOT-VER-20260704-40": {
+      "sku_code": "ULV-RYC-04",
+      "lot_number": "LOT-VER-20260704-40",
+      "physical": 108,
+      "reserved": 10,
+      "quarantine": 0
+    },
+    "ULV-SNL-01||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-01",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 789,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "ULV-SNL-01||LOT-VER-20260704-01": {
+      "sku_code": "ULV-SNL-01",
+      "lot_number": "LOT-VER-20260704-01",
+      "physical": 40,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-02||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-02",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 752,
+      "reserved": 13,
+      "quarantine": 0
+    },
+    "ULV-SNL-02||LOT-VER-20260704-02": {
+      "sku_code": "ULV-SNL-02",
+      "lot_number": "LOT-VER-20260704-02",
+      "physical": 143,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-03||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-03",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 784,
+      "reserved": 12,
+      "quarantine": 0
+    },
+    "ULV-SNL-03||LOT-VER-20260704-03": {
+      "sku_code": "ULV-SNL-03",
+      "lot_number": "LOT-VER-20260704-03",
+      "physical": 42,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-04||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-04",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 768,
+      "reserved": 4,
+      "quarantine": 0
+    },
+    "ULV-SNL-05||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-05",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 792,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-05||LOT-VER-20260704-05": {
+      "sku_code": "ULV-SNL-05",
+      "lot_number": "LOT-VER-20260704-05",
+      "physical": 211,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-06||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-06",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 780,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-06||LOT-VER-20260704-06": {
+      "sku_code": "ULV-SNL-06",
+      "lot_number": "LOT-VER-20260704-06",
+      "physical": 24,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-FLD-01||LOT-NGS-20260701-23": {
+      "sku_code": "WNG-FLD-01",
+      "lot_number": "LOT-NGS-20260701-23",
+      "physical": 725,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-FLD-02||LOT-NGS-20260615-INIT-24": {
+      "sku_code": "WNG-FLD-02",
+      "lot_number": "LOT-NGS-20260615-INIT-24",
+      "physical": 64,
+      "reserved": 21,
+      "quarantine": 0
+    },
+    "WNG-FLD-02||LOT-NGS-20260701-24": {
+      "sku_code": "WNG-FLD-02",
+      "lot_number": "LOT-NGS-20260701-24",
+      "physical": 803,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-FLD-03||LOT-NGS-20260615-INIT-25": {
+      "sku_code": "WNG-FLD-03",
+      "lot_number": "LOT-NGS-20260615-INIT-25",
+      "physical": 54,
+      "reserved": 27,
+      "quarantine": 28
+    },
+    "WNG-FLD-03||LOT-NGS-20260701-25": {
+      "sku_code": "WNG-FLD-03",
+      "lot_number": "LOT-NGS-20260701-25",
+      "physical": 803,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-GLD-01||LOT-NGS-20260615-INIT-29": {
+      "sku_code": "WNG-GLD-01",
+      "lot_number": "LOT-NGS-20260615-INIT-29",
+      "physical": 146,
+      "reserved": 3,
+      "quarantine": 3
+    },
+    "WNG-GLD-01||LOT-NGS-20260701-29": {
+      "sku_code": "WNG-GLD-01",
+      "lot_number": "LOT-NGS-20260701-29",
+      "physical": 803,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-GLD-02||LOT-NGS-20260701-30": {
+      "sku_code": "WNG-GLD-02",
+      "lot_number": "LOT-NGS-20260701-30",
+      "physical": 633,
+      "reserved": 13,
+      "quarantine": 2
+    },
+    "WNG-GLD-03||LOT-NGS-20260615-INIT-31": {
+      "sku_code": "WNG-GLD-03",
+      "lot_number": "LOT-NGS-20260615-INIT-31",
+      "physical": 63,
+      "reserved": 30,
+      "quarantine": 0
+    },
+    "WNG-GLD-03||LOT-NGS-20260701-31": {
+      "sku_code": "WNG-GLD-03",
+      "lot_number": "LOT-NGS-20260701-31",
+      "physical": 860,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-GLD-04||LOT-NGS-20260701-32": {
+      "sku_code": "WNG-GLD-04",
+      "lot_number": "LOT-NGS-20260701-32",
+      "physical": 795,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JSJ-01||LOT-NGS-20260615-INIT-13": {
+      "sku_code": "WNG-JSJ-01",
+      "lot_number": "LOT-NGS-20260615-INIT-13",
+      "physical": 52,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JSJ-01||LOT-NGS-20260701-13": {
+      "sku_code": "WNG-JSJ-01",
+      "lot_number": "LOT-NGS-20260701-13",
+      "physical": 567,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JSJ-02||LOT-NGS-20260701-14": {
+      "sku_code": "WNG-JSJ-02",
+      "lot_number": "LOT-NGS-20260701-14",
+      "physical": 473,
+      "reserved": 24,
+      "quarantine": 0
+    },
+    "WNG-JSJ-03||LOT-NGS-20260615-INIT-15": {
+      "sku_code": "WNG-JSJ-03",
+      "lot_number": "LOT-NGS-20260615-INIT-15",
+      "physical": 32,
+      "reserved": 21,
+      "quarantine": 0
+    },
+    "WNG-JSJ-03||LOT-NGS-20260701-15": {
+      "sku_code": "WNG-JSJ-03",
+      "lot_number": "LOT-NGS-20260701-15",
+      "physical": 567,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JSJ-04||LOT-NGS-20260615-INIT-16": {
+      "sku_code": "WNG-JSJ-04",
+      "lot_number": "LOT-NGS-20260615-INIT-16",
+      "physical": 36,
+      "reserved": 3,
+      "quarantine": 8
+    },
+    "WNG-JSJ-04||LOT-NGS-20260701-16": {
+      "sku_code": "WNG-JSJ-04",
+      "lot_number": "LOT-NGS-20260701-16",
+      "physical": 567,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JVN-01||LOT-NGS-20260701-26": {
+      "sku_code": "WNG-JVN-01",
+      "lot_number": "LOT-NGS-20260701-26",
+      "physical": 803,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JVN-02||LOT-NGS-20260615-INIT-27": {
+      "sku_code": "WNG-JVN-02",
+      "lot_number": "LOT-NGS-20260615-INIT-27",
+      "physical": 40,
+      "reserved": 6,
+      "quarantine": 0
+    },
+    "WNG-JVN-02||LOT-NGS-20260701-27": {
+      "sku_code": "WNG-JVN-02",
+      "lot_number": "LOT-NGS-20260701-27",
+      "physical": 860,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JVN-03||LOT-NGS-20260615-INIT-28": {
+      "sku_code": "WNG-JVN-03",
+      "lot_number": "LOT-NGS-20260615-INIT-28",
+      "physical": 145,
+      "reserved": 0,
+      "quarantine": 5
+    },
+    "WNG-JVN-03||LOT-NGS-20260701-28": {
+      "sku_code": "WNG-JVN-03",
+      "lot_number": "LOT-NGS-20260701-28",
+      "physical": 860,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-01||LOT-NGS-20260615-INIT-01": {
+      "sku_code": "WNG-SDP-01",
+      "lot_number": "LOT-NGS-20260615-INIT-01",
+      "physical": 153,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-01||LOT-NGS-20260701-01": {
+      "sku_code": "WNG-SDP-01",
+      "lot_number": "LOT-NGS-20260701-01",
+      "physical": 535,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-02||LOT-NGS-20260615-INIT-02": {
+      "sku_code": "WNG-SDP-02",
+      "lot_number": "LOT-NGS-20260615-INIT-02",
+      "physical": 408,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-02||LOT-NGS-20260701-02": {
+      "sku_code": "WNG-SDP-02",
+      "lot_number": "LOT-NGS-20260701-02",
+      "physical": 578,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-03||LOT-NGS-20260701-03": {
+      "sku_code": "WNG-SDP-03",
+      "lot_number": "LOT-NGS-20260701-03",
+      "physical": 508,
+      "reserved": 8,
+      "quarantine": 0
+    },
+    "WNG-SDP-04||LOT-NGS-20260701-04": {
+      "sku_code": "WNG-SDP-04",
+      "lot_number": "LOT-NGS-20260701-04",
+      "physical": 515,
+      "reserved": 12,
+      "quarantine": 0
+    },
+    "WNG-SDP-05||LOT-NGS-20260701-05": {
+      "sku_code": "WNG-SDP-05",
+      "lot_number": "LOT-NGS-20260701-05",
+      "physical": 464,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-06||LOT-NGS-20260615-INIT-06": {
+      "sku_code": "WNG-SDP-06",
+      "lot_number": "LOT-NGS-20260615-INIT-06",
+      "physical": 49,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-06||LOT-NGS-20260701-06": {
+      "sku_code": "WNG-SDP-06",
+      "lot_number": "LOT-NGS-20260701-06",
+      "physical": 482,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-07||LOT-NGS-20260615-INIT-07": {
+      "sku_code": "WNG-SDP-07",
+      "lot_number": "LOT-NGS-20260615-INIT-07",
+      "physical": 116,
+      "reserved": 8,
+      "quarantine": 10
+    },
+    "WNG-SDP-07||LOT-NGS-20260701-07": {
+      "sku_code": "WNG-SDP-07",
+      "lot_number": "LOT-NGS-20260701-07",
+      "physical": 466,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-08||LOT-NGS-20260701-08": {
+      "sku_code": "WNG-SDP-08",
+      "lot_number": "LOT-NGS-20260701-08",
+      "physical": 162,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "WNG-SDP-09||LOT-NGS-20260615-INIT-09": {
+      "sku_code": "WNG-SDP-09",
+      "lot_number": "LOT-NGS-20260615-INIT-09",
+      "physical": 280,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-09||LOT-NGS-20260701-09": {
+      "sku_code": "WNG-SDP-09",
+      "lot_number": "LOT-NGS-20260701-09",
+      "physical": 535,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-10||LOT-NGS-20260615-INIT-10": {
+      "sku_code": "WNG-SDP-10",
+      "lot_number": "LOT-NGS-20260615-INIT-10",
+      "physical": 310,
+      "reserved": 17,
+      "quarantine": 0
+    },
+    "WNG-SDP-10||LOT-NGS-20260701-10": {
+      "sku_code": "WNG-SDP-10",
+      "lot_number": "LOT-NGS-20260701-10",
+      "physical": 547,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-11||LOT-NGS-20260701-11": {
+      "sku_code": "WNG-SDP-11",
+      "lot_number": "LOT-NGS-20260701-11",
+      "physical": 181,
+      "reserved": 4,
+      "quarantine": 0
+    },
+    "WNG-SDP-12||LOT-NGS-20260615-INIT-12": {
+      "sku_code": "WNG-SDP-12",
+      "lot_number": "LOT-NGS-20260615-INIT-12",
+      "physical": 332,
+      "reserved": 5,
+      "quarantine": 0
+    },
+    "WNG-SDP-12||LOT-NGS-20260701-12": {
+      "sku_code": "WNG-SDP-12",
+      "lot_number": "LOT-NGS-20260701-12",
+      "physical": 516,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SGD-01||LOT-NGS-20260701-17": {
+      "sku_code": "WNG-SGD-01",
+      "lot_number": "LOT-NGS-20260701-17",
+      "physical": 49,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SGD-01||LOT-SGD-202608-NEW-01": {
+      "sku_code": "WNG-SGD-01",
+      "lot_number": "LOT-SGD-202608-NEW-01",
+      "physical": 765,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SGD-02||LOT-NGS-20260701-18": {
+      "sku_code": "WNG-SGD-02",
+      "lot_number": "LOT-NGS-20260701-18",
+      "physical": 51,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SGD-02||LOT-SGD-202608-NEW-01": {
+      "sku_code": "WNG-SGD-02",
+      "lot_number": "LOT-SGD-202608-NEW-01",
+      "physical": 779,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-TOP-01||LOT-NGS-20260701-19": {
+      "sku_code": "WNG-TOP-01",
+      "lot_number": "LOT-NGS-20260701-19",
+      "physical": 383,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-TOP-02||LOT-NGS-20260615-INIT-20": {
+      "sku_code": "WNG-TOP-02",
+      "lot_number": "LOT-NGS-20260615-INIT-20",
+      "physical": 15,
+      "reserved": 3,
+      "quarantine": 0
+    },
+    "WNG-TOP-02||LOT-NGS-20260701-20": {
+      "sku_code": "WNG-TOP-02",
+      "lot_number": "LOT-NGS-20260701-20",
+      "physical": 371,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-TOP-03||LOT-NGS-20260701-21": {
+      "sku_code": "WNG-TOP-03",
+      "lot_number": "LOT-NGS-20260701-21",
+      "physical": 298,
+      "reserved": 23,
+      "quarantine": 0
+    },
+    "WNG-TOP-04||LOT-NGS-20260701-22": {
+      "sku_code": "WNG-TOP-04",
+      "lot_number": "LOT-NGS-20260701-22",
+      "physical": 429,
+      "reserved": 1,
+      "quarantine": 0
+    }
+  },
+  "open_invoices": {
+    "INV-202607-0756": "2026-07-20",
+    "INV-202607-0757": "2026-07-20",
+    "INV-202607-0798": "2026-07-21",
+    "INV-202607-0801": "2026-07-21",
+    "INV-202607-0802": "2026-07-21",
+    "INV-202607-0803": "2026-07-21",
+    "INV-202607-0804": "2026-07-21",
+    "INV-202607-0805": "2026-07-21",
+    "INV-202607-1047": "2026-07-27",
+    "INV-202607-1048": "2026-07-27",
+    "INV-202607-1049": "2026-07-27",
+    "INV-202607-1050": "2026-07-27",
+    "INV-202607-1083": "2026-07-28",
+    "INV-202607-1084": "2026-07-28",
+    "INV-202607-1085": "2026-07-28",
+    "INV-202607-1086": "2026-07-28",
+    "INV-202607-1087": "2026-07-28",
+    "INV-202607-1088": "2026-07-28",
+    "INV-202608-0028": "2026-08-03",
+    "INV-202608-0029": "2026-08-03",
+    "INV-202608-0030": "2026-08-03",
+    "INV-202608-0031": "2026-08-03",
+    "INV-202608-0032": "2026-08-03",
+    "INV-202608-0033": "2026-08-03",
+    "INV-202608-0034": "2026-08-03",
+    "INV-202608-0075": "2026-08-04",
+    "INV-202608-0076": "2026-08-04",
+    "INV-202608-0077": "2026-08-04",
+    "INV-202608-0078": "2026-08-04",
+    "INV-202608-0079": "2026-08-04",
+    "INV-202608-0080": "2026-08-04",
+    "INV-202608-0081": "2026-08-04",
+    "INV-202608-0082": "2026-08-04",
+    "INV-202608-0083": "2026-08-04",
+    "INV-202608-0084": "2026-08-04",
+    "INV-202608-0085": "2026-08-04",
+    "INV-202608-0135": "2026-08-05",
+    "INV-202608-0136": "2026-08-05",
+    "INV-202608-0137": "2026-08-05",
+    "INV-202608-0138": "2026-08-05",
+    "INV-202608-0139": "2026-08-05",
+    "INV-202608-0140": "2026-08-05",
+    "INV-202608-0195": "2026-08-06",
+    "INV-202608-0196": "2026-08-06",
+    "INV-202608-0197": "2026-08-06",
+    "INV-202608-0198": "2026-08-06",
+    "INV-202608-0199": "2026-08-06",
+    "INV-202608-0200": "2026-08-06",
+    "INV-202608-0201": "2026-08-06",
+    "INV-202608-0202": "2026-08-06",
+    "INV-202608-0203": "2026-08-06",
+    "INV-202608-0204": "2026-08-06",
+    "INV-202608-0256": "2026-08-07",
+    "INV-202608-0257": "2026-08-07",
+    "INV-202608-0258": "2026-08-07",
+    "INV-202608-0311": "2026-08-08",
+    "INV-202608-0312": "2026-08-08",
+    "INV-202608-0313": "2026-08-08",
+    "INV-202608-0314": "2026-08-08",
+    "INV-202608-0370": "2026-08-10",
+    "INV-202608-0371": "2026-08-10",
+    "INV-202608-0372": "2026-08-10",
+    "INV-202608-0373": "2026-08-10",
+    "INV-202608-0408": "2026-08-11",
+    "INV-202608-0409": "2026-08-11",
+    "INV-202608-0410": "2026-08-11",
+    "INV-202608-0411": "2026-08-11",
+    "INV-202608-0412": "2026-08-11",
+    "INV-202608-0413": "2026-08-11",
+    "INV-202608-0414": "2026-08-11",
+    "INV-202608-0415": "2026-08-11",
+    "INV-202608-0463": "2026-08-12",
+    "INV-202608-0464": "2026-08-12",
+    "INV-202608-0517": "2026-08-13",
+    "INV-202608-0518": "2026-08-13",
+    "INV-202608-0519": "2026-08-13",
+    "INV-202608-0520": "2026-08-13",
+    "INV-202608-0521": "2026-08-13",
+    "INV-202608-0522": "2026-08-13",
+    "INV-202608-0523": "2026-08-13",
+    "INV-202608-0565": "2026-08-14",
+    "INV-202608-0566": "2026-08-14",
+    "INV-202608-0567": "2026-08-14",
+    "INV-202608-0568": "2026-08-14",
+    "INV-202608-0617": "2026-08-15",
+    "INV-202608-0618": "2026-08-15",
+    "INV-202608-0619": "2026-08-15",
+    "INV-202608-0620": "2026-08-15",
+    "INV-202608-0621": "2026-08-15",
+    "INV-202608-0622": "2026-08-15",
+    "INV-202608-0623": "2026-08-15",
+    "INV-202608-0675": "2026-08-18",
+    "INV-202608-0676": "2026-08-18",
+    "INV-202608-0677": "2026-08-18",
+    "INV-202608-0678": "2026-08-18",
+    "INV-202608-0679": "2026-08-18",
+    "INV-202608-0680": "2026-08-18",
+    "INV-202608-0681": "2026-08-18",
+    "INV-202608-0682": "2026-08-18",
+    "INV-202608-0713": "2026-08-19",
+    "INV-202608-0714": "2026-08-19",
+    "INV-202608-0715": "2026-08-19",
+    "INV-202608-0716": "2026-08-19",
+    "INV-202608-0717": "2026-08-19",
+    "INV-202608-0718": "2026-08-19",
+    "INV-202608-0719": "2026-08-19",
+    "INV-202608-0720": "2026-08-19",
+    "INV-202608-0721": "2026-08-19",
+    "INV-202608-0722": "2026-08-19",
+    "INV-202608-0723": "2026-08-19",
+    "INV-202608-0724": "2026-08-19",
+    "INV-202608-0725": "2026-08-19",
+    "INV-202608-0726": "2026-08-19",
+    "INV-202608-0727": "2026-08-19",
+    "INV-202608-0728": "2026-08-19",
+    "INV-202608-0729": "2026-08-19",
+    "INV-202608-0733": "2026-08-19",
+    "INV-202608-0734": "2026-08-19",
+    "INV-202608-0735": "2026-08-19",
+    "INV-202608-0736": "2026-08-19",
+    "INV-202608-0737": "2026-08-19",
+    "INV-202608-0738": "2026-08-19",
+    "INV-202608-0767": "2026-08-20",
+    "INV-202608-0768": "2026-08-20",
+    "INV-202608-0769": "2026-08-20",
+    "INV-202608-0770": "2026-08-20",
+    "INV-202608-0771": "2026-08-20",
+    "INV-202608-0772": "2026-08-20",
+    "INV-202608-0773": "2026-08-20",
+    "INV-202608-0774": "2026-08-20",
+    "INV-202608-0775": "2026-08-20",
+    "INV-202608-0776": "2026-08-20",
+    "INV-202608-0777": "2026-08-20",
+    "INV-202608-0778": "2026-08-20",
+    "INV-202608-0779": "2026-08-20",
+    "INV-202608-0780": "2026-08-20",
+    "INV-202608-0781": "2026-08-20",
+    "INV-202608-0782": "2026-08-20",
+    "INV-202608-0783": "2026-08-20",
+    "INV-202608-0784": "2026-08-20",
+    "INV-202608-0791": "2026-08-20",
+    "INV-202608-0792": "2026-08-20",
+    "INV-202608-0793": "2026-08-20",
+    "INV-202608-0794": "2026-08-20",
+    "INV-202608-0795": "2026-08-20",
+    "INV-202608-0796": "2026-08-20",
+    "INV-202608-0797": "2026-08-20",
+    "INV-202608-0798": "2026-08-20",
+    "INV-202608-0822": "2026-08-21",
+    "INV-202608-0823": "2026-08-21",
+    "INV-202608-0824": "2026-08-21",
+    "INV-202608-0825": "2026-08-21",
+    "INV-202608-0826": "2026-08-21",
+    "INV-202608-0827": "2026-08-21",
+    "INV-202608-0828": "2026-08-21",
+    "INV-202608-0829": "2026-08-21",
+    "INV-202608-0830": "2026-08-21",
+    "INV-202608-0831": "2026-08-21",
+    "INV-202608-0832": "2026-08-21",
+    "INV-202608-0833": "2026-08-21",
+    "INV-202608-0834": "2026-08-21",
+    "INV-202608-0835": "2026-08-21",
+    "INV-202608-0836": "2026-08-21",
+    "INV-202608-0837": "2026-08-21",
+    "INV-202608-0838": "2026-08-21",
+    "INV-202608-0850": "2026-08-21",
+    "INV-202608-0851": "2026-08-21",
+    "INV-202608-0852": "2026-08-21",
+    "INV-202608-0853": "2026-08-21",
+    "INV-202608-0882": "2026-08-22",
+    "INV-202608-0883": "2026-08-22",
+    "INV-202608-0884": "2026-08-22",
+    "INV-202608-0885": "2026-08-22",
+    "INV-202608-0886": "2026-08-22",
+    "INV-202608-0887": "2026-08-22",
+    "INV-202608-0888": "2026-08-22",
+    "INV-202608-0889": "2026-08-22",
+    "INV-202608-0890": "2026-08-22",
+    "INV-202608-0891": "2026-08-22",
+    "INV-202608-0892": "2026-08-22",
+    "INV-202608-0893": "2026-08-22",
+    "INV-202608-0894": "2026-08-22",
+    "INV-202608-0895": "2026-08-22",
+    "INV-202608-0896": "2026-08-22",
+    "INV-202608-0897": "2026-08-22",
+    "INV-202608-0898": "2026-08-22",
+    "INV-202608-0899": "2026-08-22",
+    "INV-202608-0900": "2026-08-22",
+    "INV-202608-0901": "2026-08-22",
+    "INV-202608-0910": "2026-08-22",
+    "INV-202608-0911": "2026-08-22",
+    "INV-202608-0912": "2026-08-22",
+    "INV-202608-0913": "2026-08-22",
+    "INV-202608-0914": "2026-08-22",
+    "INV-202608-0915": "2026-08-22",
+    "INV-202608-0916": "2026-08-22",
+    "INV-202608-0942": "2026-08-24",
+    "INV-202608-0943": "2026-08-24",
+    "INV-202608-0944": "2026-08-24",
+    "INV-202608-0945": "2026-08-24",
+    "INV-202608-0946": "2026-08-24",
+    "INV-202608-0947": "2026-08-24",
+    "INV-202608-0948": "2026-08-24",
+    "INV-202608-0975": "2026-08-26",
+    "INV-202608-0976": "2026-08-26",
+    "INV-202608-0977": "2026-08-26",
+    "INV-202608-0978": "2026-08-26",
+    "INV-202608-0979": "2026-08-26",
+    "INV-202608-0980": "2026-08-26",
+    "INV-202608-0981": "2026-08-26",
+    "INV-202608-0982": "2026-08-26",
+    "INV-202608-0983": "2026-08-26",
+    "INV-202608-0984": "2026-08-26",
+    "INV-202608-0985": "2026-08-26",
+    "INV-202608-0986": "2026-08-26",
+    "INV-202608-0987": "2026-08-26",
+    "INV-202608-0988": "2026-08-26",
+    "INV-202608-0989": "2026-08-26",
+    "INV-202608-0990": "2026-08-26",
+    "INV-202608-0991": "2026-08-26",
+    "INV-202608-0992": "2026-08-26",
+    "INV-202608-0993": "2026-08-26",
+    "INV-202608-0994": "2026-08-26",
+    "INV-202608-0995": "2026-08-26",
+    "INV-202608-0996": "2026-08-26",
+    "INV-202608-0997": "2026-08-26",
+    "INV-202608-0998": "2026-08-26",
+    "INV-202608-0999": "2026-08-26",
+    "INV-202608-1000": "2026-08-26",
+    "INV-202608-1001": "2026-08-26",
+    "INV-202608-1002": "2026-08-26",
+    "INV-202608-1003": "2026-08-26",
+    "INV-202608-1004": "2026-08-26",
+    "INV-202608-1005": "2026-08-26",
+    "INV-202608-1022": "2026-08-27",
+    "INV-202608-1023": "2026-08-27",
+    "INV-202608-1024": "2026-08-27",
+    "INV-202608-1025": "2026-08-27",
+    "INV-202608-1026": "2026-08-27",
+    "INV-202608-1027": "2026-08-27",
+    "INV-202608-1028": "2026-08-27",
+    "INV-202608-1029": "2026-08-27",
+    "INV-202608-1030": "2026-08-27",
+    "INV-202608-1031": "2026-08-27",
+    "INV-202608-1032": "2026-08-27",
+    "INV-202608-1033": "2026-08-27",
+    "INV-202608-1034": "2026-08-27",
+    "INV-202608-1035": "2026-08-27",
+    "INV-202608-1036": "2026-08-27",
+    "INV-202608-1037": "2026-08-27",
+    "INV-202608-1038": "2026-08-27",
+    "INV-202608-1039": "2026-08-27",
+    "INV-202608-1040": "2026-08-27",
+    "INV-202608-1041": "2026-08-27",
+    "INV-202608-1042": "2026-08-27",
+    "INV-202608-1043": "2026-08-27",
+    "INV-202608-1044": "2026-08-27",
+    "INV-202608-1045": "2026-08-27",
+    "INV-202608-1046": "2026-08-27",
+    "INV-202608-1047": "2026-08-27",
+    "INV-202608-1048": "2026-08-27",
+    "INV-202608-1074": "2026-08-28",
+    "INV-202608-1075": "2026-08-28",
+    "INV-202608-1076": "2026-08-28",
+    "INV-202608-1077": "2026-08-28",
+    "INV-202608-1078": "2026-08-28",
+    "INV-202608-1079": "2026-08-28",
+    "INV-202608-1080": "2026-08-28",
+    "INV-202608-1081": "2026-08-28",
+    "INV-202608-1082": "2026-08-28",
+    "INV-202608-1083": "2026-08-28",
+    "INV-202608-1084": "2026-08-28",
+    "INV-202608-1085": "2026-08-28",
+    "INV-202608-1086": "2026-08-28",
+    "INV-202608-1087": "2026-08-28",
+    "INV-202608-1088": "2026-08-28",
+    "INV-202608-1089": "2026-08-28",
+    "INV-202608-1090": "2026-08-28",
+    "INV-202608-1091": "2026-08-28",
+    "INV-202608-1092": "2026-08-28",
+    "INV-202608-1093": "2026-08-28",
+    "INV-202608-1094": "2026-08-28",
+    "INV-202608-1095": "2026-08-28",
+    "INV-202608-1096": "2026-08-28",
+    "INV-202608-1097": "2026-08-28",
+    "INV-202608-1098": "2026-08-28",
+    "INV-202608-1099": "2026-08-28",
+    "INV-202608-1100": "2026-08-28",
+    "INV-202608-1101": "2026-08-28",
+    "INV-202608-1102": "2026-08-28",
+    "INV-202608-1103": "2026-08-28",
+    "INV-202608-1104": "2026-08-28",
+    "INV-202608-1105": "2026-08-28",
+    "INV-202608-1106": "2026-08-28",
+    "INV-202608-1107": "2026-08-28",
+    "INV-202608-1108": "2026-08-28",
+    "INV-202608-1109": "2026-08-28",
+    "INV-202608-1110": "2026-08-28",
+    "INV-202608-1111": "2026-08-28",
+    "INV-202608-1131": "2026-08-29",
+    "INV-202608-1132": "2026-08-29",
+    "INV-202608-1133": "2026-08-29",
+    "INV-202608-1134": "2026-08-29",
+    "INV-202608-1135": "2026-08-29",
+    "INV-202608-1136": "2026-08-29",
+    "INV-202608-1137": "2026-08-29",
+    "INV-202608-1138": "2026-08-29",
+    "INV-202608-1139": "2026-08-29",
+    "INV-202608-1140": "2026-08-29",
+    "INV-202608-1141": "2026-08-29",
+    "INV-202608-1142": "2026-08-29",
+    "INV-202608-1143": "2026-08-29",
+    "INV-202608-1144": "2026-08-29",
+    "INV-202608-1145": "2026-08-29",
+    "INV-202608-1146": "2026-08-29",
+    "INV-202608-1147": "2026-08-29",
+    "INV-202608-1148": "2026-08-29",
+    "INV-202608-1149": "2026-08-29",
+    "INV-202608-1150": "2026-08-29",
+    "INV-202608-1151": "2026-08-29",
+    "INV-202608-1152": "2026-08-29",
+    "INV-202608-1153": "2026-08-29",
+    "INV-202608-1154": "2026-08-29",
+    "INV-202608-1155": "2026-08-29",
+    "INV-202608-1156": "2026-08-29",
+    "INV-202608-1157": "2026-08-29",
+    "INV-202608-1158": "2026-08-29",
+    "INV-202608-1159": "2026-08-29",
+    "INV-202608-1160": "2026-08-29",
+    "INV-202608-1175": "2026-08-31",
+    "INV-202608-1176": "2026-08-31",
+    "INV-202608-1177": "2026-08-31",
+    "INV-202608-1178": "2026-08-31",
+    "INV-202608-1179": "2026-08-31",
+    "INV-202608-1180": "2026-08-31",
+    "INV-202608-1181": "2026-08-31",
+    "INV-202608-1182": "2026-08-31",
+    "INV-202608-1183": "2026-08-31",
+    "INV-202608-1184": "2026-08-31",
+    "INV-202608-1185": "2026-08-31",
+    "INV-202608-1186": "2026-08-31",
+    "INV-202608-1187": "2026-08-31",
+    "INV-202608-1188": "2026-08-31",
+    "INV-202608-1189": "2026-08-31",
+    "INV-202608-1190": "2026-08-31"
+  },
+  "carry_invoices": {},
+  "open_po": {
+    "PO-2026-08-01": "2026-08-24",
+    "PO-2026-08-02": "2026-08-20",
+    "PO-2026-08-03": "2026-08-24",
+    "PO-2026-08-04": "2026-08-20",
+    "PO-2026-08-05": "2026-08-24",
+    "PO-2026-08-06": "2026-08-21",
+    "PO-2026-08-07": "2026-08-26",
+    "PO-2026-08-08": "2026-08-21",
+    "PO-2026-08-09": "2026-08-26",
+    "PO-2026-08-10": "2026-08-22",
+    "PO-2026-08-11": "2026-08-26",
+    "PO-2026-08-12": "2026-08-22",
+    "PO-2026-08-13": "2026-08-26",
+    "PO-2026-08-14": "2026-08-24",
+    "PO-2026-08-15": "2026-08-27",
+    "PO-2026-08-16": "2026-08-24"
+  },
+  "in_transit": {},
+  "pending_dos": {}
+}
