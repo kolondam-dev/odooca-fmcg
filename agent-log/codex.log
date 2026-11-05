@@ -316,3 +316,9 @@
 - Create company-scoped pickings and operations for transfers, one picking for batch; no synthetic computed reference or journal.
 - 17 finance local tests Ruff 11 manifests PASS; native rerun pending. Baseline upgrade41975851299 PASS24m53s separate; no demo changes merge deploy.
 - Task managed by codex agent at 2026-11-05T13:11:51+07:00
+
+[2026-11-05T14:33:37+07:00] [INFO] Fix PR95 P2 unmatched mapped stock GL keys
+- Owner HOLD4bb761c: production loop ignored extra GL account-product key inside linked journal despite CI green; compare union via production stock_compare helper and expose issues/gl_line_ids.
+- Add local production-function counterexamples, no-product/other-mapped-account/net-zero/missing-GL coverage; native balanced extra-product and unset-product mutations at1x/7x require rejection then exact journal baseline restoration.
+- 20 finance tests Ruff 11 manifests diff-check PASS; native exact-SHA rerun pending. PR95 remains HOLD, no demo write seed merge deploy.
+- Task managed by codex agent at 2026-11-05T14:33:37+07:00

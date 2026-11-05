@@ -1,3 +1,7 @@
+## 2026-11-05 — codex — Koreksi review P2 unmatched stock GL pada PR95
+**[F]** Pemilik HOLD `4bb761c` meskipun 12 job hijau: extra GL key di jurnal tertaut hilang dari loop. Produksi kini memakai union gerakan dan semua GL key pada akun stok current-mapped; unmatched key ditampilkan dengan issue dan GL IDs, termasuk product kosong/net-zero. Oracle menolak anomaly selain selisih nominal.
+**Regresi:** fungsi produksi lokal + mutasi native balanced debit stok/kredit lawan untuk produk lain dan tanpa produk pada skala1/7; rollback wajib mengembalikan grup jurnal persis baseline. [BU] native rerun exact HEAD. Tidak melonggarkan invariant, demo write/seed/merge/deploy; PR95 tetap HOLD untuk review ulang.
+
 ## 2026-11-05 — codex — Ikat fixture stock pada picking native
 **[F]** Run `41975851312` pada `5dd6c69` mencapai jurnal pertama; move tanpa picking menghasilkan reference=False lalu native stock_account gagal menggabung string label. Helper kini membuat picking/operation native company-scoped dan batch memakai satu picking, tanpa menulis computed reference/jurnal.
 **Diverifikasi:** baseline upgrade `41975851299` PASS24m53s, terpisah dari stock gate yang belum PASS. Oracle costing/ownership tetap utuh; tidak demo write/seed/merge/deploy.

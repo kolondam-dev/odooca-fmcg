@@ -6,6 +6,8 @@ from datetime import datetime, time, timedelta
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError
 
+from .stock_compare import compare_stock_gl
+
 LIMIT = 20000
 
 
@@ -82,6 +84,10 @@ class FinanceStockBridge(models.AbstractModel):
                            "lot_id": line.lot_id.id} for line in lines],
                 "issues": issues,
             })
+        stock_accounts = {row["stock_account_id_now"] for row in rows}
+        stock_accounts.update(row["stock_account_id"] for row in policies)
+        stock_accounts.add(company.account_stock_valuation_id.id)
+        stock_accounts.discard(False)
         groups = []
         for journal in moves.account_move_id:
             # A journal may cover several stock moves: never compare each move
@@ -90,25 +96,16 @@ class FinanceStockBridge(models.AbstractModel):
             if any(move.company_id != company for move in siblings):
                 raise AccessError(_("Stock journal belongs to another company."))
             expected = defaultdict(float)
-            actual = defaultdict(float)
             for move in siblings:
                 account = move.product_id._get_product_accounts()["stock_valuation"]
                 expected[(account.id, move.product_id.id)] += move.value * (int(move.is_in) - int(move.is_out))
             journal_lines = self._bounded("account.move.line", [("move_id", "=", journal.id)])
             journal.line_ids.check_access("read")
-            for line in journal_lines:
-                key = (line.account_id.id, line.product_id.id)
-                if key in expected:
-                    actual[key] += line.balance
             groups.append({"account_move_id": journal.id, "sibling_move_ids": siblings.ids,
                            "state": journal.state, "posting_date": str(journal.date),
-                           "comparisons_current_mapping": [
-                               {"account_id": key[0], "product_id": key[1], "move_value_signed": value,
-                                "gl_balance": actual[key], "difference": company.currency_id.round(actual[key] - value)}
-                               for key, value in sorted(expected.items())]})
-        stock_accounts = {row["stock_account_id_now"] for row in rows}
-        stock_accounts.update(row["stock_account_id"] for row in policies)
-        stock_accounts.add(company.account_stock_valuation_id.id)
+                           "comparisons_current_mapping": compare_stock_gl(
+                               expected, [(line.id, line.account_id.id, line.product_id.id, line.balance)
+                                          for line in journal_lines], stock_accounts, company.currency_id.round)})
         ledger = self._bounded("account.move.line", [
             ("company_id", "=", company.id), ("parent_state", "=", "posted"),
             ("date", ">=", start), ("date", "<=", end),

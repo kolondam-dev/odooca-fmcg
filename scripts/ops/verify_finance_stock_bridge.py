@@ -23,6 +23,8 @@ def assert_groups(snapshot):
         if group["state"] != "posted":
             raise AssertionError("Unposted stock journal")
         for row in group["comparisons_current_mapping"]:
+            if row.get("issues"):
+                raise AssertionError(f"Unmatched stock/GL sources: {row}")
             if row["difference"]:
                 raise AssertionError(f"Stock/GL difference: {row}")
 
@@ -193,6 +195,52 @@ def run(env):
                     pass
                 env.invalidate_all()
                 assert_groups(report._snapshot(company.id, "2026-07-01", "2026-07-31"))
+                # P2: extra stock GL key inside an already linked journal must
+                # not disappear just because no sibling move supplies that key.
+                for extra_product in (results[1]["product_id"], False):
+                    try:
+                        with env.cr.savepoint():
+                            journal = scoped["account.move"].browse(snapshot["journal_groups"][0]["account_move_id"])
+                            stock_line = journal.line_ids.filtered(lambda line: line.debit)[:1]
+                            offset_line = journal.line_ids.filtered(lambda line: line.credit)[:1]
+                            journal.button_draft()
+                            journal.write({"line_ids": [(0, 0, {
+                                "name": "Unmatched stock GL mutation", "account_id": stock_line.account_id.id,
+                                "product_id": extra_product, "debit": 10 * scale, "credit": 0,
+                            }), (0, 0, {
+                                "name": "Balanced counterpart", "account_id": offset_line.account_id.id,
+                                "debit": 0, "credit": 10 * scale,
+                            })]})
+                            journal.action_post()
+                            assert sum(journal.line_ids.mapped("balance")) == 0
+                            mutated = report._snapshot(company.id, "2026-07-01", "2026-07-31")
+                            group = next(row for row in mutated["journal_groups"] if row["account_move_id"] == journal.id)
+                            unmatched = [row for row in group["comparisons_current_mapping"]
+                                         if "gl_without_stock_move" in row["issues"]]
+                            assert len(unmatched) == 1
+                            anomaly = unmatched[0]
+                            assert anomaly["product_id"] == extra_product
+                            assert anomaly["move_value_signed"] == 0
+                            assert anomaly["gl_balance"] == anomaly["difference"] == 10 * scale
+                            assert len(anomaly["gl_line_ids"]) == 1
+                            assert journal.id not in mutated["gl_without_selected_stock_link"]
+                            try:
+                                assert_groups(mutated)
+                            except AssertionError as exc:
+                                assert "Unmatched stock/GL sources" in str(exc)
+                            else:
+                                raise AssertionError("Unmatched GL mutation accepted")
+                            raise Rollback()
+                    except Rollback:
+                        pass
+                    env.invalidate_all()
+                    restored = report._snapshot(company.id, "2026-07-01", "2026-07-31")
+                    assert_groups(restored)
+                    assert restored["journal_groups"] == snapshot["journal_groups"]
+                    evidence.setdefault("unmatched_gl_mutations", []).append({
+                        "scale": scale, "product": "other" if extra_product else "unset",
+                        "result": "REJECTED_BASELINE_RESTORED",
+                    })
                 # Boundary readback in disposable fixture only. Not a backdating loader.
                 try:
                     with env.cr.savepoint():

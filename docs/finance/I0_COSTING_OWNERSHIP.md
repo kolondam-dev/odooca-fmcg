@@ -2,6 +2,26 @@
 
 ## Status dan kontrak
 
+### Koreksi review P2 — PR95 masih HOLD sampai rerun
+
+[F] Pada `4bb761c`, run finance `41978862157` dan 12 job unik hijau, tetapi
+review pemilik membuktikan baris GL stok tambahan untuk produk lain di jurnal
+tertaut dapat hilang dari perbandingan. Badge hijau lama tidak menutup finding.
+`stock_compare.compare_stock_gl` kini dipakai produksi untuk membandingkan
+**union** key gerakan dengan seluruh key GL pada akun stok current-mapped
+(company/category/produk dan sibling), termasuk product kosong. Setiap key tanpa
+gerakan menampilkan `gl_without_stock_move`, ID baris GL dan selisih; bahkan key
+tanpa pasangan bernilai net zero tetap merupakan anomali. Key gerakan tanpa GL
+menampilkan `stock_move_without_gl`. Oracle menolak anomali maupun salah nominal.
+
+Regresi memanggil fungsi produksi lokal dan API produksi native: debit stok
+10×skala untuk produk lain/tanpa produk ditambah kredit lawan 10×skala dalam
+jurnal yang sudah tertaut. Jurnal tetap balanced dan tidak masuk daftar jurnal
+tanpa link, tetapi anomaly row harus muncul dan oracle menolak. Setelah rollback,
+grup jurnal wajib persis sama dengan baseline serta kembali lulus. Native cases
+dijalankan pada skala 1×/7× dan dicetak pada `unmatched_gl_mutations`.
+[BU] Rerun native exact HEAD koreksi masih diperlukan; tidak ada merge/deploy.
+
 [F] Implementasi dibangun dari main `77a8ccc` (PR91). Paket ini tetap bagian
 **I0, tahap 1 dari 9 (I0–I8)**. Bukan penerimaan I3, FIN02 penuh, atau FIN01–58.
 Tidak mengganti chart, costing, company atau data demo; tidak mengaktifkan addon
