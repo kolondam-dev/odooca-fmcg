@@ -81,6 +81,11 @@ lulus, fixture stock berhenti sebelum valuasi karena company disposable tidak
 memiliki default incoming picking type untuk quotation. Fixture sekarang membuat
 operation type company-scoped secara eksplisit; oracle angka tidak dilonggarkan.
 Upgrade baseline existing run `41970733046` lulus (25m20s), bukan bukti fixture baru.
+Run `41973776521` pada `8ec5bf9` melewati setup quotation lalu menolak field lama
+`stock.move.name`. Fixture menghapus field tersebut dan secara eksplisit mengisi
+owner pada move line receipt konsinyasi sebelum native completion (quantity
+inverse tidak mewariskan restrict partner tanpa reserved quant). Angka oracle
+tetap sama. Baseline upgrade `41973776542` lulus 15m31s; stock gate belum PASS.
 Profil reports menambahkan `purchase_stock` hanya pada database disposable.
 Artifact `finance-i0-candidate-evidence/stock-bridge.log` harus memuat JSON bukti
 serta `FINANCE_STOCK_BRIDGE=PASS`.

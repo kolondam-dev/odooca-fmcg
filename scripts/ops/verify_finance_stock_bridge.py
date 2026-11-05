@@ -29,13 +29,18 @@ def assert_groups(snapshot):
 
 def complete(env, company, product, source, dest, qty, **extra):
     move = env["stock.move"].with_company(company).create({
-        "name": "Finance native stock fixture", "company_id": company.id,
+        "company_id": company.id,
         "product_id": product.id, "product_uom": product.uom_id.id,
         "product_uom_qty": qty, "location_id": source.id, "location_dest_id": dest.id,
         **extra,
     })
     move._action_confirm()
     move.quantity = qty
+    if move.restrict_partner_id:
+        # Native quantity inverse creates lines without an owner when no
+        # reserved quant exists (notably supplier receipts). Set the real
+        # owner on the lines before native valuation/quant updates.
+        move.move_line_ids.owner_id = move.restrict_partner_id
     move.picked = True
     move.with_context(force_period_date="2026-07-31")._action_done()
     return move
@@ -108,7 +113,7 @@ def build(env, suffix, scale):
         assert consigned.move_line_ids.owner_id == owner
         results.append({"method": method, "values": actual, "product_id": product.id})
     batch = scoped["stock.move"].create([{
-        "name": "Finance grouped journal", "company_id": company.id,
+        "company_id": company.id,
         "product_id": result["product_id"], "product_uom_qty": 2,
         "location_id": locations["shelf"].id, "location_dest_id": locations["customer"].id,
     } for result in results])

@@ -1,3 +1,7 @@
+## 2026-11-05 — codex — Selaraskan field native Odoo19 fixture stok
+**[F]** Run `41973776521` pada `8ec5bf9` melewati quotation, lalu menolak legacy `stock.move.name`. Dihapus pada helper/batch; source core diperiksa dan receipt konsinyasi kini mengisi move-line owner eksplisit sebelum completion, karena quantity inverse tanpa reserved quant tidak mewariskannya.
+**Batas:** oracle tetap utuh; [BU] stock gate rerun. Baseline upgrade `41973776542` PASS15m31s terpisah dari fixture baru; tidak demo write/seed/merge/deploy.
+
 ## 2026-11-05 — codex — Perbaiki incoming operation type fixture PR95
 **[F]** Finance run `41970732989` pada `44b37f5` gagal di quotation pertama: `purchase.order.picking_type_id` NULL karena company disposable belum punya default receipt operation. Fixture kini membuat incoming picking type company-scoped dan mengikat quotation secara eksplisit. Tidak mengubah diagnostik/oracle nominal.
 **Diverifikasi:** job umum termasuk baseline upgrade `41970733046` PASS25m20s; [BU] rerun stock fixture. Full suite lokal sebelumnya timeout120s, bukan PASS. Tidak demo write/seed/merge/deploy; PR95 belum siap merge.

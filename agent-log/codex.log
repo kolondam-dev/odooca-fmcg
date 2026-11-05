@@ -304,3 +304,9 @@
 - 17 finance oracle tests, Ruff, 11 manifests PASS; native rerun pending. Baseline upgrade41970733046 PASS25m20s separately; broad local suite timeout120s not PASS.
 - No oracle weakening, demo writes, merge or deploy.
 - Task managed by codex agent at 2026-11-05T12:23:33+07:00
+
+[2026-11-05T12:43:29+07:00] [INFO] Align disposable stock fixture with Odoo19 fields
+- Run41973776521 reaches stock create then rejects removed stock.move.name; remove legacy field from single and batch fixtures.
+- Native source review: quantity inverse creates unowned lines without reserved quant; set consignment line owner explicitly before completion.
+- 17 local finance tests, Ruff and 11 manifests PASS; native rerun pending, oracle unchanged. Baseline upgrade41973776542 PASS15m31s; no demo write merge deploy.
+- Task managed by codex agent at 2026-11-05T12:43:29+07:00
