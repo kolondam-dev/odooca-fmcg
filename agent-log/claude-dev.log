@@ -124,3 +124,9 @@
 - K1 batas seed 5 Nov, mesin harian hanya 6 Nov+; K2 kalibrasi biaya+retur+diskon, Juli beku; K3 opsi A dengan micro-slicing presisi; K4 organik. Pemicu via shell oleh antigravity; dokumen live PWA = fakta.
 - Hanya dokumen: Bab 9A dan fase F9 di SEED_AGUSTUS_NOVEMBER_ANALISIS_DAN_PLAN.md. Tidak ada perubahan data/loader/gate/server. K5-K9 default [A].
 - Task managed by claude-dev agent at 2026-11-05T08:59:14+07:00
+
+[2026-11-05T10:42:35+07:00] [INFO] F1: Kontrak Seed v2 + gate v2 + tes mutasi
+- docs/reviews/SEED_INVARIANT_CONTRACT_V2.md; scripts/ops/seed_v2_gates.py (murni); tests/test_seed_v2_gates.py (76 tes). 12 gate dapat dieksekusi; gate slice (F9), v1 per pack (F2), FLEET-CAPACITY dan ROUND-NUMBER dinyatakan terbuka.
+- Register Juli beku lulus gate v2 yang berlaku; replay penutupan Juli = laporan rekonsiliasi (53.837/1.038/9, 309 AR, 48 carry-forward). Tiap pemeriksa dimatikan -> >=2 tes gagal. Suite penuh 267 tes OK (2 skip), ruff dan check_manifests PASS, v1 gates PASS.
+- Tidak mengubah register, loader, gate v1, workflow atau server. [BU] pack nyata, runtime Odoo dan DB live belum diuji.
+- Task managed by claude-dev agent at 2026-11-05T10:42:35+07:00

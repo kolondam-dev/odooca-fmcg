@@ -126,3 +126,8 @@ python scripts/ops/verify_seed_acceptance.py --report /tmp/acceptance-report.jso
 PASS artefak lokal tidak membuktikan loader, backdating, upgrade, GL atau runtime
 Odoo. Checklist runtime terdahulu tetap berlaku. Perluasan periode/schema wajib
 mengubah kontrak dan tes secara eksplisit; jangan menambah allowlist baseline.
+
+## Perluasan periode (2026-11-05)
+Periode Agustus 2026 dan seterusnya diatur oleh `SEED_INVARIANT_CONTRACT_V2.md`
+(gate `scripts/ops/seed_v2_gates.py`, tes `tests/test_seed_v2_gates.py`). Kontrak ini
+tetap berlaku utuh untuk Juli 2026 dan tidak dilonggarkan oleh v2.

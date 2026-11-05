@@ -329,3 +329,9 @@
 - CI adds clean foundation install/upgrade and persisted ledger/stock policy fingerprint preservation plus five-role native probes. Local23 finance tests Ruff12 manifests YAML/XML PASS; native exact-SHA pending.
 - I0 latest live sources/approved COA and full I1/I2-I8 remain open; no seed merge deploy.
 - Task managed by codex agent at 2026-11-05T15:42:55+07:00
+
+[2026-11-05T15:52:47+07:00] [INFO] Integrate main PR93 into PR96 preserving histories
+- PR96 conflicted after main advanced to89172e2; only HANDOFF conflict. Preserve all lines from both parents; seed source merged verbatim, finance source unchanged.
+- 23 finance tests Ruff12 manifests and both-parent HANDOFF preservation PASS. Old run41996730531 only push Seed jobs, not native finance/full PR evidence; integration CI pending.
+- No merge PR to main, demo write or deployment.
+- Task managed by codex agent at 2026-11-05T15:52:47+07:00
