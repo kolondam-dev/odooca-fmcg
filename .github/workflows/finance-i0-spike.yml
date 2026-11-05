@@ -5,6 +5,8 @@ on:
     paths:
       - 'addons/id_base/**'
       - 'scripts/ops/finance_i0*'
+      - 'scripts/ops/verify_finance_golden_ledger.py'
+      - 'tests/test_finance_golden_ledger.py'
       - 'docs/finance/**'
       - 'oca.lock'
       - '.github/workflows/finance-i0-spike.yml'
@@ -73,6 +75,14 @@ jobs:
           print('FINANCE_I0_PROFILE_INSTALLED_AND_UPGRADED', sys.argv[1])
           PY
           done
+      - name: Minimal golden ledger against actual OCA Trial Balance
+        run: |
+          set -euo pipefail
+          docker run --rm -i --network host --entrypoint bash fmcg-finance:i0 -c '
+            odoo shell -d finance_i0_reports_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ops/verify_finance_golden_ledger.py 2>&1 | tee finance-i0-evidence/golden-ledger.log
+          grep -q '^FINANCE_GOLDEN_LEDGER=PASS$' finance-i0-evidence/golden-ledger.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -248,3 +248,10 @@
 - Run41927243405 failed before build: docker create parsed -U outside single quotes. Match established ci.yml double quoting; no acceptance relaxed.
 - Main PR checks 162bb8b passed including install and persistent upgrade. Candidate evidence remains pending rerun.
 - Task managed by codex agent at 2026-11-05T06:00:46+07:00
+
+[2026-11-05T08:11:44+07:00] [INFO] I0 followup golden ledger against real OCA report
+- Verified PR89 merged main6af00a9, approved scope remains initial audit containment only.
+- New branch finance-i0-golden-ledger adds exact-disposable two-company two-period general-journal fixture, independent expected TB, posted/draft control and balanced-mutation rollback.
+- Calls production OCA Trial Balance, no copied report algorithm; source pin API inspected. Local3 oracle tests Ruff manifests YAML PASS; native CI pending.
+- No demo DB writes merge deploy; untracked local full_dataset_runtime artifacts left untouched.
+- Task managed by codex agent at 2026-11-05T08:11:44+07:00

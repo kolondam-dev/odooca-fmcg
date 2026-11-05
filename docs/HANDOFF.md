@@ -1,3 +1,8 @@
+## 2026-11-05T08:11:44+07:00 — codex — I0 lanjutan: golden ledger minimal OCA
+**[F]** PR89 merged ke main `6af00a9`; review pemilik PASS hanya audit awal/containment (HEAD `c3a7a79`, 12 job PR unik, 207 tes Odoo, lima profil kandidat, persistent upgrade/replay). Bukan PASS I0 keseluruhan.
+**Berubah:** branch baru `agen/finance-i0-golden-ledger`, runner disposable dua company/dua periode dengan angka kontrol eksplisit terhadap `_get_data` Trial Balance OCA asli; posted/draft noise, balanced mutation rejection dan baseline-after-rollback; workflow dan docs finance diperbarui.
+**Diverifikasi:** 3 tes oracle lokal, Ruff, 10 manifest dan YAML PASS. **[BU]** Runtime native PostgreSQL/OCA CI. Invoice/refund/reconcile, costing/ownership, COA mapping, role/company negatives dan FIN01–58 tetap terbuka. Tidak mengubah demo DB, merge atau deploy. Dua artifact runtime lokal untracked tidak disentuh.
+
 ## 2026-11-05T06:00:46+07:00 — codex — Koreksi quoting healthcheck spike I0
 **[F]** Run `41927243405` gagal di Initialize containers sebelum build/instal: runner memecah single-quoted health command sehingga Docker membaca `-U` sebagai option create. Disamakan dengan double quote pada CI existing; acceptance tidak dilonggarkan.
 **[F]** CI utama commit `162bb8b` hijau termasuk install-test dan upgrade/replay. **[BU]** Spike kandidat menunggu HEAD koreksi; belum merge/deploy atau perubahan data demo.
