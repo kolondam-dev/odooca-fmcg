@@ -2061,3 +2061,9 @@
 - Membangun scripts/ops/generate_state_20260801.py, scripts/ops/seed_f0_inspect_live.py, scripts/ops/seed_f0_analyze_stock_live.py, dan tests/test_state_20260801.py (4 tests PASS).
 - Verifikasi ruff check clean, check_manifests.py 10 addon OK, verify_seed_invariants PASS, verify_seed_acceptance PASS.
 - Task managed by antigravity at 2026-11-05T11:15:00+07:00
+
+[2026-11-05T14:35:00+07:00] [INFO] PR94: verifier mewajibkan eksak 15 entri fingerprint register kanonikal
+- scripts/ops/generate_state_20260801.py memvalidasi set kunci input_dataset_sha256 sama persis dengan 15 register kanonikal
+- Penanganan manifes fingerprint kosong {} atau berkurang langsung fail-fast dengan ValueError
+- Penambahan tes regresi test_empty_or_incomplete_fingerprint_manifest_fails_fast di tests/test_state_20260801.py (8 tes PASS)
+- Task managed by antigravity-agent at 2026-11-05T14:35:00+07:00

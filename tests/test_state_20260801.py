@@ -118,6 +118,26 @@ class TestState20260801(unittest.TestCase):
                 generate_state(tmp_path, verify_fingerprint=True)
             self.assertIn("Canonical register fingerprint mismatch", str(ctx.exception))
 
+    def test_empty_or_incomplete_fingerprint_manifest_fails_fast(self):
+        """Regression test for supervisor probe: replacing manifest fingerprint with {} must fail fast."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            reg_dir = ROOT / "data" / "registers"
+            for item in reg_dir.glob("*.csv"):
+                shutil.copy(item, tmp_path / item.name)
+            for item in reg_dir.glob("*.json"):
+                shutil.copy(item, tmp_path / item.name)
+
+            # Replace input_dataset_sha256 with {}
+            recon_file = tmp_path / "canonical_financial_reconciliation_july_2026.json"
+            recon_data = json.loads(recon_file.read_text(encoding="utf-8"))
+            recon_data["input_dataset_sha256"] = {}
+            recon_file.write_text(json.dumps(recon_data), encoding="utf-8")
+
+            with self.assertRaises(ValueError) as ctx:
+                generate_state(tmp_path, verify_fingerprint=True)
+            self.assertIn("15 canonical registers", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

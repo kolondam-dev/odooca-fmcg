@@ -39,6 +39,25 @@ def load_csv_rows(path: Path):
     return list(csv.DictReader(data.decode("utf-8-sig").splitlines()))
 
 
+CANONICAL_REGISTER_FILES = frozenset({
+    "customer_registry_354.csv",
+    "inbound_po_intransit_june_headers.csv",
+    "inbound_po_intransit_june_lines.csv",
+    "initial_stock_20260701.csv",
+    "perpetual_ap_payments.csv",
+    "perpetual_ar_collections.csv",
+    "perpetual_daily_stock_cards.csv",
+    "perpetual_deliveries.csv",
+    "perpetual_invoices.csv",
+    "perpetual_opex_payroll.csv",
+    "perpetual_order_lines.csv",
+    "perpetual_order_rejections.csv",
+    "perpetual_sales_orders.csv",
+    "perpetual_stock_event_ledger.csv",
+    "pjp_july_2026_matrix.csv",
+})
+
+
 def verify_canonical_fingerprints(reg_dir: Path):
     """Verify SHA-256 hashes of the 15 frozen canonical registers."""
     recon_file = reg_dir / "canonical_financial_reconciliation_july_2026.json"
@@ -47,7 +66,19 @@ def verify_canonical_fingerprints(reg_dir: Path):
     with recon_file.open(encoding="utf-8") as f:
         recon = json.load(f)
     expected_hashes = recon.get("input_dataset_sha256", {})
-    for filename, expected_hash in expected_hashes.items():
+    if not isinstance(expected_hashes, dict):
+        raise ValueError("Invalid reconciliation manifest: input_dataset_sha256 must be a dictionary")
+    if set(expected_hashes.keys()) != CANONICAL_REGISTER_FILES:
+        missing = sorted(CANONICAL_REGISTER_FILES - set(expected_hashes.keys()))
+        extra = sorted(set(expected_hashes.keys()) - CANONICAL_REGISTER_FILES)
+        raise ValueError(
+            f"Reconciliation manifest input_dataset_sha256 must contain exactly the 15 canonical registers. "
+            f"Missing: {missing}, Extra: {extra}"
+        )
+    for filename in sorted(CANONICAL_REGISTER_FILES):
+        expected_hash = expected_hashes[filename]
+        if not expected_hash or not isinstance(expected_hash, str):
+            raise ValueError(f"Missing or invalid SHA-256 fingerprint for canonical register: {filename}")
         file_path = reg_dir / filename
         if not file_path.exists():
             raise FileNotFoundError(f"Missing canonical register file: {filename}")

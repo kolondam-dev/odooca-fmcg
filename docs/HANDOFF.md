@@ -1,3 +1,8 @@
+## 2026-11-05T14:35:00+07:00 — antigravity — PR94: mewajibkan eksak 15 entri fingerprint register kanonikal
+**Berubah:** scripts/ops/generate_state_20260801.py: mewajibkan eksak 15 entri register kanonikal (CANONICAL_REGISTER_FILES) pada input_dataset_sha256 manifest rekonsiliasi sebelum replay; manifes kosong {} atau tidak lengkap memicu ValueError; tests/test_state_20260801.py: penambahan tes regresi supervisor test_empty_or_incomplete_fingerprint_manifest_fails_fast (total 8 tes).
+**Diverifikasi:** 8 tes unit PASS lokal, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon).
+**Belum diuji:** [BU] Re-review CI PR #94. Tidak ada mutasi/deploy ke database live.
+
 ## 2026-11-05T11:50:00+07:00 — antigravity — Koreksi review F0: kuantitas fraksional, fingerprint beku, timezone WITA, dan resolusi main
 **Berubah:**
 - scripts/ops/generate_state_20260801.py: menolak kuantitas non-integral secara fail-closed (mencegah silent truncation pada mutasi 0.5 karton), memverifikasi SHA-256 fingerprint 15 register beku sebelum replay, dan menyelaraskan timezone cutoff dengan WITA (+08:00).
