@@ -13,6 +13,8 @@ Permintaan pemilik: paket lengkap Finance/Accounting/Tax Indonesia dengan OCA da
 4. [Kontrak penerimaan](ACCEPTANCE_CONTRACT.md): angka kontrol, skenario negatif, keamanan dan bukti siap pakai.
 5. [Audit runtime I0 dan containment](I0_RUNTIME_AUDIT.md): hasil implementasi awal,
    keputusan scope demo pemilik, matriks sumber dan gate yang masih terbuka.
+6. [Golden ledger minimal I0](I0_GOLDEN_LEDGER.md): oracle dua company/dua periode
+   terhadap Trial Balance OCA aktual dan batas pembuktiannya.
 
 ## Tiga putaran penyusunan rencana
 
