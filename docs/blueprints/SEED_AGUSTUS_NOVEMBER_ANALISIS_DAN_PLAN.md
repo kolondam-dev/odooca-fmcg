@@ -1,7 +1,7 @@
 # Seeding transaksi historis Agustus – 4 November 2026: analisis, gap analysis, dan plan
 
 **Penulis:** claude-dev · **Tanggal:** 2026-11-04, diperbarui 2026-11-05 (hari ini Kamis 5 November) · **Basis:** `main` `2b7cdd2` (PR #86)
-**Status dokumen:** analisis dan rencana. Tidak ada data, register, loader, gate, atau server yang diubah. Menunggu keputusan pemilik (Bab 9).
+**Status dokumen:** analisis dan rencana. Tidak ada data, register, loader, gate, atau server yang diubah. Keputusan pemilik K1–K4 dan tiga konfirmasi diterima 2026-11-05 (Bab 9A); K5–K9 memakai usulan sebagai default [A] sampai dikoreksi.
 **Penandaan:** [F] fakta bersumber · [A] asumsi · [BU] belum diuji/diverifikasi (AGENTS.md butir 6).
 
 ---
@@ -269,6 +269,32 @@ Rekomendasi [A]: **B bila pemilik mau memberi otorisasi satu kali**; jika tidak,
 
 ---
 
+## 9A. Keputusan pemilik (2026-11-05) dan dampaknya pada desain
+
+| # | Keputusan | Dampak |
+|---|---|---|
+| K1 | Batas seed Kamis 5 Nov (hari kerja ke-81; DO 6 Nov berstatus siap kirim, pola carry-forward 1 Agustus). Mesin harian dengan pemicu manual **hanya untuk 6 Nov dan seterusnya** | Dua mekanisme, satu planner: (1) **period pack** Agustus–5 Nov dihasilkan offline dari penutupan Juli; (2) **mesin harian** 6 Nov+ yang membaca keadaan dari database. Planner murni yang sama dipakai keduanya; tes kontinuitas membuktikan hasil pack sampai 5 Nov sama dengan keadaan awal mesin harian |
+| K2 | Juli beku. Kalibrasi hanya perilaku Agustus+: biaya (katalog OPEX), retur/tolakan (nota kredit, karantina, penghapusan), dan diskon (disetujui) | Kurva sasaran [A]: margin bersih 4,1 → ±2,5 → ±3,7 → ±5,0 (Jul→Okt); tolakan 0,04 → 2,4 → 1,8 → 0,8. Titik "Juli 0,9%" dilepas dan skrip demo memakai kalimat yang benar. Pita NARRATIVE-ANCHORS dikunci di konfigurasi terversi |
+| K3 | Opsi A: tambah ke database live, tanpa timpa/restore. Micro-slicing wajib **presisi** | Lihat spesifikasi slice di bawah. Guard loader (menolak `railway`) harus diadaptasi, direview, dan diuji di disposable berisi data pembanding sebelum menyentuh server (keputusan 30 Okt). Backup DB + filestore sebelum tiap blok bulan |
+| K4 | Opsi A: campuran principal organik | Titik awal W23 / M29 / KA21 / U27 (data Juli: campuran sama di semua channel, jadi tidak bergeser sendiri). Tanpa mandat 34/28/20/18; laporan naratif hanya mencatat deviasinya |
+| Diskon | Ikut dikalibrasi (4,64% → ±2,5% → 2,0%) | Pengungkit utama margin kotor; konfigurasi terversi per bulan |
+| Pemicu | **Perintah shell**, dijalankan antigravity atas permintaan pemilik (bukan wizard di Odoo) | `scripts/ops/seed_day.py` via `odoo shell`; default dry-run (cetak rencana, digest, preflight), `--apply` eksplisit; satu tanggal per eksekusi; binding exact project/environment/database dan opt-in demo; hasil dicatat di agent-log dan HANDOFF oleh pelaksana |
+| Dokumen live PWA | **Fakta** | Stok tersedia dikurangi reservasi/penjualan dokumen live; mesin tidak mengubah, menghapus, atau membayarkan dokumen live (dilaporkan sebagai item terbuka) [A]. Dokumen live = tanpa penanda `fmcg_seed_batch` |
+
+**Spesifikasi slice (presisi, toleransi nol, `Decimal`):**
+1. **Satu slice = satu hari kerja, atomik.** Gagal berarti rollback penuh; tidak pernah setengah hari.
+2. **Preflight:** stok per SKU/lot dan reservasi, AR/AP terbuka, nomor urut terakhir per jenis dokumen, dan penanda penutupan slice sebelumnya harus sama dengan keadaan database, selisih hanya boleh berasal dari dokumen live yang dikenali dan dicatat. Selain itu: berhenti dan lapor, tidak menebak.
+3. **Idempoten:** kunci = tanggal + digest rencana; ulang = 0 record baru; slice tidak boleh melompati hari yang belum ada.
+4. **Deterministik:** aliran acak per (tanggal, aliran), himpunan diurutkan, zona WITA, hasil sama pada `PYTHONHASHSEED` berbeda.
+5. **Audit penutupan per slice** (PASS/FAIL tercatat): stok fisik ≥ 0 dan reserved ≤ fisik; AR/AP terbuka = buku besar; 0 draft; jumlah dan nilai dokumen = rencana; kalender resmi; SO satu principal; penomoran monoton.
+6. **Penanda penutupan** ditulis di akhir slice (tanggal, digest, jumlah dokumen, saldo) dan menjadi dasar preflight berikutnya.
+
+Gate baru yang ditambahkan ke Kontrak v2: SLICE-ATOMIC, SLICE-IDEMPOTENT, LIVE-AS-FACT, PACK-TO-DAILY-CONTINUITY.
+
+K5–K9 belum dijawab; usulan pada Bab 9 dipakai sebagai default [A] dan akan dikoreksi bila pemilik berbeda.
+
+---
+
 ## 10. Plan bertahap
 
 | Fase | Isi | Keluaran | Gate keluar |
@@ -281,7 +307,10 @@ Rekomendasi [A]: **B bila pemilik mau memberi otorisasi satu kali**; jika tidak,
 | F5 | Runtime disposable penuh: Juli+1 Agu → Agustus | laporan audit | GL/stok/AR/AP/PPN cocok; imutabilitas Juli |
 | F6 | September, Oktober, 1–3/4 November (satu per satu) | pack 09/10/11 | idem per bulan |
 | F7 | Verifikasi menyeluruh: dump, snapshot, perbandingan, dashboard PWA vs oracle, `DEMO_SCRIPT` | referensi snapshot, skrip demo | Semua gate hijau pada SHA akhir |
-| F8 | Deploy sesuai K3, probe pascadeploy, HANDOFF | bukti | Persetujuan pemilik |
+| F8 | Deploy sesuai K3 (opsi A): pack dimuat ke database live per hari-slice, backup per bulan, probe pascadeploy, HANDOFF. Dijalankan antigravity | bukti | Persetujuan pemilik |
+| F9 | **Mesin harian 6 Nov+** (`seed_day.py`): uji di disposable berantai 5→6→7 Nov, uji drift (sisipkan SO live, ubah stok, ulang tanggal, gagal di tengah slice) | skrip, tes, runbook pemicu | Semua gate slice hijau; drift terdeteksi dan berhenti, bukan menebak |
+
+Catatan perubahan 2026-11-05: F2 membangun satu planner murni yang dipakai pack dan mesin harian; F4 menambah slice loader dan adaptasi guard database live; F0 mencakup snapshot read-only database live (`scripts/ops/odoo_snapshot.py`, dijalankan pemilik/antigravity tanpa menaruh kredensial di repo).
 
 Setiap fase: cabang `agen/<topik>`, PR, CI hijau, entri HANDOFF/agent-log, commit bertanda tangan agen.
 

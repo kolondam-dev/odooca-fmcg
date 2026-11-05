@@ -119,3 +119,8 @@
 - Temuan baru: gate CALENDAR memercayai flag dataset sendiri; 0 piutang jatuh tempo pada 31 Juli dan 33 outlet melampaui limit kredit; kebutuhan modal kerja Agustus; dataset historis lama non-otoritatif.
 - Hanya dokumen. Register, loader, gate, workflow dan server tidak diubah. [BU] isi DB Railway belum diaudit; estimasi waktu loader dan kebutuhan kas bersifat asumsi.
 - Task managed by claude-dev agent at 2026-11-05T05:21:18+07:00
+
+[2026-11-05T08:59:14+07:00] [INFO] Keputusan pemilik K1-K4 dicatat; plan diperbarui (mesin harian 6 Nov+)
+- K1 batas seed 5 Nov, mesin harian hanya 6 Nov+; K2 kalibrasi biaya+retur+diskon, Juli beku; K3 opsi A dengan micro-slicing presisi; K4 organik. Pemicu via shell oleh antigravity; dokumen live PWA = fakta.
+- Hanya dokumen: Bab 9A dan fase F9 di SEED_AGUSTUS_NOVEMBER_ANALISIS_DAN_PLAN.md. Tidak ada perubahan data/loader/gate/server. K5-K9 default [A].
+- Task managed by claude-dev agent at 2026-11-05T08:59:14+07:00
