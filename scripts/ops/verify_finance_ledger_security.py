@@ -85,6 +85,7 @@ def check_roles_and_scope(env, fixtures):
     require(not reader["account.move.line"].search([("company_id", "=", b[0].id)]), "Foreign AML visible to reader")
     for label, user_env in (("sales", sales), ("driver", driver)):
         evidence.append(denied(env, lambda e=user_env: golden.trial_balance(e, a, "2026-07-01", "2026-07-31", scoped_filters=False), f"{label}_report_denied"))
+        evidence.append(denied(env, lambda e=user_env: e["report.account_financial_report.trial_balance"]._get_report_values([], {"company_id": a[0].id}), f"{label}_render_data_denied"))
         evidence.append(denied(env, lambda e=user_env: golden.make_entry(e, a, "forbidden", "2026-07-01", {"cash": 1, "equity": -1}), f"{label}_posting_denied"))
     for fixture in fixtures:
         totals = golden.trial_balance(accountant, fixture, "2026-07-01", "2026-07-31", scoped_filters=False)
@@ -239,6 +240,8 @@ def check_native_documents(env, suffix, scale):
 
 def run(env):
     require(env.cr.dbname == "finance_i0_reports_disposable", "Extended ledger requires exact disposable reports database")
+    require(env["ir.module.module"].search_count([("name", "=", "id_finance_reporting"), ("state", "=", "installed")]) == 1,
+            "Finance reporting boundary addon must be installed; no silent missing guard")
     evidence = {"scope": "I0 ledger/security package, not full FIN01-58 acceptance"}
     companies_before = set(env["res.company"].search([]).ids)
     users_before = set(env["res.users"].with_context(active_test=False).search([]).ids)

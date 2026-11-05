@@ -1,3 +1,7 @@
+## 2026-11-05T08:47:02+07:00 — codex — Boundary report Trial Balance server-side
+**Berubah:** addon `id_finance_reporting` LGPL-3, guard accounting role + explicit active authorized company pada `_get_data`/`_get_report_values`, tanpa menggandakan engine OCA atau sudo. Wizard OCA terbuka base.group_user dan Sales native punya read account/AML; menu bukan boundary cukup. Negative tests mencakup render-data.
+**Diverifikasi:** 14 tes finance lokal, 11 manifest, Ruff PASS. **[BU]** Instal/upgrade addon dan native role/lifecycle pada CI HEAD baru. Addon hanya diaktivasi pada profil disposable, bukan INIT_MODULES atau demo DB. Tidak merge/deploy.
+
 ## 2026-11-05T08:43:19+07:00 — codex — Paket I0 ledger native dan keamanan
 **Berubah:** branch `agen/finance-i0-ledger-security` dari main `3a96a49`; runner extended, workflow profil reports dengan mobile groups asli, enam tes oracle lokal dan `docs/finance/I0_LEDGER_SECURITY.md`. Sesuai permintaan pemilik, satu PR menggabungkan isolasi company tanpa filter, reader/accountant/sales/mobile ACL, restricted-source mutation, invoice/bill/refund/payment/reconciliation native dua periode, historical partial cutoff, unreconcile rollback dan archived partner.
 **Diverifikasi:** Ruff, 6 tes lokal, 10 manifest dan YAML PASS. **[BU]** Runtime PostgreSQL/OCA CI dan review exact HEAD. Expected angka tidak dilonggarkan; I0/FIN01–58 tetap belum diterima penuh. Semua company tambahan hanya fixture disposable yang di-rollback; tidak mengubah DB demo, merge atau deploy.

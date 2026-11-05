@@ -262,3 +262,9 @@
 - Added native invoices bills refunds payments partial reconciliation August settlement dated residual oracle unreconcile rollback archived partner, two companies scales1 and7.
 - Six local tests Ruff ten manifests YAML PASS; native CI pending. No demo changes merge deploy. Docs I0_LEDGER_SECURITY records boundaries.
 - Task managed by codex agent at 2026-11-05T08:43:19+07:00
+
+[2026-11-05T08:47:02+07:00] [INFO] Enforce Trial Balance role and company boundaries
+- Added id_finance_reporting LGPL3 addon delegating OCA engine with accounting-role explicit-active-company guard at data and render boundaries.
+- Source inspection: OCA wizard ACL base.group_user plus native sale grants read account AML; menus not sufficient boundary. No blanket AML access removed from Sales.
+- Reports disposable profile installs boundary addon; real-user negatives include render path; no production activation. Local14 finance tests eleven manifests Ruff PASS; native CI pending.
+- Task managed by codex agent at 2026-11-05T08:47:02+07:00

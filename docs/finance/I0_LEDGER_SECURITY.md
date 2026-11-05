@@ -44,6 +44,17 @@ atau money-in-transit production. Credit-note lifecycle koreksi resmi belum diuj
 
 ## Eksekusi dan bukti
 
+Addon baru **`id_finance_reporting`** (19.0.1.0.0, LGPL-3) menjadi boundary
+server-side Trial Balance: hanya accounting readonly/user/manager; company wajib
+eksplisit, aktif dalam context, dan milik user. Guard dipasang sebelum `_get_data`
+dan `_get_report_values`, tanpa sudo atau duplikasi algoritma OCA. Sumber OCA
+wizard ACL pada pin proyek memberi CRUD kepada base.group_user; sumber sale
+memberi salesman read account/AML, sehingga wizard/menu bukan boundary cukup.
+XLSX OCA memanggil report `_get_report_values` yang sama; render-data negatives
+diuji, tetapi artifact XLSX/PDF end-to-end belum menjadi klaim paket ini.
+Tidak mengubah akses AML native milik Sales; hanya report Trial Balance yang
+dibatasi. Report OCA lain memerlukan gate terpisah sebelum aktivasi.
+
 Runner `scripts/ops/verify_finance_ledger_security.py` hanya menerima
 `finance_i0_reports_disposable`. Profil reports memasang id_mobile_api agar grup
 driver/evidence asli tersedia. CI menjalankan lima profil, golden minimal PR90,
