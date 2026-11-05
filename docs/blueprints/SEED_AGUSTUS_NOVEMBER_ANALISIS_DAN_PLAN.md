@@ -4,6 +4,9 @@
 **Status dokumen:** analisis dan rencana. Tidak ada data, register, loader, gate, atau server yang diubah. Keputusan pemilik K1–K4 dan tiga konfirmasi diterima 2026-11-05 (Bab 9A); K5–K9 memakai usulan sebagai default [A] sampai dikoreksi.
 **Penandaan:** [F] fakta bersumber · [A] asumsi · [BU] belum diuji/diverifikasi (AGENTS.md butir 6).
 
+**Acuan setelah keputusan 5 November:** Bab 9A mengesampingkan opsi/rekomendasi lama yang bertentangan. Batas pack adalah **5 November 2026** (81 hari kerja sejak 1 Agustus); mesin harian mulai **6 November**. Judul dan angka sampai 4 November di analisis awal adalah baseline historis perhitungan, bukan batas implementasi terbaru; estimasi volume/biaya perlu dihitung ulang sebelum F1. F6 mengikuti batas 5 November ini. Jalur terpilih adalah A (tambahan per hari-slice tanpa restore menimpa), Juli tetap beku, dan campuran principal organik. K5–K9 serta angka anchor bertanda [A] belum menjadi persetujuan nominal, toleransi, atau kebijakan akuntansi/pajak. Persetujuan rencana bukan izin mengeksekusi seed/menulis database live; preflight, kontrak, pembuktian disposable, serta otorisasi eksekusi sesuai fase tetap wajib. “0 draft” pada audit slice berlaku untuk dokumen seed yang seharusnya selesai pada cut-off, bukan perintah menyelesaikan draft live atau DO carry-forward yang memang harus terbuka.
+
+
 ---
 
 ## 0. Ringkasan eksekutif

@@ -228,3 +228,34 @@
 - Generated fallback count follows assignment, stable DO IDs derive from outlet IDs; labels/address/site use the same outlet.
 - Local 374 unit tests, typecheck, three builds and manifests pass; browser/native Odoo deferred to CI.
 - Task managed by codex agent at 2026-11-03T08:58:21+07:00
+
+[2026-11-05T00:25:15+07:00] [INFO] Finance I0 runtime audit and legacy tax containment
+- Main fast-forward to 565e8a4; PR86 already merged; branch follows implementation guide.
+- Owner selected demo company1 IDR existing Indonesian chart and owner demo Finance/Tax decisions.
+- Read-only Railway SQL inventory: native Coretax installed; report/MIS/reconcile uninstalled; zero legacy numbers/export flags. 67 source modules, 19 OCA manifests match exact lock pins.
+- Implemented legacy number/CSV RPC refusal and unverified UI without changing existing ledger or native tax workflow; native regression added. Ruff, 10 manifests and 3 audit unit tests PASS; CI pending.
+- I0 overall HOLD pending candidate install/upgrade spikes, golden fixture, effective costing and approved COA mapping. No merge or deploy.
+- Task managed by codex agent at 2026-11-05T00:25:15+07:00
+
+[2026-11-05T05:39:23+07:00] [INFO] Finance I0 candidate install upgrade spike
+- PR89 initial 2832a26 checks green including native install and persistent upgrade 41877539024.
+- Added isolated CI profiles reports MIS bank credit native/payroll, install then persisted upgrade and registry assertions.
+- Upstream tools discovery pinned c23fd09977c870eb3db071fca5958b83f699bc4a; account_usability and assets manifests inspected, not activated.
+- Four local inventory/source tests and Ruff/YAML PASS. No live mutations, merge or deploy.
+- Task managed by codex agent at 2026-11-05T05:39:23+07:00
+
+[2026-11-05T06:00:46+07:00] [INFO] Fix candidate CI PostgreSQL health command quoting
+- Run41927243405 failed before build: docker create parsed -U outside single quotes. Match established ci.yml double quoting; no acceptance relaxed.
+- Main PR checks 162bb8b passed including install and persistent upgrade. Candidate evidence remains pending rerun.
+- Task managed by codex agent at 2026-11-05T06:00:46+07:00
+
+[2026-11-05T08:11:44+07:00] [INFO] I0 followup golden ledger against real OCA report
+- Verified PR89 merged main6af00a9, approved scope remains initial audit containment only.
+- New branch finance-i0-golden-ledger adds exact-disposable two-company two-period general-journal fixture, independent expected TB, posted/draft control and balanced-mutation rollback.
+- Calls production OCA Trial Balance, no copied report algorithm; source pin API inspected. Local3 oracle tests Ruff manifests YAML PASS; native CI pending.
+- No demo DB writes merge deploy; untracked local full_dataset_runtime artifacts left untouched.
+- Task managed by codex agent at 2026-11-05T08:11:44+07:00
+
+[2026-11-05T09:14:45+07:00] [INFO] PR92 review dan resolusi konflik HANDOFF
+- Semua entri kedua parent dipertahankan; acuan keputusan Bab9A diperjelas tanpa perubahan loader/data. Ruff/10 manifest/preservasi log/kalender PASS; CI integrasi menunggu.
+- Task managed by codex agent at 2026-11-05T09:14:45+07:00

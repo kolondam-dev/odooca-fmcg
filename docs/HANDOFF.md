@@ -1,14 +1,39 @@
+## 2026-11-05T09:14:45+07:00 — codex — PR92: review rencana dan resolusi konflik main
+**Berubah:** konflik HANDOFF diselesaikan dengan mempertahankan semua entri kedua parent secara utuh; main PR89/90 diintegrasikan. Catatan acuan dokumen menegaskan Bab 9A/batas 5 Nov, K5–K9 belum disahkan, serta scope draft seed vs live/carry-forward.
+**Diverifikasi:** [F] Ruff, 10 manifest, diff whitespace, kalender repo 80/81 hari sampai 4/5 Nov, dan preservasi entri HANDOFF kedua parent PASS. Tidak ada perubahan loader/gate/register/konfigurasi atau data produksi dibanding main.
+**Belum diuji:** CI integrasi HEAD baru menunggu; semua klaim data live/estimasi tetap [BU] sesuai dokumen. Merge rencana bukan izin menjalankan seed live.
+**Berikutnya:** merge PR92 hanya setelah CI HEAD integrasi hijau sesuai izin pemilik; tidak menjalankan deploy manual/seed.
+
 ## 2026-11-05T08:59:14+07:00 — claude-dev agent — Keputusan pemilik K1-K4 dan plan mesin harian
 **Berubah:** docs/blueprints/SEED_AGUSTUS_NOVEMBER_ANALISIS_DAN_PLAN.md: Bab 9A (keputusan + spesifikasi slice presisi), fase F9, catatan perubahan F0/F2/F4/F8. Tidak ada perubahan data/loader/gate/server.
 **Keputusan:** seed s/d 5 Nov; mesin harian hanya 6 Nov+ (shell, dijalankan antigravity); Juli beku, kalibrasi biaya+retur+diskon; opsi A tambah ke DB live dengan micro-slicing atomik/idempoten/presisi; campuran principal organik; dokumen live PWA = fakta.
 **Belum diuji:** [BU] isi DB live, guard loader untuk DB demo, waktu per slice. K5-K9 default [A].
 **Berikutnya:** F1 Kontrak Seed v2 + tes mutasi (merah dulu) setelah persetujuan memulai.
 
+## 2026-11-05T08:11:44+07:00 — codex — I0 lanjutan: golden ledger minimal OCA
+**[F]** PR89 merged ke main `6af00a9`; review pemilik PASS hanya audit awal/containment (HEAD `c3a7a79`, 12 job PR unik, 207 tes Odoo, lima profil kandidat, persistent upgrade/replay). Bukan PASS I0 keseluruhan.
+**Berubah:** branch baru `agen/finance-i0-golden-ledger`, runner disposable dua company/dua periode dengan angka kontrol eksplisit terhadap `_get_data` Trial Balance OCA asli; posted/draft noise, balanced mutation rejection dan baseline-after-rollback; workflow dan docs finance diperbarui.
+**Diverifikasi:** 3 tes oracle lokal, Ruff, 10 manifest dan YAML PASS. **[BU]** Runtime native PostgreSQL/OCA CI. Invoice/refund/reconcile, costing/ownership, COA mapping, role/company negatives dan FIN01–58 tetap terbuka. Tidak mengubah demo DB, merge atau deploy. Dua artifact runtime lokal untracked tidak disentuh.
+
+## 2026-11-05T06:00:46+07:00 — codex — Koreksi quoting healthcheck spike I0
+**[F]** Run `41927243405` gagal di Initialize containers sebelum build/instal: runner memecah single-quoted health command sehingga Docker membaca `-U` sebagai option create. Disamakan dengan double quote pada CI existing; acceptance tidak dilonggarkan.
+**[F]** CI utama commit `162bb8b` hijau termasuk install-test dan upgrade/replay. **[BU]** Spike kandidat menunggu HEAD koreksi; belum merge/deploy atau perubahan data demo.
+
+## 2026-11-05T05:39:23+07:00 — codex — Finance I0 spike kandidat install/upgrade
+**Berubah:** workflow `finance-i0-spike.yml`, penguatan read-only guard dan tes mismatch manifest; discovery upstream tools pada pin eksplisit dicatat di dokumen I0.
+**[F]** CI PR89 commit awal `2832a26` hijau termasuk native install dan persistent upgrade/replay (run `41877539024`). Ini belum bukti kandidat OCA terpasang. Workflow baru menguji lima profil disposable secara terpisah, install lalu upgrade DB yang sama dan assertion registry installed.
+**Diverifikasi:** 4 tes audit/source, Ruff dan YAML lokal PASS. **[BU]** Workflow spike pada HEAD baru; oracle/ACL dan golden fixture masih terbuka. Tidak mengubah DB demo, merge atau deploy.
+
 ## 2026-11-05T05:21:18+07:00 — claude-dev agent — Analisis seeding Agustus-4 November 2026
 **Berubah:** tambah docs/blueprints/SEED_AGUSTUS_NOVEMBER_ANALISIS_DAN_PLAN.md (analisis, gap G-01..G-21, keputusan K1-K9, plan F0-F8). Tidak ada perubahan data/loader/gate/server.
 **Diverifikasi:** [F] metrik Juli dihitung ulang dari data/registers (cocok dengan laporan rekonsiliasi); hari kerja Agu 24/Sep 26/Okt 27/1-4 Nov 3 dari fmcg_calendar.py.
 **Belum diuji:** [BU] isi DB Railway live, waktu loader ~3.500 SO, perilaku valuasi Odoo 19 untuk backdating Agustus-November. [A] kebutuhan modal kerja Rp4-4,5 M.
 **Berikutnya:** menunggu keputusan pemilik K1-K4 (batas hari live, rekonsiliasi narasi vs Juli beku, jalur deploy, campuran principal) sebelum F1.
+## 2026-11-05T00:25:15+07:00 — codex — Finance I0 audit runtime dan containment legacy
+**Berubah:** branch `agen/finance-i0-runtime-audit` dari main `565e8a4`; alat audit read-only, bukti 67 modul/19 manifest OCA cocok pin, `docs/finance/I0_RUNTIME_AUDIT.md`; `id_base` 19.0.1.3.1 menolak RPC generator nomor/CSV legacy dan melabeli field historis unverified.
+**[F]** PR86 sudah merged. Pemilik memilih demo company 1, IDR, chart Indonesia existing dan menjadi pemberi keputusan Finance/Tax demo. Audit Railway melalui transaksi READ ONLY: native Coretax installed; laporan/MIS/reconcile OCA uninstalled; 0 nomor pajak custom/flag ekspor legacy. Tidak mengubah data live.
+**Diverifikasi:** Ruff, 10 manifest, 3 unit audit PASS; source hash dibandingkan upstream exact pin. Regresi native memastikan penolakan generator dan preservasi posted AML/legacy values ditambahkan.
+**[BU]** CI native/upgrade containment dan review independen exact HEAD; I0 keseluruhan HOLD untuk spike kandidat, golden dataset, effective costing/stock ownership dan mapping COA. FIN01–58 belum diterima. Tidak merge/deploy. Detail acceptance dan tindak lanjut ada di dokumen I0.
 
 ## 2026-11-04T21:56:23+07:00 — claude-dev agent — PR #87 merged: verifikasi main dan deploy otomatis
 **Berubah:** hanya catatan (`docs/HANDOFF.md`, `agent-log/claude-dev.log`).

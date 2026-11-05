@@ -1,0 +1,90 @@
+name: Finance I0 candidate spike
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'addons/id_base/**'
+      - 'scripts/ops/finance_i0*'
+      - 'scripts/ops/verify_finance_golden_ledger.py'
+      - 'tests/test_finance_golden_ledger.py'
+      - 'docs/finance/**'
+      - 'oca.lock'
+      - '.github/workflows/finance-i0-spike.yml'
+permissions:
+  contents: read
+concurrency:
+  group: finance-i0-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate-install-upgrade:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U odoo" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned project image
+        run: docker build -t fmcg-finance:i0 .
+      - name: Install separate candidate profiles and upgrade persisted databases
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p finance-i0-evidence
+          profiles=(
+            'reports:account_financial_report,account_tax_balance,partner_statement'
+            'mis:mis_builder,mis_builder_budget,mis_builder_cash_flow'
+            'bank:account_reconcile_oca,account_statement_import_sheet_file_xlsx'
+            'credit:account_credit_control,sale_financial_risk'
+            'native:l10n_id_efaktur_coretax,stock_landed_costs,hr_expense,payroll'
+          )
+          for profile in "${profiles[@]}"; do
+            name="${profile%%:*}"
+            modules="id_base,l10n_id,${profile#*:}"
+            for mode in install upgrade; do
+              flag=-i
+              if [ "$mode" = upgrade ]; then flag=-u; fi
+              docker run --rm --network host --entrypoint bash fmcg-finance:i0 -c '
+                odoo -d "$1" --db_host localhost --db_port 5432 -r odoo -w odoo \
+                  --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
+                  "$2" "$3" --stop-after-init --no-http
+              ' -- "finance_i0_${name}_disposable" "$flag" "$modules" \
+                2>&1 | tee "finance-i0-evidence/${name}-${mode}.log"
+              if grep -E ' (ERROR|CRITICAL) |Traceback' "finance-i0-evidence/${name}-${mode}.log"; then exit 1; fi
+            done
+            docker run --rm --network host --entrypoint python3 \
+              -e PGHOST=localhost -e PGPORT=5432 -e PGUSER=odoo -e PGPASSWORD=odoo \
+              -e PGDATABASE="finance_i0_${name}_disposable" \
+              fmcg-finance:i0 /opt/scripts/ops/finance_i0_inventory.py \
+              > "finance-i0-evidence/${name}-inventory.json"
+            python - "$modules" "finance-i0-evidence/${name}-inventory.json" <<'PY'
+          import json, sys
+          report = json.load(open(sys.argv[2]))
+          installed = {r['name'] for r in report['database']['modules'] if r['state'] == 'installed'}
+          missing = set(sys.argv[1].split(',')) - installed
+          assert not missing, f'Candidate install silently skipped: {missing}'
+          assert not report['errors'], report['errors']
+          print('FINANCE_I0_PROFILE_INSTALLED_AND_UPGRADED', sys.argv[1])
+          PY
+          done
+      - name: Minimal golden ledger against actual OCA Trial Balance
+        run: |
+          set -euo pipefail
+          docker run --rm -i --network host --entrypoint bash fmcg-finance:i0 -c '
+            odoo shell -d finance_i0_reports_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ops/verify_finance_golden_ledger.py 2>&1 | tee finance-i0-evidence/golden-ledger.log
+          grep -q '^FINANCE_GOLDEN_LEDGER=PASS$' finance-i0-evidence/golden-ledger.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: finance-i0-candidate-evidence
+          path: finance-i0-evidence/

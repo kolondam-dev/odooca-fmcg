@@ -1,7 +1,4 @@
 from datetime import timedelta
-import base64
-import csv
-import io
 from odoo import fields
 from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase
@@ -169,8 +166,8 @@ class TestCreditLimitApproval(TransactionCase):
         with self.assertRaises(UserError):
             order.action_confirm()
 
-    def test_04_coretax_nsfp_generation_and_csv_export(self):
-        """Verifikasi pembuatan NSFP otomatis dan ekspor berkas CoreTax CSV."""
+    def test_04_legacy_tax_generation_is_blocked_without_ledger_changes(self):
+        """Direct RPC entrypoints cannot synthesize numbers or export acceptance."""
         inv = self.env["account.move"].create({
             "move_type": "out_invoice",
             "journal_id": self.sale_journal.id,
@@ -188,25 +185,33 @@ class TestCreditLimitApproval(TransactionCase):
         })
         inv.action_post()
 
-        # Generate NSFP
-        inv.action_generate_nsfp()
-        self.assertTrue(inv.l10n_id_tax_invoice_number)
-        self.assertTrue(inv.l10n_id_tax_invoice_number.startswith("010.000-26."))
+        before = inv.line_ids.read(["balance", "account_id", "date", "parent_state"])
+        with self.assertRaisesRegex(UserError, "Legacy tax number generation is disabled"):
+            inv.action_generate_nsfp()
+        self.assertFalse(inv.l10n_id_tax_invoice_number)
+        self.assertFalse(inv.l10n_id_tax_invoice_date)
 
         # Ekspor via wizard
         wizard = self.env["coretax.export.wizard"].create({
             "date_from": fields.Date.today() - timedelta(days=1),
             "date_to": fields.Date.today() + timedelta(days=1),
         })
-        res = wizard.action_generate_coretax_csv()
-        self.assertEqual(res["res_id"], wizard.id)
-        self.assertEqual(wizard.state, "done")
-        self.assertGreaterEqual(wizard.total_invoices, 1)
-        self.assertTrue(wizard.export_file)
+        with self.assertRaisesRegex(UserError, "Legacy tax CSV generation is disabled"):
+            wizard.action_generate_coretax_csv()
+        self.assertEqual(wizard.state, "draft")
+        self.assertFalse(wizard.export_file)
+        self.assertFalse(inv.l10n_id_coretax_exported)
+        self.assertEqual(before, inv.line_ids.read(["balance", "account_id", "date", "parent_state"]))
 
-        # Parse CSV
-        raw_csv = base64.b64decode(wizard.export_file).decode("utf-8")
-        reader = csv.reader(io.StringIO(raw_csv))
-        rows = list(reader)
-        self.assertEqual(rows[0][0], "KD_JENIS_TRANSAKSI")
-        self.assertEqual(rows[0][2], "NOMOR_FAKTUR")
+        # Preserve an existing reference verbatim, even if its provenance is unknown.
+        inv.write({
+            "l10n_id_tax_invoice_number": "LEGACY-TEST-REFERENCE",
+            "l10n_id_tax_invoice_date": fields.Date.today(),
+            "l10n_id_coretax_exported": True,
+        })
+        for records in (inv, self.env["account.move"]):
+            with self.assertRaisesRegex(UserError, "Legacy tax number generation is disabled"):
+                records.action_generate_nsfp()
+        self.assertEqual(inv.l10n_id_tax_invoice_number, "LEGACY-TEST-REFERENCE")
+        self.assertTrue(inv.l10n_id_coretax_exported)
+        self.assertEqual(before, inv.line_ids.read(["balance", "account_id", "date", "parent_state"]))
