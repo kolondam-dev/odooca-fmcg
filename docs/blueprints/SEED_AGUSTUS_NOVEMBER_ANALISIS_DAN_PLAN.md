@@ -298,6 +298,19 @@ K5–K9 belum dijawab; usulan pada Bab 9 dipakai sebagai default [A] dan akan di
 
 ---
 
+## 9B. Rekomendasi claude-dev atas K5, anchor, lead time dan pajak (2026-11-05)
+
+Tandai: [F] fakta bersumber, [A] asumsi, [BU] belum diuji. Menunggu persetujuan pemilik kecuali butir 3 (instruksi pemilik).
+
+**1. K5 modal kerja / saldo awal kas.** [F] Juli dimuat tanpa saldo awal kas; stok awal dimuat lewat penyesuaian persediaan `stock.quant` (force_period_date 2026-07-01, origin `OPENING-20260701`), bukan jurnal pembukaan ekuitas; kas kumulatif minimum Juli = -Rp3.163.173.047,71 (31 Jul). Rekomendasi: jangan menyuntik kas ke Juli (beku, K2). Modelkan sebagai fasilitas kredit modal kerja (overdraft) dengan batas yang ditetapkan pemilik; kebutuhan puncak sekitar Rp3,9-4,5 M sekitar 8 Agustus [A]. CASH-NONNEG diubah menjadi `saldo >= -batas_fasilitas`. [BU] akun lawan penyesuaian stok awal di GL Odoo belum diverifikasi (risiko distorsi laba); dicek pada F0 (read-only).
+
+**2. Pita naratif (anchor).** Basis blueprint historical_simulation_and_turnover_model, disesuaikan gap: omzet net DPP Agustus 4,235 M, September 3,96 M, Oktober sekitar 6,3-6,8 M, 1-5 November diekstrapolasi; diskon 2,5% / 2,0% / 2,0%; tolakan 2,4% / 1,8% / 0,8% atas basis net; outlet aktif dibatasi kohort 212/242/354; pita +/-3%. Margin bersih termodelkan sekitar 2,3 / 4,2 / 5,4% melawan sasaran 2,5 / 3,7 / 5,0%, ditutup lewat katalog biaya. [A] Angka final ditetapkan pemilik; pita di-hash di manifest.
+
+**3. Lead time PO (instruksi pemilik).** Administrasi 1 hari sejak submit; release di principal = hari yang sama dengan approval; pengiriman sekitar 14 hari hingga diterima, dihitung dari release. Maka `min_lead_days` = 14 hari kalender seragam semua principal (menggantikan tabel blueprint 10-16 hari kerja); terima jatuh pada hari kerja berikutnya bila bukan hari kerja. Implikasi: titik pesan ROP dimajukan; gate PO-CAUSALITY ditambah cek `release_date`. [A] Pembulatan (1 hari kerja vs kalender) diverifikasi di simulasi ROP F2.
+
+**4. Pajak (K8), penjelasan sederhana.** Tarif PPN resmi 12%, tetapi untuk barang non-mewah dasar penghitungannya hanya 11/12 dari harga (DPP nilai lain), sehingga bayarnya setara 11%: 12% x 11/12 = 11%. Barang mewah tetap 12%. Produk FMCG distributor ini (makanan, kopi, sabun) bukan barang mewah, jadi 11% efektif, sama dengan faktur Juli (PPN = DPP x 0,11). Rekomendasi: `config.tax` tarif 0,11 dengan keterangan "12% x DPP 11/12", berlaku sejak 2025-01-01, sumber PMK 131/2024 (terbit 31 Des 2024) [F], dan flag verifikasi ulang karena DJP pernah menyatakan meninjau PMK DPP nilai lain lain (bukan PMK 131/2024) [F] dan Kemenkeu menyatakan tidak ada perubahan kebijakan PPN 2026 (17 Agu 2025) [F]. Alasan: konsisten dengan data beku Juli, tidak mengubah angka, dan bersumber resmi bertanggal.
+Sumber: [pajak.go.id PMK 131/2024](https://www.pajak.go.id/id/artikel/pmk-1312024-tarif-ppn-sebelas-dua-belas) (6 Jan 2025); [DDTC 7 Jan 2025](https://news.ddtc.co.id/berita/nasional/1808076/pmk-dpp-nilai-lain-dan-besaran-tertentu-bakal-direvisi-ini-daftarnya); [DDTC 17 Agu 2025](https://news.ddtc.co.id/berita/nasional/1812992/tak-berubah-tarif-ppn-12-tetap-berlaku-untuk-barang-mewah-di-2026).
+
 ## 10. Plan bertahap
 
 | Fase | Isi | Keluaran | Gate keluar |
