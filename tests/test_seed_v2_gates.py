@@ -514,10 +514,12 @@ class JulyBaselineTests(unittest.TestCase):
         self.assertIn(target_inv, closing['open_invoices'])
 
     def test_supervisor_counterexample_po_without_recorded_debt_rejected(self):
-        # PO dari saldo awal tanpa nominal tercatat: pelunasan Rp0,01 wajib ditolak dan tidak boleh menghapus PO
+        # PO dari saldo awal tanpa nominal tercatat: pelunasan Rp0,01 dengan klaim nominal sendiri di baris pembayaran
+        # wajib ditolak dan tidak boleh menghapus PO dari saldo penutupan
         mutated = copy.deepcopy(self.pack)
         mutated['ap_payments'][0]['po_number'] = 'PO-2026-05-99'
         mutated['ap_payments'][0]['amount_paid_dpp'] = '0.01'
+        mutated['ap_payments'][0]['total_dpp'] = '0.01'  # klaim sepihak di baris pembayaran
         opening = dict(
             stock={},
             open_invoices={},
@@ -534,10 +536,12 @@ class JulyBaselineTests(unittest.TestCase):
         self.assertIn('PO-2026-05-99', closing['open_po'])
 
     def test_invoice_without_recorded_receivable_rejected(self):
-        # Faktur dari saldo awal tanpa nominal tercatat: pelunasan wajib ditolak dan tidak boleh menghapus faktur
+        # Faktur saldo awal tanpa nominal tercatat: pelunasan Rp0,01 dengan klaim sendiri di baris pembayaran
+        # wajib ditolak dan tidak boleh menghapus faktur dari saldo penutupan
         mutated = copy.deepcopy(self.pack)
         mutated['ar_collections'][0]['invoice_number'] = 'INV-202606-9999'
         mutated['ar_collections'][0]['net_cash_collected_total'] = '0.01'
+        mutated['ar_collections'][0]['invoice_total_with_ppn'] = '0.01'  # klaim sepihak di baris pembayaran
         opening = dict(
             stock={},
             open_invoices={'INV-202606-9999': '2026-06-25'},  # string date only, tanpa nominal tercatat

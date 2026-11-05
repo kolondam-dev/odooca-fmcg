@@ -333,8 +333,6 @@ def replay_closing(opening, pack, config):
             discount = _dec(discount_raw) if discount_raw else ZERO
             inv = row.get('invoice_number')
             expected = inv_totals.get(inv)
-            if expected is None and row.get('invoice_total_with_ppn'):
-                expected = _dec(row['invoice_total_with_ppn'])
             if amount > ZERO and expected is not None and (amount + discount) >= expected and _date(row.get('payment_date')) is not None:
                 paid_invoices.add(inv)
         except (InvalidOperation, ValueError):
@@ -365,9 +363,7 @@ def replay_closing(opening, pack, config):
             amount = _dec(row.get('amount_paid_dpp', ZERO))
             po = row.get('po_number')
             expected = po_totals.get(po)
-            if expected is None and row.get('total_dpp'):
-                expected = _dec(row['total_dpp'])
-            # Debt is only cleared if source debt balance is available and payment fully settles it
+            # Debt is only cleared if verified source debt balance is available and payment fully settles it
             if amount > ZERO and expected is not None and amount >= expected and _date(row.get('payment_date')) is not None:
                 paid_po.add(po)
         except (InvalidOperation, ValueError):
@@ -487,10 +483,8 @@ def _check_terms(pack, opening, rpt):
             if pay_date and inv_date and pay_date < inv_date:
                 rpt.fail('AR-TERMS', pid, f'payment {pay_date} before invoice {inv_date}')
             expected_total = invoices[invoice]['total']
-            if expected_total is None and row.get('invoice_total_with_ppn'):
-                expected_total = _dec(row['invoice_total_with_ppn'])
             if expected_total is None:
-                rpt.fail('AR-TERMS', pid, f'source receivable balance unavailable for invoice {invoice} (cannot settle without recorded invoice total)')
+                rpt.fail('AR-TERMS', pid, f'source receivable balance unavailable for invoice {invoice} (cannot settle without verified source invoice total)')
             elif pay_amount is not None:
                 discount_raw = row.get('early_payment_discount') or row.get('early_payment_discount_total') or ZERO
                 discount = _dec(discount_raw) if discount_raw else ZERO
@@ -547,10 +541,8 @@ def _check_terms(pack, opening, rpt):
             if pay_date and arr_date and pay_date < arr_date:
                 rpt.fail('AP-TERMS', pid, f'payment {pay_date} before receipt {arr_date}')
             expected_total = arrivals[po]['total_dpp']
-            if expected_total is None and row.get('total_dpp'):
-                expected_total = _dec(row['total_dpp'])
             if expected_total is None:
-                rpt.fail('AP-TERMS', pid, f'source debt balance unavailable for PO {po} (cannot settle without recorded debt balance)')
+                rpt.fail('AP-TERMS', pid, f'source debt balance unavailable for PO {po} (cannot settle without verified source debt balance)')
             elif pay_amount is not None:
                 if pay_amount < expected_total:
                     rpt.fail('AP-TERMS', pid, f'underpayment: paid {pay_amount} < PO total {expected_total} (partial settlement not supported)')
