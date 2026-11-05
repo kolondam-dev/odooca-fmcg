@@ -166,7 +166,7 @@ def _window(config, rpt):
 
 # ---------------------------------------------------------------- CALENDAR-OFFICIAL
 
-DATE_FIELDS = (
+WORKING_DAY_FIELDS = (
     ('sales_orders', 'so_number', 'date_order'),
     ('deliveries', 'do_number', 'scheduled_delivery_date'),
     ('invoices', 'invoice_number', 'date_invoice'),
@@ -176,11 +176,14 @@ DATE_FIELDS = (
     ('ap_payments', 'ap_payment_id', 'payment_date'),
     ('opex', None, 'date'),
     ('stock_events', 'event_id', 'date'),
-)  # tanggal pembayaran AR sengaja tidak diuji: transfer bank dapat jatuh pada hari non-kerja (25 kasus di Juli)
+)
+ALL_DATE_FIELDS = WORKING_DAY_FIELDS + (
+    ('ar_collections', 'payment_id', 'payment_date'),
+)  # pembayaran AR divalidasi format ISO/rentang periodenya; transfer hari non-kerja/Minggu tetap diizinkan
 
 
 def _check_calendar(pack, rpt):
-    for table, key, column in DATE_FIELDS:
+    for table, key, column in ALL_DATE_FIELDS:
         for index, row in enumerate(pack.get(table, [])):
             record = row[key] if key else f'{table}[{index}]'
             date = _date(row[column])
@@ -188,7 +191,7 @@ def _check_calendar(pack, rpt):
                 rpt.fail('CALENDAR-OFFICIAL', record, f'{column}: invalid date {row[column]!r}')
             elif date.year not in CALENDAR_YEARS:
                 rpt.fail('CALENDAR-OFFICIAL', record, f'{column} {date}: official calendar covers {sorted(CALENDAR_YEARS)} only')
-            elif not calendar.is_working_day(date):
+            elif (table, key, column) in WORKING_DAY_FIELDS and not calendar.is_working_day(date):
                 rpt.fail('CALENDAR-OFFICIAL', record, f'{column} {date}: not an official working day')
 
 
@@ -211,7 +214,9 @@ def _check_window(pack, start, end, rpt):
         for index, row in enumerate(pack.get(table, [])):
             date = _date(row[column])
             if date is None:
-                continue  # dilaporkan CALENDAR-OFFICIAL
+                record = row[key] if key else f'{table}[{index}]'
+                rpt.fail('PERIOD-WINDOW', record, f'{column}: invalid date {row[column]!r}')
+                continue
             record = row[key] if key else f'{table}[{index}]'
             if (low and date < low) or date > high:
                 rpt.fail('PERIOD-WINDOW', record, f'{column} {date} outside [{low or "-"}, {high}]')
@@ -305,13 +310,34 @@ def replay_closing(opening, pack, config):
                                    dict(physical=ZERO, reserved=ZERO, quarantine=ZERO))
         for field in ('physical', 'reserved', 'quarantine'):
             balance[field] += _dec(row[f'{field}_impact'])
-    paid_invoices = {row['invoice_number'] for row in pack.get('ar_collections', [])}
-    invoices = dict(opening.get('open_invoices', {}))
-    invoices.update(opening.get('carry_invoices', {}))
+    paid_invoices = set()
+    for row in pack.get('ar_collections', []):
+        try:
+            if _dec(row.get('net_cash_collected_total', ZERO)) > ZERO and _date(row.get('payment_date')) is not None:
+                paid_invoices.add(row['invoice_number'])
+        except (InvalidOperation, ValueError):
+            pass
+
+    invoices = {}
+    for inv, info in opening.get('open_invoices', {}).items():
+        invoices[inv] = info.get('date_invoice') if isinstance(info, dict) else info
+    for inv, info in opening.get('carry_invoices', {}).items():
+        invoices[inv] = info.get('date_invoice') if isinstance(info, dict) else info
     invoices.update({row['invoice_number']: row['date_invoice'] for row in pack.get('invoices', [])})
-    paid_po = {row['po_number'] for row in pack.get('ap_payments', [])}
-    pos = dict(opening.get('open_po', {}))
-    pos.update(opening.get('in_transit', {}))
+
+    paid_po = set()
+    for row in pack.get('ap_payments', []):
+        try:
+            if _dec(row.get('amount_paid_dpp', ZERO)) > ZERO and _date(row.get('payment_date')) is not None:
+                paid_po.add(row['po_number'])
+        except (InvalidOperation, ValueError):
+            pass
+
+    pos = {}
+    for po, info in opening.get('open_po', {}).items():
+        pos[po] = info.get('arrival_maumbi_date') if isinstance(info, dict) else info
+    for po, info in opening.get('in_transit', {}).items():
+        pos[po] = info.get('arrival_maumbi_date') if isinstance(info, dict) else info
     pos.update({row['po_number']: row['arrival_maumbi_date'] for row in pack.get('po_headers', [])})
     return {
         'stock': stock,
@@ -384,40 +410,116 @@ def _term(value):
 
 
 def _check_terms(pack, opening, rpt):
-    invoices = dict(opening.get('open_invoices', {}))
-    invoices.update(opening.get('carry_invoices', {}))
+    # Invoices map: invoice_number -> {'date': ..., 'total': ...}
+    invoices = {}
+    for inv, info in opening.get('open_invoices', {}).items():
+        if isinstance(info, dict):
+            invoices[inv] = {'date': info.get('date_invoice'), 'total': _dec(info['total_invoice_with_ppn']) if 'total_invoice_with_ppn' in info else None}
+        else:
+            invoices[inv] = {'date': info, 'total': None}
+    for inv, info in opening.get('carry_invoices', {}).items():
+        if isinstance(info, dict):
+            invoices[inv] = {'date': info.get('date_invoice'), 'total': _dec(info['total_invoice_with_ppn']) if 'total_invoice_with_ppn' in info else None}
+        else:
+            invoices[inv] = {'date': info, 'total': None}
     for row in pack.get('invoices', []):
-        invoices[row['invoice_number']] = row['date_invoice']
+        inv_num = row['invoice_number']
+        invoices[inv_num] = {'date': row['date_invoice'], 'total': _dec(row['total_invoice_with_ppn'])}
         term, date, due = _term(row['payment_term_days']), _date(row['date_invoice']), _date(row['due_date'])
         if term is None:
-            rpt.fail('AR-TERMS', row['invoice_number'], 'payment_term_days must be a non-negative whole number')
+            rpt.fail('AR-TERMS', inv_num, 'payment_term_days must be a non-negative whole number')
         elif date and (due is None or due != date + dt.timedelta(days=term)):
-            rpt.fail('AR-TERMS', row['invoice_number'], f'due_date {row["due_date"]} != invoice date + {term} days')
+            rpt.fail('AR-TERMS', inv_num, f'due_date {row["due_date"]} != invoice date + {term} days')
+
     counts = {}
     for row in pack.get('ar_collections', []):
+        pid = row['payment_id']
         invoice = row['invoice_number']
         counts[invoice] = counts.get(invoice, 0) + 1
+        pay_date = _date(row['payment_date'])
+        if pay_date is None:
+            rpt.fail('AR-TERMS', pid, f'payment_date: invalid date {row["payment_date"]!r}')
+        try:
+            pay_amount = _dec(row['net_cash_collected_total'])
+            if pay_amount <= ZERO:
+                rpt.fail('AR-TERMS', pid, f'net_cash_collected_total must be positive, got {pay_amount}')
+        except (InvalidOperation, ValueError):
+            rpt.fail('AR-TERMS', pid, f'invalid net_cash_collected_total {row["net_cash_collected_total"]!r}')
+            pay_amount = None
+
         if invoice not in invoices:
-            rpt.fail('AR-TERMS', row['payment_id'], f'payment for unknown invoice {invoice}')
-        elif _date(row['payment_date']) and _date(invoices[invoice]) and _date(row['payment_date']) < _date(invoices[invoice]):
-            rpt.fail('AR-TERMS', row['payment_id'], f'payment {row["payment_date"]} before invoice {invoices[invoice]}')
+            rpt.fail('AR-TERMS', pid, f'payment for unknown invoice {invoice}')
+        else:
+            inv_date = _date(invoices[invoice]['date'])
+            if pay_date and inv_date and pay_date < inv_date:
+                rpt.fail('AR-TERMS', pid, f'payment {pay_date} before invoice {inv_date}')
+            expected_total = invoices[invoice]['total']
+            if expected_total is None and row.get('invoice_total_with_ppn'):
+                expected_total = _dec(row['invoice_total_with_ppn'])
+            if expected_total is not None and pay_amount is not None:
+                discount_raw = row.get('early_payment_discount') or row.get('early_payment_discount_total') or ZERO
+                discount = _dec(discount_raw) if discount_raw else ZERO
+                if pay_amount + discount < expected_total:
+                    rpt.fail('AR-TERMS', pid, f'underpayment: paid {pay_amount} + discount {discount} < invoice total {expected_total} (partial settlement not supported)')
+
     for invoice in sorted(n for n, c in counts.items() if c > 1):
         rpt.fail('AR-TERMS', invoice, 'invoice has more than one payment (partial payment needs a schema extension)')
-    arrivals = dict(opening.get('open_po', {}))
-    arrivals.update(opening.get('in_transit', {}))
+
+    # Arrivals map: po_number -> {'arrival_date': ..., 'total_dpp': ...}
+    arrivals = {}
+    for po, info in opening.get('open_po', {}).items():
+        if isinstance(info, dict):
+            tot = info.get('total_amount_dpp') or info.get('total_dpp')
+            arrivals[po] = {'arrival_date': info.get('arrival_maumbi_date'), 'total_dpp': _dec(tot) if tot else None}
+        else:
+            arrivals[po] = {'arrival_date': info, 'total_dpp': None}
+    for po, info in opening.get('in_transit', {}).items():
+        if isinstance(info, dict):
+            tot = info.get('total_amount_dpp') or info.get('total_dpp')
+            arrivals[po] = {'arrival_date': info.get('arrival_maumbi_date'), 'total_dpp': _dec(tot) if tot else None}
+        else:
+            arrivals[po] = {'arrival_date': info, 'total_dpp': None}
     for row in pack.get('po_headers', []):
-        arrivals[row['po_number']] = row['arrival_maumbi_date']
+        po_num = row['po_number']
+        tot_dpp = _dec(row['total_dpp']) if 'total_dpp' in row else None
+        arrivals[po_num] = {'arrival_date': row['arrival_maumbi_date'], 'total_dpp': tot_dpp}
         term, arrival, due = _term(row['payment_term_days']), _date(row['arrival_maumbi_date']), _date(row['due_date'])
         if term is None:
-            rpt.fail('AP-TERMS', row['po_number'], 'payment_term_days must be a non-negative whole number')
+            rpt.fail('AP-TERMS', po_num, 'payment_term_days must be a non-negative whole number')
         elif arrival and (due is None or due != arrival + dt.timedelta(days=term)):
-            rpt.fail('AP-TERMS', row['po_number'], f'due_date {row["due_date"]} != arrival + {term} days')
+            rpt.fail('AP-TERMS', po_num, f'due_date {row["due_date"]} != arrival + {term} days')
+
+    ap_counts = {}
     for row in pack.get('ap_payments', []):
+        pid = row['ap_payment_id']
         po = row['po_number']
+        ap_counts[po] = ap_counts.get(po, 0) + 1
+        pay_date = _date(row['payment_date'])
+        if pay_date is None:
+            rpt.fail('AP-TERMS', pid, f'payment_date: invalid date {row["payment_date"]!r}')
+        try:
+            pay_amount = _dec(row['amount_paid_dpp'])
+            if pay_amount <= ZERO:
+                rpt.fail('AP-TERMS', pid, f'amount_paid_dpp must be positive, got {pay_amount}')
+        except (InvalidOperation, ValueError):
+            rpt.fail('AP-TERMS', pid, f'invalid amount_paid_dpp {row["amount_paid_dpp"]!r}')
+            pay_amount = None
+
         if po not in arrivals:
-            rpt.fail('AP-TERMS', row['ap_payment_id'], f'payment for unknown PO {po}')
-        elif _date(row['payment_date']) and _date(arrivals[po]) and _date(row['payment_date']) < _date(arrivals[po]):
-            rpt.fail('AP-TERMS', row['ap_payment_id'], f'payment {row["payment_date"]} before receipt {arrivals[po]}')
+            rpt.fail('AP-TERMS', pid, f'payment for unknown PO {po}')
+        else:
+            arr_date = _date(arrivals[po]['arrival_date'])
+            if pay_date and arr_date and pay_date < arr_date:
+                rpt.fail('AP-TERMS', pid, f'payment {pay_date} before receipt {arr_date}')
+            expected_total = arrivals[po]['total_dpp']
+            if expected_total is None and row.get('total_dpp'):
+                expected_total = _dec(row['total_dpp'])
+            if expected_total is not None and pay_amount is not None:
+                if pay_amount < expected_total:
+                    rpt.fail('AP-TERMS', pid, f'underpayment: paid {pay_amount} < PO total {expected_total} (partial settlement not supported)')
+
+    for po in sorted(n for n, c in ap_counts.items() if c > 1):
+        rpt.fail('AP-TERMS', po, 'PO has more than one payment (partial payment needs a schema extension)')
 
 
 # ---------------------------------------------------------------- TAX-SOURCE

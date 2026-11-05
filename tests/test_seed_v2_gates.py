@@ -494,6 +494,62 @@ class JulyBaselineTests(unittest.TestCase):
         found = gates.validate_pack(mutated, opening=opening, config=self.config, existing_numbers=set())
         self.assertIn('CALENDAR-OFFICIAL', rules(found))
 
+    def test_supervisor_counterexample_invalid_ar_payment_date_fails_strict(self):
+        mutated = copy.deepcopy(self.pack)
+        target_inv = mutated['ar_collections'][0]['invoice_number']
+        mutated['ar_collections'][0]['payment_date'] = 'NOT-A-DATE'
+        opening = dict(stock={}, open_invoices={}, carry_invoices={}, open_po={}, in_transit={}, pending_dos={})
+        found = gates.validate_pack(mutated, opening=opening, config=self.config, existing_numbers=set(), strict=True)
+        detected_rules = rules(found)
+        self.assertIn('CALENDAR-OFFICIAL', detected_rules)
+        self.assertIn('PERIOD-WINDOW', detected_rules)
+        self.assertIn('AR-TERMS', detected_rules)
+
+        # Closing replay must not mark target invoice as paid with invalid payment date
+        closing = gates.replay_closing(opening, mutated, self.config)
+        self.assertIn(target_inv, closing['open_invoices'])
+
+    def test_supervisor_counterexample_zero_ap_payment_fails_and_preserves_debt(self):
+        mutated = copy.deepcopy(self.pack)
+        target_po = mutated['ap_payments'][0]['po_number']
+        mutated['ap_payments'][0]['amount_paid_dpp'] = '0'
+        opening = dict(
+            stock={},
+            open_invoices={},
+            carry_invoices={},
+            open_po={'PO-2026-06-01': '2026-07-01', 'PO-2026-06-05': '2026-07-01'},
+            in_transit={},
+            pending_dos={},
+        )
+        found = gates.validate_pack(mutated, opening=opening, config=self.config, existing_numbers=set(), strict=True)
+        detected_rules = rules(found)
+        self.assertIn('AP-TERMS', detected_rules)
+
+        # Replay closing must NOT clear debt for Rp0 payment
+        closing = gates.replay_closing(opening, mutated, self.config)
+        self.assertIn(target_po, closing['open_po'])
+
+    def test_ar_underpayment_fails_terms(self):
+        mutated = copy.deepcopy(self.pack)
+        mutated['ar_collections'][0]['net_cash_collected_total'] = '1000'
+        opening = dict(stock={}, open_invoices={}, carry_invoices={}, open_po={}, in_transit={}, pending_dos={})
+        found = gates.validate_pack(mutated, opening=opening, config=self.config, existing_numbers=set(), strict=True)
+        self.assertIn('AR-TERMS', rules(found))
+
+    def test_ap_underpayment_fails_terms(self):
+        mutated = copy.deepcopy(self.pack)
+        mutated['ap_payments'][0]['amount_paid_dpp'] = '1000'
+        opening = dict(
+            stock={},
+            open_invoices={},
+            carry_invoices={},
+            open_po={'PO-2026-06-01': {'arrival_maumbi_date': '2026-07-01', 'total_dpp': '1849772800.0'}},
+            in_transit={},
+            pending_dos={},
+        )
+        found = gates.validate_pack(mutated, opening=opening, config=self.config, existing_numbers=set(), strict=True)
+        self.assertIn('AP-TERMS', rules(found))
+
 
 if __name__ == '__main__':
     unittest.main()
