@@ -62,8 +62,12 @@ def clean():
                  lot_number='L1', physical_impact='0', reserved_impact='5', quarantine_impact='0')])
     opening = dict(
         stock={('S1', 'L1'): dict(physical=Decimal(100), reserved=Decimal(0), quarantine=Decimal(0))},
-        open_invoices={'INV-202607-0100': '2026-07-30'}, carry_invoices={},
-        open_po={'PO-2026-07-09': '2026-07-28'}, in_transit={}, pending_dos={})
+        open_invoices={'INV-202607-0100': {'date_invoice': '2026-07-30', 'total_invoice_with_ppn': '55'}},
+        carry_invoices={},
+        open_po={'PO-2026-07-09': {'arrival_maumbi_date': '2026-07-28', 'total_dpp': '70'}},
+        in_transit={},
+        pending_dos={},
+    )
     config = dict(pack_start='2026-08-03', pack_end='2026-08-07', tax=dict(TAX),
                   min_lead_days={'PRIN-A': 14}, opening_cash='100000')
     existing = {'SO-202607-0001', 'PAY-AR-00001', 'PAY-AP-01', 'PO-2026-06-01'}
@@ -508,6 +512,45 @@ class JulyBaselineTests(unittest.TestCase):
         # Closing replay must not mark target invoice as paid with invalid payment date
         closing = gates.replay_closing(opening, mutated, self.config)
         self.assertIn(target_inv, closing['open_invoices'])
+
+    def test_supervisor_counterexample_po_without_recorded_debt_rejected(self):
+        # PO dari saldo awal tanpa nominal tercatat: pelunasan Rp0,01 wajib ditolak dan tidak boleh menghapus PO
+        mutated = copy.deepcopy(self.pack)
+        mutated['ap_payments'][0]['po_number'] = 'PO-2026-05-99'
+        mutated['ap_payments'][0]['amount_paid_dpp'] = '0.01'
+        opening = dict(
+            stock={},
+            open_invoices={},
+            carry_invoices={},
+            open_po={'PO-2026-05-99': '2026-06-15'},  # string date only, tanpa nominal tercatat
+            in_transit={},
+            pending_dos={},
+        )
+        found = gates.validate_pack(mutated, opening=opening, config=self.config, existing_numbers=set(), strict=True)
+        self.assertIn('AP-TERMS', rules(found))
+
+        # Replay closing must preserve debt in open_po
+        closing = gates.replay_closing(opening, mutated, self.config)
+        self.assertIn('PO-2026-05-99', closing['open_po'])
+
+    def test_invoice_without_recorded_receivable_rejected(self):
+        # Faktur dari saldo awal tanpa nominal tercatat: pelunasan wajib ditolak dan tidak boleh menghapus faktur
+        mutated = copy.deepcopy(self.pack)
+        mutated['ar_collections'][0]['invoice_number'] = 'INV-202606-9999'
+        mutated['ar_collections'][0]['net_cash_collected_total'] = '0.01'
+        opening = dict(
+            stock={},
+            open_invoices={'INV-202606-9999': '2026-06-25'},  # string date only, tanpa nominal tercatat
+            carry_invoices={},
+            open_po={},
+            in_transit={},
+            pending_dos={},
+        )
+        found = gates.validate_pack(mutated, opening=opening, config=self.config, existing_numbers=set(), strict=True)
+        self.assertIn('AR-TERMS', rules(found))
+
+        closing = gates.replay_closing(opening, mutated, self.config)
+        self.assertIn('INV-202606-9999', closing['open_invoices'])
 
     def test_supervisor_counterexample_zero_ap_payment_fails_and_preserves_debt(self):
         mutated = copy.deepcopy(self.pack)

@@ -2056,3 +2056,9 @@
 - Deteksi underpayment pada AR dan AP terms tanpa partial settlement schema
 - Reproduksi test counterexample supervisor dan resolusi konflik HANDOFF dengan main
 - Task managed by antigravity-agent at 2026-11-05T12:00:00+07:00
+
+[2026-11-05T15:05:00+07:00] [INFO] PR93: tolak pelunasan saat saldo utang sumber tidak tersedia
+- scripts/ops/seed_v2_gates.py: _check_terms menolak pelunasan AP/AR bila expected_total sumber None
+- replay_closing memastikan utang PO dan piutang faktur tidak terhapus jika saldo sumber tidak tersedia atau pembayaran underpayment
+- Penambahan tes regresi supervisor: pembayaran Rp0,01 terhadap PO saldo awal tanpa nominal ditolak dan utang tetap bertahan di open_po (82 tes PASS)
+- Task managed by antigravity-agent at 2026-11-05T15:05:00+07:00

@@ -310,35 +310,68 @@ def replay_closing(opening, pack, config):
                                    dict(physical=ZERO, reserved=ZERO, quarantine=ZERO))
         for field in ('physical', 'reserved', 'quarantine'):
             balance[field] += _dec(row[f'{field}_impact'])
-    paid_invoices = set()
-    for row in pack.get('ar_collections', []):
-        try:
-            if _dec(row.get('net_cash_collected_total', ZERO)) > ZERO and _date(row.get('payment_date')) is not None:
-                paid_invoices.add(row['invoice_number'])
-        except (InvalidOperation, ValueError):
-            pass
-
+    inv_totals = {}
     invoices = {}
     for inv, info in opening.get('open_invoices', {}).items():
         invoices[inv] = info.get('date_invoice') if isinstance(info, dict) else info
+        if isinstance(info, dict) and 'total_invoice_with_ppn' in info:
+            inv_totals[inv] = _dec(info['total_invoice_with_ppn'])
     for inv, info in opening.get('carry_invoices', {}).items():
         invoices[inv] = info.get('date_invoice') if isinstance(info, dict) else info
-    invoices.update({row['invoice_number']: row['date_invoice'] for row in pack.get('invoices', [])})
+        if isinstance(info, dict) and 'total_invoice_with_ppn' in info:
+            inv_totals[inv] = _dec(info['total_invoice_with_ppn'])
+    for row in pack.get('invoices', []):
+        invoices[row['invoice_number']] = row['date_invoice']
+        if 'total_invoice_with_ppn' in row:
+            inv_totals[row['invoice_number']] = _dec(row['total_invoice_with_ppn'])
+
+    paid_invoices = set()
+    for row in pack.get('ar_collections', []):
+        try:
+            amount = _dec(row.get('net_cash_collected_total', ZERO))
+            discount_raw = row.get('early_payment_discount') or row.get('early_payment_discount_total') or ZERO
+            discount = _dec(discount_raw) if discount_raw else ZERO
+            inv = row.get('invoice_number')
+            expected = inv_totals.get(inv)
+            if expected is None and row.get('invoice_total_with_ppn'):
+                expected = _dec(row['invoice_total_with_ppn'])
+            if amount > ZERO and expected is not None and (amount + discount) >= expected and _date(row.get('payment_date')) is not None:
+                paid_invoices.add(inv)
+        except (InvalidOperation, ValueError):
+            pass
+
+    po_totals = {}
+    pos = {}
+    for po, info in opening.get('open_po', {}).items():
+        pos[po] = info.get('arrival_maumbi_date') if isinstance(info, dict) else info
+        if isinstance(info, dict):
+            tot = info.get('total_amount_dpp') or info.get('total_dpp')
+            if tot is not None:
+                po_totals[po] = _dec(tot)
+    for po, info in opening.get('in_transit', {}).items():
+        pos[po] = info.get('arrival_maumbi_date') if isinstance(info, dict) else info
+        if isinstance(info, dict):
+            tot = info.get('total_amount_dpp') or info.get('total_dpp')
+            if tot is not None:
+                po_totals[po] = _dec(tot)
+    for row in pack.get('po_headers', []):
+        pos[row['po_number']] = row['arrival_maumbi_date']
+        if 'total_dpp' in row:
+            po_totals[row['po_number']] = _dec(row['total_dpp'])
 
     paid_po = set()
     for row in pack.get('ap_payments', []):
         try:
-            if _dec(row.get('amount_paid_dpp', ZERO)) > ZERO and _date(row.get('payment_date')) is not None:
-                paid_po.add(row['po_number'])
+            amount = _dec(row.get('amount_paid_dpp', ZERO))
+            po = row.get('po_number')
+            expected = po_totals.get(po)
+            if expected is None and row.get('total_dpp'):
+                expected = _dec(row['total_dpp'])
+            # Debt is only cleared if source debt balance is available and payment fully settles it
+            if amount > ZERO and expected is not None and amount >= expected and _date(row.get('payment_date')) is not None:
+                paid_po.add(po)
         except (InvalidOperation, ValueError):
             pass
-
-    pos = {}
-    for po, info in opening.get('open_po', {}).items():
-        pos[po] = info.get('arrival_maumbi_date') if isinstance(info, dict) else info
-    for po, info in opening.get('in_transit', {}).items():
-        pos[po] = info.get('arrival_maumbi_date') if isinstance(info, dict) else info
-    pos.update({row['po_number']: row['arrival_maumbi_date'] for row in pack.get('po_headers', [])})
     return {
         'stock': stock,
         'open_invoices': {n: d for n, d in sorted(invoices.items())
@@ -456,7 +489,9 @@ def _check_terms(pack, opening, rpt):
             expected_total = invoices[invoice]['total']
             if expected_total is None and row.get('invoice_total_with_ppn'):
                 expected_total = _dec(row['invoice_total_with_ppn'])
-            if expected_total is not None and pay_amount is not None:
+            if expected_total is None:
+                rpt.fail('AR-TERMS', pid, f'source receivable balance unavailable for invoice {invoice} (cannot settle without recorded invoice total)')
+            elif pay_amount is not None:
                 discount_raw = row.get('early_payment_discount') or row.get('early_payment_discount_total') or ZERO
                 discount = _dec(discount_raw) if discount_raw else ZERO
                 if pay_amount + discount < expected_total:
@@ -514,7 +549,9 @@ def _check_terms(pack, opening, rpt):
             expected_total = arrivals[po]['total_dpp']
             if expected_total is None and row.get('total_dpp'):
                 expected_total = _dec(row['total_dpp'])
-            if expected_total is not None and pay_amount is not None:
+            if expected_total is None:
+                rpt.fail('AP-TERMS', pid, f'source debt balance unavailable for PO {po} (cannot settle without recorded debt balance)')
+            elif pay_amount is not None:
                 if pay_amount < expected_total:
                     rpt.fail('AP-TERMS', pid, f'underpayment: paid {pay_amount} < PO total {expected_total} (partial settlement not supported)')
 
