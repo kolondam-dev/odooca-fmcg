@@ -1,3 +1,17 @@
+## 2026-11-05T15:35:00+07:00 — antigravity — PR93: penolakan klaim sepihak nominal tagihan di baris pembayaran
+**Berubah:** scripts/ops/seed_v2_gates.py: menghapus fallback nominal dari baris pembayaran (ar_collections/ap_payments); nominal expected_total wajib berasal dari sumber terverifikasi (invoices, po_headers, atau opening balances); menolak pelunasan dan mempertahankan dokumen di saldo penutupan replay_closing saat saldo sumber tidak tersedia; tests/test_seed_v2_gates.py: pembaruan tes regresi reproduksi supervisor untuk baris pembayaran yang mengklaim total_dpp / invoice_total_with_ppn sendiri (82 tes); integrasi main PR95.
+**Diverifikasi:** 82 tes unit gates v2 lulus, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon).
+**Belum diuji:** [BU] CI integrasi HEAD PR93. Tidak ada mutasi/deploy ke database live.
+
+## 2026-11-05T15:05:00+07:00 — antigravity — PR93: penolakan pelunasan saat saldo utang/piutang sumber tidak tersedia
+**Berubah:** scripts/ops/seed_v2_gates.py: _check_terms menolak pelunasan AP dan AR saat saldo utang/piutang sumber tidak tersedia (fail AP-TERMS / AR-TERMS); replay_closing hanya menandai utang PO atau piutang faktur lunas jika saldo sumber tersedia dan nominal pembayaran mencukupi pelunasan penuh (mencegah pembayaran Rp0,01 menghapus PO tanpa nominal dari saldo penutupan); tests/test_seed_v2_gates.py: clean fixture dilengkapi saldo nominal terdaftar, penambahan tes regresi supervisor test_supervisor_counterexample_po_without_recorded_debt_rejected dan test_invoice_without_recorded_receivable_rejected (total 82 tes).
+**Diverifikasi:** 82 tes unit gates v2 lulus, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon), 301 tes repositori PASS.
+**Belum diuji:** [BU] Re-review CI PR #93. Tidak ada mutasi/deploy ke database live.
+
+## 2026-11-05T12:00:00+07:00 — antigravity — PR93: perbaikan tanggal bayar AR, pencegahan AP Rp0, dan integrasi main
+**Berubah:** scripts/ops/seed_v2_gates.py: ar_collections.payment_date divalidasi format ISO dan rentang periode, _check_window menolak tanggal tidak valid, replay_closing dan _check_terms mensyaratkan net_cash_collected_total / amount_paid_dpp > 0 sehingga pembayaran Rp0 tidak menghapus utang PO, deteksi underpayment pada AR dan AP terms tanpa partial settlement; tests/test_seed_v2_gates.py: reproduksi kasus supervisor untuk tanggal bayar AR invalid dan pembayaran AP Rp0 lolos strict, serta tes underpayment (total 80 tes); integrasi main (PR91/PR92).
+**Diverifikasi:** 80 tes unit gates v2 lulus, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon). Semua riwayat agen dipertahankan utuh.
+**Belum diuji:** [BU] CI integrasi HEAD PR93, run pack nyata F2 dst. PR93 siap diubah dari draft menjadi ready for review.
 ## 2026-11-05 — codex — Koreksi review P2 unmatched stock GL pada PR95
 **[F]** Pemilik HOLD `4bb761c` meskipun 12 job hijau: extra GL key di jurnal tertaut hilang dari loop. Produksi kini memakai union gerakan dan semua GL key pada akun stok current-mapped; unmatched key ditampilkan dengan issue dan GL IDs, termasuk product kosong/net-zero. Oracle menolak anomaly selain selisih nominal.
 **Regresi:** fungsi produksi lokal + mutasi native balanced debit stok/kredit lawan untuk produk lain dan tanpa produk pada skala1/7; rollback wajib mengembalikan grup jurnal persis baseline. [BU] native rerun exact HEAD. Tidak melonggarkan invariant, demo write/seed/merge/deploy; PR95 tetap HOLD untuk review ulang.
@@ -24,6 +38,12 @@
 **Diverifikasi:** preservasi verbatim kedua parent PASS; 14 tes finance dan 11 manifest diperiksa pada pohon hasil integrasi. Bukti native HEAD lama dibedakan dari CI HEAD integrasi yang harus dijalankan ulang.
 **Berikutnya:** pemilik mengotorisasi resolusi dan merge bila CI hijau. Tidak instal modul pada demo, tidak seed/deploy manual atau perubahan produksi. I0/FIN01–58 tetap terbuka.
 
+## 2026-11-05T10:42:35+07:00 — claude-dev agent — F1 Kontrak Seed v2, gate v2 dan tes mutasi
+**Berubah:** docs/reviews/SEED_INVARIANT_CONTRACT_V2.md (kontrak, spesifikasi pack, parameter menunggu pemilik); scripts/ops/seed_v2_gates.py (INPUT-SCHEMA, CALENDAR-OFFICIAL, PERIOD-WINDOW, NUMBERING, STOCK-NONNEG, PERIOD-CONTINUITY, PO-CAUSALITY, AR/AP-TERMS, TAX-SOURCE, CASH-NONNEG, NARRATIVE-ANCHORS); tests/test_seed_v2_gates.py (76 tes); pointer di SEED_INVARIANT_CONTRACT.md. Gate v1, register, loader, workflow dan server tidak diubah.
+**Diverifikasi:** [F] TDD (merah dulu: modul belum ada, lalu hijau). Baseline Juli lulus gate v2 yang berlaku; replay penutupan Juli sama dengan laporan rekonsiliasi. Pemeriksa dimatikan satu per satu: masing-masing membuat >=2 tes gagal. Suite penuh 267 OK (2 skip), ruff, check_manifests, verify_seed_invariants dan verify_seed_acceptance PASS.
+**Temuan:** pembayaran AR di hari non-kerja ada (25 kasus) sehingga tidak digate kalender; ledger Juli tidak memuat event setelah 31 Juli (penyelesaian carry-forward masuk ledger pack berikutnya); CASH-NONNEG gagal pada Juli tanpa saldo awal (-Rp3.163.173.047,71, gap G-06) dan tidak di-allowlist.
+**Belum diuji:** [BU] pack nyata, runtime Odoo, DB live. **Terbuka:** SLICE-*/LIVE-AS-FACT (F9), gate v1 per pack (F2), FLEET-CAPACITY, ROUND-NUMBER; parameter pemilik: opening_cash, bands, min_lead_days (satuan hari kerja vs kalender), config.tax.
+
 ## 2026-11-05T09:17:46+07:00 — codex — Pulihkan security-domain cache pasca-mutasi
 **[F]** Run `41953123209`: accountant A/B account set dan nominal kini eksak. Berikutnya baseline setelah rollback global ir.rule gagal karena registry ormcache menyimpan domain restriksi; `invalidate_all` hanya membuang field cache. Fixture kini memanggil `env.registry.clear_cache()` sesudah rollback rule, sesuai cache yang dibersihkan native `ir.rule.create/write/unlink`.
 **Diverifikasi:** 14 tes finance lokal/Ruff PASS; **[BU]** native rerun dan lifecycle invoice yang belum dicapai. Assertion baseline tetap utuh. Tidak live write/merge/deploy; PR91 HOLD.
@@ -37,6 +57,7 @@
 ## 2026-11-05T09:07:04+07:00 — codex — Stabilkan fixture terhadap chart deferred
 **[F]** Run `41952023071`: semua 8 akun/nominal expected benar, tetapi 118 akun nol ditambahkan setelah actor/savepoint. Source Odoo `company.install_l10n_modules` menjadwalkan chart di precommit untuk company ber-country tanpa chart. Fixture company kini memakai native `chart_template_load=True`; assert exact account set dan chart tetap kosong dipertahankan, bukan menyaring akun ekstra/hide-zero.
 **Diverifikasi:** Ruff/14 local finance tests PASS. **[BU]** Native rerun, invoice lifecycle belum dicapai. Tidak mengubah chart/data demo atau acceptance mapping COA; PR91 tetap HOLD.
+
 
 ## 2026-11-05T08:59:14+07:00 — claude-dev agent — Keputusan pemilik K1-K4 dan plan mesin harian
 **Berubah:** docs/blueprints/SEED_AGUSTUS_NOVEMBER_ANALISIS_DAN_PLAN.md: Bab 9A (keputusan + spesifikasi slice presisi), fase F9, catatan perubahan F0/F2/F4/F8. Tidak ada perubahan data/loader/gate/server.
