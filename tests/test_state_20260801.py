@@ -69,7 +69,10 @@ class TestState20260801(unittest.TestCase):
         self.assertEqual(fresh["last_sequences"], self.data["last_sequences"])
         self.assertEqual(len(fresh["stock"]), len(self.data["stock"]))
         self.assertEqual(len(fresh["open_posted_invoices_july"]), len(self.data["open_posted_invoices_july"]))
-        self.assertEqual(len(fresh["carry_forward_pending_invoices_august"]), len(self.data["carry_forward_pending_invoices_august"]))
+        self.assertEqual(
+            len(fresh["carry_forward_pending_invoices_august"]),
+            len(self.data["carry_forward_pending_invoices_august"]),
+        )
         self.assertEqual(len(fresh["pending_dos"]), len(self.data["pending_dos"]))
         self.assertEqual(len(fresh["open_po"]), len(self.data["open_po"]))
 
@@ -87,9 +90,9 @@ class TestState20260801(unittest.TestCase):
             # Mutate physical_impact in stock event ledger with 0.5
             ledger_file = tmp_path / "perpetual_stock_event_ledger.csv"
             content = ledger_file.read_text(encoding="utf-8")
-            # Replace 202 in line 2 with 202.5
-            mutated_content = content.replace("EVT-000001,2026-07-01,INITIAL_STOCK,OPENING-20260701,MYR-RMA-01,LOT-ORA-20260615-INIT-01,202,7500.0,45450000.0,202,",
-                                              "EVT-000001,2026-07-01,INITIAL_STOCK,OPENING-20260701,MYR-RMA-01,LOT-ORA-20260615-INIT-01,202.5,7500.0,45450000.0,202.5,")
+            old_str = "MYR-RMA-01,LOT-ORA-20260615-INIT-01,202,7500.0,45450000.0,202,"
+            new_str = "MYR-RMA-01,LOT-ORA-20260615-INIT-01,202.5,7500.0,45450000.0,202.5,"
+            mutated_content = content.replace(old_str, new_str)
             ledger_file.write_text(mutated_content, encoding="utf-8")
 
             # Must raise ValueError, never silently truncate or pass
