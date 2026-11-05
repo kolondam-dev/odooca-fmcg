@@ -27,9 +27,30 @@ def assert_groups(snapshot):
                 raise AssertionError(f"Stock/GL difference: {row}")
 
 
+def make_picking(env, company, source, dest):
+    code = "internal"
+    if source.usage in ("supplier", "customer"):
+        code = "incoming"
+    elif dest.usage in ("supplier", "customer"):
+        code = "outgoing"
+    operation = env["stock.picking.type"].search([
+        ("company_id", "=", company.id), ("code", "=", code),
+    ], limit=1)
+    if not operation:
+        operation = env["stock.picking.type"].create({
+            "name": f"Finance {code}", "code": code, "sequence_code": f"FS{code.upper()}",
+            "company_id": company.id, "default_location_src_id": source.id,
+            "default_location_dest_id": dest.id,
+        })
+    return env["stock.picking"].create({
+        "picking_type_id": operation.id, "location_id": source.id, "location_dest_id": dest.id,
+    })
+
+
 def complete(env, company, product, source, dest, qty, **extra):
+    picking = make_picking(env, company, source, dest)
     move = env["stock.move"].with_company(company).create({
-        "company_id": company.id,
+        "company_id": company.id, "picking_id": picking.id,
         "product_id": product.id, "product_uom": product.uom_id.id,
         "product_uom_qty": qty, "location_id": source.id, "location_dest_id": dest.id,
         **extra,
@@ -112,8 +133,9 @@ def build(env, suffix, scale):
         assert consigned.value == 0 and not consigned.account_move_id
         assert consigned.move_line_ids.owner_id == owner
         results.append({"method": method, "values": actual, "product_id": product.id})
+    picking = make_picking(scoped, company, locations["shelf"], locations["customer"])
     batch = scoped["stock.move"].create([{
-        "company_id": company.id,
+        "company_id": company.id, "picking_id": picking.id,
         "product_id": result["product_id"], "product_uom_qty": 2,
         "location_id": locations["shelf"].id, "location_dest_id": locations["customer"].id,
     } for result in results])

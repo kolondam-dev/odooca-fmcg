@@ -310,3 +310,9 @@
 - Native source review: quantity inverse creates unowned lines without reserved quant; set consignment line owner explicitly before completion.
 - 17 local finance tests, Ruff and 11 manifests PASS; native rerun pending, oracle unchanged. Baseline upgrade41973776542 PASS15m31s; no demo write merge deploy.
 - Task managed by codex agent at 2026-11-05T12:43:29+07:00
+
+[2026-11-05T13:11:51+07:00] [INFO] Attach stock fixtures to native pickings
+- Run41975851312 reaches first native journal then fails because bare move reference=False; source computes reference from picking.name.
+- Create company-scoped pickings and operations for transfers, one picking for batch; no synthetic computed reference or journal.
+- 17 finance local tests Ruff 11 manifests PASS; native rerun pending. Baseline upgrade41975851299 PASS24m53s separate; no demo changes merge deploy.
+- Task managed by codex agent at 2026-11-05T13:11:51+07:00

@@ -86,6 +86,11 @@ Run `41973776521` pada `8ec5bf9` melewati setup quotation lalu menolak field lam
 owner pada move line receipt konsinyasi sebelum native completion (quantity
 inverse tidak mewariskan restrict partner tanpa reserved quant). Angka oracle
 tetap sama. Baseline upgrade `41973776542` lulus 15m31s; stock gate belum PASS.
+Run `41975851312` pada `5dd6c69` mencapai jurnal pertama, lalu gagal karena move
+tanpa picking memiliki `reference=False`, sedangkan stock_account membutuhkan
+string referensi. Fixture kini memakai picking native untuk setiap transfer
+dan satu picking batch. Tidak memalsukan computed reference/jurnal. Baseline
+upgrade `41975851299` lulus 24m53s; stock gate tetap menunggu rerun.
 Profil reports menambahkan `purchase_stock` hanya pada database disposable.
 Artifact `finance-i0-candidate-evidence/stock-bridge.log` harus memuat JSON bukti
 serta `FINANCE_STOCK_BRIDGE=PASS`.

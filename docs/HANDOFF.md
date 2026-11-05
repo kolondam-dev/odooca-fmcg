@@ -1,3 +1,7 @@
+## 2026-11-05 — codex — Ikat fixture stock pada picking native
+**[F]** Run `41975851312` pada `5dd6c69` mencapai jurnal pertama; move tanpa picking menghasilkan reference=False lalu native stock_account gagal menggabung string label. Helper kini membuat picking/operation native company-scoped dan batch memakai satu picking, tanpa menulis computed reference/jurnal.
+**Diverifikasi:** baseline upgrade `41975851299` PASS24m53s, terpisah dari stock gate yang belum PASS. Oracle costing/ownership tetap utuh; tidak demo write/seed/merge/deploy.
+
 ## 2026-11-05 — codex — Selaraskan field native Odoo19 fixture stok
 **[F]** Run `41973776521` pada `8ec5bf9` melewati quotation, lalu menolak legacy `stock.move.name`. Dihapus pada helper/batch; source core diperiksa dan receipt konsinyasi kini mengisi move-line owner eksplisit sebelum completion, karena quantity inverse tanpa reserved quant tidak mewariskannya.
 **Batas:** oracle tetap utuh; [BU] stock gate rerun. Baseline upgrade `41973776542` PASS15m31s terpisah dari fixture baru; tidak demo write/seed/merge/deploy.
