@@ -4,6 +4,10 @@ Ini backlog implementasi wajib, bukan klaim fitur selesai. Setiap iterasi mengha
 
 ## I0 — Audit runtime, containment pajak dan desain sumber
 
+**Paket costing/ownership:** lihat `I0_COSTING_OWNERSHIP.md` untuk diagnostik
+read-only dan fixture stok–GL. Ini fondasi sumber I0, bukan penerimaan I3 atau
+seluruh FIN01–58; native CI exact SHA tetap gate terpisah.
+
 **Input:** baseline main, akses read-only resmi ke database/role accounting, scope company dan periode. Branch berikut: `agen/finance-i0-runtime-audit`.
 
 **Pekerjaan:** inventaris ir.module.module, versi registry, dependency closure, model/menu/actions dan access groups; bandingkan lock/image/installed tanpa menganggap repo downloaded=installed. Rekam chart/tax/currency/journal/warehouse/costing master dan saldo opening. Inventaris nomor faktur custom serta penggunaannya; rancang containment tombol/label CSV/NSFP lokal sebagai legacy/unverified, tanpa rewrite posted documents. Spike seluruh kandidat modul, pin full SHA dan lisensi/dependency termasuk external Python/system packages. Tentukan contract perusahaan/legal entity/cabang, cost attribution dan laporan berbasis ledger vs SO cohort.
