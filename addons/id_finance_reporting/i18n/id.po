@@ -1,0 +1,20 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo 19.0\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/trial_balance.py:0
+msgid "Trial Balance requires an authorized accounting role."
+msgstr "Neraca saldo memerlukan peran akuntansi yang berwenang."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/trial_balance.py:0
+msgid "Select a company authorized in the active accounting context."
+msgstr "Pilih perusahaan yang diizinkan dalam konteks akuntansi aktif."

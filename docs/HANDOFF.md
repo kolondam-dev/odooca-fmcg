@@ -1,21 +1,29 @@
-## 2026-11-05T11:15:00+07:00 — antigravity — Fase F0: preflight live Railway, rekonsiliasi Juli, dan baseline 1 Agustus
+## 2026-11-05T11:50:00+07:00 — antigravity — Koreksi review F0: kuantitas fraksional, fingerprint beku, timezone WITA, dan resolusi main
 **Berubah:**
-- Hasil preflight read-only live Railway (`pleasant-caring`) dilaporkan di `docs/reviews/SEED_F0_PREFLIGHT_AND_STATE_AUDIT.md`.
-- Dekonstruksi persediaan G-05 terbukti eksak: 67.799 karton di WH/Stock = 52.799 karton sisa kanonikal Juli (setelah 48 DO 1 Agu terkirim) + 15.000 karton fixture staging 30 Okt (100 karton × 150 SKU).
-- 3 SO live/test 2026-11-04 (S06407 cancel, S06408 cancel, S06409 draft) tercatat tanpa dampak mutasi stok/GL.
-- Keputusan K1–K4 dikunci mengikat; rekomendasi rasional default K5–K9 ditetapkan (modal awal Rp5 M, katalog OPEX, retur bertahap, PPN masukan terpadu, limit kredit strict).
-- Menerbitkan `data/registers/state_20260801.json` via `scripts/ops/generate_state_20260801.py`: 53.837 fisik, 1.038 reservasi, 9 karantina, 357 AR terbuka (DPP Rp2.323.328.944,20), 1 open AP Unilever (DPP Rp2.899.971.200), dan nomor urut terakhir.
-- Uji unit `tests/test_state_20260801.py` (4 tests PASS).
+- scripts/ops/generate_state_20260801.py: menolak kuantitas non-integral secara fail-closed (mencegah silent truncation pada mutasi 0.5 karton), memverifikasi SHA-256 fingerprint 15 register beku sebelum replay, dan menyelaraskan timezone cutoff dengan WITA (+08:00).
+- data/registers/state_20260801.json: membedakan 309 posted AR Juli dan 48 carry-forward pending AR Agustus; as_of_datetime 2026-08-01T00:00:00+08:00.
+- docs/reviews/SEED_F0_PREFLIGHT_AND_STATE_AUDIT.md: klaim G-05 diturunkan ke hipotesis agregat [A] tanpa klaim atribusi per lot; penyesuaian live dilarang dari selisih agregat; K5 Rp5 M ditegaskan sebagai asumsi perancangan [A] yang belum disahkan.
+- tests/test_state_20260801.py: penambahan regresi mutasi non-integral 0.5 karton dan mismatch fingerprint (total 7 tests PASS).
+- Resolusi merge origin/main (77a8ccc dari PR #91) dengan preservasi penuh entri HANDOFF kedua parent.
 **Diverifikasi:**
-- [F] Postgres read-only proxy audit PASS.
-- [F] `python -m unittest tests/test_state_20260801.py` PASS (4 tests).
-- [F] `python -m ruff check .` PASS (clean).
-- [F] `python scripts/check_manifests.py` PASS (10 addons OK).
-- [F] `verify_seed_invariants.py` & `verify_seed_acceptance.py` PASS.
+- [F] python -m unittest tests/test_state_20260801.py PASS (7 tests).
+- [F] python -m ruff check . PASS (clean).
+- [F] python scripts/check_manifests.py PASS (10 addons OK).
+- [F] verify_seed_invariants.py & verify_seed_acceptance.py PASS.
 **Belum diuji:**
 - [BU] Eksekusi pack Agustus (menunggu F1–F3). Tidak ada penulisan data/mutasi ke server Railway dan tidak ada restore/reset DB.
 **Berikutnya:**
-- Menyerahkan hasil F0 untuk review dan melanjutkan ke F1 (Kontrak v2 + gates + tes mutasi).
+- Menyerahkan perbaikan PR #94 untuk re-review CI dan pemilik.
+
+## 2026-11-05T11:24:42+07:00 — codex — PR91 resolusi konflik dengan main PR92
+**Berubah:** kedua riwayat HANDOFF dan codex.log dipertahankan utuh; merge main `13c43d3` ke PR91. Source/fixture/security sama dengan HEAD review `ccf4530`.
+**Diverifikasi:** preservasi verbatim kedua parent PASS; 14 tes finance dan 11 manifest diperiksa pada pohon hasil integrasi. Bukti native HEAD lama dibedakan dari CI HEAD integrasi yang harus dijalankan ulang.
+**Berikutnya:** pemilik mengotorisasi resolusi dan merge bila CI hijau. Tidak instal modul pada demo, tidak seed/deploy manual atau perubahan produksi. I0/FIN01–58 tetap terbuka.
+
+## 2026-11-05T09:17:46+07:00 — codex — Pulihkan security-domain cache pasca-mutasi
+**[F]** Run `41953123209`: accountant A/B account set dan nominal kini eksak. Berikutnya baseline setelah rollback global ir.rule gagal karena registry ormcache menyimpan domain restriksi; `invalidate_all` hanya membuang field cache. Fixture kini memanggil `env.registry.clear_cache()` sesudah rollback rule, sesuai cache yang dibersihkan native `ir.rule.create/write/unlink`.
+**Diverifikasi:** 14 tes finance lokal/Ruff PASS; **[BU]** native rerun dan lifecycle invoice yang belum dicapai. Assertion baseline tetap utuh. Tidak live write/merge/deploy; PR91 HOLD.
+
 
 ## 2026-11-05T09:14:45+07:00 — codex — PR92: review rencana dan resolusi konflik main
 **Berubah:** konflik HANDOFF diselesaikan dengan mempertahankan semua entri kedua parent secara utuh; main PR89/90 diintegrasikan. Catatan acuan dokumen menegaskan Bab 9A/batas 5 Nov, K5–K9 belum disahkan, serta scope draft seed vs live/carry-forward.
@@ -23,11 +31,26 @@
 **Belum diuji:** CI integrasi HEAD baru menunggu; semua klaim data live/estimasi tetap [BU] sesuai dokumen. Merge rencana bukan izin menjalankan seed live.
 **Berikutnya:** merge PR92 hanya setelah CI HEAD integrasi hijau sesuai izin pemilik; tidak menjalankan deploy manual/seed.
 
+## 2026-11-05T09:07:04+07:00 — codex — Stabilkan fixture terhadap chart deferred
+**[F]** Run `41952023071`: semua 8 akun/nominal expected benar, tetapi 118 akun nol ditambahkan setelah actor/savepoint. Source Odoo `company.install_l10n_modules` menjadwalkan chart di precommit untuk company ber-country tanpa chart. Fixture company kini memakai native `chart_template_load=True`; assert exact account set dan chart tetap kosong dipertahankan, bukan menyaring akun ekstra/hide-zero.
+**Diverifikasi:** Ruff/14 local finance tests PASS. **[BU]** Native rerun, invoice lifecycle belum dicapai. Tidak mengubah chart/data demo atau acceptance mapping COA; PR91 tetap HOLD.
+
 ## 2026-11-05T08:59:14+07:00 — claude-dev agent — Keputusan pemilik K1-K4 dan plan mesin harian
 **Berubah:** docs/blueprints/SEED_AGUSTUS_NOVEMBER_ANALISIS_DAN_PLAN.md: Bab 9A (keputusan + spesifikasi slice presisi), fase F9, catatan perubahan F0/F2/F4/F8. Tidak ada perubahan data/loader/gate/server.
 **Keputusan:** seed s/d 5 Nov; mesin harian hanya 6 Nov+ (shell, dijalankan antigravity); Juli beku, kalibrasi biaya+retur+diskon; opsi A tambah ke DB live dengan micro-slicing atomik/idempoten/presisi; campuran principal organik; dokumen live PWA = fakta.
 **Belum diuji:** [BU] isi DB live, guard loader untuk DB demo, waktu per slice. K5-K9 default [A].
 **Berikutnya:** F1 Kontrak Seed v2 + tes mutasi (merah dulu) setelah persetujuan memulai.
+## 2026-11-05T08:57:30+07:00 — codex — Diagnosis cakupan accountant
+**[F]** Run `41950898720` lolos lima profil dan golden minimal, extended gagal account coverage pada accountant company switch setelah reader/sales/mobile negative checks. Native invoice lifecycle belum dicapai, tidak diklaim PASS.
+**Berubah:** diagnostics missing/extra account IDs dan payload scope fixture sintetis untuk menemukan sumber mismatch; assertion tidak dilonggarkan. Ruff/14 unit finance PASS, native CI HEAD koreksi menunggu. PR91 HOLD, tidak merge/deploy/live write.
+
+## 2026-11-05T08:47:02+07:00 — codex — Boundary report Trial Balance server-side
+**Berubah:** addon `id_finance_reporting` LGPL-3, guard accounting role + explicit active authorized company pada `_get_data`/`_get_report_values`, tanpa menggandakan engine OCA atau sudo. Wizard OCA terbuka base.group_user dan Sales native punya read account/AML; menu bukan boundary cukup. Negative tests mencakup render-data.
+**Diverifikasi:** 14 tes finance lokal, 11 manifest, Ruff PASS. **[BU]** Instal/upgrade addon dan native role/lifecycle pada CI HEAD baru. Addon hanya diaktivasi pada profil disposable, bukan INIT_MODULES atau demo DB. Tidak merge/deploy.
+
+## 2026-11-05T08:43:19+07:00 — codex — Paket I0 ledger native dan keamanan
+**Berubah:** branch `agen/finance-i0-ledger-security` dari main `3a96a49`; runner extended, workflow profil reports dengan mobile groups asli, enam tes oracle lokal dan `docs/finance/I0_LEDGER_SECURITY.md`. Sesuai permintaan pemilik, satu PR menggabungkan isolasi company tanpa filter, reader/accountant/sales/mobile ACL, restricted-source mutation, invoice/bill/refund/payment/reconciliation native dua periode, historical partial cutoff, unreconcile rollback dan archived partner.
+**Diverifikasi:** Ruff, 6 tes lokal, 10 manifest dan YAML PASS. **[BU]** Runtime PostgreSQL/OCA CI dan review exact HEAD. Expected angka tidak dilonggarkan; I0/FIN01–58 tetap belum diterima penuh. Semua company tambahan hanya fixture disposable yang di-rollback; tidak mengubah DB demo, merge atau deploy.
 
 ## 2026-11-05T08:11:44+07:00 — codex — I0 lanjutan: golden ledger minimal OCA
 **[F]** PR89 merged ke main `6af00a9`; review pemilik PASS hanya audit awal/containment (HEAD `c3a7a79`, 12 job PR unik, 207 tes Odoo, lima profil kandidat, persistent upgrade/replay). Bukan PASS I0 keseluruhan.

@@ -15,6 +15,8 @@ Permintaan pemilik: paket lengkap Finance/Accounting/Tax Indonesia dengan OCA da
    keputusan scope demo pemilik, matriks sumber dan gate yang masih terbuka.
 6. [Golden ledger minimal I0](I0_GOLDEN_LEDGER.md): oracle dua company/dua periode
    terhadap Trial Balance OCA aktual dan batas pembuktiannya.
+7. [Paket ledger native dan keamanan](I0_LEDGER_SECURITY.md): isolasi tanpa filter,
+   role/company negatives, invoice/refund/payment/reconcile dan kontrol historis.
 
 ## Tiga putaran penyusunan rencana
 
