@@ -1,3 +1,8 @@
+## 2026-11-05T15:35:00+07:00 — antigravity — PR93: penolakan klaim sepihak nominal tagihan di baris pembayaran
+**Berubah:** scripts/ops/seed_v2_gates.py: menghapus fallback nominal dari baris pembayaran (ar_collections/ap_payments); nominal expected_total wajib berasal dari sumber terverifikasi (invoices, po_headers, atau opening balances); menolak pelunasan dan mempertahankan dokumen di saldo penutupan replay_closing saat saldo sumber tidak tersedia; tests/test_seed_v2_gates.py: pembaruan tes regresi reproduksi supervisor untuk baris pembayaran yang mengklaim total_dpp / invoice_total_with_ppn sendiri (82 tes); integrasi main PR95.
+**Diverifikasi:** 82 tes unit gates v2 lulus, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon).
+**Belum diuji:** [BU] CI integrasi HEAD PR93. Tidak ada mutasi/deploy ke database live.
+
 ## 2026-11-05T15:05:00+07:00 — antigravity — PR93: penolakan pelunasan saat saldo utang/piutang sumber tidak tersedia
 **Berubah:** scripts/ops/seed_v2_gates.py: _check_terms menolak pelunasan AP dan AR saat saldo utang/piutang sumber tidak tersedia (fail AP-TERMS / AR-TERMS); replay_closing hanya menandai utang PO atau piutang faktur lunas jika saldo sumber tersedia dan nominal pembayaran mencukupi pelunasan penuh (mencegah pembayaran Rp0,01 menghapus PO tanpa nominal dari saldo penutupan); tests/test_seed_v2_gates.py: clean fixture dilengkapi saldo nominal terdaftar, penambahan tes regresi supervisor test_supervisor_counterexample_po_without_recorded_debt_rejected dan test_invoice_without_recorded_receivable_rejected (total 82 tes).
 **Diverifikasi:** 82 tes unit gates v2 lulus, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon), 301 tes repositori PASS.
@@ -7,6 +12,26 @@
 **Berubah:** scripts/ops/seed_v2_gates.py: ar_collections.payment_date divalidasi format ISO dan rentang periode, _check_window menolak tanggal tidak valid, replay_closing dan _check_terms mensyaratkan net_cash_collected_total / amount_paid_dpp > 0 sehingga pembayaran Rp0 tidak menghapus utang PO, deteksi underpayment pada AR dan AP terms tanpa partial settlement; tests/test_seed_v2_gates.py: reproduksi kasus supervisor untuk tanggal bayar AR invalid dan pembayaran AP Rp0 lolos strict, serta tes underpayment (total 80 tes); integrasi main (PR91/PR92).
 **Diverifikasi:** 80 tes unit gates v2 lulus, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon). Semua riwayat agen dipertahankan utuh.
 **Belum diuji:** [BU] CI integrasi HEAD PR93, run pack nyata F2 dst. PR93 siap diubah dari draft menjadi ready for review.
+## 2026-11-05 — codex — Koreksi review P2 unmatched stock GL pada PR95
+**[F]** Pemilik HOLD `4bb761c` meskipun 12 job hijau: extra GL key di jurnal tertaut hilang dari loop. Produksi kini memakai union gerakan dan semua GL key pada akun stok current-mapped; unmatched key ditampilkan dengan issue dan GL IDs, termasuk product kosong/net-zero. Oracle menolak anomaly selain selisih nominal.
+**Regresi:** fungsi produksi lokal + mutasi native balanced debit stok/kredit lawan untuk produk lain dan tanpa produk pada skala1/7; rollback wajib mengembalikan grup jurnal persis baseline. [BU] native rerun exact HEAD. Tidak melonggarkan invariant, demo write/seed/merge/deploy; PR95 tetap HOLD untuk review ulang.
+
+## 2026-11-05 — codex — Ikat fixture stock pada picking native
+**[F]** Run `41975851312` pada `5dd6c69` mencapai jurnal pertama; move tanpa picking menghasilkan reference=False lalu native stock_account gagal menggabung string label. Helper kini membuat picking/operation native company-scoped dan batch memakai satu picking, tanpa menulis computed reference/jurnal.
+**Diverifikasi:** baseline upgrade `41975851299` PASS24m53s, terpisah dari stock gate yang belum PASS. Oracle costing/ownership tetap utuh; tidak demo write/seed/merge/deploy.
+
+## 2026-11-05 — codex — Selaraskan field native Odoo19 fixture stok
+**[F]** Run `41973776521` pada `8ec5bf9` melewati quotation, lalu menolak legacy `stock.move.name`. Dihapus pada helper/batch; source core diperiksa dan receipt konsinyasi kini mengisi move-line owner eksplisit sebelum completion, karena quantity inverse tanpa reserved quant tidak mewariskannya.
+**Batas:** oracle tetap utuh; [BU] stock gate rerun. Baseline upgrade `41973776542` PASS15m31s terpisah dari fixture baru; tidak demo write/seed/merge/deploy.
+
+## 2026-11-05 — codex — Perbaiki incoming operation type fixture PR95
+**[F]** Finance run `41970732989` pada `44b37f5` gagal di quotation pertama: `purchase.order.picking_type_id` NULL karena company disposable belum punya default receipt operation. Fixture kini membuat incoming picking type company-scoped dan mengikat quotation secara eksplisit. Tidak mengubah diagnostik/oracle nominal.
+**Diverifikasi:** job umum termasuk baseline upgrade `41970733046` PASS25m20s; [BU] rerun stock fixture. Full suite lokal sebelumnya timeout120s, bukan PASS. Tidak demo write/seed/merge/deploy; PR95 belum siap merge.
+
+## 2026-11-05 — codex — Paket I0 costing ownership dan fondasi stok–GL
+**Berubah:** dari main `77a8ccc`, cabang `agen/finance-i0-costing-ownership`; private read-only stock source API, policy efektif sekarang, current quant ownership, WITA/posting scopes, grouped move-to-GL comparisons dan GL tanpa direct link. Fixture disposable dua company/skala, tiga costing methods, return/internal/consignment, grouped journals, balanced mutation, date/link/security probes; CI reports profile menambah purchase_stock. Dokumen `docs/finance/I0_COSTING_OWNERSHIP.md` memisahkan fondasi dari I3 penuh.
+**Diverifikasi:** [F] 17 tes oracle finance lokal, `python -m ruff check .`, 11 manifest dan diff check PASS. [BU] Native install/upgrade/fixture pada exact SHA menunggu CI; belum verdict PASS paket.
+**Batas:** tidak demo write/seed/merge/deploy, tidak aktivasi modul demo, dataset user untracked tetap utuh. I0 tahap 1/9 dan FIN01–58 belum selesai; full invoice COGS/closing dan completeness historic mapping/rule tetap terbuka.
 
 ## 2026-11-05T11:24:42+07:00 — codex — PR91 resolusi konflik dengan main PR92
 **Berubah:** kedua riwayat HANDOFF dan codex.log dipertahankan utuh; merge main `13c43d3` ke PR91. Source/fixture/security sama dengan HEAD review `ccf4530`.

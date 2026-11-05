@@ -8,6 +8,8 @@ on:
       - 'scripts/ops/finance_i0*'
       - 'scripts/ops/verify_finance_golden_ledger.py'
       - 'scripts/ops/verify_finance_ledger_security.py'
+      - 'scripts/ops/verify_finance_stock_bridge.py'
+      - 'tests/test_finance_stock_bridge.py'
       - 'tests/test_finance_golden_ledger.py'
       - 'docs/finance/**'
       - 'oca.lock'
@@ -42,7 +44,7 @@ jobs:
           set -euo pipefail
           mkdir -p finance-i0-evidence
           profiles=(
-            'reports:account_financial_report,account_tax_balance,partner_statement,id_mobile_api,id_finance_reporting'
+            'reports:account_financial_report,account_tax_balance,partner_statement,id_mobile_api,id_finance_reporting,purchase_stock'
             'mis:mis_builder,mis_builder_budget,mis_builder_cash_flow'
             'bank:account_reconcile_oca,account_statement_import_sheet_file_xlsx'
             'credit:account_credit_control,sale_financial_risk'
@@ -93,6 +95,14 @@ jobs:
               --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
           ' < scripts/ops/verify_finance_ledger_security.py 2>&1 | tee finance-i0-evidence/ledger-security.log
           grep -q '^FINANCE_LEDGER_SECURITY=PASS$' finance-i0-evidence/ledger-security.log
+      - name: Native costing ownership and stock journal bridge
+        run: |
+          set -euo pipefail
+          docker run --rm -i --network host --entrypoint bash fmcg-finance:i0 -c '
+            odoo shell -d finance_i0_reports_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ops/verify_finance_stock_bridge.py 2>&1 | tee finance-i0-evidence/stock-bridge.log
+          grep -q '^FINANCE_STOCK_BRIDGE=PASS$' finance-i0-evidence/stock-bridge.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:

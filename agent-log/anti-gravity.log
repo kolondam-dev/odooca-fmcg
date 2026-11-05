@@ -2062,3 +2062,10 @@
 - replay_closing memastikan utang PO dan piutang faktur tidak terhapus jika saldo sumber tidak tersedia atau pembayaran underpayment
 - Penambahan tes regresi supervisor: pembayaran Rp0,01 terhadap PO saldo awal tanpa nominal ditolak dan utang tetap bertahan di open_po (82 tes PASS)
 - Task managed by antigravity-agent at 2026-11-05T15:05:00+07:00
+
+[2026-11-05T15:35:00+07:00] [INFO] PR93: penolakan klaim sepihak nominal tagihan di baris pembayaran
+- scripts/ops/seed_v2_gates.py: menghapus fallback row.get('total_dpp') dan row.get('invoice_total_with_ppn') pada _check_terms dan replay_closing
+- Nominal tagihan wajib berasal murni dari faktur, PO, atau saldo awal yang terverifikasi
+- Pelunasan Rp0,01 dengan klaim nominal sendiri di baris pembayaran ditolak dan tidak menghapus dokumen dari open_po/open_invoices
+- Resolusi konflik docs/HANDOFF.md pasca merge origin/main (PR95)
+- Task managed by antigravity-agent at 2026-11-05T15:35:00+07:00

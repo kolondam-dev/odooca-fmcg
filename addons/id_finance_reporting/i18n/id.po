@@ -18,3 +18,21 @@ msgstr "Neraca saldo memerlukan peran akuntansi yang berwenang."
 #: code:addons/id_finance_reporting/models/trial_balance.py:0
 msgid "Select a company authorized in the active accounting context."
 msgstr "Pilih perusahaan yang diizinkan dalam konteks akuntansi aktif."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/stock_bridge.py:0
+msgid "Too many stock sources; narrow the diagnostic scope."
+msgstr "Terlalu banyak sumber stok; persempit cakupan diagnostik."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/stock_bridge.py:0
+msgid "Select an ordered period of at most 367 days."
+msgstr "Pilih periode berurutan paling lama 367 hari."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/stock_bridge.py:0
+msgid "Stock journal belongs to another company."
+msgstr "Jurnal stok milik perusahaan lain."
