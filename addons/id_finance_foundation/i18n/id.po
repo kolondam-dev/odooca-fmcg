@@ -1,0 +1,63 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo 19.0\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: id_finance_foundation
+#: model:res.groups.privilege,name:id_finance_foundation.privilege_finance
+msgid "FMCG Finance"
+msgstr "Keuangan FMCG"
+
+#. module: id_finance_foundation
+#: model:res.groups,name:id_finance_foundation.group_finance_reader
+msgid "Finance Reader"
+msgstr "Pembaca Keuangan"
+
+#. module: id_finance_foundation
+#: model:res.groups,name:id_finance_foundation.group_finance_accountant
+msgid "Finance Accountant"
+msgstr "Akuntan Keuangan"
+
+#. module: id_finance_foundation
+#: model:res.groups,name:id_finance_foundation.group_finance_manager
+msgid "Finance Manager"
+msgstr "Manajer Keuangan"
+
+#. module: id_finance_foundation
+#: model:res.groups,name:id_finance_foundation.group_tax_pic
+msgid "Tax PIC (Read-only Preparation)"
+msgstr "PIC Pajak (Persiapan Baca Saja)"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance
+msgid "Finance"
+msgstr "Keuangan"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_trial_balance
+msgid "Trial Balance"
+msgstr "Neraca Saldo"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_general_ledger
+msgid "General Ledger"
+msgstr "Buku Besar"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_journal_ledger
+msgid "Journal Ledger"
+msgstr "Buku Jurnal"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_open_items
+msgid "Open Items"
+msgstr "Pos Terbuka"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_aged_partner_balance
+msgid "Aged Partner Balance"
+msgstr "Umur Saldo Mitra"

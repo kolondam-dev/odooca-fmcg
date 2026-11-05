@@ -18,6 +18,10 @@ seluruh FIN01–58; native CI exact SHA tetap gate terpisah.
 
 ## I1 — Foundation, full menus dan aktivasi paket terukur
 
+**Persiapan implementasi:** `I1_FOUNDATION.md` memuat profil opt-in, role/menu,
+pin account_usability dan uji preservation persisten. Tidak mengotorisasi aktivasi
+demo sebelum gate I0/COA dan rollout diselesaikan; deployment ditunda oleh pemilik.
+
 **Dependensi:** I0. Branch `agen/finance-i1-foundation`.
 
 Pin/evaluasi account-financial-tools/account_usability; native account + l10n_id; kelompokkan paket laporan/reconcile/MIS menurut dependency closure yang lolos spike. Tambah activation profile/migration marker versioned untuk installed database, bukan mengandalkan upgrade_modules_v3 lama atau FORCE_UPGRADE permanen. Uji install baru dan upgrade database persisten; no demo data masuk produksi. Definisikan Finance Reader, Accountant, Accounting Manager, Tax PIC; sales/driver tidak memperoleh akses luas. Uji menu/action/report access, company rules, export dan technical groups.
