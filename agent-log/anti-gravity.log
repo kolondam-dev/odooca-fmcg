@@ -2049,3 +2049,10 @@
 - Frontend: App.tsx memilih actor MockProvider delivery dan mock.ts menyuplai manifest pengiriman
 - PR #77 dibuka untuk integrasi ke main
 - Task managed by antigravity-agent at 2026-11-03T08:12:57+07:00
+
+[2026-11-05T12:00:00+07:00] [INFO] PR93: perbaikan tanggal bayar AR dan pencegahan AP Rp0
+- Validasi format ISO dan rentang periode pada ar_collections.payment_date
+- Pencegahan pembayaran AP Rp0 menghapus saldo utang PO dari closing replay
+- Deteksi underpayment pada AR dan AP terms tanpa partial settlement schema
+- Reproduksi test counterexample supervisor dan resolusi konflik HANDOFF dengan main
+- Task managed by antigravity-agent at 2026-11-05T12:00:00+07:00
