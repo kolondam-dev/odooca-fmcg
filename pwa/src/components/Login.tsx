@@ -1,6 +1,7 @@
 import { useRef, useState } from "preact/hooks";
 import { Brand } from "./Brand";
 import { signIn } from "../data/auth";
+import { Button, Field } from "../ui";
 export function Login({
     onSuccess,
     message = "",
@@ -52,35 +53,31 @@ export function Login({
                 >
                     <h1>Masuk</h1>
                     <p class="muted">Gunakan akun perusahaan Anda.</p>
-                    <label>
-                        Nama pengguna
-                        <input
-                            name="login"
-                            autoComplete="username"
-                            required
-                            disabled={busy}
-                            autoCapitalize="none"
-                            spellcheck={false}
-                        />
-                    </label>
-                    <label>
-                        Kata sandi
-                        <input
-                            name="password"
-                            type="password"
-                            autoComplete="current-password"
-                            required
-                            disabled={busy}
-                        />
-                    </label>
+                    <Field
+                        label="Nama pengguna"
+                        name="login"
+                        autoComplete="username"
+                        required
+                        disabled={busy}
+                        autoCapitalize="none"
+                        spellcheck={false}
+                    />
+                    <Field
+                        label="Kata sandi"
+                        name="password"
+                        type="password"
+                        autoComplete="current-password"
+                        required
+                        disabled={busy}
+                    />
                     {(error || message) && (
                         <p class="form-error" role="alert">
                             {error || message}
                         </p>
                     )}
-                    <button type="submit" disabled={busy}>
+                    <Button type="submit" disabled={busy}>
                         {busy ? "Memverifikasi…" : "Masuk"}
-                    </button>
+                    </Button>
                     <p class="login-help">
                         Butuh bantuan? Hubungi admin atau line manager di
                         perusahaan Anda.

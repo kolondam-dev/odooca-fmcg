@@ -142,3 +142,9 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - tsc, prettier, vitest 402 PASS, check:build PASS; e2e 3 tes gagal juga pada baseline (collection:200, delivery:180, visits:93)
 - [BU] Impor Figma, uji perangkat nyata
 - Task managed by claude-design agent at 2026-11-07T08:47:53+07:00
+
+[2026-11-07T14:18:52+07:00] [INFO] PWA Fase 1 (bagian 1): navy disatukan, Login memakai atom
+- --c-nav = #001A57 (navy merek PWA); --navy jadi alias; tokens.json disesuaikan
+- Login.tsx memakai Field dan Button; label dan e2e tidak berubah
+- vitest 402 PASS; login-attendance-ux 14 PASS
+- Task managed by claude-design agent at 2026-11-07T14:18:52+07:00

@@ -19,7 +19,7 @@
     font-synthesis: none;
     font-size: 16px;
     line-height: 1.5;
-    --navy: #001a57;
+    --navy: var(--c-nav);
     --blue: var(--c-pri);
     --muted: var(--c-mute);
     --border: var(--c-line);

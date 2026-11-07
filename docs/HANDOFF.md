@@ -1,3 +1,9 @@
+## 2026-11-07T14:18:52+07:00 — claude-design — PWA Fase 1 (bagian 1): navy disatukan, Login memakai atom
+**Berubah:** pwa/src/ui/tokens.css (--c-nav = #001A57, navy merek PWA; mockup memakai #0B1F4D yang sebenarnya warna teks), style.css (--navy = alias --c-nav), design/tokens.json, ui/Field.tsx (autoCapitalize, spellcheck), components/Login.tsx (Field dan Button; label tidak berubah).
+**Diverifikasi:** [F] vitest 402 PASS; prettier PASS; e2e login-attendance-ux 14 PASS (phone dan tablet).
+**Belum diuji:** [BU] BottomNav dan AppHeader baru, BottomSheet, Absen, Kamera, Sinkron (sisa Fase 1). Bundel design system (/mockup) masih memakai #0B1F4D untuk navbar; sesuaikan saat bundel diperbarui.
+**Berikutnya:** AppHeader/BottomNav (tab terpilih menyatu dengan body), lalu Absen, Kamera, Sinkron.
+
 ## 2026-11-07T08:47:53+07:00 — claude-design — PWA Fase 0: token dan atom design system
 **Berubah:**
 - pwa/src/ui/tokens.css, ui.css, 11 atom (Button, IconButton, Chip, Field, Select, Segmented, Checkbox, RadioRow, Stepper, Progress, StatusDot), Gallery.tsx (dibuka dengan #ui, hanya mode dev), README.md; pwa/design/tokens.json (Tokens Studio).

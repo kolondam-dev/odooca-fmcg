@@ -13,6 +13,8 @@ export type FieldProps = {
     name?: string;
     placeholder?: string;
     autoComplete?: string;
+    autoCapitalize?: "none" | "sentences" | "words" | "characters";
+    spellcheck?: boolean;
     maxLength?: number;
     readOnly?: boolean;
     disabled?: boolean;
