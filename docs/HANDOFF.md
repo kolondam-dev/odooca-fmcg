@@ -1,3 +1,8 @@
+## 2026-11-07T08:59:30+07:00 — antigravity — Handover brief Finance/Accounting/Tax untuk WSL
+**Berubah:** `docs/finance/HANDOVER_ANTIGRAVITY.md`: status I0–I8 dan bukti PR95/PR96, batas 58 report `BELUM_DITERIMA`, aturan kerja/commit/log, checklist WSL, rincian paket I2a–I2c (FIN01–09,36–38,51,55–57), oracle dan counterexample, jebakan Odoo 19, keputusan pemilik yang terbuka, red flags dan format laporan balik. Tidak ada perubahan kode/addon/workflow.
+**Diverifikasi:** [F] baseline `main` `d9c7e5f` (PR #96 merged dari `192defa`); katalog 58 baris seluruhnya `BELUM_DITERIMA`; 23 tes finance, Ruff, 12 manifest PASS pada paket sebelumnya.
+**Belum diuji:** [BU] tidak ada run native baru pada sesi ini; brief bukan penerimaan report. Tidak ada deploy, seed, aktivasi, tulis demo, merge main atau perubahan role/chart/costing.
+
 ## 2026-11-05T14:35:00+07:00 — antigravity — PR94: mewajibkan eksak 15 entri fingerprint register kanonikal
 **Berubah:** scripts/ops/generate_state_20260801.py: mewajibkan eksak 15 entri register kanonikal (CANONICAL_REGISTER_FILES) pada input_dataset_sha256 manifest rekonsiliasi sebelum replay; manifes kosong {} atau tidak lengkap memicu ValueError; tests/test_state_20260801.py: penambahan tes regresi supervisor test_empty_or_incomplete_fingerprint_manifest_fails_fast (total 8 tes).
 **Diverifikasi:** 8 tes unit PASS lokal, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon).
