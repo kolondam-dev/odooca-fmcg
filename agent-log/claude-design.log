@@ -160,3 +160,9 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - style.css: .capture-actions satu kolom, aturan button 11-12px dihapus (di bawah minimum 12px)
 - vitest 403 PASS; e2e 86 PASS; 5 tes sales-delivery-rules/review-regressions gagal juga pada origin/main
 - Task managed by claude-design agent at 2026-11-07T14:30:48+07:00
+
+[2026-11-07T15:10:05+07:00] [INFO] PWA Fase 1 (bagian 4): teks minimum 12px
+- 27 selektor 10,9-11,99px dinaikkan ke 12px di style.css; 33 selektor <11px belum (perlu tinjau tata letak)
+- Kamera tidak diganti atom: UI gelap khusus; kepatuhan aturan teks/sentuh diaudit
+- vitest 403 PASS; e2e phone 68 PASS, 2 flaky saat 6 worker lolos saat dijalankan sendiri
+- Task managed by claude-design agent at 2026-11-07T15:10:05+07:00
