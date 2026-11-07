@@ -43,7 +43,7 @@ for (const approved of [true, false])
             .getByRole("button", { name: "Mulai kunjungan", exact: true })
             .click();
         await page
-            .getByRole("button", { name: "Open session", exact: true })
+            .getByRole("button", { name: "Buat order di outlet", exact: true })
             .click();
         const units = page.getByRole("group", {
             name: "Satuan Biskuit Kelapa 300 g",
@@ -177,7 +177,7 @@ test("multi-SKU partial requires line reasons, closes session offline and update
         .filter({ hasText: "DEMO-DO-001" });
     await restored.locator("summary").first().click();
     await restored
-        .getByRole("button", { name: "Open session", exact: true })
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
     await expect(
         restored.getByLabel("Alasan item Biskuit Kelapa 300 g (contoh)", {
@@ -229,7 +229,7 @@ test("SKU packaging drives new order and offline correction prices independently
         .getByRole("button", { name: "Mulai kunjungan", exact: true })
         .click();
     await page
-        .getByRole("button", { name: "Open session", exact: true })
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
     const units = page.getByRole("group", {
         name: "Satuan Biskuit Mini 24 pcs",

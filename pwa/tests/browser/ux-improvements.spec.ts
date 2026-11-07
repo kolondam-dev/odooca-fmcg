@@ -84,7 +84,7 @@ test("search Back restores list and compact POS toolbar leaves product space on 
         .getByRole("button", { name: "Mulai kunjungan", exact: true })
         .click();
     await page
-        .getByRole("button", { name: "Open session", exact: true })
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
     await page.setViewportSize({ width: 393, height: 430 });
     await page.locator(".sheet-body").evaluate((el) => {
@@ -249,7 +249,7 @@ test("500 SKU catalog renders bounded rows and preserves selected off-screen qua
         .getByRole("button", { name: "Mulai kunjungan", exact: true })
         .click();
     await page
-        .getByRole("button", { name: "Open session", exact: true })
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
     await expect(page.locator(".product-card")).toHaveCount(60);
     await page.getByLabel("Cari produk", { exact: true }).fill("SKU-499");

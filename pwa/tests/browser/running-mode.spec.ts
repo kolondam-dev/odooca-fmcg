@@ -1,5 +1,5 @@
 import { test, expect, checkIn } from "./session-fixture";
-import { saveVisitPhoto } from "./visit-helpers";
+import { saveVisitPhoto, leaveVisit } from "./visit-helpers";
 
 test("running mode toggle, demo mode geofence bypass, and preservation on switch to live", async ({
     page,
@@ -62,13 +62,20 @@ test("running mode toggle, demo mode geofence bypass, and preservation on switch
         page.getByText("Kunjungan ditutup lokal", { exact: false }),
     ).toBeVisible();
 
-    // 6. Switch back to LIVE mode: banner disappears
+    // 6. Layar kunjungan penuh: kembali ke daftar, lalu pindah ke LIVE
+    await page
+        .getByRole("button", { name: "Kembali ke daftar outlet", exact: true })
+        .click();
     await modePill.click();
     await expect(banner).toHaveCount(0);
     await expect(modePill).toHaveText("LIVE");
 
     // 7. Navigate out, reload page in LIVE mode
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await leaveVisit(page);
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await page.reload();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
 
@@ -82,7 +89,11 @@ test("running mode toggle, demo mode geofence bypass, and preservation on switch
     ).toBeVisible();
 
     // 9. Navigate to a new unvisited outlet in LIVE mode: out-of-radius fix is strictly guarded
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await leaveVisit(page);
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await page
         .getByRole("button", { name: "Buat order", exact: false })
         .click();

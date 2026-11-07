@@ -102,10 +102,10 @@ test("sales check-in unlocks mini POS, preview submits through outbox then close
     await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     const open = page.getByRole("button", {
-        name: "Open session",
+        name: "Buat order di outlet",
         exact: true,
     });
-    await expect(open).toBeDisabled();
+    await expect(open).toHaveCount(0);
     await saveVisitPhoto(page, "check-in");
     await page
         .getByRole("button", { name: "Mulai kunjungan", exact: true })
@@ -139,9 +139,6 @@ test("sales check-in unlocks mini POS, preview submits through outbox then close
         .getByRole("button", { name: "Kirim order", exact: true })
         .click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(
-        page.getByRole("button", { name: "Close session", exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
     await saveVisitPhoto(page, "check-out");
     await page.getByLabel("Catatan kunjungan").fill("Order diajukan");
     await page

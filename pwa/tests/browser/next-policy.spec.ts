@@ -83,7 +83,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             page.getByText("Kunjungan lokal aktif", { exact: true }),
         ).toBeVisible();
         await page
-            .getByRole("button", { name: "Open session", exact: true })
+            .getByRole("button", { name: "Buat order di outlet", exact: true })
             .click();
         await page
             .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })

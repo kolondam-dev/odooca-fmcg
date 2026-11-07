@@ -1,4 +1,4 @@
-import { sendOrder } from "./visit-helpers";
+import { sendOrder, leaveVisit } from "./visit-helpers";
 import { checkIn } from "./session-fixture";
 import { switchPersona } from "./delivery-helpers";
 import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
@@ -25,19 +25,9 @@ async function visitOrder(page: Page, first = true) {
         await expect(
             page.getByText("Kunjungan lokal aktif", { exact: true }),
         ).toBeVisible();
-    } else {
-        await page
-            .getByRole("button", { name: "Check-in toko", exact: true })
-            .click();
-        const refreshBtn = page.getByRole("button", {
-            name: "Perbarui lokasi outlet",
-            exact: true,
-        });
-        await expect(refreshBtn).toBeVisible();
-        await refreshBtn.click();
     }
     await page
-        .getByRole("button", { name: "Open session", exact: true })
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
 }
 async function demoGps(page: Page) {
@@ -139,6 +129,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
@@ -156,6 +147,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
     await sendOrder(page);
+    await leaveVisit(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(
         page.getByText("Menunggu koneksi", { exact: true }),
@@ -164,6 +156,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
@@ -296,6 +289,7 @@ test("morning gate requires attendance, preserves account separation and expires
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
@@ -312,6 +306,7 @@ test("morning gate requires attendance, preserves account separation and expires
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
@@ -436,6 +431,7 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })

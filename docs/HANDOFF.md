@@ -1,3 +1,21 @@
+## 2026-11-08T06:38:37+07:00 — claude-design — Fase 2: Check-in dan Hub kunjungan dibangun ulang (bukan sekadar ganti komponen)
+
+**Berubah**
+- [F] Keputusan baru pemilik: desain PWA lama tidak dipertahankan; layar dibangun ulang mengikuti mockup/DS, test menyesuaikan.
+- [F] Atom baru: `Screen`, `ScreenHeader`, `ActionCaption`, `Tracker`, `Card`, `CardHead`, `ListRow`, `Callout`, `KV`, `BottomSheet`, `Textarea`.
+- [F] `VisitPanel` ditulis ulang: layar penuh Check-in (status geofence, peta, alamat, foto, footer "Mulai kunjungan"); Hub (header + chip Berjalan, Tracker Check-in/Order/Selesai, kartu profil toko, kartu Tagihan "Segera tersedia", baris Order, footer "Buat order di outlet" + "Selesai kunjungan"); BottomSheet "Selesai kunjungan". Logika (locate/start/finish, restore) tidak berubah.
+- [F] Tab "Check-in toko / Open session / Close session" dihapus; test diganti ke "Buat order di outlet" / "Selesai kunjungan"; helper `leaveVisit` (layar penuh menutup bottom nav).
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest; e2e running-mode, visits, visit-evidence, field, route-workflow lulus kecuali yang gagal juga di baseline (field:275 morning gate, visits:98 denied GPS, route-workflow:11 login).
+
+**Belum diuji**
+- [BU] Peta (`CheckinMap`) dan bukti foto (`VisitPhotoField`/`EvidenceCapture`) masih bergaya lama di dalam layar baru; perlu didesain ulang berikutnya.
+- [A] Tracker 3 tahap (tanpa "Tagihan") karena penagihan belum ada di backend.
+
+**Berikutnya**
+- Desain ulang foto bukti + peta check-in; lalu Order (OrderSheet/POS), Ringkasan, Hasil kirim.
+
 ## 2026-11-08T06:06:42+07:00 — claude-design — Fase 2: Hub kunjungan (VisitPanel) memakai atom
 
 **Berubah**

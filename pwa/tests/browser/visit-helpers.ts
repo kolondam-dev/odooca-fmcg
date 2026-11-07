@@ -3,14 +3,14 @@ export async function saveVisitPhoto(
     page: Page,
     phase: "check-in" | "check-out",
 ) {
-    if (phase === "check-out")
-        await page
-            .getByRole("button", { name: "Close session", exact: true })
-            .click();
     const group = page.getByRole("group", {
         name: `Foto ${phase} kunjungan`,
         exact: true,
     });
+    if (phase === "check-out" && !(await group.isVisible()))
+        await page
+            .getByRole("button", { name: "Selesai kunjungan", exact: true })
+            .click();
     await group.scrollIntoViewIfNeeded();
     await group.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
     await expect(group.getByAltText("Pratinjau foto bukti lokal")).toBeVisible({
@@ -53,4 +53,14 @@ export async function sendOrder(page: Page) {
     await page
         .getByRole("button", { name: "Kirim order", exact: true })
         .click();
+}
+
+/** Layar kunjungan menutupi navigasi bawah; keluar lewat tombol Kembali bila terbuka. */
+export async function leaveVisit(page: Page) {
+    const back = page.getByRole("button", { name: "Kembali", exact: true });
+    const shown = await back
+        .waitFor({ state: "visible", timeout: 1500 })
+        .then(() => true)
+        .catch(() => false);
+    if (shown) await back.click();
 }

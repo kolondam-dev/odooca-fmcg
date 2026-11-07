@@ -1,5 +1,3 @@
-import { useRememberedState, useRememberedScroll } from "../ui/viewMemory";
-import { CustomerSummary } from "./CustomerSummary";
 import { VisitPhotoField } from "./VisitPhotoField";
 import { EvidenceCapture } from "./Evidence";
 import { CheckinMap } from "./CheckinMap";
@@ -12,7 +10,23 @@ import { useRunningMode } from "../domain/running-mode";
 import { captureVisitLocation, type SalesVisits } from "../domain/visits";
 import type { VisitFix, VisitCheckout } from "../domain/visit-contracts";
 import type { QueueItem } from "../storage/store";
-import { Button, Segmented, Select, Textarea } from "../ui";
+import {
+    ActionCaption,
+    BottomSheet,
+    Button,
+    Callout,
+    Card,
+    CardHead,
+    Chip,
+    Field,
+    KV,
+    ListRow,
+    Screen,
+    ScreenHeader,
+    Select,
+    Textarea,
+    Tracker,
+} from "../ui";
 export function VisitPanel({
     outlet,
     store,
@@ -34,14 +48,7 @@ export function VisitPanel({
     order: () => void;
     back: () => void;
 }) {
-    const [phase, setPhase] = useRememberedState<"checkin" | "open" | "close">(
-        `visit-phase:${sessionId}:${outlet.id}`,
-        "checkin",
-    );
-    const previousOrders = useRef(0);
-    const panelScroll = useRememberedScroll(
-        `visit-scroll:${sessionId}:${outlet.id}`,
-    );
+    const [sheet, setSheet] = useState(false);
     const [runningMode] = useRunningMode();
     const isDemo = runningMode === "demo";
     const [info, setInfo] =
@@ -167,7 +174,6 @@ export function VisitPanel({
             const restored = await service.restore(outlet.id);
             if (ticket !== generation.current) return;
             setInfo(restored);
-            setPhase("open");
             changed();
         } catch (e) {
             if (ticket === generation.current)
@@ -223,11 +229,8 @@ export function VisitPanel({
         }
     }
     useEffect(() => {
-        if ((info?.orders ?? 0) > previousOrders.current && phase === "open")
-            setPhase("close");
-        previousOrders.current = info?.orders ?? 0;
-        if (closed) setPhase("close");
-    }, [info?.orders, closed, phase]);
+        if (closed) setSheet(false);
+    }, [closed]);
     const labels = {
         inside: "Di dalam geofence",
         outside: isDemo
@@ -244,61 +247,95 @@ export function VisitPanel({
             : "Waktu lokasi tidak valid",
         invalid: "Lokasi tidak valid",
     };
-    return (
-        <section
-            ref={panelScroll}
-            class="visit-panel visit-workflow"
-            aria-label="Kunjungan outlet"
-        >
-            <Button variant="sec" size="md" auto onClick={back}>
-                Kembali ke daftar outlet
-            </Button>
-            <CustomerSummary outlet={outlet} />
-            <Segmented
-                label="Tahap kunjungan"
-                value={phase}
-                onChange={(next) => {
-                    if (next === "open") {
-                        setPhase("open");
-                        order();
-                    } else setPhase(next);
-                }}
-                items={[
-                    { value: "checkin", label: "Check-in toko" },
-                    {
-                        value: "open",
-                        label: "Open session",
-                        disabled:
-                            !active ||
-                            closed ||
-                            busy ||
-                            (!isDemo &&
-                                !outlet.demo_unrestricted &&
-                                assessment?.status !== "inside"),
-                    },
-                    {
-                        value: "close",
-                        label: "Close session",
-                        disabled: !active && !closed,
-                    },
-                ]}
-            />
-            <p role="status">
-                {closed
-                    ? "Kunjungan ditutup lokal — menunggu hasil sinkronisasi."
-                    : active
-                      ? "Kunjungan lokal aktif"
-                      : info?.active
+    const canOrder =
+        !busy &&
+        active &&
+        !closed &&
+        (isDemo ||
+            !!outlet.demo_unrestricted ||
+            assessment?.status === "inside");
+    const orders = info?.orders ?? 0;
+    const commercial = outlet.commercial;
+    const idr = new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: commercial?.currency ?? "IDR",
+        maximumFractionDigits: 0,
+    });
+    const money = (value?: number | null) =>
+        value != null ? idr.format(value) : "—";
+    const checkinBlocked =
+        !info ||
+        !!info.active ||
+        busy ||
+        (!isDemo &&
+            !outlet.demo_unrestricted &&
+            !!fix &&
+            assessment?.status !== "inside") ||
+        (!isDemo && !fresh(inPhoto));
+    const staleIn = inPhoto && !fresh(inPhoto) && !isDemo;
+    const caption = checkinBlocked
+        ? !inPhoto
+            ? "Foto toko wajib sebelum check-in."
+            : staleIn
+              ? "Foto check-in sudah kedaluwarsa. Ambil foto dan lokasi baru."
+              : assessment && assessment.status !== "inside"
+                ? "Check-in hanya sah di dalam area toko."
+                : ""
+        : "";
+    const errorNote = error ? (
+        <p role="alert" class="form-error">
+            {error}
+        </p>
+    ) : null;
+    if (!active && !closed)
+        return (
+            <Screen
+                label="Kunjungan outlet"
+                header={
+                    <ScreenHeader
+                        title={`Check-in · ${outlet.name}`}
+                        onBack={back}
+                    />
+                }
+                footer={
+                    <>
+                        <Button
+                            icon="pin"
+                            disabled={checkinBlocked}
+                            onClick={() => void start()}
+                        >
+                            Mulai kunjungan
+                        </Button>
+                        {caption ? (
+                            <ActionCaption>{caption}</ActionCaption>
+                        ) : null}
+                    </>
+                }
+            >
+                <p role="status" class="ui-visually-hidden">
+                    {info?.active
                         ? `Masih ada kunjungan aktif: ${info.active.context.outlet_id}`
                         : "Belum check-in kunjungan"}
-            </p>
-            <div hidden={phase !== "checkin"}>
-                {assessment && (
-                    <p class="geo-summary" role="status">
-                        <strong>{labels[assessment.status]}</strong> · Akurasi ±
-                        {Math.round(fix!.accuracy)} m
-                    </p>
-                )}
+                </p>
+                {assessment ? (
+                    <div class="ui-geo">
+                        <Chip
+                            tone={
+                                assessment.status === "inside" ? "ok" : "warn"
+                            }
+                            icon={
+                                assessment.status === "inside"
+                                    ? "check"
+                                    : "warning"
+                            }
+                        >
+                            {labels[assessment.status]}
+                        </Chip>
+                        <span class="ui-row__sub">
+                            Akurasi ±{Math.round(fix!.accuracy)} m
+                        </span>
+                    </div>
+                ) : null}
                 <CheckinMap
                     key={`${sessionId}:${outlet.id}`}
                     compact
@@ -324,181 +361,230 @@ export function VisitPanel({
                 >
                     {busy ? "Memproses lokasi…" : "Perbarui lokasi outlet"}
                 </Button>
-                {!active && !closed && (
+                <Field
+                    label="Alamat (otomatis)"
+                    value={outlet.address}
+                    readOnly
+                />
+                <VisitPhotoField
+                    key={`in:${sessionId}:${outlet.id}`}
+                    store={store}
+                    owner={owner}
+                    sessionId={sessionId}
+                    outletId={outlet.id}
+                    phase="check_in"
+                    ready={setInPhoto}
+                    disabled={busy}
+                />
+                {errorNote}
+            </Screen>
+        );
+    return (
+        <Screen
+            label="Kunjungan outlet"
+            header={
+                <ScreenHeader
+                    title={outlet.name}
+                    onBack={back}
+                    status={
+                        closed
+                            ? { tone: "ok", label: "Selesai" }
+                            : { tone: "info", label: "Berjalan" }
+                    }
+                />
+            }
+            sub={
+                <Tracker
+                    label="Tahap kunjungan"
+                    steps={[
+                        { label: "Check-in", state: "done" },
+                        {
+                            label: "Order",
+                            state: closed || orders ? "done" : "cur",
+                        },
+                        {
+                            label: "Selesai",
+                            state: closed ? "done" : orders ? "cur" : "future",
+                        },
+                    ]}
+                />
+            }
+            footer={
+                closed ? (
+                    <Button variant="sec" onClick={back}>
+                        Kembali ke daftar outlet
+                    </Button>
+                ) : (
+                    <>
+                        <Button icon="bag" disabled={!canOrder} onClick={order}>
+                            Buat order di outlet
+                        </Button>
+                        <Button
+                            variant="sec"
+                            disabled={busy}
+                            onClick={() => setSheet(true)}
+                        >
+                            Selesai kunjungan
+                        </Button>
+                    </>
+                )
+            }
+        >
+            <Callout tone={closed ? "neu" : "info"} icon="clock">
+                {closed
+                    ? "Kunjungan ditutup lokal — menunggu hasil sinkronisasi."
+                    : "Kunjungan lokal aktif"}
+            </Callout>
+            <Card>
+                <CardHead title="Profil toko" />
+                <span class="ui-row__sub">{outlet.address}</span>
+                {[
+                    ["Omset terbesar", money(commercial?.max_order)],
+                    [
+                        "Kunj. sebelumnya",
+                        money(commercial?.previous_visit_total),
+                    ],
+                    ["Top order SKU", commercial?.top_sku ?? "—"],
+                    ["TOP", commercial?.payment_terms ?? "—"],
+                    ["PIC", commercial?.contact ?? "—"],
+                ]
+                    .filter(([, value]) => value !== "—")
+                    .map(([label, value]) => (
+                        <KV key={label} label={label} value={value} />
+                    ))}
+            </Card>
+            <Card>
+                <CardHead
+                    title="Tagihan jatuh tempo"
+                    status={{ tone: "neu", label: "Segera tersedia" }}
+                />
+                <span class="ui-row__sub">
+                    Penagihan di aplikasi belum aktif. Order tidak menunggu
+                    tagihan pada versi ini.
+                </span>
+            </Card>
+            <Card tight>
+                <ListRow
+                    icon="bag"
+                    title="Order"
+                    sub={`${orders} pengajuan order`}
+                    status={
+                        orders
+                            ? { tone: "ok", label: "Diajukan" }
+                            : { tone: "info", label: "Siap" }
+                    }
+                    onClick={canOrder ? order : undefined}
+                />
+            </Card>
+            {info?.selected?.check_in_evidence && (
+                <details class="visit-photo-history">
+                    <summary>Bukti foto check-in tersimpan</summary>
+                    <EvidenceCapture
+                        store={store}
+                        owner={owner}
+                        existingRef={info.selected.check_in_evidence}
+                        onChange={() => {}}
+                        readOnly
+                    />
+                </details>
+            )}
+            {closed && info?.selected?.check_out?.payload.evidence && (
+                <details class="visit-photo-history">
+                    <summary>Bukti foto check-out tersimpan</summary>
+                    <EvidenceCapture
+                        store={store}
+                        owner={owner}
+                        existingRef={info.selected.check_out.payload.evidence}
+                        onChange={() => {}}
+                        readOnly
+                    />
+                </details>
+            )}
+            {errorNote}
+            {sheet && !closed && (
+                <BottomSheet
+                    title="Selesai kunjungan"
+                    onClose={() => setSheet(false)}
+                >
+                    <Callout tone="neu">{orders} pengajuan order</Callout>
+                    <Button
+                        variant="sec"
+                        size="md"
+                        icon="bag"
+                        disabled={!canOrder}
+                        onClick={() => {
+                            setSheet(false);
+                            order();
+                        }}
+                    >
+                        + Tambah order lagi untuk outlet ini
+                    </Button>
                     <VisitPhotoField
-                        key={`in:${sessionId}:${outlet.id}`}
+                        key={`out:${info?.active?.context.visit_uuid}`}
                         store={store}
                         owner={owner}
                         sessionId={sessionId}
                         outletId={outlet.id}
-                        phase="check_in"
-                        ready={setInPhoto}
+                        phase="check_out"
+                        visitId={info?.active?.context.visit_uuid}
+                        ready={setOutPhoto}
                         disabled={busy}
                     />
-                )}
-                {!active &&
-                    !closed &&
-                    inPhoto &&
-                    !fresh(inPhoto) &&
-                    !isDemo && (
+                    {outPhoto && !fresh(outPhoto) && !isDemo && (
                         <p role="status" class="notice">
-                            Foto check-in sudah kedaluwarsa. Ambil foto dan
+                            Foto check-out sudah kedaluwarsa. Ambil foto dan
                             lokasi baru.
                         </p>
                     )}
-                {!active && !closed && (
-                    <Button
-                        disabled={
-                            !info ||
-                            !!info.active ||
-                            busy ||
-                            (!isDemo &&
-                                !outlet.demo_unrestricted &&
-                                !!fix &&
-                                assessment?.status !== "inside") ||
-                            (!isDemo && !fresh(inPhoto))
-                        }
-                        onClick={() => void start()}
-                    >
-                        Mulai kunjungan
-                    </Button>
-                )}
-            </div>
-            <div hidden={phase !== "close"}>
-                {info?.selected?.check_in_evidence && (
-                    <details class="visit-photo-history">
-                        <summary>Bukti foto check-in tersimpan</summary>
-                        <EvidenceCapture
-                            store={store}
-                            owner={owner}
-                            existingRef={info.selected.check_in_evidence}
-                            onChange={() => {}}
-                            readOnly
-                        />
-                    </details>
-                )}
-                {closed && info?.selected?.check_out?.payload.evidence && (
-                    <details class="visit-photo-history">
-                        <summary>Bukti foto check-out tersimpan</summary>
-                        <EvidenceCapture
-                            store={store}
-                            owner={owner}
-                            existingRef={
-                                info.selected.check_out.payload.evidence
+                    <form class="visit-close" onSubmit={finish}>
+                        <Select
+                            label="Hasil kunjungan"
+                            value={orders ? "order_requested" : outcome}
+                            onChange={(value) =>
+                                setOutcome(value as VisitCheckout["outcome"])
                             }
-                            onChange={() => {}}
-                            readOnly
-                        />
-                    </details>
-                )}
-            </div>
-            {active && !closed && (
-                <>
-                    <div hidden={phase !== "open"}>
-                        <Button
-                            icon="bag"
-                            disabled={
-                                busy ||
-                                (!isDemo &&
-                                    !outlet.demo_unrestricted &&
-                                    assessment?.status !== "inside")
+                            options={
+                                orders
+                                    ? [
+                                          {
+                                              value: "order_requested",
+                                              label: "Order diajukan",
+                                          },
+                                      ]
+                                    : [
+                                          {
+                                              value: "no_order",
+                                              label: "Tidak ada order",
+                                          },
+                                          {
+                                              value: "outlet_closed",
+                                              label: "Outlet tutup",
+                                          },
+                                          {
+                                              value: "unavailable",
+                                              label: "Kontak tidak tersedia",
+                                          },
+                                      ]
                             }
-                            onClick={order}
-                        >
-                            Buat order di outlet
-                        </Button>
-                    </div>
-                    <div hidden={phase !== "close"}>
-                        <h3>Ringkasan kunjungan</h3>
-                        <p>{info?.orders ?? 0} pengajuan order</p>
-                        <Button
-                            variant="sec"
-                            size="md"
-                            icon="bag"
-                            disabled={busy}
-                            onClick={() => {
-                                setPhase("open");
-                                order();
-                            }}
-                        >
-                            + Tambah order lagi untuk outlet ini
-                        </Button>
-                        <VisitPhotoField
-                            key={`out:${info?.active?.context.visit_uuid}`}
-                            store={store}
-                            owner={owner}
-                            sessionId={sessionId}
-                            outletId={outlet.id}
-                            phase="check_out"
-                            visitId={info?.active?.context.visit_uuid}
-                            ready={setOutPhoto}
-                            disabled={busy}
                         />
-                        {outPhoto && !fresh(outPhoto) && !isDemo && (
-                            <p role="status" class="notice">
-                                Foto check-out sudah kedaluwarsa. Ambil foto dan
-                                lokasi baru.
-                            </p>
-                        )}
-                        <form class="visit-close" onSubmit={finish}>
-                            <Select
-                                label="Hasil kunjungan"
-                                value={
-                                    info?.orders ? "order_requested" : outcome
-                                }
-                                onChange={(value) =>
-                                    setOutcome(
-                                        value as VisitCheckout["outcome"],
-                                    )
-                                }
-                                options={
-                                    info?.orders
-                                        ? [
-                                              {
-                                                  value: "order_requested",
-                                                  label: "Order diajukan",
-                                              },
-                                          ]
-                                        : [
-                                              {
-                                                  value: "no_order",
-                                                  label: "Tidak ada order",
-                                              },
-                                              {
-                                                  value: "outlet_closed",
-                                                  label: "Outlet tutup",
-                                              },
-                                              {
-                                                  value: "unavailable",
-                                                  label: "Kontak tidak tersedia",
-                                              },
-                                          ]
-                                }
-                            />
-                            <Textarea
-                                label="Catatan kunjungan"
-                                required={!info?.orders}
-                                minLength={info?.orders ? 0 : 5}
-                                maxLength={500}
-                                value={notes}
-                                onInput={setNotes}
-                            />
-                            <Button
-                                variant="sec"
-                                type="submit"
-                                disabled={busy || (!isDemo && !fresh(outPhoto))}
-                            >
-                                Tutup kunjungan
-                            </Button>
-                        </form>
-                    </div>
-                </>
+                        <Textarea
+                            label="Catatan kunjungan"
+                            required={!orders}
+                            minLength={orders ? 0 : 5}
+                            maxLength={500}
+                            value={notes}
+                            onInput={setNotes}
+                        />
+                        <Button
+                            type="submit"
+                            disabled={busy || (!isDemo && !fresh(outPhoto))}
+                        >
+                            Tutup kunjungan
+                        </Button>
+                    </form>
+                    {errorNote}
+                </BottomSheet>
             )}
-            {error && (
-                <p role="alert" class="form-error">
-                    {error}
-                </p>
-            )}
-        </section>
+        </Screen>
     );
 }
