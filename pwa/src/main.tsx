@@ -1,6 +1,13 @@
 import { render } from "preact";
+import "./ui/tokens.css";
 import "./style.css";
-if (__READ_ONLY__) {
+import "./ui/ui.css";
+if (import.meta.env.DEV && location.hash === "#ui") {
+    // Galeri atom: hanya mode pengembangan.
+    import("./ui/Gallery").then(({ Gallery }) =>
+        render(<Gallery />, document.getElementById("app")!),
+    );
+} else if (__READ_ONLY__) {
     // Retire any previous /field/ shell before connecting a real session.
     async function openReadApp() {
         if ("serviceWorker" in navigator) {

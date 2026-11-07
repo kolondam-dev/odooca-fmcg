@@ -135,3 +135,10 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - Traceback: odoo/tools/translate.py PoFile.__iter__ (match.groups() pada None) saat memuat id_dashboard_sales/i18n/id.po; entri yang saya tambah di redesain tidak memiliki komentar '#. module: id_dashboard_sales'.
 - Perbaikan: semua 75 entri kini diawali '#. module: id_dashboard_sales'. [BU] menunggu CI ulang.
 - Task Managed by agent claude-design2 at 2026-11-01T06:52:39+07:00
+
+[2026-11-07T08:47:53+07:00] [INFO] PWA: token dan atom design system (Fase 0)
+- pwa/src/ui: tokens.css, ui.css, 11 atom (Button, IconButton, Chip, Field, Select, Segmented, Checkbox, RadioRow, Stepper, Progress, StatusDot), galeri #ui (dev saja)
+- pwa/design/tokens.json untuk Tokens Studio; style.css: 42 warna identik diganti var(--c-*), tampilan tidak berubah
+- tsc, prettier, vitest 402 PASS, check:build PASS; e2e 3 tes gagal juga pada baseline (collection:200, delivery:180, visits:93)
+- [BU] Impor Figma, uji perangkat nyata
+- Task managed by claude-design agent at 2026-11-07T08:47:53+07:00

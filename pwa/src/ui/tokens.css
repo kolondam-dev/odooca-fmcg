@@ -1,0 +1,63 @@
+/* Token desain Odoo FMCG Mobile. Sumber: pwa/design/tokens.json (impor ke Figma lewat Tokens Studio). Ubah keduanya bersamaan. */
+:root {
+    /* color / base */
+    --c-ink: #0b1f4d;
+    --c-mute: #52647a;
+    --c-line: #e6ecf3;
+    --c-bd: #c5d2e0;
+    --c-bg: #f7f9fc;
+    --c-surface: #ffffff;
+    --c-scrim: rgba(11, 31, 77, 0.5);
+    /* color / brand */
+    --c-pri: #1b5e8c;
+    --c-nav: #0b1f4d;
+    --c-nav-fg: #dce6f5;
+    /* color / status (fg di atas bg tipis, kontras >= 4.5:1) */
+    --c-ok: #11663f;
+    --c-ok-bg: #e7f6ed;
+    --c-warn: #7a4b00;
+    --c-warn-bg: #fdf0d5;
+    --c-bad: #b42318;
+    --c-bad-bg: #fde8e6;
+    --c-info: #17537e;
+    --c-info-bg: #e5f0f8;
+    --c-neu: #3f5068;
+    --c-neu-bg: #eaeff5;
+    --c-dis: #e3e8ef;
+    --c-dis-fg: #66758a;
+    --c-badge: #b45309;
+    --c-online: #1f9d5b;
+    --c-bad-bd: #f0c4bf;
+    /* color / camera & map */
+    --c-cam: #0b1430;
+    --c-cam-box: #070b1a;
+    --c-map: #dce5ef;
+    --c-map-green: #c9dfd3;
+    /* typography */
+    --font:
+        "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI",
+        sans-serif;
+    /* radius */
+    --r-sm: 8px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-xl: 20px;
+    --r-pill: 999px;
+    /* spacing (4 px grid) */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
+    --sp-6: 24px;
+    /* size */
+    --touch: 44px;
+    --hdr-h: 56px;
+    --nav-h: 64px;
+    --btn-lg: 56px;
+    --btn-md: 48px;
+    --btn-sm: 44px;
+    --field-h: 48px;
+    /* elevation */
+    --shadow-seg: 0 1px 2px rgba(11, 31, 77, 0.15);
+}

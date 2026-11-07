@@ -1,0 +1,410 @@
+/* Atom design system. Awalan ui- agar tidak bertabrakan dengan style.css. Dimuat setelah style.css. */
+/* Button */
+.ui-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    border: 0;
+    border-radius: var(--r-lg);
+    padding: 0 16px;
+    font: 600 16px/24px var(--font);
+    flex: none;
+}
+.ui-btn--lg {
+    height: var(--btn-lg);
+}
+.ui-btn--md {
+    height: var(--btn-md);
+    font-size: 15px;
+}
+.ui-btn--sm {
+    height: var(--btn-sm);
+    font-size: 14px;
+}
+.ui-btn--pri {
+    background: var(--c-pri);
+    color: #fff;
+}
+.ui-btn--sec {
+    background: #fff;
+    color: var(--c-pri);
+    border: 1px solid var(--c-bd);
+}
+.ui-btn--danger {
+    background: #fff;
+    color: var(--c-bad);
+    border: 1px solid var(--c-bad-bd);
+}
+.ui-btn--dis {
+    background: var(--c-dis);
+    color: var(--c-dis-fg);
+    cursor: not-allowed;
+}
+/* Icon button */
+.ui-iconbtn {
+    width: var(--touch);
+    height: var(--touch);
+    border: 0;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    position: relative;
+}
+.ui-iconbtn--box {
+    border: 1px solid var(--c-bd);
+    background: #fff;
+    color: var(--c-pri);
+    border-radius: var(--r-md);
+}
+.ui-iconbtn__badge {
+    position: absolute;
+    top: 4px;
+    right: 2px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--c-badge);
+    color: #fff;
+    font: 700 12px/18px var(--font);
+    text-align: center;
+}
+/* Chip / badge */
+.ui-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: var(--r-pill);
+    font: 600 12px/16px var(--font);
+    white-space: nowrap;
+    flex: none;
+}
+.ui-chip--ok {
+    background: var(--c-ok-bg);
+    color: var(--c-ok);
+}
+.ui-chip--warn {
+    background: var(--c-warn-bg);
+    color: var(--c-warn);
+}
+.ui-chip--bad {
+    background: var(--c-bad-bg);
+    color: var(--c-bad);
+}
+.ui-chip--info {
+    background: var(--c-info-bg);
+    color: var(--c-info);
+}
+.ui-chip--neu {
+    background: var(--c-neu-bg);
+    color: var(--c-neu);
+}
+/* Field, select */
+.ui-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.ui-field__label {
+    font: 500 13px/18px var(--font);
+    color: var(--c-mute);
+}
+.ui-field__input {
+    height: var(--field-h);
+    width: 100%;
+    border: 1px solid var(--c-bd);
+    border-radius: var(--r-md);
+    padding: 0 14px;
+    font: 400 16px/24px var(--font);
+    background: #fff;
+    color: var(--c-ink);
+}
+.ui-field__input:focus {
+    outline: 3px solid var(--c-pri);
+    outline-offset: 1px;
+}
+.ui-field__input[readonly] {
+    background: #f2f5f9;
+}
+.ui-select {
+    height: var(--field-h);
+    width: 100%;
+    border: 1px solid var(--c-bd);
+    border-radius: var(--r-md);
+    padding: 0 14px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: left;
+    font: 400 16px/24px var(--font);
+}
+.ui-select__val {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+/* Segmented */
+.ui-seg {
+    display: flex;
+    background: #e8eef5;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 2px;
+    flex: none;
+}
+.ui-seg__item {
+    flex: 1;
+    height: 44px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--c-mute);
+    font: 500 14px/20px var(--font);
+}
+.ui-seg__item.is-on {
+    background: #fff;
+    color: var(--c-ink);
+    font-weight: 600;
+    box-shadow: var(--shadow-seg);
+}
+/* Checkbox, radio */
+.ui-check {
+    width: var(--touch);
+    height: var(--touch);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+}
+.ui-check input {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    accent-color: var(--c-pri);
+}
+.ui-radio {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 0 4px;
+    font: 400 15px/22px var(--font);
+}
+.ui-radio.is-on {
+    font-weight: 600;
+}
+.ui-radio input {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    accent-color: var(--c-pri);
+    flex: none;
+}
+/* Stepper */
+.ui-stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+}
+.ui-stepper__btn {
+    width: var(--touch);
+    height: var(--touch);
+    border: 1px solid var(--c-bd);
+    background: #fff;
+    border-radius: var(--r-md);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ui-stepper__btn--add {
+    background: var(--c-pri);
+    color: #fff;
+    border: 0;
+}
+.ui-stepper__val {
+    min-width: 34px;
+    text-align: center;
+    font: 700 17px/24px var(--font);
+}
+/* Progress, dot, avatar */
+.ui-progress {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--c-neu-bg);
+    overflow: hidden;
+}
+.ui-progress__bar {
+    display: block;
+    height: 6px;
+    background: var(--c-pri);
+}
+.ui-progress__bar--bad {
+    background: var(--c-bad);
+}
+.ui-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--c-online);
+    flex: none;
+    margin-right: 2px;
+}
+.ui-dot.is-off {
+    background: var(--c-badge);
+}
+.ui-btn:focus-visible,
+.ui-iconbtn:focus-visible,
+.ui-seg__item:focus-visible,
+.ui-select:focus-visible,
+.ui-stepper__btn:focus-visible {
+    outline: 3px solid var(--c-pri);
+    outline-offset: 2px;
+}
+/* Menimpa aturan global button:disabled di style.css */
+.ui-btn:disabled {
+    background: var(--c-dis);
+    color: var(--c-dis-fg);
+    border: 0;
+    cursor: not-allowed;
+    transform: none;
+}
+.ui-btn--sec:disabled,
+.ui-btn--danger:disabled {
+    background: #fff;
+    color: var(--c-dis-fg);
+    border: 1px solid var(--c-bd);
+}
+.ui-iconbtn:disabled {
+    background: transparent;
+    color: var(--c-dis-fg);
+    border: 0;
+    opacity: 0.6;
+}
+.ui-iconbtn {
+    position: relative;
+}
+.ui-stepper__btn:disabled {
+    background: #fff;
+    color: var(--c-dis-fg);
+    border: 1px solid var(--c-bd);
+    opacity: 0.55;
+}
+.ui-stepper__btn--add:disabled {
+    background: var(--c-dis);
+    color: var(--c-dis-fg);
+    border: 0;
+    opacity: 1;
+}
+.ui-seg__item:disabled {
+    background: transparent;
+    color: var(--c-dis-fg);
+    border: 0;
+}
+select.ui-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 40px;
+    font: 400 16px/24px var(--font);
+    color: var(--c-ink);
+    background: #fff
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 256 256' fill='%2352647A'%3E%3Cpath d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80a8 8 0 0 1 11.32-11.32L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z'/%3E%3C/svg%3E")
+        no-repeat right 12px center;
+}
+.ui-field__input[aria-invalid="true"] {
+    border-color: var(--c-bad);
+}
+.ui-field__msg {
+    font: 400 13px/18px var(--font);
+    color: var(--c-mute);
+}
+.ui-field__msg--bad {
+    color: var(--c-bad);
+}
+.ui-check {
+    display: inline-flex;
+    width: auto;
+    min-width: var(--touch);
+    gap: 10px;
+    font: 400 15px/22px var(--font);
+    color: var(--c-ink);
+}
+.ui-radio {
+    cursor: pointer;
+}
+.ui-radio.is-on {
+    font-weight: 600;
+}
+.ui-btn--auto {
+    width: auto;
+}
+.ui-stepper__sign {
+    font: 600 22px/1 var(--font);
+}
+.ui-progress__bar--ok {
+    background: var(--c-ok);
+}
+.ui-progress__bar--warn {
+    background: var(--c-badge);
+}
+/* Menimpa aturan global label, input, dan button di style.css */
+.ui-field,
+.ui-check,
+.ui-radio {
+    margin: 0;
+}
+.ui-field {
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+.ui-check,
+.ui-radio {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 400;
+}
+.ui-radio.is-on {
+    font-weight: 600;
+}
+.ui-check input,
+.ui-radio input {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    flex: none;
+}
+.ui-iconbtn {
+    color: var(--c-ink);
+}
+.ui-iconbtn--box {
+    color: var(--c-pri);
+}
+.ui-stepper__btn {
+    color: var(--c-ink);
+}
+.ui-stepper__btn--add {
+    color: #fff;
+}
+.ui-seg__item {
+    box-shadow: none;
+}
+.ui-seg__item.is-on {
+    box-shadow: var(--shadow-seg);
+}
+.ui-check {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+}

@@ -1,3 +1,12 @@
+## 2026-11-07T08:47:53+07:00 — claude-design — PWA Fase 0: token dan atom design system
+**Berubah:**
+- pwa/src/ui/tokens.css, ui.css, 11 atom (Button, IconButton, Chip, Field, Select, Segmented, Checkbox, RadioRow, Stepper, Progress, StatusDot), Gallery.tsx (dibuka dengan #ui, hanya mode dev), README.md; pwa/design/tokens.json (Tokens Studio).
+- pwa/src/style.css: 42 warna tertulis yang identik dengan token diganti var(--c-*); --blue/--muted/--border/--surface menjadi alias. --navy (#001a57) sengaja tidak diubah.
+- pwa/tests/ui-atoms.test.ts (15 tes).
+**Diverifikasi:** [F] tsc, prettier, vitest 402 PASS, build + check:build PASS (demo, live, staging). [F] e2e field, visits, collection, delivery, login-attendance: 48 PASS; 3 tes gagal (collection.spec:200, delivery.spec:180, visits.spec:93) juga gagal pada baseline tanpa perubahan ini.
+**Belum diuji:** [BU] uji perangkat Android/iOS; impor Figma; Fase 1 (header, navbar, footer, sheet, Login/Absen/Kamera/Sinkron) belum dimulai.
+**Berikutnya:** Fase 1 sesuai plan integrasi (doc Claude "Plan Integrasi Mockup Mobile ke PWA"); putuskan --navy vs --c-nav.
+
 ## 2026-11-05T14:35:00+07:00 — antigravity — PR94: mewajibkan eksak 15 entri fingerprint register kanonikal
 **Berubah:** scripts/ops/generate_state_20260801.py: mewajibkan eksak 15 entri register kanonikal (CANONICAL_REGISTER_FILES) pada input_dataset_sha256 manifest rekonsiliasi sebelum replay; manifes kosong {} atau tidak lengkap memicu ValueError; tests/test_state_20260801.py: penambahan tes regresi supervisor test_empty_or_incomplete_fingerprint_manifest_fails_fast (total 8 tes).
 **Diverifikasi:** 8 tes unit PASS lokal, python -m ruff check . PASS, python scripts/check_manifests.py PASS (11 addon).
