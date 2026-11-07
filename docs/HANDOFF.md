@@ -1,3 +1,19 @@
+## 2026-11-08T05:57:15+07:00 — claude-design — Fase 2: daftar Outlet sesuai design system
+
+**Berubah**
+- [F] Atom `OutletCard` (nomor kunjungan, nama, alamat, Chip status; sorot "Berikutnya"). `OutletDirectory` memakai kartu itu, filter `Segmented` Semua/Belum/Selesai (dengan hitungan) dan `Button` Extra call. Prop `status` → `closed` (boolean).
+- [F] CSS lama `.outlet-row` dihapus; test `route-workflow` memakai `.ui-ocard`. Avatar logo outlet tidak dipakai di daftar (DS memakai nomor).
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest 404; tangkapan layar demo (phone) sesuai DS.
+
+**Belum diuji**
+- [BU] `route-workflow.spec:11` dan `ux-improvements.spec:217` gagal di login ("Ruang kerja belum tersedia") baik dengan maupun tanpa perubahan ini (baseline), jadi pencarian outlet di drawer belum tervalidasi e2e.
+- [A] Jam kunjungan/jarak/tagihan di kartu belum ada: tidak ada datanya di snapshot.
+
+**Berikutnya**
+- Fase 2 lanjut: Check-in, Hub kunjungan (VisitPanel), Order.
+
 ## 2026-11-07T16:09:50+07:00 — claude-design — Fase 1: atom SheetHeader di form tugas
 
 **Berubah**

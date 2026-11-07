@@ -832,7 +832,7 @@ function Workspace({
                                         extra={() =>
                                             setDialog({ type: "extra" })
                                         }
-                                        status={(id) =>
+                                        closed={(id) =>
                                             queue.some(
                                                 (q) =>
                                                     q.command.type ===
@@ -843,8 +843,6 @@ function Workspace({
                                                         .business_date ===
                                                         identity.businessDate,
                                             )
-                                                ? "Session closed"
-                                                : "Belum ditutup"
                                         }
                                     />
                                 )}

@@ -4,6 +4,7 @@ export { Checkbox } from "./Checkbox";
 export { Chip, type Tone } from "./Chip";
 export { Field, type FieldProps } from "./Field";
 export { IconButton, type IconButtonProps } from "./IconButton";
+export { OutletCard, type OutletCardProps } from "./OutletCard";
 export { Progress } from "./Progress";
 export { RadioRow } from "./RadioRow";
 export { SheetHeader, type SheetHeaderProps } from "./SheetHeader";

@@ -408,3 +408,67 @@ select.ui-select {
     width: 100%;
     justify-content: flex-start;
 }
+
+/* OutletCard (DS: ocard) */
+.ui-ocard {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 16px;
+    text-align: left;
+    background: #fff;
+    color: var(--c-ink);
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+}
+.ui-ocard.is-hl {
+    border: 2px solid var(--c-pri);
+    padding: 15px;
+}
+.ui-ocard__num {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--c-neu-bg);
+    color: var(--c-neu);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: 700 14px/20px var(--font);
+}
+.ui-ocard__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.ui-ocard__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+.ui-ocard__name {
+    font: 700 16px/22px var(--font);
+}
+.ui-ocard__addr {
+    font: 400 14px/20px var(--font);
+    color: var(--c-mute);
+}
+.ui-ocard__meta {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    font: 400 14px/20px var(--font);
+}
+.ui-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 16px 16px;
+}

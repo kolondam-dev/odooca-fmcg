@@ -59,8 +59,8 @@ test("outlet list alone scrolls, full search filters dynamically and dismissal r
     });
     await expect(drawer).toBeVisible();
     await drawer.getByRole("searchbox").fill("Alamat 87");
-    await expect(drawer.locator(".outlet-row")).toHaveCount(1);
-    await expect(drawer.locator(".outlet-row")).toContainText("Toko 87");
+    await expect(drawer.locator(".ui-ocard")).toHaveCount(1);
+    await expect(drawer.locator(".ui-ocard")).toContainText("Toko 87");
     await page.keyboard.press("Escape");
     await expect(drawer).toHaveCount(0);
     await expect(input).toBeFocused();
