@@ -32,6 +32,11 @@ COA mapping bersumber chart/account groups yang disahkan; perluasan akun memakai
 
 ## I2 — Paket buku besar dan subledger dasar
 
+**Sub-paket I2a (core ledgers & registers):** lihat `I2A_LEDGERS_CORE.md` untuk
+implementasi dan oracle native `FIN01`, `FIN02`, `FIN03`, `FIN04`, `FIN51`, dan
+`FIN57` pada branch `agen/finance-i2-ledgers-core`. Sub-paket `I2b` (`FIN05–09`)
+dan `I2c` (`FIN36–38,55–56`) tetap terpisah.
+
 **Dependensi:** I1. Branch `agen/finance-i2-ledgers`. Coverage FIN01–09,36–38,51,55–57.
 
 Konfigurasi OCA Financial Reports dan source drilldown; susun opening/movement/closing, journal ledger, AR/AP historical/open items/aging, multi-company TB. Aktifkan aset, accrual/prepayment/deferred dan FX dengan kandidat tervalidasi atau custom apabila gap Odoo19 terbukti. Tambahkan loan/lease/interest schedules berdasarkan kebijakan yang disahkan, payroll/reimbursement-to-GL bridge dan sales/purchase register; tax/payroll source yang belum resmi menjadi exception, bukan posting rekaan. Adapter historical harus menjelaskan rekonstruksi dari ledger/reconcile yang diamati sekarang dan dukungan frozen observation.

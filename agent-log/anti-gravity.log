@@ -2092,3 +2092,18 @@
 - Diverifikasi: baseline main d9c7e5f dan PR96 merged192defa; katalog58 baris semuanya BELUM_DITERIMA; 23 tes finance/Ruff/manifests sudah PASS pada paket sebelumnya.
 - Tidak ada perubahan kode, data, role, chart, costing, seed, aktivasi, merge main atau deployment.
 - Task managed by antigravity-agent at 2026-11-07T08:59:30+07:00
+
+[2026-11-07T11:07:00+07:00] [INFO] Resume paket I2a Finance (agen/finance-i2-ledgers-core) dari main 0a6f3c7
+- Membaca dan menyinkronkan baseline main 0a6f3c76c2cd3c578087d7f0c968c38ef4044434 (PR #99 merged dari de08b5f59aebe21983d3d1d6f8ece263bc353503 di atas d9c7e5f05dc7a023cb28c3bf60678c86f7820700).
+- Verifikasi checklist §5: 12 manifest OK, 23 tes unit finance PASS (0.063s), 90 tes unit seed/state PASS (6.943s).
+- Atas konfirmasi pemilik, membuka cabang agen/finance-i2-ledgers-core untuk paket I2a (FIN01 General Ledger, FIN02 Trial Balance, FIN03 Journal Ledger, FIN04 Journal Items Audit Trail, FIN51 Multi-company Combined TB, FIN57 Sales and Purchase Register).
+- Tidak ada deploy, seed, aktivasi demo, atau perubahan data live.
+- Task Managed by Agent VSCode at 2026-11-07T11:07:00+07:00
+
+[2026-11-07T14:01:00+07:00] [INFO] Implementasi paket I2a core ledgers (FIN01, FIN02, FIN03, FIN04, FIN51, FIN57)
+- Memperkuat batas filter lintas-perusahaan (_check_filter_company pada journal_ids dan account_ids) di addons/id_finance_reporting/models/trial_balance.py dan addons/id_finance_foundation/models/report_boundary.py, serta meneruskan journal_ids ke extra_domain General Ledger OCA tanpa memutasi dict pemanggil.
+- Menambahkan addons/id_finance_reporting/models/ledger_compare.py dan ledger_reports.py: id.finance.audit.trail (FIN04), id.finance.combined.trial.balance (FIN51; combined != consolidated), dan id.finance.sales.purchase.register (FIN57; bebas duplikasi baris dan terekonsiliasi ke GL).
+- Menambahkan runner native disposable scripts/ops/verify_finance_i2_ledgers_core.py (2 company 1x/7x, 3 periode, PPN 10%, pembayaran parsial/pelunasan, partnerless entry, akrual+reversal, unreconcile rollback, counterexamples role/company/tamper) dan step CI di .github/workflows/finance-i0-spike.yml.
+- Menambahkan tes unit lokal tests/test_finance_i2_ledgers_core.py dan memperbarui tests/test_finance_report_scope.py serta dokumentasi docs/finance/I2A_LEDGERS_CORE.md.
+- Diverifikasi lokal: python3 scripts/check_manifests.py PASS (12 addon), python3 -m unittest discover -s tests -p 'test_finance*.py' -v PASS (28 tes); CI native exact-SHA masih [BU] menunggu run PR. Tidak ada deploy, seed, atau mutasi DB live.
+- Task Managed by Agent VSCode at 2026-11-07T14:01:00+07:00
