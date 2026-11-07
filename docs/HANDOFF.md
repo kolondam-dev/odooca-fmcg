@@ -1,3 +1,17 @@
+## 2026-11-07T16:06:31+07:00 — claude-design — Fase 1: Sinkron memakai Chip
+
+**Berubah**
+- [F] `SyncDiagnostics.tsx`: pill status → atom `Chip` (review→bad, accepted→ok, lainnya→warn). Filter antrean dibiarkan (markup khusus, tidak ada atom setara).
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest 403 lulus.
+
+**Belum diuji**
+- [BU] Visual Sinkron di browser; e2e tidak mereferensikan `.pill`.
+
+**Berikutnya**
+- BottomSheet, lalu Fase 2 (Sales).
+
 ## 2026-11-07T15:10:04+07:00 — claude-design — PWA Fase 1 (bagian 4): teks minimum 12 px
 **Berubah:** pwa/src/style.css: 27 selektor dengan font-size 10,9 sampai 11,99 px dinaikkan ke 12 px (aturan token: teks minimal 12 px). Kamera (CameraViewfinder) tidak diganti atom karena UI gelap khusus.
 **Diverifikasi:** [F] vitest 403 PASS; e2e --project=phone: 68 PASS; next-policy:463 dan review-regressions:40 gagal saat 6 worker tetapi lolos dijalankan sendiri (flaky beban). Tes lain yang gagal (expense, read-session, official-*, dsb.) sudah gagal pada origin/main pada run baseline dan tidak terkait font.
