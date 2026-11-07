@@ -1,3 +1,17 @@
+## 2026-11-07T16:09:50+07:00 — claude-design — Fase 1: atom SheetHeader di form tugas
+
+**Berubah**
+- [F] Atom `SheetHeader` (eyebrow, judul, tombol tutup 44 px via IconButton); `TaskForm.tsx` memakainya. Kamera tetap UI gelap khusus, tidak dikonversi.
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest 404 lulus; e2e `field.spec.ts` (phone) 10/10.
+
+**Belum diuji**
+- [BU] Visual tombol tutup (kelas lama `icon-button` → `ui-iconbtn`) di browser.
+
+**Berikutnya**
+- Fase 2: Sales dengan command yang ada.
+
 ## 2026-11-07T16:06:31+07:00 — claude-design — Fase 1: Sinkron memakai Chip
 
 **Berubah**

@@ -10,6 +10,7 @@ import {
     Progress,
     RadioRow,
     Segmented,
+    SheetHeader,
     StatusDot,
     Stepper,
     clamp,
@@ -239,5 +240,22 @@ describe("BottomNav", () => {
         expect(out.match(/class="active"/g)).toHaveLength(1);
         expect(out).not.toContain("aria-current");
         expect(out.match(/nav-dot/g)).toHaveLength(1);
+    });
+});
+
+describe("SheetHeader", () => {
+    it("menampilkan judul, eyebrow, dan tombol tutup berlabel", () => {
+        const out = html(
+            SheetHeader({
+                title: "Order",
+                titleId: "t",
+                eyebrow: "Outlet A",
+                onClose: () => {},
+                closeLabel: "Tutup form",
+            }),
+        );
+        expect(out).toContain("Outlet A");
+        expect(out).toContain('id="t"');
+        expect(out).toContain('aria-label="Tutup form"');
     });
 });

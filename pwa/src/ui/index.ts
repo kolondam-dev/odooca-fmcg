@@ -6,6 +6,7 @@ export { Field, type FieldProps } from "./Field";
 export { IconButton, type IconButtonProps } from "./IconButton";
 export { Progress } from "./Progress";
 export { RadioRow } from "./RadioRow";
+export { SheetHeader, type SheetHeaderProps } from "./SheetHeader";
 export { Segmented, type SegmentedItem } from "./Segmented";
 export { Select, type SelectOption, type SelectProps } from "./Select";
 export { StatusDot } from "./StatusDot";
