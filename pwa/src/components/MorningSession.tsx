@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { Button, Chip } from "../ui";
 import type { FieldProvider, Identity } from "../domain/contracts";
 import {
     fieldBusinessDate,
@@ -96,13 +97,13 @@ export function MorningSession({
                             : ""}
                     </p>
                 </div>
-                <span class={`pill ${ready ? "success" : "neutral"}`}>
+                <Chip tone={ready ? "ok" : "neu"}>
                     {today?.clockOutAt
                         ? "Sesi selesai"
                         : ready
                           ? "Sesi aktif"
                           : "Belum dibuka"}
-                </span>
+                </Chip>
             </div>
             {ready ? (
                 <p class="notice" role="status">
@@ -110,13 +111,14 @@ export function MorningSession({
                     offline hari ini.
                 </p>
             ) : (
-                <button
-                    class="secondary full"
+                <Button
+                    variant="sec"
+                    size="md"
                     disabled={!loaded || busy || !today || !!today.clockOutAt}
                     onClick={() => void advance()}
                 >
                     {busy ? "Memproses…" : "Buka sesi kerja"}
-                </button>
+                </Button>
             )}
             {(error || restoreError) && (
                 <p role="alert" class="form-error">

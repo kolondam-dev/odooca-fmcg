@@ -1,3 +1,9 @@
+## 2026-11-07T14:30:48+07:00 — claude-design — PWA Fase 1 (bagian 3): Absen dan sesi pagi memakai atom
+**Berubah:** components/AttendanceCapture.tsx (Field alamat; Button Ambil Lokasi Presisi dan Buka Kamera), components/MorningSession.tsx (Chip status; Button Buka sesi kerja); style.css (.capture-actions satu kolom; aturan .capture-actions button 11-12px dihapus karena menimpa ukuran atom dan di bawah 12px).
+**Diverifikasi:** [F] vitest 403 PASS; e2e login-attendance-ux, field, visit-evidence, morning, running-mode, checkin-map, ux-improvements: PASS. Lima tes (sales-delivery-rules: SKU prices, tier simulator x2; review-regressions: POD unit legacy x2) gagal juga pada origin/main murni, bukan dari perubahan ini.
+**Belum diuji:** [BU] tangkapan layar Absen di perangkat nyata; Kamera dan Sinkron belum diganti.
+**Berikutnya:** Kamera (CameraViewfinder), Sinkron (SyncDiagnostics), BottomSheet.
+
 ## 2026-11-07T14:22:45+07:00 — claude-design — PWA Fase 1 (bagian 2): BottomNav diekstrak
 **Berubah:** pwa/src/ui/BottomNav.tsx (+ ekspor di index.ts, 1 tes di ui-atoms.test.ts); App.tsx memakai BottomNav dengan markup, kelas, dan aria-current identik.
 **Temuan:** gaya navbar terpilih menyatu dengan body (border atas 0, latar --c-bg) sudah ada di style.css; tidak ada perubahan visual.

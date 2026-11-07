@@ -2259,16 +2259,8 @@ textarea {
 }
 .capture-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 8px;
-}
-.capture-actions button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 12px;
-    padding: 12px 8px;
 }
 .attendance-result {
     display: grid;
@@ -2311,9 +2303,6 @@ textarea {
     }
     .login-box {
         padding: 22px;
-    }
-    .capture-actions button {
-        font-size: 11px;
     }
 }
 .compact-map > small:last-child {
