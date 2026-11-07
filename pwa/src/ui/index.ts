@@ -12,4 +12,5 @@ export { Segmented, type SegmentedItem } from "./Segmented";
 export { Select, type SelectOption, type SelectProps } from "./Select";
 export { StatusDot } from "./StatusDot";
 export { Stepper } from "./Stepper";
+export { Textarea, type TextareaProps } from "./Textarea";
 export { clamp, cx, stepValue } from "./cx";

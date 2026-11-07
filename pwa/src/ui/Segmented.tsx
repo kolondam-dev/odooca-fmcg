@@ -1,6 +1,10 @@
 import { cx } from "./cx";
 
-export type SegmentedItem<T extends string> = { value: T; label: string };
+export type SegmentedItem<T extends string> = {
+    value: T;
+    label: string;
+    disabled?: boolean;
+};
 
 /** Dua sampai empat pilihan eksklusif. Tombol memakai aria-pressed seperti .segmented lama. */
 export function Segmented<T extends string>({
@@ -23,6 +27,7 @@ export function Segmented<T extends string>({
                     type="button"
                     class={cx("ui-seg__item", item.value === value && "is-on")}
                     aria-pressed={item.value === value}
+                    disabled={item.disabled}
                     onClick={() => onChange(item.value)}
                 >
                     {item.label}

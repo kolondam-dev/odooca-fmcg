@@ -2836,10 +2836,6 @@ body:has(.delivery-task[open]) {
     font-size: 12px;
     margin: 10px 0;
 }
-.location-retry {
-    min-height: 44px;
-    padding: 8px 0;
-}
 .map-simulation-label {
     color: #795100;
     font-size: 12px;

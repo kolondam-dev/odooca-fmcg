@@ -11,6 +11,7 @@ import {
     RadioRow,
     Segmented,
     SheetHeader,
+    Textarea,
     StatusDot,
     Stepper,
     clamp,
@@ -257,5 +258,26 @@ describe("SheetHeader", () => {
         expect(out).toContain("Outlet A");
         expect(out).toContain('id="t"');
         expect(out).toContain('aria-label="Tutup form"');
+    });
+});
+
+describe("Textarea & Segmented disabled", () => {
+    it("merender textarea berlabel dan item segmented nonaktif", () => {
+        expect(
+            html(Textarea({ label: "Catatan", value: "x", onInput: () => {} })),
+        ).toContain("Catatan");
+        expect(
+            html(
+                Segmented({
+                    label: "T",
+                    value: "a",
+                    onChange: () => {},
+                    items: [
+                        { value: "a", label: "A" },
+                        { value: "b", label: "B", disabled: true },
+                    ],
+                }),
+            ),
+        ).toContain("disabled");
     });
 });

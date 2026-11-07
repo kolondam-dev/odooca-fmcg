@@ -472,3 +472,12 @@ select.ui-select {
     gap: 12px;
     padding: 0 16px 16px;
 }
+
+.ui-field__input--area {
+    height: auto;
+    min-height: 96px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    resize: vertical;
+    line-height: 22px;
+}

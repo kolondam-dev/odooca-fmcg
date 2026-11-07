@@ -12,7 +12,7 @@ import { useRunningMode } from "../domain/running-mode";
 import { captureVisitLocation, type SalesVisits } from "../domain/visits";
 import type { VisitFix, VisitCheckout } from "../domain/visit-contracts";
 import type { QueueItem } from "../storage/store";
-import { Icon } from "./Icon";
+import { Button, Segmented, Select, Textarea } from "../ui";
 export function VisitPanel({
     outlet,
     store,
@@ -250,42 +250,39 @@ export function VisitPanel({
             class="visit-panel visit-workflow"
             aria-label="Kunjungan outlet"
         >
-            <button class="text-button" onClick={back}>
+            <Button variant="sec" size="md" auto onClick={back}>
                 Kembali ke daftar outlet
-            </button>
+            </Button>
             <CustomerSummary outlet={outlet} />
-            <nav class="workflow-tabs" aria-label="Tahap kunjungan">
-                <button
-                    aria-pressed={phase === "checkin"}
-                    onClick={() => setPhase("checkin")}
-                >
-                    Check-in toko
-                </button>
-                <button
-                    aria-pressed={phase === "open"}
-                    disabled={
-                        !active ||
-                        closed ||
-                        busy ||
-                        (!isDemo &&
-                            !outlet.demo_unrestricted &&
-                            assessment?.status !== "inside")
-                    }
-                    onClick={() => {
+            <Segmented
+                label="Tahap kunjungan"
+                value={phase}
+                onChange={(next) => {
+                    if (next === "open") {
                         setPhase("open");
                         order();
-                    }}
-                >
-                    Open session
-                </button>
-                <button
-                    aria-pressed={phase === "close"}
-                    disabled={!active && !closed}
-                    onClick={() => setPhase("close")}
-                >
-                    Close session
-                </button>
-            </nav>
+                    } else setPhase(next);
+                }}
+                items={[
+                    { value: "checkin", label: "Check-in toko" },
+                    {
+                        value: "open",
+                        label: "Open session",
+                        disabled:
+                            !active ||
+                            closed ||
+                            busy ||
+                            (!isDemo &&
+                                !outlet.demo_unrestricted &&
+                                assessment?.status !== "inside"),
+                    },
+                    {
+                        value: "close",
+                        label: "Close session",
+                        disabled: !active && !closed,
+                    },
+                ]}
+            />
             <p role="status">
                 {closed
                     ? "Kunjungan ditutup lokal — menunggu hasil sinkronisasi."
@@ -318,14 +315,15 @@ export function VisitPanel({
                             : undefined
                     }
                 />
-                <button
-                    class="text-button location-retry"
+                <Button
+                    variant="sec"
+                    size="md"
+                    icon="pin"
                     onClick={() => void locate()}
                     disabled={busy}
                 >
-                    <Icon name="pin" size={18} />
                     {busy ? "Memproses lokasi…" : "Perbarui lokasi outlet"}
-                </button>
+                </Button>
                 {!active && !closed && (
                     <VisitPhotoField
                         key={`in:${sessionId}:${outlet.id}`}
@@ -349,8 +347,7 @@ export function VisitPanel({
                         </p>
                     )}
                 {!active && !closed && (
-                    <button
-                        class="primary full"
+                    <Button
                         disabled={
                             !info ||
                             !!info.active ||
@@ -364,7 +361,7 @@ export function VisitPanel({
                         onClick={() => void start()}
                     >
                         Mulai kunjungan
-                    </button>
+                    </Button>
                 )}
             </div>
             <div hidden={phase !== "close"}>
@@ -398,8 +395,8 @@ export function VisitPanel({
             {active && !closed && (
                 <>
                     <div hidden={phase !== "open"}>
-                        <button
-                            class="primary full"
+                        <Button
+                            icon="bag"
                             disabled={
                                 busy ||
                                 (!isDemo &&
@@ -408,25 +405,24 @@ export function VisitPanel({
                             }
                             onClick={order}
                         >
-                            <Icon name="bag" size={18} /> Buat order di outlet
-                        </button>
+                            Buat order di outlet
+                        </Button>
                     </div>
                     <div hidden={phase !== "close"}>
                         <h3>Ringkasan kunjungan</h3>
                         <p>{info?.orders ?? 0} pengajuan order</p>
-                        <button
-                            type="button"
-                            class="secondary full"
-                            style={{ margin: "8px 0 14px" }}
+                        <Button
+                            variant="sec"
+                            size="md"
+                            icon="bag"
                             disabled={busy}
                             onClick={() => {
                                 setPhase("open");
                                 order();
                             }}
                         >
-                            <Icon name="bag" size={16} /> + Tambah order lagi
-                            untuk outlet ini
-                        </button>
+                            + Tambah order lagi untuk outlet ini
+                        </Button>
                         <VisitPhotoField
                             key={`out:${info?.active?.context.visit_uuid}`}
                             store={store}
@@ -445,59 +441,55 @@ export function VisitPanel({
                             </p>
                         )}
                         <form class="visit-close" onSubmit={finish}>
-                            <label>
-                                Hasil kunjungan
-                                <select
-                                    value={
-                                        info?.orders
-                                            ? "order_requested"
-                                            : outcome
-                                    }
-                                    onChange={(e) =>
-                                        setOutcome(
-                                            e.currentTarget
-                                                .value as VisitCheckout["outcome"],
-                                        )
-                                    }
-                                >
-                                    {info?.orders ? (
-                                        <option value="order_requested">
-                                            Order diajukan
-                                        </option>
-                                    ) : (
-                                        <>
-                                            <option value="no_order">
-                                                Tidak ada order
-                                            </option>
-                                            <option value="outlet_closed">
-                                                Outlet tutup
-                                            </option>
-                                            <option value="unavailable">
-                                                Kontak tidak tersedia
-                                            </option>
-                                        </>
-                                    )}
-                                </select>
-                            </label>
-                            <label>
-                                Catatan kunjungan
-                                <textarea
-                                    required={!info?.orders}
-                                    minLength={info?.orders ? 0 : 5}
-                                    maxLength={500}
-                                    value={notes}
-                                    onInput={(e) =>
-                                        setNotes(e.currentTarget.value)
-                                    }
-                                />
-                            </label>
-                            <button
-                                class="secondary full"
+                            <Select
+                                label="Hasil kunjungan"
+                                value={
+                                    info?.orders ? "order_requested" : outcome
+                                }
+                                onChange={(value) =>
+                                    setOutcome(
+                                        value as VisitCheckout["outcome"],
+                                    )
+                                }
+                                options={
+                                    info?.orders
+                                        ? [
+                                              {
+                                                  value: "order_requested",
+                                                  label: "Order diajukan",
+                                              },
+                                          ]
+                                        : [
+                                              {
+                                                  value: "no_order",
+                                                  label: "Tidak ada order",
+                                              },
+                                              {
+                                                  value: "outlet_closed",
+                                                  label: "Outlet tutup",
+                                              },
+                                              {
+                                                  value: "unavailable",
+                                                  label: "Kontak tidak tersedia",
+                                              },
+                                          ]
+                                }
+                            />
+                            <Textarea
+                                label="Catatan kunjungan"
+                                required={!info?.orders}
+                                minLength={info?.orders ? 0 : 5}
+                                maxLength={500}
+                                value={notes}
+                                onInput={setNotes}
+                            />
+                            <Button
+                                variant="sec"
                                 type="submit"
                                 disabled={busy || (!isDemo && !fresh(outPhoto))}
                             >
                                 Tutup kunjungan
-                            </button>
+                            </Button>
                         </form>
                     </div>
                 </>

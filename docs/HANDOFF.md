@@ -1,3 +1,20 @@
+## 2026-11-08T06:06:42+07:00 — claude-design — Fase 2: Hub kunjungan (VisitPanel) memakai atom
+
+**Berubah**
+- [F] `VisitPanel`: tahap (Check-in toko / Open session / Close session) → `Segmented` (kini mendukung `disabled` per item); tombol → `Button`; Hasil kunjungan → `Select`; Catatan → atom baru `Textarea`. Label tidak berubah; "Open session" tetap membuka order.
+- [F] CSS `.location-retry` dihapus.
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest; e2e `running-mode.spec` (check-in → tutup kunjungan) lulus; tangkapan layar demo.
+- [F] next-policy, sales-delivery-rules: set kegagalan identik dengan baseline (tanpa perubahan ini), jadi tidak ada regresi.
+
+**Belum diuji**
+- [BU] Spec yang gagal di baseline (next-policy:66/307/385, sales-delivery-rules:19/216) tidak bisa memvalidasi alur kunjungan penuh.
+- [A] Label tab membungkus dua baris di 360 px; perlu putusan visual.
+
+**Berikutnya**
+- Check-in (peta/foto), lalu Order.
+
 ## 2026-11-08T05:57:15+07:00 — claude-design — Fase 2: daftar Outlet sesuai design system
 
 **Berubah**
