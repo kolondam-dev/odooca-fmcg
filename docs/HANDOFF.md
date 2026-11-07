@@ -1,3 +1,10 @@
+## 2026-11-07T14:22:45+07:00 — claude-design — PWA Fase 1 (bagian 2): BottomNav diekstrak
+**Berubah:** pwa/src/ui/BottomNav.tsx (+ ekspor di index.ts, 1 tes di ui-atoms.test.ts); App.tsx memakai BottomNav dengan markup, kelas, dan aria-current identik.
+**Temuan:** gaya navbar terpilih menyatu dengan body (border atas 0, latar --c-bg) sudah ada di style.css; tidak ada perubahan visual.
+**Diverifikasi:** [F] vitest 403 PASS; e2e login-attendance-ux dan navigasi 18 PASS; visits.spec:93 gagal juga pada baseline.
+**Belum diuji:** [BU] AppHeader per layar (mockup: back/tab/home), BottomSheet, Absen, Kamera, Sinkron.
+**Berikutnya:** Absen (AttendanceCapture, MorningSession) memakai atom, lalu Kamera dan Sinkron.
+
 ## 2026-11-07T14:18:52+07:00 — claude-design — PWA Fase 1 (bagian 1): navy disatukan, Login memakai atom
 **Berubah:** pwa/src/ui/tokens.css (--c-nav = #001A57, navy merek PWA; mockup memakai #0B1F4D yang sebenarnya warna teks), style.css (--navy = alias --c-nav), design/tokens.json, ui/Field.tsx (autoCapitalize, spellcheck), components/Login.tsx (Field dan Button; label tidak berubah).
 **Diverifikasi:** [F] vitest 402 PASS; prettier PASS; e2e login-attendance-ux 14 PASS (phone dan tablet).

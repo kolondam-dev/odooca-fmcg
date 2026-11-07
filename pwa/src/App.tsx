@@ -3,6 +3,7 @@ import { ViewMemoryContext, useRememberedScroll } from "./ui/viewMemory";
 import { TaskForm } from "./components/TaskForm";
 import { LiveClock } from "./components/LiveClock";
 import { useNavigation, type Page, type Dialog } from "./ui/navigation";
+import { BottomNav } from "./ui";
 import { OutletDirectory } from "./components/OutletDirectory";
 import { TripClosing } from "./components/TripClosing";
 import { OrderCorrections } from "./components/OrderCorrections";
@@ -1216,35 +1217,22 @@ function Workspace({
                             </>
                         )}
                     </main>
-                    <nav class="bottom-nav" aria-label="Navigasi utama">
-                        {nav.map((p) => (
-                            <button
-                                key={p.id}
-                                class={
-                                    page === p.id ||
-                                    (page === "expenses" && p.id === "more") ||
-                                    (page === "delivery" && p.id === "sales")
-                                        ? "active"
-                                        : ""
-                                }
-                                aria-current={
-                                    page === p.id ||
-                                    (p.id === "sales" && page === "delivery")
-                                        ? "page"
-                                        : undefined
-                                }
-                                onClick={() => go(p.id)}
-                            >
-                                <span class="nav-icon">
-                                    <Icon name={p.icon} size={24} />
-                                    {p.id === "more" && pending > 0 && (
-                                        <span class="nav-dot" />
-                                    )}
-                                </span>
-                                <span>{p.name}</span>
-                            </button>
-                        ))}
-                    </nav>
+                    <BottomNav
+                        items={nav.map((p) => ({
+                            id: p.id,
+                            name: p.name,
+                            icon: p.icon,
+                            active:
+                                page === p.id ||
+                                (page === "expenses" && p.id === "more") ||
+                                (page === "delivery" && p.id === "sales"),
+                            current:
+                                page === p.id ||
+                                (p.id === "sales" && page === "delivery"),
+                            dot: p.id === "more" && pending > 0,
+                        }))}
+                        onSelect={(id) => go(id as Page)}
+                    />
                     <div class="sr-only" aria-live="polite">
                         {online
                             ? ""

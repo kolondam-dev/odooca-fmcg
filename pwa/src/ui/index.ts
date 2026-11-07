@@ -1,3 +1,4 @@
+export { BottomNav, type BottomNavItem } from "./BottomNav";
 export { Button, type ButtonProps } from "./Button";
 export { Checkbox } from "./Checkbox";
 export { Chip, type Tone } from "./Chip";

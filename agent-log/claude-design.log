@@ -148,3 +148,9 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - Login.tsx memakai Field dan Button; label dan e2e tidak berubah
 - vitest 402 PASS; login-attendance-ux 14 PASS
 - Task managed by claude-design agent at 2026-11-07T14:18:52+07:00
+
+[2026-11-07T14:22:45+07:00] [INFO] PWA Fase 1 (bagian 2): BottomNav diekstrak ke src/ui
+- BottomNav.tsx dengan markup dan kelas identik; App.tsx memakainya
+- Temuan: navbar terpilih menyatu dengan body sudah ada di style.css (butir feedback 18 sudah terpenuhi)
+- vitest 403 PASS; e2e 18 PASS; visits:93 gagal juga pada baseline
+- Task managed by claude-design agent at 2026-11-07T14:22:45+07:00

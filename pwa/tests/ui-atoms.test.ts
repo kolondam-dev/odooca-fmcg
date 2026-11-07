@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ComponentChildren, VNode } from "preact";
 import {
+    BottomNav,
     Button,
     Checkbox,
     Chip,
@@ -207,5 +208,36 @@ describe("Progress dan StatusDot", () => {
         expect(html(StatusDot({ online: true }))).toContain(
             'aria-label="Online"',
         );
+    });
+});
+
+describe("BottomNav", () => {
+    it("aktif dan aria-current dapat berbeda; titik hanya bila dot", () => {
+        const out = html(
+            BottomNav({
+                onSelect: () => undefined,
+                items: [
+                    {
+                        id: "sales",
+                        name: "Sales",
+                        icon: "store",
+                        active: true,
+                        current: false,
+                    },
+                    {
+                        id: "more",
+                        name: "Lainnya",
+                        icon: "grid",
+                        active: false,
+                        current: false,
+                        dot: true,
+                    },
+                ],
+            }),
+        );
+        expect(out).toContain('aria-label="Navigasi utama"');
+        expect(out.match(/class="active"/g)).toHaveLength(1);
+        expect(out).not.toContain("aria-current");
+        expect(out.match(/nav-dot/g)).toHaveLength(1);
     });
 });
