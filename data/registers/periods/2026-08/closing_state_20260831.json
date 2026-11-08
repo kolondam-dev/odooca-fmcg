@@ -20,7 +20,7 @@
     "last_invoice_number": "INV-202608-1240",
     "last_ar_payment_id": "PAY-AR-02169",
     "last_ap_payment_id": "PAY-AP-05",
-    "last_rejection_id": "REJ-202608-046",
+    "last_rejection_id": "REJ-202608-047",
     "last_po_number": "PO-2026-08-16",
     "last_event_id": "EVT-010595"
   },
@@ -4541,8 +4541,8 @@
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-      "dpp_amount": "2560000.00",
-      "total_invoice_with_ppn": "2841600.00"
+      "dpp_amount": "1696000.00",
+      "total_invoice_with_ppn": "1882560.00"
     },
     "INV-202608-1224": {
       "date_invoice": "2026-09-01",
@@ -4977,7 +4977,7 @@
     "DO-202608-1223": {
       "so_number": "SO-202608-1223",
       "scheduled_delivery_date": "2026-09-01",
-      "rejection_dpp": "0.00",
+      "rejection_dpp": "864000.00",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
     },
     "DO-202608-1224": {
@@ -5090,7 +5090,9 @@
       "sku_code": "MYR-CND-04",
       "lot_number": "LOT-ORA-20260702-38",
       "qty_cartons": "4",
-      "unit_cost_price": "6800"
+      "unit_cost_price": "6800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1191",
@@ -5098,7 +5100,9 @@
       "sku_code": "MYR-RMA-10",
       "lot_number": "LOT-RMA-202608-NEW-01",
       "qty_cartons": "2",
-      "unit_cost_price": "7500"
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1191",
@@ -5106,7 +5110,9 @@
       "sku_code": "MYR-TRB-01",
       "lot_number": "LOT-ORA-20260703-19",
       "qty_cartons": "1",
-      "unit_cost_price": "1200"
+      "unit_cost_price": "1200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1192",
@@ -5114,7 +5120,9 @@
       "sku_code": "WNG-FLD-03",
       "lot_number": "LOT-NGS-20260615-INIT-25",
       "qty_cartons": "4",
-      "unit_cost_price": "3000"
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1192",
@@ -5122,7 +5130,9 @@
       "sku_code": "WNG-SDP-10",
       "lot_number": "LOT-NGS-20260615-INIT-10",
       "qty_cartons": "1",
-      "unit_cost_price": "4400"
+      "unit_cost_price": "4400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1193",
@@ -5130,7 +5140,9 @@
       "sku_code": "KPA-ABC-03",
       "lot_number": "LOT-TOS-20260701-15",
       "qty_cartons": "2",
-      "unit_cost_price": "1200"
+      "unit_cost_price": "1200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1193",
@@ -5138,7 +5150,9 @@
       "sku_code": "KPA-YA-02",
       "lot_number": "LOT-TOS-20260701-20",
       "qty_cartons": "3",
-      "unit_cost_price": "850"
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1194",
@@ -5146,7 +5160,9 @@
       "sku_code": "ULV-LFB-06",
       "lot_number": "LOT-VER-20260704-22",
       "qty_cartons": "4",
-      "unit_cost_price": "18500"
+      "unit_cost_price": "18500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1195",
@@ -5154,7 +5170,9 @@
       "sku_code": "MYR-CND-01",
       "lot_number": "LOT-ORA-20260702-35",
       "qty_cartons": "4",
-      "unit_cost_price": "7500"
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1196",
@@ -5162,7 +5180,9 @@
       "sku_code": "ULV-LFB-05",
       "lot_number": "LOT-VER-20260704-21",
       "qty_cartons": "2",
-      "unit_cost_price": "21000"
+      "unit_cost_price": "21000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1197",
@@ -5170,7 +5190,9 @@
       "sku_code": "MYR-CND-10",
       "lot_number": "LOT-TMR-202608-NEW-01",
       "qty_cartons": "4",
-      "unit_cost_price": "2000"
+      "unit_cost_price": "2000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1198",
@@ -5178,7 +5200,9 @@
       "sku_code": "WNG-SDP-04",
       "lot_number": "LOT-NGS-20260701-04",
       "qty_cartons": "1",
-      "unit_cost_price": "2600"
+      "unit_cost_price": "2600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1199",
@@ -5186,7 +5210,9 @@
       "sku_code": "WNG-SDP-03",
       "lot_number": "LOT-NGS-20260701-03",
       "qty_cartons": "1",
-      "unit_cost_price": "2500"
+      "unit_cost_price": "2500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1199",
@@ -5194,7 +5220,9 @@
       "sku_code": "WNG-TOP-03",
       "lot_number": "LOT-NGS-20260701-21",
       "qty_cartons": "3",
-      "unit_cost_price": "1300"
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1200",
@@ -5202,7 +5230,9 @@
       "sku_code": "ULV-SNL-02",
       "lot_number": "LOT-SNL-202608-NEW-01",
       "qty_cartons": "3",
-      "unit_cost_price": "5200"
+      "unit_cost_price": "5200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1201",
@@ -5210,7 +5240,9 @@
       "sku_code": "WNG-SDP-07",
       "lot_number": "LOT-NGS-20260615-INIT-07",
       "qty_cartons": "3",
-      "unit_cost_price": "3100"
+      "unit_cost_price": "3100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1202",
@@ -5218,7 +5250,9 @@
       "sku_code": "KPA-KA-01",
       "lot_number": "LOT-KA-202608-NEW-01",
       "qty_cartons": "2",
-      "unit_cost_price": "4800"
+      "unit_cost_price": "4800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1203",
@@ -5226,7 +5260,9 @@
       "sku_code": "ULV-LFB-08",
       "lot_number": "LOT-VER-20260704-24",
       "qty_cartons": "3",
-      "unit_cost_price": "7500"
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1204",
@@ -5234,7 +5270,9 @@
       "sku_code": "WNG-SDP-07",
       "lot_number": "LOT-NGS-20260615-INIT-07",
       "qty_cartons": "3",
-      "unit_cost_price": "3100"
+      "unit_cost_price": "3100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1204",
@@ -5242,7 +5280,9 @@
       "sku_code": "WNG-SDP-11",
       "lot_number": "LOT-NGS-20260701-11",
       "qty_cartons": "4",
-      "unit_cost_price": "4600"
+      "unit_cost_price": "4600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1205",
@@ -5250,7 +5290,9 @@
       "sku_code": "MYR-CND-01",
       "lot_number": "LOT-ORA-20260702-35",
       "qty_cartons": "10",
-      "unit_cost_price": "7500"
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1206",
@@ -5258,7 +5300,9 @@
       "sku_code": "ULV-RYC-01",
       "lot_number": "LOT-VER-20260704-37",
       "qty_cartons": "6",
-      "unit_cost_price": "8500"
+      "unit_cost_price": "8500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1206",
@@ -5266,7 +5310,9 @@
       "sku_code": "ULV-SNL-02",
       "lot_number": "LOT-SNL-202608-NEW-01",
       "qty_cartons": "10",
-      "unit_cost_price": "5200"
+      "unit_cost_price": "5200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1207",
@@ -5274,7 +5320,9 @@
       "sku_code": "WNG-JSJ-02",
       "lot_number": "LOT-NGS-20260701-14",
       "qty_cartons": "11",
-      "unit_cost_price": "850"
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1208",
@@ -5282,7 +5330,9 @@
       "sku_code": "MYR-TRB-07",
       "lot_number": "LOT-ORA-20260703-25",
       "qty_cartons": "16",
-      "unit_cost_price": "1500"
+      "unit_cost_price": "1500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1209",
@@ -5290,7 +5340,9 @@
       "sku_code": "KPA-ABC-01",
       "lot_number": "LOT-TOS-20260701-13",
       "qty_cartons": "14",
-      "unit_cost_price": "1400"
+      "unit_cost_price": "1400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1209",
@@ -5298,7 +5350,9 @@
       "sku_code": "KPA-KA-03",
       "lot_number": "LOT-KA-202608-NEW-01",
       "qty_cartons": "26",
-      "unit_cost_price": "25500"
+      "unit_cost_price": "25500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1209",
@@ -5306,7 +5360,9 @@
       "sku_code": "KPA-KA-04",
       "lot_number": "LOT-TOS-20260701-04",
       "qty_cartons": "8",
-      "unit_cost_price": "1300"
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1209",
@@ -5314,7 +5370,9 @@
       "sku_code": "KPA-KA-11",
       "lot_number": "LOT-KA-202608-NEW-01",
       "qty_cartons": "25",
-      "unit_cost_price": "28000"
+      "unit_cost_price": "28000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1210",
@@ -5322,7 +5380,9 @@
       "sku_code": "ULV-RNS-02",
       "lot_number": "LOT-RNS-202608-NEW-01",
       "qty_cartons": "13",
-      "unit_cost_price": "22000"
+      "unit_cost_price": "22000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1210",
@@ -5330,7 +5390,9 @@
       "sku_code": "ULV-RNS-04",
       "lot_number": "LOT-RNS-202608-NEW-01",
       "qty_cartons": "3",
-      "unit_cost_price": "42000"
+      "unit_cost_price": "42000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1211",
@@ -5338,7 +5400,9 @@
       "sku_code": "WNG-GLD-03",
       "lot_number": "LOT-NGS-20260615-INIT-31",
       "qty_cartons": "12",
-      "unit_cost_price": "2800"
+      "unit_cost_price": "2800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1211",
@@ -5346,7 +5410,9 @@
       "sku_code": "WNG-SDP-04",
       "lot_number": "LOT-NGS-20260701-04",
       "qty_cartons": "4",
-      "unit_cost_price": "2600"
+      "unit_cost_price": "2600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1211",
@@ -5354,7 +5420,9 @@
       "sku_code": "WNG-TOP-03",
       "lot_number": "LOT-NGS-20260701-21",
       "qty_cartons": "20",
-      "unit_cost_price": "1300"
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1212",
@@ -5362,7 +5430,9 @@
       "sku_code": "MYR-BBG-01",
       "lot_number": "LOT-BBG-202608-NEW-01",
       "qty_cartons": "20",
-      "unit_cost_price": "2000"
+      "unit_cost_price": "2000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1212",
@@ -5370,7 +5440,9 @@
       "sku_code": "MYR-BBG-03",
       "lot_number": "LOT-BBG-202608-NEW-01",
       "qty_cartons": "23",
-      "unit_cost_price": "11000"
+      "unit_cost_price": "11000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1212",
@@ -5378,7 +5450,9 @@
       "sku_code": "MYR-CND-09",
       "lot_number": "LOT-ORA-20260703-43",
       "qty_cartons": "23",
-      "unit_cost_price": "3000"
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1212",
@@ -5386,7 +5460,9 @@
       "sku_code": "MYR-KPK-RTD-02",
       "lot_number": "LOT-ORA-20260703-30",
       "qty_cartons": "18",
-      "unit_cost_price": "6000"
+      "unit_cost_price": "6000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1212",
@@ -5394,7 +5470,9 @@
       "sku_code": "MYR-TRB-10",
       "lot_number": "LOT-ORA-20260703-28",
       "qty_cartons": "14",
-      "unit_cost_price": "1500"
+      "unit_cost_price": "1500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1213",
@@ -5402,7 +5480,9 @@
       "sku_code": "KPA-ABC-02",
       "lot_number": "LOT-TOS-20260701-14",
       "qty_cartons": "6",
-      "unit_cost_price": "1400"
+      "unit_cost_price": "1400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1214",
@@ -5410,7 +5490,9 @@
       "sku_code": "ULV-LFB-07",
       "lot_number": "LOT-VER-20260704-23",
       "qty_cartons": "14",
-      "unit_cost_price": "19500"
+      "unit_cost_price": "19500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1214",
@@ -5418,7 +5500,9 @@
       "sku_code": "ULV-RYC-01",
       "lot_number": "LOT-VER-20260704-37",
       "qty_cartons": "11",
-      "unit_cost_price": "8500"
+      "unit_cost_price": "8500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1215",
@@ -5426,7 +5510,9 @@
       "sku_code": "WNG-GLD-03",
       "lot_number": "LOT-NGS-20260615-INIT-31",
       "qty_cartons": "18",
-      "unit_cost_price": "2800"
+      "unit_cost_price": "2800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1215",
@@ -5434,7 +5520,9 @@
       "sku_code": "WNG-JSJ-02",
       "lot_number": "LOT-NGS-20260701-14",
       "qty_cartons": "5",
-      "unit_cost_price": "850"
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1215",
@@ -5442,7 +5530,9 @@
       "sku_code": "WNG-JSJ-03",
       "lot_number": "LOT-NGS-20260615-INIT-15",
       "qty_cartons": "21",
-      "unit_cost_price": "850"
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1215",
@@ -5450,7 +5540,9 @@
       "sku_code": "WNG-SDP-03",
       "lot_number": "LOT-NGS-20260701-03",
       "qty_cartons": "7",
-      "unit_cost_price": "2500"
+      "unit_cost_price": "2500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1215",
@@ -5458,7 +5550,9 @@
       "sku_code": "WNG-SDP-04",
       "lot_number": "LOT-NGS-20260701-04",
       "qty_cartons": "7",
-      "unit_cost_price": "2600"
+      "unit_cost_price": "2600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1215",
@@ -5466,7 +5560,9 @@
       "sku_code": "WNG-SDP-10",
       "lot_number": "LOT-NGS-20260615-INIT-10",
       "qty_cartons": "16",
-      "unit_cost_price": "4400"
+      "unit_cost_price": "4400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1216",
@@ -5474,7 +5570,9 @@
       "sku_code": "MYR-BTR-01",
       "lot_number": "LOT-BTR-202608-NEW-01",
       "qty_cartons": "1",
-      "unit_cost_price": "1800"
+      "unit_cost_price": "1800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1216",
@@ -5482,7 +5580,9 @@
       "sku_code": "MYR-CND-08",
       "lot_number": "LOT-ORA-20260703-42",
       "qty_cartons": "4",
-      "unit_cost_price": "7000"
+      "unit_cost_price": "7000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1216",
@@ -5490,7 +5590,9 @@
       "sku_code": "MYR-TRB-04",
       "lot_number": "LOT-ORA-20260703-22",
       "qty_cartons": "5",
-      "unit_cost_price": "1100"
+      "unit_cost_price": "1100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1217",
@@ -5498,7 +5600,9 @@
       "sku_code": "KPA-KA-04",
       "lot_number": "LOT-TOS-20260701-04",
       "qty_cartons": "2",
-      "unit_cost_price": "1300"
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1218",
@@ -5506,7 +5610,9 @@
       "sku_code": "ULV-MLT-01",
       "lot_number": "LOT-VER-20260704-13",
       "qty_cartons": "9",
-      "unit_cost_price": "17500"
+      "unit_cost_price": "17500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1219",
@@ -5514,7 +5620,9 @@
       "sku_code": "WNG-GLD-02",
       "lot_number": "LOT-NGS-20260701-30",
       "qty_cartons": "13",
-      "unit_cost_price": "3000"
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1219",
@@ -5522,7 +5630,9 @@
       "sku_code": "WNG-TOP-04",
       "lot_number": "LOT-NGS-20260701-22",
       "qty_cartons": "1",
-      "unit_cost_price": "1100"
+      "unit_cost_price": "1100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1220",
@@ -5530,7 +5640,9 @@
       "sku_code": "MYR-CND-03",
       "lot_number": "LOT-ORA-20260703-37",
       "qty_cartons": "10",
-      "unit_cost_price": "7800"
+      "unit_cost_price": "7800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1221",
@@ -5538,7 +5650,9 @@
       "sku_code": "KPA-KA-03",
       "lot_number": "LOT-KA-202608-NEW-01",
       "qty_cartons": "6",
-      "unit_cost_price": "25500"
+      "unit_cost_price": "25500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1221",
@@ -5546,7 +5660,9 @@
       "sku_code": "KPA-KPT-01",
       "lot_number": "LOT-TOS-20260701-21",
       "qty_cartons": "2",
-      "unit_cost_price": "4200"
+      "unit_cost_price": "4200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1222",
@@ -5554,7 +5670,9 @@
       "sku_code": "ULV-BNG-01",
       "lot_number": "LOT-VER-20260704-41",
       "qty_cartons": "12",
-      "unit_cost_price": "21000"
+      "unit_cost_price": "21000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1222",
@@ -5562,7 +5680,9 @@
       "sku_code": "ULV-SNL-03",
       "lot_number": "LOT-SNL-202608-NEW-01",
       "qty_cartons": "12",
-      "unit_cost_price": "14000"
+      "unit_cost_price": "14000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1223",
@@ -5570,7 +5690,9 @@
       "sku_code": "WNG-FLD-03",
       "lot_number": "LOT-NGS-20260615-INIT-25",
       "qty_cartons": "10",
-      "unit_cost_price": "3000"
+      "unit_cost_price": "3000",
+      "is_rejected": true,
+      "rejection_dpp": "864000.00"
     },
     {
       "so_number": "SO-202608-1223",
@@ -5578,7 +5700,9 @@
       "sku_code": "WNG-JSJ-02",
       "lot_number": "LOT-NGS-20260701-14",
       "qty_cartons": "8",
-      "unit_cost_price": "850"
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1223",
@@ -5586,7 +5710,9 @@
       "sku_code": "WNG-SDP-12",
       "lot_number": "LOT-NGS-20260615-INIT-12",
       "qty_cartons": "5",
-      "unit_cost_price": "2800"
+      "unit_cost_price": "2800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1224",
@@ -5594,7 +5720,9 @@
       "sku_code": "MYR-BBG-03",
       "lot_number": "LOT-BBG-202608-NEW-01",
       "qty_cartons": "1",
-      "unit_cost_price": "11000"
+      "unit_cost_price": "11000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1224",
@@ -5602,7 +5730,9 @@
       "sku_code": "MYR-BBG-04",
       "lot_number": "LOT-BBG-202608-NEW-01",
       "qty_cartons": "12",
-      "unit_cost_price": "2200"
+      "unit_cost_price": "2200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1224",
@@ -5610,7 +5740,9 @@
       "sku_code": "MYR-KPK-RTD-04",
       "lot_number": "LOT-ORA-20260702-32",
       "qty_cartons": "8",
-      "unit_cost_price": "6200"
+      "unit_cost_price": "6200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1225",
@@ -5618,7 +5750,9 @@
       "sku_code": "KPA-KA-08",
       "lot_number": "LOT-KA-202608-NEW-01",
       "qty_cartons": "11",
-      "unit_cost_price": "8500"
+      "unit_cost_price": "8500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1225",
@@ -5626,7 +5760,9 @@
       "sku_code": "KPA-KA-11",
       "lot_number": "LOT-KA-202608-NEW-01",
       "qty_cartons": "2",
-      "unit_cost_price": "28000"
+      "unit_cost_price": "28000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1226",
@@ -5634,7 +5770,9 @@
       "sku_code": "ULV-SNL-04",
       "lot_number": "LOT-SNL-202608-NEW-01",
       "qty_cartons": "4",
-      "unit_cost_price": "14200"
+      "unit_cost_price": "14200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1227",
@@ -5642,7 +5780,9 @@
       "sku_code": "WNG-SDP-07",
       "lot_number": "LOT-NGS-20260615-INIT-07",
       "qty_cartons": "2",
-      "unit_cost_price": "3100"
+      "unit_cost_price": "3100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1227",
@@ -5650,7 +5790,9 @@
       "sku_code": "WNG-TOP-02",
       "lot_number": "LOT-NGS-20260615-INIT-20",
       "qty_cartons": "3",
-      "unit_cost_price": "1300"
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1228",
@@ -5658,7 +5800,9 @@
       "sku_code": "MYR-BBG-01",
       "lot_number": "LOT-BBG-202608-NEW-01",
       "qty_cartons": "3",
-      "unit_cost_price": "2000"
+      "unit_cost_price": "2000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1228",
@@ -5666,7 +5810,9 @@
       "sku_code": "MYR-CND-01",
       "lot_number": "LOT-ORA-20260702-35",
       "qty_cartons": "9",
-      "unit_cost_price": "7500"
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1228",
@@ -5674,7 +5820,9 @@
       "sku_code": "MYR-CND-08",
       "lot_number": "LOT-ORA-20260703-42",
       "qty_cartons": "5",
-      "unit_cost_price": "7000"
+      "unit_cost_price": "7000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1228",
@@ -5682,7 +5830,9 @@
       "sku_code": "MYR-TRB-06",
       "lot_number": "LOT-ORA-20260703-24",
       "qty_cartons": "11",
-      "unit_cost_price": "1600"
+      "unit_cost_price": "1600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1228",
@@ -5690,7 +5840,9 @@
       "sku_code": "MYR-TRB-10",
       "lot_number": "LOT-ORA-20260703-28",
       "qty_cartons": "11",
-      "unit_cost_price": "1500"
+      "unit_cost_price": "1500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1229",
@@ -5698,7 +5850,9 @@
       "sku_code": "KPA-RTD-01",
       "lot_number": "LOT-TOS-20260701-25",
       "qty_cartons": "5",
-      "unit_cost_price": "5500"
+      "unit_cost_price": "5500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1230",
@@ -5706,7 +5860,9 @@
       "sku_code": "MYR-CND-03",
       "lot_number": "LOT-ORA-20260703-37",
       "qty_cartons": "3",
-      "unit_cost_price": "7800"
+      "unit_cost_price": "7800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1230",
@@ -5714,7 +5870,9 @@
       "sku_code": "MYR-EGN-02",
       "lot_number": "LOT-ORA-20260703-34",
       "qty_cartons": "9",
-      "unit_cost_price": "1800"
+      "unit_cost_price": "1800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1230",
@@ -5722,7 +5880,9 @@
       "sku_code": "MYR-TRB-05",
       "lot_number": "LOT-ORA-20260702-23",
       "qty_cartons": "13",
-      "unit_cost_price": "1100"
+      "unit_cost_price": "1100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1231",
@@ -5730,7 +5890,9 @@
       "sku_code": "KPA-KPT-02",
       "lot_number": "LOT-TOS-20260701-22",
       "qty_cartons": "10",
-      "unit_cost_price": "9800"
+      "unit_cost_price": "9800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1232",
@@ -5738,7 +5900,9 @@
       "sku_code": "ULV-SNL-01",
       "lot_number": "LOT-SNL-202608-NEW-01",
       "qty_cartons": "2",
-      "unit_cost_price": "13500"
+      "unit_cost_price": "13500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1233",
@@ -5746,7 +5910,9 @@
       "sku_code": "WNG-FLD-02",
       "lot_number": "LOT-NGS-20260615-INIT-24",
       "qty_cartons": "11",
-      "unit_cost_price": "3000"
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1234",
@@ -5754,7 +5920,9 @@
       "sku_code": "MYR-RMA-03",
       "lot_number": "LOT-RMA-202608-NEW-01",
       "qty_cartons": "9",
-      "unit_cost_price": "7500"
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1235",
@@ -5762,7 +5930,9 @@
       "sku_code": "KPA-KA-07",
       "lot_number": "LOT-KA-202608-NEW-01",
       "qty_cartons": "2",
-      "unit_cost_price": "1600"
+      "unit_cost_price": "1600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1235",
@@ -5770,7 +5940,9 @@
       "sku_code": "KPA-RTD-04",
       "lot_number": "LOT-TOS-20260701-28",
       "qty_cartons": "1",
-      "unit_cost_price": "8200"
+      "unit_cost_price": "8200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1235",
@@ -5778,7 +5950,9 @@
       "sku_code": "KPA-YA-02",
       "lot_number": "LOT-TOS-20260701-20",
       "qty_cartons": "8",
-      "unit_cost_price": "850"
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1236",
@@ -5786,7 +5960,9 @@
       "sku_code": "WNG-JSJ-04",
       "lot_number": "LOT-NGS-20260615-INIT-16",
       "qty_cartons": "3",
-      "unit_cost_price": "850"
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1236",
@@ -5794,7 +5970,9 @@
       "sku_code": "WNG-JVN-02",
       "lot_number": "LOT-NGS-20260615-INIT-27",
       "qty_cartons": "6",
-      "unit_cost_price": "2800"
+      "unit_cost_price": "2800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1237",
@@ -5802,7 +5980,9 @@
       "sku_code": "MYR-CND-07",
       "lot_number": "LOT-ORA-20260703-41",
       "qty_cartons": "7",
-      "unit_cost_price": "6800"
+      "unit_cost_price": "6800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1237",
@@ -5810,7 +5990,9 @@
       "sku_code": "MYR-RMA-07",
       "lot_number": "LOT-RMA-202608-NEW-01",
       "qty_cartons": "3",
-      "unit_cost_price": "7500"
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1237",
@@ -5818,7 +6000,9 @@
       "sku_code": "MYR-TRB-02",
       "lot_number": "LOT-ORA-20260703-20",
       "qty_cartons": "8",
-      "unit_cost_price": "1400"
+      "unit_cost_price": "1400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1238",
@@ -5826,7 +6010,9 @@
       "sku_code": "KPA-KA-03",
       "lot_number": "LOT-KA-202608-NEW-01",
       "qty_cartons": "8",
-      "unit_cost_price": "25500"
+      "unit_cost_price": "25500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1239",
@@ -5834,7 +6020,9 @@
       "sku_code": "ULV-LFB-02",
       "lot_number": "LOT-VER-20260704-18",
       "qty_cartons": "10",
-      "unit_cost_price": "3800"
+      "unit_cost_price": "3800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1239",
@@ -5842,7 +6030,9 @@
       "sku_code": "ULV-RYC-04",
       "lot_number": "LOT-VER-20260704-40",
       "qty_cartons": "10",
-      "unit_cost_price": "6000"
+      "unit_cost_price": "6000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1240",
@@ -5850,7 +6040,9 @@
       "sku_code": "WNG-FLD-02",
       "lot_number": "LOT-NGS-20260615-INIT-24",
       "qty_cartons": "10",
-      "unit_cost_price": "3000"
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1240",
@@ -5858,7 +6050,9 @@
       "sku_code": "WNG-FLD-03",
       "lot_number": "LOT-NGS-20260615-INIT-25",
       "qty_cartons": "13",
-      "unit_cost_price": "3000"
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     },
     {
       "so_number": "SO-202608-1240",
@@ -5866,7 +6060,9 @@
       "sku_code": "WNG-GLD-01",
       "lot_number": "LOT-NGS-20260615-INIT-29",
       "qty_cartons": "3",
-      "unit_cost_price": "3000"
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
     }
   ]
 }

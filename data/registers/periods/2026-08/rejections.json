@@ -458,5 +458,15 @@
     "lot_number": "LOT-BBG-202608-NEW-01",
     "qty_cartons": "2",
     "rejection_dpp": "624000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-047",
+    "rejection_date": "2026-09-01",
+    "so_number": "SO-202608-1223",
+    "do_number": "DO-202608-1223",
+    "sku_code": "WNG-FLD-03",
+    "lot_number": "LOT-NGS-20260615-INIT-25",
+    "qty_cartons": "10",
+    "rejection_dpp": "864000.00"
   }
 ]

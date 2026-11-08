@@ -1,3 +1,26 @@
+## 2026-11-08T14:45:00+07:00 — antigravity — F2/PR97: Penanganan Rejection Carry-Forward & Pengikatan Provenance Manifest Commit
+**Berubah:**
+- scripts/ops/seed_planner.py:
+  * Menangani item dengan status `is_rejected` pada DO carry-forward di akhir bulan; menghasilkan baris `rejections` bertanggal `2026-09-01` (`REJ-202608-047`), mengurangi `dpp_amount` faktur (`INV-202608-1223`), dan membawa flag `is_rejected: True` serta `rejection_dpp` pada payload `carry_forward_lines`.
+  * Di bulan berikutnya (September), baris carry-forward yang ditolak menghasilkan event stok pelepasan (reserved/physical) dan event karantina (`quarantine_impact: +qty`) pada hari kerja pertama (`2026-09-01`), menjaga konsistensi saldo fisik, reservasi, dan karantina.
+- scripts/ops/generate_period_pack.py:
+  * Mendukung pembacaan commit HEAD git dan override `--generator-commit` untuk menjamin provenance `MANIFEST.json` mengikat commit exact source generator yang direview.
+- data/registers/periods/2026-08/:
+  * Regenerasi seluruh file pack, closing state, narrative report, dan `MANIFEST.json` yang mengikat `generator_commit=d6a51aea4d5b0eb8f5e60abc9e454c295832ad27` dan hash LF dari 4 skrip generator.
+- tests/test_seed_planner.py:
+  * Penambahan tes deterministik `test_carry_forward_rejection_consistency` yang memvalidasi siklus hidup penolakan carry-forward (DO, faktur net DPP, rejections.csv, carry_forward_lines, dan stock events karantina September). Total 14 tes unit lulus.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 14 tests PASS.
+- [F] python -m unittest tests.test_seed_v2_gates: 82 tests PASS.
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (11 addon OK).
+- [F] Validasi validate_pack_report(strict=True) atas pack Agustus 2026: 11 gates run, 0 skipped, 0 violations.
+- [F] Metrik naratif pack Agustus 2026: net DPP Rp4.141.788.300,00 [4.00-4.50 M], diskon 2,50% [2.00%-3.20%], tolakan 1,99% [1.80%-3.00%], outlet aktif 207 [200-215].
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Mengajukan update commit ke PR #97 dan menyampaikan bukti pemenuhan kedua temuan re-review.
+
 ## 2026-11-08T13:00:00+07:00 — antigravity — F2/PR97: Penyelesaian Lengkap Review Change Request (P1 SO carry-forward, P2 Lead Time Hari Kerja, P2 Penomoran PO, dan Klarifikasi Target Naratif)
 **Berubah:**
 - scripts/ops/seed_planner.py:

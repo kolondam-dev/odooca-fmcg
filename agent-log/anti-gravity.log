@@ -2107,3 +2107,10 @@
 - Resolusi Temuan Review: Kontinuitas opening Agustus diuji independen terhadap replay Juli (bukan self-comparison); chained test September lulus (50 DO carry di-dispatch via stock event 1 September, 39 faktur carry tertagih, 15 PO Agustus terlunasi); hash sumber generator diikat pada MANIFEST.json.
 - Verifikasi: 13 unit tests test_seed_planner lulus, 82 unit tests test_seed_v2_gates lulus, ruff check clean, check_manifests 11 addon valid, 11 gerbang invariant strict=True lulus tanpa pelanggaran.
 - Task managed by antigravity at 2026-11-08T13:00:00+07:00
+
+[2026-11-08T14:45:00+07:00] [INFO] F2/PR97: Penyelesaian Re-Review (Rejection Carry-Forward & Provenance Manifest)
+- P2: Menangani item dengan status is_rejected pada DO carry-forward di akhir bulan; menghasilkan baris rejections bertanggal 2026-09-01 (REJ-202608-047), mengurangi dpp_amount faktur (INV-202608-1223), dan membawa flag is_rejected serta rejection_dpp pada payload carry_forward_lines.
+- P2: Di bulan berikutnya (September), baris carry-forward yang ditolak menghasilkan event stok pelepasan (reserved/physical) dan event karantina (quarantine_impact: +qty) pada hari kerja pertama (2026-09-01), menjaga konsistensi saldo fisik, reservasi, dan karantina.
+- P1: scripts/ops/generate_period_pack.py mendukung pembacaan commit HEAD git dan override --generator-commit; MANIFEST.json mengikat generator_commit=d6a51aea4d5b0eb8f5e60abc9e454c295832ad27 dan hash LF eksak 4 file generator.
+- Pengujian: 14 tes unit test_seed_planner lulus (termasuk test_carry_forward_rejection_consistency), 82 tes unit test_seed_v2_gates lulus, ruff clean, check_manifests 11 addon OK, 11 gerbang invariant strict=True lulus 0 violations.
+- Task managed by antigravity at 2026-11-08T14:45:00+07:00

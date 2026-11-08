@@ -14670,9 +14670,9 @@
     "date_invoice": "2026-09-01",
     "due_date": "2026-09-15",
     "payment_term_days": "14",
-    "dpp_amount": "2560000.00",
-    "ppn_amount": "281600.00",
-    "total_invoice_with_ppn": "2841600.00",
+    "dpp_amount": "1696000.00",
+    "ppn_amount": "186560.00",
+    "total_invoice_with_ppn": "1882560.00",
     "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
   },
   {

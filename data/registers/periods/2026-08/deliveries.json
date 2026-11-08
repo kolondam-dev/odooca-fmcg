@@ -8557,7 +8557,7 @@
     "do_number": "DO-202608-1223",
     "so_number": "SO-202608-1223",
     "scheduled_delivery_date": "2026-09-01",
-    "rejection_dpp": "0.00",
+    "rejection_dpp": "864000.00",
     "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
   },
   {
