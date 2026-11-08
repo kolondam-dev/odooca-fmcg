@@ -145,6 +145,72 @@ class I2aLedgerCoreTests(unittest.TestCase):
                 account_map={"1101": ("1101", "Cash on Hand", "asset_cash")},
             )
 
+    def _fin51_rows(self, expected_table, multiplier, skip=(), code_override=None):
+        rows = []
+        for idx, (key, figures) in enumerate(expected_table.items()):
+            if key in skip:
+                continue
+            code = (code_override or {}).get(key, runner.fin51_combined_code(idx))
+            opening, debit, credit, closing = (v * multiplier for v in figures)
+            rows.append({
+                "code": code, "initial_balance": opening, "debit": debit,
+                "credit": credit, "ending_balance": closing,
+            })
+        return rows
+
+    def test_fin51_zero_activity_account_is_explicit_in_combined_contract(self):
+        table = runner.I2A_JULY
+        self.assertEqual(table["unaffected_earnings"], (0, 0, 0, 0))
+        # Zero-activity equity_unaffected row present under its aligned code: PASS.
+        runner.assert_fin51_combined_rows(self._fin51_rows(table, 8), table, 8)
+        # Dropping the zero-activity row is a coverage failure, not a silent skip or KeyError.
+        with self.assertRaisesRegex(AssertionError, r"missing=\['I2ACOMB08'\], extra=\[\]"):
+            runner.assert_fin51_combined_rows(
+                self._fin51_rows(table, 8, skip=("unaffected_earnings",)), table, 8,
+            )
+        # Row left under the system code (company-dependent code written for the wrong company).
+        with self.assertRaisesRegex(AssertionError, r"missing=\['I2ACOMB08'\], extra=\['999999'\]"):
+            runner.assert_fin51_combined_rows(
+                self._fin51_rows(table, 8, code_override={"unaffected_earnings": "999999"}), table, 8,
+            )
+        # Non-zero coverage stays value-checked and duplicate codes are rejected.
+        wrong = self._fin51_rows(table, 8)
+        wrong[0]["ending_balance"] += 1
+        with self.assertRaisesRegex(AssertionError, "FIN51 combined cash"):
+            runner.assert_fin51_combined_rows(wrong, table, 8)
+        with self.assertRaisesRegex(AssertionError, "duplicate combined code"):
+            runner.assert_fin51_combined_rows(self._fin51_rows(table, 8) + self._fin51_rows(table, 8)[:1], table, 8)
+
+    def test_fin51_zero_activity_rows_are_preserved_by_combiner(self):
+        def entity(company_id, rows):
+            return {
+                "company_id": company_id, "company_name": f"E{company_id}", "currency_id": 10,
+                "currency_name": "IDR", "rate_to_presentation": 1.0, "rate_date": "2026-07-31",
+                "rows": rows,
+            }
+
+        def row(account_id, code, name, acc_type, init, debit, credit, end):
+            return {
+                "account_id": account_id, "code": code, "name": name, "account_type": acc_type,
+                "initial_balance": init, "debit": debit, "credit": credit,
+                "balance": debit - credit, "ending_balance": end,
+            }
+
+        zero_a = row(901, "UE", "Unaffected", "equity_unaffected", 0.0, 0.0, 0.0, 0.0)
+        zero_b = row(902, "UE", "Unaffected", "equity_unaffected", 0.0, 0.0, 0.0, 0.0)
+        cash_a = row(101, "100", "Cash", "asset_cash", 0.0, 5.0, 0.0, 5.0)
+        cash_b = row(201, "100", "Cash", "asset_cash", 0.0, 3.0, 0.0, 3.0)
+        combined = compare.combine_trial_balances(
+            [entity(1, [cash_a, zero_a]), entity(2, [cash_b, zero_b])], round,
+        )
+        by_code = {r["code"]: r for r in combined["combined_rows"]}
+        self.assertEqual(set(by_code), {"100", "UE"})
+        self.assertEqual(by_code["100"]["ending_balance"], 8.0)
+        self.assertEqual(
+            (by_code["UE"]["debit"], by_code["UE"]["credit"], by_code["UE"]["ending_balance"]),
+            (0.0, 0.0, 0.0),
+        )
+
     def test_fin57_register_reconciles_to_gl_and_detects_duplicates_or_manual_gl(self):
         docs = [
             {

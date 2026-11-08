@@ -144,9 +144,10 @@ def build_i2a_fixture(env, suffix, scale):
     company, accounts, gen_journal, partner, _scale = fixture
     # OCA trial.balance.report.wizard computes unaffected_earnings_account via
     # company.get_unaffected_earnings_account(), which creates an equity_unaffected
-    # account (code 999999) when the company has none. Bind it explicitly in the
-    # fixture account map and assert exact 9-account company COA coverage.
-    accounts["unaffected_earnings"] = company.get_unaffected_earnings_account()
+    # account when the company has none. Odoo 19 stores account.code per company
+    # (code_store is company_dependent), so the account must be created and read
+    # under the fixture company, never under the shell's default company.
+    accounts["unaffected_earnings"] = company.with_company(company).get_unaffected_earnings_account()
     require(
         accounts["unaffected_earnings"].account_type == "equity_unaffected",
         "Expected equity_unaffected account from get_unaffected_earnings_account()",
@@ -493,6 +494,38 @@ def assert_fin04_audit(snapshot, oracle, docs):
                 "FIN04 must identify unposted draft AMLs in period separately")
 
 
+def fin51_combined_code(index):
+    """Shared synthetic code for the index-th key of the I2a expected tables."""
+    return f"I2ACOMB{index:02d}"
+
+
+def assert_fin51_combined_rows(combined_rows, expected_table, multiplier):
+    """Strict FIN51 coverage contract, including explicit zero-activity accounts.
+
+    Every expected account (also the all-zero ``unaffected_earnings`` row, which
+    the OCA Trial Balance always materializes as the company's equity_unaffected
+    account) must appear exactly once under its aligned code, and no unexpected
+    combined code may appear. Missing and extra codes fail with a readable
+    message instead of a bare KeyError, and non-zero accounts stay value-checked.
+    """
+    expected_codes = {fin51_combined_code(idx): key for idx, key in enumerate(expected_table)}
+    by_code = {}
+    for row in combined_rows:
+        require(row["code"] not in by_code, f"FIN51 duplicate combined code {row['code']}")
+        by_code[row["code"]] = row
+    missing = sorted(set(expected_codes) - set(by_code))
+    extra = sorted(set(by_code) - set(expected_codes))
+    require(
+        not missing and not extra,
+        f"FIN51 combined account coverage mismatch: missing={missing}, extra={extra}",
+    )
+    for code, key in expected_codes.items():
+        row = by_code[code]
+        wanted = tuple(v * multiplier for v in expected_table[key])
+        got = (row["initial_balance"], row["debit"], row["credit"], row["ending_balance"])
+        require(got == wanted, f"FIN51 combined {key}: expected {wanted}, got {got}")
+
+
 def assert_fin57_register(snapshot, scale, expected_non_register_moves=1):
     require(snapshot["report_id"] == "FIN57", "Wrong FIN57 report_id")
     require(not snapshot["duplicate_move_ids"], f"FIN57 duplicate moves: {snapshot['duplicate_move_ids']}")
@@ -619,10 +652,19 @@ def run(env):
             comp_b, acc_b, jnl_b, _, _, _ = fix_b
             # Align account codes and names so combined TB validates COA equivalence (code, name, type)
             for idx, key in enumerate(I2A_JULY):
-                code = f"I2ACOMB{idx:02d}"
+                code = fin51_combined_code(idx)
                 label = f"I2A Combined {key}"
-                acc_a[key].write({"code": code, "name": label})
-                acc_b[key].write({"code": code, "name": label})
+                # account.code is company-dependent in Odoo 19: write it under each owning company.
+                for comp, acc in ((comp_a, acc_a[key]), (comp_b, acc_b[key])):
+                    acc.with_company(comp).write({"code": code, "name": label})
+            env.flush_all()
+            env.invalidate_all()
+            for comp, accs in ((comp_a, acc_a), (comp_b, acc_b)):
+                for idx, key in enumerate(I2A_JULY):
+                    require(
+                        accs[key].with_company(comp).code == fin51_combined_code(idx),
+                        f"FIN51 fixture code alignment failed for {comp.name} {key}",
+                    )
             both_env = env["id.finance.combined.trial.balance"].with_context(
                 allowed_company_ids=[comp_a.id, comp_b.id],
             )
@@ -632,12 +674,7 @@ def run(env):
                 and combined["eliminations_applied"] is False,
                 "FIN51 must explicitly state combined != consolidated",
             )
-            by_code = {row["code"]: row for row in combined["combined_rows"]}
-            for idx, (key, figures) in enumerate(I2A_JULY.items()):
-                row = by_code[f"I2ACOMB{idx:02d}"]
-                wanted = tuple(v * 8 for v in figures)
-                got = (row["initial_balance"], row["debit"], row["credit"], row["ending_balance"])
-                require(got == wanted, f"FIN51 combined {key}: expected {wanted}, got {got}")
+            assert_fin51_combined_rows(combined["combined_rows"], I2A_JULY, 8)
             require(combined["totals"]["debit"] == combined["totals"]["credit"], "FIN51 combined debit != credit")
 
             # FIN51 Counterexample: same code with different name or account_type must fail closed
@@ -645,7 +682,8 @@ def run(env):
 
             try:
                 with env.cr.savepoint():
-                    acc_b["cash"].name = "Mismatched Cross-Company Account Name"
+                    acc_b["cash"].with_company(comp_b).name = "Mismatched Cross-Company Account Name"
+                    env.flush_all()
                     try:
                         both_env._snapshot([comp_a.id, comp_b.id], "2026-07-01", "2026-07-31")
                     except UserError:
@@ -661,7 +699,8 @@ def run(env):
 
             try:
                 with env.cr.savepoint():
-                    acc_b["cash"].account_type = "asset_current"
+                    acc_b["cash"].with_company(comp_b).account_type = "asset_current"
+                    env.flush_all()
                     try:
                         both_env._snapshot([comp_a.id, comp_b.id], "2026-07-01", "2026-07-31")
                     except UserError:
@@ -692,7 +731,7 @@ def run(env):
                     )
                     require(translated["presentation_currency_id"] == usd.id, "FIN51 presentation currency mismatch")
                     require(translated["entities"][0]["rate_to_presentation"] == 0.5, "FIN51 rate mismatch")
-                    cash_row = next(r for r in translated["combined_rows"] if r["code"] == "I2ACOMB00")
+                    cash_row = next(r for r in translated["combined_rows"] if r["code"] == fin51_combined_code(0))
                     require(cash_row["ending_balance"] == 72.5, f"FIN51 translated cash mismatch: {cash_row}")
                     raise RollbackI2a()
             except RollbackI2a:
