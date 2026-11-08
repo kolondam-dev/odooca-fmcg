@@ -7,9 +7,7 @@ import {
 } from "./session-fixture";
 import { saveVisitPhoto, leaveVisit } from "./visit-helpers";
 async function openVisit(page: Page) {
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
 }
 async function prepare(page: Page, context: BrowserContext) {

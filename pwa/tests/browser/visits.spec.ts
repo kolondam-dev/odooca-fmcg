@@ -14,9 +14,7 @@ test("visit location guards, offline restore and checkout sync", async ({
     await page.goto("./");
     await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     const locate = page.getByRole("button", {
         name: "Perbarui lokasi outlet",
@@ -62,9 +60,7 @@ test("visit location guards, offline restore and checkout sync", async ({
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
         .click();
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await expect(
         page.getByText("Kunjungan lokal aktif", { exact: true }),
@@ -111,9 +107,7 @@ test("denied GPS permits demo coordinates but photo is still mandatory", async (
             });
     });
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await page
         .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })
@@ -165,9 +159,7 @@ test("corrupt offline check-in remains held after reload, reconnect and manual r
     await page.goto("./");
     await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await page
         .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })

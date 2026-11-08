@@ -1,7 +1,7 @@
 import { useRef, useState } from "preact/hooks";
 import { Brand } from "./Brand";
 import { signIn } from "../data/auth";
-import { Button, Field } from "../ui";
+import { Button, Callout, Field } from "../ui";
 export function Login({
     onSuccess,
     message = "",
@@ -12,90 +12,90 @@ export function Login({
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const running = useRef(false);
+    async function submit(event: SubmitEvent) {
+        event.preventDefault();
+        if (running.current) return;
+        running.current = true;
+        setBusy(true);
+        setError("");
+        const form = event.currentTarget as HTMLFormElement;
+        const fields = new FormData(form);
+        const clear = () =>
+            (form.querySelector<HTMLInputElement>('[name="password"]')!.value =
+                "");
+        try {
+            await signIn(
+                String(fields.get("login") ?? ""),
+                String(fields.get("password") ?? ""),
+            );
+            clear();
+            await onSuccess();
+        } catch (failure) {
+            setError(
+                failure instanceof Error && !(failure instanceof TypeError)
+                    ? failure.message
+                    : "Login belum berhasil. Coba kembali.",
+            );
+        } finally {
+            clear();
+            running.current = false;
+            setBusy(false);
+        }
+    }
     return (
-        <main class="login-page">
-            <div class="login-layout">
+        <main class="ui-login">
+            <div class="ui-login__brand">
                 <Brand />
-                <form
-                    class="login-box"
-                    onSubmit={async (event) => {
-                        event.preventDefault();
-                        if (running.current) return;
-                        running.current = true;
-                        setBusy(true);
-                        setError("");
-                        const form = event.currentTarget;
-                        const fields = new FormData(form);
-                        try {
-                            await signIn(
-                                String(fields.get("login") ?? ""),
-                                String(fields.get("password") ?? ""),
-                            );
-                            form.querySelector<HTMLInputElement>(
-                                '[name="password"]',
-                            )!.value = "";
-                            await onSuccess();
-                        } catch (failure) {
-                            setError(
-                                failure instanceof Error &&
-                                    !(failure instanceof TypeError)
-                                    ? failure.message
-                                    : "Login belum berhasil. Coba kembali.",
-                            );
-                        } finally {
-                            form.querySelector<HTMLInputElement>(
-                                '[name="password"]',
-                            )!.value = "";
-                            running.current = false;
-                            setBusy(false);
-                        }
-                    }}
-                >
-                    <h1>Masuk</h1>
-                    <p class="muted">Gunakan akun perusahaan Anda.</p>
-                    <Field
-                        label="Nama pengguna"
-                        name="login"
-                        autoComplete="username"
-                        required
-                        disabled={busy}
-                        autoCapitalize="none"
-                        spellcheck={false}
-                    />
-                    <Field
-                        label="Kata sandi"
-                        name="password"
-                        type="password"
-                        autoComplete="current-password"
-                        required
-                        disabled={busy}
-                    />
-                    {(error || message) && (
-                        <p class="form-error" role="alert">
-                            {error || message}
-                        </p>
-                    )}
-                    <Button type="submit" disabled={busy}>
-                        {busy ? "Memverifikasi…" : "Masuk"}
-                    </Button>
-                    <p class="login-help">
-                        Butuh bantuan? Hubungi admin atau line manager di
-                        perusahaan Anda.
-                    </p>
-                    <a
-                        class="text-button"
-                        href="/web/login?redirect=%2Ffield%2F"
-                    >
-                        Opsi login perusahaan / verifikasi akun
-                    </a>
-                    <a
-                        class="text-button"
-                        href="/web/session/logout?redirect=%2Ffield%2F"
-                    >
-                        Ganti akun / keluar dari sesi sebelumnya
-                    </a>
-                </form>
+                <h1 class="ui-login__lead">Masuk untuk memulai kerja</h1>
             </div>
+            {(error || message) && (
+                <Callout tone="bad" icon="warning" alert>
+                    {error || message}
+                </Callout>
+            )}
+            <form class="ui-login__form" onSubmit={submit}>
+                <Field
+                    label="Nama pengguna"
+                    name="login"
+                    autoComplete="username"
+                    required
+                    disabled={busy}
+                    autoCapitalize="none"
+                    spellcheck={false}
+                />
+                <Field
+                    label="Kata sandi"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    disabled={busy}
+                />
+                <Button type="submit" disabled={busy}>
+                    {busy ? "Memverifikasi…" : "Masuk"}
+                </Button>
+            </form>
+            <div class="ui-login__or">
+                <span />
+                atau
+                <span />
+            </div>
+            <a
+                class="ui-btn ui-btn--sec ui-btn--lg ui-login__sso"
+                href="/web/login?redirect=%2Ffield%2F"
+            >
+                Masuk dengan SSO
+            </a>
+            <p class="ui-login__help">
+                Lupa kata sandi? Hubungi admin atau line manager di perusahaan
+                Anda.
+            </p>
+            <a
+                class="ui-login__link"
+                href="/web/session/logout?redirect=%2Ffield%2F"
+            >
+                Ganti akun / keluar dari sesi sebelumnya
+            </a>
         </main>
     );
 }

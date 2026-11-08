@@ -186,3 +186,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-08T06:38:37+07:00] [INFO] Fase 2: Hub kunjungan dibangun ulang sesuai DS
 - layar penuh Check-in + Hub (Tracker, Card, ListRow), BottomSheet Selesai kunjungan
 - Task managed by claude-design agent at 2026-11-08T06:38:37+07:00
+
+[2026-11-08T12:25:45+07:00] [INFO] Fase 1b: Login, Beranda, Absen dan header dibangun ulang sesuai DS
+- AppHeader, Home, MorningSession (DayStep), AttendanceScreen, Login baru; topbar/greeting/quick-grid dibuang
+- Task managed by claude-design agent at 2026-11-08T12:25:45+07:00

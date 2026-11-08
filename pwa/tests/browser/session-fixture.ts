@@ -190,11 +190,11 @@ export const test = base.extend({
 export { expect };
 export type { Page, Locator, BrowserContext } from "@playwright/test";
 export async function checkIn(page: Page) {
-    const clock = page.locator(".quick-attendance-record");
+    const clock = page.locator('[data-testid="attendance-record"]');
     if (await clock.isVisible()) return;
     await page.context().grantPermissions(["geolocation"]);
     await page
-        .getByRole("button", { name: /^Absensi/ })
+        .getByRole("button", { name: "Absen masuk", exact: true })
         .first()
         .click();
     await page
@@ -215,6 +215,8 @@ export async function checkIn(page: Page) {
     await expect(
         page.getByAltText("Foto absensi dengan watermark"),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Check in", exact: true }).click();
+    await page
+        .getByRole("button", { name: "Simpan absen masuk", exact: true })
+        .click();
     await expect(clock).toBeVisible();
 }

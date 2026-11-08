@@ -79,14 +79,19 @@ export function Callout({
     icon,
     title,
     children,
+    alert,
 }: {
+    alert?: boolean;
     tone?: "info" | "warn" | "bad" | "neu";
     icon?: IconName;
     title?: string;
     children: ComponentChildren;
 }) {
     return (
-        <div class={cx("ui-callout", `ui-callout--${tone}`)} role="status">
+        <div
+            class={cx("ui-callout", `ui-callout--${tone}`)}
+            role={alert ? "alert" : "status"}
+        >
             {icon ? <Icon name={icon} size={20} /> : null}
             <span class="ui-callout__body">
                 {title ? <strong>{title}</strong> : null}

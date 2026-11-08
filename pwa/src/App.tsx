@@ -3,7 +3,9 @@ import { ViewMemoryContext, useRememberedScroll } from "./ui/viewMemory";
 import { TaskForm } from "./components/TaskForm";
 import { LiveClock } from "./components/LiveClock";
 import { useNavigation, type Page, type Dialog } from "./ui/navigation";
-import { BottomNav } from "./ui";
+import { AppHeader, BottomNav } from "./ui";
+import { Home } from "./components/Home";
+import { AttendanceScreen } from "./components/AttendanceScreen";
 import { OutletDirectory } from "./components/OutletDirectory";
 import { TripClosing } from "./components/TripClosing";
 import { OrderCorrections } from "./components/OrderCorrections";
@@ -459,6 +461,22 @@ function Workspace({
         ["queued", "sending", "auth_required"].includes(x.state),
     ).length;
     const review = queue.filter((x) => x.state === "needs_approval").length;
+    const doneOutletIds = new Set(
+        queue
+            .filter(
+                (q) =>
+                    q.command?.type === "sales.visit.check_out" &&
+                    q.command.payload?.business_date === identity.businessDate,
+            )
+            .map((q) =>
+                String((q.command.payload as { outlet_id?: string }).outlet_id),
+            ),
+    );
+    const orderCount = queue.filter(
+        (q) =>
+            q.command?.type === "sales.order.submit" &&
+            q.command.payload?.business_date === identity.businessDate,
+    ).length;
     const go = (id: Page) => {
         if (canOpen(identity.roles, id)) {
             setPage(id);
@@ -526,18 +544,26 @@ function Workspace({
             <ViewMemoryContext.Provider value={viewMemory}>
                 <div class="app-shell">
                     <div class="header-fixed">
-                        <header class="topbar">
-                            <a
-                                class="wordmark"
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    go("home");
-                                }}
-                            >
-                                <Brand />
-                            </a>
-                            <div class="top-actions">
+                        <AppHeader
+                            eyebrow={
+                                page === "home" ? <LiveClock /> : undefined
+                            }
+                            title={
+                                {
+                                    home: <>Selamat bekerja, {identity.name}</>,
+                                    sales: "Outlet",
+                                    delivery: "Delivery",
+                                    hris: "HRIS",
+                                    expenses: "Uang lapangan",
+                                    more: "Lainnya",
+                                }[page] ?? "Beranda"
+                            }
+                            online={online}
+                            pending={pending}
+                            initial={identity.name[0]}
+                            onSync={() => go("more")}
+                            onProfile={() => setDialog({ type: "profile" })}
+                            extra={
                                 <button
                                     type="button"
                                     class={`running-mode-pill ${runningMode}`}
@@ -553,35 +579,8 @@ function Workspace({
                                 >
                                     {runningMode.toUpperCase()}
                                 </button>
-                                <span
-                                    class={`connection-badge ${online ? "" : "is-offline"}`}
-                                    role="status"
-                                >
-                                    <Icon name="signal" size={16} />
-                                    <span>{online ? "Online" : "Offline"}</span>
-                                </span>
-                                <button
-                                    class="icon-button"
-                                    aria-label="Lihat antrean sinkronisasi"
-                                    onClick={() => go("more")}
-                                >
-                                    <Icon name="sync" />
-                                    {pending > 0 && (
-                                        <b class="counter">{pending}</b>
-                                    )}
-                                </button>
-                                <button
-                                    class="avatar"
-                                    aria-label="Profil dan Sesi Akun"
-                                    title="Buka status akun & sesi"
-                                    onClick={() =>
-                                        setDialog({ type: "profile" })
-                                    }
-                                >
-                                    {identity.name[0]}
-                                </button>
-                            </div>
-                        </header>
+                            }
+                        />
                         {runningMode === "demo" && (
                             <div
                                 class="mode-indicator demo-running-banner"
@@ -597,176 +596,49 @@ function Workspace({
                         class={`content${page === "sales" ? " sales-content" : ""}`}
                     >
                         {page === "home" && (
-                            <>
-                                <div class="greeting">
-                                    <div>
-                                        <p class="eyebrow">
-                                            <LiveClock />
-                                        </p>
-                                        <h1>
-                                            Selamat bekerja,
-                                            <br />
-                                            <span>{identity.name}.</span>
-                                        </h1>
-                                    </div>
-                                </div>
-                                {identity.roles.some(
-                                    (r) => r === "sales" || r === "delivery",
-                                ) && (
-                                    <MorningSession
-                                        key={`morning:${morningRevision}`}
-                                        identity={identity}
-                                        provider={provider}
-                                        store={store}
-                                        onChange={setMorning}
-                                        record={morning}
-                                        loaded={morningLoaded}
-                                        restoreError={morningError}
-                                    />
-                                )}
-                                <div class="quick-grid">
-                                    {identity.roles.includes("sales") && (
-                                        <button
-                                            class="quick-sales"
-                                            disabled={!attended || checkedOut}
-                                            onClick={() => go("sales")}
-                                        >
-                                            <span class="quick-icon">
-                                                <Icon name="bag" size={26} />
-                                            </span>
-                                            <strong>Buat order</strong>
-                                            <small>
-                                                {snapshot.outlets.length} outlet
-                                            </small>
-                                        </button>
-                                    )}
-                                    {identity.roles.includes("delivery") && (
-                                        <button
-                                            class="quick-delivery"
-                                            disabled={!attended || checkedOut}
-                                            onClick={() => go("delivery")}
-                                        >
-                                            <span class="quick-icon">
-                                                <Icon name="truck" size={26} />
-                                            </span>
-                                            <strong>Pengiriman</strong>
-                                            <small>
-                                                {snapshot.deliveries.length}{" "}
-                                                manifest
-                                            </small>
-                                        </button>
-                                    )}
-                                    {attended ? (
-                                        <div class="quick-attendance-record">
-                                            <div>
-                                                <Icon name="user" size={22} />
-                                                <strong>Clock in</strong>
-                                                <time>
-                                                    {new Date(
-                                                        morning!.attendanceAt,
-                                                    )
-                                                        .toLocaleTimeString(
-                                                            "id-ID",
-                                                            {
-                                                                timeZone:
-                                                                    "Asia/Makassar",
-                                                                hour12: false,
-                                                            },
-                                                        )
-                                                        .replaceAll(
-                                                            ".",
-                                                            ":",
-                                                        )}{" "}
-                                                    WITA
-                                                </time>
-                                                <small>
-                                                    Tersimpan di perangkat
-                                                </small>
-                                            </div>
-                                            <button
-                                                disabled={checkedOut}
-                                                onClick={() =>
-                                                    setDialog({
-                                                        type: "attendance",
-                                                        event: "check_out",
-                                                    })
-                                                }
-                                            >
-                                                {checkedOut
-                                                    ? `Clock out ${new Date(morning!.clockOutAt!).toLocaleTimeString("id-ID", { timeZone: "Asia/Makassar" })}`
-                                                    : "Clock out"}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            class="quick-attendance"
-                                            onClick={() =>
+                            <Home
+                                day={
+                                    identity.roles.some(
+                                        (r) =>
+                                            r === "sales" || r === "delivery",
+                                    ) ? (
+                                        <MorningSession
+                                            key={`morning:${morningRevision}`}
+                                            identity={identity}
+                                            provider={provider}
+                                            store={store}
+                                            onChange={setMorning}
+                                            record={morning}
+                                            loaded={morningLoaded}
+                                            restoreError={morningError}
+                                            attended={attended}
+                                            onAttend={() =>
                                                 setDialog({
                                                     type: "attendance",
                                                 })
                                             }
-                                        >
-                                            <span class="quick-icon">
-                                                <Icon name="user" size={26} />
-                                            </span>
-                                            <strong>Absensi</strong>
-                                            <small>Check-in</small>
-                                        </button>
-                                    )}
-                                    <button
-                                        class="quick-expense"
-                                        disabled={!attended || checkedOut}
-                                        onClick={() =>
-                                            setDialog({ type: "expense" })
-                                        }
-                                    >
-                                        <span class="quick-icon">
-                                            <Icon name="wallet" size={26} />
-                                        </span>
-                                        <strong>Uang lapangan</strong>
-                                        <small>
-                                            {pending + review} pending
-                                        </small>
-                                    </button>
-                                </div>
-                                {identity.roles.includes("sales") &&
-                                dailyReady ? (
-                                    <>
-                                        <Heading
-                                            title="Kunjungan berikutnya"
-                                            action={
-                                                <button
-                                                    class="text-button"
-                                                    onClick={() => go("sales")}
-                                                >
-                                                    Semua{" "}
-                                                    <Icon
-                                                        name="arrow"
-                                                        size={16}
-                                                    />
-                                                </button>
+                                            onClockOut={() =>
+                                                setDialog({
+                                                    type: "attendance",
+                                                    event: "check_out",
+                                                })
                                             }
                                         />
-                                        <OutletCard
-                                            outlet={snapshot.outlets[0]}
-                                            open={() =>
-                                                openVisit(
-                                                    snapshot.outlets[0].id,
-                                                )
-                                            }
-                                        />
-                                    </>
-                                ) : (
-                                    !identity.roles.includes("sales") && (
-                                        <button
-                                            class="outlet-card"
-                                            onClick={() => go("delivery")}
-                                        >
-                                            Buka manifest pengiriman
-                                        </button>
-                                    )
-                                )}
-                            </>
+                                    ) : null
+                                }
+                                outlets={snapshot.outlets}
+                                doneIds={doneOutletIds}
+                                orders={orderCount}
+                                canWork={dailyReady && attended && !checkedOut}
+                                isSales={identity.roles.includes("sales")}
+                                isDelivery={identity.roles.includes("delivery")}
+                                deliveries={snapshot.deliveries.length}
+                                pendingExpense={pending + review}
+                                onOpenVisit={(id) => openVisit(id)}
+                                onSales={() => go("sales")}
+                                onDelivery={() => go("delivery")}
+                                onExpense={() => setDialog({ type: "expense" })}
+                            />
                         )}
                         {page === "sales" && !dailyReady && (
                             <p class="notice">
@@ -832,18 +704,7 @@ function Workspace({
                                         extra={() =>
                                             setDialog({ type: "extra" })
                                         }
-                                        closed={(id) =>
-                                            queue.some(
-                                                (q) =>
-                                                    q.command.type ===
-                                                        "sales.visit.check_out" &&
-                                                    q.command.payload
-                                                        .outlet_id === id &&
-                                                    q.command.payload
-                                                        .business_date ===
-                                                        identity.businessDate,
-                                            )
-                                        }
+                                        closed={(id) => doneOutletIds.has(id)}
                                     />
                                 )}
                             </>
@@ -855,10 +716,6 @@ function Workspace({
                         )}
                         {page === "delivery" && dailyReady && (
                             <>
-                                <Heading
-                                    title="Delivery"
-                                    note="Manifest contoh · Maumbi — Manado"
-                                />
                                 <section class="trip-card">
                                     <Icon name="truck" size={36} />
                                     <div>
@@ -915,10 +772,6 @@ function Workspace({
                         )}
                         {page === "hris" && (
                             <>
-                                <Heading
-                                    title="Personal HRIS"
-                                    note="Ruang personal, untuk kebutuhan Anda."
-                                />
                                 <section class="profile-card">
                                     <span class="avatar large">
                                         {identity.name[0]}
@@ -1041,10 +894,6 @@ function Workspace({
                                         changed={() => void refresh()}
                                     />
                                 )}
-                                <Heading
-                                    title="Akun & sinkronisasi"
-                                    note={identity.title}
-                                />
                                 <section class="sync-card">
                                     <div>
                                         <span class="metric-icon blue">
@@ -1242,7 +1091,19 @@ function Workspace({
                             {toast}
                         </div>
                     )}
-                    {dialog && (
+                    {dialog?.type === "attendance" && (
+                        <AttendanceScreen
+                            key={JSON.stringify(dialog)}
+                            event={dialog.event ?? "check_in"}
+                            store={store}
+                            owner={owner}
+                            identity={identity}
+                            office={snapshot.office}
+                            startSession={startSession}
+                            close={() => setDialog(undefined)}
+                        />
+                    )}
+                    {dialog && dialog.type !== "attendance" && (
                         <TaskForm
                             key={JSON.stringify(dialog)}
                             dialog={dialog}
@@ -1266,38 +1127,5 @@ function Workspace({
                 </div>
             </ViewMemoryContext.Provider>
         </EvidenceIdentityContext.Provider>
-    );
-}
-function OutletCard({
-    outlet,
-    open,
-    status,
-}: {
-    status?: string;
-    outlet: Snapshot["outlets"][number];
-    open: () => void;
-}) {
-    return (
-        <button class="outlet-card" onClick={open}>
-            <span class="outlet-icon">
-                <Icon name="store" size={28} />
-            </span>
-            <div>
-                <div class="card-title">
-                    <strong>{outlet.name}</strong>
-                    <Pill>{outlet.channel}</Pill>
-                </div>
-                <p>{outlet.address}</p>
-                {status && <p>{status}</p>}
-                <small>
-                    <Icon name="clock" size={14} />
-                    {outlet.time}
-                    <span>·</span>
-                    <Icon name="pin" size={14} />
-                    {outlet.distance}
-                </small>
-            </div>
-            <Icon name="caret" size={18} />
-        </button>
     );
 }

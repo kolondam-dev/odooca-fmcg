@@ -28,9 +28,7 @@ test("running mode toggle, demo mode geofence bypass, and preservation on switch
     await expect(modePill).toHaveText("DEMO");
 
     // 4. Open visit panel
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
 
     // In demo mode, start button should be usable even if far away or no GPS
@@ -80,9 +78,7 @@ test("running mode toggle, demo mode geofence bypass, and preservation on switch
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
 
     // 8. Re-open Toko Sinar Pagi in LIVE mode: history is preserved, workspace is not locked!
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await expect(
         page.getByText("Kunjungan ditutup lokal", { exact: false }),
@@ -94,9 +90,7 @@ test("running mode toggle, demo mode geofence bypass, and preservation on switch
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
         .click();
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Berkat Bahu/ }).click();
 
     // In LIVE mode without valid in-geofence GPS, starting a new visit is disabled
@@ -118,7 +112,7 @@ for (const closed of [false, true]) {
         await checkIn(page);
         if (closed) {
             await page
-                .getByRole("button", { name: "Clock out", exact: true })
+                .getByRole("button", { name: "Absen pulang", exact: true })
                 .click();
             await page
                 .getByRole("button", {
@@ -142,22 +136,27 @@ for (const closed of [false, true]) {
                 page.getByAltText("Foto absensi dengan watermark"),
             ).toBeVisible();
             await page
-                .getByRole("button", { name: "Check out", exact: true })
+                .getByRole("button", {
+                    name: "Simpan absen pulang",
+                    exact: true,
+                })
                 .click();
             await expect(page.getByRole("dialog")).toHaveCount(0);
             await expect(
-                page.getByRole("button", { name: /Buat order/ }),
-            ).toBeDisabled();
+                page.getByRole("button", { name: /Mulai kunjungan/ }),
+            ).toHaveCount(0);
         }
         await page.clock.setFixedTime(new Date("2026-11-03T16:00:01Z"));
         await page.reload();
-        await expect(page.locator(".quick-attendance-record")).toHaveCount(0);
+        await expect(
+            page.locator('[data-testid="attendance-record"]'),
+        ).toHaveCount(0);
         await checkIn(page);
         await expect(
             page.getByText("Sesi aktif", { exact: true }),
         ).toBeVisible();
         await expect(
-            page.getByRole("button", { name: /Buat order/ }),
+            page.getByRole("button", { name: /Mulai kunjungan/ }),
         ).toBeEnabled();
         await page.reload();
         await expect(

@@ -1,3 +1,25 @@
+## 2026-11-08T12:25:45+07:00 — claude-design — Login, Beranda, Absen, header dibangun ulang sesuai DS
+
+**Berubah**
+- [F] Keputusan pemilik: seluruh layar mengikuti DS, bukan sekadar ganti komponen. Layar awal diselesaikan.
+- [F] Atom baru: `AppHeader` (tanggal + judul + klaster koneksi/sinkron/avatar, pil mode), `Stats`, `DayStep`; ikon `lock`, `plus`, `send`.
+- [F] `Login` ditulis ulang (logo, "Masuk untuk memulai kerja", Callout error role=alert, divider "atau", tombol SSO, bantuan). Heading kini "Masuk untuk memulai kerja".
+- [F] Beranda (`Home`): kartu hari kerja 3 langkah (Absen masuk → Sinkron data harian → Mulai kunjungan), baris sesi aktif (`data-testid="attendance-record"`, tombol "Absen pulang"), Stats (Outlet hari ini / Kunjungan selesai / Order diajukan), kartu "Outlet berikutnya" dengan CTA "Mulai kunjungan · nama", kartu Pengiriman, baris Uang lapangan.
+- [F] `AttendanceScreen` (layar penuh) menggantikan dialog absensi di TaskForm; tombol "Simpan absen masuk/pulang". Fokus kembali ke pemicu.
+- [F] Topbar, sapaan, quick-grid, dan Heading judul (Delivery/HRIS/Akun) dibuang; judul halaman kini di header.
+- [F] Label berubah: Absensi→"Absen masuk", Check in/out→"Simpan absen masuk/pulang", Clock out→"Absen pulang", Buka sesi kerja→"Sinkronkan data harian". Test diperbarui.
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest 405, build live/staging/demo + check:build; e2e phone penuh: kegagalan identik dengan baseline (23 test lama), tanpa regresi baru.
+- [F] Bug yang ditemukan e2e: `queue` bisa memuat baris tanpa `command` (diagnostics); App kini memakai optional chaining.
+
+**Belum diuji**
+- [BU] Proyek tablet belum dijalankan. CSS lama (.topbar, .greeting, .quick-*, .morning-card, .login-*) belum dihapus (utang, lihat inventaris).
+- [BU] Peta check-in dan foto bukti masih bergaya lama.
+
+**Berikutnya**
+- Inventaris konflik DS ↔ PWA ↔ backend (docs/DS_RECONCILIATION.md), lalu Order, Ringkasan, Hasil kirim, Delivery.
+
 ## 2026-11-08T06:38:37+07:00 — claude-design — Fase 2: Check-in dan Hub kunjungan dibangun ulang (bukan sekadar ganti komponen)
 
 **Berubah**

@@ -14,7 +14,9 @@ test("browser Back closes camera before form and returns through pages", async (
     await page.goBack();
     await expect(page).toHaveURL(/#home$/);
     await page.context().grantPermissions(["geolocation"]);
-    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
     await page.getByLabel("Alamat / nama lokasi").fill("Kantor Manado");
     await page
         .getByRole("button", { name: "Buka Kamera", exact: true })
@@ -29,9 +31,12 @@ test("browser Back closes camera before form and returns through pages", async (
     ).toBe(true);
     await page.goBack();
     await expect(camera).toHaveCount(0);
-    await expect(page.getByRole("dialog")).toHaveCount(1);
+    const screen = page.getByRole("region", {
+        name: "Absensi foto dan lokasi",
+    });
+    await expect(screen).toBeVisible();
     await page.goBack();
-    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(screen).toHaveCount(0);
 });
 
 test("shell keeps header and nav stable while HRIS and More scroll internally", async ({
@@ -148,7 +153,9 @@ test("map zoom and consent survive a new GPS fix, touch affects only the map", a
         }),
     );
     await page.goto("./");
-    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
     const region = page.getByRole("region", {
         name: "Preview peta Kantor Pusat",
         exact: true,
@@ -326,7 +333,9 @@ test("account handover with nested camera restores body scroll and clears both d
     await page.context().grantPermissions(["geolocation"]);
     await page.goto("./");
     const overflow = await page.evaluate(() => document.body.style.overflow);
-    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
     await page.getByLabel("Alamat / nama lokasi").fill("Kantor Manado");
     await page
         .getByRole("button", { name: "Buka Kamera", exact: true })

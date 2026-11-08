@@ -757,3 +757,196 @@ select.ui-select {
     gap: 8px;
     flex-wrap: wrap;
 }
+
+/* Kepala tab, klaster status, langkah hari kerja */
+.ui-hdr--tab {
+    height: auto;
+    min-height: var(--hdr-h);
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding: 0 8px 0 16px;
+    gap: 2px;
+}
+.ui-hdr__col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+.ui-hdr__date {
+    font: 400 12px/16px var(--font);
+    color: var(--c-mute);
+}
+.ui-conn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+}
+.ui-avatar {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--c-nav);
+    color: #fff;
+    font: 700 16px/20px var(--font);
+}
+.ui-stats {
+    display: flex;
+    gap: 8px;
+    flex: none;
+}
+.ui-stat {
+    flex: 1;
+    min-width: 0;
+    background: #fff;
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.ui-stat__v {
+    font: 700 24px/32px var(--font);
+}
+.ui-stat__l {
+    font: 500 13px/18px var(--font);
+    color: var(--c-mute);
+}
+.ui-dstep {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+}
+.ui-dstep__dot {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: 700 14px/20px var(--font);
+    background: var(--c-dis);
+    color: var(--c-dis-fg);
+}
+.ui-dstep__dot.is-done {
+    background: var(--c-ok);
+    color: #fff;
+}
+.ui-dstep__dot.is-active {
+    background: var(--c-pri);
+    color: #fff;
+}
+.ui-dstep__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+.ui-dstep__title {
+    font: 600 15px/22px var(--font);
+}
+.ui-dstep__sub {
+    font: 400 13px/18px var(--font);
+    color: var(--c-mute);
+}
+.ui-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.ui-dayrow__main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.ui-dayrow__info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+}
+.ui-dayrow__t {
+    font: 700 16px/22px var(--font);
+}
+.ui-section {
+    font: 600 14px/20px var(--font);
+    color: var(--c-mute);
+}
+
+/* Login */
+.ui-login {
+    min-height: 100dvh;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 56px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--c-bg);
+    color: var(--c-ink);
+}
+.ui-login__brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+.ui-login__lead {
+    margin: 0;
+    font: 400 15px/22px var(--font);
+    color: var(--c-mute);
+}
+.ui-login__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.ui-login__or {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font: 400 13px/18px var(--font);
+    color: var(--c-mute);
+}
+.ui-login__or span {
+    flex: 1;
+    height: 1px;
+    background: var(--c-line);
+}
+.ui-login__sso {
+    text-decoration: none;
+}
+.ui-login__help {
+    margin: 0;
+    text-align: center;
+    font: 400 14px/20px var(--font);
+    color: var(--c-mute);
+}
+.ui-login__link {
+    align-self: center;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    font: 500 14px/20px var(--font);
+    color: var(--c-pri);
+}
+.ui-hdr__date {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ui-hdr .running-mode-pill {
+    min-height: 32px;
+    min-width: 0;
+    padding: 0 8px;
+    font: 700 12px/16px var(--font);
+    border-radius: 8px;
+    width: auto;
+}
