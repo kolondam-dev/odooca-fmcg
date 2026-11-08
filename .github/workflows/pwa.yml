@@ -64,6 +64,15 @@ jobs:
           path: pwa/dist/
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - name: Print failure page snapshots (diagnostics in job log)
+        if: failure()
+        run: |
+          for f in $(find test-results -name error-context.md | sort | head -40); do
+            echo "::group::$f"
+            head -c 6000 "$f"
+            echo
+            echo "::endgroup::"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
