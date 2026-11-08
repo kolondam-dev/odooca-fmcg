@@ -95,6 +95,56 @@ class I2aLedgerCoreTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "positive"):
             compare.combine_trial_balances([{**entities[0], "rate_to_presentation": 0}], round)
 
+    def test_fin51_rejects_ambiguous_cross_company_coa_on_same_code(self):
+        base_a = {
+            "company_id": 1, "company_name": "Entity A", "currency_id": 10,
+            "currency_name": "IDR", "rate_to_presentation": 1.0, "rate_date": "2026-07-31",
+            "rows": [{
+                "account_id": 101, "code": "1101", "name": "Cash on Hand",
+                "account_type": "asset_cash", "initial_balance": 0.0,
+                "debit": 100.0, "credit": 0.0, "balance": 100.0, "ending_balance": 100.0,
+            }],
+        }
+        # Same code "1101" and same type, but different name -> must fail closed
+        diff_name_b = {
+            "company_id": 2, "company_name": "Entity B", "currency_id": 10,
+            "currency_name": "IDR", "rate_to_presentation": 1.0, "rate_date": "2026-07-31",
+            "rows": [{
+                "account_id": 201, "code": "1101", "name": "Short-Term Deposit",
+                "account_type": "asset_cash", "initial_balance": 0.0,
+                "debit": 50.0, "credit": 0.0, "balance": 50.0, "ending_balance": 50.0,
+            }],
+        }
+        with self.assertRaisesRegex(ValueError, "Ambiguous cross-company COA mapping for code 1101"):
+            compare.combine_trial_balances([base_a, diff_name_b], round)
+
+        # Explicit account_map resolves different local names when account_type matches
+        mapped = compare.combine_trial_balances(
+            [base_a, diff_name_b],
+            round,
+            account_map={"1101": ("1101", "Cash and Equivalents", "asset_cash")},
+        )
+        self.assertEqual(mapped["combined_rows"][0]["ending_balance"], 150.0)
+
+        # Same code "1101" and same name, but different account_type -> must fail closed
+        diff_type_b = {
+            "company_id": 2, "company_name": "Entity B", "currency_id": 10,
+            "currency_name": "IDR", "rate_to_presentation": 1.0, "rate_date": "2026-07-31",
+            "rows": [{
+                "account_id": 201, "code": "1101", "name": "Cash on Hand",
+                "account_type": "liability_payable", "initial_balance": 0.0,
+                "debit": 0.0, "credit": 50.0, "balance": -50.0, "ending_balance": -50.0,
+            }],
+        }
+        with self.assertRaisesRegex(ValueError, "Ambiguous cross-company COA mapping for code 1101"):
+            compare.combine_trial_balances([base_a, diff_type_b], round)
+        with self.assertRaisesRegex(ValueError, "cannot change account_type"):
+            compare.combine_trial_balances(
+                [base_a, diff_type_b],
+                round,
+                account_map={"1101": ("1101", "Cash on Hand", "asset_cash")},
+            )
+
     def test_fin57_register_reconciles_to_gl_and_detects_duplicates_or_manual_gl(self):
         docs = [
             {

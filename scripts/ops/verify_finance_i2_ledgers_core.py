@@ -46,6 +46,7 @@ I2A_JULY = {
     "expense": (0, 92, 22, 70),
     "tax_input": (0, 8, 1, 7),
     "equity": (-100, 0, 0, -100),
+    "unaffected_earnings": (0, 0, 0, 0),
 }
 I2A_AUGUST = {
     "cash": (145, 28, 47, 126),
@@ -56,6 +57,7 @@ I2A_AUGUST = {
     "expense": (70, 0, 0, 70),
     "tax_input": (7, 0, 0, 7),
     "equity": (-100, 0, 0, -100),
+    "unaffected_earnings": (0, 0, 0, 0),
 }
 I2A_EMPTY_MAY = {key: (0, 0, 0, 0) for key in I2A_JULY}
 
@@ -69,6 +71,7 @@ I2A_JULY_SALE_JOURNAL = {
     "expense": (0, 0, 0, 0),
     "tax_input": (0, 0, 0, 0),
     "equity": (0, 0, 0, 0),
+    "unaffected_earnings": (0, 0, 0, 0),
 }
 
 
@@ -139,6 +142,24 @@ def make_taxed_document(env, fixture, kind, journal, tax, amount, when):
 def build_i2a_fixture(env, suffix, scale):
     fixture = golden.build_fixture(env, suffix, scale, events=(), draft_noise=False)
     company, accounts, gen_journal, partner, _scale = fixture
+    # OCA trial.balance.report.wizard computes unaffected_earnings_account via
+    # company.get_unaffected_earnings_account(), which creates an equity_unaffected
+    # account (code 999999) when the company has none. Bind it explicitly in the
+    # fixture account map and assert exact 9-account company COA coverage.
+    accounts["unaffected_earnings"] = company.get_unaffected_earnings_account()
+    require(
+        accounts["unaffected_earnings"].account_type == "equity_unaffected",
+        "Expected equity_unaffected account from get_unaffected_earnings_account()",
+    )
+    company_account_ids = set(
+        env["account.account"].with_context(active_test=False).search([
+            ("company_ids", "in", company.ids),
+        ]).ids
+    )
+    require(
+        company_account_ids == {acc.id for acc in accounts.values()},
+        f"Unexpected company COA accounts on {company.name}: {company_account_ids}",
+    )
     partner.with_company(company).write({
         "property_account_receivable_id": accounts["ar"].id,
         "property_account_payable_id": accounts["ap"].id,
@@ -266,12 +287,12 @@ def independent_aml_oracle(env, company, accounts, date_from, date_to, journal_i
     all_lines = env["account.move.line"].search(base, order="date asc, move_id asc, id asc")
     by_account = {}
     for key, acc in accounts.items():
-        acc_lines = all_lines.filtered(lambda l, a=acc: l.account_id == a)
+        acc_lines = all_lines.filtered(lambda line, a=acc: line.account_id == a)
         if acc.include_initial_balance:
-            init_lines = acc_lines.filtered(lambda l: l.date < start)
+            init_lines = acc_lines.filtered(lambda line: line.date < start)
         else:
-            init_lines = acc_lines.filtered(lambda l: fy_date <= l.date < start)
-        period_lines = acc_lines.filtered(lambda l: start <= l.date <= end)
+            init_lines = acc_lines.filtered(lambda line: fy_date <= line.date < start)
+        period_lines = acc_lines.filtered(lambda line: start <= line.date <= end)
         opening = round_amt(sum(init_lines.mapped("balance")))
         debit = round_amt(sum(period_lines.mapped("debit")))
         credit = round_amt(sum(period_lines.mapped("credit")))
@@ -284,10 +305,10 @@ def independent_aml_oracle(env, company, accounts, date_from, date_to, journal_i
             "ending_balance": closing,
             "period_aml_ids": sorted(period_lines.ids),
         }
-    period_all = all_lines.filtered(lambda l: start <= l.date <= end)
+    period_all = all_lines.filtered(lambda line: start <= line.date <= end)
     by_journal = {}
     for jnl_id in sorted(set(period_all.journal_id.ids)):
-        jlines = period_all.filtered(lambda l, j=jnl_id: l.journal_id.id == j)
+        jlines = period_all.filtered(lambda line, j=jnl_id: line.journal_id.id == j)
         by_journal[jnl_id] = {
             "debit": round_amt(sum(jlines.mapped("debit"))),
             "credit": round_amt(sum(jlines.mapped("credit"))),
@@ -596,11 +617,12 @@ def run(env):
             # FIN51 Multi-company combined Trial Balance (1x + 7x = 8x in IDR, plus foreign currency translation)
             comp_a, acc_a, jnl_a, _, _, docs_a = fix_a
             comp_b, acc_b, jnl_b, _, _, _ = fix_b
-            # Align account codes by logical suffix so combined TB groups matching economic accounts
+            # Align account codes and names so combined TB validates COA equivalence (code, name, type)
             for idx, key in enumerate(I2A_JULY):
                 code = f"I2ACOMB{idx:02d}"
-                acc_a[key].code = code
-                acc_b[key].code = code
+                label = f"I2A Combined {key}"
+                acc_a[key].write({"code": code, "name": label})
+                acc_b[key].write({"code": code, "name": label})
             both_env = env["id.finance.combined.trial.balance"].with_context(
                 allowed_company_ids=[comp_a.id, comp_b.id],
             )
@@ -617,6 +639,41 @@ def run(env):
                 got = (row["initial_balance"], row["debit"], row["credit"], row["ending_balance"])
                 require(got == wanted, f"FIN51 combined {key}: expected {wanted}, got {got}")
             require(combined["totals"]["debit"] == combined["totals"]["credit"], "FIN51 combined debit != credit")
+
+            # FIN51 Counterexample: same code with different name or account_type must fail closed
+            from odoo.exceptions import UserError
+
+            try:
+                with env.cr.savepoint():
+                    acc_b["cash"].name = "Mismatched Cross-Company Account Name"
+                    try:
+                        both_env._snapshot([comp_a.id, comp_b.id], "2026-07-01", "2026-07-31")
+                    except UserError:
+                        evidence["counterexamples"].append({
+                            "case": "fin51_ambiguous_coa_name_rejected",
+                            "result": "REJECTED",
+                        })
+                    else:
+                        raise AssertionError("FIN51 accepted ambiguous cross-company account name")
+                    raise RollbackI2a()
+            except RollbackI2a:
+                env.invalidate_all()
+
+            try:
+                with env.cr.savepoint():
+                    acc_b["cash"].account_type = "asset_current"
+                    try:
+                        both_env._snapshot([comp_a.id, comp_b.id], "2026-07-01", "2026-07-31")
+                    except UserError:
+                        evidence["counterexamples"].append({
+                            "case": "fin51_ambiguous_coa_type_rejected",
+                            "result": "REJECTED",
+                        })
+                    else:
+                        raise AssertionError("FIN51 accepted ambiguous cross-company account_type")
+                    raise RollbackI2a()
+            except RollbackI2a:
+                env.invalidate_all()
 
             # FIN51 Currency translation check (present IDR companies in USD at explicit 1 IDR = 0.5 USD test rate)
             try:

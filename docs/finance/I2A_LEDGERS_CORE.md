@@ -29,6 +29,7 @@
 2. **`id.finance.combined.trial.balance` (`FIN51`):**
    - Memvalidasi `_check_scope(cid)` untuk **setiap** perusahaan di `company_ids` (menolak jika salah satu perusahaan tidak aktif atau tidak diizinkan bagi user).
    - Memanggil `report.account_financial_report.trial_balance._get_data` per entitas, mencatat mata uang fungsional entitas serta kurs konversi `res.currency._get_conversion_rate` pada `rate_date`, menerjemahkan saldo ke `presentation_currency_id`, dan menggabungkan per kode akun melalui `combine_trial_balances` (`addons/id_finance_reporting/models/ledger_compare.py`).
+   - Memvalidasi kesetaraan COA lintas-perusahaan (`code`, `name`, dan `account_type`) atau `account_map` eksplisit, serta menolak secara fail-closed (`ValueError` / `UserError`) bila terdapat kode akun yang sama dengan nama atau tipe akun berbeda antar-perusahaan.
    - Menyertakan metadata eksplisit `"scope": "combined_multi_entity_trial_balance_not_consolidated"` dan `"eliminations_applied": False`.
 3. **`id.finance.sales.purchase.register` (`FIN57`):**
    - Memeriksa `_check_scope(company_id, journal_ids)` dan mengambil dokumen `out_invoice`, `out_refund`, `in_invoice`, `in_refund`.
@@ -49,6 +50,7 @@ Fixture disposable 2 perusahaan (`scale=1` dan `scale=7`) × 3 periode (`2026-05
 | `expense` | 0 | 92 | 22 | 70 | 70 | 0 | 0 | 70 |
 | `tax_input` | 0 | 8 | 1 | 7 | 7 | 0 | 0 | 7 |
 | `equity` | -100 | 0 | 0 | -100 | -100 | 0 | 0 | -100 |
+| `unaffected_earnings` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 Skenario dan counterexample yang diuji di `scripts/ops/verify_finance_i2_ledgers_core.py`:
 - Periode kosong (`2026-05-01..2026-05-31`), saldo awal sebelum periode (`2026-06-30`), faktur/retur pelanggan & tagihan/retur pemasok dengan PPN 10%, pembayaran parsial Juli & pelunasan Agustus, jurnal umum tanpa partner pada akun pendapatan, serta akrual AP tanpa partner + pembalikan `_reverse_moves` (terbukti masuk grup `Missing Partner` `id=0` di `FIN01` dan terdeteksi di `FIN04`).

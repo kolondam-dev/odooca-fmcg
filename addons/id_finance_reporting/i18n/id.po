@@ -66,3 +66,9 @@ msgstr "Entri jurnal milik perusahaan lain."
 #: code:addons/id_finance_reporting/models/ledger_reports.py:0
 msgid "Invalid register type; choose all, sale or purchase."
 msgstr "Jenis register tidak valid; pilih semua, penjualan, atau pembelian."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/ledger_reports.py:0
+msgid "Ambiguous cross-company Chart of Accounts mapping: %s"
+msgstr "Pemetaan Bagan Akun lintas-perusahaan ambigu: %s"

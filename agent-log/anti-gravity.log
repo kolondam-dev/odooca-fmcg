@@ -2107,3 +2107,11 @@
 - Menambahkan tes unit lokal tests/test_finance_i2_ledgers_core.py dan memperbarui tests/test_finance_report_scope.py serta dokumentasi docs/finance/I2A_LEDGERS_CORE.md.
 - Diverifikasi lokal: python3 scripts/check_manifests.py PASS (12 addon), python3 -m unittest discover -s tests -p 'test_finance*.py' -v PASS (28 tes); CI native exact-SHA masih [BU] menunggu run PR. Tidak ada deploy, seed, atau mutasi DB live.
 - Task Managed by Agent VSCode at 2026-11-07T14:01:00+07:00
+
+[2026-11-08T13:38:00+07:00] [INFO] PR101: perbaikan review supervisor pada FIN51 COA equivalence, FIN02 unaffected earnings account, dan lint Ruff
+- addons/id_finance_reporting/models/ledger_compare.py & ledger_reports.py: memvalidasi kesetaraan COA lintas-perusahaan (code, name, account_type) atau account_map eksplisit pada combine_trial_balances (FIN51), menolak secara fail-closed (ValueError / UserError) jika kode akun sama tetapi nama atau account_type berbeda antar-perusahaan, serta mencegah duplikasi company_id dalam satu slot.
+- scripts/ops/verify_finance_i2_ledgers_core.py: mengikat eksplisit accounts['unaffected_earnings'] = company.get_unaffected_earnings_account() (akun equity_unaffected kode 999999 yang dibuat otomatis oleh trial.balance.report.wizard._compute_unaffected_earnings_account) ke dalam 9-account fixture dan tabel ekspektasi I2A_JULY/AUGUST/EMPTY_MAY/SALE_JOURNAL tanpa melonggarkan golden.assert_figures; menambahkan counterexample native untuk penolakan ambiguitas nama/tipe COA pada FIN51; mengganti variabel lambda ambigu l menjadi line (Ruff E741).
+- addons/id_finance_reporting/models/__init__.py: menghapus duplikasi import ledger_reports (Ruff F811).
+- tests/test_finance_i2_ledgers_core.py: menambahkan tes regresi test_fin51_rejects_ambiguous_cross_company_coa_on_same_code (29 tes unit finance PASS).
+- Diverifikasi lokal: python3 scripts/check_manifests.py PASS (12 addon), 29 tes unit finance PASS, AST/lint check PASS; rerun CI native exact-SHA menunggu push. Tidak ada deploy, seed, atau mutasi DB live.
+- Task Managed by Agent VSCode at 2026-11-08T13:38:00+07:00

@@ -147,7 +147,7 @@ class FinanceCombinedTrialBalance(models.AbstractModel):
     def _snapshot(
         self, company_ids, date_from, date_to, presentation_currency_id=None,
         rate_date=None, only_posted_moves=True, hide_account_at_0=False,
-        fy_start_date=None,
+        fy_start_date=None, account_map=None,
     ):
         if not company_ids:
             raise AccessError(_("Select a company authorized in the active accounting context."))
@@ -219,7 +219,14 @@ class FinanceCombinedTrialBalance(models.AbstractModel):
                 "rate_source": "res.currency._get_conversion_rate",
                 "rows": rows,
             })
-        combined = combine_trial_balances(entities_input, pres_currency.round)
+        try:
+            combined = combine_trial_balances(
+                entities_input, pres_currency.round, account_map=account_map,
+            )
+        except ValueError as exc:
+            raise UserError(
+                _("Ambiguous cross-company Chart of Accounts mapping: %s", exc)
+            ) from exc
         combined.update({
             "report_id": "FIN51",
             "company_ids": unique_company_ids,

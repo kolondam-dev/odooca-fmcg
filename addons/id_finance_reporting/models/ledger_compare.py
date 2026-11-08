@@ -5,7 +5,36 @@ from collections import defaultdict
 REGISTER_TYPES = ("out_invoice", "out_refund", "in_invoice", "in_refund")
 
 
-def combine_trial_balances(entities, round_amount):
+def _resolve_coa_target(company_id, row, account_map):
+    code = (row.get("code") or "").strip()
+    name = (row.get("name") or "").strip()
+    acc_type = (row.get("account_type") or "").strip()
+    if not code or not name or not acc_type:
+        raise ValueError(
+            "Combined Trial Balance requires non-empty code, name, and account_type on every row."
+        )
+    if account_map is None:
+        return code, name, acc_type
+    mapped = account_map.get((company_id, code)) or account_map.get(code)
+    if not mapped:
+        raise ValueError(f"Missing explicit COA mapping for company {company_id} account {code}.")
+    if isinstance(mapped, dict):
+        target_code = (mapped.get("code") or "").strip()
+        target_name = (mapped.get("name") or "").strip()
+        target_type = (mapped.get("account_type") or "").strip()
+    else:
+        target_code, target_name, target_type = (str(part).strip() for part in mapped)
+    if not target_code or not target_name or not target_type:
+        raise ValueError(f"Incomplete explicit COA mapping for account {code}.")
+    if target_type != acc_type:
+        raise ValueError(
+            f"Cross-company COA mapping for code {code} cannot change account_type "
+            f"({acc_type!r} -> {target_type!r})."
+        )
+    return target_code, target_name, target_type
+
+
+def combine_trial_balances(entities, round_amount, account_map=None):
     """Combine translated entity Trial Balances without intercompany eliminations.
 
     entities: list of dicts with company_id, company_name, currency_id,
@@ -24,6 +53,9 @@ def combine_trial_balances(entities, round_amount):
         ent_debit = ent_credit = ent_init = ent_end = 0.0
         translated_rows = []
         for row in sorted(entity["rows"], key=lambda item: (item["code"], item["account_id"])):
+            target_code, target_name, target_type = _resolve_coa_target(
+                entity["company_id"], row, account_map,
+            )
             init_bal = round_amount(row["initial_balance"] * rate)
             debit = round_amount(row["debit"] * rate)
             credit = round_amount(row["credit"] * rate)
@@ -49,18 +81,31 @@ def combine_trial_balances(entities, round_amount):
                 "translated_balance": balance,
                 "translated_ending_balance": end_bal,
             })
-            code = row["code"]
-            slot = by_code.setdefault(code, {
-                "code": code,
-                "name": row["name"],
-                "account_type": row.get("account_type"),
-                "initial_balance": 0.0,
-                "debit": 0.0,
-                "credit": 0.0,
-                "balance": 0.0,
-                "ending_balance": 0.0,
-                "entity_breakdown": {},
-            })
+            if target_code in by_code:
+                slot = by_code[target_code]
+                if (slot["name"], slot["account_type"]) != (target_name, target_type):
+                    raise ValueError(
+                        f"Ambiguous cross-company COA mapping for code {target_code}: "
+                        f"({slot['name']!r}, {slot['account_type']!r}) vs "
+                        f"({target_name!r}, {target_type!r})."
+                    )
+                if entity["company_id"] in slot["entity_breakdown"]:
+                    raise ValueError(
+                        f"Duplicate account mapping for company {entity['company_id']} "
+                        f"on code {target_code}."
+                    )
+            else:
+                slot = by_code.setdefault(target_code, {
+                    "code": target_code,
+                    "name": target_name,
+                    "account_type": target_type,
+                    "initial_balance": 0.0,
+                    "debit": 0.0,
+                    "credit": 0.0,
+                    "balance": 0.0,
+                    "ending_balance": 0.0,
+                    "entity_breakdown": {},
+                })
             slot["initial_balance"] = round_amount(slot["initial_balance"] + init_bal)
             slot["debit"] = round_amount(slot["debit"] + debit)
             slot["credit"] = round_amount(slot["credit"] + credit)
