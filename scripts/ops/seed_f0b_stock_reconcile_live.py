@@ -5,13 +5,18 @@ READ-ONLY (default_transaction_read_only). Tidak menyesuaikan stok apa pun.
 Basis rekonsiliasi: AVAILABLE-VS-AVAILABLE (stok tersedia = physical - reserved)
 setelah 48 DO carry-forward 1 Agustus terkirim:
 - Sisi kanonikal (`state_20260801.json`): `physical - reserved` per (sku, lot).
-- Sisi live (`stock_quant` pada `WH/Stock` internal perusahaan aktif):
+- Sisi live (`stock_quant` pada `WH/Stock` internal SATU perusahaan eksplisit):
   `SUM(sq.quantity) - SUM(sq.reserved_quantity)`.
+
+Cakupan perusahaan WAJIB eksplisit (`--company-id`). State kanonikal merepresentasikan
+satu entitas (`PT Salva Inti Mandiri`), sehingga stok perusahaan aktif lain tidak boleh
+ikut dijumlahkan. ID perusahaan divalidasi terhadap nama entitas kanonikal (fail-closed)
+dan setiap baris live harus membawa `company_id` yang sama dengan cakupan.
 
 Tujuan: menguji hipotesis selisih 15.000 karton = fixture mobile 100 karton x 150 SKU
 (gap G-05). Hasil: JSON diff per SKU/lot, tanpa kredensial.
 
-Pakai: python scripts/ops/seed_f0b_stock_reconcile_live.py --out /tmp/f0b.json
+Pakai: python scripts/ops/seed_f0b_stock_reconcile_live.py --company-id <ID> --out /tmp/f0b.json
 (env PG* / RAILWAY_TCP_PROXY_* seperti seed_f0_analyze_stock_live.py)
 """
 from __future__ import annotations
@@ -28,8 +33,17 @@ ROOT = Path(__file__).resolve().parents[2]
 STATE = ROOT / "data" / "registers" / "state_20260801.json"
 INITIAL = ROOT / "data" / "registers" / "initial_stock_20260701.csv"
 
+CANONICAL_COMPANY_NAME = "PT Salva Inti Mandiri"
+
+COMPANY_SQL = """
+SELECT id, name, active
+FROM res_company
+WHERE id = %(company_id)s
+"""
+
 LIVE_STOCK_SQL = """
 SELECT
+    sq.company_id,
     pt.default_code,
     spl.name,
     SUM(sq.quantity) AS physical_qty,
@@ -40,14 +54,32 @@ JOIN product_template pt ON pt.id = pp.product_tmpl_id
 JOIN stock_location sl ON sl.id = sq.location_id
 JOIN res_company rc ON rc.id = sq.company_id
 LEFT JOIN stock_lot spl ON spl.id = sq.lot_id
-WHERE sl.complete_name = 'WH/Stock'
+WHERE sq.company_id = %(company_id)s
+  AND sl.complete_name = 'WH/Stock'
   AND sl.usage = 'internal'
   AND rc.active = TRUE
   AND pp.active = TRUE
   AND pt.default_code IS NOT NULL
-GROUP BY 1, 2
+GROUP BY 1, 2, 3
 HAVING SUM(sq.quantity) <> 0 OR SUM(sq.reserved_quantity) <> 0
 """
+
+
+def check_company_row(row, company_id: int, expected_name: str = CANONICAL_COMPANY_NAME) -> str:
+    """Validasi perusahaan target terhadap entitas kanonikal; fail-closed."""
+    if row is None:
+        raise ValueError(f"Company id {company_id} does not exist; refusing to reconcile.")
+    row_id, name, active = row
+    if int(row_id) != int(company_id):
+        raise ValueError(f"Company lookup returned id {row_id}, expected {company_id}.")
+    if not active:
+        raise ValueError(f"Company id {company_id} ({name!r}) is inactive; refusing to reconcile.")
+    if name != expected_name:
+        raise ValueError(
+            f"Company id {company_id} is {name!r}, but the canonical state represents "
+            f"{expected_name!r}; refusing to compare against another entity."
+        )
+    return name
 
 
 def load_canonical_state(path: Path = STATE) -> dict:
@@ -77,15 +109,22 @@ def carton_sizes(path: Path = INITIAL) -> dict[str, int]:
         return {r["sku_code"]: int(r["carton_qty"]) for r in csv.DictReader(fh)}
 
 
-def _unpack_live_row(row) -> tuple[str, str | None, Decimal, Decimal]:
-    """Terima 4-tuple (sku, lot, physical_units, reserved_units) dari SQL live."""
-    if len(row) == 4:
-        sku, lot, physical_qty, reserved_qty = row
-    elif len(row) == 3:
-        sku, lot, physical_qty = row
-        reserved_qty = 0
-    else:
-        raise ValueError(f"Expected 3- or 4-tuple live stock row, got {len(row)} elements.")
+def _unpack_live_row(row, company_id: int) -> tuple[str, str | None, Decimal, Decimal]:
+    """Terima 5-tuple (company_id, sku, lot, physical_units, reserved_units) dari SQL live.
+
+    Baris dari perusahaan selain `company_id` ditolak (tidak diabaikan diam-diam) agar
+    stok perusahaan lain tidak mengontaminasi rekonsiliasi.
+    """
+    if len(row) != 5:
+        raise ValueError(
+            f"Expected 5-tuple (company_id, sku, lot, physical, reserved) live row, got {len(row)} elements."
+        )
+    row_company, sku, lot, physical_qty, reserved_qty = row
+    if int(row_company) != int(company_id):
+        raise ValueError(
+            f"Live stock row for SKU {sku} belongs to company {row_company}, "
+            f"outside the reconciliation scope company {company_id}."
+        )
     phys = Decimal(str(physical_qty))
     resv = Decimal(str(reserved_qty))
     if resv < 0:
@@ -93,14 +132,17 @@ def _unpack_live_row(row) -> tuple[str, str | None, Decimal, Decimal]:
     return sku, lot, phys, resv
 
 
-def compare(live_rows, canon: dict, carton: dict[str, int]) -> dict:
-    """Bandingkan stok tersedia live (physical - reserved) terhadap kanonikal dalam karton."""
+def compare(live_rows, canon: dict, carton: dict[str, int], company_id: int) -> dict:
+    """Bandingkan stok tersedia live (physical - reserved) terhadap kanonikal dalam karton.
+
+    `company_id` adalah cakupan eksplisit; semua `live_rows` harus milik perusahaan itu.
+    """
     live = defaultdict(Decimal)
     lotless = defaultdict(Decimal)
     total_physical = Decimal(0)
     total_reserved = Decimal(0)
     for row in live_rows:
-        sku, lot, phys_units, resv_units = _unpack_live_row(row)
+        sku, lot, phys_units, resv_units = _unpack_live_row(row, company_id)
         c_size = Decimal(carton[sku])
         phys_cartons = phys_units / c_size
         resv_cartons = resv_units / c_size
@@ -125,6 +167,7 @@ def compare(live_rows, canon: dict, carton: dict[str, int]) -> dict:
     avail_total = sum(live.values()) + sum(lotless.values())
     return {
         "reconciliation_basis": "available_vs_available",
+        "company_id": int(company_id),
         "live_physical_total_cartons": str(total_physical),
         "live_reserved_total_cartons": str(total_reserved),
         "live_available_total_cartons": str(avail_total),
@@ -140,7 +183,7 @@ def compare(live_rows, canon: dict, carton: dict[str, int]) -> dict:
     }
 
 
-def fetch_live_rows():
+def fetch_live_rows(company_id: int, expected_name: str = CANONICAL_COMPANY_NAME):
     import psycopg2
 
     host = (
@@ -164,8 +207,10 @@ def fetch_live_rows():
     )
     try:
         with conn, conn.cursor() as cur:
-            cur.execute(LIVE_STOCK_SQL)
-            return [(r[0], r[1], r[2], r[3]) for r in cur.fetchall()]
+            cur.execute(COMPANY_SQL, {"company_id": company_id})
+            check_company_row(cur.fetchone(), company_id, expected_name)
+            cur.execute(LIVE_STOCK_SQL, {"company_id": company_id})
+            return [(r[0], r[1], r[2], r[3], r[4]) for r in cur.fetchall()]
     finally:
         conn.close()
 
@@ -173,9 +218,19 @@ def fetch_live_rows():
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
+    ap.add_argument(
+        "--company-id", type=int, required=True,
+        help="ID res_company yang setara dengan entitas kanonikal (wajib; tidak ada default).",
+    )
+    ap.add_argument(
+        "--expected-company-name", default=CANONICAL_COMPANY_NAME,
+        help="Nama entitas yang direpresentasikan state kanonikal; divalidasi terhadap res_company.",
+    )
     args = ap.parse_args()
     state = load_canonical_state(STATE)
-    result = compare(fetch_live_rows(), canonical_available(state), carton_sizes())
+    live_rows = fetch_live_rows(args.company_id, args.expected_company_name)
+    result = compare(live_rows, canonical_available(state), carton_sizes(), args.company_id)
+    result["company_name"] = args.expected_company_name
     Path(args.out).write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"ditulis {args.out}; hypothesis_100x150_proven={result['hypothesis_100x150_proven']}")
 

@@ -2098,3 +2098,9 @@
 - tests/test_seed_f0b_stock_reconcile.py: memodelkan 4-tuple (sku, lot, physical_units, reserved_units) dan menambahkan 3 tes regresi supervisor (reservasi > 0 tanpa false-positive diff, fisik konstan dengan variasi reservasi mengubah available diff, serta error eksplisit bila berkas fixture tidak ada; total 8 tes PASS).
 - Mengintegrasikan origin/main (0a6f3c7, termasuk data/registers/state_20260801.json dari PR #94) ke cabang agen/seed-f0b-stock-reconcile dengan preservasi verbatim seluruh riwayat docs/HANDOFF.md.
 - Task Managed by Agent VSCode at 2026-11-08T13:45:00+07:00
+
+[2026-11-08T22:20:00+07:00] [INFO] PR98: cakupan perusahaan eksplisit pada rekonsiliasi live F0b
+- scripts/ops/seed_f0b_stock_reconcile_live.py: SQL live dibatasi sq.company_id = %(company_id)s (GROUP BY memuat company_id); --company-id wajib; check_company_row() fail-closed terhadap nama entitas kanonikal PT Salva Inti Mandiri; compare() menolak baris perusahaan lain atau tanpa company_id.
+- tests/test_seed_f0b_stock_reconcile.py: regresi kontaminasi dua perusahaan aktif memakai teks SQL produksi (sqlite minimal), penolakan lintas-perusahaan, validasi perusahaan; 11 tes PASS, 90 tes seed/state PASS.
+- Tidak ada eksekusi live, deploy, atau mutasi DB; hipotesis 15.000 karton tetap [BU].
+- Task Managed by Agent VSCode at 2026-11-08T22:20:00+07:00
