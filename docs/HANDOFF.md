@@ -1,4 +1,4 @@
-## 2026-11-08T14:10:00+07:00 — claude-dev — PR #100: tindak lanjut CHANGES_REQUESTED
+## 2026-11-08T13:32:51+07:00 — claude-dev — PR #100: tindak lanjut CHANGES_REQUESTED
 **Berubah:** (P1) `main` diintegrasikan ke `agen/pwa-ui-tokens-atoms`; satu-satunya konflik `docs/HANDOFF.md`, entri antigravity `2026-11-07T08:59:30` disisipkan kronologis (antara `14:18:52` dan `08:47:53` tanggal 7 Nov), semua entri kedua sisi utuh. (P2) `pwa/src/ui/tokens.css` `--c-nav` `#0b1f4d` -> `#001a57` (= `pwa/design/tokens.json` dan `docs/ui/DS_RECONCILIATION.md` K1); `pwa/tests/design-tokens-parity.test.ts` (41 pasangan token + cek orphan + cek navbar) agar drift CSS/JSON gagal di CI; `npm run test:tokens`. (CI) `.github/workflows/pwa.yml`: push juga untuk `agen/pwa-*`, langkah "Design token parity".
 **Diverifikasi:** [F] logika pariti dijalankan ulang dengan Python terhadap berkas nyata (semua 41 pasangan cocok, 0 orphan). **Belum diuji:** [BU] vitest, prettier, tsc, build dan Playwright belum dijalankan lokal karena registry npm tidak dapat dijangkau pada sesi ini; bukti hanya dari CI GitHub pada HEAD baru. Catatan non-blocking (font <12 px, e2e/perangkat nyata) tidak diubah.
 
