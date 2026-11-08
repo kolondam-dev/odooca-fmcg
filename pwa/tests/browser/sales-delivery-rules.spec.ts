@@ -177,7 +177,7 @@ test("multi-SKU partial requires line reasons, closes session offline and update
         .filter({ hasText: "DEMO-DO-001" });
     await restored.locator("summary").first().click();
     await restored
-        .getByRole("button", { name: "Buat order di outlet", exact: true })
+        .getByRole("button", { name: "Open session", exact: true })
         .click();
     await expect(
         restored.getByLabel("Alasan item Biskuit Kelapa 300 g (contoh)", {

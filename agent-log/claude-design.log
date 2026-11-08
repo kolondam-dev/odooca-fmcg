@@ -190,3 +190,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-08T12:25:45+07:00] [INFO] Fase 1b: Login, Beranda, Absen dan header dibangun ulang sesuai DS
 - AppHeader, Home, MorningSession (DayStep), AttendanceScreen, Login baru; topbar/greeting/quick-grid dibuang
 - Task managed by claude-design agent at 2026-11-08T12:25:45+07:00
+
+[2026-11-08T21:58:44+07:00] [INFO] PR100: pulihkan label Open session pada tes Delivery (regresi sed sendiri)
+- sales-delivery-rules:117 lulus lagi; 13 e2e lain gagal juga di main hari Minggu (dipisah ke PR lain)
+- Task managed by claude-design agent at 2026-11-08T21:58:44+07:00
