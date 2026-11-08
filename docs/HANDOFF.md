@@ -1,3 +1,36 @@
+## 2026-11-08T13:00:00+07:00 — antigravity — F2/PR97: Penyelesaian Lengkap Review Change Request (P1 SO carry-forward, P2 Lead Time Hari Kerja, P2 Penomoran PO, dan Klarifikasi Target Naratif)
+**Berubah:**
+- scripts/ops/seed_planner.py:
+  * P1: Penambahan generasi eksplisit carry-forward untuk 50 SO tanggal 31 Agustus; menghasilkan 50 DO (`DO-202608-1191` s.d. `1240`) dan 50 faktur (`INV-202608-1191` s.d. `1240`) dengan jadwal delivery `2026-09-01`; total pack Agustus genap 1.240 SO = 1.240 DO = 1.240 faktur (bebas gap penyerahan).
+  * P2: Satuan lead time maritim PO diselaraskan menjadi Hari Kerja Operasional (working days); jadwal kedatangan dihitung menggunakan `add_working_days(curr_dt, lead_days)`; penomoran PO diparameterisasi per periode (`PO-{YYYY}-{MM}-{counter:02d}`).
+  * Observasi Desain: Klarifikasi dokumentasi `PeriodConfig` bahwa `target_net_dpp`, `target_discount_pct`, dan `target_rejection_pct` adalah benchmark naratif blueprint untuk acuan naratif dan gerbang invariant `NARRATIVE-ANCHORS` (bukan pengontrol deterministik alur transaksi).
+- scripts/ops/fmcg_calendar.py:
+  * Menambahkan fungsi `add_working_days(d, n)` dan `count_working_days(start, end)` sebagai single source of truth penghitungan hari kerja operasional (Senin–Sabtu, di luar hari libur nasional SKB 3 Menteri 2026).
+- scripts/ops/seed_v2_gates.py:
+  * Menyelaraskan gerbang `PO-CAUSALITY` untuk menghitung hari kerja operasional antara `order_date` dan `arrival_maumbi_date` (`calendar.count_working_days >= min_lead`).
+  * Normalisasi pengecekan saldo karton (`physical`, `reserved`, `quarantine`) dan penanggalan dokumen pada `check_continuity`.
+- scripts/ops/generate_period_pack.py:
+  * Membandingkan pembukaan Agustus secara independen terhadap hasil replay register kanonikal Juli (`get_verified_previous_closing`), bukan membandingkan pembukaan dengan dirinya sendiri.
+  * Menyematkan `generator_sources_sha256` pada `MANIFEST.json` yang mengikat hash LF 4 skrip generator (`seed_planner.py`, `generate_period_pack.py`, `seed_v2_gates.py`, `fmcg_calendar.py`) serta 15 fingerprint register kanonikal Juli.
+  * Mencatat metadata lengkap pada penutupan: 50 `pending_dos`, 50 `carry_invoices`, 771 karton reservasi, 98 `carry_forward_lines`, serta objek PO lengkap (`arrival_maumbi_date`, `payment_due_date`, `total_amount_dpp`).
+- tests/test_seed_planner.py:
+  * Penambahan pengujian regresi: `test_every_so_has_matching_delivery_and_invoice` (1.240 SO = 1.240 DO = 1.240 faktur, 50 pending DO 31 Agt); `test_po_lead_time_in_working_days` (lead time dalam hari kerja operasional); `test_continuity_gate_rejects_quarantine_mutation` (mutasi +1 karantina tertolak `PERIOD-CONTINUITY`); `test_august_to_september_chained_generation` (eksekusi September dari ekspor Agustus: sequence PO `PO-2026-09-01`, dispatch stok carry 1 September, pelunasan PO Agustus di September); `test_pack_manifest_generator_sources_and_fingerprints` (integritas hash generator). Total 13 tes unit lulus.
+- tests/test_seed_v2_gates.py:
+  * Penyesuaian `clean()` fixture `min_lead_days={'PRIN-A': 12}` untuk konsistensi hari kerja operasional (total 82 tes lulus).
+- docs/reviews/SEED_INVARIANT_CONTRACT_V2.md:
+  * Mengunci spesifikasi lead time PO ke Hari Kerja Operasional (working days).
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 13 tests PASS.
+- [F] python -m unittest tests.test_seed_v2_gates: 82 tests PASS.
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (11 addon OK).
+- [F] Validasi validate_pack_report(strict=True) atas pack Agustus 2026: 11 gates run, 0 skipped, 0 violations.
+- [F] Metrik naratif pack Agustus 2026: net DPP Rp4.141.788.300,00 [4.00-4.50 M], diskon 2,50% [2.00%-3.20%], tolakan 1,97% [1.80%-3.00%], outlet aktif 207 [200-215].
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Mengajukan update commit ke PR #97 dan menyampaikan bukti pemenuhan seluruh change request supervisor.
+
 ## 2026-11-05T20:30:00+07:00 — antigravity — F2: Planner murni dan generator pack periode transaksi Agustus 2026
 **Berubah:**
 - scripts/ops/seed_planner.py: implementasi mesin perencanaan deterministik FMCG lintas modul; kebal terhadap PYTHONHASHSEED via SHA-256 seeding; kalender PJP dan off-days (Minggu, 17 & 25 Agustus libur); carry-forward 48 DO dispatch pada 1 Agustus; single-principal SO; FEFO inventory allocation; kalkulasi PPN 11% pembulatan sen; evaluasi ROP dengan lead-time maritim; pelunasan AP PO Unilever pada jatuh tempo 8 Agustus; penomoran bulanan mulai dari 1 dan nomor global berlanjut; helper prepare_gate_opening dan extract_existing_numbers.

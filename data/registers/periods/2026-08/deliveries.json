@@ -8328,5 +8328,355 @@
     "scheduled_delivery_date": "2026-08-31",
     "rejection_dpp": "0.00",
     "customer": "CUST-GT-33 - Toko Malalayang Megah"
+  },
+  {
+    "do_number": "DO-202608-1191",
+    "so_number": "SO-202608-1191",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1"
+  },
+  {
+    "do_number": "DO-202608-1192",
+    "so_number": "SO-202608-1192",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1"
+  },
+  {
+    "do_number": "DO-202608-1193",
+    "so_number": "SO-202608-1193",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan"
+  },
+  {
+    "do_number": "DO-202608-1194",
+    "so_number": "SO-202608-1194",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan"
+  },
+  {
+    "do_number": "DO-202608-1195",
+    "so_number": "SO-202608-1195",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon"
+  },
+  {
+    "do_number": "DO-202608-1196",
+    "so_number": "SO-202608-1196",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon"
+  },
+  {
+    "do_number": "DO-202608-1197",
+    "so_number": "SO-202608-1197",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1"
+  },
+  {
+    "do_number": "DO-202608-1198",
+    "so_number": "SO-202608-1198",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1"
+  },
+  {
+    "do_number": "DO-202608-1199",
+    "so_number": "SO-202608-1199",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-049 - Warung Kasih Joppy Jembatan"
+  },
+  {
+    "do_number": "DO-202608-1200",
+    "so_number": "SO-202608-1200",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon"
+  },
+  {
+    "do_number": "DO-202608-1201",
+    "so_number": "SO-202608-1201",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon"
+  },
+  {
+    "do_number": "DO-202608-1202",
+    "so_number": "SO-202608-1202",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1"
+  },
+  {
+    "do_number": "DO-202608-1203",
+    "so_number": "SO-202608-1203",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1"
+  },
+  {
+    "do_number": "DO-202608-1204",
+    "so_number": "SO-202608-1204",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1"
+  },
+  {
+    "do_number": "DO-202608-1205",
+    "so_number": "SO-202608-1205",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang"
+  },
+  {
+    "do_number": "DO-202608-1206",
+    "so_number": "SO-202608-1206",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang"
+  },
+  {
+    "do_number": "DO-202608-1207",
+    "so_number": "SO-202608-1207",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang"
+  },
+  {
+    "do_number": "DO-202608-1208",
+    "so_number": "SO-202608-1208",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-MT-01 - Indomarett DC Manado"
+  },
+  {
+    "do_number": "DO-202608-1209",
+    "so_number": "SO-202608-1209",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-MT-01 - Indomarett DC Manado"
+  },
+  {
+    "do_number": "DO-202608-1210",
+    "so_number": "SO-202608-1210",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-MT-01 - Indomarett DC Manado"
+  },
+  {
+    "do_number": "DO-202608-1211",
+    "so_number": "SO-202608-1211",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-MT-01 - Indomarett DC Manado"
+  },
+  {
+    "do_number": "DO-202608-1212",
+    "so_number": "SO-202608-1212",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-MT-02 - Alfamiddii DC Manado"
+  },
+  {
+    "do_number": "DO-202608-1213",
+    "so_number": "SO-202608-1213",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-MT-02 - Alfamiddii DC Manado"
+  },
+  {
+    "do_number": "DO-202608-1214",
+    "so_number": "SO-202608-1214",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-MT-02 - Alfamiddii DC Manado"
+  },
+  {
+    "do_number": "DO-202608-1215",
+    "so_number": "SO-202608-1215",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-MT-02 - Alfamiddii DC Manado"
+  },
+  {
+    "do_number": "DO-202608-1216",
+    "so_number": "SO-202608-1216",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45"
+  },
+  {
+    "do_number": "DO-202608-1217",
+    "so_number": "SO-202608-1217",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45"
+  },
+  {
+    "do_number": "DO-202608-1218",
+    "so_number": "SO-202608-1218",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45"
+  },
+  {
+    "do_number": "DO-202608-1219",
+    "so_number": "SO-202608-1219",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45"
+  },
+  {
+    "do_number": "DO-202608-1220",
+    "so_number": "SO-202608-1220",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
+  },
+  {
+    "do_number": "DO-202608-1221",
+    "so_number": "SO-202608-1221",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
+  },
+  {
+    "do_number": "DO-202608-1222",
+    "so_number": "SO-202608-1222",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
+  },
+  {
+    "do_number": "DO-202608-1223",
+    "so_number": "SO-202608-1223",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
+  },
+  {
+    "do_number": "DO-202608-1224",
+    "so_number": "SO-202608-1224",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca"
+  },
+  {
+    "do_number": "DO-202608-1225",
+    "so_number": "SO-202608-1225",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca"
+  },
+  {
+    "do_number": "DO-202608-1226",
+    "so_number": "SO-202608-1226",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca"
+  },
+  {
+    "do_number": "DO-202608-1227",
+    "so_number": "SO-202608-1227",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca"
+  },
+  {
+    "do_number": "DO-202608-1228",
+    "so_number": "SO-202608-1228",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa"
+  },
+  {
+    "do_number": "DO-202608-1229",
+    "so_number": "SO-202608-1229",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa"
+  },
+  {
+    "do_number": "DO-202608-1230",
+    "so_number": "SO-202608-1230",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-34 - Grosir Tikala Baru"
+  },
+  {
+    "do_number": "DO-202608-1231",
+    "so_number": "SO-202608-1231",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-34 - Grosir Tikala Baru"
+  },
+  {
+    "do_number": "DO-202608-1232",
+    "so_number": "SO-202608-1232",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-34 - Grosir Tikala Baru"
+  },
+  {
+    "do_number": "DO-202608-1233",
+    "so_number": "SO-202608-1233",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-34 - Grosir Tikala Baru"
+  },
+  {
+    "do_number": "DO-202608-1234",
+    "so_number": "SO-202608-1234",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala"
+  },
+  {
+    "do_number": "DO-202608-1235",
+    "so_number": "SO-202608-1235",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala"
+  },
+  {
+    "do_number": "DO-202608-1236",
+    "so_number": "SO-202608-1236",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala"
+  },
+  {
+    "do_number": "DO-202608-1237",
+    "so_number": "SO-202608-1237",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-36 - Grosir Taas Damai Tikala"
+  },
+  {
+    "do_number": "DO-202608-1238",
+    "so_number": "SO-202608-1238",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-36 - Grosir Taas Damai Tikala"
+  },
+  {
+    "do_number": "DO-202608-1239",
+    "so_number": "SO-202608-1239",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-36 - Grosir Taas Damai Tikala"
+  },
+  {
+    "do_number": "DO-202608-1240",
+    "so_number": "SO-202608-1240",
+    "scheduled_delivery_date": "2026-09-01",
+    "rejection_dpp": "0.00",
+    "customer": "CUST-GT-36 - Grosir Taas Damai Tikala"
   }
 ]

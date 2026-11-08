@@ -37,7 +37,11 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Path ke root repositori
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-from scripts.ops.fmcg_calendar import get_next_working_day, is_working_day  # noqa: E402
+from scripts.ops.fmcg_calendar import (  # noqa: E402
+    add_working_days,
+    get_next_working_day,
+    is_working_day,
+)
 
 ZERO = Decimal("0")
 ONE_CENT = Decimal("0.01")
@@ -73,7 +77,24 @@ def deterministic_seed(salt: str, *keys: Any) -> int:
 
 @dataclass
 class PeriodConfig:
-    """Konfigurasi parameter periode untuk perencana deterministik."""
+    """Konfigurasi parameter periode untuk perencana deterministik.
+
+    Catatan Desain & Klasifikasi Parameter:
+    - Kontrol Generasi Aktif:
+      * pack_start, pack_end: Rentang periode simulasi kalender.
+      * seed: Bilangan acak deterministik (SHA-256 keyed).
+      * opening_cash: Saldo kas pembukaan untuk validasi solvency.
+      * tax_rate, tax_source, ...: Parameter perpajakan (PPN 11%).
+      * min_lead_days: Ambang batas lead time maritim minimal dalam Hari Kerja Operasional (Senin-Sabtu, bukan libur).
+    - Metadata Benchmark Naratif Blueprint (Descriptive Benchmark Targets):
+      * target_net_dpp: Angka acuan blueprint (Hangover Agustus: Rp 4,235 BIO) yang menjadi
+        titik tengah pita otorisasi [Rp 4,000 BIO s.d. Rp 4,500 BIO].
+      * target_discount_pct: Angka acuan blueprint (2.50%) untuk pita [2.00% s.d. 3.20%].
+      * target_rejection_pct: Angka acuan blueprint (2.40%) untuk pita [1.80% s.d. 3.00%].
+      Nilai aktual dihasilkan secara deterministik dari probabilitas operasional lapangan
+      (kunjungan PJP, alokasi stok FEFO, dan tingkat tolakan riil di Manado) dan divalidasi
+      oleh gerbang invariant NARRATIVE-ANCHORS agar berada di dalam pita otorisasi pemilik.
+    """
     pack_start: str
     pack_end: str
     seed: int = 20260801
@@ -88,8 +109,12 @@ class PeriodConfig:
     min_lead_days: Dict[str, int] = field(default_factory=lambda: {
         "PRIN-WINGS": 10,
         "PRIN-SANTOS": 10,
-        "PRIN-MAYORA": 13,
+        "PRIN-MAYORA": 12,
         "PRIN-UNILEVER": 14,
+        "PRIN-001": 14,
+        "PRIN-002": 10,
+        "PRIN-003": 12,
+        "PRIN-004": 10,
     })
     bands: Dict[str, Tuple[Decimal, Decimal]] = field(default_factory=lambda: {
         "net_dpp": (Decimal("4000000000.00"), Decimal("4500000000.00")),
@@ -158,11 +183,33 @@ class SeedPlanner:
                 }
         return meta
 
-    def _load_carry_forward_lines(self) -> List[Dict[str, Any]]:
-        path = self.reg_dir / "perpetual_order_lines.csv"
-        raw = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-        lines = list(csv.DictReader(StringIO(raw.decode("utf-8-sig"))))
-        return [row for row in lines if row["so_number"] >= "SO-202607-1277"]
+    def _load_carry_forward_lines(self, opening_state_dict: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+        opening_state_dict = opening_state_dict or {}
+        if "carry_forward_lines" in opening_state_dict:
+            return opening_state_dict["carry_forward_lines"]
+
+        if self.config.pack_start.startswith("2026-08"):
+            path = self.reg_dir / "perpetual_order_lines.csv"
+            raw = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            lines = list(csv.DictReader(StringIO(raw.decode("utf-8-sig"))))
+            return [row for row in lines if row["so_number"] >= "SO-202607-1277"]
+
+        start_dt = dt.date.fromisoformat(self.config.pack_start)
+        prev_m = start_dt.month - 1
+        prev_y = start_dt.year if prev_m > 0 else start_dt.year - 1
+        prev_m = prev_m if prev_m > 0 else 12
+        prev_period_str = f"{prev_y:04d}-{prev_m:02d}"
+        prev_lines_path = self.reg_dir / "periods" / prev_period_str / "order_lines.csv"
+        if prev_lines_path.exists():
+            raw = prev_lines_path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            lines = list(csv.DictReader(StringIO(raw.decode("utf-8-sig"))))
+            pending_dos = set(opening_state_dict.get("pending_dos", {}).keys())
+            return [
+                row for row in lines
+                if any(do_key.endswith(row["so_number"].split("-")[-1]) for do_key in pending_dos)
+            ]
+
+        return []
 
     def plan_period(self, opening_state_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Menghasilkan pack transaksi lengkap untuk satu periode kalender."""
@@ -198,6 +245,7 @@ class SeedPlanner:
 
         # Format tahun-bulan untuk nomor transaksi baru
         ym_str = f"{start_date.year:04d}{start_date.month:02d}"
+        ym_dash = f"{start_date.year:04d}-{start_date.month:02d}"
 
         # 2. Inisialisasi Sequence Monotonik
         # Per Kontrak Invariant v2: Dokumen bulanan (SO, DO, INV, REJ) memakai grup YYYYMM
@@ -226,40 +274,73 @@ class SeedPlanner:
         evt_seq = int(seq.get("last_event_id", "EVT-000000").split("-")[-1])
 
         # 3. Inisialisasi Open Receivables (AR)
-        # open_invoices_registry: inv_num -> dict(invoice info, total, remaining, due_date)
         open_invoices: Dict[str, Dict[str, Any]] = {}
-        for inv, info in opening_state_dict.get("open_posted_invoices_july", {}).items():
-            tot = _dec(info["total_invoice_with_ppn"])
+        raw_posted = opening_state_dict.get("open_invoices") or opening_state_dict.get("open_posted_invoices_july", {})
+        for inv, info in raw_posted.items():
+            if isinstance(info, dict):
+                tot = _dec(info.get("total_invoice_with_ppn") or "0")
+                dpp = _dec(info.get("dpp_amount") or (tot / (Decimal("1") + self.config.tax_rate)))
+                due = info.get("due_date") or info.get("date_invoice") or start_date.isoformat()
+                cust = info.get("customer") or ""
+                d_inv = info.get("date_invoice") or start_date.isoformat()
+            else:
+                tot = Decimal("0")
+                dpp = Decimal("0")
+                due = str(info)
+                cust = ""
+                d_inv = str(info)
             open_invoices[inv] = {
                 "invoice_number": inv,
-                "date_invoice": info.get("date_invoice"),
-                "due_date": info.get("due_date"),
-                "customer": info.get("customer"),
+                "date_invoice": d_inv,
+                "due_date": due,
+                "customer": cust,
                 "total_with_ppn": tot,
-                "dpp_amount": _dec(info.get("dpp_amount") or tot / (Decimal("1") + self.config.tax_rate)),
-                "source": "july_posted",
+                "dpp_amount": dpp,
+                "source": "posted",
             }
-        for inv, info in opening_state_dict.get("carry_forward_pending_invoices_august", {}).items():
-            tot = _dec(info["total_invoice_with_ppn"])
+
+        raw_carry = opening_state_dict.get("carry_invoices") or opening_state_dict.get("carry_forward_pending_invoices_august", {})
+        for inv, info in raw_carry.items():
+            if isinstance(info, dict):
+                tot = _dec(info.get("total_invoice_with_ppn") or "0")
+                dpp = _dec(info.get("dpp_amount") or (tot / (Decimal("1") + self.config.tax_rate)))
+                due = info.get("due_date") or info.get("date_invoice") or start_date.isoformat()
+                cust = info.get("customer") or ""
+                d_inv = info.get("date_invoice") or start_date.isoformat()
+            else:
+                tot = Decimal("0")
+                dpp = Decimal("0")
+                due = str(info)
+                cust = ""
+                d_inv = str(info)
             open_invoices[inv] = {
                 "invoice_number": inv,
-                "date_invoice": info.get("date_invoice"),
-                "due_date": info.get("due_date"),
-                "customer": info.get("customer"),
+                "date_invoice": d_inv,
+                "due_date": due,
+                "customer": cust,
                 "total_with_ppn": tot,
-                "dpp_amount": _dec(info.get("dpp_amount") or tot / (Decimal("1") + self.config.tax_rate)),
-                "source": "august_carry",
+                "dpp_amount": dpp,
+                "source": "carry_forward",
             }
 
         # 4. Inisialisasi Open Payables (AP)
         open_pos: Dict[str, Dict[str, Any]] = {}
         for po, info in opening_state_dict.get("open_po", {}).items():
-            tot = _dec(info.get("total_amount_dpp") or info.get("total_dpp"))
+            if isinstance(info, dict):
+                tot = _dec(info.get("total_amount_dpp") or info.get("total_dpp") or "0")
+                arr = info.get("arrival_maumbi_date") or start_date.isoformat()
+                due = info.get("payment_due_date") or info.get("due_date") or arr
+                prin = info.get("principal_code") or ""
+            else:
+                tot = Decimal("0")
+                arr = str(info)
+                due = str(info)
+                prin = ""
             open_pos[po] = {
                 "po_number": po,
-                "principal_code": info.get("principal_code"),
-                "arrival_maumbi_date": info.get("arrival_maumbi_date"),
-                "due_date": info.get("payment_due_date") or info.get("due_date"),
+                "principal_code": prin,
+                "arrival_maumbi_date": arr,
+                "due_date": due,
                 "total_dpp": tot,
             }
 
@@ -281,7 +362,7 @@ class SeedPlanner:
         scheduled_po_arrivals: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
 
         # 6. Eksekusi Pengiriman Carry-Forward DOs pada Hari Kerja Pertama
-        carry_lines = self._load_carry_forward_lines()
+        carry_lines = self._load_carry_forward_lines(opening_state_dict)
         first_workday = start_date
         while not is_working_day(first_workday):
             first_workday += dt.timedelta(days=1)
@@ -669,11 +750,11 @@ class SeedPlanner:
                     skus_to_buy = fast_skus_by_prin[prin]
                     if not skus_to_buy:
                         continue
-                    po_num = f"PO-2026-08-{po_counter:02d}"
+                    po_num = f"PO-{ym_dash}-{po_counter:02d}"
                     po_counter += 1
 
                     lead_days = self.config.min_lead_days.get(prin, 14)
-                    arrival_dt = get_next_working_day(curr_dt, lead_days)
+                    arrival_dt = add_working_days(curr_dt, lead_days)
                     arrival_dt_str = arrival_dt.isoformat()
 
                     term_days = 35 if "UNILEVER" in prin else (30 if "MAYORA" in prin else (28 if "SANTOS" in prin else 21))
@@ -802,6 +883,67 @@ class SeedPlanner:
 
             curr_dt += dt.timedelta(days=1)
 
+        # 7. Pemrosesan DO dan Faktur Carry-Forward (Pengiriman setelah akhir bulan)
+        carry_forward_lines: List[Dict[str, Any]] = []
+        follow_day = get_next_working_day(end_date)
+        follow_day_str = follow_day.isoformat()
+
+        if follow_day_str in scheduled_deliveries:
+            for deliv in scheduled_deliveries[follow_day_str]:
+                do_num = deliv["do_number"]
+                so_num = deliv["so_number"]
+                cust_code = deliv["customer_code"]
+                cust_info = self.cust_map[cust_code]
+
+                gross_dpp = Decimal("0")
+                rej_dpp = Decimal("0")
+
+                for item in deliv["items"]:
+                    qty = item["qty"]
+                    c_price = item["carton_price_dpp"]
+                    line_gross = qty * c_price
+                    gross_dpp += line_gross
+
+                    carry_forward_lines.append({
+                        "so_number": so_num,
+                        "do_number": do_num,
+                        "sku_code": item["sku_code"],
+                        "lot_number": item["lot_number"],
+                        "qty_cartons": str(qty),
+                        "unit_cost_price": str(item.get("unit_cost_dec", "0")),
+                    })
+
+                deliveries.append({
+                    "do_number": do_num,
+                    "so_number": so_num,
+                    "scheduled_delivery_date": follow_day_str,
+                    "rejection_dpp": _q(rej_dpp),
+                    "customer": f"{cust_code} - {cust_info['name']}",
+                })
+
+                inv_seq += 1
+                inv_num = f"INV-{ym_str}-{inv_seq:04d}"
+                inv_dpp = gross_dpp - rej_dpp
+                ppn = (inv_dpp * self.config.tax_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                inv_total = inv_dpp + ppn
+
+                top_days = cust_info["payment_term_days_int"]
+                due_date = follow_day + dt.timedelta(days=top_days)
+                due_date_str = due_date.isoformat()
+
+                invoices.append({
+                    "invoice_number": inv_num,
+                    "so_number": so_num,
+                    "do_number": do_num,
+                    "date_invoice": follow_day_str,
+                    "due_date": due_date_str,
+                    "payment_term_days": str(top_days),
+                    "dpp_amount": _q(inv_dpp),
+                    "ppn_amount": _q(ppn),
+                    "total_invoice_with_ppn": _q(inv_total),
+                    "customer": f"{cust_code} - {cust_info['name']}",
+                })
+
         # -------------------------------------------------------------
         # METRIK & LAPORAN NARATIF
         # -------------------------------------------------------------
@@ -854,6 +996,7 @@ class SeedPlanner:
         return {
             "pack": pack,
             "narrative_report": narrative_report,
+            "carry_forward_lines": carry_forward_lines,
             "last_sequences": {
                 "last_so_number": sales_orders[-1]["so_number"] if sales_orders else seq.get("last_so_number"),
                 "last_do_number": deliveries[-1]["do_number"] if deliveries else seq.get("last_do_number"),
@@ -861,6 +1004,7 @@ class SeedPlanner:
                 "last_ar_payment_id": ar_collections[-1]["payment_id"] if ar_collections else seq.get("last_ar_payment_id"),
                 "last_ap_payment_id": ap_payments[-1]["ap_payment_id"] if ap_payments else seq.get("last_ap_payment_id"),
                 "last_rejection_id": rejections[-1]["rejection_id"] if rejections else seq.get("last_rejection_id"),
+                "last_po_number": po_headers[-1]["po_number"] if po_headers else seq.get("last_po_number", "PO-2026-06-05"),
                 "last_event_id": stock_events[-1]["event_id"] if stock_events else seq.get("last_event_id"),
             },
         }
@@ -870,10 +1014,15 @@ def prepare_gate_opening(raw_opening: Dict[str, Any]) -> Dict[str, Any]:
     """Mengonversi opening state dari JSON ke format struktur internal yang dibutuhkan oleh seed_v2_gates."""
     opening = dict(raw_opening)
     stock = {}
-    for entry in raw_opening.get("stock", {}).values():
-        stock[(entry["sku_code"], entry["lot_number"])] = {
-            "sku_code": entry["sku_code"],
-            "lot_number": entry["lot_number"],
+    for k, entry in raw_opening.get("stock", {}).items():
+        if isinstance(k, tuple):
+            sku, lot = k
+        elif "||" in str(k):
+            sku, lot = str(k).split("||", 1)
+        else:
+            sku = entry.get("sku_code", "")
+            lot = entry.get("lot_number", "")
+        stock[(sku, lot)] = {
             "physical": Decimal(str(entry["physical"])),
             "reserved": Decimal(str(entry["reserved"])),
             "quarantine": Decimal(str(entry["quarantine"])),

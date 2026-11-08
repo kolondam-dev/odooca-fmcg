@@ -4,7 +4,8 @@
 Menghasilkan pack transaksi sintetis deterministik bulanan (misal 2026-08)
 yang memenuhi seluruh kontrak invariant di SEED_INVARIANT_CONTRACT_V2.md,
 divalidasi secara ketat (strict=True) oleh seed_v2_gates.py,
-dan menghasilkan MANIFEST.json dengan checksum SHA-256 LF-kanonikal.
+dan menghasilkan MANIFEST.json dengan checksum SHA-256 LF-kanonikal
+serta pengikatan hash sumber generator.
 """
 
 import argparse
@@ -30,7 +31,7 @@ from scripts.ops.seed_planner import (  # noqa: E402
     extract_existing_numbers,
     prepare_gate_opening,
 )
-from scripts.ops.seed_v2_gates import replay_closing, validate_pack_report  # noqa: E402
+from scripts.ops.seed_v2_gates import load_pack, replay_closing, validate_pack_report  # noqa: E402
 
 
 def compute_sha256_lf(path: Path) -> str:
@@ -52,6 +53,64 @@ def get_git_head_commit() -> str:
         return res.stdout.strip()
     except Exception:
         return "UNKNOWN_COMMIT"
+
+
+def get_verified_previous_closing(period: str, reg_dir: Path) -> Dict[str, Any]:
+    """Menghitung penutupan periode sebelumnya secara independen dan terverifikasi."""
+    year_str, month_str = period.split("-")
+    year, month = int(year_str), int(month_str)
+    if month == 1:
+        prev_period = f"{year - 1:04d}-12"
+    else:
+        prev_period = f"{year:04d}-{month - 1:02d}"
+
+    if prev_period == "2026-07":
+        # Verifikasi 15 register kanonikal Juli sebelum replay
+        verify_canonical_fingerprints(reg_dir)
+        july_pack = load_pack(
+            reg_dir,
+            dict(
+                sales_orders="perpetual_sales_orders.csv",
+                deliveries="perpetual_deliveries.csv",
+                invoices="perpetual_invoices.csv",
+                ar_collections="perpetual_ar_collections.csv",
+                po_headers="inbound_po_intransit_june_headers.csv",
+                ap_payments="perpetual_ap_payments.csv",
+                opex="perpetual_opex_payroll.csv",
+                rejections="perpetual_order_rejections.csv",
+                stock_events="perpetual_stock_event_ledger.csv",
+            ),
+        )
+        july_config = dict(pack_start="2026-07-01", pack_end="2026-07-31")
+        opening_zero = dict(
+            stock={}, open_invoices={}, carry_invoices={}, open_po={}, in_transit={}, pending_dos={}
+        )
+        return replay_closing(opening_zero, july_pack, july_config)
+    else:
+        # Untuk periode setelah Agustus (misal 2026-09):
+        # Penutupan periode sebelumnya diverifikasi dari manifes pack periode sebelumnya
+        prev_pack_dir = reg_dir / "periods" / prev_period
+        manifest_path = prev_pack_dir / "MANIFEST.json"
+        if not manifest_path.exists():
+            raise FileNotFoundError(
+                f"Pack manifest untuk periode sebelumnya {prev_period} tidak ditemukan di {prev_pack_dir}"
+            )
+        with manifest_path.open("r", encoding="utf-8") as f:
+            manifest = json.load(f)
+
+        for fname, expected_hash in manifest.get("files_sha256", {}).items():
+            fpath = prev_pack_dir / fname
+            if not fpath.exists() or compute_sha256_lf(fpath) != expected_hash:
+                raise ValueError(
+                    f"Integritas file {fname} pada pack {prev_period} tidak valid menurut MANIFEST"
+                )
+
+        prev_closing_files = list(prev_pack_dir.glob("closing_state_*.json"))
+        if not prev_closing_files:
+            raise FileNotFoundError(f"closing_state berkas tidak ditemukan di {prev_pack_dir}")
+        with prev_closing_files[0].open("r", encoding="utf-8") as f:
+            prev_closing_data = json.load(f)
+        return prepare_gate_opening(prev_closing_data)
 
 
 def export_table_csv(table_name: str, rows: List[Dict[str, Any]], out_dir: Path) -> Path:
@@ -111,7 +170,6 @@ def generate_period_pack(
     year_str, month_str = period.split("-")
     year, month = int(year_str), int(month_str)
 
-    # Hitung batas hari kalender
     import calendar as py_calendar
     _, last_day = py_calendar.monthrange(year, month)
     pack_start = f"{year:04d}-{month:02d}-01"
@@ -134,6 +192,7 @@ def generate_period_pack(
     pack = result["pack"]
     narrative_report = result["narrative_report"]
     last_sequences = result["last_sequences"]
+    carry_forward_lines = result.get("carry_forward_lines", [])
 
     # 5. Persiapkan Opening untuk Gate & Validasi
     gate_opening = prepare_gate_opening(raw_opening)
@@ -167,6 +226,101 @@ def generate_period_pack(
                 "quarantine": int(st["quarantine"]),
             }
 
+    # Susun metadata kaya untuk entitas open agar dapat dipakai sebagai opening periode berikutnya
+    po_header_map = {row["po_number"]: row for row in pack.get("po_headers", [])}
+    rich_open_po = {}
+    for po_num, arr_date in closing_raw["open_po"].items():
+        if po_num in po_header_map:
+            h = po_header_map[po_num]
+            rich_open_po[po_num] = {
+                "principal_code": h["principal_code"],
+                "arrival_maumbi_date": h["arrival_maumbi_date"],
+                "payment_due_date": h["due_date"],
+                "total_amount_dpp": h["total_dpp"],
+            }
+        elif po_num in raw_opening.get("open_po", {}):
+            rich_open_po[po_num] = raw_opening["open_po"][po_num]
+        elif po_num in raw_opening.get("in_transit", {}):
+            rich_open_po[po_num] = raw_opening["in_transit"][po_num]
+        elif po_num in raw_opening.get("in_transit_po", {}):
+            rich_open_po[po_num] = raw_opening["in_transit_po"][po_num]
+        else:
+            rich_open_po[po_num] = {"arrival_maumbi_date": arr_date}
+
+    rich_in_transit = {}
+    for po_num, arr_date in closing_raw["in_transit"].items():
+        if po_num in po_header_map:
+            h = po_header_map[po_num]
+            rich_in_transit[po_num] = {
+                "principal_code": h["principal_code"],
+                "arrival_maumbi_date": h["arrival_maumbi_date"],
+                "payment_due_date": h["due_date"],
+                "total_amount_dpp": h["total_dpp"],
+            }
+        elif po_num in raw_opening.get("in_transit", {}):
+            rich_in_transit[po_num] = raw_opening["in_transit"][po_num]
+        elif po_num in raw_opening.get("in_transit_po", {}):
+            rich_in_transit[po_num] = raw_opening["in_transit_po"][po_num]
+        else:
+            rich_in_transit[po_num] = {"arrival_maumbi_date": arr_date}
+
+    inv_map = {row["invoice_number"]: row for row in pack.get("invoices", [])}
+    so_cust_map = {row["so_number"]: row["customer"] for row in pack.get("sales_orders", [])}
+
+    rich_open_invoices = {}
+    for inv_num, inv_date in closing_raw["open_invoices"].items():
+        if inv_num in inv_map:
+            r = inv_map[inv_num]
+            rich_open_invoices[inv_num] = {
+                "date_invoice": r["date_invoice"],
+                "status_at_cutoff": "posted",
+                "due_date": r["due_date"],
+                "customer": r.get("customer") or so_cust_map.get(r.get("so_number"), ""),
+                "dpp_amount": r["dpp_amount"],
+                "total_invoice_with_ppn": r["total_invoice_with_ppn"],
+            }
+        elif inv_num in raw_opening.get("open_invoices", {}):
+            rich_open_invoices[inv_num] = raw_opening["open_invoices"][inv_num]
+        elif inv_num in raw_opening.get("open_posted_invoices_july", {}):
+            rich_open_invoices[inv_num] = raw_opening["open_posted_invoices_july"][inv_num]
+        else:
+            rich_open_invoices[inv_num] = {"date_invoice": inv_date}
+
+    rich_carry_invoices = {}
+    for inv_num, inv_date in closing_raw["carry_invoices"].items():
+        if inv_num in inv_map:
+            r = inv_map[inv_num]
+            rich_carry_invoices[inv_num] = {
+                "date_invoice": r["date_invoice"],
+                "status_at_cutoff": "carry_forward_pending",
+                "due_date": r["due_date"],
+                "customer": r.get("customer") or so_cust_map.get(r.get("so_number"), ""),
+                "dpp_amount": r["dpp_amount"],
+                "total_invoice_with_ppn": r["total_invoice_with_ppn"],
+            }
+        elif inv_num in raw_opening.get("carry_invoices", {}):
+            rich_carry_invoices[inv_num] = raw_opening["carry_invoices"][inv_num]
+        elif inv_num in raw_opening.get("carry_forward_pending_invoices_august", {}):
+            rich_carry_invoices[inv_num] = raw_opening["carry_forward_pending_invoices_august"][inv_num]
+        else:
+            rich_carry_invoices[inv_num] = {"date_invoice": inv_date}
+
+    do_map = {row["do_number"]: row for row in pack.get("deliveries", [])}
+    rich_pending_dos = {}
+    for do_num, deliv_date in closing_raw["pending_dos"].items():
+        if do_num in do_map:
+            r = do_map[do_num]
+            rich_pending_dos[do_num] = {
+                "so_number": r["so_number"],
+                "scheduled_delivery_date": r["scheduled_delivery_date"],
+                "rejection_dpp": r.get("rejection_dpp", "0.00"),
+                "customer": r.get("customer", ""),
+            }
+        elif do_num in raw_opening.get("pending_dos", {}):
+            rich_pending_dos[do_num] = raw_opening["pending_dos"][do_num]
+        else:
+            rich_pending_dos[do_num] = {"scheduled_delivery_date": deliv_date}
+
     follow_day = get_next_working_day(py_calendar.datetime.date(year, month, last_day))
     closing_state = {
         "as_of_datetime": f"{follow_day.isoformat()}T00:00:00+08:00",
@@ -178,23 +332,25 @@ def generate_period_pack(
             "total_reserved_cartons": sum(v["reserved"] for v in non_zero_stock_closing.values()),
             "total_available_cartons": sum(v["physical"] - v["reserved"] for v in non_zero_stock_closing.values()),
             "total_quarantine_cartons": sum(v["quarantine"] for v in non_zero_stock_closing.values()),
-            "open_invoices_count": len(closing_raw["open_invoices"]),
-            "carry_invoices_count": len(closing_raw["carry_invoices"]),
-            "open_po_count": len(closing_raw["open_po"]),
-            "in_transit_po_count": len(closing_raw["in_transit"]),
-            "pending_dos_count": len(closing_raw["pending_dos"]),
+            "open_invoices_count": len(rich_open_invoices),
+            "carry_invoices_count": len(rich_carry_invoices),
+            "open_po_count": len(rich_open_po),
+            "in_transit_po_count": len(rich_in_transit),
+            "pending_dos_count": len(rich_pending_dos),
         },
         "last_sequences": last_sequences,
         "stock": non_zero_stock_closing,
-        "open_invoices": closing_raw["open_invoices"],
-        "carry_invoices": closing_raw["carry_invoices"],
-        "open_po": closing_raw["open_po"],
-        "in_transit": closing_raw["in_transit"],
-        "pending_dos": closing_raw["pending_dos"],
+        "open_invoices": rich_open_invoices,
+        "carry_invoices": rich_carry_invoices,
+        "open_po": rich_open_po,
+        "in_transit": rich_in_transit,
+        "pending_dos": rich_pending_dos,
+        "carry_forward_lines": carry_forward_lines,
     }
 
-    # 7. Validasi Invariant Gates v2
+    # 7. Validasi Invariant Gates v2 dengan Previous Closing Terverifikasi Independen
     if strict_validate:
+        verified_prev_closing = get_verified_previous_closing(period, reg_dir)
         bands = {
             "net_dpp": (Decimal("4000000000.00"), Decimal("4500000000.00")),
             "discount_pct": (Decimal("2.00"), Decimal("3.20")),
@@ -204,7 +360,7 @@ def generate_period_pack(
         report = validate_pack_report(
             pack=pack,
             opening=gate_opening,
-            previous_closing=gate_opening,
+            previous_closing=verified_prev_closing,
             existing_numbers=existing_numbers,
             config=gate_config,
             bands=bands,
@@ -225,7 +381,16 @@ def generate_period_pack(
     closing_filename = f"closing_state_{pack_end.replace('-', '')}"
     exported_files.append(export_table_json(closing_filename, closing_state, output_dir))
 
-    # 9. Buat MANIFEST.json dengan SHA-256 LF kanonikal
+    # 9. Buat MANIFEST.json dengan SHA-256 LF kanonikal & Pengikatan Source Generator
+    generator_sources = {
+        "scripts/ops/seed_planner.py": compute_sha256_lf(REPO_ROOT / "scripts" / "ops" / "seed_planner.py"),
+        "scripts/ops/generate_period_pack.py": compute_sha256_lf(
+            REPO_ROOT / "scripts" / "ops" / "generate_period_pack.py"
+        ),
+        "scripts/ops/seed_v2_gates.py": compute_sha256_lf(REPO_ROOT / "scripts" / "ops" / "seed_v2_gates.py"),
+        "scripts/ops/fmcg_calendar.py": compute_sha256_lf(REPO_ROOT / "scripts" / "ops" / "fmcg_calendar.py"),
+    }
+
     file_manifest: Dict[str, str] = {}
     for p in sorted(exported_files, key=lambda x: x.name):
         file_manifest[p.name] = compute_sha256_lf(p)
@@ -235,6 +400,7 @@ def generate_period_pack(
         "pack_start": pack_start,
         "pack_end": pack_end,
         "generator_commit": get_git_head_commit(),
+        "generator_sources_sha256": generator_sources,
         "canonical_july_15_register_fingerprints": july_fingerprints,
         "configuration": {
             "target_net_dpp": str(config.target_net_dpp),
@@ -243,9 +409,7 @@ def generate_period_pack(
             "opening_cash": str(opening_cash),
             "tax": gate_config["tax"],
             "min_lead_days": config.min_lead_days,
-            "narrative_bands": {
-                k: [str(b[0]), str(b[1])] for k, b in config.bands.items()
-            },
+            "narrative_bands": {k: [str(b[0]), str(b[1])] for k, b in config.bands.items()},
         },
         "metrics_summary": narrative_report["metrics"],
         "closing_summary": closing_state["summary"],
@@ -290,4 +454,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

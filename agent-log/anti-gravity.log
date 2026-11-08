@@ -2098,3 +2098,12 @@
 - Membangun CLI generator scripts/ops/generate_period_pack.py yang menghasilkan pack CSV & JSON, closing_state_20260831.json, narrative_report.json, dan MANIFEST.json dengan checksum SHA-256 LF-kanonikal.
 - Menambahkan test suite tests/test_seed_planner.py (8 tes unit lulus).
 - Task managed by antigravity at 2026-11-05T20:30:00+07:00
+
+[2026-11-08T13:00:00+07:00] [INFO] F2/PR97: Penyelesaian Lengkap Review Change Request
+- P1: Penambahan generasi carry-forward 50 SO tanggal 31 Agustus menjadi 50 DO dan 50 faktur terjadwal 1 September 2026; total pack genap 1.240 SO = 1.240 DO = 1.240 faktur; closing state mencatat 50 pending DO dan 771 karton reservasi.
+- P2: Penyelarasan lead time maritim PO ke Hari Kerja Operasional (working days); fmcg_calendar.py menyediakan add_working_days dan count_working_days; seed_planner.py dan seed_v2_gates.py selaras menghitung hari kerja operasional; SEED_INVARIANT_CONTRACT_V2.md mengunci keputusan pemilik.
+- P2: Penomoran PO diparameterisasi per periode (PO-{YYYY}-{MM}-{counter:02d}); pengujian membuktikan September menghasilkan PO-2026-09-01.
+- Observasi Desain: Dokumentasi eksplisit PeriodConfig bahwa target naratif blueprint (net DPP, diskon, tolakan) adalah acuan benchmark untuk NARRATIVE-ANCHORS, bukan pengontrol alur transaksi deterministik.
+- Resolusi Temuan Review: Kontinuitas opening Agustus diuji independen terhadap replay Juli (bukan self-comparison); chained test September lulus (50 DO carry di-dispatch via stock event 1 September, 39 faktur carry tertagih, 15 PO Agustus terlunasi); hash sumber generator diikat pada MANIFEST.json.
+- Verifikasi: 13 unit tests test_seed_planner lulus, 82 unit tests test_seed_v2_gates lulus, ruff check clean, check_manifests 11 addon valid, 11 gerbang invariant strict=True lulus tanpa pelanggaran.
+- Task managed by antigravity at 2026-11-08T13:00:00+07:00

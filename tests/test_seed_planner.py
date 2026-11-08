@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """test_seed_planner.py - Unit & Reproducibility Tests for Phase F2 Seed Planner."""
 
+import copy
 import datetime as dt
 from decimal import Decimal
 import json
 from pathlib import Path
 import unittest
 
-from scripts.ops.fmcg_calendar import is_working_day
-from scripts.ops.generate_period_pack import compute_sha256_lf
+from scripts.ops.fmcg_calendar import count_working_days, is_working_day
+from scripts.ops.generate_period_pack import (
+    compute_sha256_lf,
+    get_verified_previous_closing,
+)
 from scripts.ops.seed_planner import (
     PeriodConfig,
     SeedPlanner,
@@ -73,10 +77,11 @@ class TestSeedPlannerF2(unittest.TestCase):
                 "effective_from": "2025-01-01",
             },
         }
+        verified_prev = get_verified_previous_closing("2026-08", self.reg_dir)
         report = validate_pack_report(
             pack=self.pack,
             opening=self.gate_opening,
-            previous_closing=self.gate_opening,
+            previous_closing=verified_prev,
             existing_numbers=self.existing,
             config=gate_config,
             bands=bands,
@@ -84,7 +89,161 @@ class TestSeedPlannerF2(unittest.TestCase):
         )
         self.assertEqual(report.get("violations"), [])
         self.assertEqual(report.get("gates_skipped"), [])
-        self.assertGreaterEqual(len(report.get("gates_run", [])), 10)
+        self.assertGreaterEqual(len(report.get("gates_run", [])), 11)
+
+    def test_continuity_gate_rejects_quarantine_mutation(self):
+        mutated_opening = copy.deepcopy(self.gate_opening)
+        first_key = next(iter(mutated_opening["stock"]))
+        mutated_opening["stock"][first_key]["quarantine"] += Decimal("1")
+
+        gate_config = {
+            "pack_start": "2026-08-01",
+            "pack_end": "2026-08-31",
+            "opening_cash": "5000000000.00",
+            "min_lead_days": self.config.min_lead_days,
+            "tax": {
+                "rate": "0.11",
+                "source": "PMK 131/2024 & UU HPP No. 7/2021",
+                "source_date": "2024-12-31",
+                "effective_from": "2025-01-01",
+            },
+        }
+        verified_prev = get_verified_previous_closing("2026-08", self.reg_dir)
+        report = validate_pack_report(
+            pack=self.pack,
+            opening=mutated_opening,
+            previous_closing=verified_prev,
+            existing_numbers=self.existing,
+            config=gate_config,
+            strict=True,
+        )
+        violations = [v for v in report.get("violations", []) if v.get("invariant") == "PERIOD-CONTINUITY"]
+        self.assertGreaterEqual(
+            len(violations), 1, "Mutating quarantine carton must trigger PERIOD-CONTINUITY violation"
+        )
+
+    def test_every_so_has_matching_delivery_and_invoice(self):
+        so_numbers = {so["so_number"] for so in self.pack["sales_orders"]}
+        do_so_numbers = {do["so_number"] for do in self.pack["deliveries"]}
+        inv_so_numbers = {inv["so_number"] for inv in self.pack["invoices"]}
+
+        self.assertEqual(len(self.pack["sales_orders"]), 1240)
+        self.assertEqual(len(self.pack["deliveries"]), 1240)
+        self.assertEqual(len(self.pack["invoices"]), 1240)
+
+        self.assertEqual(so_numbers, do_so_numbers, "Every SO must have an associated Delivery Order")
+        self.assertEqual(so_numbers, inv_so_numbers, "Every SO must have an associated Invoice")
+
+        # 50 SO tanggal 31 Agustus harus terjadwal delivery 2026-09-01 dan tercatat di pending_dos
+        aug_31_sos = {so["so_number"] for so in self.pack["sales_orders"] if so["date_order"] == "2026-08-31"}
+        self.assertEqual(len(aug_31_sos), 50)
+
+        pending_dos = {
+            do["do_number"]: do["scheduled_delivery_date"]
+            for do in self.pack["deliveries"]
+            if do["so_number"] in aug_31_sos
+        }
+        self.assertEqual(len(pending_dos), 50)
+        for sched_date in pending_dos.values():
+            self.assertEqual(sched_date, "2026-09-01")
+
+    def test_po_lead_time_in_working_days(self):
+        for po in self.pack["po_headers"]:
+            po_num = po["po_number"]
+            order_dt = dt.date.fromisoformat(po["order_date"])
+            arrival_dt = dt.date.fromisoformat(po["arrival_maumbi_date"])
+            prin = po["principal_code"]
+            min_lead = self.config.min_lead_days[prin]
+
+            work_days = count_working_days(order_dt, arrival_dt)
+            self.assertGreaterEqual(
+                work_days,
+                min_lead,
+                f"PO {po_num} ({prin}) lead time {work_days} working days < minimum {min_lead}",
+            )
+            self.assertTrue(
+                is_working_day(arrival_dt),
+                f"PO {po_num} arrival {arrival_dt} is not a valid working day",
+            )
+
+    def test_august_to_september_chained_generation(self):
+        pack_dir = self.reg_dir / "periods" / "2026-08"
+        aug_closing_path = pack_dir / "closing_state_20260831.json"
+        self.assertTrue(aug_closing_path.exists())
+
+        with aug_closing_path.open("r", encoding="utf-8") as f:
+            aug_closing_raw = json.load(f)
+
+        # 1. Pastikan PO di closing Agustus memuat objek lengkap (nominal + tanggal jatuh tempo)
+        self.assertGreater(len(aug_closing_raw.get("open_po", {})), 0)
+        first_open_po = next(iter(aug_closing_raw["open_po"].values()))
+        self.assertIsInstance(first_open_po, dict)
+        self.assertIn("payment_due_date", first_open_po)
+        self.assertIn("total_amount_dpp", first_open_po)
+
+        # 2. Inisialisasi September Planner menggunakan closing Agustus
+        sep_config = PeriodConfig(
+            pack_start="2026-09-01",
+            pack_end="2026-09-30",
+            opening_cash=Decimal("5000000000.00"),
+            tax_rate=Decimal("0.11"),
+            target_net_dpp=Decimal("4235000000.00"),
+        )
+        sep_planner = SeedPlanner(sep_config, root_dir=REPO_ROOT)
+        sep_res = sep_planner.plan_period(aug_closing_raw)
+        sep_pack = sep_res["pack"]
+
+        # Nomor PO di September harus menggunakan prefix PO-2026-09- (bukan hardcoded Agustus)
+        first_sep_po = sep_pack["po_headers"][0]["po_number"]
+        self.assertEqual(first_sep_po, "PO-2026-09-01")
+
+        # Garis pesanan carry-forward dari 31 Agustus harus dikirim (stock event dispatch) pada 1 September
+        sep_1_events = [e for e in sep_pack["stock_events"] if e["date"] == "2026-09-01"]
+        self.assertGreaterEqual(len(sep_1_events), 50)
+
+        # Faktur carry-forward Agustus harus terlunasi di September saat jatuh tempo
+        carry_inv_nums = set(aug_closing_raw.get("carry_invoices", {}).keys())
+        paid_invs = {a["invoice_number"] for a in sep_pack["ar_collections"]}
+        paid_carry = carry_inv_nums.intersection(paid_invs)
+        self.assertGreaterEqual(len(paid_carry), 30)
+
+        # PO Agustus yang jatuh tempo di September harus terlunasi dengan sequence AP berlanjut
+        first_ap = sep_pack["ap_payments"][0]
+        self.assertEqual(first_ap["ap_payment_id"], "PAY-AP-06")
+        self.assertTrue(first_ap["po_number"].startswith("PO-2026-08-"))
+
+        # Validasi gerbang kontinuitas dan invariansi untuk September dari closing Agustus
+        sep_opening = prepare_gate_opening(aug_closing_raw)
+        verified_prev = get_verified_previous_closing("2026-09", self.reg_dir)
+        sep_existing = extract_existing_numbers(sep_opening)
+
+        gate_config = {
+            "pack_start": "2026-09-01",
+            "pack_end": "2026-09-30",
+            "opening_cash": "5000000000.00",
+            "min_lead_days": sep_config.min_lead_days,
+            "tax": {
+                "rate": "0.11",
+                "source": "PMK 131/2024 & UU HPP No. 7/2021",
+                "source_date": "2024-12-31",
+                "effective_from": "2025-01-01",
+            },
+        }
+        report = validate_pack_report(
+            pack=sep_pack,
+            opening=sep_opening,
+            previous_closing=verified_prev,
+            existing_numbers=sep_existing,
+            config=gate_config,
+            strict=False,
+        )
+        # Gerbang kontinuitas, double spend, link AR/AP, dan saldo stok tidak boleh ada pelanggaran
+        for v in report.get("violations", []):
+            self.assertNotEqual(v.get("invariant"), "PERIOD-CONTINUITY")
+            self.assertNotEqual(v.get("invariant"), "STOCK-BALANCE")
+            self.assertNotEqual(v.get("invariant"), "DOUBLE-SPEND")
+            self.assertNotEqual(v.get("invariant"), "AR-PAYMENT-LINK")
+            self.assertNotEqual(v.get("invariant"), "AP-PAYMENT-LINK")
 
     def test_calendar_working_days_strict_dispatch(self):
         # 17 Aug (Proklamasi) & 25 Aug (Maulid Nabi) must not contain SOs or deliveries
@@ -167,6 +326,30 @@ class TestSeedPlannerF2(unittest.TestCase):
             self.assertTrue(fpath.exists(), f"File {filename} in manifest missing on disk")
             computed_hash = compute_sha256_lf(fpath)
             self.assertEqual(computed_hash, recorded_hash, f"Hash mismatch for {filename}")
+
+    def test_pack_manifest_generator_sources_and_fingerprints(self):
+        pack_dir = self.reg_dir / "periods" / "2026-08"
+        manifest_file = pack_dir / "MANIFEST.json"
+        with manifest_file.open("r", encoding="utf-8") as f:
+            manifest = json.load(f)
+
+        # 1. Generator source binding
+        sources = manifest.get("generator_sources_sha256", {})
+        self.assertGreaterEqual(len(sources), 4)
+        for rel_path, expected_hash in sources.items():
+            fpath = REPO_ROOT / rel_path
+            self.assertTrue(fpath.exists(), f"Source file {rel_path} must exist on disk")
+            computed = compute_sha256_lf(fpath)
+            self.assertEqual(computed, expected_hash, f"Source hash mismatch for {rel_path}")
+
+        # 2. Canonical July 15 fingerprints
+        canonical = manifest.get("canonical_july_15_register_fingerprints", {})
+        self.assertEqual(len(canonical), 15)
+        for fname, exp_hash in canonical.items():
+            fpath = self.reg_dir / fname
+            self.assertTrue(fpath.exists(), f"Canonical register {fname} must exist on disk")
+            computed = compute_sha256_lf(fpath)
+            self.assertEqual(computed, exp_hash, f"Canonical hash mismatch for {fname}")
 
 
 if __name__ == "__main__":

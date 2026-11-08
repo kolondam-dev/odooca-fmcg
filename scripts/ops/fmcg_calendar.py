@@ -62,3 +62,34 @@ def get_next_working_day(d: dt.date, offset_days: int = 1) -> dt.date:
     while not is_working_day(curr):
         curr += dt.timedelta(days=1)
     return curr
+
+
+def add_working_days(d: dt.date, n_working_days: int) -> dt.date:
+    """Melangkah sejumlah n_working_days hari kerja operasional ke depan (Senin s/d Sabtu, bukan libur nasional).
+    Contoh: d = Sabtu, n = 1 -> Senin (karena Minggu bukan hari kerja).
+    Jika n_working_days == 0, mengembalikan d jika d adalah hari kerja, atau hari kerja berikutnya.
+    """
+    if n_working_days < 0:
+        raise ValueError(f"n_working_days must be non-negative, got {n_working_days}")
+    curr = d
+    added = 0
+    while added < n_working_days:
+        curr += dt.timedelta(days=1)
+        if is_working_day(curr):
+            added += 1
+    return curr
+
+
+def count_working_days(start_date: dt.date, end_date: dt.date) -> int:
+    """Menghitung jumlah hari kerja operasional dari start_date (exclusive) hingga end_date (inclusive).
+    Mengembalikan 0 jika end_date <= start_date.
+    """
+    if end_date <= start_date:
+        return 0
+    curr = start_date + dt.timedelta(days=1)
+    count = 0
+    while curr <= end_date:
+        if is_working_day(curr):
+            count += 1
+        curr += dt.timedelta(days=1)
+    return count
