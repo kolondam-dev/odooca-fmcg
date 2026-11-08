@@ -6,6 +6,7 @@ sale-workflow 19.0 b457387a885b0925a286ecb1d661e7ae5a96eceb
 stock-logistics-workflow 19.0 8a06c01a4e04f0f3f630f51c8d6c3635e25501b7
 stock-logistics-warehouse 19.0 ae373d190a295298c5bcf29d391f9098bb154435
 account-financial-reporting 19.0 f48b4ea777c444256aa1c215ec3117d604b5feff
+account-financial-tools 19.0 c23fd09977c870eb3db071fca5958b83f699bc4a
 mis-builder 19.0 7d519f31e1a553d7a5499571a9146f7e3ea49ea4
 reporting-engine 19.0 b9e8c6cdd2d106614eddaf81bd78f487ae35db45
 bank-statement-import 19.0 3a8c86a61232c2888bd94fb32e3ce04a72707807

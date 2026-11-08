@@ -2050,6 +2050,23 @@
 - PR #77 dibuka untuk integrasi ke main
 - Task managed by antigravity-agent at 2026-11-03T08:12:57+07:00
 
+
+[2026-11-05T11:15:00+07:00] [INFO] Preflight read-only keadaan live Railway, audit rekonsiliasi Juli, dan deklarasi state 1 Agustus (Fase F0)
+- Menjalankan audit read-only terhadap database produksi Railway pleasant-caring via PostgreSQL proxy (default_transaction_read_only=on).
+- Mengonfirmasi integrasi transaksi kanonikal Juli di server live: tepat 1.324 SO (DPP Rp5.784.650.114), 1.324 DO (1.276 Juli + 48 carry-forward 1 Agustus), 1.324 faktur, 967 pelunasan AR, dan 4 pembayaran AP.
+- Mendekonstruksi temuan persediaan Gudang Maumbi (G-05): 67.799 karton di WH/Stock terbukti terdiri dari 52.799 karton sisa kanonikal Juli (setelah 48 DO terkirim) + 15.000 karton fixture mobile staging 30 Okt (100 karton × 150 SKU).
+- Menemukan 3 SO live/test tanggal 2026-11-04 (S06407 cancel, S06408 cancel, S06409 draft) tanpa dampak pergerakan stok atau buku besar.
+- Mengunci keputusan pemilik K1–K4 (Bab 9A) dan menetapkan usulan default rasional K5–K9 (modal awal Rp5 M, katalog OPEX, retur bertahap, PPN masukan selaras Odoo, credit limit strict).
+- Menerbitkan data/registers/state_20260801.json yang merekonsiliasi 100% saldo fisik 53.837 karton, 1.038 reservasi, 9 karantina, 357 AR terbuka (DPP Rp2.323.328.944,20), 1 open AP Unilever (DPP Rp2.899.971.200), dan urutan nomor dokumen terakhir.
+- Membangun scripts/ops/generate_state_20260801.py, scripts/ops/seed_f0_inspect_live.py, scripts/ops/seed_f0_analyze_stock_live.py, dan tests/test_state_20260801.py (4 tests PASS).
+- Verifikasi ruff check clean, check_manifests.py 10 addon OK, verify_seed_invariants PASS, verify_seed_acceptance PASS.
+- Task managed by antigravity at 2026-11-05T11:15:00+07:00
+
+[2026-11-05T14:35:00+07:00] [INFO] PR94: verifier mewajibkan eksak 15 entri fingerprint register kanonikal
+- scripts/ops/generate_state_20260801.py memvalidasi set kunci input_dataset_sha256 sama persis dengan 15 register kanonikal
+- Penanganan manifes fingerprint kosong {} atau berkurang langsung fail-fast dengan ValueError
+- Penambahan tes regresi test_empty_or_incomplete_fingerprint_manifest_fails_fast di tests/test_state_20260801.py (8 tes PASS)
+- Task managed by antigravity-agent at 2026-11-05T14:35:00+07:00
 [2026-11-05T12:00:00+07:00] [INFO] PR93: perbaikan tanggal bayar AR dan pencegahan AP Rp0
 - Validasi format ISO dan rentang periode pada ar_collections.payment_date
 - Pencegahan pembayaran AP Rp0 menghapus saldo utang PO dari closing replay
@@ -2069,3 +2086,15 @@
 - Pelunasan Rp0,01 dengan klaim nominal sendiri di baris pembayaran ditolak dan tidak menghapus dokumen dari open_po/open_invoices
 - Resolusi konflik docs/HANDOFF.md pasca merge origin/main (PR95)
 - Task managed by antigravity-agent at 2026-11-05T15:35:00+07:00
+
+[2026-11-07T08:59:30+07:00] [INFO] Handover brief Finance/Accounting/Tax untuk WSL
+- Membuat docs/finance/HANDOVER_ANTIGRAVITY.md dari main d9c7e5f: status I0-I8, 58 report BELUM_DITERIMA, bukti PR95/PR96, aturan kerja, checklist WSL, paket I2a-I2c, jebakan Odoo19, keputusan pemilik, red flags dan format laporan.
+- Diverifikasi: baseline main d9c7e5f dan PR96 merged192defa; katalog58 baris semuanya BELUM_DITERIMA; 23 tes finance/Ruff/manifests sudah PASS pada paket sebelumnya.
+- Tidak ada perubahan kode, data, role, chart, costing, seed, aktivasi, merge main atau deployment.
+- Task managed by antigravity-agent at 2026-11-07T08:59:30+07:00
+
+[2026-11-08T13:45:00+07:00] [INFO] PR98: penyelarasan basis available-vs-available F0b, tes reservasi, dan integrasi main
+- scripts/ops/seed_f0b_stock_reconcile_live.py: menyelaraskan basis rekonsiliasi menjadi available-vs-available (SUM(sq.quantity) - SUM(sq.reserved_quantity) pada WH/Stock internal perusahaan aktif vs physical - reserved pada state_20260801.json); menambahkan load_canonical_state dengan FileNotFoundError eksplisit dan penutupan koneksi/cursor PostgreSQL via context manager.
+- tests/test_seed_f0b_stock_reconcile.py: memodelkan 4-tuple (sku, lot, physical_units, reserved_units) dan menambahkan 3 tes regresi supervisor (reservasi > 0 tanpa false-positive diff, fisik konstan dengan variasi reservasi mengubah available diff, serta error eksplisit bila berkas fixture tidak ada; total 8 tes PASS).
+- Mengintegrasikan origin/main (0a6f3c7, termasuk data/registers/state_20260801.json dari PR #94) ke cabang agen/seed-f0b-stock-reconcile dengan preservasi verbatim seluruh riwayat docs/HANDOFF.md.
+- Task Managed by Agent VSCode at 2026-11-08T13:45:00+07:00
