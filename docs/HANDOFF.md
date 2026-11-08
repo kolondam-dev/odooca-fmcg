@@ -1,3 +1,7 @@
+## 2026-11-08T14:10:00+07:00 — claude-dev — PR #100: tindak lanjut CHANGES_REQUESTED
+**Berubah:** (P1) `main` diintegrasikan ke `agen/pwa-ui-tokens-atoms`; satu-satunya konflik `docs/HANDOFF.md`, entri antigravity `2026-11-07T08:59:30` disisipkan kronologis (antara `14:18:52` dan `08:47:53` tanggal 7 Nov), semua entri kedua sisi utuh. (P2) `pwa/src/ui/tokens.css` `--c-nav` `#0b1f4d` -> `#001a57` (= `pwa/design/tokens.json` dan `docs/ui/DS_RECONCILIATION.md` K1); `pwa/tests/design-tokens-parity.test.ts` (41 pasangan token + cek orphan + cek navbar) agar drift CSS/JSON gagal di CI; `npm run test:tokens`. (CI) `.github/workflows/pwa.yml`: push juga untuk `agen/pwa-*`, langkah "Design token parity".
+**Diverifikasi:** [F] logika pariti dijalankan ulang dengan Python terhadap berkas nyata (semua 41 pasangan cocok, 0 orphan). **Belum diuji:** [BU] vitest, prettier, tsc, build dan Playwright belum dijalankan lokal karena registry npm tidak dapat dijangkau pada sesi ini; bukti hanya dari CI GitHub pada HEAD baru. Catatan non-blocking (font <12 px, e2e/perangkat nyata) tidak diubah.
+
 ## 2026-11-08T12:25:45+07:00 — claude-design — Login, Beranda, Absen, header dibangun ulang sesuai DS
 
 **Berubah**
@@ -123,6 +127,11 @@
 **Diverifikasi:** [F] vitest 402 PASS; prettier PASS; e2e login-attendance-ux 14 PASS (phone dan tablet).
 **Belum diuji:** [BU] BottomNav dan AppHeader baru, BottomSheet, Absen, Kamera, Sinkron (sisa Fase 1). Bundel design system (/mockup) masih memakai #0B1F4D untuk navbar; sesuaikan saat bundel diperbarui.
 **Berikutnya:** AppHeader/BottomNav (tab terpilih menyatu dengan body), lalu Absen, Kamera, Sinkron.
+
+## 2026-11-07T08:59:30+07:00 — antigravity — Handover brief Finance/Accounting/Tax untuk WSL
+**Berubah:** `docs/finance/HANDOVER_ANTIGRAVITY.md`: status I0–I8 dan bukti PR95/PR96, batas 58 report `BELUM_DITERIMA`, aturan kerja/commit/log, checklist WSL, rincian paket I2a–I2c (FIN01–09,36–38,51,55–57), oracle dan counterexample, jebakan Odoo 19, keputusan pemilik yang terbuka, red flags dan format laporan balik. Tidak ada perubahan kode/addon/workflow.
+**Diverifikasi:** [F] baseline `main` `d9c7e5f` (PR #96 merged dari `192defa`); katalog 58 baris seluruhnya `BELUM_DITERIMA`; 23 tes finance, Ruff, 12 manifest PASS pada paket sebelumnya.
+**Belum diuji:** [BU] tidak ada run native baru pada sesi ini; brief bukan penerimaan report. Tidak ada deploy, seed, aktivasi, tulis demo, merge main atau perubahan role/chart/costing.
 
 ## 2026-11-07T08:47:53+07:00 — claude-design — PWA Fase 0: token dan atom design system
 **Berubah:**

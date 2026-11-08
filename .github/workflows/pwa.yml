@@ -2,7 +2,7 @@ name: PWA quality
 on:
   pull_request:
   push:
-    branches: [main, 'agen/mobile-*']
+    branches: [main, 'agen/mobile-*', 'agen/pwa-*']
 permissions:
   contents: read
 concurrency:
@@ -25,6 +25,8 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run contracts:check
+      - name: Design token parity (tokens.css = design/tokens.json)
+        run: npm run test:tokens
       - run: npm test
       - run: npm run test:hosting
       - run: npm run build:demo
