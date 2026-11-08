@@ -14,10 +14,11 @@ from decimal import Decimal
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(REPO_ROOT) not in sys.path:
@@ -40,8 +41,13 @@ def compute_sha256_lf(path: Path) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def get_git_head_commit() -> str:
-    """Mengambil commit HEAD git repository saat ini."""
+def get_git_head_commit(override_commit: Optional[str] = None) -> str:
+    """Mengambil commit HEAD git repository saat ini atau override yang diberikan."""
+    if override_commit:
+        return override_commit
+    env_commit = os.environ.get("GENERATOR_COMMIT")
+    if env_commit:
+        return env_commit
     try:
         res = subprocess.run(
             ["git", "rev-parse", "HEAD"],
@@ -146,6 +152,7 @@ def generate_period_pack(
     strict_validate: bool = True,
     opening_cash: Decimal = Decimal("5000000000.00"),
     tax_rate: Decimal = Decimal("0.11"),
+    generator_commit: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Eksekusi generator pack untuk suatu periode dan menyimpannya ke disk."""
     reg_dir = REPO_ROOT / "data" / "registers"
@@ -399,7 +406,7 @@ def generate_period_pack(
         "period": period,
         "pack_start": pack_start,
         "pack_end": pack_end,
-        "generator_commit": get_git_head_commit(),
+        "generator_commit": get_git_head_commit(generator_commit),
         "generator_sources_sha256": generator_sources,
         "canonical_july_15_register_fingerprints": july_fingerprints,
         "configuration": {
@@ -434,6 +441,7 @@ def main():
     parser.add_argument("--opening-state", default=None, help="Path ke berkas JSON opening state")
     parser.add_argument("--output-dir", default=None, help="Path direktori output pack")
     parser.add_argument("--no-strict", action="store_true", help="Nonaktifkan validasi strict")
+    parser.add_argument("--generator-commit", default=None, help="Override commit hash generator untuk manifest")
     args = parser.parse_args()
 
     op_path = Path(args.opening_state) if args.opening_state else None
@@ -445,6 +453,7 @@ def main():
         opening_state_path=op_path,
         output_dir=out_dir,
         strict_validate=not args.no_strict,
+        generator_commit=args.generator_commit,
     )
     print("Period pack generation complete.")
     print("Summary:")

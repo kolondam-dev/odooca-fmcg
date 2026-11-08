@@ -368,12 +368,15 @@ class SeedPlanner:
             first_workday += dt.timedelta(days=1)
         first_workday_str = first_workday.isoformat()
 
-        # Eksekusi dispatch stock_events untuk 48 DO carry-forward
+        # Eksekusi dispatch stock_events untuk carry-forward
         for line in carry_lines:
             evt_seq += 1
             sku = line["sku_code"]
             lot = line["lot_number"]
             qty = _dec(line["qty_cartons"])
+            is_rej = str(line.get("is_rejected", "")).lower() in ("true", "1")
+
+            # 1. Dispatch pelepasan reserved dan physical
             stock_events.append({
                 "event_id": f"EVT-{evt_seq:06d}",
                 "date": first_workday_str,
@@ -383,12 +386,28 @@ class SeedPlanner:
                 "reserved_impact": str(-qty),
                 "quarantine_impact": "0",
             })
-            # Update live stock state
             for entry in stock_state[sku]:
                 if entry["lot"] == lot:
                     entry["physical"] -= qty
                     entry["reserved"] -= qty
                     break
+
+            # 2. Jika item ditolak, masukkan kuantitas ke karantina
+            if is_rej:
+                evt_seq += 1
+                stock_events.append({
+                    "event_id": f"EVT-{evt_seq:06d}",
+                    "date": first_workday_str,
+                    "sku_code": sku,
+                    "lot_number": lot,
+                    "physical_impact": "0",
+                    "reserved_impact": "0",
+                    "quarantine_impact": str(qty),
+                })
+                for entry in stock_state[sku]:
+                    if entry["lot"] == lot:
+                        entry["quarantine"] += qty
+                        break
 
         # Pemetaan PJP Customer
         cust_by_sls_day: Dict[Tuple[str, str], List[Dict[str, Any]]] = defaultdict(list)
@@ -904,6 +923,22 @@ class SeedPlanner:
                     line_gross = qty * c_price
                     gross_dpp += line_gross
 
+                    is_rej = bool(item.get("is_rejected", False))
+                    if is_rej:
+                        rej_dpp += line_gross
+                        rej_seq += 1
+                        rej_id = f"REJ-{ym_str}-{rej_seq:03d}"
+                        rejections.append({
+                            "rejection_id": rej_id,
+                            "rejection_date": follow_day_str,
+                            "so_number": so_num,
+                            "do_number": do_num,
+                            "sku_code": item["sku_code"],
+                            "lot_number": item["lot_number"],
+                            "qty_cartons": str(qty),
+                            "rejection_dpp": _q(line_gross),
+                        })
+
                     carry_forward_lines.append({
                         "so_number": so_num,
                         "do_number": do_num,
@@ -911,6 +946,8 @@ class SeedPlanner:
                         "lot_number": item["lot_number"],
                         "qty_cartons": str(qty),
                         "unit_cost_price": str(item.get("unit_cost_dec", "0")),
+                        "is_rejected": is_rej,
+                        "rejection_dpp": _q(line_gross) if is_rej else "0.00",
                     })
 
                 deliveries.append({

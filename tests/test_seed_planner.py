@@ -245,6 +245,68 @@ class TestSeedPlannerF2(unittest.TestCase):
             self.assertNotEqual(v.get("invariant"), "AR-PAYMENT-LINK")
             self.assertNotEqual(v.get("invariant"), "AP-PAYMENT-LINK")
 
+    def test_carry_forward_rejection_consistency(self):
+        # 1. Pastikan ada item carry-forward yang mengalami rejection (misal DO-202608-1223)
+        rej_dos = [
+            d for d in self.pack["deliveries"]
+            if d["scheduled_delivery_date"] == "2026-09-01" and Decimal(d["rejection_dpp"]) > Decimal("0")
+        ]
+        self.assertGreater(len(rej_dos), 0, "Harus ada DO carry-forward yang memiliki rejection")
+
+        target_do = rej_dos[0]
+        do_num = target_do["do_number"]
+        so_num = target_do["so_number"]
+        rej_dpp = Decimal(target_do["rejection_dpp"])
+
+        # 2. Cek bahwa faktur untuk DO tersebut memiliki net DPP yang dikurangi nilai tolakan
+        matching_inv = next(i for i in self.pack["invoices"] if i["do_number"] == do_num)
+        matching_so = next(s for s in self.pack["sales_orders"] if s["so_number"] == so_num)
+        so_gross = Decimal(matching_so["gross_dpp"])
+        inv_dpp = Decimal(matching_inv["dpp_amount"])
+        self.assertEqual(inv_dpp, so_gross - rej_dpp, "Faktur DO carry-forward harus dikurangi nilai tolakan")
+
+        # 3. Cek bahwa rejections.csv memiliki baris untuk DO tersebut bertanggal 2026-09-01
+        matching_rej = [r for r in self.pack["rejections"] if r["do_number"] == do_num]
+        self.assertEqual(len(matching_rej), 1)
+        self.assertEqual(matching_rej[0]["rejection_date"], "2026-09-01")
+        self.assertEqual(Decimal(matching_rej[0]["rejection_dpp"]), rej_dpp)
+
+        # 4. Cek bahwa carry_forward_lines pada closing_state membawa flag is_rejected dan nominalnya
+        pack_dir = self.reg_dir / "periods" / "2026-08"
+        with (pack_dir / "closing_state_20260831.json").open("r", encoding="utf-8") as f:
+            closing = json.load(f)
+        cf_rejected = [
+            row for row in closing.get("carry_forward_lines", [])
+            if row.get("do_number") == do_num and row.get("is_rejected")
+        ]
+        self.assertEqual(len(cf_rejected), 1)
+        self.assertEqual(Decimal(cf_rejected[0]["rejection_dpp"]), rej_dpp)
+
+        # 5. Eksekusi September dari closing Agustus: pastikan stock_events 2026-09-01 memuat event karantina
+        sep_config = PeriodConfig(
+            pack_start="2026-09-01",
+            pack_end="2026-09-30",
+            opening_cash=Decimal("5000000000.00"),
+            target_net_dpp=Decimal("4235000000.00"),
+        )
+        sep_planner = SeedPlanner(sep_config, root_dir=REPO_ROOT)
+        sep_res = sep_planner.plan_period(closing)
+
+        sku = cf_rejected[0]["sku_code"]
+        lot = cf_rejected[0]["lot_number"]
+        qty = cf_rejected[0]["qty_cartons"]
+
+        q_events = [
+            e for e in sep_res["pack"]["stock_events"]
+            if e["date"] == "2026-09-01"
+            and e["sku_code"] == sku
+            and e["lot_number"] == lot
+            and e["quarantine_impact"] == qty
+        ]
+        self.assertEqual(
+            len(q_events), 1, "Stock events September harus mencatat event karantina untuk carry-forward rejected"
+        )
+
     def test_calendar_working_days_strict_dispatch(self):
         # 17 Aug (Proklamasi) & 25 Aug (Maulid Nabi) must not contain SOs or deliveries
         for so in self.pack["sales_orders"]:
@@ -332,6 +394,11 @@ class TestSeedPlannerF2(unittest.TestCase):
         manifest_file = pack_dir / "MANIFEST.json"
         with manifest_file.open("r", encoding="utf-8") as f:
             manifest = json.load(f)
+
+        # 0. Generator commit provenance
+        gen_commit = manifest.get("generator_commit")
+        self.assertTrue(gen_commit, "generator_commit must be present in manifest")
+        self.assertNotEqual(gen_commit, "UNKNOWN_COMMIT")
 
         # 1. Generator source binding
         sources = manifest.get("generator_sources_sha256", {})
