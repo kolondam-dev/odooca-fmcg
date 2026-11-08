@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_finance" name="Finance" sequence="35"
+              groups="account.group_account_readonly,account.group_account_user,account.group_account_manager"/>
+    <menuitem id="menu_trial_balance" name="Trial Balance" parent="menu_finance" sequence="10"
+              action="account_financial_report.action_trial_balance_wizard"/>
+    <menuitem id="menu_general_ledger" name="General Ledger" parent="menu_finance" sequence="20"
+              action="account_financial_report.action_general_ledger_wizard"/>
+    <menuitem id="menu_journal_ledger" name="Journal Ledger" parent="menu_finance" sequence="30"
+              action="account_financial_report.action_journal_ledger_wizard"/>
+    <menuitem id="menu_open_items" name="Open Items" parent="menu_finance" sequence="40"
+              action="account_financial_report.action_open_items_wizard"/>
+    <menuitem id="menu_aged_partner_balance" name="Aged Partner Balance" parent="menu_finance" sequence="50"
+              action="account_financial_report.action_aged_partner_balance_wizard"/>
+</odoo>

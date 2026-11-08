@@ -54,6 +54,11 @@
 **Berikutnya:**
 - Mengajukan update commit ke PR #97 dan menyampaikan bukti pemenuhan seluruh change request supervisor.
 
+## 2026-11-07T08:59:30+07:00 — antigravity — Handover brief Finance/Accounting/Tax untuk WSL
+**Berubah:** `docs/finance/HANDOVER_ANTIGRAVITY.md`: status I0–I8 dan bukti PR95/PR96, batas 58 report `BELUM_DITERIMA`, aturan kerja/commit/log, checklist WSL, rincian paket I2a–I2c (FIN01–09,36–38,51,55–57), oracle dan counterexample, jebakan Odoo 19, keputusan pemilik yang terbuka, red flags dan format laporan balik. Tidak ada perubahan kode/addon/workflow.
+**Diverifikasi:** [F] baseline `main` `d9c7e5f` (PR #96 merged dari `192defa`); katalog 58 baris seluruhnya `BELUM_DITERIMA`; 23 tes finance, Ruff, 12 manifest PASS pada paket sebelumnya.
+**Belum diuji:** [BU] tidak ada run native baru pada sesi ini; brief bukan penerimaan report. Tidak ada deploy, seed, aktivasi, tulis demo, merge main atau perubahan role/chart/costing.
+
 ## 2026-11-05T20:30:00+07:00 — antigravity — F2: Planner murni dan generator pack periode transaksi Agustus 2026
 **Berubah:**
 - scripts/ops/seed_planner.py: implementasi mesin perencanaan deterministik FMCG lintas modul; kebal terhadap PYTHONHASHSEED via SHA-256 seeding; kalender PJP dan off-days (Minggu, 17 & 25 Agustus libur); carry-forward 48 DO dispatch pada 1 Agustus; single-principal SO; FEFO inventory allocation; kalkulasi PPN 11% pembulatan sen; evaluasi ROP dengan lead-time maritim; pelunasan AP PO Unilever pada jatuh tempo 8 Agustus; penomoran bulanan mulai dari 1 dan nomor global berlanjut; helper prepare_gate_opening dan extract_existing_numbers.
