@@ -1,3 +1,13 @@
+## 2026-11-08T23:04:17+07:00 — claude-design — PR #100: 13 tes e2e diperbaiki, pwa-gate
+
+**Berubah (hanya tes/fixture):**
+- session-fixture: pergeseran tanggal hari Minggu tidak berlaku bila tes memasang `page.clock` (sebelumnya jam mundur setelah reload; akar 3 tes expense); `page.evaluate` di route fixture diulang saat navigasi; helper `freshSnapshotMeta`.
+- visit-helpers: `leaveClosedVisit`. next-policy dan sales-delivery-rules keluar dari kunjungan sebelum membuka Lainnya (layar kunjungan penuh menutupi navigasi); label Delivery "Open session" dipulihkan.
+- route-workflow dan ux 500 SKU: snapshot kustom membawa tanggal bisnis fixture; heading dan region Hub baru. field morning-gate: gerbang = tombol Absen masuk, tanpa tombol sinkron.
+**Diverifikasi:** [F] e2e phone+tablet 180 lulus (build QA seperti CI), prettier, tsc, vitest 448, contracts, test:tokens, build + check:build. Tidak ada `test.skip` baru.
+**Belum diuji:** [BU] hasil CI GitHub pada commit ini; perangkat nyata.
+**Berikutnya:** pantau pwa-gate; fase layar sisanya.
+
 ## 2026-11-08T21:58:44+07:00 — claude-design — PR #100: pulihkan tes Delivery, catatan kegagalan e2e yang sudah ada di main
 
 **Berubah:** pwa/tests/browser/sales-delivery-rules.spec.ts: tombol Delivery "Open session" dikembalikan (sebelumnya salah ganti ke "Buat order di outlet" oleh sed saya; regresi dari PR ini).

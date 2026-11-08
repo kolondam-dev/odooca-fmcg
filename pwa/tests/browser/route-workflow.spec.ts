@@ -1,4 +1,4 @@
-import { test, expect, checkIn } from "./session-fixture";
+import { test, expect, checkIn, freshSnapshotMeta } from "./session-fixture";
 import { MockProvider } from "../../src/data/mock";
 import { saveVisitPhoto, saveDisplayPhoto } from "./visit-helpers";
 import {
@@ -19,10 +19,13 @@ test("outlet list alone scrolls, full search filters dynamically and dismissal r
         name: `Toko ${i}`,
         address: `Alamat ${i}, Manado`,
     }));
+    const meta = freshSnapshotMeta();
     await page.route("**/api/v1/sync/snapshot", (route) =>
         route.fulfill({
             json: {
                 ...snapshot,
+                updatedAt: meta.updatedAt,
+                scope: { ...snapshot.scope, business_date: meta.businessDate },
                 office: {
                     id: "1",
                     name: "Kantor Pusat",
@@ -66,13 +69,11 @@ test("outlet list alone scrolls, full search filters dynamically and dismissal r
     await expect(input).toBeFocused();
     await input.click();
     await drawer.getByRole("button", { name: /Toko 87/ }).click();
-    await expect(
-        page.getByRole("heading", { name: "Toko 87", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Toko 87/ })).toBeVisible();
     await expect(page.locator(".outlet-list")).toHaveCount(0);
     expect(
         await page
-            .locator(".visit-panel")
+            .getByRole("region", { name: "Kunjungan outlet" })
             .evaluate((el) => getComputedStyle(el).borderRadius),
     ).toBe("0px");
     expect(

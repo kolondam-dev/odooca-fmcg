@@ -6,7 +6,12 @@ import {
     saveDeliveryPhoto,
     startDelivery,
 } from "./delivery-helpers";
-import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
+import {
+    leaveClosedVisit,
+    leaveVisit,
+    saveDisplayPhoto,
+    saveVisitPhoto,
+} from "./visit-helpers";
 test.beforeEach(async ({ context }) => {
     await context.grantPermissions(["geolocation"]);
     await context.setGeolocation({
@@ -90,6 +95,7 @@ for (const approved of [true, false])
         expect((await liveRequest).headers()["x-csrf-token"]).toBe(
             "fixture-command-csrf",
         );
+        await leaveVisit(page);
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
@@ -271,6 +277,7 @@ test("SKU packaging drives new order and offline correction prices independently
     await page
         .getByRole("button", { name: "Tutup kunjungan", exact: true })
         .click();
+    await leaveClosedVisit(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await page
         .getByLabel("Alasan keputusan diskon", { exact: true })

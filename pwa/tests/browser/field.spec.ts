@@ -270,20 +270,24 @@ test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
     await expect(page.locator(".activity")).toHaveCount(1);
 });
 
-test("morning gate requires attendance, preserves account separation and expires next WITA day", async ({
-    page,
-}) => {
-    await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
-    await page.goto("./");
-    await expect(
-        page.getByRole("button", { name: /Buat order/ }),
-    ).toBeDisabled();
+async function expectGateClosed(page: Page) {
+    // Sebelum absen masuk, hari kerja belum bisa disinkronkan: hanya ada "Absen masuk".
     await expect(
         page.getByRole("button", {
             name: "Sinkronkan data harian",
             exact: true,
         }),
-    ).toBeDisabled();
+    ).toHaveCount(0);
+    await expect(
+        page.getByRole("button", { name: "Absen masuk", exact: true }),
+    ).toBeVisible();
+}
+test("morning gate requires attendance, preserves account separation and expires next WITA day", async ({
+    page,
+}) => {
+    await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
+    await page.goto("./");
+    await expectGateClosed(page);
     await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.reload();
@@ -297,9 +301,7 @@ test("morning gate requires attendance, preserves account separation and expires
         .click();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await switchPersona(page, "canvass");
-    await expect(
-        page.getByRole("button", { name: /Buat order/ }),
-    ).toBeDisabled();
+    await expectGateClosed(page);
     await switchPersona(page, "sales");
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.clock.setSystemTime(new Date("2026-10-27T16:00:01Z"));
@@ -312,9 +314,7 @@ test("morning gate requires attendance, preserves account separation and expires
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
         .click();
-    await expect(
-        page.getByRole("button", { name: /Buat order/ }),
-    ).toBeDisabled();
+    await expectGateClosed(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toHaveCount(0);
 });
 

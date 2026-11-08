@@ -6,7 +6,11 @@ import {
     startDelivery,
     saveDeliveryPhoto,
 } from "./delivery-helpers";
-import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
+import {
+    leaveClosedVisit,
+    saveDisplayPhoto,
+    saveVisitPhoto,
+} from "./visit-helpers";
 test.beforeEach(async ({ context }) => {
     await context.grantPermissions(["geolocation"]);
     await context.setGeolocation({
@@ -99,6 +103,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
         await page
             .getByRole("button", { name: "Tutup kunjungan", exact: true })
             .click();
+        await leaveClosedVisit(page);
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();

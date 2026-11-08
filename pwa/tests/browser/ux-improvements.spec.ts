@@ -1,4 +1,10 @@
-import { test, expect, checkIn, changeTestAccount } from "./session-fixture";
+import {
+    test,
+    expect,
+    checkIn,
+    changeTestAccount,
+    freshSnapshotMeta,
+} from "./session-fixture";
 import { saveVisitPhoto } from "./visit-helpers";
 
 test("browser Back closes camera before form and returns through pages", async ({
@@ -232,10 +238,13 @@ test("500 SKU catalog renders bounded rows and preserves selected off-screen qua
         sku_code: `SKU-${i}`,
         name: `Produk ${i}`,
     }));
+    const meta = freshSnapshotMeta();
     await page.route("**/api/v1/sync/snapshot", (route) =>
         route.fulfill({
             json: {
                 ...snapshot,
+                updatedAt: meta.updatedAt,
+                scope: { ...snapshot.scope, business_date: meta.businessDate },
                 office: {
                     id: "1",
                     name: "Kantor Pusat",

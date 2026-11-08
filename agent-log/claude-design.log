@@ -194,3 +194,8 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-08T21:58:44+07:00] [INFO] PR100: pulihkan label Open session pada tes Delivery (regresi sed sendiri)
 - sales-delivery-rules:117 lulus lagi; 13 e2e lain gagal juga di main hari Minggu (dipisah ke PR lain)
 - Task managed by claude-design agent at 2026-11-08T21:58:44+07:00
+
+[2026-11-08T23:04:17+07:00] [INFO] PR100: 13 tes e2e diperbaiki agar pwa-gate hijau
+- Akar: jam Minggu (fixture) bentrok dengan page.clock; layar kunjungan menutupi navigasi; snapshot kustom tanpa tanggal bisnis; label UI lama
+- e2e phone+tablet 180 lulus lokal dengan build QA
+- Task managed by claude-design agent at 2026-11-08T23:04:17+07:00

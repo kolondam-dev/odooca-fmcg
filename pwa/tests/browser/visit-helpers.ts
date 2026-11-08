@@ -64,3 +64,16 @@ export async function leaveVisit(page: Page) {
         .catch(() => false);
     if (shown) await back.click();
 }
+
+/** Setelah "Tutup kunjungan": tunggu penutupan lokal, lalu kembali ke daftar agar navigasi bawah bebas. */
+export async function leaveClosedVisit(page: Page) {
+    await expect(
+        page.getByText(/Kunjungan ditutup lokal/).first(),
+    ).toBeVisible();
+    await page
+        .getByRole("button", { name: "Kembali ke daftar outlet", exact: true })
+        .click();
+    await expect(
+        page.getByRole("region", { name: "Kunjungan outlet" }),
+    ).toHaveCount(0);
+}
