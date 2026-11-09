@@ -6,13 +6,40 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import HttpCase, TransactionCase, tagged
 from odoo.tests.common import new_test_user
 
-from ..models.mobile_workday import business_date, MobileReadConflict
+from ..models import mobile_workday
+from ..models.mobile_workday import MobileReadConflict
+
+
+def business_date():
+    """Tanggal bisnis uji yang deterministik terhadap kalender.
+
+    Operasional order/kunjungan libur hari Minggu (WITA). Agar regression guard
+    tetap berjalan setiap hari, hari Minggu digeser ke Sabtu sebelumnya; tes
+    tidak pernah dilewati karena kalender. Fixture mem-patch
+    `mobile_workday.business_date` dengan fungsi ini, jadi model dan tes selalu
+    memakai hari yang sama. Aturan libur Minggu diuji eksplisit dengan
+    `sunday_business_date()`.
+    """
+    day = _real_business_date()
+    return day - timedelta(days=1) if day.weekday() == 6 else day
+
+
+def sunday_business_date():
+    """Hari Minggu terdekat sebelum atau pada hari ini (untuk tes aturan libur)."""
+    day = _real_business_date()
+    return day - timedelta(days=(day.weekday() + 1) % 7)
+
+
+_real_business_date = mobile_workday.business_date
 
 
 class MobileFixture:
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        patcher = patch.object(mobile_workday, "business_date", business_date)
+        patcher.start()
+        cls.addClassCleanup(patcher.stop)
         currency = cls.env.ref("base.IDR")
         currency.active = True
         cls.company = cls.env["res.company"].create({"name": "Mobile API Company", "currency_id": currency.id})
@@ -54,10 +81,8 @@ class MobileFixture:
             "name": "API Scheduled Outlet", "company_id": cls.company.id, "user_id": cls.mobile.id,
             "partner_latitude": 1.465, "partner_longitude": 124.833, "street": "Test Street",
         })
-        today = business_date()
-        cls.test_business_date = today + timedelta(days=1) if today.weekday() == 6 else today
         cls.assignment = cls.env["id.mobile.workday"].create({
-            "user_id": cls.mobile.id, "company_id": cls.company.id, "business_date": cls.test_business_date,
+            "user_id": cls.mobile.id, "company_id": cls.company.id, "business_date": business_date(),
             "warehouse_id": cls.warehouse.id, "pricelist_id": cls.pricelist.id,
             "outlet_ids": [Command.set(cls.outlet.ids)], "product_ids": [Command.set(cls.product.ids)],
         })
@@ -70,15 +95,6 @@ class MobileFixture:
             cls.product, cls.foreign_warehouse.lot_stock_id, 4800,
         )
         Quant._update_available_quantity(cls.product, cls.warehouse.lot_stock_id, 1200, owner_id=cls.outlet)
-
-    def setUp(self):
-        super().setUp()
-        self.workday_date_patcher = patch(
-            "odoo.addons.id_mobile_api.models.mobile_workday.business_date",
-            return_value=self.test_business_date,
-        )
-        self.workday_date_patcher.start()
-        self.addCleanup(self.workday_date_patcher.stop)
 
 
 @tagged("post_install", "-at_install")
