@@ -10,6 +10,7 @@
     "dev": "vite --host 127.0.0.1 --mode demo",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:tokens": "vitest run tests/design-tokens-parity.test.ts",
     "build": "vite build --mode production",
     "build:demo": "vite build --mode demo",
     "check:build": "node scripts/check-build.mjs",

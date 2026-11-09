@@ -135,3 +135,72 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - Traceback: odoo/tools/translate.py PoFile.__iter__ (match.groups() pada None) saat memuat id_dashboard_sales/i18n/id.po; entri yang saya tambah di redesain tidak memiliki komentar '#. module: id_dashboard_sales'.
 - Perbaikan: semua 75 entri kini diawali '#. module: id_dashboard_sales'. [BU] menunggu CI ulang.
 - Task Managed by agent claude-design2 at 2026-11-01T06:52:39+07:00
+
+[2026-11-07T08:47:53+07:00] [INFO] PWA: token dan atom design system (Fase 0)
+- pwa/src/ui: tokens.css, ui.css, 11 atom (Button, IconButton, Chip, Field, Select, Segmented, Checkbox, RadioRow, Stepper, Progress, StatusDot), galeri #ui (dev saja)
+- pwa/design/tokens.json untuk Tokens Studio; style.css: 42 warna identik diganti var(--c-*), tampilan tidak berubah
+- tsc, prettier, vitest 402 PASS, check:build PASS; e2e 3 tes gagal juga pada baseline (collection:200, delivery:180, visits:93)
+- [BU] Impor Figma, uji perangkat nyata
+- Task managed by claude-design agent at 2026-11-07T08:47:53+07:00
+
+[2026-11-07T14:18:52+07:00] [INFO] PWA Fase 1 (bagian 1): navy disatukan, Login memakai atom
+- --c-nav = #001A57 (navy merek PWA); --navy jadi alias; tokens.json disesuaikan
+- Login.tsx memakai Field dan Button; label dan e2e tidak berubah
+- vitest 402 PASS; login-attendance-ux 14 PASS
+- Task managed by claude-design agent at 2026-11-07T14:18:52+07:00
+
+[2026-11-07T14:22:45+07:00] [INFO] PWA Fase 1 (bagian 2): BottomNav diekstrak ke src/ui
+- BottomNav.tsx dengan markup dan kelas identik; App.tsx memakainya
+- Temuan: navbar terpilih menyatu dengan body sudah ada di style.css (butir feedback 18 sudah terpenuhi)
+- vitest 403 PASS; e2e 18 PASS; visits:93 gagal juga pada baseline
+- Task managed by claude-design agent at 2026-11-07T14:22:45+07:00
+
+[2026-11-07T14:30:48+07:00] [INFO] PWA Fase 1 (bagian 3): Absen dan sesi pagi memakai atom
+- AttendanceCapture: Field dan Button; MorningSession: Chip dan Button
+- style.css: .capture-actions satu kolom, aturan button 11-12px dihapus (di bawah minimum 12px)
+- vitest 403 PASS; e2e 86 PASS; 5 tes sales-delivery-rules/review-regressions gagal juga pada origin/main
+- Task managed by claude-design agent at 2026-11-07T14:30:48+07:00
+
+[2026-11-07T15:10:05+07:00] [INFO] PWA Fase 1 (bagian 4): teks minimum 12px
+- 27 selektor 10,9-11,99px dinaikkan ke 12px di style.css; 33 selektor <11px belum (perlu tinjau tata letak)
+- Kamera tidak diganti atom: UI gelap khusus; kepatuhan aturan teks/sentuh diaudit
+- vitest 403 PASS; e2e phone 68 PASS, 2 flaky saat 6 worker lolos saat dijalankan sendiri
+- Task managed by claude-design agent at 2026-11-07T15:10:05+07:00
+
+[2026-11-07T16:06:36+07:00] [INFO] Fase 1: Sinkron memakai Chip
+- pill status SyncDiagnostics diganti Chip (bad/ok/warn); label dan perilaku tetap
+- Task managed by claude-design agent at 2026-11-07T16:06:36+07:00
+
+[2026-11-07T16:09:50+07:00] [INFO] Fase 1: SheetHeader
+- atom SheetHeader dipakai TaskForm
+- Task managed by claude-design agent at 2026-11-07T16:09:50+07:00
+
+[2026-11-08T05:57:15+07:00] [INFO] Fase 2: daftar Outlet sesuai DS
+- OutletCard + filter Semua/Belum/Selesai; Extra call jadi Button
+- Task managed by claude-design agent at 2026-11-08T05:57:15+07:00
+
+[2026-11-08T06:06:42+07:00] [INFO] Fase 2: Hub kunjungan memakai atom
+- VisitPanel: Segmented tahap, Button, Select, Textarea
+- Task managed by claude-design agent at 2026-11-08T06:06:42+07:00
+
+[2026-11-08T06:38:37+07:00] [INFO] Fase 2: Hub kunjungan dibangun ulang sesuai DS
+- layar penuh Check-in + Hub (Tracker, Card, ListRow), BottomSheet Selesai kunjungan
+- Task managed by claude-design agent at 2026-11-08T06:38:37+07:00
+
+[2026-11-08T12:25:45+07:00] [INFO] Fase 1b: Login, Beranda, Absen dan header dibangun ulang sesuai DS
+- AppHeader, Home, MorningSession (DayStep), AttendanceScreen, Login baru; topbar/greeting/quick-grid dibuang
+- Task managed by claude-design agent at 2026-11-08T12:25:45+07:00
+
+[2026-11-08T21:58:44+07:00] [INFO] PR100: pulihkan label Open session pada tes Delivery (regresi sed sendiri)
+- sales-delivery-rules:117 lulus lagi; 13 e2e lain gagal juga di main hari Minggu (dipisah ke PR lain)
+- Task managed by claude-design agent at 2026-11-08T21:58:44+07:00
+
+[2026-11-08T23:04:17+07:00] [INFO] PR100: 13 tes e2e diperbaiki agar pwa-gate hijau
+- Akar: jam Minggu (fixture) bentrok dengan page.clock; layar kunjungan menutupi navigasi; snapshot kustom tanpa tanggal bisnis; label UI lama
+- e2e phone+tablet 180 lulus lokal dengan build QA
+- Task managed by claude-design agent at 2026-11-08T23:04:17+07:00
+
+[2026-11-09T07:24:14+07:00] [INFO] PR100 re-review P2: tes backend tidak lagi dilewati pada hari Minggu
+- business_date() dipatch di MobileFixture (Minggu digeser ke Sabtu); skip_on_sunday dihapus; tes aturan libur Minggu eksplisit
+- Odoo tidak tersedia di sandbox; validasi via CI
+- Task managed by claude-design agent at 2026-11-09T07:24:14+07:00

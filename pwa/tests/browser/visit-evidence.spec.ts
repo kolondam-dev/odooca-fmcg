@@ -5,11 +5,9 @@ import {
     type Page,
     type BrowserContext,
 } from "./session-fixture";
-import { saveVisitPhoto } from "./visit-helpers";
+import { saveVisitPhoto, leaveVisit } from "./visit-helpers";
 async function openVisit(page: Page) {
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
 }
 async function prepare(page: Page, context: BrowserContext) {
@@ -46,7 +44,11 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
     await expect(start).toBeEnabled();
     await context.setOffline(true);
     await page.reload();
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await leaveVisit(page);
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await openVisit(page);
     const photo = page.getByRole("group", {
         name: "Foto check-in kunjungan",
@@ -74,9 +76,6 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
             exact: true,
         }),
     });
-    await page
-        .getByRole("button", { name: "Close session", exact: true })
-        .click();
     await history.locator(":scope > summary").click();
     await expect(history.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await expect(history.getByLabel("Foto bukti")).toHaveCount(0);
@@ -84,6 +83,9 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
         name: "Tutup kunjungan",
         exact: true,
     });
+    await page
+        .getByRole("button", { name: "Selesai kunjungan", exact: true })
+        .click();
     await expect(close).toBeDisabled();
     await saveVisitPhoto(page, "check-out");
     await page
@@ -124,6 +126,7 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
             (r) => r.version === 1 && r.evidence.packageHash.length === 64,
         ),
     ).toBe(true);
+    await leaveVisit(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await context.setOffline(false);
     await expect(
@@ -182,7 +185,11 @@ test("tampered persisted parent media blocks restore and both queued actions aft
         db.close();
     });
     await page.reload();
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await leaveVisit(page);
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await openVisit(page);
     await expect(
         page
@@ -192,6 +199,7 @@ test("tampered persisted parent media blocks restore and both queued actions aft
     await expect(
         page.getByRole("button", { name: "Mulai kunjungan", exact: true }),
     ).toBeDisabled();
+    await leaveVisit(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await context.setOffline(false);
     await expect(

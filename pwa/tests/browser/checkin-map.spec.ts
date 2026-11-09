@@ -16,7 +16,9 @@ test("office check-in previews real fix and handles failed road tiles without au
         return route.abort();
     });
     await page.goto("./");
-    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
     const map = page.getByRole("region", {
         name: "Preview peta Kantor Pusat",
         exact: true,
@@ -35,7 +37,7 @@ test("office check-in previews real fix and handles failed road tiles without au
     await expect(map.getByRole("status")).toContainText("Peta jalan gagal");
     await expect(map.locator("svg[role=img]")).toBeVisible();
     await expect(
-        page.getByRole("button", { name: "Check in", exact: true }),
+        page.getByRole("button", { name: "Simpan absen masuk", exact: true }),
     ).toBeDisabled();
     expect(tiles).toBeGreaterThan(0);
     expect(
@@ -55,7 +57,9 @@ test("office preview keeps test master labeled and actual device fix separate", 
         accuracy: 3,
     });
     await page.goto("./");
-    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
     const map = page.getByRole("region", {
         name: "Preview peta Kantor Pusat",
         exact: true,
@@ -85,9 +89,7 @@ test("outlet check-in renders attributed road preview, zoom and scope reset with
     await page.goto("./");
     await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     const map = page.getByRole("region", {
         name: "Preview peta Toko Sinar Pagi",
@@ -147,9 +149,7 @@ test("denied outlet GPS labels fallback as simulation", async ({ page }) => {
             fail?.({ code: 1, message: "denied" } as GeolocationPositionError);
     });
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await page
         .getByRole("button", { name: "Perbarui lokasi outlet", exact: true })

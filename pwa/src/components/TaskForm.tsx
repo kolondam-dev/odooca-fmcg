@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Dialog } from "../ui/navigation";
+import { SheetHeader } from "../ui";
 import { useDialog } from "../ui/useDialog";
 import { ExpenseContextFields } from "./ExpenseContextFields";
 import { LocalDateInput } from "./LocalDateInput";
@@ -351,21 +352,14 @@ export function TaskForm({
                 aria-modal="true"
                 aria-labelledby="dialog-title"
             >
-                <header class="sheet-head">
-                    <div>
-                        <p class="eyebrow">{identity.name}</p>
-                        <h2 id="dialog-title">{title}</h2>
-                    </div>
-                    <button
-                        class="icon-button"
-                        type="button"
-                        onClick={close}
-                        aria-label="Tutup form"
-                        disabled={busy}
-                    >
-                        <Icon name="close" />
-                    </button>
-                </header>
+                <SheetHeader
+                    eyebrow={identity.name}
+                    title={title}
+                    titleId="dialog-title"
+                    onClose={close}
+                    closeLabel="Tutup form"
+                    closeDisabled={busy}
+                />
                 <form onSubmit={(e) => void send(e)}>
                     <div class="sheet-body">
                         {dialog.type === "order" && (
