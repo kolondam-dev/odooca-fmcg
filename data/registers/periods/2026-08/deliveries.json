@@ -311,7 +311,7 @@
     "do_number": "DO-202608-0045",
     "so_number": "SO-202608-0045",
     "scheduled_delivery_date": "2026-08-03",
-    "rejection_dpp": "7632000.00",
+    "rejection_dpp": "7418304.00",
     "customer": "CUST-GT-33 - Toko Malalayang Megah"
   },
   {
@@ -353,7 +353,7 @@
     "do_number": "DO-202608-0051",
     "so_number": "SO-202608-0051",
     "scheduled_delivery_date": "2026-08-04",
-    "rejection_dpp": "180000.00",
+    "rejection_dpp": "177840.00",
     "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan"
   },
   {
@@ -500,7 +500,7 @@
     "do_number": "DO-202608-0072",
     "so_number": "SO-202608-0072",
     "scheduled_delivery_date": "2026-08-04",
-    "rejection_dpp": "345600.00",
+    "rejection_dpp": "341452.80",
     "customer": "CUST-RTL-133 - Kios Ci Wanda Bawah Pohon"
   },
   {
@@ -577,7 +577,7 @@
     "do_number": "DO-202608-0083",
     "so_number": "SO-202608-0083",
     "scheduled_delivery_date": "2026-08-04",
-    "rejection_dpp": "4056000.00",
+    "rejection_dpp": "3865368.00",
     "customer": "CUST-MT-02 - Alfamiddii DC Manado"
   },
   {
@@ -605,7 +605,7 @@
     "do_number": "DO-202608-0087",
     "so_number": "SO-202608-0087",
     "scheduled_delivery_date": "2026-08-04",
-    "rejection_dpp": "4212000.00",
+    "rejection_dpp": "4094064.00",
     "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45"
   },
   {
@@ -696,7 +696,7 @@
     "do_number": "DO-202608-0100",
     "so_number": "SO-202608-0100",
     "scheduled_delivery_date": "2026-08-04",
-    "rejection_dpp": "1536000.00",
+    "rejection_dpp": "1511424.00",
     "customer": "CUST-GT-34 - Grosir Tikala Baru"
   },
   {
@@ -808,7 +808,7 @@
     "do_number": "DO-202608-0116",
     "so_number": "SO-202608-0116",
     "scheduled_delivery_date": "2026-08-05",
-    "rejection_dpp": "1680000.00",
+    "rejection_dpp": "1659840.00",
     "customer": "CUST-RTL-038 - Kios Gloria Utu Lorong 2"
   },
   {
@@ -885,7 +885,7 @@
     "do_number": "DO-202608-0127",
     "so_number": "SO-202608-0127",
     "scheduled_delivery_date": "2026-08-05",
-    "rejection_dpp": "792000.00",
+    "rejection_dpp": "782496.00",
     "customer": "CUST-RTL-086 - Warung Ronny Kompleks"
   },
   {
@@ -1214,7 +1214,7 @@
     "do_number": "DO-202608-0174",
     "so_number": "SO-202608-0174",
     "scheduled_delivery_date": "2026-08-06",
-    "rejection_dpp": "316800.00",
+    "rejection_dpp": "312998.40",
     "customer": "CUST-RTL-015 - Kios Ko Deasy Pasar"
   },
   {
@@ -1235,7 +1235,7 @@
     "do_number": "DO-202608-0177",
     "so_number": "SO-202608-0177",
     "scheduled_delivery_date": "2026-08-06",
-    "rejection_dpp": "882000.00",
+    "rejection_dpp": "871416.00",
     "customer": "CUST-RTL-039 - Warung Kasih Meyke Lorong 3"
   },
   {
@@ -1739,7 +1739,7 @@
     "do_number": "DO-202608-0249",
     "so_number": "SO-202608-0249",
     "scheduled_delivery_date": "2026-08-07",
-    "rejection_dpp": "1872000.00",
+    "rejection_dpp": "1849536.00",
     "customer": "CUST-RTL-088 - Kios Gloria Bobby Depan SD"
   },
   {
@@ -1767,7 +1767,7 @@
     "do_number": "DO-202608-0253",
     "so_number": "SO-202608-0253",
     "scheduled_delivery_date": "2026-08-07",
-    "rejection_dpp": "1275000.00",
+    "rejection_dpp": "1255875.00",
     "customer": "CUST-INST-04 - Katering Minahasa Indah"
   },
   {
@@ -2180,14 +2180,14 @@
     "do_number": "DO-202608-0312",
     "so_number": "SO-202608-0312",
     "scheduled_delivery_date": "2026-08-08",
-    "rejection_dpp": "1632000.00",
+    "rejection_dpp": "1563456.00",
     "customer": "CUST-MT-06 - MultiiMart Megamas Manado"
   },
   {
     "do_number": "DO-202608-0313",
     "so_number": "SO-202608-0313",
     "scheduled_delivery_date": "2026-08-08",
-    "rejection_dpp": "3600000.00",
+    "rejection_dpp": "3477600.00",
     "customer": "CUST-MT-06 - MultiiMart Megamas Manado"
   },
   {
@@ -2901,7 +2901,7 @@
     "do_number": "DO-202608-0415",
     "so_number": "SO-202608-0415",
     "scheduled_delivery_date": "2026-08-11",
-    "rejection_dpp": "1555200.00",
+    "rejection_dpp": "1502323.20",
     "customer": "CUST-MT-02 - Alfamiddii DC Manado"
   },
   {
@@ -3013,7 +3013,7 @@
     "do_number": "DO-202608-0431",
     "so_number": "SO-202608-0431",
     "scheduled_delivery_date": "2026-08-11",
-    "rejection_dpp": "1428000.00",
+    "rejection_dpp": "1405152.00",
     "customer": "CUST-GT-06 - Grosir Calaca Baru"
   },
   {
@@ -3125,14 +3125,14 @@
     "do_number": "DO-202608-0447",
     "so_number": "SO-202608-0447",
     "scheduled_delivery_date": "2026-08-12",
-    "rejection_dpp": "528000.00",
+    "rejection_dpp": "521664.00",
     "customer": "CUST-RTL-032 - Warung Om Toar Kompleks"
   },
   {
     "do_number": "DO-202608-0448",
     "so_number": "SO-202608-0448",
     "scheduled_delivery_date": "2026-08-12",
-    "rejection_dpp": "441600.00",
+    "rejection_dpp": "436300.80",
     "customer": "CUST-RTL-044 - Warung Tante Ritha Perempatan"
   },
   {
@@ -3272,14 +3272,14 @@
     "do_number": "DO-202608-0468",
     "so_number": "SO-202608-0468",
     "scheduled_delivery_date": "2026-08-12",
-    "rejection_dpp": "864000.00",
+    "rejection_dpp": "834624.00",
     "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45"
   },
   {
     "do_number": "DO-202608-0469",
     "so_number": "SO-202608-0469",
     "scheduled_delivery_date": "2026-08-12",
-    "rejection_dpp": "5928000.00",
+    "rejection_dpp": "5833152.00",
     "customer": "CUST-GT-07 - Toko Harapan Bersehati"
   },
   {
@@ -3328,7 +3328,7 @@
     "do_number": "DO-202608-0476",
     "so_number": "SO-202608-0476",
     "scheduled_delivery_date": "2026-08-12",
-    "rejection_dpp": "3520000.00",
+    "rejection_dpp": "3463680.00",
     "customer": "CUST-GT-10 - Toko Sario Makmur"
   },
   {
@@ -3510,7 +3510,7 @@
     "do_number": "DO-202608-0502",
     "so_number": "SO-202608-0502",
     "scheduled_delivery_date": "2026-08-13",
-    "rejection_dpp": "1584000.00",
+    "rejection_dpp": "1564992.00",
     "customer": "CUST-RTL-057 - Kios Berkat Nico Lorong 3"
   },
   {
@@ -3860,7 +3860,7 @@
     "do_number": "DO-202608-0552",
     "so_number": "SO-202608-0552",
     "scheduled_delivery_date": "2026-08-14",
-    "rejection_dpp": "312000.00",
+    "rejection_dpp": "300456.00",
     "customer": "CUST-RTL-070 - Kios Filadelfia Marietje Depan SD"
   },
   {
@@ -3951,7 +3951,7 @@
     "do_number": "DO-202608-0565",
     "so_number": "SO-202608-0565",
     "scheduled_delivery_date": "2026-08-14",
-    "rejection_dpp": "3974400.00",
+    "rejection_dpp": "3787603.20",
     "customer": "CUST-MT-05 - FreshhMart Express Tikala"
   },
   {
@@ -4007,7 +4007,7 @@
     "do_number": "DO-202608-0573",
     "so_number": "SO-202608-0573",
     "scheduled_delivery_date": "2026-08-14",
-    "rejection_dpp": "912000.00",
+    "rejection_dpp": "897408.00",
     "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea"
   },
   {
@@ -4133,7 +4133,7 @@
     "do_number": "DO-202608-0591",
     "so_number": "SO-202608-0591",
     "scheduled_delivery_date": "2026-08-14",
-    "rejection_dpp": "5760000.00",
+    "rejection_dpp": "5598720.00",
     "customer": "CUST-GT-48 - Toko Usaha Bersama Singkil"
   },
   {
@@ -4175,7 +4175,7 @@
     "do_number": "DO-202608-0597",
     "so_number": "SO-202608-0597",
     "scheduled_delivery_date": "2026-08-15",
-    "rejection_dpp": "400000.00",
+    "rejection_dpp": "385200.00",
     "customer": "CUST-RTL-023 - Kios Ci Vicky Pintu Masuk"
   },
   {
@@ -4371,7 +4371,7 @@
     "do_number": "DO-202608-0625",
     "so_number": "SO-202608-0625",
     "scheduled_delivery_date": "2026-08-15",
-    "rejection_dpp": "504000.00",
+    "rejection_dpp": "482832.00",
     "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung"
   },
   {
@@ -4595,7 +4595,7 @@
     "do_number": "DO-202608-0657",
     "so_number": "SO-202608-0657",
     "scheduled_delivery_date": "2026-08-18",
-    "rejection_dpp": "936000.00",
+    "rejection_dpp": "924768.00",
     "customer": "CUST-RTL-042 - Warung Om Ventje Ujung Lorong"
   },
   {
@@ -4910,7 +4910,7 @@
     "do_number": "DO-202608-0702",
     "so_number": "SO-202608-0702",
     "scheduled_delivery_date": "2026-08-19",
-    "rejection_dpp": "648000.00",
+    "rejection_dpp": "624024.00",
     "customer": "CUST-RTL-062 - Warung Om Stenly Perempatan"
   },
   {
@@ -5008,7 +5008,7 @@
     "do_number": "DO-202608-0716",
     "so_number": "SO-202608-0716",
     "scheduled_delivery_date": "2026-08-19",
-    "rejection_dpp": "1728000.00",
+    "rejection_dpp": "1646784.00",
     "customer": "CUST-MT-03 - FreshhMart Superstore Bahu"
   },
   {
@@ -5064,7 +5064,7 @@
     "do_number": "DO-202608-0724",
     "so_number": "SO-202608-0724",
     "scheduled_delivery_date": "2026-08-19",
-    "rejection_dpp": "1368000.00",
+    "rejection_dpp": "1346112.00",
     "customer": "CUST-GT-07 - Toko Harapan Bersehati"
   },
   {
@@ -5260,7 +5260,7 @@
     "do_number": "DO-202608-0752",
     "so_number": "SO-202608-0752",
     "scheduled_delivery_date": "2026-08-20",
-    "rejection_dpp": "972000.00",
+    "rejection_dpp": "960336.00",
     "customer": "CUST-RTL-027 - Kios Berkat Stenly Jalan Salib"
   },
   {
@@ -5435,7 +5435,7 @@
     "do_number": "DO-202608-0777",
     "so_number": "SO-202608-0777",
     "scheduled_delivery_date": "2026-08-20",
-    "rejection_dpp": "1260000.00",
+    "rejection_dpp": "1239840.00",
     "customer": "CUST-GT-11 - Grosir Krida Bahu"
   },
   {
@@ -5736,7 +5736,7 @@
     "do_number": "DO-202608-0820",
     "so_number": "SO-202608-0820",
     "scheduled_delivery_date": "2026-08-21",
-    "rejection_dpp": "252000.00",
+    "rejection_dpp": "248976.00",
     "customer": "CUST-RTL-100 - Kios Filadelfia Vera Pondok Damai"
   },
   {
@@ -5778,7 +5778,7 @@
     "do_number": "DO-202608-0826",
     "so_number": "SO-202608-0826",
     "scheduled_delivery_date": "2026-08-21",
-    "rejection_dpp": "4080000.00",
+    "rejection_dpp": "3990240.00",
     "customer": "CUST-MT-05 - FreshhMart Express Tikala"
   },
   {
@@ -5939,7 +5939,7 @@
     "do_number": "DO-202608-0849",
     "so_number": "SO-202608-0849",
     "scheduled_delivery_date": "2026-08-21",
-    "rejection_dpp": "1296000.00",
+    "rejection_dpp": "1275264.00",
     "customer": "CUST-GT-22 - Toko Winangun Berkat"
   },
   {
@@ -6275,7 +6275,7 @@
     "do_number": "DO-202608-0897",
     "so_number": "SO-202608-0897",
     "scheduled_delivery_date": "2026-08-22",
-    "rejection_dpp": "132000.00",
+    "rejection_dpp": "129888.00",
     "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang"
   },
   {
@@ -6765,7 +6765,7 @@
     "do_number": "DO-202608-0967",
     "so_number": "SO-202608-0967",
     "scheduled_delivery_date": "2026-08-26",
-    "rejection_dpp": "396000.00",
+    "rejection_dpp": "391248.00",
     "customer": "CUST-RTL-067 - Kios Berkat Toar Jembatan"
   },
   {
@@ -7164,7 +7164,7 @@
     "do_number": "DO-202608-1024",
     "so_number": "SO-202608-1024",
     "scheduled_delivery_date": "2026-08-27",
-    "rejection_dpp": "168000.00",
+    "rejection_dpp": "165480.00",
     "customer": "CUST-INST-08 - Restoran Nelayan Megamas"
   },
   {
@@ -7269,7 +7269,7 @@
     "do_number": "DO-202608-1039",
     "so_number": "SO-202608-1039",
     "scheduled_delivery_date": "2026-08-27",
-    "rejection_dpp": "972000.00",
+    "rejection_dpp": "956448.00",
     "customer": "CUST-GT-14 - Toko Batu Kota Indah"
   },
   {
@@ -7549,7 +7549,7 @@
     "do_number": "DO-202608-1079",
     "so_number": "SO-202608-1079",
     "scheduled_delivery_date": "2026-08-28",
-    "rejection_dpp": "8256000.00",
+    "rejection_dpp": "7975296.00",
     "customer": "CUST-MT-05 - FreshhMart Express Tikala"
   },
   {
@@ -7647,7 +7647,7 @@
     "do_number": "DO-202608-1093",
     "so_number": "SO-202608-1093",
     "scheduled_delivery_date": "2026-08-28",
-    "rejection_dpp": "324000.00",
+    "rejection_dpp": "318816.00",
     "customer": "CUST-GT-19 - Grosir Teling Sentosa Wanea"
   },
   {
@@ -7689,7 +7689,7 @@
     "do_number": "DO-202608-1099",
     "so_number": "SO-202608-1099",
     "scheduled_delivery_date": "2026-08-28",
-    "rejection_dpp": "672000.00",
+    "rejection_dpp": "661248.00",
     "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai"
   },
   {
@@ -7738,7 +7738,7 @@
     "do_number": "DO-202608-1106",
     "so_number": "SO-202608-1106",
     "scheduled_delivery_date": "2026-08-28",
-    "rejection_dpp": "1920000.00",
+    "rejection_dpp": "1889280.00",
     "customer": "CUST-GT-48 - Toko Usaha Bersama Singkil"
   },
   {
@@ -8270,7 +8270,7 @@
     "do_number": "DO-202608-1182",
     "so_number": "SO-202608-1182",
     "scheduled_delivery_date": "2026-08-31",
-    "rejection_dpp": "624000.00",
+    "rejection_dpp": "614016.00",
     "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki"
   },
   {
@@ -8557,7 +8557,7 @@
     "do_number": "DO-202608-1223",
     "so_number": "SO-202608-1223",
     "scheduled_delivery_date": "2026-09-01",
-    "rejection_dpp": "864000.00",
+    "rejection_dpp": "839808.00",
     "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
   },
   {

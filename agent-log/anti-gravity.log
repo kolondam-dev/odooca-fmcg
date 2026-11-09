@@ -2160,24 +2160,61 @@
 - scripts/ops/verify_finance_i2_ledgers_core.py: akun unaffected dibuat via company.with_company(company); penulisan code/name dan counterexample COA memakai with_company per perusahaan; verifikasi pembacaan code per perusahaan setelah penyelarasan; assert_fin51_combined_rows() mendefinisikan kontrak eksplisit: setiap akun yang diharapkan (termasuk baris nol) harus muncul tepat sekali, tanpa kode ekstra, dengan pesan missing/extra yang terbaca (bukan KeyError); angka akun non-nol tetap divalidasi ketat.
 - tests/test_finance_i2_ledgers_core.py: regresi baris nol (hadir, hilang, tertinggal di kode sistem '999999', nilai salah, kode duplikat) dan pelestarian baris nol oleh combine_trial_balances (31 tes PASS). Tidak ada perubahan kode produksi pada addon.
 - Task Managed by Agent VSCode at 2026-11-08T22:10:00+07:00
-[2026-11-09T07:37:05+07:00] [INFO] Perbaikan flakiness CI hari Minggu pada id_mobile_api dan race condition PWA offline reload
-- Menyelaraskan fixture id_mobile_api dengan mock tanggal kerja jika runner dieksekusi hari Minggu dan menambahkan tes regresi eksplisit untuk penolakan order/kunjungan pada hari Minggu
-- Membuat pembukaan koreksi OrderCorrections async dengan fallback pemulihan snapshot dari IndexedDB serta sinkronisasi aria-busy sesi kerja pada next-policy.spec.ts
-- Task Managed by Agent VSCode at 2026-11-09T07:37:05+07:00
-[2026-11-09T12:56:01+07:00] [INFO] PR101 & PR98: penyelarasan company context production FIN51 dan perbaikan readiness locator PWA
-- addons/id_finance_reporting/models/ledger_reports.py: memastikan unaffected earnings dipanggil via company.with_company(company).get_unaffected_earnings_account() agar pembuatan/pembacaan akun company-dependent tetap terikat ke target company context
-- scripts/ops/verify_finance_i2_ledgers_core.py & tests/test_finance_i2_ledgers_core.py: menambahkan tes regresi resolusi unaffected earnings untuk fresh company C saat default environment adalah company A
-- pwa/tests/browser/next-policy.spec.ts: mengganti assertion region Sesi kerja pasca reload dengan tombol navigasi Lainnya dan summary Riwayat SO yang selalu hadir di bottom nav
-- Task managed by antigravity-agent at 2026-11-09T12:56:01+07:00
+
 [2026-11-08T22:20:00+07:00] [INFO] PR98: cakupan perusahaan eksplisit pada rekonsiliasi live F0b
 - scripts/ops/seed_f0b_stock_reconcile_live.py: SQL live dibatasi sq.company_id = %(company_id)s (GROUP BY memuat company_id); --company-id wajib; check_company_row() fail-closed terhadap nama entitas kanonikal PT Salva Inti Mandiri; compare() menolak baris perusahaan lain atau tanpa company_id.
 - tests/test_seed_f0b_stock_reconcile.py: regresi kontaminasi dua perusahaan aktif memakai teks SQL produksi (sqlite minimal), penolakan lintas-perusahaan, validasi perusahaan; 11 tes PASS, 90 tes seed/state PASS.
 - Tidak ada eksekusi live, deploy, atau mutasi DB; hipotesis 15.000 karton tetap [BU].
 - Task Managed by Agent VSCode at 2026-11-08T22:20:00+07:00
+
 [2026-11-09T07:37:05+07:00] [INFO] Perbaikan flakiness CI hari Minggu pada id_mobile_api dan race condition PWA offline reload
 - Menyelaraskan fixture id_mobile_api dengan mock tanggal kerja jika runner dieksekusi hari Minggu dan menambahkan tes regresi eksplisit untuk penolakan order/kunjungan pada hari Minggu
 - Membuat pembukaan koreksi OrderCorrections async dengan fallback pemulihan snapshot dari IndexedDB serta sinkronisasi aria-busy sesi kerja pada next-policy.spec.ts
 - Task Managed by Agent VSCode at 2026-11-09T07:37:05+07:00
+
+[2026-11-09T12:56:01+07:00] [INFO] PR101 & PR98: penyelarasan company context production FIN51 dan perbaikan readiness locator PWA
+- addons/id_finance_reporting/models/ledger_reports.py: memastikan unaffected earnings dipanggil via company.with_company(company).get_unaffected_earnings_account() agar pembuatan/pembacaan akun company-dependent tetap terikat ke target company context
+- scripts/ops/verify_finance_i2_ledgers_core.py & tests/test_finance_i2_ledgers_core.py: menambahkan tes regresi resolusi unaffected earnings untuk fresh company C saat default environment adalah company A
+- pwa/tests/browser/next-policy.spec.ts: mengganti assertion region Sesi kerja pasca reload dengan tombol navigasi Lainnya dan summary Riwayat SO yang selalu hadir di bottom nav
+- Task managed by antigravity-agent at 2026-11-09T12:56:01+07:00
+
 [2026-11-09T13:47:04+07:00] [INFO] PR98: penyelarasan locator readiness browser PWA pasca offline reload
 - pwa/tests/browser/next-policy.spec.ts: mengganti assertion region Sesi kerja pada baris 155 dan 179 dengan tombol navigasi Lainnya dan summary Riwayat SO yang selalu hadir di bottom nav
 - Task managed by antigravity-agent at 2026-11-09T13:47:04+07:00
+
+[2026-11-09T19:15:00+07:00] [INFO] F2: Refinement Komersial, Pajak, Logistik, dan OPEX Pack Transaksi Agustus 2026
+- Diskon Komersial Bertingkat: Menerapkan cascading line discount per pricelist tier (MT 2.2%, GT 1.6%, INST 1.5%, RTL 1.2%) dipadu promo selektif joint MoU Mayora (+2.5%) dan Santos (+2.0%) serta volume tier Wings/Unilever (+1.2%). Agregat diskon Agustus terkunci presisi di 2.57% (pita otorisasi [2.00%, 3.20%]).
+- Delivery Rejection Netto Diskon & Keselarasan PWA: Memperbaiki formula potongan faktur agar dihitung netto (inv_dpp = so_net - line_net_rej) sehingga toko tidak menikmati diskon ganda saat menolak barang. Menyelaraskan skema penolakan POD dengan domain model PWA (rejection_reason: ITEM RUSAK / ITEM EXPIRED, evidence_photo_ref: /evidence/pod_rejection_carton_damaged.jpg).
+- Kepatuhan Pajak B2B Coretax/PER-03: Menambahkan customer_vat pada faktur (NPWP 16-digit untuk 94 outlet PKP dan 16-digit nol '0000000000000000' untuk 260 outlet Non-PKP), jenis faktur STANDAR, dan kode transaksi 04 (DPP Nilai Lain PMK 131/2024). Menambahkan ppn_amount (11%) dan total_with_ppn pada po_headers.
+- Logistik & Fleet Load Balancing: Menghasilkan tabel metrik logistik harian daily_logistics_metrics (144 entri) yang memetakan muatan, okupansi CBM, utilisasi, dan estimasi mileage untuk 6 armada delivery dan salesman PJP. Mengalokasikan biaya uang jalan ritase ke-2 L300 (Rp 100.000) spesifik pada hari kerja pengiriman di mana muatan > 5.4 CBM (supir Eko Prasetyo).
+- Proporsionalitas OPEX: Menambahkan servis berkala 6 armada bengkel resmi (Rp 18,5 Jt), retribusi KIR Dishub (Rp 600 rb), komisi/insentif sales PJP (Rp 12 Jt), dan administrasi kliring bank (Rp 1,2 Jt). Total entri OPEX naik menjadi 48 entri dengan saldo kas akhir tetap surplus sangat sehat (Rp 6,36 Miliar).
+- Tata Letak Gudang: Menambahkan metadata simulasi penempatan 1.287 palet pada seksi GD-MND/UTAMA (1.152 palet), GD-MND/STAGING (110 palet), dan GD-MND/BAD-STOCK (25 palet) di closing_state_20260831.json.
+- Verifikasi & Pengujian: 113 tes unit PASS (test_seed_planner + test_seed_v2_gates), 11 gerbang invariant strict=True PASS 0 violations, ruff check clean, check_manifests 12 addons OK.
+- Task managed by antigravity at 2026-11-09T19:15:00+07:00
+
+[2026-11-09T20:25:00+07:00] [INFO] F2: Sinkronisasi agen/seed-f2-august-refinement dengan main terbaru (54b2db1)
+- Integrasi Cabang: Melakukan merge origin/main (54b2db1: PR #98 F0b stock reconciliation, PR #101 Finance I2a core ledgers, PR #103 PWA POS) ke dalam cabang agen/seed-f2-august-refinement secara bersih tanpa force-push.
+- Resolusi Konflik: Mengonsolidasikan log agen dan handoff secara kronologis dan append-only.
+- Verifikasi Kontrak & Generator: Memverifikasi 113 tes unit PASS, ruff check clean, check_manifests 12 addon OK.
+- Regenerasi MANIFEST: Memperbarui MANIFEST.json untuk mengikat commit generator terbaru hasil merge (a31040c) dengan integritas LF SHA-256 seluruh berkas 100% identik.
+- Task managed by antigravity at 2026-11-09T20:25:00+07:00
+[2026-11-09T21:55:00+07:00] [INFO] F2: Resolusi Review Substantif PR #105 (PMK 131/2024, Coretax, Provenance Rejection)
+- P1 DPP Nilai Lain & PPN 12% (PMK 131/2024): Memisahkan nilai komersial netto (commercial_dpp) dari dasar pengenaan pajak faktur pajak (dpp_amount = 11/12 x commercial_dpp). Menetapkan tarif resmi undang-undang 12% (tax_rate: 0.12) dan PPN terutang ppn_amount = 12% x dpp_amount (efektif 11% dari nilai jual komersial), serta total faktur komersial total_invoice_with_ppn = commercial_dpp + ppn_amount. Menyelaraskan po_headers dan gate TAX-SOURCE di seed_v2_gates.py untuk memvalidasi aritmetika kode transaksi 04 secara presisi.
+- P2 Pemisahan Status PKP & Identitas Pembeli Coretax: Memisahkan status pengusaha kena pajak (is_pkp) dari tipe identitas perpajakan pembeli (buyer_id_type). Modern Trade, Institusi, dan GT badan usaha berstatus is_pkp=True dengan NPWP16 16 digit. Retail warung perorangan berstatus is_pkp=False dengan mayoritas NIK 16 digit Kota Manado (7171) dan sebagian kecil tanpa identitas TIN_0 ('0000000000000000').
+- P2 Provenance Rejection & Semantic Consistency: Mengeliminasi pola paritas artifisial ganjil-genap dan menggantinya dengan katalog insiden kausal deterministik (REJECTION_INCIDENT_CATALOG). Menambahkan kolom incident_batch_ref, evidence_type (ACTUAL, BATCH_REFERENCE, SYNTHETIC, NONE), dan evidence_photo_ref nullable. Tolakan kadaluwarsa Modern Trade (EXPIRY_DEKAT_DITOLAK) ditandai evidence_type: NONE dan referensi foto kosong (semantic consistency terjamin dan tidak berpura-pura lengkap).
+- Verifikasi Kontrak & Aritmetika: Menambahkan unit test aritmetika PMK 131/2024, Coretax identity separation, dan causality provenance rejection (114 unit test PASS dalam 23.2s). 11/11 gerbang invariant v2 PASS strict=True dengan 0 violations. ruff check clean, check_manifests 12 addons OK.
+- Task managed by antigravity at 2026-11-09T21:55:00+07:00
+
+[2026-11-10T00:15:00+07:00] [INFO] F2: Resolusi Tuntas Temuan P2 Supervisor PR #105 (Fixture Identitas Coretax & Verifiable Synthetic Evidence)
+- P2 Fixture Identitas Pembeli & Status PKP Deklaratif: Membuat data/registers/customer_tax_profile_fixture.json untuk 354 outlet (46 outlet PKP ber-NPWP16, 282 outlet Non-PKP ber-NIK test Manado 7171, 26 outlet Non-PKP TIN_0 '0000000000000000'). Memuat fixture ini langsung di seed_planner.py tanpa inferensi heuristik (is_company + channel_code), tanpa manipulasi string pemotongan vat[:16], tanpa rumus modulo idx % 10, dan tanpa pembuatan NIK algoritmik fiktif. Seluruh identitas non-produksi diberi penanda transparan tax_id_status: 'SYNTHETIC_TEST_IDENTITY' (atau 'UNREGISTERED_ZERO_IDENTITY' untuk TIN 0).
+- P2 Provenance Rejection & Keberadaan Bukti Fisik: Mengganti seluruh referensi path gambar fiktif (/evidence/*) dengan berkas bukti fisik valid di git tree (data/evidence/pod_synthetic_carton_damage.jpg dan data/evidence/pod_synthetic_seal_leak.jpg). Mengeliminasi klaim ACTUAL/BAP palsu; seluruh penolakan bertanda jujur SYNTHETIC atau NONE (tolakan administratif expiry Modern Trade tanpa foto).
+- Transparansi Manifest Pajak: Mengonfigurasi statutory_rate: '0.12', dpp_factor: '11/12', effective_rate: '0.11', dan rate: '0.11' secara eksplisit di MANIFEST.json.
+- Verifikasi & Integritas: 114 unit test PASS (test_seed_planner + test_seed_v2_gates) termasuk asersi keberadaan berkas fisik foto bukti di disk dan keselarasan 100% profil pajak invoice terhadap fixture; 11 gerbang invariant v2 PASS (strict=True, 0 violations); ruff check clean; check_manifests 12 addons OK; verify_seed_invariants PASS; verify_seed_acceptance PASS.
+- Task managed by antigravity at 2026-11-10T00:15:00+07:00
+[2026-11-10T02:40:00+07:00] [INFO] F2: Penutupan Celah Fail-Open TAX-SOURCE Kode 04 & Sinkronisasi origin/main (6ff44a7: PR #107)
+- P2 Penutupan Celah Fail-Open TAX-SOURCE: Memodifikasi scripts/ops/seed_v2_gates.py pada _check_tax() sehingga jika tax_code == '04', field commercial_dpp wajib ada, tidak boleh blank, harus numerik valid, finite, dan >= 0. Jika tidak memenuhi syarat, langsung memicu kegagalan TAX-SOURCE dan melarang jatuh (fall through) ke cabang else standar/legacy.
+- Pengujian Mutasi & Regresi: Menambahkan 8 test baru di tests/test_seed_v2_gates.py (total 122 tests PASS), termasuk kasus missing commercial_dpp dan blank commercial_dpp yang angkanya sengaja diselaraskan dengan rumus legacy, membuktikan bahwa kode transaksi 04 tetap ditolak keras tanpa lolos ke jalur legacy.
+- Sinkronisasi origin/main: Menggabungkan origin/main terbaru (6ff44a7 PR #107 partner-slice coverage) secara bersih tanpa force-push.
+- Regenerasi MANIFEST: Memperbarui MANIFEST.json untuk mengikat generator commit a63c612 dan hash baru scripts/ops/seed_v2_gates.py.
+- Verifikasi Penuh: 122 tests PASS, 11 gates PASS (strict=True, 0 violations), verify_seed_invariants PASS, verify_seed_acceptance PASS, ruff check clean, check_manifests 12 addons OK.
+- Task managed by antigravity at 2026-11-10T02:40:00+07:00

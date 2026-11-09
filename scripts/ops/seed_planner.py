@@ -31,6 +31,7 @@ import datetime as dt
 from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 from io import StringIO
+import json
 from pathlib import Path
 import random
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -54,6 +55,47 @@ DAY_NAMES = {
     5: "Sabtu",
     6: "Minggu",
 }
+
+# Fixture Katalog Penolakan Pengiriman Simulasi (Synthetic Rejection Fixture)
+# Menjamin integritas provenance: seluruh metadata ditandai secara eksplisit sebagai SYNTHETIC
+# simulasi atau NONE bila tanpa foto. File bukti tersedia secara fisik di repository (data/evidence/).
+SYNTHETIC_REJECTION_FIXTURE = {
+    "CARTON_DAMAGE": {
+        "reason": "KEMASAN_RUSAK_TRANSIT",
+        "evidence_type": "SYNTHETIC",
+        "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg",
+        "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+        "desc": "Simulasi kardus penyok saat handling pengiriman (Synthetic Fixture)",
+    },
+    "SEAL_LEAK": {
+        "reason": "SEGEL_PABRIK_BOCOR",
+        "evidence_type": "SYNTHETIC",
+        "evidence_photo_ref": "data/evidence/pod_synthetic_seal_leak.jpg",
+        "incident_batch_ref": "SIM-INC-202608-LEAK",
+        "desc": "Simulasi kebocoran segel botol/kemasan cairan produk prinsipal (Synthetic Fixture)",
+    },
+    "SLA_EXPIRY": {
+        "reason": "EXPIRY_DEKAT_DITOLAK",
+        "evidence_type": "NONE",
+        "evidence_photo_ref": "",
+        "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+        "desc": "Penolakan administratif SLA umur simpan outlet modern trade tanpa dokumentasi foto fisik",
+    },
+}
+
+
+def resolve_rejection_incident(sku: str, lot: str, ch: str, vehicle_plate: str) -> Dict[str, Any]:
+    """Menentukan insiden penolakan dari katalog fixture simulasi secara konsisten."""
+    # 1. Modern Trade (MT) memiliki kebijakan ketat SLA umur simpan (penolakan administratif tanpa foto fisik)
+    if ch == "MT":
+        return SYNTHETIC_REJECTION_FIXTURE["SLA_EXPIRY"]
+
+    # 2. Produk cairan / botol / RTD yang rentan kebocoran segel
+    if any(k in sku for k in ("KAPAL", "ABC", "WINGS", "SNT", "MYR-BVR")):
+        return SYNTHETIC_REJECTION_FIXTURE["SEAL_LEAK"]
+
+    # 3. Default: simulasi kerusakan kardus transit
+    return SYNTHETIC_REJECTION_FIXTURE["CARTON_DAMAGE"]
 
 
 def _dec(val: Any) -> Decimal:
@@ -150,15 +192,42 @@ class SeedPlanner:
             r["unit_price_dec"] = _dec(r["list_price"])
             r["carton_cost_dec"] = r["unit_cost_dec"] * r["carton_qty_int"]
             r["carton_price_dec"] = r["unit_price_dec"] * r["carton_qty_int"]
+            r["carton_volume_cbm"] = _dec(r.get("carton_volume_cbm") or "0.05")
+            r["carton_weight_kg"] = _dec(r.get("carton_weight_kg") or "10.0")
         return rows
 
     def _load_customers(self) -> List[Dict[str, Any]]:
         path = self.reg_dir / "customer_registry_354.csv"
         raw = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         rows = list(csv.DictReader(StringIO(raw.decode("utf-8-sig"))))
-        for r in rows:
+
+        # Muat fixture profil identitas perpajakan eksplisit (Coretax Synthetic Identity Fixture)
+        # Menjamin: status PKP, tipe identitas, dan ID pembeli terikat deklaratif pada fixture terpisah,
+        # tanpa mengubah hash fingerprinted customer_registry_354.csv dan tanpa inferensi algoritmik fiktif.
+        tax_fixture_path = self.reg_dir / "customer_tax_profile_fixture.json"
+        tax_profiles = {}
+        if tax_fixture_path.exists():
+            tax_profiles = json.loads(tax_fixture_path.read_text(encoding="utf-8"))
+
+        for idx, r in enumerate(rows):
             r["credit_limit_dec"] = _dec(r.get("credit_limit") or "0")
             r["payment_term_days_int"] = int(r.get("payment_term_days") or "0")
+            ref = r.get("ref", "")
+
+            if ref in tax_profiles:
+                prof = tax_profiles[ref]
+                r["is_pkp"] = bool(prof["is_pkp"])
+                r["buyer_id_type"] = str(prof["buyer_id_type"])
+                r["customer_tax_id"] = str(prof["customer_tax_id"])
+                r["customer_vat"] = str(prof["customer_tax_id"])
+                r["tax_id_status"] = str(prof.get("tax_id_status", "SYNTHETIC_TEST_IDENTITY"))
+            else:
+                # Fallback deterministik murni bertanda SYNTHETIC_TEST_IDENTITY
+                r["is_pkp"] = False
+                r["buyer_id_type"] = "TIN_0"
+                r["customer_tax_id"] = "0000000000000000"
+                r["customer_vat"] = "0000000000000000"
+                r["tax_id_status"] = "SYNTHETIC_TEST_IDENTITY"
         return rows
 
     def _load_lot_metadata(self) -> Dict[Tuple[str, str], Dict[str, Any]]:
@@ -360,6 +429,13 @@ class SeedPlanner:
         # Antrean DO dan PO terjadwal di dalam pack
         scheduled_deliveries: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
         scheduled_po_arrivals: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        so_lookup: Dict[str, Dict[str, Any]] = {}
+        daily_vehicle_load: Dict[str, Dict[str, Dict[str, Any]]] = defaultdict(lambda: defaultdict(lambda: {
+            "orders": 0,
+            "cartons": Decimal("0"),
+            "weight_kg": Decimal("0"),
+            "volume_cbm": Decimal("0"),
+        }))
 
         # 6. Eksekusi Pengiriman Carry-Forward DOs pada Hari Kerja Pertama
         carry_lines = self._load_carry_forward_lines(opening_state_dict)
@@ -471,9 +547,10 @@ class SeedPlanner:
                     so_num = deliv["so_number"]
                     cust_code = deliv["customer_code"]
                     cust_info = self.cust_map[cust_code]
+                    so_info = so_lookup[so_num]
 
                     gross_dpp = Decimal("0")
-                    rej_dpp = Decimal("0")
+                    rej_net_dpp = Decimal("0")
 
                     for item in deliv["items"]:
                         sku = item["sku_code"]
@@ -481,6 +558,8 @@ class SeedPlanner:
                         qty = item["qty"]
                         c_price = item["carton_price_dpp"]
                         line_gross = qty * c_price
+                        line_disc = item.get("discount_dpp", Decimal("0"))
+                        line_net_rej = line_gross - line_disc
                         gross_dpp += line_gross
 
                         # Kurangi reserved dan physical
@@ -500,11 +579,17 @@ class SeedPlanner:
                                 lot_e["reserved"] -= qty
                                 break
 
-                        # Uji Rejection (Tolakan)
+                        # Uji Rejection (Tolakan Pengiriman dihitung Netto Diskon)
                         if item.get("is_rejected"):
-                            rej_dpp += line_gross
+                            rej_net_dpp += line_net_rej
                             rej_seq += 1
                             rej_id = f"REJ-{ym_str}-{rej_seq:03d}"
+                            inc = resolve_rejection_incident(
+                                sku,
+                                lot,
+                                cust_info.get("channel_code", ""),
+                                cust_info.get("delivery_vehicle", ""),
+                            )
                             rejections.append({
                                 "rejection_id": rej_id,
                                 "rejection_date": d_str,
@@ -513,7 +598,13 @@ class SeedPlanner:
                                 "sku_code": sku,
                                 "lot_number": lot,
                                 "qty_cartons": str(qty),
-                                "rejection_dpp": _q(line_gross),
+                                "line_gross_dpp": _q(line_gross),
+                                "line_disc_dpp": _q(line_disc),
+                                "rejection_dpp": _q(line_net_rej),
+                                "rejection_reason": inc["reason"],
+                                "incident_batch_ref": inc["incident_batch_ref"],
+                                "evidence_type": inc["evidence_type"],
+                                "evidence_photo_ref": inc["evidence_photo_ref"] or "",
                             })
                             evt_seq += 1
                             stock_events.append({
@@ -534,16 +625,19 @@ class SeedPlanner:
                         "do_number": do_num,
                         "so_number": so_num,
                         "scheduled_delivery_date": d_str,
-                        "rejection_dpp": _q(rej_dpp),
+                        "rejection_dpp": _q(rej_net_dpp),
                         "customer": f"{cust_code} - {cust_info['name']}",
                     })
 
-                    # Cetak Faktur Komersial (net of rejection)
+                    # Cetak Faktur Komersial (net of rejection & net of discount)
+                    # Sesuai PMK 131/2024: DPP Nilai Lain = 11/12 x Nilai Jual Komersial Netto, PPN 12%
                     inv_seq += 1
                     inv_num = f"INV-{ym_str}-{inv_seq:04d}"
-                    inv_dpp = gross_dpp - rej_dpp
-                    ppn = (inv_dpp * self.config.tax_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
-                    inv_total = inv_dpp + ppn
+                    inv_comm_dpp = so_info["net_dpp"] - rej_net_dpp
+                    inv_tax_base = (inv_comm_dpp * Decimal(11) / Decimal(12)).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                    statutory_rate = Decimal("0.12")
+                    ppn = (inv_tax_base * statutory_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                    inv_total = inv_comm_dpp + ppn
 
                     top_days = cust_info["payment_term_days_int"]
                     due_date = curr_dt + dt.timedelta(days=top_days)
@@ -556,10 +650,19 @@ class SeedPlanner:
                         "date_invoice": d_str,
                         "due_date": due_date_str,
                         "payment_term_days": str(top_days),
-                        "dpp_amount": _q(inv_dpp),
+                        "commercial_dpp": _q(inv_comm_dpp),
+                        "dpp_amount": _q(inv_tax_base),
+                        "tax_rate": "0.12",
                         "ppn_amount": _q(ppn),
                         "total_invoice_with_ppn": _q(inv_total),
                         "customer": f"{cust_code} - {cust_info['name']}",
+                        "is_pkp": str(cust_info["is_pkp"]),
+                        "buyer_id_type": cust_info["buyer_id_type"],
+                        "customer_tax_id": cust_info["customer_tax_id"],
+                        "customer_vat": cust_info["customer_vat"],
+                        "tax_id_status": cust_info.get("tax_id_status", "SYNTHETIC_TEST_IDENTITY"),
+                        "tax_invoice_type": "DPP_NILAI_LAIN",
+                        "tax_code": "04",
                     })
 
                     open_invoices[inv_num] = {
@@ -567,7 +670,8 @@ class SeedPlanner:
                         "date_invoice": d_str,
                         "due_date": due_date_str,
                         "customer": f"{cust_code} - {cust_info['name']}",
-                        "dpp_amount": inv_dpp,
+                        "commercial_dpp": inv_comm_dpp,
+                        "dpp_amount": inv_tax_base,
                         "total_with_ppn": inv_total,
                         "source": "august_current",
                     }
@@ -686,6 +790,8 @@ class SeedPlanner:
                             "carton_price_dpp": c_price,
                             "carton_cost_dec": c_cost,
                             "unit_cost_dec": p["unit_cost_dec"],
+                            "carton_volume_cbm": p["carton_volume_cbm"],
+                            "carton_weight_kg": p["carton_weight_kg"],
                         })
                         if rem == 0:
                             break
@@ -703,24 +809,50 @@ class SeedPlanner:
                     so_num = f"SO-{ym_str}-{so_seq:04d}"
                     do_num = f"DO-{ym_str}-{do_seq:04d}"
 
-                    gross = sum((it["qty"] * it["carton_price_dpp"]) for it in items)
-                    # Diskon ~2.5%
-                    disc_rate = self.config.target_discount_pct / Decimal("100")
-                    disc_dpp = (gross * disc_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
-                    net_dpp = gross - disc_dpp
+                    # Hitung line discount deterministik berbasis pricelist tier & selektif promo
+                    base_ch_disc = {
+                        "MT": Decimal("2.20"),
+                        "GT": Decimal("1.60"),
+                        "INST": Decimal("1.50"),
+                        "RTL": Decimal("1.20"),
+                    }
+                    base_pct = base_ch_disc.get(ch, Decimal("1.00"))
 
-                    sales_orders.append({
-                        "so_number": so_num,
-                        "date_order": d_str,
-                        "customer": f"{cust_ref} - {c['name']}",
-                        "gross_dpp": _q(gross),
-                        "discount_dpp": _q(disc_dpp),
-                        "net_dpp": _q(net_dpp),
-                    })
+                    total_so_gross = Decimal("0")
+                    total_so_disc = Decimal("0")
 
                     for it in items:
                         line_gross = it["qty"] * it["carton_price_dpp"]
                         line_cogs = it["qty"] * it["carton_cost_dec"]
+
+                        pct = base_pct
+                        h = deterministic_seed(str(self.config.seed), "promo_line_v4", so_num, it["sku_code"])
+                        promo_id = ""
+                        prin_code = it["principal_code"]
+                        if ("MAYORA" in prin_code or "003" in prin_code) and (h % 100 < 35):
+                            pct += Decimal("2.50")
+                            promo_id = "PROMO-2026-MAYORA-FMCG"
+                        elif ("SANTOS" in prin_code or "002" in prin_code) and (h % 100 < 30):
+                            pct += Decimal("2.00")
+                            promo_id = "PROMO-2026-SANTOS-KOPI"
+                        elif ("WINGS" in prin_code or "004" in prin_code) and it["qty"] >= 10:
+                            pct += Decimal("1.20")
+                            promo_id = "TIER-VOL-WINGS-10"
+                        elif ("UNILEVER" in prin_code or "001" in prin_code) and it["qty"] >= 8:
+                            pct += Decimal("1.20")
+                            promo_id = "TIER-VOL-UNILEVER-8"
+
+                        line_disc = (line_gross * pct / Decimal("100")).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                        line_net = line_gross - line_disc
+
+                        it["discount_pct"] = pct
+                        it["discount_dpp"] = line_disc
+                        it["line_net_dpp"] = line_net
+                        it["promo_id"] = promo_id
+
+                        total_so_gross += line_gross
+                        total_so_disc += line_disc
+
                         order_lines.append({
                             "so_number": so_num,
                             "date_order": d_str,
@@ -733,10 +865,40 @@ class SeedPlanner:
                             "unit_price_dpp": _q(it["unit_price_dpp"]),
                             "carton_price_dpp": _q(it["carton_price_dpp"]),
                             "line_subtotal_dpp": _q(line_gross),
+                            "discount_pct": _q(pct),
+                            "discount_dpp": _q(line_disc),
+                            "line_net_dpp": _q(line_net),
+                            "promo_id": promo_id,
                             "cogs_subtotal": _q(line_cogs),
                             "lot_number": it["lot_number"],
                             "unit_cost": _q(it["unit_cost_dec"]),
                         })
+
+                    total_so_net = total_so_gross - total_so_disc
+
+                    sales_orders.append({
+                        "so_number": so_num,
+                        "date_order": d_str,
+                        "customer": f"{cust_ref} - {c['name']}",
+                        "gross_dpp": _q(total_so_gross),
+                        "discount_dpp": _q(total_so_disc),
+                        "net_dpp": _q(total_so_net),
+                    })
+
+                    so_lookup[so_num] = {
+                        "gross_dpp": total_so_gross,
+                        "discount_dpp": total_so_disc,
+                        "net_dpp": total_so_net,
+                    }
+
+                    # Catat muatan armada pengiriman untuk load balancing & metrik
+                    deliv_veh_raw = c.get("delivery_vehicle") or "DB 8234 QX (Gran Max Box)"
+                    veh_plate = deliv_veh_raw.split(" (")[0]
+                    daily_vehicle_load[deliv_dt_str][veh_plate]["orders"] += 1
+                    for it in items:
+                        daily_vehicle_load[deliv_dt_str][veh_plate]["cartons"] += it["qty"]
+                        daily_vehicle_load[deliv_dt_str][veh_plate]["weight_kg"] += it["qty"] * it["carton_weight_kg"]
+                        daily_vehicle_load[deliv_dt_str][veh_plate]["volume_cbm"] += it["qty"] * it["carton_volume_cbm"]
 
                     # Uji peluang tolakan (~2.4% target nilai tolakan terhadap gross)
                     rej_rng = random.Random(deterministic_seed(str(self.config.seed), "rejection", do_num))
@@ -807,6 +969,10 @@ class SeedPlanner:
                         po_lines.append(pl_entry)
                         po_lines_batch.append(pl_entry)
 
+                    po_tax_base = (po_tot_dpp * Decimal(11) / Decimal(12)).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                    po_ppn = (po_tax_base * Decimal("0.12")).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                    po_total_with_ppn = po_tot_dpp + po_ppn
+
                     po_headers.append({
                         "po_number": po_num,
                         "principal_code": prin,
@@ -816,7 +982,13 @@ class SeedPlanner:
                         "due_date": po_due_str,
                         "rop_trigger_date": d_str,
                         "rop_cover_days": "14",
+                        "commercial_dpp": _q(po_tot_dpp),
                         "total_dpp": _q(po_tot_dpp),
+                        "tax_dpp": _q(po_tax_base),
+                        "tax_code": "04",
+                        "tax_rate": "0.12",
+                        "ppn_amount": _q(po_ppn),
+                        "total_with_ppn": _q(po_total_with_ppn),
                     })
 
                     # Daftarkan jadwal kedatangan
@@ -879,8 +1051,18 @@ class SeedPlanner:
                 "date": d_str,
                 "amount": "3200000.00",
                 "category": "Logistik Rutin",
-                "description": f"BBM Solar 6 Armada, Uang Jalan Ritase, Tol & Retribusi Pengiriman {d_str}",
+                "description": f"BBM Solar 6 Armada, Tol & Retribusi Pengiriman {d_str}",
             })
+
+            # 1b. Uang jalan ritase ke-2 armada yang over-capacity (> 5.4 CBM untuk L300 FB DB 8456 FB)
+            l300_vol = daily_vehicle_load.get(d_str, {}).get("DB 8456 FB", {}).get("volume_cbm", ZERO)
+            if l300_vol > Decimal("5.40"):
+                opex.append({
+                    "date": d_str,
+                    "amount": "100000.00",
+                    "category": "Uang Jalan Ritase",
+                    "description": f"Uang jalan ritase ke-2 pengiriman Manado Barat - Mitsubishi L300 FB DB 8456 FB (Driver: Eko Prasetyo, volume {_q(l300_vol)} CBM)",
+                })
 
             # 2. Sewa & Utilitas pada awal bulan
             if curr_dt == first_workday:
@@ -891,6 +1073,24 @@ class SeedPlanner:
                     "description": f"Sewa Gudang Maumbi, Listrik PLN, Air PDAM, Internet Fiber {ym_str}",
                 })
 
+            # 2b. Servis Rutin Berkala & Ganti Oli 6 Armada Bengkel Resmi pada pertengahan bulan
+            if curr_dt.day == 15:
+                opex.append({
+                    "date": d_str,
+                    "amount": "18500000.00",
+                    "category": "Pemeliharaan Armada",
+                    "description": f"Servis berkala & ganti oli mesin/transmisi 6 armada logistik bengkel resmi Manado {ym_str}",
+                })
+
+            # 2c. Uji Berkala KIR Armada Dishub Kota Manado
+            if curr_dt.day == 18:
+                opex.append({
+                    "date": d_str,
+                    "amount": "600000.00",
+                    "category": "Perizinan & Regulasi",
+                    "description": "Biaya retribusi uji berkala KIR Dishub Kota Manado Mitsubishi L300 FB DB 8456 FB",
+                })
+
             # 3. Payroll Karyawan pada tanggal 28 (atau hari kerja terdekat)
             if curr_dt.day == 28:
                 opex.append({
@@ -898,6 +1098,22 @@ class SeedPlanner:
                     "amount": "145000000.00",
                     "category": "Payroll Karyawan",
                     "description": f"Payroll Gaji 24 Personel Gudang & Logistik {ym_str}",
+                })
+                # 3b. Insentif & Komisi Sales Lapangan atas pencapaian target kunjungan PJP
+                opex.append({
+                    "date": d_str,
+                    "amount": "12000000.00",
+                    "category": "Komisi & Insentif",
+                    "description": f"Insentif & komisi penjualan salesman lapangan PJP periode {ym_str}",
+                })
+
+            # 4. Administrasi & Kliring Bank Operasional pada akhir bulan
+            if curr_dt.day == 31:
+                opex.append({
+                    "date": d_str,
+                    "amount": "1200000.00",
+                    "category": "Administrasi Bank",
+                    "description": f"Biaya administrasi rekening giro operasional dan kliring SKN/BI-FAST Bank Mandiri {ym_str}",
                 })
 
             curr_dt += dt.timedelta(days=1)
@@ -913,21 +1129,30 @@ class SeedPlanner:
                 so_num = deliv["so_number"]
                 cust_code = deliv["customer_code"]
                 cust_info = self.cust_map[cust_code]
+                so_info = so_lookup[so_num]
 
                 gross_dpp = Decimal("0")
-                rej_dpp = Decimal("0")
+                rej_net_dpp = Decimal("0")
 
                 for item in deliv["items"]:
                     qty = item["qty"]
                     c_price = item["carton_price_dpp"]
                     line_gross = qty * c_price
+                    line_disc = item.get("discount_dpp", Decimal("0"))
+                    line_net_rej = line_gross - line_disc
                     gross_dpp += line_gross
 
                     is_rej = bool(item.get("is_rejected", False))
                     if is_rej:
-                        rej_dpp += line_gross
+                        rej_net_dpp += line_net_rej
                         rej_seq += 1
                         rej_id = f"REJ-{ym_str}-{rej_seq:03d}"
+                        inc = resolve_rejection_incident(
+                            item["sku_code"],
+                            item["lot_number"],
+                            cust_info.get("channel_code", ""),
+                            cust_info.get("delivery_vehicle", ""),
+                        )
                         rejections.append({
                             "rejection_id": rej_id,
                             "rejection_date": follow_day_str,
@@ -936,7 +1161,13 @@ class SeedPlanner:
                             "sku_code": item["sku_code"],
                             "lot_number": item["lot_number"],
                             "qty_cartons": str(qty),
-                            "rejection_dpp": _q(line_gross),
+                            "line_gross_dpp": _q(line_gross),
+                            "line_disc_dpp": _q(line_disc),
+                            "rejection_dpp": _q(line_net_rej),
+                            "rejection_reason": inc["reason"],
+                            "incident_batch_ref": inc["incident_batch_ref"],
+                            "evidence_type": inc["evidence_type"],
+                            "evidence_photo_ref": inc["evidence_photo_ref"] or "",
                         })
 
                     carry_forward_lines.append({
@@ -947,22 +1178,24 @@ class SeedPlanner:
                         "qty_cartons": str(qty),
                         "unit_cost_price": str(item.get("unit_cost_dec", "0")),
                         "is_rejected": is_rej,
-                        "rejection_dpp": _q(line_gross) if is_rej else "0.00",
+                        "rejection_dpp": _q(line_net_rej) if is_rej else "0.00",
                     })
 
                 deliveries.append({
                     "do_number": do_num,
                     "so_number": so_num,
                     "scheduled_delivery_date": follow_day_str,
-                    "rejection_dpp": _q(rej_dpp),
+                    "rejection_dpp": _q(rej_net_dpp),
                     "customer": f"{cust_code} - {cust_info['name']}",
                 })
 
                 inv_seq += 1
                 inv_num = f"INV-{ym_str}-{inv_seq:04d}"
-                inv_dpp = gross_dpp - rej_dpp
-                ppn = (inv_dpp * self.config.tax_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
-                inv_total = inv_dpp + ppn
+                inv_comm_dpp = so_info["net_dpp"] - rej_net_dpp
+                inv_tax_base = (inv_comm_dpp * Decimal(11) / Decimal(12)).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                statutory_rate = Decimal("0.12")
+                ppn = (inv_tax_base * statutory_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                inv_total = inv_comm_dpp + ppn
 
                 top_days = cust_info["payment_term_days_int"]
                 due_date = follow_day + dt.timedelta(days=top_days)
@@ -975,10 +1208,19 @@ class SeedPlanner:
                     "date_invoice": follow_day_str,
                     "due_date": due_date_str,
                     "payment_term_days": str(top_days),
-                    "dpp_amount": _q(inv_dpp),
+                    "commercial_dpp": _q(inv_comm_dpp),
+                    "dpp_amount": _q(inv_tax_base),
+                    "tax_rate": "0.12",
                     "ppn_amount": _q(ppn),
                     "total_invoice_with_ppn": _q(inv_total),
                     "customer": f"{cust_code} - {cust_info['name']}",
+                    "is_pkp": str(cust_info["is_pkp"]),
+                    "buyer_id_type": cust_info["buyer_id_type"],
+                    "customer_tax_id": cust_info["customer_tax_id"],
+                    "customer_vat": cust_info["customer_vat"],
+                    "tax_id_status": cust_info.get("tax_id_status", "SYNTHETIC_TEST_IDENTITY"),
+                    "tax_invoice_type": "DPP_NILAI_LAIN",
+                    "tax_code": "04",
                 })
 
         # -------------------------------------------------------------
@@ -992,6 +1234,55 @@ class SeedPlanner:
         disc_pct = (tot_disc_dpp / tot_gross_dpp * Decimal("100")).quantize(ONE_CENT, rounding=ROUND_HALF_UP) if tot_gross_dpp > 0 else ZERO
         rej_pct = (tot_rej_dpp / tot_gross_dpp * Decimal("100")).quantize(ONE_CENT, rounding=ROUND_HALF_UP) if tot_gross_dpp > 0 else ZERO
         active_outlets = len({r["customer"].split(" - ")[0] for r in sales_orders})
+
+        # Kompilasi tabel metrik logistik & ritase armada harian
+        vehicle_meta = {
+            "DB 8345 MK": {"name": "Mitsubishi Canter CDD", "driver": "Meidy Palit", "capacity_cbm": Decimal("16.00"), "capacity_kg": Decimal("4000.00"), "route": "Modern Trade & Key Accounts"},
+            "DB 8456 FB": {"name": "Mitsubishi L300 FB", "driver": "Eko Prasetyo", "capacity_cbm": Decimal("5.40"), "capacity_kg": Decimal("1250.00"), "route": "Manado Barat & Sario"},
+            "DB 8567 TR": {"name": "Isuzu Traga Pick Up", "driver": "Stenly Sumampouw", "capacity_cbm": Decimal("6.80"), "capacity_kg": Decimal("1500.00"), "route": "Manado Selatan & Malalayang"},
+            "DB 8234 QX": {"name": "Daihatsu Gran Max Box", "driver": "Jemmy Rondonuwu", "capacity_cbm": Decimal("4.20"), "capacity_kg": Decimal("1000.00"), "route": "Manado Timur & Tikala"},
+            "DB 8123 QA": {"name": "Daihatsu Gran Max BV", "driver": "Hendra Tendean", "capacity_cbm": Decimal("4.20"), "capacity_kg": Decimal("1000.00"), "route": "Manado Utara & Tuminting"},
+            "DB 8910 TK": {"name": "Isuzu Elf NLR 55", "driver": "Michael Pangemanan", "capacity_cbm": Decimal("8.50"), "capacity_kg": Decimal("2500.00"), "route": "Luar Kota Minahasa & Bitung"},
+        }
+
+        daily_logistics_metrics: List[Dict[str, str]] = []
+        for date_k in sorted(daily_vehicle_load.keys()):
+            for plate, meta in sorted(vehicle_meta.items()):
+                load = daily_vehicle_load[date_k].get(plate, {"orders": 0, "cartons": ZERO, "weight_kg": ZERO, "volume_cbm": ZERO})
+                orders = load["orders"]
+                cartons = load["cartons"]
+                weight_kg = load["weight_kg"]
+                volume_cbm = load["volume_cbm"]
+                cap_cbm = meta["capacity_cbm"]
+                util_pct = (volume_cbm / cap_cbm * Decimal("100")).quantize(ONE_CENT, rounding=ROUND_HALF_UP) if cap_cbm > ZERO else ZERO
+                ritase_count = 2 if volume_cbm > cap_cbm else (1 if orders > 0 else 0)
+
+                # Mileage harian
+                if orders == 0:
+                    mileage = Decimal("0.0")
+                elif plate == "DB 8910 TK":
+                    mileage = Decimal("95.0") + (Decimal(str(orders)) * Decimal("1.5"))
+                elif ritase_count == 2:
+                    mileage = Decimal("45.0") + (Decimal(str(orders)) * Decimal("2.0")) + Decimal("25.0")
+                else:
+                    mileage = Decimal("40.0") + (Decimal(str(orders)) * Decimal("2.0"))
+
+                daily_logistics_metrics.append({
+                    "date": date_k,
+                    "entity_type": "ARMADA_DELIVERY",
+                    "code": plate,
+                    "name": meta["name"],
+                    "personnel_name": meta["driver"],
+                    "route_name": meta["route"],
+                    "stops_count": str(orders),
+                    "cartons_delivered": str(cartons),
+                    "weight_kg": _q(weight_kg),
+                    "volume_cbm": _q(volume_cbm),
+                    "capacity_cbm": _q(cap_cbm),
+                    "utilization_cbm_pct": str(util_pct),
+                    "ritase_count": str(ritase_count),
+                    "est_mileage_km": _q(mileage),
+                })
 
         narrative_report = {
             "period": f"{start_date.year:04d}-{start_date.month:02d}",
@@ -1013,6 +1304,7 @@ class SeedPlanner:
                 "total_ap_payments": len(ap_payments),
                 "total_opex_entries": len(opex),
                 "total_stock_events": len(stock_events),
+                "total_daily_logistics_entries": len(daily_logistics_metrics),
             },
         }
 
@@ -1028,6 +1320,7 @@ class SeedPlanner:
             "opex": opex,
             "rejections": rejections,
             "stock_events": stock_events,
+            "daily_logistics_metrics": daily_logistics_metrics,
         }
 
         return {

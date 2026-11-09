@@ -311,6 +311,9 @@ def generate_period_pack(
         "opening_cash": str(opening_cash),
         "min_lead_days": config.min_lead_days,
         "tax": {
+            "statutory_rate": "0.12",
+            "dpp_factor": "11/12",
+            "effective_rate": "0.11",
             "rate": str(tax_rate),
             "source": "PMK 131/2024 & UU HPP No. 7/2021",
             "source_date": "2024-12-31",
@@ -382,6 +385,7 @@ def generate_period_pack(
                 "status_at_cutoff": "posted",
                 "due_date": r["due_date"],
                 "customer": r.get("customer") or so_cust_map.get(r.get("so_number"), ""),
+                "commercial_dpp": r.get("commercial_dpp", r["dpp_amount"]),
                 "dpp_amount": r["dpp_amount"],
                 "total_invoice_with_ppn": r["total_invoice_with_ppn"],
             }
@@ -401,6 +405,7 @@ def generate_period_pack(
                 "status_at_cutoff": "carry_forward_pending",
                 "due_date": r["due_date"],
                 "customer": r.get("customer") or so_cust_map.get(r.get("so_number"), ""),
+                "commercial_dpp": r.get("commercial_dpp", r["dpp_amount"]),
                 "dpp_amount": r["dpp_amount"],
                 "total_invoice_with_ppn": r["total_invoice_with_ppn"],
             }
@@ -452,6 +457,29 @@ def generate_period_pack(
         "in_transit": rich_in_transit,
         "pending_dos": rich_pending_dos,
         "carry_forward_lines": carry_forward_lines,
+        "warehouse_layout_simulation": {
+            "warehouse_code": "GD-MND",
+            "location_name": "Gudang Utama Maumbi (Minahasa Utara / Manado)",
+            "total_storage_pallets": 1287,
+            "racking_type": "Selective Pallet Racking (3-4 Tier) & Floor Staging",
+            "sections": {
+                "GD-MND/UTAMA": {
+                    "description": "Penyimpanan Stok Fisik Siap Jual (Fast & Medium Moving)",
+                    "pallets_allocated": 1152,
+                    "tiering": "Tier 1-4 Selective Racking",
+                },
+                "GD-MND/STAGING": {
+                    "description": "Area Buffer & Staging Dispatch Pengiriman Harian",
+                    "pallets_allocated": 110,
+                    "tiering": "Hamparan Lantai (Floor Staging)",
+                },
+                "GD-MND/BAD-STOCK": {
+                    "description": "Area Karantina Terisolasi Barang Rusak & Tolakan POD",
+                    "pallets_allocated": 25,
+                    "tiering": "Hamparan Lantai Tersegel (Floor Dedicated Quarantine)",
+                },
+            },
+        },
     }
 
     # 7. Validasi Invariant Gates v2 dengan Previous Closing Terverifikasi Independen
