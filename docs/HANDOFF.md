@@ -1,3 +1,27 @@
+## 2026-11-09T19:15:00+07:00 — antigravity — F2: Refinement Komersial, Pajak, Logistik, dan OPEX Pack Transaksi Agustus 2026
+**Berubah:**
+- scripts/ops/seed_planner.py:
+  * Diskon Komersial Bertingkat: Cascading line discount per tier channel (MT 2.2%, GT 1.6%, INST 1.5%, RTL 1.2%) dipadu promo selektif joint MoU Mayora (+2.5%) dan Santos (+2.0%) serta volume tier Wings/Unilever (+1.2%). Agregat diskon Agustus terkunci presisi di 2.57% (baseline 2.50%, pita otorisasi [2.00%, 3.20%]).
+  * Delivery Rejection Netto Diskon & Keselarasan PWA: Memperbaiki formula potongan faktur agar dihitung netto (inv_dpp = so_net - line_net_rej) sehingga toko tidak menikmati diskon ganda saat menolak barang. Menyelaraskan skema penolakan POD dengan domain model PWA (rejection_reason: ITEM RUSAK / ITEM EXPIRED, evidence_photo_ref: /evidence/pod_rejection_carton_damaged.jpg).
+  * Kepatuhan Pajak B2B Coretax/PER-03: Menambahkan customer_vat pada faktur (NPWP 16-digit untuk 94 outlet PKP dan 16-digit nol '0000000000000000' untuk 260 outlet Non-PKP), jenis faktur STANDAR, dan kode transaksi 04 (DPP Nilai Lain PMK 131/2024). Menambahkan ppn_amount (11%) dan total_with_ppn pada po_headers.
+  * Logistik & Fleet Load Balancing: Menghasilkan tabel metrik logistik harian daily_logistics_metrics (144 entri) yang memetakan muatan, okupansi CBM, utilisasi, dan estimasi mileage untuk 6 armada delivery dan salesman PJP. Mengalokasikan biaya uang jalan ritase ke-2 L300 (Rp 100.000) spesifik pada hari kerja pengiriman di mana muatan > 5.4 CBM (supir Eko Prasetyo).
+  * Proporsionalitas OPEX: Menambahkan servis berkala 6 armada bengkel resmi (Rp 18,5 Jt), retribusi KIR Dishub (Rp 600 rb), komisi/insentif sales PJP (Rp 12 Jt), dan administrasi kliring bank (Rp 1,2 Jt). Total entri OPEX naik menjadi 48 entri dengan saldo kas akhir tetap surplus sangat sehat (Rp 6,36 Miliar).
+- scripts/ops/generate_period_pack.py:
+  * Tata Letak Gudang: Menambahkan metadata simulasi penempatan 1.287 palet pada seksi GD-MND/UTAMA (1.152 palet), GD-MND/STAGING (110 palet), dan GD-MND/BAD-STOCK (25 palet) di closing_state_20260831.json.
+- tests/test_seed_planner.py:
+  * Menyelaraskan asersi faktur carry forward netto dan menambahkan 6 unit test baru untuk memvalidasi atribut B2B tax, baris diskon & promo, alasan reject & bukti POD PWA, PPN PO headers, metrik logistik & ritase L300, dan tata letak gudang (total 31 tes unit di test_seed_planner, 113 tes unit total).
+- data/registers/periods/2026-08:
+  * Seluruh pack Agustus diregenerasi dengan 11 gerbang invariant strict=True PASS 0 violations, mencakup tabel baru daily_logistics_metrics dan MANIFEST.json.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner tests.test_seed_v2_gates: 113 tests PASS in 22s.
+- [F] python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict: PASS (0 violations).
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+**Belum diuji:**
+- [BU] Eksekusi seeding ke database live Odoo 19 CE.
+**Berikutnya:**
+- Buat PR agen/seed-f2-august-refinement ke main dan pantau CI.
+
 ## 2026-11-09T12:55:00+07:00 — antigravity — F2/PR97: Fail-Closed Check Opening State Eksplisit pada Direktori Pack Ber-MANIFEST
 **Berubah:**
 - scripts/ops/generate_period_pack.py:

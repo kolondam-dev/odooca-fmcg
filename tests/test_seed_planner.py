@@ -263,9 +263,9 @@ class TestSeedPlannerF2(unittest.TestCase):
         # 2. Cek bahwa faktur untuk DO tersebut memiliki net DPP yang dikurangi nilai tolakan
         matching_inv = next(i for i in self.pack["invoices"] if i["do_number"] == do_num)
         matching_so = next(s for s in self.pack["sales_orders"] if s["so_number"] == so_num)
-        so_gross = Decimal(matching_so["gross_dpp"])
+        so_net = Decimal(matching_so["net_dpp"])
         inv_dpp = Decimal(matching_inv["dpp_amount"])
-        self.assertEqual(inv_dpp, so_gross - rej_dpp, "Faktur DO carry-forward harus dikurangi nilai tolakan")
+        self.assertEqual(inv_dpp, so_net - rej_dpp, "Faktur DO carry-forward harus dikurangi nilai tolakan")
 
         # 3. Cek bahwa rejections.csv memiliki baris untuk DO tersebut bertanggal 2026-09-01
         matching_rej = [r for r in self.pack["rejections"] if r["do_number"] == do_num]
@@ -565,6 +565,90 @@ class TestSeedPlannerF2(unittest.TestCase):
                 opening_state_path=standalone_file,
             )
             self.assertEqual(resolved, standalone_file)
+
+    def test_b2b_tax_invoice_attributes(self):
+        """Memverifikasi faktur komersial memuat customer_vat, tax_invoice_type STANDAR, dan tax_code 04."""
+        invoices = self.pack["invoices"]
+        self.assertGreater(len(invoices), 0)
+        sample_inv = invoices[0]
+        self.assertIn("customer_vat", sample_inv)
+        self.assertIn("tax_invoice_type", sample_inv)
+        self.assertIn("tax_code", sample_inv)
+        self.assertEqual(sample_inv["tax_invoice_type"], "STANDAR")
+        self.assertEqual(sample_inv["tax_code"], "04")
+
+        # Pastikan outlet non-PKP menggunakan 16-digit nol sesuai PER-03 / Coretax
+        zero_vat_invs = [i for i in invoices if i["customer_vat"] == "0000000000000000"]
+        pkp_vat_invs = [i for i in invoices if i["customer_vat"] != "0000000000000000"]
+        self.assertGreater(len(zero_vat_invs), 0)
+        self.assertGreater(len(pkp_vat_invs), 0)
+        for i in pkp_vat_invs:
+            self.assertEqual(len(i["customer_vat"]), 16)
+
+    def test_line_discounts_and_promos(self):
+        """Memverifikasi baris order memuat discount_pct, discount_dpp, line_net_dpp, dan promo selektif."""
+        lines = self.pack["order_lines"]
+        self.assertGreater(len(lines), 0)
+        sample_line = lines[0]
+        self.assertIn("discount_pct", sample_line)
+        self.assertIn("discount_dpp", sample_line)
+        self.assertIn("line_net_dpp", sample_line)
+        self.assertIn("promo_id", sample_line)
+
+        # Pastikan ada lini promo Mayora dan Santos yang terpicu secara deterministik
+        promo_lines = [row for row in lines if row["promo_id"]]
+        self.assertGreater(len(promo_lines), 0)
+
+    def test_pod_rejection_reasons_and_evidence(self):
+        """Memverifikasi tabel rejections memuat rejection_reason dan referensi bukti foto POD."""
+        rejections = self.pack["rejections"]
+        self.assertGreater(len(rejections), 0)
+        for r in rejections:
+            self.assertIn("rejection_reason", r)
+            self.assertIn("evidence_photo_ref", r)
+            self.assertIn(r["rejection_reason"], ("ITEM RUSAK", "ITEM EXPIRED"))
+            self.assertTrue(r["evidence_photo_ref"].endswith(".jpg"))
+
+    def test_po_headers_input_vat(self):
+        """Memverifikasi po_headers memuat ppn_amount 11% dan total_with_ppn."""
+        pos = self.pack["po_headers"]
+        self.assertGreater(len(pos), 0)
+        for p in pos:
+            self.assertIn("ppn_amount", p)
+            self.assertIn("total_with_ppn", p)
+            dpp = Decimal(p["total_dpp"])
+            ppn = Decimal(p["ppn_amount"])
+            tot = Decimal(p["total_with_ppn"])
+            expected_ppn = (dpp * Decimal("0.11")).quantize(Decimal("0.01"))
+            self.assertEqual(ppn, expected_ppn)
+            self.assertEqual(tot, dpp + ppn)
+
+    def test_daily_logistics_metrics_and_ritase(self):
+        """Memverifikasi tabel daily_logistics_metrics dan deteksi ritase ke-2 L300."""
+        metrics = self.pack["daily_logistics_metrics"]
+        self.assertGreater(len(metrics), 0)
+        sample = metrics[0]
+        self.assertIn("code", sample)
+        self.assertTrue(sample["code"].startswith("DB "))
+        self.assertIn("est_mileage_km", sample)
+
+        # Cek adanya entri ritase ke-2 pada OPEX
+        ritase_opex = [o for o in self.pack["opex"] if o["category"] == "Uang Jalan Ritase"]
+        self.assertGreater(len(ritase_opex), 0)
+        for o in ritase_opex:
+            self.assertEqual(o["amount"], "100000.00")
+
+    def test_warehouse_layout_simulation_in_closing_state(self):
+        """Memverifikasi closing state memuat simulasi seksi gudang Maumbi dan 1.287 palet."""
+        pack_dir = self.reg_dir / "periods" / "2026-08"
+        closing_file = pack_dir / "closing_state_20260831.json"
+        if closing_file.exists():
+            with closing_file.open("r", encoding="utf-8") as f:
+                closing = json.load(f)
+            self.assertIn("warehouse_layout_simulation", closing)
+            layout = closing["warehouse_layout_simulation"]
+            self.assertEqual(layout["total_storage_pallets"], 1287)
+            self.assertIn("GD-MND/UTAMA", layout["sections"])
 
 
 if __name__ == "__main__":

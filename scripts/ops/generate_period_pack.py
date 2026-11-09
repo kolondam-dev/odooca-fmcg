@@ -452,6 +452,29 @@ def generate_period_pack(
         "in_transit": rich_in_transit,
         "pending_dos": rich_pending_dos,
         "carry_forward_lines": carry_forward_lines,
+        "warehouse_layout_simulation": {
+            "warehouse_code": "GD-MND",
+            "location_name": "Gudang Utama Maumbi (Minahasa Utara / Manado)",
+            "total_storage_pallets": 1287,
+            "racking_type": "Selective Pallet Racking (3-4 Tier) & Floor Staging",
+            "sections": {
+                "GD-MND/UTAMA": {
+                    "description": "Penyimpanan Stok Fisik Siap Jual (Fast & Medium Moving)",
+                    "pallets_allocated": 1152,
+                    "tiering": "Tier 1-4 Selective Racking",
+                },
+                "GD-MND/STAGING": {
+                    "description": "Area Buffer & Staging Dispatch Pengiriman Harian",
+                    "pallets_allocated": 110,
+                    "tiering": "Hamparan Lantai (Floor Staging)",
+                },
+                "GD-MND/BAD-STOCK": {
+                    "description": "Area Karantina Terisolasi Barang Rusak & Tolakan POD",
+                    "pallets_allocated": 25,
+                    "tiering": "Hamparan Lantai Tersegel (Floor Dedicated Quarantine)",
+                },
+            },
+        },
     }
 
     # 7. Validasi Invariant Gates v2 dengan Previous Closing Terverifikasi Independen
