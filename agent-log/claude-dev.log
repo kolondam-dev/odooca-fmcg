@@ -184,6 +184,12 @@
 - PR #104 di-merge ke main pada 2026-11-09T15:18:02Z oleh frankiezz1988, merge commit 7c957ad686dd820fcd62636d2e9ebfbea3103831; 14/14 check pada SHA 1d7a2c8 SUCCESS sebelum merge.
 - [BU] Merge kode bukan penerimaan laporan: export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller masih terbuka; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA. Tidak ada deploy/mutasi DB live.
 - Task managed by claude-dev agent at 2026-11-09T22:25:00+07:00
+[2026-11-09T22:25:00+07:00] [INFO] I2b/PR104: MERGED setelah APPROVE reviewer
+- Reviewer frankiezz1988 memberi APPROVE pada SHA 1d7a2c8d8224e412d00931810a1e5e7578d8eb03 (review PRR_kwDOVUWh9s8AAAABW2AfZg, 2026-11-09T15:17:31Z): perbaikan P2 dinilai menyelesaikan inkonsistensi scope, partial_scope=both_legs_selected terdokumentasi, regresi native journal/date AR/AP dua skala lulus, tidak ada defect tersisa.
+- Catatan non-blocking reviewer: tambahkan kasus native partner_ids pada iterasi berikutnya karena filter itu juga bagian kontrak slice, walau implementasi memakai jalur seleksi line IDs yang sama.
+- PR #104 di-merge ke main pada 2026-11-09T15:18:02Z oleh frankiezz1988, merge commit 7c957ad686dd820fcd62636d2e9ebfbea3103831; 14/14 check pada SHA 1d7a2c8 SUCCESS sebelum merge.
+- [BU] Merge kode bukan penerimaan laporan: export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller masih terbuka; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA. Tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-09T22:25:00+07:00
 [2026-11-10T00:05:00+07:00] [INFO] I2b: kasus native slice partner_ids (tindak lanjut non-blocking reviewer PR104)
 - Menindaklanjuti catatan reviewer pada review PRR_kwDOVUWh9s8AAAABW2AfZg: partner_ids adalah dimensi slice ketiga dan kini punya kasus native sendiri.
 - Runner scripts/ops/verify_finance_i2_arap_subledger.py: _posted_lines dan independent_open_items menerima partner_ids; filtered_scopes mencakup journal_sale, date_from_0710, dan partner_named (as-of 2026-07-25); hard-coded check memverifikasi FIN07 partnerless_residual=0 / partnerless_line_ids=[] / AR 28 / AP -47 / gl_tie_out, serta FIN08-FIN09 hanya partner terpilih, total -19, balanced dan tie-out.
