@@ -72,3 +72,39 @@ msgstr "Jenis register tidak valid; pilih semua, penjualan, atau pembelian."
 #: code:addons/id_finance_reporting/models/ledger_reports.py:0
 msgid "Ambiguous cross-company Chart of Accounts mapping: %s"
 msgstr "Pemetaan Bagan Akun lintas-perusahaan ambigu: %s"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/subledger_reports.py:0
+msgid "Invalid partner type; choose customer, supplier or all."
+msgstr "Jenis partner tidak valid; pilih pelanggan, pemasok, atau semua."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/subledger_reports.py:0
+msgid "Select a single as-of date for AR/AP open items."
+msgstr "Pilih satu tanggal posisi untuk pos terbuka piutang/utang."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/subledger_reports.py:0
+msgid "Selected partner does not exist."
+msgstr "Partner yang dipilih tidak ditemukan."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/subledger_reports.py:0
+msgid "Selected partner belongs to another company."
+msgstr "Partner yang dipilih milik perusahaan lain."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/subledger_reports.py:0
+msgid "The as-of date must be on or after the optional start date."
+msgstr "Tanggal posisi harus sama dengan atau setelah tanggal mulai opsional."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/subledger_reports.py:0
+msgid "Aging bucket edges must be positive and strictly increasing."
+msgstr "Batas interval aging harus positif dan naik secara ketat."
