@@ -145,6 +145,53 @@ def export_table_json(table_name: str, data: Any, out_dir: Path) -> Path:
     return json_path
 
 
+def resolve_opening_state_path(
+    period: str,
+    reg_dir: Path,
+    opening_state_path: Optional[Path] = None,
+) -> Path:
+    """Menentukan path opening state untuk periode tertentu secara fail-closed dan konsisten.
+
+    Aturan kontinuitas:
+    1. Jika opening_state_path diberikan secara eksplisit: gunakan dan pastikan file ada.
+    2. Jika opening_state_path tidak diberikan:
+       * Periode '2026-08': default ke data/registers/state_20260801.json.
+       * Periode non-Agustus (misal '2026-09'): otomatis mencari berkas closing_state
+         pada direktori pack periode sebelumnya (data/registers/periods/<prev_period>/closing_state_*.json).
+         Jika tidak ditemukan, wajibkan eksplisit dengan melempar ValueError agar tidak
+         menghasilkan transaksi yang terlepas dari kontinuitas saldo penutupan sebelumnya.
+    """
+    if opening_state_path is not None:
+        p = Path(opening_state_path)
+        if not p.exists():
+            raise FileNotFoundError(f"Opening state berkas tidak ditemukan: {p}")
+        return p
+
+    if period == "2026-08":
+        default_august = reg_dir / "state_20260801.json"
+        if not default_august.exists():
+            raise FileNotFoundError(f"Default opening state Agustus tidak ditemukan di {default_august}")
+        return default_august
+
+    year_str, month_str = period.split("-")
+    year, month = int(year_str), int(month_str)
+    if month == 1:
+        prev_period = f"{year - 1:04d}-12"
+    else:
+        prev_period = f"{year:04d}-{month - 1:02d}"
+
+    prev_pack_dir = reg_dir / "periods" / prev_period
+    closing_candidates = list(prev_pack_dir.glob("closing_state_*.json")) if prev_pack_dir.exists() else []
+
+    if closing_candidates:
+        return sorted(closing_candidates)[-1]
+
+    raise ValueError(
+        f"Opening state untuk periode non-Agustus '{period}' wajib disertakan via --opening-state "
+        f"karena closing state periode sebelumnya '{prev_period}' tidak ditemukan di {prev_pack_dir}."
+    )
+
+
 def generate_period_pack(
     period: str = "2026-08",
     opening_state_path: Path = None,
@@ -156,8 +203,7 @@ def generate_period_pack(
 ) -> Dict[str, Any]:
     """Eksekusi generator pack untuk suatu periode dan menyimpannya ke disk."""
     reg_dir = REPO_ROOT / "data" / "registers"
-    if opening_state_path is None:
-        opening_state_path = reg_dir / "state_20260801.json"
+    opening_state_path = resolve_opening_state_path(period, reg_dir, opening_state_path)
 
     if output_dir is None:
         output_dir = reg_dir / "periods" / period

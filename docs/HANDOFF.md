@@ -1,3 +1,27 @@
+## 2026-11-09T07:38:00+07:00 — antigravity — F2/PR97: Default Opening State Lintas-Periode, CI Sunday Invariant Guard, dan Penyelarasan Clock PWA
+**Berubah:**
+- scripts/ops/generate_period_pack.py:
+  * P2: Menambahkan fungsi `resolve_opening_state_path` yang secara fail-closed dan otomatis menentukan opening state: periode default `2026-08` mengarah ke `data/registers/state_20260801.json`; periode non-Agustus (`2026-09`) otomatis mencari closing state pack periode sebelumnya (`closing_state_*.json`). Jika closing sebelumnya tidak ditemukan, wajib menyertakan `--opening-state` secara eksplisit (mencegah silent drift/gap kontinuitas).
+- tests/test_seed_planner.py:
+  * Penambahan 4 tes regresi pembuktian resolusi opening state: default Agustus, deteksi otomatis September atas closing Agustus, penolakan periode non-Agustus tanpa closing sebelumnya, dan validasi path eksplisit. Total 18 tes unit lulus.
+- addons/id_mobile_api/:
+  * `models/mobile_workday.py`: `business_date()` mendukung override environment `ID_MOBILE_BUSINESS_DATE` untuk pengujian waktu deterministik.
+  * `tests/test_read_api.py`: `MobileFixture.setUpClass` otomatis memastikan fixture tes operasional beroperasi pada hari kerja resmi jika CI dieksekusi pada hari Minggu.
+  * `tests/test_commands_api.py`: Penambahan pengujian unit eksplisit `test_sales_order_rejected_on_sunday` yang memvalidasi bahwa pembuatan sales order pada hari Minggu ditolak dengan `UserError: Operasional sales order libur pada hari Minggu` (menjamin integritas invariant FMCG dan stabilitas CI lintas hari kalender).
+- pwa/tests/browser/session-fixture.ts:
+  * Menyematkan guard `!isPlaywrightClock` dan pewarisan method statis `Date.UTC` serta `Date.parse` pada `ShiftedDate` agar timer mock Playwright tidak tertimpa/rusak saat reload.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 18 tests PASS (termasuk 4 tes resolusi opening state).
+- [F] python -m unittest tests.test_seed_v2_gates: 82 tests PASS.
+- [F] python -m unittest tests.test_finance_activation: PASS.
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+- [F] cd pwa && npx vitest run tests/visits.test.ts: PASS (32 tests PASS).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Commit source code, regenerasi pack Agustus 2026 dan MANIFEST.json dengan binding generator commit exact, lalu push ke PR #97.
+
 ## 2026-11-08T14:45:00+07:00 — antigravity — F2/PR97: Penanganan Rejection Carry-Forward & Pengikatan Provenance Manifest Commit
 **Berubah:**
 - scripts/ops/seed_planner.py:

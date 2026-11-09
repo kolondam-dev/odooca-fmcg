@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -13,6 +14,12 @@ class MobileFixture:
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        current_day = business_date()
+        if current_day.weekday() == 6:
+            # Shift Sunday to Saturday so operational test fixtures run on a valid workday
+            work_day = current_day - timedelta(days=1)
+            os.environ["ID_MOBILE_BUSINESS_DATE"] = work_day.isoformat()
+            cls.addClassCleanup(os.environ.pop, "ID_MOBILE_BUSINESS_DATE", None)
         currency = cls.env.ref("base.IDR")
         currency.active = True
         cls.company = cls.env["res.company"].create({"name": "Mobile API Company", "currency_id": currency.id})

@@ -12,6 +12,7 @@ from scripts.ops.fmcg_calendar import count_working_days, is_working_day
 from scripts.ops.generate_period_pack import (
     compute_sha256_lf,
     get_verified_previous_closing,
+    resolve_opening_state_path,
 )
 from scripts.ops.seed_planner import (
     PeriodConfig,
@@ -417,6 +418,36 @@ class TestSeedPlannerF2(unittest.TestCase):
             self.assertTrue(fpath.exists(), f"Canonical register {fname} must exist on disk")
             computed = compute_sha256_lf(fpath)
             self.assertEqual(computed, exp_hash, f"Canonical hash mismatch for {fname}")
+
+    def test_default_opening_state_resolution_august(self):
+        """Periode default 2026-08 otomatis memakai register state_20260801.json."""
+        resolved = resolve_opening_state_path("2026-08", self.reg_dir)
+        expected = self.reg_dir / "state_20260801.json"
+        self.assertEqual(resolved, expected)
+        self.assertTrue(resolved.exists())
+
+    def test_default_opening_state_resolution_september_finds_august_closing(self):
+        """Periode 2026-09 otomatis mencari dan menemukan closing_state dari pack 2026-08."""
+        resolved = resolve_opening_state_path("2026-09", self.reg_dir)
+        expected = self.reg_dir / "periods" / "2026-08" / "closing_state_20260831.json"
+        self.assertEqual(resolved, expected)
+        self.assertTrue(resolved.exists())
+
+    def test_default_opening_state_resolution_missing_previous_fails_closed(self):
+        """Periode non-Agustus tanpa closing periode sebelumnya wajib menolak dan meminta --opening-state."""
+        with self.assertRaises(ValueError) as cm:
+            resolve_opening_state_path("2027-05", self.reg_dir)
+        self.assertIn("--opening-state", str(cm.exception))
+        self.assertIn("2027-04", str(cm.exception))
+
+    def test_explicit_opening_state_resolution(self):
+        """Path opening_state eksplisit dihormati jika ada, dan memicu FileNotFoundError jika tidak ada."""
+        explicit_path = self.reg_dir / "state_20260801.json"
+        resolved = resolve_opening_state_path("2026-09", self.reg_dir, opening_state_path=explicit_path)
+        self.assertEqual(resolved, explicit_path)
+
+        with self.assertRaises(FileNotFoundError):
+            resolve_opening_state_path("2026-09", self.reg_dir, opening_state_path=Path("non_existent_state.json"))
 
 
 if __name__ == "__main__":

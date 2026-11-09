@@ -55,6 +55,29 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         self.assertEqual(model.process_command(command), receipt)
         self.assertEqual(log.sale_order_ids, order)
 
+    def test_sales_order_rejected_on_sunday(self):
+        """Operasional sales order wajib ditolak pada hari Minggu (FMCG invariant)."""
+        sunday_date = "2026-11-08"
+        with patch.dict("os.environ", {"ID_MOBILE_BUSINESS_DATE": sunday_date}):
+            self.env["id.mobile.workday"].create({
+                "user_id": self.mobile.id,
+                "company_id": self.company.id,
+                "business_date": sunday_date,
+                "warehouse_id": self.warehouse.id,
+                "pricelist_id": self.pricelist.id,
+                "outlet_ids": [Command.set(self.outlet.ids)],
+                "product_ids": [Command.set(self.product.ids)],
+            })
+            model = self._command_model()
+            command = {
+                "client_uuid": str(uuid.uuid4()),
+                "type": "sales.order.submit",
+                "payload": self._valid_order_payload(),
+            }
+            with self.assertRaises(UserError) as cm:
+                model.process_command(command)
+            self.assertIn("Operasional sales order libur pada hari Minggu", str(cm.exception))
+
     def test_actor_model_guard(self):
         """Direct ORM/RPC call without mobile sales privileges must fail closed."""
         cmd = {

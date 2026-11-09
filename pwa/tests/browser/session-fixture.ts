@@ -23,8 +23,11 @@ export const test = base.extend({
                 Date.UTC(parts[0], parts[1] - 1, parts[2], 12, 0, 0),
             ).getUTCDay();
             const shiftMs = witaDay === 0 ? -3 * 24 * 60 * 60 * 1000 : 0;
+            const isPlaywrightClock =
+                Boolean((window.Date as unknown as { isFakeTimer?: boolean }).isFakeTimer) ||
+                Boolean((window as unknown as { __playwright_clock?: unknown }).__playwright_clock);
 
-            if (shiftMs !== 0) {
+            if (shiftMs !== 0 && !isPlaywrightClock) {
                 class ShiftedDate extends RealDate {
                     constructor(...args: unknown[]) {
                         if (args.length === 0) {
@@ -39,6 +42,10 @@ export const test = base.extend({
                         return RealDate.now() + shiftMs;
                     }
                 }
+                // @ts-expect-error Mock Date methods
+                ShiftedDate.UTC = RealDate.UTC;
+                // @ts-expect-error Mock Date methods
+                ShiftedDate.parse = RealDate.parse;
                 // @ts-expect-error Assign shifted date constructor
                 window.Date = ShiftedDate;
             }
