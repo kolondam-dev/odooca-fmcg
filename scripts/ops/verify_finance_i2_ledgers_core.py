@@ -738,6 +738,44 @@ def run(env):
                 env.invalidate_all()
             evidence["cases"].append({"case": "FIN51_combined_and_translated", "result": "PASS"})
 
+            # FIN51 Regression: Company C resolves unaffected earnings under its own company context while default env is Company A
+            try:
+                with env.cr.savepoint():
+                    env_comp_a = env["id.finance.combined.trial.balance"].with_company(comp_a).with_context(
+                        allowed_company_ids=[comp_a.id, comp_b.id],
+                    )
+                    comp_fresh = env["res.company"].with_company(comp_a).create({
+                        "name": "I2A Fresh Entity C Without Unaffected",
+                        "currency_id": comp_a.currency_id.id,
+                    })
+                    existing = env["account.account"].with_context(active_test=False).search([
+                        ("company_id", "=", comp_fresh.id),
+                        ("account_type", "=", "equity_unaffected"),
+                    ])
+                    require(not existing, "Fresh company should not have unaffected earnings account yet")
+                    _snap = env_comp_a.with_context(
+                        allowed_company_ids=[comp_a.id, comp_fresh.id],
+                    )._snapshot([comp_fresh.id], "2026-07-01", "2026-07-31")
+                    unaffected_fresh = comp_fresh.with_company(comp_fresh).get_unaffected_earnings_account()
+                    require(bool(unaffected_fresh), "FIN51 must resolve unaffected earnings for fresh entity")
+                    require(
+                        unaffected_fresh.company_id == comp_fresh,
+                        "Unaffected earnings must belong to fresh entity",
+                    )
+                    code_fresh = unaffected_fresh.with_company(comp_fresh).code
+                    require(bool(code_fresh), "Unaffected earnings must have valid code in entity context")
+                    require(
+                        unaffected_fresh.with_company(comp_a).company_id != comp_a,
+                        "Unaffected earnings must not pollute Company A",
+                    )
+                    evidence["cases"].append({
+                        "case": "fin51_unaffected_earnings_created_in_target_company_context",
+                        "result": "PASS",
+                    })
+                    raise RollbackI2a()
+            except RollbackI2a:
+                env.invalidate_all()
+
             # Counterexample 1: Role & company isolation across all 6 reports (FIN01, FIN02, FIN03, FIN04, FIN51, FIN57)
             _u_reader, reader = sec.actor(
                 env, "i2a.reader", comp_a, ["id_finance_foundation.group_finance_reader"],

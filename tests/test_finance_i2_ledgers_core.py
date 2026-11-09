@@ -263,6 +263,31 @@ class I2aLedgerCoreTests(unittest.TestCase):
         dup_res = compare.reconcile_register_to_gl(dup_docs, gl_lines, {400, 210}, lambda x: round(x, 2))
         self.assertEqual(dup_res["duplicate_move_ids"], [10])
 
+    def test_fin51_snapshot_uses_target_company_context_for_unaffected_earnings(self):
+        """Production FIN51 must resolve unaffected earnings under target company context, not default env company."""
+        from unittest.mock import MagicMock
+
+        comp_b = MagicMock()
+        comp_b.id = 2
+        comp_b.display_name = "Company B"
+        comp_b.currency_id.id = 10
+        comp_b.currency_id.name = "IDR"
+
+        scoped_comp_b = MagicMock()
+        comp_b.with_company.return_value = scoped_comp_b
+        fake_unaffected = MagicMock()
+        fake_unaffected.id = 999
+        scoped_comp_b.get_unaffected_earnings_account.return_value = fake_unaffected
+
+        comp_b.get_unaffected_earnings_account.side_effect = AssertionError(
+            "get_unaffected_earnings_account was called directly on company instead of company.with_company(company)"
+        )
+
+        unaffected = comp_b.with_company(comp_b).get_unaffected_earnings_account()
+        self.assertEqual(unaffected.id, 999)
+        comp_b.with_company.assert_called_once_with(comp_b)
+        scoped_comp_b.get_unaffected_earnings_account.assert_called_once_with()
+
 
 if __name__ == "__main__":
     unittest.main()

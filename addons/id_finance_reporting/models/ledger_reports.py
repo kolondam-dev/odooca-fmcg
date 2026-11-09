@@ -168,7 +168,7 @@ class FinanceCombinedTrialBalance(models.AbstractModel):
             tb_report = self.env["report.account_financial_report.trial_balance"].with_context(
                 allowed_company_ids=unique_company_ids,
             ).with_company(company)
-            unaffected = company.get_unaffected_earnings_account()
+            unaffected = company.with_company(company).get_unaffected_earnings_account()
             totals, accounts_data, _partners = tb_report._get_data(
                 account_ids=[],
                 journal_ids=[],
