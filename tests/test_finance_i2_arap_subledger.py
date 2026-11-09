@@ -234,6 +234,53 @@ class I2bSubledgerHelperTests(unittest.TestCase):
         self.assertEqual(full_slice["rows"][0]["matched_amount"], -60.0)
         self.assertEqual(full_slice["closed_line_ids"], [2])
 
+    def test_open_items_slice_invariant_holds_for_every_scope(self):
+        # The rule "both legs selected" is what makes the residual total equal
+        # the summed balance of the slice, which is exactly what the GL control
+        # total compares against. Assert it for journal, date and partner slices.
+        named = [
+            line(1, sub.AR_TYPE, "2026-07-01", debit=110.0, due_date="2026-07-01"),
+            line(2, sub.AR_TYPE, "2026-07-15", credit=60.0),
+            line(3, sub.AR_TYPE, "2026-07-20", credit=22.0),
+        ]
+        partnerless = [line(4, sub.AP_TYPE, "2026-07-25", credit=12.0, partner_id=0)]
+        all_lines = named + partnerless
+        partials = [
+            partial(101, 1, 2, 60.0, "2026-07-15"),
+            partial(102, 1, 3, 22.0, "2026-07-20"),
+        ]
+        round_amount = lambda value: round(value, 2)  # noqa: E731
+
+        slices = {
+            "journal_sale": [line for line in named if line["line_id"] in (1, 3)],
+            "date_from_0710": [line for line in named if line["line_id"] in (2, 3)],
+            "partner_named": named,
+            "partner_named_plus_ap_partnerless": all_lines,
+        }
+        for label, slice_lines in slices.items():
+            with self.subTest(slice=label):
+                result = sub.reconstruct_open_items(
+                    slice_lines, partials, "2026-07-31", round_amount,
+                )
+                self.assertEqual(
+                    result["total_residual"],
+                    round_amount(sum(line["balance"] for line in slice_lines)),
+                    f"{label} residual must equal the slice balance",
+                )
+
+        partner_only = sub.reconstruct_open_items(
+            named, partials, "2026-07-31", round_amount,
+        )
+        self.assertEqual(partner_only["partnerless_residual"], 0.0)
+        self.assertEqual(partner_only["partnerless_line_ids"], [])
+        self.assertEqual(partner_only["total_residual"], 28.0)
+
+        with_partnerless = sub.reconstruct_open_items(
+            all_lines, partials, "2026-07-31", round_amount,
+        )
+        self.assertEqual(with_partnerless["partnerless_residual"], -12.0)
+        self.assertEqual(with_partnerless["partnerless_line_ids"], [4])
+
     def test_tie_out_reports_difference(self):
         tied = sub.tie_subledger_to_gl(28.0, 28.0, lambda value: round(value, 2))
         self.assertTrue(tied["balanced"])

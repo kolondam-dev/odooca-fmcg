@@ -100,6 +100,11 @@ keep residuals and the GL control on the same footing:
 |---|---|---:|---:|
 | `journal_ids=[sale]` | faktur 110, refund 22 (receipt 60 di jurnal kas, di luar slice) | 88 | 88 |
 | `date_from=2026-07-10` | refund 22, receipt 60 (faktur 1 Juli di luar slice) | -82 | -82 |
+| `partner_ids=[named]` as-of 25 Juli | AR 28 dan AP -47 untuk partner bernama saja | -19 | -19 |
+
+Pada slice `partner_ids`, baris partnerless (akrual AP -12 dan reversalnya) keluar
+dari slice secara eksplisit: `partnerless_residual = 0` dan
+`partnerless_line_ids = []`, bukan dihapus diam-diam.
 
 Tanpa aturan `both_legs_selected`, slice jurnal hanya menghasilkan 28 dan slice
 `date_from` menghasilkan 0, sehingga tie-out GL gagal.
@@ -118,9 +123,11 @@ Skenario yang diuji:
   termasuk pemisahan `all` dan baris partnerless.
 - Open items pada 14/25/31 Juli dan 31 Agustus, termasuk pembuktian bahwa
   `amount_residual` saat ini akan salah menjadi 0 untuk posisi 14 Juli.
-- Filter scope: `journal_ids=[sale]` dan `date_from=2026-07-10` pada as-of
-  31 Juli, dibandingkan dengan oracle yang memakai domain `AND` untuk kedua kaki
-  partial; residual, `gl_control_total`, dan `gl_tie_out` wajib konsisten.
+- Filter scope: `journal_ids=[sale]`, `date_from=2026-07-10`, dan
+  `partner_ids=[named]` dibandingkan dengan oracle yang memakai domain `AND` untuk
+  kedua kaki partial; residual, `gl_control_total`, dan `gl_tie_out` wajib
+  konsisten. Slice partner juga memeriksa `partnerless_residual = 0`,
+  `partnerless_line_ids = []`, dan coverage partner pada FIN08/FIN09.
 - Aging pada 14/25/31 Juli dengan bucket bertanda, coverage per partner, dan
   tie-out ke total open items/GL kontrol.
 - OCA `open_items` pada 14 dan 31 Juli; OCA `aged_partner_balance` pada 25 dan
