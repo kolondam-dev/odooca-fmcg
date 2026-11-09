@@ -1,3 +1,15 @@
+## 2026-11-10T05:10:00+07:00 — Agent VSCode — I2c: discovery dan ADR sumber FIN36–38, FIN55–56
+**Berubah:** dokumen baru `docs/finance/I2C_DISCOVERY_ADR.md`; `docs/HANDOFF.md` dan `agent-log/claude-dev.log` diperbarui. **Tidak ada perubahan kode**, `oca.lock`, `deploy/`, atau katalog.
+**Diverifikasi:** [F] Audit manifest dan model pada SHA pin, bukan HEAD cabang: `account_asset_management` 19.0.1.0.3 (AGPL-3, depends `account`+`report_xlsx_helper`, excludes `account_asset`) ada di `account-financial-tools` `c23fd09` tetapi **belum** di `oca.lock`/image; `report_xlsx_helper` tersedia di `reporting-engine` `b9e8c6c`. [F] `account_cutoff_base` dan `account_multicurrency_revaluation` tidak ada pada tree 19.0 yang diaudit; `payroll` 19.0.1.0.2 ter-pin tetapi `hr.payslip` tidak mereferensikan `account.move` (tanpa posting GL) dan `payroll_account` tidak ada. [F] `account.asset.line` menyimpan `type` (create/depreciate/remove), `move_id`, `move_check`, `parent_state` sehingga register aset bisa direkonstruksi tanpa menulis mesin depresiasi. [F] ADR menetapkan FIN36=baca OCA dengan prasyarat pin+lisensi, FIN37/38/55/56=custom dengan oracle yang sama, plus rencana 6 PR. [F] `ruff check .` PASS; `check_manifests.py` PASS (12 addon).
+**Belum diuji:** [BU] Spike install/upgrade `account_asset_management`; profil CI yang memasang `hr_expense`/`payroll` pada DB runner; keputusan lisensi AGPL-3; sign-off parameter `FIN55`/`FIN56`. Tidak ada deploy/mutasi DB live.
+**Berikutnya:** minta keputusan pemilik atas ADR-I2c-01 (pin AGPL) sebelum menulis kode atau `oca.lock`.
+
+## 2026-11-10T04:05:00+07:00 — Agent VSCode — I2b/PR107: HOLD reviewer terpenuhi, PR merged
+**Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`.
+**Diverifikasi:** [F] Seluruh 12 check SUCCESS pada HEAD `db50642`; reviewer memberi APPROVED dan PR #107 di-merge (squash) sebagai `6ff44a77af89bc67670622c112679fd94475a520`. [F] Diff setelah HEAD yang direview (`55a647a`) hanya menyentuh log/HANDOFF; tidak ada perubahan kode.
+**Belum diuji:** [BU] Gate operasional I2b (export XLSX/PDF, browser geometry, I8, sign-off Finance Controller); `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
+**Berikutnya:** lanjut I2c.
+
 ## 2026-11-10T02:35:00+07:00 — Agent VSCode — I2b/PR107: CI exact-SHA 55a647a hijau (pasca merge main)
 **Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode pada commit ini.
 **Diverifikasi:** [F] PR #107 pada SHA `55a647a17828bec47b0c3a234189ff1f2f8d7a0b` `MERGEABLE` dengan 12/12 check SUCCESS, termasuk `Finance I0 candidate spike` run `42663566390` yang mencetak `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Log native memuat matriks filter lengkap: `journal_sale`, `date_from_0710`, dan `partner_named` untuk customer/supplier pada `scale=1` dan `scale=7`, semuanya `result=PASS`. [F] Konflik `docs/HANDOFF.md` dan `agent-log/claude-dev.log` dengan `c8fe1c0` diselesaikan tanpa menghapus entri agen lain; entri 22:25 yang terduplikasi saat rekonsiliasi dihapus, entri 00:05 dan 01:10 dipertahankan sekali. [F] `ruff` PASS; `check_manifests.py` PASS (12 addon); 44 tes finance PASS.

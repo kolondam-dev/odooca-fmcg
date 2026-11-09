@@ -212,3 +212,10 @@
 - HEAD bergeser 55a647a -> 20e2197 tetapi diff hanya docs/HANDOFF.md dan agent-log/claude-dev.log; git diff --name-only 55a647a 20e2197 -- addons scripts tests kosong, jadi kode yang dinilai identik. Konfirmasi diposting di issuecomment-6747502453.
 - [BU] Menunggu verdict final supervisor; PR belum di-merge; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T04:05:00+07:00
+[2026-11-10T05:10:00+07:00] [INFO] I2c: discovery dan ADR sumber FIN36-38, FIN55-56
+- Audit pada SHA pin (bukan HEAD cabang): account_asset_management 19.0.1.0.3 (AGPL-3, depends account + report_xlsx_helper, excludes account_asset, python-dateutil) tersedia di account-financial-tools c23fd09 tetapi BELUM ada di oca.lock/image; report_xlsx_helper tersedia di reporting-engine b9e8c6c.
+- account_cutoff_base dan account_multicurrency_revaluation tidak ada pada tree OCA 19.0 yang diaudit; payroll 19.0.1.0.2 ter-pin tetapi hr.payslip tidak mereferensikan account.move (tidak posting GL) dan payroll_account tidak ada; tidak ada kandidat loan/lease.
+- account.asset.line menyimpan type (create/depreciate/remove), move_id, move_check, parent_state sehingga register aset dapat direkonstruksi tanpa menulis mesin depresiasi.
+- ADR: FIN36 membaca OCA dengan prasyarat pin + keputusan lisensi AGPL-3; FIN37 custom dari AML posted (tanpa posting modul); FIN38 custom dari amount_currency vs balance dengan realized/unrealized terpisah; FIN55 custom amortization dengan parameter bertanggal; FIN56 bridge payroll/expense ke GL tanpa jurnal rekaan. Rencana 6 PR, oracle native per report, counterexample tamper/rollback/role/company.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon). Tidak ada perubahan kode, oca.lock, deploy, atau data. [BU] Spike install/upgrade aset, profil CI hr_expense+payroll pada DB runner, keputusan lisensi, dan sign-off parameter FIN55/FIN56 masih terbuka; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T05:10:00+07:00
