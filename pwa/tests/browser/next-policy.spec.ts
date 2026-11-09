@@ -158,7 +158,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
         await expect(page.getByText(/Riwayat SO ·/).first()).toBeVisible();
-        await page.getByText(/Riwayat SO ·/).first().click();
+        await page.getByText(/Riwayat SO ·/).click();
         await page
             .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
             .click();
@@ -183,7 +183,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
                 .getByRole("button", { name: "Lainnya", exact: true })
                 .click();
             await expect(page.getByText(/Riwayat SO ·/).first()).toBeVisible();
-            await page.getByText(/Riwayat SO ·/).first().click();
+            await page.getByText(/Riwayat SO ·/).click();
             await page
                 .getByRole("button", {
                     name: "Lihat draft koreksi lewat hari",
