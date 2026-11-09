@@ -53,9 +53,7 @@ export const test = base.extend({
                         return RealDate.now() + shift();
                     }
                 }
-                // @ts-expect-error Mock Date methods
                 ShiftedDate.UTC = RealDate.UTC;
-                // @ts-expect-error Mock Date methods
                 ShiftedDate.parse = RealDate.parse;
                 // @ts-expect-error Assign shifted date constructor
                 window.Date = ShiftedDate;
