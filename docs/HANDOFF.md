@@ -1,3 +1,20 @@
+## 2026-11-09T09:36:00+07:00 — antigravity — F2/PR97: Validasi Provenance dan Checksum MANIFEST pada Auto-Resolution Opening State
+**Berubah:**
+- scripts/ops/generate_period_pack.py:
+  * P2: Mengintegrasikan fungsi `verify_pack_manifest` pada `resolve_opening_state_path` untuk memvalidasi keberadaan `MANIFEST.json`, keterdaftaran berkas closing state pada `files_sha256`, dan kesesuaian hash SHA-256 LF secara fail-closed sebelum berkas diterima sebagai opening state periode berikutnya.
+  * Menambahkan validasi hash MANIFEST untuk berkas opening state yang diberikan secara eksplisit bila berkas berada di dalam direktori pack ber-manifest.
+  * Menyelaraskan `get_verified_previous_closing` untuk memakai `verify_pack_manifest` bersama.
+- tests/test_seed_planner.py:
+  * Menambahkan 4 unit regression test: penolakan jika MANIFEST hilang (`test_default_opening_state_resolution_missing_manifest_fails_fast`), penolakan jika closing tidak terdaftar di MANIFEST (`test_default_opening_state_resolution_closing_missing_from_manifest_fails_fast`), penolakan jika checksum closing tidak cocok (`test_default_opening_state_resolution_checksum_mismatch_fails_fast`), dan penolakan jika hash opening state eksplisit tidak cocok dengan MANIFEST (`test_explicit_opening_state_checksum_mismatch_with_manifest_fails_fast`). Total 22 tes unit.
+**Diverifikasi:**
+- [F] python -m ruff check .: PASS (clean).
+- [F] 4 tes regresi baru resolusi integritas MANIFEST: PASS.
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Commit perubahan source generator dan test regresi, regenerasi pack Agustus 2026 dan MANIFEST.json dengan binding generator commit exact, commit MANIFEST, push ke PR #97, dan pantau CI.
+
 ## 2026-11-09T08:15:00+07:00 — antigravity — F2/PR97: Penyelarasan id_mobile_api dengan main untuk stabilitas CI
 **Berubah:**
 - addons/id_mobile_api: Mengembalikan file `models/mobile_workday.py` dan `tests/test_commands_api.py` ke keselarasan 100% dengan `origin/main` (PR #100) menggunakan mekanisme patching `business_date` dan pengujian `test_sunday_rule_rejects_order_and_check_in`.

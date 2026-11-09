@@ -61,6 +61,34 @@ def get_git_head_commit(override_commit: Optional[str] = None) -> str:
         return "UNKNOWN_COMMIT"
 
 
+def verify_pack_manifest(pack_dir: Path) -> Dict[str, Any]:
+    """Memverifikasi integritas manifest dan checksum SHA-256 LF seluruh berkas dalam pack."""
+    manifest_path = pack_dir / "MANIFEST.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(
+            f"Pack manifest untuk periode sebelumnya tidak ditemukan di {manifest_path}"
+        )
+    with manifest_path.open("r", encoding="utf-8") as f:
+        manifest = json.load(f)
+
+    files_sha = manifest.get("files_sha256", {})
+    if not files_sha:
+        raise ValueError(f"MANIFEST.json di {manifest_path} tidak memuat entri files_sha256.")
+
+    for fname, expected_hash in files_sha.items():
+        fpath = pack_dir / fname
+        if not fpath.exists():
+            raise FileNotFoundError(f"Berkas '{fname}' yang terdaftar pada MANIFEST tidak ditemukan di {pack_dir}")
+        actual_hash = compute_sha256_lf(fpath)
+        if actual_hash != expected_hash:
+            raise ValueError(
+                f"Integritas file {fname} pada pack {pack_dir.name} tidak valid menurut MANIFEST: "
+                f"aktual {actual_hash} != expected {expected_hash}"
+            )
+
+    return manifest
+
+
 def get_verified_previous_closing(period: str, reg_dir: Path) -> Dict[str, Any]:
     """Menghitung penutupan periode sebelumnya secara independen dan terverifikasi."""
     year_str, month_str = period.split("-")
@@ -96,25 +124,11 @@ def get_verified_previous_closing(period: str, reg_dir: Path) -> Dict[str, Any]:
         # Untuk periode setelah Agustus (misal 2026-09):
         # Penutupan periode sebelumnya diverifikasi dari manifes pack periode sebelumnya
         prev_pack_dir = reg_dir / "periods" / prev_period
-        manifest_path = prev_pack_dir / "MANIFEST.json"
-        if not manifest_path.exists():
-            raise FileNotFoundError(
-                f"Pack manifest untuk periode sebelumnya {prev_period} tidak ditemukan di {prev_pack_dir}"
-            )
-        with manifest_path.open("r", encoding="utf-8") as f:
-            manifest = json.load(f)
-
-        for fname, expected_hash in manifest.get("files_sha256", {}).items():
-            fpath = prev_pack_dir / fname
-            if not fpath.exists() or compute_sha256_lf(fpath) != expected_hash:
-                raise ValueError(
-                    f"Integritas file {fname} pada pack {prev_period} tidak valid menurut MANIFEST"
-                )
-
-        prev_closing_files = list(prev_pack_dir.glob("closing_state_*.json"))
+        verify_pack_manifest(prev_pack_dir)
+        prev_closing_files = sorted(prev_pack_dir.glob("closing_state_*.json"))
         if not prev_closing_files:
             raise FileNotFoundError(f"closing_state berkas tidak ditemukan di {prev_pack_dir}")
-        with prev_closing_files[0].open("r", encoding="utf-8") as f:
+        with prev_closing_files[-1].open("r", encoding="utf-8") as f:
             prev_closing_data = json.load(f)
         return prepare_gate_opening(prev_closing_data)
 
@@ -153,18 +167,35 @@ def resolve_opening_state_path(
     """Menentukan path opening state untuk periode tertentu secara fail-closed dan konsisten.
 
     Aturan kontinuitas:
-    1. Jika opening_state_path diberikan secara eksplisit: gunakan dan pastikan file ada.
+    1. Jika opening_state_path diberikan secara eksplisit:
+       * Pastikan berkas ada.
+       * Jika direktori berkas memuat MANIFEST.json dan berkas terdaftar di files_sha256,
+         verifikasi kesesuaian hash SHA-256 LF secara fail-closed.
     2. Jika opening_state_path tidak diberikan:
        * Periode '2026-08': default ke data/registers/state_20260801.json.
        * Periode non-Agustus (misal '2026-09'): otomatis mencari berkas closing_state
          pada direktori pack periode sebelumnya (data/registers/periods/<prev_period>/closing_state_*.json).
-         Jika tidak ditemukan, wajibkan eksplisit dengan melempar ValueError agar tidak
-         menghasilkan transaksi yang terlepas dari kontinuitas saldo penutupan sebelumnya.
+         Wajib memverifikasi MANIFEST.json dan checksum berkas closing state tersebut
+         secara fail-closed via verify_pack_manifest. Jika berkas closing, manifest, atau
+         hash tidak cocok/hilang, proses menolak dengan FileNotFoundError/ValueError.
     """
     if opening_state_path is not None:
         p = Path(opening_state_path)
         if not p.exists():
             raise FileNotFoundError(f"Opening state berkas tidak ditemukan: {p}")
+        manifest_path = p.parent / "MANIFEST.json"
+        if manifest_path.exists():
+            with manifest_path.open("r", encoding="utf-8") as f:
+                manifest = json.load(f)
+            files_sha = manifest.get("files_sha256", {})
+            if p.name in files_sha:
+                expected_hash = files_sha[p.name]
+                actual_hash = compute_sha256_lf(p)
+                if actual_hash != expected_hash:
+                    raise ValueError(
+                        f"Integritas opening state eksplisit '{p.name}' tidak cocok dengan MANIFEST: "
+                        f"aktual {actual_hash} != diharapkan {expected_hash}"
+                    )
         return p
 
     if period == "2026-08":
@@ -181,15 +212,28 @@ def resolve_opening_state_path(
         prev_period = f"{year:04d}-{month - 1:02d}"
 
     prev_pack_dir = reg_dir / "periods" / prev_period
-    closing_candidates = list(prev_pack_dir.glob("closing_state_*.json")) if prev_pack_dir.exists() else []
+    if not prev_pack_dir.exists():
+        raise ValueError(
+            f"Opening state untuk periode non-Agustus '{period}' wajib disertakan via --opening-state "
+            f"karena closing state periode sebelumnya '{prev_period}' tidak ditemukan di {prev_pack_dir}."
+        )
 
-    if closing_candidates:
-        return sorted(closing_candidates)[-1]
+    closing_candidates = sorted(prev_pack_dir.glob("closing_state_*.json"))
+    if not closing_candidates:
+        raise FileNotFoundError(
+            f"Closing state periode sebelumnya '{prev_period}' tidak ditemukan di {prev_pack_dir}."
+        )
+    closing_file = closing_candidates[-1]
 
-    raise ValueError(
-        f"Opening state untuk periode non-Agustus '{period}' wajib disertakan via --opening-state "
-        f"karena closing state periode sebelumnya '{prev_period}' tidak ditemukan di {prev_pack_dir}."
-    )
+    # Validasi provenance dan checksum closing state terhadap MANIFEST periode sebelumnya
+    manifest = verify_pack_manifest(prev_pack_dir)
+    files_sha = manifest.get("files_sha256", {})
+    if closing_file.name not in files_sha:
+        raise ValueError(
+            f"Closing state '{closing_file.name}' tidak terdaftar pada MANIFEST.json periode '{prev_period}'."
+        )
+
+    return closing_file
 
 
 def generate_period_pack(

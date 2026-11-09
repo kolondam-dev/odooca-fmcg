@@ -2143,3 +2143,9 @@
 - CI Install Test Guard: Mengembalikan id_mobile_api ke keselarasan 100% dengan origin/main (PR #100), menghilangkan redundansi fixture dan memanfaatkan test_sunday_rule_rejects_order_and_check_in kanonikal.
 - Pengujian: 18 tes planner PASS, ruff clean, manifest 12 addon OK, PWA gate 100% PASS (pwa-quality, pwa-container, pwa-browser).
 - Task managed by antigravity at 2026-11-09T08:15:00+07:00
+
+[2026-11-09T09:36:00+07:00] [INFO] F2/PR97: Validasi Provenance dan Checksum MANIFEST pada Auto-Resolution Opening State
+- P2: Mengintegrasikan verify_pack_manifest pada resolve_opening_state_path untuk memvalidasi keberadaan MANIFEST.json, keterdaftaran closing state pada files_sha256, dan kesesuaian hash SHA-256 LF secara fail-closed sebelum berkas opening state diterima.
+- Regresi Planner: Menambahkan 4 unit regression test pembuktian penolakan fail-fast jika MANIFEST hilang, berkas tidak terdaftar, atau checksum tidak cocok (total 22 tes unit).
+- Pengujian: ruff check clean, check_manifests 12 addon OK.
+- Task managed by antigravity at 2026-11-09T09:36:00+07:00

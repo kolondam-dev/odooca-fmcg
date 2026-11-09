@@ -6,6 +6,7 @@ import datetime as dt
 from decimal import Decimal
 import json
 from pathlib import Path
+import tempfile
 import unittest
 
 from scripts.ops.fmcg_calendar import count_working_days, is_working_day
@@ -448,6 +449,73 @@ class TestSeedPlannerF2(unittest.TestCase):
 
         with self.assertRaises(FileNotFoundError):
             resolve_opening_state_path("2026-09", self.reg_dir, opening_state_path=Path("non_existent_state.json"))
+
+    def test_default_opening_state_resolution_missing_manifest_fails_fast(self):
+        """Auto-resolve periode non-Agustus menolak jika MANIFEST.json periode sebelumnya tidak ada."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            temp_reg = Path(tmp_dir)
+            prev_dir = temp_reg / "periods" / "2026-08"
+            prev_dir.mkdir(parents=True)
+            closing_file = prev_dir / "closing_state_20260831.json"
+            closing_file.write_text("{}", encoding="utf-8")
+
+            with self.assertRaises(FileNotFoundError) as cm:
+                resolve_opening_state_path("2026-09", temp_reg)
+            self.assertIn("Pack manifest", str(cm.exception))
+
+    def test_default_opening_state_resolution_closing_missing_from_manifest_fails_fast(self):
+        """Auto-resolve periode non-Agustus menolak jika berkas closing tidak terdaftar di MANIFEST.json."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            temp_reg = Path(tmp_dir)
+            prev_dir = temp_reg / "periods" / "2026-08"
+            prev_dir.mkdir(parents=True)
+            closing_file = prev_dir / "closing_state_20260831.json"
+            closing_file.write_text("{}", encoding="utf-8")
+            other_file = prev_dir / "other.csv"
+            other_file.write_text("dummy\n", encoding="utf-8")
+            other_hash = compute_sha256_lf(other_file)
+            manifest_file = prev_dir / "MANIFEST.json"
+            manifest_file.write_text(json.dumps({"files_sha256": {"other.csv": other_hash}}), encoding="utf-8")
+
+            with self.assertRaises(ValueError) as cm:
+                resolve_opening_state_path("2026-09", temp_reg)
+            self.assertIn("tidak terdaftar pada MANIFEST.json", str(cm.exception))
+
+    def test_default_opening_state_resolution_checksum_mismatch_fails_fast(self):
+        """Auto-resolve periode non-Agustus menolak jika hash closing tidak cocok dengan MANIFEST.json."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            temp_reg = Path(tmp_dir)
+            prev_dir = temp_reg / "periods" / "2026-08"
+            prev_dir.mkdir(parents=True)
+            closing_file = prev_dir / "closing_state_20260831.json"
+            closing_file.write_text("{}", encoding="utf-8")
+            manifest_file = prev_dir / "MANIFEST.json"
+            manifest_file.write_text(
+                json.dumps({"files_sha256": {"closing_state_20260831.json": "0" * 64}}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValueError) as cm:
+                resolve_opening_state_path("2026-09", temp_reg)
+            self.assertIn("tidak valid menurut MANIFEST", str(cm.exception))
+
+    def test_explicit_opening_state_checksum_mismatch_with_manifest_fails_fast(self):
+        """Opening state eksplisit yang berada di direktori pack ber-MANIFEST menolak jika checksum tidak cocok."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            temp_reg = Path(tmp_dir)
+            prev_dir = temp_reg / "periods" / "2026-08"
+            prev_dir.mkdir(parents=True)
+            closing_file = prev_dir / "closing_state_20260831.json"
+            closing_file.write_text("{}", encoding="utf-8")
+            manifest_file = prev_dir / "MANIFEST.json"
+            manifest_file.write_text(
+                json.dumps({"files_sha256": {"closing_state_20260831.json": "bad_hash_value"}}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValueError) as cm:
+                resolve_opening_state_path("2026-09", temp_reg, opening_state_path=closing_file)
+            self.assertIn("tidak cocok dengan MANIFEST", str(cm.exception))
 
 
 if __name__ == "__main__":
