@@ -382,6 +382,7 @@ def generate_period_pack(
                 "status_at_cutoff": "posted",
                 "due_date": r["due_date"],
                 "customer": r.get("customer") or so_cust_map.get(r.get("so_number"), ""),
+                "commercial_dpp": r.get("commercial_dpp", r["dpp_amount"]),
                 "dpp_amount": r["dpp_amount"],
                 "total_invoice_with_ppn": r["total_invoice_with_ppn"],
             }
@@ -401,6 +402,7 @@ def generate_period_pack(
                 "status_at_cutoff": "carry_forward_pending",
                 "due_date": r["due_date"],
                 "customer": r.get("customer") or so_cust_map.get(r.get("so_number"), ""),
+                "commercial_dpp": r.get("commercial_dpp", r["dpp_amount"]),
                 "dpp_amount": r["dpp_amount"],
                 "total_invoice_with_ppn": r["total_invoice_with_ppn"],
             }

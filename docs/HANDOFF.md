@@ -1,3 +1,25 @@
+## 2026-11-09T21:55:00+07:00 — antigravity — F2: Resolusi Review Substantif PR #105 (PMK 131/2024, Coretax, Provenance Rejection)
+**Berubah:**
+- scripts/ops/seed_planner.py:
+  * P1 Pemisahan Nilai Komersial & DPP Nilai Lain (PMK 131/2024): Memisahkan nilai komersial netto (`commercial_dpp`) dari dasar pengenaan pajak faktur pajak (`dpp_amount` = 11/12 x commercial_dpp). Menetapkan tarif resmi undang-undang 12% (`tax_rate: 0.12`), PPN terutang `ppn_amount = 12% x dpp_amount` (efektif 11% dari nilai jual komersial), dan total faktur komersial `total_invoice_with_ppn = commercial_dpp + ppn_amount`. Metadata diselaraskan pada invoice normal, carry-forward invoice, dan `po_headers` (faktur pajak masukan).
+  * P2 Pemisahan Status PKP & Identitas Pembeli Coretax: Memisahkan status pengusaha kena pajak (`is_pkp`) dari tipe identitas perpajakan pembeli (`buyer_id_type`). Modern Trade, Institusi, dan GT badan usaha berstatus `is_pkp=True` dengan NPWP16 16 digit. Retail warung perorangan berstatus `is_pkp=False` dengan mayoritas NIK 16 digit Kota Manado (7171) dan sebagian kecil tanpa identitas TIN_0 ('0000000000000000').
+  * P2 Provenance Rejection & Semantic Consistency: Mengeliminasi pola paritas artifisial ganjil-genap dan menggantinya dengan katalog insiden kausal deterministik (`REJECTION_INCIDENT_CATALOG`). Menambahkan kolom `incident_batch_ref`, `evidence_type` (ACTUAL, BATCH_REFERENCE, SYNTHETIC, NONE), dan `evidence_photo_ref` nullable. Tolakan kadaluwarsa Modern Trade (`EXPIRY_DEKAT_DITOLAK`) ditandai `evidence_type: NONE` dan referensi foto kosong (semantic consistency terjamin dan tidak berpura-pura lengkap).
+- scripts/ops/seed_v2_gates.py:
+  * Menyelaraskan gerbang `TAX-SOURCE` untuk memvalidasi konsistensi kode transaksi `04` (DPP Nilai Lain 11/12 dan tarif 12%) secara matematis presisi tanpa merusak kompatibilitas mundur transaksi kode 01 legacy Juli.
+- tests/test_seed_planner.py:
+  * Menambahkan unit test aritmetika PMK 131/2024 (`test_pmk131_tax_code_04_arithmetic_precision`), verifikasi Coretax buyer identity (`test_commercial_invoices_tax_metadata`), dan kausalitas provenance rejection (`test_pod_rejection_reasons_and_evidence`).
+- data/registers/periods/2026-08/:
+  * Regenerasi seluruh berkas pack periode Agustus 2026 dengan skema baru dan MANIFEST.json.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner tests.test_seed_v2_gates: 114 tests PASS in 23.2s.
+- [F] python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict: PASS (11 gates, 0 violations).
+- [F] python -m ruff check scripts/ops/ tests/: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+**Belum diuji:**
+- [BU] Eksekusi seeding ke database live Odoo 19 CE.
+**Berikutnya:**
+- Commit dan push pembaruan ke `agen/seed-f2-august-refinement`, pantau CI PR #105, dan serahkan ke supervisor untuk re-review.
+
 ## 2026-11-09T20:25:00+07:00 — antigravity — F2: Sinkronisasi agen/seed-f2-august-refinement dengan main terbaru (54b2db1)
 **Berubah:**
 - Integrasi Cabang: Menggabungkan `origin/main` (commit `54b2db1` yang memuat PR #98 F0b stock reconciliation, PR #101 Finance I2a core ledgers, dan PR #103 PWA Order POS) ke dalam cabang `agen/seed-f2-august-refinement` via merge commit tanpa force-push.

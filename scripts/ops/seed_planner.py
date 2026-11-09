@@ -55,6 +55,57 @@ DAY_NAMES = {
     6: "Minggu",
 }
 
+# Fixture Katalog Insiden Penolakan Pengiriman (Provenance & Causal Fixture)
+# Menjamin integritas kausal: alasan penolakan berakar pada kondisi faktual serah terima barang di outlet.
+REJECTION_INCIDENT_CATALOG = {
+    "TRANSIT_ROUGH_ROAD": {
+        "reason": "KEMASAN_RUSAK_TRANSIT",
+        "evidence_type": "BATCH_REFERENCE",
+        "evidence_photo_ref": "/evidence/batch/incident_transit_rough_road_202608.jpg",
+        "incident_batch_ref": "BAP-TR-202608-01",
+        "desc": "Kardus penyok/sobek akibat guncangan distribusi armada rute luar kota/jalan berlubang",
+    },
+    "FACTORY_SEAL_LEAK": {
+        "reason": "SEGEL_PABRIK_BOCOR",
+        "evidence_type": "ACTUAL",
+        "evidence_photo_ref": "/evidence/actual/pod_rejection_seal_leak.jpg",
+        "incident_batch_ref": "BAP-QA-202608-02",
+        "desc": "Kebocoran segel botol/kemasan produk cair dari pabrik prinsipal",
+    },
+    "SLA_EXPIRY_REJECT": {
+        "reason": "EXPIRY_DEKAT_DITOLAK",
+        "evidence_type": "NONE",
+        "evidence_photo_ref": None,
+        "incident_batch_ref": "BAP-SLA-202608-03",
+        "desc": "Sisa umur simpan di bawah SLA penerimaan outlet modern trade (< 6 bulan)",
+    },
+    "SYNTHETIC_CAN_DENT": {
+        "reason": "DEFECT_KALENG_PENYOK",
+        "evidence_type": "SYNTHETIC",
+        "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg",
+        "incident_batch_ref": "SIM-QA-202608-04",
+        "desc": "Sampel kaleng penyok untuk pengujian kalibrasi visual PWA",
+    },
+}
+
+
+def resolve_rejection_incident(sku: str, lot: str, ch: str, vehicle_plate: str) -> Dict[str, Any]:
+    """Menentukan insiden penolakan secara kausal dan deterministik berdasarkan konteks transaksi."""
+    # 1. Modern Trade (MT) memiliki kebijakan ketat SLA sisa shelf-life (penolakan administratif tanpa kerusakan fisik)
+    if ch == "MT":
+        return REJECTION_INCIDENT_CATALOG["SLA_EXPIRY_REJECT"]
+
+    # 2. Rute luar kota / armada antar-kota dengan guncangan jalan (Minahasa/Bitung: DB 8910 TK, dsb)
+    if vehicle_plate in ("DB 8910 TK", "DB 8567 TR"):
+        return REJECTION_INCIDENT_CATALOG["TRANSIT_ROUGH_ROAD"]
+
+    # 3. Produk cair / botol / RTD yang rentan bocor segel pabrikan
+    if any(k in sku for k in ("KAPAL", "ABC", "WINGS")):
+        return REJECTION_INCIDENT_CATALOG["FACTORY_SEAL_LEAK"]
+
+    # 4. Default penolakan handling umum
+    return REJECTION_INCIDENT_CATALOG["SYNTHETIC_CAN_DENT"]
+
 
 def _dec(val: Any) -> Decimal:
     if isinstance(val, Decimal):
@@ -158,13 +209,42 @@ class SeedPlanner:
         path = self.reg_dir / "customer_registry_354.csv"
         raw = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
         rows = list(csv.DictReader(StringIO(raw.decode("utf-8-sig"))))
-        for r in rows:
+        for idx, r in enumerate(rows):
             r["credit_limit_dec"] = _dec(r.get("credit_limit") or "0")
             r["payment_term_days_int"] = int(r.get("payment_term_days") or "0")
             vat_raw = r.get("vat") or ""
             vat_clean = "".join(ch for ch in vat_raw if ch.isdigit())
-            r["customer_vat"] = vat_clean if len(vat_clean) == 16 else "0000000000000000"
-            r["is_pkp"] = bool(r.get("vat") and len(vat_clean) == 16)
+            vat_16 = vat_clean[:16] if len(vat_clean) >= 16 else vat_clean.zfill(16)
+            ch = r.get("channel_code", "")
+            is_comp = str(r.get("is_company", "")).strip().lower() == "true"
+
+            # Pisahkan status PKP dari jenis identitas perpajakan (Coretax Architecture)
+            if is_comp and len(vat_clean) >= 15:
+                # Badan Usaha PKP (Modern Trade DC & Superstore, Grosir Berbadan Usaha, Institusi)
+                r["is_pkp"] = True
+                r["buyer_id_type"] = "NPWP16"
+                r["customer_tax_id"] = vat_16
+                r["customer_vat"] = vat_16
+            elif ch in ("MT", "INST") or (ch == "GT" and is_comp):
+                # Cadangan PKP untuk channel korporat bila format awal bukan 16 digit
+                r["is_pkp"] = True
+                r["buyer_id_type"] = "NPWP16"
+                r["customer_tax_id"] = vat_16 if vat_clean else f"0123456789{idx+1:06d}"
+                r["customer_vat"] = r["customer_tax_id"]
+            else:
+                # Retail Warung/Kios Perorangan (Non-PKP karena omzet di bawah threshold pengusaha kecil)
+                r["is_pkp"] = False
+                # Di sistem Coretax DJP, WPOP pemilik warung retail didaftarkan dengan NIK KTP Manado (kode 7171).
+                # Sebagian kecil outlet retail (sekitar 10%) belum terdata NIK-nya dicatat dengan TIN_0 (0000000000000000).
+                if idx % 10 == 0:
+                    r["buyer_id_type"] = "TIN_0"
+                    r["customer_tax_id"] = "0000000000000000"
+                    r["customer_vat"] = "0000000000000000"
+                else:
+                    r["buyer_id_type"] = "NIK"
+                    nik_id = f"717101{((idx * 7) % 28 + 1):02d}08{80 + (idx % 20):02d}{idx+1:04d}"
+                    r["customer_tax_id"] = nik_id
+                    r["customer_vat"] = nik_id
         return rows
 
     def _load_lot_metadata(self) -> Dict[Tuple[str, str], Dict[str, Any]]:
@@ -521,6 +601,12 @@ class SeedPlanner:
                             rej_net_dpp += line_net_rej
                             rej_seq += 1
                             rej_id = f"REJ-{ym_str}-{rej_seq:03d}"
+                            inc = resolve_rejection_incident(
+                                sku,
+                                lot,
+                                cust_info.get("channel_code", ""),
+                                cust_info.get("delivery_vehicle", ""),
+                            )
                             rejections.append({
                                 "rejection_id": rej_id,
                                 "rejection_date": d_str,
@@ -532,8 +618,10 @@ class SeedPlanner:
                                 "line_gross_dpp": _q(line_gross),
                                 "line_disc_dpp": _q(line_disc),
                                 "rejection_dpp": _q(line_net_rej),
-                                "rejection_reason": "ITEM RUSAK" if (rej_seq % 2 == 0) else "ITEM EXPIRED",
-                                "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg",
+                                "rejection_reason": inc["reason"],
+                                "incident_batch_ref": inc["incident_batch_ref"],
+                                "evidence_type": inc["evidence_type"],
+                                "evidence_photo_ref": inc["evidence_photo_ref"] or "",
                             })
                             evt_seq += 1
                             stock_events.append({
@@ -559,11 +647,14 @@ class SeedPlanner:
                     })
 
                     # Cetak Faktur Komersial (net of rejection & net of discount)
+                    # Sesuai PMK 131/2024: DPP Nilai Lain = 11/12 x Nilai Jual Komersial Netto, PPN 12%
                     inv_seq += 1
                     inv_num = f"INV-{ym_str}-{inv_seq:04d}"
-                    inv_dpp = so_info["net_dpp"] - rej_net_dpp
-                    ppn = (inv_dpp * self.config.tax_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
-                    inv_total = inv_dpp + ppn
+                    inv_comm_dpp = so_info["net_dpp"] - rej_net_dpp
+                    inv_tax_base = (inv_comm_dpp * Decimal(11) / Decimal(12)).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                    statutory_rate = Decimal("0.12")
+                    ppn = (inv_tax_base * statutory_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                    inv_total = inv_comm_dpp + ppn
 
                     top_days = cust_info["payment_term_days_int"]
                     due_date = curr_dt + dt.timedelta(days=top_days)
@@ -576,12 +667,17 @@ class SeedPlanner:
                         "date_invoice": d_str,
                         "due_date": due_date_str,
                         "payment_term_days": str(top_days),
-                        "dpp_amount": _q(inv_dpp),
+                        "commercial_dpp": _q(inv_comm_dpp),
+                        "dpp_amount": _q(inv_tax_base),
+                        "tax_rate": "0.12",
                         "ppn_amount": _q(ppn),
                         "total_invoice_with_ppn": _q(inv_total),
                         "customer": f"{cust_code} - {cust_info['name']}",
+                        "is_pkp": str(cust_info["is_pkp"]),
+                        "buyer_id_type": cust_info["buyer_id_type"],
+                        "customer_tax_id": cust_info["customer_tax_id"],
                         "customer_vat": cust_info["customer_vat"],
-                        "tax_invoice_type": "STANDAR",
+                        "tax_invoice_type": "DPP_NILAI_LAIN",
                         "tax_code": "04",
                     })
 
@@ -590,7 +686,8 @@ class SeedPlanner:
                         "date_invoice": d_str,
                         "due_date": due_date_str,
                         "customer": f"{cust_code} - {cust_info['name']}",
-                        "dpp_amount": inv_dpp,
+                        "commercial_dpp": inv_comm_dpp,
+                        "dpp_amount": inv_tax_base,
                         "total_with_ppn": inv_total,
                         "source": "august_current",
                     }
@@ -888,7 +985,8 @@ class SeedPlanner:
                         po_lines.append(pl_entry)
                         po_lines_batch.append(pl_entry)
 
-                    po_ppn = (po_tot_dpp * self.config.tax_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                    po_tax_base = (po_tot_dpp * Decimal(11) / Decimal(12)).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                    po_ppn = (po_tax_base * Decimal("0.12")).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
                     po_total_with_ppn = po_tot_dpp + po_ppn
 
                     po_headers.append({
@@ -900,7 +998,11 @@ class SeedPlanner:
                         "due_date": po_due_str,
                         "rop_trigger_date": d_str,
                         "rop_cover_days": "14",
+                        "commercial_dpp": _q(po_tot_dpp),
                         "total_dpp": _q(po_tot_dpp),
+                        "tax_dpp": _q(po_tax_base),
+                        "tax_code": "04",
+                        "tax_rate": "0.12",
                         "ppn_amount": _q(po_ppn),
                         "total_with_ppn": _q(po_total_with_ppn),
                     })
@@ -1061,6 +1163,12 @@ class SeedPlanner:
                         rej_net_dpp += line_net_rej
                         rej_seq += 1
                         rej_id = f"REJ-{ym_str}-{rej_seq:03d}"
+                        inc = resolve_rejection_incident(
+                            item["sku_code"],
+                            item["lot_number"],
+                            cust_info.get("channel_code", ""),
+                            cust_info.get("delivery_vehicle", ""),
+                        )
                         rejections.append({
                             "rejection_id": rej_id,
                             "rejection_date": follow_day_str,
@@ -1072,8 +1180,10 @@ class SeedPlanner:
                             "line_gross_dpp": _q(line_gross),
                             "line_disc_dpp": _q(line_disc),
                             "rejection_dpp": _q(line_net_rej),
-                            "rejection_reason": "ITEM RUSAK" if (rej_seq % 2 == 0) else "ITEM EXPIRED",
-                            "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg",
+                            "rejection_reason": inc["reason"],
+                            "incident_batch_ref": inc["incident_batch_ref"],
+                            "evidence_type": inc["evidence_type"],
+                            "evidence_photo_ref": inc["evidence_photo_ref"] or "",
                         })
 
                     carry_forward_lines.append({
@@ -1097,9 +1207,11 @@ class SeedPlanner:
 
                 inv_seq += 1
                 inv_num = f"INV-{ym_str}-{inv_seq:04d}"
-                inv_dpp = so_info["net_dpp"] - rej_net_dpp
-                ppn = (inv_dpp * self.config.tax_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
-                inv_total = inv_dpp + ppn
+                inv_comm_dpp = so_info["net_dpp"] - rej_net_dpp
+                inv_tax_base = (inv_comm_dpp * Decimal(11) / Decimal(12)).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                statutory_rate = Decimal("0.12")
+                ppn = (inv_tax_base * statutory_rate).quantize(ONE_CENT, rounding=ROUND_HALF_UP)
+                inv_total = inv_comm_dpp + ppn
 
                 top_days = cust_info["payment_term_days_int"]
                 due_date = follow_day + dt.timedelta(days=top_days)
@@ -1112,12 +1224,17 @@ class SeedPlanner:
                     "date_invoice": follow_day_str,
                     "due_date": due_date_str,
                     "payment_term_days": str(top_days),
-                    "dpp_amount": _q(inv_dpp),
+                    "commercial_dpp": _q(inv_comm_dpp),
+                    "dpp_amount": _q(inv_tax_base),
+                    "tax_rate": "0.12",
                     "ppn_amount": _q(ppn),
                     "total_invoice_with_ppn": _q(inv_total),
                     "customer": f"{cust_code} - {cust_info['name']}",
+                    "is_pkp": str(cust_info["is_pkp"]),
+                    "buyer_id_type": cust_info["buyer_id_type"],
+                    "customer_tax_id": cust_info["customer_tax_id"],
                     "customer_vat": cust_info["customer_vat"],
-                    "tax_invoice_type": "STANDAR",
+                    "tax_invoice_type": "DPP_NILAI_LAIN",
                     "tax_code": "04",
                 })
 

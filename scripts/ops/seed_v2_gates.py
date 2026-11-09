@@ -593,10 +593,28 @@ def _check_tax(pack, config, rpt):
         date = _date(row['date_invoice'])
         if effective and date and date < effective:
             rpt.fail('TAX-SOURCE', number, f'invoice {date} before tax effective date {effective}')
-        if abs(ppn - (dpp * rate).quantize(TOLERANCE, ROUND_HALF_UP)) > TOLERANCE:
-            rpt.fail('TAX-SOURCE', number, f'PPN {ppn} != DPP {dpp} x {rate}')
-        if abs(total - (dpp + ppn)) > TOLERANCE:
-            rpt.fail('TAX-SOURCE', number, f'total {total} != DPP + PPN {dpp + ppn}')
+
+        tax_code = str(row.get('tax_code', '')).strip()
+        comm_dpp = _dec(row['commercial_dpp']) if 'commercial_dpp' in row and str(row['commercial_dpp']).strip() else None
+
+        if tax_code == '04' and comm_dpp is not None:
+            # Sesuai PMK 131/2024: DPP Nilai Lain = 11/12 x commercial_dpp
+            expected_tax_base = (comm_dpp * Decimal(11) / Decimal(12)).quantize(TOLERANCE, ROUND_HALF_UP)
+            if abs(dpp - expected_tax_base) > TOLERANCE:
+                rpt.fail('TAX-SOURCE', number, f'Tax base DPP {dpp} != 11/12 commercial {comm_dpp} (expected {expected_tax_base})')
+            # Tarif resmi undang-undang pada DPP Nilai Lain adalah 12%
+            statutory_rate = Decimal('0.12')
+            if abs(ppn - (dpp * statutory_rate).quantize(TOLERANCE, ROUND_HALF_UP)) > TOLERANCE:
+                rpt.fail('TAX-SOURCE', number, f'PPN {ppn} != DPP {dpp} x {statutory_rate}')
+            # Total tagihan komersial = commercial_dpp + PPN
+            if abs(total - (comm_dpp + ppn)) > TOLERANCE:
+                rpt.fail('TAX-SOURCE', number, f'total {total} != commercial DPP + PPN {comm_dpp + ppn}')
+        else:
+            # Standar / Legacy
+            if abs(ppn - (dpp * rate).quantize(TOLERANCE, ROUND_HALF_UP)) > TOLERANCE:
+                rpt.fail('TAX-SOURCE', number, f'PPN {ppn} != DPP {dpp} x {rate}')
+            if abs(total - (dpp + ppn)) > TOLERANCE:
+                rpt.fail('TAX-SOURCE', number, f'total {total} != DPP + PPN {dpp + ppn}')
 
 
 # ---------------------------------------------------------------- CASH-NONNEG
