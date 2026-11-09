@@ -176,7 +176,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             ).toBeDisabled();
             await page.reload();
             await expect(
-            page.getByRole("region", { name: "Sesi kerja", exact: true }),
+                page.getByRole("region", { name: "Sesi kerja", exact: true }),
             ).toHaveAttribute("aria-busy", "false");
             await page
                 .getByRole("button", { name: "Lainnya", exact: true })
