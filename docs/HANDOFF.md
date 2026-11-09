@@ -1,3 +1,18 @@
+## 2026-11-09T07:55:00+07:00 — antigravity — F2/PR97: Binding MANIFEST.json ke Commit Generator c7f5a36
+**Berubah:**
+- data/registers/periods/2026-08/MANIFEST.json:
+  * Memperbarui `generator_commit` ke `c7f5a363ee0dbc4362b5416012c4085d72de7710` (commit perbaikan P2 opening state lintas-periode dan CI Sunday guard).
+  * Memperbarui `generator_sources_sha256` untuk `scripts/ops/generate_period_pack.py` ke hash LF eksak `7c29502ca99b0a81245ea9dccd7fef22e4e9dd42af7478200b2a5f859197399f`.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 18 tests PASS.
+- [F] python -m unittest tests.test_seed_v2_gates: 82 tests PASS.
+- [F] python scripts/ops/generate_period_pack.py --period 2026-08 --strict-validate: 11 invariant gates PASS (0 violations).
+- [F] LF verification & manifest provenance check: PASS.
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Push ke origin `agen/seed-f2-planner` dan pantau CI workflow checks.
+
 ## 2026-11-09T07:38:00+07:00 — antigravity — F2/PR97: Default Opening State Lintas-Periode, CI Sunday Invariant Guard, dan Penyelarasan Clock PWA
 **Berubah:**
 - scripts/ops/generate_period_pack.py:
