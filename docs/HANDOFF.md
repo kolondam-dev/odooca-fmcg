@@ -1,3 +1,31 @@
+## 2026-11-10T00:15:00+07:00 — antigravity — F2: Resolusi Tuntas Temuan P2 Supervisor PR #105 (Fixture Identitas Coretax & Verifiable Synthetic Evidence)
+**Berubah:**
+- data/registers/customer_tax_profile_fixture.json:
+  * Fixture deklaratif eksplisit 354 outlet pelanggan: 46 outlet PKP ber-NPWP16 (`is_pkp: true`, `buyer_id_type: NPWP16`), 282 outlet Non-PKP ber-NIK Manado (`is_pkp: false`, `buyer_id_type: NIK`), dan 26 outlet Non-PKP tanpa NPWP/NIK (`buyer_id_type: TIN_0`, `'0000000000000000'`). Seluruh identitas non-produksi berstatus transparan `tax_id_status: SYNTHETIC_TEST_IDENTITY` atau `UNREGISTERED_ZERO_IDENTITY`.
+- data/evidence/pod_synthetic_carton_damage.jpg & data/evidence/pod_synthetic_seal_leak.jpg:
+  * Berkas bukti fisik valid JPEG (JFIF standar) tersedia nyata di repositori untuk seluruh penolakan bertanda `SYNTHETIC`.
+- scripts/ops/seed_planner.py:
+  * Memuat langsung `customer_tax_profile_fixture.json` pada `_load_customers()`, mengeliminasi pemotongan string `vat[:16]`, rumus modulo `idx % 10`, dan penalaran algoritmik fiktif.
+  * Menyelaraskan katalog `SYNTHETIC_REJECTION_FIXTURE` ke berkas `data/evidence/` fisik dan melarang klaim `ACTUAL` palsu.
+- scripts/ops/generate_period_pack.py:
+  * Mengekspos parameter perpajakan eksplisit di manifest konfigurasi: `statutory_rate: "0.12"`, `dpp_factor: "11/12"`, `effective_rate: "0.11"`, `rate: "0.11"`.
+- tests/test_seed_planner.py:
+  * Menambahkan asersi verifikasi fisik: `(REPO_ROOT / r["evidence_photo_ref"]).is_file()` untuk setiap penolakan sintetis.
+  * Menambahkan pengujian keselarasan 100% invoice terhadap fixture deklaratif `customer_tax_profile_fixture.json`.
+- data/registers/periods/2026-08/:
+  * Regenerasi seluruh berkas pack periode Agustus 2026 dan MANIFEST.json terikat commit generator `a168e4e`.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner tests.test_seed_v2_gates: 114 tests PASS in 20.7s.
+- [F] python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict: PASS (11 gates, 0 violations).
+- [F] python scripts/ops/verify_seed_invariants.py: PASS.
+- [F] python scripts/ops/verify_seed_acceptance.py: PASS.
+- [F] python -m ruff check scripts/ops/ tests/: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #105.
+**Berikutnya:**
+- Commit pack data & logs, push ke `origin/agen/seed-f2-august-refinement`, pantau CI PR #105 hingga 100% hijau, dan minta re-review supervisor.
+
 ## 2026-11-09T22:25:00+07:00 — antigravity — F2: Sinkronisasi origin/main (7c957ad: PR #104) & Resolusi Review Substantif PR #105
 **Berubah:**
 - Integrasi Cabang: Menggabungkan `origin/main` (commit `7c957ad` PR #104: I2b AR/AP subledger FIN05-FIN09) ke dalam cabang `agen/seed-f2-august-refinement` via merge commit tanpa force-push.
