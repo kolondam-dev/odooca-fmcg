@@ -54,6 +54,39 @@ class FinanceScopeTests(unittest.TestCase):
         with self.assertRaisesRegex(Denied, "active accounting context"):
             guard(subject(superuser=True), False)
 
+    def test_foreign_journal_and_account_filters_denied(self):
+        filter_method = next(
+            node for node in ast.walk(TREE)
+            if isinstance(node, ast.FunctionDef) and node.name == "_check_filter_company"
+        )
+        ns = {"AccessError": Denied, "_": lambda message: message}
+        exec(compile(ast.Module(body=[filter_method], type_ignores=[]), str(SOURCE), "exec"), ns)
+        check_filter = ns["_check_filter_company"]
+
+        def filter_subject(journals=(), accounts=()):
+            j_map = {j.id: j for j in journals}
+            a_map = {a.id: a for a in accounts}
+            return SimpleNamespace(env={
+                "account.journal": SimpleNamespace(
+                    with_context=lambda **_kw: SimpleNamespace(browse=lambda ids: [j_map[i] for i in ids]),
+                ),
+                "account.account": SimpleNamespace(
+                    with_context=lambda **_kw: SimpleNamespace(browse=lambda ids: [a_map[i] for i in ids]),
+                ),
+            })
+
+        j_ok = SimpleNamespace(id=10, company_id=SimpleNamespace(id=1))
+        j_bad = SimpleNamespace(id=20, company_id=SimpleNamespace(id=2))
+        a_ok = SimpleNamespace(id=100, company_ids=SimpleNamespace(ids=[1]))
+        a_bad = SimpleNamespace(id=200, company_ids=SimpleNamespace(ids=[2]))
+        instance = filter_subject([j_ok, j_bad], [a_ok, a_bad])
+        check_filter(instance, 1, [10], [100])
+        with self.assertRaisesRegex(Denied, "journal belongs to another company"):
+            check_filter(instance, 1, [20], [100])
+        with self.assertRaisesRegex(Denied, "account belongs to another company"):
+            check_filter(instance, 1, [10], [200])
+
+
 
 if __name__ == "__main__":
     unittest.main()

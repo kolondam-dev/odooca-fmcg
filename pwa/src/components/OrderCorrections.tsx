@@ -15,6 +15,7 @@ import { VisitOrderSchema } from "../domain/visit-contracts";
 import { productPackaging } from "../domain/product-units";
 import { orderQuote, type OrderUom } from "../domain/order-pricing";
 import {
+    MORNING_KEY,
     MorningRecordSchema,
     morningReady,
     type MorningRecord,
@@ -140,18 +141,32 @@ export function OrderCorrections({
             active = false;
         };
     }, [owner, key, morning?.sessionId]);
-    function open(leaf: QueueItem, rootId: string) {
+    async function open(leaf: QueueItem, rootId: string) {
         setMessage("");
         const source = roots.find((r) => r.command.client_uuid === rootId);
         if (!source) return;
+        let currentMorning = morning;
+        if (!currentMorning) {
+            try {
+                const restored = await store.draft(owner, MORNING_KEY);
+                if (restored)
+                    currentMorning = MorningRecordSchema.parse(restored);
+            } catch {
+                /* fallback to state */
+            }
+        }
         if (
             rootOrderDate(source, owner) === today &&
-            !morningReady(morning, owner)
+            !morningReady(currentMorning, owner)
         ) {
             setMessage("Daily sync hari ini wajib sebelum koreksi.");
             return;
         }
-        setDraftSnapshot(undefined);
+        if (currentMorning?.snapshot) {
+            setDraftSnapshot(currentMorning.snapshot);
+        } else {
+            setDraftSnapshot(undefined);
+        }
         setRoot(rootId);
         setParent(leaf);
     }
@@ -278,7 +293,7 @@ export function OrderCorrections({
                             <button
                                 class="secondary"
                                 onClick={() =>
-                                    open(leaf, r.command.client_uuid)
+                                    void open(leaf, r.command.client_uuid)
                                 }
                             >
                                 {expired

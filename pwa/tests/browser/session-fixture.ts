@@ -32,7 +32,6 @@ export const test = base.extend({
                 Date.UTC(parts[0], parts[1] - 1, parts[2], 12, 0, 0),
             ).getUTCDay();
             const shiftMs = witaDay === 0 ? -3 * 24 * 60 * 60 * 1000 : 0;
-
             // Tes yang memasang page.clock memakai jam sendiri; pergeseran hari
             // Minggu tidak boleh ikut, atau jam berjalan mundur setelah reload.
             const shift = () =>
@@ -54,6 +53,8 @@ export const test = base.extend({
                         return RealDate.now() + shift();
                     }
                 }
+                ShiftedDate.UTC = RealDate.UTC;
+                ShiftedDate.parse = RealDate.parse;
                 // @ts-expect-error Assign shifted date constructor
                 window.Date = ShiftedDate;
             }

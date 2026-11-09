@@ -1,3 +1,8 @@
+## 2026-11-09T17:55:00+07:00 — claude-design — PR #103 review P2: approval dari receipt, SKU stale, cartEmpty
+
+**Berubah:** OrderResult (approval hanya dari receipt/antrean; alasan lokal jadi "Kemungkinan perlu approval"), order-cart (`stale` dilaporkan), OrderScreen (callout "Hapus dari draft", kirim diblokir, cartEmpty hanya SKU valid); +2 tes order-cart. Merge main.
+**Diverifikasi:** [F] tsc, vitest. **Belum diuji:** [BU] e2e & CI setelah merge.
+
 ## 2026-11-09T13:47:14+07:00 — claude-design — Fase 2: Order POS, Ringkasan, Hasil kirim, Display & stok
 
 **Berubah:** pwa/src/components/{OrderScreen,OrderResult,DisplayStockScreen}.tsx (layar penuh DS: POS stepper per satuan, cari, kunci principal, SKU sheet, Diskon order, Ringkasan + Catatan/No PO, Hasil kirim bertahap, Display & stok); domain/order-cart.ts (keranjang multi-satuan dilebur ke satu baris kontrak); Stepper punya mode isian; ikon baru; kartu Hub "Display & stok toko"; OrderSheet lama dan cabang order TaskForm dihapus. Bug Back: satu lapis Back untuk Order+Hasil kirim, Display ditumpuk di dalam Order.
@@ -5,6 +10,110 @@
 **Diverifikasi:** [F] e2e phone+tablet 180 lulus (build QA), vitest 456 (+8 order-cart), prettier, tsc, contracts, build + check:build. [A] callout limit kredit memakai credit_limit saja.
 **Belum diuji:** [BU] CI GitHub, perangkat nyata, tombol hubungi SPV (tak ada data).
 **Berikutnya:** peta+foto bukti (K8), Selesai kunjungan, Lainnya/Antrean, Delivery, hapus CSS lama.
+
+## 2026-11-09T12:56:00+07:00 — Agent VSCode — PR101: penyelarasan company context production FIN51 dan perbaikan readiness locator PWA
+**Berubah:** `addons/id_finance_reporting/models/ledger_reports.py`: [F] akar masalah ialah `unaffected = company.get_unaffected_earnings_account()` dipanggil tanpa `with_company(company)` sehingga saat default env adalah company A dan memproses company B, pembuatan akun fallback via `_load_records` berisiko mengikat field company-dependent ke company default; kini eksplisit `company.with_company(company).get_unaffected_earnings_account()`; `scripts/ops/verify_finance_i2_ledgers_core.py` & `tests/test_finance_i2_ledgers_core.py`: menambahkan native regression saat fresh company C belum memiliki akun unaffected earnings dan diproses dari env dengan default company A, serta unit test mock per-company invocation (32 tes finance PASS); `pwa/tests/browser/next-policy.spec.ts`: [F] akar kegagalan e2e browser ialah locator `getByRole("region", { name: "Sesi kerja" })` hanya dirender pada `page === "home"`, sedangkan setelah reload offline aplikasi tetap berada di halaman `"more"`; locator kesiapan kini menggunakan tombol navigasi bottom-nav `"Lainnya"` dan ringkasan `"Riwayat SO ·"` yang deterministik hadir di semua view.
+**Diverifikasi:** [F] `python3 scripts/check_manifests.py` PASS (12 addon); `python3 -m unittest discover -s tests -p 'test_finance*.py'` PASS (32 tes); py_compile dan AST check PASS.
+**Belum diuji:** [BU] Rerun CI GitHub Actions exact-SHA pada PR #101 dan PR #98. Tidak ada deploy atau mutasi DB live.
+
+## 2026-11-09T12:55:00+07:00 — antigravity — F2/PR97: Fail-Closed Check Opening State Eksplisit pada Direktori Pack Ber-MANIFEST
+**Berubah:**
+- scripts/ops/generate_period_pack.py:
+  * P2: Menutup celah fail-open pada penanganan `opening_state_path` eksplisit di `resolve_opening_state_path`. Jika berkas berada di dalam direktori pack yang memiliki `MANIFEST.json`, mewajibkan entri `files_sha256` valid dan non-kosong, mewajibkan nama berkas terdaftar pada `files_sha256` (jika tidak terdaftar raise `ValueError`), dan memverifikasi checksum SHA-256 LF secara fail-closed. Berkas opening state eksplisit di luar direktori pack ber-MANIFEST tetap diizinkan jika berkas ada.
+- tests/test_seed_planner.py:
+  * Menambahkan 3 unit regression test: penolakan jika opening state eksplisit tidak terdaftar di `files_sha256` MANIFEST (`test_explicit_opening_state_missing_from_manifest_fails_fast`), penolakan jika MANIFEST tidak memuat `files_sha256` yang valid (`test_explicit_opening_state_manifest_missing_files_sha256_fails_fast`), dan penerimaan opening state eksplisit yang berada di luar direktori pack ber-MANIFEST (`test_explicit_opening_state_outside_pack_without_manifest_accepted`). Total 25 tes unit.
+**Diverifikasi:**
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+- [F] Unit regression tests pada tests/test_seed_planner.py: PASS.
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Commit perubahan source generator dan test regresi, regenerasi pack Agustus 2026 dan MANIFEST.json dengan binding generator commit exact, commit MANIFEST, push ke PR #97, dan pantau CI.
+
+## 2026-11-09T09:36:00+07:00 — antigravity — F2/PR97: Validasi Provenance dan Checksum MANIFEST pada Auto-Resolution Opening State
+**Berubah:**
+- scripts/ops/generate_period_pack.py:
+  * P2: Mengintegrasikan fungsi `verify_pack_manifest` pada `resolve_opening_state_path` untuk memvalidasi keberadaan `MANIFEST.json`, keterdaftaran berkas closing state pada `files_sha256`, dan kesesuaian hash SHA-256 LF secara fail-closed sebelum berkas diterima sebagai opening state periode berikutnya.
+  * Menambahkan validasi hash MANIFEST untuk berkas opening state yang diberikan secara eksplisit bila berkas berada di dalam direktori pack ber-manifest.
+  * Menyelaraskan `get_verified_previous_closing` untuk memakai `verify_pack_manifest` bersama.
+- tests/test_seed_planner.py:
+  * Menambahkan 4 unit regression test: penolakan jika MANIFEST hilang (`test_default_opening_state_resolution_missing_manifest_fails_fast`), penolakan jika closing tidak terdaftar di MANIFEST (`test_default_opening_state_resolution_closing_missing_from_manifest_fails_fast`), penolakan jika checksum closing tidak cocok (`test_default_opening_state_resolution_checksum_mismatch_fails_fast`), dan penolakan jika hash opening state eksplisit tidak cocok dengan MANIFEST (`test_explicit_opening_state_checksum_mismatch_with_manifest_fails_fast`). Total 22 tes unit.
+**Diverifikasi:**
+- [F] python -m ruff check .: PASS (clean).
+- [F] 4 tes regresi baru resolusi integritas MANIFEST: PASS.
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Commit perubahan source generator dan test regresi, regenerasi pack Agustus 2026 dan MANIFEST.json dengan binding generator commit exact, commit MANIFEST, push ke PR #97, dan pantau CI.
+
+## 2026-11-09T08:15:00+07:00 — antigravity — F2/PR97: Penyelarasan id_mobile_api dengan main untuk stabilitas CI
+**Berubah:**
+- addons/id_mobile_api: Mengembalikan file `models/mobile_workday.py` dan `tests/test_commands_api.py` ke keselarasan 100% dengan `origin/main` (PR #100) menggunakan mekanisme patching `business_date` dan pengujian `test_sunday_rule_rejects_order_and_check_in`.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 18 tests PASS.
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+- [F] CI PWA gate (pwa-quality, pwa-container, pwa-browser): 100% PASS pada commit 8f87500.
+**Belum diuji:**
+- [BU] Verifikasi ulang CI workflow (install-test) pada SHA terbaru.
+**Berikutnya:**
+- Commit, push ke origin, dan pantau penyelesaian install-test.
+
+## 2026-11-09T08:00:00+07:00 — antigravity — F2/PR97: Sinkronisasi main (PR #100) dan Binding Provenance MANIFEST.json
+**Berubah:**
+- Sinkronisasi cabang: Mengintegrasikan origin/main (PR #100) ke dalam agen/seed-f2-planner.
+- addons/id_mobile_api/: Mengadopsi patch mobile_workday.business_date dan pengujian test_sunday_rule_rejects_order_and_check_in dari PR #100.
+- pwa/tests/browser/session-fixture.ts: Menggabungkan guard __noDateShift dari PR #100 dengan pewarisan statis Date.UTC dan Date.parse pada ShiftedDate.
+- data/registers/periods/2026-08/MANIFEST.json: Binding exact generator_commit dan hash sha256 generator.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 18 tests PASS.
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+- [F] python -m ruff check .: PASS (clean).
+**Belum diuji:**
+- [BU] Verifikasi GitHub Actions CI checks dan re-review supervisor pada PR #97.
+**Berikutnya:**
+- Commit merge commit dan push ke origin/agen/seed-f2-planner.
+
+## 2026-11-09T07:55:00+07:00 — antigravity — F2/PR97: Binding MANIFEST.json ke Commit Generator c7f5a36
+**Berubah:**
+- data/registers/periods/2026-08/MANIFEST.json:
+  * Memperbarui `generator_commit` ke `c7f5a363ee0dbc4362b5416012c4085d72de7710` (commit perbaikan P2 opening state lintas-periode dan CI Sunday guard).
+  * Memperbarui `generator_sources_sha256` untuk `scripts/ops/generate_period_pack.py` ke hash LF eksak `7c29502ca99b0a81245ea9dccd7fef22e4e9dd42af7478200b2a5f859197399f`.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 18 tests PASS.
+- [F] python -m unittest tests.test_seed_v2_gates: 82 tests PASS.
+- [F] python scripts/ops/generate_period_pack.py --period 2026-08 --strict-validate: 11 invariant gates PASS (0 violations).
+- [F] LF verification & manifest provenance check: PASS.
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Push ke origin `agen/seed-f2-planner` dan pantau CI workflow checks.
+
+## 2026-11-09T07:38:00+07:00 — antigravity — F2/PR97: Default Opening State Lintas-Periode, CI Sunday Invariant Guard, dan Penyelarasan Clock PWA
+**Berubah:**
+- scripts/ops/generate_period_pack.py:
+  * P2: Menambahkan fungsi `resolve_opening_state_path` yang secara fail-closed dan otomatis menentukan opening state: periode default `2026-08` mengarah ke `data/registers/state_20260801.json`; periode non-Agustus (`2026-09`) otomatis mencari closing state pack periode sebelumnya (`closing_state_*.json`). Jika closing sebelumnya tidak ditemukan, wajib menyertakan `--opening-state` secara eksplisit (mencegah silent drift/gap kontinuitas).
+- tests/test_seed_planner.py:
+  * Penambahan 4 tes regresi pembuktian resolusi opening state: default Agustus, deteksi otomatis September atas closing Agustus, penolakan periode non-Agustus tanpa closing sebelumnya, dan validasi path eksplisit. Total 18 tes unit lulus.
+- addons/id_mobile_api/:
+  * `models/mobile_workday.py`: `business_date()` mendukung override environment `ID_MOBILE_BUSINESS_DATE` untuk pengujian waktu deterministik.
+  * `tests/test_read_api.py`: `MobileFixture.setUpClass` otomatis memastikan fixture tes operasional beroperasi pada hari kerja resmi jika CI dieksekusi pada hari Minggu.
+  * `tests/test_commands_api.py`: Penambahan pengujian unit eksplisit `test_sales_order_rejected_on_sunday` yang memvalidasi bahwa pembuatan sales order pada hari Minggu ditolak dengan `UserError: Operasional sales order libur pada hari Minggu` (menjamin integritas invariant FMCG dan stabilitas CI lintas hari kalender).
+- pwa/tests/browser/session-fixture.ts:
+  * Menyematkan guard `!isPlaywrightClock` dan pewarisan method statis `Date.UTC` serta `Date.parse` pada `ShiftedDate` agar timer mock Playwright tidak tertimpa/rusak saat reload.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 18 tests PASS (termasuk 4 tes resolusi opening state).
+- [F] python -m unittest tests.test_seed_v2_gates: 82 tests PASS.
+- [F] python -m unittest tests.test_finance_activation: PASS.
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+- [F] cd pwa && npx vitest run tests/visits.test.ts: PASS (32 tests PASS).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Commit source code, regenerasi pack Agustus 2026 dan MANIFEST.json dengan binding generator commit exact, lalu push ke PR #97.
 
 ## 2026-11-09T07:24:14+07:00 — claude-design — PR #100 re-review P2: tes backend deterministik terhadap kalender
 
@@ -29,9 +138,65 @@
 **Belum diuji:** [BU] penyebab akar 13 tes tsb; dipisah ke PR/issue tersendiri.
 **Berikutnya:** PR terpisah memperbaiki tes e2e itu (bergantung tanggal/lingkungan), lalu pwa-gate hijau.
 
+## 2026-11-08T14:45:00+07:00 — antigravity — F2/PR97: Penanganan Rejection Carry-Forward & Pengikatan Provenance Manifest Commit
+**Berubah:**
+- scripts/ops/seed_planner.py:
+  * Menangani item dengan status `is_rejected` pada DO carry-forward di akhir bulan; menghasilkan baris `rejections` bertanggal `2026-09-01` (`REJ-202608-047`), mengurangi `dpp_amount` faktur (`INV-202608-1223`), dan membawa flag `is_rejected: True` serta `rejection_dpp` pada payload `carry_forward_lines`.
+  * Di bulan berikutnya (September), baris carry-forward yang ditolak menghasilkan event stok pelepasan (reserved/physical) dan event karantina (`quarantine_impact: +qty`) pada hari kerja pertama (`2026-09-01`), menjaga konsistensi saldo fisik, reservasi, dan karantina.
+- scripts/ops/generate_period_pack.py:
+  * Mendukung pembacaan commit HEAD git dan override `--generator-commit` untuk menjamin provenance `MANIFEST.json` mengikat commit exact source generator yang direview.
+- data/registers/periods/2026-08/:
+  * Regenerasi seluruh file pack, closing state, narrative report, dan `MANIFEST.json` yang mengikat `generator_commit=d6a51aea4d5b0eb8f5e60abc9e454c295832ad27` dan hash LF dari 4 skrip generator.
+- tests/test_seed_planner.py:
+  * Penambahan tes deterministik `test_carry_forward_rejection_consistency` yang memvalidasi siklus hidup penolakan carry-forward (DO, faktur net DPP, rejections.csv, carry_forward_lines, dan stock events karantina September). Total 14 tes unit lulus.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 14 tests PASS.
+- [F] python -m unittest tests.test_seed_v2_gates: 82 tests PASS.
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (11 addon OK).
+- [F] Validasi validate_pack_report(strict=True) atas pack Agustus 2026: 11 gates run, 0 skipped, 0 violations.
+- [F] Metrik naratif pack Agustus 2026: net DPP Rp4.141.788.300,00 [4.00-4.50 M], diskon 2,50% [2.00%-3.20%], tolakan 1,99% [1.80%-3.00%], outlet aktif 207 [200-215].
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Mengajukan update commit ke PR #97 dan menyampaikan bukti pemenuhan kedua temuan re-review.
+
 ## 2026-11-08T13:32:51+07:00 — claude-dev — PR #100: tindak lanjut CHANGES_REQUESTED
 **Berubah:** (P1) `main` diintegrasikan ke `agen/pwa-ui-tokens-atoms`; satu-satunya konflik `docs/HANDOFF.md`, entri antigravity `2026-11-07T08:59:30` disisipkan kronologis (antara `14:18:52` dan `08:47:53` tanggal 7 Nov), semua entri kedua sisi utuh. (P2) `pwa/src/ui/tokens.css` `--c-nav` `#0b1f4d` -> `#001a57` (= `pwa/design/tokens.json` dan `docs/ui/DS_RECONCILIATION.md` K1); `pwa/tests/design-tokens-parity.test.ts` (41 pasangan token + cek orphan + cek navbar) agar drift CSS/JSON gagal di CI; `npm run test:tokens`. (CI) `.github/workflows/pwa.yml`: push juga untuk `agen/pwa-*`, langkah "Design token parity".
 **Diverifikasi:** [F] logika pariti dijalankan ulang dengan Python terhadap berkas nyata (semua 41 pasangan cocok, 0 orphan). **Belum diuji:** [BU] vitest, prettier, tsc, build dan Playwright belum dijalankan lokal karena registry npm tidak dapat dijangkau pada sesi ini; bukti hanya dari CI GitHub pada HEAD baru. Catatan non-blocking (font <12 px, e2e/perangkat nyata) tidak diubah.
+
+## 2026-11-08T13:00:00+07:00 — antigravity — F2/PR97: Penyelesaian Lengkap Review Change Request (P1 SO carry-forward, P2 Lead Time Hari Kerja, P2 Penomoran PO, dan Klarifikasi Target Naratif)
+**Berubah:**
+- scripts/ops/seed_planner.py:
+  * P1: Penambahan generasi eksplisit carry-forward untuk 50 SO tanggal 31 Agustus; menghasilkan 50 DO (`DO-202608-1191` s.d. `1240`) dan 50 faktur (`INV-202608-1191` s.d. `1240`) dengan jadwal delivery `2026-09-01`; total pack Agustus genap 1.240 SO = 1.240 DO = 1.240 faktur (bebas gap penyerahan).
+  * P2: Satuan lead time maritim PO diselaraskan menjadi Hari Kerja Operasional (working days); jadwal kedatangan dihitung menggunakan `add_working_days(curr_dt, lead_days)`; penomoran PO diparameterisasi per periode (`PO-{YYYY}-{MM}-{counter:02d}`).
+  * Observasi Desain: Klarifikasi dokumentasi `PeriodConfig` bahwa `target_net_dpp`, `target_discount_pct`, dan `target_rejection_pct` adalah benchmark naratif blueprint untuk acuan naratif dan gerbang invariant `NARRATIVE-ANCHORS` (bukan pengontrol deterministik alur transaksi).
+- scripts/ops/fmcg_calendar.py:
+  * Menambahkan fungsi `add_working_days(d, n)` dan `count_working_days(start, end)` sebagai single source of truth penghitungan hari kerja operasional (Senin–Sabtu, di luar hari libur nasional SKB 3 Menteri 2026).
+- scripts/ops/seed_v2_gates.py:
+  * Menyelaraskan gerbang `PO-CAUSALITY` untuk menghitung hari kerja operasional antara `order_date` dan `arrival_maumbi_date` (`calendar.count_working_days >= min_lead`).
+  * Normalisasi pengecekan saldo karton (`physical`, `reserved`, `quarantine`) dan penanggalan dokumen pada `check_continuity`.
+- scripts/ops/generate_period_pack.py:
+  * Membandingkan pembukaan Agustus secara independen terhadap hasil replay register kanonikal Juli (`get_verified_previous_closing`), bukan membandingkan pembukaan dengan dirinya sendiri.
+  * Menyematkan `generator_sources_sha256` pada `MANIFEST.json` yang mengikat hash LF 4 skrip generator (`seed_planner.py`, `generate_period_pack.py`, `seed_v2_gates.py`, `fmcg_calendar.py`) serta 15 fingerprint register kanonikal Juli.
+  * Mencatat metadata lengkap pada penutupan: 50 `pending_dos`, 50 `carry_invoices`, 771 karton reservasi, 98 `carry_forward_lines`, serta objek PO lengkap (`arrival_maumbi_date`, `payment_due_date`, `total_amount_dpp`).
+- tests/test_seed_planner.py:
+  * Penambahan pengujian regresi: `test_every_so_has_matching_delivery_and_invoice` (1.240 SO = 1.240 DO = 1.240 faktur, 50 pending DO 31 Agt); `test_po_lead_time_in_working_days` (lead time dalam hari kerja operasional); `test_continuity_gate_rejects_quarantine_mutation` (mutasi +1 karantina tertolak `PERIOD-CONTINUITY`); `test_august_to_september_chained_generation` (eksekusi September dari ekspor Agustus: sequence PO `PO-2026-09-01`, dispatch stok carry 1 September, pelunasan PO Agustus di September); `test_pack_manifest_generator_sources_and_fingerprints` (integritas hash generator). Total 13 tes unit lulus.
+- tests/test_seed_v2_gates.py:
+  * Penyesuaian `clean()` fixture `min_lead_days={'PRIN-A': 12}` untuk konsistensi hari kerja operasional (total 82 tes lulus).
+- docs/reviews/SEED_INVARIANT_CONTRACT_V2.md:
+  * Mengunci spesifikasi lead time PO ke Hari Kerja Operasional (working days).
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 13 tests PASS.
+- [F] python -m unittest tests.test_seed_v2_gates: 82 tests PASS.
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (11 addon OK).
+- [F] Validasi validate_pack_report(strict=True) atas pack Agustus 2026: 11 gates run, 0 skipped, 0 violations.
+- [F] Metrik naratif pack Agustus 2026: net DPP Rp4.141.788.300,00 [4.00-4.50 M], diskon 2,50% [2.00%-3.20%], tolakan 1,97% [1.80%-3.00%], outlet aktif 207 [200-215].
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Mengajukan update commit ke PR #97 dan menyampaikan bukti pemenuhan seluruh change request supervisor.
 
 ## 2026-11-08T12:25:45+07:00 — claude-design — Login, Beranda, Absen, header dibangun ulang sesuai DS
 
@@ -159,6 +324,8 @@
 **Belum diuji:** [BU] BottomNav dan AppHeader baru, BottomSheet, Absen, Kamera, Sinkron (sisa Fase 1). Bundel design system (/mockup) masih memakai #0B1F4D untuk navbar; sesuaikan saat bundel diperbarui.
 **Berikutnya:** AppHeader/BottomNav (tab terpilih menyatu dengan body), lalu Absen, Kamera, Sinkron.
 
+## 2026-11-08T22:10:00+07:00 — Agent VSCode — PR101: akar `KeyError: 'I2ACOMB08'` pada `FIN51` dan kontrak baris nol
+
 ## 2026-11-07T08:59:30+07:00 — antigravity — Handover brief Finance/Accounting/Tax untuk WSL
 **Berubah:** `docs/finance/HANDOVER_ANTIGRAVITY.md`: status I0–I8 dan bukti PR95/PR96, batas 58 report `BELUM_DITERIMA`, aturan kerja/commit/log, checklist WSL, rincian paket I2a–I2c (FIN01–09,36–38,51,55–57), oracle dan counterexample, jebakan Odoo 19, keputusan pemilik yang terbuka, red flags dan format laporan balik. Tidak ada perubahan kode/addon/workflow.
 **Diverifikasi:** [F] baseline `main` `d9c7e5f` (PR #96 merged dari `192defa`); katalog 58 baris seluruhnya `BELUM_DITERIMA`; 23 tes finance, Ruff, 12 manifest PASS pada paket sebelumnya.
@@ -172,6 +339,25 @@
 **Diverifikasi:** [F] tsc, prettier, vitest 402 PASS, build + check:build PASS (demo, live, staging). [F] e2e field, visits, collection, delivery, login-attendance: 48 PASS; 3 tes gagal (collection.spec:200, delivery.spec:180, visits.spec:93) juga gagal pada baseline tanpa perubahan ini.
 **Belum diuji:** [BU] uji perangkat Android/iOS; impor Figma; Fase 1 (header, navbar, footer, sheet, Login/Absen/Kamera/Sinkron) belum dimulai.
 **Berikutnya:** Fase 1 sesuai plan integrasi (doc Claude "Plan Integrasi Mockup Mobile ke PWA"); putuskan --navy vs --c-nav.
+
+## 2026-11-05T20:30:00+07:00 — antigravity — F2: Planner murni dan generator pack periode transaksi Agustus 2026
+**Berubah:**
+- scripts/ops/seed_planner.py: implementasi mesin perencanaan deterministik FMCG lintas modul; kebal terhadap PYTHONHASHSEED via SHA-256 seeding; kalender PJP dan off-days (Minggu, 17 & 25 Agustus libur); carry-forward 48 DO dispatch pada 1 Agustus; single-principal SO; FEFO inventory allocation; kalkulasi PPN 11% pembulatan sen; evaluasi ROP dengan lead-time maritim; pelunasan AP PO Unilever pada jatuh tempo 8 Agustus; penomoran bulanan mulai dari 1 dan nomor global berlanjut; helper prepare_gate_opening dan extract_existing_numbers.
+- scripts/ops/generate_period_pack.py: CLI generator pack periode transaksi bulanan; ekspor tabel CSV & JSON ke data/registers/periods/<period>/; replay penutupan ke closing_state_<date>.json; laporan naratif; MANIFEST.json berisi SHA-256 LF kanonikal, commit generator, dan verifikasi fingerprint 15 register kanonikal Juli.
+- scripts/ops/generate_state_20260801.py: alias kunci canonical gate (open_invoices, carry_invoices, in_transit) disematkan pada state_20260801.json.
+- data/registers/periods/2026-08/: direktori pack Agustus 2026 lengkap (1.240 SO, 1.190 DO, 1.190 INV, 1.202 AR collections, 16 PO headers, 1 AP payment, 26 OPEX, 4.866 stock events, closing state 31 Agustus 2026, narrative report, dan MANIFEST).
+- tests/test_seed_planner.py: 8 unit tests mencakup determinisme seed, validasi gates v2 strict=True 0 pelanggaran, kalender kerja & hari libur, penomoran bulanan & global, pita metrik naratif, pelunasan AP Unilever 8 Agustus, dan integritas hash SHA-256 MANIFEST.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 8 tests PASS (0,72 detik).
+- [F] python -m unittest discover -s tests -p 'test_*.py': 323 tests PASS (0 failures).
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (11 addon OK).
+- [F] Validasi validate_pack_report(strict=True) atas pack Agustus 2026: 11 gates run, 0 skipped, 0 violations.
+- [F] Metrik naratif Agustus 2026: net DPP Rp4.150.068.000,00 [4.00-4.50 M], diskon 2,50% [2.00%-3.20%], tolakan 1,97% [1.80%-3.00%], outlet aktif 207 [200-215].
+**Belum diuji:**
+- [BU] CI integrasi branch F2 pada exact-SHA HEAD. Pemuatan ke runtime Odoo live belum dilakukan (menunggu otorisasi pemilik dan F5/F9).
+**Berikutnya:**
+- Menyerahkan PR Fase F2 untuk review supervisor dan persetujuan pemilik.
 
 ## 2026-11-05T14:35:00+07:00 — antigravity — PR94: mewajibkan eksak 15 entri fingerprint register kanonikal
 **Berubah:** scripts/ops/generate_state_20260801.py: mewajibkan eksak 15 entri register kanonikal (CANONICAL_REGISTER_FILES) pada input_dataset_sha256 manifest rekonsiliasi sebelum replay; manifes kosong {} atau tidak lengkap memicu ValueError; tests/test_state_20260801.py: penambahan tes regresi supervisor test_empty_or_incomplete_fingerprint_manifest_fails_fast (total 8 tes).
