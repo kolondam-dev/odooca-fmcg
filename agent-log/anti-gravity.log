@@ -2103,3 +2103,7 @@
 - Menyelaraskan fixture id_mobile_api dengan mock tanggal kerja jika runner dieksekusi hari Minggu dan menambahkan tes regresi eksplisit untuk penolakan order/kunjungan pada hari Minggu
 - Membuat pembukaan koreksi OrderCorrections async dengan fallback pemulihan snapshot dari IndexedDB serta sinkronisasi aria-busy sesi kerja pada next-policy.spec.ts
 - Task Managed by Agent VSCode at 2026-11-09T07:37:05+07:00
+
+[2026-11-09T13:47:04+07:00] [INFO] PR98: penyelarasan locator readiness browser PWA pasca offline reload
+- pwa/tests/browser/next-policy.spec.ts: mengganti assertion region Sesi kerja pada baris 155 dan 179 dengan tombol navigasi Lainnya dan summary Riwayat SO yang selalu hadir di bottom nav
+- Task managed by antigravity-agent at 2026-11-09T13:47:04+07:00

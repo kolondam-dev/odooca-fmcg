@@ -1,3 +1,8 @@
+## 2026-11-09T13:47:00+07:00 — Agent VSCode — PR98: penyelarasan locator readiness browser PWA pasca offline reload
+**Berubah:** `pwa/tests/browser/next-policy.spec.ts`: [F] akar kegagalan e2e browser pada PR #98 ialah locator `getByRole("region", { name: "Sesi kerja" })` di baris 155 dan 179 hanya dirender pada `page === "home"`, sedangkan setelah reload offline aplikasi tetap berada di halaman `"more"`; locator kesiapan kini menggunakan tombol navigasi bottom-nav `"Lainnya"` dan ringkasan `"Riwayat SO ·"` yang deterministik hadir di semua view.
+**Diverifikasi:** [F] `python3 scripts/check_manifests.py` PASS (12 addon); `python3 -m unittest discover -s tests -p 'test_seed_f0b*.py'` PASS (11 tes).
+**Belum diuji:** [BU] Rerun CI GitHub Actions exact-SHA pada PR #98. Tidak ada deploy atau mutasi DB live.
+
 ## 2026-11-09T07:24:14+07:00 — claude-design — PR #100 re-review P2: tes backend deterministik terhadap kalender
 
 **Berubah (hanya tes):** addons/id_mobile_api/tests/test_read_api.py: `MobileFixture` mem-patch `mobile_workday.business_date` dengan `business_date()` uji yang menggeser hari Minggu ke Sabtu; helper `sunday_business_date()`. test_commands_api.py: `skip_on_sunday` dihapus (8 tes kini berjalan setiap hari); tes baru `test_sunday_rule_rejects_order_and_check_in` menguji aturan libur Minggu secara eksplisit pada tanggal Minggu tetap.
