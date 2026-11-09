@@ -1667,2616 +1667,2616 @@
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
-      "dpp_amount": "6963000.00",
-      "total_invoice_with_ppn": "7728930.00"
+      "dpp_amount": "6858555.00",
+      "total_invoice_with_ppn": "7612996.05"
     },
     "INV-202608-0029": {
       "date_invoice": "2026-08-03",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
-      "dpp_amount": "5424000.00",
-      "total_invoice_with_ppn": "6020640.00"
+      "dpp_amount": "5294640.00",
+      "total_invoice_with_ppn": "5877050.40"
     },
     "INV-202608-0030": {
       "date_invoice": "2026-08-03",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
-      "dpp_amount": "6336000.00",
-      "total_invoice_with_ppn": "7032960.00"
+      "dpp_amount": "6164928.00",
+      "total_invoice_with_ppn": "6843070.08"
     },
     "INV-202608-0031": {
       "date_invoice": "2026-08-03",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
-      "dpp_amount": "924000.00",
-      "total_invoice_with_ppn": "1025640.00"
+      "dpp_amount": "910140.00",
+      "total_invoice_with_ppn": "1010255.40"
     },
     "INV-202608-0032": {
       "date_invoice": "2026-08-03",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "9489000.00",
-      "total_invoice_with_ppn": "10532790.00"
+      "dpp_amount": "9280242.00",
+      "total_invoice_with_ppn": "10301068.62"
     },
     "INV-202608-0033": {
       "date_invoice": "2026-08-03",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "65280000.00",
-      "total_invoice_with_ppn": "72460800.00"
+      "dpp_amount": "63060480.00",
+      "total_invoice_with_ppn": "69997132.80"
     },
     "INV-202608-0034": {
       "date_invoice": "2026-08-03",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "4042400.00",
-      "total_invoice_with_ppn": "4487064.00"
+      "dpp_amount": "3904958.40",
+      "total_invoice_with_ppn": "4334503.82"
     },
     "INV-202608-0075": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
-      "dpp_amount": "1800000.00",
-      "total_invoice_with_ppn": "1998000.00"
+      "dpp_amount": "1773000.00",
+      "total_invoice_with_ppn": "1968030.00"
     },
     "INV-202608-0076": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
-      "dpp_amount": "2040000.00",
-      "total_invoice_with_ppn": "2264400.00"
+      "dpp_amount": "2009400.00",
+      "total_invoice_with_ppn": "2230434.00"
     },
     "INV-202608-0077": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
-      "dpp_amount": "3900000.00",
-      "total_invoice_with_ppn": "4329000.00"
+      "dpp_amount": "3794700.00",
+      "total_invoice_with_ppn": "4212117.00"
     },
     "INV-202608-0078": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
-      "dpp_amount": "1188000.00",
-      "total_invoice_with_ppn": "1318680.00"
+      "dpp_amount": "1155924.00",
+      "total_invoice_with_ppn": "1283075.64"
     },
     "INV-202608-0079": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "5424000.00",
-      "total_invoice_with_ppn": "6020640.00"
+      "dpp_amount": "5304672.00",
+      "total_invoice_with_ppn": "5888185.92"
     },
     "INV-202608-0080": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "3912000.00",
-      "total_invoice_with_ppn": "4342320.00"
+      "dpp_amount": "3802416.00",
+      "total_invoice_with_ppn": "4220681.76"
     },
     "INV-202608-0081": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "7548000.00",
-      "total_invoice_with_ppn": "8378280.00"
+      "dpp_amount": "7306344.00",
+      "total_invoice_with_ppn": "8110041.84"
     },
     "INV-202608-0082": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "6201600.00",
-      "total_invoice_with_ppn": "6883776.00"
+      "dpp_amount": "5990745.60",
+      "total_invoice_with_ppn": "6649727.62"
     },
     "INV-202608-0083": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "2798400.00",
-      "total_invoice_with_ppn": "3106224.00"
+      "dpp_amount": "2700475.20",
+      "total_invoice_with_ppn": "2997527.47"
     },
     "INV-202608-0084": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "19080000.00",
-      "total_invoice_with_ppn": "21178800.00"
+      "dpp_amount": "18454608.00",
+      "total_invoice_with_ppn": "20484614.88"
     },
     "INV-202608-0085": {
       "date_invoice": "2026-08-04",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "1980000.00",
-      "total_invoice_with_ppn": "2197800.00"
+      "dpp_amount": "1913630.40",
+      "total_invoice_with_ppn": "2124129.74"
     },
     "INV-202608-0135": {
       "date_invoice": "2026-08-05",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
-      "dpp_amount": "192000.00",
-      "total_invoice_with_ppn": "213120.00"
+      "dpp_amount": "185280.00",
+      "total_invoice_with_ppn": "205660.80"
     },
     "INV-202608-0136": {
       "date_invoice": "2026-08-05",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
-      "dpp_amount": "11004000.00",
-      "total_invoice_with_ppn": "12214440.00"
+      "dpp_amount": "10765932.00",
+      "total_invoice_with_ppn": "11950184.52"
     },
     "INV-202608-0137": {
       "date_invoice": "2026-08-05",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
-      "dpp_amount": "980000.00",
-      "total_invoice_with_ppn": "1087800.00"
+      "dpp_amount": "965300.00",
+      "total_invoice_with_ppn": "1071483.00"
     },
     "INV-202608-0138": {
       "date_invoice": "2026-08-05",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
-      "dpp_amount": "16080000.00",
-      "total_invoice_with_ppn": "17848800.00"
+      "dpp_amount": "15464040.00",
+      "total_invoice_with_ppn": "17165084.40"
     },
     "INV-202608-0139": {
       "date_invoice": "2026-08-05",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
-      "dpp_amount": "35040000.00",
-      "total_invoice_with_ppn": "38894400.00"
+      "dpp_amount": "33890016.00",
+      "total_invoice_with_ppn": "37617917.76"
     },
     "INV-202608-0140": {
       "date_invoice": "2026-08-05",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
-      "dpp_amount": "4776000.00",
-      "total_invoice_with_ppn": "5301360.00"
+      "dpp_amount": "4618224.00",
+      "total_invoice_with_ppn": "5126228.64"
     },
     "INV-202608-0195": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
-      "dpp_amount": "2940000.00",
-      "total_invoice_with_ppn": "3263400.00"
+      "dpp_amount": "2891700.00",
+      "total_invoice_with_ppn": "3209787.00"
     },
     "INV-202608-0196": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
-      "dpp_amount": "15114000.00",
-      "total_invoice_with_ppn": "16776540.00"
+      "dpp_amount": "14790522.00",
+      "total_invoice_with_ppn": "16417479.42"
     },
     "INV-202608-0197": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
-      "dpp_amount": "1188000.00",
-      "total_invoice_with_ppn": "1318680.00"
+      "dpp_amount": "1170180.00",
+      "total_invoice_with_ppn": "1298899.80"
     },
     "INV-202608-0198": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "26288600.00",
-      "total_invoice_with_ppn": "29180346.00"
+      "dpp_amount": "25602460.80",
+      "total_invoice_with_ppn": "28418731.49"
     },
     "INV-202608-0199": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "2892000.00",
-      "total_invoice_with_ppn": "3210120.00"
+      "dpp_amount": "2814696.00",
+      "total_invoice_with_ppn": "3124312.56"
     },
     "INV-202608-0200": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "11296000.00",
-      "total_invoice_with_ppn": "12538560.00"
+      "dpp_amount": "10911936.00",
+      "total_invoice_with_ppn": "12112248.96"
     },
     "INV-202608-0201": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "4684800.00",
-      "total_invoice_with_ppn": "5200128.00"
+      "dpp_amount": "4536921.60",
+      "total_invoice_with_ppn": "5035982.98"
     },
     "INV-202608-0202": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "16626000.00",
-      "total_invoice_with_ppn": "18454860.00"
+      "dpp_amount": "16245828.00",
+      "total_invoice_with_ppn": "18032869.08"
     },
     "INV-202608-0203": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "2016000.00",
-      "total_invoice_with_ppn": "2237760.00"
+      "dpp_amount": "1971648.00",
+      "total_invoice_with_ppn": "2188529.28"
     },
     "INV-202608-0204": {
       "date_invoice": "2026-08-06",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "36012000.00",
-      "total_invoice_with_ppn": "39973320.00"
+      "dpp_amount": "34868664.00",
+      "total_invoice_with_ppn": "38704217.04"
     },
     "INV-202608-0256": {
       "date_invoice": "2026-08-07",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-06",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "22293000.00",
-      "total_invoice_with_ppn": "24745230.00"
+      "dpp_amount": "21568554.00",
+      "total_invoice_with_ppn": "23941094.94"
     },
     "INV-202608-0257": {
       "date_invoice": "2026-08-07",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-06",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "9456000.00",
-      "total_invoice_with_ppn": "10496160.00"
+      "dpp_amount": "9079248.00",
+      "total_invoice_with_ppn": "10077965.28"
     },
     "INV-202608-0258": {
       "date_invoice": "2026-08-07",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-06",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "18918000.00",
-      "total_invoice_with_ppn": "20998980.00"
+      "dpp_amount": "18295524.00",
+      "total_invoice_with_ppn": "20308031.64"
     },
     "INV-202608-0311": {
       "date_invoice": "2026-08-08",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "2295000.00",
-      "total_invoice_with_ppn": "2547450.00"
+      "dpp_amount": "2244510.00",
+      "total_invoice_with_ppn": "2491406.10"
     },
     "INV-202608-0312": {
       "date_invoice": "2026-08-08",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "7716000.00",
-      "total_invoice_with_ppn": "8564760.00"
+      "dpp_amount": "7529448.00",
+      "total_invoice_with_ppn": "8357687.28"
     },
     "INV-202608-0313": {
       "date_invoice": "2026-08-08",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "11196000.00",
-      "total_invoice_with_ppn": "12427560.00"
+      "dpp_amount": "10857240.00",
+      "total_invoice_with_ppn": "12051536.40"
     },
     "INV-202608-0314": {
       "date_invoice": "2026-08-08",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "15340000.00",
-      "total_invoice_with_ppn": "17027400.00"
+      "dpp_amount": "14822472.00",
+      "total_invoice_with_ppn": "16452943.92"
     },
     "INV-202608-0370": {
       "date_invoice": "2026-08-10",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "7096800.00",
-      "total_invoice_with_ppn": "7877448.00"
+      "dpp_amount": "6877970.40",
+      "total_invoice_with_ppn": "7634547.14"
     },
     "INV-202608-0371": {
       "date_invoice": "2026-08-10",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "6556000.00",
-      "total_invoice_with_ppn": "7277160.00"
+      "dpp_amount": "6411768.00",
+      "total_invoice_with_ppn": "7117062.48"
     },
     "INV-202608-0372": {
       "date_invoice": "2026-08-10",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "25092000.00",
-      "total_invoice_with_ppn": "27852120.00"
+      "dpp_amount": "24344712.00",
+      "total_invoice_with_ppn": "27022630.32"
     },
     "INV-202608-0373": {
       "date_invoice": "2026-08-10",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "2781600.00",
-      "total_invoice_with_ppn": "3087576.00"
+      "dpp_amount": "2699841.60",
+      "total_invoice_with_ppn": "2996824.18"
     },
     "INV-202608-0408": {
       "date_invoice": "2026-08-11",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-25",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "7725000.00",
-      "total_invoice_with_ppn": "8574750.00"
+      "dpp_amount": "7516050.00",
+      "total_invoice_with_ppn": "8342815.50"
     },
     "INV-202608-0409": {
       "date_invoice": "2026-08-11",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-25",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "5388000.00",
-      "total_invoice_with_ppn": "5980680.00"
+      "dpp_amount": "5263944.00",
+      "total_invoice_with_ppn": "5842977.84"
     },
     "INV-202608-0410": {
       "date_invoice": "2026-08-11",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-25",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "8040000.00",
-      "total_invoice_with_ppn": "8924400.00"
+      "dpp_amount": "7766640.00",
+      "total_invoice_with_ppn": "8620970.40"
     },
     "INV-202608-0411": {
       "date_invoice": "2026-08-11",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-25",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "9404800.00",
-      "total_invoice_with_ppn": "10439328.00"
+      "dpp_amount": "9093590.40",
+      "total_invoice_with_ppn": "10093885.34"
     },
     "INV-202608-0412": {
       "date_invoice": "2026-08-11",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-25",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "4197600.00",
-      "total_invoice_with_ppn": "4659336.00"
+      "dpp_amount": "4045852.80",
+      "total_invoice_with_ppn": "4490896.61"
     },
     "INV-202608-0413": {
       "date_invoice": "2026-08-11",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-25",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "780000.00",
-      "total_invoice_with_ppn": "865800.00"
+      "dpp_amount": "762840.00",
+      "total_invoice_with_ppn": "846752.40"
     },
     "INV-202608-0414": {
       "date_invoice": "2026-08-11",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-25",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "29466000.00",
-      "total_invoice_with_ppn": "32707260.00"
+      "dpp_amount": "28473660.00",
+      "total_invoice_with_ppn": "31605762.60"
     },
     "INV-202608-0415": {
       "date_invoice": "2026-08-11",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-25",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "367200.00",
-      "total_invoice_with_ppn": "407592.00"
+      "dpp_amount": "359121.60",
+      "total_invoice_with_ppn": "398624.98"
     },
     "INV-202608-0463": {
       "date_invoice": "2026-08-12",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
-      "dpp_amount": "7040000.00",
-      "total_invoice_with_ppn": "7814400.00"
+      "dpp_amount": "6885120.00",
+      "total_invoice_with_ppn": "7642483.20"
     },
     "INV-202608-0464": {
       "date_invoice": "2026-08-12",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
-      "dpp_amount": "31644000.00",
-      "total_invoice_with_ppn": "35124840.00"
+      "dpp_amount": "30568104.00",
+      "total_invoice_with_ppn": "33930595.44"
     },
     "INV-202608-0517": {
       "date_invoice": "2026-08-13",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "12586000.00",
-      "total_invoice_with_ppn": "13970460.00"
+      "dpp_amount": "12294708.00",
+      "total_invoice_with_ppn": "13647125.88"
     },
     "INV-202608-0518": {
       "date_invoice": "2026-08-13",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "21660000.00",
-      "total_invoice_with_ppn": "24042600.00"
+      "dpp_amount": "20985192.00",
+      "total_invoice_with_ppn": "23293563.12"
     },
     "INV-202608-0519": {
       "date_invoice": "2026-08-13",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "10512000.00",
-      "total_invoice_with_ppn": "11668320.00"
+      "dpp_amount": "10173024.00",
+      "total_invoice_with_ppn": "11292056.64"
     },
     "INV-202608-0520": {
       "date_invoice": "2026-08-13",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "18759000.00",
-      "total_invoice_with_ppn": "20822490.00"
+      "dpp_amount": "18011202.00",
+      "total_invoice_with_ppn": "19992434.22"
     },
     "INV-202608-0521": {
       "date_invoice": "2026-08-13",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "1632000.00",
-      "total_invoice_with_ppn": "1811520.00"
+      "dpp_amount": "1581696.00",
+      "total_invoice_with_ppn": "1755682.56"
     },
     "INV-202608-0522": {
       "date_invoice": "2026-08-13",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "21804000.00",
-      "total_invoice_with_ppn": "24202440.00"
+      "dpp_amount": "21173832.00",
+      "total_invoice_with_ppn": "23502953.52"
     },
     "INV-202608-0523": {
       "date_invoice": "2026-08-13",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "5080000.00",
-      "total_invoice_with_ppn": "5638800.00"
+      "dpp_amount": "4907280.00",
+      "total_invoice_with_ppn": "5447080.80"
     },
     "INV-202608-0565": {
       "date_invoice": "2026-08-14",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-13",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "2700000.00",
-      "total_invoice_with_ppn": "2997000.00"
+      "dpp_amount": "2640600.00",
+      "total_invoice_with_ppn": "2931066.00"
     },
     "INV-202608-0566": {
       "date_invoice": "2026-08-14",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-13",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "5430000.00",
-      "total_invoice_with_ppn": "6027300.00"
+      "dpp_amount": "5310540.00",
+      "total_invoice_with_ppn": "5894699.40"
     },
     "INV-202608-0567": {
       "date_invoice": "2026-08-14",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-13",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "14760000.00",
-      "total_invoice_with_ppn": "16383600.00"
+      "dpp_amount": "14258160.00",
+      "total_invoice_with_ppn": "15826557.60"
     },
     "INV-202608-0568": {
       "date_invoice": "2026-08-14",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-13",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "14560000.00",
-      "total_invoice_with_ppn": "16161600.00"
+      "dpp_amount": "14074176.00",
+      "total_invoice_with_ppn": "15622335.36"
     },
     "INV-202608-0617": {
       "date_invoice": "2026-08-15",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-14",
       "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
-      "dpp_amount": "1680000.00",
-      "total_invoice_with_ppn": "1864800.00"
+      "dpp_amount": "1654800.00",
+      "total_invoice_with_ppn": "1836828.00"
     },
     "INV-202608-0618": {
       "date_invoice": "2026-08-15",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-14",
       "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
-      "dpp_amount": "16236000.00",
-      "total_invoice_with_ppn": "18021960.00"
+      "dpp_amount": "15850764.00",
+      "total_invoice_with_ppn": "17594348.04"
     },
     "INV-202608-0619": {
       "date_invoice": "2026-08-15",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-14",
       "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
-      "dpp_amount": "396000.00",
-      "total_invoice_with_ppn": "439560.00"
+      "dpp_amount": "390060.00",
+      "total_invoice_with_ppn": "432966.60"
     },
     "INV-202608-0620": {
       "date_invoice": "2026-08-15",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-14",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "6585600.00",
-      "total_invoice_with_ppn": "7310016.00"
+      "dpp_amount": "6320716.80",
+      "total_invoice_with_ppn": "7015995.65"
     },
     "INV-202608-0621": {
       "date_invoice": "2026-08-15",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-14",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "10944000.00",
-      "total_invoice_with_ppn": "12147840.00"
+      "dpp_amount": "10564032.00",
+      "total_invoice_with_ppn": "11726075.52"
     },
     "INV-202608-0622": {
       "date_invoice": "2026-08-15",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-14",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "9240000.00",
-      "total_invoice_with_ppn": "10256400.00"
+      "dpp_amount": "8925840.00",
+      "total_invoice_with_ppn": "9907682.40"
     },
     "INV-202608-0623": {
       "date_invoice": "2026-08-15",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-14",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "4834400.00",
-      "total_invoice_with_ppn": "5366184.00"
+      "dpp_amount": "4671422.40",
+      "total_invoice_with_ppn": "5185278.86"
     },
     "INV-202608-0675": {
       "date_invoice": "2026-08-18",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-17",
       "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
-      "dpp_amount": "9393600.00",
-      "total_invoice_with_ppn": "10426896.00"
+      "dpp_amount": "9252696.00",
+      "total_invoice_with_ppn": "10270492.56"
     },
     "INV-202608-0676": {
       "date_invoice": "2026-08-18",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-17",
       "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
-      "dpp_amount": "3168000.00",
-      "total_invoice_with_ppn": "3516480.00"
+      "dpp_amount": "3082464.00",
+      "total_invoice_with_ppn": "3421535.04"
     },
     "INV-202608-0677": {
       "date_invoice": "2026-08-18",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-17",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "12474000.00",
-      "total_invoice_with_ppn": "13846140.00"
+      "dpp_amount": "12117972.00",
+      "total_invoice_with_ppn": "13450948.92"
     },
     "INV-202608-0678": {
       "date_invoice": "2026-08-18",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-17",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "15504000.00",
-      "total_invoice_with_ppn": "17209440.00"
+      "dpp_amount": "14976864.00",
+      "total_invoice_with_ppn": "16624319.04"
     },
     "INV-202608-0679": {
       "date_invoice": "2026-08-18",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-17",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "3225600.00",
-      "total_invoice_with_ppn": "3580416.00"
+      "dpp_amount": "3118982.40",
+      "total_invoice_with_ppn": "3462070.46"
     },
     "INV-202608-0680": {
       "date_invoice": "2026-08-18",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-01",
       "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
-      "dpp_amount": "10331000.00",
-      "total_invoice_with_ppn": "11467410.00"
+      "dpp_amount": "10150404.00",
+      "total_invoice_with_ppn": "11266948.44"
     },
     "INV-202608-0681": {
       "date_invoice": "2026-08-18",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-01",
       "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
-      "dpp_amount": "3444000.00",
-      "total_invoice_with_ppn": "3822840.00"
+      "dpp_amount": "3354336.00",
+      "total_invoice_with_ppn": "3723312.96"
     },
     "INV-202608-0682": {
       "date_invoice": "2026-08-18",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-01",
       "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
-      "dpp_amount": "3392000.00",
-      "total_invoice_with_ppn": "3765120.00"
+      "dpp_amount": "3337728.00",
+      "total_invoice_with_ppn": "3704878.08"
     },
     "INV-202608-0713": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
-      "dpp_amount": "6420000.00",
-      "total_invoice_with_ppn": "7126200.00"
+      "dpp_amount": "6163200.00",
+      "total_invoice_with_ppn": "6841152.00"
     },
     "INV-202608-0714": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
-      "dpp_amount": "2700000.00",
-      "total_invoice_with_ppn": "2997000.00"
+      "dpp_amount": "2659500.00",
+      "total_invoice_with_ppn": "2952045.00"
     },
     "INV-202608-0715": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
-      "dpp_amount": "936000.00",
-      "total_invoice_with_ppn": "1038960.00"
+      "dpp_amount": "921960.00",
+      "total_invoice_with_ppn": "1023375.60"
     },
     "INV-202608-0716": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
-      "dpp_amount": "10590000.00",
-      "total_invoice_with_ppn": "11754900.00"
+      "dpp_amount": "10267770.00",
+      "total_invoice_with_ppn": "11397224.70"
     },
     "INV-202608-0717": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
-      "dpp_amount": "552000.00",
-      "total_invoice_with_ppn": "612720.00"
+      "dpp_amount": "528816.00",
+      "total_invoice_with_ppn": "586985.76"
     },
     "INV-202608-0718": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
-      "dpp_amount": "10056000.00",
-      "total_invoice_with_ppn": "11162160.00"
+      "dpp_amount": "9714096.00",
+      "total_invoice_with_ppn": "10782646.56"
     },
     "INV-202608-0719": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-18",
       "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
-      "dpp_amount": "6374400.00",
-      "total_invoice_with_ppn": "7075584.00"
+      "dpp_amount": "6214694.40",
+      "total_invoice_with_ppn": "6898310.78"
     },
     "INV-202608-0720": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
-      "dpp_amount": "22023000.00",
-      "total_invoice_with_ppn": "24445530.00"
+      "dpp_amount": "21414819.00",
+      "total_invoice_with_ppn": "23770449.09"
     },
     "INV-202608-0721": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
-      "dpp_amount": "1716000.00",
-      "total_invoice_with_ppn": "1904760.00"
+      "dpp_amount": "1678248.00",
+      "total_invoice_with_ppn": "1862855.28"
     },
     "INV-202608-0722": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
-      "dpp_amount": "1036800.00",
-      "total_invoice_with_ppn": "1150848.00"
+      "dpp_amount": "1001548.80",
+      "total_invoice_with_ppn": "1111719.17"
     },
     "INV-202608-0723": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-07 - Toko Harapan Bersehati",
-      "dpp_amount": "2160000.00",
-      "total_invoice_with_ppn": "2397600.00"
+      "dpp_amount": "2125440.00",
+      "total_invoice_with_ppn": "2359238.40"
     },
     "INV-202608-0724": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-07 - Toko Harapan Bersehati",
-      "dpp_amount": "4608000.00",
-      "total_invoice_with_ppn": "5114880.00"
+      "dpp_amount": "4526592.00",
+      "total_invoice_with_ppn": "5024517.12"
     },
     "INV-202608-0725": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-07 - Toko Harapan Bersehati",
-      "dpp_amount": "972000.00",
-      "total_invoice_with_ppn": "1078920.00"
+      "dpp_amount": "956448.00",
+      "total_invoice_with_ppn": "1061657.28"
     },
     "INV-202608-0726": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-07 - Toko Harapan Bersehati",
-      "dpp_amount": "5952000.00",
-      "total_invoice_with_ppn": "6606720.00"
+      "dpp_amount": "5856768.00",
+      "total_invoice_with_ppn": "6501012.48"
     },
     "INV-202608-0727": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-08 - Grosir Bintang Samrat Sario",
-      "dpp_amount": "3831000.00",
-      "total_invoice_with_ppn": "4252410.00"
+      "dpp_amount": "3731304.00",
+      "total_invoice_with_ppn": "4141747.44"
     },
     "INV-202608-0728": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-08 - Grosir Bintang Samrat Sario",
-      "dpp_amount": "1716000.00",
-      "total_invoice_with_ppn": "1904760.00"
+      "dpp_amount": "1688544.00",
+      "total_invoice_with_ppn": "1874283.84"
     },
     "INV-202608-0729": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-08 - Grosir Bintang Samrat Sario",
-      "dpp_amount": "2592000.00",
-      "total_invoice_with_ppn": "2877120.00"
+      "dpp_amount": "2530944.00",
+      "total_invoice_with_ppn": "2809347.84"
     },
     "INV-202608-0733": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-38 - Toko Paal Dua Jaya",
-      "dpp_amount": "3540000.00",
-      "total_invoice_with_ppn": "3929400.00"
+      "dpp_amount": "3483360.00",
+      "total_invoice_with_ppn": "3866529.60"
     },
     "INV-202608-0734": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-38 - Toko Paal Dua Jaya",
-      "dpp_amount": "3480000.00",
-      "total_invoice_with_ppn": "3862800.00"
+      "dpp_amount": "3424320.00",
+      "total_invoice_with_ppn": "3800995.20"
     },
     "INV-202608-0735": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-38 - Toko Paal Dua Jaya",
-      "dpp_amount": "4408000.00",
-      "total_invoice_with_ppn": "4892880.00"
+      "dpp_amount": "4318128.00",
+      "total_invoice_with_ppn": "4793122.08"
     },
     "INV-202608-0736": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-39 - Toko Berkat Melimpah Paal Dua",
-      "dpp_amount": "3168000.00",
-      "total_invoice_with_ppn": "3516480.00"
+      "dpp_amount": "3117312.00",
+      "total_invoice_with_ppn": "3460216.32"
     },
     "INV-202608-0737": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-39 - Toko Berkat Melimpah Paal Dua",
-      "dpp_amount": "12636000.00",
-      "total_invoice_with_ppn": "14025960.00"
+      "dpp_amount": "12282192.00",
+      "total_invoice_with_ppn": "13633233.12"
     },
     "INV-202608-0738": {
       "date_invoice": "2026-08-19",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-39 - Toko Berkat Melimpah Paal Dua",
-      "dpp_amount": "4136000.00",
-      "total_invoice_with_ppn": "4590960.00"
+      "dpp_amount": "4039872.00",
+      "total_invoice_with_ppn": "4484257.92"
     },
     "INV-202608-0767": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
-      "dpp_amount": "5630400.00",
-      "total_invoice_with_ppn": "6249744.00"
+      "dpp_amount": "5545944.00",
+      "total_invoice_with_ppn": "6155997.84"
     },
     "INV-202608-0768": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
-      "dpp_amount": "1641600.00",
-      "total_invoice_with_ppn": "1822176.00"
+      "dpp_amount": "1605571.20",
+      "total_invoice_with_ppn": "1782184.03"
     },
     "INV-202608-0769": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "21844000.00",
-      "total_invoice_with_ppn": "24246840.00"
+      "dpp_amount": "21061532.00",
+      "total_invoice_with_ppn": "23378300.52"
     },
     "INV-202608-0770": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "4272000.00",
-      "total_invoice_with_ppn": "4741920.00"
+      "dpp_amount": "4178016.00",
+      "total_invoice_with_ppn": "4637597.76"
     },
     "INV-202608-0771": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "20196000.00",
-      "total_invoice_with_ppn": "22417560.00"
+      "dpp_amount": "19525176.00",
+      "total_invoice_with_ppn": "21672945.36"
     },
     "INV-202608-0772": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "868000.00",
-      "total_invoice_with_ppn": "963480.00"
+      "dpp_amount": "848904.00",
+      "total_invoice_with_ppn": "942283.44"
     },
     "INV-202608-0773": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "16798800.00",
-      "total_invoice_with_ppn": "18646668.00"
+      "dpp_amount": "16365476.40",
+      "total_invoice_with_ppn": "18165678.80"
     },
     "INV-202608-0774": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "6264000.00",
-      "total_invoice_with_ppn": "6953040.00"
+      "dpp_amount": "6126192.00",
+      "total_invoice_with_ppn": "6800073.12"
     },
     "INV-202608-0775": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "15552000.00",
-      "total_invoice_with_ppn": "17262720.00"
+      "dpp_amount": "15023232.00",
+      "total_invoice_with_ppn": "16675787.52"
     },
     "INV-202608-0776": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-19",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "1948000.00",
-      "total_invoice_with_ppn": "2162280.00"
+      "dpp_amount": "1884552.00",
+      "total_invoice_with_ppn": "2091852.72"
     },
     "INV-202608-0777": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-11 - Grosir Krida Bahu",
-      "dpp_amount": "2640000.00",
-      "total_invoice_with_ppn": "2930400.00"
+      "dpp_amount": "2531760.00",
+      "total_invoice_with_ppn": "2810253.60"
     },
     "INV-202608-0778": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-11 - Grosir Krida Bahu",
-      "dpp_amount": "1008000.00",
-      "total_invoice_with_ppn": "1118880.00"
+      "dpp_amount": "971712.00",
+      "total_invoice_with_ppn": "1078600.32"
     },
     "INV-202608-0779": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-11 - Grosir Krida Bahu",
-      "dpp_amount": "16740000.00",
-      "total_invoice_with_ppn": "18581400.00"
+      "dpp_amount": "16271280.00",
+      "total_invoice_with_ppn": "18061120.80"
     },
     "INV-202608-0780": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-11 - Grosir Krida Bahu",
-      "dpp_amount": "660000.00",
-      "total_invoice_with_ppn": "732600.00"
+      "dpp_amount": "649440.00",
+      "total_invoice_with_ppn": "720878.40"
     },
     "INV-202608-0781": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
-      "dpp_amount": "2241600.00",
-      "total_invoice_with_ppn": "2488176.00"
+      "dpp_amount": "2184134.40",
+      "total_invoice_with_ppn": "2424389.18"
     },
     "INV-202608-0782": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
-      "dpp_amount": "2184000.00",
-      "total_invoice_with_ppn": "2424240.00"
+      "dpp_amount": "2105376.00",
+      "total_invoice_with_ppn": "2336967.36"
     },
     "INV-202608-0783": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
-      "dpp_amount": "5280000.00",
-      "total_invoice_with_ppn": "5860800.00"
+      "dpp_amount": "5132160.00",
+      "total_invoice_with_ppn": "5696697.60"
     },
     "INV-202608-0784": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
-      "dpp_amount": "2800000.00",
-      "total_invoice_with_ppn": "3108000.00"
+      "dpp_amount": "2727552.00",
+      "total_invoice_with_ppn": "3027582.72"
     },
     "INV-202608-0791": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
-      "dpp_amount": "156000.00",
-      "total_invoice_with_ppn": "173160.00"
+      "dpp_amount": "153504.00",
+      "total_invoice_with_ppn": "170389.44"
     },
     "INV-202608-0792": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
-      "dpp_amount": "3740000.00",
-      "total_invoice_with_ppn": "4151400.00"
+      "dpp_amount": "3680160.00",
+      "total_invoice_with_ppn": "4084977.60"
     },
     "INV-202608-0793": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
-      "dpp_amount": "3744000.00",
-      "total_invoice_with_ppn": "4155840.00"
+      "dpp_amount": "3646080.00",
+      "total_invoice_with_ppn": "4047148.80"
     },
     "INV-202608-0794": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
-      "dpp_amount": "1564800.00",
-      "total_invoice_with_ppn": "1736928.00"
+      "dpp_amount": "1539763.20",
+      "total_invoice_with_ppn": "1709137.15"
     },
     "INV-202608-0795": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
-      "dpp_amount": "1680000.00",
-      "total_invoice_with_ppn": "1864800.00"
+      "dpp_amount": "1611120.00",
+      "total_invoice_with_ppn": "1788343.20"
     },
     "INV-202608-0796": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
-      "dpp_amount": "896000.00",
-      "total_invoice_with_ppn": "994560.00"
+      "dpp_amount": "881664.00",
+      "total_invoice_with_ppn": "978647.04"
     },
     "INV-202608-0797": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
-      "dpp_amount": "3780000.00",
-      "total_invoice_with_ppn": "4195800.00"
+      "dpp_amount": "3719520.00",
+      "total_invoice_with_ppn": "4128667.20"
     },
     "INV-202608-0798": {
       "date_invoice": "2026-08-20",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
-      "dpp_amount": "1564800.00",
-      "total_invoice_with_ppn": "1736928.00"
+      "dpp_amount": "1539763.20",
+      "total_invoice_with_ppn": "1709137.15"
     },
     "INV-202608-0822": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-INST-04 - Katering Minahasa Indah",
-      "dpp_amount": "5160000.00",
-      "total_invoice_with_ppn": "5727600.00"
+      "dpp_amount": "5082600.00",
+      "total_invoice_with_ppn": "5641686.00"
     },
     "INV-202608-0823": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-INST-04 - Katering Minahasa Indah",
-      "dpp_amount": "789600.00",
-      "total_invoice_with_ppn": "876456.00"
+      "dpp_amount": "777756.00",
+      "total_invoice_with_ppn": "863309.16"
     },
     "INV-202608-0824": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-INST-04 - Katering Minahasa Indah",
-      "dpp_amount": "14256000.00",
-      "total_invoice_with_ppn": "15824160.00"
+      "dpp_amount": "13871088.00",
+      "total_invoice_with_ppn": "15396907.68"
     },
     "INV-202608-0825": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-20",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "12686400.00",
-      "total_invoice_with_ppn": "14081904.00"
+      "dpp_amount": "12407299.20",
+      "total_invoice_with_ppn": "13772102.11"
     },
     "INV-202608-0826": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-20",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "6312000.00",
-      "total_invoice_with_ppn": "7006320.00"
+      "dpp_amount": "6173136.00",
+      "total_invoice_with_ppn": "6852180.96"
     },
     "INV-202608-0827": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-20",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "15156000.00",
-      "total_invoice_with_ppn": "16823160.00"
+      "dpp_amount": "14640696.00",
+      "total_invoice_with_ppn": "16251172.56"
     },
     "INV-202608-0828": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-20",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "8692000.00",
-      "total_invoice_with_ppn": "9648120.00"
+      "dpp_amount": "8396472.00",
+      "total_invoice_with_ppn": "9320083.92"
     },
     "INV-202608-0829": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
-      "dpp_amount": "12507000.00",
-      "total_invoice_with_ppn": "13882770.00"
+      "dpp_amount": "12022671.00",
+      "total_invoice_with_ppn": "13345164.81"
     },
     "INV-202608-0830": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
-      "dpp_amount": "3488000.00",
-      "total_invoice_with_ppn": "3871680.00"
+      "dpp_amount": "3363264.00",
+      "total_invoice_with_ppn": "3733223.04"
     },
     "INV-202608-0831": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
-      "dpp_amount": "1476000.00",
-      "total_invoice_with_ppn": "1638360.00"
+      "dpp_amount": "1443528.00",
+      "total_invoice_with_ppn": "1602316.08"
     },
     "INV-202608-0832": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
-      "dpp_amount": "3766400.00",
-      "total_invoice_with_ppn": "4180704.00"
+      "dpp_amount": "3651398.40",
+      "total_invoice_with_ppn": "4053052.22"
     },
     "INV-202608-0833": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
-      "dpp_amount": "2550000.00",
-      "total_invoice_with_ppn": "2830500.00"
+      "dpp_amount": "2502825.00",
+      "total_invoice_with_ppn": "2778135.75"
     },
     "INV-202608-0834": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
-      "dpp_amount": "1680000.00",
-      "total_invoice_with_ppn": "1864800.00"
+      "dpp_amount": "1619520.00",
+      "total_invoice_with_ppn": "1797667.20"
     },
     "INV-202608-0835": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
-      "dpp_amount": "6336000.00",
-      "total_invoice_with_ppn": "7032960.00"
+      "dpp_amount": "6158592.00",
+      "total_invoice_with_ppn": "6836037.12"
     },
     "INV-202608-0836": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
-      "dpp_amount": "768000.00",
-      "total_invoice_with_ppn": "852480.00"
+      "dpp_amount": "755712.00",
+      "total_invoice_with_ppn": "838840.32"
     },
     "INV-202608-0837": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
-      "dpp_amount": "12816000.00",
-      "total_invoice_with_ppn": "14225760.00"
+      "dpp_amount": "12470976.00",
+      "total_invoice_with_ppn": "13842783.36"
     },
     "INV-202608-0838": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
-      "dpp_amount": "2736000.00",
-      "total_invoice_with_ppn": "3036960.00"
+      "dpp_amount": "2680128.00",
+      "total_invoice_with_ppn": "2974942.08"
     },
     "INV-202608-0850": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
-      "dpp_amount": "6822000.00",
-      "total_invoice_with_ppn": "7572420.00"
+      "dpp_amount": "6712848.00",
+      "total_invoice_with_ppn": "7451261.28"
     },
     "INV-202608-0851": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
-      "dpp_amount": "2280000.00",
-      "total_invoice_with_ppn": "2530800.00"
+      "dpp_amount": "2243520.00",
+      "total_invoice_with_ppn": "2490307.20"
     },
     "INV-202608-0852": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
-      "dpp_amount": "7632000.00",
-      "total_invoice_with_ppn": "8471520.00"
+      "dpp_amount": "7418304.00",
+      "total_invoice_with_ppn": "8234317.44"
     },
     "INV-202608-0853": {
       "date_invoice": "2026-08-21",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
-      "dpp_amount": "1032000.00",
-      "total_invoice_with_ppn": "1145520.00"
+      "dpp_amount": "1015488.00",
+      "total_invoice_with_ppn": "1127191.68"
     },
     "INV-202608-0882": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
-      "dpp_amount": "7752000.00",
-      "total_invoice_with_ppn": "8604720.00"
+      "dpp_amount": "7576920.00",
+      "total_invoice_with_ppn": "8410381.20"
     },
     "INV-202608-0883": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
-      "dpp_amount": "636000.00",
-      "total_invoice_with_ppn": "705960.00"
+      "dpp_amount": "626460.00",
+      "total_invoice_with_ppn": "695370.60"
     },
     "INV-202608-0884": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
-      "dpp_amount": "15024000.00",
-      "total_invoice_with_ppn": "16676640.00"
+      "dpp_amount": "14629584.00",
+      "total_invoice_with_ppn": "16238838.24"
     },
     "INV-202608-0885": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
-      "dpp_amount": "1123200.00",
-      "total_invoice_with_ppn": "1246752.00"
+      "dpp_amount": "1092873.60",
+      "total_invoice_with_ppn": "1213089.70"
     },
     "INV-202608-0886": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-21",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "5421600.00",
-      "total_invoice_with_ppn": "6017976.00"
+      "dpp_amount": "5302324.80",
+      "total_invoice_with_ppn": "5885580.53"
     },
     "INV-202608-0887": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-21",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "3948000.00",
-      "total_invoice_with_ppn": "4382280.00"
+      "dpp_amount": "3861144.00",
+      "total_invoice_with_ppn": "4285869.84"
     },
     "INV-202608-0888": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-21",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "8016000.00",
-      "total_invoice_with_ppn": "8897760.00"
+      "dpp_amount": "7749792.00",
+      "total_invoice_with_ppn": "8602269.12"
     },
     "INV-202608-0889": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-21",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "10240000.00",
-      "total_invoice_with_ppn": "11366400.00"
+      "dpp_amount": "9894768.00",
+      "total_invoice_with_ppn": "10983192.48"
     },
     "INV-202608-0890": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
-      "dpp_amount": "16008000.00",
-      "total_invoice_with_ppn": "17768880.00"
+      "dpp_amount": "15502824.00",
+      "total_invoice_with_ppn": "17208134.64"
     },
     "INV-202608-0891": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
-      "dpp_amount": "10404000.00",
-      "total_invoice_with_ppn": "11548440.00"
+      "dpp_amount": "10175112.00",
+      "total_invoice_with_ppn": "11294374.32"
     },
     "INV-202608-0892": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
-      "dpp_amount": "2640000.00",
-      "total_invoice_with_ppn": "2930400.00"
+      "dpp_amount": "2550240.00",
+      "total_invoice_with_ppn": "2830766.40"
     },
     "INV-202608-0893": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
-      "dpp_amount": "12604800.00",
-      "total_invoice_with_ppn": "13991328.00"
+      "dpp_amount": "12225254.40",
+      "total_invoice_with_ppn": "13570032.38"
     },
     "INV-202608-0894": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
-      "dpp_amount": "2799000.00",
-      "total_invoice_with_ppn": "3106890.00"
+      "dpp_amount": "2712216.00",
+      "total_invoice_with_ppn": "3010559.76"
     },
     "INV-202608-0895": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
-      "dpp_amount": "3880000.00",
-      "total_invoice_with_ppn": "4306800.00"
+      "dpp_amount": "3776320.00",
+      "total_invoice_with_ppn": "4191715.20"
     },
     "INV-202608-0896": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
-      "dpp_amount": "2940000.00",
-      "total_invoice_with_ppn": "3263400.00"
+      "dpp_amount": "2857680.00",
+      "total_invoice_with_ppn": "3172024.80"
     },
     "INV-202608-0897": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
-      "dpp_amount": "1496000.00",
-      "total_invoice_with_ppn": "1660560.00"
+      "dpp_amount": "1454112.00",
+      "total_invoice_with_ppn": "1614064.32"
     },
     "INV-202608-0898": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-25 - Grosir Megamas Abadi",
-      "dpp_amount": "4662000.00",
-      "total_invoice_with_ppn": "5174820.00"
+      "dpp_amount": "4489983.00",
+      "total_invoice_with_ppn": "4983881.13"
     },
     "INV-202608-0899": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-25 - Grosir Megamas Abadi",
-      "dpp_amount": "1656000.00",
-      "total_invoice_with_ppn": "1838160.00"
+      "dpp_amount": "1596384.00",
+      "total_invoice_with_ppn": "1771986.24"
     },
     "INV-202608-0900": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-25 - Grosir Megamas Abadi",
-      "dpp_amount": "2232000.00",
-      "total_invoice_with_ppn": "2477520.00"
+      "dpp_amount": "2196288.00",
+      "total_invoice_with_ppn": "2437879.68"
     },
     "INV-202608-0901": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-25 - Grosir Megamas Abadi",
-      "dpp_amount": "6326400.00",
-      "total_invoice_with_ppn": "7022304.00"
+      "dpp_amount": "6155481.60",
+      "total_invoice_with_ppn": "6832584.58"
     },
     "INV-202608-0910": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
-      "dpp_amount": "4050000.00",
-      "total_invoice_with_ppn": "4495500.00"
+      "dpp_amount": "3985200.00",
+      "total_invoice_with_ppn": "4423572.00"
     },
     "INV-202608-0911": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
-      "dpp_amount": "4336000.00",
-      "total_invoice_with_ppn": "4812960.00"
+      "dpp_amount": "4266624.00",
+      "total_invoice_with_ppn": "4735952.64"
     },
     "INV-202608-0912": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
-      "dpp_amount": "4680000.00",
-      "total_invoice_with_ppn": "5194800.00"
+      "dpp_amount": "4605120.00",
+      "total_invoice_with_ppn": "5111683.20"
     },
     "INV-202608-0913": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
-      "dpp_amount": "1512000.00",
-      "total_invoice_with_ppn": "1678320.00"
+      "dpp_amount": "1450008.00",
+      "total_invoice_with_ppn": "1609508.88"
     },
     "INV-202608-0914": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
-      "dpp_amount": "1716000.00",
-      "total_invoice_with_ppn": "1904760.00"
+      "dpp_amount": "1654224.00",
+      "total_invoice_with_ppn": "1836188.64"
     },
     "INV-202608-0915": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
-      "dpp_amount": "7812000.00",
-      "total_invoice_with_ppn": "8671320.00"
+      "dpp_amount": "7597152.00",
+      "total_invoice_with_ppn": "8432838.72"
     },
     "INV-202608-0916": {
       "date_invoice": "2026-08-22",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
-      "dpp_amount": "1210400.00",
-      "total_invoice_with_ppn": "1343544.00"
+      "dpp_amount": "1178937.60",
+      "total_invoice_with_ppn": "1308620.74"
     },
     "INV-202608-0942": {
       "date_invoice": "2026-08-24",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-23",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "8562000.00",
-      "total_invoice_with_ppn": "9503820.00"
+      "dpp_amount": "8159586.00",
+      "total_invoice_with_ppn": "9057140.46"
     },
     "INV-202608-0943": {
       "date_invoice": "2026-08-24",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-23",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "20640000.00",
-      "total_invoice_with_ppn": "22910400.00"
+      "dpp_amount": "19938240.00",
+      "total_invoice_with_ppn": "22131446.40"
     },
     "INV-202608-0944": {
       "date_invoice": "2026-08-24",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-23",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "5229600.00",
-      "total_invoice_with_ppn": "5804856.00"
+      "dpp_amount": "5051793.60",
+      "total_invoice_with_ppn": "5607490.90"
     },
     "INV-202608-0945": {
       "date_invoice": "2026-08-24",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
-      "dpp_amount": "5016000.00",
-      "total_invoice_with_ppn": "5567760.00"
+      "dpp_amount": "4935744.00",
+      "total_invoice_with_ppn": "5478675.84"
     },
     "INV-202608-0946": {
       "date_invoice": "2026-08-24",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
-      "dpp_amount": "1512000.00",
-      "total_invoice_with_ppn": "1678320.00"
+      "dpp_amount": "1457568.00",
+      "total_invoice_with_ppn": "1617900.48"
     },
     "INV-202608-0947": {
       "date_invoice": "2026-08-24",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
-      "dpp_amount": "2940000.00",
-      "total_invoice_with_ppn": "3263400.00"
+      "dpp_amount": "2857680.00",
+      "total_invoice_with_ppn": "3172024.80"
     },
     "INV-202608-0948": {
       "date_invoice": "2026-08-24",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
-      "dpp_amount": "604000.00",
-      "total_invoice_with_ppn": "670440.00"
+      "dpp_amount": "594336.00",
+      "total_invoice_with_ppn": "659712.96"
     },
     "INV-202608-0975": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-10-10",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "17391000.00",
-      "total_invoice_with_ppn": "19304010.00"
+      "dpp_amount": "16885998.00",
+      "total_invoice_with_ppn": "18743457.78"
     },
     "INV-202608-0976": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-10-10",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "9878400.00",
-      "total_invoice_with_ppn": "10965024.00"
+      "dpp_amount": "9643267.20",
+      "total_invoice_with_ppn": "10704026.59"
     },
     "INV-202608-0977": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-10-10",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "11574000.00",
-      "total_invoice_with_ppn": "12847140.00"
+      "dpp_amount": "11180484.00",
+      "total_invoice_with_ppn": "12410337.24"
     },
     "INV-202608-0978": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-10-10",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "3420000.00",
-      "total_invoice_with_ppn": "3796200.00"
+      "dpp_amount": "3308472.00",
+      "total_invoice_with_ppn": "3672403.92"
     },
     "INV-202608-0979": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-10-10",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "11919000.00",
-      "total_invoice_with_ppn": "13230090.00"
+      "dpp_amount": "11656782.00",
+      "total_invoice_with_ppn": "12939028.02"
     },
     "INV-202608-0980": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-10-10",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "8586000.00",
-      "total_invoice_with_ppn": "9530460.00"
+      "dpp_amount": "8333748.00",
+      "total_invoice_with_ppn": "9250460.28"
     },
     "INV-202608-0981": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-10-10",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "1504800.00",
-      "total_invoice_with_ppn": "1670328.00"
+      "dpp_amount": "1453636.80",
+      "total_invoice_with_ppn": "1613536.85"
     },
     "INV-202608-0982": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
-      "dpp_amount": "2474400.00",
-      "total_invoice_with_ppn": "2746584.00"
+      "dpp_amount": "2395449.60",
+      "total_invoice_with_ppn": "2658949.06"
     },
     "INV-202608-0983": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
-      "dpp_amount": "8628000.00",
-      "total_invoice_with_ppn": "9577080.00"
+      "dpp_amount": "8427744.00",
+      "total_invoice_with_ppn": "9354795.84"
     },
     "INV-202608-0984": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
-      "dpp_amount": "1440000.00",
-      "total_invoice_with_ppn": "1598400.00"
+      "dpp_amount": "1399680.00",
+      "total_invoice_with_ppn": "1553644.80"
     },
     "INV-202608-0985": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-      "dpp_amount": "1275000.00",
-      "total_invoice_with_ppn": "1415250.00"
+      "dpp_amount": "1254600.00",
+      "total_invoice_with_ppn": "1392606.00"
     },
     "INV-202608-0986": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-      "dpp_amount": "1176000.00",
-      "total_invoice_with_ppn": "1305360.00"
+      "dpp_amount": "1133664.00",
+      "total_invoice_with_ppn": "1258367.04"
     },
     "INV-202608-0987": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-      "dpp_amount": "4204000.00",
-      "total_invoice_with_ppn": "4666440.00"
+      "dpp_amount": "4098720.00",
+      "total_invoice_with_ppn": "4549579.20"
     },
     "INV-202608-0988": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-      "dpp_amount": "408000.00",
-      "total_invoice_with_ppn": "452880.00"
+      "dpp_amount": "401472.00",
+      "total_invoice_with_ppn": "445633.92"
     },
     "INV-202608-0989": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
-      "dpp_amount": "5496000.00",
-      "total_invoice_with_ppn": "6100560.00"
+      "dpp_amount": "5324064.00",
+      "total_invoice_with_ppn": "5909711.04"
     },
     "INV-202608-0990": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
-      "dpp_amount": "3456000.00",
-      "total_invoice_with_ppn": "3836160.00"
+      "dpp_amount": "3359232.00",
+      "total_invoice_with_ppn": "3728747.52"
     },
     "INV-202608-0991": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
-      "dpp_amount": "3355200.00",
-      "total_invoice_with_ppn": "3724272.00"
+      "dpp_amount": "3273436.80",
+      "total_invoice_with_ppn": "3633514.85"
     },
     "INV-202608-0992": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-04 - Toko Pinaesaan Calaca",
-      "dpp_amount": "1332000.00",
-      "total_invoice_with_ppn": "1478520.00"
+      "dpp_amount": "1297248.00",
+      "total_invoice_with_ppn": "1439945.28"
     },
     "INV-202608-0993": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-04 - Toko Pinaesaan Calaca",
-      "dpp_amount": "7236000.00",
-      "total_invoice_with_ppn": "8031960.00"
+      "dpp_amount": "7044192.00",
+      "total_invoice_with_ppn": "7819053.12"
     },
     "INV-202608-0994": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-06 - Grosir Calaca Baru",
-      "dpp_amount": "2892000.00",
-      "total_invoice_with_ppn": "3210120.00"
+      "dpp_amount": "2827728.00",
+      "total_invoice_with_ppn": "3138778.08"
     },
     "INV-202608-0995": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-06 - Grosir Calaca Baru",
-      "dpp_amount": "2040000.00",
-      "total_invoice_with_ppn": "2264400.00"
+      "dpp_amount": "2007360.00",
+      "total_invoice_with_ppn": "2228169.60"
     },
     "INV-202608-0996": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-06 - Grosir Calaca Baru",
-      "dpp_amount": "3840000.00",
-      "total_invoice_with_ppn": "4262400.00"
+      "dpp_amount": "3732480.00",
+      "total_invoice_with_ppn": "4143052.80"
     },
     "INV-202608-0997": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-06 - Grosir Calaca Baru",
-      "dpp_amount": "2420000.00",
-      "total_invoice_with_ppn": "2686200.00"
+      "dpp_amount": "2368176.00",
+      "total_invoice_with_ppn": "2628675.36"
     },
     "INV-202608-0998": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-34 - Grosir Tikala Baru",
-      "dpp_amount": "2805000.00",
-      "total_invoice_with_ppn": "3113550.00"
+      "dpp_amount": "2760120.00",
+      "total_invoice_with_ppn": "3063733.20"
     },
     "INV-202608-0999": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-34 - Grosir Tikala Baru",
-      "dpp_amount": "4442400.00",
-      "total_invoice_with_ppn": "4931064.00"
+      "dpp_amount": "4350201.60",
+      "total_invoice_with_ppn": "4828723.78"
     },
     "INV-202608-1000": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
-      "dpp_amount": "1368000.00",
-      "total_invoice_with_ppn": "1518480.00"
+      "dpp_amount": "1318752.00",
+      "total_invoice_with_ppn": "1463814.72"
     },
     "INV-202608-1001": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
-      "dpp_amount": "1848000.00",
-      "total_invoice_with_ppn": "2051280.00"
+      "dpp_amount": "1818432.00",
+      "total_invoice_with_ppn": "2018459.52"
     },
     "INV-202608-1002": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-09",
       "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
-      "dpp_amount": "3336000.00",
-      "total_invoice_with_ppn": "3702960.00"
+      "dpp_amount": "3246076.80",
+      "total_invoice_with_ppn": "3603145.25"
     },
     "INV-202608-1003": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-37 - Grosir Makmur Abadi Tikala",
-      "dpp_amount": "2985000.00",
-      "total_invoice_with_ppn": "3313350.00"
+      "dpp_amount": "2937240.00",
+      "total_invoice_with_ppn": "3260336.40"
     },
     "INV-202608-1004": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-37 - Grosir Makmur Abadi Tikala",
-      "dpp_amount": "2736000.00",
-      "total_invoice_with_ppn": "3036960.00"
+      "dpp_amount": "2692224.00",
+      "total_invoice_with_ppn": "2988368.64"
     },
     "INV-202608-1005": {
       "date_invoice": "2026-08-26",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-02",
       "customer": "CUST-GT-37 - Grosir Makmur Abadi Tikala",
-      "dpp_amount": "1082400.00",
-      "total_invoice_with_ppn": "1201464.00"
+      "dpp_amount": "1065081.60",
+      "total_invoice_with_ppn": "1182240.58"
     },
     "INV-202608-1022": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-INST-08 - Restoran Nelayan Megamas",
-      "dpp_amount": "2534400.00",
-      "total_invoice_with_ppn": "2813184.00"
+      "dpp_amount": "2496384.00",
+      "total_invoice_with_ppn": "2770986.24"
     },
     "INV-202608-1023": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-INST-08 - Restoran Nelayan Megamas",
-      "dpp_amount": "5600000.00",
-      "total_invoice_with_ppn": "6216000.00"
+      "dpp_amount": "5448800.00",
+      "total_invoice_with_ppn": "6048168.00"
     },
     "INV-202608-1024": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-INST-08 - Restoran Nelayan Megamas",
-      "dpp_amount": "1586400.00",
-      "total_invoice_with_ppn": "1760904.00"
+      "dpp_amount": "1546447.20",
+      "total_invoice_with_ppn": "1716556.39"
     },
     "INV-202608-1025": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-26",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "8892000.00",
-      "total_invoice_with_ppn": "9870120.00"
+      "dpp_amount": "8609076.00",
+      "total_invoice_with_ppn": "9556074.36"
     },
     "INV-202608-1026": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-26",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "12576000.00",
-      "total_invoice_with_ppn": "13959360.00"
+      "dpp_amount": "12070848.00",
+      "total_invoice_with_ppn": "13398641.28"
     },
     "INV-202608-1027": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-26",
       "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
-      "dpp_amount": "5760000.00",
-      "total_invoice_with_ppn": "6393600.00"
+      "dpp_amount": "5564160.00",
+      "total_invoice_with_ppn": "6176217.60"
     },
     "INV-202608-1028": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-26",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "16335000.00",
-      "total_invoice_with_ppn": "18131850.00"
+      "dpp_amount": "15585255.00",
+      "total_invoice_with_ppn": "17299633.05"
     },
     "INV-202608-1029": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-26",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "864000.00",
-      "total_invoice_with_ppn": "959040.00"
+      "dpp_amount": "827712.00",
+      "total_invoice_with_ppn": "918760.32"
     },
     "INV-202608-1030": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-26",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "14592000.00",
-      "total_invoice_with_ppn": "16197120.00"
+      "dpp_amount": "14102928.00",
+      "total_invoice_with_ppn": "15654250.08"
     },
     "INV-202608-1031": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-26",
       "customer": "CUST-MT-08 - MultiiMart Tomohon",
-      "dpp_amount": "6632800.00",
-      "total_invoice_with_ppn": "7362408.00"
+      "dpp_amount": "6486878.40",
+      "total_invoice_with_ppn": "7200435.02"
     },
     "INV-202608-1032": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-11 - Grosir Krida Bahu",
-      "dpp_amount": "1176000.00",
-      "total_invoice_with_ppn": "1305360.00"
+      "dpp_amount": "1157184.00",
+      "total_invoice_with_ppn": "1284474.24"
     },
     "INV-202608-1033": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-11 - Grosir Krida Bahu",
-      "dpp_amount": "5256000.00",
-      "total_invoice_with_ppn": "5834160.00"
+      "dpp_amount": "5171904.00",
+      "total_invoice_with_ppn": "5740813.44"
     },
     "INV-202608-1034": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
-      "dpp_amount": "1260000.00",
-      "total_invoice_with_ppn": "1398600.00"
+      "dpp_amount": "1208340.00",
+      "total_invoice_with_ppn": "1341257.40"
     },
     "INV-202608-1035": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
-      "dpp_amount": "1224000.00",
-      "total_invoice_with_ppn": "1358640.00"
+      "dpp_amount": "1204416.00",
+      "total_invoice_with_ppn": "1336901.76"
     },
     "INV-202608-1036": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
-      "dpp_amount": "2250400.00",
-      "total_invoice_with_ppn": "2497944.00"
+      "dpp_amount": "2195049.60",
+      "total_invoice_with_ppn": "2436505.06"
     },
     "INV-202608-1037": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-14 - Toko Batu Kota Indah",
-      "dpp_amount": "3200000.00",
-      "total_invoice_with_ppn": "3552000.00"
+      "dpp_amount": "3148800.00",
+      "total_invoice_with_ppn": "3495168.00"
     },
     "INV-202608-1038": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-14 - Toko Batu Kota Indah",
-      "dpp_amount": "2322000.00",
-      "total_invoice_with_ppn": "2577420.00"
+      "dpp_amount": "2281608.00",
+      "total_invoice_with_ppn": "2532584.88"
     },
     "INV-202608-1039": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-14 - Toko Batu Kota Indah",
-      "dpp_amount": "7236000.00",
-      "total_invoice_with_ppn": "8031960.00"
+      "dpp_amount": "7086960.00",
+      "total_invoice_with_ppn": "7866525.60"
     },
     "INV-202608-1040": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-14 - Toko Batu Kota Indah",
-      "dpp_amount": "1592000.00",
-      "total_invoice_with_ppn": "1767120.00"
+      "dpp_amount": "1549728.00",
+      "total_invoice_with_ppn": "1720198.08"
     },
     "INV-202608-1041": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
-      "dpp_amount": "2652000.00",
-      "total_invoice_with_ppn": "2943720.00"
+      "dpp_amount": "2594268.00",
+      "total_invoice_with_ppn": "2879637.48"
     },
     "INV-202608-1042": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
-      "dpp_amount": "972000.00",
-      "total_invoice_with_ppn": "1078920.00"
+      "dpp_amount": "956448.00",
+      "total_invoice_with_ppn": "1061657.28"
     },
     "INV-202608-1043": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
-      "dpp_amount": "763200.00",
-      "total_invoice_with_ppn": "847152.00"
+      "dpp_amount": "750988.80",
+      "total_invoice_with_ppn": "833597.57"
     },
     "INV-202608-1044": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
-      "dpp_amount": "840000.00",
-      "total_invoice_with_ppn": "932400.00"
+      "dpp_amount": "826560.00",
+      "total_invoice_with_ppn": "917481.60"
     },
     "INV-202608-1045": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-10",
       "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
-      "dpp_amount": "3936000.00",
-      "total_invoice_with_ppn": "4368960.00"
+      "dpp_amount": "3812544.00",
+      "total_invoice_with_ppn": "4231923.84"
     },
     "INV-202608-1046": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-46 - Toko Sindulang Jaya",
-      "dpp_amount": "8664000.00",
-      "total_invoice_with_ppn": "9617040.00"
+      "dpp_amount": "8452776.00",
+      "total_invoice_with_ppn": "9382581.36"
     },
     "INV-202608-1047": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-46 - Toko Sindulang Jaya",
-      "dpp_amount": "2160000.00",
-      "total_invoice_with_ppn": "2397600.00"
+      "dpp_amount": "2125440.00",
+      "total_invoice_with_ppn": "2359238.40"
     },
     "INV-202608-1048": {
       "date_invoice": "2026-08-27",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-03",
       "customer": "CUST-GT-46 - Toko Sindulang Jaya",
-      "dpp_amount": "1293600.00",
-      "total_invoice_with_ppn": "1435896.00"
+      "dpp_amount": "1272902.40",
+      "total_invoice_with_ppn": "1412921.66"
     },
     "INV-202608-1074": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-INST-09 - Katering Berkat Tondano",
-      "dpp_amount": "2491800.00",
-      "total_invoice_with_ppn": "2765898.00"
+      "dpp_amount": "2454423.00",
+      "total_invoice_with_ppn": "2724409.53"
     },
     "INV-202608-1075": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-INST-09 - Katering Berkat Tondano",
-      "dpp_amount": "6000000.00",
-      "total_invoice_with_ppn": "6660000.00"
+      "dpp_amount": "5865648.00",
+      "total_invoice_with_ppn": "6510869.28"
     },
     "INV-202608-1076": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-INST-09 - Katering Berkat Tondano",
-      "dpp_amount": "3456000.00",
-      "total_invoice_with_ppn": "3836160.00"
+      "dpp_amount": "3362688.00",
+      "total_invoice_with_ppn": "3732583.68"
     },
     "INV-202608-1077": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-27",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "14976000.00",
-      "total_invoice_with_ppn": "16623360.00"
+      "dpp_amount": "14412828.00",
+      "total_invoice_with_ppn": "15998239.08"
     },
     "INV-202608-1078": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-27",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "17520000.00",
-      "total_invoice_with_ppn": "19447200.00"
+      "dpp_amount": "16912800.00",
+      "total_invoice_with_ppn": "18773208.00"
     },
     "INV-202608-1079": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-27",
       "customer": "CUST-MT-05 - FreshhMart Express Tikala",
-      "dpp_amount": "3276000.00",
-      "total_invoice_with_ppn": "3636360.00"
+      "dpp_amount": "3203928.00",
+      "total_invoice_with_ppn": "3556360.08"
     },
     "INV-202608-1080": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
-      "dpp_amount": "8638200.00",
-      "total_invoice_with_ppn": "9588402.00"
+      "dpp_amount": "8366079.60",
+      "total_invoice_with_ppn": "9286348.36"
     },
     "INV-202608-1081": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
-      "dpp_amount": "8148000.00",
-      "total_invoice_with_ppn": "9044280.00"
+      "dpp_amount": "7968744.00",
+      "total_invoice_with_ppn": "8845305.84"
     },
     "INV-202608-1082": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
-      "dpp_amount": "15300000.00",
-      "total_invoice_with_ppn": "16983000.00"
+      "dpp_amount": "14779800.00",
+      "total_invoice_with_ppn": "16405578.00"
     },
     "INV-202608-1083": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
-      "dpp_amount": "3800000.00",
-      "total_invoice_with_ppn": "4218000.00"
+      "dpp_amount": "3682752.00",
+      "total_invoice_with_ppn": "4087854.72"
     },
     "INV-202608-1084": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
-      "dpp_amount": "1332000.00",
-      "total_invoice_with_ppn": "1478520.00"
+      "dpp_amount": "1277388.00",
+      "total_invoice_with_ppn": "1417900.68"
     },
     "INV-202608-1085": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
-      "dpp_amount": "4892000.00",
-      "total_invoice_with_ppn": "5430120.00"
+      "dpp_amount": "4813728.00",
+      "total_invoice_with_ppn": "5343238.08"
     },
     "INV-202608-1086": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
-      "dpp_amount": "3612000.00",
-      "total_invoice_with_ppn": "4009320.00"
+      "dpp_amount": "3554208.00",
+      "total_invoice_with_ppn": "3945170.88"
     },
     "INV-202608-1087": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
-      "dpp_amount": "464000.00",
-      "total_invoice_with_ppn": "515040.00"
+      "dpp_amount": "456576.00",
+      "total_invoice_with_ppn": "506799.36"
     },
     "INV-202608-1088": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
-      "dpp_amount": "1275000.00",
-      "total_invoice_with_ppn": "1415250.00"
+      "dpp_amount": "1254600.00",
+      "total_invoice_with_ppn": "1392606.00"
     },
     "INV-202608-1089": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
-      "dpp_amount": "6096000.00",
-      "total_invoice_with_ppn": "6766560.00"
+      "dpp_amount": "5998464.00",
+      "total_invoice_with_ppn": "6658295.04"
     },
     "INV-202608-1090": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
-      "dpp_amount": "4212000.00",
-      "total_invoice_with_ppn": "4675320.00"
+      "dpp_amount": "4113504.00",
+      "total_invoice_with_ppn": "4565989.44"
     },
     "INV-202608-1091": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
-      "dpp_amount": "1269600.00",
-      "total_invoice_with_ppn": "1409256.00"
+      "dpp_amount": "1249286.40",
+      "total_invoice_with_ppn": "1386707.90"
     },
     "INV-202608-1092": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-19 - Grosir Teling Sentosa Wanea",
-      "dpp_amount": "3108000.00",
-      "total_invoice_with_ppn": "3449880.00"
+      "dpp_amount": "3029712.00",
+      "total_invoice_with_ppn": "3362980.32"
     },
     "INV-202608-1093": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-19 - Grosir Teling Sentosa Wanea",
-      "dpp_amount": "5872000.00",
-      "total_invoice_with_ppn": "6517920.00"
+      "dpp_amount": "5778048.00",
+      "total_invoice_with_ppn": "6413633.28"
     },
     "INV-202608-1094": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-19 - Grosir Teling Sentosa Wanea",
-      "dpp_amount": "1452000.00",
-      "total_invoice_with_ppn": "1611720.00"
+      "dpp_amount": "1411344.00",
+      "total_invoice_with_ppn": "1566591.84"
     },
     "INV-202608-1095": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-21 - Grosir Tingkulu Jaya Wanea",
-      "dpp_amount": "1152000.00",
-      "total_invoice_with_ppn": "1278720.00"
+      "dpp_amount": "1133568.00",
+      "total_invoice_with_ppn": "1258260.48"
     },
     "INV-202608-1096": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-21 - Grosir Tingkulu Jaya Wanea",
-      "dpp_amount": "2040000.00",
-      "total_invoice_with_ppn": "2264400.00"
+      "dpp_amount": "2007360.00",
+      "total_invoice_with_ppn": "2228169.60"
     },
     "INV-202608-1097": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-21 - Grosir Tingkulu Jaya Wanea",
-      "dpp_amount": "523200.00",
-      "total_invoice_with_ppn": "580752.00"
+      "dpp_amount": "514828.80",
+      "total_invoice_with_ppn": "571459.97"
     },
     "INV-202608-1098": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
-      "dpp_amount": "3110400.00",
-      "total_invoice_with_ppn": "3452544.00"
+      "dpp_amount": "3017433.60",
+      "total_invoice_with_ppn": "3349351.30"
     },
     "INV-202608-1099": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
-      "dpp_amount": "432000.00",
-      "total_invoice_with_ppn": "479520.00"
+      "dpp_amount": "416448.00",
+      "total_invoice_with_ppn": "462257.28"
     },
     "INV-202608-1100": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
-      "dpp_amount": "4800000.00",
-      "total_invoice_with_ppn": "5328000.00"
+      "dpp_amount": "4678272.00",
+      "total_invoice_with_ppn": "5192881.92"
     },
     "INV-202608-1101": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
-      "dpp_amount": "2572000.00",
-      "total_invoice_with_ppn": "2854920.00"
+      "dpp_amount": "2530848.00",
+      "total_invoice_with_ppn": "2809241.28"
     },
     "INV-202608-1102": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
-      "dpp_amount": "2880000.00",
-      "total_invoice_with_ppn": "3196800.00"
+      "dpp_amount": "2761920.00",
+      "total_invoice_with_ppn": "3065731.20"
     },
     "INV-202608-1103": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
-      "dpp_amount": "4240000.00",
-      "total_invoice_with_ppn": "4706400.00"
+      "dpp_amount": "4172160.00",
+      "total_invoice_with_ppn": "4631097.60"
     },
     "INV-202608-1104": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
-      "dpp_amount": "10200000.00",
-      "total_invoice_with_ppn": "11322000.00"
+      "dpp_amount": "9946944.00",
+      "total_invoice_with_ppn": "11041107.84"
     },
     "INV-202608-1105": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-11",
       "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
-      "dpp_amount": "1092000.00",
-      "total_invoice_with_ppn": "1212120.00"
+      "dpp_amount": "1061424.00",
+      "total_invoice_with_ppn": "1178180.64"
     },
     "INV-202608-1106": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-48 - Toko Usaha Bersama Singkil",
-      "dpp_amount": "3985800.00",
-      "total_invoice_with_ppn": "4424238.00"
+      "dpp_amount": "3829882.20",
+      "total_invoice_with_ppn": "4251169.24"
     },
     "INV-202608-1107": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-48 - Toko Usaha Bersama Singkil",
-      "dpp_amount": "6048000.00",
-      "total_invoice_with_ppn": "6713280.00"
+      "dpp_amount": "5922720.00",
+      "total_invoice_with_ppn": "6574219.20"
     },
     "INV-202608-1108": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-48 - Toko Usaha Bersama Singkil",
-      "dpp_amount": "600000.00",
-      "total_invoice_with_ppn": "666000.00"
+      "dpp_amount": "590400.00",
+      "total_invoice_with_ppn": "655344.00"
     },
     "INV-202608-1109": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-50 - Grosir Cahaya Utara Mahakeret",
-      "dpp_amount": "4320000.00",
-      "total_invoice_with_ppn": "4795200.00"
+      "dpp_amount": "4187880.00",
+      "total_invoice_with_ppn": "4648546.80"
     },
     "INV-202608-1110": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-50 - Grosir Cahaya Utara Mahakeret",
-      "dpp_amount": "9360000.00",
-      "total_invoice_with_ppn": "10389600.00"
+      "dpp_amount": "9097920.00",
+      "total_invoice_with_ppn": "10098691.20"
     },
     "INV-202608-1111": {
       "date_invoice": "2026-08-28",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-04",
       "customer": "CUST-GT-50 - Grosir Cahaya Utara Mahakeret",
-      "dpp_amount": "2776000.00",
-      "total_invoice_with_ppn": "3081360.00"
+      "dpp_amount": "2731584.00",
+      "total_invoice_with_ppn": "3032058.24"
     },
     "INV-202608-1131": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-28",
       "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
-      "dpp_amount": "3768000.00",
-      "total_invoice_with_ppn": "4182480.00"
+      "dpp_amount": "3684480.00",
+      "total_invoice_with_ppn": "4089772.80"
     },
     "INV-202608-1132": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-28",
       "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
-      "dpp_amount": "768000.00",
-      "total_invoice_with_ppn": "852480.00"
+      "dpp_amount": "741120.00",
+      "total_invoice_with_ppn": "822643.20"
     },
     "INV-202608-1133": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-28",
       "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
-      "dpp_amount": "8100000.00",
-      "total_invoice_with_ppn": "8991000.00"
+      "dpp_amount": "7886916.00",
+      "total_invoice_with_ppn": "8754476.76"
     },
     "INV-202608-1134": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-28",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "2805000.00",
-      "total_invoice_with_ppn": "3113550.00"
+      "dpp_amount": "2692290.00",
+      "total_invoice_with_ppn": "2988441.90"
     },
     "INV-202608-1135": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-28",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "264000.00",
-      "total_invoice_with_ppn": "293040.00"
+      "dpp_amount": "252912.00",
+      "total_invoice_with_ppn": "280732.32"
     },
     "INV-202608-1136": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-28",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "8568000.00",
-      "total_invoice_with_ppn": "9510480.00"
+      "dpp_amount": "8284464.00",
+      "total_invoice_with_ppn": "9195755.04"
     },
     "INV-202608-1137": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-28",
       "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
-      "dpp_amount": "6640800.00",
-      "total_invoice_with_ppn": "7371288.00"
+      "dpp_amount": "6418814.40",
+      "total_invoice_with_ppn": "7124883.98"
     },
     "INV-202608-1138": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
-      "dpp_amount": "5748000.00",
-      "total_invoice_with_ppn": "6380280.00"
+      "dpp_amount": "5621544.00",
+      "total_invoice_with_ppn": "6239913.84"
     },
     "INV-202608-1139": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
-      "dpp_amount": "2052000.00",
-      "total_invoice_with_ppn": "2277720.00"
+      "dpp_amount": "1965816.00",
+      "total_invoice_with_ppn": "2182055.76"
     },
     "INV-202608-1140": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
-      "dpp_amount": "3960000.00",
-      "total_invoice_with_ppn": "4395600.00"
+      "dpp_amount": "3872880.00",
+      "total_invoice_with_ppn": "4298896.80"
     },
     "INV-202608-1141": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
-      "dpp_amount": "1188000.00",
-      "total_invoice_with_ppn": "1318680.00"
+      "dpp_amount": "1161864.00",
+      "total_invoice_with_ppn": "1289669.04"
     },
     "INV-202608-1142": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
-      "dpp_amount": "3710400.00",
-      "total_invoice_with_ppn": "4118544.00"
+      "dpp_amount": "3622233.60",
+      "total_invoice_with_ppn": "4020679.30"
     },
     "INV-202608-1143": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
-      "dpp_amount": "4176000.00",
-      "total_invoice_with_ppn": "4635360.00"
+      "dpp_amount": "4074624.00",
+      "total_invoice_with_ppn": "4522832.64"
     },
     "INV-202608-1144": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
-      "dpp_amount": "3744000.00",
-      "total_invoice_with_ppn": "4155840.00"
+      "dpp_amount": "3639168.00",
+      "total_invoice_with_ppn": "4039476.48"
     },
     "INV-202608-1145": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-25 - Grosir Megamas Abadi",
-      "dpp_amount": "4713600.00",
-      "total_invoice_with_ppn": "5232096.00"
+      "dpp_amount": "4530182.40",
+      "total_invoice_with_ppn": "5028502.46"
     },
     "INV-202608-1146": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-25 - Grosir Megamas Abadi",
-      "dpp_amount": "9456000.00",
-      "total_invoice_with_ppn": "10496160.00"
+      "dpp_amount": "9221760.00",
+      "total_invoice_with_ppn": "10236153.60"
     },
     "INV-202608-1147": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
-      "dpp_amount": "1152000.00",
-      "total_invoice_with_ppn": "1278720.00"
+      "dpp_amount": "1133568.00",
+      "total_invoice_with_ppn": "1258260.48"
     },
     "INV-202608-1148": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
-      "dpp_amount": "3484800.00",
-      "total_invoice_with_ppn": "3868128.00"
+      "dpp_amount": "3359347.20",
+      "total_invoice_with_ppn": "3728875.39"
     },
     "INV-202608-1149": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
-      "dpp_amount": "3240000.00",
-      "total_invoice_with_ppn": "3596400.00"
+      "dpp_amount": "3149280.00",
+      "total_invoice_with_ppn": "3495700.80"
     },
     "INV-202608-1150": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
-      "dpp_amount": "1116000.00",
-      "total_invoice_with_ppn": "1238760.00"
+      "dpp_amount": "1098144.00",
+      "total_invoice_with_ppn": "1218939.84"
     },
     "INV-202608-1151": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
-      "dpp_amount": "792000.00",
-      "total_invoice_with_ppn": "879120.00"
+      "dpp_amount": "779328.00",
+      "total_invoice_with_ppn": "865054.08"
     },
     "INV-202608-1152": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
-      "dpp_amount": "1224000.00",
-      "total_invoice_with_ppn": "1358640.00"
+      "dpp_amount": "1204416.00",
+      "total_invoice_with_ppn": "1336901.76"
     },
     "INV-202608-1153": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
-      "dpp_amount": "6480000.00",
-      "total_invoice_with_ppn": "7192800.00"
+      "dpp_amount": "6350400.00",
+      "total_invoice_with_ppn": "7048944.00"
     },
     "INV-202608-1154": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
-      "dpp_amount": "2536800.00",
-      "total_invoice_with_ppn": "2815848.00"
+      "dpp_amount": "2496211.20",
+      "total_invoice_with_ppn": "2770794.43"
     },
     "INV-202608-1155": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
-      "dpp_amount": "4095000.00",
-      "total_invoice_with_ppn": "4545450.00"
+      "dpp_amount": "3984480.00",
+      "total_invoice_with_ppn": "4422772.80"
     },
     "INV-202608-1156": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
-      "dpp_amount": "3999200.00",
-      "total_invoice_with_ppn": "4439112.00"
+      "dpp_amount": "3935212.80",
+      "total_invoice_with_ppn": "4368086.21"
     },
     "INV-202608-1157": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-12",
       "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
-      "dpp_amount": "3744000.00",
-      "total_invoice_with_ppn": "4155840.00"
+      "dpp_amount": "3647808.00",
+      "total_invoice_with_ppn": "4049066.88"
     },
     "INV-202608-1158": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-54 - Toko Bengkol Sejahtera",
-      "dpp_amount": "2784000.00",
-      "total_invoice_with_ppn": "3090240.00"
+      "dpp_amount": "2739456.00",
+      "total_invoice_with_ppn": "3040796.16"
     },
     "INV-202608-1159": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-54 - Toko Bengkol Sejahtera",
-      "dpp_amount": "5496000.00",
-      "total_invoice_with_ppn": "6100560.00"
+      "dpp_amount": "5382144.00",
+      "total_invoice_with_ppn": "5974179.84"
     },
     "INV-202608-1160": {
       "date_invoice": "2026-08-29",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-05",
       "customer": "CUST-GT-54 - Toko Bengkol Sejahtera",
-      "dpp_amount": "1795200.00",
-      "total_invoice_with_ppn": "1992672.00"
+      "dpp_amount": "1756022.40",
+      "total_invoice_with_ppn": "1949184.86"
     },
     "INV-202608-1175": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-30",
       "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
-      "dpp_amount": "2688000.00",
-      "total_invoice_with_ppn": "2983680.00"
+      "dpp_amount": "2647680.00",
+      "total_invoice_with_ppn": "2938924.80"
     },
     "INV-202608-1176": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-30",
       "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
-      "dpp_amount": "2436000.00",
-      "total_invoice_with_ppn": "2703960.00"
+      "dpp_amount": "2379060.00",
+      "total_invoice_with_ppn": "2640756.60"
     },
     "INV-202608-1177": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-30",
       "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
-      "dpp_amount": "9504000.00",
-      "total_invoice_with_ppn": "10549440.00"
+      "dpp_amount": "9247392.00",
+      "total_invoice_with_ppn": "10264605.12"
     },
     "INV-202608-1178": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-30",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "11979800.00",
-      "total_invoice_with_ppn": "13297578.00"
+      "dpp_amount": "11668724.40",
+      "total_invoice_with_ppn": "12952284.08"
     },
     "INV-202608-1179": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-30",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "2280000.00",
-      "total_invoice_with_ppn": "2530800.00"
+      "dpp_amount": "2229840.00",
+      "total_invoice_with_ppn": "2475122.40"
     },
     "INV-202608-1180": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-30",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "9540000.00",
-      "total_invoice_with_ppn": "10589400.00"
+      "dpp_amount": "9215640.00",
+      "total_invoice_with_ppn": "10229360.40"
     },
     "INV-202608-1181": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-30",
       "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
-      "dpp_amount": "8923200.00",
-      "total_invoice_with_ppn": "9904752.00"
+      "dpp_amount": "8645683.20",
+      "total_invoice_with_ppn": "9596708.35"
     },
     "INV-202608-1182": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-14",
       "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
-      "dpp_amount": "6412800.00",
-      "total_invoice_with_ppn": "7118208.00"
+      "dpp_amount": "6203995.20",
+      "total_invoice_with_ppn": "6886434.67"
     },
     "INV-202608-1183": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-14",
       "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
-      "dpp_amount": "432000.00",
-      "total_invoice_with_ppn": "479520.00"
+      "dpp_amount": "425088.00",
+      "total_invoice_with_ppn": "471847.68"
     },
     "INV-202608-1184": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-31 - Grosir Sario Damai",
-      "dpp_amount": "1440000.00",
-      "total_invoice_with_ppn": "1598400.00"
+      "dpp_amount": "1402560.00",
+      "total_invoice_with_ppn": "1556841.60"
     },
     "INV-202608-1185": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-31 - Grosir Sario Damai",
-      "dpp_amount": "7168000.00",
-      "total_invoice_with_ppn": "7956480.00"
+      "dpp_amount": "6967296.00",
+      "total_invoice_with_ppn": "7733698.56"
     },
     "INV-202608-1186": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-31 - Grosir Sario Damai",
-      "dpp_amount": "2078400.00",
-      "total_invoice_with_ppn": "2307024.00"
+      "dpp_amount": "2045145.60",
+      "total_invoice_with_ppn": "2270111.62"
     },
     "INV-202608-1187": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-33 - Toko Malalayang Megah",
-      "dpp_amount": "3879000.00",
-      "total_invoice_with_ppn": "4305690.00"
+      "dpp_amount": "3816936.00",
+      "total_invoice_with_ppn": "4236798.96"
     },
     "INV-202608-1188": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-33 - Toko Malalayang Megah",
-      "dpp_amount": "684000.00",
-      "total_invoice_with_ppn": "759240.00"
+      "dpp_amount": "673056.00",
+      "total_invoice_with_ppn": "747092.16"
     },
     "INV-202608-1189": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-33 - Toko Malalayang Megah",
-      "dpp_amount": "3564000.00",
-      "total_invoice_with_ppn": "3956040.00"
+      "dpp_amount": "3464208.00",
+      "total_invoice_with_ppn": "3845270.88"
     },
     "INV-202608-1190": {
       "date_invoice": "2026-08-31",
       "status_at_cutoff": "posted",
       "due_date": "2026-09-07",
       "customer": "CUST-GT-33 - Toko Malalayang Megah",
-      "dpp_amount": "3655200.00",
-      "total_invoice_with_ppn": "4057272.00"
+      "dpp_amount": "3573676.80",
+      "total_invoice_with_ppn": "3966781.25"
     }
   },
   "carry_invoices": {
@@ -4285,400 +4285,400 @@
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1",
-      "dpp_amount": "1458000.00",
-      "total_invoice_with_ppn": "1618380.00"
+      "dpp_amount": "1421304.00",
+      "total_invoice_with_ppn": "1577647.44"
     },
     "INV-202608-1192": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1",
-      "dpp_amount": "468000.00",
-      "total_invoice_with_ppn": "519480.00"
+      "dpp_amount": "462384.00",
+      "total_invoice_with_ppn": "513246.24"
     },
     "INV-202608-1193": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan",
-      "dpp_amount": "756000.00",
-      "total_invoice_with_ppn": "839160.00"
+      "dpp_amount": "739728.00",
+      "total_invoice_with_ppn": "821098.08"
     },
     "INV-202608-1194": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan",
-      "dpp_amount": "2064000.00",
-      "total_invoice_with_ppn": "2291040.00"
+      "dpp_amount": "2039232.00",
+      "total_invoice_with_ppn": "2263547.52"
     },
     "INV-202608-1195": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon",
-      "dpp_amount": "864000.00",
-      "total_invoice_with_ppn": "959040.00"
+      "dpp_amount": "832032.00",
+      "total_invoice_with_ppn": "923555.52"
     },
     "INV-202608-1196": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon",
-      "dpp_amount": "1152000.00",
-      "total_invoice_with_ppn": "1278720.00"
+      "dpp_amount": "1138176.00",
+      "total_invoice_with_ppn": "1263375.36"
     },
     "INV-202608-1197": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1",
-      "dpp_amount": "1200000.00",
-      "total_invoice_with_ppn": "1332000.00"
+      "dpp_amount": "1155600.00",
+      "total_invoice_with_ppn": "1282716.00"
     },
     "INV-202608-1198": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1",
-      "dpp_amount": "120000.00",
-      "total_invoice_with_ppn": "133200.00"
+      "dpp_amount": "118560.00",
+      "total_invoice_with_ppn": "131601.60"
     },
     "INV-202608-1199": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-049 - Warung Kasih Joppy Jembatan",
-      "dpp_amount": "692000.00",
-      "total_invoice_with_ppn": "768120.00"
+      "dpp_amount": "683696.00",
+      "total_invoice_with_ppn": "758902.56"
     },
     "INV-202608-1200": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon",
-      "dpp_amount": "864000.00",
-      "total_invoice_with_ppn": "959040.00"
+      "dpp_amount": "853632.00",
+      "total_invoice_with_ppn": "947531.52"
     },
     "INV-202608-1201": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon",
-      "dpp_amount": "432000.00",
-      "total_invoice_with_ppn": "479520.00"
+      "dpp_amount": "426816.00",
+      "total_invoice_with_ppn": "473765.76"
     },
     "INV-202608-1202": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
-      "dpp_amount": "448000.00",
-      "total_invoice_with_ppn": "497280.00"
+      "dpp_amount": "442624.00",
+      "total_invoice_with_ppn": "491312.64"
     },
     "INV-202608-1203": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
-      "dpp_amount": "1296000.00",
-      "total_invoice_with_ppn": "1438560.00"
+      "dpp_amount": "1280448.00",
+      "total_invoice_with_ppn": "1421297.28"
     },
     "INV-202608-1204": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-01",
       "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
-      "dpp_amount": "940800.00",
-      "total_invoice_with_ppn": "1044288.00"
+      "dpp_amount": "929510.40",
+      "total_invoice_with_ppn": "1031756.54"
     },
     "INV-202608-1205": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-01",
       "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
-      "dpp_amount": "2160000.00",
-      "total_invoice_with_ppn": "2397600.00"
+      "dpp_amount": "2127600.00",
+      "total_invoice_with_ppn": "2361636.00"
     },
     "INV-202608-1206": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-01",
       "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
-      "dpp_amount": "5280000.00",
-      "total_invoice_with_ppn": "5860800.00"
+      "dpp_amount": "5166240.00",
+      "total_invoice_with_ppn": "5734526.40"
     },
     "INV-202608-1207": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-01",
       "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
-      "dpp_amount": "1452000.00",
-      "total_invoice_with_ppn": "1611720.00"
+      "dpp_amount": "1412796.00",
+      "total_invoice_with_ppn": "1568203.56"
     },
     "INV-202608-1208": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-16",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "3456000.00",
-      "total_invoice_with_ppn": "3836160.00"
+      "dpp_amount": "3379968.00",
+      "total_invoice_with_ppn": "3751764.48"
     },
     "INV-202608-1209": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-16",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "23040000.00",
-      "total_invoice_with_ppn": "25574400.00"
+      "dpp_amount": "22103040.00",
+      "total_invoice_with_ppn": "24534374.40"
     },
     "INV-202608-1210": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-16",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "4764000.00",
-      "total_invoice_with_ppn": "5288040.00"
+      "dpp_amount": "4612392.00",
+      "total_invoice_with_ppn": "5119755.12"
     },
     "INV-202608-1211": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-16",
       "customer": "CUST-MT-01 - Indomarett DC Manado",
-      "dpp_amount": "5270400.00",
-      "total_invoice_with_ppn": "5850144.00"
+      "dpp_amount": "5096966.40",
+      "total_invoice_with_ppn": "5657632.70"
     },
     "INV-202608-1212": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-16",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "25198400.00",
-      "total_invoice_with_ppn": "27970224.00"
+      "dpp_amount": "24344675.20",
+      "total_invoice_with_ppn": "27022589.47"
     },
     "INV-202608-1213": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-16",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "1224000.00",
-      "total_invoice_with_ppn": "1358640.00"
+      "dpp_amount": "1172592.00",
+      "total_invoice_with_ppn": "1301577.12"
     },
     "INV-202608-1214": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-16",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "11960000.00",
-      "total_invoice_with_ppn": "13275600.00"
+      "dpp_amount": "11553360.00",
+      "total_invoice_with_ppn": "12824229.60"
     },
     "INV-202608-1215": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-10-16",
       "customer": "CUST-MT-02 - Alfamiddii DC Manado",
-      "dpp_amount": "8468000.00",
-      "total_invoice_with_ppn": "9399480.00"
+      "dpp_amount": "8207832.00",
+      "total_invoice_with_ppn": "9110693.52"
     },
     "INV-202608-1216": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
-      "dpp_amount": "1887200.00",
-      "total_invoice_with_ppn": "2094792.00"
+      "dpp_amount": "1857004.80",
+      "total_invoice_with_ppn": "2061275.33"
     },
     "INV-202608-1217": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
-      "dpp_amount": "384000.00",
-      "total_invoice_with_ppn": "426240.00"
+      "dpp_amount": "377856.00",
+      "total_invoice_with_ppn": "419420.16"
     },
     "INV-202608-1218": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
-      "dpp_amount": "2160000.00",
-      "total_invoice_with_ppn": "2397600.00"
+      "dpp_amount": "2099520.00",
+      "total_invoice_with_ppn": "2330467.20"
     },
     "INV-202608-1219": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
-      "dpp_amount": "1260000.00",
-      "total_invoice_with_ppn": "1398600.00"
+      "dpp_amount": "1226736.00",
+      "total_invoice_with_ppn": "1361676.96"
     },
     "INV-202608-1220": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-      "dpp_amount": "2208000.00",
-      "total_invoice_with_ppn": "2450880.00"
+      "dpp_amount": "2172672.00",
+      "total_invoice_with_ppn": "2411665.92"
     },
     "INV-202608-1221": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-      "dpp_amount": "2488000.00",
-      "total_invoice_with_ppn": "2761680.00"
+      "dpp_amount": "2398432.00",
+      "total_invoice_with_ppn": "2662259.52"
     },
     "INV-202608-1222": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-      "dpp_amount": "11520000.00",
-      "total_invoice_with_ppn": "12787200.00"
+      "dpp_amount": "11197440.00",
+      "total_invoice_with_ppn": "12429158.40"
     },
     "INV-202608-1223": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
-      "dpp_amount": "1696000.00",
-      "total_invoice_with_ppn": "1882560.00"
+      "dpp_amount": "1668864.00",
+      "total_invoice_with_ppn": "1852439.04"
     },
     "INV-202608-1224": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
-      "dpp_amount": "6878400.00",
-      "total_invoice_with_ppn": "7635024.00"
+      "dpp_amount": "6638745.60",
+      "total_invoice_with_ppn": "7369007.62"
     },
     "INV-202608-1225": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
-      "dpp_amount": "4068000.00",
-      "total_invoice_with_ppn": "4515480.00"
+      "dpp_amount": "4002912.00",
+      "total_invoice_with_ppn": "4443232.32"
     },
     "INV-202608-1226": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
-      "dpp_amount": "1584000.00",
-      "total_invoice_with_ppn": "1758240.00"
+      "dpp_amount": "1558656.00",
+      "total_invoice_with_ppn": "1730108.16"
     },
     "INV-202608-1227": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
-      "dpp_amount": "864000.00",
-      "total_invoice_with_ppn": "959040.00"
+      "dpp_amount": "850176.00",
+      "total_invoice_with_ppn": "943695.36"
     },
     "INV-202608-1228": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-08",
       "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa",
-      "dpp_amount": "9144000.00",
-      "total_invoice_with_ppn": "10149840.00"
+      "dpp_amount": "8997696.00",
+      "total_invoice_with_ppn": "9987442.56"
     },
     "INV-202608-1229": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-08",
       "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa",
-      "dpp_amount": "780000.00",
-      "total_invoice_with_ppn": "865800.00"
+      "dpp_amount": "767520.00",
+      "total_invoice_with_ppn": "851947.20"
     },
     "INV-202608-1230": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-34 - Grosir Tikala Baru",
-      "dpp_amount": "5066400.00",
-      "total_invoice_with_ppn": "5623704.00"
+      "dpp_amount": "4985337.60",
+      "total_invoice_with_ppn": "5533724.74"
     },
     "INV-202608-1231": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-34 - Grosir Tikala Baru",
-      "dpp_amount": "2760000.00",
-      "total_invoice_with_ppn": "3063600.00"
+      "dpp_amount": "2660640.00",
+      "total_invoice_with_ppn": "2953310.40"
     },
     "INV-202608-1232": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-34 - Grosir Tikala Baru",
-      "dpp_amount": "744000.00",
-      "total_invoice_with_ppn": "825840.00"
+      "dpp_amount": "732096.00",
+      "total_invoice_with_ppn": "812626.56"
     },
     "INV-202608-1233": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-34 - Grosir Tikala Baru",
-      "dpp_amount": "950400.00",
-      "total_invoice_with_ppn": "1054944.00"
+      "dpp_amount": "923788.80",
+      "total_invoice_with_ppn": "1025405.57"
     },
     "INV-202608-1234": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
-      "dpp_amount": "2295000.00",
-      "total_invoice_with_ppn": "2547450.00"
+      "dpp_amount": "2258280.00",
+      "total_invoice_with_ppn": "2506690.80"
     },
     "INV-202608-1235": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
-      "dpp_amount": "1740000.00",
-      "total_invoice_with_ppn": "1931400.00"
+      "dpp_amount": "1681920.00",
+      "total_invoice_with_ppn": "1866931.20"
     },
     "INV-202608-1236": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-15",
       "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
-      "dpp_amount": "871200.00",
-      "total_invoice_with_ppn": "967032.00"
+      "dpp_amount": "857260.80",
+      "total_invoice_with_ppn": "951559.49"
     },
     "INV-202608-1237": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-08",
       "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
-      "dpp_amount": "3741000.00",
-      "total_invoice_with_ppn": "4152510.00"
+      "dpp_amount": "3621219.00",
+      "total_invoice_with_ppn": "4019553.09"
     },
     "INV-202608-1238": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-08",
       "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
-      "dpp_amount": "2784000.00",
-      "total_invoice_with_ppn": "3090240.00"
+      "dpp_amount": "2739456.00",
+      "total_invoice_with_ppn": "3040796.16"
     },
     "INV-202608-1239": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-08",
       "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
-      "dpp_amount": "6120000.00",
-      "total_invoice_with_ppn": "6793200.00"
+      "dpp_amount": "5948640.00",
+      "total_invoice_with_ppn": "6602990.40"
     },
     "INV-202608-1240": {
       "date_invoice": "2026-09-01",
       "status_at_cutoff": "carry_forward_pending",
       "due_date": "2026-09-08",
       "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
-      "dpp_amount": "2239200.00",
-      "total_invoice_with_ppn": "2485512.00"
+      "dpp_amount": "2179526.40",
+      "total_invoice_with_ppn": "2419274.30"
     }
   },
   "open_po": {
@@ -4977,7 +4977,7 @@
     "DO-202608-1223": {
       "so_number": "SO-202608-1223",
       "scheduled_delivery_date": "2026-09-01",
-      "rejection_dpp": "864000.00",
+      "rejection_dpp": "839808.00",
       "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
     },
     "DO-202608-1224": {
@@ -5692,7 +5692,7 @@
       "qty_cartons": "10",
       "unit_cost_price": "3000",
       "is_rejected": true,
-      "rejection_dpp": "864000.00"
+      "rejection_dpp": "839808.00"
     },
     {
       "so_number": "SO-202608-1223",
@@ -6064,5 +6064,28 @@
       "is_rejected": false,
       "rejection_dpp": "0.00"
     }
-  ]
+  ],
+  "warehouse_layout_simulation": {
+    "warehouse_code": "GD-MND",
+    "location_name": "Gudang Utama Maumbi (Minahasa Utara / Manado)",
+    "total_storage_pallets": 1287,
+    "racking_type": "Selective Pallet Racking (3-4 Tier) & Floor Staging",
+    "sections": {
+      "GD-MND/UTAMA": {
+        "description": "Penyimpanan Stok Fisik Siap Jual (Fast & Medium Moving)",
+        "pallets_allocated": 1152,
+        "tiering": "Tier 1-4 Selective Racking"
+      },
+      "GD-MND/STAGING": {
+        "description": "Area Buffer & Staging Dispatch Pengiriman Harian",
+        "pallets_allocated": 110,
+        "tiering": "Hamparan Lantai (Floor Staging)"
+      },
+      "GD-MND/BAD-STOCK": {
+        "description": "Area Karantina Terisolasi Barang Rusak & Tolakan POD",
+        "pallets_allocated": 25,
+        "tiering": "Hamparan Lantai Tersegel (Floor Dedicated Quarantine)"
+      }
+    }
+  }
 }

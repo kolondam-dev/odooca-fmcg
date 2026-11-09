@@ -4,11 +4,11 @@
   "pack_end": "2026-08-31",
   "metrics": {
     "gross_dpp": "4247988000.00",
-    "discount_dpp": "106199700.00",
-    "net_dpp": "4141788300.00",
-    "discount_pct": "2.50",
-    "rejection_dpp": "84590600.00",
-    "rejection_pct": "1.99",
+    "discount_dpp": "108961922.80",
+    "net_dpp": "4139026077.20",
+    "discount_pct": "2.57",
+    "rejection_dpp": "82393649.40",
+    "rejection_pct": "1.94",
     "active_outlets": 207,
     "total_sales_orders": 1240,
     "total_deliveries": 1240,
@@ -16,7 +16,8 @@
     "total_ar_collections": 1202,
     "total_po_headers": 16,
     "total_ap_payments": 1,
-    "total_opex_entries": 26,
-    "total_stock_events": 4854
+    "total_opex_entries": 48,
+    "total_stock_events": 4854,
+    "total_daily_logistics_entries": 144
   }
 }
