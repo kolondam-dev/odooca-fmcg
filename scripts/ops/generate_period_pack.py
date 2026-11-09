@@ -311,6 +311,9 @@ def generate_period_pack(
         "opening_cash": str(opening_cash),
         "min_lead_days": config.min_lead_days,
         "tax": {
+            "statutory_rate": "0.12",
+            "dpp_factor": "11/12",
+            "effective_rate": "0.11",
             "rate": str(tax_rate),
             "source": "PMK 131/2024 & UU HPP No. 7/2021",
             "source_date": "2024-12-31",

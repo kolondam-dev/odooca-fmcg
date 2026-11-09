@@ -591,6 +591,22 @@ class TestSeedPlannerF2(unittest.TestCase):
         self.assertGreater(len(pkp_invs), 0)
         self.assertGreater(len(non_pkp_invs), 0)
 
+        # Muat fixture profil identitas untuk memverifikasi konsistensi deklaratif 100%
+        fixture_path = REPO_ROOT / "data" / "registers" / "customer_tax_profile_fixture.json"
+        self.assertTrue(fixture_path.is_file(), "customer_tax_profile_fixture.json wajib ada di disk")
+        import json
+        profiles = json.loads(fixture_path.read_text(encoding="utf-8"))
+
+        for i in invoices:
+            cust_code = i["customer"].split(" - ")[0]
+            self.assertIn(cust_code, profiles, f"Customer {cust_code} wajib terdaftar di profil pajak")
+            prof = profiles[cust_code]
+            self.assertEqual(i["is_pkp"], str(prof["is_pkp"]))
+            self.assertEqual(i["buyer_id_type"], prof["buyer_id_type"])
+            self.assertEqual(i["customer_tax_id"], prof["customer_tax_id"])
+            self.assertEqual(i.get("tax_id_status"), prof.get("tax_id_status"))
+            self.assertIn(i.get("tax_id_status"), {"SYNTHETIC_TEST_IDENTITY", "UNREGISTERED_ZERO_IDENTITY"})
+
         # PKP wajib ber-NPWP 16 digit
         for i in pkp_invs:
             self.assertEqual(i["buyer_id_type"], "NPWP16")
@@ -645,16 +661,15 @@ class TestSeedPlannerF2(unittest.TestCase):
         self.assertGreater(len(promo_lines), 0)
 
     def test_pod_rejection_reasons_and_evidence(self):
-        """Memverifikasi tabel rejections memuat provenance kausal, incident_batch_ref, dan evidence_type."""
+        """Memverifikasi tabel rejections memuat provenance simulasi jujur dan evidence terverifikasi."""
         rejections = self.pack["rejections"]
         self.assertGreater(len(rejections), 0)
         valid_reasons = {
             "KEMASAN_RUSAK_TRANSIT",
             "SEGEL_PABRIK_BOCOR",
             "EXPIRY_DEKAT_DITOLAK",
-            "DEFECT_KALENG_PENYOK",
         }
-        valid_evidence_types = {"BATCH_REFERENCE", "ACTUAL", "SYNTHETIC", "NONE"}
+        valid_evidence_types = {"SYNTHETIC", "NONE"}
 
         for r in rejections:
             self.assertIn("rejection_reason", r)
@@ -669,14 +684,16 @@ class TestSeedPlannerF2(unittest.TestCase):
                 self.assertEqual(r["evidence_type"], "NONE")
                 self.assertEqual(r["evidence_photo_ref"], "")
 
-            # Insiden batch reference wajib memuat ref BAP dan referensi file gambar
-            if r["evidence_type"] == "BATCH_REFERENCE":
-                self.assertTrue(r["incident_batch_ref"].startswith("BAP-"))
-                self.assertTrue(r["evidence_photo_ref"].endswith(".jpg"))
-
-            # Bukti sintetis wajib ditandai SYNTHETIC
+            # Bukti sintetis wajib ditandai SYNTHETIC dan file bukti fisik wajib ada di repositori
             if r["evidence_type"] == "SYNTHETIC":
                 self.assertIn("synthetic", r["evidence_photo_ref"])
+                photo_file = REPO_ROOT / r["evidence_photo_ref"]
+                self.assertTrue(
+                    photo_file.is_file(),
+                    f"File bukti penolakan {r['evidence_photo_ref']} wajib tersedia secara fisik di git tree"
+                )
+                # Pastikan file non-kosong dan valid
+                self.assertGreater(photo_file.stat().st_size, 100)
 
     def test_po_headers_input_vat(self):
         """Memverifikasi po_headers memuat tax_dpp 11/12, ppn_amount 12%, dan total_with_ppn."""
