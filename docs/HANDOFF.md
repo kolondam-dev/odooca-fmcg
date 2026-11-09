@@ -1,7 +1,7 @@
 ## 2026-11-10T00:15:00+07:00 — antigravity — F2: Resolusi Tuntas Temuan P2 Supervisor PR #105 (Fixture Identitas Coretax & Verifiable Synthetic Evidence)
 **Berubah:**
 - data/registers/customer_tax_profile_fixture.json:
-  * Fixture deklaratif eksplisit 354 outlet pelanggan: 46 outlet PKP ber-NPWP16 (`is_pkp: true`, `buyer_id_type: NPWP16`), 282 outlet Non-PKP ber-NIK Manado (`is_pkp: false`, `buyer_id_type: NIK`), dan 26 outlet Non-PKP tanpa NPWP/NIK (`buyer_id_type: TIN_0`, `'0000000000000000'`). Seluruh identitas non-produksi berstatus transparan `tax_id_status: SYNTHETIC_TEST_IDENTITY` atau `UNREGISTERED_ZERO_IDENTITY`.
+  * Fixture deklaratif eksplisit 354 outlet pelanggan: 46 outlet PKP ber-NPWP16 (`is_pkp: true`, `buyer_id_type: NPWP16`), 277 outlet Non-PKP ber-NIK Manado (`is_pkp: false`, `buyer_id_type: NIK`), dan 31 outlet Non-PKP tanpa NPWP/NIK (`buyer_id_type: TIN_0`, `'0000000000000000'`). Seluruh identitas non-produksi berstatus transparan `tax_id_status: SYNTHETIC_TEST_IDENTITY` atau `UNREGISTERED_ZERO_IDENTITY`.
 - data/evidence/pod_synthetic_carton_damage.jpg & data/evidence/pod_synthetic_seal_leak.jpg:
   * Berkas bukti fisik valid JPEG (JFIF standar) tersedia nyata di repositori untuk seluruh penolakan bertanda `SYNTHETIC`.
 - scripts/ops/seed_planner.py:
