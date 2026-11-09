@@ -1,4 +1,4 @@
-import { sendOrder } from "./visit-helpers";
+import { sendOrder, applyDiscount, fillQty } from "./visit-helpers";
 import { switchPersona } from "./delivery-helpers";
 import { expect, test } from "./session-fixture";
 import {
@@ -50,33 +50,25 @@ for (const approved of [true, false])
         await page
             .getByRole("button", { name: "Buat order di outlet", exact: true })
             .click();
-        const units = page.getByRole("group", {
-            name: "Satuan Biskuit Kelapa 300 g",
-            exact: true,
+        await page
+            .getByRole("button", { name: "Detail SKU Biskuit Kelapa 300 g" })
+            .click();
+        const info = page.getByRole("dialog", {
+            name: "Biskuit Kelapa 300 g",
         });
         await expect(
-            units.getByRole("button", { name: "Renceng", exact: true }),
+            info.getByText("1 karton = 144 pcs · 1 renceng = 12 pcs", {
+                exact: true,
+            }),
         ).toBeVisible();
-        await expect(
-            page
-                .getByText("1 Karton = 144 Pcs · 1 Renceng = 12 Pcs", {
-                    exact: true,
-                })
-                .first(),
-        ).toBeVisible();
-        await units
-            .getByRole("button", { name: "Renceng", exact: true })
+        await info
+            .getByRole("button", { name: "Tutup", exact: true })
+            .last()
             .click();
-        await page
-            .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
-            .fill("1");
-        await page.locator("details.order-extra > summary").click();
-        await page.getByLabel("Diskon diminta (%)", { exact: true }).fill("5");
-        await page
-            .getByLabel("Alasan permintaan diskon", { exact: true })
-            .fill("Promo contoh");
+        await fillQty(page, "Biskuit Kelapa 300 g", "Renceng", 1);
+        await applyDiscount(page, 5, "Promo contoh");
         await saveDisplayPhoto(page);
-        await page.locator(".product-card").first().scrollIntoViewIfNeeded();
+        await page.locator(".pos-card").first().scrollIntoViewIfNeeded();
         await page.screenshot({
             path: `test-results/order-tiers-${test.info().project.name}.png`,
             fullPage: true,
@@ -237,40 +229,20 @@ test("SKU packaging drives new order and offline correction prices independently
     await page
         .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
-    const units = page.getByRole("group", {
-        name: "Satuan Biskuit Mini 24 pcs",
-        exact: true,
-    });
-    await expect(
-        units.getByRole("button", { name: "Box", exact: true }),
-    ).toBeVisible();
-    await expect(
-        units.getByRole("button", { name: "Pack", exact: true }),
-    ).toBeVisible();
-    await expect(
-        page.getByText("1 Box = 24 Pcs · 1 Pack = 6 Pcs", {
-            exact: true,
-        }),
-    ).toBeVisible();
-    await units.getByRole("button", { name: "Pack", exact: true }).click();
     await page
-        .getByLabel("Kuantitas Biskuit Mini 24 pcs", { exact: true })
-        .fill("2");
-    await page
-        .getByRole("group", {
-            name: "Satuan Biskuit Kelapa 300 g",
-            exact: true,
-        })
-        .getByRole("button", { name: "Renceng", exact: true })
+        .getByRole("button", { name: "Detail SKU Biskuit Mini 24 pcs" })
         .click();
-    await page
-        .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
-        .fill("1");
-    await page.locator("details.order-extra > summary").click();
-    await page.getByLabel("Diskon diminta (%)", { exact: true }).fill("5");
-    await page
-        .getByLabel("Alasan permintaan diskon", { exact: true })
-        .fill("Promo kemasan SKU");
+    const mini = page.getByRole("dialog", { name: "Biskuit Mini 24 pcs" });
+    await expect(
+        mini.getByText("1 box = 24 pcs · 1 pack = 6 pcs", { exact: true }),
+    ).toBeVisible();
+    await mini
+        .getByRole("button", { name: "Tutup", exact: true })
+        .last()
+        .click();
+    await fillQty(page, "Biskuit Mini 24 pcs", "Pack", 2);
+    await fillQty(page, "Biskuit Kelapa 300 g", "Renceng", 1);
+    await applyDiscount(page, 5, "Promo kemasan SKU");
     await saveDisplayPhoto(page);
     await sendOrder(page);
     await saveVisitPhoto(page, "check-out");

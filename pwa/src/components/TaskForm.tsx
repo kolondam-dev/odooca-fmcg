@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import type { Dialog } from "../ui/navigation";
 import { SheetHeader } from "../ui";
 import { useDialog } from "../ui/useDialog";
@@ -6,14 +6,9 @@ import { ExpenseContextFields } from "./ExpenseContextFields";
 import { LocalDateInput } from "./LocalDateInput";
 import { AttendanceCapture } from "./AttendanceCapture";
 import { Icon } from "./Icon";
-import { OrderCatalog, OrderSummary } from "./OrderSheet";
-import { DisplayPhoto } from "./DisplayPhoto";
 import { EvidenceCapture, type EvidenceRef } from "./Evidence";
-import { orderQuote, type OrderUom } from "../domain/order-pricing";
 import {
-    validateOrder,
     type Command,
-    type FieldProvider,
     type Identity,
     type Snapshot,
 } from "../domain/contracts";
@@ -30,11 +25,10 @@ export function TaskForm({
     close,
     workStatus,
     store,
-    provider,
 }: {
     workStatus: string;
     store: FieldStore;
-    dialog: Dialog;
+    dialog: Exclude<Dialog, { type: "order" | "display" }>;
     identity: Identity;
     snapshot: Snapshot;
     owner: string;
@@ -48,144 +42,15 @@ export function TaskForm({
         evidence: EvidenceRef,
     ) => Promise<void>;
     close: () => void;
-    provider?: FieldProvider;
 }) {
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
-    const [orderPreview, setOrderPreview] = useState(false);
     const dialogRef = useDialog(() => {
         if (!busy) close();
     });
-    const [qty, setQty] = useState<Record<string, number>>({});
-    const [principal, setPrincipal] = useState(
-        () => snapshot.products[0]?.principal ?? "mayora",
-    );
-    const [units, setUnits] = useState<Record<string, OrderUom>>({});
-    const [discount, setDiscount] = useState(0);
-    const [discountReason, setDiscountReason] = useState("");
-    const [poNumber, setPoNumber] = useState("");
     const [evidence, setEvidence] = useState<EvidenceRef>();
-    const [restored, setRestored] = useState(false);
     const [category, setCategory] = useState("fuel_planned");
-    // Separated stock display: snapshot remains the authoritative morning session
-    // contract (locking pricing & snapshot_version). liveStock updates dynamically for real-time inventory visibility.
-    const [liveStock, setLiveStock] = useState<Record<string, number>>(() =>
-        Object.fromEntries(snapshot.products.map((p) => [p.id, p.stock])),
-    );
-    const [refreshingStock, setRefreshingStock] = useState(false);
-    const [stockSyncedAt, setStockSyncedAt] = useState<Date>(() => new Date());
-    const stockGeneration = useRef(0);
-
-    const handleRefreshStock = async () => {
-        if (!provider || refreshingStock) return;
-        const currentGen = ++stockGeneration.current;
-        setRefreshingStock(true);
-        try {
-            const fresh = await provider.snapshot();
-            if (
-                currentGen === stockGeneration.current &&
-                fresh?.products?.length
-            ) {
-                const updated: Record<string, number> = {};
-                for (const p of fresh.products) {
-                    updated[p.id] = p.stock;
-                }
-                setLiveStock((prev) => ({ ...prev, ...updated }));
-                setStockSyncedAt(new Date());
-            }
-        } catch {
-            // Graceful fallback: maintain current live stock on offline/network errors
-        } finally {
-            if (currentGen === stockGeneration.current) {
-                setRefreshingStock(false);
-            }
-        }
-    };
-
-    useEffect(() => {
-        if (dialog.type !== "order" || !provider) return;
-        let active = true;
-        const currentGen = ++stockGeneration.current;
-        void provider
-            .snapshot()
-            .then((fresh: Snapshot) => {
-                if (
-                    active &&
-                    currentGen === stockGeneration.current &&
-                    fresh?.products?.length
-                ) {
-                    const updated: Record<string, number> = {};
-                    for (const p of fresh.products) {
-                        updated[p.id] = p.stock;
-                    }
-                    setLiveStock((prev) => ({ ...prev, ...updated }));
-                    setStockSyncedAt(new Date());
-                }
-            })
-            .catch(() => {});
-        const timer = setInterval(() => {
-            if (active) void handleRefreshStock();
-        }, 20_000);
-        return () => {
-            active = false;
-            clearInterval(timer);
-        };
-    }, [dialog.type, provider]);
-    const busyRef = useRef(false);
-    busyRef.current = busy;
-    const key = dialog.type === "order" ? `order:${dialog.outlet}` : "";
-    useEffect(() => {
-        if (!key) {
-            setRestored(true);
-            return;
-        }
-        let active = true;
-        void store
-            .draft(owner, key)
-            .then((value) => {
-                if (active && value && typeof value === "object") {
-                    const v = value as {
-                        quantities: Record<string, number>;
-                        principal: string;
-                        units?: Record<string, OrderUom>;
-                        discount?: number;
-                        discountReason?: string;
-                        evidence?: EvidenceRef;
-                    };
-                    setQty(v.quantities ?? {});
-                    setPrincipal(v.principal ?? "mayora");
-                    setUnits(v.units ?? {});
-                    setDiscount(v.discount ?? 0);
-                    setDiscountReason(v.discountReason ?? "");
-                    if (v.evidence) setEvidence(v.evidence);
-                }
-                if (active) setRestored(true);
-            })
-            .catch(() => {
-                setError("Draft tidak dapat dibaca.");
-            });
-        return () => {
-            active = false;
-        };
-    }, []);
-    useEffect(() => {
-        if (restored && key)
-            void store
-                .draft(owner, key, {
-                    quantities: qty,
-                    principal,
-                    units,
-                    discount,
-                    discountReason,
-                    ...(evidence ? { evidence } : {}),
-                })
-                .catch(() =>
-                    setError("Draft gagal disimpan. Periksa penyimpanan."),
-                );
-    }, [qty, principal, units, discount, discountReason, evidence, restored]);
-    const orderLines = Object.entries(qty).filter(([, q]) => q > 0);
     const title = {
-        order: "Buat Sales Order",
         extra: "Ajukan extra call",
         proof: "Bukti pengiriman",
         expense: "Uang lapangan",
@@ -196,11 +61,6 @@ export function TaskForm({
     async function send(e: SubmitEvent) {
         e.preventDefault();
         if (busy) return;
-        if (dialog.type === "order" && !orderPreview) {
-            if (orderLines.length) setOrderPreview(true);
-            else setError("Pilih minimal 1 item produk sebelum preview.");
-            return;
-        }
         setError("");
         const f = new FormData(e.currentTarget as HTMLFormElement);
         setBusy(true);
@@ -208,52 +68,7 @@ export function TaskForm({
             let type: Command["type"];
             let payload: Record<string, unknown>;
             let label: string;
-            if (dialog.type === "order") {
-                if (!evidence)
-                    throw new Error(
-                        "Ambil foto display outlet sebelum mengirim order.",
-                    );
-                const lines = Object.entries(qty)
-                    .filter(([, q]) => q > 0)
-                    .map(([productId, quantity]) => ({ productId, quantity }));
-                const invalid = validateOrder(lines, snapshot);
-                if (invalid) throw new Error(invalid);
-                type = "sales.order.submit";
-                payload = {
-                    outlet_id: dialog.outlet,
-                    snapshot_version: snapshot.version,
-                    lines: lines.map((l) => ({
-                        product_id: l.productId,
-                        qty: String(l.quantity),
-                        uom: units[l.productId] ?? "carton",
-                    })),
-                    customer_po_number: poNumber.trim() || undefined,
-                    pricing_version: 1,
-                    ...(discount > 0
-                        ? {
-                              discount_request: {
-                                  percent: discount,
-                                  reason: discountReason,
-                              },
-                          }
-                        : {}),
-                    note: String(f.get("note") ?? ""),
-                    observed_total: String(
-                        orderQuote(
-                            lines.map((l) => ({
-                                product_id: l.productId,
-                                qty: String(l.quantity),
-                                uom: units[l.productId] ?? "carton",
-                            })),
-                            snapshot,
-                            discount > 0
-                                ? { percent: discount, reason: discountReason }
-                                : undefined,
-                        ).requestedTotal,
-                    ),
-                };
-                label = `Order • ${snapshot.outlets.find((o) => o.id === dialog.outlet)?.name}`;
-            } else if (dialog.type === "extra") {
+            if (dialog.type === "extra") {
                 type = "sales.extra_call.request";
                 payload = {
                     outlet_name: f.get("outlet"),
@@ -332,7 +147,6 @@ export function TaskForm({
                     "Bukti tersimpan lokal. Pengiriman resmi menunggu API evidence & snapshot peta.",
                 );
             await submit(type, payload, label);
-            if (key) await store.removeDraft(owner, key);
         } catch (x) {
             setError(
                 x instanceof Error
@@ -362,193 +176,6 @@ export function TaskForm({
                 />
                 <form onSubmit={(e) => void send(e)}>
                     <div class="sheet-body">
-                        {dialog.type === "order" && (
-                            <>
-                                <nav
-                                    class="workflow-tabs"
-                                    aria-label="Tahap order"
-                                >
-                                    <button
-                                        type="button"
-                                        aria-pressed={!orderPreview}
-                                        onClick={() => setOrderPreview(false)}
-                                    >
-                                        Produk & cart
-                                    </button>
-                                    <button
-                                        type="button"
-                                        aria-pressed={orderPreview}
-                                        disabled={
-                                            !orderLines.length || !evidence
-                                        }
-                                        onClick={() => setOrderPreview(true)}
-                                    >
-                                        Preview order
-                                    </button>
-                                </nav>
-                                {orderPreview && (
-                                    <section
-                                        class="order-preview"
-                                        aria-label="Preview order"
-                                    >
-                                        <h3>
-                                            {
-                                                snapshot.outlets.find(
-                                                    (o) =>
-                                                        o.id === dialog.outlet,
-                                                )?.name
-                                            }
-                                        </h3>
-                                        {orderLines.map(([id, quantity]) => (
-                                            <div class="preview-line" key={id}>
-                                                <span>
-                                                    {
-                                                        snapshot.products.find(
-                                                            (p) => p.id === id,
-                                                        )?.name
-                                                    }
-                                                    <small>
-                                                        {quantity}{" "}
-                                                        {units[id] ?? "carton"}
-                                                    </small>
-                                                </span>
-                                                <button
-                                                    type="button"
-                                                    class="secondary"
-                                                    aria-label={`Hapus ${snapshot.products.find((p) => p.id === id)?.name}`}
-                                                    onClick={() =>
-                                                        setQty({
-                                                            ...qty,
-                                                            [id]: 0,
-                                                        })
-                                                    }
-                                                >
-                                                    Hapus
-                                                </button>
-                                            </div>
-                                        ))}
-                                        <p>
-                                            {discount > 0
-                                                ? `Diskon ${discount}% • menunggu approval`
-                                                : "Harga sesuai snapshot"}
-                                        </p>
-                                    </section>
-                                )}
-                                <div hidden={orderPreview}>
-                                    <p class="sheet-subtitle">
-                                        {
-                                            snapshot.outlets.find(
-                                                (o) => o.id === dialog.outlet,
-                                            )?.name
-                                        }{" "}
-                                        · satu principal per order
-                                    </p>
-                                    <DisplayPhoto
-                                        store={store}
-                                        owner={owner}
-                                        value={evidence}
-                                        outletName={
-                                            snapshot.outlets.find(
-                                                (o) => o.id === dialog.outlet,
-                                            )?.name ?? "Outlet"
-                                        }
-                                        coordinates={(() => {
-                                            const outlet =
-                                                snapshot.outlets.find(
-                                                    (o) =>
-                                                        o.id === dialog.outlet,
-                                                );
-                                            return outlet
-                                                ? {
-                                                      latitude: outlet.latitude,
-                                                      longitude:
-                                                          outlet.longitude,
-                                                  }
-                                                : undefined;
-                                        })()}
-                                        onChange={setEvidence}
-                                    />
-                                    <OrderCatalog
-                                        snapshot={snapshot}
-                                        principal={principal}
-                                        onPrincipal={setPrincipal}
-                                        qty={qty}
-                                        onQty={setQty}
-                                        units={units}
-                                        onUnits={setUnits}
-                                        liveStock={liveStock}
-                                        onRefreshStock={handleRefreshStock}
-                                        refreshingStock={refreshingStock}
-                                        stockSyncedAt={stockSyncedAt}
-                                    />
-                                    <details class="order-extra">
-                                        <summary>
-                                            Catatan, diskon & Nomor PO
-                                        </summary>
-                                        <label>
-                                            Nomor PO Outlet (opsional)
-                                            <input
-                                                name="customer_po_number"
-                                                type="text"
-                                                maxLength={64}
-                                                placeholder="Contoh: PO/2026/10/099"
-                                                value={poNumber}
-                                                onInput={(e) =>
-                                                    setPoNumber(
-                                                        e.currentTarget.value,
-                                                    )
-                                                }
-                                            />
-                                        </label>
-                                        <label>
-                                            Diskon diminta (%)
-                                            <input
-                                                aria-label="Diskon diminta (%)"
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                step="1"
-                                                inputMode="numeric"
-                                                value={discount}
-                                                onInput={(e) =>
-                                                    setDiscount(
-                                                        Number(
-                                                            e.currentTarget
-                                                                .value,
-                                                        ),
-                                                    )
-                                                }
-                                            />
-                                        </label>
-                                        {discount > 0 && (
-                                            <label>
-                                                Alasan permintaan diskon
-                                                <textarea
-                                                    required
-                                                    minLength={3}
-                                                    maxLength={500}
-                                                    value={discountReason}
-                                                    onInput={(e) =>
-                                                        setDiscountReason(
-                                                            e.currentTarget
-                                                                .value,
-                                                        )
-                                                    }
-                                                />
-                                            </label>
-                                        )}
-                                        <label>
-                                            Catatan order
-                                            <textarea
-                                                name="note"
-                                                maxLength={500}
-                                                placeholder="Permintaan outlet (opsional)"
-                                            />
-                                        </label>
-                                    </details>
-                                </div>
-                            </>
-                        )}
                         {dialog.type === "extra" && (
                             <>
                                 <p class="notice">
@@ -910,95 +537,33 @@ export function TaskForm({
                         )}
                     </div>
                     {dialog.type !== "profile" ? (
-                        <footer
-                            class={`sheet-footer${dialog.type === "order" ? " order-footer" : ""}`}
-                        >
-                            {dialog.type === "order" ? (
-                                <>
-                                    <OrderSummary
-                                        snapshot={snapshot}
-                                        qty={qty}
-                                        units={units}
-                                        discount={discount}
-                                    />
-                                    {!evidence && (
-                                        <p class="summary-hint">
-                                            Foto display outlet wajib sebelum
-                                            order dikirim.
-                                        </p>
-                                    )}
-                                    {orderPreview ? (
-                                        <>
-                                            <button
-                                                type="button"
-                                                class="secondary"
-                                                onClick={() =>
-                                                    setOrderPreview(false)
-                                                }
-                                            >
-                                                Ubah order
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                class="order-submit"
-                                                disabled={
-                                                    busy ||
-                                                    !restored ||
-                                                    !orderLines.length ||
-                                                    !evidence
-                                                }
-                                            >
-                                                {busy
-                                                    ? "Mengirim…"
-                                                    : "Kirim order"}
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            class="order-submit"
-                                            disabled={
-                                                busy ||
-                                                !restored ||
-                                                !orderLines.length
-                                            }
-                                            onClick={() =>
-                                                setOrderPreview(true)
-                                            }
-                                        >
-                                            Preview order
-                                        </button>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    <button
-                                        type="button"
-                                        class="secondary"
-                                        onClick={close}
-                                        disabled={busy}
-                                    >
-                                        Kembali
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={
-                                            busy ||
-                                            !restored ||
-                                            (dialog.type === "attendance" &&
-                                                !evidence)
-                                        }
-                                    >
-                                        {busy
-                                            ? "Menyimpan…"
-                                            : dialog.type === "attendance"
-                                              ? dialog.event === "check_out"
-                                                  ? "Check out"
-                                                  : "Check in"
-                                              : "Simpan ke antrean"}
-                                    </button>
-                                </>
-                            )}
+                        <footer class="sheet-footer">
+                            <>
+                                <button
+                                    type="button"
+                                    class="secondary"
+                                    onClick={close}
+                                    disabled={busy}
+                                >
+                                    Kembali
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        busy ||
+                                        (dialog.type === "attendance" &&
+                                            !evidence)
+                                    }
+                                >
+                                    {busy
+                                        ? "Menyimpan…"
+                                        : dialog.type === "attendance"
+                                          ? dialog.event === "check_out"
+                                              ? "Check out"
+                                              : "Check in"
+                                          : "Simpan ke antrean"}
+                                </button>
+                            </>
                         </footer>
                     ) : (
                         <footer
