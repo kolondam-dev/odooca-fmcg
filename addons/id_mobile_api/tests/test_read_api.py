@@ -54,8 +54,10 @@ class MobileFixture:
             "name": "API Scheduled Outlet", "company_id": cls.company.id, "user_id": cls.mobile.id,
             "partner_latitude": 1.465, "partner_longitude": 124.833, "street": "Test Street",
         })
+        today = business_date()
+        cls.test_business_date = today + timedelta(days=1) if today.weekday() == 6 else today
         cls.assignment = cls.env["id.mobile.workday"].create({
-            "user_id": cls.mobile.id, "company_id": cls.company.id, "business_date": business_date(),
+            "user_id": cls.mobile.id, "company_id": cls.company.id, "business_date": cls.test_business_date,
             "warehouse_id": cls.warehouse.id, "pricelist_id": cls.pricelist.id,
             "outlet_ids": [Command.set(cls.outlet.ids)], "product_ids": [Command.set(cls.product.ids)],
         })
@@ -68,6 +70,15 @@ class MobileFixture:
             cls.product, cls.foreign_warehouse.lot_stock_id, 4800,
         )
         Quant._update_available_quantity(cls.product, cls.warehouse.lot_stock_id, 1200, owner_id=cls.outlet)
+
+    def setUp(self):
+        super().setUp()
+        self.workday_date_patcher = patch(
+            "odoo.addons.id_mobile_api.models.mobile_workday.business_date",
+            return_value=self.test_business_date,
+        )
+        self.workday_date_patcher.start()
+        self.addCleanup(self.workday_date_patcher.stop)
 
 
 @tagged("post_install", "-at_install")

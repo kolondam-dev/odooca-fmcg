@@ -1095,3 +1095,36 @@ class TestMobileCommandsHttp(MobileFixture, HttpCase):
         receipt = res.json()
         self.assertEqual(receipt["client_uuid"], cmd["client_uuid"])
         self.assertIn(receipt["status"], ["accepted", "needs_approval"])
+
+    def test_sunday_sales_order_submission_rejected(self):
+        """Sales order submit must be rejected on Sunday."""
+        model = self._command_model()
+        days_ahead = (6 - self.test_business_date.weekday()) % 7
+        sunday = self.test_business_date if days_ahead == 0 else self.test_business_date + timedelta(days=days_ahead)
+        with patch("odoo.addons.id_mobile_api.models.mobile_workday.business_date", return_value=sunday):
+            self.assignment.business_date = sunday
+            with self.assertRaises(UserError) as ctx:
+                model.process_command({
+                    "client_uuid": str(uuid.uuid4()),
+                    "type": "sales.order.submit",
+                    "payload": self._valid_order_payload(),
+                })
+            self.assertIn("Operasional sales order libur pada hari Minggu", str(ctx.exception))
+
+    def test_sunday_visit_checkin_rejected(self):
+        """Visit check-in must be rejected on Sunday."""
+        model = self._command_model()
+        days_ahead = (6 - self.test_business_date.weekday()) % 7
+        sunday = self.test_business_date if days_ahead == 0 else self.test_business_date + timedelta(days=days_ahead)
+        with patch("odoo.addons.id_mobile_api.models.mobile_workday.business_date", return_value=sunday):
+            self.assignment.business_date = sunday
+            with self.assertRaises(UserError) as ctx:
+                model.process_command({
+                    "client_uuid": str(uuid.uuid4()),
+                    "type": "sales.visit.check_in",
+                    "payload": {
+                        "outlet_id": str(self.outlet.id),
+                        "business_date": sunday.isoformat(),
+                    },
+                })
+            self.assertIn("Kunjungan operasional libur pada hari Minggu", str(ctx.exception))

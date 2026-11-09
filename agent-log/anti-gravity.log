@@ -2093,22 +2093,13 @@
 - Tidak ada perubahan kode, data, role, chart, costing, seed, aktivasi, merge main atau deployment.
 - Task managed by antigravity-agent at 2026-11-07T08:59:30+07:00
 
-[2026-11-08T13:45:00+07:00] [INFO] PR98: penyelarasan basis available-vs-available F0b, tes reservasi, dan integrasi main
-- scripts/ops/seed_f0b_stock_reconcile_live.py: menyelaraskan basis rekonsiliasi menjadi available-vs-available (SUM(sq.quantity) - SUM(sq.reserved_quantity) pada WH/Stock internal perusahaan aktif vs physical - reserved pada state_20260801.json); menambahkan load_canonical_state dengan FileNotFoundError eksplisit dan penutupan koneksi/cursor PostgreSQL via context manager.
-- tests/test_seed_f0b_stock_reconcile.py: memodelkan 4-tuple (sku, lot, physical_units, reserved_units) dan menambahkan 3 tes regresi supervisor (reservasi > 0 tanpa false-positive diff, fisik konstan dengan variasi reservasi mengubah available diff, serta error eksplisit bila berkas fixture tidak ada; total 8 tes PASS).
-- Mengintegrasikan origin/main (0a6f3c7, termasuk data/registers/state_20260801.json dari PR #94) ke cabang agen/seed-f0b-stock-reconcile dengan preservasi verbatim seluruh riwayat docs/HANDOFF.md.
-- Task Managed by Agent VSCode at 2026-11-08T13:45:00+07:00
-
-[2026-11-08T13:38:00+07:00] [INFO] PR101: perbaikan review supervisor pada FIN51 COA equivalence, FIN02 unaffected earnings account, dan lint Ruff
-- addons/id_finance_reporting/models/ledger_compare.py & ledger_reports.py: memvalidasi kesetaraan COA lintas-perusahaan (code, name, account_type) atau account_map eksplisit pada combine_trial_balances (FIN51), menolak secara fail-closed (ValueError / UserError) jika kode akun sama tetapi nama atau account_type berbeda antar-perusahaan, serta mencegah duplikasi company_id dalam satu slot.
-- scripts/ops/verify_finance_i2_ledgers_core.py: mengikat eksplisit accounts['unaffected_earnings'] = company.get_unaffected_earnings_account() (akun equity_unaffected kode 999999 yang dibuat otomatis oleh trial.balance.report.wizard._compute_unaffected_earnings_account) ke dalam 9-account fixture dan tabel ekspektasi I2A_JULY/AUGUST/EMPTY_MAY/SALE_JOURNAL tanpa melonggarkan golden.assert_figures; menambahkan counterexample native untuk penolakan ambiguitas nama/tipe COA pada FIN51; mengganti variabel lambda ambigu l menjadi line (Ruff E741).
-- addons/id_finance_reporting/models/__init__.py: menghapus duplikasi import ledger_reports (Ruff F811).
-- tests/test_finance_i2_ledgers_core.py: menambahkan tes regresi test_fin51_rejects_ambiguous_cross_company_coa_on_same_code (29 tes unit finance PASS).
-- Diverifikasi lokal: python3 scripts/check_manifests.py PASS (12 addon), 29 tes unit finance PASS, AST/lint check PASS; rerun CI native exact-SHA menunggu push. Tidak ada deploy, seed, atau mutasi DB live.
-- Task Managed by Agent VSCode at 2026-11-08T13:38:00+07:00
-
 [2026-11-08T22:10:00+07:00] [INFO] PR101: akar KeyError FIN51 'I2ACOMB08' (kode akun unaffected_earnings company-dependent) dan kontrak baris nol
 - Akar masalah [F]: Odoo 19 menyimpan account.code di code_store (company_dependent, dibaca/ditulis per env.company.root_id). Akun delapan fixture dibuat via with_company(company).create sehingga recordset-nya membawa konteks company fixture; akun unaffected_earnings dibuat oleh company.get_unaffected_earnings_account() (_load_records) pada env default, jadi penulisan code 'I2ACOMB08' mendarat di company default dan laporan OCA (env company fixture) tetap membaca '999999'. Baris nol TIDAK dihilangkan oleh OCA: _get_data selalu menambahkan unaffected_earnings_account bernilai 0.
 - scripts/ops/verify_finance_i2_ledgers_core.py: akun unaffected dibuat via company.with_company(company); penulisan code/name dan counterexample COA memakai with_company per perusahaan; verifikasi pembacaan code per perusahaan setelah penyelarasan; assert_fin51_combined_rows() mendefinisikan kontrak eksplisit: setiap akun yang diharapkan (termasuk baris nol) harus muncul tepat sekali, tanpa kode ekstra, dengan pesan missing/extra yang terbaca (bukan KeyError); angka akun non-nol tetap divalidasi ketat.
 - tests/test_finance_i2_ledgers_core.py: regresi baris nol (hadir, hilang, tertinggal di kode sistem '999999', nilai salah, kode duplikat) dan pelestarian baris nol oleh combine_trial_balances (31 tes PASS). Tidak ada perubahan kode produksi pada addon.
 - Task Managed by Agent VSCode at 2026-11-08T22:10:00+07:00
+
+[2026-11-09T07:37:05+07:00] [INFO] Perbaikan flakiness CI hari Minggu pada id_mobile_api dan race condition PWA offline reload
+- Menyelaraskan fixture id_mobile_api dengan mock tanggal kerja jika runner dieksekusi hari Minggu dan menambahkan tes regresi eksplisit untuk penolakan order/kunjungan pada hari Minggu
+- Membuat pembukaan koreksi OrderCorrections async dengan fallback pemulihan snapshot dari IndexedDB serta sinkronisasi aria-busy sesi kerja pada next-policy.spec.ts
+- Task Managed by Agent VSCode at 2026-11-09T07:37:05+07:00
