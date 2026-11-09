@@ -517,6 +517,55 @@ class TestSeedPlannerF2(unittest.TestCase):
                 resolve_opening_state_path("2026-09", temp_reg, opening_state_path=closing_file)
             self.assertIn("tidak cocok dengan MANIFEST", str(cm.exception))
 
+    def test_explicit_opening_state_missing_from_manifest_fails_fast(self):
+        """Opening state eksplisit dalam direktori pack ber-MANIFEST menolak jika tidak terdaftar di files_sha256."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            temp_reg = Path(tmp_dir)
+            pack_dir = temp_reg / "periods" / "2026-08"
+            pack_dir.mkdir(parents=True)
+            unregistered_file = pack_dir / "unregistered_state.json"
+            unregistered_file.write_text("{}", encoding="utf-8")
+            manifest_file = pack_dir / "MANIFEST.json"
+            manifest_file.write_text(
+                json.dumps({"files_sha256": {"other_file.csv": "0" * 64}}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValueError) as cm:
+                resolve_opening_state_path("2026-09", temp_reg, opening_state_path=unregistered_file)
+            self.assertIn("tidak terdaftar pada MANIFEST.json", str(cm.exception))
+
+    def test_explicit_opening_state_manifest_missing_files_sha256_fails_fast(self):
+        """Opening state eksplisit dalam direktori pack ber-MANIFEST menolak jika files_sha256 hilang/kosong."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            temp_reg = Path(tmp_dir)
+            pack_dir = temp_reg / "periods" / "2026-08"
+            pack_dir.mkdir(parents=True)
+            state_file = pack_dir / "custom_state.json"
+            state_file.write_text("{}", encoding="utf-8")
+            manifest_file = pack_dir / "MANIFEST.json"
+            manifest_file.write_text(
+                json.dumps({"period": "2026-08"}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValueError) as cm:
+                resolve_opening_state_path("2026-09", temp_reg, opening_state_path=state_file)
+            self.assertIn("tidak memuat entri files_sha256", str(cm.exception))
+
+    def test_explicit_opening_state_outside_pack_without_manifest_accepted(self):
+        """Opening state eksplisit di luar direktori ber-MANIFEST diterima langsung jika berkas ada."""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            standalone_file = Path(tmp_dir) / "standalone_opening.json"
+            standalone_file.write_text("{}", encoding="utf-8")
+
+            resolved = resolve_opening_state_path(
+                "2026-09",
+                Path(tmp_dir),
+                opening_state_path=standalone_file,
+            )
+            self.assertEqual(resolved, standalone_file)
+
 
 if __name__ == "__main__":
     unittest.main()

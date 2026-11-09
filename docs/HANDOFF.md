@@ -1,3 +1,18 @@
+## 2026-11-09T12:55:00+07:00 — antigravity — F2/PR97: Fail-Closed Check Opening State Eksplisit pada Direktori Pack Ber-MANIFEST
+**Berubah:**
+- scripts/ops/generate_period_pack.py:
+  * P2: Menutup celah fail-open pada penanganan `opening_state_path` eksplisit di `resolve_opening_state_path`. Jika berkas berada di dalam direktori pack yang memiliki `MANIFEST.json`, mewajibkan entri `files_sha256` valid dan non-kosong, mewajibkan nama berkas terdaftar pada `files_sha256` (jika tidak terdaftar raise `ValueError`), dan memverifikasi checksum SHA-256 LF secara fail-closed. Berkas opening state eksplisit di luar direktori pack ber-MANIFEST tetap diizinkan jika berkas ada.
+- tests/test_seed_planner.py:
+  * Menambahkan 3 unit regression test: penolakan jika opening state eksplisit tidak terdaftar di `files_sha256` MANIFEST (`test_explicit_opening_state_missing_from_manifest_fails_fast`), penolakan jika MANIFEST tidak memuat `files_sha256` yang valid (`test_explicit_opening_state_manifest_missing_files_sha256_fails_fast`), dan penerimaan opening state eksplisit yang berada di luar direktori pack ber-MANIFEST (`test_explicit_opening_state_outside_pack_without_manifest_accepted`). Total 25 tes unit.
+**Diverifikasi:**
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+- [F] Unit regression tests pada tests/test_seed_planner.py: PASS.
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #97.
+**Berikutnya:**
+- Commit perubahan source generator dan test regresi, regenerasi pack Agustus 2026 dan MANIFEST.json dengan binding generator commit exact, commit MANIFEST, push ke PR #97, dan pantau CI.
+
 ## 2026-11-09T09:36:00+07:00 — antigravity — F2/PR97: Validasi Provenance dan Checksum MANIFEST pada Auto-Resolution Opening State
 **Berubah:**
 - scripts/ops/generate_period_pack.py:

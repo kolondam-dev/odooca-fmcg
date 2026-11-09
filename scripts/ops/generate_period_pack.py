@@ -169,8 +169,10 @@ def resolve_opening_state_path(
     Aturan kontinuitas:
     1. Jika opening_state_path diberikan secara eksplisit:
        * Pastikan berkas ada.
-       * Jika direktori berkas memuat MANIFEST.json dan berkas terdaftar di files_sha256,
-         verifikasi kesesuaian hash SHA-256 LF secara fail-closed.
+       * Jika direktori berkas memuat MANIFEST.json: wajibkan files_sha256 valid,
+         wajibkan berkas terdaftar di files_sha256 (jika tidak terdaftar raise ValueError),
+         dan verifikasi kesesuaian hash SHA-256 LF secara fail-closed.
+       * Jika berkas di luar direktori pack ber-MANIFEST: diterima langsung jika berkas ada.
     2. Jika opening_state_path tidak diberikan:
        * Periode '2026-08': default ke data/registers/state_20260801.json.
        * Periode non-Agustus (misal '2026-09'): otomatis mencari berkas closing_state
@@ -187,15 +189,22 @@ def resolve_opening_state_path(
         if manifest_path.exists():
             with manifest_path.open("r", encoding="utf-8") as f:
                 manifest = json.load(f)
-            files_sha = manifest.get("files_sha256", {})
-            if p.name in files_sha:
-                expected_hash = files_sha[p.name]
-                actual_hash = compute_sha256_lf(p)
-                if actual_hash != expected_hash:
-                    raise ValueError(
-                        f"Integritas opening state eksplisit '{p.name}' tidak cocok dengan MANIFEST: "
-                        f"aktual {actual_hash} != diharapkan {expected_hash}"
-                    )
+            files_sha = manifest.get("files_sha256")
+            if not isinstance(files_sha, dict) or not files_sha:
+                raise ValueError(
+                    f"MANIFEST.json pada {p.parent} tidak memuat entri files_sha256 yang valid."
+                )
+            if p.name not in files_sha:
+                raise ValueError(
+                    f"Opening state eksplisit '{p.name}' tidak terdaftar pada MANIFEST.json di {p.parent}."
+                )
+            expected_hash = files_sha[p.name]
+            actual_hash = compute_sha256_lf(p)
+            if actual_hash != expected_hash:
+                raise ValueError(
+                    f"Integritas opening state eksplisit '{p.name}' tidak cocok dengan MANIFEST: "
+                    f"aktual {actual_hash} != diharapkan {expected_hash}"
+                )
         return p
 
     if period == "2026-08":

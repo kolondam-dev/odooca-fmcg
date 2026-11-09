@@ -2149,3 +2149,9 @@
 - Regresi Planner: Menambahkan 4 unit regression test pembuktian penolakan fail-fast jika MANIFEST hilang, berkas tidak terdaftar, atau checksum tidak cocok (total 22 tes unit).
 - Pengujian: ruff check clean, check_manifests 12 addon OK.
 - Task managed by antigravity at 2026-11-09T09:36:00+07:00
+
+[2026-11-09T12:55:00+07:00] [INFO] F2/PR97: Fail-Closed Check Opening State Eksplisit pada Direktori Pack Ber-MANIFEST
+- P2: Memperbaiki fail-open pada resolve_opening_state_path ketika opening_state_path diberikan secara eksplisit: jika berada dalam direktori pack yang memuat MANIFEST.json, fungsi mewajibkan files_sha256 berupa dictionary non-kosong yang valid, mewajibkan berkas eksplisit terdaftar di files_sha256 (raise ValueError jika tidak terdaftar), dan memverifikasi checksum SHA-256 LF secara fail-closed. Berkas di luar direktori ber-MANIFEST tetap diterima jika ada di disk.
+- Regresi Planner: Menambahkan 3 tes unit pada tests/test_seed_planner.py (test_explicit_opening_state_missing_from_manifest_fails_fast, test_explicit_opening_state_manifest_missing_files_sha256_fails_fast, test_explicit_opening_state_outside_pack_without_manifest_accepted), total 25 tes unit PASS.
+- Pengujian: ruff check clean, check_manifests 12 addon OK.
+- Task managed by antigravity at 2026-11-09T12:55:00+07:00
