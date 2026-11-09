@@ -178,3 +178,9 @@
 - Kasus lama tetap PASS: FIN05/FIN06 Juli-Agustus, FIN07 14/25/31 Juli dan 31 Agustus, FIN08/FIN09, OCA open_items/aged_partner_balance, role/company negative, tamper, unreconcile.
 - Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 43 tes finance PASS. [BU] Sign-off supervisor belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA; PR belum di-merge.
 - Task managed by claude-dev agent at 2026-11-09T21:40:00+07:00
+[2026-11-09T22:25:00+07:00] [INFO] I2b/PR104: MERGED setelah APPROVE reviewer
+- Reviewer frankiezz1988 memberi APPROVE pada SHA 1d7a2c8d8224e412d00931810a1e5e7578d8eb03 (review PRR_kwDOVUWh9s8AAAABW2AfZg, 2026-11-09T15:17:31Z): perbaikan P2 dinilai menyelesaikan inkonsistensi scope, partial_scope=both_legs_selected terdokumentasi, regresi native journal/date AR/AP dua skala lulus, tidak ada defect tersisa.
+- Catatan non-blocking reviewer: tambahkan kasus native partner_ids pada iterasi berikutnya karena filter itu juga bagian kontrak slice, walau implementasi memakai jalur seleksi line IDs yang sama.
+- PR #104 di-merge ke main pada 2026-11-09T15:18:02Z oleh frankiezz1988, merge commit 7c957ad686dd820fcd62636d2e9ebfbea3103831; 14/14 check pada SHA 1d7a2c8 SUCCESS sebelum merge.
+- [BU] Merge kode bukan penerimaan laporan: export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller masih terbuka; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA. Tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-09T22:25:00+07:00
