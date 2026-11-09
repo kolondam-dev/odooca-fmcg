@@ -201,3 +201,8 @@
 - Konflik HANDOFF dan agent-log dengan main c8fe1c0 diselesaikan tanpa menghapus entri agen lain; duplikasi entri 22:25 dihapus, entri 00:05 dan 01:10 dipertahankan sekali (log append-only tetap dipatuhi).
 - Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 44 tes finance PASS. [BU] Review supervisor PR107 belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T02:35:00+07:00
+[2026-11-10T03:20:00+07:00] [INFO] I2b/PR107: CI exact-SHA de8ed14 PASS; review diminta
+- PR #107 pada SHA de8ed14ca95867de6adbaa5631fc2bf4d837177e MERGEABLE, 12/12 check SUCCESS. Komentar penjelasan sudah dipasang (issuecomment-6746946093) dan reviewer frankiezz1988 diminta kembali.
+- Module Upgrade from Persisted Baseline tetap tidak terpicu karena PR hanya menyentuh scripts/tests/docs; 12/12 adalah cakupan penuh.
+- [BU] Menunggu verdict supervisor; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T03:20:00+07:00
