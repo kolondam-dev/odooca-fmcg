@@ -26,28 +26,13 @@
 **Berikutnya:**
 - Commit pack data & logs, push ke `origin/agen/seed-f2-august-refinement`, pantau CI PR #105 hingga 100% hijau, dan minta re-review supervisor.
 
+## 2026-11-09T22:25:00+07:00 — Agent VSCode — PR104 MERGED: I2b AR/AP subledger FIN05–FIN09
+**Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode.
+**Diverifikasi:** [F] Reviewer `frankiezz1988` memberi verdict `APPROVE` pada SHA `1d7a2c8d8224e412d00931810a1e5e7578d8eb03` (review `PRR_kwDOVUWh9s8AAAABW2AfZg`, 2026-11-09T15:17:31Z) dan menyatakan tidak ada defect tersisa yang menghalangi merge. [F] PR #104 di-merge ke `main` pada 2026-11-09T15:18:02Z oleh `frankiezz1988` sebagai merge commit `7c957ad686dd820fcd62636d2e9ebfbea3103831`. [F] Seluruh 14 check pada SHA `1d7a2c8` SUCCESS sebelum merge, termasuk `Finance I0 candidate spike` run `42637440796` dengan `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Catatan non-blocking reviewer: tambahan kasus native `partner_ids` disarankan pada iterasi berikutnya, karena filter itu juga bagian kontrak slice walau memakai jalur seleksi line IDs yang sama.
+**Belum diuji:** [BU] Bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller; `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA` karena merge kode bukan penerimaan laporan. Tidak ada deploy atau mutasi DB live.
+**Berikutnya:** kerjakan tindak lanjut non-blocking `partner_ids` pada iterasi berikutnya beserta gate export/sign-off FIN05–FIN09.
+
 ## 2026-11-09T22:25:00+07:00 — antigravity — F2: Sinkronisasi origin/main (7c957ad: PR #104) & Resolusi Review Substantif PR #105
-**Berubah:**
-- Integrasi Cabang: Menggabungkan `origin/main` (commit `7c957ad` PR #104: I2b AR/AP subledger FIN05-FIN09) ke dalam cabang `agen/seed-f2-august-refinement` via merge commit tanpa force-push.
-- scripts/ops/seed_planner.py:
-  * P1 Pemisahan Nilai Komersial & DPP Nilai Lain (PMK 131/2024): Memisahkan nilai komersial netto (`commercial_dpp`) dari dasar pengenaan pajak faktur pajak (`dpp_amount` = 11/12 x commercial_dpp). Menetapkan tarif resmi undang-undang 12% (`tax_rate: 0.12`), PPN terutang `ppn_amount = 12% x dpp_amount` (efektif 11% dari nilai jual komersial), dan total faktur komersial `total_invoice_with_ppn = commercial_dpp + ppn_amount`. Metadata diselaraskan pada invoice normal, carry-forward invoice, dan `po_headers` (faktur pajak masukan).
-  * P2 Pemisahan Status PKP & Identitas Pembeli Coretax: Memisahkan status pengusaha kena pajak (`is_pkp`) dari tipe identitas perpajakan pembeli (`buyer_id_type`). Modern Trade, Institusi, dan GT badan usaha berstatus `is_pkp=True` dengan NPWP16 16 digit. Retail warung perorangan berstatus `is_pkp=False` dengan mayoritas NIK 16 digit Kota Manado (7171) dan sebagian kecil tanpa identitas TIN_0 ('0000000000000000').
-  * P2 Provenance Rejection & Semantic Consistency: Mengeliminasi pola paritas artifisial ganjil-genap dan menggantinya dengan katalog insiden kausal deterministik (`REJECTION_INCIDENT_CATALOG`). Menambahkan kolom `incident_batch_ref`, `evidence_type` (ACTUAL, BATCH_REFERENCE, SYNTHETIC, NONE), dan `evidence_photo_ref` nullable. Tolakan kadaluwarsa Modern Trade (`EXPIRY_DEKAT_DITOLAK`) ditandai `evidence_type: NONE` dan referensi foto kosong (semantic consistency terjamin dan tidak berpura-pura lengkap).
-- scripts/ops/seed_v2_gates.py:
-  * Menyelaraskan gerbang `TAX-SOURCE` untuk memvalidasi konsistensi kode transaksi `04` (DPP Nilai Lain 11/12 dan tarif 12%) secara matematis presisi tanpa merusak kompatibilitas mundur transaksi kode 01 legacy Juli.
-- tests/test_seed_planner.py:
-  * Menambahkan unit test aritmetika PMK 131/2024 (`test_pmk131_tax_code_04_arithmetic_precision`), verifikasi Coretax buyer identity (`test_commercial_invoices_tax_metadata`), dan kausalitas provenance rejection (`test_pod_rejection_reasons_and_evidence`).
-- data/registers/periods/2026-08/:
-  * Regenerasi seluruh berkas pack periode Agustus 2026 dengan skema baru dan MANIFEST.json.
-**Diverifikasi:**
-- [F] python -m unittest tests.test_seed_planner tests.test_seed_v2_gates: 114 tests PASS in 23.2s.
-- [F] python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict: PASS (11 gates, 0 violations).
-- [F] python -m ruff check scripts/ops/ tests/: PASS (clean).
-- [F] python scripts/check_manifests.py: PASS (12 addon OK).
-**Belum diuji:**
-- [BU] Eksekusi seeding ke database live Odoo 19 CE.
-**Berikutnya:**
-- Commit dan push pembaruan ke `agen/seed-f2-august-refinement`, pantau CI PR #105, dan serahkan ke supervisor untuk re-review.
 
 ## 2026-11-09T21:40:00+07:00 — Agent VSCode — PR104: CI native exact-SHA 8310f44 hijau (fix scope filter)
 **Berubah:** hanya dokumentasi: entri bukti pada `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode pada commit ini (kode perbaikan ada di `8310f44`).
