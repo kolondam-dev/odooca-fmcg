@@ -2138,3 +2138,8 @@
 - Resolusi Konflik: Mengadopsi patch uji waktu id_mobile_api dan pengujian eksplisit libur Minggu dari PR #100, menyelaraskan session-fixture PWA dengan pewarisan statis Date.UTC/parse, serta merangkai riwayat kronologis docs/HANDOFF.md secara utuh.
 - Pengujian: 100 tes unit (test_seed_planner + test_seed_v2_gates) PASS, ruff check clean, check_manifests 12 addons OK.
 - Task managed by antigravity at 2026-11-09T08:02:00+07:00
+
+[2026-11-09T08:15:00+07:00] [INFO] F2/PR97: Penyelarasan id_mobile_api dengan main untuk stabilitas CI
+- CI Install Test Guard: Mengembalikan id_mobile_api ke keselarasan 100% dengan origin/main (PR #100), menghilangkan redundansi fixture dan memanfaatkan test_sunday_rule_rejects_order_and_check_in kanonikal.
+- Pengujian: 18 tes planner PASS, ruff clean, manifest 12 addon OK, PWA gate 100% PASS (pwa-quality, pwa-container, pwa-browser).
+- Task managed by antigravity at 2026-11-09T08:15:00+07:00

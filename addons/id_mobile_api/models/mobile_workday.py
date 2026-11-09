@@ -1,7 +1,6 @@
 import hashlib
 import json
 import math
-import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -10,9 +9,6 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 def business_date():
-    override = os.environ.get("ID_MOBILE_BUSINESS_DATE")
-    if override:
-        return datetime.strptime(override, "%Y-%m-%d").date()
     return datetime.now(ZoneInfo("Asia/Makassar")).date()
 
 

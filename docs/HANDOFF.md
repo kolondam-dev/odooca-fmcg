@@ -1,3 +1,16 @@
+## 2026-11-09T08:15:00+07:00 — antigravity — F2/PR97: Penyelarasan id_mobile_api dengan main untuk stabilitas CI
+**Berubah:**
+- addons/id_mobile_api: Mengembalikan file `models/mobile_workday.py` dan `tests/test_commands_api.py` ke keselarasan 100% dengan `origin/main` (PR #100) menggunakan mekanisme patching `business_date` dan pengujian `test_sunday_rule_rejects_order_and_check_in`.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner: 18 tests PASS.
+- [F] python -m ruff check .: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+- [F] CI PWA gate (pwa-quality, pwa-container, pwa-browser): 100% PASS pada commit 8f87500.
+**Belum diuji:**
+- [BU] Verifikasi ulang CI workflow (install-test) pada SHA terbaru.
+**Berikutnya:**
+- Commit, push ke origin, dan pantau penyelesaian install-test.
+
 ## 2026-11-09T08:00:00+07:00 — antigravity — F2/PR97: Sinkronisasi main (PR #100) dan Binding Provenance MANIFEST.json
 **Berubah:**
 - Sinkronisasi cabang: Mengintegrasikan origin/main (PR #100) ke dalam agen/seed-f2-planner.
