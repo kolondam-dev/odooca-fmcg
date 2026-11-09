@@ -1,4 +1,4 @@
-import { sendOrder } from "./visit-helpers";
+import { sendOrder, leaveVisit } from "./visit-helpers";
 import { checkIn } from "./session-fixture";
 import { switchPersona } from "./delivery-helpers";
 import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
@@ -25,19 +25,9 @@ async function visitOrder(page: Page, first = true) {
         await expect(
             page.getByText("Kunjungan lokal aktif", { exact: true }),
         ).toBeVisible();
-    } else {
-        await page
-            .getByRole("button", { name: "Check-in toko", exact: true })
-            .click();
-        const refreshBtn = page.getByRole("button", {
-            name: "Perbarui lokasi outlet",
-            exact: true,
-        });
-        await expect(refreshBtn).toBeVisible();
-        await refreshBtn.click();
     }
     await page
-        .getByRole("button", { name: "Open session", exact: true })
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
 }
 async function demoGps(page: Page) {
@@ -128,9 +118,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await demoGps(page);
     await page.goto("./");
     await openMorning(page);
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await visitOrder(page);
     await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("2");
@@ -139,13 +127,12 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
         .click();
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await visitOrder(page, false);
     await expect(page.getByLabel("Kuantitas Biskuit Kelapa 300 g")).toHaveValue(
@@ -156,6 +143,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
     await sendOrder(page);
+    await leaveVisit(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await expect(
         page.getByText("Menunggu koneksi", { exact: true }),
@@ -164,6 +152,7 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
@@ -227,9 +216,11 @@ test("missing evidence is not accepted as attendance", async ({
 }) => {
     await context.clearPermissions();
     await page.goto("./");
-    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
     await expect(
-        page.getByRole("button", { name: "Check in", exact: true }),
+        page.getByRole("button", { name: "Simpan absen masuk", exact: true }),
     ).toBeDisabled();
 });
 test("live build is fail-closed with no simulation selector or data", async ({
@@ -279,32 +270,38 @@ test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
     await expect(page.locator(".activity")).toHaveCount(1);
 });
 
+async function expectGateClosed(page: Page) {
+    // Sebelum absen masuk, hari kerja belum bisa disinkronkan: hanya ada "Absen masuk".
+    await expect(
+        page.getByRole("button", {
+            name: "Sinkronkan data harian",
+            exact: true,
+        }),
+    ).toHaveCount(0);
+    await expect(
+        page.getByRole("button", { name: "Absen masuk", exact: true }),
+    ).toBeVisible();
+}
 test("morning gate requires attendance, preserves account separation and expires next WITA day", async ({
     page,
 }) => {
     await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
     await page.goto("./");
-    await expect(
-        page.getByRole("button", { name: /Buat order/ }),
-    ).toBeDisabled();
-    await expect(
-        page.getByRole("button", { name: "Buka sesi kerja", exact: true }),
-    ).toBeDisabled();
+    await expectGateClosed(page);
     await checkIn(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.reload();
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
         .click();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await switchPersona(page, "canvass");
-    await expect(
-        page.getByRole("button", { name: /Buat order/ }),
-    ).toBeDisabled();
+    await expectGateClosed(page);
     await switchPersona(page, "sales");
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
     await page.clock.setSystemTime(new Date("2026-10-27T16:00:01Z"));
@@ -312,13 +309,12 @@ test("morning gate requires attendance, preserves account separation and expires
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
         .click();
-    await expect(
-        page.getByRole("button", { name: /Buat order/ }),
-    ).toBeDisabled();
+    await expectGateClosed(page);
     await expect(page.getByText("Sesi aktif", { exact: true })).toHaveCount(0);
 });
 
@@ -384,9 +380,7 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
     await demoGps(page);
     await page.goto("./");
     await openMorning(page);
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await visitOrder(page);
     await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("2");
@@ -436,20 +430,18 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
     ).toBeVisible();
+    await leaveVisit(page);
     await page
         .getByRole("navigation", { name: "Navigasi utama" })
         .getByRole("button", { name: "Beranda", exact: true })
         .click();
     await expect(
         page.getByRole("button", {
-            name: "Buka sesi kerja",
+            name: "Absen masuk",
             exact: true,
         }),
     ).toBeVisible();
     await expect(page.getByText("Sesi aktif", { exact: true })).toHaveCount(0);
-    await expect(
-        page.getByRole("button", { name: "Buat order", exact: false }),
-    ).toBeDisabled();
     await expect(
         page.getByRole("button", { name: /Toko Sinar Pagi/ }),
     ).toHaveCount(0);

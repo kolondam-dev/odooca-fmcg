@@ -130,3 +130,9 @@
 - Register Juli beku lulus gate v2 yang berlaku; replay penutupan Juli = laporan rekonsiliasi (53.837/1.038/9, 309 AR, 48 carry-forward). Tiap pemeriksa dimatikan -> >=2 tes gagal. Suite penuh 267 tes OK (2 skip), ruff dan check_manifests PASS, v1 gates PASS.
 - Tidak mengubah register, loader, gate v1, workflow atau server. [BU] pack nyata, runtime Odoo dan DB live belum diuji.
 - Task managed by claude-dev agent at 2026-11-05T10:42:35+07:00
+
+[2026-11-08T13:32:51+07:00] [INFO] PR #100: tindak lanjut CHANGES_REQUESTED (merge main, token navbar, tes pariti, CI)
+- P1: main diintegrasikan ke agen/pwa-ui-tokens-atoms; konflik hanya docs/HANDOFF.md, entri antigravity 2026-11-07T08:59:30 disisipkan kronologis di antara 14:18:52 dan 08:47:53
+- P2: --c-nav di tokens.css #0b1f4d -> #001a57 (sama dengan tokens.json dan DS_RECONCILIATION K1); tests/design-tokens-parity.test.ts menjaga CSS=JSON
+- CI: pwa.yml push juga untuk agen/pwa-*, langkah npm run test:tokens; [BU] npm registry tidak dapat dijangkau di sesi ini sehingga vitest/prettier/tsc belum dijalankan lokal
+- Task managed by claude-dev agent at 2026-11-08T13:32:51+07:00

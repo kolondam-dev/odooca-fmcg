@@ -5,6 +5,7 @@ import {
     type SyncSnapshot,
 } from "../domain/sync-diagnostics";
 import type { FieldStore, QueueItem } from "../storage/store";
+import { Chip } from "../ui";
 import { Icon } from "./Icon";
 const filters: [QueueFilter, string][] = [
     ["all", "Semua"],
@@ -111,11 +112,17 @@ export function SyncDiagnostics({
                                     {row.uuid.slice(0, 8)}
                                 </small>
                                 <p>{row.message}</p>
-                                <span
-                                    class={`pill ${row.group === "review" ? "red" : row.state === "accepted" ? "green" : "amber"}`}
+                                <Chip
+                                    tone={
+                                        row.group === "review"
+                                            ? "bad"
+                                            : row.state === "accepted"
+                                              ? "ok"
+                                              : "warn"
+                                    }
                                 >
                                     {row.stateLabel}
-                                </span>
+                                </Chip>
                                 <p class="queue-reason">{row.title}</p>
                                 <details class="queue-details">
                                     <summary>
