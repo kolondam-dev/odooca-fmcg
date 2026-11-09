@@ -214,14 +214,18 @@ def fetch_live_rows(company_id: int):
         conn.close()
 
 
-def main() -> None:
+def build_arg_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
     ap.add_argument(
         "--company-id", type=int, required=True,
         help="ID res_company yang setara dengan entitas kanonikal (wajib; tidak ada default).",
     )
-    args = ap.parse_args()
+    return ap
+
+
+def main() -> None:
+    args = build_arg_parser().parse_args()
     state = load_canonical_state(STATE)
     live_rows = fetch_live_rows(args.company_id)
     result = compare(live_rows, canonical_available(state), carton_sizes(), args.company_id)
