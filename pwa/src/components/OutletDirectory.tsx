@@ -1,18 +1,18 @@
 import { useRememberedState, useRememberedScroll } from "../ui/viewMemory";
 import { useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
-import { OutletAvatar } from "./OutletAvatar";
+import { Button, OutletCard, Segmented } from "../ui";
 import { FullDrawer } from "./FullDrawer";
 import { Icon } from "./Icon";
 export function OutletDirectory({
     outlets,
     open,
-    status,
+    closed,
     extra,
 }: {
     outlets: Snapshot["outlets"];
     open: (id: string) => void;
-    status: (id: string) => string;
+    closed: (id: string) => boolean;
     extra: () => void;
 }) {
     const suppressFocus = useRef(false);
@@ -28,25 +28,36 @@ export function OutletDirectory({
             .toLocaleLowerCase("id")
             .includes(query.trim().toLocaleLowerCase("id")),
     );
+    const [filter, setFilter] = useState<"all" | "todo" | "done">("all");
+    const doneCount = outlets.filter((o) => closed(o.id)).length;
+    const nextId = outlets.find((o) => !closed(o.id))?.id;
     const rows = (values: typeof outlets) =>
-        values.map((outlet) => (
-            <button
-                class="outlet-row"
-                key={outlet.id}
-                onClick={() => {
-                    setSearch(false);
-                    open(outlet.id);
-                }}
-            >
-                <OutletAvatar url={outlet.image_url} name={outlet.name} />
-                <span>
-                    <strong>{outlet.name}</strong>
-                    <small>{outlet.address}</small>
-                    <small>{status(outlet.id)}</small>
-                </span>
-                <Icon name="caret" size={18} />
-            </button>
-        ));
+        values.map((outlet) => {
+            const done = closed(outlet.id);
+            return (
+                <OutletCard
+                    key={outlet.id}
+                    number={outlets.indexOf(outlet) + 1}
+                    name={outlet.name}
+                    address={outlet.address}
+                    highlight={outlet.id === nextId}
+                    status={
+                        done
+                            ? { tone: "ok", label: "Selesai" }
+                            : outlet.id === nextId
+                              ? { tone: "info", label: "Berikutnya" }
+                              : { tone: "neu", label: "Belum" }
+                    }
+                    onClick={() => {
+                        setSearch(false);
+                        open(outlet.id);
+                    }}
+                />
+            );
+        });
+    const shown = outlets.filter(
+        (o) => filter === "all" || (filter === "done") === closed(o.id),
+    );
     return (
         <section class="sales-directory" aria-label="Daftar outlet">
             <div class="directory-toolbar">
@@ -67,12 +78,30 @@ export function OutletDirectory({
                         onClick={() => setSearch(true)}
                     />
                 </label>
-                <button class="text-button" onClick={extra}>
+                <Button variant="sec" size="md" auto onClick={extra}>
                     Extra call
-                </button>
+                </Button>
             </div>
-            <div class="outlet-list" ref={listScroll}>
-                {rows(outlets)}
+            <div class="directory-filter">
+                <Segmented
+                    label="Filter outlet"
+                    value={filter}
+                    onChange={setFilter}
+                    items={[
+                        { value: "all", label: `Semua ${outlets.length}` },
+                        {
+                            value: "todo",
+                            label: `Belum ${outlets.length - doneCount}`,
+                        },
+                        { value: "done", label: `Selesai ${doneCount}` },
+                    ]}
+                />
+            </div>
+            <div class="outlet-list ui-list" ref={listScroll}>
+                {rows(shown)}
+                {!shown.length && (
+                    <p class="empty">Tidak ada outlet pada filter ini.</p>
+                )}
             </div>
             {search && (
                 <FullDrawer title="Pencarian outlet" close={dismiss}>
@@ -92,7 +121,7 @@ export function OutletDirectory({
                     <p class="result-count" role="status">
                         {filtered.length} outlet
                     </p>
-                    <div class="search-results">
+                    <div class="search-results ui-list">
                         {rows(filtered)}
                         {!filtered.length && (
                             <p class="empty">Tidak ada outlet yang cocok.</p>

@@ -14,7 +14,10 @@ test("login stands alone, rejects wrong credentials and never exposes mock perso
     );
     await page.goto("./");
     await expect(
-        page.getByRole("heading", { name: "Masuk", exact: true }),
+        page.getByRole("heading", {
+            name: "Masuk untuk memulai kerja",
+            exact: true,
+        }),
     ).toBeVisible();
     await expect(page.locator(".topbar, .bottom-nav")).toHaveCount(0);
     await expect(
@@ -32,7 +35,7 @@ test("login stands alone, rejects wrong credentials and never exposes mock perso
         "",
     );
     await expect(page.getByLabel("Peran", { exact: true })).toHaveCount(0);
-    await expect(page.locator(".greeting")).toHaveCount(0);
+    await expect(page.locator(".ui-hdr__title")).toHaveCount(0);
     await expect(
         page.getByRole("link", {
             name: "Ganti akun / keluar dari sesi sebelumnya",
@@ -88,8 +91,8 @@ test("native CSRF login opens real scoped workspace and full-width equal navigat
         page.getByRole("heading", { name: /Selamat bekerja/ }),
     ).toBeVisible();
     expect(posted).toBe(true);
-    await expect(page.locator(".topbar")).toContainText("Online");
-    await expect(page.locator(".greeting .eyebrow")).toHaveText(
+    await expect(page.locator(".ui-hdr")).toContainText("Online");
+    await expect(page.locator(".ui-hdr__date")).toHaveText(
         /\d{2}[.:]\d{2}[.:]\d{2}.*WITA/,
     );
     const geometry = await page.evaluate(() => {
@@ -100,11 +103,8 @@ test("native CSRF login opens real scoped workspace and full-width equal navigat
             columns: [...document.querySelectorAll(".bottom-nav button")].map(
                 (el) => el.getBoundingClientRect().toJSON(),
             ),
-            header: rect(".topbar"),
-            logo: rect(".topbar .app-brand"),
-            greeting: rect(".greeting"),
-            morning: rect(".morning-card"),
-            quick: rect(".quick-grid"),
+            header: rect(".ui-hdr"),
+            morning: rect("[data-owner]"),
             width: innerWidth,
         };
     });
@@ -112,20 +112,16 @@ test("native CSRF login opens real scoped workspace and full-width equal navigat
     expect(Math.abs(geometry.nav.width - geometry.width)).toBeLessThan(2);
     for (const col of geometry.columns)
         expect(Math.abs(col.width - geometry.nav.width / 4)).toBeLessThan(1);
-    expect(geometry.logo.height).toBe(geometry.header.height);
-    expect(geometry.morning.top).toBeGreaterThanOrEqual(
-        geometry.greeting.bottom,
-    );
-    expect(geometry.quick.top).toBeGreaterThanOrEqual(geometry.morning.bottom);
+    expect(geometry.morning.top).toBeGreaterThanOrEqual(geometry.header.bottom);
     await expect(
-        page.getByRole("button", { name: /Buat order/ }),
-    ).toBeDisabled();
+        page.getByRole("button", { name: /Sales/ }).first(),
+    ).toBeVisible();
     await expect(
         page.getByRole("button", { name: /Uang lapangan/ }),
-    ).toBeDisabled();
+    ).toHaveCount(0);
     await expect(
-        page.getByRole("button", { name: "Buka sesi kerja", exact: true }),
-    ).toBeDisabled();
+        page.getByRole("button", { name: "Absen masuk", exact: true }),
+    ).toBeEnabled();
     expect(
         await page.evaluate(() =>
             JSON.stringify({ ...localStorage, ...sessionStorage }),
@@ -143,14 +139,20 @@ test("check-in is a full page with map, bound watermark photo and clock-out", as
     await page.goto("./");
     await checkIn(page);
     await expect(
-        page.getByRole("button", { name: /Buat order/ }),
+        page.getByRole("button", { name: "Mulai kunjungan", exact: false }),
     ).toBeEnabled();
-    await expect(page.locator(".quick-attendance-record")).toContainText(
-        "Clock in",
-    );
-    await page.getByRole("button", { name: "Clock out", exact: true }).click();
-    const form = page.getByRole("dialog");
-    await expect(form.getByLabel("Aktivitas")).toHaveValue("check_out");
+    await expect(
+        page.locator('[data-testid="attendance-record"]'),
+    ).toContainText("Masuk");
+    await page
+        .getByRole("button", { name: "Absen pulang", exact: true })
+        .click();
+    const form = page.getByRole("region", {
+        name: "Absensi foto dan lokasi",
+    });
+    await expect(
+        page.getByRole("heading", { name: "Absen pulang", exact: true }),
+    ).toBeVisible();
     const bounds = await form.boundingBox();
     expect(bounds!.y).toBe(0);
     expect(bounds!.height).toBe(await page.evaluate(() => innerHeight));
@@ -183,15 +185,17 @@ test("check-in is a full page with map, bound watermark photo and clock-out", as
         path: `test-results/attendance-${test.info().project.name}.png`,
         fullPage: true,
     });
-    await page.getByRole("button", { name: "Check out", exact: true }).click();
+    await page
+        .getByRole("button", { name: "Simpan absen pulang", exact: true })
+        .click();
     await expect(form).toHaveCount(0);
     await expect(
-        page.getByRole("button", { name: /Buat order/ }),
-    ).toBeDisabled();
+        page.getByRole("button", { name: /Mulai kunjungan/ }),
+    ).toHaveCount(0);
     await page.reload();
-    await expect(page.locator(".quick-attendance-record")).toContainText(
-        "Clock out",
-    );
+    await expect(
+        page.locator('[data-testid="attendance-record"]'),
+    ).toContainText("Pulang");
 });
 
 test("denied GPS keeps check-in disabled and returning restores focus", async ({
@@ -210,11 +214,13 @@ test("denied GPS keeps check-in disabled and returning restores focus", async ({
             });
     });
     await page.goto("./");
-    const attendance = page.getByRole("button", { name: /^Absensi/ }).first();
+    const attendance = page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .first();
     await attendance.click();
     await expect(page.getByRole("alert")).toContainText("Izin lokasi ditolak");
     await expect(
-        page.getByRole("button", { name: "Check in", exact: true }),
+        page.getByRole("button", { name: "Simpan absen masuk", exact: true }),
     ).toBeDisabled();
     await expect(
         page.getByRole("button", { name: "Buka Kamera", exact: true }),
@@ -227,13 +233,16 @@ test("expired session clears the workspace before another account can enter", as
     page,
 }) => {
     await page.goto("./");
-    await expect(page.locator(".greeting")).toBeVisible();
+    await expect(page.locator(".ui-hdr__title")).toBeVisible();
     await page.route("**/api/v1/me/bootstrap", (route) =>
         route.fulfill({ status: 401, json: { error: "not_authenticated" } }),
     );
     await page.evaluate(() => window.dispatchEvent(new Event("focus")));
     await expect(
-        page.getByRole("heading", { name: "Masuk", exact: true }),
+        page.getByRole("heading", {
+            name: "Masuk untuk memulai kerja",
+            exact: true,
+        }),
     ).toBeVisible();
     await expect(page.locator(".topbar, .bottom-nav, .greeting")).toHaveCount(
         0,
@@ -258,7 +267,7 @@ for (const retake of [false, true])
         });
         await page.goto("./");
         await page
-            .getByRole("button", { name: /^Absensi/ })
+            .getByRole("button", { name: "Absen masuk", exact: true })
             .first()
             .click();
         async function photo(address: string) {
@@ -285,7 +294,10 @@ for (const retake of [false, true])
                 page.getByAltText("Foto absensi dengan watermark"),
             ).toBeInViewport();
             await expect(
-                page.getByRole("button", { name: "Check in", exact: true }),
+                page.getByRole("button", {
+                    name: "Simpan absen masuk",
+                    exact: true,
+                }),
             ).toBeEnabled();
         }
         const pending = () =>
@@ -307,7 +319,7 @@ for (const retake of [false, true])
         await photo("Alamat foto A, Manado");
         failNextSnapshot = true;
         await page
-            .getByRole("button", { name: "Check in", exact: true })
+            .getByRole("button", { name: "Simpan absen masuk", exact: true })
             .click();
         await expect(page.getByRole("alert")).toContainText("503");
         const a = await pending();
@@ -355,13 +367,17 @@ for (const retake of [false, true])
         if (retake) expect(selected.id).not.toBe(a.attendanceEvidence.id);
         else expect(selected.id).toBe(a.attendanceEvidence.id);
         await page
-            .getByRole("button", { name: "Check in", exact: true })
+            .getByRole("button", { name: "Simpan absen masuk", exact: true })
             .click();
-        await expect(page.locator(".quick-attendance-record")).toBeVisible();
+        await expect(
+            page.locator('[data-testid="attendance-record"]'),
+        ).toBeVisible();
         const opened = await pending();
         expect(opened.attendanceEvidence).toMatchObject(selected);
         expect(opened.sessionId).toBeTruthy();
         await page.reload();
-        await expect(page.locator(".quick-attendance-record")).toBeVisible();
+        await expect(
+            page.locator('[data-testid="attendance-record"]'),
+        ).toBeVisible();
         expect(await pending()).toEqual(opened);
     });

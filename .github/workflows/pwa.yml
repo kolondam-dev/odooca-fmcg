@@ -2,7 +2,7 @@ name: PWA quality
 on:
   pull_request:
   push:
-    branches: [main, 'agen/mobile-*']
+    branches: [main, 'agen/mobile-*', 'agen/pwa-*']
 permissions:
   contents: read
 concurrency:
@@ -25,6 +25,8 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run contracts:check
+      - name: Design token parity (tokens.css = design/tokens.json)
+        run: npm run test:tokens
       - run: npm test
       - run: npm run test:hosting
       - run: npm run build:demo
@@ -62,6 +64,15 @@ jobs:
           path: pwa/dist/
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - name: Print failure page snapshots (diagnostics in job log)
+        if: failure()
+        run: |
+          for f in $(find test-results -name error-context.md | sort | head -40); do
+            echo "::group::$f"
+            head -c 6000 "$f"
+            echo
+            echo "::endgroup::"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:

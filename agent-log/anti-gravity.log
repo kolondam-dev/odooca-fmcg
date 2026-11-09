@@ -2132,3 +2132,9 @@
 - Provenance Manifest: Memperbarui generator_commit ke c7f5a363ee0dbc4362b5416012c4085d72de7710 dan generator_sources_sha256 generate_period_pack.py ke hash eksak.
 - Pengujian: 18 tes unit test_seed_planner PASS, 82 tes unit test_seed_v2_gates PASS, strict validation 11 gates PASS 0 violations.
 - Task managed by antigravity at 2026-11-09T07:55:00+07:00
+
+[2026-11-09T08:02:00+07:00] [INFO] F2/PR97: Merge origin/main (PR #100) dan Sinkronisasi Desain System / Test Guard
+- Integrasi Cabang: Mengintegrasikan origin/main (PR #100) ke cabang agen/seed-f2-planner.
+- Resolusi Konflik: Mengadopsi patch uji waktu id_mobile_api dan pengujian eksplisit libur Minggu dari PR #100, menyelaraskan session-fixture PWA dengan pewarisan statis Date.UTC/parse, serta merangkai riwayat kronologis docs/HANDOFF.md secara utuh.
+- Pengujian: 100 tes unit (test_seed_planner + test_seed_v2_gates) PASS, ruff check clean, check_manifests 12 addons OK.
+- Task managed by antigravity at 2026-11-09T08:02:00+07:00

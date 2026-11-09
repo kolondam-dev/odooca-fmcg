@@ -13,6 +13,15 @@ export async function changeTestAccount(page: Page, actor: string) {
 export const test = base.extend({
     page: async ({ page }, use) => {
         actors.set(page, "sales");
+        const install = page.clock.install.bind(page.clock);
+        page.clock.install = async (options) => {
+            await page.addInitScript(() => {
+                (
+                    window as unknown as { __noDateShift?: boolean }
+                ).__noDateShift = true;
+            });
+            await install(options);
+        };
         await page.addInitScript(() => {
             const RealDate = window.Date;
             const witaDateStr = new RealDate().toLocaleDateString("en-CA", {
@@ -23,15 +32,17 @@ export const test = base.extend({
                 Date.UTC(parts[0], parts[1] - 1, parts[2], 12, 0, 0),
             ).getUTCDay();
             const shiftMs = witaDay === 0 ? -3 * 24 * 60 * 60 * 1000 : 0;
-            const isPlaywrightClock =
-                Boolean((window.Date as unknown as { isFakeTimer?: boolean }).isFakeTimer) ||
-                Boolean((window as unknown as { __playwright_clock?: unknown }).__playwright_clock);
-
-            if (shiftMs !== 0 && !isPlaywrightClock) {
+            // Tes yang memasang page.clock memakai jam sendiri; pergeseran hari
+            // Minggu tidak boleh ikut, atau jam berjalan mundur setelah reload.
+            const shift = () =>
+                (window as unknown as { __noDateShift?: boolean }).__noDateShift
+                    ? 0
+                    : shiftMs;
+            if (shiftMs !== 0) {
                 class ShiftedDate extends RealDate {
                     constructor(...args: unknown[]) {
                         if (args.length === 0) {
-                            super(RealDate.now() + shiftMs);
+                            super(RealDate.now() + shift());
                         } else if (args.length === 1) {
                             super(args[0] as string | number | Date);
                         } else {
@@ -39,7 +50,7 @@ export const test = base.extend({
                         }
                     }
                     static now() {
-                        return RealDate.now() + shiftMs;
+                        return RealDate.now() + shift();
                     }
                 }
                 // @ts-expect-error Mock Date methods
@@ -118,7 +129,7 @@ export const test = base.extend({
                 true,
             );
             const identity = await provider.bootstrap();
-            const date = await page.evaluate(() =>
+            const date = await evalRetry(page, () =>
                 new Date().toLocaleDateString("en-CA", {
                     timeZone: "Asia/Makassar",
                 }),
@@ -140,8 +151,8 @@ export const test = base.extend({
                 true,
             );
             const snapshot = await provider.snapshot();
-            const now = await page.evaluate(() => new Date().toISOString());
-            const date = await page.evaluate(() =>
+            const now = await evalRetry(page, () => new Date().toISOString());
+            const date = await evalRetry(page, () =>
                 new Date().toLocaleDateString("en-CA", {
                     timeZone: "Asia/Makassar",
                 }),
@@ -195,13 +206,24 @@ export const test = base.extend({
     },
 });
 export { expect };
+// page.evaluate dapat gagal bila halaman sedang navigasi; ulangi singkat.
+async function evalRetry<T>(page: Page, fn: () => T): Promise<T> {
+    for (let i = 0; ; i++) {
+        try {
+            return await page.evaluate(fn);
+        } catch (error) {
+            if (i >= 4) throw error;
+            await page.waitForTimeout(150);
+        }
+    }
+}
 export type { Page, Locator, BrowserContext } from "@playwright/test";
 export async function checkIn(page: Page) {
-    const clock = page.locator(".quick-attendance-record");
+    const clock = page.locator('[data-testid="attendance-record"]');
     if (await clock.isVisible()) return;
     await page.context().grantPermissions(["geolocation"]);
     await page
-        .getByRole("button", { name: /^Absensi/ })
+        .getByRole("button", { name: "Absen masuk", exact: true })
         .first()
         .click();
     await page
@@ -222,6 +244,28 @@ export async function checkIn(page: Page) {
     await expect(
         page.getByAltText("Foto absensi dengan watermark"),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Check in", exact: true }).click();
+    await page
+        .getByRole("button", { name: "Simpan absen masuk", exact: true })
+        .click();
     await expect(clock).toBeVisible();
+}
+
+/**
+ * Metadata snapshot yang selaras dengan jam peramban fixture: hari Minggu WITA
+ * digeser -3 hari (lihat addInitScript di atas), sehingga tes yang mengganti
+ * snapshot harus memakai tanggal bisnis yang sama dengan bootstrap fixture.
+ */
+export function freshSnapshotMeta() {
+    const wita = (ms: number) =>
+        new Date(ms).toLocaleDateString("en-CA", { timeZone: "Asia/Makassar" });
+    const real = Date.now();
+    const [y, m, d] = wita(real).split("-").map(Number);
+    const shift =
+        new Date(Date.UTC(y, m - 1, d, 12)).getUTCDay() === 0
+            ? -3 * 24 * 60 * 60 * 1000
+            : 0;
+    return {
+        updatedAt: new Date(real + shift).toISOString(),
+        businessDate: wita(real + shift),
+    };
 }

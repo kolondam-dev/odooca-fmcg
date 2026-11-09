@@ -7,9 +7,8 @@ from unittest.mock import patch
 from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
-from ..models.mobile_workday import MobileReadConflict, business_date
-from .test_read_api import MobileFixture
-
+from ..models.mobile_workday import MobileReadConflict
+from .test_read_api import MobileFixture, business_date, sunday_business_date
 
 @tagged("post_install", "-at_install")
 class TestMobileCommandsApi(MobileFixture, TransactionCase):
@@ -441,6 +440,29 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         orders = self.env["sale.order"].sudo().search([("origin", "=", f"PWA Mobile Order {cmd_uuid[:8]}")])
         self.assertEqual(len(orders), 2, "Must create 2 distinct SOs for 2 principals.")
         self.assertTrue(all(so.client_order_ref == "PO-SPLIT-001" for so in orders))
+
+    def test_sunday_rule_rejects_order_and_check_in(self):
+        """Libur Minggu (WITA) diuji eksplisit, tanpa bergantung pada hari eksekusi CI."""
+        sunday = sunday_business_date()
+        self.assertEqual(sunday.weekday(), 6)
+        self.assignment.copy({"business_date": sunday})
+        with patch(
+            "odoo.addons.id_mobile_api.models.mobile_workday.business_date",
+            return_value=sunday,
+        ):
+            model = self._command_model()
+            with self.assertRaisesRegex(UserError, "Minggu"):
+                model.process_command({
+                    "client_uuid": str(uuid.uuid4()),
+                    "type": "sales.order.submit",
+                    "payload": self._valid_order_payload(),
+                })
+            with self.assertRaisesRegex(UserError, "Minggu"):
+                model.process_command({
+                    "client_uuid": str(uuid.uuid4()),
+                    "type": "sales.visit.check_in",
+                    "payload": {"outlet_id": str(self.outlet.id)},
+                })
 
     def test_visit_checkin_and_checkout_validation(self):
         """Visit check-in requires fresh valid evidence; check-out requires prior active check-in."""

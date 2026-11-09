@@ -1,4 +1,4 @@
-import { test, expect, checkIn } from "./session-fixture";
+import { test, expect, checkIn, freshSnapshotMeta } from "./session-fixture";
 import { MockProvider } from "../../src/data/mock";
 import { saveVisitPhoto, saveDisplayPhoto } from "./visit-helpers";
 import {
@@ -19,10 +19,13 @@ test("outlet list alone scrolls, full search filters dynamically and dismissal r
         name: `Toko ${i}`,
         address: `Alamat ${i}, Manado`,
     }));
+    const meta = freshSnapshotMeta();
     await page.route("**/api/v1/sync/snapshot", (route) =>
         route.fulfill({
             json: {
                 ...snapshot,
+                updatedAt: meta.updatedAt,
+                scope: { ...snapshot.scope, business_date: meta.businessDate },
                 office: {
                     id: "1",
                     name: "Kantor Pusat",
@@ -59,20 +62,18 @@ test("outlet list alone scrolls, full search filters dynamically and dismissal r
     });
     await expect(drawer).toBeVisible();
     await drawer.getByRole("searchbox").fill("Alamat 87");
-    await expect(drawer.locator(".outlet-row")).toHaveCount(1);
-    await expect(drawer.locator(".outlet-row")).toContainText("Toko 87");
+    await expect(drawer.locator(".ui-ocard")).toHaveCount(1);
+    await expect(drawer.locator(".ui-ocard")).toContainText("Toko 87");
     await page.keyboard.press("Escape");
     await expect(drawer).toHaveCount(0);
     await expect(input).toBeFocused();
     await input.click();
     await drawer.getByRole("button", { name: /Toko 87/ }).click();
-    await expect(
-        page.getByRole("heading", { name: "Toko 87", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Toko 87/ })).toBeVisible();
     await expect(page.locator(".outlet-list")).toHaveCount(0);
     expect(
         await page
-            .locator(".visit-panel")
+            .getByRole("region", { name: "Kunjungan outlet" })
             .evaluate((el) => getComputedStyle(el).borderRadius),
     ).toBe("0px");
     expect(
@@ -102,10 +103,10 @@ test("sales check-in unlocks mini POS, preview submits through outbox then close
     await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     const open = page.getByRole("button", {
-        name: "Open session",
+        name: "Buat order di outlet",
         exact: true,
     });
-    await expect(open).toBeDisabled();
+    await expect(open).toHaveCount(0);
     await saveVisitPhoto(page, "check-in");
     await page
         .getByRole("button", { name: "Mulai kunjungan", exact: true })
@@ -139,9 +140,6 @@ test("sales check-in unlocks mini POS, preview submits through outbox then close
         .getByRole("button", { name: "Kirim order", exact: true })
         .click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(
-        page.getByRole("button", { name: "Close session", exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
     await saveVisitPhoto(page, "check-out");
     await page.getByLabel("Catatan kunjungan").fill("Order diajukan");
     await page
