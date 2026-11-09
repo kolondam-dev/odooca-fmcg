@@ -749,7 +749,7 @@ def run(env):
                         "currency_id": comp_a.currency_id.id,
                     })
                     existing = env["account.account"].with_context(active_test=False).search([
-                        ("company_id", "=", comp_fresh.id),
+                        ("company_ids", "in", [comp_fresh.id]),
                         ("account_type", "=", "equity_unaffected"),
                     ])
                     require(not existing, "Fresh company should not have unaffected earnings account yet")
@@ -759,13 +759,13 @@ def run(env):
                     unaffected_fresh = comp_fresh.with_company(comp_fresh).get_unaffected_earnings_account()
                     require(bool(unaffected_fresh), "FIN51 must resolve unaffected earnings for fresh entity")
                     require(
-                        unaffected_fresh.company_id == comp_fresh,
+                        comp_fresh.id in unaffected_fresh.company_ids.ids,
                         "Unaffected earnings must belong to fresh entity",
                     )
                     code_fresh = unaffected_fresh.with_company(comp_fresh).code
                     require(bool(code_fresh), "Unaffected earnings must have valid code in entity context")
                     require(
-                        unaffected_fresh.with_company(comp_a).company_id != comp_a,
+                        comp_a.id not in unaffected_fresh.with_company(comp_a).company_ids.ids,
                         "Unaffected earnings must not pollute Company A",
                     )
                     evidence["cases"].append({
