@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 export type Page = "home" | "sales" | "delivery" | "hris" | "more" | "expenses";
 export type Dialog =
     | { type: "order"; outlet: string }
+    | { type: "display"; outlet: string }
     | { type: "extra" }
     | { type: "proof"; delivery: string }
     | { type: "expense"; trip?: string }
@@ -12,6 +13,9 @@ export type Dialog =
 export type Route = { page: Page; outlet?: string; dialog?: Dialog };
 const DialogSchema = z.discriminatedUnion("type", [
     z.object({ type: z.literal("order"), outlet: z.string().min(1) }).strict(),
+    z
+        .object({ type: z.literal("display"), outlet: z.string().min(1) })
+        .strict(),
     z
         .object({ type: z.literal("proof"), delivery: z.string().min(1) })
         .strict(),

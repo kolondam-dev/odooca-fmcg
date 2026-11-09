@@ -113,31 +113,33 @@ test("sales check-in unlocks mini POS, preview submits through outbox then close
         .click();
     await expect(open).toBeEnabled();
     await open.click();
+    await expect(
+        page.getByRole("region", { name: "Order penjualan", exact: true }),
+    ).toBeVisible();
     await page.getByLabel("Cari produk", { exact: true }).fill("Wafer");
-    await expect(page.locator(".product-card")).toHaveCount(1);
+    await expect(page.locator(".pos-card")).toHaveCount(1);
     await expect(
         page
-            .locator(".pos-toolbar")
-            .getByRole("group", { name: "Principal", exact: true }),
+            .getByRole("button", { name: /^Principal .* terkunci$/ })
+            .or(page.getByLabel("Principal", { exact: true })),
     ).toBeVisible();
     await page
-        .getByLabel("Kuantitas Wafer Cokelat 24 g", { exact: true })
+        .getByLabel("Kuantitas Wafer Cokelat 24 g Karton", { exact: true })
         .fill("2");
     await saveDisplayPhoto(page);
-    await page
-        .getByRole("button", { name: "Preview order", exact: true })
-        .last()
-        .click();
-    await expect(
-        page.getByRole("region", { name: "Preview order", exact: true }),
-    ).toContainText("Wafer");
-    await expect(page.getByLabel("Cari produk", { exact: true })).toBeHidden();
+    await page.getByRole("button", { name: /SKU · .* · Lihat$/ }).click();
+    const summary = page.getByRole("dialog", { name: "Ringkasan order" });
+    await expect(summary).toContainText("Wafer");
     await page.screenshot({
         path: `test-results/pos-preview-${test.info().project.name}.png`,
         fullPage: true,
     });
-    await page
+    await summary
         .getByRole("button", { name: "Kirim order", exact: true })
+        .click();
+    await page
+        .getByRole("region", { name: "Hasil kirim order" })
+        .getByRole("button", { name: "Lihat order", exact: true })
         .click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await saveVisitPhoto(page, "check-out");

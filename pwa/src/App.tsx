@@ -6,6 +6,8 @@ import { useNavigation, type Page, type Dialog } from "./ui/navigation";
 import { AppHeader, BottomNav } from "./ui";
 import { Home } from "./components/Home";
 import { AttendanceScreen } from "./components/AttendanceScreen";
+import { OrderScreen } from "./components/OrderScreen";
+import { DisplayStockScreen } from "./components/DisplayStockScreen";
 import { OutletDirectory } from "./components/OutletDirectory";
 import { TripClosing } from "./components/TripClosing";
 import { OrderCorrections } from "./components/OrderCorrections";
@@ -270,6 +272,7 @@ function Workspace({
     const [queue, setQueue] = useState<QueueItem[]>([]);
     const [online, setOnline] = useState(navigator.onLine);
     const [toast, setToast] = useState("");
+    const [finishSignal, setFinishSignal] = useState(0);
     const [syncing, setSyncing] = useState(false);
     const [scenario, setScenario] = useState<Scenario>("normal");
     const owner = ownerKey(identity);
@@ -489,6 +492,7 @@ function Workspace({
         type: Command["type"],
         payload: Record<string, unknown>,
         label: string,
+        keepOpen?: boolean,
     ) {
         if (type.startsWith("sales.")) {
             if (!dailyReady)
@@ -509,7 +513,7 @@ function Workspace({
                       await captureVisitLocation(),
                   )
                 : await engine.enqueue(type, payload, label);
-        setDialog(undefined);
+        if (!keepOpen) setDialog(undefined);
         setToast(
             "Tersimpan di perangkat. " +
                 (online
@@ -692,6 +696,14 @@ function Workspace({
                                                     void engine.flush();
                                             }}
                                             order={() => openOrder(visitOutlet)}
+                                            display={() =>
+                                                setDialog({
+                                                    type: "display",
+                                                    outlet: visitOutlet,
+                                                })
+                                            }
+                                            dialogType={dialog?.type}
+                                            finishSignal={finishSignal}
                                             back={() =>
                                                 setVisitOutlet(undefined)
                                             }
@@ -1103,27 +1115,56 @@ function Workspace({
                             close={() => setDialog(undefined)}
                         />
                     )}
-                    {dialog && dialog.type !== "attendance" && (
-                        <TaskForm
+                    {dialog?.type === "order" && (
+                        <OrderScreen
                             key={JSON.stringify(dialog)}
-                            dialog={dialog}
-                            store={store}
-                            identity={identity}
                             snapshot={snapshot}
+                            outletId={dialog.outlet}
                             owner={owner}
-                            workStatus={
-                                checkedOut
-                                    ? "Sesi kerja selesai"
-                                    : dailyReady
-                                      ? "Sesi kerja aktif"
-                                      : "Sesi kerja belum dibuka"
-                            }
-                            submit={submit}
-                            startSession={startSession}
-                            close={() => setDialog(undefined)}
+                            store={store}
                             provider={provider}
+                            queue={queue}
+                            submit={submit as never}
+                            close={() => setDialog(undefined)}
+                            finishVisit={() => {
+                                setDialog(undefined);
+                                setFinishSignal((n) => n + 1);
+                            }}
                         />
                     )}
+                    {dialog?.type === "display" && (
+                        <DisplayStockScreen
+                            key={JSON.stringify(dialog)}
+                            snapshot={snapshot}
+                            outletId={dialog.outlet}
+                            owner={owner}
+                            store={store}
+                            close={() => setDialog(undefined)}
+                        />
+                    )}
+                    {dialog &&
+                        dialog.type !== "attendance" &&
+                        dialog.type !== "order" &&
+                        dialog.type !== "display" && (
+                            <TaskForm
+                                key={JSON.stringify(dialog)}
+                                dialog={dialog}
+                                store={store}
+                                identity={identity}
+                                snapshot={snapshot}
+                                owner={owner}
+                                workStatus={
+                                    checkedOut
+                                        ? "Sesi kerja selesai"
+                                        : dailyReady
+                                          ? "Sesi kerja aktif"
+                                          : "Sesi kerja belum dibuka"
+                                }
+                                submit={submit}
+                                startSession={startSession}
+                                close={() => setDialog(undefined)}
+                            />
+                        )}
                 </div>
             </ViewMemoryContext.Provider>
         </EvidenceIdentityContext.Provider>

@@ -1,3 +1,11 @@
+## 2026-11-09T13:47:14+07:00 — claude-design — Fase 2: Order POS, Ringkasan, Hasil kirim, Display & stok
+
+**Berubah:** pwa/src/components/{OrderScreen,OrderResult,DisplayStockScreen}.tsx (layar penuh DS: POS stepper per satuan, cari, kunci principal, SKU sheet, Diskon order, Ringkasan + Catatan/No PO, Hasil kirim bertahap, Display & stok); domain/order-cart.ts (keranjang multi-satuan dilebur ke satu baris kontrak); Stepper punya mode isian; ikon baru; kartu Hub "Display & stok toko"; OrderSheet lama dan cabang order TaskForm dihapus. Bug Back: satu lapis Back untuk Order+Hasil kirim, Display ditumpuk di dalam Order.
+**Blocker backend (B1-B8) + rekomendasi:** docs/ui/DS_RECONCILIATION.md K13 (multi-satuan per SKU, diskon baris/program/Rp, limit kredit, foto SKU, command display&stok, riwayat order, status approval, stok tersedia).
+**Diverifikasi:** [F] e2e phone+tablet 180 lulus (build QA), vitest 456 (+8 order-cart), prettier, tsc, contracts, build + check:build. [A] callout limit kredit memakai credit_limit saja.
+**Belum diuji:** [BU] CI GitHub, perangkat nyata, tombol hubungi SPV (tak ada data).
+**Berikutnya:** peta+foto bukti (K8), Selesai kunjungan, Lainnya/Antrean, Delivery, hapus CSS lama.
+
 ## 2026-11-09T07:24:14+07:00 — claude-design — PR #100 re-review P2: tes backend deterministik terhadap kalender
 
 **Berubah (hanya tes):** addons/id_mobile_api/tests/test_read_api.py: `MobileFixture` mem-patch `mobile_workday.business_date` dengan `business_date()` uji yang menggeser hari Minggu ke Sabtu; helper `sunday_business_date()`. test_commands_api.py: `skip_on_sunday` dihapus (8 tes kini berjalan setiap hari); tes baru `test_sunday_rule_rejects_order_and_check_in` menguji aturan libur Minggu secara eksplisit pada tanggal Minggu tetap.

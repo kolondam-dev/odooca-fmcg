@@ -21,7 +21,19 @@ import gas from "@phosphor-icons/core/assets/duotone/gas-pump-duotone.svg?raw";
 import lock from "@phosphor-icons/core/assets/duotone/lock-duotone.svg?raw";
 import plus from "@phosphor-icons/core/assets/duotone/plus-duotone.svg?raw";
 import send from "@phosphor-icons/core/assets/duotone/navigation-arrow-duotone.svg?raw";
+import image from "@phosphor-icons/core/assets/duotone/image-duotone.svg?raw";
+import search from "@phosphor-icons/core/assets/duotone/magnifying-glass-duotone.svg?raw";
+import tag from "@phosphor-icons/core/assets/duotone/tag-duotone.svg?raw";
+import box from "@phosphor-icons/core/assets/duotone/cube-duotone.svg?raw";
+import cart from "@phosphor-icons/core/assets/duotone/shopping-cart-duotone.svg?raw";
+import phone from "@phosphor-icons/core/assets/duotone/phone-duotone.svg?raw";
 const icons = {
+    image,
+    search,
+    tag,
+    box,
+    cart,
+    phone,
     lock,
     plus,
     send,
