@@ -190,3 +190,9 @@
 - Unit test baru test_open_items_slice_invariant_holds_for_every_scope membuktikan total residual selalu sama dengan saldo slice untuk slice jurnal, date_from, partner, dan partner+partnerless.
 - Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 44 tes finance PASS. [BU] CI native exact-SHA menyusul; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T00:05:00+07:00
+[2026-11-10T01:10:00+07:00] [INFO] I2b/PR107: CI native exact-SHA 0253311 PASS (slice partner_ids)
+- Seluruh check PR #107 pada SHA 02533111607fe4415b732bc9e86985689a794694 SUCCESS (12/12), termasuk Finance I0 candidate spike run 42659085225 yang mencetak FINANCE_I2B_ARAP_SUBLEDGER=PASS.
+- Log native memuat filter=partner_named as-of 2026-07-25 untuk customer/supplier pada scale=1 dan scale=7 result=PASS, bersama journal_sale dan date_from_0710.
+- Module Upgrade from Persisted Baseline tidak terpicu karena PR hanya menyentuh scripts/tests/docs (path filter upgrade-runtime.yml mensyaratkan addons/**); 12/12 adalah cakupan penuh.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 44 tes finance PASS. [BU] Review supervisor belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T01:10:00+07:00
