@@ -34,8 +34,14 @@ COA mapping bersumber chart/account groups yang disahkan; perluasan akun memakai
 
 **Sub-paket I2a (core ledgers & registers):** lihat `I2A_LEDGERS_CORE.md` untuk
 implementasi dan oracle native `FIN01`, `FIN02`, `FIN03`, `FIN04`, `FIN51`, dan
-`FIN57` pada branch `agen/finance-i2-ledgers-core`. Sub-paket `I2b` (`FIN05–09`)
-dan `I2c` (`FIN36–38,55–56`) tetap terpisah.
+`FIN57` pada branch `agen/finance-i2-ledgers-core`.
+
+**Sub-paket I2b (AR/AP subledger):** lihat `I2B_ARAP_SUBLEDGER.md` untuk
+partner ledger AR/AP (`FIN05`–`FIN06`), open items as-of dari partial
+reconciliation bertanggal (`FIN07`), dan aging bertanda (`FIN08`–`FIN09`) pada
+branch `agen/finance-i2b-arap-subledger`. AR dan AP selalu dipisah, baris tanpa
+partner menjadi exception eksplisit, dan bucket aging wajib tie-out ke
+subledger/akun kontrol. Sub-paket `I2c` (`FIN36–38,55–56`) tetap terpisah.
 
 **Dependensi:** I1. Branch `agen/finance-i2-ledgers`. Coverage FIN01–09,36–38,51,55–57.
 
