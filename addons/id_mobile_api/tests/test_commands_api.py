@@ -2,23 +2,13 @@ import base64
 from datetime import datetime, timedelta
 import json
 import uuid
-from unittest import skipIf
 from unittest.mock import patch
 
 from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
-from ..models.mobile_workday import MobileReadConflict, business_date
-from .test_read_api import MobileFixture
-
-# Aturan produksi: order penjualan dan kunjungan libur hari Minggu (WITA), jadi
-# alur kirim order/kunjungan tidak dapat diuji pada hari itu. Tes ini dilewati
-# hanya pada hari Minggu dan tetap berjalan penuh pada hari lain (lihat HANDOFF).
-skip_on_sunday = skipIf(
-    business_date().weekday() == 6,
-    "Operasional order/kunjungan libur hari Minggu (WITA); dijalankan hari lain",
-)
-
+from ..models.mobile_workday import MobileReadConflict
+from .test_read_api import MobileFixture, business_date, sunday_business_date
 
 @tagged("post_install", "-at_install")
 class TestMobileCommandsApi(MobileFixture, TransactionCase):
@@ -46,7 +36,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         payload.update(overrides)
         return payload
 
-    @skip_on_sunday
     def test_discount_order_persists_official_so_pending_and_replays_once(self):
         model = self._command_model()
         command = {"client_uuid": str(uuid.uuid4()), "type": "sales.order.submit",
@@ -83,7 +72,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         with self.assertRaises(AccessError):
             self._command_model(public_user).process_command(cmd)
 
-    @skip_on_sunday
     def test_record_rule_isolation(self):
         """Users can only view their own commands, while admins can audit all."""
         valid_uuid = str(uuid.uuid4())
@@ -142,7 +130,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                 "payload": "not-a-dict",
             })
 
-    @skip_on_sunday
     def test_strict_idempotency_fingerprint_conflict(self):
         """Replaying the same UUID with identical payload succeeds; changed content raises 409 conflict."""
         cmd_uuid = str(uuid.uuid4())
@@ -179,7 +166,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         with self.assertRaises(MobileReadConflict):
             model.process_command(different_type)
 
-    @skip_on_sunday
     def test_order_snapshot_and_scope_guards(self):
         """Orders outside scheduled outlet, unassigned SKU, inactive SKU, or stale snapshot must be rejected."""
         model = self._command_model()
@@ -259,7 +245,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                 ),
             })
 
-    @skip_on_sunday
     def test_order_hidden_sku_rule_guard(self):
         """Assigned SKU hidden from actor by ir.rule or catalog ACL raises AccessError."""
         model = self._command_model()
@@ -390,7 +375,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         cmds = self.env["id.mobile.command"].sudo().search([("client_uuid", "=", cmd_uuid)])
         self.assertEqual(len(cmds), 0, "No partial command log should remain after rollback.")
 
-    @skip_on_sunday
     def test_positive_multi_principal_split_orders(self):
         """Positive multi-principal submission successfully creates separate SOs per principal."""
         principal2 = self.env["id.principal"].create({"name": "Principal Pos", "code": "PRIN-POS"})
@@ -434,7 +418,29 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         self.assertEqual(len(orders), 2, "Must create 2 distinct SOs for 2 principals.")
         self.assertTrue(all(so.client_order_ref == "PO-SPLIT-001" for so in orders))
 
-    @skip_on_sunday
+    def test_sunday_rule_rejects_order_and_check_in(self):
+        """Libur Minggu (WITA) diuji eksplisit, tanpa bergantung pada hari eksekusi CI."""
+        sunday = sunday_business_date()
+        self.assertEqual(sunday.weekday(), 6)
+        self.assignment.copy({"business_date": sunday})
+        with patch(
+            "odoo.addons.id_mobile_api.models.mobile_workday.business_date",
+            return_value=sunday,
+        ):
+            model = self._command_model()
+            with self.assertRaisesRegex(UserError, "Minggu"):
+                model.process_command({
+                    "client_uuid": str(uuid.uuid4()),
+                    "type": "sales.order.submit",
+                    "payload": self._valid_order_payload(),
+                })
+            with self.assertRaisesRegex(UserError, "Minggu"):
+                model.process_command({
+                    "client_uuid": str(uuid.uuid4()),
+                    "type": "sales.visit.check_in",
+                    "payload": {"outlet_id": str(self.outlet.id)},
+                })
+
     def test_visit_checkin_and_checkout_validation(self):
         """Visit check-in requires fresh valid evidence; check-out requires prior active check-in."""
         model = self._command_model()
@@ -1053,7 +1059,6 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
 @tagged("post_install", "-at_install")
 class TestMobileCommandsHttp(MobileFixture, HttpCase):
 
-    @skip_on_sunday
     def test_http_csrf_and_role_protection(self):
         """Validates CSRF token verification, auth gates, and command HTTP route responses."""
         url = "/api/v1/sync/commands"

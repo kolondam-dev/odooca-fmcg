@@ -1,3 +1,9 @@
+## 2026-11-09T07:24:14+07:00 — claude-design — PR #100 re-review P2: tes backend deterministik terhadap kalender
+
+**Berubah (hanya tes):** addons/id_mobile_api/tests/test_read_api.py: `MobileFixture` mem-patch `mobile_workday.business_date` dengan `business_date()` uji yang menggeser hari Minggu ke Sabtu; helper `sunday_business_date()`. test_commands_api.py: `skip_on_sunday` dihapus (8 tes kini berjalan setiap hari); tes baru `test_sunday_rule_rejects_order_and_check_in` menguji aturan libur Minggu secara eksplisit pada tanggal Minggu tetap.
+**Diverifikasi:** [F] py_compile, simulasi logika tanggal untuk 7 hari. [BU] Odoo tidak tersedia di sandbox; tes backend belum dijalankan oleh agen ini, bukti dari CI GitHub (hari ini Senin, jalur Minggu hanya terbukti via tes eksplisit).
+**Berikutnya:** pantau CI; re-review akhir.
+
 ## 2026-11-08T23:04:17+07:00 — claude-design — PR #100: 13 tes e2e diperbaiki, pwa-gate
 
 **Berubah (hanya tes/fixture):**

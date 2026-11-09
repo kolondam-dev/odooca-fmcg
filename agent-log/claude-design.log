@@ -199,3 +199,8 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - Akar: jam Minggu (fixture) bentrok dengan page.clock; layar kunjungan menutupi navigasi; snapshot kustom tanpa tanggal bisnis; label UI lama
 - e2e phone+tablet 180 lulus lokal dengan build QA
 - Task managed by claude-design agent at 2026-11-08T23:04:17+07:00
+
+[2026-11-09T07:24:14+07:00] [INFO] PR100 re-review P2: tes backend tidak lagi dilewati pada hari Minggu
+- business_date() dipatch di MobileFixture (Minggu digeser ke Sabtu); skip_on_sunday dihapus; tes aturan libur Minggu eksplisit
+- Odoo tidak tersedia di sandbox; validasi via CI
+- Task managed by claude-design agent at 2026-11-09T07:24:14+07:00
