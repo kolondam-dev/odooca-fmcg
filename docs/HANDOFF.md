@@ -1,3 +1,8 @@
+## 2026-11-09T12:56:00+07:00 — Agent VSCode — PR101: penyelarasan company context production FIN51 dan perbaikan readiness locator PWA
+**Berubah:** `addons/id_finance_reporting/models/ledger_reports.py`: [F] akar masalah ialah `unaffected = company.get_unaffected_earnings_account()` dipanggil tanpa `with_company(company)` sehingga saat default env adalah company A dan memproses company B, pembuatan akun fallback via `_load_records` berisiko mengikat field company-dependent ke company default; kini eksplisit `company.with_company(company).get_unaffected_earnings_account()`; `scripts/ops/verify_finance_i2_ledgers_core.py` & `tests/test_finance_i2_ledgers_core.py`: menambahkan native regression saat fresh company C belum memiliki akun unaffected earnings dan diproses dari env dengan default company A, serta unit test mock per-company invocation (32 tes finance PASS); `pwa/tests/browser/next-policy.spec.ts`: [F] akar kegagalan e2e browser ialah locator `getByRole("region", { name: "Sesi kerja" })` hanya dirender pada `page === "home"`, sedangkan setelah reload offline aplikasi tetap berada di halaman `"more"`; locator kesiapan kini menggunakan tombol navigasi bottom-nav `"Lainnya"` dan ringkasan `"Riwayat SO ·"` yang deterministik hadir di semua view.
+**Diverifikasi:** [F] `python3 scripts/check_manifests.py` PASS (12 addon); `python3 -m unittest discover -s tests -p 'test_finance*.py'` PASS (32 tes); py_compile dan AST check PASS.
+**Belum diuji:** [BU] Rerun CI GitHub Actions exact-SHA pada PR #101 dan PR #98. Tidak ada deploy atau mutasi DB live.
+
 ## 2026-11-09T12:55:00+07:00 — antigravity — F2/PR97: Fail-Closed Check Opening State Eksplisit pada Direktori Pack Ber-MANIFEST
 **Berubah:**
 - scripts/ops/generate_period_pack.py:
@@ -305,6 +310,8 @@
 **Diverifikasi:** [F] vitest 402 PASS; prettier PASS; e2e login-attendance-ux 14 PASS (phone dan tablet).
 **Belum diuji:** [BU] BottomNav dan AppHeader baru, BottomSheet, Absen, Kamera, Sinkron (sisa Fase 1). Bundel design system (/mockup) masih memakai #0B1F4D untuk navbar; sesuaikan saat bundel diperbarui.
 **Berikutnya:** AppHeader/BottomNav (tab terpilih menyatu dengan body), lalu Absen, Kamera, Sinkron.
+
+## 2026-11-08T22:10:00+07:00 — Agent VSCode — PR101: akar `KeyError: 'I2ACOMB08'` pada `FIN51` dan kontrak baris nol
 
 ## 2026-11-07T08:59:30+07:00 — antigravity — Handover brief Finance/Accounting/Tax untuk WSL
 **Berubah:** `docs/finance/HANDOVER_ANTIGRAVITY.md`: status I0–I8 dan bukti PR95/PR96, batas 58 report `BELUM_DITERIMA`, aturan kerja/commit/log, checklist WSL, rincian paket I2a–I2c (FIN01–09,36–38,51,55–57), oracle dan counterexample, jebakan Odoo 19, keputusan pemilik yang terbuka, red flags dan format laporan balik. Tidak ada perubahan kode/addon/workflow.

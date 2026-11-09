@@ -4,7 +4,11 @@ from odoo import models
 
 
 def check_scope(report, data):
-    report.env["report.account_financial_report.trial_balance"]._check_finance_scope((data or {}).get("company_id"))
+    payload = data or {}
+    company_id = payload.get("company_id")
+    tb = report.env["report.account_financial_report.trial_balance"]
+    tb._check_finance_scope(company_id)
+    tb._check_filter_company(company_id, payload.get("journal_ids"), payload.get("account_ids"))
 
 
 class GeneralLedger(models.AbstractModel):
@@ -12,7 +16,12 @@ class GeneralLedger(models.AbstractModel):
 
     def _get_report_values(self, docids, data):
         check_scope(self, data)
-        return super()._get_report_values(docids, data)
+        payload = dict(data or {})
+        if payload.get("journal_ids"):
+            payload["domain"] = list(payload.get("domain") or []) + [
+                ("journal_id", "in", list(payload["journal_ids"])),
+            ]
+        return super()._get_report_values(docids, payload)
 
 
 class JournalLedger(models.AbstractModel):

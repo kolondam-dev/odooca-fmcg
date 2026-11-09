@@ -151,9 +151,13 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             }),
         ).toBeVisible();
         await page.reload();
+        await expect(
+            page.getByRole("button", { name: "Lainnya", exact: true }),
+        ).toBeVisible();
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
+        await expect(page.getByText(/Riwayat SO ·/).first()).toBeVisible();
         await page.getByText(/Riwayat SO ·/).click();
         await page
             .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
@@ -172,9 +176,13 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
                 }),
             ).toBeDisabled();
             await page.reload();
+            await expect(
+                page.getByRole("button", { name: "Lainnya", exact: true }),
+            ).toBeVisible();
             await page
                 .getByRole("button", { name: "Lainnya", exact: true })
                 .click();
+            await expect(page.getByText(/Riwayat SO ·/).first()).toBeVisible();
             await page.getByText(/Riwayat SO ·/).click();
             await page
                 .getByRole("button", {

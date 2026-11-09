@@ -17,6 +17,9 @@ Permintaan pemilik: paket lengkap Finance/Accounting/Tax Indonesia dengan OCA da
    terhadap Trial Balance OCA aktual dan batas pembuktiannya.
 7. [Paket ledger native dan keamanan](I0_LEDGER_SECURITY.md): isolasi tanpa filter,
    role/company negatives, invoice/refund/payment/reconcile dan kontrol historis.
+8. [Fondasi I1](I1_FOUNDATION.md) dan [Paket I2a core ledgers](I2A_LEDGERS_CORE.md):
+   peran/navigasi keuangan, profil aktivasi versioned, serta oracle native I2a
+   (`FIN01`, `FIN02`, `FIN03`, `FIN04`, `FIN51`, `FIN57`).
 
 ## Tiga putaran penyusunan rencana
 

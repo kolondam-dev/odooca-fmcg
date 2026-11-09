@@ -13,8 +13,11 @@ on:
       - 'scripts/ops/verify_finance_golden_ledger.py'
       - 'scripts/ops/verify_finance_ledger_security.py'
       - 'scripts/ops/verify_finance_stock_bridge.py'
+      - 'scripts/ops/verify_finance_i2_ledgers_core.py'
       - 'tests/test_finance_stock_bridge.py'
       - 'tests/test_finance_golden_ledger.py'
+      - 'tests/test_finance_i2_ledgers_core.py'
+      - 'tests/test_finance_report_scope.py'
       - 'docs/finance/**'
       - 'oca.lock'
       - '.github/workflows/finance-i0-spike.yml'
@@ -130,6 +133,14 @@ jobs:
               --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
           ' < scripts/ops/verify_finance_stock_bridge.py 2>&1 | tee finance-i0-evidence/stock-bridge.log
           grep -q '^FINANCE_STOCK_BRIDGE=PASS$' finance-i0-evidence/stock-bridge.log
+      - name: I2a core ledgers, audit trail, combined TB and sales/purchase register
+        run: |
+          set -euo pipefail
+          docker run --rm -i --network host --entrypoint bash fmcg-finance:i0 -c '
+            odoo shell -d finance_i0_reports_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ops/verify_finance_i2_ledgers_core.py 2>&1 | tee finance-i0-evidence/i2a-ledgers-core.log
+          grep -q '^FINANCE_I2A_LEDGERS_CORE=PASS$' finance-i0-evidence/i2a-ledgers-core.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
