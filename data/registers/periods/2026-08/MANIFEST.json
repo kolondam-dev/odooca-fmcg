@@ -2,7 +2,7 @@
   "period": "2026-08",
   "pack_start": "2026-08-01",
   "pack_end": "2026-08-31",
-  "generator_commit": "90c6588",
+  "generator_commit": "89c5c1d",
   "generator_sources_sha256": {
     "scripts/ops/seed_planner.py": "230932063cabebe8a762fba4831cda0e1417aa1814420782a0a1bdfafbcd76a5",
     "scripts/ops/generate_period_pack.py": "87aac8807ada66502c4e74ed5a6f4485c63d7da4507b97e0f144ead66bbff946",
