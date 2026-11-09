@@ -246,7 +246,8 @@ def _expected_aging(oracle, as_of):
         bucket = _bucket(row["due_date"], as_of)
         buckets[bucket] += row["residual"]
         partner_buckets[(row["partner_id"], row["account_type"])][bucket] += row["residual"]
-        account_buckets[row["account_type"]][bucket] += row["residual"]
+        # OCA aged_partner_balance rows are keyed by account id, not account type.
+        account_buckets[row["account_id"]][bucket] += row["residual"]
     return buckets, partner_buckets, account_buckets
 
 

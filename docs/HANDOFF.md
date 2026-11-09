@@ -1,3 +1,9 @@
+## 2026-11-09T18:56:43+07:00 — Agent VSCode — PR104: perbaikan kedua runner I2b (kunci bucket OCA aged)
+**Berubah:** `scripts/ops/verify_finance_i2_arap_subledger.py`: `_expected_aging` kini mengelompokkan bucket akun berdasarkan `account_id` (bukan `account_type`) agar cocok dengan baris `aged_partner_balance` OCA; `tests/test_finance_i2_arap_subledger.py`: menambahkan regresi `test_oca_aged_rows_are_matched_by_account_id`. `agent-log/claude-dev.log` diperbarui.
+**Diverifikasi:** [F] CI exact-SHA `0988502` (run 42611305792, job 129140132461) lulus install/upgrade, foundation, golden, security, stock bridge, dan I2a; hanya I2b gagal dengan `OCA aged account 161 residual mismatch`. [F] `python -m ruff check .` PASS; `python scripts/check_manifests.py` PASS (12 addon); 42 tes finance PASS.
+**Belum diuji:** [BU] CI native exact-SHA pada commit perbaikan ini; tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
+**Berikutnya:** push commit perbaikan, pantau ulang CI exact-SHA PR #104.
+
 ## 2026-11-09T18:36:16+07:00 — Agent VSCode — PR104: perbaikan runner I2b setelah CI merah
 **Berubah:** `scripts/ops/verify_finance_i2_arap_subledger.py`: scope environment laporan pada `check_fixture`/`check_tamper_and_unreconcile` diganti dari `env.with_context(...).with_company(...)` menjadi `env(context=dict(env.context, allowed_company_ids=[company.id]))`; scoping company tetap dilakukan modelset (`self.with_context(...).with_company(...)`) di dalam `_snapshot`. `agent-log/claude-dev.log` diperbarui.
 **Diverifikasi:** [F] CI exact-SHA `bd09643` (run 42605429286, job 129120103454) gagal di langkah I2b dengan `'Environment' object has no attribute 'with_context'`, bukan kegagalan install/upgrade/data. [F] Sumber OCA pin `f48b4ea777c444256aa1c215ec3117d604b5feff` diaudit ulang untuk wizard/open items/aged API. [F] `python -m ruff check .` PASS; `python scripts/check_manifests.py` PASS (12 addon); 41 tes finance PASS.

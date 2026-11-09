@@ -151,3 +151,10 @@
 - Verifikasi lokal ulang: ruff PASS; check_manifests PASS (12 addon); 41 tes finance PASS.
 - [BU] CI native exact-SHA belum dijalankan ulang; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-09T18:36:16+07:00
+
+[2026-11-09T18:56:43+07:00] [INFO] I2b/PR104: kunci bucket OCA aged memakai account id
+- CI exact-SHA 0988502 mencapai langkah I2b (install/upgrade dan seluruh langkah sebelumnya PASS) tetapi gagal di assert_oca_aged_partner_balance: 'OCA aged account 161 residual mismatch'.
+- Akar masalah: _expected_aging mengelompokkan bucket account_buckets berdasarkan account_type, sedangkan baris OCA aged_partner_balance dikunci account id; defaultdict mengembalikan 0 sehingga assertion selalu gagal.
+- Perbaikan: account_buckets kini dikunci row['account_id']; menambahkan unit test regresi test_oca_aged_rows_are_matched_by_account_id (42 tes finance).
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 42 tes finance PASS. [BU] CI native exact-SHA berikutnya belum dijalankan.
+- Task managed by claude-dev agent at 2026-11-09T18:56:43+07:00

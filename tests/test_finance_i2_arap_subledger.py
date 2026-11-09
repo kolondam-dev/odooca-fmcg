@@ -210,6 +210,39 @@ class I2bSubledgerHelperTests(unittest.TestCase):
         self.assertEqual(broken["difference"], -2.0)
         self.assertEqual(broken["issues"], ["open_items_mismatch"])
 
+    def test_oca_aged_rows_are_matched_by_account_id(self):
+        oracle = {
+            "rows": {
+                1: {
+                    "line_id": 1,
+                    "account_id": 161,
+                    "partner_id": 5,
+                    "partner_name": "Named Partner",
+                    "account_type": sub.AR_TYPE,
+                    "due_date": "2026-06-01",
+                    "residual": 28.0,
+                },
+            },
+            "total_residual": 28.0,
+        }
+        buckets = {
+            "current": 0.0, "30_days": 28.0, "60_days": 0.0,
+            "90_days": 0.0, "120_days": 0.0, "older": 0.0,
+        }
+        values = {
+            "aged_partner_balance": [{
+                "id": 161,
+                "residual": 28.0,
+                **buckets,
+                "partners": [{
+                    "name": "Named Partner",
+                    "residual": 28.0,
+                    **buckets,
+                }],
+            }],
+        }
+        runner.assert_oca_aged_partner_balance(values, oracle, "2026-07-01")
+
     def test_runner_refuses_operational_database_before_orm_access(self):
         with self.assertRaisesRegex(AssertionError, "exact disposable"):
             runner.run(SimpleNamespace(cr=SimpleNamespace(dbname="railway")))
