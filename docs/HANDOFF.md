@@ -49,6 +49,12 @@
 **Berikutnya:**
 - Commit dan push pembaruan ke `agen/seed-f2-august-refinement`, pantau CI PR #105, dan serahkan ke supervisor untuk re-review.
 
+## 2026-11-09T22:25:00+07:00 — Agent VSCode — PR104 MERGED: I2b AR/AP subledger FIN05–FIN09
+**Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode.
+**Diverifikasi:** [F] Reviewer `frankiezz1988` memberi verdict `APPROVE` pada SHA `1d7a2c8d8224e412d00931810a1e5e7578d8eb03` (review `PRR_kwDOVUWh9s8AAAABW2AfZg`, 2026-11-09T15:17:31Z) dan menyatakan tidak ada defect tersisa yang menghalangi merge. [F] PR #104 di-merge ke `main` pada 2026-11-09T15:18:02Z oleh `frankiezz1988` sebagai merge commit `7c957ad686dd820fcd62636d2e9ebfbea3103831`. [F] Seluruh 14 check pada SHA `1d7a2c8` SUCCESS sebelum merge, termasuk `Finance I0 candidate spike` run `42637440796` dengan `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Catatan non-blocking reviewer: tambahan kasus native `partner_ids` disarankan pada iterasi berikutnya, karena filter itu juga bagian kontrak slice walau memakai jalur seleksi line IDs yang sama.
+**Belum diuji:** [BU] Bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller; `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA` karena merge kode bukan penerimaan laporan. Tidak ada deploy atau mutasi DB live.
+**Berikutnya:** kerjakan tindak lanjut non-blocking `partner_ids` pada iterasi berikutnya beserta gate export/sign-off FIN05–FIN09.
+
 ## 2026-11-09T21:40:00+07:00 — Agent VSCode — PR104: CI native exact-SHA 8310f44 hijau (fix scope filter)
 **Berubah:** hanya dokumentasi: entri bukti pada `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode pada commit ini (kode perbaikan ada di `8310f44`).
 **Diverifikasi:** [F] Seluruh 14 check PR #104 pada SHA `8310f441d1408ec89656dd7f2519efdb446a0f44` SUCCESS, termasuk `Finance I0 candidate spike` (run `42634728686`) yang mencetak `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Log native memuat kasus baru `filter=journal_sale` dan `filter=date_from_0710` untuk customer/supplier pada `scale=1` dan `scale=7` dengan `result=PASS`, di samping seluruh kasus FIN05–FIN09, OCA open_items/aged, role negative, tamper, dan unreconcile. [F] `MERGEABLE`; branch tidak tertinggal dari main. [F] `ruff` PASS, `check_manifests.py` PASS (12 addon), 43 tes finance PASS.
@@ -61,50 +67,11 @@
 **Belum diuji:** [BU] CI native exact-SHA untuk commit ini (termasuk langkah I2b pada database disposable); tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`; PR #104 belum di-merge.
 **Berikutnya:** push commit, pantau seluruh check PR #104 pada SHA exact, lalu re-request review supervisor.
 
-## 2026-11-09T20:25:00+07:00 — antigravity — F2: Sinkronisasi agen/seed-f2-august-refinement dengan main terbaru (54b2db1)
-**Berubah:**
-- Integrasi Cabang: Menggabungkan `origin/main` (commit `54b2db1` yang memuat PR #98 F0b stock reconciliation, PR #101 Finance I2a core ledgers, dan PR #103 PWA Order POS) ke dalam cabang `agen/seed-f2-august-refinement` via merge commit tanpa force-push.
-- data/registers/periods/2026-08/MANIFEST.json:
-  * Memperbarui `generator_commit` mengikat commit generator terbaru hasil merge (`a31040c`).
-**Diverifikasi:**
-- [F] python -m unittest tests.test_seed_planner tests.test_seed_v2_gates: 113 tests PASS.
-- [F] python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict: PASS (0 violations).
-- [F] python -m ruff check scripts/ops/ tests/: PASS (clean).
-- [F] python scripts/check_manifests.py: PASS (12 addon OK).
-**Belum diuji:**
-- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #105.
-**Berikutnya:**
-- Commit update MANIFEST.json, push ke `origin/agen/seed-f2-august-refinement`, dan pantau CI PR #105 sampai hijau.
-
 ## 2026-11-09T19:20:45+07:00 — Agent VSCode — PR104: CI native exact-SHA hijau
 **Berubah:** `docs/finance/I2B_ARAP_SUBLEDGER.md` mencatat bukti CI native; `docs/HANDOFF.md` dan `agent-log/claude-dev.log` diperbarui. Tidak ada perubahan kode pada commit dokumentasi ini.
 **Diverifikasi:** [F] `Finance I0 candidate spike` run `42613105445` pada SHA `24b4189896e6d839fa16c08a7b1379c9123616c1` PASS (6m49s), termasuk langkah `FINANCE_I2B_ARAP_SUBLEDGER=PASS`; install/upgrade, foundation, golden, security, stock bridge, dan I2a juga PASS. [F] Seluruh check PR #104 pada SHA tersebut hijau (static, init-test, install-test, Upgrade Runtime Verification, seed-invariants, pwa-quality/gate/browser/container, candidate-install-upgrade). [F] `ruff check .` PASS; `check_manifests.py` PASS (12 addon); 42 tes finance PASS.
 **Belum diuji:** [BU] Exact-SHA CI untuk commit dokumentasi ini; bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller. Tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`; PR #104 menunggu review/sign-off, belum di-merge.
 **Berikutnya:** verifikasi exact-SHA commit dokumentasi, lalu serahkan review/sign-off.
-
-## 2026-11-09T19:15:00+07:00 — antigravity — F2: Refinement Komersial, Pajak, Logistik, dan OPEX Pack Transaksi Agustus 2026
-**Berubah:**
-- scripts/ops/seed_planner.py:
-  * Diskon Komersial Bertingkat: Cascading line discount per tier channel (MT 2.2%, GT 1.6%, INST 1.5%, RTL 1.2%) dipadu promo selektif joint MoU Mayora (+2.5%) dan Santos (+2.0%) serta volume tier Wings/Unilever (+1.2%). Agregat diskon Agustus terkunci presisi di 2.57% (baseline 2.50%, pita otorisasi [2.00%, 3.20%]).
-  * Delivery Rejection Netto Diskon & Keselarasan PWA: Memperbaiki formula potongan faktur agar dihitung netto (inv_dpp = so_net - line_net_rej) sehingga toko tidak menikmati diskon ganda saat menolak barang. Menyelaraskan skema penolakan POD dengan domain model PWA (rejection_reason: ITEM RUSAK / ITEM EXPIRED, evidence_photo_ref: /evidence/pod_rejection_carton_damaged.jpg).
-  * Kepatuhan Pajak B2B Coretax/PER-03: Menambahkan customer_vat pada faktur (NPWP 16-digit untuk 94 outlet PKP dan 16-digit nol '0000000000000000' untuk 260 outlet Non-PKP), jenis faktur STANDAR, dan kode transaksi 04 (DPP Nilai Lain PMK 131/2024). Menambahkan ppn_amount (11%) dan total_with_ppn pada po_headers.
-  * Logistik & Fleet Load Balancing: Menghasilkan tabel metrik logistik harian daily_logistics_metrics (144 entri) yang memetakan muatan, okupansi CBM, utilisasi, dan estimasi mileage untuk 6 armada delivery dan salesman PJP. Mengalokasikan biaya uang jalan ritase ke-2 L300 (Rp 100.000) spesifik pada hari kerja pengiriman di mana muatan > 5.4 CBM (supir Eko Prasetyo).
-  * Proporsionalitas OPEX: Menambahkan servis berkala 6 armada bengkel resmi (Rp 18,5 Jt), retribusi KIR Dishub (Rp 600 rb), komisi/insentif sales PJP (Rp 12 Jt), dan administrasi kliring bank (Rp 1,2 Jt). Total entri OPEX naik menjadi 48 entri dengan saldo kas akhir tetap surplus sangat sehat (Rp 6,36 Miliar).
-- scripts/ops/generate_period_pack.py:
-  * Tata Letak Gudang: Menambahkan metadata simulasi penempatan 1.287 palet pada seksi GD-MND/UTAMA (1.152 palet), GD-MND/STAGING (110 palet), dan GD-MND/BAD-STOCK (25 palet) di closing_state_20260831.json.
-- tests/test_seed_planner.py:
-  * Menyelaraskan asersi faktur carry forward netto dan menambahkan 6 unit test baru untuk memvalidasi atribut B2B tax, baris diskon & promo, alasan reject & bukti POD PWA, PPN PO headers, metrik logistik & ritase L300, dan tata letak gudang (total 31 tes unit di test_seed_planner, 113 tes unit total).
-- data/registers/periods/2026-08:
-  * Seluruh pack Agustus diregenerasi dengan 11 gerbang invariant strict=True PASS 0 violations, mencakup tabel baru daily_logistics_metrics dan MANIFEST.json.
-**Diverifikasi:**
-- [F] python -m unittest tests.test_seed_planner tests.test_seed_v2_gates: 113 tests PASS in 22s.
-- [F] python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict: PASS (0 violations).
-- [F] python -m ruff check .: PASS (clean).
-- [F] python scripts/check_manifests.py: PASS (12 addon OK).
-**Belum diuji:**
-- [BU] Eksekusi seeding ke database live Odoo 19 CE.
-**Berikutnya:**
-- Buat PR agen/seed-f2-august-refinement ke main dan pantau CI.
 
 ## 2026-11-09T18:56:43+07:00 — Agent VSCode — PR104: perbaikan kedua runner I2b (kunci bucket OCA aged)
 **Berubah:** `scripts/ops/verify_finance_i2_arap_subledger.py`: `_expected_aging` kini mengelompokkan bucket akun berdasarkan `account_id` (bukan `account_type`) agar cocok dengan baris `aged_partner_balance` OCA; `tests/test_finance_i2_arap_subledger.py`: menambahkan regresi `test_oca_aged_rows_are_matched_by_account_id`. `agent-log/claude-dev.log` diperbarui.
