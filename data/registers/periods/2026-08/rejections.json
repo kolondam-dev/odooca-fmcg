@@ -1,0 +1,472 @@
+[
+  {
+    "rejection_id": "REJ-202608-001",
+    "rejection_date": "2026-08-03",
+    "so_number": "SO-202608-0045",
+    "do_number": "DO-202608-0045",
+    "sku_code": "ULV-CLR-02",
+    "lot_number": "LOT-VER-20260704-32",
+    "qty_cartons": "12",
+    "rejection_dpp": "7632000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-002",
+    "rejection_date": "2026-08-04",
+    "so_number": "SO-202608-0051",
+    "do_number": "DO-202608-0051",
+    "sku_code": "KPA-ABC-03",
+    "lot_number": "LOT-TOS-20260701-15",
+    "qty_cartons": "1",
+    "rejection_dpp": "180000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-003",
+    "rejection_date": "2026-08-04",
+    "so_number": "SO-202608-0072",
+    "do_number": "DO-202608-0072",
+    "sku_code": "MYR-CND-09",
+    "lot_number": "LOT-ORA-20260703-43",
+    "qty_cartons": "2",
+    "rejection_dpp": "345600.00"
+  },
+  {
+    "rejection_id": "REJ-202608-004",
+    "rejection_date": "2026-08-04",
+    "so_number": "SO-202608-0083",
+    "do_number": "DO-202608-0083",
+    "sku_code": "MYR-BBG-03",
+    "lot_number": "LOT-ORA-20260615-INIT-17",
+    "qty_cartons": "13",
+    "rejection_dpp": "4056000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-005",
+    "rejection_date": "2026-08-04",
+    "so_number": "SO-202608-0087",
+    "do_number": "DO-202608-0087",
+    "sku_code": "ULV-LFB-02",
+    "lot_number": "LOT-VER-20260704-18",
+    "qty_cartons": "13",
+    "rejection_dpp": "4212000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-006",
+    "rejection_date": "2026-08-04",
+    "so_number": "SO-202608-0100",
+    "do_number": "DO-202608-0100",
+    "sku_code": "MYR-CND-04",
+    "lot_number": "LOT-ORA-20260615-INIT-38",
+    "qty_cartons": "8",
+    "rejection_dpp": "1536000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-007",
+    "rejection_date": "2026-08-05",
+    "so_number": "SO-202608-0116",
+    "do_number": "DO-202608-0116",
+    "sku_code": "KPA-KA-09",
+    "lot_number": "LOT-TOS-20260615-INIT-09",
+    "qty_cartons": "4",
+    "rejection_dpp": "1680000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-008",
+    "rejection_date": "2026-08-05",
+    "so_number": "SO-202608-0127",
+    "do_number": "DO-202608-0127",
+    "sku_code": "ULV-RNS-05",
+    "lot_number": "LOT-VER-20260704-11",
+    "qty_cartons": "3",
+    "rejection_dpp": "792000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-009",
+    "rejection_date": "2026-08-06",
+    "so_number": "SO-202608-0174",
+    "do_number": "DO-202608-0174",
+    "sku_code": "WNG-JVN-03",
+    "lot_number": "LOT-NGS-20260615-INIT-28",
+    "qty_cartons": "4",
+    "rejection_dpp": "316800.00"
+  },
+  {
+    "rejection_id": "REJ-202608-010",
+    "rejection_date": "2026-08-06",
+    "so_number": "SO-202608-0177",
+    "do_number": "DO-202608-0177",
+    "sku_code": "ULV-RNS-01",
+    "lot_number": "LOT-VER-20260704-07",
+    "qty_cartons": "3",
+    "rejection_dpp": "882000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-011",
+    "rejection_date": "2026-08-07",
+    "so_number": "SO-202608-0249",
+    "do_number": "DO-202608-0249",
+    "sku_code": "ULV-PSD-03",
+    "lot_number": "LOT-VER-20260704-27",
+    "qty_cartons": "4",
+    "rejection_dpp": "1872000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-012",
+    "rejection_date": "2026-08-07",
+    "so_number": "SO-202608-0253",
+    "do_number": "DO-202608-0253",
+    "sku_code": "MYR-RMA-03",
+    "lot_number": "LOT-ORA-20260702-03",
+    "qty_cartons": "5",
+    "rejection_dpp": "1275000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-013",
+    "rejection_date": "2026-08-08",
+    "so_number": "SO-202608-0312",
+    "do_number": "DO-202608-0312",
+    "sku_code": "KPA-KA-06",
+    "lot_number": "LOT-TOS-20260701-06",
+    "qty_cartons": "8",
+    "rejection_dpp": "1632000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-014",
+    "rejection_date": "2026-08-08",
+    "so_number": "SO-202608-0313",
+    "do_number": "DO-202608-0313",
+    "sku_code": "ULV-MLT-02",
+    "lot_number": "LOT-VER-20260704-14",
+    "qty_cartons": "15",
+    "rejection_dpp": "3600000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-015",
+    "rejection_date": "2026-08-11",
+    "so_number": "SO-202608-0415",
+    "do_number": "DO-202608-0415",
+    "sku_code": "WNG-FLD-03",
+    "lot_number": "LOT-NGS-20260615-INIT-25",
+    "qty_cartons": "18",
+    "rejection_dpp": "1555200.00"
+  },
+  {
+    "rejection_id": "REJ-202608-016",
+    "rejection_date": "2026-08-11",
+    "so_number": "SO-202608-0431",
+    "do_number": "DO-202608-0431",
+    "sku_code": "KPA-KA-06",
+    "lot_number": "LOT-TOS-20260701-06",
+    "qty_cartons": "7",
+    "rejection_dpp": "1428000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-017",
+    "rejection_date": "2026-08-12",
+    "so_number": "SO-202608-0447",
+    "do_number": "DO-202608-0447",
+    "sku_code": "WNG-JSJ-04",
+    "lot_number": "LOT-NGS-20260615-INIT-16",
+    "qty_cartons": "4",
+    "rejection_dpp": "528000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-018",
+    "rejection_date": "2026-08-12",
+    "so_number": "SO-202608-0448",
+    "do_number": "DO-202608-0448",
+    "sku_code": "MYR-CND-03",
+    "lot_number": "LOT-ORA-20260703-37",
+    "qty_cartons": "2",
+    "rejection_dpp": "441600.00"
+  },
+  {
+    "rejection_id": "REJ-202608-019",
+    "rejection_date": "2026-08-12",
+    "so_number": "SO-202608-0468",
+    "do_number": "DO-202608-0468",
+    "sku_code": "WNG-FLD-03",
+    "lot_number": "LOT-NGS-20260615-INIT-25",
+    "qty_cartons": "10",
+    "rejection_dpp": "864000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-020",
+    "rejection_date": "2026-08-12",
+    "so_number": "SO-202608-0469",
+    "do_number": "DO-202608-0469",
+    "sku_code": "MYR-BBG-02",
+    "lot_number": "LOT-ORA-20260703-16",
+    "qty_cartons": "13",
+    "rejection_dpp": "5928000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-021",
+    "rejection_date": "2026-08-12",
+    "so_number": "SO-202608-0476",
+    "do_number": "DO-202608-0476",
+    "sku_code": "MYR-BTR-01",
+    "lot_number": "LOT-ORA-20260703-11",
+    "qty_cartons": "11",
+    "rejection_dpp": "3520000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-022",
+    "rejection_date": "2026-08-13",
+    "so_number": "SO-202608-0502",
+    "do_number": "DO-202608-0502",
+    "sku_code": "ULV-BNG-02",
+    "lot_number": "LOT-VER-20260704-42",
+    "qty_cartons": "3",
+    "rejection_dpp": "1584000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-023",
+    "rejection_date": "2026-08-14",
+    "so_number": "SO-202608-0552",
+    "do_number": "DO-202608-0552",
+    "sku_code": "MYR-BBG-03",
+    "lot_number": "LOT-ORA-20260702-17",
+    "qty_cartons": "1",
+    "rejection_dpp": "312000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-024",
+    "rejection_date": "2026-08-14",
+    "so_number": "SO-202608-0565",
+    "do_number": "DO-202608-0565",
+    "sku_code": "MYR-CND-03",
+    "lot_number": "LOT-ORA-20260703-37",
+    "qty_cartons": "18",
+    "rejection_dpp": "3974400.00"
+  },
+  {
+    "rejection_id": "REJ-202608-025",
+    "rejection_date": "2026-08-14",
+    "so_number": "SO-202608-0573",
+    "do_number": "DO-202608-0573",
+    "sku_code": "KPA-RTD-04",
+    "lot_number": "LOT-TOS-20260701-28",
+    "qty_cartons": "4",
+    "rejection_dpp": "912000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-026",
+    "rejection_date": "2026-08-14",
+    "so_number": "SO-202608-0591",
+    "do_number": "DO-202608-0591",
+    "sku_code": "ULV-LFB-05",
+    "lot_number": "LOT-VER-20260704-21",
+    "qty_cartons": "10",
+    "rejection_dpp": "5760000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-027",
+    "rejection_date": "2026-08-15",
+    "so_number": "SO-202608-0597",
+    "do_number": "DO-202608-0597",
+    "sku_code": "MYR-BBG-01",
+    "lot_number": "LOT-ORA-20260702-15",
+    "qty_cartons": "1",
+    "rejection_dpp": "400000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-028",
+    "rejection_date": "2026-08-15",
+    "so_number": "SO-202608-0625",
+    "do_number": "DO-202608-0625",
+    "sku_code": "KPA-RTD-07",
+    "lot_number": "LOT-TOS-20260701-31",
+    "qty_cartons": "3",
+    "rejection_dpp": "504000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-029",
+    "rejection_date": "2026-08-18",
+    "so_number": "SO-202608-0657",
+    "do_number": "DO-202608-0657",
+    "sku_code": "MYR-BBG-03",
+    "lot_number": "LOT-ORA-20260702-17",
+    "qty_cartons": "3",
+    "rejection_dpp": "936000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-030",
+    "rejection_date": "2026-08-19",
+    "so_number": "SO-202608-0702",
+    "do_number": "DO-202608-0702",
+    "sku_code": "MYR-CND-01",
+    "lot_number": "LOT-ORA-20260702-35",
+    "qty_cartons": "3",
+    "rejection_dpp": "648000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-031",
+    "rejection_date": "2026-08-19",
+    "so_number": "SO-202608-0716",
+    "do_number": "DO-202608-0716",
+    "sku_code": "MYR-CND-05",
+    "lot_number": "LOT-ORA-20260703-39",
+    "qty_cartons": "9",
+    "rejection_dpp": "1728000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-032",
+    "rejection_date": "2026-08-19",
+    "so_number": "SO-202608-0724",
+    "do_number": "DO-202608-0724",
+    "sku_code": "KPA-ABC-04",
+    "lot_number": "LOT-TOS-20260701-16",
+    "qty_cartons": "6",
+    "rejection_dpp": "1368000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-033",
+    "rejection_date": "2026-08-20",
+    "so_number": "SO-202608-0752",
+    "do_number": "DO-202608-0752",
+    "sku_code": "ULV-LFB-02",
+    "lot_number": "LOT-VER-20260704-18",
+    "qty_cartons": "3",
+    "rejection_dpp": "972000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-034",
+    "rejection_date": "2026-08-20",
+    "so_number": "SO-202608-0777",
+    "do_number": "DO-202608-0777",
+    "sku_code": "MYR-KPK-RTD-01",
+    "lot_number": "LOT-ORA-20260702-29",
+    "qty_cartons": "7",
+    "rejection_dpp": "1260000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-035",
+    "rejection_date": "2026-08-21",
+    "so_number": "SO-202608-0820",
+    "do_number": "DO-202608-0820",
+    "sku_code": "WNG-GLD-01",
+    "lot_number": "LOT-NGS-20260615-INIT-29",
+    "qty_cartons": "3",
+    "rejection_dpp": "252000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-036",
+    "rejection_date": "2026-08-21",
+    "so_number": "SO-202608-0826",
+    "do_number": "DO-202608-0826",
+    "sku_code": "KPA-ABC-02",
+    "lot_number": "LOT-TOS-20260701-14",
+    "qty_cartons": "20",
+    "rejection_dpp": "4080000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-037",
+    "rejection_date": "2026-08-21",
+    "so_number": "SO-202608-0849",
+    "do_number": "DO-202608-0849",
+    "sku_code": "WNG-SDP-07",
+    "lot_number": "LOT-NGS-20260615-INIT-07",
+    "qty_cartons": "9",
+    "rejection_dpp": "1296000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-038",
+    "rejection_date": "2026-08-22",
+    "so_number": "SO-202608-0897",
+    "do_number": "DO-202608-0897",
+    "sku_code": "WNG-JSJ-04",
+    "lot_number": "LOT-NGS-20260615-INIT-16",
+    "qty_cartons": "1",
+    "rejection_dpp": "132000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-039",
+    "rejection_date": "2026-08-26",
+    "so_number": "SO-202608-0967",
+    "do_number": "DO-202608-0967",
+    "sku_code": "WNG-JSJ-04",
+    "lot_number": "LOT-NGS-20260615-INIT-16",
+    "qty_cartons": "3",
+    "rejection_dpp": "396000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-040",
+    "rejection_date": "2026-08-27",
+    "so_number": "SO-202608-1024",
+    "do_number": "DO-202608-1024",
+    "sku_code": "WNG-GLD-02",
+    "lot_number": "LOT-NGS-20260701-30",
+    "qty_cartons": "2",
+    "rejection_dpp": "168000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-041",
+    "rejection_date": "2026-08-27",
+    "so_number": "SO-202608-1039",
+    "do_number": "DO-202608-1039",
+    "sku_code": "ULV-LFB-02",
+    "lot_number": "LOT-VER-20260704-18",
+    "qty_cartons": "3",
+    "rejection_dpp": "972000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-042",
+    "rejection_date": "2026-08-28",
+    "so_number": "SO-202608-1079",
+    "do_number": "DO-202608-1079",
+    "sku_code": "ULV-LFB-06",
+    "lot_number": "LOT-VER-20260704-22",
+    "qty_cartons": "16",
+    "rejection_dpp": "8256000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-043",
+    "rejection_date": "2026-08-28",
+    "so_number": "SO-202608-1093",
+    "do_number": "DO-202608-1093",
+    "sku_code": "ULV-LFB-01",
+    "lot_number": "LOT-VER-20260704-17",
+    "qty_cartons": "1",
+    "rejection_dpp": "324000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-044",
+    "rejection_date": "2026-08-28",
+    "so_number": "SO-202608-1099",
+    "do_number": "DO-202608-1099",
+    "sku_code": "KPA-RTD-02",
+    "lot_number": "LOT-TOS-20260701-26",
+    "qty_cartons": "4",
+    "rejection_dpp": "672000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-045",
+    "rejection_date": "2026-08-28",
+    "so_number": "SO-202608-1106",
+    "do_number": "DO-202608-1106",
+    "sku_code": "MYR-CND-04",
+    "lot_number": "LOT-ORA-20260702-38",
+    "qty_cartons": "10",
+    "rejection_dpp": "1920000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-046",
+    "rejection_date": "2026-08-31",
+    "so_number": "SO-202608-1182",
+    "do_number": "DO-202608-1182",
+    "sku_code": "MYR-BBG-03",
+    "lot_number": "LOT-BBG-202608-NEW-01",
+    "qty_cartons": "2",
+    "rejection_dpp": "624000.00"
+  },
+  {
+    "rejection_id": "REJ-202608-047",
+    "rejection_date": "2026-09-01",
+    "so_number": "SO-202608-1223",
+    "do_number": "DO-202608-1223",
+    "sku_code": "WNG-FLD-03",
+    "lot_number": "LOT-NGS-20260615-INIT-25",
+    "qty_cartons": "10",
+    "rejection_dpp": "864000.00"
+  }
+]

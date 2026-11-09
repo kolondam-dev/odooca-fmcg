@@ -58,7 +58,7 @@ Implementasi: `scripts/ops/seed_v2_gates.py` (murni, tanpa Odoo). Tes: `tests/te
 |---|---|
 | `opening_cash` / fasilitas kredit modal kerja | K5 belum dijawab; tanpa nilai, CASH-NONNEG gagal pada strict. Bukti: register Juli tanpa saldo awal → kas minimum −Rp3.163.173.047,71 pada 31 Juli (gap G-06), tidak di-allowlist |
 | `bands` NARRATIVE-ANCHORS | nilai ditetapkan pemilik; kurva sasaran di plan Bab 9A hanya arah [A]. Pita terversi dan di-hash di manifest, tidak dapat dilebarkan worker |
-| `min_lead_days` per principal | blueprint menulis lead time dalam "hari kerja" (10–16) tetapi PO Juni teramati 13–22 hari kalender; satuan dan nilai harus ditetapkan sebelum F2 |
+| `min_lead_days` per principal | Ditetapkan pemilik per F2: **Hari Kerja Operasional (working days: Senin s/d Sabtu, di luar hari libur nasional SKB 3 Menteri)**. Nilai acuan: Unilever 14, Wings 10, Mayora 12, Santos/ABC 10 hari kerja. Dihitung via `fmcg_calendar.count_working_days(order, arrival) >= min_lead`. |
 | `config.tax` | tarif, sumber resmi bertanggal dan tanggal berlaku harus dicatat; acuan awal: PMK 131/2024 (pajak.go.id, dibaca 2026-11-04), perlu verifikasi ulang sebelum dikunci (K8) |
 
 ## 5. Bukti saat penyusunan
