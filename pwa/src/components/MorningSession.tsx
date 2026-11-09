@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { Button, Card, CardHead, Chip, DayStep, Callout } from "../ui";
 import type { FieldProvider, Identity } from "../domain/contracts";
 import {
     fieldBusinessDate,
@@ -7,7 +8,6 @@ import {
     type MorningRecord,
 } from "../domain/morning";
 import type { FieldStore } from "../storage/store";
-import { Icon } from "./Icon";
 export function MorningSession({
     identity,
     provider,
@@ -16,7 +16,13 @@ export function MorningSession({
     record: restored,
     loaded,
     restoreError,
+    attended,
+    onAttend,
+    onClockOut,
 }: {
+    attended: boolean;
+    onAttend: () => void;
+    onClockOut: () => void;
     record?: MorningRecord;
     loaded: boolean;
     restoreError?: string;
@@ -78,45 +84,124 @@ export function MorningSession({
             setBusy(false);
         }
     }
+    const clock = (iso?: string) =>
+        iso
+            ? new Date(iso)
+                  .toLocaleTimeString("id-ID", {
+                      timeZone: "Asia/Makassar",
+                      hour12: false,
+                  })
+                  .replaceAll(".", ":")
+            : "";
+    const checkedOut = !!today?.clockOutAt;
+    const inTime = clock(today?.attendanceAt);
     return (
         <section
-            class="morning-card"
+            class="ui-stack"
             aria-label="Sesi kerja"
             data-owner={`${identity.companyId}:${identity.id}`}
             aria-busy={!loaded || busy}
         >
-            <div class="morning-heading">
-                <Icon name={ready ? "check" : "clock"} />
-                <div>
-                    <h2>Sesi kerja</h2>
-                    <p>
-                        {date} · WITA
-                        {ready && today?.snapshot?.version
-                            ? ` · ${today.snapshot.version}`
-                            : ""}
-                    </p>
-                </div>
-                <span class={`pill ${ready ? "success" : "neutral"}`}>
-                    {today?.clockOutAt
-                        ? "Sesi selesai"
-                        : ready
-                          ? "Sesi aktif"
-                          : "Belum dibuka"}
-                </span>
-            </div>
-            {ready ? (
-                <p class="notice" role="status">
+            {attended && today && (
+                <Card class="ui-dayrow">
+                    <div
+                        class="ui-dayrow__main"
+                        data-testid="attendance-record"
+                    >
+                        <div class="ui-dayrow__info">
+                            <Chip
+                                tone={
+                                    checkedOut ? "neu" : ready ? "ok" : "warn"
+                                }
+                            >
+                                {checkedOut
+                                    ? "Sesi selesai"
+                                    : ready
+                                      ? "Sesi aktif"
+                                      : "Belum dibuka"}
+                            </Chip>
+                            <strong class="ui-dayrow__t">
+                                Masuk {inTime} WITA
+                            </strong>
+                            <span class="ui-row__sub">
+                                {checkedOut
+                                    ? `Pulang ${clock(today.clockOutAt)} WITA`
+                                    : ready
+                                      ? "Data tersimpan untuk kerja offline"
+                                      : `${date} · WITA`}
+                            </span>
+                        </div>
+                        <Button
+                            variant="sec"
+                            size="md"
+                            auto
+                            disabled={checkedOut}
+                            onClick={onClockOut}
+                        >
+                            Absen pulang
+                        </Button>
+                    </div>
+                </Card>
+            )}
+            {!ready && (
+                <Card>
+                    <CardHead title="Mulai hari kerja" />
+                    <div class="ui-stack">
+                        <DayStep
+                            n={1}
+                            state={attended ? "done" : "active"}
+                            title="Absen masuk"
+                            sub={
+                                attended
+                                    ? `Masuk ${inTime} WITA`
+                                    : "Selfie + lokasi di area kantor"
+                            }
+                            right={
+                                attended ? undefined : (
+                                    <Chip tone="warn">Wajib</Chip>
+                                )
+                            }
+                        />
+                        <DayStep
+                            n={2}
+                            state={attended ? "active" : "lock"}
+                            title="Sinkron data harian"
+                            sub="Outlet, produk, harga, tagihan"
+                            right={
+                                attended ? (
+                                    <Chip tone="warn">Wajib</Chip>
+                                ) : undefined
+                            }
+                        />
+                        <DayStep
+                            n={3}
+                            state="lock"
+                            title="Mulai kunjungan"
+                            sub="Terbuka setelah sync selesai"
+                        />
+                    </div>
+                    {attended ? (
+                        <Button
+                            icon="sync"
+                            disabled={
+                                !loaded || busy || !today || !!today.clockOutAt
+                            }
+                            onClick={() => void advance()}
+                        >
+                            {busy ? "Memproses…" : "Sinkronkan data harian"}
+                        </Button>
+                    ) : (
+                        <Button icon="camera" onClick={onAttend}>
+                            Absen masuk
+                        </Button>
+                    )}
+                </Card>
+            )}
+            {ready && !checkedOut && (
+                <Callout tone="info" icon="check">
                     Paket outlet, stok dan harga tersimpan. Order dapat dibuat
                     offline hari ini.
-                </p>
-            ) : (
-                <button
-                    class="secondary full"
-                    disabled={!loaded || busy || !today || !!today.clockOutAt}
-                    onClick={() => void advance()}
-                >
-                    {busy ? "Memproses…" : "Buka sesi kerja"}
-                </button>
+                </Callout>
             )}
             {(error || restoreError) && (
                 <p role="alert" class="form-error">

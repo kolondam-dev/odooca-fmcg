@@ -18,7 +18,13 @@ import bag from "@phosphor-icons/core/assets/duotone/shopping-bag-duotone.svg?ra
 import warning from "@phosphor-icons/core/assets/duotone/warning-circle-duotone.svg?raw";
 import signal from "@phosphor-icons/core/assets/duotone/wifi-high-duotone.svg?raw";
 import gas from "@phosphor-icons/core/assets/duotone/gas-pump-duotone.svg?raw";
+import lock from "@phosphor-icons/core/assets/duotone/lock-duotone.svg?raw";
+import plus from "@phosphor-icons/core/assets/duotone/plus-duotone.svg?raw";
+import send from "@phosphor-icons/core/assets/duotone/navigation-arrow-duotone.svg?raw";
 const icons = {
+    lock,
+    plus,
+    send,
     house,
     store,
     truck,

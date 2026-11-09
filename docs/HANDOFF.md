@@ -1,7 +1,169 @@
+## 2026-11-09T07:24:14+07:00 — claude-design — PR #100 re-review P2: tes backend deterministik terhadap kalender
+
+**Berubah (hanya tes):** addons/id_mobile_api/tests/test_read_api.py: `MobileFixture` mem-patch `mobile_workday.business_date` dengan `business_date()` uji yang menggeser hari Minggu ke Sabtu; helper `sunday_business_date()`. test_commands_api.py: `skip_on_sunday` dihapus (8 tes kini berjalan setiap hari); tes baru `test_sunday_rule_rejects_order_and_check_in` menguji aturan libur Minggu secara eksplisit pada tanggal Minggu tetap.
+**Diverifikasi:** [F] py_compile, simulasi logika tanggal untuk 7 hari. [BU] Odoo tidak tersedia di sandbox; tes backend belum dijalankan oleh agen ini, bukti dari CI GitHub (hari ini Senin, jalur Minggu hanya terbukti via tes eksplisit).
+**Berikutnya:** pantau CI; re-review akhir.
+
+## 2026-11-08T23:04:17+07:00 — claude-design — PR #100: 13 tes e2e diperbaiki, pwa-gate
+
+**Berubah (hanya tes/fixture):**
+- session-fixture: pergeseran tanggal hari Minggu tidak berlaku bila tes memasang `page.clock` (sebelumnya jam mundur setelah reload; akar 3 tes expense); `page.evaluate` di route fixture diulang saat navigasi; helper `freshSnapshotMeta`.
+- visit-helpers: `leaveClosedVisit`. next-policy dan sales-delivery-rules keluar dari kunjungan sebelum membuka Lainnya (layar kunjungan penuh menutupi navigasi); label Delivery "Open session" dipulihkan.
+- route-workflow dan ux 500 SKU: snapshot kustom membawa tanggal bisnis fixture; heading dan region Hub baru. field morning-gate: gerbang = tombol Absen masuk, tanpa tombol sinkron.
+**Diverifikasi:** [F] e2e phone+tablet 180 lulus (build QA seperti CI), prettier, tsc, vitest 448, contracts, test:tokens, build + check:build. Tidak ada `test.skip` baru.
+**Belum diuji:** [BU] hasil CI GitHub pada commit ini; perangkat nyata.
+**Berikutnya:** pantau pwa-gate; fase layar sisanya.
+
+## 2026-11-08T21:58:44+07:00 — claude-design — PR #100: pulihkan tes Delivery, catatan kegagalan e2e yang sudah ada di main
+
+**Berubah:** pwa/tests/browser/sales-delivery-rules.spec.ts: tombol Delivery "Open session" dikembalikan (sebelumnya salah ganti ke "Buat order di outlet" oleh sed saya; regresi dari PR ini).
+**Diverifikasi:** [F] tes tsb lulus di cabang. [F] Dijalankan pada `main` (Minggu 2026-11-08, phone): gagal juga expense 96/281/429, next-policy 66 x3, route-workflow 11, sales-delivery-rules 19 x2 dan 216, field morning-gate, ux 500 SKU catalog. Jadi bukan dari redesain; kegagalan CI pwa-browser pada PR ini berasal dari daftar itu (plus visits:149 flaky, lulus saat retry).
+**Belum diuji:** [BU] penyebab akar 13 tes tsb; dipisah ke PR/issue tersendiri.
+**Berikutnya:** PR terpisah memperbaiki tes e2e itu (bergantung tanggal/lingkungan), lalu pwa-gate hijau.
+
+## 2026-11-08T13:32:51+07:00 — claude-dev — PR #100: tindak lanjut CHANGES_REQUESTED
+**Berubah:** (P1) `main` diintegrasikan ke `agen/pwa-ui-tokens-atoms`; satu-satunya konflik `docs/HANDOFF.md`, entri antigravity `2026-11-07T08:59:30` disisipkan kronologis (antara `14:18:52` dan `08:47:53` tanggal 7 Nov), semua entri kedua sisi utuh. (P2) `pwa/src/ui/tokens.css` `--c-nav` `#0b1f4d` -> `#001a57` (= `pwa/design/tokens.json` dan `docs/ui/DS_RECONCILIATION.md` K1); `pwa/tests/design-tokens-parity.test.ts` (41 pasangan token + cek orphan + cek navbar) agar drift CSS/JSON gagal di CI; `npm run test:tokens`. (CI) `.github/workflows/pwa.yml`: push juga untuk `agen/pwa-*`, langkah "Design token parity".
+**Diverifikasi:** [F] logika pariti dijalankan ulang dengan Python terhadap berkas nyata (semua 41 pasangan cocok, 0 orphan). **Belum diuji:** [BU] vitest, prettier, tsc, build dan Playwright belum dijalankan lokal karena registry npm tidak dapat dijangkau pada sesi ini; bukti hanya dari CI GitHub pada HEAD baru. Catatan non-blocking (font <12 px, e2e/perangkat nyata) tidak diubah.
+
+## 2026-11-08T12:25:45+07:00 — claude-design — Login, Beranda, Absen, header dibangun ulang sesuai DS
+
+**Berubah**
+- [F] Keputusan pemilik: seluruh layar mengikuti DS, bukan sekadar ganti komponen. Layar awal diselesaikan.
+- [F] Atom baru: `AppHeader` (tanggal + judul + klaster koneksi/sinkron/avatar, pil mode), `Stats`, `DayStep`; ikon `lock`, `plus`, `send`.
+- [F] `Login` ditulis ulang (logo, "Masuk untuk memulai kerja", Callout error role=alert, divider "atau", tombol SSO, bantuan). Heading kini "Masuk untuk memulai kerja".
+- [F] Beranda (`Home`): kartu hari kerja 3 langkah (Absen masuk → Sinkron data harian → Mulai kunjungan), baris sesi aktif (`data-testid="attendance-record"`, tombol "Absen pulang"), Stats (Outlet hari ini / Kunjungan selesai / Order diajukan), kartu "Outlet berikutnya" dengan CTA "Mulai kunjungan · nama", kartu Pengiriman, baris Uang lapangan.
+- [F] `AttendanceScreen` (layar penuh) menggantikan dialog absensi di TaskForm; tombol "Simpan absen masuk/pulang". Fokus kembali ke pemicu.
+- [F] Topbar, sapaan, quick-grid, dan Heading judul (Delivery/HRIS/Akun) dibuang; judul halaman kini di header.
+- [F] Label berubah: Absensi→"Absen masuk", Check in/out→"Simpan absen masuk/pulang", Clock out→"Absen pulang", Buka sesi kerja→"Sinkronkan data harian". Test diperbarui.
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest 405, build live/staging/demo + check:build; e2e phone penuh: kegagalan identik dengan baseline (23 test lama), tanpa regresi baru.
+- [F] Bug yang ditemukan e2e: `queue` bisa memuat baris tanpa `command` (diagnostics); App kini memakai optional chaining.
+
+**Belum diuji**
+- [BU] Proyek tablet belum dijalankan. CSS lama (.topbar, .greeting, .quick-*, .morning-card, .login-*) belum dihapus (utang, lihat inventaris).
+- [BU] Peta check-in dan foto bukti masih bergaya lama.
+
+**Berikutnya**
+- Inventaris konflik DS ↔ PWA ↔ backend (docs/DS_RECONCILIATION.md), lalu Order, Ringkasan, Hasil kirim, Delivery.
+
+## 2026-11-08T06:38:37+07:00 — claude-design — Fase 2: Check-in dan Hub kunjungan dibangun ulang (bukan sekadar ganti komponen)
+
+**Berubah**
+- [F] Keputusan baru pemilik: desain PWA lama tidak dipertahankan; layar dibangun ulang mengikuti mockup/DS, test menyesuaikan.
+- [F] Atom baru: `Screen`, `ScreenHeader`, `ActionCaption`, `Tracker`, `Card`, `CardHead`, `ListRow`, `Callout`, `KV`, `BottomSheet`, `Textarea`.
+- [F] `VisitPanel` ditulis ulang: layar penuh Check-in (status geofence, peta, alamat, foto, footer "Mulai kunjungan"); Hub (header + chip Berjalan, Tracker Check-in/Order/Selesai, kartu profil toko, kartu Tagihan "Segera tersedia", baris Order, footer "Buat order di outlet" + "Selesai kunjungan"); BottomSheet "Selesai kunjungan". Logika (locate/start/finish, restore) tidak berubah.
+- [F] Tab "Check-in toko / Open session / Close session" dihapus; test diganti ke "Buat order di outlet" / "Selesai kunjungan"; helper `leaveVisit` (layar penuh menutup bottom nav).
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest; e2e running-mode, visits, visit-evidence, field, route-workflow lulus kecuali yang gagal juga di baseline (field:275 morning gate, visits:98 denied GPS, route-workflow:11 login).
+
+**Belum diuji**
+- [BU] Peta (`CheckinMap`) dan bukti foto (`VisitPhotoField`/`EvidenceCapture`) masih bergaya lama di dalam layar baru; perlu didesain ulang berikutnya.
+- [A] Tracker 3 tahap (tanpa "Tagihan") karena penagihan belum ada di backend.
+
+**Berikutnya**
+- Desain ulang foto bukti + peta check-in; lalu Order (OrderSheet/POS), Ringkasan, Hasil kirim.
+
+## 2026-11-08T06:06:42+07:00 — claude-design — Fase 2: Hub kunjungan (VisitPanel) memakai atom
+
+**Berubah**
+- [F] `VisitPanel`: tahap (Check-in toko / Open session / Close session) → `Segmented` (kini mendukung `disabled` per item); tombol → `Button`; Hasil kunjungan → `Select`; Catatan → atom baru `Textarea`. Label tidak berubah; "Open session" tetap membuka order.
+- [F] CSS `.location-retry` dihapus.
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest; e2e `running-mode.spec` (check-in → tutup kunjungan) lulus; tangkapan layar demo.
+- [F] next-policy, sales-delivery-rules: set kegagalan identik dengan baseline (tanpa perubahan ini), jadi tidak ada regresi.
+
+**Belum diuji**
+- [BU] Spec yang gagal di baseline (next-policy:66/307/385, sales-delivery-rules:19/216) tidak bisa memvalidasi alur kunjungan penuh.
+- [A] Label tab membungkus dua baris di 360 px; perlu putusan visual.
+
+**Berikutnya**
+- Check-in (peta/foto), lalu Order.
+
+## 2026-11-08T05:57:15+07:00 — claude-design — Fase 2: daftar Outlet sesuai design system
+
+**Berubah**
+- [F] Atom `OutletCard` (nomor kunjungan, nama, alamat, Chip status; sorot "Berikutnya"). `OutletDirectory` memakai kartu itu, filter `Segmented` Semua/Belum/Selesai (dengan hitungan) dan `Button` Extra call. Prop `status` → `closed` (boolean).
+- [F] CSS lama `.outlet-row` dihapus; test `route-workflow` memakai `.ui-ocard`. Avatar logo outlet tidak dipakai di daftar (DS memakai nomor).
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest 404; tangkapan layar demo (phone) sesuai DS.
+
+**Belum diuji**
+- [BU] `route-workflow.spec:11` dan `ux-improvements.spec:217` gagal di login ("Ruang kerja belum tersedia") baik dengan maupun tanpa perubahan ini (baseline), jadi pencarian outlet di drawer belum tervalidasi e2e.
+- [A] Jam kunjungan/jarak/tagihan di kartu belum ada: tidak ada datanya di snapshot.
+
+**Berikutnya**
+- Fase 2 lanjut: Check-in, Hub kunjungan (VisitPanel), Order.
+
+## 2026-11-07T16:09:50+07:00 — claude-design — Fase 1: atom SheetHeader di form tugas
+
+**Berubah**
+- [F] Atom `SheetHeader` (eyebrow, judul, tombol tutup 44 px via IconButton); `TaskForm.tsx` memakainya. Kamera tetap UI gelap khusus, tidak dikonversi.
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest 404 lulus; e2e `field.spec.ts` (phone) 10/10.
+
+**Belum diuji**
+- [BU] Visual tombol tutup (kelas lama `icon-button` → `ui-iconbtn`) di browser.
+
+**Berikutnya**
+- Fase 2: Sales dengan command yang ada.
+
+## 2026-11-07T16:06:31+07:00 — claude-design — Fase 1: Sinkron memakai Chip
+
+**Berubah**
+- [F] `SyncDiagnostics.tsx`: pill status → atom `Chip` (review→bad, accepted→ok, lainnya→warn). Filter antrean dibiarkan (markup khusus, tidak ada atom setara).
+
+**Diverifikasi**
+- [F] tsc, prettier, vitest 403 lulus.
+
+**Belum diuji**
+- [BU] Visual Sinkron di browser; e2e tidak mereferensikan `.pill`.
+
+**Berikutnya**
+- BottomSheet, lalu Fase 2 (Sales).
+
+## 2026-11-07T15:10:04+07:00 — claude-design — PWA Fase 1 (bagian 4): teks minimum 12 px
+**Berubah:** pwa/src/style.css: 27 selektor dengan font-size 10,9 sampai 11,99 px dinaikkan ke 12 px (aturan token: teks minimal 12 px). Kamera (CameraViewfinder) tidak diganti atom karena UI gelap khusus.
+**Diverifikasi:** [F] vitest 403 PASS; e2e --project=phone: 68 PASS; next-policy:463 dan review-regressions:40 gagal saat 6 worker tetapi lolos dijalankan sendiri (flaky beban). Tes lain yang gagal (expense, read-session, official-*, dsb.) sudah gagal pada origin/main pada run baseline dan tidak terkait font.
+**Belum:** [BU] 33 selektor masih di bawah 12 px (6 sampai 10,4 px): .activity small, .card-title .pill, .compact-map .footnote, .compact-map > small:last-child, .conversion, .counter, .customer-metrics dt, .day-bottom > span, .day-bottom strong span, .display-photo-head small, .evidence > small, .eyebrow, .footnote, .line-note, .metric small, .mode-indicator, .mode-tag, .morning-heading p, .order-summary dt, .outlet-card small, .pill, .pill.light, .product small:not(.eyebrow), .product-head small, .product-price small, .quick-attendance-record small, .quick-attendance-record time, .quick-grid small, .quick-grid strong, .simulation, .summary-hint. Perlu tinjau tata letak per layar saat layar itu diganti; bukan sekadar naikkan angka.
+**Berikutnya:** Sinkron (SyncDiagnostics) dan BottomSheet; lalu Fase 2 (Sales).
+
+## 2026-11-07T14:30:48+07:00 — claude-design — PWA Fase 1 (bagian 3): Absen dan sesi pagi memakai atom
+**Berubah:** components/AttendanceCapture.tsx (Field alamat; Button Ambil Lokasi Presisi dan Buka Kamera), components/MorningSession.tsx (Chip status; Button Buka sesi kerja); style.css (.capture-actions satu kolom; aturan .capture-actions button 11-12px dihapus karena menimpa ukuran atom dan di bawah 12px).
+**Diverifikasi:** [F] vitest 403 PASS; e2e login-attendance-ux, field, visit-evidence, morning, running-mode, checkin-map, ux-improvements: PASS. Lima tes (sales-delivery-rules: SKU prices, tier simulator x2; review-regressions: POD unit legacy x2) gagal juga pada origin/main murni, bukan dari perubahan ini.
+**Belum diuji:** [BU] tangkapan layar Absen di perangkat nyata; Kamera dan Sinkron belum diganti.
+**Berikutnya:** Kamera (CameraViewfinder), Sinkron (SyncDiagnostics), BottomSheet.
+
+## 2026-11-07T14:22:45+07:00 — claude-design — PWA Fase 1 (bagian 2): BottomNav diekstrak
+**Berubah:** pwa/src/ui/BottomNav.tsx (+ ekspor di index.ts, 1 tes di ui-atoms.test.ts); App.tsx memakai BottomNav dengan markup, kelas, dan aria-current identik.
+**Temuan:** gaya navbar terpilih menyatu dengan body (border atas 0, latar --c-bg) sudah ada di style.css; tidak ada perubahan visual.
+**Diverifikasi:** [F] vitest 403 PASS; e2e login-attendance-ux dan navigasi 18 PASS; visits.spec:93 gagal juga pada baseline.
+**Belum diuji:** [BU] AppHeader per layar (mockup: back/tab/home), BottomSheet, Absen, Kamera, Sinkron.
+**Berikutnya:** Absen (AttendanceCapture, MorningSession) memakai atom, lalu Kamera dan Sinkron.
+
+## 2026-11-07T14:18:52+07:00 — claude-design — PWA Fase 1 (bagian 1): navy disatukan, Login memakai atom
+**Berubah:** pwa/src/ui/tokens.css (--c-nav = #001A57, navy merek PWA; mockup memakai #0B1F4D yang sebenarnya warna teks), style.css (--navy = alias --c-nav), design/tokens.json, ui/Field.tsx (autoCapitalize, spellcheck), components/Login.tsx (Field dan Button; label tidak berubah).
+**Diverifikasi:** [F] vitest 402 PASS; prettier PASS; e2e login-attendance-ux 14 PASS (phone dan tablet).
+**Belum diuji:** [BU] BottomNav dan AppHeader baru, BottomSheet, Absen, Kamera, Sinkron (sisa Fase 1). Bundel design system (/mockup) masih memakai #0B1F4D untuk navbar; sesuaikan saat bundel diperbarui.
+**Berikutnya:** AppHeader/BottomNav (tab terpilih menyatu dengan body), lalu Absen, Kamera, Sinkron.
+
 ## 2026-11-07T08:59:30+07:00 — antigravity — Handover brief Finance/Accounting/Tax untuk WSL
 **Berubah:** `docs/finance/HANDOVER_ANTIGRAVITY.md`: status I0–I8 dan bukti PR95/PR96, batas 58 report `BELUM_DITERIMA`, aturan kerja/commit/log, checklist WSL, rincian paket I2a–I2c (FIN01–09,36–38,51,55–57), oracle dan counterexample, jebakan Odoo 19, keputusan pemilik yang terbuka, red flags dan format laporan balik. Tidak ada perubahan kode/addon/workflow.
 **Diverifikasi:** [F] baseline `main` `d9c7e5f` (PR #96 merged dari `192defa`); katalog 58 baris seluruhnya `BELUM_DITERIMA`; 23 tes finance, Ruff, 12 manifest PASS pada paket sebelumnya.
 **Belum diuji:** [BU] tidak ada run native baru pada sesi ini; brief bukan penerimaan report. Tidak ada deploy, seed, aktivasi, tulis demo, merge main atau perubahan role/chart/costing.
+
+## 2026-11-07T08:47:53+07:00 — claude-design — PWA Fase 0: token dan atom design system
+**Berubah:**
+- pwa/src/ui/tokens.css, ui.css, 11 atom (Button, IconButton, Chip, Field, Select, Segmented, Checkbox, RadioRow, Stepper, Progress, StatusDot), Gallery.tsx (dibuka dengan #ui, hanya mode dev), README.md; pwa/design/tokens.json (Tokens Studio).
+- pwa/src/style.css: 42 warna tertulis yang identik dengan token diganti var(--c-*); --blue/--muted/--border/--surface menjadi alias. --navy (#001a57) sengaja tidak diubah.
+- pwa/tests/ui-atoms.test.ts (15 tes).
+**Diverifikasi:** [F] tsc, prettier, vitest 402 PASS, build + check:build PASS (demo, live, staging). [F] e2e field, visits, collection, delivery, login-attendance: 48 PASS; 3 tes gagal (collection.spec:200, delivery.spec:180, visits.spec:93) juga gagal pada baseline tanpa perubahan ini.
+**Belum diuji:** [BU] uji perangkat Android/iOS; impor Figma; Fase 1 (header, navbar, footer, sheet, Login/Absen/Kamera/Sinkron) belum dimulai.
+**Berikutnya:** Fase 1 sesuai plan integrasi (doc Claude "Plan Integrasi Mockup Mobile ke PWA"); putuskan --navy vs --c-nav.
 
 ## 2026-11-05T14:35:00+07:00 — antigravity — PR94: mewajibkan eksak 15 entri fingerprint register kanonikal
 **Berubah:** scripts/ops/generate_state_20260801.py: mewajibkan eksak 15 entri register kanonikal (CANONICAL_REGISTER_FILES) pada input_dataset_sha256 manifest rekonsiliasi sebelum replay; manifes kosong {} atau tidak lengkap memicu ValueError; tests/test_state_20260801.py: penambahan tes regresi supervisor test_empty_or_incomplete_fingerprint_manifest_fails_fast (total 8 tes).

@@ -26,7 +26,7 @@ export async function ensureDaily(page: Page) {
     const ready = region.getByText("Sesi aktif", { exact: true });
     if (await ready.isVisible()) return;
     const open = region.getByRole("button", {
-        name: "Buka sesi kerja",
+        name: "Sinkronkan data harian",
         exact: true,
     });
     await expect(open).toBeEnabled();

@@ -69,6 +69,9 @@ test("diagnosis filters, safe detail and persona isolation preserve offline data
         return rows.map((r) => r.key.split(":").at(-1)!);
     });
     await page.reload();
+    await expect(
+        page.getByRole("button", { name: "Absen masuk", exact: true }),
+    ).toBeVisible();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     const region = page.getByRole("region", {
         name: "Diagnosis sinkronisasi",

@@ -1,5 +1,5 @@
 import { test, expect, checkIn } from "./session-fixture";
-import { saveVisitPhoto } from "./visit-helpers";
+import { saveVisitPhoto, leaveVisit } from "./visit-helpers";
 
 test("running mode toggle, demo mode geofence bypass, and preservation on switch to live", async ({
     page,
@@ -28,9 +28,7 @@ test("running mode toggle, demo mode geofence bypass, and preservation on switch
     await expect(modePill).toHaveText("DEMO");
 
     // 4. Open visit panel
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
 
     // In demo mode, start button should be usable even if far away or no GPS
@@ -62,30 +60,37 @@ test("running mode toggle, demo mode geofence bypass, and preservation on switch
         page.getByText("Kunjungan ditutup lokal", { exact: false }),
     ).toBeVisible();
 
-    // 6. Switch back to LIVE mode: banner disappears
+    // 6. Layar kunjungan penuh: kembali ke daftar, lalu pindah ke LIVE
+    await page
+        .getByRole("button", { name: "Kembali ke daftar outlet", exact: true })
+        .click();
     await modePill.click();
     await expect(banner).toHaveCount(0);
     await expect(modePill).toHaveText("LIVE");
 
     // 7. Navigate out, reload page in LIVE mode
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await leaveVisit(page);
+    await page
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
+        .click();
     await page.reload();
     await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
 
     // 8. Re-open Toko Sinar Pagi in LIVE mode: history is preserved, workspace is not locked!
-    await page
-        .getByRole("button", { name: "Buat order", exact: false })
-        .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await expect(
         page.getByText("Kunjungan ditutup lokal", { exact: false }),
     ).toBeVisible();
 
     // 9. Navigate to a new unvisited outlet in LIVE mode: out-of-radius fix is strictly guarded
-    await page.getByRole("button", { name: "Beranda", exact: true }).click();
+    await leaveVisit(page);
     await page
-        .getByRole("button", { name: "Buat order", exact: false })
+        .getByRole("navigation", { name: "Navigasi utama" })
+        .getByRole("button", { name: "Beranda", exact: true })
         .click();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Berkat Bahu/ }).click();
 
     // In LIVE mode without valid in-geofence GPS, starting a new visit is disabled
@@ -107,7 +112,7 @@ for (const closed of [false, true]) {
         await checkIn(page);
         if (closed) {
             await page
-                .getByRole("button", { name: "Clock out", exact: true })
+                .getByRole("button", { name: "Absen pulang", exact: true })
                 .click();
             await page
                 .getByRole("button", {
@@ -131,22 +136,27 @@ for (const closed of [false, true]) {
                 page.getByAltText("Foto absensi dengan watermark"),
             ).toBeVisible();
             await page
-                .getByRole("button", { name: "Check out", exact: true })
+                .getByRole("button", {
+                    name: "Simpan absen pulang",
+                    exact: true,
+                })
                 .click();
             await expect(page.getByRole("dialog")).toHaveCount(0);
             await expect(
-                page.getByRole("button", { name: /Buat order/ }),
-            ).toBeDisabled();
+                page.getByRole("button", { name: /Mulai kunjungan/ }),
+            ).toHaveCount(0);
         }
         await page.clock.setFixedTime(new Date("2026-11-03T16:00:01Z"));
         await page.reload();
-        await expect(page.locator(".quick-attendance-record")).toHaveCount(0);
+        await expect(
+            page.locator('[data-testid="attendance-record"]'),
+        ).toHaveCount(0);
         await checkIn(page);
         await expect(
             page.getByText("Sesi aktif", { exact: true }),
         ).toBeVisible();
         await expect(
-            page.getByRole("button", { name: /Buat order/ }),
+            page.getByRole("button", { name: /Mulai kunjungan/ }),
         ).toBeEnabled();
         await page.reload();
         await expect(

@@ -1,4 +1,10 @@
-import { test, expect, checkIn, changeTestAccount } from "./session-fixture";
+import {
+    test,
+    expect,
+    checkIn,
+    changeTestAccount,
+    freshSnapshotMeta,
+} from "./session-fixture";
 import { saveVisitPhoto } from "./visit-helpers";
 
 test("browser Back closes camera before form and returns through pages", async ({
@@ -14,7 +20,9 @@ test("browser Back closes camera before form and returns through pages", async (
     await page.goBack();
     await expect(page).toHaveURL(/#home$/);
     await page.context().grantPermissions(["geolocation"]);
-    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
     await page.getByLabel("Alamat / nama lokasi").fill("Kantor Manado");
     await page
         .getByRole("button", { name: "Buka Kamera", exact: true })
@@ -29,9 +37,12 @@ test("browser Back closes camera before form and returns through pages", async (
     ).toBe(true);
     await page.goBack();
     await expect(camera).toHaveCount(0);
-    await expect(page.getByRole("dialog")).toHaveCount(1);
+    const screen = page.getByRole("region", {
+        name: "Absensi foto dan lokasi",
+    });
+    await expect(screen).toBeVisible();
     await page.goBack();
-    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(screen).toHaveCount(0);
 });
 
 test("shell keeps header and nav stable while HRIS and More scroll internally", async ({
@@ -84,7 +95,7 @@ test("search Back restores list and compact POS toolbar leaves product space on 
         .getByRole("button", { name: "Mulai kunjungan", exact: true })
         .click();
     await page
-        .getByRole("button", { name: "Open session", exact: true })
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
     await page.setViewportSize({ width: 393, height: 430 });
     await page.locator(".sheet-body").evaluate((el) => {
@@ -148,7 +159,9 @@ test("map zoom and consent survive a new GPS fix, touch affects only the map", a
         }),
     );
     await page.goto("./");
-    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
     const region = page.getByRole("region", {
         name: "Preview peta Kantor Pusat",
         exact: true,
@@ -225,10 +238,13 @@ test("500 SKU catalog renders bounded rows and preserves selected off-screen qua
         sku_code: `SKU-${i}`,
         name: `Produk ${i}`,
     }));
+    const meta = freshSnapshotMeta();
     await page.route("**/api/v1/sync/snapshot", (route) =>
         route.fulfill({
             json: {
                 ...snapshot,
+                updatedAt: meta.updatedAt,
+                scope: { ...snapshot.scope, business_date: meta.businessDate },
                 office: {
                     id: "1",
                     name: "Kantor Pusat",
@@ -249,7 +265,7 @@ test("500 SKU catalog renders bounded rows and preserves selected off-screen qua
         .getByRole("button", { name: "Mulai kunjungan", exact: true })
         .click();
     await page
-        .getByRole("button", { name: "Open session", exact: true })
+        .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
     await expect(page.locator(".product-card")).toHaveCount(60);
     await page.getByLabel("Cari produk", { exact: true }).fill("SKU-499");
@@ -326,7 +342,9 @@ test("account handover with nested camera restores body scroll and clears both d
     await page.context().grantPermissions(["geolocation"]);
     await page.goto("./");
     const overflow = await page.evaluate(() => document.body.style.overflow);
-    await page.getByRole("button", { name: /^Absensi/ }).click();
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
     await page.getByLabel("Alamat / nama lokasi").fill("Kantor Manado");
     await page
         .getByRole("button", { name: "Buka Kamera", exact: true })

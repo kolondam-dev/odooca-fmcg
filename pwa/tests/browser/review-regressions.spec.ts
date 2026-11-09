@@ -182,7 +182,9 @@ test("daily helper waits for deliberately held attendance persistence before syn
     });
     const pending = ensureDaily(page);
     await page.waitForFunction(() => (window as any).__attendanceHeld === true);
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(
+        page.getByRole("region", { name: "Absensi foto dan lokasi" }),
+    ).toBeVisible();
     await expect(
         page.getByRole("button", { name: "Menyimpan…", exact: true }),
     ).toBeDisabled();

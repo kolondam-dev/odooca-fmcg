@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { CameraViewfinder, type CameraCaptureResult } from "./CameraViewfinder";
 import { CheckinMap } from "./CheckinMap";
-import { Icon } from "./Icon";
+import { Button, Field } from "../ui";
 import type { MapFix, MapSite } from "../domain/checkin-map";
 import type { EvidenceRef } from "./Evidence";
 import { renderEvidencePackage } from "../domain/evidence-render";
@@ -190,41 +190,39 @@ export function AttendanceCapture({
                     {Math.round(fix.accuracy)} m
                 </p>
             )}
-            <label>
-                Alamat / nama lokasi
-                <input
-                    value={address}
-                    maxLength={140}
-                    required
-                    placeholder="Alamat lengkap lokasi Anda saat ini"
-                    disabled={busy || camera}
-                    onInput={(event) => {
-                        generation.current++;
-                        setAddress(event.currentTarget.value);
-                        setPhoto(undefined);
-                        setCaptured("");
-                        changed.current(undefined);
-                    }}
-                />
-            </label>
+            <Field
+                label="Alamat / nama lokasi"
+                value={address}
+                maxLength={140}
+                required
+                placeholder="Alamat lengkap lokasi Anda saat ini"
+                disabled={busy || camera}
+                onInput={(value) => {
+                    generation.current++;
+                    setAddress(value);
+                    setPhoto(undefined);
+                    setCaptured("");
+                    changed.current(undefined);
+                }}
+            />
             <div class="capture-actions">
-                <button
-                    type="button"
-                    class="secondary"
+                <Button
+                    variant="sec"
+                    size="md"
+                    icon="pin"
                     disabled={busy}
                     onClick={() => locate(true)}
                 >
-                    <Icon name="pin" size={18} />
                     Ambil Lokasi Presisi
-                </button>
-                <button
-                    type="button"
+                </Button>
+                <Button
+                    size="md"
+                    icon="camera"
                     disabled={busy || !fix || !address.trim() || !mapSite}
                     onClick={() => setCamera(true)}
                 >
-                    <Icon name="camera" size={18} />
                     {photo ? "Foto ulang" : "Buka Kamera"}
-                </button>
+                </Button>
             </div>
             {busy && <p role="status">Menyiapkan bukti…</p>}
             {error && (
