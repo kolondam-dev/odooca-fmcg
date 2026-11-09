@@ -143,3 +143,11 @@
 - Runner disposable scripts/ops/verify_finance_i2_arap_subledger.py: oracle AML/partial independen, render OCA open_items dan aged_partner_balance pada pin f48b4ea, role/company negative, tamper dan unreconcile rollback; workflow finance-i0-spike menambah langkah PASS.
 - Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 41 tes finance PASS termasuk 9 tes I2b. [BU] CI native exact-SHA belum dijalankan; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-09T17:55:02+07:00
+
+[2026-11-09T18:36:16+07:00] [INFO] I2b/PR104: perbaikan scope Environment pada runner native AR/AP
+- Diagnosis CI exact-SHA bd09643: job candidate-install-upgrade gagal di check_fixture dengan 'Environment' object has no attribute 'with_context' pada scripts/ops/verify_finance_i2_arap_subledger.py.
+- Perbaikan: scope environment laporan diganti env(context=dict(env.context, allowed_company_ids=[company.id])) mengikuti pola verify_finance_stock_bridge.py; scoping company tetap dilakukan modelset via with_context(...).with_company(...) di dalam _snapshot.
+- Audit ulang sumber OCA pin f48b4ea: wizard _prepare_report_data, _get_report_values, struktur Open_Items/total_amount dan aged_partner_balance, serta konfigurasi interval 30/60/90/120 sesuai dengan runner.
+- Verifikasi lokal ulang: ruff PASS; check_manifests PASS (12 addon); 41 tes finance PASS.
+- [BU] CI native exact-SHA belum dijalankan ulang; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-09T18:36:16+07:00

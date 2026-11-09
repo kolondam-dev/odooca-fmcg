@@ -416,7 +416,7 @@ def check_fixture(env, fixture, evidence, check_hard_coded=False):
     company, accounts, journals, partner, scale, docs = fixture
     control = _control_accounts(env, company, accounts)
     round_amt = company.currency_id.round
-    models = env.with_context(allowed_company_ids=[company.id]).with_company(company)
+    models = env(context=dict(env.context, allowed_company_ids=[company.id]))
 
     for label, date_from, date_to in (
         ("july", "2026-07-01", "2026-07-31"),
@@ -651,7 +651,7 @@ def check_security(env, fixture_a, fixture_b, evidence):
 def check_tamper_and_unreconcile(env, fixture, evidence):
     company, accounts, journals, partner, scale, docs = fixture
     control = _control_accounts(env, company, accounts)
-    models = env.with_context(allowed_company_ids=[company.id]).with_company(company)
+    models = env(context=dict(env.context, allowed_company_ids=[company.id]))
     baseline_oracle = independent_open_items(env, company, control, "2026-07-31")
     baseline_ledger = independent_partner_ledger(
         env, company, control, "2026-07-01", "2026-07-31",
