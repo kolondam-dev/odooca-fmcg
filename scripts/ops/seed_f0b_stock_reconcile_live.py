@@ -58,7 +58,6 @@ WHERE sq.company_id = %(company_id)s
   AND sl.complete_name = 'WH/Stock'
   AND sl.usage = 'internal'
   AND rc.active = TRUE
-  AND pp.active = TRUE
   AND pt.default_code IS NOT NULL
 GROUP BY 1, 2, 3
 HAVING SUM(sq.quantity) <> 0 OR SUM(sq.reserved_quantity) <> 0
@@ -183,7 +182,7 @@ def compare(live_rows, canon: dict, carton: dict[str, int], company_id: int) -> 
     }
 
 
-def fetch_live_rows(company_id: int, expected_name: str = CANONICAL_COMPANY_NAME):
+def fetch_live_rows(company_id: int):
     import psycopg2
 
     host = (
@@ -208,7 +207,7 @@ def fetch_live_rows(company_id: int, expected_name: str = CANONICAL_COMPANY_NAME
     try:
         with conn, conn.cursor() as cur:
             cur.execute(COMPANY_SQL, {"company_id": company_id})
-            check_company_row(cur.fetchone(), company_id, expected_name)
+            check_company_row(cur.fetchone(), company_id)
             cur.execute(LIVE_STOCK_SQL, {"company_id": company_id})
             return [(r[0], r[1], r[2], r[3], r[4]) for r in cur.fetchall()]
     finally:
@@ -222,15 +221,11 @@ def main() -> None:
         "--company-id", type=int, required=True,
         help="ID res_company yang setara dengan entitas kanonikal (wajib; tidak ada default).",
     )
-    ap.add_argument(
-        "--expected-company-name", default=CANONICAL_COMPANY_NAME,
-        help="Nama entitas yang direpresentasikan state kanonikal; divalidasi terhadap res_company.",
-    )
     args = ap.parse_args()
     state = load_canonical_state(STATE)
-    live_rows = fetch_live_rows(args.company_id, args.expected_company_name)
+    live_rows = fetch_live_rows(args.company_id)
     result = compare(live_rows, canonical_available(state), carton_sizes(), args.company_id)
-    result["company_name"] = args.expected_company_name
+    result["company_name"] = CANONICAL_COMPANY_NAME
     Path(args.out).write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"ditulis {args.out}; hypothesis_100x150_proven={result['hypothesis_100x150_proven']}")
 
