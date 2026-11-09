@@ -73,7 +73,8 @@ def _bucket(due_date, as_of):
     return "older"
 
 
-def _posted_lines(env, company, accounts, date_to, date_from=None, journal_ids=None):
+def _posted_lines(env, company, accounts, date_to, date_from=None, journal_ids=None,
+                  partner_ids=None):
     domain = [
         ("company_id", "=", company.id),
         ("account_id", "in", accounts.ids),
@@ -85,6 +86,8 @@ def _posted_lines(env, company, accounts, date_to, date_from=None, journal_ids=N
         domain.append(("date", ">", _cutoff(date_from)))
     if journal_ids:
         domain.append(("journal_id", "in", list(journal_ids)))
+    if partner_ids:
+        domain.append(("partner_id", "in", list(partner_ids)))
     return env["account.move.line"].search(domain, order="date asc, move_id asc, id asc")
 
 
@@ -126,18 +129,20 @@ def independent_partner_ledger(env, company, accounts, date_from, date_to):
     return {"rows": rows, "totals": totals}
 
 
-def independent_open_items(env, company, accounts, as_of, journal_ids=None, date_from=None):
+def independent_open_items(env, company, accounts, as_of, journal_ids=None, date_from=None,
+                           partner_ids=None):
     """Reconstruct residuals only from partials whose max_date <= as_of.
 
-    The optional ``journal_ids``/``date_from`` filters define the same slice as
-    the production report. A partial is consumed only when both of its legs are
-    inside that slice; otherwise a filtered invoice would look settled while the
-    control GL still counts its full balance.
+    The optional ``journal_ids``/``date_from``/``partner_ids`` filters define
+    the same slice as the production report. A partial is consumed only when
+    both of its legs are inside that slice; otherwise a filtered invoice would
+    look settled while the control GL still counts its full balance.
     """
     cutoff = _cutoff(as_of)
     round_amt = company.currency_id.round
     lines = _posted_lines(
         env, company, accounts, cutoff, date_from=date_from, journal_ids=journal_ids,
+        partner_ids=partner_ids,
     )
     line_by_id = {line.id: line for line in lines}
     if line_by_id:
@@ -539,23 +544,25 @@ def check_fixture(env, fixture, evidence, check_hard_coded=False):
     # control GL still carries its balance.
     sale_journal = journals["sale"]
     filtered_scopes = (
-        ("journal_sale", {"journal_ids": [sale_journal.id]}, None),
-        ("date_from_0710", {}, "2026-07-10"),
+        ("journal_sale", "2026-07-31", {"journal_ids": [sale_journal.id]}, None),
+        ("date_from_0710", "2026-07-31", {}, "2026-07-10"),
+        ("partner_named", "2026-07-25", {"partner_ids": [partner.id]}, None),
     )
-    for label, filters, start in filtered_scopes:
+    for label, as_of, filters, start in filtered_scopes:
         for partner_type, account_key in (("customer", "ar"), ("supplier", "ap")):
             oracle = independent_open_items(
-                env, company, accounts[account_key], "2026-07-31",
+                env, company, accounts[account_key], as_of,
                 journal_ids=filters.get("journal_ids"), date_from=start,
+                partner_ids=filters.get("partner_ids"),
             )
             snapshot = models["id.finance.open.items"]._snapshot(
-                company.id, "2026-07-31", partner_type=partner_type,
+                company.id, as_of, partner_type=partner_type,
                 date_from=start, **filters,
             )
             assert_open_items(snapshot, oracle)
             evidence["cases"].append({
                 "company": company.name, "scale": scale, "report": "FIN07",
-                "as_of": "2026-07-31", "partner_type": partner_type,
+                "as_of": as_of, "partner_type": partner_type,
                 "filter": label, "result": "PASS",
             })
 
@@ -601,6 +608,51 @@ def check_fixture(env, fixture, evidence, check_hard_coded=False):
         require(
             journal_scope["partial_scope"] == date_scope["partial_scope"] == "both_legs_selected",
             "FIN07 must report the partial scope explicitly",
+        )
+
+        # partner_ids is the third slice dimension: the partnerless AP accrual
+        # and its reversal must disappear, while the named partner's AR/AP
+        # residuals stay those of the unfiltered 25 July position.
+        partner_scope = models["id.finance.open.items"]._snapshot(
+            company.id, "2026-07-25", partner_type="all", partner_ids=[partner.id],
+        )
+        require(
+            partner_scope["partnerless_residual"] == 0.0
+            and partner_scope["partnerless_line_ids"] == [],
+            "FIN07 partner slice must exclude partnerless lines explicitly",
+        )
+        partner_totals = {
+            row["account_type"]: row["residual"] for row in partner_scope["account_totals"]
+        }
+        require(
+            partner_totals.get(AR_TYPE) == round_amt(28 * scale)
+            and partner_totals.get(AP_TYPE) == round_amt(-47 * scale),
+            f"FIN07 partner slice totals mismatch: {partner_totals}",
+        )
+        require(
+            partner_scope["gl_tie_out"]["balanced"],
+            f"FIN07 partner slice must tie out: {partner_scope['gl_tie_out']}",
+        )
+        partner_aging = models["id.finance.aged.partner.balance"]._snapshot(
+            company.id, "2026-07-25", partner_type="all", partner_ids=[partner.id],
+        )
+        require(
+            partner_aging["partnerless_residual"] == 0.0,
+            "FIN08/FIN09 partner slice must exclude partnerless lines explicitly",
+        )
+        require(
+            {row["partner_id"] for row in partner_aging["partners"]} == {partner.id},
+            "FIN08/FIN09 partner slice must only contain the selected partner",
+        )
+        require(
+            partner_aging["total_residual"] == round_amt(
+                (28 * scale) + (-47 * scale)
+            ),
+            f"FIN08/FIN09 partner slice total mismatch: {partner_aging['total_residual']}",
+        )
+        require(
+            partner_aging["balanced"] and partner_aging["gl_tie_out"]["balanced"],
+            "FIN08/FIN09 partner slice must stay balanced and tie out",
         )
 
     for as_of in ("2026-07-14", "2026-07-25", "2026-07-31"):
