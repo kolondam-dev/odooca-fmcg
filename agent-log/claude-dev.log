@@ -172,3 +172,9 @@
 - Regresi: unit test baru test_open_items_ignore_partials_with_counterpart_outside_slice; runner native menambah oracle independent_open_items(journal_ids=..., date_from=...) dengan query AND dan dua kasus terfilter pada as-of 2026-07-31 (journal sale = 88, date_from 2026-07-10 = -82, keduanya wajib tie-out ke GL control).
 - Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 43 tes finance PASS. [BU] CI native exact-SHA menyusul; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA; PR belum di-merge.
 - Task managed by claude-dev agent at 2026-11-09T21:20:00+07:00
+[2026-11-09T21:40:00+07:00] [INFO] I2b/PR104: CI native exact-SHA 8310f44 PASS (fix scope filter)
+- Seluruh 14 check PR #104 pada SHA 8310f441d1408ec89656dd7f2519efdb446a0f44 SUCCESS: CI, Finance I0 candidate spike (run 42634728686), Upgrade Runtime Verification, Seed supervision, PWA quality, static/init/install.
+- Log native I2b memuat kasus baru filter=journal_sale dan filter=date_from_0710 untuk customer/supplier pada scale=1 dan scale=7 dengan result=PASS; residual dan gl_control_total konsisten (88 dan -82) serta gl_tie_out balanced.
+- Kasus lama tetap PASS: FIN05/FIN06 Juli-Agustus, FIN07 14/25/31 Juli dan 31 Agustus, FIN08/FIN09, OCA open_items/aged_partner_balance, role/company negative, tamper, unreconcile.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 43 tes finance PASS. [BU] Sign-off supervisor belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA; PR belum di-merge.
+- Task managed by claude-dev agent at 2026-11-09T21:40:00+07:00
