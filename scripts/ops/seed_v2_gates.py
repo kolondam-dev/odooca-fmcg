@@ -595,9 +595,26 @@ def _check_tax(pack, config, rpt):
             rpt.fail('TAX-SOURCE', number, f'invoice {date} before tax effective date {effective}')
 
         tax_code = str(row.get('tax_code', '')).strip()
-        comm_dpp = _dec(row['commercial_dpp']) if 'commercial_dpp' in row and str(row['commercial_dpp']).strip() else None
 
-        if tax_code == '04' and comm_dpp is not None:
+        if tax_code == '04':
+            # Untuk kode transaksi 04 (DPP Nilai Lain PMK 131/2024), metadata commercial_dpp WAJIB ADA dan valid.
+            # Fail-closed: jika hilang, blank, non-numeric, non-finite, atau negatif, laporkan pelanggaran TAX-SOURCE.
+            if 'commercial_dpp' not in row:
+                rpt.fail('TAX-SOURCE', number, "tax_code 04 requires 'commercial_dpp' field")
+                continue
+            raw_comm = str(row.get('commercial_dpp', '')).strip()
+            if not raw_comm:
+                rpt.fail('TAX-SOURCE', number, "tax_code 04 requires non-empty 'commercial_dpp'")
+                continue
+            try:
+                comm_dpp = _dec(raw_comm)
+                if comm_dpp < ZERO:
+                    rpt.fail('TAX-SOURCE', number, f"tax_code 04 'commercial_dpp' negative: {raw_comm}")
+                    continue
+            except (InvalidOperation, ValueError, TypeError):
+                rpt.fail('TAX-SOURCE', number, f"tax_code 04 'commercial_dpp' invalid/non-finite: {raw_comm}")
+                continue
+
             # Sesuai PMK 131/2024: DPP Nilai Lain = 11/12 x commercial_dpp
             expected_tax_base = (comm_dpp * Decimal(11) / Decimal(12)).quantize(TOLERANCE, ROUND_HALF_UP)
             if abs(dpp - expected_tax_base) > TOLERANCE:
@@ -610,7 +627,7 @@ def _check_tax(pack, config, rpt):
             if abs(total - (comm_dpp + ppn)) > TOLERANCE:
                 rpt.fail('TAX-SOURCE', number, f'total {total} != commercial DPP + PPN {comm_dpp + ppn}')
         else:
-            # Standar / Legacy
+            # Standar / Legacy (kode non-04 / transaksi umum)
             if abs(ppn - (dpp * rate).quantize(TOLERANCE, ROUND_HALF_UP)) > TOLERANCE:
                 rpt.fail('TAX-SOURCE', number, f'PPN {ppn} != DPP {dpp} x {rate}')
             if abs(total - (dpp + ppn)) > TOLERANCE:
