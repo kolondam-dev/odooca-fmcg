@@ -158,3 +158,10 @@
 - Perbaikan: account_buckets kini dikunci row['account_id']; menambahkan unit test regresi test_oca_aged_rows_are_matched_by_account_id (42 tes finance).
 - Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 42 tes finance PASS. [BU] CI native exact-SHA berikutnya belum dijalankan.
 - Task managed by claude-dev agent at 2026-11-09T18:56:43+07:00
+
+[2026-11-09T19:20:45+07:00] [INFO] I2b/PR104: CI native exact-SHA 24b41898 PASS
+- Workflow Finance I0 candidate spike run 42613105445 pada SHA 24b4189896e6d839fa16c08a7b1379c9123616c1 PASS (6m49s); langkah I2b mencetak FINANCE_I2B_ARAP_SUBLEDGER=PASS setelah install/upgrade, foundation, golden, security, stock bridge, dan I2a.
+- Seluruh check PR #104 pada SHA tersebut hijau: static, init-test, install-test, Upgrade Runtime Verification, seed-invariants, pwa-quality, pwa-gate, pwa-browser, pwa-container, candidate-install-upgrade.
+- Dua kegagalan I2b sebelumnya sudah diperbaiki: (1) Environment.with_context tidak ada, diganti env(context=...); (2) bucket OCA aged dikunci account_id, bukan account_type.
+- Commit dokumentasi ini hanya mengubah docs/finance, HANDOFF, dan agent-log; tidak mengubah kode. [BU] Verifikasi exact-SHA commit dokumentasi menyusul; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA dan PR menunggu review/sign-off.
+- Task managed by claude-dev agent at 2026-11-09T19:20:45+07:00

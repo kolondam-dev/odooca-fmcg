@@ -107,10 +107,12 @@ Skenario yang diuji:
 
 ## Gate yang masih terbuka
 
-- [BU] Eksekusi CI native exact-SHA pada workflow `Finance I0 candidate spike`
-  (`.github/workflows/finance-i0-spike.yml`) untuk commit HEAD branch
-  `agen/finance-i2b-arap-subledger`; langkah baru mencetak
-  `FINANCE_I2B_ARAP_SUBLEDGER=PASS`.
+- [F] CI native exact-SHA `24b41898` lulus pada workflow `Finance I0 candidate
+  spike` (run `42613105445`): langkah baru mencetak
+  `FINANCE_I2B_ARAP_SUBLEDGER=PASS` setelah install/upgrade, foundation, golden,
+  security, stock bridge, dan I2a lulus. Seluruh check PR #104 pada SHA tersebut
+  hijau. Setelah itu hanya dokumentasi/log yang berubah; verifikasi ulang
+  exact-SHA untuk commit dokumentasi dicatat di HANDOFF.
 - [BU] Bukti export XLSX/PDF, browser geometry desktop/tablet, volume/performance
   `I8`, dan sign-off Finance Controller sebelum status katalog dapat mencapai
   `ACCEPTED`.
