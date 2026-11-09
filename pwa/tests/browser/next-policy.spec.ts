@@ -6,7 +6,11 @@ import {
     startDelivery,
     saveDeliveryPhoto,
 } from "./delivery-helpers";
-import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
+import {
+    leaveClosedVisit,
+    saveDisplayPhoto,
+    saveVisitPhoto,
+} from "./visit-helpers";
 test.beforeEach(async ({ context }) => {
     await context.grantPermissions(["geolocation"]);
     await context.setGeolocation({
@@ -83,7 +87,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             page.getByText("Kunjungan lokal aktif", { exact: true }),
         ).toBeVisible();
         await page
-            .getByRole("button", { name: "Open session", exact: true })
+            .getByRole("button", { name: "Buat order di outlet", exact: true })
             .click();
         await page
             .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
@@ -99,6 +103,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
         await page
             .getByRole("button", { name: "Tutup kunjungan", exact: true })
             .click();
+        await leaveClosedVisit(page);
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
@@ -171,7 +176,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             ).toBeDisabled();
             await page.reload();
             await expect(
-                page.getByRole("region", { name: "Sesi kerja", exact: true }),
+            page.getByRole("region", { name: "Sesi kerja", exact: true }),
             ).toHaveAttribute("aria-busy", "false");
             await page
                 .getByRole("button", { name: "Lainnya", exact: true })
