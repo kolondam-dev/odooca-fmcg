@@ -195,3 +195,9 @@
 - Module Upgrade from Persisted Baseline tidak terpicu karena PR hanya menyentuh scripts/tests/docs (path filter upgrade-runtime.yml mensyaratkan addons/**); 12/12 adalah cakupan penuh.
 - Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 44 tes finance PASS. [BU] Review supervisor belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T01:10:00+07:00
+[2026-11-10T02:35:00+07:00] [INFO] I2b/PR107: CI exact-SHA 55a647a PASS pasca merge main
+- PR #107 pada SHA 55a647a17828bec47b0c3a234189ff1f2f8d7a0b MERGEABLE dengan 12/12 check SUCCESS, termasuk Finance I0 candidate spike run 42663566390 (FINANCE_I2B_ARAP_SUBLEDGER=PASS).
+- Matriks filter lengkap terbukti native: journal_sale, date_from_0710, dan partner_named untuk customer/supplier pada scale=1 dan scale=7, semuanya result=PASS.
+- Konflik HANDOFF dan agent-log dengan main c8fe1c0 diselesaikan tanpa menghapus entri agen lain; duplikasi entri 22:25 dihapus, entri 00:05 dan 01:10 dipertahankan sekali (log append-only tetap dipatuhi).
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 44 tes finance PASS. [BU] Review supervisor PR107 belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T02:35:00+07:00
