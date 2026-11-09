@@ -2,11 +2,11 @@
   "period": "2026-08",
   "pack_start": "2026-08-01",
   "pack_end": "2026-08-31",
-  "generator_commit": "a168e4e14b08075d411d9804e5f918b506e2ac0d",
+  "generator_commit": "a63c6120a4e2776ab8731827b969b8c8b5a0d263",
   "generator_sources_sha256": {
     "scripts/ops/seed_planner.py": "d9402d1f22822c8206ca44d5c543101fc06bc7b3f5a396e68bd37ae68d471d26",
     "scripts/ops/generate_period_pack.py": "1d774b8e6fa965bd384d9f6b7a5a3a4e9e53b6518828246c847e67080adef1b9",
-    "scripts/ops/seed_v2_gates.py": "680997e965465c425180ec9fbefffb86c96d6336091722a18bce96885ad1469e",
+    "scripts/ops/seed_v2_gates.py": "214de9397c5978e5094f35f484ce617d2c7ff7429bc845e29f8c844a69c55a35",
     "scripts/ops/fmcg_calendar.py": "ab5d8e408ff17212aacc50ba61c68548b19d4213accf4afc289657a0c4f53b0a"
   },
   "canonical_july_15_register_fingerprints": {

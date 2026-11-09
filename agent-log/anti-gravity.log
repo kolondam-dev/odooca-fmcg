@@ -2211,3 +2211,10 @@
 - Transparansi Manifest Pajak: Mengonfigurasi statutory_rate: '0.12', dpp_factor: '11/12', effective_rate: '0.11', dan rate: '0.11' secara eksplisit di MANIFEST.json.
 - Verifikasi & Integritas: 114 unit test PASS (test_seed_planner + test_seed_v2_gates) termasuk asersi keberadaan berkas fisik foto bukti di disk dan keselarasan 100% profil pajak invoice terhadap fixture; 11 gerbang invariant v2 PASS (strict=True, 0 violations); ruff check clean; check_manifests 12 addons OK; verify_seed_invariants PASS; verify_seed_acceptance PASS.
 - Task managed by antigravity at 2026-11-10T00:15:00+07:00
+[2026-11-10T02:40:00+07:00] [INFO] F2: Penutupan Celah Fail-Open TAX-SOURCE Kode 04 & Sinkronisasi origin/main (6ff44a7: PR #107)
+- P2 Penutupan Celah Fail-Open TAX-SOURCE: Memodifikasi scripts/ops/seed_v2_gates.py pada _check_tax() sehingga jika tax_code == '04', field commercial_dpp wajib ada, tidak boleh blank, harus numerik valid, finite, dan >= 0. Jika tidak memenuhi syarat, langsung memicu kegagalan TAX-SOURCE dan melarang jatuh (fall through) ke cabang else standar/legacy.
+- Pengujian Mutasi & Regresi: Menambahkan 8 test baru di tests/test_seed_v2_gates.py (total 122 tests PASS), termasuk kasus missing commercial_dpp dan blank commercial_dpp yang angkanya sengaja diselaraskan dengan rumus legacy, membuktikan bahwa kode transaksi 04 tetap ditolak keras tanpa lolos ke jalur legacy.
+- Sinkronisasi origin/main: Menggabungkan origin/main terbaru (6ff44a7 PR #107 partner-slice coverage) secara bersih tanpa force-push.
+- Regenerasi MANIFEST: Memperbarui MANIFEST.json untuk mengikat generator commit a63c612 dan hash baru scripts/ops/seed_v2_gates.py.
+- Verifikasi Penuh: 122 tests PASS, 11 gates PASS (strict=True, 0 violations), verify_seed_invariants PASS, verify_seed_acceptance PASS, ruff check clean, check_manifests 12 addons OK.
+- Task managed by antigravity at 2026-11-10T02:40:00+07:00

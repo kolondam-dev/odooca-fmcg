@@ -1,3 +1,22 @@
+## 2026-11-10T02:40:00+07:00 — antigravity — F2: Penutupan Celah Fail-Open TAX-SOURCE Kode 04 & Sinkronisasi origin/main (PR #105)
+**Berubah:**
+- `scripts/ops/seed_v2_gates.py`: Penutupan celah fail-open pada `_check_tax()`. Baris faktur ber-`tax_code == '04'` kini wajib memiliki field `commercial_dpp`, non-empty, numerik valid, non-negative, dan diverifikasi dengan formula DPP Nilai Lain 11/12 dan PPN 12%. Jika syarat basis komersial tidak terpenuhi, gate langsung `fail('TAX-SOURCE', ...)` dan `continue` tanpa jatuh (fall through) ke jalur legacy.
+- `tests/test_seed_v2_gates.py`: Menambahkan 8 test mutasi regresi komprehensif untuk kode transaksi 04 (`test_tax_code_04_valid`, missing `commercial_dpp`, blank `commercial_dpp`, non-numeric, negative, wrong tax base, wrong PPN rate, wrong total), membuktikan bahwa transaksi 04 tanpa commercial basis tetap ditolak keras meskipun angkanya sengaja dicocokkan dengan rumus legacy.
+- `data/registers/periods/2026-08/MANIFEST.json`: Mengikat generator commit `a63c612` dan LF SHA-256 terbaru dari `scripts/ops/seed_v2_gates.py`.
+- Integrasi git: Menggabungkan `origin/main` (`6ff44a7`: PR #107) ke cabang `agen/seed-f2-august-refinement` via merge commit `a0f35fd` tanpa force-push.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_seed_planner.py tests/test_seed_v2_gates.py`: 122/122 unit tests PASS (37.9s).
+- [F] `python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict`: PASS (11 gates run, 0 violations).
+- [F] `python scripts/ops/verify_seed_invariants.py`: PASS.
+- [F] `python scripts/ops/verify_seed_acceptance.py`: PASS.
+- [F] `python -m ruff check scripts/ops/ tests/`: PASS (clean).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] Branch sinkron dengan `origin/main` (`behind_by = 0`).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #105.
+**Berikutnya:**
+- Push branch ke remote `origin/agen/seed-f2-august-refinement`, pantau 14 CI check-runs hingga 100% hijau, dan minta re-review supervisor untuk final approval & merge.
+
 ## 2026-11-10T02:35:00+07:00 — Agent VSCode — I2b/PR107: CI exact-SHA 55a647a hijau (pasca merge main)
 **Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode pada commit ini.
 **Diverifikasi:** [F] PR #107 pada SHA `55a647a17828bec47b0c3a234189ff1f2f8d7a0b` `MERGEABLE` dengan 12/12 check SUCCESS, termasuk `Finance I0 candidate spike` run `42663566390` yang mencetak `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Log native memuat matriks filter lengkap: `journal_sale`, `date_from_0710`, dan `partner_named` untuk customer/supplier pada `scale=1` dan `scale=7`, semuanya `result=PASS`. [F] Konflik `docs/HANDOFF.md` dan `agent-log/claude-dev.log` dengan `c8fe1c0` diselesaikan tanpa menghapus entri agen lain; entri 22:25 yang terduplikasi saat rekonsiliasi dihapus, entri 00:05 dan 01:10 dipertahankan sekali. [F] `ruff` PASS; `check_manifests.py` PASS (12 addon); 44 tes finance PASS.
