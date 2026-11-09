@@ -1,4 +1,4 @@
-import { sendOrder, leaveVisit } from "./visit-helpers";
+import { sendOrder, leaveVisit, openOrderScreen } from "./visit-helpers";
 import { checkIn } from "./session-fixture";
 import { switchPersona } from "./delivery-helpers";
 import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
@@ -26,9 +26,7 @@ async function visitOrder(page: Page, first = true) {
             page.getByText("Kunjungan lokal aktif", { exact: true }),
         ).toBeVisible();
     }
-    await page
-        .getByRole("button", { name: "Buat order di outlet", exact: true })
-        .click();
+    await openOrderScreen(page);
 }
 async function demoGps(page: Page) {
     await page.addInitScript(() => {
@@ -121,8 +119,13 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await visitOrder(page);
-    await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("2");
-    await page.getByRole("button", { name: "Tutup form", exact: true }).click();
+    await page
+        .getByLabel("Kuantitas Biskuit Kelapa 300 g Karton", { exact: true })
+        .fill("2");
+    await page
+        .getByRole("button", { name: "Kembali", exact: true })
+        .last()
+        .click();
     await page.reload();
     await expect(
         page.getByRole("navigation", { name: "Navigasi utama" }),
@@ -135,9 +138,11 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await visitOrder(page, false);
-    await expect(page.getByLabel("Kuantitas Biskuit Kelapa 300 g")).toHaveValue(
-        "2",
-    );
+    await expect(
+        page.getByLabel("Kuantitas Biskuit Kelapa 300 g Karton", {
+            exact: true,
+        }),
+    ).toHaveValue("2");
     await saveDisplayPhoto(page);
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
@@ -383,15 +388,22 @@ test("corrupt restored bundle locks order and extra call without deleting pendin
     await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
     await visitOrder(page);
-    await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("2");
+    await page
+        .getByLabel("Kuantitas Biskuit Kelapa 300 g Karton", { exact: true })
+        .fill("2");
     await saveDisplayPhoto(page);
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
     await sendOrder(page);
     await visitOrder(page, false);
-    await page.getByLabel("Kuantitas Biskuit Kelapa 300 g").fill("3");
-    await page.getByRole("button", { name: "Tutup form", exact: true }).click();
+    await page
+        .getByLabel("Kuantitas Biskuit Kelapa 300 g Karton", { exact: true })
+        .fill("3");
+    await page
+        .getByRole("button", { name: "Kembali", exact: true })
+        .last()
+        .click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     const before = await page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve, reject) => {

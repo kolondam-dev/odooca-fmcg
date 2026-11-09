@@ -1,3 +1,16 @@
+## 2026-11-09T17:55:00+07:00 — claude-design — PR #103 review P2: approval dari receipt, SKU stale, cartEmpty
+
+**Berubah:** OrderResult (approval hanya dari receipt/antrean; alasan lokal jadi "Kemungkinan perlu approval"), order-cart (`stale` dilaporkan), OrderScreen (callout "Hapus dari draft", kirim diblokir, cartEmpty hanya SKU valid); +2 tes order-cart. Merge main.
+**Diverifikasi:** [F] tsc, vitest. **Belum diuji:** [BU] e2e & CI setelah merge.
+
+## 2026-11-09T13:47:14+07:00 — claude-design — Fase 2: Order POS, Ringkasan, Hasil kirim, Display & stok
+
+**Berubah:** pwa/src/components/{OrderScreen,OrderResult,DisplayStockScreen}.tsx (layar penuh DS: POS stepper per satuan, cari, kunci principal, SKU sheet, Diskon order, Ringkasan + Catatan/No PO, Hasil kirim bertahap, Display & stok); domain/order-cart.ts (keranjang multi-satuan dilebur ke satu baris kontrak); Stepper punya mode isian; ikon baru; kartu Hub "Display & stok toko"; OrderSheet lama dan cabang order TaskForm dihapus. Bug Back: satu lapis Back untuk Order+Hasil kirim, Display ditumpuk di dalam Order.
+**Blocker backend (B1-B8) + rekomendasi:** docs/ui/DS_RECONCILIATION.md K13 (multi-satuan per SKU, diskon baris/program/Rp, limit kredit, foto SKU, command display&stok, riwayat order, status approval, stok tersedia).
+**Diverifikasi:** [F] e2e phone+tablet 180 lulus (build QA), vitest 456 (+8 order-cart), prettier, tsc, contracts, build + check:build. [A] callout limit kredit memakai credit_limit saja.
+**Belum diuji:** [BU] CI GitHub, perangkat nyata, tombol hubungi SPV (tak ada data).
+**Berikutnya:** peta+foto bukti (K8), Selesai kunjungan, Lainnya/Antrean, Delivery, hapus CSS lama.
+
 ## 2026-11-09T12:56:00+07:00 — Agent VSCode — PR101: penyelarasan company context production FIN51 dan perbaikan readiness locator PWA
 **Berubah:** `addons/id_finance_reporting/models/ledger_reports.py`: [F] akar masalah ialah `unaffected = company.get_unaffected_earnings_account()` dipanggil tanpa `with_company(company)` sehingga saat default env adalah company A dan memproses company B, pembuatan akun fallback via `_load_records` berisiko mengikat field company-dependent ke company default; kini eksplisit `company.with_company(company).get_unaffected_earnings_account()`; `scripts/ops/verify_finance_i2_ledgers_core.py` & `tests/test_finance_i2_ledgers_core.py`: menambahkan native regression saat fresh company C belum memiliki akun unaffected earnings dan diproses dari env dengan default company A, serta unit test mock per-company invocation (32 tes finance PASS); `pwa/tests/browser/next-policy.spec.ts`: [F] akar kegagalan e2e browser ialah locator `getByRole("region", { name: "Sesi kerja" })` hanya dirender pada `page === "home"`, sedangkan setelah reload offline aplikasi tetap berada di halaman `"more"`; locator kesiapan kini menggunakan tombol navigasi bottom-nav `"Lainnya"` dan ringkasan `"Riwayat SO ·"` yang deterministik hadir di semua view.
 **Diverifikasi:** [F] `python3 scripts/check_manifests.py` PASS (12 addon); `python3 -m unittest discover -s tests -p 'test_finance*.py'` PASS (32 tes); py_compile dan AST check PASS.

@@ -36,6 +36,9 @@ export function VisitPanel({
     queue,
     changed,
     order,
+    display,
+    dialogType,
+    finishSignal = 0,
     back,
 }: {
     outlet: Snapshot["outlets"][number];
@@ -46,9 +49,38 @@ export function VisitPanel({
     queue: QueueItem[];
     changed: () => void;
     order: () => void;
+    display: () => void;
+    /** Jenis dialog yang sedang terbuka; berubah saat layar Display/Order menutup. */
+    dialogType?: string;
+    /** Naik setiap kali Hasil kirim meminta lanjut ke Selesai kunjungan. */
+    finishSignal?: number;
     back: () => void;
 }) {
     const [sheet, setSheet] = useState(false);
+    const [displayDone, setDisplayDone] = useState(false);
+    useEffect(() => {
+        if (finishSignal > 0) setSheet(true);
+    }, [finishSignal]);
+    useEffect(() => {
+        if (dialogType) return;
+        let active = true;
+        void store
+            .draft(owner, `display:${outlet.id}`)
+            .then((value) => {
+                if (active)
+                    setDisplayDone(
+                        !!(
+                            value &&
+                            typeof value === "object" &&
+                            (value as { evidence?: unknown }).evidence
+                        ),
+                    );
+            })
+            .catch(() => {});
+        return () => {
+            active = false;
+        };
+    }, [dialogType, store, owner, outlet.id]);
     const [runningMode] = useRunningMode();
     const isDemo = runningMode === "demo";
     const [info, setInfo] =
@@ -464,6 +496,18 @@ export function VisitPanel({
                 </span>
             </Card>
             <Card tight>
+                <ListRow
+                    icon="camera"
+                    title="Display & stok toko"
+                    sub="Foto display wajib sebelum order dikirim"
+                    status={
+                        displayDone
+                            ? { tone: "ok", label: "Tersimpan" }
+                            : { tone: "warn", label: "Wajib" }
+                    }
+                    onClick={canOrder ? display : undefined}
+                    divider
+                />
                 <ListRow
                     icon="bag"
                     title="Order"

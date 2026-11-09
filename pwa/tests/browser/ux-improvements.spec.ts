@@ -98,23 +98,11 @@ test("search Back restores list and compact POS toolbar leaves product space on 
         .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
     await page.setViewportSize({ width: 393, height: 430 });
-    await page.locator(".sheet-body").evaluate((el) => {
-        el.scrollTop = 600;
-    });
-    const tabs = (await page
-        .getByRole("navigation", { name: "Tahap order" })
-        .boundingBox())!;
-    const toolbar = (await page.locator(".pos-toolbar").boundingBox())!;
-    const body = (await page.locator(".sheet-body").boundingBox())!;
-    expect(toolbar.y).toBeGreaterThanOrEqual(tabs.y + tabs.height - 1);
-    expect(toolbar.height).toBeLessThan(115);
-    expect(body.height - tabs.height - toolbar.height).toBeGreaterThan(70);
-    const search = (await page
-        .getByLabel("Cari produk", { exact: true })
-        .boundingBox())!;
-    const icon = (await page.locator(".product-search svg").boundingBox())!;
+    const bar = (await page.locator(".pos-search").boundingBox())!;
+    expect(bar.height).toBeLessThanOrEqual(60);
+    const icon = (await page.locator(".pos-search svg").boundingBox())!;
     expect(
-        Math.abs(search.y + search.height / 2 - icon.y - icon.height / 2),
+        Math.abs(bar.y + bar.height / 2 - icon.y - icon.height / 2),
     ).toBeLessThan(3);
 });
 
@@ -267,15 +255,17 @@ test("500 SKU catalog renders bounded rows and preserves selected off-screen qua
     await page
         .getByRole("button", { name: "Buat order di outlet", exact: true })
         .click();
-    await expect(page.locator(".product-card")).toHaveCount(60);
+    await expect(page.locator(".pos-card")).toHaveCount(40);
     await page.getByLabel("Cari produk", { exact: true }).fill("SKU-499");
-    await expect(page.locator(".product-card")).toHaveCount(1);
-    await page.getByLabel("Kuantitas Produk 499", { exact: true }).fill("2");
+    await expect(page.locator(".pos-card")).toHaveCount(1);
+    await page
+        .getByLabel("Kuantitas Produk 499 Karton", { exact: true })
+        .fill("2");
     await page.getByLabel("Cari produk", { exact: true }).fill("");
-    await expect(page.locator(".product-card")).toHaveCount(60);
+    await expect(page.locator(".pos-card")).toHaveCount(40);
     await page.getByLabel("Cari produk", { exact: true }).fill("SKU-499");
     await expect(
-        page.getByLabel("Kuantitas Produk 499", { exact: true }),
+        page.getByLabel("Kuantitas Produk 499 Karton", { exact: true }),
     ).toHaveValue("2");
 });
 
