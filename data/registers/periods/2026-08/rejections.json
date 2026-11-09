@@ -10,8 +10,10 @@
     "line_gross_dpp": "7632000.00",
     "line_disc_dpp": "213696.00",
     "rejection_dpp": "7418304.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-002",
@@ -24,8 +26,10 @@
     "line_gross_dpp": "180000.00",
     "line_disc_dpp": "2160.00",
     "rejection_dpp": "177840.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "SEGEL_PABRIK_BOCOR",
+    "incident_batch_ref": "BAP-QA-202608-02",
+    "evidence_type": "ACTUAL",
+    "evidence_photo_ref": "/evidence/actual/pod_rejection_seal_leak.jpg"
   },
   {
     "rejection_id": "REJ-202608-003",
@@ -38,8 +42,10 @@
     "line_gross_dpp": "345600.00",
     "line_disc_dpp": "4147.20",
     "rejection_dpp": "341452.80",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-004",
@@ -52,8 +58,10 @@
     "line_gross_dpp": "4056000.00",
     "line_disc_dpp": "190632.00",
     "rejection_dpp": "3865368.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-005",
@@ -66,8 +74,10 @@
     "line_gross_dpp": "4212000.00",
     "line_disc_dpp": "117936.00",
     "rejection_dpp": "4094064.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-006",
@@ -80,8 +90,10 @@
     "line_gross_dpp": "1536000.00",
     "line_disc_dpp": "24576.00",
     "rejection_dpp": "1511424.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-007",
@@ -94,8 +106,10 @@
     "line_gross_dpp": "1680000.00",
     "line_disc_dpp": "20160.00",
     "rejection_dpp": "1659840.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-008",
@@ -108,8 +122,10 @@
     "line_gross_dpp": "792000.00",
     "line_disc_dpp": "9504.00",
     "rejection_dpp": "782496.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-009",
@@ -122,8 +138,10 @@
     "line_gross_dpp": "316800.00",
     "line_disc_dpp": "3801.60",
     "rejection_dpp": "312998.40",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-010",
@@ -136,8 +154,10 @@
     "line_gross_dpp": "882000.00",
     "line_disc_dpp": "10584.00",
     "rejection_dpp": "871416.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-011",
@@ -150,8 +170,10 @@
     "line_gross_dpp": "1872000.00",
     "line_disc_dpp": "22464.00",
     "rejection_dpp": "1849536.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-012",
@@ -164,8 +186,10 @@
     "line_gross_dpp": "1275000.00",
     "line_disc_dpp": "19125.00",
     "rejection_dpp": "1255875.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-013",
@@ -178,8 +202,10 @@
     "line_gross_dpp": "1632000.00",
     "line_disc_dpp": "68544.00",
     "rejection_dpp": "1563456.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-014",
@@ -192,8 +218,10 @@
     "line_gross_dpp": "3600000.00",
     "line_disc_dpp": "122400.00",
     "rejection_dpp": "3477600.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-015",
@@ -206,8 +234,10 @@
     "line_gross_dpp": "1555200.00",
     "line_disc_dpp": "52876.80",
     "rejection_dpp": "1502323.20",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-016",
@@ -220,8 +250,10 @@
     "line_gross_dpp": "1428000.00",
     "line_disc_dpp": "22848.00",
     "rejection_dpp": "1405152.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-017",
@@ -234,8 +266,10 @@
     "line_gross_dpp": "528000.00",
     "line_disc_dpp": "6336.00",
     "rejection_dpp": "521664.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-018",
@@ -248,8 +282,10 @@
     "line_gross_dpp": "441600.00",
     "line_disc_dpp": "5299.20",
     "rejection_dpp": "436300.80",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-019",
@@ -262,8 +298,10 @@
     "line_gross_dpp": "864000.00",
     "line_disc_dpp": "29376.00",
     "rejection_dpp": "834624.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-020",
@@ -276,8 +314,10 @@
     "line_gross_dpp": "5928000.00",
     "line_disc_dpp": "94848.00",
     "rejection_dpp": "5833152.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-021",
@@ -290,8 +330,10 @@
     "line_gross_dpp": "3520000.00",
     "line_disc_dpp": "56320.00",
     "rejection_dpp": "3463680.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-022",
@@ -304,8 +346,10 @@
     "line_gross_dpp": "1584000.00",
     "line_disc_dpp": "19008.00",
     "rejection_dpp": "1564992.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-023",
@@ -318,8 +362,10 @@
     "line_gross_dpp": "312000.00",
     "line_disc_dpp": "11544.00",
     "rejection_dpp": "300456.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-024",
@@ -332,8 +378,10 @@
     "line_gross_dpp": "3974400.00",
     "line_disc_dpp": "186796.80",
     "rejection_dpp": "3787603.20",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-025",
@@ -346,8 +394,10 @@
     "line_gross_dpp": "912000.00",
     "line_disc_dpp": "14592.00",
     "rejection_dpp": "897408.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-026",
@@ -360,8 +410,10 @@
     "line_gross_dpp": "5760000.00",
     "line_disc_dpp": "161280.00",
     "rejection_dpp": "5598720.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-027",
@@ -374,8 +426,10 @@
     "line_gross_dpp": "400000.00",
     "line_disc_dpp": "14800.00",
     "rejection_dpp": "385200.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-028",
@@ -388,8 +442,10 @@
     "line_gross_dpp": "504000.00",
     "line_disc_dpp": "21168.00",
     "rejection_dpp": "482832.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-029",
@@ -402,8 +458,10 @@
     "line_gross_dpp": "936000.00",
     "line_disc_dpp": "11232.00",
     "rejection_dpp": "924768.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-030",
@@ -416,8 +474,10 @@
     "line_gross_dpp": "648000.00",
     "line_disc_dpp": "23976.00",
     "rejection_dpp": "624024.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-031",
@@ -430,8 +490,10 @@
     "line_gross_dpp": "1728000.00",
     "line_disc_dpp": "81216.00",
     "rejection_dpp": "1646784.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-032",
@@ -444,8 +506,10 @@
     "line_gross_dpp": "1368000.00",
     "line_disc_dpp": "21888.00",
     "rejection_dpp": "1346112.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "SEGEL_PABRIK_BOCOR",
+    "incident_batch_ref": "BAP-QA-202608-02",
+    "evidence_type": "ACTUAL",
+    "evidence_photo_ref": "/evidence/actual/pod_rejection_seal_leak.jpg"
   },
   {
     "rejection_id": "REJ-202608-033",
@@ -458,8 +522,10 @@
     "line_gross_dpp": "972000.00",
     "line_disc_dpp": "11664.00",
     "rejection_dpp": "960336.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-034",
@@ -472,8 +538,10 @@
     "line_gross_dpp": "1260000.00",
     "line_disc_dpp": "20160.00",
     "rejection_dpp": "1239840.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-035",
@@ -486,8 +554,10 @@
     "line_gross_dpp": "252000.00",
     "line_disc_dpp": "3024.00",
     "rejection_dpp": "248976.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-036",
@@ -500,8 +570,10 @@
     "line_gross_dpp": "4080000.00",
     "line_disc_dpp": "89760.00",
     "rejection_dpp": "3990240.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-037",
@@ -514,8 +586,10 @@
     "line_gross_dpp": "1296000.00",
     "line_disc_dpp": "20736.00",
     "rejection_dpp": "1275264.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-038",
@@ -528,8 +602,10 @@
     "line_gross_dpp": "132000.00",
     "line_disc_dpp": "2112.00",
     "rejection_dpp": "129888.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-039",
@@ -542,8 +618,10 @@
     "line_gross_dpp": "396000.00",
     "line_disc_dpp": "4752.00",
     "rejection_dpp": "391248.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-040",
@@ -556,8 +634,10 @@
     "line_gross_dpp": "168000.00",
     "line_disc_dpp": "2520.00",
     "rejection_dpp": "165480.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-041",
@@ -570,8 +650,10 @@
     "line_gross_dpp": "972000.00",
     "line_disc_dpp": "15552.00",
     "rejection_dpp": "956448.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-042",
@@ -584,8 +666,10 @@
     "line_gross_dpp": "8256000.00",
     "line_disc_dpp": "280704.00",
     "rejection_dpp": "7975296.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "BAP-SLA-202608-03",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-043",
@@ -598,8 +682,10 @@
     "line_gross_dpp": "324000.00",
     "line_disc_dpp": "5184.00",
     "rejection_dpp": "318816.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-044",
@@ -612,8 +698,10 @@
     "line_gross_dpp": "672000.00",
     "line_disc_dpp": "10752.00",
     "rejection_dpp": "661248.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-045",
@@ -626,8 +714,10 @@
     "line_gross_dpp": "1920000.00",
     "line_disc_dpp": "30720.00",
     "rejection_dpp": "1889280.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-046",
@@ -640,8 +730,10 @@
     "line_gross_dpp": "624000.00",
     "line_disc_dpp": "9984.00",
     "rejection_dpp": "614016.00",
-    "rejection_reason": "ITEM RUSAK",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   },
   {
     "rejection_id": "REJ-202608-047",
@@ -654,7 +746,9 @@
     "line_gross_dpp": "864000.00",
     "line_disc_dpp": "24192.00",
     "rejection_dpp": "839808.00",
-    "rejection_reason": "ITEM EXPIRED",
-    "evidence_photo_ref": "/evidence/pod_rejection_carton_damaged.jpg"
+    "rejection_reason": "DEFECT_KALENG_PENYOK",
+    "incident_batch_ref": "SIM-QA-202608-04",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "/evidence/synthetic/sample_carton_damage_synthetic.jpg"
   }
 ]
