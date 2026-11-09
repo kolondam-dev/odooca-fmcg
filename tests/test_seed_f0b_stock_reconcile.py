@@ -133,26 +133,45 @@ class F0bTests(unittest.TestCase):
                 lot_id INTEGER, quantity REAL, reserved_quantity REAL
             );
             INSERT INTO res_company VALUES (7, 'PT Salva Inti Mandiri', 1), (9, 'Other Active Co', 1);
-            INSERT INTO product_template VALUES (1, 'SKU-A');
-            INSERT INTO product_product VALUES (1, 1, 1);
+            INSERT INTO product_template VALUES (1, 'SKU-A'), (2, 'SKU-ARCH');
+            INSERT INTO product_product VALUES (1, 1, 1), (2, 2, 0);
             INSERT INTO stock_location VALUES (1, 'WH/Stock', 'internal'), (2, 'WH/Stock', 'internal');
             INSERT INTO stock_lot VALUES (1, 'LOT-1');
-            INSERT INTO stock_quant VALUES (1, 7, 1, 1, 1, 240, 24), (2, 9, 1, 2, 1, 14400, 0);
+            INSERT INTO stock_quant VALUES
+                (1, 7, 1, 1, 1, 240, 24),
+                (2, 9, 1, 2, 1, 14400, 0),
+                (3, 7, 2, 1, 1, 48, 0);
             """
         )
         sql = f0b.LIVE_STOCK_SQL.replace("%(company_id)s", ":company_id")
         scoped = db.execute(sql, {"company_id": 7}).fetchall()
-        self.assertEqual(scoped, [(7, "SKU-A", "LOT-1", 240.0, 24.0)])
+        self.assertEqual(
+            set(scoped),
+            {
+                (7, "SKU-A", "LOT-1", 240.0, 24.0),
+                (7, "SKU-ARCH", "LOT-1", 48.0, 0.0),
+            },
+        )
+        self.assertNotIn("pp.active", f0b.LIVE_STOCK_SQL)
         other = db.execute(sql, {"company_id": 9}).fetchall()
         self.assertEqual(other, [(9, "SKU-A", "LOT-1", 14400.0, 0.0)])
         # Every returned row carries the scope, so compare() accepts only the selected company.
         carton = {"SKU-A": 24}
-        res = f0b.compare(scoped, {("SKU-A", "LOT-1"): 9}, carton, 7)
+        res = f0b.compare([row for row in scoped if row[1] == "SKU-A"], {("SKU-A", "LOT-1"): 9}, carton, 7)
         self.assertEqual(res["company_id"], 7)
         self.assertEqual(Decimal(res["live_available_total_cartons"]), 9)
         self.assertEqual(res["lot_diffs_count"], 0)
         with self.assertRaisesRegex(ValueError, "outside the reconciliation scope"):
-            f0b.compare(scoped + other, {("SKU-A", "LOT-1"): 9}, carton, 7)
+            f0b.compare([row for row in scoped if row[1] == "SKU-A"] + other, {("SKU-A", "LOT-1"): 9}, carton, 7)
+
+    def test_cli_cannot_override_canonical_company_identity(self):
+        args = f0b.build_arg_parser().parse_args(["--company-id", "7", "--out", "/tmp/f0b.json"])
+        self.assertEqual(args.company_id, 7)
+        with self.assertRaises(SystemExit):
+            f0b.build_arg_parser().parse_args([
+                "--company-id", "9", "--out", "/tmp/f0b.json",
+                "--expected-company-name", "Other Active Co",
+            ])
 
     def test_company_validation_is_fail_closed(self):
         name = f0b.CANONICAL_COMPANY_NAME
