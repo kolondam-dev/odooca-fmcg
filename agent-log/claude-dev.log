@@ -136,3 +136,10 @@
 - P2: --c-nav di tokens.css #0b1f4d -> #001a57 (sama dengan tokens.json dan DS_RECONCILIATION K1); tests/design-tokens-parity.test.ts menjaga CSS=JSON
 - CI: pwa.yml push juga untuk agen/pwa-*, langkah npm run test:tokens; [BU] npm registry tidak dapat dijangkau di sesi ini sehingga vitest/prettier/tsc belum dijalankan lokal
 - Task managed by claude-dev agent at 2026-11-08T13:32:51+07:00
+
+[2026-11-09T17:55:02+07:00] [INFO] I2b: AR/AP subledger FIN05-FIN09 (partner ledger, open items as-of, signed aging)
+- Model baru: id.finance.partner.ledger (FIN05/FIN06), id.finance.open.items (FIN07), id.finance.aged.partner.balance (FIN08/FIN09); helper murni ledger_subledger.py memakai partial reconciliation bertanggal, bukan amount_residual saat ini.
+- AR dan AP dipisah per (partner_id, account_type); baris partnerless diekspos sebagai exception eksplisit; bucket aging bertanda dan wajib tie-out ke total open items/GL kontrol.
+- Runner disposable scripts/ops/verify_finance_i2_arap_subledger.py: oracle AML/partial independen, render OCA open_items dan aged_partner_balance pada pin f48b4ea, role/company negative, tamper dan unreconcile rollback; workflow finance-i0-spike menambah langkah PASS.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 41 tes finance PASS termasuk 9 tes I2b. [BU] CI native exact-SHA belum dijalankan; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-09T17:55:02+07:00
