@@ -69,7 +69,7 @@ def clean():
         pending_dos={},
     )
     config = dict(pack_start='2026-08-03', pack_end='2026-08-07', tax=dict(TAX),
-                  min_lead_days={'PRIN-A': 14}, opening_cash='100000')
+                  min_lead_days={'PRIN-A': 12}, opening_cash='100000')
     existing = {'SO-202607-0001', 'PAY-AR-00001', 'PAY-AP-01', 'PO-2026-06-01'}
     return dict(pack=pack, opening=opening, config=config, existing=existing)
 

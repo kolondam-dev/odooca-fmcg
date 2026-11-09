@@ -1,0 +1,6068 @@
+{
+  "as_of_datetime": "2026-09-01T00:00:00+08:00",
+  "timezone": "Asia/Makassar (+08:00 WITA)",
+  "period_closed": "2026-08",
+  "description": "Closing state after completing 2026-08 transactions pack.",
+  "summary": {
+    "total_physical_cartons": 61412,
+    "total_reserved_cartons": 771,
+    "total_available_cartons": 60641,
+    "total_quarantine_cartons": 314,
+    "open_invoices_count": 345,
+    "carry_invoices_count": 50,
+    "open_po_count": 15,
+    "in_transit_po_count": 1,
+    "pending_dos_count": 50
+  },
+  "last_sequences": {
+    "last_so_number": "SO-202608-1240",
+    "last_do_number": "DO-202608-1240",
+    "last_invoice_number": "INV-202608-1240",
+    "last_ar_payment_id": "PAY-AR-02169",
+    "last_ap_payment_id": "PAY-AP-05",
+    "last_rejection_id": "REJ-202608-047",
+    "last_po_number": "PO-2026-08-16",
+    "last_event_id": "EVT-010595"
+  },
+  "stock": {
+    "KPA-ABC-01||LOT-TOS-20260701-13": {
+      "sku_code": "KPA-ABC-01",
+      "lot_number": "LOT-TOS-20260701-13",
+      "physical": 67,
+      "reserved": 14,
+      "quarantine": 0
+    },
+    "KPA-ABC-02||LOT-TOS-20260701-14": {
+      "sku_code": "KPA-ABC-02",
+      "lot_number": "LOT-TOS-20260701-14",
+      "physical": 174,
+      "reserved": 6,
+      "quarantine": 20
+    },
+    "KPA-ABC-03||LOT-TOS-20260701-15": {
+      "sku_code": "KPA-ABC-03",
+      "lot_number": "LOT-TOS-20260701-15",
+      "physical": 91,
+      "reserved": 2,
+      "quarantine": 1
+    },
+    "KPA-ABC-04||LOT-TOS-20260615-INIT-16": {
+      "sku_code": "KPA-ABC-04",
+      "lot_number": "LOT-TOS-20260615-INIT-16",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "KPA-ABC-04||LOT-TOS-20260701-16": {
+      "sku_code": "KPA-ABC-04",
+      "lot_number": "LOT-TOS-20260701-16",
+      "physical": 162,
+      "reserved": 0,
+      "quarantine": 6
+    },
+    "KPA-ABC-05||LOT-TOS-20260701-17": {
+      "sku_code": "KPA-ABC-05",
+      "lot_number": "LOT-TOS-20260701-17",
+      "physical": 177,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-ABC-06||LOT-TOS-20260701-18": {
+      "sku_code": "KPA-ABC-06",
+      "lot_number": "LOT-TOS-20260701-18",
+      "physical": 61,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-01||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-01",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 768,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "KPA-KA-01||LOT-TOS-20260701-01": {
+      "sku_code": "KPA-KA-01",
+      "lot_number": "LOT-TOS-20260701-01",
+      "physical": 147,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-02||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-02",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 776,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-02||LOT-TOS-20260615-INIT-02": {
+      "sku_code": "KPA-KA-02",
+      "lot_number": "LOT-TOS-20260615-INIT-02",
+      "physical": 12,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-02||LOT-TOS-20260701-02": {
+      "sku_code": "KPA-KA-02",
+      "lot_number": "LOT-TOS-20260701-02",
+      "physical": 164,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-03||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-03",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 773,
+      "reserved": 40,
+      "quarantine": 0
+    },
+    "KPA-KA-03||LOT-TOS-20260701-03": {
+      "sku_code": "KPA-KA-03",
+      "lot_number": "LOT-TOS-20260701-03",
+      "physical": 65,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-04||LOT-TOS-20260701-04": {
+      "sku_code": "KPA-KA-04",
+      "lot_number": "LOT-TOS-20260701-04",
+      "physical": 240,
+      "reserved": 10,
+      "quarantine": 0
+    },
+    "KPA-KA-05||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-05",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 785,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-05||LOT-TOS-20260701-05": {
+      "sku_code": "KPA-KA-05",
+      "lot_number": "LOT-TOS-20260701-05",
+      "physical": 173,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-06||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-06",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 756,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-06||LOT-TOS-20260701-06": {
+      "sku_code": "KPA-KA-06",
+      "lot_number": "LOT-TOS-20260701-06",
+      "physical": 96,
+      "reserved": 0,
+      "quarantine": 15
+    },
+    "KPA-KA-07||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-07",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 775,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "KPA-KA-07||LOT-TOS-20260701-07": {
+      "sku_code": "KPA-KA-07",
+      "lot_number": "LOT-TOS-20260701-07",
+      "physical": 141,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-08||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-08",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 784,
+      "reserved": 11,
+      "quarantine": 0
+    },
+    "KPA-KA-08||LOT-TOS-20260701-08": {
+      "sku_code": "KPA-KA-08",
+      "lot_number": "LOT-TOS-20260701-08",
+      "physical": 16,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-09||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-09",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 781,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-09||LOT-TOS-20260615-INIT-09": {
+      "sku_code": "KPA-KA-09",
+      "lot_number": "LOT-TOS-20260615-INIT-09",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 4
+    },
+    "KPA-KA-09||LOT-TOS-20260701-09": {
+      "sku_code": "KPA-KA-09",
+      "lot_number": "LOT-TOS-20260701-09",
+      "physical": 72,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-10||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-10",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 800,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-10||LOT-TOS-20260701-10": {
+      "sku_code": "KPA-KA-10",
+      "lot_number": "LOT-TOS-20260701-10",
+      "physical": 151,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-11||LOT-KA-202608-NEW-01": {
+      "sku_code": "KPA-KA-11",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "physical": 788,
+      "reserved": 27,
+      "quarantine": 0
+    },
+    "KPA-KA-11||LOT-TOS-20260701-11": {
+      "sku_code": "KPA-KA-11",
+      "lot_number": "LOT-TOS-20260701-11",
+      "physical": 97,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KA-12||LOT-TOS-20260701-12": {
+      "sku_code": "KPA-KA-12",
+      "lot_number": "LOT-TOS-20260701-12",
+      "physical": 111,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KPT-01||LOT-TOS-20260701-21": {
+      "sku_code": "KPA-KPT-01",
+      "lot_number": "LOT-TOS-20260701-21",
+      "physical": 165,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "KPA-KPT-02||LOT-TOS-20260701-22": {
+      "sku_code": "KPA-KPT-02",
+      "lot_number": "LOT-TOS-20260701-22",
+      "physical": 93,
+      "reserved": 10,
+      "quarantine": 0
+    },
+    "KPA-KPT-03||LOT-TOS-20260701-23": {
+      "sku_code": "KPA-KPT-03",
+      "lot_number": "LOT-TOS-20260701-23",
+      "physical": 204,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-KPT-04||LOT-TOS-20260701-24": {
+      "sku_code": "KPA-KPT-04",
+      "lot_number": "LOT-TOS-20260701-24",
+      "physical": 229,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-RTD-01||LOT-TOS-20260701-25": {
+      "sku_code": "KPA-RTD-01",
+      "lot_number": "LOT-TOS-20260701-25",
+      "physical": 85,
+      "reserved": 5,
+      "quarantine": 0
+    },
+    "KPA-RTD-02||LOT-TOS-20260701-26": {
+      "sku_code": "KPA-RTD-02",
+      "lot_number": "LOT-TOS-20260701-26",
+      "physical": 215,
+      "reserved": 0,
+      "quarantine": 4
+    },
+    "KPA-RTD-03||LOT-TOS-20260701-27": {
+      "sku_code": "KPA-RTD-03",
+      "lot_number": "LOT-TOS-20260701-27",
+      "physical": 127,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-RTD-04||LOT-TOS-20260701-28": {
+      "sku_code": "KPA-RTD-04",
+      "lot_number": "LOT-TOS-20260701-28",
+      "physical": 66,
+      "reserved": 1,
+      "quarantine": 4
+    },
+    "KPA-RTD-05||LOT-TOS-20260701-29": {
+      "sku_code": "KPA-RTD-05",
+      "lot_number": "LOT-TOS-20260701-29",
+      "physical": 412,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-RTD-06||LOT-TOS-20260701-30": {
+      "sku_code": "KPA-RTD-06",
+      "lot_number": "LOT-TOS-20260701-30",
+      "physical": 385,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-RTD-07||LOT-TOS-20260615-INIT-31": {
+      "sku_code": "KPA-RTD-07",
+      "lot_number": "LOT-TOS-20260615-INIT-31",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "KPA-RTD-07||LOT-TOS-20260701-31": {
+      "sku_code": "KPA-RTD-07",
+      "lot_number": "LOT-TOS-20260701-31",
+      "physical": 226,
+      "reserved": 0,
+      "quarantine": 3
+    },
+    "KPA-RTD-08||LOT-TOS-20260701-32": {
+      "sku_code": "KPA-RTD-08",
+      "lot_number": "LOT-TOS-20260701-32",
+      "physical": 176,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-YA-01||LOT-TOS-20260701-19": {
+      "sku_code": "KPA-YA-01",
+      "lot_number": "LOT-TOS-20260701-19",
+      "physical": 178,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "KPA-YA-02||LOT-TOS-20260701-20": {
+      "sku_code": "KPA-YA-02",
+      "lot_number": "LOT-TOS-20260701-20",
+      "physical": 315,
+      "reserved": 11,
+      "quarantine": 0
+    },
+    "MYR-BBG-01||LOT-BBG-202608-NEW-01": {
+      "sku_code": "MYR-BBG-01",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "physical": 788,
+      "reserved": 23,
+      "quarantine": 0
+    },
+    "MYR-BBG-01||LOT-ORA-20260702-15": {
+      "sku_code": "MYR-BBG-01",
+      "lot_number": "LOT-ORA-20260702-15",
+      "physical": 10,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "MYR-BBG-01||LOT-ORA-20260703-15": {
+      "sku_code": "MYR-BBG-01",
+      "lot_number": "LOT-ORA-20260703-15",
+      "physical": 185,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BBG-02||LOT-BBG-202608-NEW-01": {
+      "sku_code": "MYR-BBG-02",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "physical": 799,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BBG-02||LOT-ORA-20260703-16": {
+      "sku_code": "MYR-BBG-02",
+      "lot_number": "LOT-ORA-20260703-16",
+      "physical": 83,
+      "reserved": 0,
+      "quarantine": 13
+    },
+    "MYR-BBG-03||LOT-BBG-202608-NEW-01": {
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "physical": 198,
+      "reserved": 24,
+      "quarantine": 2
+    },
+    "MYR-BBG-03||LOT-ORA-20260615-INIT-17": {
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-ORA-20260615-INIT-17",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 13
+    },
+    "MYR-BBG-03||LOT-ORA-20260702-17": {
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-ORA-20260702-17",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 4
+    },
+    "MYR-BBG-03||LOT-ORA-20260703-17": {
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-ORA-20260703-17",
+      "physical": 196,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BBG-04||LOT-BBG-202608-NEW-01": {
+      "sku_code": "MYR-BBG-04",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "physical": 588,
+      "reserved": 12,
+      "quarantine": 0
+    },
+    "MYR-BBG-04||LOT-ORA-20260703-18": {
+      "sku_code": "MYR-BBG-04",
+      "lot_number": "LOT-ORA-20260703-18",
+      "physical": 113,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BTR-01||LOT-BTR-202608-NEW-01": {
+      "sku_code": "MYR-BTR-01",
+      "lot_number": "LOT-BTR-202608-NEW-01",
+      "physical": 776,
+      "reserved": 1,
+      "quarantine": 0
+    },
+    "MYR-BTR-01||LOT-ORA-20260703-11": {
+      "sku_code": "MYR-BTR-01",
+      "lot_number": "LOT-ORA-20260703-11",
+      "physical": 50,
+      "reserved": 0,
+      "quarantine": 11
+    },
+    "MYR-BTR-02||LOT-BTR-202608-NEW-01": {
+      "sku_code": "MYR-BTR-02",
+      "lot_number": "LOT-BTR-202608-NEW-01",
+      "physical": 400,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-BTR-02||LOT-ORA-20260703-12": {
+      "sku_code": "MYR-BTR-02",
+      "lot_number": "LOT-ORA-20260703-12",
+      "physical": 178,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-01||LOT-ORA-20260702-35": {
+      "sku_code": "MYR-CND-01",
+      "lot_number": "LOT-ORA-20260702-35",
+      "physical": 50,
+      "reserved": 23,
+      "quarantine": 3
+    },
+    "MYR-CND-01||LOT-ORA-20260703-35": {
+      "sku_code": "MYR-CND-01",
+      "lot_number": "LOT-ORA-20260703-35",
+      "physical": 328,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-02||LOT-KPK-202608-NEW-01": {
+      "sku_code": "MYR-CND-02",
+      "lot_number": "LOT-KPK-202608-NEW-01",
+      "physical": 358,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-02||LOT-ORA-20260703-36": {
+      "sku_code": "MYR-CND-02",
+      "lot_number": "LOT-ORA-20260703-36",
+      "physical": 188,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-03||LOT-ORA-20260703-37": {
+      "sku_code": "MYR-CND-03",
+      "lot_number": "LOT-ORA-20260703-37",
+      "physical": 238,
+      "reserved": 13,
+      "quarantine": 20
+    },
+    "MYR-CND-04||LOT-ORA-20260615-INIT-38": {
+      "sku_code": "MYR-CND-04",
+      "lot_number": "LOT-ORA-20260615-INIT-38",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 8
+    },
+    "MYR-CND-04||LOT-ORA-20260702-38": {
+      "sku_code": "MYR-CND-04",
+      "lot_number": "LOT-ORA-20260702-38",
+      "physical": 24,
+      "reserved": 4,
+      "quarantine": 10
+    },
+    "MYR-CND-04||LOT-ORA-20260703-38": {
+      "sku_code": "MYR-CND-04",
+      "lot_number": "LOT-ORA-20260703-38",
+      "physical": 362,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-05||LOT-ORA-20260703-39": {
+      "sku_code": "MYR-CND-05",
+      "lot_number": "LOT-ORA-20260703-39",
+      "physical": 264,
+      "reserved": 0,
+      "quarantine": 9
+    },
+    "MYR-CND-06||LOT-ORA-20260703-40": {
+      "sku_code": "MYR-CND-06",
+      "lot_number": "LOT-ORA-20260703-40",
+      "physical": 247,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-07||LOT-ORA-20260703-41": {
+      "sku_code": "MYR-CND-07",
+      "lot_number": "LOT-ORA-20260703-41",
+      "physical": 302,
+      "reserved": 7,
+      "quarantine": 0
+    },
+    "MYR-CND-08||LOT-ORA-20260703-42": {
+      "sku_code": "MYR-CND-08",
+      "lot_number": "LOT-ORA-20260703-42",
+      "physical": 300,
+      "reserved": 9,
+      "quarantine": 0
+    },
+    "MYR-CND-09||LOT-ORA-20260703-43": {
+      "sku_code": "MYR-CND-09",
+      "lot_number": "LOT-ORA-20260703-43",
+      "physical": 188,
+      "reserved": 23,
+      "quarantine": 2
+    },
+    "MYR-CND-10||LOT-ORA-20260703-44": {
+      "sku_code": "MYR-CND-10",
+      "lot_number": "LOT-ORA-20260703-44",
+      "physical": 97,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-CND-10||LOT-TMR-202608-NEW-01": {
+      "sku_code": "MYR-CND-10",
+      "lot_number": "LOT-TMR-202608-NEW-01",
+      "physical": 167,
+      "reserved": 4,
+      "quarantine": 0
+    },
+    "MYR-EGN-01||LOT-EGN-202608-NEW-01": {
+      "sku_code": "MYR-EGN-01",
+      "lot_number": "LOT-EGN-202608-NEW-01",
+      "physical": 400,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-EGN-01||LOT-ORA-20260703-33": {
+      "sku_code": "MYR-EGN-01",
+      "lot_number": "LOT-ORA-20260703-33",
+      "physical": 204,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-EGN-02||LOT-ORA-20260703-34": {
+      "sku_code": "MYR-EGN-02",
+      "lot_number": "LOT-ORA-20260703-34",
+      "physical": 245,
+      "reserved": 9,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-01||LOT-ORA-20260702-29": {
+      "sku_code": "MYR-KPK-RTD-01",
+      "lot_number": "LOT-ORA-20260702-29",
+      "physical": 6,
+      "reserved": 0,
+      "quarantine": 7
+    },
+    "MYR-KPK-RTD-01||LOT-ORA-20260703-29": {
+      "sku_code": "MYR-KPK-RTD-01",
+      "lot_number": "LOT-ORA-20260703-29",
+      "physical": 379,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-02||LOT-ORA-20260703-30": {
+      "sku_code": "MYR-KPK-RTD-02",
+      "lot_number": "LOT-ORA-20260703-30",
+      "physical": 277,
+      "reserved": 18,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-03||LOT-ORA-20260703-31": {
+      "sku_code": "MYR-KPK-RTD-03",
+      "lot_number": "LOT-ORA-20260703-31",
+      "physical": 342,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-04||LOT-ORA-20260702-32": {
+      "sku_code": "MYR-KPK-RTD-04",
+      "lot_number": "LOT-ORA-20260702-32",
+      "physical": 53,
+      "reserved": 8,
+      "quarantine": 0
+    },
+    "MYR-KPK-RTD-04||LOT-ORA-20260703-32": {
+      "sku_code": "MYR-KPK-RTD-04",
+      "lot_number": "LOT-ORA-20260703-32",
+      "physical": 397,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-01||LOT-ORA-20260702-01": {
+      "sku_code": "MYR-RMA-01",
+      "lot_number": "LOT-ORA-20260702-01",
+      "physical": 36,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-01||LOT-ORA-20260703-01": {
+      "sku_code": "MYR-RMA-01",
+      "lot_number": "LOT-ORA-20260703-01",
+      "physical": 262,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-02||LOT-ORA-20260703-02": {
+      "sku_code": "MYR-RMA-02",
+      "lot_number": "LOT-ORA-20260703-02",
+      "physical": 246,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-03||LOT-ORA-20260702-03": {
+      "sku_code": "MYR-RMA-03",
+      "lot_number": "LOT-ORA-20260702-03",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 5
+    },
+    "MYR-RMA-03||LOT-ORA-20260703-03": {
+      "sku_code": "MYR-RMA-03",
+      "lot_number": "LOT-ORA-20260703-03",
+      "physical": 205,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-03||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-03",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 597,
+      "reserved": 9,
+      "quarantine": 0
+    },
+    "MYR-RMA-04||LOT-ORA-20260703-04": {
+      "sku_code": "MYR-RMA-04",
+      "lot_number": "LOT-ORA-20260703-04",
+      "physical": 200,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-04||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-04",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 792,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-05||LOT-ORA-20260703-05": {
+      "sku_code": "MYR-RMA-05",
+      "lot_number": "LOT-ORA-20260703-05",
+      "physical": 185,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-05||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-05",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 200,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-06||LOT-ORA-20260703-06": {
+      "sku_code": "MYR-RMA-06",
+      "lot_number": "LOT-ORA-20260703-06",
+      "physical": 226,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-07||LOT-ORA-20260703-07": {
+      "sku_code": "MYR-RMA-07",
+      "lot_number": "LOT-ORA-20260703-07",
+      "physical": 167,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-07||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-07",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 784,
+      "reserved": 3,
+      "quarantine": 0
+    },
+    "MYR-RMA-08||LOT-ORA-20260703-08": {
+      "sku_code": "MYR-RMA-08",
+      "lot_number": "LOT-ORA-20260703-08",
+      "physical": 170,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-08||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-08",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 789,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-09||LOT-ORA-20260703-09": {
+      "sku_code": "MYR-RMA-09",
+      "lot_number": "LOT-ORA-20260703-09",
+      "physical": 194,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-10||LOT-ORA-20260703-10": {
+      "sku_code": "MYR-RMA-10",
+      "lot_number": "LOT-ORA-20260703-10",
+      "physical": 162,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-RMA-10||LOT-RMA-202608-NEW-01": {
+      "sku_code": "MYR-RMA-10",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "physical": 200,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "MYR-SLI-01||LOT-ORA-20260703-13": {
+      "sku_code": "MYR-SLI-01",
+      "lot_number": "LOT-ORA-20260703-13",
+      "physical": 376,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-SLI-02||LOT-ORA-20260703-14": {
+      "sku_code": "MYR-SLI-02",
+      "lot_number": "LOT-ORA-20260703-14",
+      "physical": 346,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-01||LOT-ORA-20260703-19": {
+      "sku_code": "MYR-TRB-01",
+      "lot_number": "LOT-ORA-20260703-19",
+      "physical": 245,
+      "reserved": 1,
+      "quarantine": 0
+    },
+    "MYR-TRB-02||LOT-ORA-20260703-20": {
+      "sku_code": "MYR-TRB-02",
+      "lot_number": "LOT-ORA-20260703-20",
+      "physical": 350,
+      "reserved": 8,
+      "quarantine": 0
+    },
+    "MYR-TRB-03||LOT-ORA-20260703-21": {
+      "sku_code": "MYR-TRB-03",
+      "lot_number": "LOT-ORA-20260703-21",
+      "physical": 194,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-04||LOT-ORA-20260703-22": {
+      "sku_code": "MYR-TRB-04",
+      "lot_number": "LOT-ORA-20260703-22",
+      "physical": 420,
+      "reserved": 5,
+      "quarantine": 0
+    },
+    "MYR-TRB-05||LOT-ORA-20260702-23": {
+      "sku_code": "MYR-TRB-05",
+      "lot_number": "LOT-ORA-20260702-23",
+      "physical": 25,
+      "reserved": 13,
+      "quarantine": 0
+    },
+    "MYR-TRB-05||LOT-ORA-20260703-23": {
+      "sku_code": "MYR-TRB-05",
+      "lot_number": "LOT-ORA-20260703-23",
+      "physical": 447,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-06||LOT-ORA-20260703-24": {
+      "sku_code": "MYR-TRB-06",
+      "lot_number": "LOT-ORA-20260703-24",
+      "physical": 303,
+      "reserved": 11,
+      "quarantine": 0
+    },
+    "MYR-TRB-07||LOT-ORA-20260703-25": {
+      "sku_code": "MYR-TRB-07",
+      "lot_number": "LOT-ORA-20260703-25",
+      "physical": 323,
+      "reserved": 16,
+      "quarantine": 0
+    },
+    "MYR-TRB-08||LOT-ORA-20260703-26": {
+      "sku_code": "MYR-TRB-08",
+      "lot_number": "LOT-ORA-20260703-26",
+      "physical": 217,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-09||LOT-ORA-20260703-27": {
+      "sku_code": "MYR-TRB-09",
+      "lot_number": "LOT-ORA-20260703-27",
+      "physical": 224,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "MYR-TRB-10||LOT-ORA-20260703-28": {
+      "sku_code": "MYR-TRB-10",
+      "lot_number": "LOT-ORA-20260703-28",
+      "physical": 320,
+      "reserved": 25,
+      "quarantine": 0
+    },
+    "ULV-BNG-01||LOT-VER-20260704-41": {
+      "sku_code": "ULV-BNG-01",
+      "lot_number": "LOT-VER-20260704-41",
+      "physical": 29,
+      "reserved": 12,
+      "quarantine": 0
+    },
+    "ULV-BNG-02||LOT-VER-20260704-42": {
+      "sku_code": "ULV-BNG-02",
+      "lot_number": "LOT-VER-20260704-42",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 3
+    },
+    "ULV-CLR-01||LOT-VER-20260704-31": {
+      "sku_code": "ULV-CLR-01",
+      "lot_number": "LOT-VER-20260704-31",
+      "physical": 13,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-CLR-02||LOT-VER-20260704-32": {
+      "sku_code": "ULV-CLR-02",
+      "lot_number": "LOT-VER-20260704-32",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 12
+    },
+    "ULV-CLR-04||LOT-VER-20260704-34": {
+      "sku_code": "ULV-CLR-04",
+      "lot_number": "LOT-VER-20260704-34",
+      "physical": 2,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-LFB-01||LOT-VER-20260704-17": {
+      "sku_code": "ULV-LFB-01",
+      "lot_number": "LOT-VER-20260704-17",
+      "physical": 29,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "ULV-LFB-02||LOT-VER-20260704-18": {
+      "sku_code": "ULV-LFB-02",
+      "lot_number": "LOT-VER-20260704-18",
+      "physical": 101,
+      "reserved": 10,
+      "quarantine": 19
+    },
+    "ULV-LFB-03||LOT-VER-20260704-19": {
+      "sku_code": "ULV-LFB-03",
+      "lot_number": "LOT-VER-20260704-19",
+      "physical": 174,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-LFB-05||LOT-VER-20260704-21": {
+      "sku_code": "ULV-LFB-05",
+      "lot_number": "LOT-VER-20260704-21",
+      "physical": 28,
+      "reserved": 2,
+      "quarantine": 10
+    },
+    "ULV-LFB-06||LOT-VER-20260615-INIT-22": {
+      "sku_code": "ULV-LFB-06",
+      "lot_number": "LOT-VER-20260615-INIT-22",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 2
+    },
+    "ULV-LFB-06||LOT-VER-20260704-22": {
+      "sku_code": "ULV-LFB-06",
+      "lot_number": "LOT-VER-20260704-22",
+      "physical": 57,
+      "reserved": 4,
+      "quarantine": 16
+    },
+    "ULV-LFB-07||LOT-VER-20260704-23": {
+      "sku_code": "ULV-LFB-07",
+      "lot_number": "LOT-VER-20260704-23",
+      "physical": 22,
+      "reserved": 14,
+      "quarantine": 0
+    },
+    "ULV-LFB-08||LOT-VER-20260704-24": {
+      "sku_code": "ULV-LFB-08",
+      "lot_number": "LOT-VER-20260704-24",
+      "physical": 94,
+      "reserved": 3,
+      "quarantine": 0
+    },
+    "ULV-MLT-01||LOT-VER-20260615-INIT-13": {
+      "sku_code": "ULV-MLT-01",
+      "lot_number": "LOT-VER-20260615-INIT-13",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "ULV-MLT-01||LOT-VER-20260704-13": {
+      "sku_code": "ULV-MLT-01",
+      "lot_number": "LOT-VER-20260704-13",
+      "physical": 118,
+      "reserved": 9,
+      "quarantine": 0
+    },
+    "ULV-MLT-02||LOT-VER-20260704-14": {
+      "sku_code": "ULV-MLT-02",
+      "lot_number": "LOT-VER-20260704-14",
+      "physical": 125,
+      "reserved": 0,
+      "quarantine": 15
+    },
+    "ULV-MLT-03||LOT-VER-20260704-15": {
+      "sku_code": "ULV-MLT-03",
+      "lot_number": "LOT-VER-20260704-15",
+      "physical": 155,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-MLT-04||LOT-VER-20260704-16": {
+      "sku_code": "ULV-MLT-04",
+      "lot_number": "LOT-VER-20260704-16",
+      "physical": 226,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-PSD-02||LOT-VER-20260704-26": {
+      "sku_code": "ULV-PSD-02",
+      "lot_number": "LOT-VER-20260704-26",
+      "physical": 34,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-PSD-03||LOT-VER-20260704-27": {
+      "sku_code": "ULV-PSD-03",
+      "lot_number": "LOT-VER-20260704-27",
+      "physical": 44,
+      "reserved": 0,
+      "quarantine": 4
+    },
+    "ULV-RNS-01||LOT-RNS-202608-NEW-01": {
+      "sku_code": "ULV-RNS-01",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "physical": 600,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-01||LOT-VER-20260704-07": {
+      "sku_code": "ULV-RNS-01",
+      "lot_number": "LOT-VER-20260704-07",
+      "physical": 154,
+      "reserved": 0,
+      "quarantine": 3
+    },
+    "ULV-RNS-02||LOT-RNS-202608-NEW-01": {
+      "sku_code": "ULV-RNS-02",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "physical": 600,
+      "reserved": 13,
+      "quarantine": 0
+    },
+    "ULV-RNS-02||LOT-VER-20260704-08": {
+      "sku_code": "ULV-RNS-02",
+      "lot_number": "LOT-VER-20260704-08",
+      "physical": 136,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-03||LOT-RNS-202608-NEW-01": {
+      "sku_code": "ULV-RNS-03",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "physical": 584,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-03||LOT-VER-20260615-INIT-09": {
+      "sku_code": "ULV-RNS-03",
+      "lot_number": "LOT-VER-20260615-INIT-09",
+      "physical": 0,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "ULV-RNS-03||LOT-VER-20260704-09": {
+      "sku_code": "ULV-RNS-03",
+      "lot_number": "LOT-VER-20260704-09",
+      "physical": 87,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-04||LOT-RNS-202608-NEW-01": {
+      "sku_code": "ULV-RNS-04",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "physical": 593,
+      "reserved": 3,
+      "quarantine": 0
+    },
+    "ULV-RNS-04||LOT-VER-20260704-10": {
+      "sku_code": "ULV-RNS-04",
+      "lot_number": "LOT-VER-20260704-10",
+      "physical": 120,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RNS-05||LOT-VER-20260704-11": {
+      "sku_code": "ULV-RNS-05",
+      "lot_number": "LOT-VER-20260704-11",
+      "physical": 90,
+      "reserved": 0,
+      "quarantine": 3
+    },
+    "ULV-RNS-06||LOT-VER-20260704-12": {
+      "sku_code": "ULV-RNS-06",
+      "lot_number": "LOT-VER-20260704-12",
+      "physical": 54,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RYC-01||LOT-VER-20260704-37": {
+      "sku_code": "ULV-RYC-01",
+      "lot_number": "LOT-VER-20260704-37",
+      "physical": 119,
+      "reserved": 17,
+      "quarantine": 0
+    },
+    "ULV-RYC-02||LOT-VER-20260704-38": {
+      "sku_code": "ULV-RYC-02",
+      "lot_number": "LOT-VER-20260704-38",
+      "physical": 74,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RYC-03||LOT-VER-20260704-39": {
+      "sku_code": "ULV-RYC-03",
+      "lot_number": "LOT-VER-20260704-39",
+      "physical": 11,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-RYC-04||LOT-VER-20260704-40": {
+      "sku_code": "ULV-RYC-04",
+      "lot_number": "LOT-VER-20260704-40",
+      "physical": 108,
+      "reserved": 10,
+      "quarantine": 0
+    },
+    "ULV-SNL-01||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-01",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 592,
+      "reserved": 2,
+      "quarantine": 0
+    },
+    "ULV-SNL-01||LOT-VER-20260704-01": {
+      "sku_code": "ULV-SNL-01",
+      "lot_number": "LOT-VER-20260704-01",
+      "physical": 37,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-02||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-02",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 589,
+      "reserved": 13,
+      "quarantine": 0
+    },
+    "ULV-SNL-02||LOT-VER-20260704-02": {
+      "sku_code": "ULV-SNL-02",
+      "lot_number": "LOT-VER-20260704-02",
+      "physical": 106,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-03||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-03",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 600,
+      "reserved": 12,
+      "quarantine": 0
+    },
+    "ULV-SNL-03||LOT-VER-20260704-03": {
+      "sku_code": "ULV-SNL-03",
+      "lot_number": "LOT-VER-20260704-03",
+      "physical": 26,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-04||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-04",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 580,
+      "reserved": 4,
+      "quarantine": 0
+    },
+    "ULV-SNL-05||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-05",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 592,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-05||LOT-VER-20260704-05": {
+      "sku_code": "ULV-SNL-05",
+      "lot_number": "LOT-VER-20260704-05",
+      "physical": 211,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-06||LOT-SNL-202608-NEW-01": {
+      "sku_code": "ULV-SNL-06",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "physical": 581,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "ULV-SNL-06||LOT-VER-20260704-06": {
+      "sku_code": "ULV-SNL-06",
+      "lot_number": "LOT-VER-20260704-06",
+      "physical": 23,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-FLD-01||LOT-NGS-20260701-23": {
+      "sku_code": "WNG-FLD-01",
+      "lot_number": "LOT-NGS-20260701-23",
+      "physical": 725,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-FLD-02||LOT-NGS-20260615-INIT-24": {
+      "sku_code": "WNG-FLD-02",
+      "lot_number": "LOT-NGS-20260615-INIT-24",
+      "physical": 64,
+      "reserved": 21,
+      "quarantine": 0
+    },
+    "WNG-FLD-02||LOT-NGS-20260701-24": {
+      "sku_code": "WNG-FLD-02",
+      "lot_number": "LOT-NGS-20260701-24",
+      "physical": 803,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-FLD-03||LOT-NGS-20260615-INIT-25": {
+      "sku_code": "WNG-FLD-03",
+      "lot_number": "LOT-NGS-20260615-INIT-25",
+      "physical": 54,
+      "reserved": 27,
+      "quarantine": 28
+    },
+    "WNG-FLD-03||LOT-NGS-20260701-25": {
+      "sku_code": "WNG-FLD-03",
+      "lot_number": "LOT-NGS-20260701-25",
+      "physical": 803,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-GLD-01||LOT-NGS-20260615-INIT-29": {
+      "sku_code": "WNG-GLD-01",
+      "lot_number": "LOT-NGS-20260615-INIT-29",
+      "physical": 146,
+      "reserved": 3,
+      "quarantine": 3
+    },
+    "WNG-GLD-01||LOT-NGS-20260701-29": {
+      "sku_code": "WNG-GLD-01",
+      "lot_number": "LOT-NGS-20260701-29",
+      "physical": 803,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-GLD-02||LOT-NGS-20260701-30": {
+      "sku_code": "WNG-GLD-02",
+      "lot_number": "LOT-NGS-20260701-30",
+      "physical": 633,
+      "reserved": 13,
+      "quarantine": 2
+    },
+    "WNG-GLD-03||LOT-NGS-20260615-INIT-31": {
+      "sku_code": "WNG-GLD-03",
+      "lot_number": "LOT-NGS-20260615-INIT-31",
+      "physical": 63,
+      "reserved": 30,
+      "quarantine": 0
+    },
+    "WNG-GLD-03||LOT-NGS-20260701-31": {
+      "sku_code": "WNG-GLD-03",
+      "lot_number": "LOT-NGS-20260701-31",
+      "physical": 860,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-GLD-04||LOT-NGS-20260701-32": {
+      "sku_code": "WNG-GLD-04",
+      "lot_number": "LOT-NGS-20260701-32",
+      "physical": 795,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JSJ-01||LOT-NGS-20260615-INIT-13": {
+      "sku_code": "WNG-JSJ-01",
+      "lot_number": "LOT-NGS-20260615-INIT-13",
+      "physical": 52,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JSJ-01||LOT-NGS-20260701-13": {
+      "sku_code": "WNG-JSJ-01",
+      "lot_number": "LOT-NGS-20260701-13",
+      "physical": 567,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JSJ-02||LOT-NGS-20260701-14": {
+      "sku_code": "WNG-JSJ-02",
+      "lot_number": "LOT-NGS-20260701-14",
+      "physical": 473,
+      "reserved": 24,
+      "quarantine": 0
+    },
+    "WNG-JSJ-03||LOT-NGS-20260615-INIT-15": {
+      "sku_code": "WNG-JSJ-03",
+      "lot_number": "LOT-NGS-20260615-INIT-15",
+      "physical": 32,
+      "reserved": 21,
+      "quarantine": 0
+    },
+    "WNG-JSJ-03||LOT-NGS-20260701-15": {
+      "sku_code": "WNG-JSJ-03",
+      "lot_number": "LOT-NGS-20260701-15",
+      "physical": 567,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JSJ-04||LOT-NGS-20260615-INIT-16": {
+      "sku_code": "WNG-JSJ-04",
+      "lot_number": "LOT-NGS-20260615-INIT-16",
+      "physical": 36,
+      "reserved": 3,
+      "quarantine": 8
+    },
+    "WNG-JSJ-04||LOT-NGS-20260701-16": {
+      "sku_code": "WNG-JSJ-04",
+      "lot_number": "LOT-NGS-20260701-16",
+      "physical": 567,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JVN-01||LOT-NGS-20260701-26": {
+      "sku_code": "WNG-JVN-01",
+      "lot_number": "LOT-NGS-20260701-26",
+      "physical": 803,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JVN-02||LOT-NGS-20260615-INIT-27": {
+      "sku_code": "WNG-JVN-02",
+      "lot_number": "LOT-NGS-20260615-INIT-27",
+      "physical": 40,
+      "reserved": 6,
+      "quarantine": 0
+    },
+    "WNG-JVN-02||LOT-NGS-20260701-27": {
+      "sku_code": "WNG-JVN-02",
+      "lot_number": "LOT-NGS-20260701-27",
+      "physical": 860,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-JVN-03||LOT-NGS-20260615-INIT-28": {
+      "sku_code": "WNG-JVN-03",
+      "lot_number": "LOT-NGS-20260615-INIT-28",
+      "physical": 145,
+      "reserved": 0,
+      "quarantine": 5
+    },
+    "WNG-JVN-03||LOT-NGS-20260701-28": {
+      "sku_code": "WNG-JVN-03",
+      "lot_number": "LOT-NGS-20260701-28",
+      "physical": 860,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-01||LOT-NGS-20260615-INIT-01": {
+      "sku_code": "WNG-SDP-01",
+      "lot_number": "LOT-NGS-20260615-INIT-01",
+      "physical": 153,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-01||LOT-NGS-20260701-01": {
+      "sku_code": "WNG-SDP-01",
+      "lot_number": "LOT-NGS-20260701-01",
+      "physical": 535,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-02||LOT-NGS-20260615-INIT-02": {
+      "sku_code": "WNG-SDP-02",
+      "lot_number": "LOT-NGS-20260615-INIT-02",
+      "physical": 408,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-02||LOT-NGS-20260701-02": {
+      "sku_code": "WNG-SDP-02",
+      "lot_number": "LOT-NGS-20260701-02",
+      "physical": 578,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-03||LOT-NGS-20260701-03": {
+      "sku_code": "WNG-SDP-03",
+      "lot_number": "LOT-NGS-20260701-03",
+      "physical": 508,
+      "reserved": 8,
+      "quarantine": 0
+    },
+    "WNG-SDP-04||LOT-NGS-20260701-04": {
+      "sku_code": "WNG-SDP-04",
+      "lot_number": "LOT-NGS-20260701-04",
+      "physical": 508,
+      "reserved": 12,
+      "quarantine": 0
+    },
+    "WNG-SDP-05||LOT-NGS-20260701-05": {
+      "sku_code": "WNG-SDP-05",
+      "lot_number": "LOT-NGS-20260701-05",
+      "physical": 464,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-06||LOT-NGS-20260615-INIT-06": {
+      "sku_code": "WNG-SDP-06",
+      "lot_number": "LOT-NGS-20260615-INIT-06",
+      "physical": 49,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-06||LOT-NGS-20260701-06": {
+      "sku_code": "WNG-SDP-06",
+      "lot_number": "LOT-NGS-20260701-06",
+      "physical": 482,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-07||LOT-NGS-20260615-INIT-07": {
+      "sku_code": "WNG-SDP-07",
+      "lot_number": "LOT-NGS-20260615-INIT-07",
+      "physical": 116,
+      "reserved": 8,
+      "quarantine": 10
+    },
+    "WNG-SDP-07||LOT-NGS-20260701-07": {
+      "sku_code": "WNG-SDP-07",
+      "lot_number": "LOT-NGS-20260701-07",
+      "physical": 466,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-08||LOT-NGS-20260701-08": {
+      "sku_code": "WNG-SDP-08",
+      "lot_number": "LOT-NGS-20260701-08",
+      "physical": 171,
+      "reserved": 0,
+      "quarantine": 1
+    },
+    "WNG-SDP-09||LOT-NGS-20260615-INIT-09": {
+      "sku_code": "WNG-SDP-09",
+      "lot_number": "LOT-NGS-20260615-INIT-09",
+      "physical": 280,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-09||LOT-NGS-20260701-09": {
+      "sku_code": "WNG-SDP-09",
+      "lot_number": "LOT-NGS-20260701-09",
+      "physical": 535,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-10||LOT-NGS-20260615-INIT-10": {
+      "sku_code": "WNG-SDP-10",
+      "lot_number": "LOT-NGS-20260615-INIT-10",
+      "physical": 310,
+      "reserved": 17,
+      "quarantine": 0
+    },
+    "WNG-SDP-10||LOT-NGS-20260701-10": {
+      "sku_code": "WNG-SDP-10",
+      "lot_number": "LOT-NGS-20260701-10",
+      "physical": 547,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SDP-11||LOT-NGS-20260701-11": {
+      "sku_code": "WNG-SDP-11",
+      "lot_number": "LOT-NGS-20260701-11",
+      "physical": 181,
+      "reserved": 4,
+      "quarantine": 0
+    },
+    "WNG-SDP-12||LOT-NGS-20260615-INIT-12": {
+      "sku_code": "WNG-SDP-12",
+      "lot_number": "LOT-NGS-20260615-INIT-12",
+      "physical": 332,
+      "reserved": 5,
+      "quarantine": 0
+    },
+    "WNG-SDP-12||LOT-NGS-20260701-12": {
+      "sku_code": "WNG-SDP-12",
+      "lot_number": "LOT-NGS-20260701-12",
+      "physical": 516,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SGD-01||LOT-NGS-20260701-17": {
+      "sku_code": "WNG-SGD-01",
+      "lot_number": "LOT-NGS-20260701-17",
+      "physical": 26,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SGD-01||LOT-SGD-202608-NEW-01": {
+      "sku_code": "WNG-SGD-01",
+      "lot_number": "LOT-SGD-202608-NEW-01",
+      "physical": 788,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SGD-02||LOT-NGS-20260701-18": {
+      "sku_code": "WNG-SGD-02",
+      "lot_number": "LOT-NGS-20260701-18",
+      "physical": 44,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-SGD-02||LOT-SGD-202608-NEW-01": {
+      "sku_code": "WNG-SGD-02",
+      "lot_number": "LOT-SGD-202608-NEW-01",
+      "physical": 786,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-TOP-01||LOT-NGS-20260701-19": {
+      "sku_code": "WNG-TOP-01",
+      "lot_number": "LOT-NGS-20260701-19",
+      "physical": 383,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-TOP-02||LOT-NGS-20260615-INIT-20": {
+      "sku_code": "WNG-TOP-02",
+      "lot_number": "LOT-NGS-20260615-INIT-20",
+      "physical": 15,
+      "reserved": 3,
+      "quarantine": 0
+    },
+    "WNG-TOP-02||LOT-NGS-20260701-20": {
+      "sku_code": "WNG-TOP-02",
+      "lot_number": "LOT-NGS-20260701-20",
+      "physical": 371,
+      "reserved": 0,
+      "quarantine": 0
+    },
+    "WNG-TOP-03||LOT-NGS-20260701-21": {
+      "sku_code": "WNG-TOP-03",
+      "lot_number": "LOT-NGS-20260701-21",
+      "physical": 298,
+      "reserved": 23,
+      "quarantine": 0
+    },
+    "WNG-TOP-04||LOT-NGS-20260701-22": {
+      "sku_code": "WNG-TOP-04",
+      "lot_number": "LOT-NGS-20260701-22",
+      "physical": 429,
+      "reserved": 1,
+      "quarantine": 0
+    }
+  },
+  "open_invoices": {
+    "INV-202607-0756": {
+      "date_invoice": "2026-07-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
+      "dpp_amount": "10870336.80",
+      "total_invoice_with_ppn": "12066073.85"
+    },
+    "INV-202607-0757": {
+      "date_invoice": "2026-07-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
+      "dpp_amount": "14530944.00",
+      "total_invoice_with_ppn": "16129347.84"
+    },
+    "INV-202607-0798": {
+      "date_invoice": "2026-07-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "4254624.00",
+      "total_invoice_with_ppn": "4722632.64"
+    },
+    "INV-202607-0801": {
+      "date_invoice": "2026-07-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "8798198.40",
+      "total_invoice_with_ppn": "9766000.22"
+    },
+    "INV-202607-0802": {
+      "date_invoice": "2026-07-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "9194652.00",
+      "total_invoice_with_ppn": "10206063.72"
+    },
+    "INV-202607-0803": {
+      "date_invoice": "2026-07-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "3026016.00",
+      "total_invoice_with_ppn": "3358877.76"
+    },
+    "INV-202607-0804": {
+      "date_invoice": "2026-07-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "8594568.00",
+      "total_invoice_with_ppn": "9539970.48"
+    },
+    "INV-202607-0805": {
+      "date_invoice": "2026-07-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "12088896.00",
+      "total_invoice_with_ppn": "13418674.56"
+    },
+    "INV-202607-1047": {
+      "date_invoice": "2026-07-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
+      "dpp_amount": "8554752.00",
+      "total_invoice_with_ppn": "9495774.72"
+    },
+    "INV-202607-1048": {
+      "date_invoice": "2026-07-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
+      "dpp_amount": "5904144.00",
+      "total_invoice_with_ppn": "6553599.84"
+    },
+    "INV-202607-1049": {
+      "date_invoice": "2026-07-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
+      "dpp_amount": "5551488.00",
+      "total_invoice_with_ppn": "6162151.68"
+    },
+    "INV-202607-1050": {
+      "date_invoice": "2026-07-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-MT-12 - Tranzmart Star Square Bahu",
+      "dpp_amount": "8601772.80",
+      "total_invoice_with_ppn": "9547967.81"
+    },
+    "INV-202607-1083": {
+      "date_invoice": "2026-07-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "16631712.00",
+      "total_invoice_with_ppn": "18461200.32"
+    },
+    "INV-202607-1084": {
+      "date_invoice": "2026-07-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "16415568.00",
+      "total_invoice_with_ppn": "18221280.48"
+    },
+    "INV-202607-1085": {
+      "date_invoice": "2026-07-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "9862992.00",
+      "total_invoice_with_ppn": "10947921.12"
+    },
+    "INV-202607-1086": {
+      "date_invoice": "2026-07-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "9942624.00",
+      "total_invoice_with_ppn": "11036312.64"
+    },
+    "INV-202607-1087": {
+      "date_invoice": "2026-07-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "4914432.00",
+      "total_invoice_with_ppn": "5455019.52"
+    },
+    "INV-202607-1088": {
+      "date_invoice": "2026-07-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "14606784.00",
+      "total_invoice_with_ppn": "16213530.24"
+    },
+    "INV-202608-0028": {
+      "date_invoice": "2026-08-03",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
+      "dpp_amount": "6963000.00",
+      "total_invoice_with_ppn": "7728930.00"
+    },
+    "INV-202608-0029": {
+      "date_invoice": "2026-08-03",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
+      "dpp_amount": "5424000.00",
+      "total_invoice_with_ppn": "6020640.00"
+    },
+    "INV-202608-0030": {
+      "date_invoice": "2026-08-03",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
+      "dpp_amount": "6336000.00",
+      "total_invoice_with_ppn": "7032960.00"
+    },
+    "INV-202608-0031": {
+      "date_invoice": "2026-08-03",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
+      "dpp_amount": "924000.00",
+      "total_invoice_with_ppn": "1025640.00"
+    },
+    "INV-202608-0032": {
+      "date_invoice": "2026-08-03",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "9489000.00",
+      "total_invoice_with_ppn": "10532790.00"
+    },
+    "INV-202608-0033": {
+      "date_invoice": "2026-08-03",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "65280000.00",
+      "total_invoice_with_ppn": "72460800.00"
+    },
+    "INV-202608-0034": {
+      "date_invoice": "2026-08-03",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "4042400.00",
+      "total_invoice_with_ppn": "4487064.00"
+    },
+    "INV-202608-0075": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
+      "dpp_amount": "1800000.00",
+      "total_invoice_with_ppn": "1998000.00"
+    },
+    "INV-202608-0076": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
+      "dpp_amount": "2040000.00",
+      "total_invoice_with_ppn": "2264400.00"
+    },
+    "INV-202608-0077": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
+      "dpp_amount": "3900000.00",
+      "total_invoice_with_ppn": "4329000.00"
+    },
+    "INV-202608-0078": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
+      "dpp_amount": "1188000.00",
+      "total_invoice_with_ppn": "1318680.00"
+    },
+    "INV-202608-0079": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "5424000.00",
+      "total_invoice_with_ppn": "6020640.00"
+    },
+    "INV-202608-0080": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "3912000.00",
+      "total_invoice_with_ppn": "4342320.00"
+    },
+    "INV-202608-0081": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "7548000.00",
+      "total_invoice_with_ppn": "8378280.00"
+    },
+    "INV-202608-0082": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "6201600.00",
+      "total_invoice_with_ppn": "6883776.00"
+    },
+    "INV-202608-0083": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "2798400.00",
+      "total_invoice_with_ppn": "3106224.00"
+    },
+    "INV-202608-0084": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "19080000.00",
+      "total_invoice_with_ppn": "21178800.00"
+    },
+    "INV-202608-0085": {
+      "date_invoice": "2026-08-04",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "1980000.00",
+      "total_invoice_with_ppn": "2197800.00"
+    },
+    "INV-202608-0135": {
+      "date_invoice": "2026-08-05",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
+      "dpp_amount": "192000.00",
+      "total_invoice_with_ppn": "213120.00"
+    },
+    "INV-202608-0136": {
+      "date_invoice": "2026-08-05",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
+      "dpp_amount": "11004000.00",
+      "total_invoice_with_ppn": "12214440.00"
+    },
+    "INV-202608-0137": {
+      "date_invoice": "2026-08-05",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
+      "dpp_amount": "980000.00",
+      "total_invoice_with_ppn": "1087800.00"
+    },
+    "INV-202608-0138": {
+      "date_invoice": "2026-08-05",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
+      "dpp_amount": "16080000.00",
+      "total_invoice_with_ppn": "17848800.00"
+    },
+    "INV-202608-0139": {
+      "date_invoice": "2026-08-05",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
+      "dpp_amount": "35040000.00",
+      "total_invoice_with_ppn": "38894400.00"
+    },
+    "INV-202608-0140": {
+      "date_invoice": "2026-08-05",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
+      "dpp_amount": "4776000.00",
+      "total_invoice_with_ppn": "5301360.00"
+    },
+    "INV-202608-0195": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
+      "dpp_amount": "2940000.00",
+      "total_invoice_with_ppn": "3263400.00"
+    },
+    "INV-202608-0196": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
+      "dpp_amount": "15114000.00",
+      "total_invoice_with_ppn": "16776540.00"
+    },
+    "INV-202608-0197": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
+      "dpp_amount": "1188000.00",
+      "total_invoice_with_ppn": "1318680.00"
+    },
+    "INV-202608-0198": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "26288600.00",
+      "total_invoice_with_ppn": "29180346.00"
+    },
+    "INV-202608-0199": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "2892000.00",
+      "total_invoice_with_ppn": "3210120.00"
+    },
+    "INV-202608-0200": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "11296000.00",
+      "total_invoice_with_ppn": "12538560.00"
+    },
+    "INV-202608-0201": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "4684800.00",
+      "total_invoice_with_ppn": "5200128.00"
+    },
+    "INV-202608-0202": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "16626000.00",
+      "total_invoice_with_ppn": "18454860.00"
+    },
+    "INV-202608-0203": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "2016000.00",
+      "total_invoice_with_ppn": "2237760.00"
+    },
+    "INV-202608-0204": {
+      "date_invoice": "2026-08-06",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "36012000.00",
+      "total_invoice_with_ppn": "39973320.00"
+    },
+    "INV-202608-0256": {
+      "date_invoice": "2026-08-07",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-06",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "22293000.00",
+      "total_invoice_with_ppn": "24745230.00"
+    },
+    "INV-202608-0257": {
+      "date_invoice": "2026-08-07",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-06",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "9456000.00",
+      "total_invoice_with_ppn": "10496160.00"
+    },
+    "INV-202608-0258": {
+      "date_invoice": "2026-08-07",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-06",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "18918000.00",
+      "total_invoice_with_ppn": "20998980.00"
+    },
+    "INV-202608-0311": {
+      "date_invoice": "2026-08-08",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "2295000.00",
+      "total_invoice_with_ppn": "2547450.00"
+    },
+    "INV-202608-0312": {
+      "date_invoice": "2026-08-08",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "7716000.00",
+      "total_invoice_with_ppn": "8564760.00"
+    },
+    "INV-202608-0313": {
+      "date_invoice": "2026-08-08",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "11196000.00",
+      "total_invoice_with_ppn": "12427560.00"
+    },
+    "INV-202608-0314": {
+      "date_invoice": "2026-08-08",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "15340000.00",
+      "total_invoice_with_ppn": "17027400.00"
+    },
+    "INV-202608-0370": {
+      "date_invoice": "2026-08-10",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "7096800.00",
+      "total_invoice_with_ppn": "7877448.00"
+    },
+    "INV-202608-0371": {
+      "date_invoice": "2026-08-10",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "6556000.00",
+      "total_invoice_with_ppn": "7277160.00"
+    },
+    "INV-202608-0372": {
+      "date_invoice": "2026-08-10",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "25092000.00",
+      "total_invoice_with_ppn": "27852120.00"
+    },
+    "INV-202608-0373": {
+      "date_invoice": "2026-08-10",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "2781600.00",
+      "total_invoice_with_ppn": "3087576.00"
+    },
+    "INV-202608-0408": {
+      "date_invoice": "2026-08-11",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-25",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "7725000.00",
+      "total_invoice_with_ppn": "8574750.00"
+    },
+    "INV-202608-0409": {
+      "date_invoice": "2026-08-11",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-25",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "5388000.00",
+      "total_invoice_with_ppn": "5980680.00"
+    },
+    "INV-202608-0410": {
+      "date_invoice": "2026-08-11",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-25",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "8040000.00",
+      "total_invoice_with_ppn": "8924400.00"
+    },
+    "INV-202608-0411": {
+      "date_invoice": "2026-08-11",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-25",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "9404800.00",
+      "total_invoice_with_ppn": "10439328.00"
+    },
+    "INV-202608-0412": {
+      "date_invoice": "2026-08-11",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-25",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "4197600.00",
+      "total_invoice_with_ppn": "4659336.00"
+    },
+    "INV-202608-0413": {
+      "date_invoice": "2026-08-11",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-25",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "780000.00",
+      "total_invoice_with_ppn": "865800.00"
+    },
+    "INV-202608-0414": {
+      "date_invoice": "2026-08-11",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-25",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "29466000.00",
+      "total_invoice_with_ppn": "32707260.00"
+    },
+    "INV-202608-0415": {
+      "date_invoice": "2026-08-11",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-25",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "367200.00",
+      "total_invoice_with_ppn": "407592.00"
+    },
+    "INV-202608-0463": {
+      "date_invoice": "2026-08-12",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
+      "dpp_amount": "7040000.00",
+      "total_invoice_with_ppn": "7814400.00"
+    },
+    "INV-202608-0464": {
+      "date_invoice": "2026-08-12",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
+      "dpp_amount": "31644000.00",
+      "total_invoice_with_ppn": "35124840.00"
+    },
+    "INV-202608-0517": {
+      "date_invoice": "2026-08-13",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "12586000.00",
+      "total_invoice_with_ppn": "13970460.00"
+    },
+    "INV-202608-0518": {
+      "date_invoice": "2026-08-13",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "21660000.00",
+      "total_invoice_with_ppn": "24042600.00"
+    },
+    "INV-202608-0519": {
+      "date_invoice": "2026-08-13",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "10512000.00",
+      "total_invoice_with_ppn": "11668320.00"
+    },
+    "INV-202608-0520": {
+      "date_invoice": "2026-08-13",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "18759000.00",
+      "total_invoice_with_ppn": "20822490.00"
+    },
+    "INV-202608-0521": {
+      "date_invoice": "2026-08-13",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "1632000.00",
+      "total_invoice_with_ppn": "1811520.00"
+    },
+    "INV-202608-0522": {
+      "date_invoice": "2026-08-13",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "21804000.00",
+      "total_invoice_with_ppn": "24202440.00"
+    },
+    "INV-202608-0523": {
+      "date_invoice": "2026-08-13",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "5080000.00",
+      "total_invoice_with_ppn": "5638800.00"
+    },
+    "INV-202608-0565": {
+      "date_invoice": "2026-08-14",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-13",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "2700000.00",
+      "total_invoice_with_ppn": "2997000.00"
+    },
+    "INV-202608-0566": {
+      "date_invoice": "2026-08-14",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-13",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "5430000.00",
+      "total_invoice_with_ppn": "6027300.00"
+    },
+    "INV-202608-0567": {
+      "date_invoice": "2026-08-14",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-13",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "14760000.00",
+      "total_invoice_with_ppn": "16383600.00"
+    },
+    "INV-202608-0568": {
+      "date_invoice": "2026-08-14",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-13",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "14560000.00",
+      "total_invoice_with_ppn": "16161600.00"
+    },
+    "INV-202608-0617": {
+      "date_invoice": "2026-08-15",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-14",
+      "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
+      "dpp_amount": "1680000.00",
+      "total_invoice_with_ppn": "1864800.00"
+    },
+    "INV-202608-0618": {
+      "date_invoice": "2026-08-15",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-14",
+      "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
+      "dpp_amount": "16236000.00",
+      "total_invoice_with_ppn": "18021960.00"
+    },
+    "INV-202608-0619": {
+      "date_invoice": "2026-08-15",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-14",
+      "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
+      "dpp_amount": "396000.00",
+      "total_invoice_with_ppn": "439560.00"
+    },
+    "INV-202608-0620": {
+      "date_invoice": "2026-08-15",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-14",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "6585600.00",
+      "total_invoice_with_ppn": "7310016.00"
+    },
+    "INV-202608-0621": {
+      "date_invoice": "2026-08-15",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-14",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "10944000.00",
+      "total_invoice_with_ppn": "12147840.00"
+    },
+    "INV-202608-0622": {
+      "date_invoice": "2026-08-15",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-14",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "9240000.00",
+      "total_invoice_with_ppn": "10256400.00"
+    },
+    "INV-202608-0623": {
+      "date_invoice": "2026-08-15",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-14",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "4834400.00",
+      "total_invoice_with_ppn": "5366184.00"
+    },
+    "INV-202608-0675": {
+      "date_invoice": "2026-08-18",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-17",
+      "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
+      "dpp_amount": "9393600.00",
+      "total_invoice_with_ppn": "10426896.00"
+    },
+    "INV-202608-0676": {
+      "date_invoice": "2026-08-18",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-17",
+      "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
+      "dpp_amount": "3168000.00",
+      "total_invoice_with_ppn": "3516480.00"
+    },
+    "INV-202608-0677": {
+      "date_invoice": "2026-08-18",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-17",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "12474000.00",
+      "total_invoice_with_ppn": "13846140.00"
+    },
+    "INV-202608-0678": {
+      "date_invoice": "2026-08-18",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-17",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "15504000.00",
+      "total_invoice_with_ppn": "17209440.00"
+    },
+    "INV-202608-0679": {
+      "date_invoice": "2026-08-18",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-17",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "3225600.00",
+      "total_invoice_with_ppn": "3580416.00"
+    },
+    "INV-202608-0680": {
+      "date_invoice": "2026-08-18",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-01",
+      "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
+      "dpp_amount": "10331000.00",
+      "total_invoice_with_ppn": "11467410.00"
+    },
+    "INV-202608-0681": {
+      "date_invoice": "2026-08-18",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-01",
+      "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
+      "dpp_amount": "3444000.00",
+      "total_invoice_with_ppn": "3822840.00"
+    },
+    "INV-202608-0682": {
+      "date_invoice": "2026-08-18",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-01",
+      "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
+      "dpp_amount": "3392000.00",
+      "total_invoice_with_ppn": "3765120.00"
+    },
+    "INV-202608-0713": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
+      "dpp_amount": "6420000.00",
+      "total_invoice_with_ppn": "7126200.00"
+    },
+    "INV-202608-0714": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
+      "dpp_amount": "2700000.00",
+      "total_invoice_with_ppn": "2997000.00"
+    },
+    "INV-202608-0715": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-INST-02 - Four Points by Sheraton Manado",
+      "dpp_amount": "936000.00",
+      "total_invoice_with_ppn": "1038960.00"
+    },
+    "INV-202608-0716": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
+      "dpp_amount": "10590000.00",
+      "total_invoice_with_ppn": "11754900.00"
+    },
+    "INV-202608-0717": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
+      "dpp_amount": "552000.00",
+      "total_invoice_with_ppn": "612720.00"
+    },
+    "INV-202608-0718": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
+      "dpp_amount": "10056000.00",
+      "total_invoice_with_ppn": "11162160.00"
+    },
+    "INV-202608-0719": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-18",
+      "customer": "CUST-MT-03 - FreshhMart Superstore Bahu",
+      "dpp_amount": "6374400.00",
+      "total_invoice_with_ppn": "7075584.00"
+    },
+    "INV-202608-0720": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
+      "dpp_amount": "22023000.00",
+      "total_invoice_with_ppn": "24445530.00"
+    },
+    "INV-202608-0721": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
+      "dpp_amount": "1716000.00",
+      "total_invoice_with_ppn": "1904760.00"
+    },
+    "INV-202608-0722": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-MT-09 - Goldenn Swalayan Pasar 45",
+      "dpp_amount": "1036800.00",
+      "total_invoice_with_ppn": "1150848.00"
+    },
+    "INV-202608-0723": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-07 - Toko Harapan Bersehati",
+      "dpp_amount": "2160000.00",
+      "total_invoice_with_ppn": "2397600.00"
+    },
+    "INV-202608-0724": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-07 - Toko Harapan Bersehati",
+      "dpp_amount": "4608000.00",
+      "total_invoice_with_ppn": "5114880.00"
+    },
+    "INV-202608-0725": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-07 - Toko Harapan Bersehati",
+      "dpp_amount": "972000.00",
+      "total_invoice_with_ppn": "1078920.00"
+    },
+    "INV-202608-0726": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-07 - Toko Harapan Bersehati",
+      "dpp_amount": "5952000.00",
+      "total_invoice_with_ppn": "6606720.00"
+    },
+    "INV-202608-0727": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-08 - Grosir Bintang Samrat Sario",
+      "dpp_amount": "3831000.00",
+      "total_invoice_with_ppn": "4252410.00"
+    },
+    "INV-202608-0728": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-08 - Grosir Bintang Samrat Sario",
+      "dpp_amount": "1716000.00",
+      "total_invoice_with_ppn": "1904760.00"
+    },
+    "INV-202608-0729": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-08 - Grosir Bintang Samrat Sario",
+      "dpp_amount": "2592000.00",
+      "total_invoice_with_ppn": "2877120.00"
+    },
+    "INV-202608-0733": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-38 - Toko Paal Dua Jaya",
+      "dpp_amount": "3540000.00",
+      "total_invoice_with_ppn": "3929400.00"
+    },
+    "INV-202608-0734": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-38 - Toko Paal Dua Jaya",
+      "dpp_amount": "3480000.00",
+      "total_invoice_with_ppn": "3862800.00"
+    },
+    "INV-202608-0735": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-38 - Toko Paal Dua Jaya",
+      "dpp_amount": "4408000.00",
+      "total_invoice_with_ppn": "4892880.00"
+    },
+    "INV-202608-0736": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-39 - Toko Berkat Melimpah Paal Dua",
+      "dpp_amount": "3168000.00",
+      "total_invoice_with_ppn": "3516480.00"
+    },
+    "INV-202608-0737": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-39 - Toko Berkat Melimpah Paal Dua",
+      "dpp_amount": "12636000.00",
+      "total_invoice_with_ppn": "14025960.00"
+    },
+    "INV-202608-0738": {
+      "date_invoice": "2026-08-19",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-39 - Toko Berkat Melimpah Paal Dua",
+      "dpp_amount": "4136000.00",
+      "total_invoice_with_ppn": "4590960.00"
+    },
+    "INV-202608-0767": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
+      "dpp_amount": "5630400.00",
+      "total_invoice_with_ppn": "6249744.00"
+    },
+    "INV-202608-0768": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-INST-03 - Hotel Sintesa Peninsula Manado",
+      "dpp_amount": "1641600.00",
+      "total_invoice_with_ppn": "1822176.00"
+    },
+    "INV-202608-0769": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "21844000.00",
+      "total_invoice_with_ppn": "24246840.00"
+    },
+    "INV-202608-0770": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "4272000.00",
+      "total_invoice_with_ppn": "4741920.00"
+    },
+    "INV-202608-0771": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "20196000.00",
+      "total_invoice_with_ppn": "22417560.00"
+    },
+    "INV-202608-0772": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "868000.00",
+      "total_invoice_with_ppn": "963480.00"
+    },
+    "INV-202608-0773": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "16798800.00",
+      "total_invoice_with_ppn": "18646668.00"
+    },
+    "INV-202608-0774": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "6264000.00",
+      "total_invoice_with_ppn": "6953040.00"
+    },
+    "INV-202608-0775": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "15552000.00",
+      "total_invoice_with_ppn": "17262720.00"
+    },
+    "INV-202608-0776": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-19",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "1948000.00",
+      "total_invoice_with_ppn": "2162280.00"
+    },
+    "INV-202608-0777": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-11 - Grosir Krida Bahu",
+      "dpp_amount": "2640000.00",
+      "total_invoice_with_ppn": "2930400.00"
+    },
+    "INV-202608-0778": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-11 - Grosir Krida Bahu",
+      "dpp_amount": "1008000.00",
+      "total_invoice_with_ppn": "1118880.00"
+    },
+    "INV-202608-0779": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-11 - Grosir Krida Bahu",
+      "dpp_amount": "16740000.00",
+      "total_invoice_with_ppn": "18581400.00"
+    },
+    "INV-202608-0780": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-11 - Grosir Krida Bahu",
+      "dpp_amount": "660000.00",
+      "total_invoice_with_ppn": "732600.00"
+    },
+    "INV-202608-0781": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
+      "dpp_amount": "2241600.00",
+      "total_invoice_with_ppn": "2488176.00"
+    },
+    "INV-202608-0782": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
+      "dpp_amount": "2184000.00",
+      "total_invoice_with_ppn": "2424240.00"
+    },
+    "INV-202608-0783": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
+      "dpp_amount": "5280000.00",
+      "total_invoice_with_ppn": "5860800.00"
+    },
+    "INV-202608-0784": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
+      "dpp_amount": "2800000.00",
+      "total_invoice_with_ppn": "3108000.00"
+    },
+    "INV-202608-0791": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
+      "dpp_amount": "156000.00",
+      "total_invoice_with_ppn": "173160.00"
+    },
+    "INV-202608-0792": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
+      "dpp_amount": "3740000.00",
+      "total_invoice_with_ppn": "4151400.00"
+    },
+    "INV-202608-0793": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
+      "dpp_amount": "3744000.00",
+      "total_invoice_with_ppn": "4155840.00"
+    },
+    "INV-202608-0794": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
+      "dpp_amount": "1564800.00",
+      "total_invoice_with_ppn": "1736928.00"
+    },
+    "INV-202608-0795": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
+      "dpp_amount": "1680000.00",
+      "total_invoice_with_ppn": "1864800.00"
+    },
+    "INV-202608-0796": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
+      "dpp_amount": "896000.00",
+      "total_invoice_with_ppn": "994560.00"
+    },
+    "INV-202608-0797": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
+      "dpp_amount": "3780000.00",
+      "total_invoice_with_ppn": "4195800.00"
+    },
+    "INV-202608-0798": {
+      "date_invoice": "2026-08-20",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
+      "dpp_amount": "1564800.00",
+      "total_invoice_with_ppn": "1736928.00"
+    },
+    "INV-202608-0822": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-INST-04 - Katering Minahasa Indah",
+      "dpp_amount": "5160000.00",
+      "total_invoice_with_ppn": "5727600.00"
+    },
+    "INV-202608-0823": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-INST-04 - Katering Minahasa Indah",
+      "dpp_amount": "789600.00",
+      "total_invoice_with_ppn": "876456.00"
+    },
+    "INV-202608-0824": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-INST-04 - Katering Minahasa Indah",
+      "dpp_amount": "14256000.00",
+      "total_invoice_with_ppn": "15824160.00"
+    },
+    "INV-202608-0825": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-20",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "12686400.00",
+      "total_invoice_with_ppn": "14081904.00"
+    },
+    "INV-202608-0826": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-20",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "6312000.00",
+      "total_invoice_with_ppn": "7006320.00"
+    },
+    "INV-202608-0827": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-20",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "15156000.00",
+      "total_invoice_with_ppn": "16823160.00"
+    },
+    "INV-202608-0828": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-20",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "8692000.00",
+      "total_invoice_with_ppn": "9648120.00"
+    },
+    "INV-202608-0829": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
+      "dpp_amount": "12507000.00",
+      "total_invoice_with_ppn": "13882770.00"
+    },
+    "INV-202608-0830": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
+      "dpp_amount": "3488000.00",
+      "total_invoice_with_ppn": "3871680.00"
+    },
+    "INV-202608-0831": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
+      "dpp_amount": "1476000.00",
+      "total_invoice_with_ppn": "1638360.00"
+    },
+    "INV-202608-0832": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
+      "dpp_amount": "3766400.00",
+      "total_invoice_with_ppn": "4180704.00"
+    },
+    "INV-202608-0833": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
+      "dpp_amount": "2550000.00",
+      "total_invoice_with_ppn": "2830500.00"
+    },
+    "INV-202608-0834": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
+      "dpp_amount": "1680000.00",
+      "total_invoice_with_ppn": "1864800.00"
+    },
+    "INV-202608-0835": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
+      "dpp_amount": "6336000.00",
+      "total_invoice_with_ppn": "7032960.00"
+    },
+    "INV-202608-0836": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
+      "dpp_amount": "768000.00",
+      "total_invoice_with_ppn": "852480.00"
+    },
+    "INV-202608-0837": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
+      "dpp_amount": "12816000.00",
+      "total_invoice_with_ppn": "14225760.00"
+    },
+    "INV-202608-0838": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
+      "dpp_amount": "2736000.00",
+      "total_invoice_with_ppn": "3036960.00"
+    },
+    "INV-202608-0850": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
+      "dpp_amount": "6822000.00",
+      "total_invoice_with_ppn": "7572420.00"
+    },
+    "INV-202608-0851": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
+      "dpp_amount": "2280000.00",
+      "total_invoice_with_ppn": "2530800.00"
+    },
+    "INV-202608-0852": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
+      "dpp_amount": "7632000.00",
+      "total_invoice_with_ppn": "8471520.00"
+    },
+    "INV-202608-0853": {
+      "date_invoice": "2026-08-21",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
+      "dpp_amount": "1032000.00",
+      "total_invoice_with_ppn": "1145520.00"
+    },
+    "INV-202608-0882": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
+      "dpp_amount": "7752000.00",
+      "total_invoice_with_ppn": "8604720.00"
+    },
+    "INV-202608-0883": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
+      "dpp_amount": "636000.00",
+      "total_invoice_with_ppn": "705960.00"
+    },
+    "INV-202608-0884": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
+      "dpp_amount": "15024000.00",
+      "total_invoice_with_ppn": "16676640.00"
+    },
+    "INV-202608-0885": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-INST-05 - Restoran Raja Sate Paniki",
+      "dpp_amount": "1123200.00",
+      "total_invoice_with_ppn": "1246752.00"
+    },
+    "INV-202608-0886": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-21",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "5421600.00",
+      "total_invoice_with_ppn": "6017976.00"
+    },
+    "INV-202608-0887": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-21",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "3948000.00",
+      "total_invoice_with_ppn": "4382280.00"
+    },
+    "INV-202608-0888": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-21",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "8016000.00",
+      "total_invoice_with_ppn": "8897760.00"
+    },
+    "INV-202608-0889": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-21",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "10240000.00",
+      "total_invoice_with_ppn": "11366400.00"
+    },
+    "INV-202608-0890": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
+      "dpp_amount": "16008000.00",
+      "total_invoice_with_ppn": "17768880.00"
+    },
+    "INV-202608-0891": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
+      "dpp_amount": "10404000.00",
+      "total_invoice_with_ppn": "11548440.00"
+    },
+    "INV-202608-0892": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
+      "dpp_amount": "2640000.00",
+      "total_invoice_with_ppn": "2930400.00"
+    },
+    "INV-202608-0893": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
+      "dpp_amount": "12604800.00",
+      "total_invoice_with_ppn": "13991328.00"
+    },
+    "INV-202608-0894": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
+      "dpp_amount": "2799000.00",
+      "total_invoice_with_ppn": "3106890.00"
+    },
+    "INV-202608-0895": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
+      "dpp_amount": "3880000.00",
+      "total_invoice_with_ppn": "4306800.00"
+    },
+    "INV-202608-0896": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
+      "dpp_amount": "2940000.00",
+      "total_invoice_with_ppn": "3263400.00"
+    },
+    "INV-202608-0897": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
+      "dpp_amount": "1496000.00",
+      "total_invoice_with_ppn": "1660560.00"
+    },
+    "INV-202608-0898": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-25 - Grosir Megamas Abadi",
+      "dpp_amount": "4662000.00",
+      "total_invoice_with_ppn": "5174820.00"
+    },
+    "INV-202608-0899": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-25 - Grosir Megamas Abadi",
+      "dpp_amount": "1656000.00",
+      "total_invoice_with_ppn": "1838160.00"
+    },
+    "INV-202608-0900": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-25 - Grosir Megamas Abadi",
+      "dpp_amount": "2232000.00",
+      "total_invoice_with_ppn": "2477520.00"
+    },
+    "INV-202608-0901": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-25 - Grosir Megamas Abadi",
+      "dpp_amount": "6326400.00",
+      "total_invoice_with_ppn": "7022304.00"
+    },
+    "INV-202608-0910": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
+      "dpp_amount": "4050000.00",
+      "total_invoice_with_ppn": "4495500.00"
+    },
+    "INV-202608-0911": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
+      "dpp_amount": "4336000.00",
+      "total_invoice_with_ppn": "4812960.00"
+    },
+    "INV-202608-0912": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
+      "dpp_amount": "4680000.00",
+      "total_invoice_with_ppn": "5194800.00"
+    },
+    "INV-202608-0913": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
+      "dpp_amount": "1512000.00",
+      "total_invoice_with_ppn": "1678320.00"
+    },
+    "INV-202608-0914": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
+      "dpp_amount": "1716000.00",
+      "total_invoice_with_ppn": "1904760.00"
+    },
+    "INV-202608-0915": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
+      "dpp_amount": "7812000.00",
+      "total_invoice_with_ppn": "8671320.00"
+    },
+    "INV-202608-0916": {
+      "date_invoice": "2026-08-22",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
+      "dpp_amount": "1210400.00",
+      "total_invoice_with_ppn": "1343544.00"
+    },
+    "INV-202608-0942": {
+      "date_invoice": "2026-08-24",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-23",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "8562000.00",
+      "total_invoice_with_ppn": "9503820.00"
+    },
+    "INV-202608-0943": {
+      "date_invoice": "2026-08-24",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-23",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "20640000.00",
+      "total_invoice_with_ppn": "22910400.00"
+    },
+    "INV-202608-0944": {
+      "date_invoice": "2026-08-24",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-23",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "5229600.00",
+      "total_invoice_with_ppn": "5804856.00"
+    },
+    "INV-202608-0945": {
+      "date_invoice": "2026-08-24",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
+      "dpp_amount": "5016000.00",
+      "total_invoice_with_ppn": "5567760.00"
+    },
+    "INV-202608-0946": {
+      "date_invoice": "2026-08-24",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
+      "dpp_amount": "1512000.00",
+      "total_invoice_with_ppn": "1678320.00"
+    },
+    "INV-202608-0947": {
+      "date_invoice": "2026-08-24",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
+      "dpp_amount": "2940000.00",
+      "total_invoice_with_ppn": "3263400.00"
+    },
+    "INV-202608-0948": {
+      "date_invoice": "2026-08-24",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
+      "dpp_amount": "604000.00",
+      "total_invoice_with_ppn": "670440.00"
+    },
+    "INV-202608-0975": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-10-10",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "17391000.00",
+      "total_invoice_with_ppn": "19304010.00"
+    },
+    "INV-202608-0976": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-10-10",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "9878400.00",
+      "total_invoice_with_ppn": "10965024.00"
+    },
+    "INV-202608-0977": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-10-10",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "11574000.00",
+      "total_invoice_with_ppn": "12847140.00"
+    },
+    "INV-202608-0978": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-10-10",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "3420000.00",
+      "total_invoice_with_ppn": "3796200.00"
+    },
+    "INV-202608-0979": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-10-10",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "11919000.00",
+      "total_invoice_with_ppn": "13230090.00"
+    },
+    "INV-202608-0980": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-10-10",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "8586000.00",
+      "total_invoice_with_ppn": "9530460.00"
+    },
+    "INV-202608-0981": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-10-10",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "1504800.00",
+      "total_invoice_with_ppn": "1670328.00"
+    },
+    "INV-202608-0982": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
+      "dpp_amount": "2474400.00",
+      "total_invoice_with_ppn": "2746584.00"
+    },
+    "INV-202608-0983": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
+      "dpp_amount": "8628000.00",
+      "total_invoice_with_ppn": "9577080.00"
+    },
+    "INV-202608-0984": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
+      "dpp_amount": "1440000.00",
+      "total_invoice_with_ppn": "1598400.00"
+    },
+    "INV-202608-0985": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
+      "dpp_amount": "1275000.00",
+      "total_invoice_with_ppn": "1415250.00"
+    },
+    "INV-202608-0986": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
+      "dpp_amount": "1176000.00",
+      "total_invoice_with_ppn": "1305360.00"
+    },
+    "INV-202608-0987": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
+      "dpp_amount": "4204000.00",
+      "total_invoice_with_ppn": "4666440.00"
+    },
+    "INV-202608-0988": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
+      "dpp_amount": "408000.00",
+      "total_invoice_with_ppn": "452880.00"
+    },
+    "INV-202608-0989": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
+      "dpp_amount": "5496000.00",
+      "total_invoice_with_ppn": "6100560.00"
+    },
+    "INV-202608-0990": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
+      "dpp_amount": "3456000.00",
+      "total_invoice_with_ppn": "3836160.00"
+    },
+    "INV-202608-0991": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
+      "dpp_amount": "3355200.00",
+      "total_invoice_with_ppn": "3724272.00"
+    },
+    "INV-202608-0992": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-04 - Toko Pinaesaan Calaca",
+      "dpp_amount": "1332000.00",
+      "total_invoice_with_ppn": "1478520.00"
+    },
+    "INV-202608-0993": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-04 - Toko Pinaesaan Calaca",
+      "dpp_amount": "7236000.00",
+      "total_invoice_with_ppn": "8031960.00"
+    },
+    "INV-202608-0994": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-06 - Grosir Calaca Baru",
+      "dpp_amount": "2892000.00",
+      "total_invoice_with_ppn": "3210120.00"
+    },
+    "INV-202608-0995": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-06 - Grosir Calaca Baru",
+      "dpp_amount": "2040000.00",
+      "total_invoice_with_ppn": "2264400.00"
+    },
+    "INV-202608-0996": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-06 - Grosir Calaca Baru",
+      "dpp_amount": "3840000.00",
+      "total_invoice_with_ppn": "4262400.00"
+    },
+    "INV-202608-0997": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-06 - Grosir Calaca Baru",
+      "dpp_amount": "2420000.00",
+      "total_invoice_with_ppn": "2686200.00"
+    },
+    "INV-202608-0998": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru",
+      "dpp_amount": "2805000.00",
+      "total_invoice_with_ppn": "3113550.00"
+    },
+    "INV-202608-0999": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru",
+      "dpp_amount": "4442400.00",
+      "total_invoice_with_ppn": "4931064.00"
+    },
+    "INV-202608-1000": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
+      "dpp_amount": "1368000.00",
+      "total_invoice_with_ppn": "1518480.00"
+    },
+    "INV-202608-1001": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
+      "dpp_amount": "1848000.00",
+      "total_invoice_with_ppn": "2051280.00"
+    },
+    "INV-202608-1002": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-09",
+      "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
+      "dpp_amount": "3336000.00",
+      "total_invoice_with_ppn": "3702960.00"
+    },
+    "INV-202608-1003": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-37 - Grosir Makmur Abadi Tikala",
+      "dpp_amount": "2985000.00",
+      "total_invoice_with_ppn": "3313350.00"
+    },
+    "INV-202608-1004": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-37 - Grosir Makmur Abadi Tikala",
+      "dpp_amount": "2736000.00",
+      "total_invoice_with_ppn": "3036960.00"
+    },
+    "INV-202608-1005": {
+      "date_invoice": "2026-08-26",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-02",
+      "customer": "CUST-GT-37 - Grosir Makmur Abadi Tikala",
+      "dpp_amount": "1082400.00",
+      "total_invoice_with_ppn": "1201464.00"
+    },
+    "INV-202608-1022": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-INST-08 - Restoran Nelayan Megamas",
+      "dpp_amount": "2534400.00",
+      "total_invoice_with_ppn": "2813184.00"
+    },
+    "INV-202608-1023": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-INST-08 - Restoran Nelayan Megamas",
+      "dpp_amount": "5600000.00",
+      "total_invoice_with_ppn": "6216000.00"
+    },
+    "INV-202608-1024": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-INST-08 - Restoran Nelayan Megamas",
+      "dpp_amount": "1586400.00",
+      "total_invoice_with_ppn": "1760904.00"
+    },
+    "INV-202608-1025": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-26",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "8892000.00",
+      "total_invoice_with_ppn": "9870120.00"
+    },
+    "INV-202608-1026": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-26",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "12576000.00",
+      "total_invoice_with_ppn": "13959360.00"
+    },
+    "INV-202608-1027": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-26",
+      "customer": "CUST-MT-04 - FreshhMart Lifestyle Paniki",
+      "dpp_amount": "5760000.00",
+      "total_invoice_with_ppn": "6393600.00"
+    },
+    "INV-202608-1028": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-26",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "16335000.00",
+      "total_invoice_with_ppn": "18131850.00"
+    },
+    "INV-202608-1029": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-26",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "864000.00",
+      "total_invoice_with_ppn": "959040.00"
+    },
+    "INV-202608-1030": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-26",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "14592000.00",
+      "total_invoice_with_ppn": "16197120.00"
+    },
+    "INV-202608-1031": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-26",
+      "customer": "CUST-MT-08 - MultiiMart Tomohon",
+      "dpp_amount": "6632800.00",
+      "total_invoice_with_ppn": "7362408.00"
+    },
+    "INV-202608-1032": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-11 - Grosir Krida Bahu",
+      "dpp_amount": "1176000.00",
+      "total_invoice_with_ppn": "1305360.00"
+    },
+    "INV-202608-1033": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-11 - Grosir Krida Bahu",
+      "dpp_amount": "5256000.00",
+      "total_invoice_with_ppn": "5834160.00"
+    },
+    "INV-202608-1034": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
+      "dpp_amount": "1260000.00",
+      "total_invoice_with_ppn": "1398600.00"
+    },
+    "INV-202608-1035": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
+      "dpp_amount": "1224000.00",
+      "total_invoice_with_ppn": "1358640.00"
+    },
+    "INV-202608-1036": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-12 - Toko Sumber Berkat Malalayang",
+      "dpp_amount": "2250400.00",
+      "total_invoice_with_ppn": "2497944.00"
+    },
+    "INV-202608-1037": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-14 - Toko Batu Kota Indah",
+      "dpp_amount": "3200000.00",
+      "total_invoice_with_ppn": "3552000.00"
+    },
+    "INV-202608-1038": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-14 - Toko Batu Kota Indah",
+      "dpp_amount": "2322000.00",
+      "total_invoice_with_ppn": "2577420.00"
+    },
+    "INV-202608-1039": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-14 - Toko Batu Kota Indah",
+      "dpp_amount": "7236000.00",
+      "total_invoice_with_ppn": "8031960.00"
+    },
+    "INV-202608-1040": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-14 - Toko Batu Kota Indah",
+      "dpp_amount": "1592000.00",
+      "total_invoice_with_ppn": "1767120.00"
+    },
+    "INV-202608-1041": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
+      "dpp_amount": "2652000.00",
+      "total_invoice_with_ppn": "2943720.00"
+    },
+    "INV-202608-1042": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
+      "dpp_amount": "972000.00",
+      "total_invoice_with_ppn": "1078920.00"
+    },
+    "INV-202608-1043": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-43 - Grosir Sumber Mulia Tuminting",
+      "dpp_amount": "763200.00",
+      "total_invoice_with_ppn": "847152.00"
+    },
+    "INV-202608-1044": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
+      "dpp_amount": "840000.00",
+      "total_invoice_with_ppn": "932400.00"
+    },
+    "INV-202608-1045": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-10",
+      "customer": "CUST-GT-44 - Toko Surya Indah Tuminting",
+      "dpp_amount": "3936000.00",
+      "total_invoice_with_ppn": "4368960.00"
+    },
+    "INV-202608-1046": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-46 - Toko Sindulang Jaya",
+      "dpp_amount": "8664000.00",
+      "total_invoice_with_ppn": "9617040.00"
+    },
+    "INV-202608-1047": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-46 - Toko Sindulang Jaya",
+      "dpp_amount": "2160000.00",
+      "total_invoice_with_ppn": "2397600.00"
+    },
+    "INV-202608-1048": {
+      "date_invoice": "2026-08-27",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-03",
+      "customer": "CUST-GT-46 - Toko Sindulang Jaya",
+      "dpp_amount": "1293600.00",
+      "total_invoice_with_ppn": "1435896.00"
+    },
+    "INV-202608-1074": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-INST-09 - Katering Berkat Tondano",
+      "dpp_amount": "2491800.00",
+      "total_invoice_with_ppn": "2765898.00"
+    },
+    "INV-202608-1075": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-INST-09 - Katering Berkat Tondano",
+      "dpp_amount": "6000000.00",
+      "total_invoice_with_ppn": "6660000.00"
+    },
+    "INV-202608-1076": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-INST-09 - Katering Berkat Tondano",
+      "dpp_amount": "3456000.00",
+      "total_invoice_with_ppn": "3836160.00"
+    },
+    "INV-202608-1077": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-27",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "14976000.00",
+      "total_invoice_with_ppn": "16623360.00"
+    },
+    "INV-202608-1078": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-27",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "17520000.00",
+      "total_invoice_with_ppn": "19447200.00"
+    },
+    "INV-202608-1079": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-27",
+      "customer": "CUST-MT-05 - FreshhMart Express Tikala",
+      "dpp_amount": "3276000.00",
+      "total_invoice_with_ppn": "3636360.00"
+    },
+    "INV-202608-1080": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
+      "dpp_amount": "8638200.00",
+      "total_invoice_with_ppn": "9588402.00"
+    },
+    "INV-202608-1081": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
+      "dpp_amount": "8148000.00",
+      "total_invoice_with_ppn": "9044280.00"
+    },
+    "INV-202608-1082": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
+      "dpp_amount": "15300000.00",
+      "total_invoice_with_ppn": "16983000.00"
+    },
+    "INV-202608-1083": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-MT-10 - Jumbbo Swalayan Pasar 45",
+      "dpp_amount": "3800000.00",
+      "total_invoice_with_ppn": "4218000.00"
+    },
+    "INV-202608-1084": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
+      "dpp_amount": "1332000.00",
+      "total_invoice_with_ppn": "1478520.00"
+    },
+    "INV-202608-1085": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
+      "dpp_amount": "4892000.00",
+      "total_invoice_with_ppn": "5430120.00"
+    },
+    "INV-202608-1086": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
+      "dpp_amount": "3612000.00",
+      "total_invoice_with_ppn": "4009320.00"
+    },
+    "INV-202608-1087": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-16 - Toko Pelita Jaya Wanea",
+      "dpp_amount": "464000.00",
+      "total_invoice_with_ppn": "515040.00"
+    },
+    "INV-202608-1088": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
+      "dpp_amount": "1275000.00",
+      "total_invoice_with_ppn": "1415250.00"
+    },
+    "INV-202608-1089": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
+      "dpp_amount": "6096000.00",
+      "total_invoice_with_ppn": "6766560.00"
+    },
+    "INV-202608-1090": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
+      "dpp_amount": "4212000.00",
+      "total_invoice_with_ppn": "4675320.00"
+    },
+    "INV-202608-1091": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-17 - Toko Anugerah Kasih Karombasan",
+      "dpp_amount": "1269600.00",
+      "total_invoice_with_ppn": "1409256.00"
+    },
+    "INV-202608-1092": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-19 - Grosir Teling Sentosa Wanea",
+      "dpp_amount": "3108000.00",
+      "total_invoice_with_ppn": "3449880.00"
+    },
+    "INV-202608-1093": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-19 - Grosir Teling Sentosa Wanea",
+      "dpp_amount": "5872000.00",
+      "total_invoice_with_ppn": "6517920.00"
+    },
+    "INV-202608-1094": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-19 - Grosir Teling Sentosa Wanea",
+      "dpp_amount": "1452000.00",
+      "total_invoice_with_ppn": "1611720.00"
+    },
+    "INV-202608-1095": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-21 - Grosir Tingkulu Jaya Wanea",
+      "dpp_amount": "1152000.00",
+      "total_invoice_with_ppn": "1278720.00"
+    },
+    "INV-202608-1096": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-21 - Grosir Tingkulu Jaya Wanea",
+      "dpp_amount": "2040000.00",
+      "total_invoice_with_ppn": "2264400.00"
+    },
+    "INV-202608-1097": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-21 - Grosir Tingkulu Jaya Wanea",
+      "dpp_amount": "523200.00",
+      "total_invoice_with_ppn": "580752.00"
+    },
+    "INV-202608-1098": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
+      "dpp_amount": "3110400.00",
+      "total_invoice_with_ppn": "3452544.00"
+    },
+    "INV-202608-1099": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
+      "dpp_amount": "432000.00",
+      "total_invoice_with_ppn": "479520.00"
+    },
+    "INV-202608-1100": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
+      "dpp_amount": "4800000.00",
+      "total_invoice_with_ppn": "5328000.00"
+    },
+    "INV-202608-1101": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-23 - Toko Bumi Nyiur Permai",
+      "dpp_amount": "2572000.00",
+      "total_invoice_with_ppn": "2854920.00"
+    },
+    "INV-202608-1102": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
+      "dpp_amount": "2880000.00",
+      "total_invoice_with_ppn": "3196800.00"
+    },
+    "INV-202608-1103": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
+      "dpp_amount": "4240000.00",
+      "total_invoice_with_ppn": "4706400.00"
+    },
+    "INV-202608-1104": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
+      "dpp_amount": "10200000.00",
+      "total_invoice_with_ppn": "11322000.00"
+    },
+    "INV-202608-1105": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-11",
+      "customer": "CUST-GT-47 - Toko Bintang Matuari Singkil",
+      "dpp_amount": "1092000.00",
+      "total_invoice_with_ppn": "1212120.00"
+    },
+    "INV-202608-1106": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-48 - Toko Usaha Bersama Singkil",
+      "dpp_amount": "3985800.00",
+      "total_invoice_with_ppn": "4424238.00"
+    },
+    "INV-202608-1107": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-48 - Toko Usaha Bersama Singkil",
+      "dpp_amount": "6048000.00",
+      "total_invoice_with_ppn": "6713280.00"
+    },
+    "INV-202608-1108": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-48 - Toko Usaha Bersama Singkil",
+      "dpp_amount": "600000.00",
+      "total_invoice_with_ppn": "666000.00"
+    },
+    "INV-202608-1109": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-50 - Grosir Cahaya Utara Mahakeret",
+      "dpp_amount": "4320000.00",
+      "total_invoice_with_ppn": "4795200.00"
+    },
+    "INV-202608-1110": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-50 - Grosir Cahaya Utara Mahakeret",
+      "dpp_amount": "9360000.00",
+      "total_invoice_with_ppn": "10389600.00"
+    },
+    "INV-202608-1111": {
+      "date_invoice": "2026-08-28",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-04",
+      "customer": "CUST-GT-50 - Grosir Cahaya Utara Mahakeret",
+      "dpp_amount": "2776000.00",
+      "total_invoice_with_ppn": "3081360.00"
+    },
+    "INV-202608-1131": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-28",
+      "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
+      "dpp_amount": "3768000.00",
+      "total_invoice_with_ppn": "4182480.00"
+    },
+    "INV-202608-1132": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-28",
+      "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
+      "dpp_amount": "768000.00",
+      "total_invoice_with_ppn": "852480.00"
+    },
+    "INV-202608-1133": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-28",
+      "customer": "CUST-INST-10 - Mess Karyawan Pelabuhan Bitung",
+      "dpp_amount": "8100000.00",
+      "total_invoice_with_ppn": "8991000.00"
+    },
+    "INV-202608-1134": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-28",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "2805000.00",
+      "total_invoice_with_ppn": "3113550.00"
+    },
+    "INV-202608-1135": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-28",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "264000.00",
+      "total_invoice_with_ppn": "293040.00"
+    },
+    "INV-202608-1136": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-28",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "8568000.00",
+      "total_invoice_with_ppn": "9510480.00"
+    },
+    "INV-202608-1137": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-28",
+      "customer": "CUST-MT-06 - MultiiMart Megamas Manado",
+      "dpp_amount": "6640800.00",
+      "total_invoice_with_ppn": "7371288.00"
+    },
+    "INV-202608-1138": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
+      "dpp_amount": "5748000.00",
+      "total_invoice_with_ppn": "6380280.00"
+    },
+    "INV-202608-1139": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
+      "dpp_amount": "2052000.00",
+      "total_invoice_with_ppn": "2277720.00"
+    },
+    "INV-202608-1140": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
+      "dpp_amount": "3960000.00",
+      "total_invoice_with_ppn": "4395600.00"
+    },
+    "INV-202608-1141": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-MT-11 - Jumbbo Swalayan Bitung",
+      "dpp_amount": "1188000.00",
+      "total_invoice_with_ppn": "1318680.00"
+    },
+    "INV-202608-1142": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
+      "dpp_amount": "3710400.00",
+      "total_invoice_with_ppn": "4118544.00"
+    },
+    "INV-202608-1143": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
+      "dpp_amount": "4176000.00",
+      "total_invoice_with_ppn": "4635360.00"
+    },
+    "INV-202608-1144": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-24 - Toko Cahaya Samrat Wenang",
+      "dpp_amount": "3744000.00",
+      "total_invoice_with_ppn": "4155840.00"
+    },
+    "INV-202608-1145": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-25 - Grosir Megamas Abadi",
+      "dpp_amount": "4713600.00",
+      "total_invoice_with_ppn": "5232096.00"
+    },
+    "INV-202608-1146": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-25 - Grosir Megamas Abadi",
+      "dpp_amount": "9456000.00",
+      "total_invoice_with_ppn": "10496160.00"
+    },
+    "INV-202608-1147": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
+      "dpp_amount": "1152000.00",
+      "total_invoice_with_ppn": "1278720.00"
+    },
+    "INV-202608-1148": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
+      "dpp_amount": "3484800.00",
+      "total_invoice_with_ppn": "3868128.00"
+    },
+    "INV-202608-1149": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
+      "dpp_amount": "3240000.00",
+      "total_invoice_with_ppn": "3596400.00"
+    },
+    "INV-202608-1150": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-27 - Grosir Bahu Sentosa",
+      "dpp_amount": "1116000.00",
+      "total_invoice_with_ppn": "1238760.00"
+    },
+    "INV-202608-1151": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
+      "dpp_amount": "792000.00",
+      "total_invoice_with_ppn": "879120.00"
+    },
+    "INV-202608-1152": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
+      "dpp_amount": "1224000.00",
+      "total_invoice_with_ppn": "1358640.00"
+    },
+    "INV-202608-1153": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
+      "dpp_amount": "6480000.00",
+      "total_invoice_with_ppn": "7192800.00"
+    },
+    "INV-202608-1154": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-51 - Toko Paniki Permai Mapanget",
+      "dpp_amount": "2536800.00",
+      "total_invoice_with_ppn": "2815848.00"
+    },
+    "INV-202608-1155": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
+      "dpp_amount": "4095000.00",
+      "total_invoice_with_ppn": "4545450.00"
+    },
+    "INV-202608-1156": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
+      "dpp_amount": "3999200.00",
+      "total_invoice_with_ppn": "4439112.00"
+    },
+    "INV-202608-1157": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-12",
+      "customer": "CUST-GT-52 - Grosir Kairagi Mandiri",
+      "dpp_amount": "3744000.00",
+      "total_invoice_with_ppn": "4155840.00"
+    },
+    "INV-202608-1158": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-54 - Toko Bengkol Sejahtera",
+      "dpp_amount": "2784000.00",
+      "total_invoice_with_ppn": "3090240.00"
+    },
+    "INV-202608-1159": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-54 - Toko Bengkol Sejahtera",
+      "dpp_amount": "5496000.00",
+      "total_invoice_with_ppn": "6100560.00"
+    },
+    "INV-202608-1160": {
+      "date_invoice": "2026-08-29",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-05",
+      "customer": "CUST-GT-54 - Toko Bengkol Sejahtera",
+      "dpp_amount": "1795200.00",
+      "total_invoice_with_ppn": "1992672.00"
+    },
+    "INV-202608-1175": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-30",
+      "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
+      "dpp_amount": "2688000.00",
+      "total_invoice_with_ppn": "2983680.00"
+    },
+    "INV-202608-1176": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-30",
+      "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
+      "dpp_amount": "2436000.00",
+      "total_invoice_with_ppn": "2703960.00"
+    },
+    "INV-202608-1177": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-30",
+      "customer": "CUST-INST-06 - Hotel Novotel Manado Golf Resort",
+      "dpp_amount": "9504000.00",
+      "total_invoice_with_ppn": "10549440.00"
+    },
+    "INV-202608-1178": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-30",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "11979800.00",
+      "total_invoice_with_ppn": "13297578.00"
+    },
+    "INV-202608-1179": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-30",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "2280000.00",
+      "total_invoice_with_ppn": "2530800.00"
+    },
+    "INV-202608-1180": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-30",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "9540000.00",
+      "total_invoice_with_ppn": "10589400.00"
+    },
+    "INV-202608-1181": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-30",
+      "customer": "CUST-MT-07 - MultiiMart Sam Ratulangi",
+      "dpp_amount": "8923200.00",
+      "total_invoice_with_ppn": "9904752.00"
+    },
+    "INV-202608-1182": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-14",
+      "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
+      "dpp_amount": "6412800.00",
+      "total_invoice_with_ppn": "7118208.00"
+    },
+    "INV-202608-1183": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-14",
+      "customer": "CUST-GT-29 - Grosir Pasar 45 Rezeki",
+      "dpp_amount": "432000.00",
+      "total_invoice_with_ppn": "479520.00"
+    },
+    "INV-202608-1184": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-31 - Grosir Sario Damai",
+      "dpp_amount": "1440000.00",
+      "total_invoice_with_ppn": "1598400.00"
+    },
+    "INV-202608-1185": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-31 - Grosir Sario Damai",
+      "dpp_amount": "7168000.00",
+      "total_invoice_with_ppn": "7956480.00"
+    },
+    "INV-202608-1186": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-31 - Grosir Sario Damai",
+      "dpp_amount": "2078400.00",
+      "total_invoice_with_ppn": "2307024.00"
+    },
+    "INV-202608-1187": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-33 - Toko Malalayang Megah",
+      "dpp_amount": "3879000.00",
+      "total_invoice_with_ppn": "4305690.00"
+    },
+    "INV-202608-1188": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-33 - Toko Malalayang Megah",
+      "dpp_amount": "684000.00",
+      "total_invoice_with_ppn": "759240.00"
+    },
+    "INV-202608-1189": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-33 - Toko Malalayang Megah",
+      "dpp_amount": "3564000.00",
+      "total_invoice_with_ppn": "3956040.00"
+    },
+    "INV-202608-1190": {
+      "date_invoice": "2026-08-31",
+      "status_at_cutoff": "posted",
+      "due_date": "2026-09-07",
+      "customer": "CUST-GT-33 - Toko Malalayang Megah",
+      "dpp_amount": "3655200.00",
+      "total_invoice_with_ppn": "4057272.00"
+    }
+  },
+  "carry_invoices": {
+    "INV-202608-1191": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1",
+      "dpp_amount": "1458000.00",
+      "total_invoice_with_ppn": "1618380.00"
+    },
+    "INV-202608-1192": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1",
+      "dpp_amount": "468000.00",
+      "total_invoice_with_ppn": "519480.00"
+    },
+    "INV-202608-1193": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan",
+      "dpp_amount": "756000.00",
+      "total_invoice_with_ppn": "839160.00"
+    },
+    "INV-202608-1194": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan",
+      "dpp_amount": "2064000.00",
+      "total_invoice_with_ppn": "2291040.00"
+    },
+    "INV-202608-1195": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon",
+      "dpp_amount": "864000.00",
+      "total_invoice_with_ppn": "959040.00"
+    },
+    "INV-202608-1196": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon",
+      "dpp_amount": "1152000.00",
+      "total_invoice_with_ppn": "1278720.00"
+    },
+    "INV-202608-1197": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1",
+      "dpp_amount": "1200000.00",
+      "total_invoice_with_ppn": "1332000.00"
+    },
+    "INV-202608-1198": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1",
+      "dpp_amount": "120000.00",
+      "total_invoice_with_ppn": "133200.00"
+    },
+    "INV-202608-1199": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-049 - Warung Kasih Joppy Jembatan",
+      "dpp_amount": "692000.00",
+      "total_invoice_with_ppn": "768120.00"
+    },
+    "INV-202608-1200": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon",
+      "dpp_amount": "864000.00",
+      "total_invoice_with_ppn": "959040.00"
+    },
+    "INV-202608-1201": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon",
+      "dpp_amount": "432000.00",
+      "total_invoice_with_ppn": "479520.00"
+    },
+    "INV-202608-1202": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
+      "dpp_amount": "448000.00",
+      "total_invoice_with_ppn": "497280.00"
+    },
+    "INV-202608-1203": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
+      "dpp_amount": "1296000.00",
+      "total_invoice_with_ppn": "1438560.00"
+    },
+    "INV-202608-1204": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-01",
+      "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1",
+      "dpp_amount": "940800.00",
+      "total_invoice_with_ppn": "1044288.00"
+    },
+    "INV-202608-1205": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-01",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
+      "dpp_amount": "2160000.00",
+      "total_invoice_with_ppn": "2397600.00"
+    },
+    "INV-202608-1206": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-01",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
+      "dpp_amount": "5280000.00",
+      "total_invoice_with_ppn": "5860800.00"
+    },
+    "INV-202608-1207": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-01",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang",
+      "dpp_amount": "1452000.00",
+      "total_invoice_with_ppn": "1611720.00"
+    },
+    "INV-202608-1208": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-16",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "3456000.00",
+      "total_invoice_with_ppn": "3836160.00"
+    },
+    "INV-202608-1209": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-16",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "23040000.00",
+      "total_invoice_with_ppn": "25574400.00"
+    },
+    "INV-202608-1210": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-16",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "4764000.00",
+      "total_invoice_with_ppn": "5288040.00"
+    },
+    "INV-202608-1211": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-16",
+      "customer": "CUST-MT-01 - Indomarett DC Manado",
+      "dpp_amount": "5270400.00",
+      "total_invoice_with_ppn": "5850144.00"
+    },
+    "INV-202608-1212": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-16",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "25198400.00",
+      "total_invoice_with_ppn": "27970224.00"
+    },
+    "INV-202608-1213": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-16",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "1224000.00",
+      "total_invoice_with_ppn": "1358640.00"
+    },
+    "INV-202608-1214": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-16",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "11960000.00",
+      "total_invoice_with_ppn": "13275600.00"
+    },
+    "INV-202608-1215": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-10-16",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado",
+      "dpp_amount": "8468000.00",
+      "total_invoice_with_ppn": "9399480.00"
+    },
+    "INV-202608-1216": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
+      "dpp_amount": "1887200.00",
+      "total_invoice_with_ppn": "2094792.00"
+    },
+    "INV-202608-1217": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
+      "dpp_amount": "384000.00",
+      "total_invoice_with_ppn": "426240.00"
+    },
+    "INV-202608-1218": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
+      "dpp_amount": "2160000.00",
+      "total_invoice_with_ppn": "2397600.00"
+    },
+    "INV-202608-1219": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45",
+      "dpp_amount": "1260000.00",
+      "total_invoice_with_ppn": "1398600.00"
+    },
+    "INV-202608-1220": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
+      "dpp_amount": "2208000.00",
+      "total_invoice_with_ppn": "2450880.00"
+    },
+    "INV-202608-1221": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
+      "dpp_amount": "2488000.00",
+      "total_invoice_with_ppn": "2761680.00"
+    },
+    "INV-202608-1222": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
+      "dpp_amount": "11520000.00",
+      "total_invoice_with_ppn": "12787200.00"
+    },
+    "INV-202608-1223": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang",
+      "dpp_amount": "1696000.00",
+      "total_invoice_with_ppn": "1882560.00"
+    },
+    "INV-202608-1224": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
+      "dpp_amount": "6878400.00",
+      "total_invoice_with_ppn": "7635024.00"
+    },
+    "INV-202608-1225": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
+      "dpp_amount": "4068000.00",
+      "total_invoice_with_ppn": "4515480.00"
+    },
+    "INV-202608-1226": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
+      "dpp_amount": "1584000.00",
+      "total_invoice_with_ppn": "1758240.00"
+    },
+    "INV-202608-1227": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca",
+      "dpp_amount": "864000.00",
+      "total_invoice_with_ppn": "959040.00"
+    },
+    "INV-202608-1228": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-08",
+      "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa",
+      "dpp_amount": "9144000.00",
+      "total_invoice_with_ppn": "10149840.00"
+    },
+    "INV-202608-1229": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-08",
+      "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa",
+      "dpp_amount": "780000.00",
+      "total_invoice_with_ppn": "865800.00"
+    },
+    "INV-202608-1230": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru",
+      "dpp_amount": "5066400.00",
+      "total_invoice_with_ppn": "5623704.00"
+    },
+    "INV-202608-1231": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru",
+      "dpp_amount": "2760000.00",
+      "total_invoice_with_ppn": "3063600.00"
+    },
+    "INV-202608-1232": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru",
+      "dpp_amount": "744000.00",
+      "total_invoice_with_ppn": "825840.00"
+    },
+    "INV-202608-1233": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru",
+      "dpp_amount": "950400.00",
+      "total_invoice_with_ppn": "1054944.00"
+    },
+    "INV-202608-1234": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
+      "dpp_amount": "2295000.00",
+      "total_invoice_with_ppn": "2547450.00"
+    },
+    "INV-202608-1235": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
+      "dpp_amount": "1740000.00",
+      "total_invoice_with_ppn": "1931400.00"
+    },
+    "INV-202608-1236": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-15",
+      "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala",
+      "dpp_amount": "871200.00",
+      "total_invoice_with_ppn": "967032.00"
+    },
+    "INV-202608-1237": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-08",
+      "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
+      "dpp_amount": "3741000.00",
+      "total_invoice_with_ppn": "4152510.00"
+    },
+    "INV-202608-1238": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-08",
+      "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
+      "dpp_amount": "2784000.00",
+      "total_invoice_with_ppn": "3090240.00"
+    },
+    "INV-202608-1239": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-08",
+      "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
+      "dpp_amount": "6120000.00",
+      "total_invoice_with_ppn": "6793200.00"
+    },
+    "INV-202608-1240": {
+      "date_invoice": "2026-09-01",
+      "status_at_cutoff": "carry_forward_pending",
+      "due_date": "2026-09-08",
+      "customer": "CUST-GT-36 - Grosir Taas Damai Tikala",
+      "dpp_amount": "2239200.00",
+      "total_invoice_with_ppn": "2485512.00"
+    }
+  },
+  "open_po": {
+    "PO-2026-08-01": {
+      "principal_code": "PRIN-MAYORA",
+      "arrival_maumbi_date": "2026-08-26",
+      "payment_due_date": "2026-09-25",
+      "total_amount_dpp": "555000000.00"
+    },
+    "PO-2026-08-02": {
+      "principal_code": "PRIN-SANTOS",
+      "arrival_maumbi_date": "2026-08-22",
+      "payment_due_date": "2026-09-19",
+      "total_amount_dpp": "497000000.00"
+    },
+    "PO-2026-08-03": {
+      "principal_code": "PRIN-UNILEVER",
+      "arrival_maumbi_date": "2026-08-28",
+      "payment_due_date": "2026-10-02",
+      "total_amount_dpp": "565680000.00"
+    },
+    "PO-2026-08-04": {
+      "principal_code": "PRIN-WINGS",
+      "arrival_maumbi_date": "2026-08-22",
+      "payment_due_date": "2026-09-12",
+      "total_amount_dpp": "177600000.00"
+    },
+    "PO-2026-08-05": {
+      "principal_code": "PRIN-MAYORA",
+      "arrival_maumbi_date": "2026-08-27",
+      "payment_due_date": "2026-09-26",
+      "total_amount_dpp": "552000000.00"
+    },
+    "PO-2026-08-06": {
+      "principal_code": "PRIN-SANTOS",
+      "arrival_maumbi_date": "2026-08-24",
+      "payment_due_date": "2026-09-21",
+      "total_amount_dpp": "497000000.00"
+    },
+    "PO-2026-08-07": {
+      "principal_code": "PRIN-UNILEVER",
+      "arrival_maumbi_date": "2026-08-29",
+      "payment_due_date": "2026-10-03",
+      "total_amount_dpp": "565680000.00"
+    },
+    "PO-2026-08-08": {
+      "principal_code": "PRIN-WINGS",
+      "arrival_maumbi_date": "2026-08-24",
+      "payment_due_date": "2026-09-14",
+      "total_amount_dpp": "177600000.00"
+    },
+    "PO-2026-08-09": {
+      "principal_code": "PRIN-MAYORA",
+      "arrival_maumbi_date": "2026-08-28",
+      "payment_due_date": "2026-09-27",
+      "total_amount_dpp": "540960000.00"
+    },
+    "PO-2026-08-10": {
+      "principal_code": "PRIN-SANTOS",
+      "arrival_maumbi_date": "2026-08-26",
+      "payment_due_date": "2026-09-23",
+      "total_amount_dpp": "497000000.00"
+    },
+    "PO-2026-08-11": {
+      "principal_code": "PRIN-UNILEVER",
+      "arrival_maumbi_date": "2026-08-31",
+      "payment_due_date": "2026-10-05",
+      "total_amount_dpp": "565680000.00"
+    },
+    "PO-2026-08-12": {
+      "principal_code": "PRIN-WINGS",
+      "arrival_maumbi_date": "2026-08-26",
+      "payment_due_date": "2026-09-16",
+      "total_amount_dpp": "177600000.00"
+    },
+    "PO-2026-08-13": {
+      "principal_code": "PRIN-MAYORA",
+      "arrival_maumbi_date": "2026-08-29",
+      "payment_due_date": "2026-09-28",
+      "total_amount_dpp": "507760000.00"
+    },
+    "PO-2026-08-14": {
+      "principal_code": "PRIN-SANTOS",
+      "arrival_maumbi_date": "2026-08-27",
+      "payment_due_date": "2026-09-24",
+      "total_amount_dpp": "497000000.00"
+    },
+    "PO-2026-08-16": {
+      "principal_code": "PRIN-WINGS",
+      "arrival_maumbi_date": "2026-08-27",
+      "payment_due_date": "2026-09-17",
+      "total_amount_dpp": "177600000.00"
+    }
+  },
+  "in_transit": {
+    "PO-2026-08-15": {
+      "principal_code": "PRIN-UNILEVER",
+      "arrival_maumbi_date": "2026-09-01",
+      "payment_due_date": "2026-10-06",
+      "total_amount_dpp": "565680000.00"
+    }
+  },
+  "pending_dos": {
+    "DO-202608-1191": {
+      "so_number": "SO-202608-1191",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1"
+    },
+    "DO-202608-1192": {
+      "so_number": "SO-202608-1192",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-001 - Kios Tante Tin Lorong 1"
+    },
+    "DO-202608-1193": {
+      "so_number": "SO-202608-1193",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan"
+    },
+    "DO-202608-1194": {
+      "so_number": "SO-202608-1194",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-013 - Kios Ci Meiske Jembatan"
+    },
+    "DO-202608-1195": {
+      "so_number": "SO-202608-1195",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon"
+    },
+    "DO-202608-1196": {
+      "so_number": "SO-202608-1196",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-025 - Kios Ko Franky Bawah Pohon"
+    },
+    "DO-202608-1197": {
+      "so_number": "SO-202608-1197",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1"
+    },
+    "DO-202608-1198": {
+      "so_number": "SO-202608-1198",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-037 - Kios Berkat Oce Lorong 1"
+    },
+    "DO-202608-1199": {
+      "so_number": "SO-202608-1199",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-049 - Warung Kasih Joppy Jembatan"
+    },
+    "DO-202608-1200": {
+      "so_number": "SO-202608-1200",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon"
+    },
+    "DO-202608-1201": {
+      "so_number": "SO-202608-1201",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-061 - Kios Tante Siska Bawah Pohon"
+    },
+    "DO-202608-1202": {
+      "so_number": "SO-202608-1202",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1"
+    },
+    "DO-202608-1203": {
+      "so_number": "SO-202608-1203",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1"
+    },
+    "DO-202608-1204": {
+      "so_number": "SO-202608-1204",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-RTL-073 - Kios Ci Utu Lorong 1"
+    },
+    "DO-202608-1205": {
+      "so_number": "SO-202608-1205",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang"
+    },
+    "DO-202608-1206": {
+      "so_number": "SO-202608-1206",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang"
+    },
+    "DO-202608-1207": {
+      "so_number": "SO-202608-1207",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-INST-01 - RSUP Prof. Kandou Malalayang"
+    },
+    "DO-202608-1208": {
+      "so_number": "SO-202608-1208",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-MT-01 - Indomarett DC Manado"
+    },
+    "DO-202608-1209": {
+      "so_number": "SO-202608-1209",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-MT-01 - Indomarett DC Manado"
+    },
+    "DO-202608-1210": {
+      "so_number": "SO-202608-1210",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-MT-01 - Indomarett DC Manado"
+    },
+    "DO-202608-1211": {
+      "so_number": "SO-202608-1211",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-MT-01 - Indomarett DC Manado"
+    },
+    "DO-202608-1212": {
+      "so_number": "SO-202608-1212",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado"
+    },
+    "DO-202608-1213": {
+      "so_number": "SO-202608-1213",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado"
+    },
+    "DO-202608-1214": {
+      "so_number": "SO-202608-1214",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado"
+    },
+    "DO-202608-1215": {
+      "so_number": "SO-202608-1215",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-MT-02 - Alfamiddii DC Manado"
+    },
+    "DO-202608-1216": {
+      "so_number": "SO-202608-1216",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45"
+    },
+    "DO-202608-1217": {
+      "so_number": "SO-202608-1217",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45"
+    },
+    "DO-202608-1218": {
+      "so_number": "SO-202608-1218",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45"
+    },
+    "DO-202608-1219": {
+      "so_number": "SO-202608-1219",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-01 - Toko Sembako Berkat Pasar 45"
+    },
+    "DO-202608-1220": {
+      "so_number": "SO-202608-1220",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
+    },
+    "DO-202608-1221": {
+      "so_number": "SO-202608-1221",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
+    },
+    "DO-202608-1222": {
+      "so_number": "SO-202608-1222",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
+    },
+    "DO-202608-1223": {
+      "so_number": "SO-202608-1223",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "864000.00",
+      "customer": "CUST-GT-02 - Toko Kawanua Sejati Wenang"
+    },
+    "DO-202608-1224": {
+      "so_number": "SO-202608-1224",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca"
+    },
+    "DO-202608-1225": {
+      "so_number": "SO-202608-1225",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca"
+    },
+    "DO-202608-1226": {
+      "so_number": "SO-202608-1226",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca"
+    },
+    "DO-202608-1227": {
+      "so_number": "SO-202608-1227",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-03 - Grosir Sinar Terang Calaca"
+    },
+    "DO-202608-1228": {
+      "so_number": "SO-202608-1228",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa"
+    },
+    "DO-202608-1229": {
+      "so_number": "SO-202608-1229",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-05 - Grosir Istiqlal Sentosa"
+    },
+    "DO-202608-1230": {
+      "so_number": "SO-202608-1230",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru"
+    },
+    "DO-202608-1231": {
+      "so_number": "SO-202608-1231",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru"
+    },
+    "DO-202608-1232": {
+      "so_number": "SO-202608-1232",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru"
+    },
+    "DO-202608-1233": {
+      "so_number": "SO-202608-1233",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-34 - Grosir Tikala Baru"
+    },
+    "DO-202608-1234": {
+      "so_number": "SO-202608-1234",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala"
+    },
+    "DO-202608-1235": {
+      "so_number": "SO-202608-1235",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala"
+    },
+    "DO-202608-1236": {
+      "so_number": "SO-202608-1236",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-35 - Toko Banjer Berkah Tikala"
+    },
+    "DO-202608-1237": {
+      "so_number": "SO-202608-1237",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-36 - Grosir Taas Damai Tikala"
+    },
+    "DO-202608-1238": {
+      "so_number": "SO-202608-1238",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-36 - Grosir Taas Damai Tikala"
+    },
+    "DO-202608-1239": {
+      "so_number": "SO-202608-1239",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-36 - Grosir Taas Damai Tikala"
+    },
+    "DO-202608-1240": {
+      "so_number": "SO-202608-1240",
+      "scheduled_delivery_date": "2026-09-01",
+      "rejection_dpp": "0.00",
+      "customer": "CUST-GT-36 - Grosir Taas Damai Tikala"
+    }
+  },
+  "carry_forward_lines": [
+    {
+      "so_number": "SO-202608-1191",
+      "do_number": "DO-202608-1191",
+      "sku_code": "MYR-CND-04",
+      "lot_number": "LOT-ORA-20260702-38",
+      "qty_cartons": "4",
+      "unit_cost_price": "6800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1191",
+      "do_number": "DO-202608-1191",
+      "sku_code": "MYR-RMA-10",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "qty_cartons": "2",
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1191",
+      "do_number": "DO-202608-1191",
+      "sku_code": "MYR-TRB-01",
+      "lot_number": "LOT-ORA-20260703-19",
+      "qty_cartons": "1",
+      "unit_cost_price": "1200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1192",
+      "do_number": "DO-202608-1192",
+      "sku_code": "WNG-FLD-03",
+      "lot_number": "LOT-NGS-20260615-INIT-25",
+      "qty_cartons": "4",
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1192",
+      "do_number": "DO-202608-1192",
+      "sku_code": "WNG-SDP-10",
+      "lot_number": "LOT-NGS-20260615-INIT-10",
+      "qty_cartons": "1",
+      "unit_cost_price": "4400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1193",
+      "do_number": "DO-202608-1193",
+      "sku_code": "KPA-ABC-03",
+      "lot_number": "LOT-TOS-20260701-15",
+      "qty_cartons": "2",
+      "unit_cost_price": "1200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1193",
+      "do_number": "DO-202608-1193",
+      "sku_code": "KPA-YA-02",
+      "lot_number": "LOT-TOS-20260701-20",
+      "qty_cartons": "3",
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1194",
+      "do_number": "DO-202608-1194",
+      "sku_code": "ULV-LFB-06",
+      "lot_number": "LOT-VER-20260704-22",
+      "qty_cartons": "4",
+      "unit_cost_price": "18500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1195",
+      "do_number": "DO-202608-1195",
+      "sku_code": "MYR-CND-01",
+      "lot_number": "LOT-ORA-20260702-35",
+      "qty_cartons": "4",
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1196",
+      "do_number": "DO-202608-1196",
+      "sku_code": "ULV-LFB-05",
+      "lot_number": "LOT-VER-20260704-21",
+      "qty_cartons": "2",
+      "unit_cost_price": "21000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1197",
+      "do_number": "DO-202608-1197",
+      "sku_code": "MYR-CND-10",
+      "lot_number": "LOT-TMR-202608-NEW-01",
+      "qty_cartons": "4",
+      "unit_cost_price": "2000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1198",
+      "do_number": "DO-202608-1198",
+      "sku_code": "WNG-SDP-04",
+      "lot_number": "LOT-NGS-20260701-04",
+      "qty_cartons": "1",
+      "unit_cost_price": "2600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1199",
+      "do_number": "DO-202608-1199",
+      "sku_code": "WNG-SDP-03",
+      "lot_number": "LOT-NGS-20260701-03",
+      "qty_cartons": "1",
+      "unit_cost_price": "2500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1199",
+      "do_number": "DO-202608-1199",
+      "sku_code": "WNG-TOP-03",
+      "lot_number": "LOT-NGS-20260701-21",
+      "qty_cartons": "3",
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1200",
+      "do_number": "DO-202608-1200",
+      "sku_code": "ULV-SNL-02",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "qty_cartons": "3",
+      "unit_cost_price": "5200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1201",
+      "do_number": "DO-202608-1201",
+      "sku_code": "WNG-SDP-07",
+      "lot_number": "LOT-NGS-20260615-INIT-07",
+      "qty_cartons": "3",
+      "unit_cost_price": "3100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1202",
+      "do_number": "DO-202608-1202",
+      "sku_code": "KPA-KA-01",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "qty_cartons": "2",
+      "unit_cost_price": "4800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1203",
+      "do_number": "DO-202608-1203",
+      "sku_code": "ULV-LFB-08",
+      "lot_number": "LOT-VER-20260704-24",
+      "qty_cartons": "3",
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1204",
+      "do_number": "DO-202608-1204",
+      "sku_code": "WNG-SDP-07",
+      "lot_number": "LOT-NGS-20260615-INIT-07",
+      "qty_cartons": "3",
+      "unit_cost_price": "3100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1204",
+      "do_number": "DO-202608-1204",
+      "sku_code": "WNG-SDP-11",
+      "lot_number": "LOT-NGS-20260701-11",
+      "qty_cartons": "4",
+      "unit_cost_price": "4600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1205",
+      "do_number": "DO-202608-1205",
+      "sku_code": "MYR-CND-01",
+      "lot_number": "LOT-ORA-20260702-35",
+      "qty_cartons": "10",
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1206",
+      "do_number": "DO-202608-1206",
+      "sku_code": "ULV-RYC-01",
+      "lot_number": "LOT-VER-20260704-37",
+      "qty_cartons": "6",
+      "unit_cost_price": "8500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1206",
+      "do_number": "DO-202608-1206",
+      "sku_code": "ULV-SNL-02",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "qty_cartons": "10",
+      "unit_cost_price": "5200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1207",
+      "do_number": "DO-202608-1207",
+      "sku_code": "WNG-JSJ-02",
+      "lot_number": "LOT-NGS-20260701-14",
+      "qty_cartons": "11",
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1208",
+      "do_number": "DO-202608-1208",
+      "sku_code": "MYR-TRB-07",
+      "lot_number": "LOT-ORA-20260703-25",
+      "qty_cartons": "16",
+      "unit_cost_price": "1500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1209",
+      "do_number": "DO-202608-1209",
+      "sku_code": "KPA-ABC-01",
+      "lot_number": "LOT-TOS-20260701-13",
+      "qty_cartons": "14",
+      "unit_cost_price": "1400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1209",
+      "do_number": "DO-202608-1209",
+      "sku_code": "KPA-KA-03",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "qty_cartons": "26",
+      "unit_cost_price": "25500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1209",
+      "do_number": "DO-202608-1209",
+      "sku_code": "KPA-KA-04",
+      "lot_number": "LOT-TOS-20260701-04",
+      "qty_cartons": "8",
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1209",
+      "do_number": "DO-202608-1209",
+      "sku_code": "KPA-KA-11",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "qty_cartons": "25",
+      "unit_cost_price": "28000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1210",
+      "do_number": "DO-202608-1210",
+      "sku_code": "ULV-RNS-02",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "qty_cartons": "13",
+      "unit_cost_price": "22000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1210",
+      "do_number": "DO-202608-1210",
+      "sku_code": "ULV-RNS-04",
+      "lot_number": "LOT-RNS-202608-NEW-01",
+      "qty_cartons": "3",
+      "unit_cost_price": "42000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1211",
+      "do_number": "DO-202608-1211",
+      "sku_code": "WNG-GLD-03",
+      "lot_number": "LOT-NGS-20260615-INIT-31",
+      "qty_cartons": "12",
+      "unit_cost_price": "2800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1211",
+      "do_number": "DO-202608-1211",
+      "sku_code": "WNG-SDP-04",
+      "lot_number": "LOT-NGS-20260701-04",
+      "qty_cartons": "4",
+      "unit_cost_price": "2600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1211",
+      "do_number": "DO-202608-1211",
+      "sku_code": "WNG-TOP-03",
+      "lot_number": "LOT-NGS-20260701-21",
+      "qty_cartons": "20",
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1212",
+      "do_number": "DO-202608-1212",
+      "sku_code": "MYR-BBG-01",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "qty_cartons": "20",
+      "unit_cost_price": "2000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1212",
+      "do_number": "DO-202608-1212",
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "qty_cartons": "23",
+      "unit_cost_price": "11000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1212",
+      "do_number": "DO-202608-1212",
+      "sku_code": "MYR-CND-09",
+      "lot_number": "LOT-ORA-20260703-43",
+      "qty_cartons": "23",
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1212",
+      "do_number": "DO-202608-1212",
+      "sku_code": "MYR-KPK-RTD-02",
+      "lot_number": "LOT-ORA-20260703-30",
+      "qty_cartons": "18",
+      "unit_cost_price": "6000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1212",
+      "do_number": "DO-202608-1212",
+      "sku_code": "MYR-TRB-10",
+      "lot_number": "LOT-ORA-20260703-28",
+      "qty_cartons": "14",
+      "unit_cost_price": "1500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1213",
+      "do_number": "DO-202608-1213",
+      "sku_code": "KPA-ABC-02",
+      "lot_number": "LOT-TOS-20260701-14",
+      "qty_cartons": "6",
+      "unit_cost_price": "1400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1214",
+      "do_number": "DO-202608-1214",
+      "sku_code": "ULV-LFB-07",
+      "lot_number": "LOT-VER-20260704-23",
+      "qty_cartons": "14",
+      "unit_cost_price": "19500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1214",
+      "do_number": "DO-202608-1214",
+      "sku_code": "ULV-RYC-01",
+      "lot_number": "LOT-VER-20260704-37",
+      "qty_cartons": "11",
+      "unit_cost_price": "8500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1215",
+      "do_number": "DO-202608-1215",
+      "sku_code": "WNG-GLD-03",
+      "lot_number": "LOT-NGS-20260615-INIT-31",
+      "qty_cartons": "18",
+      "unit_cost_price": "2800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1215",
+      "do_number": "DO-202608-1215",
+      "sku_code": "WNG-JSJ-02",
+      "lot_number": "LOT-NGS-20260701-14",
+      "qty_cartons": "5",
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1215",
+      "do_number": "DO-202608-1215",
+      "sku_code": "WNG-JSJ-03",
+      "lot_number": "LOT-NGS-20260615-INIT-15",
+      "qty_cartons": "21",
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1215",
+      "do_number": "DO-202608-1215",
+      "sku_code": "WNG-SDP-03",
+      "lot_number": "LOT-NGS-20260701-03",
+      "qty_cartons": "7",
+      "unit_cost_price": "2500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1215",
+      "do_number": "DO-202608-1215",
+      "sku_code": "WNG-SDP-04",
+      "lot_number": "LOT-NGS-20260701-04",
+      "qty_cartons": "7",
+      "unit_cost_price": "2600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1215",
+      "do_number": "DO-202608-1215",
+      "sku_code": "WNG-SDP-10",
+      "lot_number": "LOT-NGS-20260615-INIT-10",
+      "qty_cartons": "16",
+      "unit_cost_price": "4400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1216",
+      "do_number": "DO-202608-1216",
+      "sku_code": "MYR-BTR-01",
+      "lot_number": "LOT-BTR-202608-NEW-01",
+      "qty_cartons": "1",
+      "unit_cost_price": "1800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1216",
+      "do_number": "DO-202608-1216",
+      "sku_code": "MYR-CND-08",
+      "lot_number": "LOT-ORA-20260703-42",
+      "qty_cartons": "4",
+      "unit_cost_price": "7000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1216",
+      "do_number": "DO-202608-1216",
+      "sku_code": "MYR-TRB-04",
+      "lot_number": "LOT-ORA-20260703-22",
+      "qty_cartons": "5",
+      "unit_cost_price": "1100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1217",
+      "do_number": "DO-202608-1217",
+      "sku_code": "KPA-KA-04",
+      "lot_number": "LOT-TOS-20260701-04",
+      "qty_cartons": "2",
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1218",
+      "do_number": "DO-202608-1218",
+      "sku_code": "ULV-MLT-01",
+      "lot_number": "LOT-VER-20260704-13",
+      "qty_cartons": "9",
+      "unit_cost_price": "17500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1219",
+      "do_number": "DO-202608-1219",
+      "sku_code": "WNG-GLD-02",
+      "lot_number": "LOT-NGS-20260701-30",
+      "qty_cartons": "13",
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1219",
+      "do_number": "DO-202608-1219",
+      "sku_code": "WNG-TOP-04",
+      "lot_number": "LOT-NGS-20260701-22",
+      "qty_cartons": "1",
+      "unit_cost_price": "1100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1220",
+      "do_number": "DO-202608-1220",
+      "sku_code": "MYR-CND-03",
+      "lot_number": "LOT-ORA-20260703-37",
+      "qty_cartons": "10",
+      "unit_cost_price": "7800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1221",
+      "do_number": "DO-202608-1221",
+      "sku_code": "KPA-KA-03",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "qty_cartons": "6",
+      "unit_cost_price": "25500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1221",
+      "do_number": "DO-202608-1221",
+      "sku_code": "KPA-KPT-01",
+      "lot_number": "LOT-TOS-20260701-21",
+      "qty_cartons": "2",
+      "unit_cost_price": "4200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1222",
+      "do_number": "DO-202608-1222",
+      "sku_code": "ULV-BNG-01",
+      "lot_number": "LOT-VER-20260704-41",
+      "qty_cartons": "12",
+      "unit_cost_price": "21000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1222",
+      "do_number": "DO-202608-1222",
+      "sku_code": "ULV-SNL-03",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "qty_cartons": "12",
+      "unit_cost_price": "14000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1223",
+      "do_number": "DO-202608-1223",
+      "sku_code": "WNG-FLD-03",
+      "lot_number": "LOT-NGS-20260615-INIT-25",
+      "qty_cartons": "10",
+      "unit_cost_price": "3000",
+      "is_rejected": true,
+      "rejection_dpp": "864000.00"
+    },
+    {
+      "so_number": "SO-202608-1223",
+      "do_number": "DO-202608-1223",
+      "sku_code": "WNG-JSJ-02",
+      "lot_number": "LOT-NGS-20260701-14",
+      "qty_cartons": "8",
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1223",
+      "do_number": "DO-202608-1223",
+      "sku_code": "WNG-SDP-12",
+      "lot_number": "LOT-NGS-20260615-INIT-12",
+      "qty_cartons": "5",
+      "unit_cost_price": "2800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1224",
+      "do_number": "DO-202608-1224",
+      "sku_code": "MYR-BBG-03",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "qty_cartons": "1",
+      "unit_cost_price": "11000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1224",
+      "do_number": "DO-202608-1224",
+      "sku_code": "MYR-BBG-04",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "qty_cartons": "12",
+      "unit_cost_price": "2200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1224",
+      "do_number": "DO-202608-1224",
+      "sku_code": "MYR-KPK-RTD-04",
+      "lot_number": "LOT-ORA-20260702-32",
+      "qty_cartons": "8",
+      "unit_cost_price": "6200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1225",
+      "do_number": "DO-202608-1225",
+      "sku_code": "KPA-KA-08",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "qty_cartons": "11",
+      "unit_cost_price": "8500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1225",
+      "do_number": "DO-202608-1225",
+      "sku_code": "KPA-KA-11",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "qty_cartons": "2",
+      "unit_cost_price": "28000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1226",
+      "do_number": "DO-202608-1226",
+      "sku_code": "ULV-SNL-04",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "qty_cartons": "4",
+      "unit_cost_price": "14200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1227",
+      "do_number": "DO-202608-1227",
+      "sku_code": "WNG-SDP-07",
+      "lot_number": "LOT-NGS-20260615-INIT-07",
+      "qty_cartons": "2",
+      "unit_cost_price": "3100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1227",
+      "do_number": "DO-202608-1227",
+      "sku_code": "WNG-TOP-02",
+      "lot_number": "LOT-NGS-20260615-INIT-20",
+      "qty_cartons": "3",
+      "unit_cost_price": "1300",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1228",
+      "do_number": "DO-202608-1228",
+      "sku_code": "MYR-BBG-01",
+      "lot_number": "LOT-BBG-202608-NEW-01",
+      "qty_cartons": "3",
+      "unit_cost_price": "2000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1228",
+      "do_number": "DO-202608-1228",
+      "sku_code": "MYR-CND-01",
+      "lot_number": "LOT-ORA-20260702-35",
+      "qty_cartons": "9",
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1228",
+      "do_number": "DO-202608-1228",
+      "sku_code": "MYR-CND-08",
+      "lot_number": "LOT-ORA-20260703-42",
+      "qty_cartons": "5",
+      "unit_cost_price": "7000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1228",
+      "do_number": "DO-202608-1228",
+      "sku_code": "MYR-TRB-06",
+      "lot_number": "LOT-ORA-20260703-24",
+      "qty_cartons": "11",
+      "unit_cost_price": "1600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1228",
+      "do_number": "DO-202608-1228",
+      "sku_code": "MYR-TRB-10",
+      "lot_number": "LOT-ORA-20260703-28",
+      "qty_cartons": "11",
+      "unit_cost_price": "1500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1229",
+      "do_number": "DO-202608-1229",
+      "sku_code": "KPA-RTD-01",
+      "lot_number": "LOT-TOS-20260701-25",
+      "qty_cartons": "5",
+      "unit_cost_price": "5500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1230",
+      "do_number": "DO-202608-1230",
+      "sku_code": "MYR-CND-03",
+      "lot_number": "LOT-ORA-20260703-37",
+      "qty_cartons": "3",
+      "unit_cost_price": "7800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1230",
+      "do_number": "DO-202608-1230",
+      "sku_code": "MYR-EGN-02",
+      "lot_number": "LOT-ORA-20260703-34",
+      "qty_cartons": "9",
+      "unit_cost_price": "1800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1230",
+      "do_number": "DO-202608-1230",
+      "sku_code": "MYR-TRB-05",
+      "lot_number": "LOT-ORA-20260702-23",
+      "qty_cartons": "13",
+      "unit_cost_price": "1100",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1231",
+      "do_number": "DO-202608-1231",
+      "sku_code": "KPA-KPT-02",
+      "lot_number": "LOT-TOS-20260701-22",
+      "qty_cartons": "10",
+      "unit_cost_price": "9800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1232",
+      "do_number": "DO-202608-1232",
+      "sku_code": "ULV-SNL-01",
+      "lot_number": "LOT-SNL-202608-NEW-01",
+      "qty_cartons": "2",
+      "unit_cost_price": "13500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1233",
+      "do_number": "DO-202608-1233",
+      "sku_code": "WNG-FLD-02",
+      "lot_number": "LOT-NGS-20260615-INIT-24",
+      "qty_cartons": "11",
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1234",
+      "do_number": "DO-202608-1234",
+      "sku_code": "MYR-RMA-03",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "qty_cartons": "9",
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1235",
+      "do_number": "DO-202608-1235",
+      "sku_code": "KPA-KA-07",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "qty_cartons": "2",
+      "unit_cost_price": "1600",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1235",
+      "do_number": "DO-202608-1235",
+      "sku_code": "KPA-RTD-04",
+      "lot_number": "LOT-TOS-20260701-28",
+      "qty_cartons": "1",
+      "unit_cost_price": "8200",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1235",
+      "do_number": "DO-202608-1235",
+      "sku_code": "KPA-YA-02",
+      "lot_number": "LOT-TOS-20260701-20",
+      "qty_cartons": "8",
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1236",
+      "do_number": "DO-202608-1236",
+      "sku_code": "WNG-JSJ-04",
+      "lot_number": "LOT-NGS-20260615-INIT-16",
+      "qty_cartons": "3",
+      "unit_cost_price": "850",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1236",
+      "do_number": "DO-202608-1236",
+      "sku_code": "WNG-JVN-02",
+      "lot_number": "LOT-NGS-20260615-INIT-27",
+      "qty_cartons": "6",
+      "unit_cost_price": "2800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1237",
+      "do_number": "DO-202608-1237",
+      "sku_code": "MYR-CND-07",
+      "lot_number": "LOT-ORA-20260703-41",
+      "qty_cartons": "7",
+      "unit_cost_price": "6800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1237",
+      "do_number": "DO-202608-1237",
+      "sku_code": "MYR-RMA-07",
+      "lot_number": "LOT-RMA-202608-NEW-01",
+      "qty_cartons": "3",
+      "unit_cost_price": "7500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1237",
+      "do_number": "DO-202608-1237",
+      "sku_code": "MYR-TRB-02",
+      "lot_number": "LOT-ORA-20260703-20",
+      "qty_cartons": "8",
+      "unit_cost_price": "1400",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1238",
+      "do_number": "DO-202608-1238",
+      "sku_code": "KPA-KA-03",
+      "lot_number": "LOT-KA-202608-NEW-01",
+      "qty_cartons": "8",
+      "unit_cost_price": "25500",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1239",
+      "do_number": "DO-202608-1239",
+      "sku_code": "ULV-LFB-02",
+      "lot_number": "LOT-VER-20260704-18",
+      "qty_cartons": "10",
+      "unit_cost_price": "3800",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1239",
+      "do_number": "DO-202608-1239",
+      "sku_code": "ULV-RYC-04",
+      "lot_number": "LOT-VER-20260704-40",
+      "qty_cartons": "10",
+      "unit_cost_price": "6000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1240",
+      "do_number": "DO-202608-1240",
+      "sku_code": "WNG-FLD-02",
+      "lot_number": "LOT-NGS-20260615-INIT-24",
+      "qty_cartons": "10",
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1240",
+      "do_number": "DO-202608-1240",
+      "sku_code": "WNG-FLD-03",
+      "lot_number": "LOT-NGS-20260615-INIT-25",
+      "qty_cartons": "13",
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    },
+    {
+      "so_number": "SO-202608-1240",
+      "do_number": "DO-202608-1240",
+      "sku_code": "WNG-GLD-01",
+      "lot_number": "LOT-NGS-20260615-INIT-29",
+      "qty_cartons": "3",
+      "unit_cost_price": "3000",
+      "is_rejected": false,
+      "rejection_dpp": "0.00"
+    }
+  ]
+}

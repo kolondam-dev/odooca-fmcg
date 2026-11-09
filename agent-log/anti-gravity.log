@@ -2087,8 +2087,71 @@
 - Resolusi konflik docs/HANDOFF.md pasca merge origin/main (PR95)
 - Task managed by antigravity-agent at 2026-11-05T15:35:00+07:00
 
+[2026-11-05T20:30:00+07:00] [INFO] F2: Planner murni dan generator pack periode transaksi Agustus 2026
+- Mengimplementasikan SeedPlanner deterministik (scripts/ops/seed_planner.py) kebal terhadap PYTHONHASHSEED menggunakan SHA-256 seed.
+- Menghasilkan pack periode Agustus 2026: 1.240 SO, 1.190 DO, 1.190 INV, 1.202 AR collections, 16 PO headers, 1 AP payment, 26 OPEX, 4.866 stock events.
+- Eksekusi carry-forward 48 DO Juli (1.038 karton) pada hari kerja pertama 1 Agustus 2026.
+- Pelunasan penuh utang dagang Unilever PO-2026-06-05 (DPP Rp2.899.971.200,00) tepat jatuh tempo 8 Agustus 2026.
+- Penomoran dokumen bulanan (SO, DO, INV, REJ, PO) berurutan mulai dari 1 per bulan baru; dokumen global (PAY-AR, PAY-AP, EVT) berlanjut monotonik dari baseline Juli.
+- Seluruh gate v2 (scripts/ops/seed_v2_gates.py) validasi strict=True lulus dengan 0 pelanggaran dan 0 gate terlewat: INPUT-SCHEMA, CALENDAR-OFFICIAL, PERIOD-WINDOW, NUMBERING, STOCK-NONNEG, PO-CAUSALITY, AR-TERMS/AP-TERMS, TAX-SOURCE, CASH-NONNEG, NARRATIVE-ANCHORS, PERIOD-CONTINUITY.
+- Metrik naratif Agustus 2026 berada tepat di dalam pita terversi: net DPP Rp4.150.068.000,00 (pita Rp4,00-Rp4,50 M), diskon 2,50% (pita 2,00%-3,20%), tolakan 1,97% (pita 1,80%-3,00%), outlet aktif 207 (pita 200-215).
+- Membangun CLI generator scripts/ops/generate_period_pack.py yang menghasilkan pack CSV & JSON, closing_state_20260831.json, narrative_report.json, dan MANIFEST.json dengan checksum SHA-256 LF-kanonikal.
+- Menambahkan test suite tests/test_seed_planner.py (8 tes unit lulus).
+- Task managed by antigravity at 2026-11-05T20:30:00+07:00
+
 [2026-11-07T08:59:30+07:00] [INFO] Handover brief Finance/Accounting/Tax untuk WSL
 - Membuat docs/finance/HANDOVER_ANTIGRAVITY.md dari main d9c7e5f: status I0-I8, 58 report BELUM_DITERIMA, bukti PR95/PR96, aturan kerja, checklist WSL, paket I2a-I2c, jebakan Odoo19, keputusan pemilik, red flags dan format laporan.
 - Diverifikasi: baseline main d9c7e5f dan PR96 merged192defa; katalog58 baris semuanya BELUM_DITERIMA; 23 tes finance/Ruff/manifests sudah PASS pada paket sebelumnya.
 - Tidak ada perubahan kode, data, role, chart, costing, seed, aktivasi, merge main atau deployment.
 - Task managed by antigravity-agent at 2026-11-07T08:59:30+07:00
+
+[2026-11-08T13:00:00+07:00] [INFO] F2/PR97: Penyelesaian Lengkap Review Change Request
+- P1: Penambahan generasi carry-forward 50 SO tanggal 31 Agustus menjadi 50 DO dan 50 faktur terjadwal 1 September 2026; total pack genap 1.240 SO = 1.240 DO = 1.240 faktur; closing state mencatat 50 pending DO dan 771 karton reservasi.
+- P2: Penyelarasan lead time maritim PO ke Hari Kerja Operasional (working days); fmcg_calendar.py menyediakan add_working_days dan count_working_days; seed_planner.py dan seed_v2_gates.py selaras menghitung hari kerja operasional; SEED_INVARIANT_CONTRACT_V2.md mengunci keputusan pemilik.
+- P2: Penomoran PO diparameterisasi per periode (PO-{YYYY}-{MM}-{counter:02d}); pengujian membuktikan September menghasilkan PO-2026-09-01.
+- Observasi Desain: Dokumentasi eksplisit PeriodConfig bahwa target naratif blueprint (net DPP, diskon, tolakan) adalah acuan benchmark untuk NARRATIVE-ANCHORS, bukan pengontrol alur transaksi deterministik.
+- Resolusi Temuan Review: Kontinuitas opening Agustus diuji independen terhadap replay Juli (bukan self-comparison); chained test September lulus (50 DO carry di-dispatch via stock event 1 September, 39 faktur carry tertagih, 15 PO Agustus terlunasi); hash sumber generator diikat pada MANIFEST.json.
+- Verifikasi: 13 unit tests test_seed_planner lulus, 82 unit tests test_seed_v2_gates lulus, ruff check clean, check_manifests 11 addon valid, 11 gerbang invariant strict=True lulus tanpa pelanggaran.
+- Task managed by antigravity at 2026-11-08T13:00:00+07:00
+
+[2026-11-08T14:45:00+07:00] [INFO] F2/PR97: Penyelesaian Re-Review (Rejection Carry-Forward & Provenance Manifest)
+- P2: Menangani item dengan status is_rejected pada DO carry-forward di akhir bulan; menghasilkan baris rejections bertanggal 2026-09-01 (REJ-202608-047), mengurangi dpp_amount faktur (INV-202608-1223), dan membawa flag is_rejected serta rejection_dpp pada payload carry_forward_lines.
+- P2: Di bulan berikutnya (September), baris carry-forward yang ditolak menghasilkan event stok pelepasan (reserved/physical) dan event karantina (quarantine_impact: +qty) pada hari kerja pertama (2026-09-01), menjaga konsistensi saldo fisik, reservasi, dan karantina.
+- P1: scripts/ops/generate_period_pack.py mendukung pembacaan commit HEAD git dan override --generator-commit; MANIFEST.json mengikat generator_commit=d6a51aea4d5b0eb8f5e60abc9e454c295832ad27 dan hash LF eksak 4 file generator.
+- Pengujian: 14 tes unit test_seed_planner lulus (termasuk test_carry_forward_rejection_consistency), 82 tes unit test_seed_v2_gates lulus, ruff clean, check_manifests 11 addon OK, 11 gerbang invariant strict=True lulus 0 violations.
+- Task managed by antigravity at 2026-11-08T14:45:00+07:00
+
+[2026-11-09T07:38:00+07:00] [INFO] F2/PR97: Default Opening State Lintas-Periode, CI Sunday Invariant Guard, dan Penyelarasan Clock PWA
+- P2: Menambahkan fungsi resolve_opening_state_path pada scripts/ops/generate_period_pack.py untuk pemilihan otomatis closing state periode sebelumnya secara fail-closed (2026-08 default ke state_20260801.json, 2026-09 otomatis mencari closing Agustus, non-Agustus tanpa closing mewajibkan --opening-state).
+- Regresi Planner: Penambahan 4 tes unit resolusi opening state pada tests/test_seed_planner.py (total 18 tes unit PASS).
+- Resolusi Install Test (Sunday sales order guard): Dukungan override environment ID_MOBILE_BUSINESS_DATE pada addons/id_mobile_api/models/mobile_workday.py, auto-guard weekday pada fixture MobileFixture, dan penambahan pengujian eksplisit penolakan hari Minggu test_sales_order_rejected_on_sunday pada addons/id_mobile_api/tests/test_commands_api.py.
+- Resolusi PWA Browser Clock: Penyelarasan pwa/tests/browser/session-fixture.ts dengan perlindungan !isPlaywrightClock dan pewarisan method statis Date.UTC / Date.parse pada ShiftedDate agar timer Playwright tidak ter-clobber.
+- Task managed by antigravity at 2026-11-09T07:38:00+07:00
+
+[2026-11-09T07:55:00+07:00] [INFO] F2/PR97: Binding MANIFEST.json ke Commit Generator c7f5a36
+- Provenance Manifest: Memperbarui generator_commit ke c7f5a363ee0dbc4362b5416012c4085d72de7710 dan generator_sources_sha256 generate_period_pack.py ke hash eksak.
+- Pengujian: 18 tes unit test_seed_planner PASS, 82 tes unit test_seed_v2_gates PASS, strict validation 11 gates PASS 0 violations.
+- Task managed by antigravity at 2026-11-09T07:55:00+07:00
+
+[2026-11-09T08:02:00+07:00] [INFO] F2/PR97: Merge origin/main (PR #100) dan Sinkronisasi Desain System / Test Guard
+- Integrasi Cabang: Mengintegrasikan origin/main (PR #100) ke cabang agen/seed-f2-planner.
+- Resolusi Konflik: Mengadopsi patch uji waktu id_mobile_api dan pengujian eksplisit libur Minggu dari PR #100, menyelaraskan session-fixture PWA dengan pewarisan statis Date.UTC/parse, serta merangkai riwayat kronologis docs/HANDOFF.md secara utuh.
+- Pengujian: 100 tes unit (test_seed_planner + test_seed_v2_gates) PASS, ruff check clean, check_manifests 12 addons OK.
+- Task managed by antigravity at 2026-11-09T08:02:00+07:00
+
+[2026-11-09T08:15:00+07:00] [INFO] F2/PR97: Penyelarasan id_mobile_api dengan main untuk stabilitas CI
+- CI Install Test Guard: Mengembalikan id_mobile_api ke keselarasan 100% dengan origin/main (PR #100), menghilangkan redundansi fixture dan memanfaatkan test_sunday_rule_rejects_order_and_check_in kanonikal.
+- Pengujian: 18 tes planner PASS, ruff clean, manifest 12 addon OK, PWA gate 100% PASS (pwa-quality, pwa-container, pwa-browser).
+- Task managed by antigravity at 2026-11-09T08:15:00+07:00
+
+[2026-11-09T09:36:00+07:00] [INFO] F2/PR97: Validasi Provenance dan Checksum MANIFEST pada Auto-Resolution Opening State
+- P2: Mengintegrasikan verify_pack_manifest pada resolve_opening_state_path untuk memvalidasi keberadaan MANIFEST.json, keterdaftaran closing state pada files_sha256, dan kesesuaian hash SHA-256 LF secara fail-closed sebelum berkas opening state diterima.
+- Regresi Planner: Menambahkan 4 unit regression test pembuktian penolakan fail-fast jika MANIFEST hilang, berkas tidak terdaftar, atau checksum tidak cocok (total 22 tes unit).
+- Pengujian: ruff check clean, check_manifests 12 addon OK.
+- Task managed by antigravity at 2026-11-09T09:36:00+07:00
+
+[2026-11-09T12:55:00+07:00] [INFO] F2/PR97: Fail-Closed Check Opening State Eksplisit pada Direktori Pack Ber-MANIFEST
+- P2: Memperbaiki fail-open pada resolve_opening_state_path ketika opening_state_path diberikan secara eksplisit: jika berada dalam direktori pack yang memuat MANIFEST.json, fungsi mewajibkan files_sha256 berupa dictionary non-kosong yang valid, mewajibkan berkas eksplisit terdaftar di files_sha256 (raise ValueError jika tidak terdaftar), dan memverifikasi checksum SHA-256 LF secara fail-closed. Berkas di luar direktori ber-MANIFEST tetap diterima jika ada di disk.
+- Regresi Planner: Menambahkan 3 tes unit pada tests/test_seed_planner.py (test_explicit_opening_state_missing_from_manifest_fails_fast, test_explicit_opening_state_manifest_missing_files_sha256_fails_fast, test_explicit_opening_state_outside_pack_without_manifest_accepted), total 25 tes unit PASS.
+- Pengujian: ruff check clean, check_manifests 12 addon OK.
+- Task managed by antigravity at 2026-11-09T12:55:00+07:00

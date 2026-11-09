@@ -1,0 +1,123 @@
+{
+  "period": "2026-08",
+  "pack_start": "2026-08-01",
+  "pack_end": "2026-08-31",
+  "generator_commit": "31920b1ac9be5e15fdf85ef82706f7b7439e20fc",
+  "generator_sources_sha256": {
+    "scripts/ops/seed_planner.py": "e6ac658af1629f1b8f7af1914e4b711616bdab51ee36e89c1b9b6eac057929e8",
+    "scripts/ops/generate_period_pack.py": "8592a2d1fdf488ed22c1fb54370302ea4779c8044a228becbcd1d4da19936403",
+    "scripts/ops/seed_v2_gates.py": "9a6a0622d9ac17b071558a3f9666caad92c965aaa7e5b2d528568fcbcb8f9c0b",
+    "scripts/ops/fmcg_calendar.py": "ab5d8e408ff17212aacc50ba61c68548b19d4213accf4afc289657a0c4f53b0a"
+  },
+  "canonical_july_15_register_fingerprints": {
+    "customer_registry_354.csv": "9303e7fd9aab35134e481611545a9c8704f6e36b66e3e6c10ddf43c386250fb3",
+    "initial_stock_20260701.csv": "6a4539fb978eab00c60ac071f222574a054cfbcff5bfc19e999fd9a3275e6408",
+    "inbound_po_intransit_june_headers.csv": "3643efa63031fac441e68bfb5118ece350415056ffd92f6df1d8bd61d1d6852d",
+    "inbound_po_intransit_june_lines.csv": "fec4f7491fc3b29bfaccac0b98dd7281a304e329c7d3b267753549f35d70a91c",
+    "pjp_july_2026_matrix.csv": "f17fc52b03575b82498062d6dc89baad2c5235a4e09ff3f15524f4a359e3a67e",
+    "perpetual_sales_orders.csv": "fbfc22e86cb8b0678938a9a83485814d64e391b359d2980a9828d4fd9282f35f",
+    "perpetual_order_lines.csv": "a011c8ebb690dc7724b1d9c6fee8ad01fc6bc899cc8df14ba88aac31ede8bf56",
+    "perpetual_deliveries.csv": "dcd62acddbaa1829f343e3f2fde6caa5496b16641687526696499eae49084b19",
+    "perpetual_order_rejections.csv": "ace21a299e0361e4e8838f679e33120592f98fc20e3b66162610b61fea589578",
+    "perpetual_invoices.csv": "b58486598cf69e0aeb4ad9f28c1eb8fadc619fbb3324ac4788ca6982e4aef398",
+    "perpetual_ar_collections.csv": "0214da5d755dacdc004a13b17a9729e436ebfac6467b8253213d961c045bd906",
+    "perpetual_ap_payments.csv": "7a5083096ac0d96795c24972f33946d58989f7a3b1567b2fe649d08f585467f3",
+    "perpetual_opex_payroll.csv": "48017137991dac72f66d785cae67c132603c315f3d93cbd7a09a40daddf60625",
+    "perpetual_daily_stock_cards.csv": "40bc3e2d2fe92d2cb4273a431e6af2090e8832237c302379d24e53ad8314fc7f",
+    "perpetual_stock_event_ledger.csv": "b5a326f8480effcbeba6e130cd290cb2c4de4fad4e721e0e4f6276943422bf86"
+  },
+  "configuration": {
+    "target_net_dpp": "4235000000.00",
+    "target_discount_pct": "2.50",
+    "target_rejection_pct": "2.40",
+    "opening_cash": "5000000000.00",
+    "tax": {
+      "rate": "0.11",
+      "source": "PMK 131/2024 & UU HPP No. 7/2021",
+      "source_date": "2024-12-31",
+      "effective_from": "2025-01-01"
+    },
+    "min_lead_days": {
+      "PRIN-WINGS": 10,
+      "PRIN-SANTOS": 10,
+      "PRIN-MAYORA": 12,
+      "PRIN-UNILEVER": 14,
+      "PRIN-001": 14,
+      "PRIN-002": 10,
+      "PRIN-003": 12,
+      "PRIN-004": 10
+    },
+    "narrative_bands": {
+      "net_dpp": [
+        "4000000000.00",
+        "4500000000.00"
+      ],
+      "discount_pct": [
+        "2.00",
+        "3.20"
+      ],
+      "rejection_pct": [
+        "1.80",
+        "3.00"
+      ],
+      "active_outlets": [
+        "200",
+        "215"
+      ]
+    }
+  },
+  "metrics_summary": {
+    "gross_dpp": "4247988000.00",
+    "discount_dpp": "106199700.00",
+    "net_dpp": "4141788300.00",
+    "discount_pct": "2.50",
+    "rejection_dpp": "84590600.00",
+    "rejection_pct": "1.99",
+    "active_outlets": 207,
+    "total_sales_orders": 1240,
+    "total_deliveries": 1240,
+    "total_invoices": 1240,
+    "total_ar_collections": 1202,
+    "total_po_headers": 16,
+    "total_ap_payments": 1,
+    "total_opex_entries": 26,
+    "total_stock_events": 4854
+  },
+  "closing_summary": {
+    "total_physical_cartons": 61412,
+    "total_reserved_cartons": 771,
+    "total_available_cartons": 60641,
+    "total_quarantine_cartons": 314,
+    "open_invoices_count": 345,
+    "carry_invoices_count": 50,
+    "open_po_count": 15,
+    "in_transit_po_count": 1,
+    "pending_dos_count": 50
+  },
+  "files_sha256": {
+    "ap_payments.csv": "ca81b087135cccb513632faf1db0705d341952c0eec8b1e5afdd886a1b1c7b1d",
+    "ap_payments.json": "87eac308a05a38768cb3c666ab17df00df68d38e255dc8b54f2fb71aa3cb1874",
+    "ar_collections.csv": "472b375ef833f710dfb96fa83b514cc82566147a649ab14ec4d0c5acde008096",
+    "ar_collections.json": "b3f0a3f3809ed23fa2c46f6800bb926d190f39d462a7eddc33850b50e28ea740",
+    "closing_state_20260831.json": "23257d776c9488917dd410f754adee2b19c4b953449aaaef18e29feb18cbc80d",
+    "deliveries.csv": "04b3561508d03e53c75a2603f4d07a532228997038f28ac1c128d3c46de48524",
+    "deliveries.json": "586c833b19acc21ab4eaabe67997a4259a5a7e031bcbbe763019709a18381e31",
+    "invoices.csv": "a3a2a6ab811f719243576082230823edf02e6c89096121beab17fff4c8f7abf5",
+    "invoices.json": "af14c4ab5888676239ac333ef6276f67f5ee98dcbe46bfcb7243446110d44e12",
+    "narrative_report.json": "6f550406398826482aa34a0bdcfdb6d11a7cd38b1286d662a360be47dabdec89",
+    "opex.csv": "aa88ccfae884f7a2d1f4e19812e1b21035bf75b73d1bb79fde73fb7a18abd33f",
+    "opex.json": "6023c21d7612315b8d58c004c13ac1de667b9d74e072d03b23da6d3a253c6399",
+    "order_lines.csv": "ccc4a1f62f0983e132041a9c81b226fe0a8f1a28941765f88f14bbb169d1af14",
+    "order_lines.json": "b18ba9d9102ac5a182df4a2a99b955d90db41c2ef1ec7e889c3ee93b9e56d544",
+    "po_headers.csv": "be92f64443f18fdcaea6b90ec89db8350341992b53f42e8994f9fcdf6a96b50e",
+    "po_headers.json": "3de1e498888d037f971c6a804d63b426157a169cb9970a498dc9a751021b94de",
+    "po_lines.csv": "857cd07d68568f26ffece61e567458171c5ffe58bf7cb7535d39174924aa11de",
+    "po_lines.json": "30dfedc54886584bc6836303565cddccf191503fe422b0fc409ec66b59f3c066",
+    "rejections.csv": "d449560ebc877eb4960811875a65d1877cc039ca840424faf1f175622929736d",
+    "rejections.json": "c2d34b4ba3d82c5ca28de84300933d6872cf48602a38f0a9de05c6f29ef11296",
+    "sales_orders.csv": "b633adee3d1ba709f9b67efdea9b46d2a5d7fe06eeb36a89293a8230563426e6",
+    "sales_orders.json": "623136bc2dfc4b7d50d9d2a77b48d5017edca0420a839974f9e8f8734b481c13",
+    "stock_events.csv": "d0ee72bbdd21327c857183a129160de3195bd3f828ac26c7595d44ab18379609",
+    "stock_events.json": "4cf596e5b3694effaa3bc344e141d0ef74bb8398170a49f6faad38e818e35268"
+  }
+}
