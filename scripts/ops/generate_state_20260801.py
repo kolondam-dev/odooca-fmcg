@@ -245,6 +245,9 @@ def generate_state(reg_dir: Path, *, verify_fingerprint: bool = True) -> dict:
         "pending_dos": pending_dos,
         "open_po": open_po,
         "in_transit_po": in_transit_po,
+        "open_invoices": open_invoices_july,
+        "carry_invoices": carry_invoices_august,
+        "in_transit": in_transit_po,
         "stock": non_zero_stock,
     }
     return state

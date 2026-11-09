@@ -392,11 +392,25 @@ def check_continuity(declared, expected):
         left, right = declared.get(key, {}), expected.get(key, {})
         if key == 'stock':
             left, right = _nonzero_stock(left), _nonzero_stock(right)
-        for item in sorted(set(left) | set(right), key=str):
-            if left.get(item) != right.get(item):
-                label = '/'.join(item) if isinstance(item, tuple) else item
-                rpt.fail('PERIOD-CONTINUITY', f'{key}:{label}',
-                         f'declared opening {left.get(item)!r} differs from previous closing {right.get(item)!r}')
+            for item in sorted(set(left) | set(right), key=str):
+                l_item = left.get(item)
+                r_item = right.get(item)
+                l_bal = {f: _dec(l_item.get(f, ZERO)) for f in ('physical', 'reserved', 'quarantine')} if isinstance(l_item, dict) else None
+                r_bal = {f: _dec(r_item.get(f, ZERO)) for f in ('physical', 'reserved', 'quarantine')} if isinstance(r_item, dict) else None
+                if l_bal != r_bal:
+                    label = '/'.join(item) if isinstance(item, tuple) else item
+                    rpt.fail('PERIOD-CONTINUITY', f'{key}:{label}',
+                             f'declared opening {l_item!r} differs from previous closing {r_item!r}')
+        else:
+            for item in sorted(set(left) | set(right), key=str):
+                l_item = left.get(item)
+                r_item = right.get(item)
+                l_val = l_item.get('date_invoice') or l_item.get('arrival_maumbi_date') or l_item.get('scheduled_delivery_date') or str(l_item) if isinstance(l_item, dict) else (str(l_item) if l_item is not None else None)
+                r_val = r_item.get('date_invoice') or r_item.get('arrival_maumbi_date') or r_item.get('scheduled_delivery_date') or str(r_item) if isinstance(r_item, dict) else (str(r_item) if r_item is not None else None)
+                if l_val != r_val:
+                    label = '/'.join(item) if isinstance(item, tuple) else item
+                    rpt.fail('PERIOD-CONTINUITY', f'{key}:{label}',
+                             f'declared opening {l_item!r} differs from previous closing {r_item!r}')
     return rpt.items
 
 
@@ -429,8 +443,11 @@ def _check_po(pack, start, min_lead, rpt):
         principal = row['principal_code']
         if principal not in min_lead:
             rpt.fail('PO-CAUSALITY', po, f'no minimum lead-time parameter for {principal}')
-        elif (arrival - order).days < int(min_lead[principal]):
-            rpt.fail('PO-CAUSALITY', po, f'lead time {(arrival - order).days} days < minimum {min_lead[principal]}')
+        else:
+            work_days = calendar.count_working_days(order, arrival)
+            min_days = int(min_lead[principal])
+            if work_days < min_days:
+                rpt.fail('PO-CAUSALITY', po, f'lead time {work_days} working days < minimum {min_days}')
 
 
 def _term(value):
