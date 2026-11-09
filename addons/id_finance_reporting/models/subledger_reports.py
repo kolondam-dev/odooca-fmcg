@@ -97,14 +97,22 @@ class FinanceSubledgerMixin(models.AbstractModel):
         }
 
     def _partial_payloads(self, company, line_ids, as_of):
+        """Return dated partials whose *both* legs are inside the selection.
+
+        ``journal_ids``/``date_from``/``partner_ids`` define the report slice
+        and therefore also define which reconciliations may be consumed. A
+        partial whose counterpart sits outside the slice must stay out of the
+        reconstruction, otherwise a filtered invoice would look settled while
+        ``gl_control_total`` still counts its full balance.
+        """
         if not line_ids:
             return []
+        selected = list(line_ids)
         domain = [
             ("company_id", "=", company.id),
             ("max_date", "<=", as_of),
-            "|",
-            ("debit_move_id", "in", list(line_ids)),
-            ("credit_move_id", "in", list(line_ids)),
+            ("debit_move_id", "in", selected),
+            ("credit_move_id", "in", selected),
         ]
         partials = self._bounded(
             "account.partial.reconcile", domain, order="max_date asc, id asc",
@@ -133,8 +141,11 @@ class FinanceSubledgerMixin(models.AbstractModel):
         result = reconstruct_open_items(
             payload, partials, as_of, round_amt, partner_types,
         )
+        # Both legs of an applied partial always sit inside the same slice, so
+        # their matched amounts cancel and sum(residual) == sum(balance).
         gl_control_total = round_amt(sum(item["balance"] for item in payload))
         result.update({
+            "partial_scope": "both_legs_selected",
             "gl_control_total": gl_control_total,
             "gl_tie_out": tie_subledger_to_gl(
                 result["total_residual"], gl_control_total, round_amt, label="open_items",
@@ -297,6 +308,7 @@ class FinanceAgedPartnerBalance(models.AbstractModel):
             "open_items_total_residual": result["total_residual"],
             "partnerless_residual": result["partnerless_residual"],
             "partnerless_line_ids": result["partnerless_line_ids"],
+            "partial_scope": result["partial_scope"],
             "gl_control_total": result["gl_control_total"],
             "gl_tie_out": result["gl_tie_out"],
             **aging,

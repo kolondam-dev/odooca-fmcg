@@ -34,16 +34,29 @@
    Formula ini setara dengan rekonstruksi OCA pada pin
    `f48b4ea777c444256aa1c215ec3117d604b5feff`: OCA menambahkan kembali partial
    dengan `max_date > date_at` ke `amount_residual` berjalan.
-3. **Aging bertanda dan harus tie-out.** Bucket `current`, `days_1_30`,
+3. **Filter menentukan slice, dan partial wajib berada utuh di dalamnya.**
+   `journal_ids`, `partner_ids`, dan `date_from` membatasi baris kontrol yang
+   dilaporkan. Partial reconciliation hanya boleh mengurangi residual bila
+   **kedua** kakinya ada di slice tersebut (`partial_scope =
+   "both_legs_selected"`). Tanpa aturan ini, faktur di Journal A yang dibayar
+   lewat Journal B akan tampak lunas pada filter Journal A padahal
+   `gl_control_total` masih memuat saldo penuh faktur; hal yang sama terjadi bila
+   `date_from` mengecualikan faktur tetapi memasukkan pembayaran. Karena kedua
+   kaki selalu berada di slice yang sama, jumlah `matched_amount` saling
+   menghapus sehingga `total_residual == Σ balance baris terpilih` dan tie-out GL
+   tetap berlaku pada mode terfilter. Pada mode tanpa filter, semua partial yang
+   relevan otomatis memiliki kedua kaki di dalam slice, sehingga angka kontrol
+   tidak berubah.
+4. **Aging bertanda dan harus tie-out.** Bucket `current`, `days_1_30`,
    `days_31_60`, `days_61_90`, `days_91_120`, dan `older` menyimpan saldo
    bertanda (piutang positif, utang negatif). `bucket_sum` wajib sama dengan
    `total_residual` open items; `gl_tie_out` membandingkan total subledger dengan
    total saldo akun kontrol pada tanggal/periode yang sama.
-4. **Baris tanpa partner adalah exception eksplisit.** Baris partnerless tidak
+5. **Baris tanpa partner adalah exception eksplisit.** Baris partnerless tidak
    dibuang. Laporan menyertakan `partnerless_residual` dan
    `partnerless_line_ids`, sementara partner ledger menampilkan baris
    `partner_id = 0` dengan `partnerless = True`.
-5. **Batas query fail-closed.** Setiap `_snapshot` memakai
+6. **Batas query fail-closed.** Setiap `_snapshot` memakai
    `_check_scope(company_id, journal_ids, account_ids)` dari
    `id.finance.ledger.mixin`, `_bounded` dengan `LIMIT = 20000`, periode
    `<= 367` hari untuk partner ledger, satu tanggal as-of untuk open items, dan
@@ -54,7 +67,7 @@
 | Report | Input utama | Output kunci |
 |---|---|---|
 | `FIN05` / `FIN06` | `company_id`, `date_from`, `date_to`, `partner_type`, `journal_ids`, `partner_ids`, `only_posted_moves` | `rows` per `(partner, account_type)`, `opening_balance`, `debit`, `credit`, `closing_balance`, `by_account_type`, `gl_tie_out` |
-| `FIN07` | `company_id`, `as_of_date`, `date_from` opsional, `partner_type`, `journal_ids`, `partner_ids` | residual per baris, total per akun, `partnerless_residual`, `partnerless_line_ids`, `closed_line_ids`, `gl_tie_out` |
+| `FIN07` | `company_id`, `as_of_date`, `date_from` opsional, `partner_type`, `journal_ids`, `partner_ids` | residual per baris, total per akun, `partnerless_residual`, `partnerless_line_ids`, `closed_line_ids`, `partial_scope`, `gl_tie_out` |
 | `FIN08` / `FIN09` | sama dengan `FIN07` plus `bucket_edges` | bucket bertanda per partner/akun, `bucket_sum`, `unexplained_difference`, `balanced`, `gl_tie_out` |
 
 ## Angka kontrol independen
@@ -80,6 +93,17 @@ Fixture disposable dua perusahaan (`scale=1` dan `scale=7`) dari
 
 Aging 2026-07-31: `FIN08` `days_1_30 = 28`; `FIN09` `days_1_30 = -47`.
 
+Filtered scopes (`scale=1`, as-of 2026-07-31, AR), where the slice rule must
+keep residuals and the GL control on the same footing:
+
+| Filter | Isi slice | Total residual | `gl_control_total` |
+|---|---|---:|---:|
+| `journal_ids=[sale]` | faktur 110, refund 22 (receipt 60 di jurnal kas, di luar slice) | 88 | 88 |
+| `date_from=2026-07-10` | refund 22, receipt 60 (faktur 1 Juli di luar slice) | -82 | -82 |
+
+Tanpa aturan `both_legs_selected`, slice jurnal hanya menghasilkan 28 dan slice
+`date_from` menghasilkan 0, sehingga tie-out GL gagal.
+
 ## Oracle dan counterexample native
 
 `scripts/ops/verify_finance_i2_arap_subledger.py` berjalan hanya pada
@@ -94,6 +118,9 @@ Skenario yang diuji:
   termasuk pemisahan `all` dan baris partnerless.
 - Open items pada 14/25/31 Juli dan 31 Agustus, termasuk pembuktian bahwa
   `amount_residual` saat ini akan salah menjadi 0 untuk posisi 14 Juli.
+- Filter scope: `journal_ids=[sale]` dan `date_from=2026-07-10` pada as-of
+  31 Juli, dibandingkan dengan oracle yang memakai domain `AND` untuk kedua kaki
+  partial; residual, `gl_control_total`, dan `gl_tie_out` wajib konsisten.
 - Aging pada 14/25/31 Juli dengan bucket bertanda, coverage per partner, dan
   tie-out ke total open items/GL kontrol.
 - OCA `open_items` pada 14 dan 31 Juli; OCA `aged_partner_balance` pada 25 dan

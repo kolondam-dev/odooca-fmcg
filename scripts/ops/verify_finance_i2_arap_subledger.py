@@ -73,7 +73,7 @@ def _bucket(due_date, as_of):
     return "older"
 
 
-def _posted_lines(env, company, accounts, date_to, date_from=None):
+def _posted_lines(env, company, accounts, date_to, date_from=None, journal_ids=None):
     domain = [
         ("company_id", "=", company.id),
         ("account_id", "in", accounts.ids),
@@ -83,6 +83,8 @@ def _posted_lines(env, company, accounts, date_to, date_from=None):
     ]
     if date_from:
         domain.append(("date", ">", _cutoff(date_from)))
+    if journal_ids:
+        domain.append(("journal_id", "in", list(journal_ids)))
     return env["account.move.line"].search(domain, order="date asc, move_id asc, id asc")
 
 
@@ -124,25 +126,38 @@ def independent_partner_ledger(env, company, accounts, date_from, date_to):
     return {"rows": rows, "totals": totals}
 
 
-def independent_open_items(env, company, accounts, as_of):
-    """Reconstruct residuals only from partials whose max_date <= as_of."""
+def independent_open_items(env, company, accounts, as_of, journal_ids=None, date_from=None):
+    """Reconstruct residuals only from partials whose max_date <= as_of.
+
+    The optional ``journal_ids``/``date_from`` filters define the same slice as
+    the production report. A partial is consumed only when both of its legs are
+    inside that slice; otherwise a filtered invoice would look settled while the
+    control GL still counts its full balance.
+    """
     cutoff = _cutoff(as_of)
     round_amt = company.currency_id.round
-    lines = _posted_lines(env, company, accounts, cutoff)
+    lines = _posted_lines(
+        env, company, accounts, cutoff, date_from=date_from, journal_ids=journal_ids,
+    )
     line_by_id = {line.id: line for line in lines}
-    partials = env["account.partial.reconcile"].search([
-        ("company_id", "=", company.id),
-        ("max_date", "<=", cutoff),
-        "|",
-        ("debit_move_id", "in", list(line_by_id)),
-        ("credit_move_id", "in", list(line_by_id)),
-    ], order="max_date asc, id asc") if line_by_id else env["account.partial.reconcile"]
+    if line_by_id:
+        selected = list(line_by_id)
+        partials = env["account.partial.reconcile"].search([
+            ("company_id", "=", company.id),
+            ("max_date", "<=", cutoff),
+            ("debit_move_id", "in", selected),
+            ("credit_move_id", "in", selected),
+        ], order="max_date asc, id asc")
+    else:
+        partials = env["account.partial.reconcile"]
     matched = defaultdict(float)
     for partial in partials:
-        if partial.debit_move_id.id in line_by_id:
-            matched[partial.debit_move_id.id] -= partial.amount
-        if partial.credit_move_id.id in line_by_id:
-            matched[partial.credit_move_id.id] += partial.amount
+        if partial.debit_move_id.id not in line_by_id:
+            continue
+        if partial.credit_move_id.id not in line_by_id:
+            continue
+        matched[partial.debit_move_id.id] -= partial.amount
+        matched[partial.credit_move_id.id] += partial.amount
     rows = {}
     for line_id, line in line_by_id.items():
         residual = round_amt(line.balance + matched[line_id])
@@ -517,6 +532,76 @@ def check_fixture(env, fixture, evidence, check_hard_coded=False):
                     snapshot["total_residual"] == round_amt(expected),
                     f"FIN07 as-of before settlement must use dated partials, got {snapshot['total_residual']}",
                 )
+
+    # Filtered slices: journal_ids/date_from/partner_ids define the report
+    # scope, and only partials with both legs inside that scope may be
+    # consumed. Otherwise a filtered invoice would look settled while the
+    # control GL still carries its balance.
+    sale_journal = journals["sale"]
+    filtered_scopes = (
+        ("journal_sale", {"journal_ids": [sale_journal.id]}, None),
+        ("date_from_0710", {}, "2026-07-10"),
+    )
+    for label, filters, start in filtered_scopes:
+        for partner_type, account_key in (("customer", "ar"), ("supplier", "ap")):
+            oracle = independent_open_items(
+                env, company, accounts[account_key], "2026-07-31",
+                journal_ids=filters.get("journal_ids"), date_from=start,
+            )
+            snapshot = models["id.finance.open.items"]._snapshot(
+                company.id, "2026-07-31", partner_type=partner_type,
+                date_from=start, **filters,
+            )
+            assert_open_items(snapshot, oracle)
+            evidence["cases"].append({
+                "company": company.name, "scale": scale, "report": "FIN07",
+                "as_of": "2026-07-31", "partner_type": partner_type,
+                "filter": label, "result": "PASS",
+            })
+
+    if check_hard_coded:
+        # Invoice 110 in the sale journal, refund 22 also in the sale journal,
+        # receipt 60 in the cash journal. A journal-only slice must keep the
+        # matched 22 and report 88; date_from=2026-07-10 excludes the invoice
+        # and keeps the two credits, reporting -82.
+        journal_scope = models["id.finance.open.items"]._snapshot(
+            company.id, "2026-07-31", partner_type="customer",
+            journal_ids=[sale_journal.id],
+        )
+        require(
+            journal_scope["total_residual"] == round_amt(88 * scale),
+            f"FIN07 cross-journal slice must ignore the cash-journal receipt: "
+            f"{journal_scope['total_residual']}",
+        )
+        require(
+            journal_scope["gl_control_total"] == round_amt(88 * scale),
+            "FIN07 cross-journal slice GL control must match the same scope",
+        )
+        require(
+            journal_scope["gl_tie_out"]["balanced"],
+            f"FIN07 cross-journal slice must tie out: {journal_scope['gl_tie_out']}",
+        )
+        date_scope = models["id.finance.open.items"]._snapshot(
+            company.id, "2026-07-31", partner_type="customer",
+            date_from="2026-07-10",
+        )
+        require(
+            date_scope["total_residual"] == round_amt(-82 * scale),
+            f"FIN07 date_from slice must keep the out-of-scope invoice open: "
+            f"{date_scope['total_residual']}",
+        )
+        require(
+            date_scope["gl_control_total"] == round_amt(-82 * scale),
+            "FIN07 date_from slice GL control must match the same scope",
+        )
+        require(
+            date_scope["gl_tie_out"]["balanced"],
+            f"FIN07 date_from slice must tie out: {date_scope['gl_tie_out']}",
+        )
+        require(
+            journal_scope["partial_scope"] == date_scope["partial_scope"] == "both_legs_selected",
+            "FIN07 must report the partial scope explicitly",
+        )
 
     for as_of in ("2026-07-14", "2026-07-25", "2026-07-31"):
         for partner_type, account_key in (("customer", "ar"), ("supplier", "ap")):

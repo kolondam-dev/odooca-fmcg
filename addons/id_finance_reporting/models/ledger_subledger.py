@@ -141,6 +141,13 @@ def reconstruct_open_items(lines, partials, as_of, round_amount, partner_types=(
     A matched amount only reduces a line when ``partial.max_date <= as_of``.
     That is the key difference from reading the current ``amount_residual``:
     a payment received after the as-of date must not close an invoice early.
+
+    A partial is only consumed when *both* legs are part of ``lines``. Callers
+    may pass a filtered slice (journal, partner or start date); a counterpart
+    outside that slice must not silently settle a line, otherwise the residual
+    total and the control-account total would describe different scopes. With
+    this rule the matched amounts always cancel, so ``total_residual`` equals
+    the summed balance of the selected lines.
     """
     cutoff = _as_date(as_of)
     if not cutoff:
@@ -163,12 +170,12 @@ def reconstruct_open_items(lines, partials, as_of, round_amount, partner_types=(
         amount = partial.get("amount") or 0.0
         debit_id = partial.get("debit_line_id")
         credit_id = partial.get("credit_line_id")
-        if debit_id in selected:
-            matched[debit_id] = round_amount(matched[debit_id] - amount)
-            matched_partials[debit_id].append(partial.get("partial_id"))
-        if credit_id in selected:
-            matched[credit_id] = round_amount(matched[credit_id] + amount)
-            matched_partials[credit_id].append(partial.get("partial_id"))
+        if debit_id not in selected or credit_id not in selected:
+            continue
+        matched[debit_id] = round_amount(matched[debit_id] - amount)
+        matched_partials[debit_id].append(partial.get("partial_id"))
+        matched[credit_id] = round_amount(matched[credit_id] + amount)
+        matched_partials[credit_id].append(partial.get("partial_id"))
     rows = []
     closed_line_ids = []
     for line_id, line in selected.items():

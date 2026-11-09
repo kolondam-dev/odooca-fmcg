@@ -199,6 +199,41 @@ class I2bSubledgerHelperTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Invalid partner type"):
             sub.resolve_partner_types("employee")
 
+    def test_open_items_ignore_partials_with_counterpart_outside_slice(self):
+        # Invoice 110 in the sale journal, receipt 60 in the cash journal.
+        # A journal-only slice keeps the invoice partly open: the receipt's
+        # partial must not settle it because its credit leg is out of scope.
+        invoice = line(1, sub.AR_TYPE, "2026-07-01", debit=110.0, due_date="2026-07-01")
+        receipt = line(2, sub.AR_TYPE, "2026-07-15", credit=60.0)
+        partials = [partial(101, 1, 2, 60.0, "2026-07-15")]
+        round_amount = lambda value: round(value, 2)  # noqa: E731
+
+        journal_slice = sub.reconstruct_open_items(
+            [invoice], partials, "2026-07-31", round_amount,
+        )
+        self.assertEqual(journal_slice["total_residual"], 110.0)
+        self.assertEqual(journal_slice["rows"][0]["residual"], 110.0)
+        self.assertEqual(journal_slice["rows"][0]["matched_amount"], 0.0)
+        self.assertEqual(journal_slice["rows"][0]["matched_partial_ids"], [])
+        self.assertEqual(journal_slice["closed_line_ids"], [])
+        self.assertEqual(
+            journal_slice["total_residual"],
+            round_amount(sum(row["balance"] for row in [invoice])),
+        )
+
+        date_slice = sub.reconstruct_open_items(
+            [receipt], partials, "2026-07-31", round_amount,
+        )
+        self.assertEqual(date_slice["total_residual"], -60.0)
+        self.assertEqual(date_slice["rows"][0]["matched_amount"], 0.0)
+
+        full_slice = sub.reconstruct_open_items(
+            [invoice, receipt], partials, "2026-07-31", round_amount,
+        )
+        self.assertEqual(full_slice["total_residual"], 50.0)
+        self.assertEqual(full_slice["rows"][0]["matched_amount"], -60.0)
+        self.assertEqual(full_slice["closed_line_ids"], [2])
+
     def test_tie_out_reports_difference(self):
         tied = sub.tie_subledger_to_gl(28.0, 28.0, lambda value: round(value, 2))
         self.assertTrue(tied["balanced"])

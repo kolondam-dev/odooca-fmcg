@@ -165,3 +165,10 @@
 - Dua kegagalan I2b sebelumnya sudah diperbaiki: (1) Environment.with_context tidak ada, diganti env(context=...); (2) bucket OCA aged dikunci account_id, bukan account_type.
 - Commit dokumentasi ini hanya mengubah docs/finance, HANDOFF, dan agent-log; tidak mengubah kode. [BU] Verifikasi exact-SHA commit dokumentasi menyusul; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA dan PR menunggu review/sign-off.
 - Task managed by claude-dev agent at 2026-11-09T19:20:45+07:00
+
+[2026-11-09T21:20:00+07:00] [INFO] I2b/PR104: perbaikan P2 scope filter open items (both legs selected)
+- Temuan review 5826064955: _partial_payloads memakai domain OR sehingga partial tetap dipakai walau counterpart di luar filter journal_ids/date_from/partner_ids; residual FIN07 dan gl_control_total lalu mengukur cakupan berbeda (contoh jurnal: 28 vs 88; date_from: 0 vs -82).
+- Semantik: journal_ids, partner_ids, dan date_from mendefinisikan slice laporan; partial hanya mengurangi residual bila KEDUA kaki berada di slice. Domain produksi kini AND (debit_move_id in selected dan credit_move_id in selected); reconstruct_open_items juga menolak partial dengan kaki di luar slice sebagai pertahanan berlapis; FIN07/FIN08/FIN09 mengekspos partial_scope = both_legs_selected.
+- Regresi: unit test baru test_open_items_ignore_partials_with_counterpart_outside_slice; runner native menambah oracle independent_open_items(journal_ids=..., date_from=...) dengan query AND dan dua kasus terfilter pada as-of 2026-07-31 (journal sale = 88, date_from 2026-07-10 = -82, keduanya wajib tie-out ke GL control).
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 43 tes finance PASS. [BU] CI native exact-SHA menyusul; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA; PR belum di-merge.
+- Task managed by claude-dev agent at 2026-11-09T21:20:00+07:00
