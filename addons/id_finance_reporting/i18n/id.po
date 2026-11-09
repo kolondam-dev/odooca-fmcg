@@ -36,3 +36,39 @@ msgstr "Pilih periode berurutan paling lama 367 hari."
 #: code:addons/id_finance_reporting/models/stock_bridge.py:0
 msgid "Stock journal belongs to another company."
 msgstr "Jurnal stok milik perusahaan lain."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/trial_balance.py:0
+msgid "Selected journal belongs to another company."
+msgstr "Jurnal yang dipilih milik perusahaan lain."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/trial_balance.py:0
+msgid "Selected account belongs to another company."
+msgstr "Akun yang dipilih milik perusahaan lain."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/ledger_reports.py:0
+msgid "Too many journal items; narrow the report period or filters."
+msgstr "Terlalu banyak pos jurnal; persempit periode atau filter laporan."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/ledger_reports.py:0
+msgid "Journal entry belongs to another company."
+msgstr "Entri jurnal milik perusahaan lain."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/ledger_reports.py:0
+msgid "Invalid register type; choose all, sale or purchase."
+msgstr "Jenis register tidak valid; pilih semua, penjualan, atau pembelian."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/ledger_reports.py:0
+msgid "Ambiguous cross-company Chart of Accounts mapping: %s"
+msgstr "Pemetaan Bagan Akun lintas-perusahaan ambigu: %s"

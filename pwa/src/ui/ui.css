@@ -950,3 +950,293 @@ select.ui-select {
     border-radius: 8px;
     width: auto;
 }
+
+/* Order POS, Ringkasan, Hasil kirim, Display & stok (DS: Order_pos, Ringkasan, Hasil_kirim, Display_stok) */
+.pos-toolbar-ds {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+.pos-search {
+    flex-direction: row;
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 56px;
+    padding: 0 12px;
+    border: 1px solid var(--c-bd);
+    border-radius: var(--r-md);
+    background: #fff;
+    color: var(--c-mute);
+}
+.pos-search input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    font: 16px/24px var(--font);
+    color: var(--c-ink);
+}
+.pos-principal {
+    flex-direction: row;
+    margin: 0;
+    height: 56px;
+    padding: 0 12px;
+    border: 1px solid var(--c-bd);
+    border-radius: var(--r-md);
+    background: #fff;
+    color: var(--c-pri);
+    font: 700 16px/24px var(--font);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 96px;
+    justify-content: center;
+}
+.pos-principal select {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    padding: 0;
+    height: 100%;
+    min-height: 0;
+}
+.pos-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+.pos-card__id {
+    min-width: 0;
+}
+.pos-card__name {
+    margin: 0;
+    font: 700 17px/24px var(--font);
+    color: var(--c-ink);
+}
+.pos-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.pos-card__out {
+    color: var(--c-bad);
+    font-weight: 700;
+}
+.pos-tier {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2px 0;
+}
+.pos-tier__id {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.pos-tier__name {
+    font: 700 16px/22px var(--font);
+    color: var(--c-ink);
+}
+.pos-card__sum {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    border-top: 1px solid var(--c-line);
+    padding-top: 8px;
+}
+.pos-card__sum strong {
+    color: var(--c-pri);
+    font: 700 17px/24px var(--font);
+}
+.ui-stepper .ui-stepper__input {
+    width: 56px;
+    min-height: var(--touch);
+    padding: 0;
+    border: 1px solid transparent;
+    background: transparent;
+    box-shadow: none;
+    border-radius: var(--r-md);
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+.ui-stepper .ui-stepper__input::-webkit-outer-spin-button,
+.ui-stepper .ui-stepper__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.ui-stepper .ui-stepper__input:focus-visible {
+    outline: 3px solid var(--c-pri);
+    outline-offset: 2px;
+}
+.pos-photo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 140px;
+    border-radius: var(--r-lg);
+    background: var(--c-neu-bg);
+    color: var(--c-mute);
+}
+.pos-facts h3 {
+    margin: 8px 0 2px;
+    font: 700 16px/22px var(--font);
+}
+.pos-facts p {
+    margin: 0;
+    color: var(--c-mute);
+    font: 16px/22px var(--font);
+}
+.pos-lines {
+    display: flex;
+    flex-direction: column;
+}
+.pos-line {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--c-line);
+}
+.pos-line > div {
+    display: flex;
+    flex-direction: column;
+}
+.pos-line .ui-linkbtn {
+    grid-column: 2;
+    justify-self: end;
+}
+.pos-totals {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.pos-totals > div {
+    display: flex;
+    justify-content: space-between;
+    color: var(--c-mute);
+}
+.pos-totals strong {
+    color: var(--c-ink);
+}
+.pos-totals .pos-neg {
+    color: var(--c-ok);
+}
+.pos-totals__grand {
+    font: 700 18px/26px var(--font);
+}
+.pos-totals__grand strong {
+    font-size: 22px;
+}
+.pos-done {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 20px 0 8px;
+    text-align: center;
+}
+.pos-done__badge {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: var(--c-ok-bg);
+    color: var(--c-ok);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pos-done__badge.is-bad {
+    background: var(--c-bad-bg);
+    color: var(--c-bad);
+}
+.pos-done__title {
+    margin: 8px 0 0;
+    font: 700 22px/30px var(--font);
+}
+.pos-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.pos-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    color: var(--c-mute);
+}
+.pos-step__body {
+    display: flex;
+    flex-direction: column;
+}
+.pos-step__body strong {
+    color: var(--c-ink);
+    font: 700 17px/24px var(--font);
+}
+.pos-step.is-done .pos-step__icon {
+    color: var(--c-ok);
+}
+.pos-step.is-active .pos-step__icon {
+    color: var(--c-pri);
+}
+.pos-step.is-bad .pos-step__icon {
+    color: var(--c-bad);
+}
+.ui-linkbtn {
+    background: none;
+    border: 0;
+    padding: 0;
+    min-height: var(--touch);
+    display: inline-flex;
+    align-items: center;
+    color: var(--c-pri);
+    font: 700 16px/22px var(--font);
+    text-decoration: underline;
+    box-shadow: none;
+}
+.ui-sectionlabel {
+    margin: 8px 0 0;
+    font: 700 16px/22px var(--font);
+    color: var(--c-mute);
+}
+.stock-row {
+    margin: 0;
+    padding: 12px 0 0;
+    border: 0;
+    border-top: 1px solid var(--c-line);
+}
+.stock-row legend {
+    padding: 0;
+    font: 700 17px/24px var(--font);
+    color: var(--c-ink);
+}
+.stock-row__grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 12px;
+    margin-top: 6px;
+}
+.stock-row__input {
+    text-align: center;
+}
+/* Layar yang dibuka di atas Hub kunjungan (Order, Hasil kirim, Display & stok). */
+.ui-screen.ui-screen--over {
+    z-index: 40;
+}

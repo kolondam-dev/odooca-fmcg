@@ -1,4 +1,4 @@
-import { sendOrder } from "./visit-helpers";
+import { sendOrder, applyDiscount } from "./visit-helpers";
 import { expect, test, type Page } from "./session-fixture";
 import {
     ensureDaily,
@@ -90,13 +90,11 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             .getByRole("button", { name: "Buat order di outlet", exact: true })
             .click();
         await page
-            .getByLabel("Kuantitas Biskuit Kelapa 300 g", { exact: true })
+            .getByLabel("Kuantitas Biskuit Kelapa 300 g Karton", {
+                exact: true,
+            })
             .fill("1");
-        await page.locator("details.order-extra > summary").click();
-        await page.getByLabel("Diskon diminta (%)", { exact: true }).fill("5");
-        await page
-            .getByLabel("Alasan permintaan diskon", { exact: true })
-            .fill("Promo pertama");
+        await applyDiscount(page, 5, "Promo pertama");
         await saveDisplayPhoto(page);
         await sendOrder(page);
         await saveVisitPhoto(page, "check-out");
@@ -151,9 +149,13 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             }),
         ).toBeVisible();
         await page.reload();
+        await expect(
+            page.getByRole("button", { name: "Lainnya", exact: true }),
+        ).toBeVisible();
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
+        await expect(page.getByText(/Riwayat SO ·/).first()).toBeVisible();
         await page.getByText(/Riwayat SO ·/).click();
         await page
             .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
@@ -172,9 +174,13 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
                 }),
             ).toBeDisabled();
             await page.reload();
+            await expect(
+                page.getByRole("button", { name: "Lainnya", exact: true }),
+            ).toBeVisible();
             await page
                 .getByRole("button", { name: "Lainnya", exact: true })
                 .click();
+            await expect(page.getByText(/Riwayat SO ·/).first()).toBeVisible();
             await page.getByText(/Riwayat SO ·/).click();
             await page
                 .getByRole("button", {

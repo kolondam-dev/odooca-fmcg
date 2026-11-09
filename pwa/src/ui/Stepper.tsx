@@ -1,4 +1,4 @@
-import { stepValue } from "./cx";
+import { clamp, stepValue } from "./cx";
 
 /** Penambah dan pengurang qty. Tombol nonaktif di batas min atau maks. */
 export function Stepper({
@@ -8,6 +8,7 @@ export function Stepper({
     max = 9999,
     step = 1,
     unit,
+    label,
 }: {
     value: number;
     onChange: (value: number) => void;
@@ -16,6 +17,8 @@ export function Stepper({
     step?: number;
     /** Nama satuan untuk pembaca layar, mis. "karton". */
     unit?: string;
+    /** Bila ada, angka dapat diketik langsung (isian numerik) dengan nama ini. */
+    label?: string;
 }) {
     const noun = unit ? ` ${unit}` : "";
     return (
@@ -31,9 +34,37 @@ export function Stepper({
                     −
                 </span>
             </button>
-            <span class="ui-stepper__val" aria-live="polite">
-                {value}
-            </span>
+            {label ? (
+                <input
+                    class="ui-stepper__val ui-stepper__input"
+                    aria-label={label}
+                    type="number"
+                    inputMode="numeric"
+                    min={min}
+                    max={max}
+                    step={step}
+                    value={value}
+                    onInput={(event) =>
+                        onChange(
+                            clamp(
+                                Math.trunc(
+                                    Number(
+                                        (
+                                            event.currentTarget as HTMLInputElement
+                                        ).value,
+                                    ),
+                                ) || 0,
+                                min,
+                                max,
+                            ),
+                        )
+                    }
+                />
+            ) : (
+                <span class="ui-stepper__val" aria-live="polite">
+                    {value}
+                </span>
+            )}
             <button
                 type="button"
                 class="ui-stepper__btn ui-stepper__btn--add"

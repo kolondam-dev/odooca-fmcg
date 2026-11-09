@@ -2155,6 +2155,32 @@
 - Regresi Planner: Menambahkan 3 tes unit pada tests/test_seed_planner.py (test_explicit_opening_state_missing_from_manifest_fails_fast, test_explicit_opening_state_manifest_missing_files_sha256_fails_fast, test_explicit_opening_state_outside_pack_without_manifest_accepted), total 25 tes unit PASS.
 - Pengujian: ruff check clean, check_manifests 12 addon OK.
 - Task managed by antigravity at 2026-11-09T12:55:00+07:00
+[2026-11-08T22:10:00+07:00] [INFO] PR101: akar KeyError FIN51 'I2ACOMB08' (kode akun unaffected_earnings company-dependent) dan kontrak baris nol
+- Akar masalah [F]: Odoo 19 menyimpan account.code di code_store (company_dependent, dibaca/ditulis per env.company.root_id). Akun delapan fixture dibuat via with_company(company).create sehingga recordset-nya membawa konteks company fixture; akun unaffected_earnings dibuat oleh company.get_unaffected_earnings_account() (_load_records) pada env default, jadi penulisan code 'I2ACOMB08' mendarat di company default dan laporan OCA (env company fixture) tetap membaca '999999'. Baris nol TIDAK dihilangkan oleh OCA: _get_data selalu menambahkan unaffected_earnings_account bernilai 0.
+- scripts/ops/verify_finance_i2_ledgers_core.py: akun unaffected dibuat via company.with_company(company); penulisan code/name dan counterexample COA memakai with_company per perusahaan; verifikasi pembacaan code per perusahaan setelah penyelarasan; assert_fin51_combined_rows() mendefinisikan kontrak eksplisit: setiap akun yang diharapkan (termasuk baris nol) harus muncul tepat sekali, tanpa kode ekstra, dengan pesan missing/extra yang terbaca (bukan KeyError); angka akun non-nol tetap divalidasi ketat.
+- tests/test_finance_i2_ledgers_core.py: regresi baris nol (hadir, hilang, tertinggal di kode sistem '999999', nilai salah, kode duplikat) dan pelestarian baris nol oleh combine_trial_balances (31 tes PASS). Tidak ada perubahan kode produksi pada addon.
+- Task Managed by Agent VSCode at 2026-11-08T22:10:00+07:00
+
+[2026-11-08T22:20:00+07:00] [INFO] PR98: cakupan perusahaan eksplisit pada rekonsiliasi live F0b
+- scripts/ops/seed_f0b_stock_reconcile_live.py: SQL live dibatasi sq.company_id = %(company_id)s (GROUP BY memuat company_id); --company-id wajib; check_company_row() fail-closed terhadap nama entitas kanonikal PT Salva Inti Mandiri; compare() menolak baris perusahaan lain atau tanpa company_id.
+- tests/test_seed_f0b_stock_reconcile.py: regresi kontaminasi dua perusahaan aktif memakai teks SQL produksi (sqlite minimal), penolakan lintas-perusahaan, validasi perusahaan; 11 tes PASS, 90 tes seed/state PASS.
+- Tidak ada eksekusi live, deploy, atau mutasi DB; hipotesis 15.000 karton tetap [BU].
+- Task Managed by Agent VSCode at 2026-11-08T22:20:00+07:00
+
+[2026-11-09T07:37:05+07:00] [INFO] Perbaikan flakiness CI hari Minggu pada id_mobile_api dan race condition PWA offline reload
+- Menyelaraskan fixture id_mobile_api dengan mock tanggal kerja jika runner dieksekusi hari Minggu dan menambahkan tes regresi eksplisit untuk penolakan order/kunjungan pada hari Minggu
+- Membuat pembukaan koreksi OrderCorrections async dengan fallback pemulihan snapshot dari IndexedDB serta sinkronisasi aria-busy sesi kerja pada next-policy.spec.ts
+- Task Managed by Agent VSCode at 2026-11-09T07:37:05+07:00
+
+[2026-11-09T12:56:01+07:00] [INFO] PR101 & PR98: penyelarasan company context production FIN51 dan perbaikan readiness locator PWA
+- addons/id_finance_reporting/models/ledger_reports.py: memastikan unaffected earnings dipanggil via company.with_company(company).get_unaffected_earnings_account() agar pembuatan/pembacaan akun company-dependent tetap terikat ke target company context
+- scripts/ops/verify_finance_i2_ledgers_core.py & tests/test_finance_i2_ledgers_core.py: menambahkan tes regresi resolusi unaffected earnings untuk fresh company C saat default environment adalah company A
+- pwa/tests/browser/next-policy.spec.ts: mengganti assertion region Sesi kerja pasca reload dengan tombol navigasi Lainnya dan summary Riwayat SO yang selalu hadir di bottom nav
+- Task managed by antigravity-agent at 2026-11-09T12:56:01+07:00
+
+[2026-11-09T13:47:04+07:00] [INFO] PR98: penyelarasan locator readiness browser PWA pasca offline reload
+- pwa/tests/browser/next-policy.spec.ts: mengganti assertion region Sesi kerja pada baris 155 dan 179 dengan tombol navigasi Lainnya dan summary Riwayat SO yang selalu hadir di bottom nav
+- Task managed by antigravity-agent at 2026-11-09T13:47:04+07:00
 
 [2026-11-09T19:15:00+07:00] [INFO] F2: Refinement Komersial, Pajak, Logistik, dan OPEX Pack Transaksi Agustus 2026
 - Diskon Komersial Bertingkat: Menerapkan cascading line discount per pricelist tier (MT 2.2%, GT 1.6%, INST 1.5%, RTL 1.2%) dipadu promo selektif joint MoU Mayora (+2.5%) dan Santos (+2.0%) serta volume tier Wings/Unilever (+1.2%). Agregat diskon Agustus terkunci presisi di 2.57% (pita otorisasi [2.00%, 3.20%]).
