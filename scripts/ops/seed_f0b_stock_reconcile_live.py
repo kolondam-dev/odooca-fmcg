@@ -64,7 +64,7 @@ HAVING SUM(sq.quantity) <> 0 OR SUM(sq.reserved_quantity) <> 0
 """
 
 
-def check_company_row(row, company_id: int, expected_name: str = CANONICAL_COMPANY_NAME) -> str:
+def check_company_row(row, company_id: int) -> str:
     """Validasi perusahaan target terhadap entitas kanonikal; fail-closed."""
     if row is None:
         raise ValueError(f"Company id {company_id} does not exist; refusing to reconcile.")
@@ -73,10 +73,10 @@ def check_company_row(row, company_id: int, expected_name: str = CANONICAL_COMPA
         raise ValueError(f"Company lookup returned id {row_id}, expected {company_id}.")
     if not active:
         raise ValueError(f"Company id {company_id} ({name!r}) is inactive; refusing to reconcile.")
-    if name != expected_name:
+    if name != CANONICAL_COMPANY_NAME:
         raise ValueError(
             f"Company id {company_id} is {name!r}, but the canonical state represents "
-            f"{expected_name!r}; refusing to compare against another entity."
+            f"{CANONICAL_COMPANY_NAME!r}; refusing to compare against another entity."
         )
     return name
 
