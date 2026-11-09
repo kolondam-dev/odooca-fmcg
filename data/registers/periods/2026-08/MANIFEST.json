@@ -2,10 +2,10 @@
   "period": "2026-08",
   "pack_start": "2026-08-01",
   "pack_end": "2026-08-31",
-  "generator_commit": "7f8e54f62413e94ea3edccfb33759f665bd4bfe5",
+  "generator_commit": "31920b1ac9be5e15fdf85ef82706f7b7439e20fc",
   "generator_sources_sha256": {
     "scripts/ops/seed_planner.py": "e6ac658af1629f1b8f7af1914e4b711616bdab51ee36e89c1b9b6eac057929e8",
-    "scripts/ops/generate_period_pack.py": "31f262f1f1668d4d5d4949a228abd6b9ad1c0cc3705937e6b4b072a06e6bf48b",
+    "scripts/ops/generate_period_pack.py": "8592a2d1fdf488ed22c1fb54370302ea4779c8044a228becbcd1d4da19936403",
     "scripts/ops/seed_v2_gates.py": "9a6a0622d9ac17b071558a3f9666caad92c965aaa7e5b2d528568fcbcb8f9c0b",
     "scripts/ops/fmcg_calendar.py": "ab5d8e408ff17212aacc50ba61c68548b19d4213accf4afc289657a0c4f53b0a"
   },
