@@ -454,7 +454,15 @@ export function OrderScreen({
         snapshot.products.find((p) => p.principal === activePrincipal)
             ?.principal_name ??
         activePrincipal.charAt(0).toUpperCase() + activePrincipal.slice(1);
-    const cartEmpty = totals.skuCount === 0 && !Object.keys(cart).length;
+    const cartEmpty = totals.skuCount === 0;
+    const staleItems = totals.stale;
+    function dropStale() {
+        setCart((current) => {
+            const next = { ...current };
+            for (const id of staleItems) delete next[id];
+            return next;
+        });
+    }
     const creditLimit = outlet?.commercial?.credit_limit ?? null;
     const overCredit = creditLimit !== null && totals.total > creditLimit;
     const approvalReasons = [
@@ -467,6 +475,12 @@ export function OrderScreen({
         setError("");
         if (!display) {
             setError("Foto display toko wajib sebelum order dikirim.");
+            return;
+        }
+        if (staleItems.length) {
+            setError(
+                `${staleItems.length} SKU di draft sudah tidak ada di katalog. Hapus dari draft sebelum mengirim.`,
+            );
             return;
         }
         if (totals.errors.length) {
@@ -645,6 +659,19 @@ export function OrderScreen({
                             Buka Display & stok
                         </button>
                     </span>
+                </Callout>
+            ) : null}
+            {staleItems.length ? (
+                <Callout tone="bad" alert>
+                    {staleItems.length} SKU di draft tidak ada lagi di katalog
+                    terbaru dan tidak ikut terhitung.{" "}
+                    <button
+                        type="button"
+                        class="ui-linkbtn"
+                        onClick={dropStale}
+                    >
+                        Hapus dari draft
+                    </button>
                 </Callout>
             ) : null}
             {overCredit ? (

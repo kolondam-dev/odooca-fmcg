@@ -72,15 +72,20 @@ export function normalizeLine(
 export function cartLines(cart: Cart, snapshot: Snapshot) {
     const lines: { product_id: string; qty: string; uom: OrderUom }[] = [];
     const errors: string[] = [];
+    /** SKU di draft yang sudah tidak ada di snapshot terbaru. */
+    const stale: string[] = [];
     for (const [id, tiers] of Object.entries(cart)) {
         const product = snapshot.products.find((p) => p.id === id);
-        if (!product || pcsOf(product, tiers, snapshot.catalog_version) <= 0)
+        if (!product) {
+            if (Object.values(tiers).some((q) => (q ?? 0) > 0)) stale.push(id);
             continue;
+        }
+        if (pcsOf(product, tiers, snapshot.catalog_version) <= 0) continue;
         const line = normalizeLine(product, tiers, snapshot.catalog_version);
         if ("error" in line) errors.push(line.error);
         else lines.push(line);
     }
-    return { lines, errors };
+    return { lines, errors, stale };
 }
 
 /** Teks "4 krt 2 pak" memakai singkatan satuan produk. */
@@ -100,7 +105,7 @@ export function cartTotals(
     snapshot: Snapshot,
     discountPercent = 0,
 ) {
-    const { lines, errors } = cartLines(cart, snapshot);
+    const { lines, errors, stale } = cartLines(cart, snapshot);
     let gross = 0;
     try {
         gross = lines.length ? orderQuote(lines, snapshot).gross : 0;
@@ -115,5 +120,6 @@ export function cartTotals(
         total: gross - discount,
         lines,
         errors,
+        stale,
     };
 }

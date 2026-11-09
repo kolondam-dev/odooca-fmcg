@@ -76,9 +76,10 @@ export function OrderResult({
     const sent =
         !!receipt ||
         ["accepted", "needs_approval", "rejected"].includes(item.state);
+    // Status approval hanya dari receipt/antrean server; alasan lokal hanyalah indikasi.
     const needsApproval =
-        receipt?.status === "needs_approval" || approvalReasons.length > 0;
-    const approved = receipt?.status === "accepted";
+        receipt?.status === "needs_approval" || item.state === "needs_approval";
+    const expectApproval = !sent && approvalReasons.length > 0;
     return (
         <Screen
             label="Hasil kirim order"
@@ -129,19 +130,25 @@ export function OrderResult({
                                 : "Dikirim saat koneksi tersedia"
                         }
                     />
-                    {needsApproval ? (
+                    {needsApproval || expectApproval ? (
                         <Step
                             state={
-                                rejected ? "bad" : approved ? "done" : "active"
+                                rejected
+                                    ? "bad"
+                                    : needsApproval
+                                      ? "active"
+                                      : "wait"
                             }
                             title="Approval supervisor"
                             sub={
                                 rejected
                                     ? (receipt?.message ?? "Ditolak")
-                                    : approvalReasons.length
-                                      ? approvalReasons.join(" + ")
-                                      : (receipt?.message ??
-                                        "Menunggu keputusan")
+                                    : needsApproval
+                                      ? (receipt?.message ??
+                                        (approvalReasons.length
+                                            ? approvalReasons.join(" + ")
+                                            : "Menunggu keputusan"))
+                                      : `Kemungkinan perlu approval: ${approvalReasons.join(" + ")}`
                             }
                         />
                     ) : null}

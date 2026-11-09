@@ -76,4 +76,16 @@ describe("keranjang POS multi-satuan", () => {
     it("teks ringkas memakai singkatan krt/pak/pcs", () => {
         expect(tierText(product, { carton: 4, pack: 2 })).toBe("4 krt 2 pak");
     });
+    it("SKU yang hilang dari katalog dilaporkan sebagai stale, bukan dibuang diam-diam", () => {
+        const r = cartLines({ p1: { carton: 1 }, gone: { pack: 2 } }, snapshot);
+        expect(r.stale).toEqual(["gone"]);
+        expect(r.lines).toHaveLength(1);
+        expect(cartTotals({ gone: { pack: 2 } }, snapshot).skuCount).toBe(0);
+        expect(cartTotals({ gone: { pack: 2 } }, snapshot).stale).toEqual([
+            "gone",
+        ]);
+    });
+    it("entri stale berkuantitas nol diabaikan", () => {
+        expect(cartLines({ gone: { pack: 0 } }, snapshot).stale).toEqual([]);
+    });
 });
