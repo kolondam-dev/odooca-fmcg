@@ -1,3 +1,18 @@
+## 2026-11-10T08:35:00+07:00 — antigravity — F4: Generic Period Pack Loader & Mode Dry-Run (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`: Implementasi core engine loader period pack generik berbasis manifes. Menerima argumen `--pack <dir>` (misal: `data/registers/periods/2026-08`), `--dry-run`, `--apply`, `--strict`, dan `--company-id`. Memvalidasi integritas seluruh berkas dengan LF SHA-256 terhadap `MANIFEST.json`. Menerapkan aturan kontinuitas ketat: dilarang membuat ulang master data (partner, SKU, opening stock Juli). Merekonsiliasikan pelunasan AP Unilever 8 Agustus terhadap vendor bill Juli (Rp2.899.971.200) tanpa membuat utang/bill baru. Mengimplementasikan deteksi drift fail-closed (`StateInconsistencyError`) dan mode evaluasi `--dry-run` tanpa mutasi database.
+- `tests/test_period_pack_loader.py`: 11 unit tests komprehensif untuk pengujian manifest checksum verification, tamper detection, missing declared files, preflight continuity rules (partner threshold, SKU threshold, July SO threshold), idempotency matching & skip, idempotency drift rejection, dan cross-period AP settlement binding.
+**Diverifikasi:**
+- [F] `python scripts/ops/load_period_pack.py --pack data/registers/periods/2026-08 --dry-run`: PASS (mencetak rencana eksekusi: 16 PO to create, 1.240 SO to create, 1.240 DO to create, 1.240 Invoice to create, 1.202 AR to reconcile, 1 AP to reconcile, 48 OPEX to create; 0 mutations).
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 11/11 tests PASS (2.9s).
+- [F] `python -m unittest discover -s tests -p "test_*.py"`: 402/402 tests PASS (2.788s), termasuk perpetual loader kanonikal, invariant v1 & v2, dan seluruh suite finance.
+- [F] `python -m ruff check scripts/ops/ tests/`: PASS (clean).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+**Belum diuji:**
+- [BU] Verifikasi runtime Odoo shell pada database disposable terisolasi (Skenario A & Skenario B). Tidak ada deploy atau mutasi server live Railway selama fase F4.
+**Berikutnya:**
+- Menyiapkan dedicated disposable runtime proof script (`scripts/ops/verify_disposable_period_pack.py`) untuk membuktikan eksekusi Odoo shell pada Skenario A (Baseline Juli -> Load Agustus -> Rerun) dan Skenario B (DB Kosong -> Load Juli -> Load Agustus), serta fault-injection recovery.
+
 ## 2026-11-10T02:40:00+07:00 — antigravity — F2: Penutupan Celah Fail-Open TAX-SOURCE Kode 04 & Sinkronisasi origin/main (PR #105)
 **Berubah:**
 - `scripts/ops/seed_v2_gates.py`: Penutupan celah fail-open pada `_check_tax()`. Baris faktur ber-`tax_code == '04'` kini wajib memiliki field `commercial_dpp`, non-empty, numerik valid, non-negative, dan diverifikasi dengan formula DPP Nilai Lain 11/12 dan PPN 12%. Jika syarat basis komersial tidak terpenuhi, gate langsung `fail('TAX-SOURCE', ...)` dan `continue` tanpa jatuh (fall through) ke jalur legacy.
