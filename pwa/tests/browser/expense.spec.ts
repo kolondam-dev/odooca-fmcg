@@ -1,4 +1,5 @@
 import { checkIn } from "./session-fixture";
+import { activity, openActivity } from "./visit-helpers";
 import { switchPersona } from "./delivery-helpers";
 import {
     expect,
@@ -44,11 +45,11 @@ async function requestAdvance(page: Page, category = "meal") {
         .fill("Uang lapangan simulasi luar kota");
     await page.getByRole("button", { name: "Simpan ke antrean" }).click();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await openActivity(page);
     await expect(
-        page
-            .locator(".activity")
-            .getByText("Menunggu approval", { exact: true }),
+        activity(page).getByText("Menunggu approval", { exact: true }),
     ).toBeVisible();
+    await page.getByRole("button", { name: "Kembali", exact: true }).click();
     await openExpenses(page);
     await page
         .getByRole("button", { name: "Proses approval & pencairan" })
@@ -58,9 +59,7 @@ async function requestAdvance(page: Page, category = "meal") {
     ).toBeVisible();
 }
 async function openExpenses(page: Page) {
-    await page
-        .getByRole("button", { name: "Realisasi & saldo uang lapangan" })
-        .click();
+    await page.getByRole("button", { name: /^Uang lapangan/ }).click();
     await page.getByRole("button", { name: /Petty cash/ }).click();
 }
 async function details(page: Page, n: number, amount: string, receipt: string) {
@@ -150,9 +149,7 @@ test("component draft restores offline and queues realization separately from ap
     await page.getByRole("button", { name: "Kembali ke akun" }).click();
     await switchPersona(page, "delivery");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await page
-        .getByRole("button", { name: "Realisasi & saldo uang lapangan" })
-        .click();
+    await page.getByRole("button", { name: /^Uang lapangan/ }).click();
     await expect(
         page.getByText("Belum ada pengajuan biaya pada akun ini."),
     ).toBeVisible();

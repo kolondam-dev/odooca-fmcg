@@ -1,4 +1,10 @@
-import { sendOrder, applyDiscount } from "./visit-helpers";
+import {
+    sendOrder,
+    applyDiscount,
+    koreksiEditLines,
+    koreksiTactical,
+    leaveVisit,
+} from "./visit-helpers";
 import { expect, test, type Page } from "./session-fixture";
 import {
     ensureDaily,
@@ -114,40 +120,24 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
                 exact: true,
             })
             .click();
+        await page.getByRole("button", { name: /^Riwayat pengajuan/ }).click();
         await page.getByText(/Riwayat SO ·/).click();
         await page
             .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
             .click();
         await page
-            .getByLabel("Alasan koreksi SO", { exact: true })
+            .getByLabel("Catatan untuk SPV", { exact: true })
             .fill("Ganti SKU dan diskon");
-        await page
-            .getByLabel("Qty revisi Biskuit Kelapa 300 g", { exact: true })
-            .fill("0");
-        await page
-            .getByLabel("Qty revisi Wafer Cokelat 24 g", { exact: true })
-            .fill("3");
-        await page
-            .getByLabel("Satuan revisi Wafer Cokelat 24 g", { exact: true })
-            .selectOption("pcs");
-        await page.getByLabel("Diskon revisi (%)", { exact: true }).fill("2");
-        await page
-            .getByLabel("Alasan diskon revisi", { exact: true })
-            .fill("Promo revisi");
+        await koreksiEditLines(page, [
+            { product: "Biskuit Kelapa 300 g", tier: "Karton", qty: 0 },
+            { product: "Wafer Cokelat 24 g", tier: "Pcs", qty: 3 },
+        ]);
+        await koreksiTactical(page, "Wafer Cokelat 24 g", 2, "Promo revisi");
         await page.evaluate(() => navigator.serviceWorker.ready);
         await page.waitForFunction(() => !!navigator.serviceWorker.controller);
         await context.setOffline(true);
-        await page
-            .getByRole("button", {
-                name: "Simpan draft koreksi SO",
-                exact: true,
-            })
-            .click();
-        await expect(
-            page.getByText("Draft koreksi SO tersimpan offline.", {
-                exact: true,
-            }),
-        ).toBeVisible();
+        // Draft koreksi tersimpan otomatis di perangkat (offline).
+        await page.waitForTimeout(500);
         await page.reload();
         await expect(
             page.getByRole("button", { name: "Lainnya", exact: true }),
@@ -155,21 +145,25 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
+        await page.getByRole("button", { name: /^Riwayat pengajuan/ }).click();
         await expect(page.getByText(/Riwayat SO ·/).first()).toBeVisible();
         await page.getByText(/Riwayat SO ·/).click();
         await page
             .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
             .click();
         await expect(
-            page.getByLabel("Qty revisi Wafer Cokelat 24 g", { exact: true }),
-        ).toHaveValue("3");
+            page.getByRole("region", { name: "Koreksi order" }),
+        ).toContainText("Wafer Cokelat 24 g");
+        await expect(
+            page.getByRole("region", { name: "Koreksi order" }),
+        ).toContainText("3 pcs");
         if (flow === "expired-draft") {
             const before = await readSoState(page);
             await page.clock.setSystemTime(new Date("2026-10-28T16:00:00Z"));
             await page.clock.runFor(1000);
             await expect(
                 page.getByRole("button", {
-                    name: "Ajukan revisi SO",
+                    name: "Kirim ulang",
                     exact: true,
                 }),
             ).toBeDisabled();
@@ -180,6 +174,9 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             await page
                 .getByRole("button", { name: "Lainnya", exact: true })
                 .click();
+            await page
+                .getByRole("button", { name: /^Riwayat pengajuan/ })
+                .click();
             await expect(page.getByText(/Riwayat SO ·/).first()).toBeVisible();
             await page.getByText(/Riwayat SO ·/).click();
             await page
@@ -189,26 +186,29 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
                 })
                 .click();
             await expect(
-                page.getByLabel("Qty revisi Wafer Cokelat 24 g", {
-                    exact: true,
-                }),
-            ).toHaveValue("3");
+                page.getByRole("region", { name: "Koreksi order" }),
+            ).toContainText("3 pcs");
             await expect(
-                page.getByLabel("Qty revisi Wafer Cokelat 24 g", {
+                page.getByRole("button", {
+                    name: "Ubah baris order",
                     exact: true,
                 }),
             ).toBeDisabled();
             await expect(
                 page
-                    .getByRole("status")
-                    .filter({ hasText: /Lewat batas hari root SO/ })
+                    .getByRole("region", { name: "Koreksi order" })
+                    .getByText(/Lewat batas hari root SO/)
                     .first(),
             ).toBeVisible();
             expect(await readSoState(page)).toEqual(before);
             await context.setOffline(false);
+            await leaveVisit(page);
             await ensureDaily(page);
             await page
                 .getByRole("button", { name: "Lainnya", exact: true })
+                .click();
+            await page
+                .getByRole("button", { name: /^Riwayat pengajuan/ })
                 .click();
             await page.getByText(/Riwayat SO ·/).click();
             await page
@@ -219,7 +219,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
                 .click();
             await expect(
                 page.getByRole("button", {
-                    name: "Ajukan revisi SO",
+                    name: "Kirim ulang",
                     exact: true,
                 }),
             ).toBeDisabled();
@@ -234,10 +234,14 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             return;
         }
         await page
-            .getByRole("button", { name: "Ajukan revisi SO", exact: true })
+            .getByRole("button", { name: "Kirim ulang", exact: true })
             .click();
         await expect(page.getByText(/Revisi baru masuk antrean/)).toBeVisible();
         await context.setOffline(false);
+        await leaveVisit(page);
+        await page
+            .getByRole("button", { name: "Lainnya", exact: true })
+            .click();
         await expect(
             page.getByRole("heading", {
                 name: "Simulator approval diskon",
@@ -308,6 +312,7 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
                 exact: true,
             })
             .click();
+        await page.getByRole("button", { name: /^Riwayat pengajuan/ }).click();
         await expect(page.getByText(/Riwayat SO ·.*2 pengajuan/)).toBeVisible();
         await page.screenshot({
             path: `test-results/so-revision-${test.info().project.name}.png`,

@@ -73,11 +73,12 @@ test("diagnosis filters, safe detail and persona isolation preserve offline data
         page.getByRole("button", { name: "Absen masuk", exact: true }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByRole("button", { name: /^Riwayat aktivitas/ }).click();
     const region = page.getByRole("region", {
-        name: "Diagnosis sinkronisasi",
+        name: "Riwayat aktivitas",
         exact: true,
     });
-    await expect(region.locator(".activity")).toHaveCount(6);
+    await expect(region.locator(".ui-row")).toHaveCount(6);
     await expect(region).not.toContainText("SECRET-PAYLOAD-NOT-DISPLAYED");
     await expect(region).not.toContainText("SECRET-TOKEN-NOT-DISPLAYED");
     const before = await page.evaluate(async () => {
@@ -98,36 +99,27 @@ test("diagnosis filters, safe detail and persona isolation preserve offline data
         db.close();
         return rows;
     });
+    await region.getByRole("button", { name: "Ditolak", exact: true }).click();
+    await expect(region.locator(".ui-row").first()).toBeVisible();
     await region
-        .getByRole("button", { name: "Perlu review 3", exact: true })
+        .locator(".ui-row")
+        .filter({ hasText: "Diagnostic fixture 4" })
         .click();
-    await expect(region.locator(".activity")).toHaveCount(3);
-    const auth = region
-        .locator(".activity")
-        .filter({ hasText: "Diagnostic fixture 4" });
-    await auth.getByText("Detail sinkronisasi", { exact: true }).click();
-    await expect(auth.getByText(ids[4], { exact: true })).toBeVisible();
-    await expect(auth).toContainText(
+    const sheet = page.getByRole("dialog", { name: "Diagnostic fixture 4" });
+    await expect(sheet.getByText(ids[4], { exact: true })).toBeVisible();
+    await expect(sheet).toContainText(
         "Sinkronkan tidak memulihkan sesi yang habis",
     );
-    await region
-        .getByRole("button", { name: "Approval 1", exact: true })
+    await sheet
+        .getByRole("button", { name: "Tutup", exact: true })
+        .last()
         .click();
-    await expect(region.locator(".activity")).toHaveCount(1);
-    await region.getByText("Detail sinkronisasi", { exact: true }).click();
-    await expect(region).toContainText(
-        "Belum disetujui, dicairkan atau diposting ke Odoo",
-    );
     await region
-        .getByRole("button", { name: "Diterima 1", exact: true })
+        .getByRole("button", { name: "Diposting", exact: true })
         .click();
-    await expect(region.locator(".activity")).toHaveCount(1);
-    await region
-        .getByRole("button", { name: "Menunggu 1", exact: true })
-        .click();
-    await expect(region.locator(".activity")).toHaveCount(1);
-    await region.getByText("Detail sinkronisasi", { exact: true }).click();
-    await expect(region).toContainText("Tersimpan saat offline");
+    await expect(region.locator(".ui-row")).toHaveCount(1);
+    await region.getByRole("button", { name: "Semua", exact: true }).click();
+    await expect(region.locator(".ui-row")).toHaveCount(6);
     expect(
         await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth,
@@ -139,18 +131,19 @@ test("diagnosis filters, safe detail and persona isolation preserve offline data
     });
     await switchPersona(page, "delivery");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByRole("button", { name: /^Riwayat aktivitas/ }).click();
     await expect(
-        page.getByText(
-            "Belum ada aktivitas. Mulai dari order atau pengajuan.",
-            { exact: true },
-        ),
+        page.getByText("Belum ada aktivitas pada filter ini.", {
+            exact: true,
+        }),
     ).toBeVisible();
     await expect(
         page.getByText("Diagnostic fixture 4", { exact: true }),
     ).toHaveCount(0);
     await switchPersona(page, "sales");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await expect(region.locator(".activity")).toHaveCount(6);
+    await page.getByRole("button", { name: /^Riwayat aktivitas/ }).click();
+    await expect(region.locator(".ui-row")).toHaveCount(6);
     const after = await page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve) => {
             const r = indexedDB.open("fmcg-field-demo-v1");

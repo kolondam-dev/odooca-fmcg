@@ -1,4 +1,4 @@
-import { validateOrderQuote } from "./order-pricing";
+import { lineChecks, validateOrderQuote } from "./order-pricing";
 import { bindVisitEvidence } from "./visit-evidence";
 import { CommandSchema, validateOrder } from "./contracts";
 import {
@@ -326,13 +326,7 @@ export function visitLedger(
         const source = MorningRecordSchema.parse(
             r.morning_source ?? fallbackMorning,
         );
-        const invalid = validateOrder(
-            body.lines.map((l) => ({
-                productId: l.product_id,
-                quantity: Number(l.qty),
-            })),
-            source.snapshot!,
-        );
+        const invalid = validateOrder(lineChecks(body.lines), source.snapshot!);
         if (invalid) throw new Error(invalid);
         requireVisitFix(
             c.fix,
@@ -432,10 +426,7 @@ export function validateVisitCommit(
             const body = VisitOrderSchema.parse(item.command.payload);
             validateOrderQuote(body, morning.snapshot!);
             const invalid = validateOrder(
-                body.lines.map((l) => ({
-                    productId: l.product_id,
-                    quantity: Number(l.qty),
-                })),
+                lineChecks(body.lines),
                 morning.snapshot!,
             );
             if (invalid) throw new Error(invalid);

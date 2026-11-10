@@ -11,6 +11,7 @@ import {
 } from "./settlement-contracts.ts";
 import { VisitCheckInSchema, VisitCheckoutSchema } from "./visit-contracts.ts";
 import { z } from "zod";
+import { DiscountProgramSchema } from "./order-discount.ts";
 import { CollectionReceiptSchema } from "./collection-contracts.ts";
 import { DeliveryPodSchema } from "./delivery-contracts.ts";
 export const Role = z.enum(["sales", "delivery", "hris"]);
@@ -166,6 +167,12 @@ export const SnapshotSchema = z
                         top_sku: z.string().nullable(),
                         payment_terms: z.string().nullable(),
                         credit_limit: z.number().nonnegative().nullable(),
+                        /** Piutang berjalan (AR) outlet; sisa limit = credit_limit − ar_outstanding. */
+                        ar_outstanding: z
+                            .number()
+                            .nonnegative()
+                            .nullable()
+                            .optional(),
                         contact: z.string().nullable(),
                     })
                     .optional(),
@@ -188,8 +195,29 @@ export const SnapshotSchema = z
                 unit_label: UnitLabelSchema.optional(),
                 price_basis: z.literal("carton").optional(),
                 stock_basis: z.literal("carton").optional(),
+                /** Foto SKU dari DB live; diunduh sekali dan diperbarui hanya bila image_version berubah. */
+                image_url: z
+                    .string()
+                    .regex(/^\/api\/v1\/products\/\d+\/image$/)
+                    .nullable()
+                    .optional(),
+                image_version: z.string().min(1).max(64).nullable().optional(),
             }),
         ),
+        discount_programs: z.array(DiscountProgramSchema).optional(),
+        /** Kapabilitas server. `order_pricing_v2` harus eksplisit true agar PWA boleh mengirim order/revisi v2. */
+        features: z
+            .object({ order_pricing_v2: z.boolean().optional() })
+            .optional(),
+        /** SKU yang pernah dipesan per outlet (daftar Display & stok). Ikut sync harian. */
+        order_history: z
+            .array(
+                z.object({
+                    outlet_id: z.string(),
+                    product_ids: z.array(z.string()).max(200),
+                }),
+            )
+            .optional(),
         deliveries: z.array(
             z.object({
                 id: z.string(),

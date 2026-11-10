@@ -27,13 +27,13 @@ import {
     type Scenario,
     type Snapshot,
 } from "./domain/contracts";
-import { SyncDiagnostics } from "./components/SyncDiagnostics";
 import { VisitPanel } from "./components/VisitPanel";
 import { SalesVisits, captureVisitLocation } from "./domain/visits";
 import { CollectionWorkspace } from "./components/CollectionWorkspace";
 import { DeliveryWorkspace } from "./components/DeliveryWorkspace";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
+import { MorePage } from "./components/MorePage";
 import { MorningSession } from "./components/MorningSession";
 import {
     morningReady,
@@ -881,199 +881,79 @@ function Workspace({
                             />
                         )}
                         {page === "more" && (
-                            <>
-                                <OrderCorrections
-                                    store={store}
-                                    owner={owner}
-                                    morning={morning}
-                                    queue={queue}
-                                    engine={engine}
-                                    changed={() => void refresh()}
-                                />
-                                {__QA_TOOLS__ && (
-                                    <DeliveryApproval
+                            <MorePage
+                                identity={identity}
+                                store={store}
+                                owner={owner}
+                                queue={queue}
+                                online={online}
+                                syncing={syncing}
+                                pending={pending}
+                                onSync={() => void sync()}
+                                onExpenses={() => go("expenses")}
+                                runningMode={runningMode}
+                                setRunningMode={setRunningMode}
+                                corrections={
+                                    <OrderCorrections
                                         store={store}
                                         owner={owner}
+                                        morning={morning}
                                         queue={queue}
+                                        engine={engine}
                                         changed={() => void refresh()}
                                     />
-                                )}
-                                {__QA_TOOLS__ && (
-                                    <DiscountApproval
-                                        store={store}
-                                        owner={owner}
-                                        queue={queue}
-                                        changed={() => void refresh()}
-                                    />
-                                )}
-                                <section class="sync-card">
-                                    <div>
-                                        <span class="metric-icon blue">
-                                            <Icon name="sync" />
-                                        </span>
-                                        <h3>{pending} aktivitas menunggu</h3>
-                                        <p class="muted">
-                                            {online
-                                                ? "Koneksi tersedia"
-                                                : "Offline • antrean disimpan di perangkat"}
-                                        </p>
-                                    </div>
-                                    <button
-                                        disabled={!online || syncing}
-                                        onClick={() => void sync()}
-                                    >
-                                        {syncing ? "Mengirim…" : "Sinkronkan"}
-                                    </button>
-                                </section>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        gap: "10px",
-                                        margin: "14px 0",
-                                    }}
-                                >
-                                    <a
-                                        href="/web/login?redirect=/field/"
-                                        class="button secondary"
-                                        style={{
-                                            flex: 1,
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: "6px",
-                                            padding: "10px",
-                                            borderRadius: "10px",
-                                            textDecoration: "none",
-                                            fontWeight: "600",
-                                            fontSize: "0.85rem",
-                                            color: "var(--navy)",
-                                            border: "1px solid var(--border)",
-                                            background: "#fff",
-                                        }}
-                                    >
-                                        <Icon name="user" size={16} /> Ganti
-                                        Akun Odoo
-                                    </a>
-                                    <a
-                                        href="/web/session/logout?redirect=/field/"
-                                        class="button secondary"
-                                        style={{
-                                            flex: 1,
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: "6px",
-                                            padding: "10px",
-                                            borderRadius: "10px",
-                                            textDecoration: "none",
-                                            fontWeight: "600",
-                                            fontSize: "0.85rem",
-                                            color: "#dc2626",
-                                            border: "1px solid #fecaca",
-                                            background: "#fff5f5",
-                                        }}
-                                    >
-                                        <Icon name="close" size={16} /> Keluar
-                                        (Logout)
-                                    </a>
-                                </div>
-                                <div class="running-mode-section">
-                                    <div class="running-mode-header">
-                                        <label>Mode Operasi Aplikasi</label>
-                                        <span class={`mode-tag ${runningMode}`}>
-                                            {runningMode.toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <div
-                                        class="running-mode-toggle"
-                                        role="group"
-                                        aria-label="Pilih mode operasi"
-                                    >
-                                        <button
-                                            type="button"
-                                            class={`mode-choice ${runningMode === "demo" ? "active" : ""}`}
-                                            onClick={() =>
-                                                setRunningMode("demo")
-                                            }
-                                        >
-                                            DEMO
-                                        </button>
-                                        <button
-                                            type="button"
-                                            class={`mode-choice ${runningMode === "live" ? "active" : ""}`}
-                                            onClick={() =>
-                                                setRunningMode("live")
-                                            }
-                                        >
-                                            LIVE
-                                        </button>
-                                    </div>
-                                    <p class="mode-desc">
-                                        {runningMode === "demo"
-                                            ? "Mode DEMO: Validasi geofence, waktu, dan foto diabaikan. Transaksi dapat diinput dari mana saja."
-                                            : "Mode LIVE: Validasi ketat geofence, waktu GPS, dan foto resmi diberlakukan."}
-                                    </p>
-                                </div>
-                                <button
-                                    class="secondary full"
-                                    onClick={() => go("expenses")}
-                                >
-                                    <Icon name="wallet" size={20} /> Realisasi &
-                                    saldo uang lapangan
-                                </button>
-                                {__QA_TOOLS__ && (
-                                    <label class="local-mode-control">
-                                        Mode respons transaksi lokal
-                                        <select
-                                            aria-label="Mode respons"
-                                            value={scenario}
-                                            onChange={(event) =>
-                                                setScenario(
-                                                    event.currentTarget
-                                                        .value as Scenario,
-                                                )
-                                            }
-                                        >
-                                            <option value="normal">
-                                                Normal
-                                            </option>
-                                            <option value="approval">
-                                                Menunggu approval
-                                            </option>
-                                            <option value="rejected">
-                                                Ditolak
-                                            </option>
-                                            <option value="timeout">
-                                                Jaringan gagal / 503
-                                            </option>
-                                            <option value="expired">
-                                                Sesi habis / 401
-                                            </option>
-                                        </select>
-                                    </label>
-                                )}
-                                <Heading
-                                    title="Aktivitas perangkat ini"
-                                    note="Terkirim berbeda dengan disetujui atau diposting."
-                                />
-                                <SyncDiagnostics
-                                    key={owner}
-                                    store={store}
-                                    owner={owner}
-                                    queue={queue}
-                                    online={online}
-                                />
-                                <details>
-                                    <summary>Status integrasi</summary>
-                                    <p class="footnote">
-                                        Binding perangkat, approval resmi,
-                                        notifikasi backend dan pengiriman
-                                        evidence menunggu integrasi API. Tidak
-                                        ada token atau dokumen gaji di cache
-                                        lokal.
-                                    </p>
-                                </details>
-                            </>
+                                }
+                                qaTools={
+                                    __QA_TOOLS__ ? (
+                                        <>
+                                            <p class="ui-sectionlabel">
+                                                Alat QA
+                                            </p>
+                                            <DeliveryApproval
+                                                store={store}
+                                                owner={owner}
+                                                queue={queue}
+                                                changed={() => void refresh()}
+                                            />
+                                            <DiscountApproval
+                                                store={store}
+                                                owner={owner}
+                                                queue={queue}
+                                                changed={() => void refresh()}
+                                            />
+                                            <label class="local-mode-control">
+                                                Mode respons transaksi lokal
+                                                <select
+                                                    aria-label="Mode respons"
+                                                    value={scenario}
+                                                    onChange={(event) =>
+                                                        setScenario(
+                                                            event.currentTarget
+                                                                .value as Scenario,
+                                                        )
+                                                    }
+                                                >
+                                                    <option value="normal">
+                                                        Normal
+                                                    </option>
+                                                    <option value="approval">
+                                                        Menunggu approval
+                                                    </option>
+                                                    <option value="rejected">
+                                                        Ditolak
+                                                    </option>
+                                                    <option value="timeout">
+                                                        Jaringan gagal / 503
+                                                    </option>
+                                                    <option value="expired">
+                                                        Sesi habis / 401
+                                                    </option>
+                                                </select>
+                                            </label>
+                                        </>
+                                    ) : null
+                                }
+                            />
                         )}
                     </main>
                     <BottomNav
