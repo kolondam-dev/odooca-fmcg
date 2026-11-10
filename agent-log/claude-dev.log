@@ -248,3 +248,8 @@
 - Test baru tests/test_finance_i2c_adr_formulas.py (11 tes, murni aritmetika tanpa ORM/DB) mengunci formula dan alokasi jadwal. Verifikasi lokal: 11/11 PASS, 55 tes finance PASS, ruff PASS, check_manifests PASS (12 addon).
 - [BU] CI exact-SHA HEAD baru belum jalan; formula belum diverifikasi terhadap jurnal exchange nyata Odoo; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN36-38/55-56 dan FIN05-09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T10:20:00+07:00
+[2026-11-10T11:15:00+07:00] [INFO] I2c/PR108: CI exact-SHA 9e52f66 PASS (formula FIN37/FIN38)
+- Seluruh 12 check PR #108 pada SHA 9e52f66c813ecdc57126b00b1ce1c33b49153e48 SUCCESS dan MERGEABLE. Komposisi: CI 3, Finance I0 candidate spike 1, PWA quality 4, Seed supervision 4 (push + pull_request trigger).
+- Re-review terakhir diminta; PR belum di-merge dan tidak ada perubahan kode aplikasi, oca.lock, deploy, atau katalog.
+- [BU] Formula masih diuji sebagai aritmetika murni; verifikasi terhadap jurnal exchange nyata Odoo menyusul pada PR implementasi FIN38. Tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-10T11:15:00+07:00
