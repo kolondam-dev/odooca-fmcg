@@ -1,3 +1,8 @@
+## 2026-11-10T13:58:02+07:00 — claude-design — Fase 3B-1: Extra call dan Selesai kunjungan
+
+**Berubah:** ExtraCallScreen (menggantikan form extra di TaskForm), CloseVisitScreen (menggantikan bottom sheet; outcome otomatis order_requested/no_order), snapshot.extra_call_outlets opsional; tes e2e baru extra-call + close-visit; helper/test lama disesuaikan. Utang: DS_RECONCILIATION K15.
+**Diverifikasi:** [F] tsc, e2e phone+tablet spec terkait. **Belum diuji:** [BU] full e2e, CI.
+
 ## 2026-11-10T11:42:54+07:00 — claude-design — Fase 3A: Order v2, Koreksi_so, foto SKU, klaster Lainnya
 
 **Berubah:** domain/order-discount.ts + kontrak pricing v2 (program/tactical bertingkat, diskon footer Rp); OrderScreen/Ringkasan per mockup; KoreksiScreen; sku-photo (Cache Storage, ganti hanya jika versi berubah, fallback placeholder); MorePage + ActivityScreens (Antrean sinkronisasi, Riwayat aktivitas, Riwayat pengajuan); SyncDiagnostics dihapus. Utang backend: DS_RECONCILIATION K14.

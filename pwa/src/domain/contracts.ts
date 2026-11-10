@@ -209,6 +209,16 @@ export const SnapshotSchema = z
         features: z
             .object({ order_pricing_v2: z.boolean().optional() })
             .optional(),
+        /** Outlet di luar PJP yang boleh diajukan sebagai extra call (pencarian layar Extra call). */
+        extra_call_outlets: z
+            .array(
+                z.object({
+                    id: z.string().min(1),
+                    name: z.string().min(1),
+                    address: z.string().default(""),
+                }),
+            )
+            .optional(),
         /** SKU yang pernah dipesan per outlet (daftar Display & stok). Ikut sync harian. */
         order_history: z
             .array(

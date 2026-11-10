@@ -74,11 +74,11 @@ test("visit location guards, offline restore and checkout sync", async ({
     ).toBeVisible();
     await saveVisitPhoto(page, "check-out");
     await page
-        .getByLabel("Catatan kunjungan")
+        .getByLabel(/^Catatan/)
         .fill("Toko tutup untuk kunjungan simulasi");
-    await page.getByLabel("Hasil kunjungan").selectOption("outlet_closed");
     await page
-        .getByRole("button", { name: "Tutup kunjungan", exact: true })
+        .getByRole("button", { name: "Selesai kunjungan", exact: true })
+        .first()
         .click();
     await expect(
         page.getByText("Kunjungan ditutup lokal", { exact: false }),

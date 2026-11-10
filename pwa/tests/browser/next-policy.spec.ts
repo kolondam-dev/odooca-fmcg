@@ -105,7 +105,8 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
         await sendOrder(page);
         await saveVisitPhoto(page, "check-out");
         await page
-            .getByRole("button", { name: "Tutup kunjungan", exact: true })
+            .getByRole("button", { name: "Selesai kunjungan", exact: true })
+            .first()
             .click();
         await leaveClosedVisit(page);
         await page

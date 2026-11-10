@@ -28,7 +28,7 @@ export function TaskForm({
 }: {
     workStatus: string;
     store: FieldStore;
-    dialog: Exclude<Dialog, { type: "order" | "display" }>;
+    dialog: Exclude<Dialog, { type: "order" | "display" | "extra" }>;
     identity: Identity;
     snapshot: Snapshot;
     owner: string;
@@ -51,7 +51,6 @@ export function TaskForm({
     const [evidence, setEvidence] = useState<EvidenceRef>();
     const [category, setCategory] = useState("fuel_planned");
     const title = {
-        extra: "Ajukan extra call",
         proof: "Bukti pengiriman",
         expense: "Uang lapangan",
         attendance: "Absensi foto & lokasi",
@@ -68,14 +67,7 @@ export function TaskForm({
             let type: Command["type"];
             let payload: Record<string, unknown>;
             let label: string;
-            if (dialog.type === "extra") {
-                type = "sales.extra_call.request";
-                payload = {
-                    outlet_name: f.get("outlet"),
-                    reason: f.get("reason"),
-                };
-                label = `Extra call • ${f.get("outlet")}`;
-            } else if (dialog.type === "expense") {
+            if (dialog.type === "expense") {
                 const amount = Number(f.get("amount"));
                 if (!Number.isFinite(amount) || amount < 1)
                     throw new Error("Nominal harus lebih dari nol.");
@@ -176,30 +168,6 @@ export function TaskForm({
                 />
                 <form onSubmit={(e) => void send(e)}>
                     <div class="sheet-body">
-                        {dialog.type === "extra" && (
-                            <>
-                                <p class="notice">
-                                    Kunjungan di luar PJP baru sah setelah
-                                    supervisor menyetujui.
-                                </p>
-                                <label>
-                                    Nama outlet
-                                    <input
-                                        name="outlet"
-                                        required
-                                        maxLength={100}
-                                    />
-                                </label>
-                                <label>
-                                    Alasan extra call
-                                    <textarea
-                                        name="reason"
-                                        required
-                                        maxLength={500}
-                                    />
-                                </label>
-                            </>
-                        )}
                         {dialog.type === "expense" && (
                             <>
                                 <label>

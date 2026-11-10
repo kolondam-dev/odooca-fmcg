@@ -265,7 +265,8 @@ test("SKU packaging drives new order and offline correction prices independently
     await sendOrder(page);
     await saveVisitPhoto(page, "check-out");
     await page
-        .getByRole("button", { name: "Tutup kunjungan", exact: true })
+        .getByRole("button", { name: "Selesai kunjungan", exact: true })
+        .first()
         .click();
     await leaveClosedVisit(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();

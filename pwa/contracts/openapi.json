@@ -5662,6 +5662,32 @@
             },
             "additionalProperties": false
           },
+          "extra_call_outlets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "address": {
+                  "default": "",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "address"
+              ],
+              "additionalProperties": false
+            }
+          },
           "order_history": {
             "type": "array",
             "items": {
