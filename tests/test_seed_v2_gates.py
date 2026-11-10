@@ -355,6 +355,80 @@ class V2GateTests(unittest.TestCase):
             row['ppn_11_amount'] = row.pop('ppn_amount')
         self.assertEqual([v for v in run(self.case) if v['invariant'] == 'TAX-SOURCE'], [])
 
+    def test_tax_code_04_valid(self):
+        inv = self.case['pack']['invoices'][0]
+        inv['tax_code'] = '04'
+        inv['commercial_dpp'] = '120.00'
+        inv['dpp_amount'] = '110.00'
+        inv['ppn_amount'] = '13.20'
+        inv['total_invoice_with_ppn'] = '133.20'
+        self.assertEqual([v for v in run(self.case) if v['invariant'] == 'TAX-SOURCE'], [])
+
+    def test_tax_code_04_missing_commercial_dpp_rejects_even_if_legacy_arithmetic_matches(self):
+        # Skenario blocker fail-open: tax_code 04 tanpa commercial_dpp tidak boleh jatuh ke rumus legacy
+        inv = self.case['pack']['invoices'][0]
+        inv['tax_code'] = '04'
+        inv.pop('commercial_dpp', None)
+        # Angka sengaja diselaraskan dengan rumus legacy (PPN 11% x dpp, total = dpp + ppn)
+        inv['dpp_amount'] = '180.00'
+        inv['ppn_amount'] = '19.80'
+        inv['total_invoice_with_ppn'] = '199.80'
+        self.expect('TAX-SOURCE')
+
+    def test_tax_code_04_blank_commercial_dpp_rejects_even_if_legacy_arithmetic_matches(self):
+        inv = self.case['pack']['invoices'][0]
+        inv['tax_code'] = '04'
+        inv['commercial_dpp'] = '   '
+        inv['dpp_amount'] = '180.00'
+        inv['ppn_amount'] = '19.80'
+        inv['total_invoice_with_ppn'] = '199.80'
+        self.expect('TAX-SOURCE')
+
+    def test_tax_code_04_non_numeric_commercial_dpp_rejects(self):
+        inv = self.case['pack']['invoices'][0]
+        inv['tax_code'] = '04'
+        inv['commercial_dpp'] = 'INVALID_NON_NUMERIC'
+        inv['dpp_amount'] = '110.00'
+        inv['ppn_amount'] = '13.20'
+        inv['total_invoice_with_ppn'] = '133.20'
+        self.expect('TAX-SOURCE')
+
+    def test_tax_code_04_negative_commercial_dpp_rejects(self):
+        inv = self.case['pack']['invoices'][0]
+        inv['tax_code'] = '04'
+        inv['commercial_dpp'] = '-120.00'
+        inv['dpp_amount'] = '-110.00'
+        inv['ppn_amount'] = '-13.20'
+        inv['total_invoice_with_ppn'] = '-133.20'
+        self.expect('TAX-SOURCE')
+
+    def test_tax_code_04_wrong_tax_base_dpp_rejects(self):
+        inv = self.case['pack']['invoices'][0]
+        inv['tax_code'] = '04'
+        inv['commercial_dpp'] = '120.00'
+        inv['dpp_amount'] = '120.00'  # Bukan 11/12
+        inv['ppn_amount'] = '14.40'
+        inv['total_invoice_with_ppn'] = '134.40'
+        self.expect('TAX-SOURCE')
+
+    def test_tax_code_04_wrong_ppn_rate_rejects(self):
+        inv = self.case['pack']['invoices'][0]
+        inv['tax_code'] = '04'
+        inv['commercial_dpp'] = '120.00'
+        inv['dpp_amount'] = '110.00'
+        inv['ppn_amount'] = '12.10'  # 11% alih-alih 12%
+        inv['total_invoice_with_ppn'] = '132.10'
+        self.expect('TAX-SOURCE')
+
+    def test_tax_code_04_wrong_commercial_total_rejects(self):
+        inv = self.case['pack']['invoices'][0]
+        inv['tax_code'] = '04'
+        inv['commercial_dpp'] = '120.00'
+        inv['dpp_amount'] = '110.00'
+        inv['ppn_amount'] = '13.20'
+        inv['total_invoice_with_ppn'] = '123.20'  # dpp_amount + ppn alih-alih commercial_dpp + ppn
+        self.expect('TAX-SOURCE')
+
     # ---- CASH-NONNEG
     def test_cash_negative_day(self):
         self.case['config']['opening_cash'] = '10'

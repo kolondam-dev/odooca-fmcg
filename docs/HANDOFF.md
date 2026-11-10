@@ -10,6 +10,25 @@
 **Belum diuji:** [BU] Gate operasional I2b (export XLSX/PDF, browser geometry, I8, sign-off Finance Controller); `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
 **Berikutnya:** lanjut I2c.
 
+## 2026-11-10T02:40:00+07:00 — antigravity — F2: Penutupan Celah Fail-Open TAX-SOURCE Kode 04 & Sinkronisasi origin/main (PR #105)
+**Berubah:**
+- `scripts/ops/seed_v2_gates.py`: Penutupan celah fail-open pada `_check_tax()`. Baris faktur ber-`tax_code == '04'` kini wajib memiliki field `commercial_dpp`, non-empty, numerik valid, non-negative, dan diverifikasi dengan formula DPP Nilai Lain 11/12 dan PPN 12%. Jika syarat basis komersial tidak terpenuhi, gate langsung `fail('TAX-SOURCE', ...)` dan `continue` tanpa jatuh (fall through) ke jalur legacy.
+- `tests/test_seed_v2_gates.py`: Menambahkan 8 test mutasi regresi komprehensif untuk kode transaksi 04 (`test_tax_code_04_valid`, missing `commercial_dpp`, blank `commercial_dpp`, non-numeric, negative, wrong tax base, wrong PPN rate, wrong total), membuktikan bahwa transaksi 04 tanpa commercial basis tetap ditolak keras meskipun angkanya sengaja dicocokkan dengan rumus legacy.
+- `data/registers/periods/2026-08/MANIFEST.json`: Mengikat generator commit `a63c612` dan LF SHA-256 terbaru dari `scripts/ops/seed_v2_gates.py`.
+- Integrasi git: Menggabungkan `origin/main` (`6ff44a7`: PR #107) ke cabang `agen/seed-f2-august-refinement` via merge commit `a0f35fd` tanpa force-push.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_seed_planner.py tests/test_seed_v2_gates.py`: 122/122 unit tests PASS (37.9s).
+- [F] `python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict`: PASS (11 gates run, 0 violations).
+- [F] `python scripts/ops/verify_seed_invariants.py`: PASS.
+- [F] `python scripts/ops/verify_seed_acceptance.py`: PASS.
+- [F] `python -m ruff check scripts/ops/ tests/`: PASS (clean).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] Branch sinkron dengan `origin/main` (`behind_by = 0`).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #105.
+**Berikutnya:**
+- Push branch ke remote `origin/agen/seed-f2-august-refinement`, pantau 14 CI check-runs hingga 100% hijau, dan minta re-review supervisor untuk final approval & merge.
+
 ## 2026-11-10T02:35:00+07:00 — Agent VSCode — I2b/PR107: CI exact-SHA 55a647a hijau (pasca merge main)
 **Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode pada commit ini.
 **Diverifikasi:** [F] PR #107 pada SHA `55a647a17828bec47b0c3a234189ff1f2f8d7a0b` `MERGEABLE` dengan 12/12 check SUCCESS, termasuk `Finance I0 candidate spike` run `42663566390` yang mencetak `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Log native memuat matriks filter lengkap: `journal_sale`, `date_from_0710`, dan `partner_named` untuk customer/supplier pada `scale=1` dan `scale=7`, semuanya `result=PASS`. [F] Konflik `docs/HANDOFF.md` dan `agent-log/claude-dev.log` dengan `c8fe1c0` diselesaikan tanpa menghapus entri agen lain; entri 22:25 yang terduplikasi saat rekonsiliasi dihapus, entri 00:05 dan 01:10 dipertahankan sekali. [F] `ruff` PASS; `check_manifests.py` PASS (12 addon); 44 tes finance PASS.
@@ -27,6 +46,42 @@
 **Diverifikasi:** [F] `python -m ruff check .` PASS; `python scripts/check_manifests.py` PASS (12 addon); `python -m unittest discover -s tests -p "test_finance*.py"` PASS (44 tes). [F] Menutup catatan non-blocking reviewer pada review `PRR_kwDOVUWh9s8AAAABW2AfZg`: `partner_ids` kini punya kasus native sendiri dan invarian "residual = saldo slice" diuji untuk keempat jenis slice pada level unit.
 **Belum diuji:** [BU] CI native exact-SHA untuk commit ini; tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
 **Berikutnya:** push, buka PR, pantau seluruh check exact-SHA, lalu serahkan review.
+
+## 2026-11-10T00:15:00+07:00 — antigravity — F2: Resolusi Tuntas Temuan P2 Supervisor PR #105 (Fixture Identitas Coretax & Verifiable Synthetic Evidence)
+**Berubah:**
+- data/registers/customer_tax_profile_fixture.json:
+  * Fixture deklaratif eksplisit 354 outlet pelanggan: 46 outlet PKP ber-NPWP16 (`is_pkp: true`, `buyer_id_type: NPWP16`), 277 outlet Non-PKP ber-NIK Manado (`is_pkp: false`, `buyer_id_type: NIK`), dan 31 outlet Non-PKP tanpa NPWP/NIK (`buyer_id_type: TIN_0`, `'0000000000000000'`). Seluruh identitas non-produksi berstatus transparan `tax_id_status: SYNTHETIC_TEST_IDENTITY` atau `UNREGISTERED_ZERO_IDENTITY`.
+- data/evidence/pod_synthetic_carton_damage.jpg & data/evidence/pod_synthetic_seal_leak.jpg:
+  * Berkas bukti fisik valid JPEG (JFIF standar) tersedia nyata di repositori untuk seluruh penolakan bertanda `SYNTHETIC`.
+- scripts/ops/seed_planner.py:
+  * Memuat langsung `customer_tax_profile_fixture.json` pada `_load_customers()`, mengeliminasi pemotongan string `vat[:16]`, rumus modulo `idx % 10`, dan penalaran algoritmik fiktif.
+  * Menyelaraskan katalog `SYNTHETIC_REJECTION_FIXTURE` ke berkas `data/evidence/` fisik dan melarang klaim `ACTUAL` palsu.
+- scripts/ops/generate_period_pack.py:
+  * Mengekspos parameter perpajakan eksplisit di manifest konfigurasi: `statutory_rate: "0.12"`, `dpp_factor: "11/12"`, `effective_rate: "0.11"`, `rate: "0.11"`.
+- tests/test_seed_planner.py:
+  * Menambahkan asersi verifikasi fisik: `(REPO_ROOT / r["evidence_photo_ref"]).is_file()` untuk setiap penolakan sintetis.
+  * Menambahkan pengujian keselarasan 100% invoice terhadap fixture deklaratif `customer_tax_profile_fixture.json`.
+- data/registers/periods/2026-08/:
+  * Regenerasi seluruh berkas pack periode Agustus 2026 dan MANIFEST.json terikat commit generator `a168e4e`.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner tests.test_seed_v2_gates: 114 tests PASS in 20.7s.
+- [F] python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict: PASS (11 gates, 0 violations).
+- [F] python scripts/ops/verify_seed_invariants.py: PASS.
+- [F] python scripts/ops/verify_seed_acceptance.py: PASS.
+- [F] python -m ruff check scripts/ops/ tests/: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #105.
+**Berikutnya:**
+- Commit pack data & logs, push ke `origin/agen/seed-f2-august-refinement`, pantau CI PR #105 hingga 100% hijau, dan minta re-review supervisor.
+
+## 2026-11-09T22:25:00+07:00 — Agent VSCode — PR104 MERGED: I2b AR/AP subledger FIN05–FIN09
+**Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode.
+**Diverifikasi:** [F] Reviewer `frankiezz1988` memberi verdict `APPROVE` pada SHA `1d7a2c8d8224e412d00931810a1e5e7578d8eb03` (review `PRR_kwDOVUWh9s8AAAABW2AfZg`, 2026-11-09T15:17:31Z) dan menyatakan tidak ada defect tersisa yang menghalangi merge. [F] PR #104 di-merge ke `main` pada 2026-11-09T15:18:02Z oleh `frankiezz1988` sebagai merge commit `7c957ad686dd820fcd62636d2e9ebfbea3103831`. [F] Seluruh 14 check pada SHA `1d7a2c8` SUCCESS sebelum merge, termasuk `Finance I0 candidate spike` run `42637440796` dengan `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Catatan non-blocking reviewer: tambahan kasus native `partner_ids` disarankan pada iterasi berikutnya, karena filter itu juga bagian kontrak slice walau memakai jalur seleksi line IDs yang sama.
+**Belum diuji:** [BU] Bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller; `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA` karena merge kode bukan penerimaan laporan. Tidak ada deploy atau mutasi DB live.
+**Berikutnya:** kerjakan tindak lanjut non-blocking `partner_ids` pada iterasi berikutnya beserta gate export/sign-off FIN05–FIN09.
+
+## 2026-11-09T22:25:00+07:00 — antigravity — F2: Sinkronisasi origin/main (7c957ad: PR #104) & Resolusi Review Substantif PR #105
 
 ## 2026-11-09T22:25:00+07:00 — Agent VSCode — PR104 MERGED: I2b AR/AP subledger FIN05–FIN09
 **Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode.
