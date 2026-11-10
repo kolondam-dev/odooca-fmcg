@@ -534,6 +534,281 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             loader.evaluate_dry_run()
         self.assertIn("debit account mismatch", str(ctx.exception))
 
+    def test_ap_payment_rejects_decoy_bill(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        mock_partner_unilever = MockRecord(id=50, name="PT Unilever Enterprise Indonesia", ref="PRIN-002")
+        decoy_bill = MockRecord(
+            id=201,
+            company_id=1,
+            name="BILL/2026/07/0001",
+            move_type="in_invoice",
+            state="posted",
+            payment_state="not_paid",
+            amount_total=2899971200.00,
+            amount_residual=2899971200.00,
+            ref="PO-2026-06-050",  # Decoy! Should NOT match PO-2026-06-05
+            partner_id=mock_partner_unilever,
+        )
+        mock_journal_bank = MockRecord(id=5, company_id=1, type="bank")
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "product.product": MockModel(auto_match=True),
+            "res.partner": MockModel(records=[mock_partner_unilever]),
+            "account.move": MockModel(records=[decoy_bill]),
+            "account.journal": MockModel(records=[mock_journal_bank]),
+            "account.payment": MockModel(),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=False, strict=True, company_id=1)
+        loader.company = mock_company
+        with self.assertRaises(PreflightContinuityError) as ctx:
+            loader._apply_ap_payments()
+        self.assertIn("not found for AP payment", str(ctx.exception))
+
+    def test_ap_payment_rejects_ambiguous_duplicate_bills(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        mock_partner_unilever = MockRecord(id=50, name="PT Unilever Enterprise Indonesia", ref="PRIN-002")
+        bill_1 = MockRecord(
+            id=201,
+            company_id=1,
+            name="BILL/2026/07/0001",
+            move_type="in_invoice",
+            state="posted",
+            amount_residual=2899971200.00,
+            ref="PO-2026-06-05",
+            partner_id=mock_partner_unilever,
+        )
+        bill_2 = MockRecord(
+            id=202,
+            company_id=1,
+            name="BILL/2026/07/0002",
+            move_type="in_invoice",
+            state="posted",
+            amount_residual=2899971200.00,
+            ref="PO-2026-06-05",
+            partner_id=mock_partner_unilever,
+        )
+        mock_journal_bank = MockRecord(id=5, company_id=1, type="bank")
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "res.partner": MockModel(records=[mock_partner_unilever]),
+            "account.move": MockModel(records=[bill_1, bill_2]),
+            "account.journal": MockModel(records=[mock_journal_bank]),
+            "account.payment": MockModel(),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=False, strict=True, company_id=1)
+        loader.company = mock_company
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._apply_ap_payments()
+        self.assertIn("Ambiguous posted vendor bills", str(ctx.exception))
+
+    def test_preflight_replay_with_settled_paid_bill_passes_if_payment_exists(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_partner_unilever = MockRecord(id=50, name="PT Unilever Enterprise Indonesia", ref="PRIN-002")
+        paid_bill = MockRecord(
+            id=201,
+            company_id=1,
+            name="BILL/2026/07/0001",
+            move_type="in_invoice",
+            state="posted",
+            payment_state="paid",
+            amount_total=2899971200.00,
+            amount_residual=0.00,
+            ref="PO-2026-06-05",
+            partner_id=mock_partner_unilever,
+        )
+        matching_payment = MockRecord(
+            id=901,
+            company_id=1,
+            ref="AP-202608-0001",
+            payment_type="outbound",
+            state="posted",
+            amount=2899971200.00,
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "stock.location": MockModel(records=[MockRecord(id=1, company_id=1, usage="internal")]),
+            "res.partner": MockModel(records=[mock_partner_unilever], count_val=400),
+            "product.product": MockModel(count_val=200),
+            "sale.order": MockModel(count_val=1200),
+            "account.move": MockModel(records=[paid_bill]),
+            "account.payment": MockModel(records=[matching_payment]),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True, company_id=1)
+        loader.company = mock_company
+        # Should not raise PreflightContinuityError because replay with verified payment is valid
+        loader.verify_preflight()
+
+    def test_preflight_replay_with_settled_paid_bill_fails_if_payment_missing(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_partner_unilever = MockRecord(id=50, name="PT Unilever Enterprise Indonesia", ref="PRIN-002")
+        paid_bill = MockRecord(
+            id=201,
+            company_id=1,
+            name="BILL/2026/07/0001",
+            move_type="in_invoice",
+            state="posted",
+            payment_state="paid",
+            amount_total=2899971200.00,
+            amount_residual=0.00,
+            ref="PO-2026-06-05",
+            partner_id=mock_partner_unilever,
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "stock.location": MockModel(records=[MockRecord(id=1, company_id=1, usage="internal")]),
+            "res.partner": MockModel(records=[mock_partner_unilever], count_val=400),
+            "product.product": MockModel(count_val=200),
+            "sale.order": MockModel(count_val=1200),
+            "account.move": MockModel(records=[paid_bill]),
+            "account.payment": MockModel(records=[]),  # No payment!
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True, company_id=1)
+        loader.company = mock_company
+        with self.assertRaises(PreflightContinuityError) as ctx:
+            loader.verify_preflight()
+        self.assertIn("matching reconciled August AP payment", str(ctx.exception))
+
+    def test_ar_payment_validator_rejects_wrong_partner(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        mock_cust_correct = MockRecord(id=10, name="Toko ABC", ref="CUST-0001")
+        mock_cust_wrong = MockRecord(id=20, name="Toko XYZ", ref="CUST-9999")
+        inv = MockRecord(
+            id=101,
+            company_id=1,
+            payment_reference="INV-202608-0001",
+            partner_id=mock_cust_correct,
+            line_ids=[],
+        )
+        existing_pay = MockRecord(
+            id=401,
+            company_id=1,
+            ref="PAY-AR-202608-0001",
+            partner_id=mock_cust_wrong,  # Wrong partner!
+            date="2026-08-05",
+            amount=500000.00,
+            state="posted",
+            payment_type="inbound",
+            journal_id=MockRecord(type="bank"),
+            is_reconciled=True,
+            reconciled_invoice_ids=[inv],
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "account.move": MockModel(records=[inv]),
+            "res.partner": MockModel(records=[mock_cust_correct, mock_cust_wrong]),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True, company_id=1)
+        loader.company = mock_company
+        ar_row = {
+            "payment_id": "PAY-AR-202608-0001",
+            "invoice_number": "INV-202608-0001",
+            "customer": "CUST-0001",
+            "payment_date": "2026-08-05",
+            "net_cash_collected_total": "500000.00",
+        }
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._validate_existing_ar_payment(existing_pay, ar_row)
+        self.assertIn("partner mismatch", str(ctx.exception))
+
+    def test_scenario_b_requires_separate_db_in_all_scenario(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(records=[]),
+            "account.move": MockModel(records=[]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        from unittest.mock import patch
+        from scripts.ops.verify_disposable_period_pack import run_full_disposable_period_verification
+
+        with patch.object(GenericPeriodPackLoader, "execute_apply", return_value={}):
+            report = run_full_disposable_period_verification(
+                env=env, pack_dir=AUG_PACK_DIR, scenario="all", env_b=None
+            )
+        self.assertEqual(
+            report["scenario_b_continuation"]["status"], "FAIL_SEPARATE_DB_REQUIRED"
+        )
+
+    def test_audit_fails_when_mandatory_gl_account_missing(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        # Missing accounts 113000, 211200, 114100
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(records=[]),
+            "account.move": MockModel(records=[]),
+            "purchase.order": MockModel(records=[]),
+            "account.payment": MockModel(records=[]),
+            "stock.picking": MockModel(records=[]),
+            "stock.move": MockModel(records=[]),
+            "stock.quant": MockModel(records=[]),
+            "account.move.line": MockModel(records=[]),
+            "account.account": MockModel(records=[
+                MockRecord(id=1, code="112000", name="AR", company_id=1),
+                MockRecord(id=2, code="211000", name="AP", company_id=1),
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        missing_violations = [v for v in report["violations"] if "Mandatory GL account" in v]
+        self.assertGreaterEqual(len(missing_violations), 3)
+
+    def test_audit_fails_on_tax_code_04_calculation_mismatch(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        # Invoices with invalid tax calculation (PPN 20% instead of 11% effective / 12% on 11/12)
+        corrupt_inv = MockRecord(
+            id=101,
+            company_id=1,
+            name="INV/2026/08/0001",
+            payment_reference="INV-202608-0001",
+            move_type="out_invoice",
+            state="posted",
+            is_fmcg_seed_invoice=True,
+            amount_untaxed=100000.00,
+            amount_tax=20000.00,  # 20% instead of 11% / 11000
+            amount_total=120000.00,
+            line_ids=[
+                MockRecord(id=1, account_id=MockRecord(code="211200"), credit=20000.00, debit=0.0)
+            ],
+        )
+        mock_acc_ppn_out = MockRecord(id=10, code="211200", name="PPN Keluaran", company_id=1)
+        mock_acc_ppn_in = MockRecord(id=11, code="114100", name="PPN Masukan", company_id=1)
+        mock_acc_stock = MockRecord(id=12, code="113000", name="Stock", company_id=1)
+        mock_acc_ar = MockRecord(id=13, code="112000", name="AR", company_id=1)
+        mock_acc_ap = MockRecord(id=14, code="211000", name="AP", company_id=1)
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(records=[]),
+            "account.move": MockModel(records=[corrupt_inv]),
+            "purchase.order": MockModel(records=[]),
+            "account.payment": MockModel(records=[]),
+            "stock.picking": MockModel(records=[]),
+            "stock.move": MockModel(records=[]),
+            "stock.quant": MockModel(records=[]),
+            "account.move.line": MockModel(records=[]),
+            "account.account": MockModel(records=[
+                mock_acc_ppn_out, mock_acc_ppn_in, mock_acc_stock, mock_acc_ar, mock_acc_ap
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        tax_violations = [v for v in report["violations"] if "Tax Code 04" in v or "Effective tax rate mismatch" in v]
+        self.assertGreaterEqual(len(tax_violations), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -349,34 +349,79 @@ class GenericPeriodPackLoader:
 
             # Verify July Unilever open vendor bill exists for August AP settlement
             Partner = self.env["res.partner"].sudo()
-            unilever_partner = Partner.search(
-                [("ref", "=", "PRIN-002")], limit=1
-            ) or Partner.search([("name", "ilike", "Unilever")], limit=1)
+            unilever_partner = Partner.search([("ref", "=", "PRIN-002")], limit=1)
+            if not unilever_partner:
+                unilever_partner = Partner.search([("name", "=", "PT Unilever Enterprise Indonesia")], limit=1)
             if not unilever_partner and self.strict:
                 raise PreflightContinuityError("Unilever principal partner (PRIN-002) not found in res.partner")
 
             AccountMove = self.env["account.move"].sudo()
-            base_domain = [
+            target_amt = Decimal("2899971200.00")
+
+            # Find exact posted July Unilever bill for PO-2026-06-05 (NO ilike)
+            bill_domain = [
                 ("company_id", "=", self.company.id),
                 ("move_type", "=", "in_invoice"),
                 ("state", "=", "posted"),
-                ("payment_state", "in", ["not_paid", "partial"]),
-                ("partner_id", "=", unilever_partner.id),
+                ("partner_id", "=", unilever_partner.id if unilever_partner else False),
             ]
-            matching_bill = AccountMove.search(base_domain + [("ref", "ilike", "PO-2026-06-05")], limit=1)
-            if not matching_bill:
-                matching_bill = AccountMove.search(base_domain + [("invoice_origin", "ilike", "PO-2026-06-05")], limit=1)
+            exact_ref_bills = list(AccountMove.search(bill_domain + [("ref", "=", "PO-2026-06-05")]))
+            exact_origin_bills = list(AccountMove.search(bill_domain + [("invoice_origin", "=", "PO-2026-06-05")]))
+            all_matching = list({b.id: b for b in (exact_ref_bills + exact_origin_bills)}.values())
 
-            target_amt = Decimal("2899971200.00")
-            if matching_bill:
-                res_val = _dec(getattr(matching_bill, "amount_residual", None) or getattr(matching_bill, "amount_total", None))
-                if abs(res_val - target_amt) > Decimal("1.00"):
-                    matching_bill = None
-
-            if not matching_bill and self.strict:
-                raise PreflightContinuityError(
-                    f"Open July Unilever vendor bill for PO-2026-06-05 with residual {target_amt} not found for August AP payment"
+            if len(all_matching) > 1 and self.strict:
+                raise StateInconsistencyError(
+                    f"Ambiguous July Unilever vendor bills found ({len(all_matching)}) for exact PO-2026-06-05"
                 )
+            if not all_matching and self.strict:
+                raise PreflightContinuityError(
+                    "July Unilever vendor bill for PO-2026-06-05 not found"
+                )
+
+            matching_bill = all_matching[0] if all_matching else None
+            if matching_bill:
+                bill_res = _dec(getattr(matching_bill, "amount_residual", Decimal(0)))
+                bill_state = getattr(matching_bill, "payment_state", "not_paid")
+
+                # Case 1: Fresh baseline before August AP payment -> must be open with exact residual
+                if bill_state in ("not_paid", "partial"):
+                    if abs(bill_res - target_amt) > Decimal("1.00"):
+                        raise PreflightContinuityError(
+                            f"Open July Unilever vendor bill residual ({bill_res}) does not match expected {target_amt}"
+                        )
+                # Case 2: Replay baseline -> bill is already paid. ACCEPT ONLY IF exact reconciled August payment exists!
+                elif bill_state in ("paid", "in_payment") and bill_res <= Decimal("1.00"):
+                    AccountPayment = self.env["account.payment"].sudo()
+                    reconciled_pay = AccountPayment.search(
+                        [
+                            ("company_id", "=", self.company.id),
+                            ("ref", "=", "AP-202608-0001"),
+                            ("payment_type", "=", "outbound"),
+                            ("state", "=", "posted"),
+                        ],
+                        limit=1,
+                    )
+                    if not reconciled_pay:
+                        reconciled_pay = AccountPayment.search(
+                            [
+                                ("company_id", "=", self.company.id),
+                                ("partner_id", "=", unilever_partner.id if unilever_partner else False),
+                                ("payment_type", "=", "outbound"),
+                                ("amount", "=", float(target_amt)),
+                                ("state", "=", "posted"),
+                            ],
+                            limit=1,
+                        )
+                    if not reconciled_pay and self.strict:
+                        raise PreflightContinuityError(
+                            "July Unilever bill is marked paid, but no matching reconciled August AP payment (AP-202608-0001) found"
+                        )
+                else:
+                    if self.strict:
+                        raise PreflightContinuityError(
+                            f"July Unilever vendor bill has unexpected payment state '{bill_state}' with residual {bill_res}"
+                        )
+
             report["checks"].append(
                 f"unilever_bill_found: {matching_bill.name if matching_bill else 'none'}"
             )
@@ -431,6 +476,13 @@ class GenericPeriodPackLoader:
                         raise StateInconsistencyError(
                             f"Drift detected on existing PO {po_num} SKU {sku}: qty mismatch {act_qty} vs {exp_qty}"
                         )
+                    if "unit_price" in exp_line:
+                        exp_price = float(exp_line["unit_price"])
+                        act_price = float(getattr(ol, "price_unit", 0))
+                        if abs(exp_price - act_price) > 0.01:
+                            raise StateInconsistencyError(
+                                f"Drift detected on existing PO {po_num} SKU {sku}: price mismatch {act_price} vs {exp_price}"
+                            )
 
     def _validate_existing_so(
         self, existing: Any, so_row: Dict[str, str], lines: List[Dict[str, str]]
@@ -461,6 +513,28 @@ class GenericPeriodPackLoader:
                 raise StateInconsistencyError(
                     f"Drift detected on existing {so_num}: line count mismatch {len(order_lines)} vs {len(lines)}"
                 )
+            lines_by_sku = {line["sku_code"]: line for line in lines}
+            for sol in order_lines:
+                sku = getattr(sol.product_id, "default_code", "")
+                if sku and sku not in lines_by_sku:
+                    raise StateInconsistencyError(
+                        f"Drift detected on existing {so_num}: unexpected SKU '{sku}'"
+                    )
+                if sku in lines_by_sku:
+                    exp_l = lines_by_sku[sku]
+                    exp_qty = float(exp_l.get("qty", 0))
+                    act_qty = float(getattr(sol, "product_uom_qty", 0))
+                    if abs(exp_qty - act_qty) > 0.01:
+                        raise StateInconsistencyError(
+                            f"Drift detected on existing {so_num} SKU {sku}: qty mismatch {act_qty} vs {exp_qty}"
+                        )
+                    if "unit_price" in exp_l:
+                        exp_price = float(exp_l["unit_price"])
+                        act_price = float(getattr(sol, "price_unit", 0))
+                        if abs(exp_price - act_price) > 0.01:
+                            raise StateInconsistencyError(
+                                f"Drift detected on existing {so_num} SKU {sku}: price mismatch {act_price} vs {exp_price}"
+                            )
 
     def _validate_existing_invoice(self, existing: Any, inv_row: Dict[str, str]) -> None:
         """Validate existing Invoice matches period pack specification with zero drift."""
@@ -471,6 +545,12 @@ class GenericPeriodPackLoader:
         if cust_ref and existing.partner_id and p_ref != cust_ref and cust_ref not in p_name:
             raise StateInconsistencyError(
                 f"Drift detected on Invoice {inv_num}: customer mismatch {p_ref} vs {cust_ref}"
+            )
+        inv_date = inv_row.get("date_invoice", "")
+        act_date = str(getattr(existing, "invoice_date", "") or getattr(existing, "date", ""))
+        if inv_date and act_date and not act_date.startswith(inv_date[:10]):
+            raise StateInconsistencyError(
+                f"Drift detected on Invoice {inv_num}: date mismatch {act_date} vs {inv_date}"
             )
         exp_total = _dec(inv_row.get("total_invoice_with_ppn", 0))
         act_total = _dec(getattr(existing, "amount_total", 0))
@@ -500,9 +580,29 @@ class GenericPeriodPackLoader:
                 f"Drift detected on Invoice {inv_num}: state is '{act_state}' (expected posted)"
             )
 
-    def _validate_existing_ar_payment(self, existing: Any, ar_row: Dict[str, str]) -> None:
+    def _validate_existing_ar_payment(
+        self, existing: Any, ar_row: Dict[str, str], target_invoice: Any = None
+    ) -> None:
         """Validate existing AR Payment matches period pack specification with zero drift."""
         pay_ref = ar_row["payment_id"]
+        cust_ref = extract_ref(ar_row.get("customer", ""))
+        p_ref = getattr(existing.partner_id, "ref", "")
+        p_name = getattr(existing.partner_id, "name", "")
+        if cust_ref and existing.partner_id and p_ref != cust_ref and cust_ref not in p_name:
+            raise StateInconsistencyError(
+                f"Drift detected on AR payment {pay_ref}: partner mismatch {p_ref} vs {cust_ref}"
+            )
+        exp_date = ar_row.get("payment_date", "")
+        act_date = str(getattr(existing, "date", ""))
+        if exp_date and act_date and not act_date.startswith(exp_date[:10]):
+            raise StateInconsistencyError(
+                f"Drift detected on AR payment {pay_ref}: date mismatch {act_date} vs {exp_date}"
+            )
+        j_type = getattr(getattr(existing, "journal_id", None), "type", "")
+        if j_type and j_type not in ("bank", "cash"):
+            raise StateInconsistencyError(
+                f"Drift detected on AR payment {pay_ref}: journal type is '{j_type}' (expected bank/cash)"
+            )
         exp_amt = _dec(ar_row.get("net_cash_collected_total", 0))
         act_amt = _dec(getattr(existing, "amount", 0))
         if abs(exp_amt - act_amt) > CENT:
@@ -519,12 +619,52 @@ class GenericPeriodPackLoader:
             raise StateInconsistencyError(
                 f"Drift detected on AR payment {pay_ref}: payment_type is '{p_type}' (expected inbound)"
             )
+        inv_num = ar_row.get("invoice_number", "")
+        if target_invoice is None and inv_num and self.env is not None:
+            AccountMove = self.env["account.move"].sudo()
+            target_invoice = AccountMove.search(
+                [("name", "=", inv_num), ("company_id", "=", self.company.id)], limit=1
+            ) or AccountMove.search(
+                [("payment_reference", "=", inv_num), ("company_id", "=", self.company.id)], limit=1
+            )
+        if target_invoice is not None:
+            if hasattr(existing, "reconciled_invoice_ids") and existing.reconciled_invoice_ids:
+                if target_invoice.id not in [i.id for i in existing.reconciled_invoice_ids]:
+                    raise StateInconsistencyError(
+                        f"Drift detected on AR payment {pay_ref}: not reconciled to target invoice {inv_num}"
+                    )
+            elif hasattr(existing, "is_reconciled") and not existing.is_reconciled:
+                raise StateInconsistencyError(
+                    f"Drift detected on AR payment {pay_ref}: payment is unreconciled (expected reconciled to {inv_num})"
+                )
 
     def _validate_existing_ap_payment(
         self, existing: Any, ap_row: Dict[str, str], unilever_bill: Any = None
     ) -> None:
         """Validate existing AP Payment matches period pack specification and Unilever bill settlement."""
         pay_ref = ap_row["ap_payment_id"]
+        if unilever_bill is None:
+            raise StateInconsistencyError(
+                f"Cannot validate AP payment {pay_ref}: target unilever_bill is missing (None)"
+            )
+        prin_code = ap_row.get("principal_code", "PRIN-002")
+        p_ref = getattr(existing.partner_id, "ref", "")
+        p_name = getattr(existing.partner_id, "name", "")
+        if existing.partner_id and p_ref != prin_code and "Unilever" not in p_name and "unilever" not in p_name.lower():
+            raise StateInconsistencyError(
+                f"Drift detected on AP payment {pay_ref}: partner mismatch {p_ref} vs {prin_code}"
+            )
+        exp_date = ap_row.get("payment_date", "")
+        act_date = str(getattr(existing, "date", ""))
+        if exp_date and act_date and not act_date.startswith(exp_date[:10]):
+            raise StateInconsistencyError(
+                f"Drift detected on AP payment {pay_ref}: date mismatch {act_date} vs {exp_date}"
+            )
+        j_type = getattr(getattr(existing, "journal_id", None), "type", "")
+        if j_type and j_type not in ("bank", "cash"):
+            raise StateInconsistencyError(
+                f"Drift detected on AP payment {pay_ref}: journal type is '{j_type}' (expected bank/cash)"
+            )
         exp_amt = _dec(ap_row.get("amount_paid_dpp", 0))
         act_amt = _dec(getattr(existing, "amount", 0))
         if abs(exp_amt - act_amt) > CENT:
@@ -541,14 +681,22 @@ class GenericPeriodPackLoader:
             raise StateInconsistencyError(
                 f"Drift detected on AP payment {pay_ref}: payment_type is '{p_type}' (expected outbound)"
             )
-        if unilever_bill:
-            bill_res = _dec(getattr(unilever_bill, "amount_residual", 0))
-            bill_state = getattr(unilever_bill, "payment_state", None)
-            if bill_res > Decimal("1.00") or (bill_state and bill_state not in ("paid", "in_payment")):
+        bill_res = _dec(getattr(unilever_bill, "amount_residual", Decimal(0)))
+        bill_state = getattr(unilever_bill, "payment_state", None)
+        if bill_res > Decimal("1.00") or (bill_state and bill_state not in ("paid", "in_payment")):
+            raise StateInconsistencyError(
+                f"Drift detected on AP settlement for {pay_ref}: linked July Unilever bill is not settled "
+                f"(residual={bill_res}, payment_state={bill_state})"
+            )
+        if hasattr(existing, "reconciled_bill_ids") and existing.reconciled_bill_ids:
+            if unilever_bill.id not in [b.id for b in existing.reconciled_bill_ids]:
                 raise StateInconsistencyError(
-                    f"Drift detected on AP settlement for {pay_ref}: linked July Unilever bill is not settled "
-                    f"(residual={bill_res}, payment_state={bill_state})"
+                    f"Drift detected on AP payment {pay_ref}: not reconciled to target July Unilever bill {unilever_bill.name}"
                 )
+        elif hasattr(existing, "is_reconciled") and not existing.is_reconciled:
+            raise StateInconsistencyError(
+                f"Drift detected on AP payment {pay_ref}: payment is unreconciled (expected reconciled to {unilever_bill.name})"
+            )
 
     def _validate_existing_opex(
         self, existing: Any, op_row: Dict[str, str], target_code: str, credit_acc_code: str
@@ -575,14 +723,14 @@ class GenericPeriodPackLoader:
                 raise StateInconsistencyError(
                     f"Drift detected on OPEX {desc}: expected credit {exp_amt}, found {act_credit}"
                 )
-            if debit_lines:
-                d_acc_code = getattr(getattr(debit_lines[0], "account_id", None), "code", "")
+            for mline in debit_lines:
+                d_acc_code = getattr(getattr(mline, "account_id", None), "code", "")
                 if d_acc_code and d_acc_code != target_code:
                     raise StateInconsistencyError(
                         f"Drift detected on OPEX {desc}: debit account mismatch {d_acc_code} vs expected {target_code}"
                     )
-            if credit_lines and credit_acc_code:
-                c_acc_code = getattr(getattr(credit_lines[0], "account_id", None), "code", "")
+            for mline in credit_lines:
+                c_acc_code = getattr(getattr(mline, "account_id", None), "code", "")
                 if c_acc_code and c_acc_code != credit_acc_code:
                     raise StateInconsistencyError(
                         f"Drift detected on OPEX {desc}: credit account mismatch {c_acc_code} vs expected {credit_acc_code}"
@@ -612,7 +760,6 @@ class GenericPeriodPackLoader:
         PurchaseOrder = self.env["purchase.order"].sudo()
         Product = self.env["product.product"].sudo()
         Partner = self.env["res.partner"].sudo()
-        Journal = self.env["account.journal"].sudo()
 
         # Map lines by parent document
         po_lines_by_po = {}
@@ -715,17 +862,21 @@ class GenericPeriodPackLoader:
                 self.plan["ar"]["to_reconcile"] += 1
 
         # 5. Evaluate AP Payments
-        unilever_partner = Partner.search([("ref", "=", "PRIN-002")], limit=1) or Partner.search(
-            [("name", "ilike", "Unilever")], limit=1
-        )
+        unilever_partner = Partner.search([("ref", "=", "PRIN-002")], limit=1)
+        if not unilever_partner:
+            unilever_partner = Partner.search([("name", "=", "PT Unilever Enterprise Indonesia")], limit=1)
         bill_domain = [
             ("company_id", "=", self.company.id),
             ("move_type", "=", "in_invoice"),
+            ("state", "=", "posted"),
             ("partner_id", "=", unilever_partner.id if unilever_partner else False),
         ]
-        unilever_bill = AccountMove.search(bill_domain + [("ref", "ilike", "PO-2026-06-05")], limit=1)
-        if not unilever_bill:
-            unilever_bill = AccountMove.search(bill_domain + [("invoice_origin", "ilike", "PO-2026-06-05")], limit=1)
+        exact_ref_bills = list(AccountMove.search(bill_domain + [("ref", "=", "PO-2026-06-05")]))
+        exact_origin_bills = list(AccountMove.search(bill_domain + [("invoice_origin", "=", "PO-2026-06-05")]))
+        all_unilever_bills = list({b.id: b for b in (exact_ref_bills + exact_origin_bills)}.values())
+        if len(all_unilever_bills) > 1 and self.strict:
+            raise StateInconsistencyError(f"Ambiguous vendor bills found ({len(all_unilever_bills)}) matching exact PO-2026-06-05")
+        unilever_bill = all_unilever_bills[0] if all_unilever_bills else None
         for ap_row in self.reader.ap_payments:
             pay_ref = ap_row["ap_payment_id"]
             existing = AccountPayment.search(
@@ -742,14 +893,9 @@ class GenericPeriodPackLoader:
                 self.plan["ap"]["to_reconcile"] += 1
 
         # 6. Evaluate OPEX
-        bank_journal = Journal.search(
-            [("company_id", "=", self.company.id), ("type", "in", ["bank", "cash"])], limit=1
-        )
-        credit_account = None
-        if bank_journal and getattr(bank_journal, "default_account_id", None):
-            credit_account = bank_journal.default_account_id
-        if not credit_account:
-            credit_account = self._resolve_account("111100")
+        credit_account = self._resolve_account("111100")
+        if not credit_account and self.strict:
+            raise PreflightContinuityError("Cannot resolve explicit credit cash account (111100) for OPEX")
         credit_code = getattr(credit_account, "code", "111100")
 
         for op_row in self.reader.opex:
@@ -1118,13 +1264,20 @@ class GenericPeriodPackLoader:
         Partner = self.env["res.partner"].sudo()
         Journal = self.env["account.journal"].sudo()
 
-        bank_journal = Journal.search(
-            [("company_id", "=", self.company.id), ("type", "=", "bank")], limit=1
+        bank_journals = list(
+            Journal.search([("company_id", "=", self.company.id), ("type", "=", "bank")])
         )
-        if not bank_journal:
-            bank_journal = Journal.search(
-                [("company_id", "=", self.company.id), ("type", "in", ["bank", "cash"])], limit=1
+        if not bank_journals:
+            bank_journals = list(
+                Journal.search([("company_id", "=", self.company.id), ("type", "in", ["bank", "cash"])])
             )
+        if len(bank_journals) > 1 and self.strict:
+            # Prefer code BANK or explicit primary bank
+            primary = [j for j in bank_journals if getattr(j, "code", "") == "BANK"]
+            bank_journal = primary[0] if primary else bank_journals[0]
+        else:
+            bank_journal = bank_journals[0] if bank_journals else None
+
         if not bank_journal and self.strict:
             raise PreflightContinuityError("Bank journal not found for AP payment settlement")
 
@@ -1136,33 +1289,29 @@ class GenericPeriodPackLoader:
             amt_dec = _dec(ap_row["amount_paid_dpp"])
             prin_code = ap_row.get("principal_code", "PRIN-002")
 
-            # 1. Resolve vendor partner strictly
-            vendor = Partner.search([("ref", "=", prin_code)], limit=1) or Partner.search(
-                [("name", "ilike", "Unilever" if prin_code == "PRIN-002" else prin_code)], limit=1
-            )
+            # 1. Resolve vendor partner strictly (exact, no ilike)
+            vendor = Partner.search([("ref", "=", prin_code)], limit=1)
+            if not vendor and prin_code == "PRIN-002":
+                vendor = Partner.search([("name", "=", "PT Unilever Enterprise Indonesia")], limit=1)
             if not vendor and self.strict:
                 raise PreflightContinuityError(f"Vendor partner for {prin_code} not found")
 
-            # 2. Find exact matching posted open vendor bill
-            bill = AccountMove.search(
-                [
-                    ("company_id", "=", self.company.id),
-                    ("move_type", "=", "in_invoice"),
-                    ("partner_id", "=", vendor.id if vendor else False),
-                    ("ref", "ilike", po_num),
-                ],
-                limit=1,
-            )
-            if not bill:
-                bill = AccountMove.search(
-                    [
-                        ("company_id", "=", self.company.id),
-                        ("move_type", "=", "in_invoice"),
-                        ("partner_id", "=", vendor.id if vendor else False),
-                        ("invoice_origin", "ilike", po_num),
-                    ],
-                    limit=1,
+            # 2. Find exact matching posted vendor bill (exact, no ilike, reject ambiguity)
+            bill_domain = [
+                ("company_id", "=", self.company.id),
+                ("move_type", "=", "in_invoice"),
+                ("state", "=", "posted"),
+                ("partner_id", "=", vendor.id if vendor else False),
+            ]
+            exact_ref_bills = list(AccountMove.search(bill_domain + [("ref", "=", po_num)]))
+            exact_origin_bills = list(AccountMove.search(bill_domain + [("invoice_origin", "=", po_num)]))
+            all_matching_bills = list({b.id: b for b in (exact_ref_bills + exact_origin_bills)}.values())
+
+            if len(all_matching_bills) > 1 and self.strict:
+                raise StateInconsistencyError(
+                    f"Ambiguous posted vendor bills found ({len(all_matching_bills)}) matching exact PO '{po_num}'"
                 )
+            bill = all_matching_bills[0] if all_matching_bills else None
 
             existing = AccountPayment.search(
                 [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
@@ -1178,8 +1327,8 @@ class GenericPeriodPackLoader:
                     f"not found for AP payment {pay_ref}"
                 )
 
-            # Validate residual amount before payment
-            bill_residual = _dec(getattr(bill, "amount_residual", None) or getattr(bill, "amount_total", None))
+            # Validate residual amount before payment (NO fallback to amount_total)
+            bill_residual = _dec(getattr(bill, "amount_residual", Decimal(0)))
             if abs(bill_residual - amt_dec) > Decimal("1.00"):
                 raise StateInconsistencyError(
                     f"Vendor bill {bill.name} residual ({bill_residual}) does not match expected payment amount ({amt_dec})"
@@ -1209,7 +1358,7 @@ class GenericPeriodPackLoader:
                 (pay_lines + bill_lines).reconcile()
 
             # Immediately verify post-reconciliation state
-            post_residual = _dec(getattr(bill, "amount_residual", 0))
+            post_residual = _dec(getattr(bill, "amount_residual", Decimal(0)))
             post_state = getattr(bill, "payment_state", None)
             if post_residual > Decimal("1.00") or (post_state and post_state not in ("paid", "in_payment")):
                 raise StateInconsistencyError(
@@ -1229,25 +1378,21 @@ class GenericPeriodPackLoader:
         AccountMove = self.env["account.move"].sudo()
         Journal = self.env["account.journal"].sudo()
 
-        misc_journal = Journal.search(
-            [("company_id", "=", self.company.id), ("type", "=", "general")], limit=1
+        general_journals = list(
+            Journal.search([("company_id", "=", self.company.id), ("type", "=", "general")])
         )
-        if not misc_journal:
-            misc_journal = Journal.search(
-                [("company_id", "=", self.company.id)], limit=1
-            )
+        if len(general_journals) > 1 and self.strict:
+            primary = [j for j in general_journals if getattr(j, "code", "") in ("MISC", "GEN")]
+            misc_journal = primary[0] if primary else general_journals[0]
+        else:
+            misc_journal = general_journals[0] if general_journals else None
+
         if not misc_journal and self.strict:
-            raise PreflightContinuityError("General journal not found for OPEX entries")
+            raise PreflightContinuityError("Explicit general journal not found for OPEX entries")
 
-        bank_journal = Journal.search(
-            [("company_id", "=", self.company.id), ("type", "in", ["bank", "cash"])], limit=1
-        )
-
-        credit_account = None
-        if bank_journal and getattr(bank_journal, "default_account_id", None):
-            credit_account = bank_journal.default_account_id
-        if not credit_account:
-            credit_account = self._resolve_account("111100")
+        credit_account = self._resolve_account("111100")
+        if not credit_account and self.strict:
+            raise PreflightContinuityError("Cannot resolve explicit credit cash account (111100) for OPEX")
         credit_code = getattr(credit_account, "code", "111100")
 
         created = 0

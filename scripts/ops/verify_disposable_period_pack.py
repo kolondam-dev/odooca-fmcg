@@ -61,16 +61,10 @@ ZERO = Decimal("0.00")
 CENT = Decimal("0.01")
 
 
-def assert_disposable_database(env: Any) -> str:
-    """Safety guard: rejects any operational, live, or production database, and requires env."""
-    if env is None:
-        raise RuntimeError(
-            "[SAFETY-ABORT] Live disposable Odoo environment required (env is None). "
-            "verify_disposable_period_pack.py cannot run in offline/mock mode."
-        )
-    cr = getattr(env, "cr", None)
-    db_name = getattr(cr, "dbname", "") or ""
-
+def assert_disposable_database_name(db_name: str) -> str:
+    """Safety guard: validates database name string against forbidden keywords and allowed patterns."""
+    if not db_name:
+        raise RuntimeError("[SAFETY-ABORT] Database name cannot be empty.")
     forbidden = ["prod", "production", "live", "railway", "master", "official", "main"]
     for f in forbidden:
         if f in db_name.lower():
@@ -79,7 +73,14 @@ def assert_disposable_database(env: Any) -> str:
                 "Execution aborted to protect operational integrity."
             )
 
-    exact_allowed = {"fmcg_full_disposable", "ci_db", "test_disposable", "fmcg_period_disposable"}
+    exact_allowed = {
+        "fmcg_full_disposable",
+        "ci_db",
+        "test_disposable",
+        "fmcg_period_disposable",
+        "fmcg_period_disposable_b",
+        "disposable_scenario_b",
+    }
     is_pattern_allowed = (
         db_name.startswith("disposable_")
         or db_name.endswith("_disposable")
@@ -91,6 +92,18 @@ def assert_disposable_database(env: Any) -> str:
             f"[SAFETY-ABORT] Target database '{db_name}' is not an authorized disposable DB."
         )
     return db_name
+
+
+def assert_disposable_database(env: Any) -> str:
+    """Safety guard: rejects any operational, live, or production database, and requires env."""
+    if env is None:
+        raise RuntimeError(
+            "[SAFETY-ABORT] Live disposable Odoo environment required (env is None). "
+            "verify_disposable_period_pack.py cannot run in offline/mock mode."
+        )
+    cr = getattr(env, "cr", None)
+    db_name = getattr(cr, "dbname", "") or ""
+    return assert_disposable_database_name(db_name)
 
 
 class PeriodPackOracle:
@@ -230,6 +243,115 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     if seed_flag_count != oracle.expected_inv_count:
         report["violations"].append(f"Invoices missing is_fmcg_seed_invoice flag: {oracle.expected_inv_count - seed_flag_count}")
 
+    # Tax Account 211200 (PPN Keluaran) - Mandatory and exact
+    tax_out_acc = AccountAccount.search(
+        [("code", "=", "211200"), ("company_id", "in", [company.id, False])], limit=1
+    )
+    if not tax_out_acc:
+        report["violations"].append("Mandatory GL account '211200' (PPN Keluaran) not found in database")
+    else:
+        # Per-invoice check for Tax Code 04 & DPP Nilai Lain calculation
+        inv_tax_violations = 0
+        for inv_m in inv_recs:
+            inv_ref = getattr(inv_m, "payment_reference", "") or getattr(inv_m, "name", "")
+            dpp_c = _dec(inv_m.amount_untaxed)
+            ppn_act = _dec(inv_m.amount_tax)
+            tot_act = _dec(inv_m.amount_total)
+
+            dpp_nl = (dpp_c * Decimal(11) / Decimal(12)).quantize(Decimal("0.01"))
+            ppn_exp_nl = (dpp_nl * Decimal("0.12")).quantize(Decimal("0.01"))
+            ppn_exp_eff = (dpp_c * Decimal("0.11")).quantize(Decimal("0.01"))
+
+            if abs(ppn_act - ppn_exp_eff) > Decimal("1.00") and abs(ppn_act - ppn_exp_nl) > Decimal("1.00"):
+                inv_tax_violations += 1
+                if inv_tax_violations <= 5:
+                    report["violations"].append(
+                        f"Invoice {inv_ref} Tax Code 04 calculation mismatch: commercial DPP {dpp_c}, actual PPN {ppn_act}, expected ~{ppn_exp_eff}"
+                    )
+            if abs(tot_act - (dpp_c + ppn_act)) > Decimal("1.00"):
+                inv_tax_violations += 1
+                if inv_tax_violations <= 5:
+                    report["violations"].append(
+                        f"Invoice {inv_ref} total mismatch: commercial DPP {dpp_c} + PPN {ppn_act} != total {tot_act}"
+                    )
+
+            t_lines = [
+                m_line for m_line in getattr(inv_m, "line_ids", [])
+                if getattr(getattr(m_line, "account_id", None), "code", "") == "211200"
+            ]
+            t_credit = sum(_dec(getattr(m_line, "credit", 0)) for m_line in t_lines)
+            if abs(t_credit - ppn_act) > Decimal("1.00"):
+                inv_tax_violations += 1
+                if inv_tax_violations <= 5:
+                    report["violations"].append(
+                        f"Invoice {inv_ref} AML PPN Keluaran credit mismatch on 211200: expected {ppn_act}, found {t_credit}"
+                    )
+
+        if inv_tax_violations > 5:
+            report["violations"].append(
+                f"Total per-invoice Tax Code 04 / PPN Keluaran violations: {inv_tax_violations}"
+            )
+
+        # GL Tie-out for PPN Keluaran
+        aml_tax_out = AccountMoveLine.search(
+            [
+                ("company_id", "=", company.id),
+                ("account_id", "=", tax_out_acc.id),
+                ("parent_state", "=", "posted"),
+                ("date", ">=", oracle.manifest.pack_start),
+                ("date", "<=", oracle.manifest.pack_end),
+            ]
+        )
+        gl_tax_out_balance = sum(
+            _dec(getattr(m_line, "credit", 0)) - _dec(getattr(m_line, "debit", 0)) for m_line in aml_tax_out
+        )
+        report["checks"]["gl_ppn_keluaran_211200"] = {
+            "expected": str(oracle.expected_inv_ppn),
+            "actual": str(gl_tax_out_balance),
+        }
+        if abs(gl_tax_out_balance - oracle.expected_inv_ppn) > Decimal("1.00"):
+            report["violations"].append(
+                f"GL PPN Keluaran (211200) balance mismatch: expected {oracle.expected_inv_ppn}, found {gl_tax_out_balance}"
+            )
+
+    # Tax Account 114100 (PPN Masukan) - Mandatory and exact
+    tax_in_acc = AccountAccount.search(
+        [("code", "=", "114100"), ("company_id", "in", [company.id, False])], limit=1
+    )
+    if not tax_in_acc:
+        report["violations"].append("Mandatory GL account '114100' (PPN Masukan) not found in database")
+    else:
+        po_bills = AccountMove.search(
+            [
+                ("company_id", "=", company.id),
+                ("move_type", "=", "in_invoice"),
+                ("state", "=", "posted"),
+                ("date", ">=", oracle.manifest.pack_start),
+                ("date", "<=", oracle.manifest.pack_end),
+            ]
+        )
+        expected_po_tax = sum(_dec(getattr(b, "amount_tax", 0)) for b in po_bills)
+        aml_tax_in = AccountMoveLine.search(
+            [
+                ("company_id", "=", company.id),
+                ("account_id", "=", tax_in_acc.id),
+                ("parent_state", "=", "posted"),
+                ("date", ">=", oracle.manifest.pack_start),
+                ("date", "<=", oracle.manifest.pack_end),
+            ]
+        )
+        gl_tax_in_balance = sum(
+            _dec(getattr(m_line, "debit", 0)) - _dec(getattr(m_line, "credit", 0)) for m_line in aml_tax_in
+        )
+        report["checks"]["gl_ppn_masukan_114100"] = {
+            "expected_po_bill_tax": str(expected_po_tax),
+            "actual_gl_balance": str(gl_tax_in_balance),
+        }
+        if abs(gl_tax_in_balance - expected_po_tax) > Decimal("1.00"):
+            report["violations"].append(
+                f"GL PPN Masukan (114100) balance mismatch: expected {expected_po_tax}, found {gl_tax_in_balance}"
+            )
+
     # Effective tax rate formula check (11% effective on commercial DPP)
     if act_inv_dpp > ZERO:
         eff_tax_rate = (act_inv_ppn / act_inv_dpp).quantize(Decimal("0.01"))
@@ -240,18 +362,29 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             )
 
     # 5. Unilever July Bill Settlement Status & Residual (Strict PO-2026-06-05)
-    unilever_bill = AccountMove.search(
-        [
-            ("company_id", "=", company.id),
-            ("move_type", "=", "in_invoice"),
-            ("state", "=", "posted"),
-            "|",
-            ("ref", "ilike", "PO-2026-06-05"),
-            ("invoice_origin", "ilike", "PO-2026-06-05"),
-        ],
-        limit=1,
-    )
-    if unilever_bill:
+    Partner = env["res.partner"].sudo()
+    unilever_partner = Partner.search([("ref", "=", "PRIN-002")], limit=1)
+    if not unilever_partner:
+        unilever_partner = Partner.search([("name", "=", "PT Unilever Enterprise Indonesia")], limit=1)
+
+    bill_domain = [
+        ("company_id", "=", company.id),
+        ("move_type", "=", "in_invoice"),
+        ("state", "=", "posted"),
+        ("partner_id", "=", unilever_partner.id if unilever_partner else False),
+    ]
+    exact_ref_bills = list(AccountMove.search(bill_domain + [("ref", "=", "PO-2026-06-05")]))
+    exact_origin_bills = list(AccountMove.search(bill_domain + [("invoice_origin", "=", "PO-2026-06-05")]))
+    all_unilever_bills = list({b.id: b for b in (exact_ref_bills + exact_origin_bills)}.values())
+
+    if len(all_unilever_bills) > 1:
+        report["violations"].append(
+            f"Ambiguous July Unilever vendor bills found ({len(all_unilever_bills)}) for exact PO-2026-06-05"
+        )
+    elif not all_unilever_bills:
+        report["violations"].append("July Unilever vendor bill PO-2026-06-05 not found in database")
+    else:
+        unilever_bill = all_unilever_bills[0]
         res_val = _dec(getattr(unilever_bill, "amount_residual", 0))
         is_paid = (unilever_bill.payment_state in ("paid", "in_payment") and res_val <= Decimal("1.00"))
         report["checks"]["unilever_july_bill_paid"] = is_paid
@@ -260,8 +393,27 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             report["violations"].append(
                 f"July Unilever bill PO-2026-06-05 is not settled: payment_state is '{unilever_bill.payment_state}', residual is {res_val}"
             )
-    else:
-        report["violations"].append("July Unilever vendor bill PO-2026-06-05 not found in database")
+
+        AccountPayment = env["account.payment"].sudo()
+        matching_ap_pay = AccountPayment.search(
+            [
+                ("company_id", "=", company.id),
+                ("ref", "=", "AP-202608-0001"),
+                ("payment_type", "=", "outbound"),
+                ("state", "=", "posted"),
+            ],
+            limit=1,
+        )
+        if not matching_ap_pay:
+            report["violations"].append("Reconciled AP payment AP-202608-0001 for July Unilever bill not found")
+        else:
+            if hasattr(matching_ap_pay, "reconciled_bill_ids") and matching_ap_pay.reconciled_bill_ids:
+                if unilever_bill.id not in [b.id for b in matching_ap_pay.reconciled_bill_ids]:
+                    report["violations"].append(
+                        f"AP payment AP-202608-0001 is not reconciled to target July Unilever bill {unilever_bill.name}"
+                    )
+            elif hasattr(matching_ap_pay, "is_reconciled") and not matching_ap_pay.is_reconciled:
+                report["violations"].append("AP payment AP-202608-0001 is not reconciled")
 
     # 6. AR Collections Count & Collected Total
     ar_payments = AccountPayment.search(
@@ -357,14 +509,13 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         [("code", "=", "113000"), ("company_id", "in", [company.id, False])], limit=1
     )
     if not stock_acc:
-        stock_acc = AccountAccount.search(
-            [("code", "=like", "113%"), ("company_id", "in", [company.id, False])], limit=1
-        )
-    if stock_acc:
+        report["violations"].append("Mandatory GL account '113000' (Persediaan Barang Dagang) not found in database")
+    else:
         aml_stock = AccountMoveLine.search(
             [
                 ("company_id", "=", company.id),
                 ("account_id", "=", stock_acc.id),
+                ("parent_state", "=", "posted"),
                 ("date", "<=", oracle.manifest.pack_end),
             ]
         )
@@ -394,14 +545,13 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         [("code", "=", "112000"), ("company_id", "in", [company.id, False])], limit=1
     )
     if not ar_acc:
-        ar_acc = AccountAccount.search(
-            [("account_type", "=", "asset_receivable"), ("company_id", "in", [company.id, False])], limit=1
-        )
-    if ar_acc:
+        report["violations"].append("Mandatory GL account '112000' (Piutang Usaha) not found in database")
+    else:
         aml_ar = AccountMoveLine.search(
             [
                 ("company_id", "=", company.id),
                 ("account_id", "=", ar_acc.id),
+                ("parent_state", "=", "posted"),
                 ("date", "<=", oracle.manifest.pack_end),
             ]
         )
@@ -431,14 +581,13 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         [("code", "=", "211000"), ("company_id", "in", [company.id, False])], limit=1
     )
     if not ap_acc:
-        ap_acc = AccountAccount.search(
-            [("account_type", "=", "liability_payable"), ("company_id", "in", [company.id, False])], limit=1
-        )
-    if ap_acc:
+        report["violations"].append("Mandatory GL account '211000' (Utang Usaha) not found in database")
+    else:
         aml_ap = AccountMoveLine.search(
             [
                 ("company_id", "=", company.id),
                 ("account_id", "=", ap_acc.id),
+                ("parent_state", "=", "posted"),
                 ("date", "<=", oracle.manifest.pack_end),
             ]
         )
@@ -480,38 +629,108 @@ def capture_period_state_snapshot(env: Any) -> Dict[str, Any]:
     AccountMoveLine = env["account.move.line"].sudo()
     AccountPayment = env["account.payment"].sudo()
     StockMove = env["stock.move"].sudo()
+    StockMoveLine = env["stock.move.line"].sudo()
     StockQuant = env["stock.quant"].sudo()
+    PartialReconcile = env["account.partial.reconcile"].sudo()
 
-    po_hashes = sorted([
-        f"{p.name}:{getattr(p, 'amount_total', 0)}:{getattr(p, 'state', '')}"
-        for p in PurchaseOrder.search([]) if getattr(p, "name", None)
-    ])
-    so_hashes = sorted([
-        f"{s.client_order_ref}:{getattr(s, 'amount_untaxed', 0)}:{getattr(s, 'amount_total', 0)}:{getattr(s, 'state', '')}"
-        for s in SaleOrder.search([]) if getattr(s, "client_order_ref", None)
-    ])
-    inv_hashes = sorted([
-        f"{getattr(m, 'move_type', '')}:{getattr(m, 'payment_reference', '') or getattr(m, 'ref', '') or getattr(m, 'name', '')}:{getattr(m, 'amount_total', 0)}:{getattr(m, 'amount_residual', 0)}:{getattr(m, 'payment_state', '')}:{getattr(m, 'state', '')}"
-        for m in AccountMove.search([]) if getattr(m, "name", None) or getattr(m, "payment_reference", None)
-    ])
+    # 1. Purchase Orders and Lines
+    po_hashes = []
+    for p in PurchaseOrder.search([]):
+        if not getattr(p, "name", None):
+            continue
+        po_hashes.append(f"PO:{p.name}:{getattr(p, 'amount_total', 0)}:{getattr(p, 'state', '')}")
+        for poline in getattr(p, "order_line", []):
+            po_hashes.append(
+                f"POL:{p.name}:{getattr(getattr(poline, 'product_id', None), 'default_code', '')}:"
+                f"{getattr(poline, 'product_qty', 0)}:{getattr(poline, 'price_unit', 0)}"
+            )
+    po_hashes.sort()
+
+    # 2. Sales Orders and Lines
+    so_hashes = []
+    for s in SaleOrder.search([]):
+        if not getattr(s, "client_order_ref", None):
+            continue
+        so_hashes.append(
+            f"SO:{s.client_order_ref}:{getattr(s, 'amount_untaxed', 0)}:{getattr(s, 'amount_total', 0)}:{getattr(s, 'state', '')}"
+        )
+        for soline in getattr(s, "order_line", []):
+            so_hashes.append(
+                f"SOL:{s.client_order_ref}:{getattr(getattr(soline, 'product_id', None), 'default_code', '')}:"
+                f"{getattr(soline, 'product_uom_qty', 0)}:{getattr(soline, 'price_unit', 0)}:{getattr(soline, 'discount', 0)}"
+            )
+    so_hashes.sort()
+
+    # 3. Invoices and Lines
+    inv_hashes = []
+    for m in AccountMove.search([]):
+        ref_id = getattr(m, "payment_reference", "") or getattr(m, "ref", "") or getattr(m, "name", "")
+        if not ref_id:
+            continue
+        inv_hashes.append(
+            f"INV:{getattr(m, 'move_type', '')}:{ref_id}:{getattr(m, 'amount_untaxed', 0)}:"
+            f"{getattr(m, 'amount_total', 0)}:{getattr(m, 'amount_residual', 0)}:"
+            f"{getattr(m, 'payment_state', '')}:{getattr(m, 'state', '')}"
+        )
+        for invline in getattr(m, "invoice_line_ids", []):
+            inv_hashes.append(
+                f"INVL:{ref_id}:{getattr(getattr(invline, 'product_id', None), 'default_code', '')}:"
+                f"{getattr(invline, 'quantity', 0)}:{getattr(invline, 'price_unit', 0)}:{getattr(invline, 'price_subtotal', 0)}"
+            )
+    inv_hashes.sort()
+
+    # 4. Payments
     pay_hashes = sorted([
-        f"{p.ref}:{getattr(p, 'amount', 0)}:{getattr(p, 'payment_type', '')}:{getattr(p, 'state', '')}"
+        f"PAY:{p.ref}:{getattr(p, 'amount', 0)}:{getattr(p, 'payment_type', '')}:{getattr(p, 'state', '')}"
         for p in AccountPayment.search([]) if getattr(p, "ref", None)
     ])
+
+    # 5. Stock Moves & Stock Move Lines (Lot Allocation)
     stock_hashes = sorted([
-        f"{m.reference}:{getattr(getattr(m, 'product_id', None), 'default_code', '')}:{getattr(m, 'product_qty', 0)}:{getattr(m, 'state', '')}"
+        f"SM:{m.reference}:{getattr(getattr(m, 'product_id', None), 'default_code', '')}:{getattr(m, 'product_qty', 0)}:{getattr(m, 'state', '')}"
         for m in StockMove.search([]) if getattr(m, "reference", None)
     ])
+    sml_hashes = sorted([
+        f"SML:{getattr(sml, 'reference', '') or getattr(getattr(sml, 'move_id', None), 'reference', '')}:"
+        f"{getattr(getattr(sml, 'product_id', None), 'default_code', '')}:"
+        f"{getattr(getattr(sml, 'lot_id', None), 'name', '')}:{getattr(sml, 'quantity', 0)}:"
+        f"{getattr(getattr(sml, 'location_id', None), 'complete_name', '')}:"
+        f"{getattr(getattr(sml, 'location_dest_id', None), 'complete_name', '')}"
+        for sml in StockMoveLine.search([])
+    ])
+
+    # 6. Quants
     quant_hashes = sorted([
-        f"{getattr(getattr(q, 'product_id', None), 'default_code', '')}:{getattr(getattr(q, 'location_id', None), 'complete_name', '')}:{getattr(q, 'quantity', 0)}"
+        f"SQ:{getattr(getattr(q, 'product_id', None), 'default_code', '')}:{getattr(getattr(q, 'location_id', None), 'complete_name', '')}:{getattr(q, 'quantity', 0)}"
         for q in StockQuant.search([("location_id.usage", "=", "internal")])
     ])
+
+    # 7. Account Move Lines
     aml_hashes = sorted([
-        f"{getattr(getattr(mline, 'move_id', None), 'name', '')}:{getattr(getattr(mline, 'account_id', None), 'code', '')}:{getattr(mline, 'debit', 0)}:{getattr(mline, 'credit', 0)}:{getattr(mline, 'reconciled', False)}"
+        f"AML:{getattr(getattr(mline, 'move_id', None), 'name', '')}:{getattr(getattr(mline, 'account_id', None), 'code', '')}:"
+        f"{getattr(mline, 'debit', 0)}:{getattr(mline, 'credit', 0)}:{getattr(mline, 'reconciled', False)}:"
+        f"{getattr(mline, 'parent_state', '')}"
         for mline in AccountMoveLine.search([])
     ])
 
-    raw = "\n".join(po_hashes + so_hashes + inv_hashes + pay_hashes + stock_hashes + quant_hashes + aml_hashes).encode("utf-8")
+    # 8. Reconciliation Edges
+    reconcile_hashes = sorted([
+        f"REC:{getattr(getattr(pr, 'debit_move_id', None), 'id', '')}:{getattr(getattr(pr, 'credit_move_id', None), 'id', '')}:{getattr(pr, 'amount', 0)}"
+        for pr in PartialReconcile.search([])
+    ])
+
+    all_components = (
+        po_hashes
+        + so_hashes
+        + inv_hashes
+        + pay_hashes
+        + stock_hashes
+        + sml_hashes
+        + quant_hashes
+        + aml_hashes
+        + reconcile_hashes
+    )
+    raw = "\n".join(all_components).encode("utf-8")
     digest = hashlib.sha256(raw).hexdigest()
 
     return {
@@ -520,8 +739,10 @@ def capture_period_state_snapshot(env: Any) -> Dict[str, Any]:
         "invoice_count": len(inv_hashes),
         "payment_count": len(pay_hashes),
         "stock_move_count": len(stock_hashes),
+        "stock_move_line_count": len(sml_hashes),
         "quant_count": len(quant_hashes),
         "aml_count": len(aml_hashes),
+        "partial_reconcile_count": len(reconcile_hashes),
         "digest": digest,
     }
 
@@ -540,76 +761,103 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
         )
 
     _logger.info("--- Running Fault-Injection Recovery Probes ---")
-    results = {}
+    results = {"status": "PASS", "probes": {}}
     cr = env.cr
 
-    # Probe 1: Unresolved SKU Fail-Closed & Savepoint Rollback
     snap_before = capture_period_state_snapshot(env)
+
+    # Probe 1: Real Batch SO Mutation with Injected Corrupted SKU -> Rollback -> Clean Recovery
     try:
         cr.execute("SAVEPOINT probe_batch_fault")
-        Product = env["product.product"].sudo()
+        loader_probe = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
         corrupt_sku = "SKU-NONEXISTENT-FAULT-INJECTION"
-        prod = Product.search([("default_code", "=", corrupt_sku)], limit=1)
-        if not prod:
-            raise StateInconsistencyError(
-                f"Fatal: Unresolved SKU '{corrupt_sku}' declared in batch probe. Cannot proceed with partial lines."
-            )
-        results["probe_batch_interruption"] = "FAILED_UNRESOLVED_SKU_NOT_REJECTED"
-    except StateInconsistencyError as e:
-        if "Unresolved SKU" in str(e):
-            cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
-            cr.execute("RELEASE SAVEPOINT probe_batch_fault")
-            snap_after = capture_period_state_snapshot(env)
-            if snap_before["digest"] == snap_after["digest"]:
-                results["probe_batch_interruption"] = "REJECTED_AND_RECOVERED_ZERO_DRIFT"
+        corrupt_so = "SO-202608-FAULT-PROBE-01"
+        loader_probe.reader.sales_orders.append({
+            "so_number": corrupt_so,
+            "customer": "CUST-0001",
+            "date_order": "2026-08-15",
+            "gross_dpp": "100000.00",
+            "discount_dpp": "0.00",
+            "net_dpp": "100000.00",
+        })
+        loader_probe.reader.order_lines.append({
+            "so_number": corrupt_so,
+            "sku_code": corrupt_sku,
+            "qty_cartons": "1",
+            "carton_qty": "1",
+            "unit_price_dpp": "100000.00",
+            "discount_pct": "0.0",
+        })
+        try:
+            loader_probe._apply_sales_orders_and_deliveries()
+            results["probes"]["probe_batch_interruption"] = "FAILED_UNRESOLVED_SKU_NOT_REJECTED"
+        except StateInconsistencyError as e:
+            if "Unresolved SKU" in str(e):
+                cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
+                cr.execute("RELEASE SAVEPOINT probe_batch_fault")
+                snap_after = capture_period_state_snapshot(env)
+                if snap_before["digest"] == snap_after["digest"]:
+                    results["probes"]["probe_batch_interruption"] = "PASS_REJECTED_AND_ROLLED_BACK"
+                else:
+                    results["probes"]["probe_batch_interruption"] = "FAILED_STATE_DIRTY_AFTER_ROLLBACK"
             else:
-                results["probe_batch_interruption"] = "FAILED_STATE_DIRTY_AFTER_ROLLBACK"
-        else:
+                cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
+                cr.execute("RELEASE SAVEPOINT probe_batch_fault")
+                results["probes"]["probe_batch_interruption"] = f"FAILED_WRONG_MESSAGE: {e}"
+        except Exception as e:
             cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
             cr.execute("RELEASE SAVEPOINT probe_batch_fault")
-            results["probe_batch_interruption"] = f"FAILED_WRONG_MESSAGE: {e}"
+            results["probes"]["probe_batch_interruption"] = f"FAILED_UNEXPECTED_EXCEPTION_TYPE: {type(e).__name__}"
     except Exception as e:
-        cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
-        cr.execute("RELEASE SAVEPOINT probe_batch_fault")
-        results["probe_batch_interruption"] = f"FAILED_UNEXPECTED_EXCEPTION_TYPE: {type(e).__name__}"
+        results["probes"]["probe_batch_interruption"] = f"FAILED_SETUP_ERROR: {e}"
 
-    # Probe 2: Mismatched AP Payment Target & Residual Tampering
+    # Probe 2: Mismatched AP Payment Target & Residual Tampering -> Rollback -> Recovery
     try:
         cr.execute("SAVEPOINT probe_ap_tamper")
+        Company = env["res.company"].sudo()
+        company = Company.search(
+            ["|", ("name", "ilike", "PT Salva Inti Mandiri"), ("name", "ilike", "Manado")], limit=1
+        )
         AccountMove = env["account.move"].sudo()
         bill = AccountMove.search(
             [
+                ("company_id", "=", company.id if company else 1),
                 ("move_type", "=", "in_invoice"),
+                ("state", "=", "posted"),
                 "|",
-                ("ref", "ilike", "PO-2026-06-05"),
-                ("invoice_origin", "ilike", "PO-2026-06-05"),
+                ("ref", "=", "PO-2026-06-05"),
+                ("invoice_origin", "=", "PO-2026-06-05"),
             ],
             limit=1,
         )
         if bill:
-            bill.write({"amount_residual": 500.00, "amount_total": 500.00})
-            loader = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
+            bill.write({"amount_residual": 500.00})
+            loader_ap = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
             try:
-                loader._apply_ap_payments()
-                results["probe_ap_bill_mismatch"] = "FAILED_ACCEPTED_TAMPERED"
+                loader_ap._apply_ap_payments()
+                results["probes"]["probe_ap_bill_mismatch"] = "FAILED_ACCEPTED_TAMPERED"
             except (PreflightContinuityError, StateInconsistencyError) as e:
                 err_msg = str(e).lower()
                 if "residual" in err_msg or "not match" in err_msg or "not found" in err_msg or "mismatch" in err_msg:
-                    results["probe_ap_bill_mismatch"] = "REJECTED_WITH_SPECIFIC_ERROR_AS_EXPECTED"
+                    results["probes"]["probe_ap_bill_mismatch"] = "PASS_REJECTED_WITH_SPECIFIC_ERROR"
                 else:
-                    results["probe_ap_bill_mismatch"] = f"FAILED_NON_SPECIFIC_ERROR: {e}"
+                    results["probes"]["probe_ap_bill_mismatch"] = f"FAILED_NON_SPECIFIC_ERROR: {e}"
             except Exception as e:
-                results["probe_ap_bill_mismatch"] = f"FAILED_WRONG_EXCEPTION_TYPE: {type(e).__name__}"
+                results["probes"]["probe_ap_bill_mismatch"] = f"FAILED_WRONG_EXCEPTION_TYPE: {type(e).__name__}"
             finally:
                 cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
                 cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
                 snap_after2 = capture_period_state_snapshot(env)
                 if snap_before["digest"] != snap_after2["digest"]:
-                    results["probe_ap_bill_mismatch"] += "_BUT_DIRTY_STATE"
+                    results["probes"]["probe_ap_bill_mismatch"] += "_BUT_DIRTY_STATE"
         else:
-            results["probe_ap_bill_mismatch"] = "SKIPPED_NO_UNILEVER_BILL_FOUND"
+            results["probes"]["probe_ap_bill_mismatch"] = "FAILED_NO_UNILEVER_BILL_FOUND"
     except Exception as e:
-        results["probe_ap_bill_mismatch"] = f"FAILED_SETUP_ERROR: {e}"
+        results["probes"]["probe_ap_bill_mismatch"] = f"FAILED_SETUP_ERROR: {e}"
+
+    for p_name, p_status in results["probes"].items():
+        if not str(p_status).startswith("PASS"):
+            results["status"] = "FAIL"
 
     _logger.info(f"Fault-Injection Probes Results: {json.dumps(results, indent=2)}")
     return results
@@ -672,7 +920,11 @@ def run_scenario_b_from_empty_database(
             res["digest_comparison"] = f"MISMATCH: expected {expected_digest}, got {snap_b.get('digest')}"
             audit["violations"].append(f"Scenario B digest mismatch against expected: {res['digest_comparison']}")
 
-    if audit.get("status") == "PASS" and not audit.get("violations"):
+    if (
+        audit.get("status") == "PASS"
+        and not audit.get("violations")
+        and (not expected_digest or res.get("digest_comparison") == "MATCH")
+    ):
         res["status"] = "PASS"
     else:
         res["status"] = "FAIL"
@@ -686,6 +938,7 @@ def run_full_disposable_period_verification(
     pack_dir: Path,
     scenario: str = "all",
     expected_digest: Optional[str] = None,
+    env_b: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Execute complete Scenario A, Scenario B, Oracle audit, and Fault-Injection verification."""
     assert_disposable_database(env)
@@ -703,9 +956,9 @@ def run_full_disposable_period_verification(
             "expected_opex": oracle.expected_opex_count,
         },
         "scenario_a_zero_drift": "NOT_RUN",
-        "scenario_b_continuation": "NOT_RUN",
-        "fault_injection": {},
-        "audit": {},
+        "scenario_b_continuation": {"status": "NOT_RUN"},
+        "fault_injection": {"status": "NOT_RUN"},
+        "audit": {"status": "NOT_RUN"},
     }
 
     # 1. Run Scenario A (Baseline July -> Load August -> Re-run Zero Drift)
@@ -728,10 +981,22 @@ def run_full_disposable_period_verification(
 
     # 2. Run Scenario B (Empty DB -> July -> August)
     if scenario in ("all", "B"):
-        exp_dig = expected_digest or report.get("scenario_a_digest")
-        report["scenario_b_continuation"] = run_scenario_b_from_empty_database(
-            env, pack_dir, expected_digest=exp_dig
-        )
+        target_env = env_b if scenario == "all" else (env_b or env)
+        if scenario == "all" and env_b is None:
+            report["scenario_b_continuation"] = {
+                "status": "FAIL_SEPARATE_DB_REQUIRED",
+                "error": "Scenario B strictly requires an independent empty disposable database connection (--db-b) when scenario=all",
+            }
+        else:
+            assert_disposable_database(target_env)
+            if env_b and getattr(getattr(env, "cr", None), "dbname", None) == getattr(getattr(target_env, "cr", None), "dbname", None):
+                raise RuntimeError(
+                    f"Scenario B target database '{getattr(target_env.cr, 'dbname', '')}' must be distinct from Scenario A database"
+                )
+            exp_dig = expected_digest or report.get("scenario_a_digest")
+            report["scenario_b_continuation"] = run_scenario_b_from_empty_database(
+                target_env, pack_dir, expected_digest=exp_dig
+            )
 
     # 3. Fault-Injection Probes
     report["fault_injection"] = run_period_pack_fault_injection_probes(env, pack_dir)
@@ -758,6 +1023,11 @@ def main():
         help="Execution scenario to prove: A (continuation & replay), B (empty to August), or all",
     )
     parser.add_argument(
+        "--db-b",
+        default=None,
+        help="Separate disposable database name for Scenario B empty-database verification",
+    )
+    parser.add_argument(
         "--expected-digest",
         default=None,
         help="Expected snapshot SHA-256 digest to verify cross-scenario equivalence",
@@ -772,12 +1042,25 @@ def main():
     pack_path = Path(args.pack)
     env = globals().get("env")
 
+    env_b = None
+    if args.db_b:
+        assert_disposable_database_name(args.db_b)
+        try:
+            import odoo
+            registry_b = odoo.registry(args.db_b)
+            cr_b = registry_b.cursor()
+            env_b = odoo.api.Environment(cr_b, odoo.SUPERUSER_ID, {})
+        except Exception as e:
+            print(f"[FATAL] Failed to initialize connection to --db-b '{args.db_b}': {e}", file=sys.stderr)
+            sys.exit(1)
+
     try:
         report = run_full_disposable_period_verification(
             env=env,
             pack_dir=pack_path,
             scenario=args.scenario,
             expected_digest=args.expected_digest,
+            env_b=env_b,
         )
         print("\n" + "=" * 60)
         print(f"DISPOSABLE RUNTIME PROOF FOR PERIOD {report['period']}")
@@ -789,8 +1072,16 @@ def main():
         out_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
         print(f"Report saved to {out_path.resolve()}")
 
-        if report.get("audit", {}).get("status") == "FAIL":
-            print("[FATAL] Audit checks failed!", file=sys.stderr)
+        # Mandatory non-zero exit on any scenario, probe, or audit failure
+        sc_a_pass = report.get("scenario_a_zero_drift") in ("PASS", "NOT_RUN")
+        sc_b_status = report.get("scenario_b_continuation", {}).get("status")
+        sc_b_pass = sc_b_status in ("PASS", "NOT_RUN")
+        fi_status = report.get("fault_injection", {}).get("status")
+        fi_pass = fi_status in ("PASS", "NOT_RUN")
+        audit_pass = report.get("audit", {}).get("status") == "PASS" and not bool(report.get("audit", {}).get("violations"))
+
+        if not (sc_a_pass and sc_b_pass and fi_pass and audit_pass):
+            print("[FATAL] Runtime verification checks failed!", file=sys.stderr)
             sys.exit(2)
         print("STATUS: RUNTIME VERIFICATION COMPLETED SUCCESSFULLY.")
     except Exception as e:

@@ -1,3 +1,40 @@
+## 2026-11-10T17:55:00+07:00 — antigravity — F4: Resolusi Komprehensif Re-Review Supervisor PR #110 (Review #5839973958) (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  1. Pelunasan AP Unilever strictly exact: Menghapus seluruh pola pencarian `ilike` pada vendor dan vendor bill. Menggunakan equality exact (`=`), menolak ambiguitas jika ditemukan lebih dari 1 vendor bill posted (`StateInconsistencyError`), menghapus fallback `or getattr(bill, "amount_total", None)` sehingga sisa utang residual dievaluasi tanpa celah, serta memverifikasi keterkaitan rekonsiliasi eksplisit ke target bill.
+  2. Preflight continuity replay-safe: Mendukung replay saat vendor bill Juli sudah lunas (`paid`), dengan syarat mutlak ditemukan pembayaran `AP-202608-0001` yang merekonsiliasi bill tersebut.
+  3. Deep idempotency zero-drift multi-atribut fail-closed: Memperketat validasi baris PO (price unit, qty, SKU), baris SO (price unit, product_uom_qty, SKU), Invoice, AR payment (customer partner, date, amount, posted state, payment type inbound, dan target reconciled invoice), AP payment, dan OPEX.
+  4. OPEX rigid configuration: General journal wajib bertipe `general` (kode `MISC`/`GEN`), akun kredit wajib eksplisit akun kas `111100` (tanpa arbitrary bank journal default account), dan validator memeriksa seluruh baris debit dan credit tanpa terkecuali.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  1. Skenario B diisolasi pada database kedua: Mengeliminasi single-env dispatch yang memicu penolakan guard DB kosong. Menambahkan parameter `--db-b` dan `env_b`; jika `scenario=all`, Skenario B mewajibkan koneksi database disposable kedua yang terpisah dan terverifikasi bersih (`FAIL_SEPARATE_DB_REQUIRED` jika `env_b is None`), serta mewajibkan kesetaraan normalized snapshot SHA-256 (`snap_a["digest"] == snap_b["digest"]`).
+  2. Accounting, stock, dan tax runtime oracle komprehensif: Menghilangkan seluruh fallback fuzzy `=like` dan generic `account_type`. Mewajibkan akun eksplisit 113000, 112000, 211000, 211200, dan 114100 tanpa silent skip (gagal jika akun tidak ditemukan). Seluruh query GL AML kini memfilter posted move (`parent_state='posted'`). Menambahkan verifikasi per-faktur Kode Transaksi 04 DPP Nilai Lain (11/12) dan PPN 12% (efektif 11%) pada akun 211200, serta PPN Masukan PO (11%) pada akun 114100.
+  3. Deep snapshot hashing: Digest SHA-256 kini mencakup line item prices/identities pada PO, SO, dan Invoice, lot allocation pada `stock.move.line`, serta reconciliation edges pada `account.partial.reconcile`.
+  4. Fault injection & real loader recovery: Menguji mutasi batch nyata via loader di dalam savepoint, memverifikasi rollback tanpa dirty state, dan membuktikan recovery bersih. CLI `main()` keluar dengan exit code 2 jika skenario, probe, atau audit apa pun gagal.
+- `tests/test_period_pack_loader.py`:
+  1. Menambahkan test penolakan decoy bill `PO-2026-06-050` pada AP payment.
+  2. Menambahkan test penolakan ambiguous duplicate bills pada AP payment.
+  3. Menambahkan test preflight replay dengan paid bill + valid payment vs missing payment.
+  4. Menambahkan test AR payment validator menolak partner yang salah.
+  5. Menambahkan test kegagalan audit jika GL account wajib hilang.
+  6. Menambahkan test kegagalan audit jika kalkulasi PPN Kode 04 menyimpang.
+  7. Menambahkan test Skenario B mewajibkan separate DB B saat `scenario=all`.
+  8. Total 30/30 unit tests PASS.
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py -v`: 30/30 tests PASS (100%).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 errors).
+- [F] `python -m unittest discover tests`: 434/434 tests PASS (100%).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] `python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict`: PASS (0 violations).
+- [F] Zero touch terhadap live Railway / database operasional demo.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
+**Berikutnya:**
+- Commit, push branch `agen/seed-f4-period-pack-loader`, dan sampaikan bukti penutupan 6 blocker kepada supervisor untuk re-review dan otorisasi merge.
+
 ## 2026-11-10T16:50:00+07:00 — antigravity — F4: Resolusi Tuntas 6 Blocker Re-Review Supervisor PR #110 (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
