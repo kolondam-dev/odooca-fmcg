@@ -174,6 +174,12 @@ class FinanceFxRevaluation(models.AbstractModel):
         leg_by_id = {}
         for line in lines:
             account = line.account_id.with_company(company)
+            currency_id = line.currency_id.id or company.currency_id.id
+            # FIN38 is a foreign-currency report. Functional-currency lines carry
+            # no exchange difference and must not enter the partial scope, or a
+            # same-currency settlement would be reported as unposted FX evidence.
+            if currency_id == company.currency_id.id:
+                continue
             row = {
                 "line_id": line.id,
                 "move_id": line.move_id.id,
@@ -182,7 +188,7 @@ class FinanceFxRevaluation(models.AbstractModel):
                 "account_type": account.account_type,
                 "partner_id": line.partner_id.id or 0,
                 "partner_name": line.partner_id.display_name or "",
-                "currency_id": line.currency_id.id or company.currency_id.id,
+                "currency_id": currency_id,
                 "company_currency_id": company.currency_id.id,
                 "balance": line.balance,
                 "amount_currency": line.amount_currency,
@@ -191,8 +197,6 @@ class FinanceFxRevaluation(models.AbstractModel):
             }
             leg_by_id[line.id] = row
             if account.id in exchange_ids:
-                continue
-            if (row["currency_id"] or 0) == company.currency_id.id:
                 continue
             if not round_amt(row["amount_residual"]) and not round_amt(
                 row["amount_residual_currency"]
@@ -237,18 +241,28 @@ class FinanceFxRevaluation(models.AbstractModel):
             order="max_date asc, id asc",
         )
         records.check_access("read")
-        return [{
-            "partial_id": record.id,
-            "amount": record.amount,
-            "debit_amount_currency": record.debit_amount_currency,
-            "credit_amount_currency": record.credit_amount_currency,
-            "max_date": record.max_date,
-            "exchange_move_id": record.exchange_move_id.id or None,
-            "debit_line_id": record.debit_move_id.id,
-            "credit_line_id": record.credit_move_id.id,
-            "debit_leg": leg_by_id.get(record.debit_move_id.id, {}),
-            "credit_leg": leg_by_id.get(record.credit_move_id.id, {}),
-        } for record in records]
+        payloads = []
+        for record in records:
+            debit_leg = leg_by_id.get(record.debit_move_id.id)
+            credit_leg = leg_by_id.get(record.credit_move_id.id)
+            # Defensive: both legs must be foreign-currency lines inside the
+            # FIN38 scope. A same-currency counterpart has no exchange
+            # difference and must not be reported as unposted FX evidence.
+            if not debit_leg or not credit_leg:
+                continue
+            payloads.append({
+                "partial_id": record.id,
+                "amount": record.amount,
+                "debit_amount_currency": record.debit_amount_currency,
+                "credit_amount_currency": record.credit_amount_currency,
+                "max_date": record.max_date,
+                "exchange_move_id": record.exchange_move_id.id or None,
+                "debit_line_id": record.debit_move_id.id,
+                "credit_line_id": record.credit_move_id.id,
+                "debit_leg": debit_leg,
+                "credit_leg": credit_leg,
+            })
+        return payloads
 
     def _rate_lookup(self, company):
         currency_model = self.env["res.currency"]

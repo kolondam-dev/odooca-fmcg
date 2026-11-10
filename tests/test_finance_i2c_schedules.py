@@ -265,6 +265,27 @@ class FxRevaluationTests(unittest.TestCase):
         tie = sched.tie_fx_to_gl(report, {2: 100_000.0}, ROUND)
         self.assertTrue(tie["balanced"], tie)
 
+    def test_same_currency_partial_is_not_unposted_fx_evidence(self):
+        # A settlement where both legs are functional-currency must contribute
+        # nothing to FIN38, not even unposted evidence. This is the regression
+        # for the native run that reported 270.0 != 0.0.
+        functional_debit = leg(1000.0, 1000.0, currency_id=1)
+        functional_credit = leg(-1000.0, -1000.0, currency_id=1)
+        report = sched.build_fx_revaluation(
+            [], [], "2026-07-31", ROUND, lambda *_: 1.0,
+        )
+        self.assertEqual(report["realized_unposted_total"], 0.0)
+        self.assertEqual(report["realized_unposted_rows"], [])
+        self.assertEqual(report["realized_posted_total"], 0.0)
+        # If such a partial ever reaches the builder, it must be a no-op either
+        # way because the caller is responsible for scope; assert the amounts.
+        amount, reason = sched.realized_partial_amount(
+            partial(1, functional_debit, functional_credit, 1000.0),
+            functional_debit, functional_credit, ROUND,
+        )
+        self.assertIsNone(reason)
+        self.assertEqual(amount, 0.0)
+
     def test_negated_gl_balance_fails_the_gain_case(self):
         invoice = leg(1_500_000.0, 100.0)
         payment = leg(-1_600_000.0, -100.0)
