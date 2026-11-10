@@ -1,0 +1,3542 @@
+{
+  "CUST-MT-01": {
+    "customer_ref": "CUST-MT-01",
+    "customer_name": "Indomarett DC Manado",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000001",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-02": {
+    "customer_ref": "CUST-MT-02",
+    "customer_name": "Alfamiddii DC Manado",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000002",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-03": {
+    "customer_ref": "CUST-MT-03",
+    "customer_name": "FreshhMart Superstore Bahu",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000003",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-04": {
+    "customer_ref": "CUST-MT-04",
+    "customer_name": "FreshhMart Lifestyle Paniki",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000004",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-05": {
+    "customer_ref": "CUST-MT-05",
+    "customer_name": "FreshhMart Express Tikala",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000005",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-06": {
+    "customer_ref": "CUST-MT-06",
+    "customer_name": "MultiiMart Megamas Manado",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000006",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-07": {
+    "customer_ref": "CUST-MT-07",
+    "customer_name": "MultiiMart Sam Ratulangi",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000007",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-08": {
+    "customer_ref": "CUST-MT-08",
+    "customer_name": "MultiiMart Tomohon",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000008",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-09": {
+    "customer_ref": "CUST-MT-09",
+    "customer_name": "Goldenn Swalayan Pasar 45",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000009",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-10": {
+    "customer_ref": "CUST-MT-10",
+    "customer_name": "Jumbbo Swalayan Pasar 45",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000010",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-11": {
+    "customer_ref": "CUST-MT-11",
+    "customer_name": "Jumbbo Swalayan Bitung",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000011",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-MT-12": {
+    "customer_ref": "CUST-MT-12",
+    "customer_name": "Tranzmart Star Square Bahu",
+    "channel_code": "MT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000012",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-01": {
+    "customer_ref": "CUST-GT-01",
+    "customer_name": "Toko Sembako Berkat Pasar 45",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000013",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-02": {
+    "customer_ref": "CUST-GT-02",
+    "customer_name": "Toko Kawanua Sejati Wenang",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000014",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-03": {
+    "customer_ref": "CUST-GT-03",
+    "customer_name": "Grosir Sinar Terang Calaca",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000015",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-04": {
+    "customer_ref": "CUST-GT-04",
+    "customer_name": "Toko Pinaesaan Calaca",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000016",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-05": {
+    "customer_ref": "CUST-GT-05",
+    "customer_name": "Grosir Istiqlal Sentosa",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000017",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-06": {
+    "customer_ref": "CUST-GT-06",
+    "customer_name": "Grosir Calaca Baru",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000018",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-07": {
+    "customer_ref": "CUST-GT-07",
+    "customer_name": "Toko Harapan Bersehati",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000019",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-08": {
+    "customer_ref": "CUST-GT-08",
+    "customer_name": "Grosir Bintang Samrat Sario",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000020",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-09": {
+    "customer_ref": "CUST-GT-09",
+    "customer_name": "Grosir Manado Raya Sario",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000021",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-10": {
+    "customer_ref": "CUST-GT-10",
+    "customer_name": "Toko Sario Makmur",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000022",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-11": {
+    "customer_ref": "CUST-GT-11",
+    "customer_name": "Grosir Krida Bahu",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000023",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-12": {
+    "customer_ref": "CUST-GT-12",
+    "customer_name": "Toko Sumber Berkat Malalayang",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000024",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-13": {
+    "customer_ref": "CUST-GT-13",
+    "customer_name": "Grosir Malalayang Satu",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000025",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-14": {
+    "customer_ref": "CUST-GT-14",
+    "customer_name": "Toko Batu Kota Indah",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000026",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-15": {
+    "customer_ref": "CUST-GT-15",
+    "customer_name": "Grosir Kleak Mandiri",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000027",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-16": {
+    "customer_ref": "CUST-GT-16",
+    "customer_name": "Toko Pelita Jaya Wanea",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000028",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-17": {
+    "customer_ref": "CUST-GT-17",
+    "customer_name": "Toko Anugerah Kasih Karombasan",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000029",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-18": {
+    "customer_ref": "CUST-GT-18",
+    "customer_name": "Grosir Rukun Damai Ranotana",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000030",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-19": {
+    "customer_ref": "CUST-GT-19",
+    "customer_name": "Grosir Teling Sentosa Wanea",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000031",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-20": {
+    "customer_ref": "CUST-GT-20",
+    "customer_name": "Toko Pakowa Sejahtera Wanea",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000032",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-21": {
+    "customer_ref": "CUST-GT-21",
+    "customer_name": "Grosir Tingkulu Jaya Wanea",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000033",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-22": {
+    "customer_ref": "CUST-GT-22",
+    "customer_name": "Toko Winangun Berkat",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000034",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-23": {
+    "customer_ref": "CUST-GT-23",
+    "customer_name": "Toko Bumi Nyiur Permai",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000035",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-24": {
+    "customer_ref": "CUST-GT-24",
+    "customer_name": "Toko Cahaya Samrat Wenang",
+    "channel_code": "GT",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0812345678000036",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-25": {
+    "customer_ref": "CUST-GT-25",
+    "customer_name": "Grosir Megamas Abadi",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960037",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-26": {
+    "customer_ref": "CUST-GT-26",
+    "customer_name": "Toko Karombasan Baru",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970038",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-27": {
+    "customer_ref": "CUST-GT-27",
+    "customer_name": "Grosir Bahu Sentosa",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980039",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-28": {
+    "customer_ref": "CUST-GT-28",
+    "customer_name": "Toko Sam Ratulangi Perkasa",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990040",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-29": {
+    "customer_ref": "CUST-GT-29",
+    "customer_name": "Grosir Pasar 45 Rezeki",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-30": {
+    "customer_ref": "CUST-GT-30",
+    "customer_name": "Toko Berkat Bahu Sejahtera",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810042",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-31": {
+    "customer_ref": "CUST-GT-31",
+    "customer_name": "Grosir Sario Damai",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820043",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-32": {
+    "customer_ref": "CUST-GT-32",
+    "customer_name": "Toko Ranotana Jaya",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830044",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-33": {
+    "customer_ref": "CUST-GT-33",
+    "customer_name": "Toko Malalayang Megah",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840045",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-34": {
+    "customer_ref": "CUST-GT-34",
+    "customer_name": "Grosir Tikala Baru",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850046",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-35": {
+    "customer_ref": "CUST-GT-35",
+    "customer_name": "Toko Banjer Berkah Tikala",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860047",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-36": {
+    "customer_ref": "CUST-GT-36",
+    "customer_name": "Grosir Taas Damai Tikala",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870048",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-37": {
+    "customer_ref": "CUST-GT-37",
+    "customer_name": "Grosir Makmur Abadi Tikala",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880049",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-38": {
+    "customer_ref": "CUST-GT-38",
+    "customer_name": "Toko Paal Dua Jaya",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890050",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-39": {
+    "customer_ref": "CUST-GT-39",
+    "customer_name": "Toko Berkat Melimpah Paal Dua",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-40": {
+    "customer_ref": "CUST-GT-40",
+    "customer_name": "Grosir Sentosa Perkasa Perkamil",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910052",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-41": {
+    "customer_ref": "CUST-GT-41",
+    "customer_name": "Toko Dendengan Mandiri Paal Dua",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920053",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-42": {
+    "customer_ref": "CUST-GT-42",
+    "customer_name": "Toko Bintang Timur Ranomuut",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930054",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-43": {
+    "customer_ref": "CUST-GT-43",
+    "customer_name": "Grosir Sumber Mulia Tuminting",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940055",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-44": {
+    "customer_ref": "CUST-GT-44",
+    "customer_name": "Toko Surya Indah Tuminting",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950056",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-45": {
+    "customer_ref": "CUST-GT-45",
+    "customer_name": "Grosir Tumumpa Berkat",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960057",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-46": {
+    "customer_ref": "CUST-GT-46",
+    "customer_name": "Toko Sindulang Jaya",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970058",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-47": {
+    "customer_ref": "CUST-GT-47",
+    "customer_name": "Toko Bintang Matuari Singkil",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980059",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-48": {
+    "customer_ref": "CUST-GT-48",
+    "customer_name": "Toko Usaha Bersama Singkil",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990060",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-49": {
+    "customer_ref": "CUST-GT-49",
+    "customer_name": "Grosir Kombos Jaya Singkil",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-50": {
+    "customer_ref": "CUST-GT-50",
+    "customer_name": "Grosir Cahaya Utara Mahakeret",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810062",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-51": {
+    "customer_ref": "CUST-GT-51",
+    "customer_name": "Toko Paniki Permai Mapanget",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820063",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-52": {
+    "customer_ref": "CUST-GT-52",
+    "customer_name": "Grosir Kairagi Mandiri",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830064",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-53": {
+    "customer_ref": "CUST-GT-53",
+    "customer_name": "Grosir Buha Indah Mapanget",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840065",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-54": {
+    "customer_ref": "CUST-GT-54",
+    "customer_name": "Toko Bengkol Sejahtera",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850066",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-55": {
+    "customer_ref": "CUST-GT-55",
+    "customer_name": "Toko Pandu Berkah Mapanget",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860067",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-56": {
+    "customer_ref": "CUST-GT-56",
+    "customer_name": "Toko Kairagi Satu Makmur",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870068",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-57": {
+    "customer_ref": "CUST-GT-57",
+    "customer_name": "Grosir Bailang Mandiri",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880069",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-58": {
+    "customer_ref": "CUST-GT-58",
+    "customer_name": "Toko Bintang Matuari Maesa",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890070",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-59": {
+    "customer_ref": "CUST-GT-59",
+    "customer_name": "Grosir Girian Indah Bitung",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-60": {
+    "customer_ref": "CUST-GT-60",
+    "customer_name": "Toko Madidir Berkat Bitung",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910072",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-61": {
+    "customer_ref": "CUST-GT-61",
+    "customer_name": "Grosir Danowudu Jaya Bitung",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920073",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-62": {
+    "customer_ref": "CUST-GT-62",
+    "customer_name": "Toko Matuari Sejati Bitung",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930074",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-63": {
+    "customer_ref": "CUST-GT-63",
+    "customer_name": "Toko Jaya Sejahtera Tomohon",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940075",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-64": {
+    "customer_ref": "CUST-GT-64",
+    "customer_name": "Grosir Paslaten Mandiri Tomohon",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950076",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-65": {
+    "customer_ref": "CUST-GT-65",
+    "customer_name": "Toko Kakaskasen Sejahtera",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960077",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-66": {
+    "customer_ref": "CUST-GT-66",
+    "customer_name": "Toko Rezeki Tondano",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970078",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-67": {
+    "customer_ref": "CUST-GT-67",
+    "customer_name": "Toko Tondano Makmur Tondano",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980079",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-68": {
+    "customer_ref": "CUST-GT-68",
+    "customer_name": "Toko Berkat Kawangkoan",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990080",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-69": {
+    "customer_ref": "CUST-GT-69",
+    "customer_name": "Grosir Kawangkoan Permai",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-70": {
+    "customer_ref": "CUST-GT-70",
+    "customer_name": "Grosir Airmadidi Baru Minut",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810082",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-71": {
+    "customer_ref": "CUST-GT-71",
+    "customer_name": "Toko Kalawat Berkat Minut",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820083",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-GT-72": {
+    "customer_ref": "CUST-GT-72",
+    "customer_name": "Toko Amurang Sentosa Minsel",
+    "channel_code": "GT",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830084",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-001": {
+    "customer_ref": "CUST-RTL-001",
+    "customer_name": "Kios Tante Tin Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840085",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-002": {
+    "customer_ref": "CUST-RTL-002",
+    "customer_name": "Warung Om Oce Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850086",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-003": {
+    "customer_ref": "CUST-RTL-003",
+    "customer_name": "Kios Ci Utu Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860087",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-004": {
+    "customer_ref": "CUST-RTL-004",
+    "customer_name": "Warung Tante Meyke Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870088",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-005": {
+    "customer_ref": "CUST-RTL-005",
+    "customer_name": "Kios Ko Ferry Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880089",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-006": {
+    "customer_ref": "CUST-RTL-006",
+    "customer_name": "Warung Dani Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890090",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-007": {
+    "customer_ref": "CUST-RTL-007",
+    "customer_name": "Kios Berkat Ventje Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-008": {
+    "customer_ref": "CUST-RTL-008",
+    "customer_name": "Kios Gloria Novry Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910092",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-009": {
+    "customer_ref": "CUST-RTL-009",
+    "customer_name": "Warung Kasih Ritha Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920093",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-010": {
+    "customer_ref": "CUST-RTL-010",
+    "customer_name": "Kios Filadelfia Meylan Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930094",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-011": {
+    "customer_ref": "CUST-RTL-011",
+    "customer_name": "Kios Tante Hein Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940095",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-012": {
+    "customer_ref": "CUST-RTL-012",
+    "customer_name": "Warung Om Vonny Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950096",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-013": {
+    "customer_ref": "CUST-RTL-013",
+    "customer_name": "Kios Ci Meiske Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960097",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-014": {
+    "customer_ref": "CUST-RTL-014",
+    "customer_name": "Warung Tante Joppy Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970098",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-015": {
+    "customer_ref": "CUST-RTL-015",
+    "customer_name": "Kios Ko Deasy Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980099",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-016": {
+    "customer_ref": "CUST-RTL-016",
+    "customer_name": "Warung Ronny Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990100",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-017": {
+    "customer_ref": "CUST-RTL-017",
+    "customer_name": "Kios Berkat Grace Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-018": {
+    "customer_ref": "CUST-RTL-018",
+    "customer_name": "Kios Gloria Bobby Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810102",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-019": {
+    "customer_ref": "CUST-RTL-019",
+    "customer_name": "Warung Kasih Erna Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820103",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-020": {
+    "customer_ref": "CUST-RTL-020",
+    "customer_name": "Kios Filadelfia Jacky Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830104",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-021": {
+    "customer_ref": "CUST-RTL-021",
+    "customer_name": "Kios Tante Lita Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840105",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-022": {
+    "customer_ref": "CUST-RTL-022",
+    "customer_name": "Warung Om Nico Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850106",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-023": {
+    "customer_ref": "CUST-RTL-023",
+    "customer_name": "Kios Ci Vicky Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860107",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-024": {
+    "customer_ref": "CUST-RTL-024",
+    "customer_name": "Warung Tante Yola Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870108",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-025": {
+    "customer_ref": "CUST-RTL-025",
+    "customer_name": "Kios Ko Franky Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880109",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-026": {
+    "customer_ref": "CUST-RTL-026",
+    "customer_name": "Warung Siska Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890110",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-027": {
+    "customer_ref": "CUST-RTL-027",
+    "customer_name": "Kios Berkat Stenly Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-028": {
+    "customer_ref": "CUST-RTL-028",
+    "customer_name": "Kios Gloria Wanda Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910112",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-029": {
+    "customer_ref": "CUST-RTL-029",
+    "customer_name": "Warung Kasih Roy Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920113",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-030": {
+    "customer_ref": "CUST-RTL-030",
+    "customer_name": "Kios Filadelfia Vera Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930114",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-031": {
+    "customer_ref": "CUST-RTL-031",
+    "customer_name": "Kios Tante Pingkan Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940115",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-032": {
+    "customer_ref": "CUST-RTL-032",
+    "customer_name": "Warung Om Toar Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950116",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-033": {
+    "customer_ref": "CUST-RTL-033",
+    "customer_name": "Kios Ci Lumimuut Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960117",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-034": {
+    "customer_ref": "CUST-RTL-034",
+    "customer_name": "Warung Tante Engelin Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970118",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-035": {
+    "customer_ref": "CUST-RTL-035",
+    "customer_name": "Kios Ko Marietje Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980119",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-036": {
+    "customer_ref": "CUST-RTL-036",
+    "customer_name": "Warung Tin Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990120",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-037": {
+    "customer_ref": "CUST-RTL-037",
+    "customer_name": "Kios Berkat Oce Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-038": {
+    "customer_ref": "CUST-RTL-038",
+    "customer_name": "Kios Gloria Utu Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810122",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-039": {
+    "customer_ref": "CUST-RTL-039",
+    "customer_name": "Warung Kasih Meyke Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820123",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-040": {
+    "customer_ref": "CUST-RTL-040",
+    "customer_name": "Kios Filadelfia Ferry Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830124",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-041": {
+    "customer_ref": "CUST-RTL-041",
+    "customer_name": "Kios Tante Dani Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840125",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-042": {
+    "customer_ref": "CUST-RTL-042",
+    "customer_name": "Warung Om Ventje Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850126",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-043": {
+    "customer_ref": "CUST-RTL-043",
+    "customer_name": "Kios Ci Novry Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860127",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-044": {
+    "customer_ref": "CUST-RTL-044",
+    "customer_name": "Warung Tante Ritha Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870128",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-045": {
+    "customer_ref": "CUST-RTL-045",
+    "customer_name": "Kios Ko Meylan Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880129",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-046": {
+    "customer_ref": "CUST-RTL-046",
+    "customer_name": "Warung Hein Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890130",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-047": {
+    "customer_ref": "CUST-RTL-047",
+    "customer_name": "Kios Berkat Vonny Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-048": {
+    "customer_ref": "CUST-RTL-048",
+    "customer_name": "Kios Gloria Meiske Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910132",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-049": {
+    "customer_ref": "CUST-RTL-049",
+    "customer_name": "Warung Kasih Joppy Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920133",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-050": {
+    "customer_ref": "CUST-RTL-050",
+    "customer_name": "Kios Filadelfia Deasy Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930134",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-051": {
+    "customer_ref": "CUST-RTL-051",
+    "customer_name": "Kios Tante Ronny Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940135",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-052": {
+    "customer_ref": "CUST-RTL-052",
+    "customer_name": "Warung Om Grace Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950136",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-053": {
+    "customer_ref": "CUST-RTL-053",
+    "customer_name": "Kios Ci Bobby Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960137",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-054": {
+    "customer_ref": "CUST-RTL-054",
+    "customer_name": "Warung Tante Erna Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970138",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-055": {
+    "customer_ref": "CUST-RTL-055",
+    "customer_name": "Kios Ko Jacky Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980139",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-056": {
+    "customer_ref": "CUST-RTL-056",
+    "customer_name": "Warung Lita Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990140",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-057": {
+    "customer_ref": "CUST-RTL-057",
+    "customer_name": "Kios Berkat Nico Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-058": {
+    "customer_ref": "CUST-RTL-058",
+    "customer_name": "Kios Gloria Vicky Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810142",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-059": {
+    "customer_ref": "CUST-RTL-059",
+    "customer_name": "Warung Kasih Yola Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820143",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-060": {
+    "customer_ref": "CUST-RTL-060",
+    "customer_name": "Kios Filadelfia Franky Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830144",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-061": {
+    "customer_ref": "CUST-RTL-061",
+    "customer_name": "Kios Tante Siska Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840145",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-062": {
+    "customer_ref": "CUST-RTL-062",
+    "customer_name": "Warung Om Stenly Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850146",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-063": {
+    "customer_ref": "CUST-RTL-063",
+    "customer_name": "Kios Ci Wanda Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860147",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-064": {
+    "customer_ref": "CUST-RTL-064",
+    "customer_name": "Warung Tante Roy Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870148",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-065": {
+    "customer_ref": "CUST-RTL-065",
+    "customer_name": "Kios Ko Vera Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880149",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-066": {
+    "customer_ref": "CUST-RTL-066",
+    "customer_name": "Warung Pingkan Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890150",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-067": {
+    "customer_ref": "CUST-RTL-067",
+    "customer_name": "Kios Berkat Toar Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-068": {
+    "customer_ref": "CUST-RTL-068",
+    "customer_name": "Kios Gloria Lumimuut Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910152",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-069": {
+    "customer_ref": "CUST-RTL-069",
+    "customer_name": "Warung Kasih Engelin Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920153",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-070": {
+    "customer_ref": "CUST-RTL-070",
+    "customer_name": "Kios Filadelfia Marietje Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930154",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-071": {
+    "customer_ref": "CUST-RTL-071",
+    "customer_name": "Kios Tante Tin Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940155",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-072": {
+    "customer_ref": "CUST-RTL-072",
+    "customer_name": "Warung Om Oce Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950156",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-073": {
+    "customer_ref": "CUST-RTL-073",
+    "customer_name": "Kios Ci Utu Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960157",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-074": {
+    "customer_ref": "CUST-RTL-074",
+    "customer_name": "Warung Tante Meyke Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970158",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-075": {
+    "customer_ref": "CUST-RTL-075",
+    "customer_name": "Kios Ko Ferry Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980159",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-076": {
+    "customer_ref": "CUST-RTL-076",
+    "customer_name": "Warung Dani Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990160",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-077": {
+    "customer_ref": "CUST-RTL-077",
+    "customer_name": "Kios Berkat Ventje Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-078": {
+    "customer_ref": "CUST-RTL-078",
+    "customer_name": "Kios Gloria Novry Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810162",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-079": {
+    "customer_ref": "CUST-RTL-079",
+    "customer_name": "Warung Kasih Ritha Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820163",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-080": {
+    "customer_ref": "CUST-RTL-080",
+    "customer_name": "Kios Filadelfia Meylan Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830164",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-081": {
+    "customer_ref": "CUST-RTL-081",
+    "customer_name": "Kios Tante Hein Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840165",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-082": {
+    "customer_ref": "CUST-RTL-082",
+    "customer_name": "Warung Om Vonny Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850166",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-083": {
+    "customer_ref": "CUST-RTL-083",
+    "customer_name": "Kios Ci Meiske Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860167",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-084": {
+    "customer_ref": "CUST-RTL-084",
+    "customer_name": "Warung Tante Joppy Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870168",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-085": {
+    "customer_ref": "CUST-RTL-085",
+    "customer_name": "Kios Ko Deasy Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880169",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-086": {
+    "customer_ref": "CUST-RTL-086",
+    "customer_name": "Warung Ronny Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890170",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-087": {
+    "customer_ref": "CUST-RTL-087",
+    "customer_name": "Kios Berkat Grace Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-088": {
+    "customer_ref": "CUST-RTL-088",
+    "customer_name": "Kios Gloria Bobby Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910172",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-089": {
+    "customer_ref": "CUST-RTL-089",
+    "customer_name": "Warung Kasih Erna Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920173",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-090": {
+    "customer_ref": "CUST-RTL-090",
+    "customer_name": "Kios Filadelfia Jacky Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930174",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-091": {
+    "customer_ref": "CUST-RTL-091",
+    "customer_name": "Kios Tante Lita Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940175",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-092": {
+    "customer_ref": "CUST-RTL-092",
+    "customer_name": "Warung Om Nico Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950176",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-093": {
+    "customer_ref": "CUST-RTL-093",
+    "customer_name": "Kios Ci Vicky Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960177",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-094": {
+    "customer_ref": "CUST-RTL-094",
+    "customer_name": "Warung Tante Yola Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970178",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-095": {
+    "customer_ref": "CUST-RTL-095",
+    "customer_name": "Kios Ko Franky Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980179",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-096": {
+    "customer_ref": "CUST-RTL-096",
+    "customer_name": "Warung Siska Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990180",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-097": {
+    "customer_ref": "CUST-RTL-097",
+    "customer_name": "Kios Berkat Stenly Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-098": {
+    "customer_ref": "CUST-RTL-098",
+    "customer_name": "Kios Gloria Wanda Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810182",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-099": {
+    "customer_ref": "CUST-RTL-099",
+    "customer_name": "Warung Kasih Roy Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820183",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-100": {
+    "customer_ref": "CUST-RTL-100",
+    "customer_name": "Kios Filadelfia Vera Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830184",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-101": {
+    "customer_ref": "CUST-RTL-101",
+    "customer_name": "Kios Tante Pingkan Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840185",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-102": {
+    "customer_ref": "CUST-RTL-102",
+    "customer_name": "Warung Om Toar Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850186",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-103": {
+    "customer_ref": "CUST-RTL-103",
+    "customer_name": "Kios Ci Lumimuut Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860187",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-104": {
+    "customer_ref": "CUST-RTL-104",
+    "customer_name": "Warung Tante Engelin Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870188",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-105": {
+    "customer_ref": "CUST-RTL-105",
+    "customer_name": "Kios Ko Marietje Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880189",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-106": {
+    "customer_ref": "CUST-RTL-106",
+    "customer_name": "Warung Tin Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890190",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-107": {
+    "customer_ref": "CUST-RTL-107",
+    "customer_name": "Kios Berkat Oce Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-108": {
+    "customer_ref": "CUST-RTL-108",
+    "customer_name": "Kios Gloria Utu Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910192",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-109": {
+    "customer_ref": "CUST-RTL-109",
+    "customer_name": "Warung Kasih Meyke Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920193",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-110": {
+    "customer_ref": "CUST-RTL-110",
+    "customer_name": "Kios Filadelfia Ferry Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930194",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-111": {
+    "customer_ref": "CUST-RTL-111",
+    "customer_name": "Kios Tante Dani Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940195",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-112": {
+    "customer_ref": "CUST-RTL-112",
+    "customer_name": "Warung Om Ventje Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950196",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-113": {
+    "customer_ref": "CUST-RTL-113",
+    "customer_name": "Kios Ci Novry Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960197",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-114": {
+    "customer_ref": "CUST-RTL-114",
+    "customer_name": "Warung Tante Ritha Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970198",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-115": {
+    "customer_ref": "CUST-RTL-115",
+    "customer_name": "Kios Ko Meylan Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980199",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-116": {
+    "customer_ref": "CUST-RTL-116",
+    "customer_name": "Warung Hein Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990200",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-117": {
+    "customer_ref": "CUST-RTL-117",
+    "customer_name": "Kios Berkat Vonny Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-118": {
+    "customer_ref": "CUST-RTL-118",
+    "customer_name": "Kios Gloria Meiske Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810202",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-119": {
+    "customer_ref": "CUST-RTL-119",
+    "customer_name": "Warung Kasih Joppy Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820203",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-120": {
+    "customer_ref": "CUST-RTL-120",
+    "customer_name": "Kios Filadelfia Deasy Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830204",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-121": {
+    "customer_ref": "CUST-RTL-121",
+    "customer_name": "Kios Tante Ronny Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840205",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-122": {
+    "customer_ref": "CUST-RTL-122",
+    "customer_name": "Warung Om Grace Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850206",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-123": {
+    "customer_ref": "CUST-RTL-123",
+    "customer_name": "Kios Ci Bobby Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860207",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-124": {
+    "customer_ref": "CUST-RTL-124",
+    "customer_name": "Warung Tante Erna Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870208",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-125": {
+    "customer_ref": "CUST-RTL-125",
+    "customer_name": "Kios Ko Jacky Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880209",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-126": {
+    "customer_ref": "CUST-RTL-126",
+    "customer_name": "Warung Lita Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890210",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-127": {
+    "customer_ref": "CUST-RTL-127",
+    "customer_name": "Kios Berkat Nico Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-128": {
+    "customer_ref": "CUST-RTL-128",
+    "customer_name": "Kios Gloria Vicky Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910212",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-129": {
+    "customer_ref": "CUST-RTL-129",
+    "customer_name": "Warung Kasih Yola Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920213",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-130": {
+    "customer_ref": "CUST-RTL-130",
+    "customer_name": "Kios Filadelfia Franky Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930214",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-131": {
+    "customer_ref": "CUST-RTL-131",
+    "customer_name": "Kios Tante Siska Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940215",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-132": {
+    "customer_ref": "CUST-RTL-132",
+    "customer_name": "Warung Om Stenly Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950216",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-133": {
+    "customer_ref": "CUST-RTL-133",
+    "customer_name": "Kios Ci Wanda Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960217",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-134": {
+    "customer_ref": "CUST-RTL-134",
+    "customer_name": "Warung Tante Roy Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970218",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-135": {
+    "customer_ref": "CUST-RTL-135",
+    "customer_name": "Kios Ko Vera Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980219",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-136": {
+    "customer_ref": "CUST-RTL-136",
+    "customer_name": "Warung Pingkan Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990220",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-137": {
+    "customer_ref": "CUST-RTL-137",
+    "customer_name": "Kios Berkat Toar Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-138": {
+    "customer_ref": "CUST-RTL-138",
+    "customer_name": "Kios Gloria Lumimuut Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810222",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-139": {
+    "customer_ref": "CUST-RTL-139",
+    "customer_name": "Warung Kasih Engelin Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820223",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-140": {
+    "customer_ref": "CUST-RTL-140",
+    "customer_name": "Kios Filadelfia Marietje Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830224",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-141": {
+    "customer_ref": "CUST-RTL-141",
+    "customer_name": "Kios Tante Tin Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840225",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-142": {
+    "customer_ref": "CUST-RTL-142",
+    "customer_name": "Warung Om Oce Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850226",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-143": {
+    "customer_ref": "CUST-RTL-143",
+    "customer_name": "Kios Ci Utu Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860227",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-144": {
+    "customer_ref": "CUST-RTL-144",
+    "customer_name": "Warung Tante Meyke Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870228",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-145": {
+    "customer_ref": "CUST-RTL-145",
+    "customer_name": "Kios Ko Ferry Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880229",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-146": {
+    "customer_ref": "CUST-RTL-146",
+    "customer_name": "Warung Dani Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890230",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-147": {
+    "customer_ref": "CUST-RTL-147",
+    "customer_name": "Kios Berkat Ventje Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-148": {
+    "customer_ref": "CUST-RTL-148",
+    "customer_name": "Kios Gloria Novry Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910232",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-149": {
+    "customer_ref": "CUST-RTL-149",
+    "customer_name": "Warung Kasih Ritha Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920233",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-150": {
+    "customer_ref": "CUST-RTL-150",
+    "customer_name": "Kios Filadelfia Meylan Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930234",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-151": {
+    "customer_ref": "CUST-RTL-151",
+    "customer_name": "Kios Tante Hein Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940235",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-152": {
+    "customer_ref": "CUST-RTL-152",
+    "customer_name": "Warung Om Vonny Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950236",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-153": {
+    "customer_ref": "CUST-RTL-153",
+    "customer_name": "Kios Ci Meiske Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960237",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-154": {
+    "customer_ref": "CUST-RTL-154",
+    "customer_name": "Warung Tante Joppy Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970238",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-155": {
+    "customer_ref": "CUST-RTL-155",
+    "customer_name": "Kios Ko Deasy Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980239",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-156": {
+    "customer_ref": "CUST-RTL-156",
+    "customer_name": "Warung Ronny Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990240",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-157": {
+    "customer_ref": "CUST-RTL-157",
+    "customer_name": "Kios Berkat Grace Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-158": {
+    "customer_ref": "CUST-RTL-158",
+    "customer_name": "Kios Gloria Bobby Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810242",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-159": {
+    "customer_ref": "CUST-RTL-159",
+    "customer_name": "Warung Kasih Erna Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820243",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-160": {
+    "customer_ref": "CUST-RTL-160",
+    "customer_name": "Kios Filadelfia Jacky Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830244",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-161": {
+    "customer_ref": "CUST-RTL-161",
+    "customer_name": "Kios Tante Lita Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840245",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-162": {
+    "customer_ref": "CUST-RTL-162",
+    "customer_name": "Warung Om Nico Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850246",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-163": {
+    "customer_ref": "CUST-RTL-163",
+    "customer_name": "Kios Ci Vicky Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860247",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-164": {
+    "customer_ref": "CUST-RTL-164",
+    "customer_name": "Warung Tante Yola Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870248",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-165": {
+    "customer_ref": "CUST-RTL-165",
+    "customer_name": "Kios Ko Franky Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880249",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-166": {
+    "customer_ref": "CUST-RTL-166",
+    "customer_name": "Warung Siska Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890250",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-167": {
+    "customer_ref": "CUST-RTL-167",
+    "customer_name": "Kios Berkat Stenly Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-168": {
+    "customer_ref": "CUST-RTL-168",
+    "customer_name": "Kios Gloria Wanda Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910252",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-169": {
+    "customer_ref": "CUST-RTL-169",
+    "customer_name": "Warung Kasih Roy Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920253",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-170": {
+    "customer_ref": "CUST-RTL-170",
+    "customer_name": "Kios Filadelfia Vera Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930254",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-171": {
+    "customer_ref": "CUST-RTL-171",
+    "customer_name": "Kios Tante Pingkan Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940255",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-172": {
+    "customer_ref": "CUST-RTL-172",
+    "customer_name": "Warung Om Toar Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950256",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-173": {
+    "customer_ref": "CUST-RTL-173",
+    "customer_name": "Kios Ci Lumimuut Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960257",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-174": {
+    "customer_ref": "CUST-RTL-174",
+    "customer_name": "Warung Tante Engelin Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970258",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-175": {
+    "customer_ref": "CUST-RTL-175",
+    "customer_name": "Kios Ko Marietje Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980259",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-176": {
+    "customer_ref": "CUST-RTL-176",
+    "customer_name": "Warung Tin Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990260",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-177": {
+    "customer_ref": "CUST-RTL-177",
+    "customer_name": "Kios Berkat Oce Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-178": {
+    "customer_ref": "CUST-RTL-178",
+    "customer_name": "Kios Gloria Utu Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810262",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-179": {
+    "customer_ref": "CUST-RTL-179",
+    "customer_name": "Warung Kasih Meyke Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820263",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-180": {
+    "customer_ref": "CUST-RTL-180",
+    "customer_name": "Kios Filadelfia Ferry Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830264",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-181": {
+    "customer_ref": "CUST-RTL-181",
+    "customer_name": "Kios Tante Dani Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840265",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-182": {
+    "customer_ref": "CUST-RTL-182",
+    "customer_name": "Warung Om Ventje Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850266",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-183": {
+    "customer_ref": "CUST-RTL-183",
+    "customer_name": "Kios Ci Novry Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860267",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-184": {
+    "customer_ref": "CUST-RTL-184",
+    "customer_name": "Warung Tante Ritha Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870268",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-185": {
+    "customer_ref": "CUST-RTL-185",
+    "customer_name": "Kios Ko Meylan Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880269",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-186": {
+    "customer_ref": "CUST-RTL-186",
+    "customer_name": "Warung Hein Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890270",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-187": {
+    "customer_ref": "CUST-RTL-187",
+    "customer_name": "Kios Berkat Vonny Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-188": {
+    "customer_ref": "CUST-RTL-188",
+    "customer_name": "Kios Gloria Meiske Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910272",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-189": {
+    "customer_ref": "CUST-RTL-189",
+    "customer_name": "Warung Kasih Joppy Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920273",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-190": {
+    "customer_ref": "CUST-RTL-190",
+    "customer_name": "Kios Filadelfia Deasy Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930274",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-191": {
+    "customer_ref": "CUST-RTL-191",
+    "customer_name": "Kios Tante Ronny Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940275",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-192": {
+    "customer_ref": "CUST-RTL-192",
+    "customer_name": "Warung Om Grace Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950276",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-193": {
+    "customer_ref": "CUST-RTL-193",
+    "customer_name": "Kios Ci Bobby Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960277",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-194": {
+    "customer_ref": "CUST-RTL-194",
+    "customer_name": "Warung Tante Erna Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970278",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-195": {
+    "customer_ref": "CUST-RTL-195",
+    "customer_name": "Kios Ko Jacky Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980279",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-196": {
+    "customer_ref": "CUST-RTL-196",
+    "customer_name": "Warung Lita Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990280",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-197": {
+    "customer_ref": "CUST-RTL-197",
+    "customer_name": "Kios Berkat Nico Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-198": {
+    "customer_ref": "CUST-RTL-198",
+    "customer_name": "Kios Gloria Vicky Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810282",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-199": {
+    "customer_ref": "CUST-RTL-199",
+    "customer_name": "Warung Kasih Yola Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820283",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-200": {
+    "customer_ref": "CUST-RTL-200",
+    "customer_name": "Kios Filadelfia Franky Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830284",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-201": {
+    "customer_ref": "CUST-RTL-201",
+    "customer_name": "Kios Tante Siska Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840285",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-202": {
+    "customer_ref": "CUST-RTL-202",
+    "customer_name": "Warung Om Stenly Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850286",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-203": {
+    "customer_ref": "CUST-RTL-203",
+    "customer_name": "Kios Ci Wanda Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860287",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-204": {
+    "customer_ref": "CUST-RTL-204",
+    "customer_name": "Warung Tante Roy Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870288",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-205": {
+    "customer_ref": "CUST-RTL-205",
+    "customer_name": "Kios Ko Vera Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880289",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-206": {
+    "customer_ref": "CUST-RTL-206",
+    "customer_name": "Warung Pingkan Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890290",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-207": {
+    "customer_ref": "CUST-RTL-207",
+    "customer_name": "Kios Berkat Toar Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-208": {
+    "customer_ref": "CUST-RTL-208",
+    "customer_name": "Kios Gloria Lumimuut Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910292",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-209": {
+    "customer_ref": "CUST-RTL-209",
+    "customer_name": "Warung Kasih Engelin Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920293",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-210": {
+    "customer_ref": "CUST-RTL-210",
+    "customer_name": "Kios Filadelfia Marietje Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930294",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-211": {
+    "customer_ref": "CUST-RTL-211",
+    "customer_name": "Kios Tante Tin Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940295",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-212": {
+    "customer_ref": "CUST-RTL-212",
+    "customer_name": "Warung Om Oce Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950296",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-213": {
+    "customer_ref": "CUST-RTL-213",
+    "customer_name": "Kios Ci Utu Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960297",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-214": {
+    "customer_ref": "CUST-RTL-214",
+    "customer_name": "Warung Tante Meyke Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970298",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-215": {
+    "customer_ref": "CUST-RTL-215",
+    "customer_name": "Kios Ko Ferry Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980299",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-216": {
+    "customer_ref": "CUST-RTL-216",
+    "customer_name": "Warung Dani Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990300",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-217": {
+    "customer_ref": "CUST-RTL-217",
+    "customer_name": "Kios Berkat Ventje Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-218": {
+    "customer_ref": "CUST-RTL-218",
+    "customer_name": "Kios Gloria Novry Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810302",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-219": {
+    "customer_ref": "CUST-RTL-219",
+    "customer_name": "Warung Kasih Ritha Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820303",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-220": {
+    "customer_ref": "CUST-RTL-220",
+    "customer_name": "Kios Filadelfia Meylan Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830304",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-221": {
+    "customer_ref": "CUST-RTL-221",
+    "customer_name": "Kios Tante Hein Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840305",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-222": {
+    "customer_ref": "CUST-RTL-222",
+    "customer_name": "Warung Om Vonny Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850306",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-223": {
+    "customer_ref": "CUST-RTL-223",
+    "customer_name": "Kios Ci Meiske Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860307",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-224": {
+    "customer_ref": "CUST-RTL-224",
+    "customer_name": "Warung Tante Joppy Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870308",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-225": {
+    "customer_ref": "CUST-RTL-225",
+    "customer_name": "Kios Ko Deasy Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880309",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-226": {
+    "customer_ref": "CUST-RTL-226",
+    "customer_name": "Warung Ronny Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890310",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-227": {
+    "customer_ref": "CUST-RTL-227",
+    "customer_name": "Kios Berkat Grace Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-228": {
+    "customer_ref": "CUST-RTL-228",
+    "customer_name": "Kios Gloria Bobby Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910312",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-229": {
+    "customer_ref": "CUST-RTL-229",
+    "customer_name": "Warung Kasih Erna Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920313",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-230": {
+    "customer_ref": "CUST-RTL-230",
+    "customer_name": "Kios Filadelfia Jacky Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930314",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-231": {
+    "customer_ref": "CUST-RTL-231",
+    "customer_name": "Kios Tante Lita Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940315",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-232": {
+    "customer_ref": "CUST-RTL-232",
+    "customer_name": "Warung Om Nico Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950316",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-233": {
+    "customer_ref": "CUST-RTL-233",
+    "customer_name": "Kios Ci Vicky Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960317",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-234": {
+    "customer_ref": "CUST-RTL-234",
+    "customer_name": "Warung Tante Yola Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970318",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-235": {
+    "customer_ref": "CUST-RTL-235",
+    "customer_name": "Kios Ko Franky Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980319",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-236": {
+    "customer_ref": "CUST-RTL-236",
+    "customer_name": "Warung Siska Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990320",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-237": {
+    "customer_ref": "CUST-RTL-237",
+    "customer_name": "Kios Berkat Stenly Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-238": {
+    "customer_ref": "CUST-RTL-238",
+    "customer_name": "Kios Gloria Wanda Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810322",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-239": {
+    "customer_ref": "CUST-RTL-239",
+    "customer_name": "Warung Kasih Roy Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820323",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-240": {
+    "customer_ref": "CUST-RTL-240",
+    "customer_name": "Kios Filadelfia Vera Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830324",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-241": {
+    "customer_ref": "CUST-RTL-241",
+    "customer_name": "Kios Tante Pingkan Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108840325",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-242": {
+    "customer_ref": "CUST-RTL-242",
+    "customer_name": "Warung Om Toar Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808850326",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-243": {
+    "customer_ref": "CUST-RTL-243",
+    "customer_name": "Kios Ci Lumimuut Jalan Salib",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508860327",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-244": {
+    "customer_ref": "CUST-RTL-244",
+    "customer_name": "Warung Tante Engelin Pondok Damai",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208870328",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-245": {
+    "customer_ref": "CUST-RTL-245",
+    "customer_name": "Kios Ko Marietje Samping Lapangan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108880329",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-246": {
+    "customer_ref": "CUST-RTL-246",
+    "customer_name": "Warung Tin Tikungan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808890330",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-247": {
+    "customer_ref": "CUST-RTL-247",
+    "customer_name": "Kios Berkat Oce Jembatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-248": {
+    "customer_ref": "CUST-RTL-248",
+    "customer_name": "Kios Gloria Utu Kompleks",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208910332",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-249": {
+    "customer_ref": "CUST-RTL-249",
+    "customer_name": "Warung Kasih Meyke Pasar",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108920333",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-250": {
+    "customer_ref": "CUST-RTL-250",
+    "customer_name": "Kios Filadelfia Ferry Depan SD",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808930334",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-251": {
+    "customer_ref": "CUST-RTL-251",
+    "customer_name": "Kios Tante Dani Dekat Mesjid",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508940335",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-252": {
+    "customer_ref": "CUST-RTL-252",
+    "customer_name": "Warung Om Ventje Puncak",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208950336",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-253": {
+    "customer_ref": "CUST-RTL-253",
+    "customer_name": "Kios Ci Novry Lorong 1",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010108960337",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-254": {
+    "customer_ref": "CUST-RTL-254",
+    "customer_name": "Warung Tante Ritha Lorong 2",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808970338",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-255": {
+    "customer_ref": "CUST-RTL-255",
+    "customer_name": "Kios Ko Meylan Lorong 3",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508980339",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-256": {
+    "customer_ref": "CUST-RTL-256",
+    "customer_name": "Warung Hein Dekat Gereja",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208990340",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-257": {
+    "customer_ref": "CUST-RTL-257",
+    "customer_name": "Kios Berkat Vonny Pintu Masuk",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "TIN_0",
+    "customer_tax_id": "0000000000000000",
+    "tax_id_status": "UNREGISTERED_ZERO_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-258": {
+    "customer_ref": "CUST-RTL-258",
+    "customer_name": "Kios Gloria Meiske Ujung Lorong",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171010808810342",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-259": {
+    "customer_ref": "CUST-RTL-259",
+    "customer_name": "Warung Kasih Joppy Bawah Pohon",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171011508820343",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-RTL-260": {
+    "customer_ref": "CUST-RTL-260",
+    "customer_name": "Kios Filadelfia Deasy Perempatan",
+    "channel_code": "RTL",
+    "is_pkp": false,
+    "buyer_id_type": "NIK",
+    "customer_tax_id": "7171012208830344",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-01": {
+    "customer_ref": "CUST-INST-01",
+    "customer_name": "RSUP Prof. Kandou Malalayang",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000345",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-02": {
+    "customer_ref": "CUST-INST-02",
+    "customer_name": "Four Points by Sheraton Manado",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000346",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-03": {
+    "customer_ref": "CUST-INST-03",
+    "customer_name": "Hotel Sintesa Peninsula Manado",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000347",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-04": {
+    "customer_ref": "CUST-INST-04",
+    "customer_name": "Katering Minahasa Indah",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000348",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-05": {
+    "customer_ref": "CUST-INST-05",
+    "customer_name": "Restoran Raja Sate Paniki",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000349",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-06": {
+    "customer_ref": "CUST-INST-06",
+    "customer_name": "Hotel Novotel Manado Golf Resort",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000350",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-07": {
+    "customer_ref": "CUST-INST-07",
+    "customer_name": "Katering Bahu Makmur",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000351",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-08": {
+    "customer_ref": "CUST-INST-08",
+    "customer_name": "Restoran Nelayan Megamas",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000352",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-09": {
+    "customer_ref": "CUST-INST-09",
+    "customer_name": "Katering Berkat Tondano",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000353",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  },
+  "CUST-INST-10": {
+    "customer_ref": "CUST-INST-10",
+    "customer_name": "Mess Karyawan Pelabuhan Bitung",
+    "channel_code": "INST",
+    "is_pkp": true,
+    "buyer_id_type": "NPWP16",
+    "customer_tax_id": "0123456789000354",
+    "tax_id_status": "SYNTHETIC_TEST_IDENTITY",
+    "pkp_decision_source": "EXPLICIT_REGISTRY_FIXTURE"
+  }
+}

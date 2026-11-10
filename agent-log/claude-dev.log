@@ -136,3 +136,79 @@
 - P2: --c-nav di tokens.css #0b1f4d -> #001a57 (sama dengan tokens.json dan DS_RECONCILIATION K1); tests/design-tokens-parity.test.ts menjaga CSS=JSON
 - CI: pwa.yml push juga untuk agen/pwa-*, langkah npm run test:tokens; [BU] npm registry tidak dapat dijangkau di sesi ini sehingga vitest/prettier/tsc belum dijalankan lokal
 - Task managed by claude-dev agent at 2026-11-08T13:32:51+07:00
+
+[2026-11-09T17:55:02+07:00] [INFO] I2b: AR/AP subledger FIN05-FIN09 (partner ledger, open items as-of, signed aging)
+- Model baru: id.finance.partner.ledger (FIN05/FIN06), id.finance.open.items (FIN07), id.finance.aged.partner.balance (FIN08/FIN09); helper murni ledger_subledger.py memakai partial reconciliation bertanggal, bukan amount_residual saat ini.
+- AR dan AP dipisah per (partner_id, account_type); baris partnerless diekspos sebagai exception eksplisit; bucket aging bertanda dan wajib tie-out ke total open items/GL kontrol.
+- Runner disposable scripts/ops/verify_finance_i2_arap_subledger.py: oracle AML/partial independen, render OCA open_items dan aged_partner_balance pada pin f48b4ea, role/company negative, tamper dan unreconcile rollback; workflow finance-i0-spike menambah langkah PASS.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 41 tes finance PASS termasuk 9 tes I2b. [BU] CI native exact-SHA belum dijalankan; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-09T17:55:02+07:00
+
+[2026-11-09T18:36:16+07:00] [INFO] I2b/PR104: perbaikan scope Environment pada runner native AR/AP
+- Diagnosis CI exact-SHA bd09643: job candidate-install-upgrade gagal di check_fixture dengan 'Environment' object has no attribute 'with_context' pada scripts/ops/verify_finance_i2_arap_subledger.py.
+- Perbaikan: scope environment laporan diganti env(context=dict(env.context, allowed_company_ids=[company.id])) mengikuti pola verify_finance_stock_bridge.py; scoping company tetap dilakukan modelset via with_context(...).with_company(...) di dalam _snapshot.
+- Audit ulang sumber OCA pin f48b4ea: wizard _prepare_report_data, _get_report_values, struktur Open_Items/total_amount dan aged_partner_balance, serta konfigurasi interval 30/60/90/120 sesuai dengan runner.
+- Verifikasi lokal ulang: ruff PASS; check_manifests PASS (12 addon); 41 tes finance PASS.
+- [BU] CI native exact-SHA belum dijalankan ulang; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-09T18:36:16+07:00
+
+[2026-11-09T18:56:43+07:00] [INFO] I2b/PR104: kunci bucket OCA aged memakai account id
+- CI exact-SHA 0988502 mencapai langkah I2b (install/upgrade dan seluruh langkah sebelumnya PASS) tetapi gagal di assert_oca_aged_partner_balance: 'OCA aged account 161 residual mismatch'.
+- Akar masalah: _expected_aging mengelompokkan bucket account_buckets berdasarkan account_type, sedangkan baris OCA aged_partner_balance dikunci account id; defaultdict mengembalikan 0 sehingga assertion selalu gagal.
+- Perbaikan: account_buckets kini dikunci row['account_id']; menambahkan unit test regresi test_oca_aged_rows_are_matched_by_account_id (42 tes finance).
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 42 tes finance PASS. [BU] CI native exact-SHA berikutnya belum dijalankan.
+- Task managed by claude-dev agent at 2026-11-09T18:56:43+07:00
+
+[2026-11-09T19:20:45+07:00] [INFO] I2b/PR104: CI native exact-SHA 24b41898 PASS
+- Workflow Finance I0 candidate spike run 42613105445 pada SHA 24b4189896e6d839fa16c08a7b1379c9123616c1 PASS (6m49s); langkah I2b mencetak FINANCE_I2B_ARAP_SUBLEDGER=PASS setelah install/upgrade, foundation, golden, security, stock bridge, dan I2a.
+- Seluruh check PR #104 pada SHA tersebut hijau: static, init-test, install-test, Upgrade Runtime Verification, seed-invariants, pwa-quality, pwa-gate, pwa-browser, pwa-container, candidate-install-upgrade.
+- Dua kegagalan I2b sebelumnya sudah diperbaiki: (1) Environment.with_context tidak ada, diganti env(context=...); (2) bucket OCA aged dikunci account_id, bukan account_type.
+- Commit dokumentasi ini hanya mengubah docs/finance, HANDOFF, dan agent-log; tidak mengubah kode. [BU] Verifikasi exact-SHA commit dokumentasi menyusul; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA dan PR menunggu review/sign-off.
+- Task managed by claude-dev agent at 2026-11-09T19:20:45+07:00
+
+[2026-11-09T21:20:00+07:00] [INFO] I2b/PR104: perbaikan P2 scope filter open items (both legs selected)
+- Temuan review 5826064955: _partial_payloads memakai domain OR sehingga partial tetap dipakai walau counterpart di luar filter journal_ids/date_from/partner_ids; residual FIN07 dan gl_control_total lalu mengukur cakupan berbeda (contoh jurnal: 28 vs 88; date_from: 0 vs -82).
+- Semantik: journal_ids, partner_ids, dan date_from mendefinisikan slice laporan; partial hanya mengurangi residual bila KEDUA kaki berada di slice. Domain produksi kini AND (debit_move_id in selected dan credit_move_id in selected); reconstruct_open_items juga menolak partial dengan kaki di luar slice sebagai pertahanan berlapis; FIN07/FIN08/FIN09 mengekspos partial_scope = both_legs_selected.
+- Regresi: unit test baru test_open_items_ignore_partials_with_counterpart_outside_slice; runner native menambah oracle independent_open_items(journal_ids=..., date_from=...) dengan query AND dan dua kasus terfilter pada as-of 2026-07-31 (journal sale = 88, date_from 2026-07-10 = -82, keduanya wajib tie-out ke GL control).
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 43 tes finance PASS. [BU] CI native exact-SHA menyusul; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA; PR belum di-merge.
+- Task managed by claude-dev agent at 2026-11-09T21:20:00+07:00
+[2026-11-09T21:40:00+07:00] [INFO] I2b/PR104: CI native exact-SHA 8310f44 PASS (fix scope filter)
+- Seluruh 14 check PR #104 pada SHA 8310f441d1408ec89656dd7f2519efdb446a0f44 SUCCESS: CI, Finance I0 candidate spike (run 42634728686), Upgrade Runtime Verification, Seed supervision, PWA quality, static/init/install.
+- Log native I2b memuat kasus baru filter=journal_sale dan filter=date_from_0710 untuk customer/supplier pada scale=1 dan scale=7 dengan result=PASS; residual dan gl_control_total konsisten (88 dan -82) serta gl_tie_out balanced.
+- Kasus lama tetap PASS: FIN05/FIN06 Juli-Agustus, FIN07 14/25/31 Juli dan 31 Agustus, FIN08/FIN09, OCA open_items/aged_partner_balance, role/company negative, tamper, unreconcile.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 43 tes finance PASS. [BU] Sign-off supervisor belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA; PR belum di-merge.
+- Task managed by claude-dev agent at 2026-11-09T21:40:00+07:00
+[2026-11-09T22:25:00+07:00] [INFO] I2b/PR104: MERGED setelah APPROVE reviewer
+- Reviewer frankiezz1988 memberi APPROVE pada SHA 1d7a2c8d8224e412d00931810a1e5e7578d8eb03 (review PRR_kwDOVUWh9s8AAAABW2AfZg, 2026-11-09T15:17:31Z): perbaikan P2 dinilai menyelesaikan inkonsistensi scope, partial_scope=both_legs_selected terdokumentasi, regresi native journal/date AR/AP dua skala lulus, tidak ada defect tersisa.
+- Catatan non-blocking reviewer: tambahkan kasus native partner_ids pada iterasi berikutnya karena filter itu juga bagian kontrak slice, walau implementasi memakai jalur seleksi line IDs yang sama.
+- PR #104 di-merge ke main pada 2026-11-09T15:18:02Z oleh frankiezz1988, merge commit 7c957ad686dd820fcd62636d2e9ebfbea3103831; 14/14 check pada SHA 1d7a2c8 SUCCESS sebelum merge.
+- [BU] Merge kode bukan penerimaan laporan: export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller masih terbuka; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA. Tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-09T22:25:00+07:00[2026-11-10T00:05:00+07:00] [INFO] I2b: kasus native slice partner_ids (tindak lanjut non-blocking reviewer PR104)
+- Menindaklanjuti catatan reviewer pada review PRR_kwDOVUWh9s8AAAABW2AfZg: partner_ids adalah dimensi slice ketiga dan kini punya kasus native sendiri.
+- Runner scripts/ops/verify_finance_i2_arap_subledger.py: _posted_lines dan independent_open_items menerima partner_ids; filtered_scopes mencakup journal_sale, date_from_0710, dan partner_named (as-of 2026-07-25); hard-coded check memverifikasi FIN07 partnerless_residual=0 / partnerless_line_ids=[] / AR 28 / AP -47 / gl_tie_out, serta FIN08-FIN09 hanya partner terpilih, total -19, balanced dan tie-out.
+- Unit test baru test_open_items_slice_invariant_holds_for_every_scope membuktikan total residual selalu sama dengan saldo slice untuk slice jurnal, date_from, partner, dan partner+partnerless.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 44 tes finance PASS. [BU] CI native exact-SHA menyusul; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T00:05:00+07:00
+[2026-11-10T01:10:00+07:00] [INFO] I2b/PR107: CI native exact-SHA 0253311 PASS (slice partner_ids)
+- Seluruh check PR #107 pada SHA 02533111607fe4415b732bc9e86985689a794694 SUCCESS (12/12), termasuk Finance I0 candidate spike run 42659085225 yang mencetak FINANCE_I2B_ARAP_SUBLEDGER=PASS.
+- Log native memuat filter=partner_named as-of 2026-07-25 untuk customer/supplier pada scale=1 dan scale=7 result=PASS, bersama journal_sale dan date_from_0710.
+- Module Upgrade from Persisted Baseline tidak terpicu karena PR hanya menyentuh scripts/tests/docs (path filter upgrade-runtime.yml mensyaratkan addons/**); 12/12 adalah cakupan penuh.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 44 tes finance PASS. [BU] Review supervisor belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T01:10:00+07:00
+[2026-11-10T02:35:00+07:00] [INFO] I2b/PR107: CI exact-SHA 55a647a PASS pasca merge main
+- PR #107 pada SHA 55a647a17828bec47b0c3a234189ff1f2f8d7a0b MERGEABLE dengan 12/12 check SUCCESS, termasuk Finance I0 candidate spike run 42663566390 (FINANCE_I2B_ARAP_SUBLEDGER=PASS).
+- Matriks filter lengkap terbukti native: journal_sale, date_from_0710, dan partner_named untuk customer/supplier pada scale=1 dan scale=7, semuanya result=PASS.
+- Konflik HANDOFF dan agent-log dengan main c8fe1c0 diselesaikan tanpa menghapus entri agen lain; duplikasi entri 22:25 dihapus, entri 00:05 dan 01:10 dipertahankan sekali (log append-only tetap dipatuhi).
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 44 tes finance PASS. [BU] Review supervisor PR107 belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T02:35:00+07:00
+[2026-11-10T03:20:00+07:00] [INFO] I2b/PR107: CI exact-SHA de8ed14 PASS; review diminta
+- PR #107 pada SHA de8ed14ca95867de6adbaa5631fc2bf4d837177e MERGEABLE, 12/12 check SUCCESS. Komentar penjelasan sudah dipasang (issuecomment-6746946093) dan reviewer frankiezz1988 diminta kembali.
+- Module Upgrade from Persisted Baseline tetap tidak terpicu karena PR hanya menyentuh scripts/tests/docs; 12/12 adalah cakupan penuh.
+- [BU] Menunggu verdict supervisor; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T03:20:00+07:00
+[2026-11-10T04:05:00+07:00] [INFO] I2b/PR107: HOLD reviewer terpenuhi (CI 12/12 sukses, branch current)
+- Reviewer memberi verdict sementara HOLD pada HEAD 55a647a karena CI exact-HEAD masih berjalan; review substantif kode dinilai PASS (filter partner_ids pada pemilihan AML, partial hanya dikonsumsi bila kedua kaki di slice, tie-out FIN07 dan coverage/total FIN08-FIN09, unit regression slice partner dan partnerless).
+- Kondisi HOLD kini terpenuhi: 12/12 check SUCCESS pada HEAD 20e2197 termasuk Finance I0 candidate spike run 42667795009 (FINANCE_I2B_ARAP_SUBLEDGER=PASS); branch memuat main c8fe1c0 dan MERGEABLE.
+- HEAD bergeser 55a647a -> 20e2197 tetapi diff hanya docs/HANDOFF.md dan agent-log/claude-dev.log; git diff --name-only 55a647a 20e2197 -- addons scripts tests kosong, jadi kode yang dinilai identik. Konfirmasi diposting di issuecomment-6747502453.
+- [BU] Menunggu verdict final supervisor; PR belum di-merge; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T04:05:00+07:00

@@ -7,7 +7,13 @@
     "sku_code": "ULV-CLR-02",
     "lot_number": "LOT-VER-20260704-32",
     "qty_cartons": "12",
-    "rejection_dpp": "7632000.00"
+    "line_gross_dpp": "7632000.00",
+    "line_disc_dpp": "213696.00",
+    "rejection_dpp": "7418304.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-002",
@@ -17,7 +23,13 @@
     "sku_code": "KPA-ABC-03",
     "lot_number": "LOT-TOS-20260701-15",
     "qty_cartons": "1",
-    "rejection_dpp": "180000.00"
+    "line_gross_dpp": "180000.00",
+    "line_disc_dpp": "2160.00",
+    "rejection_dpp": "177840.00",
+    "rejection_reason": "SEGEL_PABRIK_BOCOR",
+    "incident_batch_ref": "SIM-INC-202608-LEAK",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_seal_leak.jpg"
   },
   {
     "rejection_id": "REJ-202608-003",
@@ -27,7 +39,13 @@
     "sku_code": "MYR-CND-09",
     "lot_number": "LOT-ORA-20260703-43",
     "qty_cartons": "2",
-    "rejection_dpp": "345600.00"
+    "line_gross_dpp": "345600.00",
+    "line_disc_dpp": "4147.20",
+    "rejection_dpp": "341452.80",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-004",
@@ -37,7 +55,13 @@
     "sku_code": "MYR-BBG-03",
     "lot_number": "LOT-ORA-20260615-INIT-17",
     "qty_cartons": "13",
-    "rejection_dpp": "4056000.00"
+    "line_gross_dpp": "4056000.00",
+    "line_disc_dpp": "190632.00",
+    "rejection_dpp": "3865368.00",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-005",
@@ -47,7 +71,13 @@
     "sku_code": "ULV-LFB-02",
     "lot_number": "LOT-VER-20260704-18",
     "qty_cartons": "13",
-    "rejection_dpp": "4212000.00"
+    "line_gross_dpp": "4212000.00",
+    "line_disc_dpp": "117936.00",
+    "rejection_dpp": "4094064.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-006",
@@ -57,7 +87,13 @@
     "sku_code": "MYR-CND-04",
     "lot_number": "LOT-ORA-20260615-INIT-38",
     "qty_cartons": "8",
-    "rejection_dpp": "1536000.00"
+    "line_gross_dpp": "1536000.00",
+    "line_disc_dpp": "24576.00",
+    "rejection_dpp": "1511424.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-007",
@@ -67,7 +103,13 @@
     "sku_code": "KPA-KA-09",
     "lot_number": "LOT-TOS-20260615-INIT-09",
     "qty_cartons": "4",
-    "rejection_dpp": "1680000.00"
+    "line_gross_dpp": "1680000.00",
+    "line_disc_dpp": "20160.00",
+    "rejection_dpp": "1659840.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-008",
@@ -77,7 +119,13 @@
     "sku_code": "ULV-RNS-05",
     "lot_number": "LOT-VER-20260704-11",
     "qty_cartons": "3",
-    "rejection_dpp": "792000.00"
+    "line_gross_dpp": "792000.00",
+    "line_disc_dpp": "9504.00",
+    "rejection_dpp": "782496.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-009",
@@ -87,7 +135,13 @@
     "sku_code": "WNG-JVN-03",
     "lot_number": "LOT-NGS-20260615-INIT-28",
     "qty_cartons": "4",
-    "rejection_dpp": "316800.00"
+    "line_gross_dpp": "316800.00",
+    "line_disc_dpp": "3801.60",
+    "rejection_dpp": "312998.40",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-010",
@@ -97,7 +151,13 @@
     "sku_code": "ULV-RNS-01",
     "lot_number": "LOT-VER-20260704-07",
     "qty_cartons": "3",
-    "rejection_dpp": "882000.00"
+    "line_gross_dpp": "882000.00",
+    "line_disc_dpp": "10584.00",
+    "rejection_dpp": "871416.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-011",
@@ -107,7 +167,13 @@
     "sku_code": "ULV-PSD-03",
     "lot_number": "LOT-VER-20260704-27",
     "qty_cartons": "4",
-    "rejection_dpp": "1872000.00"
+    "line_gross_dpp": "1872000.00",
+    "line_disc_dpp": "22464.00",
+    "rejection_dpp": "1849536.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-012",
@@ -117,7 +183,13 @@
     "sku_code": "MYR-RMA-03",
     "lot_number": "LOT-ORA-20260702-03",
     "qty_cartons": "5",
-    "rejection_dpp": "1275000.00"
+    "line_gross_dpp": "1275000.00",
+    "line_disc_dpp": "19125.00",
+    "rejection_dpp": "1255875.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-013",
@@ -127,7 +199,13 @@
     "sku_code": "KPA-KA-06",
     "lot_number": "LOT-TOS-20260701-06",
     "qty_cartons": "8",
-    "rejection_dpp": "1632000.00"
+    "line_gross_dpp": "1632000.00",
+    "line_disc_dpp": "68544.00",
+    "rejection_dpp": "1563456.00",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-014",
@@ -137,7 +215,13 @@
     "sku_code": "ULV-MLT-02",
     "lot_number": "LOT-VER-20260704-14",
     "qty_cartons": "15",
-    "rejection_dpp": "3600000.00"
+    "line_gross_dpp": "3600000.00",
+    "line_disc_dpp": "122400.00",
+    "rejection_dpp": "3477600.00",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-015",
@@ -147,7 +231,13 @@
     "sku_code": "WNG-FLD-03",
     "lot_number": "LOT-NGS-20260615-INIT-25",
     "qty_cartons": "18",
-    "rejection_dpp": "1555200.00"
+    "line_gross_dpp": "1555200.00",
+    "line_disc_dpp": "52876.80",
+    "rejection_dpp": "1502323.20",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-016",
@@ -157,7 +247,13 @@
     "sku_code": "KPA-KA-06",
     "lot_number": "LOT-TOS-20260701-06",
     "qty_cartons": "7",
-    "rejection_dpp": "1428000.00"
+    "line_gross_dpp": "1428000.00",
+    "line_disc_dpp": "22848.00",
+    "rejection_dpp": "1405152.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-017",
@@ -167,7 +263,13 @@
     "sku_code": "WNG-JSJ-04",
     "lot_number": "LOT-NGS-20260615-INIT-16",
     "qty_cartons": "4",
-    "rejection_dpp": "528000.00"
+    "line_gross_dpp": "528000.00",
+    "line_disc_dpp": "6336.00",
+    "rejection_dpp": "521664.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-018",
@@ -177,7 +279,13 @@
     "sku_code": "MYR-CND-03",
     "lot_number": "LOT-ORA-20260703-37",
     "qty_cartons": "2",
-    "rejection_dpp": "441600.00"
+    "line_gross_dpp": "441600.00",
+    "line_disc_dpp": "5299.20",
+    "rejection_dpp": "436300.80",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-019",
@@ -187,7 +295,13 @@
     "sku_code": "WNG-FLD-03",
     "lot_number": "LOT-NGS-20260615-INIT-25",
     "qty_cartons": "10",
-    "rejection_dpp": "864000.00"
+    "line_gross_dpp": "864000.00",
+    "line_disc_dpp": "29376.00",
+    "rejection_dpp": "834624.00",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-020",
@@ -197,7 +311,13 @@
     "sku_code": "MYR-BBG-02",
     "lot_number": "LOT-ORA-20260703-16",
     "qty_cartons": "13",
-    "rejection_dpp": "5928000.00"
+    "line_gross_dpp": "5928000.00",
+    "line_disc_dpp": "94848.00",
+    "rejection_dpp": "5833152.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-021",
@@ -207,7 +327,13 @@
     "sku_code": "MYR-BTR-01",
     "lot_number": "LOT-ORA-20260703-11",
     "qty_cartons": "11",
-    "rejection_dpp": "3520000.00"
+    "line_gross_dpp": "3520000.00",
+    "line_disc_dpp": "56320.00",
+    "rejection_dpp": "3463680.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-022",
@@ -217,7 +343,13 @@
     "sku_code": "ULV-BNG-02",
     "lot_number": "LOT-VER-20260704-42",
     "qty_cartons": "3",
-    "rejection_dpp": "1584000.00"
+    "line_gross_dpp": "1584000.00",
+    "line_disc_dpp": "19008.00",
+    "rejection_dpp": "1564992.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-023",
@@ -227,7 +359,13 @@
     "sku_code": "MYR-BBG-03",
     "lot_number": "LOT-ORA-20260702-17",
     "qty_cartons": "1",
-    "rejection_dpp": "312000.00"
+    "line_gross_dpp": "312000.00",
+    "line_disc_dpp": "11544.00",
+    "rejection_dpp": "300456.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-024",
@@ -237,7 +375,13 @@
     "sku_code": "MYR-CND-03",
     "lot_number": "LOT-ORA-20260703-37",
     "qty_cartons": "18",
-    "rejection_dpp": "3974400.00"
+    "line_gross_dpp": "3974400.00",
+    "line_disc_dpp": "186796.80",
+    "rejection_dpp": "3787603.20",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-025",
@@ -247,7 +391,13 @@
     "sku_code": "KPA-RTD-04",
     "lot_number": "LOT-TOS-20260701-28",
     "qty_cartons": "4",
-    "rejection_dpp": "912000.00"
+    "line_gross_dpp": "912000.00",
+    "line_disc_dpp": "14592.00",
+    "rejection_dpp": "897408.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-026",
@@ -257,7 +407,13 @@
     "sku_code": "ULV-LFB-05",
     "lot_number": "LOT-VER-20260704-21",
     "qty_cartons": "10",
-    "rejection_dpp": "5760000.00"
+    "line_gross_dpp": "5760000.00",
+    "line_disc_dpp": "161280.00",
+    "rejection_dpp": "5598720.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-027",
@@ -267,7 +423,13 @@
     "sku_code": "MYR-BBG-01",
     "lot_number": "LOT-ORA-20260702-15",
     "qty_cartons": "1",
-    "rejection_dpp": "400000.00"
+    "line_gross_dpp": "400000.00",
+    "line_disc_dpp": "14800.00",
+    "rejection_dpp": "385200.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-028",
@@ -277,7 +439,13 @@
     "sku_code": "KPA-RTD-07",
     "lot_number": "LOT-TOS-20260701-31",
     "qty_cartons": "3",
-    "rejection_dpp": "504000.00"
+    "line_gross_dpp": "504000.00",
+    "line_disc_dpp": "21168.00",
+    "rejection_dpp": "482832.00",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-029",
@@ -287,7 +455,13 @@
     "sku_code": "MYR-BBG-03",
     "lot_number": "LOT-ORA-20260702-17",
     "qty_cartons": "3",
-    "rejection_dpp": "936000.00"
+    "line_gross_dpp": "936000.00",
+    "line_disc_dpp": "11232.00",
+    "rejection_dpp": "924768.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-030",
@@ -297,7 +471,13 @@
     "sku_code": "MYR-CND-01",
     "lot_number": "LOT-ORA-20260702-35",
     "qty_cartons": "3",
-    "rejection_dpp": "648000.00"
+    "line_gross_dpp": "648000.00",
+    "line_disc_dpp": "23976.00",
+    "rejection_dpp": "624024.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-031",
@@ -307,7 +487,13 @@
     "sku_code": "MYR-CND-05",
     "lot_number": "LOT-ORA-20260703-39",
     "qty_cartons": "9",
-    "rejection_dpp": "1728000.00"
+    "line_gross_dpp": "1728000.00",
+    "line_disc_dpp": "81216.00",
+    "rejection_dpp": "1646784.00",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-032",
@@ -317,7 +503,13 @@
     "sku_code": "KPA-ABC-04",
     "lot_number": "LOT-TOS-20260701-16",
     "qty_cartons": "6",
-    "rejection_dpp": "1368000.00"
+    "line_gross_dpp": "1368000.00",
+    "line_disc_dpp": "21888.00",
+    "rejection_dpp": "1346112.00",
+    "rejection_reason": "SEGEL_PABRIK_BOCOR",
+    "incident_batch_ref": "SIM-INC-202608-LEAK",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_seal_leak.jpg"
   },
   {
     "rejection_id": "REJ-202608-033",
@@ -327,7 +519,13 @@
     "sku_code": "ULV-LFB-02",
     "lot_number": "LOT-VER-20260704-18",
     "qty_cartons": "3",
-    "rejection_dpp": "972000.00"
+    "line_gross_dpp": "972000.00",
+    "line_disc_dpp": "11664.00",
+    "rejection_dpp": "960336.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-034",
@@ -337,7 +535,13 @@
     "sku_code": "MYR-KPK-RTD-01",
     "lot_number": "LOT-ORA-20260702-29",
     "qty_cartons": "7",
-    "rejection_dpp": "1260000.00"
+    "line_gross_dpp": "1260000.00",
+    "line_disc_dpp": "20160.00",
+    "rejection_dpp": "1239840.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-035",
@@ -347,7 +551,13 @@
     "sku_code": "WNG-GLD-01",
     "lot_number": "LOT-NGS-20260615-INIT-29",
     "qty_cartons": "3",
-    "rejection_dpp": "252000.00"
+    "line_gross_dpp": "252000.00",
+    "line_disc_dpp": "3024.00",
+    "rejection_dpp": "248976.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-036",
@@ -357,7 +567,13 @@
     "sku_code": "KPA-ABC-02",
     "lot_number": "LOT-TOS-20260701-14",
     "qty_cartons": "20",
-    "rejection_dpp": "4080000.00"
+    "line_gross_dpp": "4080000.00",
+    "line_disc_dpp": "89760.00",
+    "rejection_dpp": "3990240.00",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-037",
@@ -367,7 +583,13 @@
     "sku_code": "WNG-SDP-07",
     "lot_number": "LOT-NGS-20260615-INIT-07",
     "qty_cartons": "9",
-    "rejection_dpp": "1296000.00"
+    "line_gross_dpp": "1296000.00",
+    "line_disc_dpp": "20736.00",
+    "rejection_dpp": "1275264.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-038",
@@ -377,7 +599,13 @@
     "sku_code": "WNG-JSJ-04",
     "lot_number": "LOT-NGS-20260615-INIT-16",
     "qty_cartons": "1",
-    "rejection_dpp": "132000.00"
+    "line_gross_dpp": "132000.00",
+    "line_disc_dpp": "2112.00",
+    "rejection_dpp": "129888.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-039",
@@ -387,7 +615,13 @@
     "sku_code": "WNG-JSJ-04",
     "lot_number": "LOT-NGS-20260615-INIT-16",
     "qty_cartons": "3",
-    "rejection_dpp": "396000.00"
+    "line_gross_dpp": "396000.00",
+    "line_disc_dpp": "4752.00",
+    "rejection_dpp": "391248.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-040",
@@ -397,7 +631,13 @@
     "sku_code": "WNG-GLD-02",
     "lot_number": "LOT-NGS-20260701-30",
     "qty_cartons": "2",
-    "rejection_dpp": "168000.00"
+    "line_gross_dpp": "168000.00",
+    "line_disc_dpp": "2520.00",
+    "rejection_dpp": "165480.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-041",
@@ -407,7 +647,13 @@
     "sku_code": "ULV-LFB-02",
     "lot_number": "LOT-VER-20260704-18",
     "qty_cartons": "3",
-    "rejection_dpp": "972000.00"
+    "line_gross_dpp": "972000.00",
+    "line_disc_dpp": "15552.00",
+    "rejection_dpp": "956448.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-042",
@@ -417,7 +663,13 @@
     "sku_code": "ULV-LFB-06",
     "lot_number": "LOT-VER-20260704-22",
     "qty_cartons": "16",
-    "rejection_dpp": "8256000.00"
+    "line_gross_dpp": "8256000.00",
+    "line_disc_dpp": "280704.00",
+    "rejection_dpp": "7975296.00",
+    "rejection_reason": "EXPIRY_DEKAT_DITOLAK",
+    "incident_batch_ref": "SIM-SLA-202608-EXPIRED",
+    "evidence_type": "NONE",
+    "evidence_photo_ref": ""
   },
   {
     "rejection_id": "REJ-202608-043",
@@ -427,7 +679,13 @@
     "sku_code": "ULV-LFB-01",
     "lot_number": "LOT-VER-20260704-17",
     "qty_cartons": "1",
-    "rejection_dpp": "324000.00"
+    "line_gross_dpp": "324000.00",
+    "line_disc_dpp": "5184.00",
+    "rejection_dpp": "318816.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-044",
@@ -437,7 +695,13 @@
     "sku_code": "KPA-RTD-02",
     "lot_number": "LOT-TOS-20260701-26",
     "qty_cartons": "4",
-    "rejection_dpp": "672000.00"
+    "line_gross_dpp": "672000.00",
+    "line_disc_dpp": "10752.00",
+    "rejection_dpp": "661248.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-045",
@@ -447,7 +711,13 @@
     "sku_code": "MYR-CND-04",
     "lot_number": "LOT-ORA-20260702-38",
     "qty_cartons": "10",
-    "rejection_dpp": "1920000.00"
+    "line_gross_dpp": "1920000.00",
+    "line_disc_dpp": "30720.00",
+    "rejection_dpp": "1889280.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-046",
@@ -457,7 +727,13 @@
     "sku_code": "MYR-BBG-03",
     "lot_number": "LOT-BBG-202608-NEW-01",
     "qty_cartons": "2",
-    "rejection_dpp": "624000.00"
+    "line_gross_dpp": "624000.00",
+    "line_disc_dpp": "9984.00",
+    "rejection_dpp": "614016.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   },
   {
     "rejection_id": "REJ-202608-047",
@@ -467,6 +743,12 @@
     "sku_code": "WNG-FLD-03",
     "lot_number": "LOT-NGS-20260615-INIT-25",
     "qty_cartons": "10",
-    "rejection_dpp": "864000.00"
+    "line_gross_dpp": "864000.00",
+    "line_disc_dpp": "24192.00",
+    "rejection_dpp": "839808.00",
+    "rejection_reason": "KEMASAN_RUSAK_TRANSIT",
+    "incident_batch_ref": "SIM-INC-202608-DAMAGED",
+    "evidence_type": "SYNTHETIC",
+    "evidence_photo_ref": "data/evidence/pod_synthetic_carton_damage.jpg"
   }
 ]

@@ -1,8 +1,123 @@
-## 2026-11-10T14:12:06+07:00 — claude-design — Fase 3A: Order v2, Koreksi_so, foto SKU, klaster Lainnya
+## 2026-11-10T11:42:54+07:00 — claude-design — Fase 3A: Order v2, Koreksi_so, foto SKU, klaster Lainnya
 
 **Berubah:** domain/order-discount.ts + kontrak pricing v2 (program/tactical bertingkat, diskon footer Rp); OrderScreen/Ringkasan per mockup; KoreksiScreen; sku-photo (Cache Storage, ganti hanya jika versi berubah, fallback placeholder); MorePage + ActivityScreens (Antrean sinkronisasi, Riwayat aktivitas, Riwayat pengajuan); SyncDiagnostics dihapus. Utang backend: DS_RECONCILIATION K14.
 **Diverifikasi:** [F] tsc, vitest, e2e phone 90 lulus. **Belum diuji:** [BU] tablet, CI GitHub.
 **Berikutnya:** Fase 3B (Kamera, Selesai kunjungan, Extra call, Penagihan, Delivery/POD, Closing, Uang lapangan, HRIS, status/error), lalu PR docs "plan quick action".
+
+## 2026-11-10T02:40:00+07:00 — antigravity — F2: Penutupan Celah Fail-Open TAX-SOURCE Kode 04 & Sinkronisasi origin/main (PR #105)
+**Berubah:**
+- `scripts/ops/seed_v2_gates.py`: Penutupan celah fail-open pada `_check_tax()`. Baris faktur ber-`tax_code == '04'` kini wajib memiliki field `commercial_dpp`, non-empty, numerik valid, non-negative, dan diverifikasi dengan formula DPP Nilai Lain 11/12 dan PPN 12%. Jika syarat basis komersial tidak terpenuhi, gate langsung `fail('TAX-SOURCE', ...)` dan `continue` tanpa jatuh (fall through) ke jalur legacy.
+- `tests/test_seed_v2_gates.py`: Menambahkan 8 test mutasi regresi komprehensif untuk kode transaksi 04 (`test_tax_code_04_valid`, missing `commercial_dpp`, blank `commercial_dpp`, non-numeric, negative, wrong tax base, wrong PPN rate, wrong total), membuktikan bahwa transaksi 04 tanpa commercial basis tetap ditolak keras meskipun angkanya sengaja dicocokkan dengan rumus legacy.
+- `data/registers/periods/2026-08/MANIFEST.json`: Mengikat generator commit `a63c612` dan LF SHA-256 terbaru dari `scripts/ops/seed_v2_gates.py`.
+- Integrasi git: Menggabungkan `origin/main` (`6ff44a7`: PR #107) ke cabang `agen/seed-f2-august-refinement` via merge commit `a0f35fd` tanpa force-push.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_seed_planner.py tests/test_seed_v2_gates.py`: 122/122 unit tests PASS (37.9s).
+- [F] `python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict`: PASS (11 gates run, 0 violations).
+- [F] `python scripts/ops/verify_seed_invariants.py`: PASS.
+- [F] `python scripts/ops/verify_seed_acceptance.py`: PASS.
+- [F] `python -m ruff check scripts/ops/ tests/`: PASS (clean).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] Branch sinkron dengan `origin/main` (`behind_by = 0`).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #105.
+**Berikutnya:**
+- Push branch ke remote `origin/agen/seed-f2-august-refinement`, pantau 14 CI check-runs hingga 100% hijau, dan minta re-review supervisor untuk final approval & merge.
+
+## 2026-11-10T02:35:00+07:00 — Agent VSCode — I2b/PR107: CI exact-SHA 55a647a hijau (pasca merge main)
+**Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode pada commit ini.
+**Diverifikasi:** [F] PR #107 pada SHA `55a647a17828bec47b0c3a234189ff1f2f8d7a0b` `MERGEABLE` dengan 12/12 check SUCCESS, termasuk `Finance I0 candidate spike` run `42663566390` yang mencetak `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Log native memuat matriks filter lengkap: `journal_sale`, `date_from_0710`, dan `partner_named` untuk customer/supplier pada `scale=1` dan `scale=7`, semuanya `result=PASS`. [F] Konflik `docs/HANDOFF.md` dan `agent-log/claude-dev.log` dengan `c8fe1c0` diselesaikan tanpa menghapus entri agen lain; entri 22:25 yang terduplikasi saat rekonsiliasi dihapus, entri 00:05 dan 01:10 dipertahankan sekali. [F] `ruff` PASS; `check_manifests.py` PASS (12 addon); 44 tes finance PASS.
+**Belum diuji:** [BU] Review/sign-off supervisor PR #107; bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller. Tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
+**Berikutnya:** re-request review PR #107; setelah disetujui lanjut paket `I2c` (FIN36–38, FIN55–56).
+
+## 2026-11-10T01:10:00+07:00 — Agent VSCode — I2b/PR107: CI native exact-SHA 0253311 hijau (slice partner_ids)
+**Berubah:** hanya dokumentasi: `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode pada commit ini (kode ada di `0253311`).
+**Diverifikasi:** [F] Seluruh check PR #107 pada SHA `02533111607fe4415b732bc9e86985689a794694` SUCCESS (12/12), termasuk `Finance I0 candidate spike` run `42659085225` yang mencetak `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Log native memuat kasus baru `filter=partner_named` as-of 2026-07-25 untuk customer/supplier pada `scale=1` dan `scale=7` dengan `result=PASS`, bersama `journal_sale` dan `date_from_0710`. [F] `Module Upgrade from Persisted Baseline` tidak terpicu karena PR ini tidak menyentuh `addons/**` (path filter `upgrade-runtime.yml`), sehingga 12/12 adalah cakupan penuh untuk perubahan `scripts/`+`tests/`+`docs/`. [F] `ruff` PASS; `check_manifests.py` PASS (12 addon); 44 tes finance PASS.
+**Belum diuji:** [BU] Review/sign-off supervisor untuk PR #107; bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller. Tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
+**Berikutnya:** re-request review PR #107; setelah itu lanjut paket `I2c` (FIN36–38, FIN55–56).
+
+## 2026-11-10T00:05:00+07:00 — Agent VSCode — I2b: kasus native slice partner_ids (tindak lanjut reviewer)
+**Berubah:** `scripts/ops/verify_finance_i2_arap_subledger.py`: `_posted_lines` dan `independent_open_items` menerima `partner_ids`; daftar `filtered_scopes` kini mencakup `partner_named` (as-of 25 Juli) di samping `journal_sale` dan `date_from_0710`; blok hard-coded menambahkan pemeriksaan FIN07 (partnerless residual 0, total AR 28/AP -47, tie-out) dan FIN08/FIN09 (hanya partner terpilih, total -19, balanced, tie-out). `tests/test_finance_i2_arap_subledger.py`: regresi `test_open_items_slice_invariant_holds_for_every_scope`. `docs/finance/I2B_ARAP_SUBLEDGER.md` mencatat angka slice partner.
+**Diverifikasi:** [F] `python -m ruff check .` PASS; `python scripts/check_manifests.py` PASS (12 addon); `python -m unittest discover -s tests -p "test_finance*.py"` PASS (44 tes). [F] Menutup catatan non-blocking reviewer pada review `PRR_kwDOVUWh9s8AAAABW2AfZg`: `partner_ids` kini punya kasus native sendiri dan invarian "residual = saldo slice" diuji untuk keempat jenis slice pada level unit.
+**Belum diuji:** [BU] CI native exact-SHA untuk commit ini; tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
+**Berikutnya:** push, buka PR, pantau seluruh check exact-SHA, lalu serahkan review.
+
+## 2026-11-10T00:15:00+07:00 — antigravity — F2: Resolusi Tuntas Temuan P2 Supervisor PR #105 (Fixture Identitas Coretax & Verifiable Synthetic Evidence)
+**Berubah:**
+- data/registers/customer_tax_profile_fixture.json:
+  * Fixture deklaratif eksplisit 354 outlet pelanggan: 46 outlet PKP ber-NPWP16 (`is_pkp: true`, `buyer_id_type: NPWP16`), 277 outlet Non-PKP ber-NIK Manado (`is_pkp: false`, `buyer_id_type: NIK`), dan 31 outlet Non-PKP tanpa NPWP/NIK (`buyer_id_type: TIN_0`, `'0000000000000000'`). Seluruh identitas non-produksi berstatus transparan `tax_id_status: SYNTHETIC_TEST_IDENTITY` atau `UNREGISTERED_ZERO_IDENTITY`.
+- data/evidence/pod_synthetic_carton_damage.jpg & data/evidence/pod_synthetic_seal_leak.jpg:
+  * Berkas bukti fisik valid JPEG (JFIF standar) tersedia nyata di repositori untuk seluruh penolakan bertanda `SYNTHETIC`.
+- scripts/ops/seed_planner.py:
+  * Memuat langsung `customer_tax_profile_fixture.json` pada `_load_customers()`, mengeliminasi pemotongan string `vat[:16]`, rumus modulo `idx % 10`, dan penalaran algoritmik fiktif.
+  * Menyelaraskan katalog `SYNTHETIC_REJECTION_FIXTURE` ke berkas `data/evidence/` fisik dan melarang klaim `ACTUAL` palsu.
+- scripts/ops/generate_period_pack.py:
+  * Mengekspos parameter perpajakan eksplisit di manifest konfigurasi: `statutory_rate: "0.12"`, `dpp_factor: "11/12"`, `effective_rate: "0.11"`, `rate: "0.11"`.
+- tests/test_seed_planner.py:
+  * Menambahkan asersi verifikasi fisik: `(REPO_ROOT / r["evidence_photo_ref"]).is_file()` untuk setiap penolakan sintetis.
+  * Menambahkan pengujian keselarasan 100% invoice terhadap fixture deklaratif `customer_tax_profile_fixture.json`.
+- data/registers/periods/2026-08/:
+  * Regenerasi seluruh berkas pack periode Agustus 2026 dan MANIFEST.json terikat commit generator `a168e4e`.
+**Diverifikasi:**
+- [F] python -m unittest tests.test_seed_planner tests.test_seed_v2_gates: 114 tests PASS in 20.7s.
+- [F] python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict: PASS (11 gates, 0 violations).
+- [F] python scripts/ops/verify_seed_invariants.py: PASS.
+- [F] python scripts/ops/verify_seed_acceptance.py: PASS.
+- [F] python -m ruff check scripts/ops/ tests/: PASS (clean).
+- [F] python scripts/check_manifests.py: PASS (12 addon OK).
+**Belum diuji:**
+- [BU] Verifikasi re-review exact-SHA oleh supervisor pada PR #105.
+**Berikutnya:**
+- Commit pack data & logs, push ke `origin/agen/seed-f2-august-refinement`, pantau CI PR #105 hingga 100% hijau, dan minta re-review supervisor.
+
+## 2026-11-09T22:25:00+07:00 — Agent VSCode — PR104 MERGED: I2b AR/AP subledger FIN05–FIN09
+**Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode.
+**Diverifikasi:** [F] Reviewer `frankiezz1988` memberi verdict `APPROVE` pada SHA `1d7a2c8d8224e412d00931810a1e5e7578d8eb03` (review `PRR_kwDOVUWh9s8AAAABW2AfZg`, 2026-11-09T15:17:31Z) dan menyatakan tidak ada defect tersisa yang menghalangi merge. [F] PR #104 di-merge ke `main` pada 2026-11-09T15:18:02Z oleh `frankiezz1988` sebagai merge commit `7c957ad686dd820fcd62636d2e9ebfbea3103831`. [F] Seluruh 14 check pada SHA `1d7a2c8` SUCCESS sebelum merge, termasuk `Finance I0 candidate spike` run `42637440796` dengan `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Catatan non-blocking reviewer: tambahan kasus native `partner_ids` disarankan pada iterasi berikutnya, karena filter itu juga bagian kontrak slice walau memakai jalur seleksi line IDs yang sama.
+**Belum diuji:** [BU] Bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller; `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA` karena merge kode bukan penerimaan laporan. Tidak ada deploy atau mutasi DB live.
+**Berikutnya:** kerjakan tindak lanjut non-blocking `partner_ids` pada iterasi berikutnya beserta gate export/sign-off FIN05–FIN09.
+
+## 2026-11-09T22:25:00+07:00 — antigravity — F2: Sinkronisasi origin/main (7c957ad: PR #104) & Resolusi Review Substantif PR #105
+
+## 2026-11-09T22:25:00+07:00 — Agent VSCode — PR104 MERGED: I2b AR/AP subledger FIN05–FIN09
+**Berubah:** hanya `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode.
+**Diverifikasi:** [F] Reviewer `frankiezz1988` memberi verdict `APPROVE` pada SHA `1d7a2c8d8224e412d00931810a1e5e7578d8eb03` (review `PRR_kwDOVUWh9s8AAAABW2AfZg`, 2026-11-09T15:17:31Z) dan menyatakan tidak ada defect tersisa yang menghalangi merge. [F] PR #104 di-merge ke `main` pada 2026-11-09T15:18:02Z oleh `frankiezz1988` sebagai merge commit `7c957ad686dd820fcd62636d2e9ebfbea3103831`. [F] Seluruh 14 check pada SHA `1d7a2c8` SUCCESS sebelum merge, termasuk `Finance I0 candidate spike` run `42637440796` dengan `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Catatan non-blocking reviewer: tambahan kasus native `partner_ids` disarankan pada iterasi berikutnya, karena filter itu juga bagian kontrak slice walau memakai jalur seleksi line IDs yang sama.
+**Belum diuji:** [BU] Bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller; `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA` karena merge kode bukan penerimaan laporan. Tidak ada deploy atau mutasi DB live.
+**Berikutnya:** kerjakan tindak lanjut non-blocking `partner_ids` pada iterasi berikutnya beserta gate export/sign-off FIN05–FIN09.
+
+## 2026-11-09T21:40:00+07:00 — Agent VSCode — PR104: CI native exact-SHA 8310f44 hijau (fix scope filter)
+**Berubah:** hanya dokumentasi: entri bukti pada `docs/HANDOFF.md` dan `agent-log/claude-dev.log`. Tidak ada perubahan kode pada commit ini (kode perbaikan ada di `8310f44`).
+**Diverifikasi:** [F] Seluruh 14 check PR #104 pada SHA `8310f441d1408ec89656dd7f2519efdb446a0f44` SUCCESS, termasuk `Finance I0 candidate spike` (run `42634728686`) yang mencetak `FINANCE_I2B_ARAP_SUBLEDGER=PASS`. [F] Log native memuat kasus baru `filter=journal_sale` dan `filter=date_from_0710` untuk customer/supplier pada `scale=1` dan `scale=7` dengan `result=PASS`, di samping seluruh kasus FIN05–FIN09, OCA open_items/aged, role negative, tamper, dan unreconcile. [F] `MERGEABLE`; branch tidak tertinggal dari main. [F] `ruff` PASS, `check_manifests.py` PASS (12 addon), 43 tes finance PASS.
+**Belum diuji:** [BU] Sign-off supervisor atas revisi ini; bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller. Tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`; PR #104 belum di-merge.
+**Berikutnya:** re-request review supervisor pada HEAD ini; merge hanya setelah persetujuan.
+
+## 2026-11-09T21:20:00+07:00 — Agent VSCode — PR104: scope filter open items (both legs selected)
+**Berubah:** `addons/id_finance_reporting/models/subledger_reports.py`: `_partial_payloads` kini memakai domain `AND` (`debit_move_id in selected` **dan** `credit_move_id in selected`) alih-alih `OR`, dan hasil FIN07/FIN08/FIN09 mengekspos `partial_scope = "both_legs_selected"`. `addons/id_finance_reporting/models/ledger_subledger.py`: `reconstruct_open_items` melewati partial yang salah satu kakinya di luar slice terpilih (pertahanan berlapis) dan mendokumentasikan semantik slice. `scripts/ops/verify_finance_i2_arap_subledger.py`: oracle `independent_open_items` menerima `journal_ids`/`date_from`, `_posted_lines` memfilter jurnal, query partial memakai domain `AND`, plus dua kasus native terfilter dengan angka hard-coded. `tests/test_finance_i2_arap_subledger.py`: regresi `test_open_items_ignore_partials_with_counterpart_outside_slice`. `docs/finance/I2B_ARAP_SUBLEDGER.md` memuat semantik filter dan tabel angka terfilter.
+**Diverifikasi:** [F] `python -m ruff check .` PASS; `python scripts/check_manifests.py` PASS (12 addon); `python -m unittest discover -s tests -p "test_finance*.py"` PASS (43 tes). [F] Menutup temuan P2 review `5826064955`: sebelumnya slice jurnal hanya ke FIN07 = 28 dan slice `date_from` = 0, sedangkan GL control 88/-82; setelah perbaikan residual dan GL control sama-sama 88 dan -82 sehingga tie-out berlaku.
+**Belum diuji:** [BU] CI native exact-SHA untuk commit ini (termasuk langkah I2b pada database disposable); tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`; PR #104 belum di-merge.
+**Berikutnya:** push commit, pantau seluruh check PR #104 pada SHA exact, lalu re-request review supervisor.
+
+## 2026-11-09T19:20:45+07:00 — Agent VSCode — PR104: CI native exact-SHA hijau
+**Berubah:** `docs/finance/I2B_ARAP_SUBLEDGER.md` mencatat bukti CI native; `docs/HANDOFF.md` dan `agent-log/claude-dev.log` diperbarui. Tidak ada perubahan kode pada commit dokumentasi ini.
+**Diverifikasi:** [F] `Finance I0 candidate spike` run `42613105445` pada SHA `24b4189896e6d839fa16c08a7b1379c9123616c1` PASS (6m49s), termasuk langkah `FINANCE_I2B_ARAP_SUBLEDGER=PASS`; install/upgrade, foundation, golden, security, stock bridge, dan I2a juga PASS. [F] Seluruh check PR #104 pada SHA tersebut hijau (static, init-test, install-test, Upgrade Runtime Verification, seed-invariants, pwa-quality/gate/browser/container, candidate-install-upgrade). [F] `ruff check .` PASS; `check_manifests.py` PASS (12 addon); 42 tes finance PASS.
+**Belum diuji:** [BU] Exact-SHA CI untuk commit dokumentasi ini; bukti export XLSX/PDF, browser geometry, volume/performance I8, dan sign-off Finance Controller. Tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`; PR #104 menunggu review/sign-off, belum di-merge.
+**Berikutnya:** verifikasi exact-SHA commit dokumentasi, lalu serahkan review/sign-off.
+
+## 2026-11-09T18:56:43+07:00 — Agent VSCode — PR104: perbaikan kedua runner I2b (kunci bucket OCA aged)
+**Berubah:** `scripts/ops/verify_finance_i2_arap_subledger.py`: `_expected_aging` kini mengelompokkan bucket akun berdasarkan `account_id` (bukan `account_type`) agar cocok dengan baris `aged_partner_balance` OCA; `tests/test_finance_i2_arap_subledger.py`: menambahkan regresi `test_oca_aged_rows_are_matched_by_account_id`. `agent-log/claude-dev.log` diperbarui.
+**Diverifikasi:** [F] CI exact-SHA `0988502` (run 42611305792, job 129140132461) lulus install/upgrade, foundation, golden, security, stock bridge, dan I2a; hanya I2b gagal dengan `OCA aged account 161 residual mismatch`. [F] `python -m ruff check .` PASS; `python scripts/check_manifests.py` PASS (12 addon); 42 tes finance PASS.
+**Belum diuji:** [BU] CI native exact-SHA pada commit perbaikan ini; tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
+**Berikutnya:** push commit perbaikan, pantau ulang CI exact-SHA PR #104.
+
+## 2026-11-09T18:36:16+07:00 — Agent VSCode — PR104: perbaikan runner I2b setelah CI merah
+**Berubah:** `scripts/ops/verify_finance_i2_arap_subledger.py`: scope environment laporan pada `check_fixture`/`check_tamper_and_unreconcile` diganti dari `env.with_context(...).with_company(...)` menjadi `env(context=dict(env.context, allowed_company_ids=[company.id]))`; scoping company tetap dilakukan modelset (`self.with_context(...).with_company(...)`) di dalam `_snapshot`. `agent-log/claude-dev.log` diperbarui.
+**Diverifikasi:** [F] CI exact-SHA `bd09643` (run 42605429286, job 129120103454) gagal di langkah I2b dengan `'Environment' object has no attribute 'with_context'`, bukan kegagalan install/upgrade/data. [F] Sumber OCA pin `f48b4ea777c444256aa1c215ec3117d604b5feff` diaudit ulang untuk wizard/open items/aged API. [F] `python -m ruff check .` PASS; `python scripts/check_manifests.py` PASS (12 addon); 41 tes finance PASS.
+**Belum diuji:** [BU] CI native exact-SHA pada commit perbaikan ini; tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
+**Berikutnya:** push commit perbaikan, pantau CI exact-SHA PR #104, lalu serahkan review/sign-off sebelum merge.
+
+## 2026-11-09T17:55:02+07:00 — Agent VSCode — I2b: AR/AP subledger FIN05–FIN09
+**Berubah:** `addons/id_finance_reporting/models/ledger_subledger.py` (helper murni partner ledger, rekonstruksi open items dari `account.partial.reconcile.max_date <= as_of`, aging bertanda, tie-out GL); `addons/id_finance_reporting/models/subledger_reports.py` (`id.finance.partner.ledger` FIN05/FIN06, `id.finance.open.items` FIN07, `id.finance.aged.partner.balance` FIN08/FIN09); `scripts/ops/verify_finance_i2_arap_subledger.py` (oracle AML/partial independen, render OCA `open_items`/`aged_partner_balance`, role/company negative, tamper dan unreconcile rollback); `tests/test_finance_i2_arap_subledger.py`; `.github/workflows/finance-i0-spike.yml` (path filter + langkah `FINANCE_I2B_ARAP_SUBLEDGER=PASS`); `docs/finance/I2B_ARAP_SUBLEDGER.md`; manifest `19.0.1.2.0`; `i18n/id.po`. AR dan AP tidak pernah di-net; baris tanpa partner tetap exception eksplisit.
+**Diverifikasi:** [F] `python -m ruff check .` PASS; `python scripts/check_manifests.py` PASS (12 addon); `python -m unittest discover -s tests -p "test_finance*.py"` PASS (41 tes), termasuk 9 tes I2b. [F] Sumber OCA pin `f48b4ea777c444256aa1c215ec3117d604b5feff` diperiksa: OCA menambahkan kembali partial `max_date > date_at`, sehingga formula residual bertanggal setara.
+**Belum diuji:** [BU] Eksekusi native Odoo/Postgres dan CI exact-SHA untuk branch `agen/finance-i2b-arap-subledger`; tidak ada deploy atau mutasi DB live. `REPORT_CATALOG.csv` FIN05–FIN09 tetap `BELUM_DITERIMA`.
+**Berikutnya:** push branch, buka PR, pantau CI, lalu serahkan review/sign-off sebelum merge.
 
 ## 2026-11-09T17:55:00+07:00 — claude-design — PR #103 review P2: approval dari receipt, SKU stale, cartEmpty
 
