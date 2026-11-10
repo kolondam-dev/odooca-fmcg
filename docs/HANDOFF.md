@@ -15,7 +15,7 @@
   3. Menambahkan test deteksi drift pada entri OPEX.
   4. Memperbarui mock ORM untuk perbandingan foreign key relational dan sequential queries.
   5. 22/22 unit tests PASS.
-- Sinkronisasi Main: Merge origin/main terbaru (`c2e3025` PR #109 PWA Fase 3).
+- Sinkronisasi Main: Merge origin/main terbaru (`2d7c37c` PR #111 koreksi ADR I2c & `c2e3025` PR #109 PWA Fase 3).
 
 **Diverifikasi:**
 - [F] `python -m unittest tests/test_period_pack_loader.py -v`: 22/22 tests PASS (100%).
@@ -31,7 +31,19 @@
 - [BU] CI exact-SHA pada commit terbaru di GitHub Actions.
 
 **Berikutnya:**
-- Commit, push branch, perbarui deskripsi PR #110, dan sampaikan hasil resolusi blocker kepada supervisor untuk re-review dan otorisasi merge.
+- Commit merge, push branch, dan sampaikan hasil resolusi blocker kepada supervisor untuk re-review dan otorisasi merge.
+
+## 2026-11-10T21:00:00+07:00 — Agent VSCode — I2c/PR111: koreksi klaim scope non-dokumentasi pada ADR
+**Berubah:** `docs/finance/I2C_DISCOVERY_ADR.md` (menghapus klaim "satu-satunya perubahan non-docs pada PR ini" yang tidak akurat untuk PR #111, diganti pernyataan scope eksplisit); `docs/HANDOFF.md`, `agent-log/claude-dev.log`.
+**Diverifikasi:** [F] Blocker reviewer valid: PR #111 hanya mengubah `docs/finance/I2C_DISCOVERY_ADR.md`, `docs/HANDOFF.md`, dan `agent-log/claude-dev.log`; `git diff --name-only origin/main HEAD -- addons scripts tests oca.lock deploy .github` mengembalikan kosong, sehingga klaim adanya perubahan test pada PR ini memang salah warisan konteks PR #108. [F] Kini ADR menyatakan dua hal terpisah: test `test_finance_i2c_adr_formulas.py` (13 tes) diperkenalkan oleh PR #108, dan PR #111 hanya mengubah berkas dokumentasi. [F] `grep` untuk "satu-satunya|non-docs" pada ADR → 0 hasil; tidak ada klaim serupa di entri HANDOFF PR ini. [F] `ruff` PASS; `check_manifests.py` PASS (12 addon); 13 tes formula PASS.
+**Belum diuji:** [BU] CI exact-SHA pada HEAD baru (perubahan hanya dokumentasi, tetapi reviewer akan memeriksa HEAD dan status CI terbaru); tidak ada deploy/mutasi DB live.
+**Berikutnya:** push, pantau check exact HEAD, lalu minta verdict ulang.
+
+## 2026-11-10T16:10:00+07:00 — Agent VSCode — I2c/PR108 MERGED: ADR disetujui; catatan 11 vs 13 tes diperbaiki
+**Berubah:** `docs/finance/I2C_DISCOVERY_ADR.md` (jumlah test dikoreksi dari 11 menjadi **13** di dua tempat, plus deskripsi cakupan test dilengkapi); `docs/HANDOFF.md`, `agent-log/claude-dev.log`.
+**Diverifikasi:** [F] Reviewer memberi `APPROVE` (review `5836920631`) pada HEAD `7bc1efd86a513806159175b4da4971d0d74a63b8`; PR #108 di-squash-merge ke `main` sebagai `160ca84d171aa1450adf7d8f16b7ee359b99b391` pada 2026-11-10T04:56:33Z. [F] Reviewer memverifikasi sendiri source Odoo 19 `_prepare_exchange_difference_move_vals()`: gain −100.000 ↔ kredit akun exchange ↔ signed balance −100.000; loss +100.000 ↔ debit ↔ +100.000. [F] Catatan non-blocking reviewer: ADR menyebut 11 tes padahal file berisi 13 metode; `python -m unittest tests.test_finance_i2c_adr_formulas -v` mengonfirmasi `Ran 13 tests`, dan kedua rujukan sudah dikoreksi. [F] `ruff` PASS; `check_manifests.py` PASS (12 addon); 57 tes finance PASS.
+**Belum diuji:** [BU] Implementasi FIN36–FIN38/FIN55–FIN56 belum dimulai; verifikasi jurnal exchange native Odoo pada DB nyata tetap gate PR implementasi; penilaian lisensi AGPL-3 dan sign-off parameter FIN55/FIN56 masih terbuka. Tidak ada deploy/mutasi DB live.
+**Berikutnya:** mulai PR implementasi FIN37/FIN38 sesuai urutan ADR (urutan 3), dengan oracle native Odoo sebagai gate.
 
 ## 2026-11-10T11:42:54+07:00 — claude-design — Fase 3A: Order v2, Koreksi_so, foto SKU, klaster Lainnya
 
