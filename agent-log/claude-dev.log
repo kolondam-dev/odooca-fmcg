@@ -253,3 +253,11 @@
 - Re-review terakhir diminta; PR belum di-merge dan tidak ada perubahan kode aplikasi, oca.lock, deploy, atau katalog.
 - [BU] Formula masih diuji sebagai aritmetika murni; verifikasi terhadap jurnal exchange nyata Odoo menyusul pada PR implementasi FIN38. Tidak ada deploy/mutasi DB live.
 - Task managed by claude-dev agent at 2026-11-10T11:15:00+07:00
+[2026-11-10T12:10:00+07:00] [INFO] I2c/PR108: klarifikasi bahwa review terakhir menempel pada HEAD lama
+- Review PRR_kwDOVUWh9s8AAAABW8tDhg bersubmit commit 03aedbd, yaitu HEAD sebelum perbaikan; dua poin yang diminta (FIN37 fallback, FIN38 formula) sudah diperbaiki di 9e52f66 dan ada di HEAD b6f87e1.
+- Diff 03aedbd..b6f87e1 hanya docs/finance/I2C_DISCOVERY_ADR.md, tests/test_finance_i2c_adr_formulas.py, HANDOFF, dan log; git diff --name-only untuk addons/scripts/oca.lock/.github kosong.
+- FIN37: istilah fallback dihapus; ADR menyatakan tegas parameter jadwal tidak menghasilkan alokasi dan semua baris tanpa metadata hanya exception bernominal.
+- FIN38: formula per partial ditambahkan; tie-out dibatasi pada partial ber-exchange_move_id, sedangkan partial tanpa bukti posting dilaporkan sebagai realized_unposted_evidence di luar tie-out.
+- Penjelasan 12 vs 10 check: 10 adalah cakupan run PR-triggered yang diperiksa reviewer (Seed 2), 12 adalah total check-run yang menempel pada PR termasuk run push (Seed 4). Keduanya benar untuk cakupannya.
+- CI pada b6f87e1: 12/12 SUCCESS, MERGEABLE. [BU] Re-review pada HEAD terbaru belum ada; tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-10T12:10:00+07:00
