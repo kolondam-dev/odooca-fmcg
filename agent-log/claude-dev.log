@@ -337,3 +337,12 @@
 - Verifikasi lokal: 88 tes finance PASS; ruff PASS; check_manifests PASS (12 addon).
 - [BU] Pin account_invoice_start_end_dates masih terbuka (FIN37 tanpa metadata tetap fail-closed dan diverifikasi native); verifikasi FIN38 pada data exchange non-sintetis; validasi multi-mata-uang dengan dua kurs nyata belum ada di fixture native. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-11T05:40:00+07:00
+[2026-11-11T08:50:00+07:00] [INFO] I2c/PR112: tiga blocker review ditutup (OR-scope, tie-out scope, klasifikasi kasus khusus)
+- HEAD ec8cfd6: candidate-install-upgrade SUCCESS dengan FINANCE_I2C_SCHEDULES=PASS (run 42842257670). Satu kegagalan tersisa murni mirror Ubuntu pada install-test dan sudah di-rerun.
+- Blocker 1 (residual historis): query partial FIN38 memakai OR pada debit/credit_move_id. Dengan AND, filter journal_ids ke jurnal penjualan membuang kaki pembayaran jurnal kas sehingga faktur lunas tampak terbuka. Ini kebalikan aturan FIN07 (AND) dan alasannya didokumentasikan: FIN07 melaporkan slice, FIN38 merekonstruksi posisi baris terpilih.
+- Blocker 2 (scope tie-out): pembanding GL exchange kini dibatasi ke exchange_move_id yang dicapai dari partial dalam scope saat laporan terfilter, dan gl_tie_out.scope_limited=True. Tanpa filter, pembanding tetap seluruh perusahaan.
+- Blocker 3 (kasus khusus): leg map kini memuat semua baris in-scope termasuk mata uang fungsional, sehingga functional counterpart, write-off, dan reversal benar-benar terdeteksi. Deteksi write-off diperketat: harus ada kaki moneter yang terhubung ke kaki non-moneter (bukan sekadar ada akun beban).
+- Acceptance native baru (sesuai permintaan reviewer): faktur Juli yang dibayar Agustus diuji pada dua cutoff (31 Juli terbuka 100 USD, 31 Agustus closed), dan filter jurnal penjualan diuji tidak menyembunyikan settlement jurnal kas sekaligus tie-out balance dengan comparator ter-scope.
+- Verifikasi lokal: 90 tes finance PASS; ruff PASS; check_manifests PASS (12 addon).
+- [BU] Pin account_invoice_start_end_dates (FIN37 tanpa metadata tetap fail-closed, angka 150 terbukti di helper/unit); verifikasi FIN38 pada data exchange non-sintetis; fixture native masih satu mata uang asing. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-11T08:50:00+07:00
