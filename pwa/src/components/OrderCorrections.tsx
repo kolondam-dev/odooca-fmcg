@@ -9,7 +9,11 @@ import {
 } from "../domain/order-revisions";
 import { OrderRevisionSchema } from "../domain/order-revision-contracts";
 import { VisitOrderSchema } from "../domain/visit-contracts";
-import { type OrderUom } from "../domain/order-pricing";
+import {
+    orderV2Enabled,
+    ORDER_V2_UNSUPPORTED,
+    type OrderUom,
+} from "../domain/order-pricing";
 import {
     cartFromLegacy,
     cartLines,
@@ -366,6 +370,8 @@ function KoreksiScreen({
         setError("");
         try {
             assertRootOrderDay(rootItem, owner);
+            if (!orderV2Enabled(snapshot))
+                throw new Error(ORDER_V2_UNSUPPORTED);
             if (!morning)
                 throw new Error("Daily sync hari ini wajib sebelum koreksi.");
             if (form.reason.trim().length < 3)

@@ -12,6 +12,11 @@ import { productPackaging } from "./product-units.ts";
 export type Tiers = Partial<Record<OrderUom, number>>;
 export type Cart = Record<string, Tiers>;
 export const MAX_QTY = 999;
+export function validQty(n: unknown): n is number {
+    return (
+        typeof n === "number" && Number.isInteger(n) && n >= 1 && n <= MAX_QTY
+    );
+}
 const ORDER: OrderUom[] = ["carton", "pack", "pcs"];
 
 type Product = Snapshot["products"][number];
@@ -60,25 +65,34 @@ export function cartLines(
     const lines: OrderLineV2[] = [];
     /** SKU di draft yang sudah tidak ada di snapshot terbaru. */
     const stale: string[] = [];
+    /** Kuantitas tidak valid: diblokir, tidak pernah dipotong diam-diam. */
+    const invalid: string[] = [];
     for (const [id, tiers] of Object.entries(cart)) {
         const product = snapshot.products.find((p) => p.id === id);
-        const active = ORDER.filter((u) => (tiers[u] ?? 0) > 0);
+        const active = ORDER.filter((u) => (tiers[u] ?? 0) !== 0);
         if (!active.length) continue;
         if (!product) {
             stale.push(id);
+            continue;
+        }
+        const bad = active.find((u) => !validQty(tiers[u]));
+        if (bad) {
+            invalid.push(
+                `Kuantitas ${product.name} tidak valid (bilangan bulat 1–${MAX_QTY} per satuan).`,
+            );
             continue;
         }
         const line: OrderLineV2 = {
             product_id: id,
             tiers: active.map((uom) => ({
                 uom,
-                qty: String(Math.min(tiers[uom]!, MAX_QTY)),
+                qty: String(tiers[uom]),
             })),
         };
         if (discounts[id]?.length) line.discounts = discounts[id];
         lines.push(line);
     }
-    return { lines, stale };
+    return { lines, stale, invalid };
 }
 
 /** Teks "4 krt 2 pak" memakai singkatan satuan produk. */
@@ -99,7 +113,7 @@ export function cartTotals(
     footer: FooterDiscount[],
     snapshot: Snapshot,
 ) {
-    const { lines, stale } = cartLines(cart, discounts, snapshot);
+    const { lines, stale, invalid } = cartLines(cart, discounts, snapshot);
     const quote = quoteV2(lines, footer, snapshot);
     return {
         skuCount: lines.length,
@@ -108,7 +122,7 @@ export function cartTotals(
         quote,
         gross: quote.subtotal,
         total: quote.total,
-        errors: quote.errors,
+        errors: [...invalid, ...quote.errors],
     };
 }
 

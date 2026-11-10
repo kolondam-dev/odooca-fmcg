@@ -205,6 +205,10 @@ export const SnapshotSchema = z
             }),
         ),
         discount_programs: z.array(DiscountProgramSchema).optional(),
+        /** Kapabilitas server. `order_pricing_v2` harus eksplisit true agar PWA boleh mengirim order/revisi v2. */
+        features: z
+            .object({ order_pricing_v2: z.boolean().optional() })
+            .optional(),
         /** SKU yang pernah dipesan per outlet (daftar Display & stok). Ikut sync harian. */
         order_history: z
             .array(

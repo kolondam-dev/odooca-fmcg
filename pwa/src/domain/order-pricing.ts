@@ -157,3 +157,12 @@ export function orderHasDiscountRequest(payload: unknown): boolean {
         !!p.lines?.some((l) => l.discounts?.some((d) => d.kind === "tactical"))
     );
 }
+
+/** Gerbang kontrak: backend belum menyatakan dukungan v2 -> submit/revisi v2 dikunci. */
+export const ORDER_V2_UNSUPPORTED =
+    "Server belum mendukung kontrak order v2 (diskon bertingkat). Order belum dapat dikirim.";
+export function orderV2Enabled(snapshot: {
+    features?: { order_pricing_v2?: boolean };
+}) {
+    return snapshot.features?.order_pricing_v2 === true;
+}

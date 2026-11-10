@@ -12,7 +12,10 @@ import {
     assertQuoteV2,
     quoteV2,
 } from "../src/domain/order-discount";
-import { validateOrderQuote } from "../src/domain/order-pricing";
+import {
+    orderV2Enabled,
+    validateOrderQuote,
+} from "../src/domain/order-pricing";
 
 const mk = (
     id: string,
@@ -194,6 +197,30 @@ describe("order v2 sesuai mockup Ringkasan", () => {
 });
 
 describe("keranjang POS", () => {
+    it.each([
+        ["1000 (melebihi batas)", 1000],
+        ["negatif", -1],
+        ["desimal", 1.5],
+        ["NaN", Number.NaN],
+    ])("kuantitas %s diblokir, tidak dipotong diam-diam", (_n, qty) => {
+        const r = cartLines({ roma: { carton: qty } }, {}, snapshot);
+        expect(r.lines).toHaveLength(0);
+        expect(r.invalid).toHaveLength(1);
+        const t = cartTotals({ roma: { carton: qty } }, {}, [], snapshot);
+        expect(t.errors[0]).toMatch(/tidak valid/);
+        expect(t.skuCount).toBe(0);
+    });
+    it("draft malformed (string/null) diblokir", () => {
+        const bad = { roma: { carton: "5" as unknown as number } };
+        expect(cartLines(bad, {}, snapshot).invalid).toHaveLength(1);
+        const nul = { roma: { pack: null as unknown as number } };
+        expect(cartLines(nul, {}, snapshot).invalid).toHaveLength(0);
+    });
+    it("batas 999 diterima apa adanya", () => {
+        const r = cartLines({ roma: { carton: 999 } }, {}, snapshot);
+        expect(r.invalid).toHaveLength(0);
+        expect(r.lines[0]!.tiers[0]!.qty).toBe("999");
+    });
     it("SKU hilang dari katalog dilaporkan sebagai stale, bukan dibuang diam-diam", () => {
         const r = cartLines(
             { roma: { carton: 1 }, gone: { pack: 2 } },
@@ -222,5 +249,18 @@ describe("keranjang POS", () => {
     });
     it("teks ringkas memakai singkatan krt/pak/pcs", () => {
         expect(tierText(benn, { carton: 4, pack: 2 })).toBe("4 krt 2 pak");
+    });
+});
+
+describe("gerbang kontrak order v2", () => {
+    it("OFF kecuali server menyatakan eksplisit", () => {
+        expect(orderV2Enabled({})).toBe(false);
+        expect(orderV2Enabled({ features: {} })).toBe(false);
+        expect(orderV2Enabled({ features: { order_pricing_v2: false } })).toBe(
+            false,
+        );
+        expect(orderV2Enabled({ features: { order_pricing_v2: true } })).toBe(
+            true,
+        );
     });
 });

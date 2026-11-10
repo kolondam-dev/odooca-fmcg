@@ -4,7 +4,11 @@ import {
     type FieldProvider,
     type Snapshot,
 } from "../domain/contracts";
-import { lineChecks } from "../domain/order-pricing";
+import {
+    lineChecks,
+    orderV2Enabled,
+    ORDER_V2_UNSUPPORTED,
+} from "../domain/order-pricing";
 import { quoteV2 } from "../domain/order-discount";
 import type {
     DiscountProgram,
@@ -440,6 +444,10 @@ export function OrderScreen({
     async function send() {
         if (busy) return;
         setError("");
+        if (!orderV2Enabled(snapshot)) {
+            setError(ORDER_V2_UNSUPPORTED);
+            return;
+        }
         if (!display) {
             setError("Foto display toko wajib sebelum order dikirim.");
             return;
