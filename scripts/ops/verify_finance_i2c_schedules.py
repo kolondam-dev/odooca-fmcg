@@ -355,10 +355,14 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
                 snapshot["tied_exchange_move_ids"],
                 "FIN38 must tie to a posted exchange move",
             )
+            # The AR position is fully settled, so no AR line may remain in the
+            # unrealized base. The USD cash leg of the same entries is still an
+            # open monetary position and legitimately revalues at the as-of
+            # rate, so the report total is not required to be zero.
+            ar_account_id = fixture["accounts"]["ar"].id
             require(
-                snapshot["unrealized_total"] == 0.0,
-                f"FIN38 fully settled position must carry no unrealized amount, got "
-                f"{snapshot['unrealized_total']}",
+                all(row["account_id"] != ar_account_id for row in snapshot["unrealized_rows"]),
+                "FIN38 fully settled AR must carry no unrealized amount",
             )
             require(
                 snapshot["gl_tie_out"]["balanced"],
