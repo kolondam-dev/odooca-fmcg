@@ -15,6 +15,8 @@ on:
       - 'scripts/ops/verify_finance_stock_bridge.py'
       - 'scripts/ops/verify_finance_i2_ledgers_core.py'
       - 'scripts/ops/verify_finance_i2_arap_subledger.py'
+      - 'scripts/ops/verify_finance_i2c_schedules.py'
+      - 'tests/test_finance_i2c_schedules.py'
       - 'tests/test_finance_stock_bridge.py'
       - 'tests/test_finance_golden_ledger.py'
       - 'tests/test_finance_i2_ledgers_core.py'
@@ -151,6 +153,14 @@ jobs:
               --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
           ' < scripts/ops/verify_finance_i2_arap_subledger.py 2>&1 | tee finance-i0-evidence/i2b-arap-subledger.log
           grep -q '^FINANCE_I2B_ARAP_SUBLEDGER=PASS$' finance-i0-evidence/i2b-arap-subledger.log
+      - name: I2c accrual schedules and FX revaluation
+        run: |
+          set -euo pipefail
+          docker run --rm -i --network host --entrypoint bash fmcg-finance:i0 -c '
+            odoo shell -d finance_i0_reports_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ops/verify_finance_i2c_schedules.py 2>&1 | tee finance-i0-evidence/i2c-schedules.log
+          grep -q '^FINANCE_I2C_SCHEDULES=PASS$' finance-i0-evidence/i2c-schedules.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:

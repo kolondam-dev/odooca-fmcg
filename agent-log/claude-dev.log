@@ -308,3 +308,12 @@
 - Verifikasi lokal: grep "satu-satunya|non-docs" pada ADR -> 0 hasil; ruff PASS; check_manifests PASS (12 addon); 13 tes formula PASS.
 - [BU] CI exact-SHA HEAD baru belum jalan; tidak ada deploy/mutasi DB live; katalog FIN05-09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T21:00:00+07:00
+[2026-11-10T23:30:00+07:00] [INFO] I2c: implementasi FIN37 accrual schedules dan FIN38 FX revaluation
+- Model baru: id.finance.accrual.schedule (FIN37) dan id.finance.fx.revaluation (FIN38) memakai helper murni ledger_schedules.py tanpa ORM.
+- FIN37: metadata start_date/end_date wajib; tanpa metadata baris hanya menjadi exception bernominal missing_schedule_metadata (tidak ada alokasi asumtif, tanggal dokumen dilarang sebagai pengganti); rentang terbalik menjadi invalid_schedule_range; pengakuan straight-line berbasis hari inklusif dengan periode terakhir menyerap pembulatan sehingga jumlah periode tepat sama dengan balance.
+- FIN38: unrealized hanya dari amount_residual_currency posisi terbuka dikali kurs as-of; realized dihitung per partial via debit_amount_currency x (balance/amount_currency) dikurangi (-credit_amount_currency x rate). Positif = loss, negatif = gain mengikuti _get_exchange_account().
+- Tie-out memakai signed balance akun exchange dan hanya partial ber-exchange_move_id; partial tanpa bukti posting masuk realized_unposted_rows di luar tie-out. Akun income/expense_currency_exchange_account_id dikecualikan dari basis unrealized.
+- Cacat yang ditemukan dan diperbaiki saat pengembangan: alokasi bulanan awal berjumlah 1199,99 bukan 1200; periode terakhir kini menyerap selisih pembulatan. Ekspektasi test diselaraskan ke pro-rata hari sesuai ADR (181/365 = 595,07), bukan 12 bagian sama.
+- Runner native scripts/ops/verify_finance_i2c_schedules.py membuat fixture FX (faktur 100 USD @15.000, pembayaran @16.000, rekonsiliasi penuh, exchange gain -100.000) dan oracle independen; workflow finance-i0-spike menambah langkah FINANCE_I2C_SCHEDULES=PASS.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 77 tes finance PASS; YAML valid. [BU] CI native exact-SHA belum jalan; pin account_invoice_start_end_dates masih diperlukan agar FIN37 mengalokasikan jadwal nyata; REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T23:30:00+07:00
