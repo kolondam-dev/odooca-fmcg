@@ -270,3 +270,8 @@
 - ADR: tie-out kini memakai signed balance dengan tabel bukti dua arah dan catatan eksplisit bahwa -balance memberi tanda salah untuk gain.
 - Verifikasi lokal: 13/13 tes formula PASS; 57 tes finance PASS; ruff PASS; check_manifests PASS (12 addon). [BU] CI exact-SHA HEAD baru belum jalan; verifikasi terhadap jurnal exchange native Odoo pada DB nyata masih terbuka; tidak ada deploy/mutasi DB live.
 - Task managed by claude-dev agent at 2026-11-10T13:20:00+07:00
+[2026-11-10T14:30:00+07:00] [INFO] I2c/PR108: CI exact-SHA 18838e3 PASS (tanda tie-out FIN38)
+- Seluruh 12 check PR #108 pada SHA 18838e36902dabfe86f35b7f93c5d9923a6e7b77 SUCCESS dan MERGEABLE. Komposisi: CI 3, Finance I0 candidate spike 1, PWA quality 4, Seed supervision 4.
+- Re-review diminta pada HEAD ini; FIN37 sudah PASS per reviewer, yang tersisa hanya tanda tie-out FIN38 yang kini diperbaiki dan diuji dua arah.
+- [BU] Verifikasi terhadap jurnal exchange native Odoo pada DB nyata masih terbuka; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T14:30:00+07:00
