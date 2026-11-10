@@ -10,10 +10,17 @@
   (Accrual / Prepayment / Deferred schedules), `FIN38` (Foreign Currency / FX
   revaluation), `FIN55` (Loan / lease / interest liability schedules), `FIN56`
   (Payroll / employee reimbursement to GL).
-- [F] Basis: `main` `6ff44a77af89bc67670622c112679fd94475a520` (pasca PR #107).
-- [A] Pola arsitektur mengikuti I2a/I2b: **baca sumber native/OCA dan rekonsiliasi
-  ke GL**, jangan membangun buku besar kedua. Bila sumber tidak ada, custom hanya
-  untuk lapisan jadwal/bridge dengan oracle yang sama.
+- [F] Basis audit awal: `main` `6ff44a77af89bc67670622c112679fd94475a520` (pasca
+  PR #107). Audit OCA selalu dibaca pada SHA pin, bukan HEAD cabang.
+- [F] Delta `main` pasca-`6ff44a7`: PR #105 masuk sebagai
+  `d9d6423852715dc3b53ff046b37e0c0a9d947c7e`. Perubahan tersebut menyentuh
+  `data/registers/periods/2026-08/**`, `scripts/ops/seed_planner.py`,
+  `scripts/ops/seed_v2_gates.py`, `scripts/ops/generate_period_pack.py`, dan tes
+  seed. **Tidak ada perubahan** pada `addons/id_finance_reporting`,
+  `addons/id_finance_foundation`, maupun `oca.lock`
+  (`git diff --name-only 6ff44a7 d9d6423 -- addons/id_finance_reporting addons/id_finance_foundation oca.lock`
+  mengembalikan kosong). Karena itu seluruh temuan sumber di bawah tetap valid
+  tanpa diuji ulang; yang berubah hanya basis integrasi branch.
 
 ## Audit kandidat pada pin proyek
 
@@ -23,10 +30,33 @@ Semua pembacaan dilakukan pada SHA yang tercatat, bukan pada HEAD cabang.
 |---|---|---|---|
 | `account_asset_management` | `OCA/account-financial-tools` @ `c23fd09977c870eb3db071fca5958b83f699bc4a`, versi `19.0.1.0.3` | AGPL-3; depends `account`, `report_xlsx_helper`; excludes `account_asset`; python `python-dateutil` | [F] Ada di repo pada SHA pin, **tetapi belum ada di `oca.lock` dan belum ada di image** |
 | `report_xlsx_helper` | `OCA/reporting-engine` @ `b9e8c6cdd2d106614eddaf81bd78f487ae35db45` | AGPL-3 | [F] Ada di repo; closure `account_asset_management` tersedia |
-| `account_cutoff_base` | — | — | [F] Tidak ada di tree `OCA/account-closing` 19.0 (hanya `account_fiscal_year_closing`, `account_invoice_start_end_dates`) dan tidak ada di `account-financial-tools` pin |
+| `account_cutoff_base` | — | — | [F] Tidak ada di tree `OCA/account-closing` 19.0 (hanya `account_fiscal_year_closing`, `account_invoice_start_end_dates`) dan tidak ada di `account-financial-tools` pin. Pengganti metadata periode: `account_invoice_start_end_dates` (baris berikut). |
 | `account_multicurrency_revaluation` | — | — | [F] Tidak ada di `account-financial-tools` 19.0 (25 addon diperiksa) |
 | `payroll` | `OCA/payroll` @ `58f8a39799383ef98d50097f81f4abcc6dd03782`, versi `19.0.1.0.2` | LGPL-3; depends `hr_holidays`, `mail` | [F] Ter-pin di `oca.lock`; tree hanya berisi addon `payroll` — `payroll_account` tidak ada |
 | Loan / lease / interest | — | — | [F] Tidak ada kandidat pada repo yang di-pin |
+| `account_invoice_start_end_dates` | `OCA/account-closing` @ `8ce0077fd0762d49e928ea7520555341d7936a9e`, versi `19.0.1.0.0` | LGPL-3; depends `account` | [F] Ada di repo pada SHA tersebut, **belum di `oca.lock`** |
+
+Bukti metadata jadwal pada SHA pin (`account_invoice_start_end_dates`):
+
+- [F] `account.move.line` mendapat field `start_date` dan `end_date`
+  (`fields.Date(index=True)`) serta `must_have_dates`
+  (`related="product_id.must_have_dates"`).
+- [F] `@api.constrains("start_date", "end_date", "display_type", "product_id", "parent_state")`
+  menolak: hanya `start_date` tanpa `end_date`, hanya `end_date` tanpa
+  `start_date`, dan `start_date > end_date`. Jadi pasangan tanggal valid
+  dijamin konsisten oleh modul, bukan oleh asumsi laporan.
+
+Bukti FX pada model inti Odoo 19 (`odoo/odoo` 19.0 `addons/account`):
+
+- [F] `account.partial.reconcile` memiliki `exchange_move_id`,
+  `debit_amount_currency`, `credit_amount_currency`, `amount`, `max_date`.
+- [F] `account.move.line._prepare_exchange_difference_move_vals()` membuat
+  jurnal selisih kurs memakai `company.currency_exchange_journal_id`,
+  `company.income_currency_exchange_account_id`, dan
+  `company.expense_currency_exchange_account_id`.
+- [F] Karena itu realized FX punya bukti posting yang bisa dibaca
+  (`exchange_move_id`), bukan hanya selisih agregat `amount_currency` vs
+  `balance`.
 
 Bukti model aset pada SHA pin (`account_asset_management`):
 
@@ -72,49 +102,113 @@ untuk tie-out GL.
    `account_asset_management` pada image/profil; saat ini belum.
 2. Spike install + upgrade pada DB disposable, termasuk konflik `excludes:
    ["account_asset"]` dan dependensi `report_xlsx_helper`.
-3. [A] Keputusan lisensi: modul OCA berlisensi AGPL-3 sedangkan addon custom
-   repo memakai LGPL-3. Menjadi dependensi langsung membuat karya gabungan.
-   Perlu keputusan pemilik repo sebelum `depends` ditambahkan. Alternatif tanpa
+3. [A] **Penilaian lisensi sebelum menambah dependensi.** Modul OCA
+   `account_asset_management` berlisensi AGPL-3, sedangkan addon custom repo
+   memakai LGPL-3. Menjadikannya dependensi langsung menimbulkan pertanyaan
+   kewajiban lisensi (distribusi, penyediaan source, dan kompatibilitas
+   AGPL-3 dengan LGPL-3) yang **harus dinilai pemilik repo atau penasihat
+   hukum**. Metadata manifest AGPL-3/LGPL-3 saja **tidak cukup** untuk
+   menetapkan kesimpulan hukum kategoris, dan dokumen ini tidak menetapkannya.
+   Yang dapat dinyatakan di sini hanya: ada risiko/kewajiban yang perlu
+   keputusan eksplisit sebelum `depends` ditambahkan. Alternatif tanpa
    dependensi (membaca tabel lewat SQL/reflection) **ditolak** karena rapuh dan
    menyembunyikan kontrak.
 
 **Bila pin ditolak:** `FIN36` turun ke status BLOCKED dengan ADR pengganti,
 bukan ditandai N/A dan bukan diisi angka rekaan.
 
-### ADR-I2c-02 — FIN37 custom, rekonstruksi dari AML posted
+### ADR-I2c-02 — FIN37 custom, jadwal dari metadata `start_date`/`end_date`
 
-**Keputusan:** jadwal accrual/prepayment/deferred dibangun sebagai **rekonstruksi
-baca-saja** dari `account.move.line` posted pada akun beban dibayar dimuka /
-akrual, memakai rentang `date_start`–`date_end` per jadwal. Tidak ada posting
-otomatis oleh modul baru.
+**Keputusan:** jadwal accrual/prepayment/deferred dibangun sebagai
+**rekonstruksi baca-saja** dari AML posted pada akun beban dibayar dimuka /
+akrual. Periode jasa **tidak** disimpulkan dari tanggal dokumen; periode diambil
+dari field metadata jadwal yang eksplisit.
+
+**Sumber metadata jadwal (berjenjang, fail-closed):**
+
+1. **Sumber utama — `account_invoice_start_end_dates`**
+   (`OCA/account-closing` @ `8ce0077fd0762d49e928ea7520555341d7936a9e`,
+   versi `19.0.1.0.0`, LGPL-3, depends `account`). Modul ini menambahkan field
+   `start_date` dan `end_date` (`fields.Date(index=True)`) langsung pada
+   `account.move.line`, plus `must_have_dates` related ke
+   `product_id.must_have_dates`. Modul juga memasang `@api.constrains` pada
+   `start_date`/`end_date` yang menolak tanggal tidak lengkap, tanggal mulai
+   setelah tanggal akhir, dan kombinasi tidak valid. Jadi pasangan tanggal itu
+   adalah metadata otoritatif pada level baris, bukan turunan tanggal dokumen.
+2. **Fallback eksplisit — parameter jadwal yang disetujui.** Bila modul tidak
+   terpasang atau baris tidak memiliki kedua tanggal, baris tersebut menjadi
+   **exception bernominal** dengan `missing_schedule_metadata`, bukan
+   diasumsikan berdurasi 12 bulan dan bukan dibiarkan keluar dari laporan.
+3. **Tidak ada fallback ketiga.** Tanggal dokumen (`date`) atau `date_maturity`
+   **tidak** boleh dipakai sebagai pengganti periode jasa.
+
+**Konsekuensi dependensi:** opsi 1 memerlukan pin `account-closing` +
+`account_invoice_start_end_dates`. Modulnya LGPL-3 (bukan AGPL-3), sehingga
+risiko lisensinya berbeda dari ADR-I2c-01 dan tetap perlu dicatat sebagai
+keputusan pemilik. Bila pin ditolak, FIN37 tetap berjalan dengan opsi 2:
+laporan menampilkan exception `missing_schedule_metadata` secara eksplisit dan
+**tidak** mengarang jadwal.
 
 **Alasan:** `account_cutoff_base` tidak tersedia pada pin mana pun yang diaudit,
-sehingga tidak ada mesin cutoff yang bisa dibaca.
+sehingga tidak ada mesin cutoff yang bisa dibaca; `account_invoice_start_end_dates`
+adalah sumber metadata periode yang benar-benar ada pada tree 19.0.
 
 **Batas yang harus dijaga:**
 
 - Setiap baris pengakuan harus berasal dari AML posted; modul tidak boleh
   membuat jurnal sendiri (menghindari double posting).
-- Total pengakuan periode + saldo tersisa harus sama dengan saldo akun kontrol.
-- Jadwal tanpa rentang tanggal valid menjadi exception eksplisit, bukan
-  diasumsikan 12 bulan.
+- Total pengakuan periode + saldo tersisa = saldo akun kontrol.
+- Baris tanpa `start_date`/`end_date` wajib muncul sebagai exception bernominal
+  di output, bukan dibuang diam-diam.
+- Distribusi pengakuan per periode harus deterministik dari rentang tanggal
+  (termasuk pembulatan hari terakhir) dan tidak memakai pro-rata omzet.
 
-### ADR-I2c-03 — FIN38 custom, dari `amount_currency` vs `balance`
+### ADR-I2c-03 — FIN38 custom, dari `amount_currency` vs `balance`, dengan realized dari partial reconcile
 
-**Keputusan:** unrealized dan realized FX direkonstruksi dari selisih
-`amount_currency` dan `balance` pada AML posted, dipisah per akun dan mata uang.
+**Keputusan:** unrealized dan realized FX dihitung dari dua sumber berbeda yang
+tidak boleh dijumlahkan menjadi satu angka.
+
+**Sumber dan identitas:**
+
+1. **Unrealized** — berasal **hanya dari posisi terbuka**. Untuk setiap AML
+   posted pada akun moneter non-fungsional, sisa valuta asing dihitung dari
+   `amount_residual_currency` dan sisa fungsional dari `amount_residual`.
+   Selisih revaluasi = `amount_residual_currency × kurs_as_of − amount_residual`.
+   Baris yang sudah residual nol tidak menyumbang unrealized.
+
+2. **Realized** — berasal **hanya dari `account.partial.reconcile`** yang sudah
+   terjadi, dibaca lewat field native `debit_amount_currency`,
+   `credit_amount_currency`, dan `amount` (ketiganya ada pada model inti Odoo 19
+   `account.partial.reconcile`, diverifikasi pada `odoo/odoo` 19.0). Selisih
+   kurs terealisasi per partial adalah perbedaan antara nilai fungsional yang
+   dilepas dan nilai valuta yang dikonversi pada kurs transaksi. Karena
+   `amount` sudah dalam mata uang perusahaan, realized dihitung dari pasangan
+   (`amount`, `debit_amount_currency`, `credit_amount_currency`) per partial,
+   bukan dari selisih saldo agregat.
+
+3. **Exchange-difference move** — Odoo memposting jurnal selisih kurs otomatis
+   saat rekonsiliasi penuh valuta asing. Bukti pada Odoo 19: field
+   `account.partial.reconcile.exchange_move_id` dan
+   `account.move.line._prepare_exchange_difference_move_vals()`, yang memakai
+   `company.income_currency_exchange_account_id` dan
+   `company.expense_currency_exchange_account_id` serta journal
+   `company.currency_exchange_journal_id`. Revaluasi **membaca** move ini sebagai
+   bukti realisasi, tidak membuat ulang jurnalnya.
+
+**Aturan anti double-count yang wajib diuji:**
+
+- Baris AML pada akun `income_currency_exchange_account_id` dan
+  `expense_currency_exchange_account_id` **dikecualikan dari basis** unrealized
+  dan realized, lalu direkonsiliasi terpisah terhadap total `exchange_move_id`.
+- Nominal yang sudah masuk `exchange_move_id` tidak boleh dihitung lagi sebagai
+  unrealized pada posisi yang sama.
+- Realized dan unrealized dilaporkan sebagai dua baris terpisah per akun dan
+  mata uang; laporan tidak menyajikan satu angka gabungan tanpa pemisahan.
+- Perusahaan tanpa transaksi valuta asing menjadi kasus kosong yang sah
+  (nol dengan bukti tidak ada AML non-fungsional), bukan `N/A` otomatis.
 
 **Alasan:** `account_multicurrency_revaluation` tidak ada pada pin; tidak ada
 sumber OCA yang bisa direkonsiliasi.
-
-**Batas yang harus dijaga:**
-
-- Realized (dari partial reconcile) dan unrealized (saldo terbuka) **tidak**
-  dijumlahkan menjadi satu angka.
-- Selisih kurs yang sudah diposting ke akun laba/rugi kurs tidak dihitung dua
-  kali: baris akun FX dikecualikan dari basis dan direkonsiliasi terpisah.
-- Perusahaan tanpa transaksi valuta asing menjadi kasus kosong yang sah, bukan
-  N/A otomatis.
 
 ### ADR-I2c-04 — FIN55 custom amortization schedule
 
@@ -160,8 +254,8 @@ berjalan hanya pada `finance_i0_reports_disposable`, di dalam savepoint, dan
 | Report | Identitas yang diuji |
 |---|---|
 | `FIN36` | `opening + additions − disposals − depreciation = closing`; setiap baris depresiasi punya `move_id` posted; tie-out ke akun akumulasi depresiasi |
-| `FIN37` | pengakuan periode + saldo tersisa = saldo akun kontrol; tidak ada jurnal buatan modul |
-| `FIN38` | realized dan unrealized terpisah; baris akun FX dikecualikan dari basis; tie-out per akun/mata uang |
+| `FIN37` | pengakuan periode + saldo tersisa = saldo akun kontrol; setiap baris memakai `account.move.line.start_date`/`end_date`; baris tanpa metadata muncul sebagai `missing_schedule_metadata` bernominal; tidak ada jurnal buatan modul |
+| `FIN38` | unrealized hanya dari `amount_residual_currency` posisi terbuka; realized hanya dari `account.partial.reconcile` (`amount`, `debit_amount_currency`, `credit_amount_currency`); total `exchange_move_id` direkonsiliasi terpisah; akun `income_currency_exchange_account_id`/`expense_currency_exchange_account_id` dikecualikan dari basis; tidak ada double count |
 | `FIN55` | `opening + drawdowns + interest − payments = closing`; tie-out ke akun liabilitas |
 | `FIN56` | total slip disetujui = beban GL terkait; pembayaran/utang pajak terpisah; exception bernominal |
 
@@ -174,8 +268,8 @@ ditolak.
 | Urutan | Isi | Gate |
 |---|---|---|
 | 1 (dokumen ini) | Discovery + ADR | Review pemilik; belum ada kode |
-| 2 | Pin `account_asset_management` + spike install/upgrade + keputusan lisensi | CI profile hijau, ADR-I2c-01 disetujui |
-| 3 | `FIN37` + `FIN38` custom (paling sedikit dependensi eksternal) | Oracle native + unit |
+| 2 | Pin `account_asset_management` + spike install/upgrade + penilaian lisensi | CI profile hijau, ADR-I2c-01 disetujui |
+| 3 | `FIN37` + `FIN38` custom (paling sedikit dependensi eksternal) | Oracle native + unit; FIN37 perlu keputusan pin `account-closing` atau berjalan dengan exception |
 | 4 | `FIN55` custom | Oracle native + kebijakan bertanggal |
 | 5 | `FIN36` membaca OCA | Oracle native + coverage aset |
 | 6 | `FIN56` bridge payroll/expense | Profil CI dengan `hr_expense`+`payroll` pada DB runner |
@@ -186,7 +280,9 @@ OCA. Setiap PR tetap wajib CI hijau exact SHA dan tidak menandai katalog
 
 ## Gate yang masih terbuka
 
-- [BU] Keputusan lisensi AGPL-3 (ADR-I2c-01) oleh pemilik repo.
+- [BU] Penilaian lisensi AGPL-3 untuk `account_asset_management` (ADR-I2c-01)
+  dan pin `account_invoice_start_end_dates` LGPL-3 untuk FIN37, keduanya oleh
+  pemilik repo atau penasihat hukum.
 - [BU] Spike install/upgrade `account_asset_management` pada DB disposable.
 - [BU] Profil CI yang memasang `hr_expense` dan `payroll` pada
   `finance_i0_reports_disposable`.

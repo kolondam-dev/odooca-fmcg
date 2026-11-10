@@ -225,3 +225,11 @@
 - PR hanya dokumentasi: tidak ada perubahan kode, oca.lock, deploy, atau data. Reviewer diminta memutuskan ADR-I2c-01 (pin account_asset_management AGPL-3).
 - [BU] Spike install/upgrade aset, profil CI hr_expense+payroll pada DB runner, keputusan lisensi, dan sign-off parameter FIN55/FIN56 masih terbuka. REPORT_CATALOG FIN05-FIN09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T06:25:00+07:00
+[2026-11-10T07:45:00+07:00] [INFO] I2c/PR108: revisi ADR pasca CHANGES_REQUESTED + sinkronisasi main d9d6423
+- FIN37: sumber metadata jadwal kini eksplisit. account_invoice_start_end_dates (OCA/account-closing 8ce0077, 19.0.1.0.0, LGPL-3) menambahkan start_date/end_date sebagai fields.Date(index=True) pada account.move.line dan @api.constrains yang menolak tanggal tidak lengkap/terbalik. Fallback hanya exception bernominal missing_schedule_metadata; tanggal dokumen dilarang menjadi pengganti periode jasa.
+- FIN38: unrealized hanya dari amount_residual_currency posisi terbuka; realized hanya dari account.partial.reconcile (amount, debit_amount_currency, credit_amount_currency); exchange_move_id dipakai sebagai bukti posting; akun income/expense_currency_exchange_account_id dikecualikan dari basis. Field inti diverifikasi pada odoo/odoo 19.0 addons/account, termasuk _prepare_exchange_difference_move_vals().
+- Lisensi: redaksi AGPL-3 diubah menjadi risiko/kewajiban lisensi yang memerlukan penilaian pemilik atau penasihat hukum; ADR tidak lagi menetapkan kesimpulan hukum kategoris.
+- Baseline: audit awal 6ff44a7, delta main d9d6423 (PR #105) dijelaskan; diff 6ff44a7..d9d6423 untuk addons/id_finance_reporting, addons/id_finance_foundation, dan oca.lock kosong sehingga temuan sumber tetap valid.
+- Integrasi: merge origin/main d9d6423 selesai, konflik docs/HANDOFF.md diselesaikan tanpa menghapus entri antigravity (PR #105); git merge-base --is-ancestor origin/main HEAD sukses.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); tidak ada marker konflik. [BU] CI exact-SHA HEAD baru belum jalan; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN36-38/55-56 dan FIN05-09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T07:45:00+07:00
