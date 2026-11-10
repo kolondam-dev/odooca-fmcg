@@ -186,8 +186,7 @@ class FinanceFxRevaluation(models.AbstractModel):
         payload = []
         # Two maps on purpose:
         # - all_leg_by_id holds every in-scope line, including functional
-        #   currency, so a partial leg outside the FX base can still be
-        #   classified (functional counterpart, write-off, reversal).
+        #   currency, so a partial leg inside the filter can be classified.
         # - payload holds only foreign-currency, non-exchange lines, which is the
         #   unrealized base.
         all_leg_by_id = {}
@@ -216,6 +215,7 @@ class FinanceFxRevaluation(models.AbstractModel):
             payload.append(row)
 
         partials = self._partials(company, as_of, all_leg_by_id)
+        partials = self._resolve_out_of_filter_legs(company, partials)
         report = build_fx_revaluation(
             payload, partials, as_of, round_amt, self._rate_lookup(company),
             exchange_account_ids=exchange_ids,
@@ -232,6 +232,11 @@ class FinanceFxRevaluation(models.AbstractModel):
             "in-scope partials" if scope_limited
             else "company-wide: every posted exchange line is compared"
         )
+        if scope_limited and report["realized_posted_total"] and not gl_balance:
+            # A filtered report that realises FX but finds no exchange evidence
+            # must fail loudly instead of balancing against an empty comparator.
+            tie_out["balanced"] = False
+            tie_out["issues"] = sorted(set(tie_out["issues"]) | {"missing_exchange_evidence"})
         return {
             "report_id": "FIN38",
             "report_ids": ["FIN38"],
@@ -246,6 +251,64 @@ class FinanceFxRevaluation(models.AbstractModel):
             **report,
             "gl_tie_out": tie_out,
         }
+
+    def _resolve_out_of_filter_legs(self, company, partials):
+        """Load counterpart legs that the report filters excluded.
+
+        A partial can touch a selected line while its other leg sits in a journal
+        excluded by ``journal_ids``. Treating a missing leg as a functional-currency
+        counterpart silently zeroed realized FX and left an empty comparator that
+        balanced vacuously. The counterpart is fetched here for classification
+        only; it never enters the unrealized base.
+        """
+        missing = set()
+        for partial in partials:
+            for side in ("debit_leg", "credit_leg"):
+                if not partial.get(side):
+                    line_id = partial.get(f"{side[:-4]}_line_id")
+                    if line_id:
+                        missing.add(line_id)
+        if not missing:
+            return partials
+        lines = self.env["account.move.line"].with_company(company).browse(sorted(missing))
+        lines.check_access("read")
+        resolved = {}
+        for line in lines:
+            if not line.exists() or line.company_id != company:
+                continue
+            account = line.account_id.with_company(company)
+            resolved[line.id] = {
+                "line_id": line.id,
+                "move_id": line.move_id.id,
+                "account_id": account.id,
+                "account_code": account.code or "",
+                "account_type": account.account_type,
+                "partner_id": line.partner_id.id or 0,
+                "partner_name": line.partner_id.display_name or "",
+                "currency_id": line.currency_id.id or company.currency_id.id,
+                "company_currency_id": company.currency_id.id,
+                "balance": line.balance,
+                "amount_currency": line.amount_currency,
+            }
+        for partial in partials:
+            debit_leg = partial.get("debit_leg") or resolved.get(partial.get("debit_line_id"))
+            credit_leg = partial.get("credit_leg") or resolved.get(partial.get("credit_line_id"))
+            partial["debit_leg"] = debit_leg or {}
+            partial["credit_leg"] = credit_leg or {}
+            partial["functional_counterpart"] = self._is_functional_counterpart(
+                debit_leg, credit_leg, company,
+            )
+            partial["write_off"] = self._is_write_off(debit_leg, credit_leg)
+        return partials
+
+    @staticmethod
+    def _is_functional_counterpart(debit_leg, credit_leg, company):
+        """True only when one real leg is denominated in the company currency."""
+        if not debit_leg or not credit_leg:
+            return False
+        company_currency = company.currency_id.id
+        currencies = {debit_leg.get("currency_id"), credit_leg.get("currency_id")}
+        return company_currency in currencies and len(currencies) > 1
 
     def _partials(self, company, as_of, all_leg_by_id):
         """Load partials that touch any selected line, from either side.
@@ -296,9 +359,9 @@ class FinanceFxRevaluation(models.AbstractModel):
                 "reversed_entry_id": debit_move.reversed_entry_id.id
                 or credit_move.reversed_entry_id.id or None,
                 "is_reversal": bool(debit_move.reversal_move_ids or credit_move.reversal_move_ids),
-                # One leg outside the FX universe means the settlement crossed a
-                # functional-currency line: no exchange difference is realisable.
-                "functional_counterpart": bool(debit_leg) != bool(credit_leg),
+                # Classification is finalised after out-of-filter counterparts are
+                # resolved; a missing leg is NOT a functional counterpart.
+                "functional_counterpart": False,
                 "write_off": self._is_write_off(debit_leg, credit_leg),
             })
         return payloads

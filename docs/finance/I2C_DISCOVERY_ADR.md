@@ -262,8 +262,8 @@ Odoo, yang memilih `expense_currency_exchange_account_id` bila `amount > 0` dan
 | **Residual per tanggal** | Posisi terbuka direkonstruksi dari `balance`/`amount_currency` dikurangi partial bertanggal, **bukan** dari `amount_residual` saat ini. |
 | **Multi-partial** | Dijumlahkan per partial (`Σ realized_partial`). Untuk tiap baris: `Σ |p.amount| ≤ |balance|`; bila terlampaui, baris menjadi `over_reconciled` dan **dilaporkan**, bukan dipotong diam-diam. |
 | **Write-off** | Partial yang dikenali sebagai write-off (leg pada akun beban) **tidak** menghasilkan realized FX; dilaporkan terpisah di `write_off_rows` agar tidak menciptakan gain/loss palsu. |
-| **Reversal** | Partial pada move yang di-reverse diidentifikasi lewat `reversed_entry_id`/`reversal_move_ids`. Pasangan normal+reversal di-net ke nol **per pasangan** lebih dulu; realized baru dijumlahkan setelah netting. |
-| **Kaki mata uang fungsional** | Bila hanya satu kaki berada di scope valuta asing, tidak ada selisih kurs yang dapat direalisasi. Dilaporkan eksplisit di `functional_counterpart_rows`, tidak dihitung dan tidak dibuang diam-diam. |
+| **Reversal** | Partial pada move yang di-reverse dicocokkan **eksplisit**: `reversed_entry_id` dibandingkan dengan `move_id` kandidat dalam pasangan yang sama. Hanya pasangan yang cocok yang saling membatalkan; reversal tanpa pasangan **tetap** dijumlahkan agar tidak menghilangkan FX tanpa bukti. |
+| **Kaki mata uang fungsional** | Bernilai benar hanya bila satu kaki benar-benar bermata uang fungsional. Kaki yang tersaring keluar dimuat ulang untuk klasifikasi dan dilaporkan di `functional_counterpart_rows`, tidak dihitung dan tidak dibuang diam-diam. |
 | **Tanpa `exchange_move_id`** | Tetap dihitung dari formula. `exchange_move_id` adalah **bukti posting**, bukan syarat perhitungan. Nilainya masuk `realized_unposted_rows` dan **di luar** tie-out. |
 | **`amount_currency == 0` pada kaki non-fungsional** | Data tidak lengkap; menjadi exception `missing_currency_amount`, formula tidak dijalankan untuk partial itu. |
 
@@ -317,6 +317,24 @@ pembanding dibatasi pada `exchange_move_id` yang dicapai dari partial dalam
 scope, dan `gl_tie_out.scope_limited = True` menandai hal itu secara eksplisit.
 Tanpa pembatasan ini, realized terfilter akan dibandingkan dengan seluruh GL
 exchange perusahaan dan selalu gagal secara palsu.
+
+**Kaki di luar filter tetap dimuat untuk klasifikasi.** Sebuah partial bisa
+menyentuh baris terpilih sementara kakinya yang lain berada di jurnal yang
+tersaring keluar oleh `journal_ids`. Menganggap kaki yang tidak dimuat sebagai
+"functional counterpart" akan menghapus realized FX dan meninggalkan pembanding
+kosong yang **balanced secara vakum** — persis kegagalan yang harus dicegah.
+Karena itu kaki tersebut dimuat ulang (baca-saja) semata untuk klasifikasi:
+
+- `functional_counterpart` bernilai benar **hanya** bila satu kaki benar-benar
+  menggunakan mata uang fungsional, bukan karena kaki tidak ditemukan;
+- kaki di luar filter tidak pernah masuk basis unrealized;
+- bila kaki tetap tidak dapat dimuat, partial menjadi exception bernominal
+  `missing_currency_amount`, bukan dianggap nol.
+
+**Comparator kosong tidak pernah lolos.** Bila realized bernilai bukan nol
+tetapi tidak ada saldo exchange yang dapat dibandingkan, `gl_tie_out` gagal
+dengan issue `missing_exchange_evidence`. Hanya kasus realized nol tanpa
+comparator yang sah-sah saja kosong.
 
 **Bukti numerik dua arah** (wajib menjadi fixture test, bukan angka hard-coded):
 

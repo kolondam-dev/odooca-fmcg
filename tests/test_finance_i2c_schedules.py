@@ -402,6 +402,27 @@ class FxRevaluationTests(unittest.TestCase):
         self.assertEqual(report["realized_posted_total"], 0.0)
         self.assertEqual(report["tied_exchange_move_ids"], [])
 
+    def test_unmatched_reversal_is_not_silently_dropped(self):
+        # A reversal whose target move is absent must still post its own amount;
+        # dropping it would hide realized FX without any evidence.
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        orphan_reversal = partial(
+            1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0), 1_500_000.0,
+            exchange_move_id=11,
+        )
+        orphan_reversal.update({
+            "is_reversal": True, "reversed_entry_id": 999, "move_id": 5,
+        })
+        report = sched.build_fx_revaluation(
+            [open_line], [orphan_reversal], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(len(report["realized_rows"]), 1)
+        self.assertEqual(report["realized_posted_total"], -100_000.0)
+
     def test_functional_currency_counterpart_is_flagged_not_counted(self):
         open_line = {
             "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
@@ -466,6 +487,43 @@ class FxRevaluationTests(unittest.TestCase):
         )
         self.assertEqual(len(report["unrealized_rows"]), 1)
         self.assertEqual(report["unrealized_rows"][0]["amount_residual_currency"], 100.0)
+
+    def test_missing_counterpart_is_not_assumed_functional(self):
+        # Review blocker: a USD leg whose counterpart sits outside the filter was
+        # treated as a functional-currency counterpart, zeroing realized FX and
+        # leaving an empty comparator that "balanced".
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        missing_counterpart = partial(
+            1, leg(1_500_000.0, 100.0), {}, 1_500_000.0, exchange_move_id=9,
+        )
+        # Not flagged functional: the counterpart simply was not loaded yet.
+        self.assertFalse(missing_counterpart.get("functional_counterpart", False))
+        report = sched.build_fx_revaluation(
+            [open_line], [missing_counterpart], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(
+            len(report["exceptions"]), 1,
+            "an unresolved counterpart must become a nominal exception",
+        )
+        self.assertEqual(report["exceptions"][0]["reason"], "missing_currency_amount")
+
+    def test_realized_without_comparator_never_balances_vacuously(self):
+        # Review blocker: realized 0 with an empty exchange comparator reported
+        # balanced=True. Missing evidence must fail instead.
+        report = {"realized_by_currency": [{"currency_id": 2, "realized_amount": -100.0}]}
+        tie = sched.tie_fx_to_gl(report, {}, ROUND)
+        self.assertFalse(tie["balanced"], "realized without comparator must fail")
+        self.assertIn("missing_exchange_evidence", tie["issues"])
+
+    def test_no_realized_and_no_comparator_is_honestly_empty(self):
+        report = {"realized_by_currency": []}
+        tie = sched.tie_fx_to_gl(report, {}, ROUND)
+        self.assertTrue(tie["balanced"])
+        self.assertEqual(tie["issues"], [])
 
     def test_negated_gl_balance_fails_the_gain_case(self):
         invoice = leg(1_500_000.0, 100.0)

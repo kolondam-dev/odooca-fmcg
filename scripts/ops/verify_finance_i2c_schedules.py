@@ -158,10 +158,10 @@ def build_fx_fixture(env, suffix):
         "currency_exchange_journal_id": fx_journal.id,
     })
 
-    def usd_entry(label, when, ar_balance, ar_currency):
+    def usd_entry(label, when, ar_balance, ar_currency, journal=None):
         move = env["account.move"].with_company(fx_company).create({
             "company_id": fx_company.id,
-            "journal_id": journals["general"].id,
+            "journal_id": (journal or journals["general"]).id,
             "date": when,
             "ref": f"I2C-{label}-{suffix}",
             "move_type": "entry",
@@ -185,8 +185,11 @@ def build_fx_fixture(env, suffix):
         move.action_post()
         return move
 
-    invoice = usd_entry("invoice", "2026-07-01", 1_500_000, 100)
-    payment = usd_entry("payment", "2026-07-15", -1_600_000, -100)
+    # Invoice in the SALE journal, settlement in the CASH journal. This makes a
+    # journal filter meaningful: selecting only the sale journal keeps the
+    # invoice line in scope while dropping the payment leg.
+    invoice = usd_entry("invoice", "2026-07-01", 1_500_000, 100, journals["sale"])
+    payment = usd_entry("payment", "2026-07-15", -1_600_000, -100, journals["cash"])
     (sec.control_line(invoice, accounts["ar"])
      | sec.control_line(payment, accounts["ar"])).reconcile()
 
@@ -204,10 +207,56 @@ def build_fx_fixture(env, suffix):
     # July invoice settled in August through the cash journal. At 31 July it must
     # be fully open (110 USD / 1,500,000); at 31 August it must be closed. This is
     # the case the previous fixture could not prove.
-    july_invoice = usd_entry("july_open_invoice", "2026-07-20", 1_500_000, 100)
-    august_receipt = usd_entry("aug_receipt", "2026-08-05", -1_500_000, -100)
+    july_invoice = usd_entry("july_open_invoice", "2026-07-20", 1_500_000, 100,
+                              journals["sale"])
+    august_receipt = usd_entry("aug_receipt", "2026-08-05", -1_500_000, -100,
+                               journals["cash"])
     (sec.control_line(july_invoice, accounts["ar"])
      | sec.control_line(august_receipt, accounts["ar"])).reconcile()
+
+    # Write-off fixture: an AR line settled against the expense account. It must
+    # be classified as a write-off and produce no realized FX.
+    write_off_invoice = usd_entry("write_off_invoice", "2026-07-25", 750_000, 50,
+                                  journals["sale"])
+    write_off_move = env["account.move"].with_company(fx_company).create({
+        "company_id": fx_company.id,
+        "journal_id": journals["general"].id,
+        "date": "2026-07-28",
+        "ref": f"I2C-WRITEOFF-{suffix}",
+        "move_type": "entry",
+        "line_ids": [
+            (0, 0, {
+                "name": "write off", "account_id": accounts["expense"].id,
+                "currency_id": usd.id, "debit": 750_000, "amount_currency": 50,
+            }),
+            (0, 0, {
+                "name": "write off", "account_id": accounts["ar"].id,
+                "partner_id": partner.id, "currency_id": usd.id,
+                "credit": 750_000, "amount_currency": -50,
+            }),
+        ],
+    })
+    write_off_move.action_post()
+    (sec.control_line(write_off_invoice, accounts["ar"])
+     | sec.control_line(write_off_move, accounts["ar"])).reconcile()
+
+    # Reversal fixture: a settlement whose move is reversed. The pair must net to
+    # zero realized FX rather than double count.
+    reversal_source = usd_entry("reversal_source", "2026-06-10", 300_000, 20,
+                                journals["sale"])
+    reversal_settle = usd_entry("reversal_settle", "2026-06-20", -320_000, -20,
+                                journals["cash"])
+    (sec.control_line(reversal_source, accounts["ar"])
+     | sec.control_line(reversal_settle, accounts["ar"])).reconcile()
+    reversal_move = reversal_settle._reverse_moves(
+        default_values_list=[{
+            "date": date(2026, 6, 25),
+            "journal_id": journals["cash"].id,
+            "ref": f"I2C-REVERSAL-{suffix}",
+        }],
+        cancel=False,
+    )
+    reversal_move.action_post()
 
     return {
         "company": fx_company,
@@ -223,6 +272,11 @@ def build_fx_fixture(env, suffix):
         "august_invoice": august_invoice,
         "july_invoice": july_invoice,
         "august_receipt": august_receipt,
+        "write_off_invoice": write_off_invoice,
+        "write_off_move": write_off_move,
+        "reversal_source": reversal_source,
+        "reversal_settle": reversal_settle,
+        "reversal_move": reversal_move,
         "round_amt": round_amt,
     }
 
@@ -467,7 +521,8 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
 
             # Journal filter must not un-settle a line paid through another
             # journal. The July invoice is settled in the cash journal; selecting
-            # only the sale journal must still net it.
+            # only the sale journal must still net it, must still realise the FX,
+            # and must still find the exchange move.
             sale_journal_id = fixture["journals"]["sale"].id
             sale_scope = models["id.finance.fx.revaluation"]._snapshot(
                 company.id, "2026-08-31", journal_ids=[sale_journal_id],
@@ -484,6 +539,66 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
             require(
                 sale_scope["gl_tie_out"]["scope_limited"],
                 "FIN38 filtered tie-out must report that its comparator is scoped",
+            )
+            # Lock the nominal amount and the exchange coverage, not just the
+            # boolean: a filtered report that realises nothing still balanced.
+            require(
+                round_amt(sale_scope["realized_posted_total"]) != 0,
+                "FIN38 filtered report must realise a non-zero FX amount",
+            )
+            require(
+                bool(sale_scope["tied_exchange_move_ids"]),
+                "FIN38 filtered report must find its exchange move coverage",
+            )
+            require(
+                sale_scope["gl_tie_out"]["rows"]
+                and all(
+                    round_amt(row["gl_balance"]) != 0
+                    for row in sale_scope["gl_tie_out"]["rows"]
+                ),
+                "FIN38 filtered comparator must not be empty",
+            )
+            require(
+                bool(sale_scope["realized_rows"]),
+                "FIN38 filtered report must still produce realized rows",
+            )
+            require(
+                not sale_scope["functional_counterpart_rows"],
+                "FIN38 filtered report must not misclassify a filtered-out "
+                "counterpart as functional currency",
+            )
+            require(
+                sale_scope["gl_tie_out"].get("issues") == [],
+                f"FIN38 filtered tie-out must report no issue: {sale_scope['gl_tie_out']}",
+            )
+
+            # Write-off must be classified through the production reader and must
+            # not create realized FX.
+            write_off_snapshot = models["id.finance.fx.revaluation"]._snapshot(
+                company.id, "2026-08-31",
+            )
+            require(
+                write_off_snapshot["write_off_rows"],
+                "FIN38 must classify the expense-settled AR line as a write-off",
+            )
+            write_off_partials = {
+                row["partial_id"] for row in write_off_snapshot["write_off_rows"]
+            }
+            require(
+                not write_off_partials & {
+                    row["partial_id"] for row in write_off_snapshot["realized_rows"]
+                },
+                "FIN38 write-off must not also appear in realized rows",
+            )
+
+            # Reversal netting must be visible through the reader: the pair must
+            # not double count realized FX.
+            require(
+                all(
+                    not row.get("is_reversal")
+                    for row in write_off_snapshot["realized_rows"]
+                ),
+                "FIN38 realized rows must not contain unmatched reversal noise",
             )
 
 

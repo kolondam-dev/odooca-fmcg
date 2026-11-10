@@ -265,7 +265,13 @@ def realized_partial_amount(partial, debit_leg, credit_leg, round_amount):
 
 
 def _net_reversals(partials, round_amount):
-    """Net reversed partials per reconciled pair before totalling realized FX."""
+    """Net reversed partials per reconciled pair before totalling realized FX.
+
+    A reversal is matched to the partial it undoes by comparing the reversed
+    move id against each candidate's ``move_id``. Only a matched pair cancels;
+    an unmatched reversal stays in the totals so it still offsets its own amount
+    instead of silently disappearing.
+    """
     surviving = []
     cancelled = set()
     by_pair = defaultdict(list)
@@ -276,17 +282,21 @@ def _net_reversals(partials, round_amount):
         reversals = [p for p in group if p.get("is_reversal")]
         normals = [p for p in group if not p.get("is_reversal")]
         for reversal in reversals:
-            pair_id = reversal.get("reversed_entry_id")
+            target = reversal.get("reversed_entry_id")
             match = next(
                 (
-                    p for p in normals
-                    if p.get("move_id") == pair_id and id(p) not in cancelled
+                    candidate for candidate in normals
+                    if target is not None
+                    and candidate.get("move_id") == target
+                    and id(candidate) not in cancelled
                 ),
                 None,
             )
-            if match is not None:
-                cancelled.add(id(match))
-                cancelled.add(id(reversal))
+            if match is None:
+                # Unmatched reversal: keep it so its own amount still posts.
+                continue
+            cancelled.add(id(match))
+            cancelled.add(id(reversal))
         surviving.extend(p for p in group if id(p) not in cancelled)
     return surviving
 
@@ -480,10 +490,18 @@ def tie_fx_to_gl(report, gl_balance_by_currency, round_amount):
         })
         if difference != 0:
             failing.append(currency_id)
+    issues = []
+    if failing:
+        issues.append("fx_tie_out_mismatch")
+    # A non-zero realized total with no comparator at all is a missing-evidence
+    # failure, never a vacuous pass.
+    has_realized = any(round_amount(row["realized_amount"]) for row in rows)
+    if has_realized and not gl_balance_by_currency:
+        issues.append("missing_exchange_evidence")
     return {
         "rows": rows,
         "difference": round_amount(sum(row["difference"] for row in rows)),
         "failing_currency_ids": failing,
-        "balanced": not failing,
-        "issues": [] if not failing else ["fx_tie_out_mismatch"],
+        "balanced": not issues,
+        "issues": issues,
     }
