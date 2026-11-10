@@ -301,3 +301,10 @@
 - Job di-rerun; HEAD 1dec4823ab343833950e939762e393fc54187d4d kini 12/12 SUCCESS dan MERGEABLE.
 - [BU] Review PR #111 belum diberikan; tidak ada deploy/mutasi DB live; katalog FIN05-09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T19:45:00+07:00
+[2026-11-10T21:00:00+07:00] [INFO] I2c/PR111: koreksi klaim scope non-dokumentasi pada ADR
+- Blocker reviewer (review 5839193738, HEAD 3a1e1b6) valid: kalimat "Ini satu-satunya perubahan non-docs pada PR ini" adalah warisan konteks PR #108 dan salah untuk PR #111.
+- Konfirmasi: git diff --name-only origin/main HEAD hanya agent-log/claude-dev.log, docs/HANDOFF.md, docs/finance/I2C_DISCOVERY_ADR.md; untuk addons/scripts/tests/oca.lock/deploy/.github hasilnya kosong.
+- Perbaikan: ADR kini memisahkan dua fakta. Pertama, test test_finance_i2c_adr_formulas.py (13 tes) diperkenalkan oleh PR #108 dan bersifat test murni tanpa ORM/DB. Kedua, PR #111 hanya mengubah tiga berkas dokumentasi.
+- Verifikasi lokal: grep "satu-satunya|non-docs" pada ADR -> 0 hasil; ruff PASS; check_manifests PASS (12 addon); 13 tes formula PASS.
+- [BU] CI exact-SHA HEAD baru belum jalan; tidak ada deploy/mutasi DB live; katalog FIN05-09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T21:00:00+07:00

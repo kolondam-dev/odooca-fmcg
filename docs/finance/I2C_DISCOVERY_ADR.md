@@ -12,8 +12,12 @@
   (Payroll / employee reimbursement to GL).
 - [F] Aritmetika ADR dapat dieksekusi: `tests/test_finance_i2c_adr_formulas.py`
   (**13 tes**) mengunci formula FIN37 dan FIN38, termasuk tie-out dua arah
-  (gain dan loss) serta regresi penjaga konvensi tanda. Ini satu-satunya
-  perubahan non-docs pada PR ini dan sifatnya test murni tanpa ORM/database.
+  (gain dan loss) serta regresi penjaga konvensi tanda. Test itu diperkenalkan
+  oleh PR #108 dan bersifat test murni tanpa ORM/database.
+- [F] PR dokumentasi ini (PR #111) hanya mengubah berkas dokumentasi:
+  `docs/finance/I2C_DISCOVERY_ADR.md`, `docs/HANDOFF.md`, dan
+  `agent-log/claude-dev.log`. Tidak ada perubahan kode, test, `oca.lock`,
+  `deploy/`, maupun katalog.
 - [F] Basis audit awal: `main` `6ff44a77af89bc67670622c112679fd94475a520` (pasca
   PR #107). Audit OCA selalu dibaca pada SHA pin, bukan HEAD cabang.
 - [F] Delta `main` pasca-`6ff44a7`: PR #105 masuk sebagai
