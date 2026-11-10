@@ -65,6 +65,19 @@ jobs:
           if grep -E " (ERROR|CRITICAL) |Traceback" odoo.log; then
             echo "Ditemukan ERROR/Traceback pada log"; exit 1
           fi
+      - name: D1 redesign install and upgrade on isolated database
+        run: |
+          set -o pipefail
+          docker run --rm --network host --entrypoint bash fmcg-odoo:ci -c '
+            set -e
+            odoo -d d1_ci --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
+              -i id_dashboard_redesign,id_mobile_api --test-tags /id_dashboard_redesign --stop-after-init
+            odoo -d d1_ci --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" \
+              -u id_dashboard_ui,id_dashboard_redesign --test-tags /id_dashboard_redesign --stop-after-init
+          ' 2>&1 | tee d1-redesign.log
+          if grep -E ' (ERROR|CRITICAL) |Traceback' d1-redesign.log; then exit 1; fi
       - name: Disposable mobile staging provisioning shell smoke
         run: |
           set -o pipefail

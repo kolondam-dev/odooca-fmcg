@@ -1,0 +1,5 @@
+[2026-11-10T22:28:30+07:00] [INFO] D1 native sales redesign
+- Base main 2d7c37c; branch agen/d1-dashboard-(Codex-Dashboard).
+- Native clean install/upgrade12PASS each;27browser checks;26static dashboard regressions;30official JS transpilation;Ruff/XML/14manifest PASS.
+- Only Sales action retargeted; no merge/deploy/live writes; CI and owner visual/seed acceptance pending.
+- Task Managed by Agent Codex-Dashboard

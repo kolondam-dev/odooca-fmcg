@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+ <t t-name="id_dashboard_redesign.Action">
+  <div class="o_action id-dash-action" t-att-aria-busy="state.loading">
+   <div t-if="state.error" class="alert alert-danger" role="alert" t-out="state.error"/>
+   <p t-if="state.loading" class="p-3" role="status">Loading dashboard…</p>
+   <DashboardShell t-if="state.data" dashboard="dashboard" data="state.data" onApply.bind="apply" onDrill.bind="openDocument"/>
+  </div>
+ </t>
+</templates>

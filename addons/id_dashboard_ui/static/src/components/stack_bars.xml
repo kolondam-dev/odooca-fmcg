@@ -1,0 +1,3 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve"><t t-name="id_dashboard_ui.StackBars"><section class="id-dash-card" t-att-style="'min-height:' + height"><h3 t-out="props.title"/><div class="id-chart-legend"><t t-foreach="props.legend || []" t-as="l" t-key="l_index"><span><i t-att-style="'background:' + l.c"/><t t-out="l.t"/></span></t></div><t t-foreach="rows" t-as="row" t-key="row.index"><div class="id-stack-row"><b t-out="row.n"/><div class="id-stack-track"><t t-foreach="row.segs" t-as="s" t-key="s.index"><span t-att-style="'width:' + s.width + '%;background:' + s.color" t-att-title="s.t || num(s.v)"/></t></div><span t-out="row.t || num(row.total)"/></div></t><small t-out="props.note || ''"/></section></t>
+</templates>

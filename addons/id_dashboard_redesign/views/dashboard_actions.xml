@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="id_dashboard_sales.action_sales_productivity" model="ir.actions.client">
+    <field name="name">Sales Performance &amp; Salesforce Productivity</field>
+    <field name="tag">id_dashboard_redesign.d1</field>
+  </record>
+</odoo>

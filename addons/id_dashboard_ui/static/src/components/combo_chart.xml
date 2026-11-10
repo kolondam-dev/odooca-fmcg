@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.ComboChart">
+    <div t-attf-style="{{ v.card }}box-sizing:border-box;height:{{ v.hh }};display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <t t-if="v.showTitle">
+        <h3 style="margin:0 0 10px;font-size:13px;font-weight:600;border-left:3px solid var(--ac);padding-left:8px">
+          <t t-out="v.title"/>
+        </h3>
+      </t>
+      <div style="font-size:11px;color:#52627f;margin-bottom:2px">
+        <t t-out="v.note"/>
+      </div>
+      <div t-attf-style="position:relative;display:flex;height:{{ v.ch }}px">
+        <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" t-attf-style="position:absolute;left:0;top:0;width:100%;height:{{ v.zt }}px;overflow:visible">
+          <line x1="0" x2="100" stroke="#b3261e" stroke-dasharray="4 3" t-attf-y1="{{ v.ly }}" t-attf-y2="{{ v.ly }}" t-attf-style="vector-effect:non-scaling-stroke;opacity:{{ v.lo }}"/>
+          <path fill="none" t-att-stroke="v.lineColor" stroke-width="2" style="vector-effect:non-scaling-stroke" t-attf-d="{{ v.lp }}"/>
+        </svg>
+        <span t-attf-style="position:absolute;right:0;top:{{ v.lyp }}px;font-size:10px;color:#b3261e;margin-top:-13px;opacity:{{ v.lo }}">
+          <t t-out="v.limitText"/>
+        </span>
+        <t t-foreach="v.cols" t-as="c" t-key="c_index">
+          <div t-att-role="c.drill ? 'button' : undefined" t-att-tabindex="c.drill ? 0 : -1" t-att-aria-label="c.l" t-on-click="() => this.openBar(c)" t-on-keydown="(ev) => this.keyBar(ev, c)" style="flex:1;min-width:0;display:flex;flex-direction:column">
+            <div t-attf-style="position:relative;height:{{ v.zt }}px">
+              <span t-if="c.hasLine" t-attf-style="position:absolute;left:50%;top:{{ c.lineTop }}%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:{{ v.lineColor }}"/>
+              <span t-if="c.hasLine" t-attf-style="position:absolute;left:0;right:0;top:{{ c.lineTop }}%;margin-top:6px;text-align:center;font-size:10.5px;font-weight:600;color:{{ v.lineColor }}">
+                <t t-out="c.lv"/>
+              </span>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center">
+              <span style="font-size:10.5px">
+                <t t-out="c.bv"/>
+              </span>
+              <div t-attf-style="width:52%;height:{{ c.bh }}px;background:{{ c.bc }}"/>
+            </div>
+            <div style="height:20px;text-align:center;font-size:10px;color:#52627f;padding-top:4px">
+              <t t-out="c.l"/>
+            </div>
+          </div>
+        </t>
+      </div>
+    </div>
+  </t>
+</templates>

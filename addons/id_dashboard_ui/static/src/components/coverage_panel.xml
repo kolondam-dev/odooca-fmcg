@@ -1,0 +1,3 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve"><t t-name="id_dashboard_ui.CoveragePanel"><section class="id-dash-card id-coverage"><h3 t-out="props.title"/><div class="id-coverage-body"><GeoMap t-props="mapProps"/><BarRows t-props="tableProps"/></div></section></t>
+</templates>

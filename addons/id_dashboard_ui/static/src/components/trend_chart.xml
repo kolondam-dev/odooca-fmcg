@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.TrendChart">
+    <div t-attf-style="{{ v.card }}box-sizing:border-box;height:{{ v.hh }};display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <t t-if="v.showTitle">
+        <h3 style="margin:0 0 10px;font-size:13px;font-weight:600;border-left:3px solid var(--ac);padding-left:8px">
+          <t t-out="v.title"/>
+        </h3>
+      </t>
+      <div style="display:flex;gap:16px;font-size:11px;color:#52627f;margin-bottom:4px">
+        <t t-foreach="v.legend" t-as="g" t-key="g_index">
+          <span style="display:inline-flex;align-items:center;gap:5px">
+            <i t-attf-style="width:14px;height:0;border-top:{{ g.bd }};display:inline-block"/>
+            <t t-out="g.t"/>
+          </span>
+        </t>
+        <span style="margin-left:auto">
+          <t t-out="v.unit"/>
+        </span>
+      </div>
+      <div t-attf-style="position:relative;height:{{ v.ph }}px;margin:6px 10px 24px 38px">
+        <t t-foreach="v.ticks" t-as="g" t-key="g_index">
+          <div t-attf-style="position:absolute;left:0;right:0;top:{{ g.top }}%;border-top:1px solid #d5e0f2"/>
+          <span t-attf-style="position:absolute;left:-36px;top:{{ g.top }}%;transform:translateY(-50%);width:30px;text-align:right;font-size:10px;color:#52627f">
+            <t t-out="g.t"/>
+          </span>
+        </t>
+        <svg aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <polygon fill="var(--ac3)" fill-opacity=".55" t-attf-points="{{ v.a1 }}"/>
+          <polyline fill="none" stroke="var(--ac2)" stroke-width="2" style="vector-effect:non-scaling-stroke" t-attf-points="{{ v.p2 }}"/>
+          <polyline fill="none" stroke="var(--ac)" stroke-width="2.4" style="vector-effect:non-scaling-stroke" t-attf-points="{{ v.p1 }}"/>
+          <line x1="0" x2="100" stroke="var(--dk)" stroke-dasharray="5 4" t-attf-y1="{{ v.ty }}" t-attf-y2="{{ v.ty }}" t-attf-style="vector-effect:non-scaling-stroke;opacity:{{ v.to }}"/>
+        </svg>
+        <t t-foreach="v.dots" t-as="d" t-key="d_index">
+          <span t-attf-style="position:absolute;left:{{ d.l }}%;top:{{ d.t }}%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:var(--ac)"/>
+        </t>
+        <t t-foreach="v.xl" t-as="x" t-key="x_index">
+          <span t-attf-style="position:absolute;top:100%;margin-top:6px;left:{{ x.l }}%;transform:translateX(-50%);font-size:10px;color:#52627f;white-space:nowrap">
+            <t t-out="x.t"/>
+          </span>
+        </t>
+      </div>
+    </div>
+  </t>
+</templates>
