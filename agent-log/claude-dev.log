@@ -327,3 +327,13 @@
 - Satu kegagalan lagi murni infrastruktur: install-test gagal karena security.ubuntu.com mengembalikan "File has unexpected size ... Mirror sync in progress" untuk Packages.gz; di-rerun dan hijau.
 - [BU] Pin account_invoice_start_end_dates masih diperlukan agar FIN37 mengalokasikan jadwal nyata; tanpa pin seluruh baris menjadi exception (perilaku fail-closed yang diverifikasi native). Verifikasi FIN38 pada data exchange non-sintetis masih terbuka. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-11T02:50:00+07:00
+[2026-11-11T05:40:00+07:00] [INFO] I2c/PR112: empat temuan review ditutup dan diverifikasi native
+- HEAD 3556503: 14/14 check SUCCESS, MERGEABLE. Run 42811317287 mencetak FINANCE_I2C_SCHEDULES=PASS.
+- Bukti native: FIN37 as-of 2026-07-15, 2026-07-31, 2026-08-31 untuk company A (scale 1) dan B (scale 7); FIN38 as-of 31 Juli dan 31 Agustus untuk company X. Counterexample tetap ACCESS_DENIED untuk foreign company, sales, foreign journal (FIN37/FIN38), cross-company partner FIN37; tamper_rejected_FIN37; fixture_rollback PASS.
+- Temuan 1 (FIN38 memakai residual saat ini): residual kini direkonstruksi dari balance/amount_currency minus partial bertanggal. Fixture ditambah faktur USD Agustus 2026 yang tetap terbuka, dan assertion memastikan laporan Juli tidak memuatnya. Oracle diperbaiki dengan cara yang sama.
+- Temuan 2 (tie-out false-PASS): perbandingan kini per mata uang, tidak dijumlah lintas mata uang, dan mata uang GL tanpa baris realized tetap dibandingkan. failing_currency_ids dilaporkan. Kedua mode kegagalan direproduksi di test: USD +500 vs EUR -500 tidak lagi lolos, dan saldo GL yatim 123.456 terdeteksi.
+- Temuan 3 (FIN37 bulan selesai saja): pengakuan kini prorata hari di dalam periode. Repro sebelum perbaikan: 310 untuk 1-31 Juli pada as-of 15 Juli = 0; sesudah perbaikan = 150. Dua test mid-month ditambahkan.
+- Temuan 4 (kontrak kasus khusus): over_reconciled_rows dilaporkan bukan dipotong; reversal di-net per pasangan via reversed_entry_id; write_off_rows terpisah; functional_counterpart_rows ditandai eksplisit. Semuanya punya unit test.
+- Verifikasi lokal: 88 tes finance PASS; ruff PASS; check_manifests PASS (12 addon).
+- [BU] Pin account_invoice_start_end_dates masih terbuka (FIN37 tanpa metadata tetap fail-closed dan diverifikasi native); verifikasi FIN38 pada data exchange non-sintetis; validasi multi-mata-uang dengan dua kurs nyata belum ada di fixture native. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-11T05:40:00+07:00
