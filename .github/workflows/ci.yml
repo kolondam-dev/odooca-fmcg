@@ -87,6 +87,37 @@ jobs:
           ' 2>&1 | tee existing-demo.log
           grep -q 'EXISTING_DEMO_PROVISION=PASS' existing-demo.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' existing-demo.log; then exit 1; fi
+      - name: F4 Generic period pack loader runtime proof (two disposable databases)
+        run: |
+          set -o pipefail
+          docker run --rm --network host -v "$PWD":/workspace -w /workspace --entrypoint bash fmcg-odoo:ci -c '
+            set -euo pipefail
+            PGPASSWORD=odoo createdb -h localhost -p 5432 -U odoo -T ci_db fmcg_period_disposable
+            PGPASSWORD=odoo createdb -h localhost -p 5432 -U odoo -T ci_db fmcg_period_disposable_b
+
+            echo "Bootstrapping July baseline into fmcg_period_disposable..."
+            odoo shell -d fmcg_period_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http < scripts/load_canonical_perpetual.py
+
+            echo "Executing verify_disposable_period_pack.py across fmcg_period_disposable and fmcg_period_disposable_b..."
+            odoo shell -d fmcg_period_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http -- \
+              --pack data/registers/periods/2026-08 --scenario all --db-b fmcg_period_disposable_b --out period_pack_runtime_report.json \
+              < scripts/ops/verify_disposable_period_pack.py
+            
+            PGPASSWORD=odoo dropdb -h localhost -p 5432 -U odoo fmcg_period_disposable || true
+            PGPASSWORD=odoo dropdb -h localhost -p 5432 -U odoo fmcg_period_disposable_b || true
+          ' 2>&1 | tee period-pack-runtime.log
+          grep -q 'STATUS: RUNTIME VERIFICATION COMPLETED SUCCESSFULLY.' period-pack-runtime.log
+          if grep -E ' (ERROR|CRITICAL) |Traceback' period-pack-runtime.log; then exit 1; fi
+      - name: Upload period pack runtime proof report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: period-pack-runtime-report
+          path: |
+            period-pack-runtime.log
+            period_pack_runtime_report.json
       - name: Upgrade dashboard addons on persisted database
         run: |
           set -o pipefail

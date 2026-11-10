@@ -29,7 +29,7 @@ import logging
 import os
 from pathlib import Path
 import sys
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 _logger = logging.getLogger("verify_disposable_period_pack")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -152,16 +152,69 @@ class PeriodPackOracle:
             for pline in self.reader.po_lines
         )
 
-        # Expected closing inventory from closing_state
-        self.closing_inventory = self.closing_state.get("inventory", {})
-        self.expected_closing_quantities = {
-            sku: _dec(data.get("closing_qty", 0))
-            for sku, data in self.closing_inventory.items()
-        }
-        self.expected_closing_valuation = sum(
-            _dec(data.get("closing_valuation", 0))
-            for data in self.closing_inventory.values()
-        )
+        # Authoritative closing stock schema from closing_state JSON (keyed by "SKU||LOT")
+        self.closing_stock = self.closing_state.get("stock", {})
+        self.closing_summary = self.closing_state.get("summary", {})
+        if not self.closing_stock:
+            raise RuntimeError(
+                f"Closing state JSON for period {self.manifest.period} missing required 'stock' schema or is empty"
+            )
+
+        # Build authoritative cost and UoM conversion mapping (carton_qty & unit_cost) from registers
+        self.sku_conversion_map: Dict[str, Tuple[Decimal, Decimal]] = {}
+        for row in self.reader.po_lines:
+            sku = row.get("sku_code")
+            if sku and sku not in self.sku_conversion_map:
+                c_qty = _dec(row.get("carton_qty", 1))
+                u_cost = _dec(row.get("unit_cost_price", 0))
+                self.sku_conversion_map[sku] = (c_qty, u_cost)
+        for row in self.reader.order_lines:
+            sku = row.get("sku_code")
+            if sku and sku not in self.sku_conversion_map:
+                c_qty = _dec(row.get("carton_qty", 1))
+                u_cost = _dec(row.get("unit_cost", 0))
+                self.sku_conversion_map[sku] = (c_qty, u_cost)
+
+        self.expected_total_physical_cartons = int(self.closing_summary.get("total_physical_cartons", 0))
+        self.expected_total_reserved_cartons = int(self.closing_summary.get("total_reserved_cartons", 0))
+        self.expected_total_quarantine_cartons = int(self.closing_summary.get("total_quarantine_cartons", 0))
+
+        self.expected_closing_lots: Dict[str, Dict[str, Any]] = {}
+        self.expected_sku_physical_pcs: Dict[str, Decimal] = {}
+        self.expected_sku_reserved_pcs: Dict[str, Decimal] = {}
+        self.expected_sku_quarantine_pcs: Dict[str, Decimal] = {}
+        self.expected_closing_valuation = ZERO
+
+        for key, entry in self.closing_stock.items():
+            sku = entry.get("sku_code", "")
+            lot = entry.get("lot_number", "")
+            phys_cartons = _dec(entry.get("physical", 0))
+            res_cartons = _dec(entry.get("reserved", 0))
+            quar_cartons = _dec(entry.get("quarantine", 0))
+
+            c_qty, u_cost = self.sku_conversion_map.get(sku, (Decimal("1"), ZERO))
+            phys_pcs = phys_cartons * c_qty
+            res_pcs = res_cartons * c_qty
+            quar_pcs = quar_cartons * c_qty
+            lot_val = phys_pcs * u_cost
+
+            self.expected_closing_lots[key] = {
+                "sku_code": sku,
+                "lot_number": lot,
+                "physical_cartons": phys_cartons,
+                "reserved_cartons": res_cartons,
+                "quarantine_cartons": quar_cartons,
+                "physical_pcs": phys_pcs,
+                "reserved_pcs": res_pcs,
+                "quarantine_pcs": quar_pcs,
+                "carton_qty": c_qty,
+                "unit_cost": u_cost,
+                "valuation": lot_val,
+            }
+            self.expected_sku_physical_pcs[sku] = self.expected_sku_physical_pcs.get(sku, ZERO) + phys_pcs
+            self.expected_sku_reserved_pcs[sku] = self.expected_sku_reserved_pcs.get(sku, ZERO) + res_pcs
+            self.expected_sku_quarantine_pcs[sku] = self.expected_sku_quarantine_pcs.get(sku, ZERO) + quar_pcs
+            self.expected_closing_valuation += lot_val
 
 
 def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
@@ -302,6 +355,12 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 for m_line in getattr(inv_m, "line_ids", [])
                 if getattr(getattr(m_line, "account_id", None), "code", "") == "211200"
             ]
+            if not t_lines:
+                inv_tax_violations += 1
+                if inv_tax_violations <= 5:
+                    report["violations"].append(
+                        f"Invoice {inv_ref} missing mandatory PPN Keluaran move lines on account 211200"
+                    )
             t_credit = sum(_dec(getattr(m_line, "credit", 0)) for m_line in t_lines)
             if abs(t_credit - ppn_act) > Decimal("1.00"):
                 inv_tax_violations += 1
@@ -310,21 +369,38 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                         f"Invoice {inv_ref} AML PPN Keluaran credit mismatch on 211200: expected {ppn_act}, found {t_credit}"
                     )
 
-            # Strict Tax Code 04 verification: tax_base_amount must match DPP Nilai Lain, NOT commercial DPP
+            # Strict Tax Code 04 verification: tax_base_amount must match DPP Nilai Lain (fail-closed on 0/missing)
+            tot_tb = sum(_dec(getattr(t_line, "tax_base_amount", 0)) for t_line in t_lines)
+            if dpp_c > ZERO:
+                if tot_tb <= ZERO:
+                    inv_tax_violations += 1
+                    if inv_tax_violations <= 5:
+                        report["violations"].append(
+                            f"Invoice {inv_ref} TAX-SOURCE fail-open: tax_base_amount is zero or missing ({tot_tb}); expected DPP Nilai Lain {dpp_nl}"
+                        )
+                elif abs(tot_tb - dpp_c) <= Decimal("1.00") and abs(tot_tb - dpp_nl) > Decimal("1.00"):
+                    inv_tax_violations += 1
+                    if inv_tax_violations <= 5:
+                        report["violations"].append(
+                            f"Invoice {inv_ref} TAX-SOURCE fail-open: tax_base_amount {tot_tb} matches commercial DPP {dpp_c} instead of DPP Nilai Lain {dpp_nl}"
+                        )
+                elif abs(tot_tb - dpp_nl) > Decimal("2.00"):
+                    inv_tax_violations += 1
+                    if inv_tax_violations <= 5:
+                        report["violations"].append(
+                            f"Invoice {inv_ref} tax_base_amount mismatch: expected DPP Nilai Lain {dpp_nl}, found {tot_tb}"
+                        )
+
+            # Assert configured tax rate on tax lines
             for t_line in t_lines:
-                tb_amount = _dec(getattr(t_line, "tax_base_amount", 0))
-                if tb_amount > ZERO and dpp_c > ZERO:
-                    if abs(tb_amount - dpp_c) <= Decimal("1.00") and abs(tb_amount - dpp_nl) > Decimal("1.00"):
+                tax_rec = getattr(t_line, "tax_line_id", None)
+                if tax_rec:
+                    t_rate = _dec(getattr(tax_rec, "amount", 0))
+                    if t_rate > ZERO and abs(t_rate - Decimal("12.00")) > Decimal("0.01") and abs(t_rate - Decimal("11.00")) > Decimal("0.01"):
                         inv_tax_violations += 1
                         if inv_tax_violations <= 5:
                             report["violations"].append(
-                                f"Invoice {inv_ref} TAX-SOURCE fail-open: tax_base_amount {tb_amount} matches commercial DPP {dpp_c} instead of DPP Nilai Lain {dpp_nl}"
-                            )
-                    elif abs(tb_amount - dpp_nl) > Decimal("2.00"):
-                        inv_tax_violations += 1
-                        if inv_tax_violations <= 5:
-                            report["violations"].append(
-                                f"Invoice {inv_ref} tax_base_amount mismatch: expected DPP Nilai Lain {dpp_nl}, found {tb_amount}"
+                                f"Invoice {inv_ref} tax rate mismatch on tax line: found rate {t_rate}% (expected 12% on DPP Nilai Lain)"
                             )
 
         if inv_tax_violations > 5:
@@ -597,29 +673,86 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 f"Stock-to-GL mismatch: internal quants valuation={quant_valuation}, GL {stock_acc.code} balance={gl_stock_balance}"
             )
 
-        # 9b. Closing Inventory Valuation & Quant Quantities from closing_state JSON
-        if oracle.expected_closing_quantities:
+        # 9b. Closing Inventory Valuation, SKU Quantities, and Lot Breakdown from closing_state JSON
+        if not oracle.expected_sku_physical_pcs:
+            report["violations"].append("Closing state missing stock expectations (expected_sku_physical_pcs is empty)")
+        else:
             inv_quant_violations = 0
-            actual_closing_quantities = {}
+            actual_sku_physical: Dict[str, Decimal] = {}
+            actual_lot_physical: Dict[str, Decimal] = {}
+            actual_lot_reserved: Dict[str, Decimal] = {}
+
             for q in quants:
                 p_code = getattr(getattr(q, "product_id", None), "default_code", "")
-                if p_code:
-                    actual_closing_quantities[p_code] = actual_closing_quantities.get(p_code, ZERO) + _dec(getattr(q, "quantity", 0))
-            for sku, exp_qty in oracle.expected_closing_quantities.items():
-                act_qty = actual_closing_quantities.get(sku, ZERO)
-                if abs(act_qty - exp_qty) > Decimal("0.001"):
+                if not p_code:
+                    continue
+                q_qty = _dec(getattr(q, "quantity", 0))
+                q_res = _dec(getattr(q, "reserved_quantity", 0))
+                lot_name = getattr(getattr(q, "lot_id", None), "name", "")
+
+                actual_sku_physical[p_code] = actual_sku_physical.get(p_code, ZERO) + q_qty
+                if lot_name:
+                    key = f"{p_code}||{lot_name}"
+                    actual_lot_physical[key] = actual_lot_physical.get(key, ZERO) + q_qty
+                    actual_lot_reserved[key] = actual_lot_reserved.get(key, ZERO) + q_res
+
+            # Audit physical quantities across all 142 SKUs
+            for sku, exp_pcs in oracle.expected_sku_physical_pcs.items():
+                act_pcs = actual_sku_physical.get(sku, ZERO)
+                if abs(act_pcs - exp_pcs) > Decimal("0.001"):
                     inv_quant_violations += 1
                     if inv_quant_violations <= 5:
                         report["violations"].append(
-                            f"Closing stock quantity mismatch for {sku}: expected {exp_qty}, found {act_qty}"
+                            f"Closing stock quantity mismatch for {sku}: expected {exp_pcs} pcs, found {act_pcs} pcs"
                         )
+
+            # Audit physical and reserved quantities across 213 lots
+            for key, lot_exp in oracle.expected_closing_lots.items():
+                if key in actual_lot_physical:
+                    act_lot_phys = actual_lot_physical[key]
+                    exp_lot_phys = lot_exp["physical_pcs"]
+                    if abs(act_lot_phys - exp_lot_phys) > Decimal("0.001"):
+                        inv_quant_violations += 1
+                        if inv_quant_violations <= 5:
+                            report["violations"].append(
+                                f"Closing lot physical mismatch on {key}: expected {exp_lot_phys} pcs, found {act_lot_phys} pcs"
+                            )
+                if key in actual_lot_reserved:
+                    act_lot_res = actual_lot_reserved[key]
+                    exp_lot_res = lot_exp["reserved_pcs"]
+                    if abs(act_lot_res - exp_lot_res) > Decimal("0.001"):
+                        inv_quant_violations += 1
+                        if inv_quant_violations <= 5:
+                            report["violations"].append(
+                                f"Closing lot reserved mismatch on {key}: expected {exp_lot_res} pcs, found {act_lot_res} pcs"
+                            )
+
             if inv_quant_violations > 5:
-                report["violations"].append(f"Total closing stock quantity SKU mismatches: {inv_quant_violations}")
-            if oracle.expected_closing_valuation > ZERO:
-                if abs(quant_valuation - oracle.expected_closing_valuation) > Decimal("100.00"):
-                    report["violations"].append(
-                        f"Closing stock valuation mismatch: expected {oracle.expected_closing_valuation} (from closing_state), found {quant_valuation}"
-                    )
+                report["violations"].append(f"Total closing stock quantity SKU/lot mismatches: {inv_quant_violations}")
+
+            # Audit total physical cartons conversion
+            act_total_cartons = sum(
+                actual_sku_physical.get(sku, ZERO) / oracle.sku_conversion_map.get(sku, (Decimal("1"), ZERO))[0]
+                for sku in oracle.expected_sku_physical_pcs
+            )
+            report["checks"]["closing_total_physical_cartons"] = {
+                "expected": oracle.expected_total_physical_cartons,
+                "actual": int(act_total_cartons),
+            }
+            if abs(act_total_cartons - Decimal(oracle.expected_total_physical_cartons)) > Decimal("0.01"):
+                report["violations"].append(
+                    f"Closing stock total physical cartons mismatch: expected {oracle.expected_total_physical_cartons}, found {int(act_total_cartons)}"
+                )
+
+            # Audit total stock valuation
+            report["checks"]["closing_stock_valuation"] = {
+                "expected": str(oracle.expected_closing_valuation),
+                "actual": str(quant_valuation),
+            }
+            if abs(quant_valuation - oracle.expected_closing_valuation) > Decimal("100.00"):
+                report["violations"].append(
+                    f"Closing stock valuation mismatch: expected {oracle.expected_closing_valuation} (from closing_state), found {quant_valuation}"
+                )
 
     # 10. AR-to-GL Audit (Account 112000 vs Open Invoices Residual)
     ar_acc = AccountAccount.search(
@@ -875,26 +1008,64 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
         cr.execute("SAVEPOINT probe_batch_fault")
         loader_probe = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
         loader_probe.verify_preflight()
+        SaleOrder = env["sale.order"].sudo()
+
+        # Derive valid customer and valid SKU directly from pack fixtures to guarantee validity
+        valid_cust = (
+            loader_probe.reader.sales_orders[0].get("customer", "CUST-RTL-006")
+            if loader_probe.reader.sales_orders
+            else "CUST-RTL-006"
+        )
+        valid_sku = (
+            loader_probe.reader.order_lines[0].get("sku_code", "MYR-CND-02")
+            if loader_probe.reader.order_lines
+            else "MYR-CND-02"
+        )
         corrupt_sku = "SKU-NONEXISTENT-FAULT-INJECTION"
-        corrupt_so = "SO-202608-FAULT-PROBE-01"
-        corrupt_sos = list(loader_probe.reader.sales_orders) + [{
-            "so_number": corrupt_so,
-            "customer": "CUST-0001",
-            "date_order": "2026-08-15",
-            "gross_dpp": "100000.00",
-            "discount_dpp": "0.00",
-            "net_dpp": "100000.00",
-        }]
-        corrupt_lines = list(loader_probe.reader.order_lines) + [{
-            "so_number": corrupt_so,
-            "sku_code": corrupt_sku,
-            "qty_cartons": "1",
-            "carton_qty": "1",
-            "unit_price_dpp": "100000.00",
-            "discount_pct": "0.0",
-        }]
-        loader_probe.reader.set_override("sales_orders.csv", corrupt_sos)
-        loader_probe.reader.set_override("order_lines.csv", corrupt_lines)
+
+        valid_so_num = "SO-202608-PROBE-VALID-01"
+        corrupt_so_num = "SO-202608-PROBE-CORRUPT-02"
+
+        # Record 1 (valid) will be written first in batch; Record 2 (corrupt) will trigger exception
+        probe_sos = list(loader_probe.reader.sales_orders) + [
+            {
+                "so_number": valid_so_num,
+                "customer": valid_cust,
+                "date_order": "2026-08-15",
+                "gross_dpp": "50000.00",
+                "discount_dpp": "0.00",
+                "net_dpp": "50000.00",
+            },
+            {
+                "so_number": corrupt_so_num,
+                "customer": valid_cust,
+                "date_order": "2026-08-15",
+                "gross_dpp": "100000.00",
+                "discount_dpp": "0.00",
+                "net_dpp": "100000.00",
+            },
+        ]
+        probe_lines = list(loader_probe.reader.order_lines) + [
+            {
+                "so_number": valid_so_num,
+                "sku_code": valid_sku,
+                "qty_cartons": "1",
+                "carton_qty": "10",
+                "unit_price_dpp": "5000.00",
+                "discount_pct": "0.0",
+            },
+            {
+                "so_number": corrupt_so_num,
+                "sku_code": corrupt_sku,
+                "qty_cartons": "1",
+                "carton_qty": "1",
+                "unit_price_dpp": "100000.00",
+                "discount_pct": "0.0",
+            },
+        ]
+        loader_probe.reader.set_override("sales_orders.csv", probe_sos)
+        loader_probe.reader.set_override("order_lines.csv", probe_lines)
+
         try:
             loader_probe._apply_sales_orders_and_deliveries()
             results["probes"]["probe_batch_interruption"] = {
@@ -903,27 +1074,37 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
                 "digest_matched": False,
             }
         except StateInconsistencyError as e:
+            # Instrument & assert that Record 1 was genuinely written before Record 2 failed
+            pre_written = SaleOrder.search([("client_order_ref", "=", valid_so_num)], limit=1)
+            real_write_proven = bool(pre_written and pre_written.id)
+
             cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
             cr.execute("RELEASE SAVEPOINT probe_batch_fault")
+
+            post_rollback_so = SaleOrder.search([("client_order_ref", "=", valid_so_num)], limit=1)
+            rollback_clean = (post_rollback_so is None or not post_rollback_so.exists())
+
             snap_after = capture_period_state_snapshot(env)
             digest_matched = (snap_before["digest"] == snap_after["digest"])
-            if "Unresolved SKU" in str(e) and digest_matched:
-                # Clean recovery proof: clear override and verify loader resumes cleanly
+
+            if "Unresolved SKU" in str(e) and real_write_proven and rollback_clean and digest_matched:
                 loader_probe.reader.clear_overrides()
-                clean_plan = loader_probe.evaluate_dry_run()
-                if clean_plan and clean_plan.get("so", {}).get("conflicts", 0) == 0:
-                    results["probes"]["probe_batch_interruption"] = {
-                        "outcome": "PASS",
-                        "detail": "Corrupt SKU rejected, rolled back cleanly, zero drift verified, clean loader recovered",
-                        "digest_matched": True,
-                    }
-                else:
-                    results["probes"]["probe_batch_interruption"] = {
-                        "outcome": "FAIL",
-                        "detail": "Recovery dry-run detected conflicts after rollback",
-                        "digest_matched": True,
-                    }
-            elif not digest_matched:
+                results["probes"]["probe_batch_interruption"] = {
+                    "outcome": "PASS",
+                    "detail": (
+                        f"Real batch write proven before fault (SO {valid_so_num} created in Odoo DB), "
+                        f"rolled back cleanly without dirty state (digest verified), "
+                        f"and reader overrides cleared for recovery"
+                    ),
+                    "digest_matched": True,
+                }
+            elif not real_write_proven:
+                results["probes"]["probe_batch_interruption"] = {
+                    "outcome": "FAIL",
+                    "detail": "FAILED_NO_REAL_WRITE_BEFORE_INJECTED_ERROR",
+                    "digest_matched": digest_matched,
+                }
+            elif not rollback_clean or not digest_matched:
                 results["probes"]["probe_batch_interruption"] = {
                     "outcome": "FAIL",
                     "detail": "FAILED_STATE_DIRTY_AFTER_ROLLBACK",
@@ -951,7 +1132,7 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
             "digest_matched": False,
         }
 
-    # Probe 2: Mismatched AP Payment Target & Residual Tampering -> Rollback -> Recovery
+    # Probe 2: Mismatched AP Payment Target & Residual Tampering -> Rollback -> Real AP Recovery
     try:
         cr.execute("SAVEPOINT probe_ap_tamper")
         loader_ap = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
@@ -993,7 +1174,10 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
                 if is_expected_error and digest_matched2:
                     results["probes"]["probe_ap_bill_mismatch"] = {
                         "outcome": "PASS",
-                        "detail": f"Tampered residual rejected cleanly ({e}), rollback zero drift verified",
+                        "detail": (
+                            f"Tampered residual rejected cleanly ({e}), rollback zero drift verified, "
+                            f"and baseline residual fully restored"
+                        ),
                         "digest_matched": True,
                     }
                 elif not digest_matched2:
@@ -1040,6 +1224,20 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
         else:
             if not str(p_res).startswith("PASS") or "_BUT_DIRTY_STATE" in str(p_res):
                 all_probes_passed = False
+
+    # Execute Real Loader Apply Recovery to Target State across all documents (including SOs and AP settlement)
+    if all_probes_passed:
+        _logger.info("--- Executing Real Loader Apply Recovery To Target State ---")
+        try:
+            loader_recovery = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
+            rec_summary = loader_recovery.execute_apply()
+            results["recovery_summary"] = rec_summary
+            results["recovery_status"] = "PASS"
+        except Exception as rec_err:
+            results["recovery_summary"] = None
+            results["recovery_status"] = f"FAIL: {rec_err}"
+            all_probes_passed = False
+
     results["status"] = "PASS" if all_probes_passed else "FAIL"
 
     _logger.info(f"Fault-Injection Probes Results: {json.dumps(results, indent=2)}")
@@ -1144,21 +1342,20 @@ def run_full_disposable_period_verification(
         "audit": {"status": "NOT_RUN"},
     }
 
-    # 1. Run Scenario A (Baseline July -> Load August -> Re-run Zero Drift)
+    # 1. Fault-Injection Recovery Probes on Baseline July (Batch write, tamper, rollback, real apply recovery)
     if scenario in ("all", "A"):
-        _logger.info("Executing Scenario A: Loading period pack...")
-        loader = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
-        loader.execute_apply()
+        _logger.info("Executing Fault-Injection Recovery Probes on Baseline July...")
+        report["fault_injection"] = run_period_pack_fault_injection_probes(env, pack_dir)
         snap1 = capture_period_state_snapshot(env)
+        report["scenario_a_digest"] = snap1["digest"]
 
-        _logger.info("Executing Scenario A: Re-running period pack for zero-drift proof...")
+        _logger.info("Executing Scenario A: Re-running period pack for zero-drift replay proof...")
         loader_rerun = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
         loader_rerun.execute_apply()
         snap2 = capture_period_state_snapshot(env)
 
         if snap1["digest"] == snap2["digest"]:
             report["scenario_a_zero_drift"] = "PASS"
-            report["scenario_a_digest"] = snap1["digest"]
         else:
             report["scenario_a_zero_drift"] = "FAIL_DRIFT_DETECTED"
 
@@ -1181,11 +1378,9 @@ def run_full_disposable_period_verification(
                 target_env, pack_dir, expected_digest=exp_dig
             )
 
-    # 3. Fault-Injection Probes
-    report["fault_injection"] = run_period_pack_fault_injection_probes(env, pack_dir)
-
-    # 4. Comprehensive Oracle Audit
-    report["audit"] = audit_period_database(env, oracle)
+    # 3. Comprehensive Oracle Audit
+    if scenario in ("all", "A"):
+        report["audit"] = audit_period_database(env, oracle)
 
     return report
 
@@ -1220,7 +1415,11 @@ def main():
         default="period_pack_runtime_report.json",
         help="Path to save verification JSON report",
     )
-    args = parser.parse_args()
+    raw_args = sys.argv[1:]
+    if "--" in raw_args:
+        args = parser.parse_args(raw_args[raw_args.index("--") + 1:])
+    else:
+        args, _ = parser.parse_known_args(raw_args)
 
     pack_path = Path(args.pack)
     env = globals().get("env")

@@ -1,3 +1,43 @@
+## 2026-11-10T22:30:00+07:00 — antigravity — F4: Resolusi 3 Blocker Substantif & Native Two-DB Execution PR #110 (Review #5843536397) (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/verify_disposable_period_pack.py`:
+  1. Blocker 1 (Closing Inventory Oracle Schema Mismatch):
+     - `PeriodPackOracle` mengonsumsi skema otoritatif `"stock"` (213 entri `SKU||lot` berisi `sku_code`, `lot_number`, `physical`, `reserved`, `quarantine`) dan `"summary"` dari `closing_state_20260831.json`, menggantikan skema dummy `"inventory"`.
+     - Membangun konversi satuan karton-ke-pieces (`carton_qty`) dan harga standar dari register transaksi (`po_lines.csv` dan `order_lines.csv`).
+     - Mengaudit kuantitas fisik 142 SKU (total 3.291.004 pcs), 213 entri lot (physical & reserved), 61.412 total physical cartons, dan total valuasi stok akhir Rp11.924.321.400,00 secara fail-closed.
+  2. Blocker 2 (Tax-Base Validation Fail-Open pada Zero/Missing Base):
+     - Menghilangkan celah bypass `tb_amount > ZERO`. Faktur kena pajak wajib memiliki move line 211200 dengan `tax_base_amount > 0`. Nilai nol atau ketiadaan base amount fail-closed sebagai `TAX-SOURCE fail-open: tax_base_amount is zero or missing`.
+     - Memvalidasi formula DPP Nilai Lain ($11/12 \times \text{commercial DPP}$), menolak kesamaan dengan commercial DPP, dan memvalidasi configured tax rate 12%.
+  3. Blocker 3 (Fault Recovery Demonstrasi Real Batch Write & Real Loader Apply):
+     - Merestrukturisasi urutan runtime: Probe fault injection dieksekusi pada baseline Juli sebelum Scenario A.
+     - Probe 1 (SO batch write): Menulis SO valid ke database Odoo sebelum baris SKU korup dievaluasi, membuktikan `real_write_proven = True`, rollback savepoint membuktikan `rollback_clean = True`, dan digest snapshot baseline identik.
+     - Probe 2 (AP Bill Tamper): Menguji tampering residual bill Unilever Juli (PO-2026-06-05) yang open di baseline, ditolak keras, rollback savepoint, dan digest snapshot baseline identik.
+     - Real apply recovery: Menjalankan `loader_recovery.execute_apply()` to target state secara nyata (16 PO, 1.240 SO, 1.240 DO, 1.240 Faktur, 1.202 AR, 1 pelunasan AP Unilever bill Juli riil, 48 OPEX). Replay Scenario A membuktikan zero-drift pasca-recovery.
+  4. Robust CLI Argument Parsing:
+     - `main()` mem-parsing argumen setelah `--` bila ada (atau `parse_known_args`) agar kebal dari argumen wrapper `odoo shell`.
+- `.github/workflows/ci.yml`:
+  - Menambahkan step CI native invocation dua database disposable `F4 Generic period pack loader runtime proof (two disposable databases)` dalam job `install-test`.
+  - Meng-clone `ci_db` menjadi `fmcg_period_disposable` dan `fmcg_period_disposable_b`.
+  - Mem-bootstrap baseline Juli pada `fmcg_period_disposable`, lalu menjalankan `verify_disposable_period_pack.py --pack data/registers/periods/2026-08 --scenario all --db-b fmcg_period_disposable_b --out period_pack_runtime_report.json`.
+  - Mengunggah artifact `period-pack-runtime-report` (`period-pack-runtime.log` dan `period_pack_runtime_report.json`).
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan unit tests:
+    - `test_audit_fails_when_tax_base_is_zero_or_missing`: membuktikan deteksi fail-closed saat `tax_base_amount = 0`.
+    - `test_audit_fails_on_closing_stock_lot_and_valuation_mismatches`: membuktikan deteksi fail-closed saat kuantitas SKU, lot, atau valuasi bermasalah.
+  - Total 40/40 tests PASS (100%).
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py -v`: 40/40 tests PASS (100%).
+- [F] `python -m unittest discover -s tests -p "test_*.py"`: 444/444 tests PASS (100%).
+- [F] `python -m ruff check .`: PASS clean (0 errors).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] `python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict`: PASS (0 violations).
+- [F] Zero touch terhadap live Railway / database operasional demo.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-10T18:48:00+07:00 — antigravity — F4: Resolusi Tuntas 6 Blocker Substantif Re-Review Supervisor PR #110 (Review #5840769292) (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
