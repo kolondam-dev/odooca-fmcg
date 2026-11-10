@@ -93,6 +93,8 @@ Diterapkan: `OrderScreen` (POS dengan stepper per satuan, cari, kunci principal,
 Catatan teknis: draf lama (`quantities`/`units`) dibaca ke keranjang baru (kompatibel). Tes: `tests/order-cart.test.ts` (8 kasus peleburan satuan), e2e order disesuaikan.
 
 ### K14. Kontrak order v2 (Fase 3A) — keputusan pemilik: proses bisnis mockup WAJIB dipatuhi
+
+> **Gerbang kontrak (review PR #109):** PWA hanya mengirim `sales.order.submit`/`revise` v2 bila snapshot membawa `features.order_pricing_v2 === true`. Demo = true; live = OFF sampai backend menyelesaikan kontrak v2 + tes integrasi lalu menyalakan flag di snapshot. Kuantitas tidak valid (>999, negatif, desimal, malformed) diblokir, tidak dipotong.
 Kontrak lama (`pricing_version: 1`, satu satuan per SKU, satu `discount_request`) dinyatakan usang. PWA kini mengirim `pricing_version: 2`; kontrak v1 tetap dibaca hanya untuk item antrean/riwayat lama. **Backend wajib menyesuaikan** (hutang dikerjakan segera setelah PR terkait merge).
 
 | Elemen | Bentuk v2 (payload `sales.order.create` dan `sales.order.revise`) | Status PWA | Tugas backend |
