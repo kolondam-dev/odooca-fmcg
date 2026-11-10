@@ -11,8 +11,9 @@
   revaluation), `FIN55` (Loan / lease / interest liability schedules), `FIN56`
   (Payroll / employee reimbursement to GL).
 - [F] Aritmetika ADR dapat dieksekusi: `tests/test_finance_i2c_adr_formulas.py`
-  (11 tes) mengunci formula FIN37 dan FIN38. Ini satu-satunya perubahan non-docs
-  pada PR ini dan sifatnya test murni tanpa ORM/database.
+  (**13 tes**) mengunci formula FIN37 dan FIN38, termasuk tie-out dua arah
+  (gain dan loss) serta regresi penjaga konvensi tanda. Ini satu-satunya
+  perubahan non-docs pada PR ini dan sifatnya test murni tanpa ORM/database.
 - [F] Basis audit awal: `main` `6ff44a77af89bc67670622c112679fd94475a520` (pasca
   PR #107). Audit OCA selalu dibaca pada SHA pin, bukan HEAD cabang.
 - [F] Delta `main` pasca-`6ff44a7`: PR #105 masuk sebagai
@@ -296,10 +297,11 @@ nyata `_prepare_exchange_difference_move_vals()` dan
 terhadap jurnal yang benar-benar diposting Odoo.
 
 **Bukti eksekusi formula:** `tests/test_finance_i2c_adr_formulas.py` mengunci
-aritmetika di atas (test case A–D, multi-partial, mata uang fungsional, alokasi
-jadwal, dan penolakan rentang terbalik). Jalankan
-`python -m unittest tests.test_finance_i2c_adr_formulas -v`; 11 tes harus lulus.
-Tanpa test ini, formula ADR hanya prosa dan tidak boleh dianggap kontrak.
+aritmetika di atas: test case A–D, multi-partial, mata uang fungsional, tie-out
+gain dan loss terhadap signed balance akun exchange, regresi penjaga konvensi
+tanda, alokasi jadwal, dan penolakan rentang terbalik. Jalankan
+`python -m unittest tests.test_finance_i2c_adr_formulas -v`; **13 tes** harus
+lulus. Tanpa test ini, formula ADR hanya prosa dan tidak boleh dianggap kontrak.
 
 ### ADR-I2c-04 — FIN55 custom amortization schedule
 
