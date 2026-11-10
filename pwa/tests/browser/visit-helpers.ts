@@ -82,22 +82,67 @@ export async function fillQty(
         .fill(String(qty));
 }
 
-/** Diskon order lewat lembar "Diskon order" (alasan bebas lewat pilihan Lainnya). */
+/** Isi satu tingkat tactical pada lembar Diskon baris yang sedang terbuka. */
+async function fillTactical(page: Page, percent: number, reason: string) {
+    const sheet = page.getByRole("dialog", { name: /^Diskon baris/ });
+    await sheet
+        .getByRole("button", { name: /^Tambah diskon bertingkat/ })
+        .click();
+    await sheet
+        .getByLabel("Sumber diskon")
+        .last()
+        .selectOption({ label: "Tactical Discount (pengajuan)" });
+    await sheet.getByLabel("Nilai (%)").last().fill(String(percent));
+    await sheet.getByLabel("Alasan (wajib)").selectOption("Lainnya");
+    await sheet
+        .getByLabel("Alasan pengajuan diskon", { exact: true })
+        .fill(reason);
+    await sheet
+        .getByRole("button", { name: "Terapkan diskon baris", exact: true })
+        .click();
+}
+
+/** Pengajuan (tactical) diskon baris pada SKU pertama yang sudah berisi kuantitas. */
 export async function applyDiscount(
     page: Page,
     percent: number,
     reason: string,
 ) {
-    await page.getByRole("button", { name: /^Diskon order/ }).click();
-    const sheet = page.getByRole("dialog", { name: "Diskon order" });
-    await sheet.getByLabel(/^Diskon diminta \(%\)/).fill(String(percent));
-    await sheet.getByLabel("Alasan (wajib)").selectOption("Lainnya");
-    await sheet
-        .getByLabel("Alasan permintaan diskon", { exact: true })
-        .fill(reason);
-    await sheet
-        .getByRole("button", { name: "Terapkan diskon", exact: true })
+    await page
+        .getByRole("button", { name: /^Diskon baris / })
+        .and(page.locator(":not([disabled])"))
+        .first()
         .click();
+    await fillTactical(page, percent, reason);
+}
+
+/** Koreksi order: ubah kuantitas lewat lembar "Ubah baris order". */
+export async function koreksiEditLines(
+    page: Page,
+    edits: { product: string; tier: string; qty: number }[],
+) {
+    await page
+        .getByRole("button", { name: "Ubah baris order", exact: true })
+        .click();
+    for (const e of edits) await fillQty(page, e.product, e.tier, e.qty);
+    await page.locator(".ui-btn", { hasText: "Selesai" }).click();
+}
+
+/** Koreksi order: tactical diskon baris untuk satu SKU lewat "Ubah diskon". */
+export async function koreksiTactical(
+    page: Page,
+    product: string,
+    percent: number,
+    reason: string,
+) {
+    await page
+        .getByRole("button", { name: "Ubah diskon", exact: true })
+        .click();
+    await page
+        .getByRole("button", { name: new RegExp(`^Diskon baris · ${product}`) })
+        .click();
+    await fillTactical(page, percent, reason);
+    await page.locator(".ui-btn", { hasText: "Selesai" }).click();
 }
 
 /** Buka Ringkasan, kirim order, lalu tutup layar Hasil kirim kembali ke Hub. */
@@ -118,11 +163,16 @@ export async function sendOrder(page: Page) {
 /** Layar kunjungan menutupi navigasi bawah; keluar lewat tombol Kembali bila terbuka. */
 export async function leaveVisit(page: Page) {
     const back = page.getByRole("button", { name: "Kembali", exact: true });
-    const shown = await back
-        .waitFor({ state: "visible", timeout: 1500 })
-        .then(() => true)
-        .catch(() => false);
-    if (shown) await back.click();
+    // Layar bertumpuk (mis. Riwayat pengajuan -> Koreksi): tutup semuanya.
+    for (let i = 0; i < 3; i++) {
+        const shown = await back
+            .last()
+            .waitFor({ state: "visible", timeout: i ? 400 : 1500 })
+            .then(() => true)
+            .catch(() => false);
+        if (!shown) return;
+        await back.last().click();
+    }
 }
 
 /** Setelah "Tutup kunjungan": tunggu penutupan lokal, lalu kembali ke daftar agar navigasi bawah bebas. */
@@ -136,4 +186,41 @@ export async function leaveClosedVisit(page: Page) {
     await expect(
         page.getByRole("region", { name: "Kunjungan outlet" }),
     ).toHaveCount(0);
+}
+
+/** Lainnya → Antrean sinkronisasi (layar DS); mengembalikan regionnya. */
+export async function openQueue(page: Page) {
+    const region = page.getByRole("region", {
+        name: "Antrean sinkronisasi",
+        exact: true,
+    });
+    if (await region.isVisible()) return region;
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByRole("button", { name: /^Antrean sinkronisasi/ }).click();
+    return region;
+}
+/** Buka Antrean dan tekan "Kirim sekarang". */
+export async function syncNow(page: Page) {
+    const region = await openQueue(page);
+    await page
+        .getByRole("button", { name: "Kirim sekarang", exact: true })
+        .click();
+    return region;
+}
+
+/** Daftar baris Riwayat aktivitas (DS); gunakan setelah `await openActivity(page)`. */
+export const activity = (page: Page) =>
+    page
+        .getByRole("region", { name: "Riwayat aktivitas", exact: true })
+        .locator(".ui-row");
+/** Buka Lainnya → Riwayat aktivitas bila belum terbuka. */
+export async function openActivity(page: Page) {
+    const region = page.getByRole("region", {
+        name: "Riwayat aktivitas",
+        exact: true,
+    });
+    if (await region.isVisible()) return;
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByRole("button", { name: /^Riwayat aktivitas/ }).click();
+    await region.waitFor();
 }

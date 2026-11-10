@@ -552,7 +552,14 @@ it("revision without a discount still requires a fresh approval", async () => {
         p = revised(s);
     delete p.discount_request;
     p.observed_total = String(
-        orderQuote(p.lines, s.daily.snapshot!).requestedTotal,
+        orderQuote(
+            p.lines as {
+                product_id: string;
+                qty: string;
+                uom: "carton" | "pack" | "pcs";
+            }[],
+            s.daily.snapshot!,
+        ).requestedTotal,
     );
     const child = await submitRevision(store, s.owner, s.root, p, s.engine);
     await s.engine.flush();

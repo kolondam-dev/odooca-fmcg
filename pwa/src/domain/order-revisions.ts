@@ -10,7 +10,7 @@ import {
     morningReady,
     fieldBusinessDate,
 } from "./morning";
-import { validateOrderQuote } from "./order-pricing";
+import { lineChecks, validateOrderQuote } from "./order-pricing";
 import { businessRejected } from "./outbox-state";
 import { validateVisitSync } from "./visit-validation";
 import { validateVisitMedia } from "./visit-evidence";
@@ -116,13 +116,7 @@ export function revisionChain(
             !daily.snapshot!.outlets.some((o) => o.id === p.outlet_id)
         )
             throw new Error("Sumber harian/outlet revisi tidak cocok.");
-        const invalid = validateOrder(
-            p.lines.map((l) => ({
-                productId: l.product_id,
-                quantity: Number(l.qty),
-            })),
-            daily.snapshot!,
-        );
+        const invalid = validateOrder(lineChecks(p.lines), daily.snapshot!);
         if (invalid) throw new Error(invalid);
         validateOrderQuote(p, daily.snapshot!);
         // Preserve principal even when SKU, quantities, UoM or discount change.

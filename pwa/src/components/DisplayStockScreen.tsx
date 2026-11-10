@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
-import { setTier, tierQty, type Cart } from "../domain/order-cart";
+import { setTier, stockText, tierQty, type Cart } from "../domain/order-cart";
 import type { OrderUom } from "../domain/order-pricing";
 import { unitOptions } from "../domain/product-units";
 import type { FieldStore } from "../storage/store";
 import { ActionCaption, Button, Callout, Screen, ScreenHeader } from "../ui";
+import { Icon } from "./Icon";
 import { useBackLayer } from "../ui/navigation";
 import { DisplayPhoto } from "./DisplayPhoto";
 import type { EvidenceRef } from "./Evidence";
@@ -67,8 +68,16 @@ export function DisplayStockScreen({
             active = false;
         };
     }, []);
-    // SKU yang tampil: urutan katalog (riwayat order per toko belum ada di snapshot).
-    const listed = snapshot.products.slice(0, LISTED);
+    // Daftar SKU = riwayat order toko ini (ikut sync harian). Tanpa riwayat dari
+    // server, jatuh ke urutan katalog dan diberi tahu (hutang backend, DS_RECONCILIATION).
+    const history = snapshot.order_history?.find(
+        (h) => h.outlet_id === outletId,
+    );
+    const listed = history
+        ? history.product_ids
+              .map((id) => snapshot.products.find((p) => p.id === id))
+              .filter((p): p is Snapshot["products"][number] => !!p)
+        : snapshot.products.slice(0, LISTED);
     async function save() {
         if (!evidence || busy) return;
         setBusy(true);
@@ -130,15 +139,26 @@ export function DisplayStockScreen({
                 onChange={setEvidence}
             />
             <Callout tone="neu">
-                Stok aktual di toko bersifat opsional dan tersimpan di perangkat
-                sebagai catatan kunjungan.
+                {history
+                    ? "Daftar SKU dari riwayat order toko ini. Ikut sync harian, jadi selalu terbaru."
+                    : "Riwayat order toko ini belum dikirim server; menampilkan SKU pertama katalog."}
             </Callout>
             <h2 class="ui-sectionlabel">Stok aktual di toko</h2>
             {listed.map((product) => {
                 const options = unitOptions(product, snapshot.catalog_version);
                 return (
                     <fieldset class="stock-row" key={product.id}>
-                        <legend>{product.name}</legend>
+                        <legend>
+                            {product.name}
+                            <span class="stock-row__sys">
+                                <Icon name="box" size={14} />{" "}
+                                {stockText(
+                                    product,
+                                    product.stock,
+                                    snapshot.catalog_version,
+                                )}
+                            </span>
+                        </legend>
                         <div class="stock-row__grid">
                             {options.map((option) => (
                                 <label class="ui-field" key={option.uom}>

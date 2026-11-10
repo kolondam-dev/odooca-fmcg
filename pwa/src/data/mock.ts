@@ -7,6 +7,7 @@ import {
     type Scenario,
     type Snapshot,
 } from "../domain/contracts";
+import { orderHasDiscountRequest } from "../domain/order-pricing";
 import { ExpenseRealizationSchema } from "../domain/settlement-contracts";
 import { FieldStore } from "../storage/store";
 import { isDemoMode } from "../domain/running-mode";
@@ -216,6 +217,32 @@ export class MockProvider implements FieldProvider {
                     stock: 40,
                 },
             ],
+            features: { order_pricing_v2: true },
+            order_history: [
+                {
+                    outlet_id: "demo-outlet-1",
+                    product_ids: ["demo-product-1", "demo-product-2"],
+                },
+            ],
+            discount_programs: [
+                {
+                    id: "demo-promo-biskuit",
+                    name: "Gebyar Promo Biskuit Q4 (simulasi)",
+                    scope: "line" as const,
+                    principal: "mayora",
+                    product_ids: ["demo-product-1"],
+                    max_percent: 10,
+                    budget_remaining: 12500000,
+                },
+                {
+                    id: "demo-promo-footer",
+                    name: "Potongan Footer Q4 (simulasi)",
+                    scope: "footer" as const,
+                    principal: "mayora",
+                    max_amount: 100000,
+                    budget_remaining: 1000000,
+                },
+            ],
             deliveries: [
                 {
                     id: "DEMO-DO-001",
@@ -351,7 +378,7 @@ export class MockProvider implements FieldProvider {
         const discounted =
             (command.type === "sales.order.submit" ||
                 command.type === "sales.order.revise") &&
-            !!command.payload.discount_request;
+            orderHasDiscountRequest(command.payload);
         const policyApproval = [
             "sales.order.revise",
             "delivery.pod.submit",

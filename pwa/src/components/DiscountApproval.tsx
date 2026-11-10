@@ -4,6 +4,7 @@ import {
     rootOrderDate,
     ORDER_DAY_CLOSED,
 } from "../domain/order-revisions";
+import { orderHasDiscountRequest } from "../domain/order-pricing";
 import { useBusinessDate } from "./useBusinessDate";
 import type { FieldStore, QueueItem } from "../storage/store";
 export function DiscountApproval({
@@ -25,7 +26,7 @@ export function DiscountApproval({
         (q) =>
             (q.command?.type === "sales.order.revise" ||
                 (q.command?.type === "sales.order.submit" &&
-                    q.command.payload?.discount_request)) &&
+                    orderHasDiscountRequest(q.command.payload))) &&
             q.state === "needs_approval" &&
             !!q.receipt?.reference?.startsWith("DEMO-"),
     );

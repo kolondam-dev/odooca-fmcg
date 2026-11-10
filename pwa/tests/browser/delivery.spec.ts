@@ -1,4 +1,5 @@
 import { switchPersona } from "./delivery-helpers";
+import { syncNow, activity, openActivity } from "./visit-helpers";
 import { ensureDaily, startDelivery } from "./delivery-helpers";
 import { expect, test, type Page } from "./session-fixture";
 async function openDelivery(page: Page) {
@@ -80,14 +81,12 @@ test("POD draft restores offline and queues only for review, with read-only proo
         fullPage: true,
     });
     await context.setOffline(false);
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await openActivity(page);
     await expect(
-        page.getByText("POD • DEMO-DO-001", { exact: true }),
+        activity(page).getByText("POD • DEMO-DO-001", { exact: true }),
     ).toBeVisible();
     await expect(
-        page
-            .locator(".activity")
-            .getByText("Menunggu approval", { exact: true }),
+        activity(page).getByText("Menunggu approval", { exact: true }),
     ).toBeVisible();
 });
 test("corrupt offline POD media blocks restore and reconnect sync", async ({
@@ -151,14 +150,12 @@ test("corrupt offline POD media blocks restore and reconnect sync", async ({
     ).toHaveCount(0);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await context.setOffline(false);
-    await page.getByRole("button", { name: "Sinkronkan", exact: true }).click();
+    const queue = await syncNow(page);
+    await expect(queue.locator(".ui-chip", { hasText: "Gagal" })).toHaveCount(
+        1,
+    );
     await expect(
-        page.getByRole("button", { name: "Perlu review 1", exact: true }),
-    ).toBeVisible();
-    await expect(
-        page
-            .locator(".activity")
-            .getByText("Menunggu approval", { exact: true }),
+        queue.getByText("Menunggu approval", { exact: true }),
     ).toHaveCount(0);
 });
 async function savePodPhoto(task: ReturnType<Page["locator"]>) {
@@ -282,9 +279,8 @@ test("business rejection opens offline correction draft and preserves immutable 
     });
     await context.setOffline(false);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await openActivity(page);
     await expect(
-        page
-            .locator(".activity")
-            .getByText("Menunggu approval", { exact: true }),
+        activity(page).getByText("Menunggu approval", { exact: true }),
     ).toHaveCount(1);
 });
