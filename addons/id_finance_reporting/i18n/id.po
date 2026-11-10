@@ -114,3 +114,14 @@ msgstr "Batas interval aging harus positif dan naik secara ketat."
 #: code:addons/id_finance_reporting/models/schedule_reports.py:0
 msgid "Select a single as-of date for schedule reports."
 msgstr "Pilih satu tanggal posisi untuk laporan jadwal."
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/schedule_reports.py:0
+msgid "Selected partner does not exist."
+msgstr "Partner yang dipilih tidak ada."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/schedule_reports.py:0
+msgid "Selected partner belongs to another company."
+msgstr "Partner yang dipilih milik perusahaan lain."

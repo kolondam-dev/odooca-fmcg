@@ -1,7 +1,7 @@
 """Server-side bounded models for FIN37 accrual schedules and FIN38 FX revaluation."""
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 from .ledger_schedules import (
     build_accrual_schedules,
@@ -22,6 +22,17 @@ class FinanceScheduleMixin(models.AbstractModel):
         if not as_of:
             raise UserError(_("Select a single as-of date for schedule reports."))
         return as_of
+
+    def _check_partner_filter(self, company, partner_ids):
+        """Reject partners that do not exist or belong to another company."""
+        if not partner_ids:
+            return
+        unique_ids = list(dict.fromkeys(partner_ids))
+        partners = self.env["res.partner"].with_context(active_test=False).browse(unique_ids)
+        if any(not partner.exists() for partner in partners):
+            raise UserError(_("Selected partner does not exist."))
+        if any(partner.company_id and partner.company_id != company for partner in partners):
+            raise AccessError(_("Selected partner belongs to another company."))
 
     def _has_start_end_dates(self):
         """True when account.move.line exposes the OCA schedule metadata."""
@@ -44,6 +55,7 @@ class FinanceAccrualSchedule(models.AbstractModel):
         company = self.env["res.company"].browse(company_id)
         self._check_scope(company_id, journal_ids, account_ids)
         scoped = self.with_context(allowed_company_ids=[company_id]).with_company(company)
+        scoped._check_partner_filter(company, partner_ids)
         return scoped._build(
             company, as_of, account_ids, journal_ids, partner_ids, only_posted_moves,
         )
@@ -123,6 +135,7 @@ class FinanceFxRevaluation(models.AbstractModel):
         company = self.env["res.company"].browse(company_id)
         self._check_scope(company_id, journal_ids, account_ids)
         scoped = self.with_context(allowed_company_ids=[company_id]).with_company(company)
+        scoped._check_partner_filter(company, partner_ids)
         return scoped._build(
             company, as_of, account_ids, journal_ids, partner_ids, only_posted_moves,
         )
