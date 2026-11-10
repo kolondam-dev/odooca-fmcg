@@ -433,6 +433,40 @@ class FxRevaluationTests(unittest.TestCase):
         self.assertEqual(report["realized_posted_total"], 0.0)
         self.assertEqual(report["realized_unposted_total"], 0.0)
 
+    def test_settlement_from_another_journal_still_closes_the_line(self):
+        # Review blocker: a July invoice paid through the bank/cash journal must be
+        # netted even when the report filters to the sale journal only. The
+        # partial query is intentionally OR-scoped for that reason.
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        cross_journal = [
+            partial(1, leg(1_500_000.0, 100.0), leg(-1_500_000.0, -100.0),
+                    1_500_000.0, max_date="2026-07-25", exchange_move_id=9),
+        ]
+        report = sched.build_fx_revaluation(
+            [open_line], cross_journal, "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(
+            report["unrealized_rows"], [],
+            "a cross-journal settlement must still close the selected line",
+        )
+        self.assertEqual(report["realized_posted_total"], 0.0)
+
+    def test_open_line_without_any_partial_stays_open(self):
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        report = sched.build_fx_revaluation(
+            [open_line], [], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(len(report["unrealized_rows"]), 1)
+        self.assertEqual(report["unrealized_rows"][0]["amount_residual_currency"], 100.0)
+
     def test_negated_gl_balance_fails_the_gain_case(self):
         invoice = leg(1_500_000.0, 100.0)
         payment = leg(-1_600_000.0, -100.0)

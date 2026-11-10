@@ -184,16 +184,16 @@ class FinanceFxRevaluation(models.AbstractModel):
         )
         exchange_ids = self._exchange_accounts(company)
         payload = []
-        leg_by_id = {}
+        # Two maps on purpose:
+        # - all_leg_by_id holds every in-scope line, including functional
+        #   currency, so a partial leg outside the FX base can still be
+        #   classified (functional counterpart, write-off, reversal).
+        # - payload holds only foreign-currency, non-exchange lines, which is the
+        #   unrealized base.
+        all_leg_by_id = {}
         for line in lines:
             account = line.account_id.with_company(company)
-            currency_id = line.currency_id.id or company.currency_id.id
-            # FIN38 is a foreign-currency report. Functional-currency lines carry
-            # no exchange difference and must not enter the partial scope, or a
-            # same-currency settlement would be reported as unposted FX evidence.
-            if currency_id == company.currency_id.id:
-                continue
-            row = {
+            all_leg_by_id[line.id] = {
                 "line_id": line.id,
                 "move_id": line.move_id.id,
                 "account_id": account.id,
@@ -201,23 +201,37 @@ class FinanceFxRevaluation(models.AbstractModel):
                 "account_type": account.account_type,
                 "partner_id": line.partner_id.id or 0,
                 "partner_name": line.partner_id.display_name or "",
-                "currency_id": currency_id,
+                "currency_id": line.currency_id.id or company.currency_id.id,
                 "company_currency_id": company.currency_id.id,
                 "balance": line.balance,
                 "amount_currency": line.amount_currency,
             }
-            leg_by_id[line.id] = row
-            if account.id in exchange_ids:
+        for row in all_leg_by_id.values():
+            if row["account_id"] in exchange_ids:
+                continue
+            # FIN38 is a foreign-currency report: functional-currency lines carry
+            # no exchange difference and are not part of the unrealized base.
+            if row["currency_id"] == company.currency_id.id:
                 continue
             payload.append(row)
 
-        partials = self._partials(company, as_of, leg_by_id)
+        partials = self._partials(company, as_of, all_leg_by_id)
         report = build_fx_revaluation(
             payload, partials, as_of, round_amt, self._rate_lookup(company),
             exchange_account_ids=exchange_ids,
         )
-        gl_balance = self._exchange_gl_balance(company, as_of, exchange_ids, round_amt)
+        scope_limited = bool(journal_ids or partner_ids or account_ids)
+        gl_balance = self._exchange_gl_balance(
+            company, as_of, exchange_ids, round_amt,
+            exchange_move_ids=report["tied_exchange_move_ids"] if scope_limited else None,
+        )
         tie_out = tie_fx_to_gl(report, gl_balance, round_amt)
+        tie_out["scope_limited"] = scope_limited
+        tie_out["scope_note"] = (
+            "filtered: comparator restricted to exchange moves reachable from the "
+            "in-scope partials" if scope_limited
+            else "company-wide: every posted exchange line is compared"
+        )
         return {
             "report_id": "FIN38",
             "report_ids": ["FIN38"],
@@ -233,15 +247,26 @@ class FinanceFxRevaluation(models.AbstractModel):
             "gl_tie_out": tie_out,
         }
 
-    def _partials(self, company, as_of, leg_by_id):
-        if not leg_by_id:
+    def _partials(self, company, as_of, all_leg_by_id):
+        """Load partials that touch any selected line, from either side.
+
+        The domain must stay an ``OR`` on the two legs here, and that is
+        deliberate: a partial whose counterpart sits outside the report filters
+        still reduces the selected line's residual. Restricting to partials whose
+        *both* legs are selected would make a July invoice look open again as soon
+        as a bank payment is filtered out by ``journal_ids``. This is the opposite
+        of FIN07's slice rule, because FIN07 reports on a slice while FIN38
+        reconstructs the true position of the lines it selected.
+        """
+        if not all_leg_by_id:
             return []
-        selected = list(leg_by_id)
+        selected = list(all_leg_by_id)
         records = self._bounded(
             "account.partial.reconcile",
             [
                 ("company_id", "=", company.id),
                 ("max_date", "<=", as_of),
+                "|",
                 ("debit_move_id", "in", selected),
                 ("credit_move_id", "in", selected),
             ],
@@ -250,12 +275,8 @@ class FinanceFxRevaluation(models.AbstractModel):
         records.check_access("read")
         payloads = []
         for record in records:
-            debit_leg = leg_by_id.get(record.debit_move_id.id)
-            credit_leg = leg_by_id.get(record.credit_move_id.id)
-            # Both legs must be in FIN38 scope. A functional-currency counterpart
-            # produces no exchange difference; it is flagged explicitly instead
-            # of being silently dropped or double counted.
-            functional_counterpart = bool(debit_leg) != bool(credit_leg)
+            debit_leg = all_leg_by_id.get(record.debit_move_id.id)
+            credit_leg = all_leg_by_id.get(record.credit_move_id.id)
             if not debit_leg and not credit_leg:
                 continue
             debit_move = record.debit_move_id.move_id
@@ -275,18 +296,34 @@ class FinanceFxRevaluation(models.AbstractModel):
                 "reversed_entry_id": debit_move.reversed_entry_id.id
                 or credit_move.reversed_entry_id.id or None,
                 "is_reversal": bool(debit_move.reversal_move_ids or credit_move.reversal_move_ids),
-                "functional_counterpart": functional_counterpart,
-                # A write-off settles a line through an expense account without a
-                # matching foreign-currency settlement, so it carries no FX.
+                # One leg outside the FX universe means the settlement crossed a
+                # functional-currency line: no exchange difference is realisable.
+                "functional_counterpart": bool(debit_leg) != bool(credit_leg),
                 "write_off": self._is_write_off(debit_leg, credit_leg),
             })
         return payloads
 
     def _is_write_off(self, debit_leg, credit_leg):
-        for leg in (debit_leg, credit_leg):
-            if leg and (leg.get("account_type") or "").startswith("expense"):
-                return True
-        return False
+        """Detect a settlement routed through a non-reconcilable expense line.
+
+        A write-off closes a receivable/payable against an expense account and
+        carries no foreign-currency settlement, so it must not produce realized
+        FX. Detection needs the partial to *link* a monetary line and an expense
+        line; an ordinary FX settlement keeps both legs on monetary accounts.
+        """
+        if not debit_leg or not credit_leg:
+            return False
+        monetary = (
+            "asset_receivable", "liability_payable", "asset_cash",
+            "liability_credit_card", "asset_current", "liability_current",
+            "asset_non_current", "liability_non_current",
+        )
+        types = {debit_leg.get("account_type"), credit_leg.get("account_type")}
+        has_expense = any(
+            account_type and account_type not in monetary for account_type in types
+        )
+        has_monetary = any(account_type in monetary for account_type in types)
+        return bool(has_expense and has_monetary)
 
     def _rate_lookup(self, company):
         currency_model = self.env["res.currency"]
@@ -301,16 +338,29 @@ class FinanceFxRevaluation(models.AbstractModel):
 
         return lookup
 
-    def _exchange_gl_balance(self, company, as_of, exchange_ids, round_amt):
+    def _exchange_gl_balance(self, company, as_of, exchange_ids, round_amt,
+                             exchange_move_ids=None):
+        """Sum posted exchange gain/loss balances.
+
+        ``exchange_move_ids`` restricts the comparator when the report is
+        filtered. Without it the comparator stays company-wide, which is correct
+        for an unfiltered report but would compare a filtered realized total
+        against every exchange move in the company.
+        """
         if not exchange_ids:
             return {}
-        lines = self.env["account.move.line"].search([
+        domain = [
             ("company_id", "=", company.id),
             ("account_id", "in", list(exchange_ids)),
             ("date", "<=", as_of),
             ("parent_state", "=", "posted"),
             ("display_type", "not in", ["line_note", "line_section", "line_subsection"]),
-        ])
+        ]
+        if exchange_move_ids is not None:
+            if not exchange_move_ids:
+                return {}
+            domain.append(("move_id", "in", list(exchange_move_ids)))
+        lines = self.env["account.move.line"].search(domain)
         lines.check_access("read")
         totals = {}
         for line in lines:

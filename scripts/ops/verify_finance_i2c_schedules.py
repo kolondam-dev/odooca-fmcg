@@ -201,6 +201,14 @@ def build_fx_fixture(env, suffix):
         "August FX invoice must post the expected AR balance",
     )
 
+    # July invoice settled in August through the cash journal. At 31 July it must
+    # be fully open (110 USD / 1,500,000); at 31 August it must be closed. This is
+    # the case the previous fixture could not prove.
+    july_invoice = usd_entry("july_open_invoice", "2026-07-20", 1_500_000, 100)
+    august_receipt = usd_entry("aug_receipt", "2026-08-05", -1_500_000, -100)
+    (sec.control_line(july_invoice, accounts["ar"])
+     | sec.control_line(august_receipt, accounts["ar"])).reconcile()
+
     return {
         "company": fx_company,
         "accounts": accounts,
@@ -213,6 +221,8 @@ def build_fx_fixture(env, suffix):
         "invoice": invoice,
         "payment": payment,
         "august_invoice": august_invoice,
+        "july_invoice": july_invoice,
+        "august_receipt": august_receipt,
         "round_amt": round_amt,
     }
 
@@ -238,9 +248,13 @@ def independent_fx(env, fixture, as_of):
     line_by_id = {line.id: line for line in lines}
 
     selected = list(line_by_id)
+    # Same OR scope as production: a partial touching a selected line must apply
+    # even when its counterpart is outside the filtered set, otherwise a July
+    # invoice paid through a bank journal looks open again under journal filters.
     partials = env["account.partial.reconcile"].search([
         ("company_id", "=", company.id),
         ("max_date", "<=", cutoff),
+        "|",
         ("debit_move_id", "in", selected),
         ("credit_move_id", "in", selected),
     ], order="max_date asc, id asc") if selected else env["account.partial.reconcile"]
@@ -423,6 +437,51 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
                     for row in snapshot["unrealized_rows"]
                 ),
                 "FIN38 July report must not include the August open invoice",
+            )
+
+            # A July invoice settled in August must be FULLY OPEN at 31 July and
+            # CLOSED at 31 August. This is the two-cutoff acceptance the review
+            # asked for, and it is what the current-residual bug broke.
+            july_line = fixture["july_invoice"].line_ids.filtered(
+                lambda line: line.account_id == fixture["accounts"]["ar"]
+            )
+            july_august_scope = models["id.finance.fx.revaluation"]._snapshot(
+                company.id, "2026-08-31",
+            )
+            july_rows_july_cutoff = [
+                row for row in snapshot["unrealized_rows"]
+                if row["line_id"] == july_line.id
+            ]
+            require(
+                len(july_rows_july_cutoff) == 1
+                and july_rows_july_cutoff[0]["amount_residual_currency"] == 100.0,
+                "FIN38 at 31 July must keep the July invoice fully open at 100 USD",
+            )
+            require(
+                all(row["line_id"] != july_line.id
+                    for row in july_august_scope["unrealized_rows"]),
+                "FIN38 at 31 August must show the July invoice as settled",
+            )
+
+            # Journal filter must not un-settle a line paid through another
+            # journal. The July invoice is settled in the cash journal; selecting
+            # only the sale journal must still net it.
+            sale_journal_id = fixture["journals"]["sale"].id
+            sale_scope = models["id.finance.fx.revaluation"]._snapshot(
+                company.id, "2026-08-31", journal_ids=[sale_journal_id],
+            )
+            require(
+                all(row["line_id"] != july_line.id
+                    for row in sale_scope["unrealized_rows"]),
+                "FIN38 journal filter must not hide a settlement made in another journal",
+            )
+            require(
+                sale_scope["gl_tie_out"]["balanced"],
+                f"FIN38 filtered tie-out must balance: {sale_scope['gl_tie_out']}",
+            )
+            require(
+                sale_scope["gl_tie_out"]["scope_limited"],
+                "FIN38 filtered tie-out must report that its comparator is scoped",
             )
 
 

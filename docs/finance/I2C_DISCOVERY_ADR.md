@@ -297,6 +297,27 @@ dikurangi partial bertanggal (`max_date <= as_of`), sehingga pembayaran Agustus
 tidak mengubah laporan posisi Juli. Membaca `amount_residual` saat ini akan
 membuat laporan as-of bergantung pada transaksi setelah tanggal laporan.
 
+**Scope partial FIN38 adalah `OR`, bukan `AND` — dan itu berbeda dari FIN07.**
+FIN07 melaporkan sebuah *slice* sehingga residual dan GL control harus mengukur
+cakupan yang sama; karena itu partial hanya dipakai bila kedua kakinya di dalam
+slice. FIN38 melakukan hal sebaliknya: ia merekonstruksi posisi sebenarnya dari
+baris yang dipilih. Bila query diwajibkan `AND`, memfilter `journal_ids` ke
+jurnal penjualan akan membuang kaki pembayaran di jurnal kas, dan faktur yang
+sudah lunas akan tampak terbuka kembali. Karena itu FIN38 memakai `OR` pada
+`debit_move_id`/`credit_move_id`:
+
+- partial yang menyentuh baris terpilih dari sisi mana pun tetap diterapkan;
+- kaki di luar filter tetap dipakai untuk mengklasifikasi
+  (`functional_counterpart`, `write_off`, `reversal`);
+- kaki di luar filter **tidak** masuk basis unrealized.
+
+**Scope tie-out mengikuti filter.** Untuk laporan tanpa filter, pembanding
+adalah seluruh saldo akun exchange perusahaan. Untuk laporan terfilter,
+pembanding dibatasi pada `exchange_move_id` yang dicapai dari partial dalam
+scope, dan `gl_tie_out.scope_limited = True` menandai hal itu secara eksplisit.
+Tanpa pembatasan ini, realized terfilter akan dibandingkan dengan seluruh GL
+exchange perusahaan dan selalu gagal secara palsu.
+
 **Bukti numerik dua arah** (wajib menjadi fixture test, bukan angka hard-coded):
 
 | Kasus | `realized_partial` | Residual AR setelah rekonsiliasi | Baris akun exchange di jurnal Odoo | Signed `balance` akun exchange |
