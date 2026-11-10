@@ -212,3 +212,72 @@
 - HEAD bergeser 55a647a -> 20e2197 tetapi diff hanya docs/HANDOFF.md dan agent-log/claude-dev.log; git diff --name-only 55a647a 20e2197 -- addons scripts tests kosong, jadi kode yang dinilai identik. Konfirmasi diposting di issuecomment-6747502453.
 - [BU] Menunggu verdict final supervisor; PR belum di-merge; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T04:05:00+07:00
+[2026-11-10T05:10:00+07:00] [INFO] I2c: discovery dan ADR sumber FIN36-38, FIN55-56
+- Audit pada SHA pin (bukan HEAD cabang): account_asset_management 19.0.1.0.3 (AGPL-3, depends account + report_xlsx_helper, excludes account_asset, python-dateutil) tersedia di account-financial-tools c23fd09 tetapi BELUM ada di oca.lock/image; report_xlsx_helper tersedia di reporting-engine b9e8c6c.
+- account_cutoff_base dan account_multicurrency_revaluation tidak ada pada tree OCA 19.0 yang diaudit; payroll 19.0.1.0.2 ter-pin tetapi hr.payslip tidak mereferensikan account.move (tidak posting GL) dan payroll_account tidak ada; tidak ada kandidat loan/lease.
+- account.asset.line menyimpan type (create/depreciate/remove), move_id, move_check, parent_state sehingga register aset dapat direkonstruksi tanpa menulis mesin depresiasi.
+- ADR: FIN36 membaca OCA dengan prasyarat pin + keputusan lisensi AGPL-3; FIN37 custom dari AML posted (tanpa posting modul); FIN38 custom dari amount_currency vs balance dengan realized/unrealized terpisah; FIN55 custom amortization dengan parameter bertanggal; FIN56 bridge payroll/expense ke GL tanpa jurnal rekaan. Rencana 6 PR, oracle native per report, counterexample tamper/rollback/role/company.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon). Tidak ada perubahan kode, oca.lock, deploy, atau data. [BU] Spike install/upgrade aset, profil CI hr_expense+payroll pada DB runner, keputusan lisensi, dan sign-off parameter FIN55/FIN56 masih terbuka; REPORT_CATALOG FIN05-FIN09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T05:10:00+07:00
+[2026-11-10T06:25:00+07:00] [INFO] I2c/PR108: CI exact-SHA a495051 PASS (ADR discovery)
+- Seluruh 12 check PR #108 pada SHA a495051cf13a1954cd5232e9d81d6c170989994d SUCCESS: static, init-test, install-test, candidate-install-upgrade (Finance I0 candidate spike), invariant-tests dan seed-invariants (x2), pwa-quality/browser/container/gate.
+- Workflow finance-i0-spike terpicu karena path filter mencakup docs/finance/**; ini memastikan ADR tidak merusak jalur instalasi/modul yang ada.
+- PR hanya dokumentasi: tidak ada perubahan kode, oca.lock, deploy, atau data. Reviewer diminta memutuskan ADR-I2c-01 (pin account_asset_management AGPL-3).
+- [BU] Spike install/upgrade aset, profil CI hr_expense+payroll pada DB runner, keputusan lisensi, dan sign-off parameter FIN55/FIN56 masih terbuka. REPORT_CATALOG FIN05-FIN09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T06:25:00+07:00
+[2026-11-10T07:45:00+07:00] [INFO] I2c/PR108: revisi ADR pasca CHANGES_REQUESTED + sinkronisasi main d9d6423
+- FIN37: sumber metadata jadwal kini eksplisit. account_invoice_start_end_dates (OCA/account-closing 8ce0077, 19.0.1.0.0, LGPL-3) menambahkan start_date/end_date sebagai fields.Date(index=True) pada account.move.line dan @api.constrains yang menolak tanggal tidak lengkap/terbalik. Fallback hanya exception bernominal missing_schedule_metadata; tanggal dokumen dilarang menjadi pengganti periode jasa.
+- FIN38: unrealized hanya dari amount_residual_currency posisi terbuka; realized hanya dari account.partial.reconcile (amount, debit_amount_currency, credit_amount_currency); exchange_move_id dipakai sebagai bukti posting; akun income/expense_currency_exchange_account_id dikecualikan dari basis. Field inti diverifikasi pada odoo/odoo 19.0 addons/account, termasuk _prepare_exchange_difference_move_vals().
+- Lisensi: redaksi AGPL-3 diubah menjadi risiko/kewajiban lisensi yang memerlukan penilaian pemilik atau penasihat hukum; ADR tidak lagi menetapkan kesimpulan hukum kategoris.
+- Baseline: audit awal 6ff44a7, delta main d9d6423 (PR #105) dijelaskan; diff 6ff44a7..d9d6423 untuk addons/id_finance_reporting, addons/id_finance_foundation, dan oca.lock kosong sehingga temuan sumber tetap valid.
+- Integrasi: merge origin/main d9d6423 selesai, konflik docs/HANDOFF.md diselesaikan tanpa menghapus entri antigravity (PR #105); git merge-base --is-ancestor origin/main HEAD sukses.
+- Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); tidak ada marker konflik. [BU] CI exact-SHA HEAD baru belum jalan; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN36-38/55-56 dan FIN05-09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T07:45:00+07:00
+[2026-11-10T08:35:00+07:00] [INFO] I2c/PR108: CI exact-SHA 6fbecca PASS setelah revisi ADR dan merge main
+- Seluruh 12 check PR #108 pada SHA 6fbecca7e81024595df9a9fe0d604bf48f8c4ad5 SUCCESS dan MERGEABLE (BLOCKED hanya karena review CHANGES_REQUESTED belum dicabut).
+- Komposisi 12 job terverifikasi: CI 3 (static, init-test, install-test), Finance I0 candidate spike 1 (candidate-install-upgrade), PWA quality 4 (pwa-quality, pwa-browser, pwa-container, pwa-gate), Seed supervision 4 (invariant-tests dan seed-invariants pada dua run: push event 42726684519 dan pull_request event 42726693401).
+- Penjelasan selisih 12 vs 10 yang diinspeksi reviewer: Seed supervision berjalan dua kali karena trigger push dan pull_request, masing-masing menyumbang invariant-tests + seed-invariants.
+- [BU] Re-review supervisor belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN36-38/55-56 dan FIN05-09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T08:35:00+07:00
+[2026-11-10T10:20:00+07:00] [INFO] I2c/PR108: formula FIN37/FIN38 dijadikan kontrak yang dieksekusi
+- FIN37: inkonsistensi dihapus. ADR sebelumnya menyebut "parameter jadwal yang disetujui" sebagai fallback sekaligus missing_schedule_metadata. Keputusan final: parameter jadwal TIDAK menghasilkan alokasi pada FIN37; semua baris tanpa start_date/end_date hanya menjadi exception bernominal. Parameter bertanggal hanya dipakai FIN55.
+- FIN38: formula lama tidak operasional. Kini rate_debit = balance/amount_currency; functional_debit = debit_amount_currency x rate_debit; functional_credit = -credit_amount_currency x rate_credit; realized_partial = functional_debit - functional_credit. Dinyatakan juga mengapa amount-amount selalu nol (p.amount positif di kedua kaki).
+- Validasi numerik sebelum ditulis: percobaan pertama salah tanda pada kaki kredit (menghasilkan 3.100.000), diperbaiki menjadi A gain -100.000, B loss +100.000, C gain parsial -40.000, D mata uang fungsional 0.
+- Kasus khusus eksplisit: partial sebelum full reconcile dihitung per partial; multi-partial dijumlah dengan batas over_reconciled; write-off tanpa FX dilaporkan terpisah; reversal di-net per pasangan via reversed_entry_id/reversal_move_ids; tanpa exchange_move_id tetap dihitung tetapi menjadi realized_unposted_evidence di luar tie-out; amount_currency == 0 menjadi missing_currency_amount.
+- Tie-out: sum realized_partial == sum -balance pada akun exchange gain/loss untuk partial ber-exchange_move_id; selisih != 0 = gagal, tidak disapu ke rounding.
+- Test baru tests/test_finance_i2c_adr_formulas.py (11 tes, murni aritmetika tanpa ORM/DB) mengunci formula dan alokasi jadwal. Verifikasi lokal: 11/11 PASS, 55 tes finance PASS, ruff PASS, check_manifests PASS (12 addon).
+- [BU] CI exact-SHA HEAD baru belum jalan; formula belum diverifikasi terhadap jurnal exchange nyata Odoo; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN36-38/55-56 dan FIN05-09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T10:20:00+07:00
+[2026-11-10T11:15:00+07:00] [INFO] I2c/PR108: CI exact-SHA 9e52f66 PASS (formula FIN37/FIN38)
+- Seluruh 12 check PR #108 pada SHA 9e52f66c813ecdc57126b00b1ce1c33b49153e48 SUCCESS dan MERGEABLE. Komposisi: CI 3, Finance I0 candidate spike 1, PWA quality 4, Seed supervision 4 (push + pull_request trigger).
+- Re-review terakhir diminta; PR belum di-merge dan tidak ada perubahan kode aplikasi, oca.lock, deploy, atau katalog.
+- [BU] Formula masih diuji sebagai aritmetika murni; verifikasi terhadap jurnal exchange nyata Odoo menyusul pada PR implementasi FIN38. Tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-10T11:15:00+07:00
+[2026-11-10T12:10:00+07:00] [INFO] I2c/PR108: klarifikasi bahwa review terakhir menempel pada HEAD lama
+- Review PRR_kwDOVUWh9s8AAAABW8tDhg bersubmit commit 03aedbd, yaitu HEAD sebelum perbaikan; dua poin yang diminta (FIN37 fallback, FIN38 formula) sudah diperbaiki di 9e52f66 dan ada di HEAD b6f87e1.
+- Diff 03aedbd..b6f87e1 hanya docs/finance/I2C_DISCOVERY_ADR.md, tests/test_finance_i2c_adr_formulas.py, HANDOFF, dan log; git diff --name-only untuk addons/scripts/oca.lock/.github kosong.
+- FIN37: istilah fallback dihapus; ADR menyatakan tegas parameter jadwal tidak menghasilkan alokasi dan semua baris tanpa metadata hanya exception bernominal.
+- FIN38: formula per partial ditambahkan; tie-out dibatasi pada partial ber-exchange_move_id, sedangkan partial tanpa bukti posting dilaporkan sebagai realized_unposted_evidence di luar tie-out.
+- Penjelasan 12 vs 10 check: 10 adalah cakupan run PR-triggered yang diperiksa reviewer (Seed 2), 12 adalah total check-run yang menempel pada PR termasuk run push (Seed 4). Keduanya benar untuk cakupannya.
+- CI pada b6f87e1: 12/12 SUCCESS, MERGEABLE. [BU] Re-review pada HEAD terbaru belum ada; tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-10T12:10:00+07:00
+[2026-11-10T13:20:00+07:00] [INFO] I2c/PR108: perbaikan tanda tie-out FIN38 (reviewer benar)
+- Blocker valid: ADR memakai sum(realized) == sum(-balance) sementara konvensi tanda sendiri menetapkan gain = -100.000; -balance akan menghasilkan +100.000 dan bertentangan dengan contoh serta test.
+- Diturunkan ulang dari odoo/odoo 19.0 account_move_line._prepare_exchange_difference_move_vals(): pada akun exchange, debit = residual bila residual > 0, credit = -residual bila residual < 0.
+- Kasus A gain: residual AR setelah rekonsiliasi 1.500.000 - 1.600.000 = -100.000; Odoo mengkredit akun income exchange 100.000; signed balance = -100.000 == realized_partial.
+- Kasus B loss: residual +100.000; Odoo mendebit akun expense exchange 100.000; signed balance = +100.000 == realized_partial.
+- Fixture lama posted_exchange_balance = +100.000 mengarang angka; diganti fungsi exchange_difference_move() yang mereplikasi aturan posting. Test baru menguji kedua arah (gain dan loss) plus regresi test_negating_the_balance_would_break_the_gain_case yang gagal bila konvensi -balance dikembalikan.
+- ADR: tie-out kini memakai signed balance dengan tabel bukti dua arah dan catatan eksplisit bahwa -balance memberi tanda salah untuk gain.
+- Verifikasi lokal: 13/13 tes formula PASS; 57 tes finance PASS; ruff PASS; check_manifests PASS (12 addon). [BU] CI exact-SHA HEAD baru belum jalan; verifikasi terhadap jurnal exchange native Odoo pada DB nyata masih terbuka; tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-10T13:20:00+07:00
+[2026-11-10T14:30:00+07:00] [INFO] I2c/PR108: CI exact-SHA 18838e3 PASS (tanda tie-out FIN38)
+- Seluruh 12 check PR #108 pada SHA 18838e36902dabfe86f35b7f93c5d9923a6e7b77 SUCCESS dan MERGEABLE. Komposisi: CI 3, Finance I0 candidate spike 1, PWA quality 4, Seed supervision 4.
+- Re-review diminta pada HEAD ini; FIN37 sudah PASS per reviewer, yang tersisa hanya tanda tie-out FIN38 yang kini diperbaiki dan diuji dua arah.
+- [BU] Verifikasi terhadap jurnal exchange native Odoo pada DB nyata masih terbuka; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T14:30:00+07:00
+[2026-11-10T15:40:00+07:00] [INFO] I2c/PR108: review #5835974842 menempel pada c1c3f3d (pre-fix), perbaikan ada di be625b3
+- Verifikasi: gh review commit.oid = c1c3f3d4ede75a9f007385cb64d5379d50149b00; git show c1c3f3d:docs/finance/I2C_DISCOVERY_ADR.md masih memuat "Sigma -balance", sedangkan HEAD memuat "signed balance apa adanya, bukan -balance".
+- Diff c1c3f3d..HEAD: ADR 32 baris, test 68 baris, HANDOFF, log. Tidak ada perubahan addons/scripts/oca.lock/.github.
+- Perbaikan sudah mencakup semua yang diminta reviewer: formula signed balance, fixture mengarang dihapus dan diganti exchange_difference_move() yang mereplikasi aturan posting Odoo, kedua arah diuji lewat residual nyata, dan regresi penjaga test_negating_the_balance_would_break_the_gain_case.
+- CI pada 813a465: 12/12 SUCCESS, MERGEABLE. [BU] Verifikasi jurnal exchange native Odoo pada DB nyata tetap gate PR implementasi; tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-10T15:40:00+07:00
