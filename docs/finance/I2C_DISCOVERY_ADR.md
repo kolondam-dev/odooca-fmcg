@@ -252,14 +252,32 @@ Odoo, yang memilih `expense_currency_exchange_account_id` bila `amount > 0` dan
 **Tie-out wajib.** Untuk setiap pasangan (akun, mata uang):
 
 ```
-Σ realized_partial   (dari partial yang exchange_move_id-nya terisi)
-  ==  Σ -balance pada baris akun exchange gain/loss milik exchange_move_id tersebut
+Σ realized_partial   ==   Σ balance  pada baris akun exchange gain/loss
+                          milik exchange_move_id tersebut
 ```
 
-Tie-out memakai **negatif** `balance` karena jurnal exchange diposting dari sudut
-pandang kaki aset/liabilitas: koreksi yang mengurangi carrying aset muncul
-sebagai lawan pada akun gain/loss. Rumus tanda ini yang wajib diuji, dan
-selisihnya **wajib nol**; bila tidak nol, laporan gagal (bukan disapu ke
+Tie-out memakai **signed** `balance` apa adanya — **bukan** `−balance`. Ini
+diturunkan dari aturan posting Odoo, bukan dipilih agar angka cocok:
+
+- `_get_exchange_account()` memilih akun exchange berdasarkan
+  `amount_residual_to_fix`.
+- `_prepare_exchange_difference_move_vals()` memposting pada akun exchange:
+  `debit = residual` bila `residual > 0`, dan `credit = −residual` bila
+  `residual < 0`. Pada akun AML asal, arahnya berlawanan (debit `−residual`
+  bila negatif).
+
+**Bukti numerik dua arah** (wajib menjadi fixture test, bukan angka hard-coded):
+
+| Kasus | `realized_partial` | Residual AR setelah rekonsiliasi | Baris akun exchange di jurnal Odoo | Signed `balance` akun exchange |
+|---|---:|---:|---|---:|
+| A (gain) | **−100.000** | 1.500.000 − 1.600.000 = **−100.000** | credit 100.000 | **−100.000** |
+| B (loss) | **+100.000** | 1.600.000 − 1.500.000 = **+100.000** | debit 100.000 | **+100.000** |
+
+Kedua baris menunjukkan `realized_partial == signed balance`. Dengan `−balance`
+hasilnya akan `+100.000` untuk kasus A, yang **tidak** cocok — karena itu
+konvensi `−balance` dibuang.
+
+Selisih tie-out **wajib nol**; bila tidak nol, laporan gagal (bukan disapu ke
 rounding).
 
 Untuk partial **tanpa** `exchange_move_id` (belum/never fully reconciled), tidak
@@ -328,7 +346,7 @@ berjalan hanya pada `finance_i0_reports_disposable`, di dalam savepoint, dan
 |---|---|
 | `FIN36` | `opening + additions − disposals − depreciation = closing`; setiap baris depresiasi punya `move_id` posted; tie-out ke akun akumulasi depresiasi |
 | `FIN37` | pengakuan periode + saldo tersisa = saldo akun kontrol; setiap baris memakai `account.move.line.start_date`/`end_date`; baris tanpa metadata muncul sebagai `missing_schedule_metadata` bernominal dan **tidak** dialokasikan; tidak ada jurnal buatan modul |
-| `FIN38` | unrealized hanya dari `amount_residual_currency` posisi terbuka; realized per partial dari `debit_amount_currency × rate_debit − credit_amount_currency × rate_credit`; test case A–D (gain 100.000, loss 100.000, gain parsial 40.000, nol) wajib cocok; tie-out `Σ realized == Σ −balance` pada akun exchange gain/loss untuk partial ber-`exchange_move_id`; selisih ≠ 0 = gagal |
+| `FIN38` | unrealized hanya dari `amount_residual_currency` posisi terbuka; realized per partial dari `debit_amount_currency × rate_debit − credit_amount_currency × rate_credit`; test case A–D (gain 100.000, loss 100.000, gain parsial 40.000, nol) wajib cocok; tie-out `Σ realized == Σ signed balance` pada akun exchange gain/loss untuk partial ber-`exchange_move_id`, diuji untuk **kedua arah** (gain dan loss); selisih ≠ 0 = gagal |
 | `FIN55` | `opening + drawdowns + interest − payments = closing`; tie-out ke akun liabilitas |
 | `FIN56` | total slip disetujui = beban GL terkait; pembayaran/utang pajak terpisah; exception bernominal |
 

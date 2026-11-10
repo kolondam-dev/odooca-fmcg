@@ -39,6 +39,26 @@ def allocate_schedule(start_date, end_date, as_of, amount, round_amount=lambda v
     return recognized, round_amount(amount - recognized), None
 
 
+def exchange_difference_move(residual):
+    """Replicate Odoo ``_prepare_exchange_difference_move_vals`` for one leg.
+
+    Odoo posts, on the AML's own account:
+        debit  = -residual if residual < 0 else 0
+        credit =  residual if residual > 0 else 0
+    and the mirror image on the exchange gain/loss account. The returned
+    ``exchange_balance`` is the signed balance of the exchange account line.
+    """
+    exchange_debit = residual if residual > 0 else 0.0
+    exchange_credit = -residual if residual < 0 else 0.0
+    return {
+        "aml_debit": -residual if residual < 0 else 0.0,
+        "aml_credit": residual if residual > 0 else 0.0,
+        "exchange_debit": exchange_debit,
+        "exchange_credit": exchange_credit,
+        "exchange_balance": round(exchange_debit - exchange_credit, 2),
+    }
+
+
 class RealizedFxTests(unittest.TestCase):
     def test_gain_when_payment_rate_is_higher(self):
         # Invoice 100 USD @15,000 = 1,500,000; paid 100 USD @16,000 = 1,600,000.
@@ -94,11 +114,51 @@ class RealizedFxTests(unittest.TestCase):
         self.assertEqual(second, 0.0)
         self.assertEqual(first + second, -40_000.0)
 
-    def test_tie_out_sign_matches_posted_exchange_move(self):
-        # exchange_move gain line on income account carries a credit (negative).
+    def test_tie_out_gain_uses_signed_exchange_balance(self):
+        # Gain: invoice 1,500,000, paid 1,600,000. The AR residual after
+        # reconciliation is -100,000, so Odoo credits the income exchange
+        # account by 100,000 and its signed balance is -100,000.
+        realized = realized_partial(
+            {"debit_amount_currency": 100.0, "credit_amount_currency": -100.0},
+            {"balance": 1_500_000.0, "amount_currency": 100.0},
+            {"balance": -1_600_000.0, "amount_currency": -100.0},
+        )
+        move = exchange_difference_move(1_500_000.0 - 1_600_000.0)
+        self.assertEqual(realized, -100_000.0)
+        self.assertEqual(move["exchange_credit"], 100_000.0)
+        self.assertEqual(move["exchange_balance"], -100_000.0)
+        self.assertEqual(
+            realized, move["exchange_balance"],
+            "gain ties out to the SIGNED exchange-account balance, not its negation",
+        )
+
+    def test_tie_out_loss_uses_signed_exchange_balance(self):
+        # Loss: invoice 1,600,000, paid 1,500,000. The AR residual after
+        # reconciliation is +100,000, so Odoo debits the expense exchange
+        # account by 100,000 and its signed balance is +100,000.
+        realized = realized_partial(
+            {"debit_amount_currency": 100.0, "credit_amount_currency": -100.0},
+            {"balance": 1_600_000.0, "amount_currency": 100.0},
+            {"balance": -1_500_000.0, "amount_currency": -100.0},
+        )
+        move = exchange_difference_move(1_600_000.0 - 1_500_000.0)
+        self.assertEqual(realized, 100_000.0)
+        self.assertEqual(move["exchange_debit"], 100_000.0)
+        self.assertEqual(move["exchange_balance"], 100_000.0)
+        self.assertEqual(
+            realized, move["exchange_balance"],
+            "loss ties out to the SIGNED exchange-account balance, not its negation",
+        )
+
+    def test_negating_the_balance_would_break_the_gain_case(self):
+        # Guards against reintroducing the old "sum(-balance)" convention.
         realized = -100_000.0
-        posted_exchange_balance = 100_000.0
-        self.assertEqual(realized, -posted_exchange_balance)
+        move = exchange_difference_move(-100_000.0)
+        self.assertEqual(move["exchange_balance"], -100_000.0)
+        self.assertNotEqual(
+            realized, -move["exchange_balance"],
+            "the negated convention would report +100,000 for a gain",
+        )
 
 
 class ScheduleAllocationTests(unittest.TestCase):
