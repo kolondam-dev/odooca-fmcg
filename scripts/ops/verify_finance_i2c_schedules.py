@@ -413,14 +413,16 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
                 snapshot["tied_exchange_move_ids"],
                 "FIN38 must tie to a posted exchange move",
             )
-            # The AR position is fully settled, so no AR line may remain in the
-            # unrealized base. The USD cash leg of the same entries is still an
-            # open monetary position and legitimately revalues at the as-of
-            # rate, so the report total is not required to be zero.
-            ar_account_id = fixture["accounts"]["ar"].id
+            # The July-settled invoice must be gone from the 31 July base, while
+            # the July invoice settled in August must still be there. Asserting
+            # per invoice, not per account, because both live on AR.
+            settled_line = fixture["invoice"].line_ids.filtered(
+                lambda line: line.account_id == fixture["accounts"]["ar"]
+            )
             require(
-                all(row["account_id"] != ar_account_id for row in snapshot["unrealized_rows"]),
-                "FIN38 fully settled AR must carry no unrealized amount",
+                all(row["line_id"] != settled_line.id
+                    for row in snapshot["unrealized_rows"]),
+                "FIN38 must drop the invoice settled before the as-of date",
             )
             require(
                 snapshot["gl_tie_out"]["balanced"],
