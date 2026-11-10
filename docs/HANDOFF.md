@@ -1,3 +1,9 @@
+## 2026-11-10T22:38:36+07:00 — Codex-Dashboard — D1 initial-query recovery
+**Berubah:** toolbar/filter tetap tersedia saat query awal gagal; retry memakai query server yang sama. Label EC/call menyebut own scope saat service PJP membatasi ke pengguna sendiri.
+**Diverifikasi:** [F]29browser native checks termasuk injeksi RPC gagal→retry;27regresi dashboard;30transpiler resmi;Ruff/XML PASS. Backend native tidak berubah dari76105e3 (12metode install/upgrade PASS). PR #113 draft; CI diperiksa pada HEAD terbaru setelah push.
+**Batas/berikutnya:** exact-HEAD CI dan review pixel/data seed tetap gate sebelum aktivasi. Tidak merge/deploy/live DB.
+**Signature:** Task Managed by Agent Codex-Dashboard
+
 ## 2026-11-10T22:28:30+07:00 — Codex-Dashboard — D1 native sales redesign
 **Berubah:** addon reusable `id_dashboard_ui` dan integrasi D1 `id_dashboard_redesign`; hanya action Sales yang diretarget. Periode/custom comparison, Include/Exclude tujuh dimensi, agregasi SKU line, principal/channel/kota, tren dan konteks lima bulan, ranking/scatter, scoped native drill, approved popover/inline dan shell lease.
 **Diverifikasi:** [F] install DB bersih dan upgrade Odoo19 masing-masing12metode,0failed/0error;27browser acceptance termasuk11template OWL native dan1440/1024/768;26regresi dashboard;30modul transpiler resmi;Ruff/14manifest/XML PASS. Dokumen `docs/dashboard/D1_IMPLEMENTATION.md` dan `D1_VERIFICATION.json`.

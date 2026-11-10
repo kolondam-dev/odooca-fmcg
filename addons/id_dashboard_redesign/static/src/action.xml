@@ -4,6 +4,7 @@
   <div class="o_action id-dash-action" t-att-aria-busy="state.loading">
    <div t-if="state.error" class="alert alert-danger" role="alert" t-out="state.error"/>
    <p t-if="state.loading" class="p-3" role="status">Loading dashboard…</p>
+   <ApprovedControls t-if="!state.data and state.filters.dimensions" options="recoveryOptions" onApply.bind="apply"/>
    <DashboardShell t-if="state.data" dashboard="dashboard" data="state.data" onApply.bind="apply" onDrill.bind="openDocument"/>
   </div>
  </t>

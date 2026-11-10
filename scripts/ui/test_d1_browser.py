@@ -30,7 +30,27 @@ with sync_playwright() as playwright:
     page.locator("input[name=password]").fill(os.environ["D1_TEST_PASSWORD"])
     page.locator("button[type=submit]").click()
     page.wait_for_url(lambda url: "/odoo" in url and "/web/login" not in url)
+    failed_once = [False]
+
+    def fail_first_data(route):
+        if failed_once[0]:
+            route.continue_()
+            return
+        failed_once[0] = True
+        request = route.request.post_data_json
+        route.fulfill(json={"jsonrpc": "2.0", "id": request["id"], "error": {
+            "code": 200, "message": "Odoo Server Error", "data": {
+                "name": "odoo.exceptions.UserError", "message": "D1 test: narrow the query",
+                "arguments": ["D1 test: narrow the query"], "debug": ""}}})
+
+    page.route("**/web/dataset/call_kw/id.dashboard.redesign/get_data", fail_first_data)
     page.goto(base + "/odoo/action-id_dashboard_sales.action_sales_productivity")
+    page.locator(".alert-danger").wait_for()
+    check("narrow the query" in page.locator(".alert-danger").inner_text(), "Initial source error is actionable")
+    page.locator('[data-action="open-period"]').first.click()
+    check(page.locator(".d1-popover").is_visible(), "Controls remain usable after initial source error")
+    page.locator('[data-action="apply"]').click()
+
     page.locator(".id-dash-kpis").wait_for()
     page.locator(".d1-controls").wait_for()
     compiled = page.evaluate("""() => {

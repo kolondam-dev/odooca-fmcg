@@ -355,3 +355,15 @@ msgstr "Filter"
 #: addons/id_dashboard_redesign/static/src/action.js
 msgid "Source documents"
 msgstr "Dokumen sumber"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Effective call · own scope"
+msgstr "Effective call · scope sendiri"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Calls / assigned day · own scope"
+msgstr "Call / hari tugas · scope sendiri"

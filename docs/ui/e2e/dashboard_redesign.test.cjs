@@ -8,7 +8,7 @@ function action() {
     let source=fs.readFileSync(path.join(root,'addons/id_dashboard_redesign/static/src/action.js'),'utf8');
     source=source.replace(/^import .*;\s*$/mg,'').replace('export class RedesignAction','class RedesignAction')
         .replace(/^registry\.category.*$/mg,'')+'\nglobalThis.Action=RedesignAction;';
-    const ctx={Component:class{}, DashboardShell:class{}, Intl, _t:s=>s, adaptSource:(_id,response)=>({source:response.source})};
+    const ctx={Component:class{}, DashboardShell:class{}, ApprovedControls:class{}, Intl, _t:s=>s, adaptSource:(_id,response)=>({source:response.source})};
     vm.createContext(ctx);vm.runInContext(source,ctx);
     const d=Object.create(ctx.Action.prototype);
     d.generation=0; d.state={loading:false,error:null,data:{old:true},filters:{dimensions:{}},scope:{company_names:[]}};
@@ -62,4 +62,15 @@ test('D1 controls defer translations until mounted after webclient startup',()=>
     source=source.replace(/^import .*;\s*$/mg,'').replace('export function mountDashboardControls','function mountDashboardControls');
     const ctx={_t:()=>{throw new Error('translations have not been loaded');}};
     vm.createContext(ctx);assert.doesNotThrow(()=>vm.runInContext(source,ctx));
+});
+
+test('D1 initial source failure retains controls for a narrower retry',async()=>{
+    const {d,pending}=action();d.initialQuery=query();
+    const first=d.load(d.initialQuery);pending[0].reject(new Error('Narrow the period'));
+    assert.equal(await first,false);
+    const options=d.recoveryOptions;
+    assert.equal(options.initialQuery.period.from,'2026-10-01');
+    assert.equal(options.dimensions.length,0);
+    const template=fs.readFileSync(path.join(root,'addons/id_dashboard_redesign/static/src/action.xml'),'utf8');
+    assert.match(template,/<ApprovedControls t-if="!state.data and state.filters.dimensions"/);
 });

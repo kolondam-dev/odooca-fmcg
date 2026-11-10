@@ -19,8 +19,10 @@
     "database": "d1_release"
   },
   "browser": {
-    "checks": 27,
+    "checks": 29,
     "passed": [
+      "Initial source error is actionable",
+      "Controls remain usable after initial source error",
       "All D1 templates compile in native OWL, including unavailable scatter",
       "Eight native KPI cards",
       "Initial native RPC succeeds",
@@ -51,7 +53,7 @@
     ]
   },
   "static_dashboard_regression": {
-    "tests": 26,
+    "tests": 27,
     "failed": 0
   },
   "transpilation": {
@@ -133,14 +135,16 @@
     "addons/id_dashboard_redesign/__init__.py": "9476dc0ffdc9864d3680ac803634350627fcba49cef2a2ed4522b894934f79e4",
     "addons/id_dashboard_redesign/__manifest__.py": "91f06cc4a6d370ac6450c2b28f887ae509d4fbb0addbc314128b498fa320d3dd",
     "addons/id_dashboard_redesign/hooks.py": "618fbfe47950ad30ac9080ed688a1b7600bd9270a01ed8cddc16c7be0d304772",
-    "addons/id_dashboard_redesign/i18n/id.po": "40e09ec2e5b5429070c28bc0afc527c73b7434181256fe53e183d2d458eb5bb9",
+    "addons/id_dashboard_redesign/i18n/id.po": "1def27b879309b84cbdd980a79fcb635cbcb10a043f244a38016f5285775c0b3",
     "addons/id_dashboard_redesign/models/__init__.py": "ff8ba067107ab6fe8e44801cd538382fa8862e9b420f947d8a7f2e51b28b6bb0",
     "addons/id_dashboard_redesign/models/dashboard_bridge.py": "78420e7b73b56de2583010aa643f040f80eac1f20631882b4d4bfe14b7f756f7",
-    "addons/id_dashboard_redesign/static/src/action.js": "aff3a1fcecc482d021894f1f77acc4b6f0e8df3813e546e974656b14fe6b0e41",
-    "addons/id_dashboard_redesign/static/src/action.xml": "3d993620895b7ac8d4b1e1cd55d15a4a1b192fd057f233ef80870f1457c72de1",
-    "addons/id_dashboard_redesign/static/src/adapters.js": "c4910e76298dcdab00e8c11df2e4184b9738a3b69ba99342aaab1858a4ef38a9",
+    "addons/id_dashboard_redesign/static/src/action.js": "fc75b6960ae1f1b701ecd4803dac4cc774793807419be5c3ed8d6ad14260de5e",
+    "addons/id_dashboard_redesign/static/src/action.xml": "9a92d7125fd5669a6d0f9ff571aa44d16a3d74c344e6843d9f6ffecb95ce7761",
+    "addons/id_dashboard_redesign/static/src/adapters.js": "241bb7374c25621590a1fafa3076d74b33b763b379b3f1c8226b4cfcf118de10",
     "addons/id_dashboard_redesign/tests/__init__.py": "68b67bf531428a053b81ed4754f3211a2f67ede3fce9f73897685f4574cb9808",
     "addons/id_dashboard_redesign/tests/test_dashboard_bridge.py": "88e5d076e9c8c5614d3761b5ead81defcf8712da885228743f5b57dbe1db32a2",
     "addons/id_dashboard_redesign/views/dashboard_actions.xml": "4100c21ef7c1af808f34c9ba7ba5b1e6de2e9ce4e391e09b932e134ddb385631"
-  }
+  },
+  "native_backend_retested_in_followup": false,
+  "native_backend_unchanged_from": "76105e33bf063d79992d4877156dcda6511f9e4c"
 }

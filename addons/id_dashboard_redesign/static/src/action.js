@@ -3,12 +3,13 @@ import { Component, onWillStart, onWillDestroy, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
+import { ApprovedControls } from "@id_dashboard_ui/components/approved_controls";
 import { DashboardShell } from "@id_dashboard_ui/pages/dashboard";
 import { adaptSource } from "@id_dashboard_redesign/adapters";
 
 export class RedesignAction extends Component {
     static template = "id_dashboard_redesign.Action";
-    static components = { DashboardShell };
+    static components = { DashboardShell, ApprovedControls };
     static props = ["*"];
     setup() {
         this.orm = useService("orm");
@@ -24,8 +25,9 @@ export class RedesignAction extends Component {
                 this.state.scope = info.scope;
                 const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Makassar" }).format(new Date());
                 const end = info.filters.period_max < today ? info.filters.period_max : today;
-                await this.load({ period: { preset: "custom", from: end.slice(0, 8) + "01", to: end,
-                    compare: false, compareMode: "previous", align: false, customFrom: end, customTo: end }, filters: {} });
+                this.initialQuery = { period: { preset: "custom", from: end.slice(0, 8) + "01", to: end,
+                    compare: false, compareMode: "previous", align: false, customFrom: end, customTo: end }, filters: {} };
+                await this.load(this.initialQuery);
             } catch (error) {
                 this.state.error = error?.data?.message || error.message;
                 this.state.loading = false;
@@ -66,6 +68,7 @@ export class RedesignAction extends Component {
             if (token === this.generation) this.state.loading = false;
         }
     }
+    get recoveryOptions() { return this.controlOptions(this.query || this.initialQuery); }
     apply(query) { return this.load(query); }
     openDocument(drill) {
         if (this.state.loading || !drill) return;

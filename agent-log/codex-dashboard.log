@@ -3,3 +3,8 @@
 - Native clean install/upgrade12PASS each;27browser checks;26static dashboard regressions;30official JS transpilation;Ruff/XML/14manifest PASS.
 - Only Sales action retargeted; no merge/deploy/live writes; CI and owner visual/seed acceptance pending.
 - Task Managed by Agent Codex-Dashboard
+
+[2026-11-10T22:38:36+07:00] [INFO] D1 recovery after first source failure
+- Keep filters available on initial RPC failure; disclose own PJP scope in metric labels.
+-29native browser checks and27static regressions PASS; server source unchanged from76105e3. PR #113 draft; no merge/deploy.
+- Task Managed by Agent Codex-Dashboard

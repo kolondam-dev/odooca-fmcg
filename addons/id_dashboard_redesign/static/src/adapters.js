@@ -40,8 +40,8 @@ export function adaptSource(dashboard, response, scope = {}) {
             good: raw.target?.available ? raw.target.achievement >= 1 : true,
             txt: raw.target?.available ? _t("Exact period and complete salesperson scope") : raw.target?.reason }),
         card(_t("Native SO discount"), pct(t.discount_ratio), { unit: "%", pre: money(t.discount).cur + " " + money(t.discount).num + " " + money(t.discount).unit }),
-        card(_t("Effective call"), ec, { unit: "%", pre: t.pjp?.available ? fmt(t.pjp.effective, 0) + " " + _t("calls") : "", txt: t.pjp?.available ? `${t.pjp.effective} / ${t.pjp.visits}` : raw.pjp_status?.reason }),
-        card(_t("Calls / assigned workday"), t.calls_per_day, { txt: _t("Accepted visits / readable assigned salesperson-days") }),
+        card(raw.pjp_status?.scope === "own" ? _t("Effective call · own scope") : _t("Effective call"), ec, { unit: "%", pre: t.pjp?.available ? fmt(t.pjp.effective, 0) + " " + _t("calls") : "", txt: t.pjp?.available ? `${t.pjp.effective} / ${t.pjp.visits}` : raw.pjp_status?.reason }),
+        card(raw.pjp_status?.scope === "own" ? _t("Calls / assigned day · own scope") : _t("Calls / assigned workday"), t.calls_per_day, { txt: _t("Accepted visits / readable assigned salesperson-days") }),
         card(_t("Average SO value"), t.aov, { money: true }),
     ];
     ["chart", "undo", "wallet", "target", "pct", "phone", "clock", "cart"].forEach((icon, i) => value.kpis[i].icon = icon);

@@ -40,7 +40,7 @@ Filters: salesperson, channel, coverage area, city, principal, brand and SKU. OR
 - `models/dashboard_bridge.py`: validated query, native aggregation and independent source domains. The original `id.sales.productivity` API is unchanged.
 - `static/src/adapters.js`: formatting and component props, source availability, currency/unit labels, and scoped drill metadata.
 - `static/src/action.js`: authenticated RPC, request-generation guard, commit-after-success query state, native document actions and temporary `id_shell` dashboard lease.
-- `ApprovedControls`: OWL lifecycle wrapper around a scoped DOM controller. Unique instance IDs, escaped source labels, listener cleanup, staged edits, async Apply, pending-control lock and focus restoration. Data refresh preserves the active controller.
+- `ApprovedControls`: OWL lifecycle wrapper around a scoped DOM controller. Unique instance IDs, escaped source labels, listener cleanup, staged edits, async Apply, pending-control lock and focus restoration. Data refresh preserves the active controller. Initial RPC errors retain a recovery toolbar so users can narrow and retry the query.
 - `pages/pages.xml`: D1 composition. Components receive data rather than query the database. No CDN, mock fallback or arbitrary caller-supplied domain reaches the service.
 - Uninstall restores the old Sales action only if its current tag still belongs to this addon; another customization is preserved.
 
@@ -58,9 +58,9 @@ odoo -d d1_clean --addons-path <core>,addons \
   -u id_dashboard_ui,id_dashboard_redesign --test-tags /id_dashboard_redesign --stop-after-init
 ```
 
-The CI workflow repeats installation and upgrade on isolated `d1_ci`, leaving the existing legacy UI smoke database untouched. Native browser acceptance: `scripts/ui/test_d1_browser.py`; provision only a disposable `d1_` database with `scripts/ui/d1_fixture.py`, supplying `D1_TEST_PASSWORD` privately via environment. Optional `D1_BROWSER` selects the installed headless browser. No credential is committed.
+The CI workflow repeats installation and upgrade on isolated `d1_ci`, leaving the existing legacy UI smoke database untouched. Native browser acceptance: `scripts/ui/test_d1_browser.py`; provision only a disposable `d1_` database with `scripts/ui/d1_fixture.py`, supplying `D1_TEST_PASSWORD` privately via environment. Optional `D1_BROWSER` selects the installed headless browser. No credential is committed. The native browser test injects one initial RPC failure and proves controls and a successful retry remain available.
 
-Verified locally: clean install and upgrade (12 native test methods), 26 static dashboard regressions, native OWL compilation and browser checks at 1440/1024/768 pixels. See `D1_VERIFICATION.json` for final counts. Browser checks cover popovers within viewport, no page-level horizontal overflow, Escape/focus, inline displacement, custom comparison Apply, SKU Apply and native scoped document drill. Native source tests cover WITA boundaries, signed money, mixed-SKU line attribution, posted refunds, exact target coverage, role/company isolation, accepted visits and uninstall behavior.
+Verified locally: clean install and upgrade (12 native test methods), 27 static dashboard regressions, native OWL compilation and browser checks at 1440/1024/768 pixels. See `D1_VERIFICATION.json` for final counts. Browser checks cover popovers within viewport, no page-level horizontal overflow, Escape/focus, inline displacement, custom comparison Apply, SKU Apply and native scoped document drill. Native source tests cover WITA boundaries, signed money, mixed-SKU line attribution, posted refunds, exact target coverage, role/company isolation, accepted visits and uninstall behavior.
 
 ## Review and activation
 
