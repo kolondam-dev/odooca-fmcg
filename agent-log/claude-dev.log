@@ -295,3 +295,9 @@
 - Sinkronisasi: PR #109 (PWA fase 3A) masuk ke main c2e3025; konflik hanya docs/HANDOFF.md dan diselesaikan tanpa menghapus entri claude-design. git merge-base --is-ancestor origin/main HEAD sukses.
 - HEAD c7d2fb6: 12/12 check SUCCESS, MERGEABLE. [BU] Review belum diberikan; tidak ada deploy/mutasi DB live; katalog FIN05-09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T18:30:00+07:00
+[2026-11-10T19:45:00+07:00] [INFO] I2c/PR111: CI 12/12 hijau setelah rerun kedua (mirror Ubuntu)
+- Kegagalan kedua pada PR #111 juga murni infrastruktur: install-test gagal saat docker build karena security.ubuntu.com mengembalikan 404 untuk paket perl 5.38.2-3.2ubuntu0.7; fetch 17.8 MB hanya 267 kB/s. Bukan kegagalan kode.
+- Bukti dampak repo-wide: run CI pada main SHA 160ca84 (160ca84d171aa1450adf7d8f16b7ee359b99b391) juga FAILURE dengan pola yang sama, sementara SHA lain sukses. Jadi ini flakiness mirror, bukan regresi PR.
+- Job di-rerun; HEAD 1dec4823ab343833950e939762e393fc54187d4d kini 12/12 SUCCESS dan MERGEABLE.
+- [BU] Review PR #111 belum diberikan; tidak ada deploy/mutasi DB live; katalog FIN05-09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T19:45:00+07:00
