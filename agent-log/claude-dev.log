@@ -233,3 +233,9 @@
 - Integrasi: merge origin/main d9d6423 selesai, konflik docs/HANDOFF.md diselesaikan tanpa menghapus entri antigravity (PR #105); git merge-base --is-ancestor origin/main HEAD sukses.
 - Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); tidak ada marker konflik. [BU] CI exact-SHA HEAD baru belum jalan; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN36-38/55-56 dan FIN05-09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T07:45:00+07:00
+[2026-11-10T08:35:00+07:00] [INFO] I2c/PR108: CI exact-SHA 6fbecca PASS setelah revisi ADR dan merge main
+- Seluruh 12 check PR #108 pada SHA 6fbecca7e81024595df9a9fe0d604bf48f8c4ad5 SUCCESS dan MERGEABLE (BLOCKED hanya karena review CHANGES_REQUESTED belum dicabut).
+- Komposisi 12 job terverifikasi: CI 3 (static, init-test, install-test), Finance I0 candidate spike 1 (candidate-install-upgrade), PWA quality 4 (pwa-quality, pwa-browser, pwa-container, pwa-gate), Seed supervision 4 (invariant-tests dan seed-invariants pada dua run: push event 42726684519 dan pull_request event 42726693401).
+- Penjelasan selisih 12 vs 10 yang diinspeksi reviewer: Seed supervision berjalan dua kali karena trigger push dan pull_request, masing-masing menyumbang invariant-tests + seed-invariants.
+- [BU] Re-review supervisor belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN36-38/55-56 dan FIN05-09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T08:35:00+07:00
