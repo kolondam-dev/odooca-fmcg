@@ -210,11 +210,11 @@ describe("keranjang POS", () => {
         expect(t.errors[0]).toMatch(/tidak valid/);
         expect(t.skuCount).toBe(0);
     });
-    it("draft malformed (string/null) diblokir", () => {
+    it("draft malformed (string/null) diblokir, bukan diabaikan", () => {
         const bad = { roma: { carton: "5" as unknown as number } };
         expect(cartLines(bad, {}, snapshot).invalid).toHaveLength(1);
         const nul = { roma: { pack: null as unknown as number } };
-        expect(cartLines(nul, {}, snapshot).invalid).toHaveLength(0);
+        expect(cartLines(nul, {}, snapshot).invalid).toHaveLength(1);
     });
     it("batas 999 diterima apa adanya", () => {
         const r = cartLines({ roma: { carton: 999 } }, {}, snapshot);

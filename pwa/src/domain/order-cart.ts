@@ -69,7 +69,10 @@ export function cartLines(
     const invalid: string[] = [];
     for (const [id, tiers] of Object.entries(cart)) {
         const product = snapshot.products.find((p) => p.id === id);
-        const active = ORDER.filter((u) => (tiers[u] ?? 0) !== 0);
+        // Slot yang tidak ada (undefined) = kosong; null/NaN/string eksplisit = rusak.
+        const active = ORDER.filter(
+            (u) => tiers[u] !== undefined && tiers[u] !== 0,
+        );
         if (!active.length) continue;
         if (!product) {
             stale.push(id);
