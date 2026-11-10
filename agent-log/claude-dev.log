@@ -317,3 +317,13 @@
 - Runner native scripts/ops/verify_finance_i2c_schedules.py membuat fixture FX (faktur 100 USD @15.000, pembayaran @16.000, rekonsiliasi penuh, exchange gain -100.000) dan oracle independen; workflow finance-i0-spike menambah langkah FINANCE_I2C_SCHEDULES=PASS.
 - Verifikasi lokal: ruff PASS; check_manifests PASS (12 addon); 77 tes finance PASS; YAML valid. [BU] CI native exact-SHA belum jalan; pin account_invoice_start_end_dates masih diperlukan agar FIN37 mengalokasikan jadwal nyata; REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T23:30:00+07:00
+[2026-11-11T02:50:00+07:00] [INFO] I2c/PR112: FIN37+38 native PASS setelah tiga perbaikan yang ditemukan CI
+- FINANCE_I2C_SCHEDULES=PASS pada run 42802831467 (candidate-install-upgrade), HEAD ebe6f69. 14/14 check SUCCESS dan MERGEABLE.
+- Kasus PASS: FIN37 as-of 31 Juli dan 31 Agustus untuk company A (scale 1) dan B (scale 7); FIN38 as-of 31 Juli dan 31 Agustus untuk company X (fixture USD). Counterexample: reader_foreign_company (kedua report), sales_denied (kedua report), reader_foreign_journal_fin37/fin38, reader_cross_company_partner_fin37, tamper_rejected_FIN37, fixture_rollback PASS.
+- Tiga cacat nyata yang ditangkap CI native, bukan lolos ke main:
+  1. FIN38 unposted evidence mismatch 270 vs 0: leg map produksi memuat baris mata uang fungsional sehingga settlement same-currency masuk scope. Diperbaiki dengan membatasi scope ke valuta asing dan guard di _partials.
+  2. realized 3.100.000 bukan -100.000: asumsi saya bahwa credit_amount_currency bertanda negatif salah. Odoo menyimpan magnitudo positif (diverifikasi pada _prepare_reconcile_vals). Diperbaiki dengan abs() pada kedua field, dan ADR dikoreksi.
+  3. Expected AccessError reader_cross_company_partner_fin37: FIN37/FIN38 tidak memvalidasi partner lintas-perusahaan padahal I2b sudah. Ditambahkan _check_partner_filter di kedua entry point.
+- Satu kegagalan lagi murni infrastruktur: install-test gagal karena security.ubuntu.com mengembalikan "File has unexpected size ... Mirror sync in progress" untuk Packages.gz; di-rerun dan hijau.
+- [BU] Pin account_invoice_start_end_dates masih diperlukan agar FIN37 mengalokasikan jadwal nyata; tanpa pin seluruh baris menjadi exception (perilaku fail-closed yang diverifikasi native). Verifikasi FIN38 pada data exchange non-sintetis masih terbuka. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-11T02:50:00+07:00
