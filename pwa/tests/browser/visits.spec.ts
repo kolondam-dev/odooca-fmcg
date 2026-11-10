@@ -1,5 +1,12 @@
 import { checkIn } from "./session-fixture";
-import { saveVisitPhoto, leaveVisit } from "./visit-helpers";
+import {
+    saveVisitPhoto,
+    leaveVisit,
+    syncNow,
+    openQueue,
+    activity,
+    openActivity,
+} from "./visit-helpers";
 import { expect, test } from "./session-fixture";
 test("visit location guards, offline restore and checkout sync", async ({
     page,
@@ -78,12 +85,12 @@ test("visit location guards, offline restore and checkout sync", async ({
     ).toBeVisible();
     await leaveVisit(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await expect(page.locator(".activity")).toHaveCount(2);
+    await openActivity(page);
+    await expect(activity(page)).toHaveCount(2);
     await context.setOffline(false);
+    await openActivity(page);
     await expect(
-        page
-            .locator(".activity")
-            .getByText("Diterima simulator", { exact: true }),
+        activity(page).getByText("Diposting", { exact: true }),
     ).toHaveCount(2, { timeout: 20000 });
     expect(
         await page.evaluate(
@@ -216,13 +223,20 @@ test("corrupt offline check-in remains held after reload, reconnect and manual r
         .getByRole("button", { name: "Beranda", exact: true })
         .click();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await openQueue(page);
+    await page.locator(".ui-row", { hasText: "Check-in kunjungan" }).click();
     await expect(
         page.getByText(
             "Integritas antrean/sumber kunjungan tidak valid. Data tetap lokal; perlu review.",
             { exact: true },
         ),
     ).toBeVisible();
-    await page.getByRole("button", { name: "Sinkronkan", exact: true }).click();
+    await page
+        .getByRole("dialog")
+        .getByRole("button", { name: "Tutup", exact: true })
+        .last()
+        .click();
+    await syncNow(page);
     const after = (await page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve) => {
             const r = indexedDB.open("fmcg-field-demo-v1");

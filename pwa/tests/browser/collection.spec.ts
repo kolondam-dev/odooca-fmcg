@@ -1,4 +1,5 @@
 import { switchPersona } from "./delivery-helpers";
+import { syncNow, activity, openActivity } from "./visit-helpers";
 import { ensureDaily } from "./delivery-helpers";
 import { expect, test, type Page, type Locator } from "./session-fixture";
 async function open(page: Page) {
@@ -77,10 +78,9 @@ test("cash collection draft restores offline and syncs only for review", async (
     });
     await context.setOffline(false);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await openActivity(page);
     await expect(
-        page
-            .locator(".activity")
-            .getByText("Menunggu approval", { exact: true }),
+        activity(page).getByText("Menunggu approval", { exact: true }),
     ).toHaveCount(1);
 });
 test("transfer requires reference and prevents excessive or duplicate collection", async ({
@@ -186,14 +186,12 @@ test("corrupt offline collection photo holds restore and reconnect sync", async 
     ).toHaveCount(0);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await context.setOffline(false);
-    await page.getByRole("button", { name: "Sinkronkan", exact: true }).click();
+    const queue = await syncNow(page);
+    await expect(queue.locator(".ui-chip", { hasText: "Gagal" })).toHaveCount(
+        1,
+    );
     await expect(
-        page.getByRole("button", { name: "Perlu review 1", exact: true }),
-    ).toBeVisible();
-    await expect(
-        page
-            .locator(".activity")
-            .getByText("Menunggu approval", { exact: true }),
+        queue.getByText("Menunggu approval", { exact: true }),
     ).toHaveCount(0);
 });
 
@@ -296,9 +294,8 @@ test("business rejection opens offline correction draft and preserves immutable 
     });
     await context.setOffline(false);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await openActivity(page);
     await expect(
-        page
-            .locator(".activity")
-            .getByText("Menunggu approval", { exact: true }),
+        activity(page).getByText("Menunggu approval", { exact: true }),
     ).toHaveCount(1);
 });

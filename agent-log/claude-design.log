@@ -210,3 +210,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - Blocker backend B1-B8 di DS_RECONCILIATION K13
 - e2e phone+tablet 180 lulus; vitest 456
 - Task managed by claude-design agent at 2026-11-09T13:47:14+07:00
+
+[2026-11-10T07:12:20+07:00] [INFO] Fase 3A: Order v2 (diskon bertingkat), Koreksi_so, foto SKU, Lainnya/Antrean/Aktivitas/Pengajuan
+- domain order-discount v2 + kontrak; POS diskon baris/footer; KoreksiScreen; sku-photo cache; MorePage + ActivityScreens; e2e phone 90 lulus
+- Task managed by claude-design agent at 2026-11-10T07:12:20+07:00
