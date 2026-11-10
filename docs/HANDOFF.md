@@ -1,3 +1,9 @@
+## 2026-11-10T14:12:06+07:00 — claude-design — Fase 3A: Order v2, Koreksi_so, foto SKU, klaster Lainnya
+
+**Berubah:** domain/order-discount.ts + kontrak pricing v2 (program/tactical bertingkat, diskon footer Rp); OrderScreen/Ringkasan per mockup; KoreksiScreen; sku-photo (Cache Storage, ganti hanya jika versi berubah, fallback placeholder); MorePage + ActivityScreens (Antrean sinkronisasi, Riwayat aktivitas, Riwayat pengajuan); SyncDiagnostics dihapus. Utang backend: DS_RECONCILIATION K14.
+**Diverifikasi:** [F] tsc, vitest, e2e phone 90 lulus. **Belum diuji:** [BU] tablet, CI GitHub.
+**Berikutnya:** Fase 3B (Kamera, Selesai kunjungan, Extra call, Penagihan, Delivery/POD, Closing, Uang lapangan, HRIS, status/error), lalu PR docs "plan quick action".
+
 ## 2026-11-09T17:55:00+07:00 — claude-design — PR #103 review P2: approval dari receipt, SKU stale, cartEmpty
 
 **Berubah:** OrderResult (approval hanya dari receipt/antrean; alasan lokal jadi "Kemungkinan perlu approval"), order-cart (`stale` dilaporkan), OrderScreen (callout "Hapus dari draft", kirim diblokir, cartEmpty hanya SKU valid); +2 tes order-cart. Merge main.

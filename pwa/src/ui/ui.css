@@ -1240,3 +1240,80 @@ select.ui-select {
 .ui-screen.ui-screen--over {
     z-index: 40;
 }
+
+/* Diskon bertingkat / footer (Diskon_baris, Diskon_footer) */
+.pos-disc {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2, 8px);
+}
+.pos-disc__val {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+}
+.pos-disc__val .ui-field {
+    flex: 0 1 140px;
+    margin: 0;
+}
+.pos-disc__val .ui-chip {
+    margin-bottom: 14px;
+}
+.pos-disc__val .ui-iconbtn {
+    margin-left: auto;
+    color: var(--c-bad, #b42318);
+}
+.pos-line__old {
+    text-decoration: line-through;
+    color: var(--c-ink-3, #5b6b8a);
+    font-size: 13px;
+}
+.pos-lines .pos-line {
+    align-items: flex-start;
+}
+.pos-card__actions {
+    display: flex;
+    gap: 8px;
+    flex: none;
+}
+.pos-line__amt {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    margin-left: auto;
+}
+.pos-totals__grand {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+.pos-photo--img {
+    width: 100%;
+    max-height: 260px;
+    object-fit: contain;
+    background: var(--c-surface-2, #e9eef7);
+    border-radius: 12px;
+}
+.stock-row__sys {
+    float: right;
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--c-ink-3, #5b6b8a);
+}
+.pos-retry {
+    padding: 0 16px 12px 74px;
+}
+.pos-dl {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 6px 12px;
+    font-size: 14px;
+}
+.pos-dl dt {
+    color: var(--c-ink-3, #5b6b8a);
+}
+.pos-dl dd {
+    margin: 0;
+    word-break: break-all;
+}

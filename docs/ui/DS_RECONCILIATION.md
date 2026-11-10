@@ -92,6 +92,24 @@ Diterapkan: `OrderScreen` (POS dengan stepper per satuan, cari, kunci principal,
 
 Catatan teknis: draf lama (`quantities`/`units`) dibaca ke keranjang baru (kompatibel). Tes: `tests/order-cart.test.ts` (8 kasus peleburan satuan), e2e order disesuaikan.
 
+### K14. Kontrak order v2 (Fase 3A) — keputusan pemilik: proses bisnis mockup WAJIB dipatuhi
+Kontrak lama (`pricing_version: 1`, satu satuan per SKU, satu `discount_request`) dinyatakan usang. PWA kini mengirim `pricing_version: 2`; kontrak v1 tetap dibaca hanya untuk item antrean/riwayat lama. **Backend wajib menyesuaikan** (hutang dikerjakan segera setelah PR terkait merge).
+
+| Elemen | Bentuk v2 (payload `sales.order.create` dan `sales.order.revise`) | Status PWA | Tugas backend |
+|---|---|---|---|
+| Multi-satuan (B1) | `lines[] = {product_id, tiers:[{uom, qty}], discounts?:[...]}`; 1 baris per SKU, satuan unik, qty 1–999 | Selesai (`order-discount.ts`, `order-cart.ts`) | Terima `tiers`; hitung pcs per satuan dari kemasan |
+| Diskon baris bertingkat (B2) | `discounts[]` berurutan: `{kind:"program",program_id,percent}` lalu `{kind:"tactical",percent,reason}`; tiap tingkat memotong sisa harga | Selesai; lembar Diskon_baris | Validasi urutan, hitung berantai, `tactical` ⇒ approval |
+| Diskon footer Rp (B2) | `footer_discounts[]`: `{kind:"program",program_id,amount}` / `{kind:"tactical",amount,reason}`, dihitung setelah diskon baris | Selesai; lembar Diskon_footer | Idem; jumlah ≤ total setelah diskon baris |
+| Program promo berbudget (B2) | `snapshot.discount_programs[]`: `{id,name,scope:line|footer,principal?,product_ids?,max_percent?,max_amount?,budget_remaining}` | PWA menampilkan sisa budget dan memvalidasi lokal; data demo dari mock | Sediakan di snapshot harian; kurangi budget saat order diterima |
+| Total | `observed_total` = total setelah semua diskon (bilangan bulat Rp, pembulatan per tingkat `round`) | Selesai | Hitung ulang identik; tolak bila beda |
+| Limit kredit (B3) | `outlet.commercial.credit_limit` dan `ar_outstanding`; sisa = limit − AR; callout "Limit kredit terlampaui · order menunggu approval" | PWA memakai `ar_outstanding` bila ada | Isi `ar_outstanding` di snapshot; keputusan final di server |
+| Foto SKU (B4) | `product.image_url` (`/api/v1/products/<id>/image`) + `image_version`; PWA mengunduh sekali, simpan offline (Cache Storage), unduh ulang hanya bila versi berubah; fallback placeholder | Selesai (`sku-photo.ts`, 5 tes) | Endpoint gambar + `image_version`; tanggung jawab backend bila foto kosong |
+| Riwayat order untuk Display_stok (B5/B6) | `snapshot.order_history[] = {outlet_id, product_ids[]}` | PWA memakai bila ada; tanpa itu jatuh ke SKU katalog + pemberitahuan | Sediakan dataset; command `record_display_stock` (outlet, visit, evidence, items per satuan) **belum ada**, hingga itu Display & stok tetap draf lokal |
+| Stok sistem vs tersedia (B8) | Mockup menampilkan "Stok sistem" (angka gudang, satuan campuran "41 krt · 6 pak") di kartu SKU dan Katalog; stok aktual toko hanya di Display_stok | PWA menampilkan stok sistem dalam satuan campuran | `stock_on_hand`/`stock_available` bila ingin dibedakan |
+| Koreksi order (Koreksi_so) | `OrderRevision` menerima `pricing_version 2` | Layar Koreksi order baru (Ubah baris order, Ubah diskon, Catatan untuk SPV, Kirim ulang) | Terima revisi v2 |
+
+Catatan: `normalizeLine` (peleburan satuan) dihapus; tidak ada lagi pembulatan ke satuan terbesar.
+
 ### K12. Lokalisasi dan format
 - DS: Indonesia, Rp, WITA, jam `HH.mm`. PWA mencampur `:` dan `.` (mis. LiveClock). **Rekomendasi:** satu util format di `domain/format.ts`, tes unit.
 

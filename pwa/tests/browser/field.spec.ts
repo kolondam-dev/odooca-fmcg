@@ -1,4 +1,10 @@
-import { sendOrder, leaveVisit, openOrderScreen } from "./visit-helpers";
+import {
+    sendOrder,
+    leaveVisit,
+    openOrderScreen,
+    activity,
+    openActivity,
+} from "./visit-helpers";
 import { checkIn } from "./session-fixture";
 import { switchPersona } from "./delivery-helpers";
 import { saveDisplayPhoto, saveVisitPhoto } from "./visit-helpers";
@@ -170,17 +176,20 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
         page.getByText("Menunggu koneksi", { exact: true }),
     ).toBeVisible();
     await context.setOffline(false);
+    await openActivity(page);
     await expect(
-        page.getByText("Diterima simulator", { exact: true }).last(),
+        activity(page).getByText("Diposting", { exact: true }).last(),
     ).toBeVisible({ timeout: 20000 });
     await switchPersona(page, "delivery");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByRole("button", { name: /^Riwayat aktivitas/ }).click();
     await expect(
-        page.getByText("Belum ada aktivitas. Mulai dari order atau pengajuan."),
+        page.getByText("Belum ada aktivitas pada filter ini."),
     ).toBeVisible();
     await switchPersona(page, "sales");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await expect(page.locator(".activity")).toHaveCount(2);
+    await openActivity(page);
+    await expect(activity(page)).toHaveCount(2);
 });
 test("expense request is an approval request, not disbursement", async ({
     page,
@@ -209,10 +218,9 @@ test("expense request is an approval request, not disbursement", async ({
         .fill("Permohonan demo perjalanan luar kota");
     await page.getByRole("button", { name: "Simpan ke antrean" }).click();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await openActivity(page);
     await expect(
-        page
-            .locator(".activity")
-            .getByText("Menunggu approval", { exact: true }),
+        activity(page).getByText("Menunggu approval", { exact: true }),
     ).toBeVisible();
 });
 test("missing evidence is not accepted as attendance", async ({
@@ -272,7 +280,8 @@ test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
     await page.getByRole("button", { name: "Simpan ke antrean" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
-    await expect(page.locator(".activity")).toHaveCount(1);
+    await openActivity(page);
+    await expect(activity(page)).toHaveCount(1);
 });
 
 async function expectGateClosed(page: Page) {

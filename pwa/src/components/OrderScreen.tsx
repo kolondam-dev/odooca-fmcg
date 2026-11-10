@@ -4,16 +4,25 @@ import {
     type FieldProvider,
     type Snapshot,
 } from "../domain/contracts";
+import { lineChecks } from "../domain/order-pricing";
+import { quoteV2 } from "../domain/order-discount";
+import type {
+    DiscountProgram,
+    FooterDiscount,
+    LineDiscount,
+} from "../domain/order-discount";
 import { money } from "../domain/format";
 import {
     cartTotals,
     cartFromLegacy,
     pcsOf,
     setTier,
+    stockText,
     tierText,
     type Cart,
+    type LineDiscounts,
 } from "../domain/order-cart";
-import { orderQuote, type OrderUom } from "../domain/order-pricing";
+import type { OrderUom } from "../domain/order-pricing";
 import { unitOptions, productUnitLabels } from "../domain/product-units";
 import type { FieldStore, QueueItem } from "../storage/store";
 import {
@@ -22,11 +31,10 @@ import {
     Button,
     Callout,
     Card,
-    Field,
     IconButton,
     Screen,
     ScreenHeader,
-    Select,
+    Chip,
     Stepper,
     Textarea,
 } from "../ui";
@@ -34,41 +42,39 @@ import { useBackLayer } from "../ui/navigation";
 import { Icon } from "./Icon";
 import { DisplayStockScreen, displayKey } from "./DisplayStockScreen";
 import { OrderResult } from "./OrderResult";
+import { loadSkuPhoto } from "../domain/sku-photo";
+import { DiscountSheet } from "./DiscountSheets";
 
-/** Alasan baku diskon; kontrak menerima teks bebas 3–500 karakter. */
-export const DISCOUNT_REASONS = [
-    "Pembeli minta potongan ongkos",
-    "Kompetitor lebih murah",
-    "Program promo belum tersedia di sistem",
-    "Lainnya",
-];
+type Sheet = null | "summary" | "footer" | { sku: string } | { disc: string };
 
-type Sheet = null | "summary" | "discount" | { sku: string };
-
-const stockText = (value: number, carton: string) =>
-    `${Number.isInteger(value) ? value : value.toFixed(1)} ${carton.toLowerCase().slice(0, 3) === "kar" ? "krt" : carton.toLowerCase()}`;
-
-function ProductCard({
+export function ProductCard({
     product,
     catalogVersion,
     tiers,
     stock,
+    discounts,
     onTier,
     onInfo,
+    onDiscount,
 }: {
     product: Snapshot["products"][number];
     catalogVersion?: 2;
     tiers: Partial<Record<OrderUom, number>>;
     stock: number;
+    discounts: LineDiscount[];
     onTier: (uom: OrderUom, value: number) => void;
     onInfo: () => void;
+    onDiscount: () => void;
 }) {
     const options = unitOptions(product, catalogVersion);
     const pcs = pcsOf(product, tiers, catalogVersion);
-    const subtotal = Math.round(
+    const gross = Math.round(
         (product.price * pcs) /
             (options.find((o) => o.uom === "carton")?.per ?? 1),
     );
+    let subtotal = gross;
+    for (const d of discounts)
+        subtotal -= Math.round((subtotal * d.percent) / 100);
     const labels = productUnitLabels(product);
     const cartons = pcs / (options[0]?.per ?? 1);
     return (
@@ -85,16 +91,26 @@ function ProductCard({
                         >
                             {stock <= 0
                                 ? "Habis"
-                                : stockText(stock, labels.carton)}
+                                : stockText(product, stock, catalogVersion)}
                         </span>
                     </span>
                 </div>
-                <IconButton
-                    box
-                    icon="image"
-                    label={`Detail SKU ${product.name}`}
-                    onClick={onInfo}
-                />
+                <div class="pos-card__actions">
+                    <IconButton
+                        box
+                        icon="image"
+                        label={`Detail SKU ${product.name}`}
+                        onClick={onInfo}
+                    />
+                    <IconButton
+                        box
+                        icon="tag"
+                        label={`Diskon baris ${product.name}`}
+                        onClick={onDiscount}
+                        badge={discounts.length || undefined}
+                        disabled={pcs <= 0}
+                    />
+                </div>
             </div>
             {options.map((option) => (
                 <div class="pos-tier" key={option.uom}>
@@ -149,21 +165,38 @@ function SkuSheet({
 }) {
     const options = unitOptions(product, catalogVersion);
     const carton = options[0]?.per ?? 1;
-    const labels = productUnitLabels(product);
+    const [photo, setPhoto] = useState<string | null>(null);
+    useEffect(() => {
+        let active = true;
+        void loadSkuPhoto(product.image_url, product.image_version).then(
+            (url) => active && setPhoto(url),
+        );
+        return () => {
+            active = false;
+        };
+    }, [product.image_url, product.image_version]);
     const chain = options
         .slice(0, -1)
         .map((o) => `1 ${o.label.toLowerCase()} = ${o.per} pcs`)
         .join(" · ");
     return (
         <BottomSheet title={product.name} onClose={onClose}>
-            <div
-                class="pos-photo"
-                role="img"
-                aria-label="Foto SKU belum tersedia"
-            >
-                <Icon name="image" size={40} />
-                <span>Foto SKU belum tersedia</span>
-            </div>
+            {photo ? (
+                <img
+                    class="pos-photo pos-photo--img"
+                    src={photo}
+                    alt={`Foto ${product.name}`}
+                />
+            ) : (
+                <div
+                    class="pos-photo"
+                    role="img"
+                    aria-label="Foto SKU belum tersedia"
+                >
+                    <Icon name="image" size={40} />
+                    <span>Foto SKU belum tersedia</span>
+                </div>
+            )}
             <div class="pos-facts">
                 <div>
                     <h3>SKU</h3>
@@ -188,87 +221,12 @@ function SkuSheet({
                 </div>
                 <div>
                     <h3>Stok sistem</h3>
-                    <p>
-                        {stock} {labels.carton.toLowerCase()}
-                    </p>
+                    <p>{stockText(product, stock, catalogVersion)}</p>
                 </div>
             </div>
             <Button variant="sec" onClick={onClose}>
                 Tutup
             </Button>
-        </BottomSheet>
-    );
-}
-
-function DiscountSheet({
-    percent,
-    reason,
-    base,
-    onApply,
-    onClose,
-}: {
-    percent: number;
-    reason: string;
-    base: number;
-    onApply: (percent: number, reason: string) => void;
-    onClose: () => void;
-}) {
-    const preset = DISCOUNT_REASONS.includes(reason) ? reason : "";
-    const [value, setValue] = useState(percent ? String(percent) : "");
-    const [choice, setChoice] = useState(
-        preset || (reason ? "Lainnya" : DISCOUNT_REASONS[0]),
-    );
-    const [other, setOther] = useState(preset ? "" : reason);
-    const n = Number(value);
-    const valid = Number.isInteger(n) && n >= 1 && n <= 100;
-    const text = choice === "Lainnya" ? other.trim() : choice;
-    const ok = valid && text.length >= 3;
-    return (
-        <BottomSheet title="Diskon order" onClose={onClose}>
-            <Callout tone="neu">Subtotal sebelum diskon: {money(base)}</Callout>
-            <Card>
-                <Field
-                    label="Diskon diminta (%)"
-                    type="text"
-                    inputMode="numeric"
-                    value={value}
-                    onInput={(v) => setValue(v.replace(/\D/g, "").slice(0, 3))}
-                    hint={
-                        valid
-                            ? `−${money(Math.round((base * n) / 100))} · perlu approval supervisor`
-                            : "Isi 1–100"
-                    }
-                />
-                <Select
-                    label="Alasan (wajib)"
-                    options={DISCOUNT_REASONS.map((r) => ({
-                        value: r,
-                        label: r,
-                    }))}
-                    value={choice}
-                    onChange={setChoice}
-                />
-                {choice === "Lainnya" ? (
-                    <Textarea
-                        label="Alasan permintaan diskon"
-                        value={other}
-                        maxLength={500}
-                        onInput={setOther}
-                    />
-                ) : null}
-            </Card>
-            <Button
-                icon="check"
-                disabled={!ok}
-                onClick={() => onApply(n, text)}
-            >
-                Terapkan diskon
-            </Button>
-            {percent > 0 ? (
-                <Button variant="sec" onClick={() => onApply(0, "")}>
-                    Hapus diskon
-                </Button>
-            ) : null}
         </BottomSheet>
     );
 }
@@ -307,9 +265,8 @@ export function OrderScreen({
     );
     const [cart, setCart] = useState<Cart>({});
     const [principal, setPrincipal] = useState(principals[0] ?? "");
-    const [percent, setPercent] = useState(0);
-    const [reason, setReason] = useState("");
-    const [po, setPo] = useState("");
+    const [lineDisc, setLineDisc] = useState<LineDiscounts>({});
+    const [footerDisc, setFooterDisc] = useState<FooterDiscount[]>([]);
     const [note, setNote] = useState("");
     const [query, setQuery] = useState("");
     const [limit, setLimit] = useState(40);
@@ -374,17 +331,17 @@ export function OrderScreen({
                         quantities?: Record<string, number>;
                         units?: Record<string, OrderUom>;
                         principal?: string;
-                        discount?: number;
-                        discountReason?: string;
+                        lineDiscounts?: LineDiscounts;
+                        footerDiscounts?: FooterDiscount[];
                         poNumber?: string;
                         note?: string;
                     };
                     setCart(v.cart ?? cartFromLegacy(v.quantities, v.units));
                     if (v.principal) setPrincipal(v.principal);
-                    setPercent(v.discount ?? 0);
-                    setReason(v.discountReason ?? "");
-                    setPo(v.poNumber ?? "");
-                    setNote(v.note ?? "");
+                    setLineDisc(v.lineDiscounts ?? {});
+                    setFooterDisc(v.footerDiscounts ?? []);
+                    // Mockup: satu kolom "Catatan / No. PO"; draf lama memiliki dua.
+                    setNote([v.poNumber, v.note].filter(Boolean).join(" · "));
                 }
                 setRestored(true);
             })
@@ -422,15 +379,14 @@ export function OrderScreen({
             .draft(owner, key, {
                 cart,
                 principal,
-                discount: percent,
-                discountReason: reason,
-                poNumber: po,
+                lineDiscounts: lineDisc,
+                footerDiscounts: footerDisc,
                 note,
             })
             .catch(() =>
                 setError("Draft gagal disimpan. Periksa penyimpanan."),
             );
-    }, [cart, principal, percent, reason, po, note, restored]);
+    }, [cart, principal, lineDisc, footerDisc, note, restored]);
 
     const term = query.trim().toLowerCase();
     const activePrincipal = principals.includes(principal)
@@ -449,7 +405,8 @@ export function OrderScreen({
         [snapshot.products, activePrincipal, term],
     );
     useEffect(() => setLimit(40), [activePrincipal, term]);
-    const totals = cartTotals(cart, snapshot, percent);
+    const totals = cartTotals(cart, lineDisc, footerDisc, snapshot);
+    const programs = snapshot.discount_programs ?? [];
     const principalName =
         snapshot.products.find((p) => p.principal === activePrincipal)
             ?.principal_name ??
@@ -464,11 +421,21 @@ export function OrderScreen({
         });
     }
     const creditLimit = outlet?.commercial?.credit_limit ?? null;
-    const overCredit = creditLimit !== null && totals.total > creditLimit;
+    const creditLeft =
+        creditLimit === null
+            ? null
+            : creditLimit - (outlet?.commercial?.ar_outstanding ?? 0);
+    const overCredit = creditLeft !== null && totals.total > creditLeft;
     const approvalReasons = [
-        ...(percent > 0 ? ["diskon"] : []),
+        ...(totals.quote.tactical ? ["tactical discount"] : []),
         ...(overCredit ? ["limit kredit"] : []),
     ];
+    /** Pemakaian budget program oleh seluruh keranjang kecuali bagian `skip`. */
+    function usageExcept(skip: { line?: string; footer?: boolean }) {
+        const lines = totals.lines.filter((l) => l.product_id !== skip.line);
+        const q = quoteV2(lines, skip.footer ? [] : footerDisc, snapshot);
+        return q.usage;
+    }
 
     async function send() {
         if (busy) return;
@@ -487,39 +454,25 @@ export function OrderScreen({
             setError(totals.errors[0]!);
             return;
         }
-        const invalid = validateOrder(
-            totals.lines.map((l) => ({
-                productId: l.product_id,
-                quantity: Number(l.qty),
-            })),
-            snapshot,
-        );
+        const invalid = validateOrder(lineChecks(totals.lines), snapshot);
         if (invalid) {
             setError(invalid);
             return;
         }
-        if (percent > 0 && reason.trim().length < 3) {
-            setError("Alasan diskon wajib diisi.");
-            return;
-        }
         setBusy(true);
         try {
-            const discount =
-                percent > 0 ? { percent, reason: reason.trim() } : undefined;
             const item = await submit(
                 "sales.order.submit",
                 {
                     outlet_id: outletId,
                     snapshot_version: snapshot.version,
                     lines: totals.lines,
-                    customer_po_number: po.trim() || undefined,
-                    pricing_version: 1,
-                    ...(discount ? { discount_request: discount } : {}),
+                    pricing_version: 2,
+                    ...(footerDisc.length
+                        ? { footer_discounts: footerDisc }
+                        : {}),
                     note: note.trim(),
-                    observed_total: String(
-                        orderQuote(totals.lines, snapshot, discount)
-                            .requestedTotal,
-                    ),
+                    observed_total: String(totals.total),
                 },
                 `Order • ${outlet?.name}`,
                 true,
@@ -552,9 +505,24 @@ export function OrderScreen({
         );
 
     const sku =
-        sheet && typeof sheet === "object"
+        sheet && typeof sheet === "object" && "sku" in sheet
             ? snapshot.products.find((p) => p.id === sheet.sku)
             : undefined;
+    const lineProduct =
+        sheet && typeof sheet === "object" && "disc" in sheet
+            ? snapshot.products.find((p) => p.id === sheet.disc)
+            : undefined;
+    const linePreviewGross = lineProduct
+        ? Math.round(
+              (lineProduct.price *
+                  pcsOf(
+                      lineProduct,
+                      cart[lineProduct.id] ?? {},
+                      catalogVersion,
+                  )) /
+                  (unitOptions(lineProduct, catalogVersion)[0]?.per ?? 1),
+          )
+        : 0;
     const lockedByCart = !cartEmpty;
     return (
         <Screen
@@ -573,12 +541,12 @@ export function OrderScreen({
                     <Button
                         variant="sec"
                         icon="tag"
-                        onClick={() => setSheet("discount")}
+                        onClick={() => setSheet("footer")}
                         disabled={!totals.skuCount}
                     >
-                        {percent > 0
-                            ? `Diskon order · −${money(totals.discount)}`
-                            : "Diskon order"}
+                        {totals.quote.footerDiscount > 0
+                            ? `Diskon footer · −${money(totals.quote.footerDiscount)}`
+                            : "Diskon footer"}
                     </Button>
                     <Button
                         icon="cart"
@@ -676,8 +644,12 @@ export function OrderScreen({
             ) : null}
             {overCredit ? (
                 <Callout tone="warn" icon="warning">
-                    Total order melebihi limit kredit outlet ·{" "}
-                    {money(creditLimit!)}. Kemungkinan perlu approval.
+                    Limit kredit terlampaui · order menunggu approval
+                </Callout>
+            ) : null}
+            {totals.errors.length ? (
+                <Callout tone="bad" alert>
+                    {totals.errors[0]}
                 </Callout>
             ) : null}
             {products.length === 0 ? (
@@ -690,6 +662,8 @@ export function OrderScreen({
                     catalogVersion={catalogVersion}
                     tiers={cart[product.id] ?? {}}
                     stock={stock[product.id] ?? product.stock}
+                    discounts={lineDisc[product.id] ?? []}
+                    onDiscount={() => setSheet({ disc: product.id })}
                     onTier={(uom, value) =>
                         setCart((current) =>
                             setTier(current, product.id, uom, value),
@@ -713,47 +687,41 @@ export function OrderScreen({
                     onClose={() => setSheet(null)}
                 >
                     <div class="pos-lines">
-                        {Object.entries(cart).map(([id, tiers]) => {
+                        {totals.quote.lines.map((ql) => {
                             const product = snapshot.products.find(
-                                (p) => p.id === id,
+                                (p) => p.id === ql.product_id,
                             );
                             if (!product) return null;
-                            const pcs = pcsOf(product, tiers, catalogVersion);
-                            if (pcs <= 0) return null;
-                            const per =
-                                unitOptions(product, catalogVersion)[0]?.per ??
-                                1;
+                            const tiers = cart[ql.product_id] ?? {};
+                            const discounts = lineDisc[ql.product_id] ?? [];
                             return (
-                                <div class="pos-line" key={id}>
+                                <div class="pos-line" key={ql.product_id}>
                                     <div>
                                         <strong>{product.name}</strong>
                                         <span class="ui-row__sub">
                                             {product.sku_code ?? product.id} ·{" "}
-                                            {tierText(product, tiers)} ({pcs}{" "}
+                                            {tierText(product, tiers)} ({ql.pcs}{" "}
                                             pcs)
                                         </span>
                                     </div>
-                                    <strong>
-                                        {money(
-                                            Math.round(
-                                                (product.price * pcs) / per,
-                                            ),
-                                        )}
-                                    </strong>
-                                    <button
-                                        type="button"
-                                        class="ui-linkbtn"
-                                        aria-label={`Hapus ${product.name}`}
-                                        onClick={() =>
-                                            setCart((current) => {
-                                                const next = { ...current };
-                                                delete next[id];
-                                                return next;
-                                            })
-                                        }
-                                    >
-                                        Hapus
-                                    </button>
+                                    <div class="pos-line__amt">
+                                        {discounts.length ? (
+                                            <>
+                                                <Chip tone="warn">
+                                                    {discounts
+                                                        .map(
+                                                            (d) =>
+                                                                `${d.percent}%`,
+                                                        )
+                                                        .join(" + ")}
+                                                </Chip>
+                                                <span class="pos-line__old">
+                                                    {money(ql.gross)}
+                                                </span>
+                                            </>
+                                        ) : null}
+                                        <strong>{money(ql.net)}</strong>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -763,11 +731,19 @@ export function OrderScreen({
                             <span>Subtotal</span>
                             <strong>{money(totals.gross)}</strong>
                         </div>
-                        {percent > 0 ? (
+                        {totals.quote.lineDiscount > 0 ? (
                             <div>
-                                <span>Diskon {percent}%</span>
+                                <span>Diskon baris</span>
                                 <strong class="pos-neg">
-                                    −{money(totals.discount)}
+                                    −{money(totals.quote.lineDiscount)}
+                                </strong>
+                            </div>
+                        ) : null}
+                        {totals.quote.footerDiscount > 0 ? (
+                            <div>
+                                <span>Diskon footer</span>
+                                <strong class="pos-neg">
+                                    −{money(totals.quote.footerDiscount)}
                                 </strong>
                             </div>
                         ) : null}
@@ -785,18 +761,10 @@ export function OrderScreen({
                             Harga sesuai snapshot harian.
                         </Callout>
                     )}
-                    <Field
-                        label="Nomor PO outlet (opsional)"
-                        value={po}
-                        maxLength={64}
-                        placeholder="Contoh: PO/2026/10/099"
-                        onInput={setPo}
-                    />
                     <Textarea
-                        label="Catatan order"
+                        label="Catatan / No. PO (opsional)"
                         value={note}
                         maxLength={500}
-                        placeholder="Permintaan outlet (opsional)"
                         onInput={setNote}
                     />
                     {error ? (
@@ -817,15 +785,52 @@ export function OrderScreen({
                     ) : null}
                 </BottomSheet>
             ) : null}
-            {sheet === "discount" ? (
-                <DiscountSheet
-                    percent={percent}
-                    reason={reason}
-                    base={totals.gross}
+            {lineProduct ? (
+                <DiscountSheet<LineDiscount>
+                    mode="line"
+                    title={`Diskon baris · ${lineProduct.name}`}
+                    base={
+                        totals.quote.lines.find(
+                            (l) => l.product_id === lineProduct.id,
+                        )?.gross ?? linePreviewGross
+                    }
+                    programs={programs.filter(
+                        (p: DiscountProgram) =>
+                            p.scope === "line" &&
+                            (!p.principal ||
+                                p.principal === lineProduct.principal) &&
+                            (!p.product_ids?.length ||
+                                p.product_ids.includes(lineProduct.id)),
+                    )}
+                    usedElsewhere={usageExcept({ line: lineProduct.id })}
+                    initial={lineDisc[lineProduct.id] ?? []}
                     onClose={() => setSheet(null)}
-                    onApply={(p, r) => {
-                        setPercent(p);
-                        setReason(r);
+                    onApply={(next) => {
+                        setLineDisc((cur) => {
+                            const copy = { ...cur };
+                            if (next.length) copy[lineProduct.id] = next;
+                            else delete copy[lineProduct.id];
+                            return copy;
+                        });
+                        setSheet(null);
+                    }}
+                />
+            ) : null}
+            {sheet === "footer" ? (
+                <DiscountSheet<FooterDiscount>
+                    mode="footer"
+                    title="Diskon footer order"
+                    base={totals.quote.afterLine}
+                    programs={programs.filter(
+                        (p: DiscountProgram) =>
+                            p.scope === "footer" &&
+                            (!p.principal || p.principal === activePrincipal),
+                    )}
+                    usedElsewhere={usageExcept({ footer: true })}
+                    initial={footerDisc}
+                    onClose={() => setSheet(null)}
+                    onApply={(next) => {
+                        setFooterDisc(next);
                         setSheet(null);
                     }}
                 />

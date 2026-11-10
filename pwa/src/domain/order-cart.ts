@@ -1,5 +1,11 @@
 import type { Snapshot } from "./contracts";
-import { orderQuote, type OrderUom } from "./order-pricing";
+import type { OrderUom } from "./order-pricing";
+import {
+    quoteV2,
+    type FooterDiscount,
+    type LineDiscount,
+    type OrderLineV2,
+} from "./order-discount.ts";
 import { productPackaging } from "./product-units.ts";
 
 /** Keranjang POS: satu SKU boleh memuat beberapa satuan sekaligus (mis. 4 krt + 2 pak). */
@@ -43,49 +49,36 @@ export function pcsOf(product: Product, tiers: Tiers, catalogVersion?: 2) {
     return ORDER.reduce((sum, u) => sum + (tiers[u] ?? 0) * per[u], 0);
 }
 
-/**
- * Kontrak dan backend hanya menerima satu baris per SKU (satu satuan, qty 1–999).
- * Beberapa satuan dilebur ke total pcs lalu diekspresikan dalam satuan terbesar
- * yang habis membagi total tersebut. Melebihi 999 pada satuan itu -> galat jelas.
- */
-export function normalizeLine(
-    product: Product,
-    tiers: Tiers,
-    catalogVersion?: 2,
-): { product_id: string; qty: string; uom: OrderUom } | { error: string } {
-    const per = productPackaging(product, catalogVersion);
-    const pcs = pcsOf(product, tiers, catalogVersion);
-    if (pcs <= 0) return { error: "Kuantitas kosong." };
-    for (const uom of ORDER) {
-        if (pcs % per[uom] === 0 && pcs / per[uom] <= MAX_QTY)
-            return {
-                product_id: product.id,
-                qty: String(pcs / per[uom]),
-                uom,
-            };
-    }
-    return {
-        error: `${product.name}: total ${pcs} pcs melebihi batas ${MAX_QTY} per satuan. Kurangi jumlah atau pecah order.`,
-    };
-}
+/** Diskon baris per SKU (urut: program dulu, lalu pengajuan). */
+export type LineDiscounts = Record<string, LineDiscount[]>;
 
-export function cartLines(cart: Cart, snapshot: Snapshot) {
-    const lines: { product_id: string; qty: string; uom: OrderUom }[] = [];
-    const errors: string[] = [];
+export function cartLines(
+    cart: Cart,
+    discounts: LineDiscounts,
+    snapshot: Snapshot,
+) {
+    const lines: OrderLineV2[] = [];
     /** SKU di draft yang sudah tidak ada di snapshot terbaru. */
     const stale: string[] = [];
     for (const [id, tiers] of Object.entries(cart)) {
         const product = snapshot.products.find((p) => p.id === id);
+        const active = ORDER.filter((u) => (tiers[u] ?? 0) > 0);
+        if (!active.length) continue;
         if (!product) {
-            if (Object.values(tiers).some((q) => (q ?? 0) > 0)) stale.push(id);
+            stale.push(id);
             continue;
         }
-        if (pcsOf(product, tiers, snapshot.catalog_version) <= 0) continue;
-        const line = normalizeLine(product, tiers, snapshot.catalog_version);
-        if ("error" in line) errors.push(line.error);
-        else lines.push(line);
+        const line: OrderLineV2 = {
+            product_id: id,
+            tiers: active.map((uom) => ({
+                uom,
+                qty: String(Math.min(tiers[uom]!, MAX_QTY)),
+            })),
+        };
+        if (discounts[id]?.length) line.discounts = discounts[id];
+        lines.push(line);
     }
-    return { lines, errors, stale };
+    return { lines, stale };
 }
 
 /** Teks "4 krt 2 pak" memakai singkatan satuan produk. */
@@ -102,24 +95,38 @@ export function tierText(_product: Product, tiers: Tiers) {
 
 export function cartTotals(
     cart: Cart,
+    discounts: LineDiscounts,
+    footer: FooterDiscount[],
     snapshot: Snapshot,
-    discountPercent = 0,
 ) {
-    const { lines, errors, stale } = cartLines(cart, snapshot);
-    let gross = 0;
-    try {
-        gross = lines.length ? orderQuote(lines, snapshot).gross : 0;
-    } catch {
-        gross = 0;
-    }
-    const discount = Math.round((gross * discountPercent) / 100);
+    const { lines, stale } = cartLines(cart, discounts, snapshot);
+    const quote = quoteV2(lines, footer, snapshot);
     return {
         skuCount: lines.length,
-        gross,
-        discount,
-        total: gross - discount,
         lines,
-        errors,
         stale,
+        quote,
+        gross: quote.subtotal,
+        total: quote.total,
+        errors: quote.errors,
     };
+}
+
+/** Stok sistem (basis karton, boleh pecahan) dalam satuan campuran: "41 krt 6 pak". */
+export function stockText(
+    product: Product,
+    cartons: number,
+    catalogVersion?: 2,
+) {
+    const per = productPackaging(product, catalogVersion);
+    let pcs = Math.max(0, Math.round(cartons * per.carton));
+    const parts: string[] = [];
+    const k = Math.floor(pcs / per.carton);
+    pcs -= k * per.carton;
+    const p = per.pack === per.carton ? 0 : Math.floor(pcs / per.pack);
+    pcs -= p * per.pack;
+    if (k) parts.push(`${k} krt`);
+    if (p) parts.push(`${p} pak`);
+    if (pcs) parts.push(`${pcs} pcs`);
+    return parts.length ? parts.join(" · ") : "0 krt";
 }

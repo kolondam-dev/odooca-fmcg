@@ -10,6 +10,7 @@ import { approvalTiers } from "../domain/delivery-approval";
 import { validatePod } from "../domain/delivery";
 import { requireVisitFix } from "../domain/visit-validation";
 import { VisitOrderSchema } from "../domain/visit-contracts";
+import { orderHasDiscountRequest } from "../domain/order-pricing";
 import {
     assertLocalEvidence,
     type VisualEvidence,
@@ -750,7 +751,7 @@ export class FieldStore {
             !["sales.order.submit", "sales.order.revise"].includes(
                 expected.command.type,
             ) ||
-            (!body.discount_request &&
+            (!orderHasDiscountRequest(body) &&
                 expected.command.type !== "sales.order.revise") ||
             expected.state !== "needs_approval" ||
             expected.receipt?.client_uuid !== expected.command.client_uuid ||
@@ -778,7 +779,7 @@ export class FieldStore {
             const receipt: Receipt = {
                 ...expected.receipt!,
                 status: approved ? "accepted" : "rejected",
-                message: `SIMULASI diskon: diminta ${body.discount_request?.percent ?? 0}%, disetujui ${approved ? (body.discount_request?.percent ?? 0) : 0}%. ${approved ? `Total disetujui Rp ${body.observed_total}` : "Pengajuan ditolak; tidak ada total disetujui"}. ${reason.trim()}. Bukan keputusan Odoo.`,
+                message: `SIMULASI diskon: ${body.discount_request ? `diminta ${body.discount_request.percent}%, disetujui ${approved ? body.discount_request.percent : 0}%` : `pengajuan diskon ${approved ? "disetujui" : "ditolak"}`}. ${approved ? `Total disetujui Rp ${body.observed_total}` : "Pengajuan ditolak; tidak ada total disetujui"}. ${reason.trim()}. Bukan keputusan Odoo.`,
             };
             await tx
                 .objectStore("outbox")

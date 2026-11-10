@@ -5,7 +5,13 @@ import {
     type Page,
     type BrowserContext,
 } from "./session-fixture";
-import { saveVisitPhoto, leaveVisit } from "./visit-helpers";
+import {
+    saveVisitPhoto,
+    leaveVisit,
+    openQueue,
+    activity,
+    openActivity,
+} from "./visit-helpers";
 async function openVisit(page: Page) {
     await page.getByRole("button", { name: "Sales", exact: true }).click();
     await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
@@ -129,10 +135,9 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
     await leaveVisit(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await context.setOffline(false);
+    await openActivity(page);
     await expect(
-        page
-            .locator(".activity")
-            .getByText("Diterima simulator", { exact: true }),
+        activity(page).getByText("Diposting", { exact: true }),
     ).toHaveCount(2, { timeout: 20000 });
 });
 test("tampered persisted parent media blocks restore and both queued actions after reconnect", async ({
@@ -200,21 +205,19 @@ test("tampered persisted parent media blocks restore and both queued actions aft
         page.getByRole("button", { name: "Mulai kunjungan", exact: true }),
     ).toBeDisabled();
     await leaveVisit(page);
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await context.setOffline(false);
+    const queue = await openQueue(page);
     await expect(
-        page.getByRole("button", { name: "Sinkronkan", exact: true }),
+        page.getByRole("button", { name: "Kirim sekarang", exact: true }),
     ).toBeEnabled();
-    await page.getByRole("button", { name: "Sinkronkan", exact: true }).click();
+    await page
+        .getByRole("button", { name: "Kirim sekarang", exact: true })
+        .click();
+    await expect(queue.locator(".ui-chip", { hasText: "Gagal" })).toHaveCount(
+        1,
+    );
     await expect(
-        page.getByRole("button", { name: "Perlu review 1", exact: true }),
-    ).toBeVisible();
-    await expect(
-        page.getByRole("button", { name: "Menunggu 1", exact: true }),
-    ).toBeVisible();
-    await expect(
-        page
-            .locator(".activity")
-            .getByText("Diterima simulator", { exact: true }),
-    ).toHaveCount(0);
+        queue.locator(".ui-chip", { hasText: "Menunggu" }),
+    ).toHaveCount(1);
+    await expect(queue.getByText("Diposting", { exact: true })).toHaveCount(0);
 });

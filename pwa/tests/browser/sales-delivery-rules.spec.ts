@@ -1,4 +1,11 @@
-import { sendOrder, applyDiscount, fillQty } from "./visit-helpers";
+import {
+    sendOrder,
+    applyDiscount,
+    fillQty,
+    koreksiEditLines,
+    activity,
+    openActivity,
+} from "./visit-helpers";
 import { switchPersona } from "./delivery-helpers";
 import { expect, test } from "./session-fixture";
 import {
@@ -81,7 +88,12 @@ for (const approved of [true, false])
         const liveRequest = page.waitForRequest(
             (request) =>
                 request.url().endsWith("/api/v1/sync/commands") &&
-                !!request.postDataJSON()?.payload?.discount_request,
+                request
+                    .postDataJSON()
+                    ?.payload?.lines?.some(
+                        (l: { discounts?: { kind: string }[] }) =>
+                            l.discounts?.some((d) => d.kind === "tactical"),
+                    ),
         );
         await sendOrder(page);
         expect((await liveRequest).headers()["x-csrf-token"]).toBe(
@@ -106,10 +118,16 @@ for (const approved of [true, false])
                 exact: true,
             })
             .click();
+        await openActivity(page);
+        await activity(page).first().click();
         await expect(
             page
-                .locator(".activity")
-                .getByText(new RegExp(`disetujui ${approved ? 5 : 0}%`)),
+                .getByRole("dialog")
+                .getByText(
+                    approved
+                        ? /pengajuan diskon disetujui/
+                        : /pengajuan diskon ditolak/,
+                ),
         ).toBeVisible();
     });
 test("multi-SKU partial requires line reasons, closes session offline and updates list", async ({
@@ -257,45 +275,35 @@ test("SKU packaging drives new order and offline correction prices independently
     await page
         .getByRole("button", { name: "Tolak diskon", exact: true })
         .click();
+    await page.getByRole("button", { name: /^Riwayat pengajuan/ }).click();
     await page.getByText(/Riwayat SO ·/).click();
     await page
         .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
         .click();
-    await expect(
-        page
-            .getByLabel("Satuan revisi Biskuit Mini 24 pcs", { exact: true })
-            .locator('option[value="pack"]'),
-    ).toHaveText("Pack6pcs");
     await page
-        .getByLabel("Qty revisi Biskuit Kelapa 300 g", { exact: true })
-        .fill("0");
-    await page
-        .getByLabel("Qty revisi Biskuit Mini 24 pcs", { exact: true })
-        .fill("1");
-    await page.getByLabel("Diskon revisi (%)", { exact: true }).fill("0");
-    await page
-        .getByLabel("Alasan koreksi SO", { exact: true })
+        .getByLabel("Catatan untuk SPV", { exact: true })
         .fill("Satu pack enam pcs");
+    await koreksiEditLines(page, [
+        { product: "Biskuit Kelapa 300 g", tier: "Renceng", qty: 0 },
+        { product: "Biskuit Mini 24 pcs", tier: "Pack", qty: 1 },
+    ]);
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
-    await page
-        .getByRole("button", { name: "Simpan draft koreksi SO", exact: true })
-        .click();
-    await expect(
-        page.getByText("Draft koreksi SO tersimpan offline.", { exact: true }),
-    ).toBeVisible();
+    // Draft tersimpan otomatis; muat ulang memulihkan satu pack.
+    await page.waitForTimeout(500);
     await page.reload();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByRole("button", { name: /^Riwayat pengajuan/ }).click();
     await page.getByText(/Riwayat SO ·/).click();
     await page
         .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
         .click();
     await expect(
-        page.getByLabel("Satuan revisi Biskuit Mini 24 pcs", { exact: true }),
-    ).toHaveValue("pack");
+        page.getByRole("region", { name: "Koreksi order" }),
+    ).toContainText("1 pak");
     await page
-        .getByRole("button", { name: "Ajukan revisi SO", exact: true })
+        .getByRole("button", { name: "Kirim ulang", exact: true })
         .click();
     await expect(page.getByText(/Revisi baru masuk antrean/)).toBeVisible();
     const commands = await page.evaluate(async () => {
@@ -319,7 +327,7 @@ test("SKU packaging drives new order and offline correction prices independently
     expect(
         commands.find((c) => c.type === "sales.order.submit").payload
             .observed_total,
-    ).toBe("26220");
+    ).toBe("26820");
     expect(
         commands.find((c) => c.type === "sales.order.revise").payload
             .observed_total,

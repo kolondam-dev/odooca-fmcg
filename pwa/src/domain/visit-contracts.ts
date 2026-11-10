@@ -1,4 +1,5 @@
 import { UomSchema, DiscountRequestSchema } from "./order-pricing.ts";
+import { FooterDiscountSchema, OrderLineV2Schema } from "./order-discount.ts";
 import { z } from "zod";
 import { LocalExpenseEvidenceSchema } from "./settlement-contracts.ts";
 export const VisitEvidenceSchema = LocalExpenseEvidenceSchema.extend({
@@ -98,21 +99,25 @@ export const VisitOrderSchema = z
         snapshot_version: z.string().min(1),
         lines: z
             .array(
-                z
-                    .object({
-                        product_id: z.string().min(1),
-                        qty: z.string().regex(/^[1-9]\d{0,2}$/),
-                        uom: UomSchema,
-                    })
-                    .strict(),
+                z.union([
+                    z
+                        .object({
+                            product_id: z.string().min(1),
+                            qty: z.string().regex(/^[1-9]\d{0,2}$/),
+                            uom: UomSchema,
+                        })
+                        .strict(),
+                    OrderLineV2Schema,
+                ]),
             )
             .min(1)
             .max(500),
         note: z.string().max(500),
         customer_po_number: z.string().trim().max(100).optional(),
         observed_total: z.string().regex(/^\d+$/),
-        pricing_version: z.literal(1).optional(),
+        pricing_version: z.union([z.literal(1), z.literal(2)]).optional(),
         discount_request: DiscountRequestSchema.optional(),
+        footer_discounts: z.array(FooterDiscountSchema).max(4).optional(),
         visit_context: VisitContextSchema,
     })
     .strict();
