@@ -141,6 +141,28 @@ class PeriodPackOracle:
         # AP payments total
         self.expected_ap_paid = sum(_dec(r.get("amount_paid_dpp", 0)) for r in self.reader.ap_payments)
 
+        # Independent PO input tax derivation from pack po_lines.csv (11% PPN Masukan)
+        self.expected_po_input_tax = sum(
+            (
+                _dec(pline.get("qty_cartons", 0))
+                * _dec(pline.get("carton_qty", 0))
+                * _dec(pline.get("unit_cost_price", 0))
+                * Decimal("0.11")
+            ).quantize(Decimal("0.01"))
+            for pline in self.reader.po_lines
+        )
+
+        # Expected closing inventory from closing_state
+        self.closing_inventory = self.closing_state.get("inventory", {})
+        self.expected_closing_quantities = {
+            sku: _dec(data.get("closing_qty", 0))
+            for sku, data in self.closing_inventory.items()
+        }
+        self.expected_closing_valuation = sum(
+            _dec(data.get("closing_valuation", 0))
+            for data in self.closing_inventory.values()
+        )
+
 
 def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     """Execute comprehensive mathematical and accounting audit against oracle."""
@@ -276,7 +298,8 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                     )
 
             t_lines = [
-                m_line for m_line in getattr(inv_m, "line_ids", [])
+                m_line
+                for m_line in getattr(inv_m, "line_ids", [])
                 if getattr(getattr(m_line, "account_id", None), "code", "") == "211200"
             ]
             t_credit = sum(_dec(getattr(m_line, "credit", 0)) for m_line in t_lines)
@@ -286,6 +309,23 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                     report["violations"].append(
                         f"Invoice {inv_ref} AML PPN Keluaran credit mismatch on 211200: expected {ppn_act}, found {t_credit}"
                     )
+
+            # Strict Tax Code 04 verification: tax_base_amount must match DPP Nilai Lain, NOT commercial DPP
+            for t_line in t_lines:
+                tb_amount = _dec(getattr(t_line, "tax_base_amount", 0))
+                if tb_amount > ZERO and dpp_c > ZERO:
+                    if abs(tb_amount - dpp_c) <= Decimal("1.00") and abs(tb_amount - dpp_nl) > Decimal("1.00"):
+                        inv_tax_violations += 1
+                        if inv_tax_violations <= 5:
+                            report["violations"].append(
+                                f"Invoice {inv_ref} TAX-SOURCE fail-open: tax_base_amount {tb_amount} matches commercial DPP {dpp_c} instead of DPP Nilai Lain {dpp_nl}"
+                            )
+                    elif abs(tb_amount - dpp_nl) > Decimal("2.00"):
+                        inv_tax_violations += 1
+                        if inv_tax_violations <= 5:
+                            report["violations"].append(
+                                f"Invoice {inv_ref} tax_base_amount mismatch: expected DPP Nilai Lain {dpp_nl}, found {tb_amount}"
+                            )
 
         if inv_tax_violations > 5:
             report["violations"].append(
@@ -314,23 +354,40 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 f"GL PPN Keluaran (211200) balance mismatch: expected {oracle.expected_inv_ppn}, found {gl_tax_out_balance}"
             )
 
-    # Tax Account 114100 (PPN Masukan) - Mandatory and exact
+    # Tax Account 114100 (PPN Masukan) - Mandatory and independently derived from pack po_lines.csv
     tax_in_acc = AccountAccount.search(
         [("code", "=", "114100"), ("company_id", "in", [company.id, False])], limit=1
     )
     if not tax_in_acc:
         report["violations"].append("Mandatory GL account '114100' (PPN Masukan) not found in database")
     else:
+        # Strictly scope vendor bills to August POs (persis 16 PO)
         po_bills = AccountMove.search(
             [
                 ("company_id", "=", company.id),
                 ("move_type", "=", "in_invoice"),
                 ("state", "=", "posted"),
-                ("date", ">=", oracle.manifest.pack_start),
-                ("date", "<=", oracle.manifest.pack_end),
+                "|",
+                ("ref", "=like", f"PO-{oracle.manifest.period}-%"),
+                ("invoice_origin", "=like", f"PO-{oracle.manifest.period}-%"),
             ]
         )
-        expected_po_tax = sum(_dec(getattr(b, "amount_tax", 0)) for b in po_bills)
+        po_bills_count = len(po_bills)
+        report["checks"]["august_po_bills_count"] = {
+            "expected": oracle.expected_po_count,
+            "actual": po_bills_count,
+        }
+        if po_bills_count != oracle.expected_po_count:
+            report["violations"].append(
+                f"August PO vendor bills count mismatch: expected {oracle.expected_po_count}, found {po_bills_count}"
+            )
+
+        db_po_bill_tax = sum(_dec(getattr(b, "amount_tax", 0)) for b in po_bills)
+        if abs(db_po_bill_tax - oracle.expected_po_input_tax) > Decimal("1.00"):
+            report["violations"].append(
+                f"August PO vendor bills tax ({db_po_bill_tax}) deviates from independent pack PO tax ({oracle.expected_po_input_tax})"
+            )
+
         aml_tax_in = AccountMoveLine.search(
             [
                 ("company_id", "=", company.id),
@@ -344,12 +401,12 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             _dec(getattr(m_line, "debit", 0)) - _dec(getattr(m_line, "credit", 0)) for m_line in aml_tax_in
         )
         report["checks"]["gl_ppn_masukan_114100"] = {
-            "expected_po_bill_tax": str(expected_po_tax),
+            "expected_po_input_tax": str(oracle.expected_po_input_tax),
             "actual_gl_balance": str(gl_tax_in_balance),
         }
-        if abs(gl_tax_in_balance - expected_po_tax) > Decimal("1.00"):
+        if abs(gl_tax_in_balance - oracle.expected_po_input_tax) > Decimal("1.00"):
             report["violations"].append(
-                f"GL PPN Masukan (114100) balance mismatch: expected {expected_po_tax}, found {gl_tax_in_balance}"
+                f"GL PPN Masukan (114100) balance mismatch: expected {oracle.expected_po_input_tax} (derived from pack po_lines.csv), found {gl_tax_in_balance}"
             )
 
     # Effective tax rate formula check (11% effective on commercial DPP)
@@ -540,6 +597,30 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 f"Stock-to-GL mismatch: internal quants valuation={quant_valuation}, GL {stock_acc.code} balance={gl_stock_balance}"
             )
 
+        # 9b. Closing Inventory Valuation & Quant Quantities from closing_state JSON
+        if oracle.expected_closing_quantities:
+            inv_quant_violations = 0
+            actual_closing_quantities = {}
+            for q in quants:
+                p_code = getattr(getattr(q, "product_id", None), "default_code", "")
+                if p_code:
+                    actual_closing_quantities[p_code] = actual_closing_quantities.get(p_code, ZERO) + _dec(getattr(q, "quantity", 0))
+            for sku, exp_qty in oracle.expected_closing_quantities.items():
+                act_qty = actual_closing_quantities.get(sku, ZERO)
+                if abs(act_qty - exp_qty) > Decimal("0.001"):
+                    inv_quant_violations += 1
+                    if inv_quant_violations <= 5:
+                        report["violations"].append(
+                            f"Closing stock quantity mismatch for {sku}: expected {exp_qty}, found {act_qty}"
+                        )
+            if inv_quant_violations > 5:
+                report["violations"].append(f"Total closing stock quantity SKU mismatches: {inv_quant_violations}")
+            if oracle.expected_closing_valuation > ZERO:
+                if abs(quant_valuation - oracle.expected_closing_valuation) > Decimal("100.00"):
+                    report["violations"].append(
+                        f"Closing stock valuation mismatch: expected {oracle.expected_closing_valuation} (from closing_state), found {quant_valuation}"
+                    )
+
     # 10. AR-to-GL Audit (Account 112000 vs Open Invoices Residual)
     ar_acc = AccountAccount.search(
         [("code", "=", "112000"), ("company_id", "in", [company.id, False])], limit=1
@@ -680,10 +761,19 @@ def capture_period_state_snapshot(env: Any) -> Dict[str, Any]:
     inv_hashes.sort()
 
     # 4. Payments
-    pay_hashes = sorted([
-        f"PAY:{p.ref}:{getattr(p, 'amount', 0)}:{getattr(p, 'payment_type', '')}:{getattr(p, 'state', '')}"
-        for p in AccountPayment.search([]) if getattr(p, "ref", None)
-    ])
+    pay_hashes = []
+    for p in AccountPayment.search([]):
+        if not getattr(p, "ref", None):
+            continue
+        p_ref = p.ref
+        p_partner = getattr(getattr(p, "partner_id", None), "ref", "") or getattr(getattr(p, "partner_id", None), "name", "")
+        p_journal = getattr(getattr(p, "journal_id", None), "code", "")
+        p_date = getattr(p, "date", "")
+        p_amt = getattr(p, "amount", 0)
+        p_type = getattr(p, "payment_type", "")
+        p_state = getattr(p, "state", "")
+        pay_hashes.append(f"PAY:{p_ref}:{p_partner}:{p_journal}:{p_date}:{p_amt}:{p_type}:{p_state}")
+    pay_hashes.sort()
 
     # 5. Stock Moves & Stock Move Lines (Lot Allocation)
     stock_hashes = sorted([
@@ -706,18 +796,32 @@ def capture_period_state_snapshot(env: Any) -> Dict[str, Any]:
     ])
 
     # 7. Account Move Lines
-    aml_hashes = sorted([
-        f"AML:{getattr(getattr(mline, 'move_id', None), 'name', '')}:{getattr(getattr(mline, 'account_id', None), 'code', '')}:"
-        f"{getattr(mline, 'debit', 0)}:{getattr(mline, 'credit', 0)}:{getattr(mline, 'reconciled', False)}:"
-        f"{getattr(mline, 'parent_state', '')}"
-        for mline in AccountMoveLine.search([])
-    ])
+    aml_hashes = []
+    for mline in AccountMoveLine.search([]):
+        m_name = getattr(getattr(mline, "move_id", None), "name", "")
+        m_ref = getattr(getattr(mline, "move_id", None), "ref", "")
+        a_code = getattr(getattr(mline, "account_id", None), "code", "")
+        p_ref = getattr(getattr(mline, "partner_id", None), "ref", "") or getattr(getattr(mline, "partner_id", None), "name", "")
+        m_date = getattr(mline, "date", "")
+        deb = getattr(mline, "debit", 0)
+        crd = getattr(mline, "credit", 0)
+        rec = getattr(mline, "reconciled", False)
+        p_state = getattr(mline, "parent_state", "")
+        aml_hashes.append(f"AML:{m_name}:{m_ref}:{p_ref}:{m_date}:{a_code}:{deb}:{crd}:{rec}:{p_state}")
+    aml_hashes.sort()
 
     # 8. Reconciliation Edges
-    reconcile_hashes = sorted([
-        f"REC:{getattr(getattr(pr, 'debit_move_id', None), 'id', '')}:{getattr(getattr(pr, 'credit_move_id', None), 'id', '')}:{getattr(pr, 'amount', 0)}"
-        for pr in PartialReconcile.search([])
-    ])
+    reconcile_hashes = []
+    for pr in PartialReconcile.search([]):
+        deb_line = getattr(pr, "debit_move_id", None)
+        crd_line = getattr(pr, "credit_move_id", None)
+        deb_doc = getattr(getattr(deb_line, "move_id", None), "name", "") or getattr(getattr(deb_line, "move_id", None), "ref", "")
+        deb_acc = getattr(getattr(deb_line, "account_id", None), "code", "")
+        crd_doc = getattr(getattr(crd_line, "move_id", None), "name", "") or getattr(getattr(crd_line, "move_id", None), "ref", "")
+        crd_acc = getattr(getattr(crd_line, "account_id", None), "code", "")
+        amt = getattr(pr, "amount", 0)
+        reconcile_hashes.append(f"REC:{deb_doc}:{deb_acc}:{crd_doc}:{crd_acc}:{amt}")
+    reconcile_hashes.sort()
 
     all_components = (
         po_hashes
@@ -770,54 +874,89 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
     try:
         cr.execute("SAVEPOINT probe_batch_fault")
         loader_probe = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
+        loader_probe.verify_preflight()
         corrupt_sku = "SKU-NONEXISTENT-FAULT-INJECTION"
         corrupt_so = "SO-202608-FAULT-PROBE-01"
-        loader_probe.reader.sales_orders.append({
+        corrupt_sos = list(loader_probe.reader.sales_orders) + [{
             "so_number": corrupt_so,
             "customer": "CUST-0001",
             "date_order": "2026-08-15",
             "gross_dpp": "100000.00",
             "discount_dpp": "0.00",
             "net_dpp": "100000.00",
-        })
-        loader_probe.reader.order_lines.append({
+        }]
+        corrupt_lines = list(loader_probe.reader.order_lines) + [{
             "so_number": corrupt_so,
             "sku_code": corrupt_sku,
             "qty_cartons": "1",
             "carton_qty": "1",
             "unit_price_dpp": "100000.00",
             "discount_pct": "0.0",
-        })
+        }]
+        loader_probe.reader.set_override("sales_orders.csv", corrupt_sos)
+        loader_probe.reader.set_override("order_lines.csv", corrupt_lines)
         try:
             loader_probe._apply_sales_orders_and_deliveries()
-            results["probes"]["probe_batch_interruption"] = "FAILED_UNRESOLVED_SKU_NOT_REJECTED"
+            results["probes"]["probe_batch_interruption"] = {
+                "outcome": "FAIL",
+                "detail": "FAILED_UNRESOLVED_SKU_NOT_REJECTED",
+                "digest_matched": False,
+            }
         except StateInconsistencyError as e:
-            if "Unresolved SKU" in str(e):
-                cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
-                cr.execute("RELEASE SAVEPOINT probe_batch_fault")
-                snap_after = capture_period_state_snapshot(env)
-                if snap_before["digest"] == snap_after["digest"]:
-                    results["probes"]["probe_batch_interruption"] = "PASS_REJECTED_AND_ROLLED_BACK"
+            cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
+            cr.execute("RELEASE SAVEPOINT probe_batch_fault")
+            snap_after = capture_period_state_snapshot(env)
+            digest_matched = (snap_before["digest"] == snap_after["digest"])
+            if "Unresolved SKU" in str(e) and digest_matched:
+                # Clean recovery proof: clear override and verify loader resumes cleanly
+                loader_probe.reader.clear_overrides()
+                clean_plan = loader_probe.evaluate_dry_run()
+                if clean_plan and clean_plan.get("so", {}).get("conflicts", 0) == 0:
+                    results["probes"]["probe_batch_interruption"] = {
+                        "outcome": "PASS",
+                        "detail": "Corrupt SKU rejected, rolled back cleanly, zero drift verified, clean loader recovered",
+                        "digest_matched": True,
+                    }
                 else:
-                    results["probes"]["probe_batch_interruption"] = "FAILED_STATE_DIRTY_AFTER_ROLLBACK"
+                    results["probes"]["probe_batch_interruption"] = {
+                        "outcome": "FAIL",
+                        "detail": "Recovery dry-run detected conflicts after rollback",
+                        "digest_matched": True,
+                    }
+            elif not digest_matched:
+                results["probes"]["probe_batch_interruption"] = {
+                    "outcome": "FAIL",
+                    "detail": "FAILED_STATE_DIRTY_AFTER_ROLLBACK",
+                    "digest_matched": False,
+                }
             else:
-                cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
-                cr.execute("RELEASE SAVEPOINT probe_batch_fault")
-                results["probes"]["probe_batch_interruption"] = f"FAILED_WRONG_MESSAGE: {e}"
+                results["probes"]["probe_batch_interruption"] = {
+                    "outcome": "FAIL",
+                    "detail": f"FAILED_WRONG_MESSAGE: {e}",
+                    "digest_matched": digest_matched,
+                }
         except Exception as e:
             cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
             cr.execute("RELEASE SAVEPOINT probe_batch_fault")
-            results["probes"]["probe_batch_interruption"] = f"FAILED_UNEXPECTED_EXCEPTION_TYPE: {type(e).__name__}"
+            snap_after = capture_period_state_snapshot(env)
+            results["probes"]["probe_batch_interruption"] = {
+                "outcome": "FAIL",
+                "detail": f"FAILED_UNEXPECTED_EXCEPTION_TYPE: {type(e).__name__}: {e}",
+                "digest_matched": (snap_before["digest"] == snap_after["digest"]),
+            }
     except Exception as e:
-        results["probes"]["probe_batch_interruption"] = f"FAILED_SETUP_ERROR: {e}"
+        results["probes"]["probe_batch_interruption"] = {
+            "outcome": "FAIL",
+            "detail": f"FAILED_SETUP_ERROR: {e}",
+            "digest_matched": False,
+        }
 
     # Probe 2: Mismatched AP Payment Target & Residual Tampering -> Rollback -> Recovery
     try:
         cr.execute("SAVEPOINT probe_ap_tamper")
-        Company = env["res.company"].sudo()
-        company = Company.search(
-            ["|", ("name", "ilike", "PT Salva Inti Mandiri"), ("name", "ilike", "Manado")], limit=1
-        )
+        loader_ap = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
+        loader_ap.verify_preflight()
+        company = loader_ap.company
         AccountMove = env["account.move"].sudo()
         bill = AccountMove.search(
             [
@@ -832,32 +971,76 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
         )
         if bill:
             bill.write({"amount_residual": 500.00})
-            loader_ap = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
             try:
                 loader_ap._apply_ap_payments()
-                results["probes"]["probe_ap_bill_mismatch"] = "FAILED_ACCEPTED_TAMPERED"
+                results["probes"]["probe_ap_bill_mismatch"] = {
+                    "outcome": "FAIL",
+                    "detail": "FAILED_ACCEPTED_TAMPERED",
+                    "digest_matched": False,
+                }
             except (PreflightContinuityError, StateInconsistencyError) as e:
-                err_msg = str(e).lower()
-                if "residual" in err_msg or "not match" in err_msg or "not found" in err_msg or "mismatch" in err_msg:
-                    results["probes"]["probe_ap_bill_mismatch"] = "PASS_REJECTED_WITH_SPECIFIC_ERROR"
-                else:
-                    results["probes"]["probe_ap_bill_mismatch"] = f"FAILED_NON_SPECIFIC_ERROR: {e}"
-            except Exception as e:
-                results["probes"]["probe_ap_bill_mismatch"] = f"FAILED_WRONG_EXCEPTION_TYPE: {type(e).__name__}"
-            finally:
                 cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
                 cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
                 snap_after2 = capture_period_state_snapshot(env)
-                if snap_before["digest"] != snap_after2["digest"]:
-                    results["probes"]["probe_ap_bill_mismatch"] += "_BUT_DIRTY_STATE"
+                digest_matched2 = (snap_before["digest"] == snap_after2["digest"])
+                err_msg = str(e).lower()
+                is_expected_error = (
+                    "residual" in err_msg
+                    or "not match" in err_msg
+                    or "not found" in err_msg
+                    or "mismatch" in err_msg
+                )
+                if is_expected_error and digest_matched2:
+                    results["probes"]["probe_ap_bill_mismatch"] = {
+                        "outcome": "PASS",
+                        "detail": f"Tampered residual rejected cleanly ({e}), rollback zero drift verified",
+                        "digest_matched": True,
+                    }
+                elif not digest_matched2:
+                    results["probes"]["probe_ap_bill_mismatch"] = {
+                        "outcome": "FAIL",
+                        "detail": "FAILED_STATE_DIRTY_AFTER_ROLLBACK",
+                        "digest_matched": False,
+                    }
+                else:
+                    results["probes"]["probe_ap_bill_mismatch"] = {
+                        "outcome": "FAIL",
+                        "detail": f"FAILED_NON_SPECIFIC_ERROR: {e}",
+                        "digest_matched": digest_matched2,
+                    }
+            except Exception as e:
+                cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
+                cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
+                snap_after2 = capture_period_state_snapshot(env)
+                results["probes"]["probe_ap_bill_mismatch"] = {
+                    "outcome": "FAIL",
+                    "detail": f"FAILED_WRONG_EXCEPTION_TYPE: {type(e).__name__}: {e}",
+                    "digest_matched": (snap_before["digest"] == snap_after2["digest"]),
+                }
         else:
-            results["probes"]["probe_ap_bill_mismatch"] = "FAILED_NO_UNILEVER_BILL_FOUND"
+            cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
+            cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
+            results["probes"]["probe_ap_bill_mismatch"] = {
+                "outcome": "FAIL",
+                "detail": "FAILED_NO_UNILEVER_BILL_FOUND",
+                "digest_matched": False,
+            }
     except Exception as e:
-        results["probes"]["probe_ap_bill_mismatch"] = f"FAILED_SETUP_ERROR: {e}"
+        results["probes"]["probe_ap_bill_mismatch"] = {
+            "outcome": "FAIL",
+            "detail": f"FAILED_SETUP_ERROR: {e}",
+            "digest_matched": False,
+        }
 
-    for p_name, p_status in results["probes"].items():
-        if not str(p_status).startswith("PASS"):
-            results["status"] = "FAIL"
+    all_probes_passed = True
+    for p_name, p_res in results["probes"].items():
+        if isinstance(p_res, dict):
+            if p_res.get("outcome") != "PASS" or not p_res.get("digest_matched", False):
+                all_probes_passed = False
+        else:
+            if not str(p_res).startswith("PASS") or "_BUT_DIRTY_STATE" in str(p_res):
+                all_probes_passed = False
+    results["status"] = "PASS" if all_probes_passed else "FAIL"
 
     _logger.info(f"Fault-Injection Probes Results: {json.dumps(results, indent=2)}")
     return results

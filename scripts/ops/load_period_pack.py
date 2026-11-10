@@ -143,10 +143,21 @@ class PeriodPackManifest:
 class PeriodPackReader:
     """Reads CSV and JSON datasets from verified period pack directory."""
 
-    def __init__(self, pack_dir: Path):
+    def __init__(self, pack_dir: Path, overrides: Optional[Dict[str, List[Dict[str, str]]]] = None):
         self.pack_dir = pack_dir.resolve()
+        self._overrides: Dict[str, List[Dict[str, str]]] = dict(overrides) if overrides else {}
+
+    def set_override(self, filename: str, rows: List[Dict[str, str]]) -> None:
+        """Inject persistent in-memory dataset override for fault-injection or test simulation."""
+        self._overrides[filename] = rows
+
+    def clear_overrides(self) -> None:
+        """Clear all active dataset overrides."""
+        self._overrides.clear()
 
     def read_csv(self, filename: str) -> List[Dict[str, str]]:
+        if filename in self._overrides:
+            return list(self._overrides[filename])
         fpath = self.pack_dir / filename
         if not fpath.is_file():
             return []
@@ -224,6 +235,7 @@ class GenericPeriodPackLoader:
         dry_run: bool = True,
         strict: bool = True,
         company_id: Optional[int] = None,
+        reader: Optional[PeriodPackReader] = None,
     ):
         self.env = env
         self.pack_dir = pack_dir.resolve()
@@ -234,7 +246,7 @@ class GenericPeriodPackLoader:
         # 1. Manifest verification
         self.manifest = PeriodPackManifest(self.pack_dir)
         self.manifest.verify_checksums(strict=strict)
-        self.reader = PeriodPackReader(self.pack_dir)
+        self.reader = reader or PeriodPackReader(self.pack_dir)
 
         # 2. Accounting and location maps
         self.company = None
@@ -270,6 +282,35 @@ class GenericPeriodPackLoader:
                 f"Account for code '{code}' not found in account.account for company '{c_name}'"
             )
         return acc
+
+    def _resolve_general_journal(self) -> Any:
+        """Resolve general journal strictly (fail-closed: require unambiguous MISC or GEN)."""
+        if self.env is None:
+            return None
+        Journal = self.env["account.journal"].sudo()
+        general_journals = list(
+            Journal.search([("company_id", "=", self.company.id), ("type", "=", "general")])
+        )
+        if not general_journals:
+            if self.strict:
+                raise PreflightContinuityError("No general journal found for company")
+            return None
+
+        candidates = [j for j in general_journals if getattr(j, "code", "") in ("MISC", "GEN")]
+        if len(candidates) == 1:
+            return candidates[0]
+        if len(candidates) > 1:
+            if self.strict:
+                codes = [getattr(j, "code", "") for j in candidates]
+                raise StateInconsistencyError(f"Ambiguous general journals found for OPEX: {codes}")
+            return candidates[0]
+        # candidates == 0
+        if self.strict:
+            codes = [getattr(j, "code", "") for j in general_journals]
+            raise PreflightContinuityError(
+                f"No general journal with code MISC or GEN found for OPEX (available general journals: {codes})"
+            )
+        return general_journals[0]
 
     # -----------------------------------------------------------------------
     # Preflight Check & Continuity Verification
@@ -416,6 +457,30 @@ class GenericPeriodPackLoader:
                         raise PreflightContinuityError(
                             "July Unilever bill is marked paid, but no matching reconciled August AP payment (AP-202608-0001) found"
                         )
+                    # Verify explicit reconciliation edge between paid bill and the payment
+                    is_edge_valid = False
+                    if hasattr(reconciled_pay, "reconciled_bill_ids") and reconciled_pay.reconciled_bill_ids:
+                        if matching_bill.id in [b.id for b in reconciled_pay.reconciled_bill_ids]:
+                            is_edge_valid = True
+                    if not is_edge_valid and hasattr(matching_bill, "matched_payment_ids") and matching_bill.matched_payment_ids:
+                        if reconciled_pay.id in [p.id for p in matching_bill.matched_payment_ids]:
+                            is_edge_valid = True
+                    if not is_edge_valid and hasattr(reconciled_pay, "move_id") and getattr(reconciled_pay.move_id, "line_ids", None):
+                        for line in reconciled_pay.move_id.line_ids:
+                            matched_prs = list(getattr(line, "matched_debit_ids", []) or []) + list(getattr(line, "matched_credit_ids", []) or [])
+                            for pr in matched_prs:
+                                deb_id = getattr(getattr(pr, "debit_move_id", None), "move_id", None)
+                                crd_id = getattr(getattr(pr, "credit_move_id", None), "move_id", None)
+                                if (deb_id and deb_id.id == matching_bill.id) or (crd_id and crd_id.id == matching_bill.id):
+                                    is_edge_valid = True
+                                    break
+                            if is_edge_valid:
+                                break
+                    if not is_edge_valid and self.strict:
+                        pay_name = getattr(reconciled_pay, "ref", "") or getattr(reconciled_pay, "name", "unknown")
+                        raise PreflightContinuityError(
+                            f"July Unilever bill is paid, but payment {pay_name} is not reconciled to it"
+                        )
                 else:
                     if self.strict:
                         raise PreflightContinuityError(
@@ -470,14 +535,19 @@ class GenericPeriodPackLoader:
                     )
                 if sku in lines_by_sku:
                     exp_line = lines_by_sku[sku]
-                    exp_qty = float(exp_line["qty_cartons"]) * float(exp_line["carton_qty"])
+                    if "qty_cartons" in exp_line and "carton_qty" in exp_line:
+                        exp_qty = float(exp_line["qty_cartons"]) * float(exp_line["carton_qty"])
+                    else:
+                        exp_qty = float(exp_line.get("product_qty", 0) or exp_line.get("qty", 0))
                     act_qty = float(getattr(ol, "product_qty", 0))
                     if abs(exp_qty - act_qty) > 0.01:
                         raise StateInconsistencyError(
                             f"Drift detected on existing PO {po_num} SKU {sku}: qty mismatch {act_qty} vs {exp_qty}"
                         )
-                    if "unit_price" in exp_line:
-                        exp_price = float(exp_line["unit_price"])
+                    # Schema PO CSV: unit_cost_price
+                    exp_price_val = exp_line.get("unit_cost_price") or exp_line.get("price_unit") or exp_line.get("unit_price")
+                    if exp_price_val is not None:
+                        exp_price = float(exp_price_val)
                         act_price = float(getattr(ol, "price_unit", 0))
                         if abs(exp_price - act_price) > 0.01:
                             raise StateInconsistencyError(
@@ -522,18 +592,33 @@ class GenericPeriodPackLoader:
                     )
                 if sku in lines_by_sku:
                     exp_l = lines_by_sku[sku]
-                    exp_qty = float(exp_l.get("qty", 0))
+                    # Schema SO CSV: qty_cartons * carton_qty
+                    if "qty_cartons" in exp_l and "carton_qty" in exp_l:
+                        exp_qty = float(exp_l["qty_cartons"]) * float(exp_l["carton_qty"])
+                    else:
+                        exp_qty = float(exp_l.get("product_uom_qty", 0) or exp_l.get("qty", 0))
                     act_qty = float(getattr(sol, "product_uom_qty", 0))
                     if abs(exp_qty - act_qty) > 0.01:
                         raise StateInconsistencyError(
                             f"Drift detected on existing {so_num} SKU {sku}: qty mismatch {act_qty} vs {exp_qty}"
                         )
-                    if "unit_price" in exp_l:
-                        exp_price = float(exp_l["unit_price"])
+                    # Schema SO CSV: unit_price_dpp
+                    exp_price_val = exp_l.get("unit_price_dpp") or exp_l.get("price_unit") or exp_l.get("unit_price")
+                    if exp_price_val is not None:
+                        exp_price = float(exp_price_val)
                         act_price = float(getattr(sol, "price_unit", 0))
                         if abs(exp_price - act_price) > 0.01:
                             raise StateInconsistencyError(
                                 f"Drift detected on existing {so_num} SKU {sku}: price mismatch {act_price} vs {exp_price}"
+                            )
+                    # Schema SO CSV: discount_pct
+                    exp_disc_val = exp_l.get("discount_pct") or exp_l.get("discount")
+                    if exp_disc_val is not None:
+                        exp_disc = float(exp_disc_val)
+                        act_disc = float(getattr(sol, "discount", 0.0))
+                        if abs(exp_disc - act_disc) > 0.01:
+                            raise StateInconsistencyError(
+                                f"Drift detected on existing {so_num} SKU {sku}: discount mismatch {act_disc} vs {exp_disc}"
                             )
 
     def _validate_existing_invoice(self, existing: Any, inv_row: Dict[str, str]) -> None:
@@ -627,15 +712,29 @@ class GenericPeriodPackLoader:
             ) or AccountMove.search(
                 [("payment_reference", "=", inv_num), ("company_id", "=", self.company.id)], limit=1
             )
+        if target_invoice is None and self.strict:
+            raise StateInconsistencyError(
+                f"Cannot validate AR payment {pay_ref}: target invoice {inv_num} not found"
+            )
         if target_invoice is not None:
+            is_matched = False
             if hasattr(existing, "reconciled_invoice_ids") and existing.reconciled_invoice_ids:
-                if target_invoice.id not in [i.id for i in existing.reconciled_invoice_ids]:
-                    raise StateInconsistencyError(
-                        f"Drift detected on AR payment {pay_ref}: not reconciled to target invoice {inv_num}"
-                    )
-            elif hasattr(existing, "is_reconciled") and not existing.is_reconciled:
+                if target_invoice.id in [i.id for i in existing.reconciled_invoice_ids]:
+                    is_matched = True
+            if not is_matched and hasattr(existing, "move_id") and getattr(existing.move_id, "line_ids", None):
+                for line in existing.move_id.line_ids:
+                    matched_prs = list(getattr(line, "matched_debit_ids", []) or []) + list(getattr(line, "matched_credit_ids", []) or [])
+                    for pr in matched_prs:
+                        deb_id = getattr(getattr(pr, "debit_move_id", None), "move_id", None)
+                        crd_id = getattr(getattr(pr, "credit_move_id", None), "move_id", None)
+                        if (deb_id and deb_id.id == target_invoice.id) or (crd_id and crd_id.id == target_invoice.id):
+                            is_matched = True
+                            break
+                    if is_matched:
+                        break
+            if not is_matched:
                 raise StateInconsistencyError(
-                    f"Drift detected on AR payment {pay_ref}: payment is unreconciled (expected reconciled to {inv_num})"
+                    f"Drift detected on AR payment {pay_ref}: not reconciled to target invoice {inv_num}"
                 )
 
     def _validate_existing_ap_payment(
@@ -688,18 +787,36 @@ class GenericPeriodPackLoader:
                 f"Drift detected on AP settlement for {pay_ref}: linked July Unilever bill is not settled "
                 f"(residual={bill_res}, payment_state={bill_state})"
             )
+        is_matched = False
         if hasattr(existing, "reconciled_bill_ids") and existing.reconciled_bill_ids:
-            if unilever_bill.id not in [b.id for b in existing.reconciled_bill_ids]:
-                raise StateInconsistencyError(
-                    f"Drift detected on AP payment {pay_ref}: not reconciled to target July Unilever bill {unilever_bill.name}"
-                )
-        elif hasattr(existing, "is_reconciled") and not existing.is_reconciled:
+            if unilever_bill.id in [b.id for b in existing.reconciled_bill_ids]:
+                is_matched = True
+        if not is_matched and hasattr(unilever_bill, "matched_payment_ids") and unilever_bill.matched_payment_ids:
+            if existing.id in [p.id for p in unilever_bill.matched_payment_ids]:
+                is_matched = True
+        if not is_matched and hasattr(existing, "move_id") and getattr(existing.move_id, "line_ids", None):
+            for line in existing.move_id.line_ids:
+                matched_prs = list(getattr(line, "matched_debit_ids", []) or []) + list(getattr(line, "matched_credit_ids", []) or [])
+                for pr in matched_prs:
+                    deb_id = getattr(getattr(pr, "debit_move_id", None), "move_id", None)
+                    crd_id = getattr(getattr(pr, "credit_move_id", None), "move_id", None)
+                    if (deb_id and deb_id.id == unilever_bill.id) or (crd_id and crd_id.id == unilever_bill.id):
+                        is_matched = True
+                        break
+                if is_matched:
+                    break
+        if not is_matched:
             raise StateInconsistencyError(
-                f"Drift detected on AP payment {pay_ref}: payment is unreconciled (expected reconciled to {unilever_bill.name})"
+                f"Drift detected on AP payment {pay_ref}: not reconciled to target July Unilever bill {unilever_bill.name}"
             )
 
     def _validate_existing_opex(
-        self, existing: Any, op_row: Dict[str, str], target_code: str, credit_acc_code: str
+        self,
+        existing: Any,
+        op_row: Dict[str, str],
+        target_code: str,
+        credit_acc_code: str,
+        exp_journal_code: str = "MISC",
     ) -> None:
         """Validate existing OPEX journal entry matches period pack specification with zero drift."""
         desc = op_row["description"]
@@ -709,32 +826,40 @@ class GenericPeriodPackLoader:
             raise StateInconsistencyError(
                 f"Drift detected on OPEX {desc}: state is '{act_state}' (expected posted)"
             )
+        act_journal_code = getattr(getattr(existing, "journal_id", None), "code", "")
+        if exp_journal_code and act_journal_code and act_journal_code != exp_journal_code:
+            raise StateInconsistencyError(
+                f"Drift detected on OPEX {desc}: journal mismatch {act_journal_code} vs expected {exp_journal_code}"
+            )
         lines = getattr(existing, "line_ids", [])
-        if lines:
-            debit_lines = [mline for mline in lines if _dec(getattr(mline, "debit", 0)) > ZERO]
-            credit_lines = [mline for mline in lines if _dec(getattr(mline, "credit", 0)) > ZERO]
-            act_debit = sum(_dec(getattr(mline, "debit", 0)) for mline in debit_lines)
-            act_credit = sum(_dec(getattr(mline, "credit", 0)) for mline in credit_lines)
-            if abs(exp_amt - act_debit) > CENT:
+        if not lines:
+            raise StateInconsistencyError(f"Drift detected on OPEX {desc}: move has no lines")
+        debit_lines = [mline for mline in lines if _dec(getattr(mline, "debit", 0)) > ZERO]
+        credit_lines = [mline for mline in lines if _dec(getattr(mline, "credit", 0)) > ZERO]
+        if not debit_lines or not credit_lines:
+            raise StateInconsistencyError(f"Drift detected on OPEX {desc}: move missing debit or credit lines")
+        act_debit = sum(_dec(getattr(mline, "debit", 0)) for mline in debit_lines)
+        act_credit = sum(_dec(getattr(mline, "credit", 0)) for mline in credit_lines)
+        if abs(exp_amt - act_debit) > CENT:
+            raise StateInconsistencyError(
+                f"Drift detected on OPEX {desc}: expected debit {exp_amt}, found {act_debit}"
+            )
+        if abs(exp_amt - act_credit) > CENT:
+            raise StateInconsistencyError(
+                f"Drift detected on OPEX {desc}: expected credit {exp_amt}, found {act_credit}"
+            )
+        for mline in debit_lines:
+            d_acc_code = getattr(getattr(mline, "account_id", None), "code", "")
+            if d_acc_code and d_acc_code != target_code:
                 raise StateInconsistencyError(
-                    f"Drift detected on OPEX {desc}: expected debit {exp_amt}, found {act_debit}"
+                    f"Drift detected on OPEX {desc}: debit account mismatch {d_acc_code} vs expected {target_code}"
                 )
-            if abs(exp_amt - act_credit) > CENT:
+        for mline in credit_lines:
+            c_acc_code = getattr(getattr(mline, "account_id", None), "code", "")
+            if c_acc_code and c_acc_code != credit_acc_code:
                 raise StateInconsistencyError(
-                    f"Drift detected on OPEX {desc}: expected credit {exp_amt}, found {act_credit}"
+                    f"Drift detected on OPEX {desc}: credit account mismatch {c_acc_code} vs expected {credit_acc_code}"
                 )
-            for mline in debit_lines:
-                d_acc_code = getattr(getattr(mline, "account_id", None), "code", "")
-                if d_acc_code and d_acc_code != target_code:
-                    raise StateInconsistencyError(
-                        f"Drift detected on OPEX {desc}: debit account mismatch {d_acc_code} vs expected {target_code}"
-                    )
-            for mline in credit_lines:
-                c_acc_code = getattr(getattr(mline, "account_id", None), "code", "")
-                if c_acc_code and c_acc_code != credit_acc_code:
-                    raise StateInconsistencyError(
-                        f"Drift detected on OPEX {desc}: credit account mismatch {c_acc_code} vs expected {credit_acc_code}"
-                    )
 
     # -----------------------------------------------------------------------
     # Dry-Run Evaluation (No Mutations)
@@ -897,6 +1022,8 @@ class GenericPeriodPackLoader:
         if not credit_account and self.strict:
             raise PreflightContinuityError("Cannot resolve explicit credit cash account (111100) for OPEX")
         credit_code = getattr(credit_account, "code", "111100")
+        misc_journal = self._resolve_general_journal()
+        exp_journal_code = getattr(misc_journal, "code", "MISC") if misc_journal else "MISC"
 
         for op_row in self.reader.opex:
             date_str = op_row["date"]
@@ -927,7 +1054,9 @@ class GenericPeriodPackLoader:
             )
             if existing:
                 try:
-                    self._validate_existing_opex(existing, op_row, target_code, credit_code)
+                    self._validate_existing_opex(
+                        existing, op_row, target_code, credit_code, exp_journal_code=exp_journal_code
+                    )
                 except StateInconsistencyError:
                     self.plan["opex"]["conflicts"] += 1
                     raise
@@ -1376,19 +1505,10 @@ class GenericPeriodPackLoader:
             return 0
 
         AccountMove = self.env["account.move"].sudo()
-        Journal = self.env["account.journal"].sudo()
-
-        general_journals = list(
-            Journal.search([("company_id", "=", self.company.id), ("type", "=", "general")])
-        )
-        if len(general_journals) > 1 and self.strict:
-            primary = [j for j in general_journals if getattr(j, "code", "") in ("MISC", "GEN")]
-            misc_journal = primary[0] if primary else general_journals[0]
-        else:
-            misc_journal = general_journals[0] if general_journals else None
-
+        misc_journal = self._resolve_general_journal()
         if not misc_journal and self.strict:
             raise PreflightContinuityError("Explicit general journal not found for OPEX entries")
+        exp_journal_code = getattr(misc_journal, "code", "MISC") if misc_journal else "MISC"
 
         credit_account = self._resolve_account("111100")
         if not credit_account and self.strict:
@@ -1425,7 +1545,9 @@ class GenericPeriodPackLoader:
                 limit=1,
             )
             if existing:
-                self._validate_existing_opex(existing, op_row, target_code, credit_code)
+                self._validate_existing_opex(
+                    existing, op_row, target_code, credit_code, exp_journal_code=exp_journal_code
+                )
                 continue
 
             move_vals = {

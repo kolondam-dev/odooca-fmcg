@@ -255,6 +255,7 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
             "purchase.order": MockModel(),
             "account.payment": MockModel(),
             "account.account": MockModel(auto_match=True),
+            "account.journal": MockModel(records=[MockRecord(id=1, code="MISC", type="general", company_id=1)]),
         }
         env = MockEnv(mock_models)
         loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True)
@@ -307,13 +308,14 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
             partner_id=mock_partner_unilever,
         )
         mock_journal_bank = MockRecord(id=5, company_id=1, type="bank")
+        mock_journal_misc = MockRecord(id=6, company_id=1, type="general", code="MISC")
 
         mock_models = {
             "res.company": MockModel(records=[mock_company]),
             "product.product": MockModel(auto_match=True),
             "res.partner": MockModel(records=[mock_partner_unilever], auto_match=True),
             "account.move": MockModel(records=[mock_july_bill]),
-            "account.journal": MockModel(records=[mock_journal_bank]),
+            "account.journal": MockModel(records=[mock_journal_bank, mock_journal_misc]),
             "account.payment": MockModel(),
             "account.account": MockModel(auto_match=True),
         }
@@ -525,7 +527,7 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             "purchase.order": MockModel(),
             "account.payment": MockModel(),
             "account.account": MockModel(records=[mock_acc_610100, mock_acc_wrong, mock_acc_contra], auto_match=True),
-            "account.journal": MockModel(auto_match=True),
+            "account.journal": MockModel(records=[MockRecord(id=1, code="MISC", type="general", company_id=1)]),
         }
         env = MockEnv(mock_models)
         loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
@@ -625,6 +627,7 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             payment_type="outbound",
             state="posted",
             amount=2899971200.00,
+            reconciled_bill_ids=[paid_bill],
         )
         mock_models = {
             "res.company": MockModel(records=[mock_company]),
@@ -808,6 +811,363 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         self.assertEqual(report["status"], "FAIL")
         tax_violations = [v for v in report["violations"] if "Tax Code 04" in v or "Effective tax rate mismatch" in v]
         self.assertGreaterEqual(len(tax_violations), 1)
+
+    def test_so_replay_with_real_csv_schema_cartons_and_price(self):
+        """Supervisor Counterexample 1: Verify SO line qty matches qty_cartons * carton_qty and price."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        cust = MockRecord(id=10, ref="CUST-001", name="Toko ABC")
+        sku_prod = MockRecord(id=20, default_code="SKU-FD-001", name="Food 1")
+        so_row = {
+            "so_number": "SO-202608-0001",
+            "customer": "CUST-001",
+            "net_dpp": "150000.00",
+        }
+        order_lines = [
+            {
+                "sku_code": "SKU-FD-001",
+                "qty_cartons": "2",
+                "carton_qty": "10",  # Total expected qty = 20
+                "unit_price_dpp": "7500.00",
+                "discount_pct": "0.0",
+            }
+        ]
+        # Matching SO: 20 pcs @ 7500 = 150,000
+        matching_so = MockRecord(
+            id=100,
+            amount_untaxed=150000.00,
+            partner_id=cust,
+            order_line=[
+                MockRecord(
+                    id=1,
+                    product_id=sku_prod,
+                    product_uom_qty=20.0,
+                    price_unit=7500.00,
+                    discount=0.0,
+                )
+            ],
+        )
+        loader = GenericPeriodPackLoader(env=MockEnv({}), pack_dir=AUG_PACK_DIR, dry_run=True)
+        loader.company = mock_company
+        # Must pass with zero drift
+        loader._validate_existing_so(matching_so, so_row, order_lines)
+
+        # Mutate price (e.g. 8000 instead of 7500) -> MUST FAIL
+        drifted_price_so = MockRecord(
+            id=100,
+            amount_untaxed=150000.00,
+            partner_id=cust,
+            order_line=[
+                MockRecord(
+                    id=1,
+                    product_id=sku_prod,
+                    product_uom_qty=20.0,
+                    price_unit=8000.00,
+                    discount=0.0,
+                )
+            ],
+        )
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._validate_existing_so(drifted_price_so, so_row, order_lines)
+        self.assertIn("price mismatch", str(ctx.exception))
+
+    def test_po_validator_catches_price_drift_via_unit_cost_price(self):
+        """Supervisor Counterexample 2: Verify PO line price 999 vs 7500 is rejected via unit_cost_price."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        vendor = MockRecord(id=30, ref="PRIN-001", name="Principal A")
+        sku_prod = MockRecord(id=20, default_code="SKU-FD-001", name="Food 1")
+        po_row = {
+            "po_number": "PO-2026-08-01",
+            "principal_code": "PRIN-001",
+            "dpp_total": "75000.00",
+        }
+        po_lines = [
+            {
+                "sku_code": "SKU-FD-001",
+                "qty_cartons": "1",
+                "carton_qty": "10",
+                "unit_cost_price": "7500.00",  # CSV schema column
+            }
+        ]
+        # Drifted PO line with price 999.00 instead of 7500.00
+        drifted_po = MockRecord(
+            id=200,
+            amount_untaxed=75000.00,
+            partner_id=vendor,
+            order_line=[
+                MockRecord(
+                    id=1,
+                    product_id=sku_prod,
+                    product_qty=10.0,
+                    price_unit=999.00,  # Wrong price!
+                )
+            ],
+        )
+        loader = GenericPeriodPackLoader(env=MockEnv({}), pack_dir=AUG_PACK_DIR, dry_run=True)
+        loader.company = mock_company
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._validate_existing_po(drifted_po, po_row, po_lines)
+        self.assertIn("price mismatch", str(ctx.exception))
+
+    def test_ap_payment_validator_rejects_empty_reconciled_bill_edge(self):
+        """Supervisor Counterexample 3: Payment marked is_reconciled=True but reconciled_bill_ids is empty."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        vendor = MockRecord(id=50, ref="PRIN-002", name="PT Unilever Enterprise Indonesia")
+        bill = MockRecord(
+            id=301,
+            name="BILL/2026/07/0001",
+            move_type="in_invoice",
+            state="posted",
+            payment_state="paid",
+            amount_residual=0.0,
+            partner_id=vendor,
+        )
+        # Payment claims is_reconciled=True, but has empty reconciled_bill_ids and no move line partial edges
+        fake_reconciled_pay = MockRecord(
+            id=401,
+            company_id=1,
+            ref="AP-202608-0001",
+            partner_id=vendor,
+            state="posted",
+            amount=2899971200.00,
+            is_reconciled=True,
+            reconciled_bill_ids=[],  # Empty!
+            move_id=MockRecord(line_ids=[]),
+        )
+        loader = GenericPeriodPackLoader(env=MockEnv({}), pack_dir=AUG_PACK_DIR, dry_run=True)
+        loader.company = mock_company
+        ap_row = {"ap_payment_id": "AP-202608-0001", "amount_paid_dpp": "2899971200.00"}
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._validate_existing_ap_payment(fake_reconciled_pay, ap_row, bill)
+        self.assertIn("not reconciled to target July Unilever bill", str(ctx.exception))
+
+    def test_ar_payment_validator_rejects_empty_reconciled_inv_edge(self):
+        """Supervisor Counterexample 4: Payment marked is_reconciled=True but reconciled_invoice_ids is empty."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        cust = MockRecord(id=60, ref="CUST-001", name="Toko X")
+        target_inv = MockRecord(
+            id=501,
+            company_id=1,
+            payment_reference="INV-202608-0001",
+            partner_id=cust,
+            state="posted",
+        )
+        # Payment claims is_reconciled=True, but reconciled_invoice_ids is empty
+        fake_reconciled_ar_pay = MockRecord(
+            id=601,
+            company_id=1,
+            ref="PAY-AR-202608-0001",
+            partner_id=cust,
+            date="2026-08-05",
+            state="posted",
+            amount=500000.00,
+            is_reconciled=True,
+            reconciled_invoice_ids=[],  # Empty!
+            move_id=MockRecord(line_ids=[]),
+        )
+        mock_models = {
+            "account.move": MockModel(records=[target_inv]),
+            "res.partner": MockModel(records=[cust]),
+        }
+        loader = GenericPeriodPackLoader(env=MockEnv(mock_models), pack_dir=AUG_PACK_DIR, dry_run=True)
+        loader.company = mock_company
+        ar_row = {
+            "payment_id": "PAY-AR-202608-0001",
+            "invoice_number": "INV-202608-0001",
+            "customer": "CUST-001",
+            "payment_date": "2026-08-05",
+            "net_cash_collected_total": "500000.00",
+        }
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._validate_existing_ar_payment(fake_reconciled_ar_pay, ar_row)
+        self.assertIn("not reconciled to target invoice", str(ctx.exception))
+
+    def test_opex_validator_rejects_journal_mismatch(self):
+        """Supervisor Counterexample 5: OPEX move posted in wrong journal (BNK1 vs MISC)."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        journal_bank = MockRecord(id=2, code="BNK1", name="Bank Journal")
+        drifted_opex = MockRecord(
+            id=701,
+            state="posted",
+            journal_id=journal_bank,
+            line_ids=[
+                MockRecord(id=1, account_id=MockRecord(code="610100"), debit=500000.00, credit=0.0),
+                MockRecord(id=2, account_id=MockRecord(code="111100"), debit=0.0, credit=500000.00),
+            ],
+        )
+        loader = GenericPeriodPackLoader(env=MockEnv({}), pack_dir=AUG_PACK_DIR, dry_run=True)
+        loader.company = mock_company
+        op_row = {"description": "Biaya Listrik", "amount": "500000.00"}
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._validate_existing_opex(
+                drifted_opex, op_row, target_code="610100", credit_acc_code="111100", exp_journal_code="MISC"
+            )
+        self.assertIn("journal mismatch BNK1 vs expected MISC", str(ctx.exception))
+
+    def test_snapshot_normalization_business_keys_deterministic(self):
+        """Supervisor Counterexample 6: Snapshots across two databases with different surrogate IDs
+        must yield identical digests.
+        """
+        from scripts.ops.verify_disposable_period_pack import capture_period_state_snapshot
+
+        # DB 1: Move Lines with IDs 101 and 102
+        ml1_db1 = MockRecord(
+            id=101,
+            move_id=MockRecord(name="INV/2026/08/0001", ref="INV-202608-0001"),
+            account_id=MockRecord(code="112000"),
+            partner_id=MockRecord(ref="CUST-001"),
+            date="2026-08-05",
+            debit=100000.00,
+            credit=0.0,
+            reconciled=True,
+            parent_state="posted",
+        )
+        ml2_db1 = MockRecord(
+            id=102,
+            move_id=MockRecord(name="PAY/2026/08/0001", ref="PAY-AR-202608-0001"),
+            account_id=MockRecord(code="112000"),
+            partner_id=MockRecord(ref="CUST-001"),
+            date="2026-08-05",
+            debit=0.0,
+            credit=100000.00,
+            reconciled=True,
+            parent_state="posted",
+        )
+        pr_db1 = MockRecord(
+            id=1,
+            debit_move_id=ml1_db1,
+            credit_move_id=ml2_db1,
+            amount=100000.00,
+        )
+        env1 = MockEnv({
+            "purchase.order": MockModel(),
+            "sale.order": MockModel(),
+            "account.move": MockModel(),
+            "account.payment": MockModel(),
+            "stock.move": MockModel(),
+            "stock.move.line": MockModel(),
+            "stock.quant": MockModel(),
+            "account.move.line": MockModel(records=[ml1_db1, ml2_db1]),
+            "account.partial.reconcile": MockModel(records=[pr_db1]),
+        })
+
+        # DB 2: Identical business data, completely different surrogate primary keys (IDs 888 and 999)
+        ml1_db2 = MockRecord(
+            id=888,
+            move_id=MockRecord(name="INV/2026/08/0001", ref="INV-202608-0001"),
+            account_id=MockRecord(code="112000"),
+            partner_id=MockRecord(ref="CUST-001"),
+            date="2026-08-05",
+            debit=100000.00,
+            credit=0.0,
+            reconciled=True,
+            parent_state="posted",
+        )
+        ml2_db2 = MockRecord(
+            id=999,
+            move_id=MockRecord(name="PAY/2026/08/0001", ref="PAY-AR-202608-0001"),
+            account_id=MockRecord(code="112000"),
+            partner_id=MockRecord(ref="CUST-001"),
+            date="2026-08-05",
+            debit=0.0,
+            credit=100000.00,
+            reconciled=True,
+            parent_state="posted",
+        )
+        pr_db2 = MockRecord(
+            id=777,
+            debit_move_id=ml1_db2,
+            credit_move_id=ml2_db2,
+            amount=100000.00,
+        )
+        env2 = MockEnv({
+            "purchase.order": MockModel(),
+            "sale.order": MockModel(),
+            "account.move": MockModel(),
+            "account.payment": MockModel(),
+            "stock.move": MockModel(),
+            "stock.move.line": MockModel(),
+            "stock.quant": MockModel(),
+            "account.move.line": MockModel(records=[ml1_db2, ml2_db2]),
+            "account.partial.reconcile": MockModel(records=[pr_db2]),
+        })
+
+        snap1 = capture_period_state_snapshot(env1)
+        snap2 = capture_period_state_snapshot(env2)
+        # Digests must be 100% identical because local database surrogate integer IDs were normalized to business keys!
+        self.assertEqual(snap1["digest"], snap2["digest"])
+
+    def test_audit_fails_when_tax_base_matches_commercial_dpp_legacy(self):
+        """Supervisor Counterexample 7: Tax Code 04 invoice has tax_base_amount equal to commercial DPP
+        (legacy fail-open).
+        """
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        # Commercial DPP = 100,000; DPP Nilai Lain should be 91,666.67; PPN = 11,000.00
+        # If line has tax_base_amount = 100,000.00 (legacy 11% tax base), audit must flag TAX-SOURCE violation
+        legacy_inv = MockRecord(
+            id=101,
+            company_id=1,
+            payment_reference="INV-202608-0001",
+            move_type="out_invoice",
+            state="posted",
+            is_fmcg_seed_invoice=True,
+            amount_untaxed=100000.00,
+            amount_tax=11000.00,
+            amount_total=111000.00,
+            line_ids=[
+                MockRecord(
+                    id=1,
+                    account_id=MockRecord(code="211200"),
+                    credit=11000.00,
+                    debit=0.0,
+                    tax_base_amount=100000.00,  # Matches commercial DPP instead of 11/12 (91666.67)!
+                )
+            ],
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(),
+            "account.move": MockModel(records=[legacy_inv]),
+            "purchase.order": MockModel(),
+            "account.payment": MockModel(),
+            "stock.picking": MockModel(),
+            "stock.move": MockModel(),
+            "stock.quant": MockModel(),
+            "account.move.line": MockModel(),
+            "account.account": MockModel(records=[
+                MockRecord(id=10, code="211200", company_id=1),
+                MockRecord(id=11, code="114100", company_id=1),
+                MockRecord(id=12, code="113000", company_id=1),
+                MockRecord(id=13, code="112000", company_id=1),
+                MockRecord(id=14, code="211000", company_id=1),
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        tax_fail_open_violations = [v for v in report["violations"] if "TAX-SOURCE fail-open" in v]
+        self.assertGreaterEqual(len(tax_fail_open_violations), 1)
+
+    def test_reader_persistent_overrides_across_property_accesses(self):
+        """Supervisor Counterexample 8: Reader overrides persist across property access."""
+        from scripts.ops.load_period_pack import PeriodPackReader
+        reader = PeriodPackReader(AUG_PACK_DIR)
+        corrupt_row = [{"so_number": "SO-PROBE-01", "net_dpp": "123.00"}]
+        reader.set_override("sales_orders.csv", corrupt_row)
+        # Property accessed 1st time
+        res1 = reader.sales_orders
+        self.assertEqual(len(res1), 1)
+        self.assertEqual(res1[0]["so_number"], "SO-PROBE-01")
+        # Property accessed 2nd time (must NOT reload disk)
+        res2 = reader.sales_orders
+        self.assertEqual(len(res2), 1)
+        self.assertEqual(res2[0]["so_number"], "SO-PROBE-01")
+        # Clear override
+        reader.clear_overrides()
+        res3 = reader.sales_orders
+        self.assertEqual(len(res3), 1240)
 
 
 if __name__ == "__main__":

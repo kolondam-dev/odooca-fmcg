@@ -1,3 +1,56 @@
+## 2026-11-10T18:48:00+07:00 — antigravity — F4: Resolusi Tuntas 6 Blocker Substantif Re-Review Supervisor PR #110 (Review #5840769292) (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  1. Penyelarasan skema baris SO dan PO pada replay:
+     - SO replay menghitung kuantitas eksak `qty_cartons * carton_qty` (menghapus pencarian field `qty` yang tidak ada di CSV `order_lines.csv`), harga `unit_price_dpp`, dan diskon `discount_pct`.
+     - PO replay membaca harga dari kolom `unit_cost_price` (sesuai CSV `po_lines.csv`), menutup celah lolosnya harga keliru (999 vs 7.500).
+  2. Persistent dataset override pada `PeriodPackReader`:
+     - Menambahkan hook override in-memory persisten `_overrides`, `set_override()`, dan `clear_overrides()` agar manipulasi data uji/fault-injection tidak terhapus saat properti reader diakses berulang kali.
+  3. Preflight continuity & loader initialization:
+     - Memastikan loader probe dan AP probe selalu memanggil `verify_preflight()` sehingga company dan dependensi konteks terinisialisasi sebelum apply methods dipanggil.
+     - Memvalidasi edge rekonsiliasi eksplisit pada preflight replay paid bill (`reconciled_bill_ids`, `matched_payment_ids`, AML partial reconcile edges).
+  4. Penguatan validator AP, AR, dan OPEX:
+     - Menolak keras status `is_reconciled=True` jika target edge rekonsiliasi ke bill/invoice kosong (`reconciled_bill_ids` / `reconciled_invoice_ids` kosong).
+     - Menambahkan helper `_resolve_general_journal()` fail-closed yang mewajibkan general journal unik dengan code `MISC` atau `GEN` (menolak jika ada > 1 atau tidak ada).
+     - Memvalidasi `journal_id.code` pada OPEX dan memeriksa seluruh baris debit dan credit move tanpa toleransi.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  1. Deterministic snapshot normalization:
+     - Menghilangkan ketergantungan surrogate integer ID lokal database pada hashing `PartialReconcile`: diganti dengan format stabil `f"REC:{deb_doc}:{deb_acc}:{crd_doc}:{crd_acc}:{amount}"`.
+     - Menormalkan hashing `PAY` dan `AML` dengan partner ref, journal code, date, dan amount.
+  2. Tax Code 04 & independent input tax PO:
+     - Menambahkan validasi `tax_base_amount` pada move line PPN Keluaran (211200): harus mencocokkan DPP Nilai Lain ($11/12 \times \text{commercial\_dpp}$). Jika tax base sama dengan commercial DPP (rumus legacy 11%), langsung ditolak sebagai pelanggaran TAX-SOURCE fail-open.
+     - Derivasi input tax PO diturunkan secara independen dari deklarasi pack `po_lines.csv` ($11\% \times \text{DPP PO}$), bukan membaca bill database itu sendiri. Vendor bills diskop persis 16 PO pack Agustus.
+     - Menambahkan audit kuantitas dan valuasi closing inventory terhadap deklarasi `closing_state_20260831.json`.
+  3. Structured rollback outcome & zero false-positive dirty state:
+     - Mengeliminasi bug pengecekan string `startswith("PASS")` dan suffix `_BUT_DIRTY_STATE`.
+     - Output probe kini berupa structured dictionary dengan status boolean eksplisit `outcome="PASS"` dan `digest_matched=True`. Dirty state pasca-rollback langsung menggagalkan probe dan memicu non-zero exit code pada CLI (exit 2).
+     - Menjalankan clean recovery loader pasca-rollback savepoint untuk membuktikan transisi state bersih.
+- `tests/test_period_pack_loader.py`:
+  1. Menambahkan 8 counterexample unit tests baru untuk membuktikan seluruh temuan supervisor:
+     - `test_so_replay_with_real_csv_schema_cartons_and_price`: validasi SO line qty `qty_cartons * carton_qty` dan penolakan price drift.
+     - `test_po_validator_catches_price_drift_via_unit_cost_price`: pembuktian penolakan PO price 999 vs 7.500.
+     - `test_ap_payment_validator_rejects_empty_reconciled_bill_edge`: pembuktian penolakan AP payment `is_reconciled=True` dengan `reconciled_bill_ids=[]`.
+     - `test_ar_payment_validator_rejects_empty_reconciled_inv_edge`: pembuktian penolakan AR payment `is_reconciled=True` dengan `reconciled_invoice_ids=[]`.
+     - `test_opex_validator_rejects_journal_mismatch`: pembuktian penolakan OPEX yang dimutasi jurnalnya (`BNK1` vs `MISC`).
+     - `test_snapshot_normalization_business_keys_deterministic`: pembuktian snapshot identik pada dua DB dengan surrogate ID berbeda.
+     - `test_audit_fails_when_tax_base_matches_commercial_dpp_legacy`: pembuktian kegagalan audit jika tax base sama dengan commercial DPP.
+     - `test_reader_persistent_overrides_across_property_accesses`: pembuktian persistensi dataset override pada reader.
+  2. Total 38/38 unit tests PASS (100%).
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py -v`: 38/38 tests PASS (100%).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 errors).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] `python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict`: PASS (0 violations).
+- [F] Zero touch terhadap live Railway / database operasional demo.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
+**Berikutnya:**
+- Commit, push branch `agen/seed-f4-period-pack-loader`, dan laporkan penyelesaian 6 blocker kepada supervisor untuk re-review dan otorisasi merge.
+
 ## 2026-11-10T17:55:00+07:00 — antigravity — F4: Resolusi Komprehensif Re-Review Supervisor PR #110 (Review #5839973958) (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
