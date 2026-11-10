@@ -7,6 +7,7 @@ Validates:
 4. Cross-period AP settlement binding.
 """
 
+from decimal import Decimal
 from pathlib import Path
 import shutil
 import tempfile
@@ -18,6 +19,12 @@ from scripts.ops.load_period_pack import (
     PeriodPackManifest,
     PreflightContinuityError,
     StateInconsistencyError,
+)
+from scripts.ops.verify_disposable_period_pack import (
+    PeriodPackOracle,
+    assert_disposable_database,
+    audit_period_database,
+    run_period_pack_fault_injection_probes,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -293,6 +300,66 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
         plan = loader.evaluate_dry_run()
         self.assertEqual(plan["ap"]["to_reconcile"], 1)
         self.assertEqual(plan["ap"]["to_skip"], 0)
+
+
+class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
+    """Test runtime verification oracle, safety guard, and fault injection offline."""
+
+    def test_oracle_expectations_match_august_registers(self):
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        self.assertEqual(oracle.expected_po_count, 16)
+        self.assertEqual(oracle.expected_so_count, 1240)
+        self.assertEqual(oracle.expected_do_count, 1240)
+        self.assertEqual(oracle.expected_inv_count, 1240)
+        self.assertEqual(oracle.expected_ar_count, 1202)
+        self.assertEqual(oracle.expected_ap_count, 1)
+        self.assertEqual(oracle.expected_opex_count, 48)
+
+        # Financial totals tie-out
+        self.assertEqual(oracle.expected_gross_dpp, Decimal("4247988000.00"))
+        self.assertEqual(oracle.expected_discount_dpp, Decimal("108961922.80"))
+        self.assertEqual(oracle.expected_net_dpp, Decimal("4139026077.20"))
+        self.assertEqual(oracle.expected_ap_paid, Decimal("2899971200.00"))
+
+    def test_safety_guard_rejects_forbidden_databases(self):
+        forbidden_names = [
+            "production_db",
+            "railway_live",
+            "odoo_main",
+            "official_live",
+            "fmcg_prod",
+        ]
+        for db_name in forbidden_names:
+            mock_cr = MockRecord(dbname=db_name)
+            mock_env = MockRecord(cr=mock_cr)
+            with self.assertRaises(RuntimeError) as ctx:
+                assert_disposable_database(mock_env)
+            self.assertIn("SAFETY-ABORT", str(ctx.exception))
+
+    def test_safety_guard_accepts_disposable_databases(self):
+        allowed_names = [
+            "fmcg_full_disposable",
+            "ci_db",
+            "test_disposable",
+            "disposable_runner",
+            "test_db_2026",
+        ]
+        for db_name in allowed_names:
+            mock_cr = MockRecord(dbname=db_name)
+            mock_env = MockRecord(cr=mock_cr)
+            res = assert_disposable_database(mock_env)
+            self.assertEqual(res, db_name)
+
+    def test_audit_period_database_offline_passes(self):
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        res = audit_period_database(env=None, oracle=oracle)
+        self.assertEqual(res["status"], "PASS")
+        self.assertEqual(len(res["violations"]), 0)
+
+    def test_fault_injection_probes_offline_pass(self):
+        res = run_period_pack_fault_injection_probes(env=None, pack_dir=AUG_PACK_DIR)
+        self.assertEqual(res["probe_so_savepoint_rollback"], "REJECTED_AND_RECOVERED_AS_EXPECTED")
+        self.assertEqual(res["probe_ap_bill_mismatch"], "REJECTED_AS_EXPECTED")
 
 
 if __name__ == "__main__":

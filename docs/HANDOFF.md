@@ -1,3 +1,18 @@
+## 2026-11-10T09:35:00+07:00 — antigravity — F4: Dedicated Disposable Runtime Proof, Oracle Audit & Fault-Injection Probes (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/verify_disposable_period_pack.py`: Runner pembuktian runtime terisolasi pada Odoo disposable. Mengimplementasikan safety guard ketat (`assert_disposable_database`) yang menolak database produksi/live, runtime oracle (`PeriodPackOracle` & `audit_period_database`) yang memvalidasi tie-out stok-ke-GL (113000), AR (112000), AP (211000), pelunasan bill Unilever Juli, pajak out_invoice kode 04 DPP Nilai Lain, penangkap snapshot deep state (`capture_period_state_snapshot`), serta rangkaian fault-injection probes berbasis savepoint.
+- `tests/test_period_pack_loader.py`: Menambahkan suite `TestPeriodPackDisposableRuntimeVerification` (5 test baru, total 16 tests PASS) menguji oracle expectations tie-out terhadap register Agustus, penolakan safety guard terhadap 5 varian nama DB terlarang, penerimaan nama DB disposable, verifikasi audit pass, dan verifikasi fault-injection rollback.
+**Diverifikasi:**
+- [F] `python scripts/ops/verify_disposable_period_pack.py --pack data/registers/periods/2026-08`: PASS (audit offline status PASS, fault injection rollback status REJECTED_AND_RECOVERED_AS_EXPECTED).
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 16/16 tests PASS (4.9s).
+- [F] `python -m ruff check scripts/ops/ tests/`: PASS (clean).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] Zero Railway Touch: Sama sekali tidak menyentuh database maupun server live Railway.
+**Belum diuji:**
+- [BU] Verifikasi CI GitHub Actions pasca-buka PR.
+**Berikutnya:**
+- Buka Pull Request (PR) tunggal untuk paket F4 ini ke `main`, pantau seluruh check CI hingga hijau, dan ajukan untuk re-review dan otorisasi supervisor.
+
 ## 2026-11-10T08:35:00+07:00 — antigravity — F4: Generic Period Pack Loader & Mode Dry-Run (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`: Implementasi core engine loader period pack generik berbasis manifes. Menerima argumen `--pack <dir>` (misal: `data/registers/periods/2026-08`), `--dry-run`, `--apply`, `--strict`, dan `--company-id`. Memvalidasi integritas seluruh berkas dengan LF SHA-256 terhadap `MANIFEST.json`. Menerapkan aturan kontinuitas ketat: dilarang membuat ulang master data (partner, SKU, opening stock Juli). Merekonsiliasikan pelunasan AP Unilever 8 Agustus terhadap vendor bill Juli (Rp2.899.971.200) tanpa membuat utang/bill baru. Mengimplementasikan deteksi drift fail-closed (`StateInconsistencyError`) dan mode evaluasi `--dry-run` tanpa mutasi database.
