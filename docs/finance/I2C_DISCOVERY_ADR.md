@@ -158,6 +158,12 @@ menghasilkan alokasi pada FIN37.** Semua baris tanpa metadata tanggal menjadi
 exception bernominal, titik. Parameter kontrak bertanggal hanya dipakai pada
 `FIN55` (amortization pinjaman/sewa), bukan pada FIN37.
 
+**Pengakuan berbasis hari, bukan bulan selesai.** Pengakuan dihitung per hari
+dalam rentang inklusif. As-of di tengah periode mengakui porsi yang sudah
+berjalan; jadwal 310 untuk 1–31 Juli pada as-of 15 Juli mengakui **150**, bukan
+0. Menunggu bulan selesai akan membuat laporan posisi tengah bulan selalu nol
+dan menyesatkan.
+
 **Konsekuensi dependensi:** opsi 1 memerlukan pin `account-closing` +
 `account_invoice_start_end_dates`. Modulnya LGPL-3 (bukan AGPL-3), sehingga
 risiko lisensinya berbeda dari ADR-I2c-01; tetap dicatat sebagai keputusan
@@ -253,12 +259,13 @@ Odoo, yang memilih `expense_currency_exchange_account_id` bila `amount > 0` dan
 | Kasus | Perlakuan |
 |---|---|
 | **Partial settlement sebelum full reconcile** | Dihitung per partial (`p.max_date <= as_of`); tidak menunggu `full_reconcile_id`. Realized dapat muncul walau baris belum lunas. |
-| **Multi-partial** | Dijumlahkan per partial (`Σ realized_partial`), bukan dihitung dari selisih saldo agregat. Untuk tiap baris: `Σ |p.amount| ≤ |balance|`; bila terlampaui, seluruh baris menjadi exception `over_reconciled`, bukan dipotong diam-diam. |
-| **Write-off** | Baris write-off tidak punya pasangan `amount_currency` yang setara. Diperlakukan sebagai pengurangan carrying **tanpa** realized FX, dilaporkan terpisah sebagai `write_off` agar tidak menciptakan gain/loss palsu. |
-| **Reversal** | Partial pada move yang di-reverse diidentifikasi lewat `reversed_entry_id`/`reversal_move_ids`. Pasangan partial yang saling membatalkan di-net ke nol **per pasangan** lebih dulu; realized baru dijumlahkan setelah netting. |
-| **Tanpa `exchange_move_id`** | Tetap dihitung dari formula. `exchange_move_id` adalah **bukti posting**, bukan syarat perhitungan. Selisih antara nilai formula dan jurnal exchange (bila ada) menjadi exception bernominal. |
-| **Kaki mata uang fungsional** | `amount_currency == balance`, sehingga `rate = 1`; kontribusinya nol dan tidak menciptakan selisih. Tidak dikecualikan dari loop. |
-| **`amount_currency == 0` pada kaki non-fungsional** | Data tidak lengkap; baris menjadi exception `missing_currency_amount`, formula tidak dijalankan untuk partial itu. |
+| **Residual per tanggal** | Posisi terbuka direkonstruksi dari `balance`/`amount_currency` dikurangi partial bertanggal, **bukan** dari `amount_residual` saat ini. |
+| **Multi-partial** | Dijumlahkan per partial (`Σ realized_partial`). Untuk tiap baris: `Σ |p.amount| ≤ |balance|`; bila terlampaui, baris menjadi `over_reconciled` dan **dilaporkan**, bukan dipotong diam-diam. |
+| **Write-off** | Partial yang dikenali sebagai write-off (leg pada akun beban) **tidak** menghasilkan realized FX; dilaporkan terpisah di `write_off_rows` agar tidak menciptakan gain/loss palsu. |
+| **Reversal** | Partial pada move yang di-reverse diidentifikasi lewat `reversed_entry_id`/`reversal_move_ids`. Pasangan normal+reversal di-net ke nol **per pasangan** lebih dulu; realized baru dijumlahkan setelah netting. |
+| **Kaki mata uang fungsional** | Bila hanya satu kaki berada di scope valuta asing, tidak ada selisih kurs yang dapat direalisasi. Dilaporkan eksplisit di `functional_counterpart_rows`, tidak dihitung dan tidak dibuang diam-diam. |
+| **Tanpa `exchange_move_id`** | Tetap dihitung dari formula. `exchange_move_id` adalah **bukti posting**, bukan syarat perhitungan. Nilainya masuk `realized_unposted_rows` dan **di luar** tie-out. |
+| **`amount_currency == 0` pada kaki non-fungsional** | Data tidak lengkap; menjadi exception `missing_currency_amount`, formula tidak dijalankan untuk partial itu. |
 
 **Tie-out wajib.** Untuk setiap pasangan (akun, mata uang):
 
@@ -276,6 +283,19 @@ diturunkan dari aturan posting Odoo, bukan dipilih agar angka cocok:
   `debit = residual` bila `residual > 0`, dan `credit = −residual` bila
   `residual < 0`. Pada akun AML asal, arahnya berlawanan (debit `−residual`
   bila negatif).
+
+**Tie-out per mata uang, tanpa netting.** Perbandingan dilakukan **per mata
+uang** dan tidak pernah dijumlahkan lintas mata uang. Surplus USD tidak boleh
+menutupi defisit EUR. Mata uang yang punya saldo GL tetapi tidak punya baris
+realized **tetap dibandingkan**, sehingga saldo exchange yatim tidak bisa
+diabaikan. Tie-out dinyatakan gagal bila ada satu mata uang dengan selisih ≠ 0,
+dan mata uang yang gagal dilaporkan eksplisit di `failing_currency_ids`.
+
+**Residual direkonstruksi per tanggal, bukan dibaca dari `amount_residual`.**
+Posisi terbuka per `as_of` dihitung dari `balance`/`amount_currency` baris
+dikurangi partial bertanggal (`max_date <= as_of`), sehingga pembayaran Agustus
+tidak mengubah laporan posisi Juli. Membaca `amount_residual` saat ini akan
+membuat laporan as-of bergantung pada transaksi setelah tanggal laporan.
 
 **Bukti numerik dua arah** (wajib menjadi fixture test, bukan angka hard-coded):
 

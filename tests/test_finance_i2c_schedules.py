@@ -93,6 +93,28 @@ class AccrualScheduleTests(unittest.TestCase):
         self.assertEqual(result["rows"][0]["recognized_to_date"], 0.0)
         self.assertEqual(result["rows"][0]["remaining"], 1200.0)
 
+    def test_mid_period_as_of_recognizes_proportionally(self):
+        # Review finding: a 310 schedule over 1-31 July at as-of 15 July must
+        # recognise roughly half, never zero by waiting for the month to close.
+        result = sched.build_accrual_schedules(
+            [accrual_line(1, 310.0, start="2026-07-01", end="2026-07-31")],
+            "2026-07-15", ROUND,
+        )
+        row = result["rows"][0]
+        self.assertEqual(row["recognized_to_date"], 150.0)
+        self.assertEqual(row["remaining"], 160.0)
+        self.assertEqual(
+            ROUND(row["recognized_to_date"] + row["remaining"]), 310.0,
+        )
+
+    def test_mid_period_is_not_zero_on_first_day(self):
+        result = sched.build_accrual_schedules(
+            [accrual_line(1, 310.0, start="2026-07-01", end="2026-07-31")],
+            "2026-07-01", ROUND,
+        )
+        self.assertEqual(result["rows"][0]["recognized_to_date"], 10.0)
+        self.assertEqual(result["rows"][0]["remaining"], 300.0)
+
     def test_exceptions_and_rows_still_total_the_control_balance(self):
         lines = [
             accrual_line(1, 1200.0, start="2026-01-01", end="2026-12-31"),
@@ -220,7 +242,7 @@ class FxRevaluationTests(unittest.TestCase):
         open_line = {
             "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
             "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
-            "amount_residual_currency": 100.0, "amount_residual": 1_500_000.0,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
         }
         fx_line = {**open_line, "line_id": 2, "account_id": 999}
         report = sched.build_fx_revaluation(
@@ -232,16 +254,46 @@ class FxRevaluationTests(unittest.TestCase):
         self.assertEqual(report["unrealized_total"], 100_000.0)
 
     def test_closed_positions_contribute_no_unrealized(self):
-        closed = {
+        # A settled line is represented by dated partials, not by the current
+        # residual, so the reconstruction must net it to zero at the as-of date.
+        open_line = {
             "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
             "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
-            "amount_residual_currency": 0.0, "amount_residual": 0.0,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
         }
+        settlement = [
+            partial(1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0), 1_500_000.0,
+                    exchange_move_id=9),
+        ]
         report = sched.build_fx_revaluation(
-            [closed], [], "2026-07-31", ROUND, lambda *_: 16_000.0,
+            [open_line], settlement, "2026-07-31", ROUND, lambda *_: 16_000.0,
         )
         self.assertEqual(report["unrealized_rows"], [])
         self.assertEqual(report["unrealized_total"], 0.0)
+
+    def test_august_payment_does_not_change_the_july_position(self):
+        # The July as-of report must ignore a partial dated in August, even
+        # though the current residual is already zero. This is the regression
+        # for the review finding "FIN38 memakai residual saat ini".
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        august = [
+            partial(1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0), 1_500_000.0,
+                    max_date="2026-08-05", exchange_move_id=9),
+        ]
+        july = sched.build_fx_revaluation(
+            [open_line], august, "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(july["unrealized_total"], 100_000.0)
+        self.assertEqual(july["realized_posted_total"], 0.0)
+        august_report = sched.build_fx_revaluation(
+            [open_line], august, "2026-08-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(august_report["unrealized_total"], 0.0)
+        self.assertEqual(august_report["realized_posted_total"], -100_000.0)
 
     def test_tie_out_uses_signed_balance_for_gain(self):
         invoice = leg(1_500_000.0, 100.0)
@@ -285,6 +337,101 @@ class FxRevaluationTests(unittest.TestCase):
         )
         self.assertIsNone(reason)
         self.assertEqual(amount, 0.0)
+
+    def test_tie_out_never_nets_across_currencies(self):
+        # Review finding: a USD surplus must not mask a EUR deficit.
+        report = {"realized_by_currency": [
+            {"currency_id": 2, "realized_amount": 500.0},
+            {"currency_id": 3, "realized_amount": -500.0},
+        ]}
+        tie = sched.tie_fx_to_gl(report, {2: 0.0, 3: 0.0}, ROUND)
+        self.assertFalse(tie["balanced"], "cross-currency netting must not pass")
+        self.assertEqual(sorted(tie["failing_currency_ids"]), [2, 3])
+
+    def test_tie_out_compares_gl_currency_without_realized_rows(self):
+        # Review finding: an orphan GL exchange balance must not be ignored.
+        report = {"realized_by_currency": [{"currency_id": 2, "realized_amount": 0.0}]}
+        tie = sched.tie_fx_to_gl(report, {2: 0.0, 9: 123_456.0}, ROUND)
+        self.assertFalse(tie["balanced"])
+        self.assertEqual(tie["failing_currency_ids"], [9])
+
+    def test_tie_out_passes_when_every_currency_matches(self):
+        report = {"realized_by_currency": [
+            {"currency_id": 2, "realized_amount": -100.0},
+            {"currency_id": 3, "realized_amount": 50.0},
+        ]}
+        tie = sched.tie_fx_to_gl(report, {2: -100.0, 3: 50.0}, ROUND)
+        self.assertTrue(tie["balanced"])
+        self.assertEqual(tie["failing_currency_ids"], [])
+
+    def test_over_reconciled_line_is_reported_not_silently_truncated(self):
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_000.0, "amount_currency": 100.0,
+        }
+        excessive = [
+            partial(1, leg(1_000.0, 100.0), leg(-1_000.0, -100.0), 1_000.0),
+            partial(2, leg(1_000.0, 100.0), leg(-1_000.0, -100.0), 500.0),
+        ]
+        report = sched.build_fx_revaluation(
+            [open_line], excessive, "2026-07-31", ROUND, lambda *_: 1.0,
+        )
+        self.assertEqual(len(report["over_reconciled_rows"]), 1)
+        self.assertEqual(report["over_reconciled_rows"][0]["reason"], "over_reconciled")
+        self.assertEqual(report["unrealized_rows"], [])
+
+    def test_reversed_partial_is_netted_per_pair(self):
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        normal = partial(1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0),
+                         1_500_000.0, exchange_move_id=9)
+        normal["move_id"] = 77
+        reversal = dict(normal)
+        reversal.update({
+            "partial_id": 2, "is_reversal": True, "reversed_entry_id": 77,
+            "exchange_move_id": 10,
+        })
+        report = sched.build_fx_revaluation(
+            [open_line], [normal, reversal], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(report["realized_rows"], [])
+        self.assertEqual(report["realized_posted_total"], 0.0)
+        self.assertEqual(report["tied_exchange_move_ids"], [])
+
+    def test_functional_currency_counterpart_is_flagged_not_counted(self):
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        mixed = partial(1, leg(1_500_000.0, 100.0), {}, 1_500_000.0)
+        mixed["functional_counterpart"] = True
+        report = sched.build_fx_revaluation(
+            [open_line], [mixed], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(len(report["functional_counterpart_rows"]), 1)
+        self.assertEqual(report["realized_posted_total"], 0.0)
+        self.assertEqual(report["realized_unposted_total"], 0.0)
+
+    def test_write_off_is_separated_from_realized_fx(self):
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        write_off = partial(1, leg(1_500_000.0, 100.0), leg(-1_500_000.0, -100.0),
+                            1_500_000.0)
+        write_off["write_off"] = True
+        report = sched.build_fx_revaluation(
+            [open_line], [write_off], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(len(report["write_off_rows"]), 1)
+        self.assertEqual(report["realized_posted_total"], 0.0)
+        self.assertEqual(report["realized_unposted_total"], 0.0)
 
     def test_negated_gl_balance_fails_the_gain_case(self):
         invoice = leg(1_500_000.0, 100.0)

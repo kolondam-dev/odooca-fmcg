@@ -1,18 +1,19 @@
 """Pure I2c schedule and FX helpers for FIN37 and FIN38, without ORM.
 
 The production reports collect native ``account.move.line``,
-``account.partial.reconcile`` and asset/payroll records, then hand plain
+``account.partial.reconcile`` and company exchange accounts, then hand plain
 dictionaries to these functions. Keeping the arithmetic here makes the oracle
 testable without a database and keeps the report layer from inventing figures.
 
 Two rules are deliberately strict:
 
 - **FIN37** never allocates a period without explicit ``start_date``/``end_date``
-  metadata. A row missing that metadata becomes a nominal exception instead of
-  an assumed 12-month schedule.
-- **FIN38** derives realized FX from the rate carried by each reconciled leg,
-  never from ``partial.amount - partial.amount`` (which is always zero), and
-  ties out only against partials that carry a posted ``exchange_move_id``.
+  metadata, and recognises on a **day** basis so a mid-month as-of date yields a
+  proportional amount instead of waiting for the month to finish.
+- **FIN38** rebuilds the residual **as of** the report date from dated partials
+  instead of reading the current ``amount_residual``, derives realized FX from
+  the rate each leg carries, and ties out **per currency** so amounts in
+  different currencies can never mask each other.
 """
 
 from collections import defaultdict
@@ -52,9 +53,10 @@ def build_accrual_schedules(lines, as_of, round_amount):
     ``date``, ``account_id``, ``account_code``, ``account_type``, ``partner_id``,
     ``partner_name``, ``balance``, ``start_date`` and ``end_date``.
 
-    Recognition is straight-line across the inclusive day range. Rows without
-    usable metadata are reported as nominal exceptions and are never allocated;
-    document dates are not used as a substitute for the service period.
+    Recognition is straight-line and **day-prorated**, so an as-of date inside a
+    period recognises the elapsed portion of that period rather than zero.
+    Rows without usable metadata are reported as nominal exceptions and are never
+    allocated; document dates are not used as a substitute.
     """
     cutoff = _as_date(as_of)
     if not cutoff:
@@ -107,18 +109,22 @@ def build_accrual_schedules(lines, as_of, round_amount):
             else:
                 amount = round_amount(balance * days / total_days)
             allocated = round_amount(allocated + amount)
-            goes_live = period_end <= cutoff
+            # Day-proration inside the period: an as-of date mid-month must
+            # recognise the elapsed days, not wait for the period to close.
+            elapsed_days = min(max((min(cutoff, period_end) - period_start).days + 1, 0), days)
+            recognized_days = elapsed_days
+            recognized_amount = round_amount(amount * recognized_days / days)
+            recognized = round_amount(recognized + recognized_amount)
             periods.append({
                 "start": period_start.isoformat(),
                 "end": period_end.isoformat(),
                 "days": days,
                 "amount": amount,
-                "recognized": goes_live,
+                "recognized_days": recognized_days,
+                "recognized_amount": recognized_amount,
+                "recognized": recognized_days == days,
             })
-            if goes_live:
-                recognized = round_amount(recognized + amount)
 
-        recognized = round_amount(recognized)
         rows.append({
             **base,
             "start_date": start.isoformat(),
@@ -159,6 +165,74 @@ def _leg_rate(leg):
     return leg.get("balance") / amount_currency
 
 
+def reconstruct_line_residuals(lines, partials, as_of, round_amount):
+    """Rebuild each line's residual as of ``as_of`` from dated partials.
+
+    Reading the current ``amount_residual`` would let an August payment change a
+    July open-position report. This walks the partials instead:
+
+    - a partial only counts when ``max_date <= as_of``;
+    - on the debit leg it reduces the residual, on the credit leg it increases it;
+    - currency amounts use the positive magnitudes Odoo stores on
+      ``account.partial.reconcile``.
+    """
+    cutoff = _as_date(as_of)
+    if not cutoff:
+        raise ValueError("FX revaluation requires an as-of date.")
+
+    matched = defaultdict(float)
+    matched_currency = defaultdict(float)
+    partial_amount_by_line = defaultdict(float)
+    for partial in partials:
+        max_date = _as_date(partial.get("max_date"))
+        if not max_date or max_date > cutoff:
+            continue
+        amount = partial.get("amount") or 0.0
+        debit_id = partial.get("debit_line_id")
+        credit_id = partial.get("credit_line_id")
+        if debit_id is not None:
+            partial_amount_by_line[debit_id] = round_amount(
+                partial_amount_by_line[debit_id] + abs(amount)
+            )
+        if credit_id is not None:
+            partial_amount_by_line[credit_id] = round_amount(
+                partial_amount_by_line[credit_id] + abs(amount)
+            )
+        if debit_id is not None:
+            matched[debit_id] = round_amount(matched[debit_id] - amount)
+            matched_currency[debit_id] = round_amount(
+                matched_currency[debit_id] - abs(partial.get("debit_amount_currency") or 0.0)
+            )
+        if credit_id is not None:
+            matched[credit_id] = round_amount(matched[credit_id] + amount)
+            matched_currency[credit_id] = round_amount(
+                matched_currency[credit_id] + abs(partial.get("credit_amount_currency") or 0.0)
+            )
+
+    reconstructed = []
+    over_reconciled = []
+    for line in lines:
+        line_id = line.get("line_id")
+        balance = line.get("balance") or 0.0
+        amount_currency = line.get("amount_currency") or 0.0
+        if round_amount(partial_amount_by_line[line_id]) > round_amount(abs(balance)) + 0.01:
+            over_reconciled.append({
+                "line_id": line_id,
+                "balance": round_amount(balance),
+                "matched": round_amount(partial_amount_by_line[line_id]),
+                "reason": OVER_RECONCILED,
+            })
+            continue
+        reconstructed.append({
+            **line,
+            "residual_as_of": round_amount(balance + matched[line_id]),
+            "residual_currency_as_of": round_amount(
+                amount_currency + matched_currency[line_id]
+            ),
+        })
+    return reconstructed, over_reconciled
+
+
 def realized_partial_amount(partial, debit_leg, credit_leg, round_amount):
     """Realized FX for one ``account.partial.reconcile`` record.
 
@@ -190,23 +264,51 @@ def realized_partial_amount(partial, debit_leg, credit_leg, round_amount):
     return round_amount(functional_debit - functional_credit), None
 
 
+def _net_reversals(partials, round_amount):
+    """Net reversed partials per reconciled pair before totalling realized FX."""
+    surviving = []
+    cancelled = set()
+    by_pair = defaultdict(list)
+    for partial in partials:
+        key = (partial.get("debit_line_id"), partial.get("credit_line_id"))
+        by_pair[key].append(partial)
+    for _key, group in by_pair.items():
+        reversals = [p for p in group if p.get("is_reversal")]
+        normals = [p for p in group if not p.get("is_reversal")]
+        for reversal in reversals:
+            pair_id = reversal.get("reversed_entry_id")
+            match = next(
+                (
+                    p for p in normals
+                    if p.get("move_id") == pair_id and id(p) not in cancelled
+                ),
+                None,
+            )
+            if match is not None:
+                cancelled.add(id(match))
+                cancelled.add(id(reversal))
+        surviving.extend(p for p in group if id(p) not in cancelled)
+    return surviving
+
+
 def build_fx_revaluation(
-    open_lines, partials, as_of, round_amount, rate_lookup, exchange_account_ids=(),
+    lines, partials, as_of, round_amount, rate_lookup, exchange_account_ids=(),
 ):
     """Split FIN38 into unrealized revaluation and realized exchange differences.
 
-    ``open_lines`` are posted monetary lines with ``line_id``, ``account_id``,
+    ``lines`` are posted foreign-currency lines with ``line_id``, ``account_id``,
     ``account_code``, ``account_type``, ``partner_id``, ``currency_id``,
-    ``amount_residual_currency`` and ``amount_residual``.
+    ``balance`` and ``amount_currency``. Residuals are rebuilt **as of** the
+    report date from dated partials, never read from the current residual.
 
     ``partials`` carry ``debit_line_id``/``credit_line_id``,
-    ``debit_amount_currency``/``credit_amount_currency``, ``max_date`` and
-    ``exchange_move_id``; the matching legs are resolved from ``open_lines``
-    plus the caller-supplied leg payloads.
+    ``debit_amount_currency``/``credit_amount_currency``, ``max_date``,
+    ``exchange_move_id``, ``move_id``, ``reversed_entry_id`` and the resolved
+    ``debit_leg``/``credit_leg`` payloads.
 
-    Unrealized comes only from open positions. Realized comes only from
-    partial reconciliations at or before ``as_of``. Exchange gain/loss accounts
-    are excluded from the unrealized base so the posted exchange move is not
+    Unrealized comes only from open positions. Realized comes only from partial
+    reconciliations at or before ``as_of``. Exchange gain/loss accounts are
+    excluded from the unrealized base so the posted exchange move is not
     counted twice.
     """
     cutoff = _as_date(as_of)
@@ -214,17 +316,21 @@ def build_fx_revaluation(
         raise ValueError("FX revaluation requires an as-of date.")
     excluded = set(exchange_account_ids or ())
 
+    reconstructed, over_reconciled = reconstruct_line_residuals(
+        lines, partials, as_of, round_amount,
+    )
+
     unrealized_rows = []
     unrealized_total = 0.0
-    for line in open_lines:
+    for line in reconstructed:
         if line.get("account_id") in excluded:
             continue
-        amount_currency = line.get("amount_residual_currency") or 0.0
-        amount_residual = line.get("amount_residual") or 0.0
+        amount_currency = line.get("residual_currency_as_of") or 0.0
+        amount_residual = line.get("residual_as_of") or 0.0
         if round_amount(amount_currency) == 0 and round_amount(amount_residual) == 0:
             continue
         currency_id = line.get("currency_id")
-        if not currency_id or currency_id == line.get("company_currency_id"):
+        if not currency_id:
             continue
         rate = rate_lookup(currency_id, cutoff)
         if rate is None:
@@ -251,15 +357,43 @@ def build_fx_revaluation(
     realized_rows = []
     unposted_rows = []
     exceptions = []
+    functional_counterpart_rows = []
+    write_off_rows = []
     realized_posted_total = 0.0
     realized_unposted_total = 0.0
     tied_exchange_move_ids = set()
-    for partial in partials:
+
+    surviving = _net_reversals(partials, round_amount)
+    for partial in surviving:
         max_date = _as_date(partial.get("max_date"))
         if not max_date or max_date > cutoff:
             continue
         debit_leg = partial.get("debit_leg") or {}
         credit_leg = partial.get("credit_leg") or {}
+        if partial.get("functional_counterpart"):
+            # One leg is in company currency, so there is no exchange difference
+            # to realise. Reported explicitly instead of being silently zeroed.
+            functional_counterpart_rows.append({
+                "partial_id": partial.get("partial_id"),
+                "max_date": max_date.isoformat(),
+                "amount": round_amount(partial.get("amount") or 0.0),
+                "account_id": debit_leg.get("account_id") or credit_leg.get("account_id"),
+                "partner_id": debit_leg.get("partner_id") or credit_leg.get("partner_id") or 0,
+                "currency_id": debit_leg.get("currency_id") or credit_leg.get("currency_id"),
+                "reason": MISSING_CURRENCY,
+            })
+            continue
+        if partial.get("write_off"):
+            # A write-off removes carrying value without an FX settlement.
+            write_off_rows.append({
+                "partial_id": partial.get("partial_id"),
+                "max_date": max_date.isoformat(),
+                "amount": round_amount(partial.get("amount") or 0.0),
+                "account_id": debit_leg.get("account_id") or credit_leg.get("account_id"),
+                "partner_id": debit_leg.get("partner_id") or credit_leg.get("partner_id") or 0,
+                "currency_id": debit_leg.get("currency_id") or credit_leg.get("currency_id"),
+            })
+            continue
         amount, reason = realized_partial_amount(partial, debit_leg, credit_leg, round_amount)
         if reason:
             exceptions.append({
@@ -275,9 +409,10 @@ def build_fx_revaluation(
             "account_id": debit_leg.get("account_id"),
             "account_code": debit_leg.get("account_code") or "",
             "partner_id": debit_leg.get("partner_id") or 0,
-            "currency_id": debit_leg.get("currency_id"),
+            "currency_id": debit_leg.get("currency_id") or credit_leg.get("currency_id"),
             "realized_amount": amount,
             "exchange_move_id": partial.get("exchange_move_id"),
+            "is_reversal": bool(partial.get("is_reversal")),
         }
         if partial.get("exchange_move_id"):
             tied_exchange_move_ids.add(partial["exchange_move_id"])
@@ -305,6 +440,9 @@ def build_fx_revaluation(
             for currency_id in sorted(by_currency)
         ],
         "exceptions": exceptions,
+        "over_reconciled_rows": over_reconciled,
+        "functional_counterpart_rows": functional_counterpart_rows,
+        "write_off_rows": write_off_rows,
         "tied_exchange_move_ids": sorted(tied_exchange_move_ids),
         "posted_evidence_total": round_amount(realized_posted_total),
     }
@@ -313,26 +451,39 @@ def build_fx_revaluation(
 def tie_fx_to_gl(report, gl_balance_by_currency, round_amount):
     """Compare posted realized FX with the signed exchange gain/loss balance.
 
-    The tie-out uses the **signed** balance as Odoo posts it, not its negation:
-    a gain credits the income exchange account (negative balance) and matches a
-    negative ``realized_amount``. A non-zero difference fails the report.
+    The tie-out is **per currency and never netted across currencies**: a surplus
+    in USD must not mask a deficit in EUR. GL currencies with no realized row are
+    still compared, so an orphan exchange balance cannot be ignored.
+
+    Odoo posts a gain as a credit on the income exchange account (negative
+    balance) matching a negative ``realized_amount``; the comparison therefore
+    uses the signed balance, not its negation. A non-zero difference in any
+    currency fails the report.
     """
-    differences = []
-    total_difference = 0.0
-    for row in report["realized_by_currency"]:
-        currency_id = row["currency_id"]
-        expected = round_amount(gl_balance_by_currency.get(currency_id, 0.0))
-        difference = round_amount(row["realized_amount"] - expected)
-        total_difference = round_amount(total_difference + difference)
-        differences.append({
+    realized_by_currency = {
+        row["currency_id"]: round_amount(row["realized_amount"])
+        for row in report["realized_by_currency"]
+    }
+    currencies = sorted(set(realized_by_currency) | set(gl_balance_by_currency or {}))
+    rows = []
+    failing = []
+    for currency_id in currencies:
+        realized = round_amount(realized_by_currency.get(currency_id, 0.0))
+        expected = round_amount((gl_balance_by_currency or {}).get(currency_id, 0.0))
+        difference = round_amount(realized - expected)
+        rows.append({
             "currency_id": currency_id,
-            "realized_amount": row["realized_amount"],
+            "realized_amount": realized,
             "gl_balance": expected,
             "difference": difference,
+            "balanced": difference == 0,
         })
+        if difference != 0:
+            failing.append(currency_id)
     return {
-        "rows": differences,
-        "difference": total_difference,
-        "balanced": total_difference == 0,
-        "issues": [] if total_difference == 0 else ["fx_tie_out_mismatch"],
+        "rows": rows,
+        "difference": round_amount(sum(row["difference"] for row in rows)),
+        "failing_currency_ids": failing,
+        "balanced": not failing,
+        "issues": [] if not failing else ["fx_tie_out_mismatch"],
     }

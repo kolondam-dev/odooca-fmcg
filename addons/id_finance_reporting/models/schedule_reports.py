@@ -205,15 +205,9 @@ class FinanceFxRevaluation(models.AbstractModel):
                 "company_currency_id": company.currency_id.id,
                 "balance": line.balance,
                 "amount_currency": line.amount_currency,
-                "amount_residual": line.amount_residual,
-                "amount_residual_currency": line.amount_residual_currency,
             }
             leg_by_id[line.id] = row
             if account.id in exchange_ids:
-                continue
-            if not round_amt(row["amount_residual"]) and not round_amt(
-                row["amount_residual_currency"]
-            ):
                 continue
             payload.append(row)
 
@@ -258,11 +252,14 @@ class FinanceFxRevaluation(models.AbstractModel):
         for record in records:
             debit_leg = leg_by_id.get(record.debit_move_id.id)
             credit_leg = leg_by_id.get(record.credit_move_id.id)
-            # Defensive: both legs must be foreign-currency lines inside the
-            # FIN38 scope. A same-currency counterpart has no exchange
-            # difference and must not be reported as unposted FX evidence.
-            if not debit_leg or not credit_leg:
+            # Both legs must be in FIN38 scope. A functional-currency counterpart
+            # produces no exchange difference; it is flagged explicitly instead
+            # of being silently dropped or double counted.
+            functional_counterpart = bool(debit_leg) != bool(credit_leg)
+            if not debit_leg and not credit_leg:
                 continue
+            debit_move = record.debit_move_id.move_id
+            credit_move = record.credit_move_id.move_id
             payloads.append({
                 "partial_id": record.id,
                 "amount": record.amount,
@@ -272,10 +269,24 @@ class FinanceFxRevaluation(models.AbstractModel):
                 "exchange_move_id": record.exchange_move_id.id or None,
                 "debit_line_id": record.debit_move_id.id,
                 "credit_line_id": record.credit_move_id.id,
-                "debit_leg": debit_leg,
-                "credit_leg": credit_leg,
+                "debit_leg": debit_leg or {},
+                "credit_leg": credit_leg or {},
+                "move_id": debit_move.id,
+                "reversed_entry_id": debit_move.reversed_entry_id.id
+                or credit_move.reversed_entry_id.id or None,
+                "is_reversal": bool(debit_move.reversal_move_ids or credit_move.reversal_move_ids),
+                "functional_counterpart": functional_counterpart,
+                # A write-off settles a line through an expense account without a
+                # matching foreign-currency settlement, so it carries no FX.
+                "write_off": self._is_write_off(debit_leg, credit_leg),
             })
         return payloads
+
+    def _is_write_off(self, debit_leg, credit_leg):
+        for leg in (debit_leg, credit_leg):
+            if leg and (leg.get("account_type") or "").startswith("expense"):
+                return True
+        return False
 
     def _rate_lookup(self, company):
         currency_model = self.env["res.currency"]

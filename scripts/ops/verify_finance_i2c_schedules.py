@@ -190,6 +190,17 @@ def build_fx_fixture(env, suffix):
     (sec.control_line(invoice, accounts["ar"])
      | sec.control_line(payment, accounts["ar"])).reconcile()
 
+    # August noise: a second USD invoice that stays open. It must not change the
+    # July position, and it proves the report rebuilds residuals as of the date
+    # instead of reading the current amount_residual.
+    august_invoice = usd_entry("aug_invoice", "2026-08-10", 480_000, 32)
+    require(
+        round_amt(august_invoice.line_ids.filtered(
+            lambda line: line.account_id == accounts["ar"]
+        ).balance) == 480_000,
+        "August FX invoice must post the expected AR balance",
+    )
+
     return {
         "company": fx_company,
         "accounts": accounts,
@@ -201,12 +212,17 @@ def build_fx_fixture(env, suffix):
         "fx_expense": fx_expense,
         "invoice": invoice,
         "payment": payment,
+        "august_invoice": august_invoice,
         "round_amt": round_amt,
     }
 
 
 def independent_fx(env, fixture, as_of):
-    """Rebuild FIN38 totals without the production helper."""
+    """Rebuild FIN38 totals without the production helper.
+
+    Residuals are reconstructed from dated partials, never read from the current
+    ``amount_residual``, and the tie-out is per currency with no netting.
+    """
     company = fixture["company"]
     cutoff = _cutoff(as_of)
     round_amt = fixture["round_amt"]
@@ -221,19 +237,6 @@ def independent_fx(env, fixture, as_of):
     ], order="date asc, move_id asc, id asc")
     line_by_id = {line.id: line for line in lines}
 
-    unrealized = 0.0
-    for line in lines:
-        if line.account_id.id in exchange_ids:
-            continue
-        if round_amt(line.amount_residual_currency) == 0:
-            continue
-        rate = line.currency_id._get_conversion_rate(
-            line.currency_id, company.currency_id, company, cutoff,
-        )
-        unrealized = round_amt(
-            unrealized + round_amt(line.amount_residual_currency * rate - line.amount_residual)
-        )
-
     selected = list(line_by_id)
     partials = env["account.partial.reconcile"].search([
         ("company_id", "=", company.id),
@@ -242,7 +245,10 @@ def independent_fx(env, fixture, as_of):
         ("credit_move_id", "in", selected),
     ], order="max_date asc, id asc") if selected else env["account.partial.reconcile"]
 
+    matched = defaultdict(float)
+    matched_currency = defaultdict(float)
     realized = unposted = 0.0
+    realized_by_currency = defaultdict(float)
     tied = set()
     for partial in partials:
         debit = line_by_id.get(partial.debit_move_id.id)
@@ -251,6 +257,14 @@ def independent_fx(env, fixture, as_of):
             continue
         if not debit.amount_currency or not credit.amount_currency:
             continue
+        matched[debit.id] = round_amt(matched[debit.id] - partial.amount)
+        matched_currency[debit.id] = round_amt(
+            matched_currency[debit.id] - abs(partial.debit_amount_currency)
+        )
+        matched[credit.id] = round_amt(matched[credit.id] + partial.amount)
+        matched_currency[credit.id] = round_amt(
+            matched_currency[credit.id] + abs(partial.credit_amount_currency)
+        )
         amount = round_amt(
             abs(partial.debit_amount_currency) * (debit.balance / debit.amount_currency)
             - abs(partial.credit_amount_currency) * (credit.balance / credit.amount_currency)
@@ -258,8 +272,24 @@ def independent_fx(env, fixture, as_of):
         if partial.exchange_move_id:
             tied.add(partial.exchange_move_id.id)
             realized = round_amt(realized + amount)
+            realized_by_currency[debit.currency_id.id] = round_amt(
+                realized_by_currency[debit.currency_id.id] + amount
+            )
         else:
             unposted = round_amt(unposted + amount)
+
+    unrealized = 0.0
+    for line in lines:
+        if line.account_id.id in exchange_ids:
+            continue
+        residual = round_amt(line.balance + matched[line.id])
+        residual_currency = round_amt(line.amount_currency + matched_currency[line.id])
+        if round_amt(residual) == 0 and round_amt(residual_currency) == 0:
+            continue
+        rate = line.currency_id._get_conversion_rate(
+            line.currency_id, company.currency_id, company, cutoff,
+        )
+        unrealized = round_amt(unrealized + round_amt(residual_currency * rate - residual))
 
     gl_totals = defaultdict(float)
     for line in env["account.move.line"].search([
@@ -276,11 +306,12 @@ def independent_fx(env, fixture, as_of):
         "realized_total": realized,
         "unposted_total": unposted,
         "tied_exchange_move_ids": sorted(tied),
+        "realized_by_currency": dict(realized_by_currency),
         "gl_totals": dict(gl_totals),
     }
 
 
-def assert_fx(snapshot, oracle):
+def assert_fx(snapshot, oracle, round_amt):
     require(
         snapshot["unrealized_total"] == oracle["unrealized_total"],
         f"FIN38 unrealized mismatch: {snapshot['unrealized_total']} != {oracle['unrealized_total']}",
@@ -303,12 +334,25 @@ def assert_fx(snapshot, oracle):
         snapshot["gl_tie_out"]["balanced"],
         f"FIN38 FX does not tie out: {snapshot['gl_tie_out']}",
     )
+    # Independent per-currency comparison: no netting across currencies, and GL
+    # currencies without realized rows still have to match.
+    currencies = set(oracle["realized_by_currency"]) | set(oracle["gl_totals"])
+    for currency_id in currencies:
+        expected = round_amt(oracle["gl_totals"].get(currency_id, 0.0))
+        realized = round_amt(oracle["realized_by_currency"].get(currency_id, 0.0))
+        require(
+            round_amt(realized - expected) == 0,
+            f"FIN38 independent tie-out fails for currency {currency_id}: "
+            f"{realized} != {expected}",
+        )
+    failing = set(snapshot["gl_tie_out"].get("failing_currency_ids") or [])
+    require(not failing, f"FIN38 tie-out flagged currencies: {sorted(failing)}")
 
 
 def check_fin37(env, fixture, evidence, check_hard_coded=False):
     company, accounts, _journals, _partner, scale, _docs = fixture
     models = env(context=dict(env.context, allowed_company_ids=[company.id]))
-    for as_of in ("2026-07-31", "2026-08-31"):
+    for as_of in ("2026-07-15", "2026-07-31", "2026-08-31"):
         oracle = independent_accrual(env, company, accounts["cash"], as_of)
         snapshot = models["id.finance.accrual.schedule"]._snapshot(
             company.id, as_of, account_ids=[accounts["cash"].id],
@@ -340,7 +384,7 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
     for as_of in ("2026-07-31", "2026-08-31"):
         oracle = independent_fx(env, fixture, as_of)
         snapshot = models["id.finance.fx.revaluation"]._snapshot(company.id, as_of)
-        assert_fx(snapshot, oracle)
+        assert_fx(snapshot, oracle, round_amt)
         evidence["cases"].append({
             "company": company.name, "scale": 1, "report": "FIN38",
             "as_of": as_of, "result": "PASS",
@@ -367,6 +411,18 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
             require(
                 snapshot["gl_tie_out"]["balanced"],
                 f"FIN38 must tie out to the signed exchange balance: {snapshot['gl_tie_out']}",
+            )
+            # July must not see the August invoice: this is the regression for
+            # "FIN38 memakai residual saat ini".
+            august_currency = fixture["august_invoice"].line_ids.filtered(
+                lambda line: line.account_id == fixture["accounts"]["ar"]
+            ).mapped("amount_currency")
+            require(
+                all(
+                    row["amount_residual_currency"] != august_currency[0]
+                    for row in snapshot["unrealized_rows"]
+                ),
+                "FIN38 July report must not include the August open invoice",
             )
 
 
