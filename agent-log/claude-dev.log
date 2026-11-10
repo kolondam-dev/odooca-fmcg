@@ -275,3 +275,9 @@
 - Re-review diminta pada HEAD ini; FIN37 sudah PASS per reviewer, yang tersisa hanya tanda tie-out FIN38 yang kini diperbaiki dan diuji dua arah.
 - [BU] Verifikasi terhadap jurnal exchange native Odoo pada DB nyata masih terbuka; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN05-09 dan FIN36-38/55-56 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T14:30:00+07:00
+[2026-11-10T15:40:00+07:00] [INFO] I2c/PR108: review #5835974842 menempel pada c1c3f3d (pre-fix), perbaikan ada di be625b3
+- Verifikasi: gh review commit.oid = c1c3f3d4ede75a9f007385cb64d5379d50149b00; git show c1c3f3d:docs/finance/I2C_DISCOVERY_ADR.md masih memuat "Sigma -balance", sedangkan HEAD memuat "signed balance apa adanya, bukan -balance".
+- Diff c1c3f3d..HEAD: ADR 32 baris, test 68 baris, HANDOFF, log. Tidak ada perubahan addons/scripts/oca.lock/.github.
+- Perbaikan sudah mencakup semua yang diminta reviewer: formula signed balance, fixture mengarang dihapus dan diganti exchange_difference_move() yang mereplikasi aturan posting Odoo, kedua arah diuji lewat residual nyata, dan regresi penjaga test_negating_the_balance_would_break_the_gain_case.
+- CI pada 813a465: 12/12 SUCCESS, MERGEABLE. [BU] Verifikasi jurnal exchange native Odoo pada DB nyata tetap gate PR implementasi; tidak ada deploy/mutasi DB live.
+- Task managed by claude-dev agent at 2026-11-10T15:40:00+07:00
