@@ -252,8 +252,8 @@ def independent_fx(env, fixture, as_of):
         if not debit.amount_currency or not credit.amount_currency:
             continue
         amount = round_amt(
-            partial.debit_amount_currency * (debit.balance / debit.amount_currency)
-            - (-partial.credit_amount_currency) * (credit.balance / credit.amount_currency)
+            abs(partial.debit_amount_currency) * (debit.balance / debit.amount_currency)
+            - abs(partial.credit_amount_currency) * (credit.balance / credit.amount_currency)
         )
         if partial.exchange_move_id:
             tied.add(partial.exchange_move_id.id)

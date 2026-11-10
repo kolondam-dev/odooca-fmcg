@@ -210,22 +210,28 @@ rate_debit  = debit_leg.balance  / debit_leg.amount_currency
 rate_credit = credit_leg.balance / credit_leg.amount_currency
 
 # Nilai fungsional valuta yang dilepas, menurut kurs baris masing-masing.
-# debit_amount_currency > 0 dan credit_amount_currency < 0 pada partial normal,
-# sehingga nilai kredit dikembalikan ke magnitudo positif.
-functional_debit  = p.debit_amount_currency  * rate_debit
-functional_credit = -p.credit_amount_currency * rate_credit
+# debit_amount_currency dan credit_amount_currency KEDUANYA adalah magnitudo
+# positif pada account.partial.reconcile (berbeda dari amount_currency pada AML).
+functional_debit  = p.debit_amount_currency  × rate_debit
+functional_credit = p.credit_amount_currency × rate_credit
 
 realized_partial = functional_debit - functional_credit
 ```
 
+**Penting — tanda field partial.** `account.partial.reconcile.debit_amount_currency`
+dan `credit_amount_currency` disimpan sebagai **magnitudo positif**, bukan
+bertanda. Diverifikasi pada inti Odoo 19
+`account_move_line._prepare_reconcile_vals()`:
+`partial_credit_amount_currency = credit_currency.round(credit_rate * min_recon_amount)`,
+tanpa negasi. Ini berbeda dari `account.move.line.amount_currency` yang bertanda.
+Mengasumsikan nilai negatif menghasilkan realized **3.100.000** alih-alih
+**−100.000** — kesalahan yang benar-benar tertangkap oleh runner native dan
+menjadi alasan formula di atas memakai magnitudo.
+
 **Mengapa bukan `amount − amount`.** `p.amount` selalu dalam mata uang
 perusahaan dan selalu positif, sehingga kedua kaki melepas carrying fungsional
 yang sama besar — memakai `p.amount` di kedua sisi akan selalu menghasilkan nol.
-Selisih kurs lahir dari **perbedaan kurs** yang melekat pada tiap baris, dan
-itulah yang dihitung formula di atas. Kesetaraan dengan inti Odoo: Odoo
-menghitung `debit_exchange_amount = partial_debit_amount − partial_amount` pada
-`_prepare_reconcile_vals`, yaitu `−realized_partial` pada konvensi tanda di sini
-(Odoo menghitung koreksi yang harus diposting ke kaki debit).
+Selisih kurs lahir dari **perbedaan kurs** yang melekat pada tiap baris.
 
 **Sign convention.** `realized_partial > 0` = **kerugian** (loss): nilai
 fungsional yang dilepas lebih besar dari yang diterima. `realized_partial < 0` =

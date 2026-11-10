@@ -133,7 +133,7 @@ def leg(balance, amount_currency, account_id=110, partner_id=5, currency_id=2):
 
 
 def partial(partial_id, debit_leg, credit_leg, amount, max_date="2026-07-31",
-            exchange_move_id=None, debit_ccy=100.0, credit_ccy=-100.0):
+            exchange_move_id=None, debit_ccy=100.0, credit_ccy=100.0):
     return {
         "partial_id": partial_id,
         "amount": amount,
@@ -169,7 +169,7 @@ class RealizedFxTests(unittest.TestCase):
     def test_partial_settlement_scales_with_the_reconciled_amount(self):
         amount, _reason = sched.realized_partial_amount(
             partial(1, leg(1_500_000.0, 100.0), leg(-640_000.0, -40.0), 640_000.0,
-                    debit_ccy=40.0, credit_ccy=-40.0),
+                    debit_ccy=40.0, credit_ccy=40.0),
             leg(1_500_000.0, 100.0), leg(-640_000.0, -40.0), ROUND,
         )
         self.assertEqual(amount, -40_000.0)

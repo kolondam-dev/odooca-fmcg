@@ -167,7 +167,15 @@ def realized_partial_amount(partial, debit_leg, credit_leg, round_amount):
     the *rate* each leg carries:
 
         realized = debit_amount_currency * rate_debit
-                 - (-credit_amount_currency) * rate_credit
+                 - credit_amount_currency * rate_credit
+
+    Odoo stores ``debit_amount_currency`` and ``credit_amount_currency`` as
+    positive magnitudes on ``account.partial.reconcile`` (verified in
+    ``account_move_line._prepare_reconcile_vals``:
+    ``partial_credit_amount_currency = credit_currency.round(credit_rate *
+    min_recon_amount)``). That differs from ``account.move.line.amount_currency``,
+    which is signed. ``abs()`` keeps the formula correct if a future version
+    returns a signed value.
 
     Positive means loss, negative means gain. That direction matches Odoo's
     ``_get_exchange_account()``, which picks the expense account for positive
@@ -177,8 +185,8 @@ def realized_partial_amount(partial, debit_leg, credit_leg, round_amount):
     rate_credit = _leg_rate(credit_leg)
     if rate_debit is None or rate_credit is None:
         return None, MISSING_CURRENCY
-    functional_debit = (partial.get("debit_amount_currency") or 0.0) * rate_debit
-    functional_credit = -(partial.get("credit_amount_currency") or 0.0) * rate_credit
+    functional_debit = abs(partial.get("debit_amount_currency") or 0.0) * rate_debit
+    functional_credit = abs(partial.get("credit_amount_currency") or 0.0) * rate_credit
     return round_amount(functional_debit - functional_credit), None
 
 
