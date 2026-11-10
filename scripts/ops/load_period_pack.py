@@ -205,8 +205,8 @@ OPEX_CATEGORY_ACCOUNT_MAP = {
     "Logistik Rutin": "610100",
     "Uang Jalan Ritase": "610100",
     "Payroll Karyawan": "610200",
-    "Lembur Gudang & Logistik": "610300",
     "Komisi & Insentif": "610200",
+    "Lembur Gudang & Logistik": "610300",
     "Sewa & Utilitas": "610400",
     "Pemeliharaan Armada": "610500",
     "Perizinan & Regulasi": "610600",
@@ -256,27 +256,18 @@ class GenericPeriodPackLoader:
             "opex": {"to_create": 0, "to_skip": 0, "conflicts": 0},
         }
 
-    def _resolve_account(self, code: str, fallback_type: str = "expense") -> Any:
-        """Resolve account.account by code, or fallback to first account of matching type."""
+    def _resolve_account(self, code: str, fallback_type: Optional[str] = None) -> Any:
+        """Resolve account.account strictly by code (fail-closed, no fuzzy fallback)."""
         if self.env is None:
             return None
         Account = self.env["account.account"].sudo()
         acc = Account.search(
             [("code", "=", code), ("company_id", "in", [self.company.id, False])], limit=1
         )
-        if not acc:
-            acc = Account.search(
-                [("code", "=like", f"{code[:3]}%"), ("company_id", "in", [self.company.id, False])],
-                limit=1,
-            )
-        if not acc:
-            acc = Account.search(
-                [("account_type", "=", fallback_type), ("company_id", "in", [self.company.id, False])],
-                limit=1,
-            )
         if not acc and self.strict:
+            c_name = getattr(self.company, "name", "unknown")
             raise PreflightContinuityError(
-                f"Account for code '{code}' or type '{fallback_type}' not found in account.account"
+                f"Account for code '{code}' not found in account.account for company '{c_name}'"
             )
         return acc
 
@@ -365,33 +356,237 @@ class GenericPeriodPackLoader:
                 raise PreflightContinuityError("Unilever principal partner (PRIN-002) not found in res.partner")
 
             AccountMove = self.env["account.move"].sudo()
-            domain = [
+            base_domain = [
                 ("company_id", "=", self.company.id),
                 ("move_type", "=", "in_invoice"),
                 ("state", "=", "posted"),
                 ("payment_state", "in", ["not_paid", "partial"]),
+                ("partner_id", "=", unilever_partner.id),
             ]
-            if unilever_partner:
-                domain.append(("partner_id", "=", unilever_partner.id))
+            matching_bill = AccountMove.search(base_domain + [("ref", "ilike", "PO-2026-06-05")], limit=1)
+            if not matching_bill:
+                matching_bill = AccountMove.search(base_domain + [("invoice_origin", "ilike", "PO-2026-06-05")], limit=1)
 
             target_amt = Decimal("2899971200.00")
-            all_unilever_bills = AccountMove.search(domain)
-            matching_bill = None
-            for b in all_unilever_bills:
-                res_val = _dec(getattr(b, "amount_residual", None) or getattr(b, "amount_total", None))
-                if abs(res_val - target_amt) <= Decimal("1.00"):
-                    matching_bill = b
-                    break
+            if matching_bill:
+                res_val = _dec(getattr(matching_bill, "amount_residual", None) or getattr(matching_bill, "amount_total", None))
+                if abs(res_val - target_amt) > Decimal("1.00"):
+                    matching_bill = None
 
             if not matching_bill and self.strict:
                 raise PreflightContinuityError(
-                    f"Open July Unilever vendor bill with residual {target_amt} not found for August AP payment"
+                    f"Open July Unilever vendor bill for PO-2026-06-05 with residual {target_amt} not found for August AP payment"
                 )
             report["checks"].append(
                 f"unilever_bill_found: {matching_bill.name if matching_bill else 'none'}"
             )
 
         return report
+
+    # -----------------------------------------------------------------------
+    # Idempotency & Deep Drift Validation
+    # -----------------------------------------------------------------------
+
+    def _validate_existing_po(
+        self, existing: Any, po_row: Dict[str, str], lines: List[Dict[str, str]]
+    ) -> None:
+        """Validate existing Purchase Order matches period pack specification with zero drift."""
+        po_num = po_row["po_number"]
+        prin_code = po_row["principal_code"]
+        p_ref = getattr(existing.partner_id, "ref", "")
+        p_name = getattr(existing.partner_id, "name", "")
+        if existing.partner_id and p_ref != prin_code and prin_code not in p_name:
+            raise StateInconsistencyError(
+                f"Drift detected on existing PO {po_num}: partner mismatch {p_ref} vs {prin_code}"
+            )
+        order_date = po_row.get("order_date", "")
+        act_date = str(getattr(existing, "date_order", ""))
+        if order_date and act_date and not act_date.startswith(order_date[:10]):
+            raise StateInconsistencyError(
+                f"Drift detected on existing PO {po_num}: date mismatch {act_date} vs {order_date}"
+            )
+        act_state = getattr(existing, "state", None)
+        if act_state and act_state not in ("purchase", "done"):
+            raise StateInconsistencyError(
+                f"Drift detected on existing PO {po_num}: state is '{act_state}' (expected purchase/done)"
+            )
+        order_lines = getattr(existing, "order_line", None)
+        if order_lines is not None and len(order_lines) > 0 and lines:
+            if len(order_lines) != len(lines):
+                raise StateInconsistencyError(
+                    f"Drift detected on existing PO {po_num}: line count mismatch {len(order_lines)} vs {len(lines)}"
+                )
+            lines_by_sku = {line["sku_code"]: line for line in lines}
+            for ol in order_lines:
+                sku = getattr(ol.product_id, "default_code", "")
+                if sku and sku not in lines_by_sku:
+                    raise StateInconsistencyError(
+                        f"Drift detected on existing PO {po_num}: unexpected SKU '{sku}'"
+                    )
+                if sku in lines_by_sku:
+                    exp_line = lines_by_sku[sku]
+                    exp_qty = float(exp_line["qty_cartons"]) * float(exp_line["carton_qty"])
+                    act_qty = float(getattr(ol, "product_qty", 0))
+                    if abs(exp_qty - act_qty) > 0.01:
+                        raise StateInconsistencyError(
+                            f"Drift detected on existing PO {po_num} SKU {sku}: qty mismatch {act_qty} vs {exp_qty}"
+                        )
+
+    def _validate_existing_so(
+        self, existing: Any, so_row: Dict[str, str], lines: List[Dict[str, str]]
+    ) -> None:
+        """Validate existing Sales Order matches period pack specification with zero drift."""
+        so_num = so_row["so_number"]
+        cust_ref = extract_ref(so_row["customer"])
+        p_ref = getattr(existing.partner_id, "ref", "")
+        p_name = getattr(existing.partner_id, "name", "")
+        if existing.partner_id and p_ref != cust_ref and cust_ref not in p_name:
+            raise StateInconsistencyError(
+                f"Drift detected on existing {so_num}: customer mismatch {p_ref} vs {cust_ref}"
+            )
+        exp_net = _dec(so_row.get("net_dpp", 0))
+        act_net = _dec(getattr(existing, "amount_untaxed", 0))
+        if abs(exp_net - act_net) > CENT:
+            raise StateInconsistencyError(
+                f"Drift detected on existing {so_num}: expected net {exp_net}, found {act_net}"
+            )
+        act_state = getattr(existing, "state", None)
+        if act_state and act_state not in ("sale", "done"):
+            raise StateInconsistencyError(
+                f"Drift detected on existing {so_num}: state is '{act_state}' (expected sale/done)"
+            )
+        order_lines = getattr(existing, "order_line", None)
+        if order_lines is not None and len(order_lines) > 0 and lines:
+            if len(order_lines) != len(lines):
+                raise StateInconsistencyError(
+                    f"Drift detected on existing {so_num}: line count mismatch {len(order_lines)} vs {len(lines)}"
+                )
+
+    def _validate_existing_invoice(self, existing: Any, inv_row: Dict[str, str]) -> None:
+        """Validate existing Invoice matches period pack specification with zero drift."""
+        inv_num = inv_row["invoice_number"]
+        cust_ref = extract_ref(inv_row.get("customer", ""))
+        p_ref = getattr(existing.partner_id, "ref", "")
+        p_name = getattr(existing.partner_id, "name", "")
+        if cust_ref and existing.partner_id and p_ref != cust_ref and cust_ref not in p_name:
+            raise StateInconsistencyError(
+                f"Drift detected on Invoice {inv_num}: customer mismatch {p_ref} vs {cust_ref}"
+            )
+        exp_total = _dec(inv_row.get("total_invoice_with_ppn", 0))
+        act_total = _dec(getattr(existing, "amount_total", 0))
+        if abs(exp_total - act_total) > CENT:
+            raise StateInconsistencyError(
+                f"Drift detected on Invoice {inv_num}: expected total {exp_total}, found {act_total}"
+            )
+        exp_dpp = _dec(inv_row.get("dpp_amount", 0))
+        act_dpp = _dec(getattr(existing, "amount_untaxed", 0))
+        if abs(exp_dpp - act_dpp) > CENT:
+            raise StateInconsistencyError(
+                f"Drift detected on Invoice {inv_num}: expected dpp {exp_dpp}, found {act_dpp}"
+            )
+        exp_ppn = _dec(inv_row.get("ppn_amount", 0))
+        act_ppn = _dec(getattr(existing, "amount_tax", 0))
+        if abs(exp_ppn - act_ppn) > CENT:
+            raise StateInconsistencyError(
+                f"Drift detected on Invoice {inv_num}: expected PPN {exp_ppn}, found {act_ppn}"
+            )
+        if not getattr(existing, "is_fmcg_seed_invoice", False):
+            raise StateInconsistencyError(
+                f"Drift detected on Invoice {inv_num}: is_fmcg_seed_invoice flag is False"
+            )
+        act_state = getattr(existing, "state", None)
+        if act_state and act_state != "posted":
+            raise StateInconsistencyError(
+                f"Drift detected on Invoice {inv_num}: state is '{act_state}' (expected posted)"
+            )
+
+    def _validate_existing_ar_payment(self, existing: Any, ar_row: Dict[str, str]) -> None:
+        """Validate existing AR Payment matches period pack specification with zero drift."""
+        pay_ref = ar_row["payment_id"]
+        exp_amt = _dec(ar_row.get("net_cash_collected_total", 0))
+        act_amt = _dec(getattr(existing, "amount", 0))
+        if abs(exp_amt - act_amt) > CENT:
+            raise StateInconsistencyError(
+                f"Drift detected on AR payment {pay_ref}: expected amount {exp_amt}, found {act_amt}"
+            )
+        act_state = getattr(existing, "state", None)
+        if act_state and act_state != "posted":
+            raise StateInconsistencyError(
+                f"Drift detected on AR payment {pay_ref}: state is '{act_state}' (expected posted)"
+            )
+        p_type = getattr(existing, "payment_type", None)
+        if p_type and p_type != "inbound":
+            raise StateInconsistencyError(
+                f"Drift detected on AR payment {pay_ref}: payment_type is '{p_type}' (expected inbound)"
+            )
+
+    def _validate_existing_ap_payment(
+        self, existing: Any, ap_row: Dict[str, str], unilever_bill: Any = None
+    ) -> None:
+        """Validate existing AP Payment matches period pack specification and Unilever bill settlement."""
+        pay_ref = ap_row["ap_payment_id"]
+        exp_amt = _dec(ap_row.get("amount_paid_dpp", 0))
+        act_amt = _dec(getattr(existing, "amount", 0))
+        if abs(exp_amt - act_amt) > CENT:
+            raise StateInconsistencyError(
+                f"Drift detected on AP payment {pay_ref}: expected amount {exp_amt}, found {act_amt}"
+            )
+        act_state = getattr(existing, "state", None)
+        if act_state and act_state != "posted":
+            raise StateInconsistencyError(
+                f"Drift detected on AP payment {pay_ref}: state is '{act_state}' (expected posted)"
+            )
+        p_type = getattr(existing, "payment_type", None)
+        if p_type and p_type != "outbound":
+            raise StateInconsistencyError(
+                f"Drift detected on AP payment {pay_ref}: payment_type is '{p_type}' (expected outbound)"
+            )
+        if unilever_bill:
+            bill_res = _dec(getattr(unilever_bill, "amount_residual", 0))
+            bill_state = getattr(unilever_bill, "payment_state", None)
+            if bill_res > Decimal("1.00") or (bill_state and bill_state not in ("paid", "in_payment")):
+                raise StateInconsistencyError(
+                    f"Drift detected on AP settlement for {pay_ref}: linked July Unilever bill is not settled "
+                    f"(residual={bill_res}, payment_state={bill_state})"
+                )
+
+    def _validate_existing_opex(
+        self, existing: Any, op_row: Dict[str, str], target_code: str, credit_acc_code: str
+    ) -> None:
+        """Validate existing OPEX journal entry matches period pack specification with zero drift."""
+        desc = op_row["description"]
+        exp_amt = _dec(op_row.get("amount", 0))
+        act_state = getattr(existing, "state", None)
+        if act_state and act_state != "posted":
+            raise StateInconsistencyError(
+                f"Drift detected on OPEX {desc}: state is '{act_state}' (expected posted)"
+            )
+        lines = getattr(existing, "line_ids", [])
+        if lines:
+            debit_lines = [mline for mline in lines if _dec(getattr(mline, "debit", 0)) > ZERO]
+            credit_lines = [mline for mline in lines if _dec(getattr(mline, "credit", 0)) > ZERO]
+            act_debit = sum(_dec(getattr(mline, "debit", 0)) for mline in debit_lines)
+            act_credit = sum(_dec(getattr(mline, "credit", 0)) for mline in credit_lines)
+            if abs(exp_amt - act_debit) > CENT:
+                raise StateInconsistencyError(
+                    f"Drift detected on OPEX {desc}: expected debit {exp_amt}, found {act_debit}"
+                )
+            if abs(exp_amt - act_credit) > CENT:
+                raise StateInconsistencyError(
+                    f"Drift detected on OPEX {desc}: expected credit {exp_amt}, found {act_credit}"
+                )
+            if debit_lines:
+                d_acc_code = getattr(getattr(debit_lines[0], "account_id", None), "code", "")
+                if d_acc_code and d_acc_code != target_code:
+                    raise StateInconsistencyError(
+                        f"Drift detected on OPEX {desc}: debit account mismatch {d_acc_code} vs expected {target_code}"
+                    )
+            if credit_lines and credit_acc_code:
+                c_acc_code = getattr(getattr(credit_lines[0], "account_id", None), "code", "")
+                if c_acc_code and c_acc_code != credit_acc_code:
+                    raise StateInconsistencyError(
+                        f"Drift detected on OPEX {desc}: credit account mismatch {c_acc_code} vs expected {credit_acc_code}"
+                    )
 
     # -----------------------------------------------------------------------
     # Dry-Run Evaluation (No Mutations)
@@ -416,6 +611,17 @@ class GenericPeriodPackLoader:
         AccountMove = self.env["account.move"].sudo()
         PurchaseOrder = self.env["purchase.order"].sudo()
         Product = self.env["product.product"].sudo()
+        Partner = self.env["res.partner"].sudo()
+        Journal = self.env["account.journal"].sudo()
+
+        # Map lines by parent document
+        po_lines_by_po = {}
+        for line in self.reader.po_lines:
+            po_lines_by_po.setdefault(line["po_number"], []).append(line)
+
+        lines_by_so = {}
+        for lrow in self.reader.order_lines:
+            lines_by_so.setdefault(lrow["so_number"], []).append(lrow)
 
         # Pre-validate SKUs across all declared order lines (no silent skips)
         for lrow in self.reader.po_lines:
@@ -443,14 +649,11 @@ class GenericPeriodPackLoader:
                 [("company_id", "=", self.company.id), ("name", "=", po_num)], limit=1
             )
             if existing:
-                prin_code = po_row["principal_code"]
-                p_ref = getattr(existing.partner_id, "ref", "")
-                p_name = getattr(existing.partner_id, "name", "")
-                if existing.partner_id and p_ref != prin_code and prin_code not in p_name:
+                try:
+                    self._validate_existing_po(existing, po_row, po_lines_by_po.get(po_num, []))
+                except StateInconsistencyError:
                     self.plan["po"]["conflicts"] += 1
-                    raise StateInconsistencyError(
-                        f"Drift detected on existing PO {po_num}: partner mismatch {p_ref} vs {prin_code}"
-                    )
+                    raise
                 self.plan["po"]["to_skip"] += 1
             else:
                 self.plan["po"]["to_create"] += 1
@@ -462,22 +665,11 @@ class GenericPeriodPackLoader:
                 [("company_id", "=", self.company.id), ("client_order_ref", "=", so_num)], limit=1
             )
             if existing:
-                # Check for drift/inconsistency on net DPP
-                exp_net = _dec(so_row.get("net_dpp", 0))
-                act_net = _dec(existing.amount_untaxed)
-                if abs(exp_net - act_net) > CENT and self.strict:
+                try:
+                    self._validate_existing_so(existing, so_row, lines_by_so.get(so_num, []))
+                except StateInconsistencyError:
                     self.plan["so"]["conflicts"] += 1
-                    raise StateInconsistencyError(
-                        f"Drift detected on existing {so_num}: expected net {exp_net}, found {act_net}"
-                    )
-                cust_ref = extract_ref(so_row["customer"])
-                p_ref = getattr(existing.partner_id, "ref", "")
-                p_name = getattr(existing.partner_id, "name", "")
-                if existing.partner_id and p_ref != cust_ref and cust_ref not in p_name:
-                    self.plan["so"]["conflicts"] += 1
-                    raise StateInconsistencyError(
-                        f"Drift detected on existing {so_num}: customer mismatch {p_ref} vs {cust_ref}"
-                    )
+                    raise
                 self.plan["so"]["to_skip"] += 1
                 self.plan["delivery"]["to_skip"] += 1
             else:
@@ -496,25 +688,11 @@ class GenericPeriodPackLoader:
                 limit=1,
             )
             if existing:
-                exp_total = _dec(inv_row.get("total_invoice_with_ppn", 0))
-                act_total = _dec(existing.amount_total)
-                if abs(exp_total - act_total) > CENT and self.strict:
+                try:
+                    self._validate_existing_invoice(existing, inv_row)
+                except StateInconsistencyError:
                     self.plan["invoice"]["conflicts"] += 1
-                    raise StateInconsistencyError(
-                        f"Drift detected on Invoice {inv_num}: expected total {exp_total}, found {act_total}"
-                    )
-                exp_dpp = _dec(inv_row.get("dpp_amount", 0))
-                act_dpp = _dec(existing.amount_untaxed)
-                if abs(exp_dpp - act_dpp) > CENT and self.strict:
-                    self.plan["invoice"]["conflicts"] += 1
-                    raise StateInconsistencyError(
-                        f"Drift detected on Invoice {inv_num}: expected dpp {exp_dpp}, found {act_dpp}"
-                    )
-                if not getattr(existing, "is_fmcg_seed_invoice", False) and self.strict:
-                    self.plan["invoice"]["conflicts"] += 1
-                    raise StateInconsistencyError(
-                        f"Drift detected on Invoice {inv_num}: is_fmcg_seed_invoice flag is False"
-                    )
+                    raise
                 self.plan["invoice"]["to_skip"] += 1
             else:
                 self.plan["invoice"]["to_create"] += 1
@@ -527,45 +705,65 @@ class GenericPeriodPackLoader:
                 [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
             )
             if existing:
-                exp_amt = _dec(ar_row.get("net_cash_collected_total", 0))
-                act_amt = _dec(existing.amount)
-                if abs(exp_amt - act_amt) > CENT and self.strict:
+                try:
+                    self._validate_existing_ar_payment(existing, ar_row)
+                except StateInconsistencyError:
                     self.plan["ar"]["conflicts"] += 1
-                    raise StateInconsistencyError(
-                        f"Drift detected on AR payment {pay_ref}: expected amount {exp_amt}, found {act_amt}"
-                    )
+                    raise
                 self.plan["ar"]["to_skip"] += 1
             else:
                 self.plan["ar"]["to_reconcile"] += 1
 
         # 5. Evaluate AP Payments
+        unilever_partner = Partner.search([("ref", "=", "PRIN-002")], limit=1) or Partner.search(
+            [("name", "ilike", "Unilever")], limit=1
+        )
+        bill_domain = [
+            ("company_id", "=", self.company.id),
+            ("move_type", "=", "in_invoice"),
+            ("partner_id", "=", unilever_partner.id if unilever_partner else False),
+        ]
+        unilever_bill = AccountMove.search(bill_domain + [("ref", "ilike", "PO-2026-06-05")], limit=1)
+        if not unilever_bill:
+            unilever_bill = AccountMove.search(bill_domain + [("invoice_origin", "ilike", "PO-2026-06-05")], limit=1)
         for ap_row in self.reader.ap_payments:
             pay_ref = ap_row["ap_payment_id"]
             existing = AccountPayment.search(
                 [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
             )
             if existing:
-                exp_amt = _dec(ap_row.get("amount_paid_dpp", 0))
-                act_amt = _dec(existing.amount)
-                if abs(exp_amt - act_amt) > CENT and self.strict:
+                try:
+                    self._validate_existing_ap_payment(existing, ap_row, unilever_bill)
+                except StateInconsistencyError:
                     self.plan["ap"]["conflicts"] += 1
-                    raise StateInconsistencyError(
-                        f"Drift detected on AP payment {pay_ref}: expected amount {exp_amt}, found {act_amt}"
-                    )
+                    raise
                 self.plan["ap"]["to_skip"] += 1
             else:
                 self.plan["ap"]["to_reconcile"] += 1
 
         # 6. Evaluate OPEX
+        bank_journal = Journal.search(
+            [("company_id", "=", self.company.id), ("type", "in", ["bank", "cash"])], limit=1
+        )
+        credit_account = None
+        if bank_journal and getattr(bank_journal, "default_account_id", None):
+            credit_account = bank_journal.default_account_id
+        if not credit_account:
+            credit_account = self._resolve_account("111100")
+        credit_code = getattr(credit_account, "code", "111100")
+
         for op_row in self.reader.opex:
             date_str = op_row["date"]
             desc = op_row["description"]
             cat = op_row.get("category", "").strip()
-            exp_amt = _dec(op_row.get("amount", 0))
 
-            # Verify explicit account resolution
-            target_code = OPEX_CATEGORY_ACCOUNT_MAP.get(cat, "610100")
-            acc = self._resolve_account(target_code, "expense")
+            if cat not in OPEX_CATEGORY_ACCOUNT_MAP:
+                self.plan["opex"]["conflicts"] += 1
+                raise PreflightContinuityError(
+                    f"Unknown OPEX category '{cat}' (no explicit mapping configured in OPEX_CATEGORY_ACCOUNT_MAP)"
+                )
+            target_code = OPEX_CATEGORY_ACCOUNT_MAP[cat]
+            acc = self._resolve_account(target_code)
             if not acc and self.strict:
                 self.plan["opex"]["conflicts"] += 1
                 raise PreflightContinuityError(
@@ -582,12 +780,11 @@ class GenericPeriodPackLoader:
                 limit=1,
             )
             if existing:
-                act_debit = sum(_dec(getattr(line, "debit", 0)) for line in getattr(existing, "line_ids", []) if _dec(getattr(line, "debit", 0)) > ZERO)
-                if abs(exp_amt - act_debit) > CENT and self.strict:
+                try:
+                    self._validate_existing_opex(existing, op_row, target_code, credit_code)
+                except StateInconsistencyError:
                     self.plan["opex"]["conflicts"] += 1
-                    raise StateInconsistencyError(
-                        f"Drift detected on OPEX {desc} on {date_str}: expected {exp_amt}, found {act_debit}"
-                    )
+                    raise
                 self.plan["opex"]["to_skip"] += 1
             else:
                 self.plan["opex"]["to_create"] += 1
@@ -669,13 +866,7 @@ class GenericPeriodPackLoader:
                 [("company_id", "=", self.company.id), ("name", "=", po_num)], limit=1
             )
             if existing:
-                prin_code = po_row["principal_code"]
-                p_ref = getattr(existing.partner_id, "ref", "")
-                p_name = getattr(existing.partner_id, "name", "")
-                if existing.partner_id and p_ref != prin_code and prin_code not in p_name:
-                    raise StateInconsistencyError(
-                        f"Drift detected on existing PO {po_num}: partner mismatch {p_ref} vs {prin_code}"
-                    )
+                self._validate_existing_po(existing, po_row, po_lines_by_po.get(po_num, []))
                 continue
 
             prin_code = po_row["principal_code"]
@@ -741,12 +932,7 @@ class GenericPeriodPackLoader:
                 [("company_id", "=", self.company.id), ("client_order_ref", "=", so_num)], limit=1
             )
             if existing:
-                exp_net = _dec(so_row.get("net_dpp", 0))
-                act_net = _dec(existing.amount_untaxed)
-                if abs(exp_net - act_net) > CENT:
-                    raise StateInconsistencyError(
-                        f"Drift detected on existing SO {so_num}: expected net {exp_net}, found {act_net}"
-                    )
+                self._validate_existing_so(existing, so_row, lines_by_so.get(so_num, []))
                 continue
 
             cust_ref = extract_ref(so_row["customer"])
@@ -823,22 +1009,7 @@ class GenericPeriodPackLoader:
                 limit=1,
             )
             if existing:
-                exp_total = _dec(inv_row.get("total_invoice_with_ppn", 0))
-                act_total = _dec(existing.amount_total)
-                if abs(exp_total - act_total) > CENT:
-                    raise StateInconsistencyError(
-                        f"Drift detected on existing Invoice {inv_num}: expected total {exp_total}, found {act_total}"
-                    )
-                exp_dpp = _dec(inv_row.get("dpp_amount", 0))
-                act_dpp = _dec(existing.amount_untaxed)
-                if abs(exp_dpp - act_dpp) > CENT:
-                    raise StateInconsistencyError(
-                        f"Drift detected on existing Invoice {inv_num}: expected dpp {exp_dpp}, found {act_dpp}"
-                    )
-                if not getattr(existing, "is_fmcg_seed_invoice", False):
-                    raise StateInconsistencyError(
-                        f"Drift detected on existing Invoice {inv_num}: is_fmcg_seed_invoice flag is False"
-                    )
+                self._validate_existing_invoice(existing, inv_row)
                 continue
 
             so = SaleOrder.search(
@@ -882,17 +1053,12 @@ class GenericPeriodPackLoader:
             pay_ref = ar_row["payment_id"]
             inv_num = ar_row["invoice_number"]
             amt = float(ar_row["net_cash_collected_total"])
-            amt_dec = _dec(ar_row["net_cash_collected_total"])
 
             existing = AccountPayment.search(
                 [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
             )
             if existing:
-                act_amt = _dec(existing.amount)
-                if abs(act_amt - amt_dec) > CENT:
-                    raise StateInconsistencyError(
-                        f"Drift detected on AR payment {pay_ref}: expected amount {amt_dec}, found {act_amt}"
-                    )
+                self._validate_existing_ar_payment(existing, ar_row)
                 continue
 
             inv = AccountMove.search(
@@ -970,19 +1136,6 @@ class GenericPeriodPackLoader:
             amt_dec = _dec(ap_row["amount_paid_dpp"])
             prin_code = ap_row.get("principal_code", "PRIN-002")
 
-            existing = AccountPayment.search(
-                [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
-            )
-            if existing:
-                act_amt = _dec(existing.amount)
-                if abs(act_amt - amt_dec) > CENT:
-                    raise StateInconsistencyError(
-                        f"Drift detected on AP payment {pay_ref}: expected amount {amt_dec}, found {act_amt}"
-                    )
-                if existing.state != "posted":
-                    existing.action_post()
-                continue
-
             # 1. Resolve vendor partner strictly
             vendor = Partner.search([("ref", "=", prin_code)], limit=1) or Partner.search(
                 [("name", "ilike", "Unilever" if prin_code == "PRIN-002" else prin_code)], limit=1
@@ -995,44 +1148,41 @@ class GenericPeriodPackLoader:
                 [
                     ("company_id", "=", self.company.id),
                     ("move_type", "=", "in_invoice"),
-                    ("state", "=", "posted"),
-                    ("payment_state", "in", ["not_paid", "partial"]),
                     ("partner_id", "=", vendor.id if vendor else False),
-                    "|",
                     ("ref", "ilike", po_num),
-                    ("invoice_origin", "ilike", po_num),
                 ],
                 limit=1,
             )
-            if not bill and "PO-2026-06-05" in po_num and vendor:
-                # Search all posted open bills of this vendor
-                vendor_bills = AccountMove.search(
+            if not bill:
+                bill = AccountMove.search(
                     [
                         ("company_id", "=", self.company.id),
                         ("move_type", "=", "in_invoice"),
-                        ("state", "=", "posted"),
-                        ("payment_state", "in", ["not_paid", "partial"]),
-                        ("partner_id", "=", vendor.id),
-                    ]
+                        ("partner_id", "=", vendor.id if vendor else False),
+                        ("invoice_origin", "ilike", po_num),
+                    ],
+                    limit=1,
                 )
-                for vb in vendor_bills:
-                    res_val = _dec(getattr(vb, "amount_residual", None) or getattr(vb, "amount_total", None))
-                    if abs(res_val - amt_dec) <= Decimal("1.00"):
-                        bill = vb
-                        break
+
+            existing = AccountPayment.search(
+                [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
+            )
+            if existing:
+                self._validate_existing_ap_payment(existing, ap_row, bill)
+                continue
 
             if not bill:
                 vendor_name = getattr(vendor, "name", "unknown") if vendor else "none"
                 raise PreflightContinuityError(
                     f"Open vendor bill for vendor '{vendor_name}' ({prin_code}) matching PO '{po_num}' "
-                    f"and residual '{amt_dec}' not found for AP payment {pay_ref}"
+                    f"not found for AP payment {pay_ref}"
                 )
 
-            # Validate residual amount
+            # Validate residual amount before payment
             bill_residual = _dec(getattr(bill, "amount_residual", None) or getattr(bill, "amount_total", None))
-            if bill_residual < amt_dec - Decimal("1.00"):
+            if abs(bill_residual - amt_dec) > Decimal("1.00"):
                 raise StateInconsistencyError(
-                    f"Vendor bill {bill.name} residual ({bill_residual}) is less than payment amount ({amt_dec})"
+                    f"Vendor bill {bill.name} residual ({bill_residual}) does not match expected payment amount ({amt_dec})"
                 )
 
             pay_vals = {
@@ -1057,6 +1207,14 @@ class GenericPeriodPackLoader:
             )
             if pay_lines and bill_lines:
                 (pay_lines + bill_lines).reconcile()
+
+            # Immediately verify post-reconciliation state
+            post_residual = _dec(getattr(bill, "amount_residual", 0))
+            post_state = getattr(bill, "payment_state", None)
+            if post_residual > Decimal("1.00") or (post_state and post_state not in ("paid", "in_payment")):
+                raise StateInconsistencyError(
+                    f"Vendor bill {bill.name} not fully settled post-reconcile: residual={post_residual}, state={post_state}"
+                )
 
             reconciled += 1
 
@@ -1089,7 +1247,8 @@ class GenericPeriodPackLoader:
         if bank_journal and getattr(bank_journal, "default_account_id", None):
             credit_account = bank_journal.default_account_id
         if not credit_account:
-            credit_account = self._resolve_account("111100", "asset_cash")
+            credit_account = self._resolve_account("111100")
+        credit_code = getattr(credit_account, "code", "111100")
 
         created = 0
         for op_row in opex_rows:
@@ -1097,7 +1256,19 @@ class GenericPeriodPackLoader:
             desc = op_row["description"]
             cat = op_row.get("category", "").strip()
             amt = float(op_row["amount"])
-            amt_dec = _dec(op_row["amount"])
+
+            if cat not in OPEX_CATEGORY_ACCOUNT_MAP:
+                raise PreflightContinuityError(
+                    f"Unknown OPEX category '{cat}' (no explicit mapping configured in OPEX_CATEGORY_ACCOUNT_MAP)"
+                )
+            target_code = OPEX_CATEGORY_ACCOUNT_MAP[cat]
+            debit_account = self._resolve_account(target_code)
+            if not debit_account and self.strict:
+                raise PreflightContinuityError(
+                    f"Cannot resolve debit expense account for OPEX category '{cat}' (target {target_code})"
+                )
+            if not credit_account and self.strict:
+                raise PreflightContinuityError("Cannot resolve credit cash/bank account for OPEX entry")
 
             existing = AccountMove.search(
                 [
@@ -1109,21 +1280,8 @@ class GenericPeriodPackLoader:
                 limit=1,
             )
             if existing:
-                act_debit = sum(_dec(getattr(line, "debit", 0)) for line in getattr(existing, "line_ids", []) if _dec(getattr(line, "debit", 0)) > ZERO)
-                if abs(act_debit - amt_dec) > CENT and self.strict:
-                    raise StateInconsistencyError(
-                        f"Drift detected on existing OPEX {desc}: expected {amt_dec}, found {act_debit}"
-                    )
+                self._validate_existing_opex(existing, op_row, target_code, credit_code)
                 continue
-
-            target_code = OPEX_CATEGORY_ACCOUNT_MAP.get(cat, "610100")
-            debit_account = self._resolve_account(target_code, "expense")
-            if not debit_account and self.strict:
-                raise PreflightContinuityError(
-                    f"Cannot resolve debit expense account for OPEX category '{cat}' (target {target_code})"
-                )
-            if not credit_account and self.strict:
-                raise PreflightContinuityError("Cannot resolve credit cash/bank account for OPEX entry")
 
             move_vals = {
                 "journal_id": misc_journal.id,

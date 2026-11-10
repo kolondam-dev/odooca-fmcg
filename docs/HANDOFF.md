@@ -1,3 +1,38 @@
+## 2026-11-10T16:50:00+07:00 — antigravity — F4: Resolusi Tuntas 6 Blocker Re-Review Supervisor PR #110 (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  1. Pelunasan AP Unilever diperketat eksak: pencarian vendor Unilever (`PRIN-002` / 'Unilever'), purchase origin/ref `PO-2026-06-05`, residual sisa utang vendor bill Juli eksak Rp2.899.971.200 (toleransi <= 1.00), menghapus loop fallback arbitrary, verifikasi residual <= 1.00 dan payment state `paid`/`in_payment` pasca-rekonsiliasi, serta verifikasi idempotency skip pada bill yang sudah lunas.
+  2. Deep idempotency zero-drift untuk seluruh dokumen (PO, SO, Invoice, AR payment, AP payment, OPEX) dengan validator multi-atribut fail-closed (`_validate_existing_*`). Segala bentuk drift nilai memicu `StateInconsistencyError` baik pada `--dry-run` maupun `--apply`.
+  3. Pemetaan OPEX rigid deterministik: menghapus silent fallback prefix 3 digit dan arbitrary account type; mengunci 9 kategori beban operasional di `OPEX_CATEGORY_ACCOUNT_MAP` dan mengkredit akun kas/bank deterministik.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  1. Skenario B diisolasi mandiri: `run_scenario_b_from_empty_database()` melakukan preflight assertion menolak database tidak kosong (`so_count == 0` dan `move_count == 0`), memuat Juli lalu Agustus, dan membandingkan digest snapshot SHA-256 terhadap Scenario A untuk membuktikan determinisme cross-path.
+  2. Accounting, stock, dan tax runtime oracle diperketat dengan hard failure pada mismatch like-for-like monetary value: Stock-to-GL tie-out (quants internal vs akun 113000), AR-to-GL tie-out (open invoices vs akun 112000), AP-to-GL tie-out (open bills vs akun 211000), OPEX strictly scoped per baris register `opex.csv` terhadap GL matching entries, serta verifikasi Faktur Pajak Masukan (11%) dan kode transaksi 04 DPP Nilai Lain 11/12 dan PPN 12% (efektif 11%).
+  3. True fault injection & recovery: menguji mutasi nyata pada in-database batch savepoint (`cr.savepoint()`), memverifikasi penolakan kesalahan fatal (tampered AP residual dan unresolved SKU), membuktikan SHA-256 digest database sebelum == sesudah rollback (zero dirty side-effects), dan memulihkan eksekusi secara bersih.
+- `tests/test_period_pack_loader.py`:
+  1. Menambahkan test kegagalan AP settlement bila residual bill Unilever tidak cocok eksak.
+  2. Menambahkan test penolakan Skenario B bila database awal tidak kosong.
+  3. Menambahkan test deteksi drift pada entri OPEX.
+  4. Memperbarui mock ORM untuk perbandingan foreign key relational dan sequential queries.
+  5. 22/22 unit tests PASS.
+- Sinkronisasi Main: Merge origin/main terbaru (`c2e3025` PR #109 PWA Fase 3).
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py -v`: 22/22 tests PASS (100%).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 errors).
+- [F] `python -m ruff check .`: PASS clean (0 errors).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] `python scripts/ops/verify_seed_invariants.py`: PASS (0 violations).
+- [F] `python scripts/ops/verify_seed_acceptance.py`: PASS (0 violations).
+- [F] `python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict`: PASS.
+- [F] Zero touch live Railway / staging operasional demo.
+
+**Belum diuji:**
+- [BU] CI exact-SHA pada commit terbaru di GitHub Actions.
+
+**Berikutnya:**
+- Commit, push branch, perbarui deskripsi PR #110, dan sampaikan hasil resolusi blocker kepada supervisor untuk re-review dan otorisasi merge.
+
 ## 2026-11-10T11:42:54+07:00 — claude-design — Fase 3A: Order v2, Koreksi_so, foto SKU, klaster Lainnya
 
 **Berubah:** domain/order-discount.ts + kontrak pricing v2 (program/tactical bertingkat, diskon footer Rp); OrderScreen/Ringkasan per mockup; KoreksiScreen; sku-photo (Cache Storage, ganti hanya jika versi berubah, fallback placeholder); MorePage + ActivityScreens (Antrean sinkronisasi, Riwayat aktivitas, Riwayat pengajuan); SyncDiagnostics dihapus. Utang backend: DS_RECONCILIATION K14.

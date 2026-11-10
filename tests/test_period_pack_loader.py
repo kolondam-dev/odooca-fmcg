@@ -52,6 +52,31 @@ class MockModel:
         return None
 
     def search(self, domain, limit=None):
+        if self._records:
+            res = []
+            for r in self._records:
+                match = True
+                for term in domain:
+                    if isinstance(term, tuple) and len(term) == 3:
+                        field, op, val = term
+                        r_val = getattr(r, field, None)
+                        if hasattr(r_val, "id") and isinstance(val, (int, bool)):
+                            r_val = r_val.id
+                        if op == "=" and r_val != val:
+                            match = False
+                            break
+                        elif op == "in" and (r_val not in val and (r_val is not None or False not in val)):
+                            match = False
+                            break
+                        elif op == "ilike" and (r_val is None or str(val).lower() not in str(r_val).lower()):
+                            match = False
+                            break
+                if match:
+                    res.append(r)
+            if limit == 1:
+                return res[0] if res else None
+            return res
+
         if self._auto_match:
             val_map = {}
             for term in domain:
@@ -62,27 +87,7 @@ class MockModel:
             rec = MockRecord(id=999, **val_map)
             return rec if limit == 1 else [rec]
 
-        res = []
-        for r in self._records:
-            match = True
-            for term in domain:
-                if isinstance(term, tuple) and len(term) == 3:
-                    field, op, val = term
-                    r_val = getattr(r, field, None)
-                    if op == "=" and r_val != val:
-                        match = False
-                        break
-                    elif op == "in" and (r_val not in val and (r_val is not None or False not in val)):
-                        match = False
-                        break
-                    elif op == "ilike" and (r_val is None or str(val).lower() not in str(r_val).lower()):
-                        match = False
-                        break
-            if match:
-                res.append(r)
-        if limit == 1:
-            return res[0] if res else None
-        return res
+        return None if limit == 1 else []
 
     def search_count(self, domain):
         return self._count_val
@@ -447,6 +452,87 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         with self.assertRaises(StateInconsistencyError) as ctx:
             loader.evaluate_dry_run()
         self.assertIn("Drift detected on Invoice INV-202608-0001", str(ctx.exception))
+
+    def test_ap_payment_settlement_fails_when_unilever_bill_residual_mismatch(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        mock_partner_unilever = MockRecord(id=50, name="PT Unilever Indonesia", ref="PRIN-002")
+        mock_tampered_bill = MockRecord(
+            id=201,
+            company_id=1,
+            name="BILL/2026/07/0001",
+            move_type="in_invoice",
+            state="posted",
+            payment_state="not_paid",
+            amount_total=2899971200.00,
+            amount_residual=500.00,  # Tampered residual
+            ref="PO-2026-06-05",
+            partner_id=mock_partner_unilever,
+        )
+        mock_journal_bank = MockRecord(id=5, company_id=1, type="bank")
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "product.product": MockModel(auto_match=True),
+            "res.partner": MockModel(records=[mock_partner_unilever], auto_match=True),
+            "account.move": MockModel(records=[mock_tampered_bill]),
+            "account.journal": MockModel(records=[mock_journal_bank]),
+            "account.payment": MockModel(),
+            "account.account": MockModel(auto_match=True),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=False, strict=True, company_id=1)
+        loader.company = mock_company
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._apply_ap_payments()
+        self.assertIn("does not match expected payment amount", str(ctx.exception))
+
+    def test_scenario_b_fails_if_database_not_empty(self):
+        mock_cr = MockRecord(dbname="test_disposable")
+        mock_models = {
+            "res.company": MockModel(records=[MockRecord(id=1, name="PT Salva Inti Mandiri")]),
+            "sale.order": MockModel(count_val=10),  # Not empty!
+            "account.move": MockModel(count_val=20),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        with self.assertRaises(PreflightContinuityError) as ctx:
+            from scripts.ops.verify_disposable_period_pack import run_scenario_b_from_empty_database
+            run_scenario_b_from_empty_database(env=env, pack_dir=AUG_PACK_DIR)
+        self.assertIn("requires an empty disposable database", str(ctx.exception))
+
+    def test_deep_idempotency_opex_drift_detected(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        mock_acc_610100 = MockRecord(id=11, code="610100", name="Beban Logistik")
+        mock_acc_wrong = MockRecord(id=99, code="619900", name="Beban Lain-lain")
+        mock_acc_contra = MockRecord(id=21, code="111100", name="Kas Operasional")
+        # Existing OPEX entry with wrong debit account
+        existing_opex = MockRecord(
+            id=301,
+            company_id=1,
+            move_type="entry",
+            date="2026-08-01",
+            ref="BBM Solar 6 Armada, Tol & Retribusi Pengiriman 2026-08-01",
+            state="posted",
+            line_ids=[
+                MockRecord(id=1, account_id=mock_acc_wrong, debit=3200000.00, credit=0.0),
+                MockRecord(id=2, account_id=mock_acc_contra, debit=0.0, credit=3200000.00),
+            ],
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "product.product": MockModel(auto_match=True),
+            "account.move": MockModel(records=[existing_opex]),
+            "sale.order": MockModel(),
+            "purchase.order": MockModel(),
+            "account.payment": MockModel(),
+            "account.account": MockModel(records=[mock_acc_610100, mock_acc_wrong, mock_acc_contra], auto_match=True),
+            "account.journal": MockModel(auto_match=True),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
+        loader.company = mock_company
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader.evaluate_dry_run()
+        self.assertIn("debit account mismatch", str(ctx.exception))
 
 
 if __name__ == "__main__":
