@@ -34,9 +34,10 @@ AUG_PACK_DIR = REPO_ROOT / "data" / "registers" / "periods" / "2026-08"
 class MockModel:
     """Mock Odoo model for unit testing loader logic offline."""
 
-    def __init__(self, records=None, count_val=0):
+    def __init__(self, records=None, count_val=0, auto_match=False):
         self._records = records or []
         self._count_val = count_val
+        self._auto_match = auto_match
 
     def sudo(self):
         return self
@@ -51,6 +52,16 @@ class MockModel:
         return None
 
     def search(self, domain, limit=None):
+        if self._auto_match:
+            val_map = {}
+            for term in domain:
+                if isinstance(term, tuple) and len(term) == 3:
+                    field, op, val = term
+                    if op == "=":
+                        val_map[field] = val
+            rec = MockRecord(id=999, **val_map)
+            return rec if limit == 1 else [rec]
+
         res = []
         for r in self._records:
             match = True
@@ -61,7 +72,7 @@ class MockModel:
                     if op == "=" and r_val != val:
                         match = False
                         break
-                    elif op == "in" and r_val not in val:
+                    elif op == "in" and (r_val not in val and (r_val is not None or False not in val)):
                         match = False
                         break
                     elif op == "ilike" and (r_val is None or str(val).lower() not in str(r_val).lower()):
@@ -227,16 +238,18 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
             company_id=1,
             client_order_ref="SO-202608-0001",
             amount_untaxed=355680.00,
+            partner_id=MockRecord(id=1, ref="CUST-RTL-006", name="Warung Dani"),
         )
         mock_models = {
             "res.company": MockModel(records=[mock_company]),
             "stock.location": MockModel(records=[mock_loc]),
-            "res.partner": MockModel(count_val=354),
-            "product.product": MockModel(count_val=150),
+            "res.partner": MockModel(count_val=354, auto_match=True),
+            "product.product": MockModel(count_val=150, auto_match=True),
             "sale.order": MockModel(records=[existing_so], count_val=1324),
             "account.move": MockModel(count_val=1),
             "purchase.order": MockModel(),
             "account.payment": MockModel(),
+            "account.account": MockModel(auto_match=True),
         }
         env = MockEnv(mock_models)
         loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True)
@@ -256,13 +269,16 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
             company_id=1,
             client_order_ref="SO-202608-0001",
             amount_untaxed=500000.00,
+            partner_id=MockRecord(id=1, ref="CUST-RTL-006", name="Warung Dani"),
         )
         mock_models = {
             "res.company": MockModel(records=[mock_company]),
+            "product.product": MockModel(auto_match=True),
             "sale.order": MockModel(records=[drifted_so], count_val=1324),
             "account.move": MockModel(),
             "purchase.order": MockModel(),
             "account.payment": MockModel(),
+            "account.account": MockModel(auto_match=True),
         }
         env = MockEnv(mock_models)
         loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
@@ -273,7 +289,7 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
 
     def test_ap_payment_settles_july_unilever_bill(self):
         mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
-        mock_partner_unilever = MockRecord(id=50, name="PT Unilever Indonesia")
+        mock_partner_unilever = MockRecord(id=50, name="PT Unilever Indonesia", ref="PRIN-002")
         mock_july_bill = MockRecord(
             id=201,
             company_id=1,
@@ -281,6 +297,7 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
             state="posted",
             payment_state="not_paid",
             amount_total=2899971200.00,
+            amount_residual=2899971200.00,
             ref="PO-2026-06-05",
             partner_id=mock_partner_unilever,
         )
@@ -288,9 +305,12 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
 
         mock_models = {
             "res.company": MockModel(records=[mock_company]),
+            "product.product": MockModel(auto_match=True),
+            "res.partner": MockModel(records=[mock_partner_unilever], auto_match=True),
             "account.move": MockModel(records=[mock_july_bill]),
             "account.journal": MockModel(records=[mock_journal_bank]),
             "account.payment": MockModel(),
+            "account.account": MockModel(auto_match=True),
         }
         env = MockEnv(mock_models)
         loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, company_id=1)
@@ -350,16 +370,83 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             res = assert_disposable_database(mock_env)
             self.assertEqual(res, db_name)
 
-    def test_audit_period_database_offline_passes(self):
-        oracle = PeriodPackOracle(AUG_PACK_DIR)
-        res = audit_period_database(env=None, oracle=oracle)
-        self.assertEqual(res["status"], "PASS")
-        self.assertEqual(len(res["violations"]), 0)
+    def test_safety_guard_rejects_none_env(self):
+        with self.assertRaises(RuntimeError) as ctx:
+            assert_disposable_database(None)
+        self.assertIn("Live disposable Odoo environment required", str(ctx.exception))
 
-    def test_fault_injection_probes_offline_pass(self):
-        res = run_period_pack_fault_injection_probes(env=None, pack_dir=AUG_PACK_DIR)
-        self.assertEqual(res["probe_so_savepoint_rollback"], "REJECTED_AND_RECOVERED_AS_EXPECTED")
-        self.assertEqual(res["probe_ap_bill_mismatch"], "REJECTED_AS_EXPECTED")
+    def test_runtime_verifier_functions_reject_none_env(self):
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        with self.assertRaises(RuntimeError) as ctx:
+            audit_period_database(env=None, oracle=oracle)
+        self.assertIn("Live disposable Odoo environment required", str(ctx.exception))
+
+        with self.assertRaises(RuntimeError) as ctx2:
+            run_period_pack_fault_injection_probes(env=None, pack_dir=AUG_PACK_DIR)
+        self.assertIn("Live disposable Odoo environment required", str(ctx2.exception))
+
+    def test_unresolved_sku_fails_fast_in_dry_run(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        # Empty product search -> any SKU will be unresolved
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "product.product": MockModel(records=[]),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
+        loader.company = mock_company
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader.evaluate_dry_run()
+        self.assertIn("missing SKU", str(ctx.exception))
+
+    def test_opex_account_mapping_resolves_all_categories(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        mock_acc_610100 = MockRecord(id=11, code="610100", name="Beban Logistik", company_id=1)
+        mock_acc_610200 = MockRecord(id=12, code="610200", name="Beban Gaji", company_id=1)
+        mock_acc_610400 = MockRecord(id=13, code="610400", name="Beban Sewa", company_id=1)
+        mock_acc_111100 = MockRecord(id=21, code="111100", name="Kas Operasional", company_id=1)
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "account.account": MockModel(records=[mock_acc_610100, mock_acc_610200, mock_acc_610400, mock_acc_111100]),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
+        loader.company = mock_company
+        # Verify resolution of explicit accounts
+        acc_log = loader._resolve_account("610100", "expense")
+        self.assertEqual(acc_log.code, "610100")
+        acc_gaji = loader._resolve_account("610200", "expense")
+        self.assertEqual(acc_gaji.code, "610200")
+        acc_sewa = loader._resolve_account("610400", "expense")
+        self.assertEqual(acc_sewa.code, "610400")
+
+    def test_invoice_idempotency_drift_fails_closed(self):
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        # Existing invoice with drifted total
+        existing_inv = MockRecord(
+            id=501,
+            company_id=1,
+            move_type="out_invoice",
+            payment_reference="INV-202608-0001",
+            amount_total=9999999.00,  # Drifted total
+            amount_untaxed=355680.00,
+            is_fmcg_seed_invoice=True,
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "product.product": MockModel(auto_match=True),
+            "account.move": MockModel(records=[existing_inv]),
+            "sale.order": MockModel(),
+            "purchase.order": MockModel(),
+            "account.payment": MockModel(),
+            "account.account": MockModel(records=[MockRecord(id=1, code="610100", company_id=1)]),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
+        loader.company = mock_company
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader.evaluate_dry_run()
+        self.assertIn("Drift detected on Invoice INV-202608-0001", str(ctx.exception))
 
 
 if __name__ == "__main__":
