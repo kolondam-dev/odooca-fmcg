@@ -239,3 +239,12 @@
 - Penjelasan selisih 12 vs 10 yang diinspeksi reviewer: Seed supervision berjalan dua kali karena trigger push dan pull_request, masing-masing menyumbang invariant-tests + seed-invariants.
 - [BU] Re-review supervisor belum ada; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN36-38/55-56 dan FIN05-09 tetap BELUM_DITERIMA.
 - Task managed by claude-dev agent at 2026-11-10T08:35:00+07:00
+[2026-11-10T10:20:00+07:00] [INFO] I2c/PR108: formula FIN37/FIN38 dijadikan kontrak yang dieksekusi
+- FIN37: inkonsistensi dihapus. ADR sebelumnya menyebut "parameter jadwal yang disetujui" sebagai fallback sekaligus missing_schedule_metadata. Keputusan final: parameter jadwal TIDAK menghasilkan alokasi pada FIN37; semua baris tanpa start_date/end_date hanya menjadi exception bernominal. Parameter bertanggal hanya dipakai FIN55.
+- FIN38: formula lama tidak operasional. Kini rate_debit = balance/amount_currency; functional_debit = debit_amount_currency x rate_debit; functional_credit = -credit_amount_currency x rate_credit; realized_partial = functional_debit - functional_credit. Dinyatakan juga mengapa amount-amount selalu nol (p.amount positif di kedua kaki).
+- Validasi numerik sebelum ditulis: percobaan pertama salah tanda pada kaki kredit (menghasilkan 3.100.000), diperbaiki menjadi A gain -100.000, B loss +100.000, C gain parsial -40.000, D mata uang fungsional 0.
+- Kasus khusus eksplisit: partial sebelum full reconcile dihitung per partial; multi-partial dijumlah dengan batas over_reconciled; write-off tanpa FX dilaporkan terpisah; reversal di-net per pasangan via reversed_entry_id/reversal_move_ids; tanpa exchange_move_id tetap dihitung tetapi menjadi realized_unposted_evidence di luar tie-out; amount_currency == 0 menjadi missing_currency_amount.
+- Tie-out: sum realized_partial == sum -balance pada akun exchange gain/loss untuk partial ber-exchange_move_id; selisih != 0 = gagal, tidak disapu ke rounding.
+- Test baru tests/test_finance_i2c_adr_formulas.py (11 tes, murni aritmetika tanpa ORM/DB) mengunci formula dan alokasi jadwal. Verifikasi lokal: 11/11 PASS, 55 tes finance PASS, ruff PASS, check_manifests PASS (12 addon).
+- [BU] CI exact-SHA HEAD baru belum jalan; formula belum diverifikasi terhadap jurnal exchange nyata Odoo; tidak ada deploy/mutasi DB live; REPORT_CATALOG FIN36-38/55-56 dan FIN05-09 tetap BELUM_DITERIMA.
+- Task managed by claude-dev agent at 2026-11-10T10:20:00+07:00

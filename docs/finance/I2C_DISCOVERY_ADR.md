@@ -10,6 +10,9 @@
   (Accrual / Prepayment / Deferred schedules), `FIN38` (Foreign Currency / FX
   revaluation), `FIN55` (Loan / lease / interest liability schedules), `FIN56`
   (Payroll / employee reimbursement to GL).
+- [F] Aritmetika ADR dapat dieksekusi: `tests/test_finance_i2c_adr_formulas.py`
+  (11 tes) mengunci formula FIN37 dan FIN38. Ini satu-satunya perubahan non-docs
+  pada PR ini dan sifatnya test murni tanpa ORM/database.
 - [F] Basis audit awal: `main` `6ff44a77af89bc67670622c112679fd94475a520` (pasca
   PR #107). Audit OCA selalu dibaca pada SHA pin, bukan HEAD cabang.
 - [F] Delta `main` pasca-`6ff44a7`: PR #105 masuk sebagai
@@ -135,19 +138,28 @@ dari field metadata jadwal yang eksplisit.
    `start_date`/`end_date` yang menolak tanggal tidak lengkap, tanggal mulai
    setelah tanggal akhir, dan kombinasi tidak valid. Jadi pasangan tanggal itu
    adalah metadata otoritatif pada level baris, bukan turunan tanggal dokumen.
-2. **Fallback eksplisit — parameter jadwal yang disetujui.** Bila modul tidak
-   terpasang atau baris tidak memiliki kedua tanggal, baris tersebut menjadi
-   **exception bernominal** dengan `missing_schedule_metadata`, bukan
-   diasumsikan berdurasi 12 bulan dan bukan dibiarkan keluar dari laporan.
+2. **Tidak ada fallback alokasi.** Bila baris tidak memiliki `start_date` dan
+   `end_date` yang valid, baris tersebut **hanya** menjadi exception bernominal
+   `missing_schedule_metadata`. Laporan **tidak** mengalokasikan periode untuk
+   baris itu dengan asumsi apa pun (bukan 12 bulan, bukan pro-rata, bukan
+   tanggal dokumen).
 3. **Tidak ada fallback ketiga.** Tanggal dokumen (`date`) atau `date_maturity`
    **tidak** boleh dipakai sebagai pengganti periode jasa.
 
+**Klarifikasi atas inkonsistensi sebelumnya.** Versi ADR sebelumnya menyebut
+"parameter jadwal yang disetujui" sebagai fallback, yang ambigu karena dapat
+dibaca sebagai alokasi buatan. Keputusan final: **parameter jadwal tidak
+menghasilkan alokasi pada FIN37.** Semua baris tanpa metadata tanggal menjadi
+exception bernominal, titik. Parameter kontrak bertanggal hanya dipakai pada
+`FIN55` (amortization pinjaman/sewa), bukan pada FIN37.
+
 **Konsekuensi dependensi:** opsi 1 memerlukan pin `account-closing` +
 `account_invoice_start_end_dates`. Modulnya LGPL-3 (bukan AGPL-3), sehingga
-risiko lisensinya berbeda dari ADR-I2c-01 dan tetap perlu dicatat sebagai
-keputusan pemilik. Bila pin ditolak, FIN37 tetap berjalan dengan opsi 2:
-laporan menampilkan exception `missing_schedule_metadata` secara eksplisit dan
-**tidak** mengarang jadwal.
+risiko lisensinya berbeda dari ADR-I2c-01; tetap dicatat sebagai keputusan
+pemilik. Bila pin ditolak, FIN37 tetap berjalan dengan **seluruh** baris
+menjadi exception `missing_schedule_metadata` — laporan tetap jujur dan tidak
+mengarang jadwal, tetapi nilai kegunaannya turun dan itu harus dinyatakan
+sebagai keterbatasan, bukan ditutupi.
 
 **Alasan:** `account_cutoff_base` tidak tersedia pada pin mana pun yang diaudit,
 sehingga tidak ada mesin cutoff yang bisa dibaca; `account_invoice_start_end_dates`
@@ -177,38 +189,99 @@ tidak boleh dijumlahkan menjadi satu angka.
    Baris yang sudah residual nol tidak menyumbang unrealized.
 
 2. **Realized** — berasal **hanya dari `account.partial.reconcile`** yang sudah
-   terjadi, dibaca lewat field native `debit_amount_currency`,
-   `credit_amount_currency`, dan `amount` (ketiganya ada pada model inti Odoo 19
-   `account.partial.reconcile`, diverifikasi pada `odoo/odoo` 19.0). Selisih
-   kurs terealisasi per partial adalah perbedaan antara nilai fungsional yang
-   dilepas dan nilai valuta yang dikonversi pada kurs transaksi. Karena
-   `amount` sudah dalam mata uang perusahaan, realized dihitung dari pasangan
-   (`amount`, `debit_amount_currency`, `credit_amount_currency`) per partial,
-   bukan dari selisih saldo agregat.
+   terjadi, memakai field native `debit_move_id`, `credit_move_id`, `amount`,
+   `debit_amount_currency`, `credit_amount_currency`, `max_date`, dan
+   `exchange_move_id` (semua terverifikasi ada pada `account.partial.reconcile`
+   di `odoo/odoo` 19.0).
 
-3. **Exchange-difference move** — Odoo memposting jurnal selisih kurs otomatis
-   saat rekonsiliasi penuh valuta asing. Bukti pada Odoo 19: field
-   `account.partial.reconcile.exchange_move_id` dan
-   `account.move.line._prepare_exchange_difference_move_vals()`, yang memakai
-   `company.income_currency_exchange_account_id` dan
-   `company.expense_currency_exchange_account_id` serta journal
-   `company.currency_exchange_journal_id`. Revaluasi **membaca** move ini sebagai
-   bukti realisasi, tidak membuat ulang jurnalnya.
+**Formula operasional per partial.**
 
-**Aturan anti double-count yang wajib diuji:**
+Untuk setiap `p` pada `account.partial.reconcile` dengan `p.max_date <= as_of`,
+dengan `debit_leg = p.debit_move_id` dan `credit_leg = p.credit_move_id`:
 
-- Baris AML pada akun `income_currency_exchange_account_id` dan
-  `expense_currency_exchange_account_id` **dikecualikan dari basis** unrealized
-  dan realized, lalu direkonsiliasi terpisah terhadap total `exchange_move_id`.
-- Nominal yang sudah masuk `exchange_move_id` tidak boleh dihitung lagi sebagai
-  unrealized pada posisi yang sama.
-- Realized dan unrealized dilaporkan sebagai dua baris terpisah per akun dan
-  mata uang; laporan tidak menyajikan satu angka gabungan tanpa pemisahan.
-- Perusahaan tanpa transaksi valuta asing menjadi kasus kosong yang sah
-  (nol dengan bukti tidak ada AML non-fungsional), bukan `N/A` otomatis.
+```
+# Kurs efektif yang melekat pada tiap kaki (mata uang fungsional per 1 unit valuta).
+rate_debit  = debit_leg.balance  / debit_leg.amount_currency
+rate_credit = credit_leg.balance / credit_leg.amount_currency
+
+# Nilai fungsional valuta yang dilepas, menurut kurs baris masing-masing.
+# debit_amount_currency > 0 dan credit_amount_currency < 0 pada partial normal,
+# sehingga nilai kredit dikembalikan ke magnitudo positif.
+functional_debit  = p.debit_amount_currency  * rate_debit
+functional_credit = -p.credit_amount_currency * rate_credit
+
+realized_partial = functional_debit - functional_credit
+```
+
+**Mengapa bukan `amount − amount`.** `p.amount` selalu dalam mata uang
+perusahaan dan selalu positif, sehingga kedua kaki melepas carrying fungsional
+yang sama besar — memakai `p.amount` di kedua sisi akan selalu menghasilkan nol.
+Selisih kurs lahir dari **perbedaan kurs** yang melekat pada tiap baris, dan
+itulah yang dihitung formula di atas. Kesetaraan dengan inti Odoo: Odoo
+menghitung `debit_exchange_amount = partial_debit_amount − partial_amount` pada
+`_prepare_reconcile_vals`, yaitu `−realized_partial` pada konvensi tanda di sini
+(Odoo menghitung koreksi yang harus diposting ke kaki debit).
+
+**Sign convention.** `realized_partial > 0` = **kerugian** (loss): nilai
+fungsional yang dilepas lebih besar dari yang diterima. `realized_partial < 0` =
+**keuntungan** (gain). Tanda konsisten dengan `_get_exchange_account()` pada inti
+Odoo, yang memilih `expense_currency_exchange_account_id` bila `amount > 0` dan
+`income_currency_exchange_account_id` bila `amount <= 0`.
+
+**Contoh numerik (wajib menjadi test case):**
+
+| Kasus | Faktur | Pembayaran | `realized_partial` | Arti |
+|---|---|---:|---:|---|
+| A | 100 USD @ 15.000 → 1.500.000 | 100 USD @ 16.000 → 1.600.000 | **−100.000** | Gain 100.000 |
+| B | 100 USD @ 16.000 → 1.600.000 | 100 USD @ 15.000 → 1.500.000 | **+100.000** | Loss 100.000 |
+| C | 100 USD @ 15.000, bayar 40 USD @ 16.000 | partial 40 | **−40.000** | Gain parsial |
+| D | 100.000 IDR (mata uang fungsional) | 100.000 IDR | **0** | Tanpa FX |
+
+**Perlakuan kasus khusus (semua wajib diuji):**
+
+| Kasus | Perlakuan |
+|---|---|
+| **Partial settlement sebelum full reconcile** | Dihitung per partial (`p.max_date <= as_of`); tidak menunggu `full_reconcile_id`. Realized dapat muncul walau baris belum lunas. |
+| **Multi-partial** | Dijumlahkan per partial (`Σ realized_partial`), bukan dihitung dari selisih saldo agregat. Untuk tiap baris: `Σ |p.amount| ≤ |balance|`; bila terlampaui, seluruh baris menjadi exception `over_reconciled`, bukan dipotong diam-diam. |
+| **Write-off** | Baris write-off tidak punya pasangan `amount_currency` yang setara. Diperlakukan sebagai pengurangan carrying **tanpa** realized FX, dilaporkan terpisah sebagai `write_off` agar tidak menciptakan gain/loss palsu. |
+| **Reversal** | Partial pada move yang di-reverse diidentifikasi lewat `reversed_entry_id`/`reversal_move_ids`. Pasangan partial yang saling membatalkan di-net ke nol **per pasangan** lebih dulu; realized baru dijumlahkan setelah netting. |
+| **Tanpa `exchange_move_id`** | Tetap dihitung dari formula. `exchange_move_id` adalah **bukti posting**, bukan syarat perhitungan. Selisih antara nilai formula dan jurnal exchange (bila ada) menjadi exception bernominal. |
+| **Kaki mata uang fungsional** | `amount_currency == balance`, sehingga `rate = 1`; kontribusinya nol dan tidak menciptakan selisih. Tidak dikecualikan dari loop. |
+| **`amount_currency == 0` pada kaki non-fungsional** | Data tidak lengkap; baris menjadi exception `missing_currency_amount`, formula tidak dijalankan untuk partial itu. |
+
+**Tie-out wajib.** Untuk setiap pasangan (akun, mata uang):
+
+```
+Σ realized_partial   (dari partial yang exchange_move_id-nya terisi)
+  ==  Σ -balance pada baris akun exchange gain/loss milik exchange_move_id tersebut
+```
+
+Tie-out memakai **negatif** `balance` karena jurnal exchange diposting dari sudut
+pandang kaki aset/liabilitas: koreksi yang mengurangi carrying aset muncul
+sebagai lawan pada akun gain/loss. Rumus tanda ini yang wajib diuji, dan
+selisihnya **wajib nol**; bila tidak nol, laporan gagal (bukan disapu ke
+rounding).
+
+Untuk partial **tanpa** `exchange_move_id` (belum/never fully reconciled), tidak
+ada jurnal pembanding; nilai formula dilaporkan sebagai
+`realized_unposted_evidence` yang terpisah dan **tidak** masuk tie-out. Dengan
+begitu tie-out hanya membandingkan hal yang memang punya bukti posting.
+
+Akun `income_currency_exchange_account_id` dan
+`expense_currency_exchange_account_id` **dikecualikan dari basis** unrealized
+agar tidak double count dengan realized.
 
 **Alasan:** `account_multicurrency_revaluation` tidak ada pada pin; tidak ada
-sumber OCA yang bisa direkonsiliasi.
+sumber OCA yang bisa direkonsiliasi. Formula di atas diturunkan dari perilaku
+nyata `_prepare_exchange_difference_move_vals()` dan
+`_get_exchange_account()` pada `odoo/odoo` 19.0, sehingga dapat diuji ulang
+terhadap jurnal yang benar-benar diposting Odoo.
+
+**Bukti eksekusi formula:** `tests/test_finance_i2c_adr_formulas.py` mengunci
+aritmetika di atas (test case A–D, multi-partial, mata uang fungsional, alokasi
+jadwal, dan penolakan rentang terbalik). Jalankan
+`python -m unittest tests.test_finance_i2c_adr_formulas -v`; 11 tes harus lulus.
+Tanpa test ini, formula ADR hanya prosa dan tidak boleh dianggap kontrak.
 
 ### ADR-I2c-04 — FIN55 custom amortization schedule
 
@@ -254,8 +327,8 @@ berjalan hanya pada `finance_i0_reports_disposable`, di dalam savepoint, dan
 | Report | Identitas yang diuji |
 |---|---|
 | `FIN36` | `opening + additions − disposals − depreciation = closing`; setiap baris depresiasi punya `move_id` posted; tie-out ke akun akumulasi depresiasi |
-| `FIN37` | pengakuan periode + saldo tersisa = saldo akun kontrol; setiap baris memakai `account.move.line.start_date`/`end_date`; baris tanpa metadata muncul sebagai `missing_schedule_metadata` bernominal; tidak ada jurnal buatan modul |
-| `FIN38` | unrealized hanya dari `amount_residual_currency` posisi terbuka; realized hanya dari `account.partial.reconcile` (`amount`, `debit_amount_currency`, `credit_amount_currency`); total `exchange_move_id` direkonsiliasi terpisah; akun `income_currency_exchange_account_id`/`expense_currency_exchange_account_id` dikecualikan dari basis; tidak ada double count |
+| `FIN37` | pengakuan periode + saldo tersisa = saldo akun kontrol; setiap baris memakai `account.move.line.start_date`/`end_date`; baris tanpa metadata muncul sebagai `missing_schedule_metadata` bernominal dan **tidak** dialokasikan; tidak ada jurnal buatan modul |
+| `FIN38` | unrealized hanya dari `amount_residual_currency` posisi terbuka; realized per partial dari `debit_amount_currency × rate_debit − credit_amount_currency × rate_credit`; test case A–D (gain 100.000, loss 100.000, gain parsial 40.000, nol) wajib cocok; tie-out `Σ realized == Σ −balance` pada akun exchange gain/loss untuk partial ber-`exchange_move_id`; selisih ≠ 0 = gagal |
 | `FIN55` | `opening + drawdowns + interest − payments = closing`; tie-out ke akun liabilitas |
 | `FIN56` | total slip disetujui = beban GL terkait; pembayaran/utang pajak terpisah; exception bernominal |
 
