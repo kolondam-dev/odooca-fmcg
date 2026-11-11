@@ -298,6 +298,13 @@ def independent_fx(env, fixture, as_of):
         ("parent_state", "=", "posted"),
         ("display_type", "not in", ["line_note", "line_section", "line_subsection"]),
         ("currency_id", "!=", company.currency_id.id),
+        # FIN38 is a monetary-position report: expense/revenue lines are not
+        # revalued even when they carry a foreign currency.
+        ("account_id.account_type", "in", [
+            "asset_receivable", "liability_payable", "asset_cash",
+            "liability_credit_card", "asset_current", "liability_current",
+            "asset_non_current", "liability_non_current",
+        ]),
     ], order="date asc, move_id asc, id asc")
     line_by_id = {line.id: line for line in lines}
 
