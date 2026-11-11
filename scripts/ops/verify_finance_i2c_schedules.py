@@ -465,10 +465,13 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
             "as_of": as_of, "result": "PASS",
         })
         if check_hard_coded and as_of == "2026-07-31":
+            # Target the specific invoice/payment reconciliation rather than the
+            # grand total: the fixture now also carries a reversal pair and a
+            # write-off, so the total legitimately exceeds this one gain.
+            amounts = [row["realized_amount"] for row in snapshot["realized_rows"]]
             require(
-                snapshot["realized_posted_total"] == round_amt(-100_000),
-                f"FIN38 gain must be -100000 for the USD fixture, got "
-                f"{snapshot['realized_posted_total']}",
+                round_amt(-100_000) in amounts,
+                f"FIN38 must realise the -100000 gain on the main settlement, got {amounts}",
             )
             require(
                 snapshot["tied_exchange_move_ids"],
