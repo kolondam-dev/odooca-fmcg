@@ -1,4 +1,5 @@
-import { useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
+import { submitPending } from "../domain/outlet-expense";
 import type { Snapshot } from "../domain/contracts";
 import {
     OUTLET_EXPENSE_UNSUPPORTED,
@@ -59,6 +60,8 @@ export function BiayaTokoScreen({
     });
     const [otherNote, setOtherNote] = useState("");
     const [evidence, setEvidence] = useState<EvidenceRef>();
+    /** Komponen yang sudah masuk antrean: retry setelah gagal tidak menggandakannya. */
+    const saved = useRef(new Set<string>());
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const supported = outletExpenseEnabled(snapshot);
@@ -86,8 +89,9 @@ export function BiayaTokoScreen({
         }
         setBusy(true);
         try {
-            const payloads = filled.map((p) =>
-                validateExpense(
+            const items = filled.map((p) => ({
+                key: p.key,
+                payload: validateExpense(
                     {
                         category: p.key,
                         amount: String(Number(amounts[p.key])),
@@ -105,14 +109,15 @@ export function BiayaTokoScreen({
                     },
                     businessDate,
                 ),
-            );
-            for (const [i, payload] of payloads.entries())
+            }));
+            await submitPending(items, saved.current, async (item, last) => {
                 await submit(
                     "field_expense.request",
-                    payload,
-                    `Biaya toko • ${outlet.name} • ${money(Number(payload.amount))}`,
-                    i < payloads.length - 1,
+                    item.payload,
+                    `Biaya toko • ${outlet.name} • ${money(Number(item.payload.amount))}`,
+                    !last,
                 );
+            });
             close();
         } catch (e) {
             setError(e instanceof Error ? e.message : "Gagal menyimpan.");

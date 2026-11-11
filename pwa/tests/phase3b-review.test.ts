@@ -163,7 +163,13 @@ describe("setor uang", () => {
         cash_expected: "5700000",
         cash_deposited: "5700000",
         receipt_uuids: [],
-        evidence: { id: "x" },
+        evidence: {
+            id: "44444444-4444-4444-8444-444444444444",
+            latitude: 1.4,
+            longitude: 124.8,
+            accuracy: 5,
+            capturedAt: "2026-11-10T01:00:00.000Z",
+        },
     };
     it("selisih wajib catatan dan foto bukti wajib", () => {
         expect(CashDepositSchema.safeParse(base).success).toBe(true);
@@ -178,9 +184,32 @@ describe("setor uang", () => {
                 difference_note: "Kurang Rp100.000 untuk BBM",
             }).success,
         ).toBe(true);
-        expect(
-            CashDepositSchema.safeParse({ ...base, evidence: undefined })
-                .success,
-        ).toBe(false);
+        for (const bad of [undefined, true, {}, { id: "x" }])
+            expect(
+                CashDepositSchema.safeParse({ ...base, evidence: bad }).success,
+            ).toBe(false);
+    });
+});
+
+import { submitPending } from "../src/domain/outlet-expense";
+describe("biaya toko retry", () => {
+    it("kegagalan pada komponen kedua lalu retry menghasilkan satu entri per komponen", async () => {
+        const queued: string[] = [];
+        const done = new Set<string>();
+        const items = [
+            { key: "parkir" },
+            { key: "kuli" },
+            { key: "retribusi" },
+        ];
+        let failKuli = true;
+        const send = async (i: { key: string }) => {
+            if (i.key === "kuli" && failKuli) throw new Error("gagal simpan");
+            queued.push(i.key);
+        };
+        await expect(submitPending(items, done, send)).rejects.toThrow();
+        expect(queued).toEqual(["parkir"]);
+        failKuli = false;
+        await submitPending(items, done, send);
+        expect(queued).toEqual(["parkir", "kuli", "retribusi"]);
     });
 });

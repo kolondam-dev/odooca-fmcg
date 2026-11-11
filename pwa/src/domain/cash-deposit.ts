@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LocalExpenseEvidenceSchema } from "./settlement-contracts.ts";
 
 /**
  * Setor uang ke kasir (DS: Setor_uang). Kontrak USULAN, belum didukung backend:
@@ -15,8 +16,8 @@ export const CashDepositSchema = z
         difference_note: z.string().trim().max(500).optional(),
         /** client_uuid kuitansi tunai yang disetor. */
         receipt_uuids: z.array(z.string().uuid()).max(200),
-        /** Paket bukti foto setor (EvidenceRef). */
-        evidence: z.unknown().refine((v) => !!v, "Foto bukti setor wajib."),
+        /** Referensi paket bukti foto setor (skema referensi foto yang sama dengan biaya). */
+        evidence: LocalExpenseEvidenceSchema,
     })
     .strict()
     .superRefine((p, ctx) => {

@@ -67,10 +67,11 @@ export function SetorUangScreen({
         if (!parsed.success) {
             const first = parsed.error.issues[0];
             setError(
-                first?.path[0] === "evidence" ||
-                    first?.path[0] === "difference_note"
-                    ? first.message
-                    : "Tunai disetor harus bilangan bulat rupiah lebih dari nol.",
+                first?.path[0] === "evidence"
+                    ? "Foto bukti setor wajib disimpan dahulu."
+                    : first?.path[0] === "difference_note"
+                      ? first.message
+                      : "Tunai disetor harus bilangan bulat rupiah lebih dari nol.",
             );
             return;
         }
