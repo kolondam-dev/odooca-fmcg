@@ -1,3 +1,8 @@
+## 2026-11-11T19:48:31+07:00 — claude-design (Claude-Dev1) — PR #118: perbaikan review Setor uang + Biaya toko
+
+**Berubah:** P1 Biaya toko idempoten saat retry (`domain/outlet-expense.ts` `submitPending`: komponen yang sudah masuk antrean dilewati; tes unit kegagalan di komponen kedua → satu entri per komponen). P2 `CashDepositSchema.evidence` memakai `LocalExpenseEvidenceSchema` (`true` dan objek kosong ditolak); e2e Setor uang lewat UI: bukti kosong, selisih tanpa catatan, tersimpan, dan flag mati (fixture `useLegacyServer`). Merge `origin/main` (konflik hanya HANDOFF); openapi diekspor ulang.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 477, e2e phone+tablet 192 lulus. **Belum diuji:** [BU] CI pada HEAD hasil integrasi.
+
 ## 2026-11-11T19:09:55+07:00 — claude-design (Claude-Dev1) — Fase 3B-4: Setor uang + Biaya toko (terkunci flag)
 
 **Berubah:** layar Setor uang (dari layar Akhiri trip) dan Biaya toko (dari kunjungan aktif) sesuai mockup; kontrak USULAN `delivery.cash_deposit.submit` (`domain/cash-deposit.ts`), kategori `store_*` scope outlet; flag server `features.cash_deposit_v1` / `outlet_expense_v1` (mock demo ON, LIVE tidak ada = tombol kirim terkunci + callout). openapi diekspor ulang; tes unit + e2e `store-expense`. K18 di DS_RECONCILIATION memuat kontrak usulan dan syarat sebelum flag ON.
