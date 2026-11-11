@@ -465,6 +465,94 @@ class FxRevaluationTests(unittest.TestCase):
             "partials that share no reconciled line must not cancel each other",
         )
 
+    def test_reversal_with_mismatched_amounts_is_not_netted(self):
+        # Review blocker: a pair sharing a journal line and carrying a reversal
+        # link, but with different magnitudes (300000 vs 100000), was removed from
+        # realized. Netting an unproven pair erases FX without evidence.
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        first = partial(1, leg(300_000.0, 20.0), leg(-320_000.0, -20.0), 300_000.0,
+                        exchange_move_id=9, debit_ccy=20.0, credit_ccy=20.0)
+        first.update({
+            "debit_line_id": 1, "credit_line_id": 2, "move_ids": [10, 11],
+            "move_id": 10, "reversed_entry_id": None, "is_reversal": True,
+        })
+        second = partial(2, leg(100_000.0, 10.0), leg(-100_000.0, -10.0), 100_000.0,
+                         exchange_move_id=10, debit_ccy=10.0, credit_ccy=10.0)
+        second.update({
+            "debit_line_id": 1, "credit_line_id": 3, "move_ids": [10, 12],
+            "move_id": 12, "reversed_entry_id": 11, "is_reversal": False,
+        })
+        report = sched.build_fx_revaluation(
+            [open_line], [first, second], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(
+            [row["partial_id"] for row in report["realized_rows"]], [1, 2],
+            "both sides must stay in realized when cancellation is not proven",
+        )
+        self.assertEqual(len(report["reversal_exceptions"]), 1)
+        self.assertEqual(report["reversal_exceptions"][0]["reason"], "partial_reversal")
+        self.assertEqual(report["reversal_exceptions"][0]["partial_ids"], [1, 2])
+        self.assertFalse(report["complete"])
+
+    def test_reversal_across_currencies_is_not_netted(self):
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        usd_partial = partial(1, leg(300_000.0, 20.0), leg(-320_000.0, -20.0),
+                              300_000.0, exchange_move_id=9,
+                              debit_ccy=20.0, credit_ccy=20.0)
+        usd_partial.update({
+            "debit_line_id": 1, "credit_line_id": 2, "move_ids": [10, 11],
+            "move_id": 10, "is_reversal": True,
+        })
+        eur_partial = partial(2, leg(300_000.0, 20.0, currency_id=3),
+                              leg(-320_000.0, -20.0, currency_id=3), 300_000.0,
+                              exchange_move_id=10, debit_ccy=20.0, credit_ccy=20.0)
+        eur_partial.update({
+            "debit_line_id": 1, "credit_line_id": 4, "move_ids": [10, 13],
+            "move_id": 13, "reversed_entry_id": 11,
+        })
+        report = sched.build_fx_revaluation(
+            [open_line], [usd_partial, eur_partial], "2026-07-31", ROUND,
+            lambda *_: 16_000.0,
+        )
+        self.assertEqual(report["reversal_exceptions"][0]["reason"],
+                         "reversal_currency_mismatch")
+        self.assertEqual(len(report["realized_rows"]), 2)
+        self.assertFalse(report["complete"])
+
+    def test_reversal_link_is_matched_in_both_directions(self):
+        # Odoo may store the link on either move depending on how the reversal was
+        # created; matching must not depend on which side carries it.
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        first = partial(1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0),
+                        1_500_000.0, exchange_move_id=9)
+        first.update({
+            "debit_line_id": 1, "credit_line_id": 2, "move_ids": [10, 12],
+            "move_id": 12, "reversed_entry_id": 11, "is_reversal": False,
+        })
+        second = partial(2, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0),
+                         1_500_000.0, exchange_move_id=10)
+        second.update({
+            "debit_line_id": 1, "credit_line_id": 3, "move_ids": [10, 11],
+            "move_id": 11, "reversed_entry_id": None, "is_reversal": True,
+        })
+        report = sched.build_fx_revaluation(
+            [open_line], [first, second], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(report["realized_rows"], [])
+        self.assertEqual(report["reversal_exceptions"], [])
+
     def test_unmatched_reversal_is_not_silently_dropped(self):
         # A reversal whose target move is absent must still post its own amount;
         # dropping it would hide realized FX without any evidence.

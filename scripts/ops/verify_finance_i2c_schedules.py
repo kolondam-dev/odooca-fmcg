@@ -720,6 +720,13 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
                 len(expected_pairs) == len(write_off_snapshot["realized_rows"]),
                 "a reconciled pair must not be counted twice",
             )
+            # Standard flows must not produce an ambiguous reversal, and the
+            # report must therefore be able to claim completeness.
+            require(
+                write_off_snapshot["reversal_exceptions"] == [],
+                "FIN38 must not report an ambiguous reversal for the standard flows: "
+                f"{write_off_snapshot['reversal_exceptions']}",
+            )
             # Locked nominal: main settlement -100000, cancel=False settlement
             # -20000 still standing, cancelled settlement 0, write-off 0.
             require(

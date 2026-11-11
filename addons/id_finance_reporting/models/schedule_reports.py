@@ -252,6 +252,11 @@ class FinanceFxRevaluation(models.AbstractModel):
             # is unreliable; the report must not look clean.
             tie_out["balanced"] = False
             tie_out["issues"] = sorted(set(tie_out["issues"]) | {"over_reconciled_lines"})
+        if report["reversal_exceptions"]:
+            # A reversed pair whose amounts do not mirror cannot be netted. Both
+            # sides stay in the totals, and the report must say it is incomplete.
+            tie_out["balanced"] = False
+            tie_out["issues"] = sorted(set(tie_out["issues"]) | {"ambiguous_reversal"})
         return {
             "report_id": "FIN38",
             "report_ids": ["FIN38"],

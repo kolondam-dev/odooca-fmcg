@@ -264,22 +264,56 @@ def realized_partial_amount(partial, debit_leg, credit_leg, round_amount):
     return round_amount(functional_debit - functional_credit), None
 
 
-def _net_reversals(partials, round_amount):
-    """Net reversed partials against the partial that created them.
+def _partial_currency(partial):
+    debit_leg = partial.get("debit_leg") or {}
+    credit_leg = partial.get("credit_leg") or {}
+    return debit_leg.get("currency_id") or credit_leg.get("currency_id")
+
+
+def _partial_currency_amount(partial):
+    return max(
+        abs(partial.get("debit_amount_currency") or 0.0),
+        abs(partial.get("credit_amount_currency") or 0.0),
+    )
+
+
+def _reversal_verdict(first, second, round_amount):
+    """Decide whether a reverse pair cancels **completely**.
+
+    Removing both sides is only safe for a true mirror: the same foreign
+    currency and the same reconciled magnitude on both the currency and the
+    functional side. Anything else is an ambiguous residual case. Netting it
+    anyway would erase realized FX without evidence — the reviewer's fixture
+    (300000 against 100000) did exactly that.
+
+    Returns ``None`` when the pair cancels completely, otherwise a reason.
+    """
+    if _partial_currency(first) != _partial_currency(second):
+        return "reversal_currency_mismatch"
+    currency_gap = round_amount(
+        _partial_currency_amount(first) - _partial_currency_amount(second),
+    )
+    functional_gap = round_amount(
+        abs(first.get("amount") or 0.0) - abs(second.get("amount") or 0.0),
+    )
+    if currency_gap or functional_gap:
+        return "partial_reversal"
+    return None
+
+
+def _split_reversal_pairs(partials):
+    """Separate reverse pairs from partials that post on their own.
 
     A reversal creates **new journal lines**, so the reversed partial and the
     reverse partial never share the same ``(debit_line_id, credit_line_id)``
     pair. Grouping on that exact pair, as this used to do, could therefore never
-    match anything and silently left both sides in the totals.
+    match anything. Grouping follows line connectivity instead, and the link is
+    matched on the move in either direction, because Odoo stores
+    ``reversed_entry_id`` on the mirror move while the original move only knows
+    ``reversal_move_ids``.
 
-    Grouping now follows connectivity instead: two partials belong together when
-    they share at least one reconciled line. The actual cancellation is then
-    matched on the move link, in either direction, because Odoo can store the
-    link on the reversal move (``reversed_entry_id``) while the original move
-    only knows ``reversal_move_ids``.
-
-    Only a matched pair cancels. An unmatched reverse partial stays in the
-    totals so it still posts its own amount instead of disappearing.
+    Nothing is removed here: each pair still needs a cancellation verdict, and
+    an unproven pair must be reported rather than netted.
     """
     parent = {}
 
@@ -321,19 +355,26 @@ def _net_reversals(partials, round_amount):
             or (second_target and second_target in move_ids(first))
         )
 
-    surviving = []
-    cancelled = set()
+    pairs = []
+    matched = set()
     for _root, group in groups.items():
         for index, first in enumerate(group):
-            for second in group[index + 1:]:
-                if id(first) in cancelled or id(second) in cancelled:
-                    continue
-                if not reverses(first, second):
-                    continue
-                cancelled.add(id(first))
-                cancelled.add(id(second))
-        surviving.extend(item for item in group if id(item) not in cancelled)
-    return surviving
+            if id(first) in matched:
+                continue
+            match = next(
+                (
+                    second for second in group[index + 1:]
+                    if id(second) not in matched and reverses(first, second)
+                ),
+                None,
+            )
+            if match is None:
+                continue
+            matched.add(id(first))
+            matched.add(id(match))
+            pairs.append((first, match))
+    singles = [partial for partial in partials if id(partial) not in matched]
+    return pairs, singles
 
 
 def build_fx_revaluation(
@@ -421,8 +462,33 @@ def build_fx_revaluation(
         if partial.get("exchange_move_id")
     }
 
-    surviving = _net_reversals(partials, round_amount)
-    for partial in surviving:
+    reversal_pairs, singles = _split_reversal_pairs(partials)
+    reversal_exceptions = []
+    for first, second in reversal_pairs:
+        verdict = _reversal_verdict(first, second, round_amount)
+        if verdict is None:
+            # Proven mirror: neither side posts realized FX.
+            continue
+        # Ambiguous pair: report it and keep both sides. Dropping them would
+        # erase realized FX without evidence.
+        reversal_exceptions.append({
+            "partial_ids": sorted(
+                item for item in (first.get("partial_id"), second.get("partial_id"))
+                if item is not None
+            ),
+            "reason": verdict,
+            "amounts": [
+                round_amount(first.get("amount") or 0.0),
+                round_amount(second.get("amount") or 0.0),
+            ],
+            "currency_id": _partial_currency(first),
+        })
+        singles.extend((first, second))
+    singles.sort(
+        key=lambda item: (str(item.get("max_date") or ""), item.get("partial_id") or 0),
+    )
+
+    for partial in singles:
         max_date = _as_date(partial.get("max_date"))
         if not max_date or max_date > cutoff:
             continue
@@ -500,13 +566,16 @@ def build_fx_revaluation(
             for currency_id in sorted(by_currency)
         ],
         "exceptions": exceptions,
+        "reversal_exceptions": reversal_exceptions,
         "over_reconciled_rows": over_reconciled,
         "functional_counterpart_rows": functional_counterpart_rows,
         "write_off_rows": write_off_rows,
         "tied_exchange_move_ids": sorted(scope_exchange_move_ids),
         "realized_exchange_move_ids": sorted(realized_exchange_move_ids),
         "posted_evidence_total": round_amount(realized_posted_total),
-        "complete": not over_reconciled and not exceptions,
+        "complete": (
+            not over_reconciled and not exceptions and not reversal_exceptions
+        ),
     }
 
 
