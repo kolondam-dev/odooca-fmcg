@@ -693,43 +693,58 @@ class GenericPeriodPackLoader:
                 raise StateInconsistencyError(
                     f"Drift detected on existing {so_num}: line count mismatch {len(order_lines)} vs {len(lines)}"
                 )
-            lines_by_sku = {line["sku_code"]: line for line in lines}
+            remaining_expected = list(lines)
             for sol in order_lines:
                 sku = getattr(sol.product_id, "default_code", "")
-                if sku and sku not in lines_by_sku:
+                act_qty = float(getattr(sol, "product_uom_qty", 0))
+
+                # Match candidate by SKU and qty to correctly handle multi-lot lines of the same SKU
+                matched_idx = None
+                for idx, exp_l in enumerate(remaining_expected):
+                    if exp_l.get("sku_code") == sku:
+                        if "qty_cartons" in exp_l and "carton_qty" in exp_l:
+                            exp_qty = float(exp_l["qty_cartons"]) * float(exp_l["carton_qty"])
+                        else:
+                            exp_qty = float(exp_l.get("product_uom_qty", 0) or exp_l.get("qty", 0))
+                        if abs(exp_qty - act_qty) <= 0.01:
+                            matched_idx = idx
+                            break
+
+                if matched_idx is None:
+                    # Look for first candidate with matching SKU to report detailed drift
+                    for exp_l in remaining_expected:
+                        if exp_l.get("sku_code") == sku:
+                            if "qty_cartons" in exp_l and "carton_qty" in exp_l:
+                                exp_qty = float(exp_l["qty_cartons"]) * float(exp_l["carton_qty"])
+                            else:
+                                exp_qty = float(exp_l.get("product_uom_qty", 0) or exp_l.get("qty", 0))
+                            raise StateInconsistencyError(
+                                f"Drift detected on existing {so_num} SKU {sku}: qty mismatch {act_qty} vs {exp_qty}"
+                            )
                     raise StateInconsistencyError(
                         f"Drift detected on existing {so_num}: unexpected SKU '{sku}'"
                     )
-                if sku in lines_by_sku:
-                    exp_l = lines_by_sku[sku]
-                    # Schema SO CSV: qty_cartons * carton_qty
-                    if "qty_cartons" in exp_l and "carton_qty" in exp_l:
-                        exp_qty = float(exp_l["qty_cartons"]) * float(exp_l["carton_qty"])
-                    else:
-                        exp_qty = float(exp_l.get("product_uom_qty", 0) or exp_l.get("qty", 0))
-                    act_qty = float(getattr(sol, "product_uom_qty", 0))
-                    if abs(exp_qty - act_qty) > 0.01:
+
+                exp_l = remaining_expected.pop(matched_idx)
+
+                # Schema SO CSV: unit_price_dpp
+                exp_price_val = exp_l.get("unit_price_dpp") or exp_l.get("price_unit") or exp_l.get("unit_price")
+                if exp_price_val is not None:
+                    exp_price = float(exp_price_val)
+                    act_price = float(getattr(sol, "price_unit", 0))
+                    if abs(exp_price - act_price) > 0.01:
                         raise StateInconsistencyError(
-                            f"Drift detected on existing {so_num} SKU {sku}: qty mismatch {act_qty} vs {exp_qty}"
+                            f"Drift detected on existing {so_num} SKU {sku}: price mismatch {act_price} vs {exp_price}"
                         )
-                    # Schema SO CSV: unit_price_dpp
-                    exp_price_val = exp_l.get("unit_price_dpp") or exp_l.get("price_unit") or exp_l.get("unit_price")
-                    if exp_price_val is not None:
-                        exp_price = float(exp_price_val)
-                        act_price = float(getattr(sol, "price_unit", 0))
-                        if abs(exp_price - act_price) > 0.01:
-                            raise StateInconsistencyError(
-                                f"Drift detected on existing {so_num} SKU {sku}: price mismatch {act_price} vs {exp_price}"
-                            )
-                    # Schema SO CSV: discount_pct
-                    exp_disc_val = exp_l.get("discount_pct") or exp_l.get("discount")
-                    if exp_disc_val is not None:
-                        exp_disc = float(exp_disc_val)
-                        act_disc = float(getattr(sol, "discount", 0.0))
-                        if abs(exp_disc - act_disc) > 0.01:
-                            raise StateInconsistencyError(
-                                f"Drift detected on existing {so_num} SKU {sku}: discount mismatch {act_disc} vs {exp_disc}"
-                            )
+                # Schema SO CSV: discount_pct
+                exp_disc_val = exp_l.get("discount_pct") or exp_l.get("discount")
+                if exp_disc_val is not None:
+                    exp_disc = float(exp_disc_val)
+                    act_disc = float(getattr(sol, "discount", 0.0))
+                    if abs(exp_disc - act_disc) > 0.01:
+                        raise StateInconsistencyError(
+                            f"Drift detected on existing {so_num} SKU {sku}: discount mismatch {act_disc} vs {exp_disc}"
+                        )
 
     def _validate_existing_invoice(self, existing: Any, inv_row: Dict[str, str]) -> None:
         """Validate existing Invoice matches period pack specification with zero drift."""
@@ -1440,13 +1455,75 @@ class GenericPeriodPackLoader:
             so_count += 1
 
             # Validate picking delivery if present
+            StockLot = self.env["stock.lot"].sudo()
+            StockMoveLine = self.env["stock.move.line"].sudo()
+
             for pick in so_rec.picking_ids:
                 if pick.state not in ("done", "cancel"):
                     pick.action_assign()
-                    # Mark quantities as done
+                    # Resolve lot and quantities for each move
                     for m in pick.move_ids:
-                        m.quantity = m.product_uom_qty
+                        m_prod = m.product_id
+                        m_sku = getattr(m_prod, "default_code", "")
+                        target_qty = float(m.product_uom_qty)
+
+                        # Match line info by SKU and quantity
+                        m_lrow = None
+                        for lr in lines_by_so.get(so_num, []):
+                            if lr.get("sku_code") == m_sku:
+                                lr_qty = float(lr.get("qty_cartons", 0)) * float(lr.get("carton_qty", 1))
+                                if abs(lr_qty - target_qty) < 0.01:
+                                    m_lrow = lr
+                                    break
+                        if not m_lrow:
+                            for lr in lines_by_so.get(so_num, []):
+                                if lr.get("sku_code") == m_sku:
+                                    m_lrow = lr
+                                    break
+
+                        lot_num = m_lrow.get("lot_number") if m_lrow else None
+                        lot_rec = None
+                        if getattr(m_prod, "tracking", "none") in ("lot", "serial") and lot_num:
+                            lot_rec = StockLot.search([
+                                ("name", "=", lot_num),
+                                ("product_id", "=", m_prod.id),
+                                ("company_id", "=", self.company.id),
+                            ], limit=1)
+                            if not lot_rec:
+                                lot_rec = StockLot.search([
+                                    ("name", "=", lot_num),
+                                    ("product_id", "=", m_prod.id),
+                                ], limit=1)
+                            if not lot_rec:
+                                lot_rec = StockLot.create({
+                                    "name": lot_num,
+                                    "product_id": m_prod.id,
+                                    "company_id": self.company.id,
+                                })
+
+                        if m.move_line_ids:
+                            for ml in m.move_line_ids:
+                                ml_vals = {"quantity": target_qty, "picked": True}
+                                if lot_rec:
+                                    ml_vals["lot_id"] = lot_rec.id
+                                ml.write(ml_vals)
+                        else:
+                            ml_vals = {
+                                "picking_id": pick.id,
+                                "move_id": m.id,
+                                "product_id": m_prod.id,
+                                "location_id": pick.location_id.id,
+                                "location_dest_id": pick.location_dest_id.id,
+                                "quantity": target_qty,
+                                "picked": True,
+                            }
+                            if lot_rec:
+                                ml_vals["lot_id"] = lot_rec.id
+                            StockMoveLine.create(ml_vals)
+
+                        m.quantity = target_qty
                         m.picked = True
+
                     pick.button_validate()
                     do_count += 1
 

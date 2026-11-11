@@ -1,3 +1,19 @@
+## 2026-11-11T17:33:00+07:00 — antigravity — F4: Resolusi Lot Assignment Delivery dan Validasi Multi-Lot Baris SO Replay (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menetapkan `lot_id` pada move line pengiriman (delivery pickings) berdasarkan `lot_number` dari `order_lines.csv`, mengeliminasi error `UserError: You need to supply a Lot/Serial number for products...` saat validasi DO.
+  - Memperbaiki `_validate_existing_so` dengan mekanisme pencocokan baris kandidat `remaining_expected` alih-alih pemetaan dictionary SKU tunggal, menyelesaikan false-positive error drift pada SO yang memiliki multi-baris untuk produk yang sama dengan lot berbeda (misal `SO-202608-0035` untuk SKU `MYR-RMA-02`).
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 12.0s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py`: All checks passed.
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T15:43:00+07:00 — antigravity — F4: Resolusi Native Savepoint Odoo ORM, SQL Tamper Rollback & Seed Context Bypassing Credit Limit (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
@@ -4210,17 +4226,5 @@ Main ea20ed0 diintegrasikan untuk required checks strict sebelum merge yang dimi
 **Implementasi Perbaikan:**
 1. **Pemasangan Modul `product_expiry` & Introspeksi Lapangan ([deploy/init.sh](file:///c:/Users/ACER/dev/odooca-fmcg/deploy/init.sh) & [.github/workflows/ci.yml](file:///c:/Users/ACER/dev/odooca-fmcg/.github/workflows/ci.yml)):**
    - Menambahkan `product_expiry` ke dalam `INIT_MODULES` di `deploy/init.sh` dan workflow CI `docker run`.
-   - Menambahkan introspeksi runtime di `verify_historical_experiment.py` untuk menginstal `product_expiry` via `button_immediate_install()` jika belum aktif, serta memeriksa keberadaan `expiration_date` pada `stock.lot._fields`.
-2. **Source-Driven Oracle Dinamis Langsung dari Register Kanonikal CSV ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
-   - Mengimplementasikan `build_source_oracle()` yang membaca langsung 6 berkas CSV register kanonikal (`initial_stock_20260701.csv`, `perpetual_order_lines.csv`, `perpetual_deliveries.csv`, `perpetual_order_rejections.csv`, `inbound_po_intransit_june_lines.csv`, `inbound_po_intransit_june_headers.csv`).
-   - Menurunkan nilai ekspektasi 5 cutoff secara dinamis dari baris data sumber:
-     * *Cutoff 0 (Pre-Opening 2026-06-30)*: On-hand fisik 0 ctn, Rp 0.
-     * *Cutoff 1 (Opening 2026-07-01)*: 84 ctn (1.008 pcs) Lot `LOT-VER-20260615-INIT-09` @ Rp 18.500 = Rp 18.648.000.
-     * *Cutoff 2 (Delivery DO-202607-0063 2026-07-03 14:00:00)*: -7 ctn (84 pcs) -> On-hand saleable 77 ctn (924 pcs) = Rp 17.094.000.
-     * *Cutoff 3 (Retur REJ-202607-001 2026-07-03 23:59:59)*: +1 ctn (12 pcs) ke Karantina -> On-hand saleable 77 ctn, Karantina 1 ctn (Total fisik 78 ctn / Rp 17.316.000).
-     * *Cutoff 4 (Receipt PO-2026-06-05 2026-07-04 23:59:59)*: +311 ctn (3.732 pcs) Lot `LOT-VER-20260704-09` @ Rp 18.500 = Rp 69.042.000 -> On-hand saleable 388 ctn, Karantina 1 ctn (Total fisik 389 ctn / Rp 86.358.000).
-3. **Pemisahan Identitas Operasi & Penanganan Collision:**
-   - Setiap operasi stok menggunakan origin, lokasi sumber, dan tujuan yang berbeda secara definitif (`OPENING-20260701`, `DO-202607-0063`, `REJ-202607-001`, `PO-2026-06-05`), mengeliminasi risiko benturan identitas dokumen.
-4. **Native Historical Readback Pasca-Injeksi Seluruh Data:**
-   - Evaluasi saldo on-hand historis pada tiap cutoff dieksekusi setelah seluruh data transaksi diinjeksi, menghitung saldo net dari `stock.move.line` yang selesai dengan `date <= cutoff_dt
+   - Menambahkan introspeksi runtime di `verify_historical_experiment.py` untuk menginstal `product_expiry` via `button_immediate_install()` jika belum aktif, serta memeriksa keberadaan `expiration_date` pada `stock.lot
 ... [truncated for diff preview]
