@@ -690,10 +690,17 @@ def load_canonical_taxes():
     # Cari akun GL PPN Keluaran 211200
     tax_out_acc = None
     if AccountAccount:
+        acc_fields = getattr(AccountAccount, "_fields", {})
+        comp_acc_domain = []
+        if "company_ids" in acc_fields:
+            comp_acc_domain = [("company_ids", "in", [company.id])]
+        elif "company_id" in acc_fields:
+            comp_acc_domain = [("company_id", "in", [company.id, False])]
+
         tax_out_acc = AccountAccount.search(
-            [("code", "=", "211200"), ("company_id", "in", [company.id, False])], limit=1
+            comp_acc_domain + [("code", "=", "211200")], limit=1
         ) or AccountAccount.search(
-            [("name", "ilike", "PPN Keluaran"), ("company_id", "in", [company.id, False])], limit=1
+            comp_acc_domain + [("name", "ilike", "PPN Keluaran")], limit=1
         )
 
     # Tax Group PPN

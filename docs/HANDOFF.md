@@ -1,3 +1,20 @@
+## 2026-11-11T09:50:00+07:00 — antigravity — F4: Resolusi Domain Odoo 19 `company_ids` pada `account.account` (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/load_canonical_perpetual.py`:
+  - Resolusi Domain Company pada `account.account`: Di Odoo 19, model `account.account` menggunakan relasi `company_ids` (bukan field tunggal `company_id`). Menggunakan `_safe_fields` untuk memeriksa keberadaan `company_ids` vs `company_id` sebelum membangun domain pencarian akun diskon dan piutang, menyelesaikan `ValueError: Invalid field account.account.company_id in condition ('company_id', 'in', [1, False])` di `init-test`.
+- `scripts/load_fmcg_seed.py`:
+  - Mengadaptasi pencarian akun GL PPN Keluaran 211200 agar secara dinamis memeriksa field `company_ids` vs `company_id`.
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 18.5s).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T09:25:00+07:00 — antigravity — F4: Resolusi Rekonsiliasi AR Akun Piutang Identik & PPN 11% Juli (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

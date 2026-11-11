@@ -2587,40 +2587,32 @@ class CanonicalPerpetualAdapter:
                         ar_account = cust_partner.property_account_receivable_id
 
                     if AccountAccount is not None:
-                        comp_ids = [self.company.id, False] if hasattr(self, "company") and self.company else [False]
+                        acc_fields = _safe_fields(AccountAccount)
+                        comp_domain = []
+                        if hasattr(self, "company") and self.company:
+                            if "company_ids" in acc_fields:
+                                comp_domain = [("company_ids", "in", [self.company.id])]
+                            elif "company_id" in acc_fields:
+                                comp_domain = [("company_id", "in", [self.company.id, False])]
+
                         disc_account = AccountAccount.search(
-                            [
-                                ("code", "in", ["410200", "510200", "610200"]),
-                                ("company_id", "in", comp_ids),
-                            ],
+                            comp_domain + [("code", "in", ["410200", "510200", "610200"])],
                             limit=1,
                         ) or AccountAccount.search(
-                            [
-                                ("account_type", "in", ["expense", "income_other"]),
-                                ("name", "ilike", "diskon"),
-                                ("company_id", "in", comp_ids),
-                            ],
+                            comp_domain
+                            + [("account_type", "in", ["expense", "income_other"]), ("name", "ilike", "diskon")],
                             limit=1,
                         ) or AccountAccount.search(
-                            [
-                                ("account_type", "=", "expense"),
-                                ("company_id", "in", comp_ids),
-                            ],
+                            comp_domain + [("account_type", "=", "expense")],
                             limit=1,
                         )
                         if not ar_account:
                             ar_account = AccountAccount.search(
-                                [
-                                    ("code", "=", "112000"),
-                                    ("company_id", "in", comp_ids),
-                                ],
+                                comp_domain + [("code", "=", "112000")],
                                 limit=1,
                             ) or AccountAccount.search(
-                                [
-                                    ("account_type", "=", "asset_receivable"),
-                                    ("name", "not ilike", "pos"),
-                                    ("company_id", "in", comp_ids),
-                                ],
+                                comp_domain
+                                + [("account_type", "=", "asset_receivable"), ("name", "not ilike", "pos")],
                                 limit=1,
                             )
 
