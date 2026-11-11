@@ -1,3 +1,46 @@
+## 2026-11-11T07:10:00+07:00 — antigravity — F4: Resolusi Celah CI Bootstrap Juli, Closing Lot Union & Tax Configuration (Review #5851374243) (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `.github/workflows/ci.yml`:
+  - Memperbaiki step native execution F4 dua database disposable:
+    1. Menginisialisasi `fmcg_period_master` dan memuat seluruh data master FMCG lengkap (`scripts/load_fmcg_seed.py`: 150 Master SKU, vendor, outlet, armada, karyawan).
+    2. Menjadikan `fmcg_period_disposable_b` (Scenario B) sebagai *master-only baseline* yang terisolasi (150 SKU terverifikasi, 0 transaksi).
+    3. Meng-clone `fmcg_period_disposable` (Scenario A) dari master lalu mem-bootstrap transaksi kanonikal Juli lengkap (`scripts/load_canonical_perpetual.py`), menghilangkan kegagalan scope produk `Expected 150 SKU, ditemukan 0`.
+    4. Menjalankan `verify_disposable_period_pack.py` pada kedua database dan mengunggah artifact report.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Blocker 1 (Closing Stock UNION Lot Identities & Quarantine Semantics):
+    - Mengaudit perbandingan himpunan UNION seluruh lot identities (`expected` dan `actual` physical, reserved, quarantine).
+    - Menolak missing lot yang memiliki nilai nonzero (mencatat `Closing lot physical mismatch`).
+    - Menolak unexpected lot yang tidak terdaftar di closing state.
+    - Menolak mutasi redistribusi lot antar-lot meski total kuantitas SKU sama.
+    - Menolak perubahan kuantitas reservasi (`Closing lot reserved mismatch`).
+    - Memisahkan quant internal gudang normal dan quant karantina (`Karantina FMCG Maumbi`), mengaudit lot karantina dan total summary karantina (314 karton).
+    - Menghilangkan silent fallback UoM/cost: wajib *fail-closed* jika SKU tidak terdaftar di `sku_conversion_map`.
+  - Blocker 2 (Tax Configuration Contract Strict Fail-Closed):
+    - Menolak keras tax line dengan `tax_line_id` kosong/absent.
+    - Menolak tarif 11% legacy atau 0% (wajib tarif persis 12.00% DPP Nilai Lain).
+    - Memvalidasi identitas semantik pajak Kode 04 / DPP Nilai Lain pada objek `account.tax`.
+- `scripts/ops/load_period_pack.py`:
+  - Memasang sales tax 12% (`sale_tax_12`) secara deterministik pada baris SO (`order_line`) sehingga faktur yang digenerate mengikat tax configuration 12% secara native.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan unit tests:
+    - `test_audit_fails_when_expected_closing_lots_are_missing_in_database`: membuktikan deteksi missing lot saat quant kosong.
+    - `test_audit_fails_when_tax_configuration_is_legacy_11_or_absent`: membuktikan penolakan konfigurasi pajak 11% legacy atau tanpa tax_line_id.
+    - `test_audit_fails_on_quarantine_lot_mismatch`: membuktikan deteksi mismatch kuantitas karantina.
+    - `test_audit_fails_when_sku_total_preserved_but_lot_redistributed`: membuktikan deteksi saat kuantitas SKU dipindahkan ke lot yang salah.
+    - `test_audit_fails_when_reservation_mutated`: membuktikan deteksi saat kuantitas reservasi diubah.
+  - Total 45/45 unit tests PASS (100%).
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py -v`: 45/45 tests PASS (100%).
+- [F] `python -m ruff check .`: PASS clean (0 errors).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] `python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict`: PASS (0 violations).
+- [F] Zero touch terhadap live Railway / database operasional demo.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-10T22:30:00+07:00 — antigravity — F4: Resolusi 3 Blocker Substantif & Native Two-DB Execution PR #110 (Review #5843536397) (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

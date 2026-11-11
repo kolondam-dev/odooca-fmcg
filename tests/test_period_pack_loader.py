@@ -1280,6 +1280,235 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         ]
         self.assertGreaterEqual(len(quant_violations), 1)
 
+    def test_audit_fails_when_expected_closing_lots_are_missing_in_database(self):
+        """Supervisor Review #5851374243 Finding 1: Audit must FAIL when expected lots are missing in DB.
+        Previously, empty actual_lot_physical resulted in 0 violations because loop only checked 'if key in actual'.
+        """
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        mock_acc_stock = MockRecord(id=12, code="113000", company_id=1)
+        # Completely empty quants: all 213 expected lots are missing!
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(),
+            "account.move": MockModel(),
+            "purchase.order": MockModel(),
+            "account.payment": MockModel(),
+            "stock.picking": MockModel(),
+            "stock.move": MockModel(),
+            "stock.quant": MockModel(records=[]),  # Empty quants
+            "account.move.line": MockModel(),
+            "account.account": MockModel(records=[
+                MockRecord(id=10, code="211200", company_id=1),
+                MockRecord(id=11, code="114100", company_id=1),
+                mock_acc_stock,
+                MockRecord(id=13, code="112000", company_id=1),
+                MockRecord(id=14, code="211000", company_id=1),
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        missing_lot_violations = [
+            v for v in report["violations"]
+            if "Closing lot physical mismatch" in v
+        ]
+        # Must catch missing expected lots (non-empty violations)
+        self.assertGreaterEqual(len(missing_lot_violations), 1)
+
+    def test_audit_fails_when_tax_configuration_is_legacy_11_or_absent(self):
+        """Supervisor Review #5851374243 Finding 2: Reject legacy 11% or missing tax_line_id."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        # Legacy tax line configured with 11% instead of 12% on DPP Nilai Lain
+        legacy_tax_rec = MockRecord(id=1, name="PPN 11%", description="Legacy 11%", amount=11.00)
+        inv_legacy_tax = MockRecord(
+            id=101,
+            company_id=1,
+            payment_reference="INV-202608-0001",
+            move_type="out_invoice",
+            state="posted",
+            is_fmcg_seed_invoice=True,
+            amount_untaxed=100000.00,
+            amount_tax=11000.00,
+            amount_total=111000.00,
+            line_ids=[
+                MockRecord(
+                    id=1,
+                    account_id=MockRecord(code="211200"),
+                    credit=11000.00,
+                    debit=0.0,
+                    tax_base_amount=91666.67,  # Correct base, but wrong configured tax rate (11% vs 12%)
+                    tax_line_id=legacy_tax_rec,
+                )
+            ],
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(),
+            "account.move": MockModel(records=[inv_legacy_tax]),
+            "purchase.order": MockModel(),
+            "account.payment": MockModel(),
+            "stock.picking": MockModel(),
+            "stock.move": MockModel(),
+            "stock.quant": MockModel(),
+            "account.move.line": MockModel(),
+            "account.account": MockModel(records=[
+                MockRecord(id=10, code="211200", company_id=1),
+                MockRecord(id=11, code="114100", company_id=1),
+                MockRecord(id=12, code="113000", company_id=1),
+                MockRecord(id=13, code="112000", company_id=1),
+                MockRecord(id=14, code="211000", company_id=1),
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        tax_config_violations = [
+            v for v in report["violations"]
+            if "tax configuration mismatch" in v or "strictly requires 12.00%" in v
+        ]
+        self.assertGreaterEqual(len(tax_config_violations), 1)
+
+    def test_audit_fails_on_quarantine_lot_mismatch(self):
+        """Supervisor Review #5851374243 Finding 1b: Audit fails when quarantine quantities mismatch."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        # Quant placed in quarantine location but with wrong quantity
+        quar_quant = MockRecord(
+            id=1,
+            company_id=1,
+            location_id=MockRecord(name="Karantina FMCG Maumbi", usage="internal"),
+            product_id=MockRecord(default_code="KPA-ABC-02", standard_price=1000.00),
+            lot_id=MockRecord(name="LOT-TOS-20260701-14"),
+            quantity=999.0,  # Expected quarantine is 20 cartons * carton_qty
+            reserved_quantity=0.0,
+        )
+        mock_acc_stock = MockRecord(id=12, code="113000", company_id=1)
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(),
+            "account.move": MockModel(),
+            "purchase.order": MockModel(),
+            "account.payment": MockModel(),
+            "stock.picking": MockModel(),
+            "stock.move": MockModel(),
+            "stock.quant": MockModel(records=[quar_quant]),
+            "account.move.line": MockModel(),
+            "account.account": MockModel(records=[
+                MockRecord(id=10, code="211200", company_id=1),
+                MockRecord(id=11, code="114100", company_id=1),
+                mock_acc_stock,
+                MockRecord(id=13, code="112000", company_id=1),
+                MockRecord(id=14, code="211000", company_id=1),
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        quar_violations = [
+            v for v in report["violations"]
+            if "quarantine" in v.lower()
+        ]
+        self.assertGreaterEqual(len(quar_violations), 1)
+
+    def test_audit_fails_when_sku_total_preserved_but_lot_redistributed(self):
+        """Supervisor Review #5851374243: Mutation preserving SKU total but moving qty between lots must FAIL."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        mock_acc_stock = MockRecord(id=12, code="113000", company_id=1)
+        # SKU KPA-ABC-01 total expected is 8,040 pcs (67 cartons * 120)
+        # Move all 8,040 pcs to a fake/wrong lot, leaving LOT-TOS-20260701-13 empty
+        redistributed_quant = MockRecord(
+            id=1,
+            company_id=1,
+            location_id=MockRecord(name="Stock Gudang Maumbi", usage="internal"),
+            product_id=MockRecord(default_code="KPA-ABC-01", standard_price=1400.00),
+            lot_id=MockRecord(name="LOT-WRONG-REDISTRIBUTED-01"),  # Wrong lot!
+            quantity=8040.0,  # SKU total matches exactly!
+            reserved_quantity=0.0,
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(),
+            "account.move": MockModel(),
+            "purchase.order": MockModel(),
+            "account.payment": MockModel(),
+            "stock.picking": MockModel(),
+            "stock.move": MockModel(),
+            "stock.quant": MockModel(records=[redistributed_quant]),
+            "account.move.line": MockModel(),
+            "account.account": MockModel(records=[
+                MockRecord(id=10, code="211200", company_id=1),
+                MockRecord(id=11, code="114100", company_id=1),
+                mock_acc_stock,
+                MockRecord(id=13, code="112000", company_id=1),
+                MockRecord(id=14, code="211000", company_id=1),
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        # Must catch lot mismatch despite SKU total matching
+        lot_mismatches = [
+            v for v in report["violations"]
+            if "Closing lot physical mismatch" in v or "Unexpected closing lot" in v
+        ]
+        self.assertGreaterEqual(len(lot_mismatches), 1)
+
+    def test_audit_fails_when_reservation_mutated(self):
+        """Supervisor Review #5851374243: Mutation changing reserved quantities must FAIL."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        mock_acc_stock = MockRecord(id=12, code="113000", company_id=1)
+        # Expected reserved for KPA-ABC-01||LOT-TOS-20260701-13 is 14 cartons * 120 = 1,680 pcs
+        # Mutate reserved quantity to 999 pcs
+        mutated_res_quant = MockRecord(
+            id=1,
+            company_id=1,
+            location_id=MockRecord(name="Stock Gudang Maumbi", usage="internal"),
+            product_id=MockRecord(default_code="KPA-ABC-01", standard_price=1400.00),
+            lot_id=MockRecord(name="LOT-TOS-20260701-13"),
+            quantity=8040.0,
+            reserved_quantity=999.0,  # Wrong reserved qty!
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(),
+            "account.move": MockModel(),
+            "purchase.order": MockModel(),
+            "account.payment": MockModel(),
+            "stock.picking": MockModel(),
+            "stock.move": MockModel(),
+            "stock.quant": MockModel(records=[mutated_res_quant]),
+            "account.move.line": MockModel(),
+            "account.account": MockModel(records=[
+                MockRecord(id=10, code="211200", company_id=1),
+                MockRecord(id=11, code="114100", company_id=1),
+                mock_acc_stock,
+                MockRecord(id=13, code="112000", company_id=1),
+                MockRecord(id=14, code="211000", company_id=1),
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        res_mismatches = [
+            v for v in report["violations"]
+            if "Closing lot reserved mismatch" in v or "total reserved cartons mismatch" in v
+        ]
+        self.assertGreaterEqual(len(res_mismatches), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

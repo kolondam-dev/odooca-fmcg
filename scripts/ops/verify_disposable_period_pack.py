@@ -192,7 +192,11 @@ class PeriodPackOracle:
             res_cartons = _dec(entry.get("reserved", 0))
             quar_cartons = _dec(entry.get("quarantine", 0))
 
-            c_qty, u_cost = self.sku_conversion_map.get(sku, (Decimal("1"), ZERO))
+            if sku not in self.sku_conversion_map:
+                raise RuntimeError(
+                    f"Unknown SKU '{sku}' in closing stock has no carton_qty conversion or unit cost in register pack!"
+                )
+            c_qty, u_cost = self.sku_conversion_map[sku]
             phys_pcs = phys_cartons * c_qty
             res_pcs = res_cartons * c_qty
             quar_pcs = quar_cartons * c_qty
@@ -391,17 +395,37 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                             f"Invoice {inv_ref} tax_base_amount mismatch: expected DPP Nilai Lain {dpp_nl}, found {tot_tb}"
                         )
 
-            # Assert configured tax rate on tax lines
+            # Assert configured tax rate and Tax Code 04 contract on tax lines (FAIL-CLOSED)
             for t_line in t_lines:
                 tax_rec = getattr(t_line, "tax_line_id", None)
-                if tax_rec:
-                    t_rate = _dec(getattr(tax_rec, "amount", 0))
-                    if t_rate > ZERO and abs(t_rate - Decimal("12.00")) > Decimal("0.01") and abs(t_rate - Decimal("11.00")) > Decimal("0.01"):
-                        inv_tax_violations += 1
-                        if inv_tax_violations <= 5:
-                            report["violations"].append(
-                                f"Invoice {inv_ref} tax rate mismatch on tax line: found rate {t_rate}% (expected 12% on DPP Nilai Lain)"
-                            )
+                if not tax_rec:
+                    inv_tax_violations += 1
+                    if inv_tax_violations <= 5:
+                        report["violations"].append(
+                            f"Invoice {inv_ref} tax line missing configured tax record (tax_line_id is empty/None)"
+                        )
+                    continue
+
+                t_rate = _dec(getattr(tax_rec, "amount", 0))
+                # Strictly require configured rate 12.00% for DPP Nilai Lain; reject 0%, 11% legacy, or absent rate
+                if abs(t_rate - Decimal("12.00")) > Decimal("0.01"):
+                    inv_tax_violations += 1
+                    if inv_tax_violations <= 5:
+                        report["violations"].append(
+                            f"Invoice {inv_ref} tax configuration mismatch: tax rate is {t_rate}% (strictly requires 12.00% DPP Nilai Lain configuration; legacy 11% or zero rejected)"
+                        )
+
+                # Check tax code / description semantics
+                tax_name = str(getattr(tax_rec, "name", "") or "")
+                tax_desc = str(getattr(tax_rec, "description", "") or "")
+                tax_combined = f"{tax_name} {tax_desc}".lower()
+                is_ppn_04 = any(term in tax_combined for term in ("04", "nilai lain", "12%", "ppn"))
+                if not is_ppn_04:
+                    inv_tax_violations += 1
+                    if inv_tax_violations <= 5:
+                        report["violations"].append(
+                            f"Invoice {inv_ref} tax identity mismatch: tax '{tax_name}' does not reflect Tax Code 04 / DPP Nilai Lain contract"
+                        )
 
         if inv_tax_violations > 5:
             report["violations"].append(
@@ -673,14 +697,18 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 f"Stock-to-GL mismatch: internal quants valuation={quant_valuation}, GL {stock_acc.code} balance={gl_stock_balance}"
             )
 
-        # 9b. Closing Inventory Valuation, SKU Quantities, and Lot Breakdown from closing_state JSON
+        # 9b. Closing Inventory Valuation, SKU Quantities, Lot Breakdown, and Quarantine Audit
         if not oracle.expected_sku_physical_pcs:
             report["violations"].append("Closing state missing stock expectations (expected_sku_physical_pcs is empty)")
         else:
             inv_quant_violations = 0
             actual_sku_physical: Dict[str, Decimal] = {}
+            actual_sku_reserved: Dict[str, Decimal] = {}
+            actual_sku_quarantine: Dict[str, Decimal] = {}
+
             actual_lot_physical: Dict[str, Decimal] = {}
             actual_lot_reserved: Dict[str, Decimal] = {}
+            actual_lot_quarantine: Dict[str, Decimal] = {}
 
             for q in quants:
                 p_code = getattr(getattr(q, "product_id", None), "default_code", "")
@@ -689,59 +717,134 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 q_qty = _dec(getattr(q, "quantity", 0))
                 q_res = _dec(getattr(q, "reserved_quantity", 0))
                 lot_name = getattr(getattr(q, "lot_id", None), "name", "")
+                loc_name = str(getattr(getattr(q, "location_id", None), "name", "") or "").lower()
+                is_quarantine = "quarantine" in loc_name or "karantina" in loc_name
 
-                actual_sku_physical[p_code] = actual_sku_physical.get(p_code, ZERO) + q_qty
-                if lot_name:
-                    key = f"{p_code}||{lot_name}"
-                    actual_lot_physical[key] = actual_lot_physical.get(key, ZERO) + q_qty
-                    actual_lot_reserved[key] = actual_lot_reserved.get(key, ZERO) + q_res
+                if is_quarantine:
+                    actual_sku_quarantine[p_code] = actual_sku_quarantine.get(p_code, ZERO) + q_qty
+                    if lot_name:
+                        key = f"{p_code}||{lot_name}"
+                        actual_lot_quarantine[key] = actual_lot_quarantine.get(key, ZERO) + q_qty
+                else:
+                    actual_sku_physical[p_code] = actual_sku_physical.get(p_code, ZERO) + q_qty
+                    actual_sku_reserved[p_code] = actual_sku_reserved.get(p_code, ZERO) + q_res
+                    if lot_name:
+                        key = f"{p_code}||{lot_name}"
+                        actual_lot_physical[key] = actual_lot_physical.get(key, ZERO) + q_qty
+                        actual_lot_reserved[key] = actual_lot_reserved.get(key, ZERO) + q_res
 
-            # Audit physical quantities across all 142 SKUs
-            for sku, exp_pcs in oracle.expected_sku_physical_pcs.items():
+            # Audit physical quantities across union of all SKUs
+            all_sku_keys = set(oracle.expected_sku_physical_pcs.keys()) | set(actual_sku_physical.keys())
+            sku_violations = 0
+            for sku in sorted(all_sku_keys):
+                exp_pcs = oracle.expected_sku_physical_pcs.get(sku, ZERO)
                 act_pcs = actual_sku_physical.get(sku, ZERO)
                 if abs(act_pcs - exp_pcs) > Decimal("0.001"):
                     inv_quant_violations += 1
-                    if inv_quant_violations <= 5:
+                    sku_violations += 1
+                    if sku_violations <= 5:
                         report["violations"].append(
                             f"Closing stock quantity mismatch for {sku}: expected {exp_pcs} pcs, found {act_pcs} pcs"
                         )
 
-            # Audit physical and reserved quantities across 213 lots
-            for key, lot_exp in oracle.expected_closing_lots.items():
-                if key in actual_lot_physical:
-                    act_lot_phys = actual_lot_physical[key]
-                    exp_lot_phys = lot_exp["physical_pcs"]
-                    if abs(act_lot_phys - exp_lot_phys) > Decimal("0.001"):
+            # Audit physical, reserved, and quarantine quantities across UNION of all lots (fail-closed on missing or unexpected)
+            all_lot_keys = (
+                set(oracle.expected_closing_lots.keys())
+                | set(actual_lot_physical.keys())
+                | set(actual_lot_reserved.keys())
+                | set(actual_lot_quarantine.keys())
+            )
+            lot_phys_violations = 0
+            lot_res_violations = 0
+            lot_quar_violations = 0
+            for key in sorted(all_lot_keys):
+                lot_exp = oracle.expected_closing_lots.get(key)
+                if not lot_exp:
+                    act_p = actual_lot_physical.get(key, ZERO)
+                    act_r = actual_lot_reserved.get(key, ZERO)
+                    act_q = actual_lot_quarantine.get(key, ZERO)
+                    if act_p > ZERO or act_r > ZERO or act_q > ZERO:
                         inv_quant_violations += 1
-                        if inv_quant_violations <= 5:
+                        if inv_quant_violations <= 10:
                             report["violations"].append(
-                                f"Closing lot physical mismatch on {key}: expected {exp_lot_phys} pcs, found {act_lot_phys} pcs"
+                                f"Unexpected closing lot found in database '{key}': physical={act_p}, reserved={act_r}, quarantine={act_q}"
                             )
-                if key in actual_lot_reserved:
-                    act_lot_res = actual_lot_reserved[key]
-                    exp_lot_res = lot_exp["reserved_pcs"]
-                    if abs(act_lot_res - exp_lot_res) > Decimal("0.001"):
-                        inv_quant_violations += 1
-                        if inv_quant_violations <= 5:
-                            report["violations"].append(
-                                f"Closing lot reserved mismatch on {key}: expected {exp_lot_res} pcs, found {act_lot_res} pcs"
-                            )
+                    continue
 
-            if inv_quant_violations > 5:
+                exp_lot_phys = lot_exp["physical_pcs"]
+                exp_lot_res = lot_exp["reserved_pcs"]
+                exp_lot_quar = lot_exp["quarantine_pcs"]
+
+                act_lot_phys = actual_lot_physical.get(key, ZERO)
+                act_lot_res = actual_lot_reserved.get(key, ZERO)
+                act_lot_quar = actual_lot_quarantine.get(key, ZERO)
+
+                if abs(act_lot_phys - exp_lot_phys) > Decimal("0.001"):
+                    inv_quant_violations += 1
+                    lot_phys_violations += 1
+                    if lot_phys_violations <= 5:
+                        report["violations"].append(
+                            f"Closing lot physical mismatch on '{key}': expected {exp_lot_phys} pcs, found {act_lot_phys} pcs"
+                        )
+                if abs(act_lot_res - exp_lot_res) > Decimal("0.001"):
+                    inv_quant_violations += 1
+                    lot_res_violations += 1
+                    if lot_res_violations <= 5:
+                        report["violations"].append(
+                            f"Closing lot reserved mismatch on '{key}': expected {exp_lot_res} pcs, found {act_lot_res} pcs"
+                        )
+                if abs(act_lot_quar - exp_lot_quar) > Decimal("0.001"):
+                    inv_quant_violations += 1
+                    lot_quar_violations += 1
+                    if lot_quar_violations <= 5:
+                        report["violations"].append(
+                            f"Closing lot quarantine mismatch on '{key}': expected {exp_lot_quar} pcs, found {act_lot_quar} pcs"
+                        )
+
+            if inv_quant_violations > 15:
                 report["violations"].append(f"Total closing stock quantity SKU/lot mismatches: {inv_quant_violations}")
 
-            # Audit total physical cartons conversion
+            # Audit cartons conversions: Physical, Reserved, and Quarantine
             act_total_cartons = sum(
-                actual_sku_physical.get(sku, ZERO) / oracle.sku_conversion_map.get(sku, (Decimal("1"), ZERO))[0]
-                for sku in oracle.expected_sku_physical_pcs
+                actual_sku_physical.get(sku, ZERO) / oracle.sku_conversion_map[sku][0]
+                for sku in all_sku_keys
+                if sku in oracle.sku_conversion_map
             )
+            act_total_reserved_cartons = sum(
+                actual_sku_reserved.get(sku, ZERO) / oracle.sku_conversion_map[sku][0]
+                for sku in all_sku_keys
+                if sku in oracle.sku_conversion_map
+            )
+            act_total_quarantine_cartons = sum(
+                actual_sku_quarantine.get(sku, ZERO) / oracle.sku_conversion_map[sku][0]
+                for sku in all_sku_keys
+                if sku in oracle.sku_conversion_map
+            )
+
             report["checks"]["closing_total_physical_cartons"] = {
                 "expected": oracle.expected_total_physical_cartons,
                 "actual": int(act_total_cartons),
             }
+            report["checks"]["closing_total_reserved_cartons"] = {
+                "expected": oracle.expected_total_reserved_cartons,
+                "actual": int(act_total_reserved_cartons),
+            }
+            report["checks"]["closing_total_quarantine_cartons"] = {
+                "expected": oracle.expected_total_quarantine_cartons,
+                "actual": int(act_total_quarantine_cartons),
+            }
+
             if abs(act_total_cartons - Decimal(oracle.expected_total_physical_cartons)) > Decimal("0.01"):
                 report["violations"].append(
                     f"Closing stock total physical cartons mismatch: expected {oracle.expected_total_physical_cartons}, found {int(act_total_cartons)}"
+                )
+            if abs(act_total_reserved_cartons - Decimal(oracle.expected_total_reserved_cartons)) > Decimal("0.01"):
+                report["violations"].append(
+                    f"Closing stock total reserved cartons mismatch: expected {oracle.expected_total_reserved_cartons}, found {int(act_total_reserved_cartons)}"
+                )
+            if abs(act_total_quarantine_cartons - Decimal(oracle.expected_total_quarantine_cartons)) > Decimal("0.01"):
+                report["violations"].append(
+                    f"Closing stock total quarantine cartons mismatch: expected {oracle.expected_total_quarantine_cartons}, found {int(act_total_quarantine_cartons)}"
                 )
 
             # Audit total stock valuation

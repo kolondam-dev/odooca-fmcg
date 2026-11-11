@@ -1201,6 +1201,19 @@ class GenericPeriodPackLoader:
         so_count = 0
         do_count = 0
 
+        AccountTax = self.env["account.tax"].sudo() if "account.tax" in self.env else None
+        sale_tax_12 = None
+        if AccountTax:
+            tax_12_recs = AccountTax.search(
+                [
+                    ("company_id", "in", [self.company.id, False]),
+                    ("type_tax_use", "=", "sale"),
+                    ("amount", "=", 12.0),
+                ],
+                limit=1,
+            )
+            sale_tax_12 = tax_12_recs[0] if tax_12_recs else None
+
         for so_row in so_rows:
             so_num = so_row["so_number"]
             existing = SaleOrder.search(
@@ -1232,18 +1245,15 @@ class GenericPeriodPackLoader:
                     raise StateInconsistencyError(
                         f"Fatal: Unresolved SKU '{sku}' declared in SO {so_num}. Cannot proceed with partial lines."
                     )
-                sol_data.append(
-                    (
-                        0,
-                        0,
-                        {
-                            "product_id": prod.id,
-                            "product_uom_qty": float(lrow["qty_cartons"]) * float(lrow["carton_qty"]),
-                            "price_unit": float(lrow["unit_price_dpp"]),
-                            "discount": float(lrow.get("discount_pct", 0.0)),
-                        },
-                    )
-                )
+                sol_vals = {
+                    "product_id": prod.id,
+                    "product_uom_qty": float(lrow["qty_cartons"]) * float(lrow["carton_qty"]),
+                    "price_unit": float(lrow["unit_price_dpp"]),
+                    "discount": float(lrow.get("discount_pct", 0.0)),
+                }
+                if sale_tax_12:
+                    sol_vals["tax_id"] = [(6, 0, [sale_tax_12.id])]
+                sol_data.append((0, 0, sol_vals))
             so_vals["order_line"] = sol_data
             so_rec = SaleOrder.create(so_vals)
             so_rec.action_confirm()
