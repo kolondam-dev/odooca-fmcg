@@ -1460,6 +1460,10 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
     if all_probes_passed:
         _logger.info("--- Executing Real Loader Apply Recovery To Target State ---")
         try:
+            if "res.currency" in env:
+                idr = env["res.currency"].sudo().search([("name", "=", "IDR")], limit=1)
+                if idr and not idr.active:
+                    idr.write({"active": True})
             loader_recovery = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
             rec_summary = loader_recovery.execute_apply()
             results["recovery_summary"] = rec_summary
@@ -1481,6 +1485,10 @@ def run_scenario_b_from_empty_database(
     """Execute Scenario B: Prove deterministic initialization from empty DB -> July -> August."""
     assert_disposable_database(env)
     _logger.info("=== Executing Scenario B: Empty DB -> July -> August ===")
+    if "res.currency" in env:
+        idr = env["res.currency"].sudo().search([("name", "=", "IDR")], limit=1)
+        if idr and not idr.active:
+            idr.write({"active": True})
     res = {
         "scenario": "B",
         "july_status": "PENDING",
@@ -1576,6 +1584,10 @@ def run_full_disposable_period_verification(
     # 1. Fault-Injection Recovery Probes on Baseline July (Batch write, tamper, rollback, real apply recovery)
     if scenario in ("all", "A"):
         _logger.info("Executing Fault-Injection Recovery Probes on Baseline July...")
+        if "res.currency" in env:
+            idr = env["res.currency"].sudo().search([("name", "=", "IDR")], limit=1)
+            if idr and not idr.active:
+                idr.write({"active": True})
         report["fault_injection"] = run_period_pack_fault_injection_probes(env, pack_dir)
         snap1 = capture_period_state_snapshot(env)
         report["scenario_a_digest"] = snap1["digest"]

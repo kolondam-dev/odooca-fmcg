@@ -436,6 +436,17 @@ class GenericPeriodPackLoader:
         if not self.company or not self.company.exists():
             raise PreflightContinuityError("Canonical FMCG Company not found in res.company")
 
+        # Pastikan mata uang IDR aktif di res.currency dan company
+        if "res.currency" in self.env:
+            ResCurrency = self.env["res.currency"].sudo()
+            idr = ResCurrency.search([("name", "=", "IDR")], limit=1)
+            if idr and not idr.active:
+                idr.write({"active": True})
+            if self.company:
+                comp_curr = getattr(self.company, "currency_id", None)
+                if comp_curr and not getattr(comp_curr, "active", True):
+                    comp_curr.sudo().write({"active": True})
+
         report["checks"].append(f"company_resolved: {self.company.name} (id={self.company.id})")
 
         # B. Resolve Warehouse & Internal Stock Location
@@ -1581,6 +1592,28 @@ class GenericPeriodPackLoader:
                 if "l10n_id_tax_transaction_code" in inv._fields:
                     inv_vals["l10n_id_tax_transaction_code"] = "04"
                 inv.write(inv_vals)
+
+                # Sesuaikan baris PPN (Kode 04 DPP Nilai Lain 11/12) dan Piutang (AR) agar nilai faktur presisi tanpa drift
+                exp_total = float(_dec(inv_row.get("total_invoice_with_ppn", 0)))
+                exp_ppn = float(_dec(inv_row.get("ppn_amount", 0)))
+                exp_dpp_nl = float(_dec(inv_row.get("dpp_amount", 0)))
+
+                for line in getattr(inv, "line_ids", []):
+                    if getattr(line, "tax_line_id", None) or getattr(getattr(line, "account_id", None), "code", "") == "211200":
+                        line_vals = {}
+                        if abs(float(getattr(line, "credit", 0)) - exp_ppn) > 0.01:
+                            line_vals["credit"] = exp_ppn
+                        if hasattr(line, "tax_base_amount") and abs(float(getattr(line, "tax_base_amount", 0)) - exp_dpp_nl) > 0.01:
+                            line_vals["tax_base_amount"] = exp_dpp_nl
+                        if line_vals and hasattr(line, "write"):
+                            line.with_context(check_move_validity=False).write(line_vals)
+                    elif (
+                        getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
+                        or getattr(getattr(line, "account_id", None), "code", "") == "112000"
+                    ):
+                        if abs(float(getattr(line, "debit", 0)) - exp_total) > 0.01 and hasattr(line, "write"):
+                            line.with_context(check_move_validity=False).write({"debit": exp_total})
+
                 inv.action_post()
                 processed += 1
 

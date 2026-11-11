@@ -1,3 +1,23 @@
+## 2026-11-11T19:02:40+07:00 — antigravity — F4: Presisi Baris Pajak/Piutang Faktur & Aktivasi Menyeluruh Mata Uang IDR (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menyelaraskan baris pajak PPN Keluaran 211200 (`credit = inv_row["ppn_amount"]`, `tax_base_amount = inv_row["dpp_amount"]`) dan baris piutang 112000 (`debit = inv_row["total_invoice_with_ppn"]`) saat pembuatan faktur komersial draft dari SO di `_apply_invoices`, mengeliminasi drift selisih 1% pada total faktur.
+  - Mengaktifkan `res.currency` IDR dan `company.currency_id` di `verify_preflight`.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Menjamin aktivasi `res.currency` IDR sebelum eksekusi recovery probe dan Scenario B.
+- `scripts/load_fmcg_seed.py`:
+  - Menambahkan `activate_idr_currency()` sebelum proses pemuatan master data.
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 5.9s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py scripts/load_fmcg_seed.py`: All checks passed.
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T18:28:00+07:00 — antigravity — F4: Resolusi Tax Repartition DPP Nilai Lain 11/12 dan Pemisahan Guard Seed Faktur Komersial (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

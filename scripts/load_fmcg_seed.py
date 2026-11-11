@@ -813,8 +813,25 @@ def load_canonical_taxes():
         print(f"    Pajak kanonikal Kode 04 sudah terpasang: {existing_tax.name} (ID {existing_tax.id})")
 
 
+def activate_idr_currency():
+    """Memastikan mata uang IDR aktif di res.currency dan company."""
+    if "res.currency" in env:
+        idr = env["res.currency"].sudo().search([("name", "=", "IDR")], limit=1)
+        if idr and not idr.active:
+            idr.write({"active": True})
+            print(" -> Mata uang IDR diaktifkan.")
+    if "res.company" in env:
+        Company = env["res.company"].sudo()
+        company = env.company or Company.search([], limit=1)
+        if company:
+            comp_curr = getattr(company, "currency_id", None)
+            if comp_curr and not getattr(comp_curr, "active", True):
+                comp_curr.sudo().write({"active": True})
+
+
 def load_all():
     try:
+        activate_idr_currency()
         load_principals_and_vendors()
         load_products()
         load_employees()
