@@ -60,14 +60,20 @@ class MockModel:
                     if isinstance(term, tuple) and len(term) == 3:
                         field, op, val = term
                         r_val = getattr(r, field, None)
-                        if hasattr(r_val, "id") and isinstance(val, (int, bool)):
-                            r_val = r_val.id
-                        if op == "=" and r_val != val:
-                            match = False
-                            break
-                        elif op == "in" and (r_val not in val and (r_val is not None or False not in val)):
-                            match = False
-                            break
+                        r_id = getattr(r_val, "id", None)
+                        if op == "=":
+                            if r_val != val and (r_id is None or r_id != val):
+                                match = False
+                                break
+                        elif op == "in":
+                            val_set = set(val) if isinstance(val, (list, tuple, set)) else {val}
+                            if (
+                                r_val not in val_set
+                                and (r_id is None or r_id not in val_set)
+                                and (r_val is not None or False not in val_set)
+                            ):
+                                match = False
+                                break
                         elif op == "ilike" and (r_val is None or str(val).lower() not in str(r_val).lower()):
                             match = False
                             break
@@ -119,6 +125,12 @@ class MockEnv:
 
     def __getitem__(self, item):
         return self.models.get(item, MockModel())
+
+    def __contains__(self, item):
+        return item in self.models
+
+    def __iter__(self):
+        return iter(self.models)
 
 
 class TestPeriodPackManifest(unittest.TestCase):
@@ -1508,6 +1520,136 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             if "Closing lot reserved mismatch" in v or "total reserved cartons mismatch" in v
         ]
         self.assertGreaterEqual(len(res_mismatches), 1)
+
+
+    def test_resolve_canonical_tax_code_04_success(self):
+        """Loader successfully resolves authoritative Tax Code 04 / DPP Nilai Lain 12%."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        tax_04 = MockRecord(
+            id=10,
+            company_id=mock_company,
+            type_tax_use="sale",
+            amount=12.0,
+            name="PPN Keluaran 12% (DPP Nilai Lain - Kode 04)",
+            description="PPN 12% atas DPP Nilai Lain 11/12 PMK 131/2024",
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "account.tax": MockModel(records=[tax_04]),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, company_id=1)
+        loader.company = mock_company
+        resolved = loader._resolve_canonical_tax_code_04()
+        self.assertEqual(resolved.id, 10)
+
+    def test_resolve_canonical_tax_code_04_rejects_generic_or_wrong_code(self):
+        """Supervisor Review #5851786779: Loader rejects generic 'PPN 12%' without authoritative 04 identifier."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        # Generic 12% tax without 04 or Nilai Lain semantics
+        generic_tax = MockRecord(
+            id=11,
+            company_id=mock_company,
+            type_tax_use="sale",
+            amount=12.0,
+            name="PPN 12%",
+            description="Generic PPN 12% Standard",
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "account.tax": MockModel(records=[generic_tax]),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, company_id=1)
+        loader.company = mock_company
+        with self.assertRaises(PreflightContinuityError) as ctx:
+            loader._resolve_canonical_tax_code_04()
+        self.assertIn("Tax Code 04 resolution failed", str(ctx.exception))
+        self.assertIn("Generic/wrong-code 12% taxes strictly rejected", str(ctx.exception))
+
+    def test_resolve_canonical_tax_code_04_rejects_ambiguous_taxes(self):
+        """Loader rejects ambiguous configuration when multiple candidate taxes match."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        tax_04_a = MockRecord(
+            id=10,
+            company_id=mock_company,
+            type_tax_use="sale",
+            amount=12.0,
+            name="PPN Keluaran 12% (DPP Nilai Lain - Kode 04)",
+        )
+        tax_04_b = MockRecord(
+            id=12,
+            company_id=mock_company,
+            type_tax_use="sale",
+            amount=12.0,
+            name="PPN 12% Nilai Lain Alt (04)",
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "account.tax": MockModel(records=[tax_04_a, tax_04_b]),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, company_id=1)
+        loader.company = mock_company
+        with self.assertRaises(PreflightContinuityError) as ctx:
+            loader._resolve_canonical_tax_code_04()
+        self.assertIn("Ambiguous Tax Code 04 configuration", str(ctx.exception))
+
+    def test_audit_fails_when_tax_rate_is_12_but_lacks_code_04_identifier(self):
+        """Supervisor Review #5851786779: Audit fails when tax rate is 12% but lacks Code 04 identifier."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        # Tax configured with 12% rate but generic name "PPN 12%" (no 04 or Nilai Lain)
+        generic_12_tax_rec = MockRecord(id=1, name="PPN 12%", description="Generic 12%", amount=12.00)
+        inv_wrong_tax_id = MockRecord(
+            id=101,
+            company_id=1,
+            payment_reference="INV-202608-0001",
+            move_type="out_invoice",
+            state="posted",
+            is_fmcg_seed_invoice=True,
+            amount_untaxed=100000.00,
+            amount_tax=11000.00,
+            amount_total=111000.00,
+            line_ids=[
+                MockRecord(
+                    id=1,
+                    account_id=MockRecord(code="211200"),
+                    credit=11000.00,
+                    debit=0.0,
+                    tax_base_amount=91666.67,  # Correct base, 12% rate, but wrong tax identity
+                    tax_line_id=generic_12_tax_rec,
+                )
+            ],
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(),
+            "account.move": MockModel(records=[inv_wrong_tax_id]),
+            "purchase.order": MockModel(),
+            "account.payment": MockModel(),
+            "stock.picking": MockModel(),
+            "stock.move": MockModel(),
+            "stock.quant": MockModel(),
+            "account.move.line": MockModel(),
+            "account.account": MockModel(records=[
+                MockRecord(id=10, code="211200", company_id=1),
+                MockRecord(id=11, code="114100", company_id=1),
+                MockRecord(id=12, code="113000", company_id=1),
+                MockRecord(id=13, code="112000", company_id=1),
+                MockRecord(id=14, code="211000", company_id=1),
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        wrong_code_violations = [
+            v for v in report["violations"]
+            if "wrong-code same-rate tax" in v or "lacks authoritative Tax Code 04" in v
+        ]
+        self.assertGreaterEqual(len(wrong_code_violations), 1)
 
 
 if __name__ == "__main__":

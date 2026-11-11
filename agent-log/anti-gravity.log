@@ -2303,3 +2303,21 @@
 - Unit Tests Counterexample Komprehensif: Menambahkan test penolakan missing expected lots saat quants kosong, test penolakan kuantitas karantina salah, test penolakan mutasi redistribusi lot antar-lot, test penolakan mutasi reservasi, serta test penolakan konfigurasi pajak 11% legacy/absent. Total 45/45 unit tests PASS (100%).
 - Verifikasi Penuh: 45/45 tests di tests/test_period_pack_loader.py PASS; ruff check clean (0 error); check_manifests 12 addons OK; seed v2 strict gates PASS (0 violations). Zero touch live Railway.
 - Task managed by antigravity at 2026-11-11T07:10:00+07:00
+
+[2026-11-11T08:30:00+07:00] [INFO] F4: Resolusi Guard COGS Move 3085 Baseline Juli & Identitas Pajak Otoritatif Kode 04 (Review #5851786779)
+- Resolusi Move 3085 & Preservasi Guard COGS id_base (Canonical July Baseline Contract):
+  * Mendiagnosis akar masalah kegagalan CI run 42929045396: 48 Sales Order 31 Juli 2026 memiliki tanggal pengiriman dijadwalkan pada 1 Agustus 2026 (carry-forward), sehingga picking pengiriman belum divalidasi (move 3085 berstatus 'assigned') pada penutupan Juli.
+  * Ketika scripts/load_canonical_perpetual.py dieksekusi di Odoo shell, default enforce_invoice_cutoff sebelumnya adalah False sehingga loader mencoba memposting faktur untuk SO carry-forward tersebut sebelum delivery divalidasi, memicu UserError dari guard _is_seed_commercial_invoice_with_posted_delivery_cogs di addons/id_base.
+  * Memperbaiki runner shell otomatis di scripts/load_canonical_perpetual.py agar secara default mengaktifkan cutoff_date="2026-07-31" dan enforce_invoice_cutoff=True (mendukung override via env vars CANONICAL_CUTOFF_DATE dan CANONICAL_ENFORCE_INVOICE_CUTOFF).
+  * Dengan perbaikan ini, persis 1.276 faktur penjualan Juli (yang pengirimannya sudah 'done') diposting, 48 order carry-forward tetap berstatus 'assigned' untuk dilanjutkan pada pack Agustus, dan guard integritas COGS id_base terpenuhi 100% tanpa bypass atau pelemahan logika.
+- Identitas Otoritatif Pajak Kode 04 & DPP Nilai Lain PMK 131/2024:
+  * scripts/load_fmcg_seed.py: Menambahkan helper load_canonical_taxes() yang memuat dan mengonfigurasi pajak kanonikal 'PPN Keluaran 12% (DPP Nilai Lain - Kode 04)' (amount=12.0, type_tax_use='sale', price_include_override='tax_excluded', tax repartition account ke GL 211200) pada company fmcg_period_master.
+  * GenericPeriodPackLoader._resolve_canonical_tax_code_04(): Menghilangkan pemilihan pajak sembarang limit=1 dan fallback silent None. Mengimplementasikan resolver fail-closed ketat yang mencari pajak 12% sale company dan memvalidasi identitas otoritatif Kode 04 / DPP Nilai Lain (menolak keras pajak generik 'PPN 12%' tanpa identitas 04, menolak ketiadaan pajak, dan menolak seleksi ambigu > 1).
+  * scripts/ops/load_period_pack.py: Mengikat canonical_tax_04 secara deterministik pada seluruh line SO di _apply_sales_orders_and_deliveries, serta menetapkan l10n_id_tax_transaction_code='04' pada out_invoice di _apply_invoices.
+  * scripts/ops/verify_disposable_period_pack.py: Mengetatkan verifikasi per-faktur agar menolak keras salah kode tarif sama (wrong-code same-rate tax, misal 'PPN 12% Standar') yang tidak membawa identitas otoritatif Kode 04 / DPP Nilai Lain. Menghapus keyword longgar '12%' dan 'ppn' dari pemeriksaan semantik identitas. Memvalidasi field l10n_id_tax_transaction_code == '04' pada invoice.
+- Optimasi Performa & Unit Tests Lengkap:
+  * Menambahkan stat/mtime caching pada compute_sha256_lf di load_period_pack.py untuk meniadakan overhead pembacaan disk berulang, mempercepat eksekusi unit test loader menjadi < 7 detik.
+  * Menambahkan __contains__ dan __iter__ pada MockEnv di tests/test_period_pack_loader.py untuk mencegah infinite sequence iteration pada operator 'in'.
+  * Menambahkan 4 unit test baru: resolusi sukses Kode 04, penolakan pajak generik 12% salah kode, penolakan konfigurasi ambigu, dan penolakan audit atas invoice dengan pajak 12% tanpa penanda Kode 04.
+  * 49/49 unit tests di tests/test_period_pack_loader.py PASS (100%); ruff check clean; check_manifests 12 addons OK; seed v2 strict gates PASS. Zero touch live Railway.
+- Task managed by antigravity at 2026-11-11T08:30:00+07:00

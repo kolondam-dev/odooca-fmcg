@@ -415,17 +415,35 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                             f"Invoice {inv_ref} tax configuration mismatch: tax rate is {t_rate}% (strictly requires 12.00% DPP Nilai Lain configuration; legacy 11% or zero rejected)"
                         )
 
-                # Check tax code / description semantics
+                # Check tax code / description semantics (STRICT: must explicitly carry Code 04 / DPP Nilai Lain identity)
                 tax_name = str(getattr(tax_rec, "name", "") or "")
                 tax_desc = str(getattr(tax_rec, "description", "") or "")
+                tax_code_trans = str(getattr(tax_rec, "l10n_id_tax_transaction_code", "") or "")
                 tax_combined = f"{tax_name} {tax_desc}".lower()
-                is_ppn_04 = any(term in tax_combined for term in ("04", "nilai lain", "12%", "ppn"))
+
+                # Strict authoritative identity requires explicit 04 / Nilai Lain semantic tag
+                # (Generic 'PPN 12%' or regular same-rate tax without 04/Nilai Lain is strictly rejected)
+                is_ppn_04 = (
+                    tax_code_trans == "04"
+                    or any(term in tax_combined for term in ("04", "nilai lain", "kode 04", "kode_04"))
+                )
                 if not is_ppn_04:
                     inv_tax_violations += 1
                     if inv_tax_violations <= 5:
                         report["violations"].append(
-                            f"Invoice {inv_ref} tax identity mismatch: tax '{tax_name}' does not reflect Tax Code 04 / DPP Nilai Lain contract"
+                            f"Invoice {inv_ref} wrong-code same-rate tax: tax '{tax_name}' has rate {t_rate}% "
+                            f"but lacks authoritative Tax Code 04 / DPP Nilai Lain identifier (generic PPN 12% without 04 rejected)"
                         )
+
+            # Assert invoice-level transaction code if model supports l10n_id_tax_transaction_code
+            inv_code = getattr(inv_m, "l10n_id_tax_transaction_code", "") or ""
+            fields_dict = getattr(inv_m, "_fields", None) or {}
+            if "l10n_id_tax_transaction_code" in fields_dict and inv_code != "04":
+                inv_tax_violations += 1
+                if inv_tax_violations <= 5:
+                    report["violations"].append(
+                        f"Invoice {inv_ref} l10n_id_tax_transaction_code is '{inv_code}', expected '04'"
+                    )
 
         if inv_tax_violations > 5:
             report["violations"].append(

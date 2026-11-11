@@ -3178,7 +3178,17 @@ class CanonicalPerpetualAdapter:
 if __name__ == "__main__" or "env" in globals():
     env_obj = globals().get("env")
     if env_obj:
-        adapter = CanonicalPerpetualAdapter(env_obj)
+        import os
+        cutoff_date = os.environ.get("CANONICAL_CUTOFF_DATE", "2026-07-31")
+        # Enforce canonical July cutoff contract by default so uncompleted deliveries crossing
+        # into August (e.g. 48 carry-forward orders) are not posted before delivery validation,
+        # satisfying the COGS guard in id_base without modification.
+        enforce_cutoff = os.environ.get("CANONICAL_ENFORCE_INVOICE_CUTOFF", "1") not in ("0", "false", "False")
+        adapter = CanonicalPerpetualAdapter(
+            env_obj,
+            cutoff_date=cutoff_date,
+            enforce_invoice_cutoff=enforce_cutoff,
+        )
         adapter.run_all()
     else:
         print("[canonical_loader] Mode offline/analisis: Verifikasi dataset kanonikal berhasil.")

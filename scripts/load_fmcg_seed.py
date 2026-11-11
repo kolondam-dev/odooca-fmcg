@@ -673,6 +673,85 @@ def load_partners():
     print(f"    Selesai: {count_created} dibuat, {count_updated} diperbarui (Alamat, TOP, & Salesman lengkap).")
 
 
+def load_canonical_taxes():
+    """Memuat dan mengonfigurasi pajak kanonikal FMCG (Kode 04 DPP Nilai Lain 12% PMK 131/2024)."""
+    if "account.tax" not in env:
+        return
+    print(" -> Mengonfigurasi Pajak Kanonikal Kode 04 (DPP Nilai Lain 12%)...")
+    AccountTax = env["account.tax"].sudo()
+    AccountAccount = env["account.account"].sudo() if "account.account" in env else None
+    TaxGroup = env["account.tax.group"].sudo() if "account.tax.group" in env else None
+    Company = env["res.company"].sudo()
+
+    company = env.company or Company.search([], limit=1)
+    if not company:
+        return
+
+    # Cari akun GL PPN Keluaran 211200
+    tax_out_acc = None
+    if AccountAccount:
+        tax_out_acc = AccountAccount.search(
+            [("code", "=", "211200"), ("company_id", "in", [company.id, False])], limit=1
+        ) or AccountAccount.search(
+            [("name", "ilike", "PPN Keluaran"), ("company_id", "in", [company.id, False])], limit=1
+        )
+
+    # Tax Group PPN
+    tax_group = None
+    if TaxGroup:
+        tax_group = TaxGroup.search([("company_id", "in", [company.id, False])], limit=1)
+
+    # Cari apakah pajak Kode 04 sudah terdaftar secara kanonikal
+    existing_tax = AccountTax.search(
+        [
+            ("company_id", "in", [company.id, False]),
+            ("type_tax_use", "=", "sale"),
+            ("amount", "=", 12.0),
+            ("name", "ilike", "04"),
+        ],
+        limit=1,
+    )
+
+    if not existing_tax:
+        tax_vals = {
+            "name": "PPN Keluaran 12% (DPP Nilai Lain - Kode 04)",
+            "description": "PPN 12% atas DPP Nilai Lain 11/12 PMK 131/2024 (Kode Transaksi 04)",
+            "amount_type": "percent",
+            "amount": 12.0,
+            "type_tax_use": "sale",
+            "company_id": company.id,
+        }
+        if "price_include_override" in AccountTax._fields:
+            tax_vals["price_include_override"] = "tax_excluded"
+        if tax_group:
+            tax_vals["tax_group_id"] = tax_group.id
+        if "country_id" in AccountTax._fields and getattr(company, "country_id", False):
+            tax_vals["country_id"] = company.country_id.id
+        if "l10n_id_tax_transaction_code" in AccountTax._fields:
+            tax_vals["l10n_id_tax_transaction_code"] = "04"
+        if tax_out_acc and "invoice_repartition_line_ids" in AccountTax._fields:
+            tax_vals["invoice_repartition_line_ids"] = [
+                (0, 0, {"repartition_type": "base", "factor_percent": 100.0}),
+                (0, 0, {
+                    "repartition_type": "tax",
+                    "factor_percent": 100.0,
+                    "account_id": tax_out_acc.id,
+                }),
+            ]
+            tax_vals["refund_repartition_line_ids"] = [
+                (0, 0, {"repartition_type": "base", "factor_percent": 100.0}),
+                (0, 0, {
+                    "repartition_type": "tax",
+                    "factor_percent": 100.0,
+                    "account_id": tax_out_acc.id,
+                }),
+            ]
+        new_tax = AccountTax.create(tax_vals)
+        print(f"    Pajak kanonikal Kode 04 dibuat: {new_tax.name} (ID {new_tax.id})")
+    else:
+        print(f"    Pajak kanonikal Kode 04 sudah terpasang: {existing_tax.name} (ID {existing_tax.id})")
+
+
 def load_all():
     try:
         load_principals_and_vendors()
@@ -680,6 +759,7 @@ def load_all():
         load_employees()
         load_vehicles()
         load_partners()
+        load_canonical_taxes()
         cr.commit()
         print("[seed_loader] SUCCESS: Seluruh data master FMCG berhasil dimuat secara lengkap.")
     except Exception as e:

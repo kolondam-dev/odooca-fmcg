@@ -45,11 +45,25 @@ ZERO = Decimal("0.00")
 CENT = Decimal("0.01")
 
 
+_SHA_CACHE: Dict[Tuple[str, float, int], str] = {}
+
+
 def compute_sha256_lf(path: Path) -> str:
-    """Compute SHA-256 hash normalizing CRLF/CR to LF."""
+    """Compute SHA-256 hash normalizing CRLF/CR to LF with mtime/size cache."""
+    try:
+        st = path.stat()
+        cache_key = (str(path.resolve()), st.st_mtime, st.st_size)
+        if cache_key in _SHA_CACHE:
+            return _SHA_CACHE[cache_key]
+    except Exception:
+        cache_key = None
+
     raw = path.read_bytes()
     normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
-    return hashlib.sha256(normalized).hexdigest()
+    h = hashlib.sha256(normalized).hexdigest()
+    if cache_key is not None:
+        _SHA_CACHE[cache_key] = h
+    return h
 
 
 def _dec(val: Any) -> Decimal:
@@ -1184,6 +1198,69 @@ class GenericPeriodPackLoader:
 
         return processed
 
+    def _resolve_canonical_tax_code_04(self):
+        """Resolve authoritative tax record for Tax Code 04 (DPP Nilai Lain PMK 131/2024, 12%).
+
+        Strict fail-closed contract:
+        - Must exist in Odoo environment (no silent None fallback).
+        - Strictly requires amount == 12.0 and type_tax_use == 'sale'.
+        - Must carry authoritative Tax Code 04 / DPP Nilai Lain identity
+          (rejects wrong-code same-rate tax, e.g. generic 'PPN 12%').
+        - Rejects ambiguous candidates (multiple matching taxes on the same scope).
+        """
+        if "account.tax" not in self.env:
+            raise PreflightContinuityError("Model 'account.tax' not found in Odoo environment.")
+
+        AccountTax = self.env["account.tax"].sudo()
+        candidates = AccountTax.search(
+            [
+                ("company_id", "in", [self.company.id, False]),
+                ("type_tax_use", "=", "sale"),
+                ("amount", "=", 12.0),
+            ]
+        )
+        if not candidates:
+            raise PreflightContinuityError(
+                f"Missing canonical tax: No 12.00% sales tax found for company '{self.company.name}' (ID {self.company.id})."
+            )
+
+        matching_04 = []
+        for t in candidates:
+            t_name = str(getattr(t, "name", "") or "").lower()
+            t_desc = str(getattr(t, "description", "") or "").lower()
+            code_field = str(getattr(t, "l10n_id_tax_transaction_code", "") or "")
+
+            has_04 = (
+                code_field == "04"
+                or any(term in t_name for term in ("04", "nilai lain", "kode 04", "kode_04"))
+                or any(term in t_desc for term in ("04", "nilai lain", "kode 04", "kode_04"))
+            )
+            if has_04:
+                matching_04.append(t)
+
+        if not matching_04:
+            cand_names = [getattr(c, "name", "") for c in candidates]
+            raise PreflightContinuityError(
+                f"Tax Code 04 resolution failed: Found 12% tax candidates {cand_names}, but NONE carry "
+                f"authoritative Tax Code 04 / DPP Nilai Lain identifier. Generic/wrong-code 12% taxes strictly rejected."
+            )
+
+        comp_matching = [
+            t for t in matching_04 if getattr(t, "company_id", False) and getattr(t.company_id, "id", None) == self.company.id
+        ]
+        if len(comp_matching) == 1:
+            return comp_matching[0]
+        if len(comp_matching) > 1:
+            raise PreflightContinuityError(
+                f"Ambiguous Tax Code 04 configuration: Multiple company-specific taxes matched: {[getattr(t, 'name', '') for t in comp_matching]}"
+            )
+        if len(matching_04) == 1:
+            return matching_04[0]
+
+        raise PreflightContinuityError(
+            f"Ambiguous Tax Code 04 configuration: Multiple global taxes matched: {[getattr(t, 'name', '') for t in matching_04]}"
+        )
+
     def _apply_sales_orders_and_deliveries(self) -> Tuple[int, int]:
         """Create and validate Sales Orders and Outbound Deliveries."""
         so_rows = self.reader.sales_orders
@@ -1201,18 +1278,8 @@ class GenericPeriodPackLoader:
         so_count = 0
         do_count = 0
 
-        AccountTax = self.env["account.tax"].sudo() if "account.tax" in self.env else None
-        sale_tax_12 = None
-        if AccountTax:
-            tax_12_recs = AccountTax.search(
-                [
-                    ("company_id", "in", [self.company.id, False]),
-                    ("type_tax_use", "=", "sale"),
-                    ("amount", "=", 12.0),
-                ],
-                limit=1,
-            )
-            sale_tax_12 = tax_12_recs[0] if tax_12_recs else None
+        # Authoritative canonical Tax Code 04 resolution (fail-closed if missing, ambiguous, or wrong-code)
+        canonical_tax_04 = self._resolve_canonical_tax_code_04()
 
         for so_row in so_rows:
             so_num = so_row["so_number"]
@@ -1250,9 +1317,8 @@ class GenericPeriodPackLoader:
                     "product_uom_qty": float(lrow["qty_cartons"]) * float(lrow["carton_qty"]),
                     "price_unit": float(lrow["unit_price_dpp"]),
                     "discount": float(lrow.get("discount_pct", 0.0)),
+                    "tax_id": [(6, 0, [canonical_tax_04.id])],
                 }
-                if sale_tax_12:
-                    sol_vals["tax_id"] = [(6, 0, [sale_tax_12.id])]
                 sol_data.append((0, 0, sol_vals))
             so_vals["order_line"] = sol_data
             so_rec = SaleOrder.create(so_vals)
@@ -1306,14 +1372,15 @@ class GenericPeriodPackLoader:
             # Generate invoice from SO
             inv = so._create_invoices()
             if inv:
-                inv.write(
-                    {
-                        "payment_reference": inv_num,
-                        "invoice_date": inv_row["date_invoice"],
-                        "invoice_date_due": inv_row["due_date"],
-                        "is_fmcg_seed_invoice": True,
-                    }
-                )
+                inv_vals = {
+                    "payment_reference": inv_num,
+                    "invoice_date": inv_row["date_invoice"],
+                    "invoice_date_due": inv_row["due_date"],
+                    "is_fmcg_seed_invoice": True,
+                }
+                if "l10n_id_tax_transaction_code" in inv._fields:
+                    inv_vals["l10n_id_tax_transaction_code"] = "04"
+                inv.write(inv_vals)
                 inv.action_post()
                 processed += 1
 

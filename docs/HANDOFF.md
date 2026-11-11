@@ -1,3 +1,42 @@
+## 2026-11-11T08:30:00+07:00 — antigravity — F4: Resolusi Guard COGS Move 3085 Baseline Juli & Identitas Pajak Otoritatif Kode 04 (Review #5851786779) (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/load_canonical_perpetual.py`:
+  - Resolusi Move 3085 & Preservasi Integritas Guard COGS `id_base` (`_is_seed_commercial_invoice_with_posted_delivery_cogs`):
+    - Mendiagnosis akar kegagalan bootstrap Juli di CI run 42929045396: 48 SO 31 Juli 2026 dijadwalkan dikirim pada 1 Agustus 2026 (carry-forward), sehingga pergerakan stoknya (seperti move 3085) berstatus `assigned`.
+    - Di Odoo shell, default `enforce_invoice_cutoff` sebelumnya bernilai `False` sehingga loader memaksakan posting faktur penjualan sebelum DO selesai, yang langsung ditolak oleh guard COGS `id_base`.
+    - Memperbarui runner shell otomatis `load_canonical_perpetual.py` agar secara default menggunakan `cutoff_date="2026-07-31"` dan `enforce_invoice_cutoff=True` (mendukung override via env vars `CANONICAL_CUTOFF_DATE` dan `CANONICAL_ENFORCE_INVOICE_CUTOFF`).
+    - Hasil: Tepat 1.276 faktur penjualan Juli yang pengirimannya tervalidasi selesai (`done`) diposting; 48 order carry-forward tetap berstatus `assigned` untuk dilanjutkan di periode berikutnya, dan guard COGS `id_base` terpenuhi 100% tanpa bypass atau penonaktifan pengecekan.
+- `scripts/load_fmcg_seed.py`:
+  - Menambahkan fungsi `load_canonical_taxes()`: mengonfigurasi pajak penjualan kanonikal `"PPN Keluaran 12% (DPP Nilai Lain - Kode 04)"` (amount=12.0, type=sale, tax-excluded, repartition akun PPN Keluaran 211200) pada company `fmcg_period_master`.
+- `scripts/ops/load_period_pack.py`:
+  - Mengimplementasikan `_resolve_canonical_tax_code_04(self)`: resolver *fail-closed* yang mencari pajak 12% sale company dan memvalidasi identitas otoritatif Kode 04 / DPP Nilai Lain. Menolak keras ketiadaan pajak, ambiguitas konfigurasi (> 1), dan salah kode tarif sama (seperti generic `"PPN 12%"`).
+  - Mengikat `canonical_tax_04` secara deterministik ke seluruh baris SO di `_apply_sales_orders_and_deliveries`.
+  - Menetapkan `l10n_id_tax_transaction_code = "04"` pada out_invoice di `_apply_invoices`.
+  - Menambahkan stat/mtime caching pada `compute_sha256_lf` untuk meniadakan pembacaan disk berulang, mempercepat suite test loader secara drastis (< 7 detik).
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Mengetatkan validasi identitas pajak per-faktur: menghapus keyword longgar `"12%"` dan `"ppn"`. Wajib memiliki identitas eksplisit Kode 04 atau DPP Nilai Lain.
+  - Memvalidasi kode transaksi faktur komersial `l10n_id_tax_transaction_code == "04"`.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan `__contains__` dan `__iter__` pada `MockEnv` untuk mencegah infinite sequence iteration pada operator `in`.
+  - Memperbarui `MockModel.search` untuk mendukung resolusi operator `"in"` dengan ID `MockRecord`.
+  - Menambahkan 4 unit test baru:
+    1. `test_resolve_canonical_tax_code_04_success`: membuktikan resolusi sukses pajak otoritatif Kode 04 12%.
+    2. `test_resolve_canonical_tax_code_04_rejects_generic_or_wrong_code`: membuktikan penolakan pajak generik 12% tanpa identitas 04.
+    3. `test_resolve_canonical_tax_code_04_rejects_ambiguous_taxes`: membuktikan penolakan saat ada konfigurasi ambigu > 1.
+    4. `test_audit_fails_when_tax_rate_is_12_but_lacks_code_04_identifier`: membuktikan penolakan audit saat faktur membawa pajak 12% tanpa Kode 04.
+  - Total 49/49 unit tests PASS (100%).
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 6.6s).
+- [F] `python -m ruff check .`: PASS clean (0 errors).
+- [F] `python scripts/check_manifests.py`: PASS (12 addon OK).
+- [F] `python scripts/ops/seed_v2_gates.py --pack data/registers/periods/2026-08 --strict`: PASS (0 violations).
+- [F] Zero touch terhadap live Railway / database operasional demo.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada run PR #110.
+
 ## 2026-11-11T07:10:00+07:00 — antigravity — F4: Resolusi Celah CI Bootstrap Juli, Closing Lot Union & Tax Configuration (Review #5851374243) (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
