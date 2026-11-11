@@ -1,3 +1,7 @@
+## 2026-11-11T16:15:36+07:00 — Codex-Dashboard — PR #115: pertahankan aksi D1 saat upgrade
+
+**Berubah:** Startup memasang atau meng-upgrade D1 setelah upgrade modul Sales agar aksi Sales Productivity tetap menunjuk ke D1. Marker D1 baru juga menerapkan ulang aksi pada database yang pernah melewati fase instalasi versi sebelumnya.
+
 ## 2026-11-11T09:00:00+07:00 — claude-design — PR #114: ringkasan revisi order + sinkron main
 
 **Berubah:** `orderSummary` (Selesai kunjungan) kini mengikuti rantai `sales.order.revise` (root_uuid/supersedes_uuid) dan memakai revisi terbaru: root ditolak Rp100 → revisi diterima Rp150 tampil Rp150 / Diposting. Tes unit baru. Merge `origin/main` (konflik hanya HANDOFF).

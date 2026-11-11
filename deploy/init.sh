@@ -144,18 +144,23 @@ else
   log "init.base sudah ada; lewati"
 fi
 
-# 4b. Sinkronisasi & pembaruan modul (idempoten: memastikan kolom model baru seperti res_partner.channel_id terbuat di DB)
+# 4b. Upgrade existing modules before reapplying D1's override of the sales action.
+upgrade_modules=0
 if ! has_mark upgrade_modules_v3 || [ "${FORCE_UPGRADE:-0}" = "1" ]; then
+  upgrade_modules=1
   log "upgrade_modules_v3: mengupdate dan menginstal modul ${INIT_MODULES}..."
   odoo_run -i "$INIT_MODULES" -u "$INIT_MODULES" --stop-after-init
-  set_mark upgrade_modules_v3
 fi
 
-# Install D1 on existing and fresh databases after the dashboard dependencies.
-if ! has_mark install_dashboard_d1_v1; then
-  log "install_dashboard_d1_v1: memasang id_dashboard_redesign..."
-  odoo_run -i id_dashboard_redesign --stop-after-init
-  set_mark install_dashboard_d1_v1
+if [ "$upgrade_modules" = "1" ] || ! has_mark install_dashboard_d1_v2; then
+  log "install_dashboard_d1_v2: memasang atau mengupdate id_dashboard_redesign..."
+  odoo_run -i id_dashboard_redesign -u id_dashboard_redesign --stop-after-init
+  set_mark install_dashboard_d1_v2
+fi
+
+# Mark the upgrade complete only after D1 has reclaimed the sales action.
+if [ "$upgrade_modules" = "1" ]; then
+  set_mark upgrade_modules_v3
 fi
 
 # 5. Postinit (v1): URL dasar, kata sandi admin, bahasa. TODO M1: aktifkan id_ID, grup bisnis admin.
