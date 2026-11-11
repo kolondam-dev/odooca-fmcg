@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.DataTable">
+    <div t-attf-style="{{ v.card }}box-sizing:border-box;height:{{ v.hh }};display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <t t-if="v.showTitle">
+        <h3 style="margin:0 0 10px;font-size:13px;font-weight:600;border-left:3px solid var(--ac);padding-left:8px">
+          <t t-out="v.title"/>
+        </h3>
+      </t>
+      <div style="flex:1;min-height:0;overflow:auto">
+        <div t-attf-style="display:grid;min-width:560px;grid-template-columns:{{ v.gtc }}">
+          <t t-foreach="v.head" t-as="h" t-key="h_index">
+            <div t-attf-style="padding:5px 6px;border-bottom:1px solid #d5e0f2;font-size:11px;font-weight:600;color:#52627f;text-align:{{ h.a }}">
+              <t t-out="h.h"/>
+            </div>
+          </t>
+          <t t-foreach="v.cells" t-as="c" t-key="c_index">
+            <div t-attf-style="padding:5px 6px;border-bottom:1px solid var(--tint2);font-size:12px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px;justify-content:{{ c.j }};color:{{ c.c }};font-weight:{{ c.fw }}">
+              <t t-if="c.hasBar">
+                <div style="width:110px;flex:none;background:var(--tint2);height:10px">
+                  <div t-attf-style="width:{{ c.bar }}%;height:10px;background:var(--ac)"/>
+                </div>
+              </t>
+              <t t-if="c.nolink">
+                <span>
+                  <t t-out="c.t"/>
+                </span>
+              </t>
+              <t t-if="c.link">
+                <button type="button" style="all:unset;cursor:pointer;color:var(--ac);font:inherit;font-weight:600" t-on-click="() =&gt; this.openCell(c)">
+                  <t t-out="c.t"/>
+                </button>
+              </t>
+            </div>
+          </t>
+        </div>
+      </div>
+      <t t-if="v.showNote">
+        <div style="font-size:10.5px;color:#52627f;margin-top:6px">
+          <t t-out="v.note"/>
+        </div>
+      </t>
+    </div>
+  </t>
+</templates>

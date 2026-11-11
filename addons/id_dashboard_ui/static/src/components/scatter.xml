@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.Scatter">
+    <div t-attf-style="{{ v.card }}box-sizing:border-box;height:{{ v.hh }};display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <t t-if="v.showTitle">
+        <h3 style="margin:0 0 10px;font-size:13px;font-weight:600;border-left:3px solid var(--ac);padding-left:8px">
+          <t t-out="v.title"/>
+        </h3>
+      </t>
+      <div t-attf-style="position:relative;height:{{ v.ph }}px;margin:6px 10px 30px 40px">
+        <t t-foreach="v.yt" t-as="g" t-key="g_index">
+          <div t-attf-style="position:absolute;left:0;right:0;top:{{ g.p }}%;border-top:1px solid #d5e0f2"/>
+          <span t-attf-style="position:absolute;left:-36px;top:{{ g.p }}%;transform:translateY(-50%);width:30px;text-align:right;font-size:10px;color:#52627f">
+            <t t-out="g.t"/>
+          </span>
+        </t>
+        <t t-foreach="v.xt" t-as="g" t-key="g_index">
+          <span t-attf-style="position:absolute;top:100%;margin-top:6px;left:{{ g.p }}%;transform:translateX(-50%);font-size:10px;color:#52627f">
+            <t t-out="g.t"/>
+          </span>
+        </t>
+        <t t-foreach="v.pts" t-as="b" t-key="b_index">
+          <div role="button" t-att-tabindex="b.drill ? 0 : -1" t-on-click="() => this.openPoint(b)" t-on-keydown="(ev) => this.keyPoint(ev, b)" t-att-aria-label="b.n" t-att-title="b.n" t-attf-style="position:absolute;left:{{ b.l }}%;top:{{ b.t }}%;width:{{ b.d }}px;height:{{ b.d }}px;margin:{{ b.m }};border-radius:50%;background:rgba(31,95,191,.7);border:1px solid var(--dk)">
+            <span t-if="b.label" style="position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:4px;font-size:10px;white-space:nowrap">
+              <t t-out="b.label"/>
+            </span>
+          </div>
+        </t>
+        <span style="position:absolute;top:100%;margin-top:20px;left:0;right:0;text-align:center;font-size:10px;color:#52627f">
+          <t t-out="v.xl"/>
+        </span>
+        <span style="position:absolute;left:-40px;top:-14px;font-size:10px;color:#52627f">
+          <t t-out="v.yl"/>
+        </span>
+      </div>
+      <div style="font-size:10.5px;color:#52627f">
+        <t t-out="v.note"/>
+      </div>
+    </div>
+  </t>
+</templates>
