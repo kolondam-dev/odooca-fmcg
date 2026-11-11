@@ -159,7 +159,7 @@ export function AttendanceCapture({
                 <div class="attendance-result" ref={resultView}>
                     <img
                         src={preview}
-                        class="photo-preview"
+                        class="ev__photo"
                         alt="Foto absensi dengan watermark"
                     />
                     <p>
@@ -185,7 +185,7 @@ export function AttendanceCapture({
                 </p>
             )}
             {fix && (
-                <p class="coordinates">
+                <p class="ev__fix">
                     {fix.latitude.toFixed(6)}, {fix.longitude.toFixed(6)} · ±
                     {Math.round(fix.accuracy)} m
                 </p>

@@ -22,12 +22,23 @@ import { money, queueLabels } from "../domain/format";
 import type { FieldStore, QueueItem } from "../storage/store";
 import type { Outbox } from "../domain/outbox";
 import { EvidenceCapture } from "./Evidence";
-import { Icon } from "./Icon";
+import {
+    Button,
+    Callout,
+    Card,
+    Field,
+    ListRow,
+    Screen,
+    ScreenHeader,
+    Textarea,
+} from "../ui";
 const categories: Record<string, string> = {
+    fuel: "BBM",
+    emergency: "Darurat",
     fuel_planned: "BBM terencana",
     fuel_emergency: "BBM insidentil",
-    meal: "Uang makan luar kota",
-    lodging: "Penginapan",
+    meal: "Makan",
+    lodging: "Nginap",
     repair: "Perbaikan darurat",
     delivery_fee: "Biaya pengiriman / toko",
 };
@@ -147,125 +158,192 @@ export function ExpenseWorkspace({
             setBusy(false);
         }
     }
-    return (
-        <>
-            <button class="text-button" onClick={back}>
-                <Icon name="caret" size={18} /> Kembali ke akun
-            </button>
-            <h1>Realisasi & uang lapangan</h1>
-            <p class="notice">
-                Pengajuan, pencairan dan review realisasi adalah status berbeda.
-                Tidak ada uang atau jurnal Odoo yang dibuat.
-            </p>
-            <button class="secondary full" onClick={create}>
-                <Icon name="wallet" size={20} /> Ajukan uang lapangan baru
-            </button>
-            {error && (
-                <p role="alert" class="form-error">
-                    {error}
-                </p>
-            )}
-            {!requests.length && (
-                <p class="paper-card">
-                    Belum ada pengajuan biaya pada akun ini.
-                </p>
-            )}
-            <div class="list-stack expense-requests">
-                {requests.map((q) => (
-                    <button
-                        class="card-row"
-                        key={q.key}
-                        disabled={busy}
-                        onClick={() => void open(q)}
-                        aria-pressed={selected === q.command.client_uuid}
-                    >
-                        <Icon name="receipt" />
-                        <div>
-                            <strong>{q.label}</strong>
-                            <small>
-                                {queueLabels[q.state]} ·{" "}
-                                {q.command.client_uuid.slice(0, 8)}
-                            </small>
-                        </div>
-                        <Icon name="caret" size={18} />
-                    </button>
-                ))}
-            </div>
-            {item && (
-                <section class="paper-card">
-                    <h2>Pengajuan terpilih</h2>
-                    <p>
-                        {request?.trip_id}
-                        {request?.delivery_id
-                            ? ` · ${request?.delivery_id}`
-                            : ""}{" "}
-                        ·{" "}
-                        {categories[request?.category ?? ""] ??
-                            "Biaya lapangan"}
-                    </p>
-                    {!advance ? (
-                        __QA_TOOLS__ ? (
-                            <div class="demo-controls">
-                                <p>
-                                    Penerimaan request bukan approval/pencairan.
-                                    Laboratorium berikut memakai persetujuan dan
-                                    uang muka fiktif untuk menguji form
-                                    realisasi; tidak memverifikasi bukti
-                                    pengajuan.
-                                </p>
-                                <button
-                                    class="secondary full"
-                                    disabled={
-                                        busy || item.state !== "needs_approval"
-                                    }
-                                    onClick={() => void disburse()}
-                                >
-                                    Proses approval & pencairan
-                                </button>
-                                <p class="footnote">
-                                    Hanya online + respons Normal. Limit contoh
-                                    simulator berasal dari policy fixture, bukan
-                                    limit perusahaan.
-                                </p>
-                            </div>
-                        ) : (
-                            <p role="status">
-                                Menunggu approval dan pencairan.
-                            </p>
-                        )
+    const [advances, setAdvances] = useState<Record<string, SimulatedAdvance>>(
+        {},
+    );
+    useEffect(() => {
+        let active = true;
+        void Promise.all(
+            requests.map(async (q) => {
+                try {
+                    const a = await service.load(q.command.client_uuid);
+                    return a
+                        ? ([q.command.client_uuid, a] as const)
+                        : undefined;
+                } catch {
+                    return undefined;
+                }
+            }),
+        ).then((rows) => {
+            if (active)
+                setAdvances(
+                    Object.fromEntries(rows.filter((r) => r !== undefined)),
+                );
+        });
+        return () => {
+            active = false;
+        };
+    }, [service, queue.length, advance]);
+    // Saldo = uang muka yang sudah cair dan belum direalisasi.
+    const saldo = Object.values(advances)
+        .filter((a) => !a.realization_uuid)
+        .reduce((n, a) => n + Number(a.amount), 0);
+    const statusOf = (q: QueueItem) => {
+        const a = advances[q.command.client_uuid];
+        if (q.state === "rejected")
+            return { tone: "bad", label: "Ditolak" } as const;
+        if (a?.realization_uuid)
+            return { tone: "info", label: "Direalisasi" } as const;
+        if (a) return { tone: "ok", label: "Disetujui" } as const;
+        return { tone: "warn", label: "Menunggu" } as const;
+    };
+    if (item) {
+        return (
+            <Screen
+                label="Realisasi uang lapangan"
+                class="ui-screen--over"
+                header={
+                    <ScreenHeader
+                        title="Realisasi uang lapangan"
+                        onBack={() => {
+                            setSelected(undefined);
+                            setAdvance(undefined);
+                        }}
+                    />
+                }
+            >
+                <Card>
+                    <ListRow
+                        icon="wallet"
+                        title={
+                            categories[request?.category ?? ""] ??
+                            "Biaya lapangan"
+                        }
+                        sub={`${request?.trip_id ?? ""}${request?.delivery_id ? ` · ${request.delivery_id}` : ""} · ${money(Number(request?.amount ?? 0))}`}
+                        status={statusOf(item)}
+                    />
+                </Card>
+                {error ? (
+                    <Callout tone="bad" alert>
+                        {error}
+                    </Callout>
+                ) : null}
+                {!advance ? (
+                    __QA_TOOLS__ ? (
+                        <Card>
+                            <Callout tone="info">
+                                Penerimaan request bukan approval/pencairan.
+                                Laboratorium berikut memakai persetujuan dan
+                                uang muka fiktif untuk menguji form realisasi.
+                            </Callout>
+                            <Button
+                                variant="sec"
+                                disabled={
+                                    busy || item.state !== "needs_approval"
+                                }
+                                onClick={() => void disburse()}
+                            >
+                                Proses approval & pencairan
+                            </Button>
+                        </Card>
                     ) : (
-                        <>
-                            <p class="notice">
-                                Uang muka fiktif {money(Number(advance.amount))}{" "}
-                                · approval contoh:{" "}
-                                {approvers(advance.approvals)} · limit contoh{" "}
-                                {money(Number(advance.policy.supervisor_limit))}
-                                .
-                            </p>
-                            <RealizationEditor
-                                key={item.command.client_uuid}
-                                item={item}
-                                advance={advance}
-                                owner={ownerKey(identity)}
-                                store={store}
-                                service={service}
-                                queue={queue}
-                                onSubmitted={async () => {
-                                    setAdvance(
-                                        await service.load(
-                                            item.command.client_uuid,
-                                        ),
-                                    );
-                                    queued();
-                                }}
+                        <Callout tone="neu">
+                            <span role="status">
+                                Menunggu approval dan pencairan.
+                            </span>
+                        </Callout>
+                    )
+                ) : (
+                    <>
+                        <Callout tone="info">
+                            Uang muka fiktif {money(Number(advance.amount))} ·
+                            approval contoh: {approvers(advance.approvals)} ·
+                            limit contoh{" "}
+                            {money(Number(advance.policy.supervisor_limit))}.
+                        </Callout>
+                        <RealizationEditor
+                            key={item.command.client_uuid}
+                            item={item}
+                            advance={advance}
+                            owner={ownerKey(identity)}
+                            store={store}
+                            service={service}
+                            queue={queue}
+                            onSubmitted={async () => {
+                                setAdvance(
+                                    await service.load(
+                                        item.command.client_uuid,
+                                    ),
+                                );
+                                queued();
+                            }}
+                        />
+                    </>
+                )}
+            </Screen>
+        );
+    }
+    return (
+        <Screen
+            label="Uang lapangan"
+            class="ui-screen--over"
+            header={<ScreenHeader title="Uang lapangan" onBack={back} />}
+        >
+            <Card>
+                <div class="exp-saldo">
+                    <div>
+                        <span class="exp-saldo__label">Saldo</span>
+                        <strong class="exp-saldo__amt">{money(saldo)}</strong>
+                    </div>
+                    <Button size="md" icon="plus" onClick={create}>
+                        Ajukan
+                    </Button>
+                </div>
+            </Card>
+            <h2 class="ui-section">Pengajuan & realisasi</h2>
+            {error ? (
+                <Callout tone="bad" alert>
+                    {error}
+                </Callout>
+            ) : null}
+            {requests.length ? (
+                <Card>
+                    {requests.map((q, i) => {
+                        const p = ExpenseRequestSchema.safeParse(
+                            q.command.payload,
+                        );
+                        return (
+                            <ListRow
+                                key={q.key}
+                                divider={i > 0}
+                                title={
+                                    p.success
+                                        ? (categories[p.data.category] ??
+                                          q.label)
+                                        : q.label
+                                }
+                                sub={`${p.success ? dayMonth(p.data.scheduled_date) : ""} · ${p.success ? money(Number(p.data.amount)) : ""}`}
+                                status={statusOf(q)}
+                                disabled={busy}
+                                onClick={() => void open(q)}
                             />
-                        </>
-                    )}
-                </section>
+                        );
+                    })}
+                </Card>
+            ) : (
+                <Callout tone="neu">
+                    Belum ada pengajuan biaya pada akun ini.
+                </Callout>
             )}
-        </>
+        </Screen>
     );
 }
+const dayMonth = (iso: string) =>
+    new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "short",
+        timeZone: "UTC",
+    }).format(new Date(`${iso}T00:00:00Z`));
 function RealizationEditor({
     item,
     advance,
@@ -410,347 +488,292 @@ function RealizationEditor({
             ...d,
             lines: d.lines.map((l, i) => (i === n ? { ...l, ...patch } : l)),
         }));
+    const history = queue.filter(
+        (q) =>
+            q.command.type === "field_expense.realization.submit" &&
+            q.command.payload.source_request_uuid === item.command.client_uuid,
+    );
+    const frozen = !loaded || busy || locked;
+    const num = (v: string) => v.replace(/[^\d.]/g, "");
     return (
-        <form class="realization-form" onSubmit={send}>
-            <h2>
+        <form class="exp-form" onSubmit={send}>
+            <h2 class="ui-section">
                 {correcting ? "Koreksi realisasi ditolak" : "Rincian realisasi"}
             </h2>
             {correcting && (
-                <p class="notice">
+                <Callout tone="warn">
                     Receipt penolakan bisnis diterima. Koreksi memakai UUID
                     baru; versi ditolak tetap tersimpan.{" "}
                     {receipt?.receipt?.message}
-                </p>
+                </Callout>
             )}
-            <div
-                class="revision-history"
-                role="region"
-                aria-label="Riwayat realisasi"
-            >
-                {queue
-                    .filter(
-                        (q) =>
-                            q.command.type ===
-                                "field_expense.realization.submit" &&
-                            q.command.payload.source_request_uuid ===
-                                item.command.client_uuid,
-                    )
-                    .map((q) => (
-                        <p key={q.key}>
-                            {q.command.client_uuid.slice(0, 8)} ·{" "}
-                            {queueLabels[q.state]}
-                            {q.command.type ===
-                                "field_expense.realization.submit" &&
-                            q.command.payload.supersedes_uuid
-                                ? ` · koreksi ${q.command.payload.supersedes_uuid.slice(0, 8)}`
-                                : ""}
-                            <small>{q.receipt?.message}</small>
-                            {q.command.type ===
-                                "field_expense.realization.submit" &&
-                                q.command.payload.correction_reason && (
-                                    <small>
-                                        Alasan koreksi:{" "}
-                                        {q.command.payload.correction_reason}
-                                    </small>
-                                )}
-                        </p>
-                    ))}
+            <div role="region" aria-label="Riwayat realisasi">
+                {history.length ? (
+                    <Card>
+                        {history.map((q, i) => (
+                            <ListRow
+                                key={q.key}
+                                divider={i > 0}
+                                title={`${q.command.client_uuid.slice(0, 8)} · ${queueLabels[q.state]}${
+                                    q.command.type ===
+                                        "field_expense.realization.submit" &&
+                                    q.command.payload.supersedes_uuid
+                                        ? ` · koreksi ${q.command.payload.supersedes_uuid.slice(0, 8)}`
+                                        : ""
+                                }`}
+                                sub={[
+                                    q.receipt?.message,
+                                    q.command.type ===
+                                        "field_expense.realization.submit" &&
+                                    q.command.payload.correction_reason
+                                        ? `Alasan koreksi: ${q.command.payload.correction_reason}`
+                                        : undefined,
+                                ]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                            />
+                        ))}
+                    </Card>
+                ) : null}
             </div>
-            <p class="footnote">
+            <p class="ev__note">
                 Bukti harus tersimpan lokal dengan waktu/lokasi. Map masih
                 pending; pengiriman berikut hanya ke simulator dan tidak
                 meluluskan gate bukti resmi.
             </p>
             {locked && (
-                <p class="notice" role="status">
-                    {receipt ? queueLabels[receipt.state] : "Antrean tersimpan"}{" "}
-                    · Realisasi dikunci setelah antre. Koreksi hanya untuk
-                    receipt penolakan bisnis; settlement final menunggu backend.
-                    Jangan membuat duplikat.
-                </p>
+                <div role="status">
+                    <Callout tone="info">
+                        {receipt
+                            ? queueLabels[receipt.state]
+                            : "Antrean tersimpan"}{" "}
+                        · Realisasi dikunci setelah antre. Koreksi hanya untuk
+                        receipt penolakan bisnis; settlement final menunggu
+                        backend. Jangan membuat duplikat.
+                    </Callout>
+                </div>
             )}
             {correcting && (
-                <label>
-                    Alasan koreksi
-                    <textarea
+                <Textarea
+                    label="Alasan koreksi"
+                    required
+                    disabled={frozen}
+                    minLength={5}
+                    maxLength={500}
+                    value={draft.correctionReason}
+                    onInput={(v) =>
+                        setDraft((d) => ({ ...d, correctionReason: v }))
+                    }
+                />
+            )}
+            {draft.lines.map((l, n) => (
+                <fieldset key={l.id} class="exp-line" disabled={frozen}>
+                    <legend>Komponen biaya {n + 1}</legend>
+                    <Field
+                        label={`Uraian biaya ${n + 1}`}
                         required
-                        disabled={busy || !loaded}
-                        minLength={5}
-                        maxLength={500}
-                        value={draft.correctionReason}
-                        onInput={(e) =>
+                        maxLength={200}
+                        value={l.description}
+                        onInput={(v) => update(n, { description: v })}
+                    />
+                    <Field
+                        label={`Nominal realisasi ${n + 1} (Rp)`}
+                        required
+                        inputMode="numeric"
+                        maxLength={9}
+                        value={l.amount}
+                        onInput={(v) =>
+                            update(n, { amount: v.replace(/\D/g, "") })
+                        }
+                    />
+                    <Field
+                        label={`Nama penjual ${n + 1}`}
+                        required
+                        maxLength={100}
+                        value={l.merchant}
+                        onInput={(v) => update(n, { merchant: v })}
+                    />
+                    <Field
+                        label={`Nomor struk ${n + 1}`}
+                        required
+                        maxLength={100}
+                        value={l.receipt_number}
+                        onInput={(v) => update(n, { receipt_number: v })}
+                    />
+                    <Field
+                        label={`Tanggal struk ${n + 1}`}
+                        type="date"
+                        required
+                        value={l.expense_date}
+                        onInput={(v) => update(n, { expense_date: v })}
+                    />
+                    <fieldset class="evidence-group">
+                        <legend>Foto struk {n + 1}</legend>
+                        <EvidenceCapture
+                            store={store}
+                            owner={owner}
+                            existingRef={l.evidence}
+                            onChange={(ref) => update(n, { evidence: ref })}
+                        />
+                        {l.evidence && (
+                            <p class="ev__note">
+                                Bukti lokal tersimpan ·{" "}
+                                {l.evidence.id.slice(0, 8)} · map pending
+                            </p>
+                        )}
+                    </fieldset>
+                    {!fuel && draft.lines.length > 1 && (
+                        <Button
+                            variant="sec"
+                            size="sm"
+                            onClick={() =>
+                                setDraft((d) => ({
+                                    ...d,
+                                    lines: d.lines.filter((_, i) => i !== n),
+                                }))
+                            }
+                        >
+                            Hapus komponen {n + 1}
+                        </Button>
+                    )}
+                </fieldset>
+            ))}
+            {!fuel && draft.lines.length < 10 && (
+                <Button
+                    variant="sec"
+                    size="md"
+                    icon="plus"
+                    disabled={frozen}
+                    onClick={() =>
+                        setDraft((d) => ({ ...d, lines: [...d.lines, line()] }))
+                    }
+                >
+                    Tambah komponen biaya
+                </Button>
+            )}
+            {fuel && (
+                <fieldset class="exp-line" disabled={frozen}>
+                    <legend>Pengisian BBM</legend>
+                    <Field
+                        label="Liter BBM"
+                        required
+                        inputMode="decimal"
+                        value={draft.liters}
+                        onInput={(v) =>
+                            setDraft((d) => ({ ...d, liters: num(v) }))
+                        }
+                    />
+                    <Field
+                        label="Harga per liter (Rp)"
+                        required
+                        inputMode="numeric"
+                        value={draft.price}
+                        onInput={(v) =>
                             setDraft((d) => ({
                                 ...d,
-                                correctionReason: e.currentTarget.value,
+                                price: v.replace(/\D/g, ""),
                             }))
                         }
                     />
-                </label>
-            )}
-            <fieldset
-                disabled={!loaded || busy || locked}
-                class="realization-fields"
-            >
-                {draft.lines.map((l, n) => (
-                    <fieldset key={l.id} class="expense-line">
-                        <legend>Komponen biaya {n + 1}</legend>
-                        <label>
-                            Uraian biaya {n + 1}
-                            <input
-                                required
-                                maxLength={200}
-                                value={l.description}
-                                onInput={(e) =>
-                                    update(n, {
-                                        description: e.currentTarget.value,
-                                    })
-                                }
-                            />
-                        </label>
-                        <label>
-                            Nominal realisasi {n + 1} (Rp)
-                            <input
-                                required
-                                type="number"
-                                min="1"
-                                max="100000000"
-                                step="1"
-                                inputMode="numeric"
-                                value={l.amount}
-                                onInput={(e) =>
-                                    update(n, { amount: e.currentTarget.value })
-                                }
-                            />
-                        </label>
-                        <label>
-                            Nama penjual {n + 1}
-                            <input
-                                required
-                                maxLength={100}
-                                value={l.merchant}
-                                onInput={(e) =>
-                                    update(n, {
-                                        merchant: e.currentTarget.value,
-                                    })
-                                }
-                            />
-                        </label>
-                        <label>
-                            Nomor struk {n + 1}
-                            <input
-                                required
-                                maxLength={100}
-                                value={l.receipt_number}
-                                onInput={(e) =>
-                                    update(n, {
-                                        receipt_number: e.currentTarget.value,
-                                    })
-                                }
-                            />
-                        </label>
-                        <label>
-                            Tanggal struk {n + 1}
-                            <input
-                                type="date"
-                                required
-                                value={l.expense_date}
-                                onInput={(e) =>
-                                    update(n, {
-                                        expense_date: e.currentTarget.value,
-                                    })
-                                }
-                            />
-                        </label>
-                        <fieldset class="evidence-group">
-                            <legend>Foto struk {n + 1}</legend>
-                            <EvidenceCapture
-                                store={store}
-                                owner={owner}
-                                existingRef={l.evidence}
-                                onChange={(ref) => update(n, { evidence: ref })}
-                            />
-                            {l.evidence && (
-                                <p class="footnote">
-                                    Bukti lokal tersimpan ·{" "}
-                                    {l.evidence.id.slice(0, 8)} · map pending
-                                </p>
-                            )}
-                        </fieldset>
-                        {!fuel && draft.lines.length > 1 && (
-                            <button
-                                type="button"
-                                class="text-button"
-                                onClick={() =>
-                                    setDraft((d) => ({
-                                        ...d,
-                                        lines: d.lines.filter(
-                                            (_, i) => i !== n,
-                                        ),
-                                    }))
-                                }
-                            >
-                                Hapus komponen {n + 1}
-                            </button>
-                        )}
-                    </fieldset>
-                ))}
-                {!fuel && draft.lines.length < 10 && (
-                    <button
-                        type="button"
-                        class="secondary full"
-                        onClick={() =>
+                    <Field
+                        label="KM sebelum pengisian"
+                        required
+                        inputMode="numeric"
+                        value={draft.beforeKm}
+                        onInput={(v) =>
                             setDraft((d) => ({
                                 ...d,
-                                lines: [...d.lines, line()],
+                                beforeKm: v.replace(/\D/g, ""),
                             }))
                         }
-                    >
-                        Tambah komponen biaya
-                    </button>
-                )}
-                {fuel && (
-                    <fieldset class="expense-line">
-                        <legend>Pengisian BBM</legend>
-                        <label>
-                            Liter BBM
-                            <input
-                                required
-                                inputMode="decimal"
-                                value={draft.liters}
-                                onInput={(e) =>
-                                    setDraft((d) => ({
-                                        ...d,
-                                        liters: e.currentTarget.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label>
-                            Harga per liter (Rp)
-                            <input
-                                required
-                                type="number"
-                                min="1"
-                                step="1"
-                                value={draft.price}
-                                onInput={(e) =>
-                                    setDraft((d) => ({
-                                        ...d,
-                                        price: e.currentTarget.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label>
-                            KM sebelum pengisian
-                            <input
-                                required
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={draft.beforeKm}
-                                onInput={(e) =>
-                                    setDraft((d) => ({
-                                        ...d,
-                                        beforeKm: e.currentTarget.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label>
-                            KM setelah pengisian
-                            <input
-                                required
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={draft.afterKm}
-                                onInput={(e) =>
-                                    setDraft((d) => ({
-                                        ...d,
-                                        afterKm: e.currentTarget.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <fieldset class="evidence-group">
-                            <legend>Foto odometer sebelum</legend>
-                            <EvidenceCapture
-                                store={store}
-                                owner={owner}
-                                existingRef={draft.before}
-                                onChange={(ref) =>
-                                    setDraft((d) => ({ ...d, before: ref }))
-                                }
-                            />
-                            {draft.before && (
-                                <p class="footnote">
-                                    Bukti lokal tersimpan · map pending
-                                </p>
-                            )}
-                        </fieldset>
-                        <fieldset class="evidence-group">
-                            <legend>Foto odometer sesudah</legend>
-                            <EvidenceCapture
-                                store={store}
-                                owner={owner}
-                                existingRef={draft.after}
-                                onChange={(ref) =>
-                                    setDraft((d) => ({ ...d, after: ref }))
-                                }
-                            />
-                            {draft.after && (
-                                <p class="footnote">
-                                    Bukti lokal tersimpan · map pending
-                                </p>
-                            )}
-                        </fieldset>
+                    />
+                    <Field
+                        label="KM setelah pengisian"
+                        required
+                        inputMode="numeric"
+                        value={draft.afterKm}
+                        onInput={(v) =>
+                            setDraft((d) => ({
+                                ...d,
+                                afterKm: v.replace(/\D/g, ""),
+                            }))
+                        }
+                    />
+                    <fieldset class="evidence-group">
+                        <legend>Foto odometer sebelum</legend>
+                        <EvidenceCapture
+                            store={store}
+                            owner={owner}
+                            existingRef={draft.before}
+                            onChange={(ref) =>
+                                setDraft((d) => ({ ...d, before: ref }))
+                            }
+                        />
+                        {draft.before && (
+                            <p class="ev__note">
+                                Bukti lokal tersimpan · map pending
+                            </p>
+                        )}
                     </fieldset>
-                )}
-            </fieldset>
+                    <fieldset class="evidence-group">
+                        <legend>Foto odometer sesudah</legend>
+                        <EvidenceCapture
+                            store={store}
+                            owner={owner}
+                            existingRef={draft.after}
+                            onChange={(ref) =>
+                                setDraft((d) => ({ ...d, after: ref }))
+                            }
+                        />
+                        {draft.after && (
+                            <p class="ev__note">
+                                Bukti lokal tersimpan · map pending
+                            </p>
+                        )}
+                    </fieldset>
+                </fieldset>
+            )}
             {preview && (
-                <section
-                    class="settlement-preview"
-                    aria-label="Estimasi settlement"
-                >
-                    <h3>Estimasi settlement</h3>
-                    <dl>
-                        <dt>Uang muka fiktif</dt>
-                        <dd>{money(Number(advance.amount))}</dd>
-                        <dt>Total realisasi</dt>
-                        <dd>{money(preview.total)}</dd>
-                        <dt>Perlu pengembalian</dt>
-                        <dd>{money(preview.refund)}</dd>
-                        <dt>Perlu tambahan / variance</dt>
-                        <dd>{money(preview.variance)}</dd>
-                    </dl>
-                    <p>
-                        Routing review contoh: {approvers(preview.approvals)}.
-                        Berdasarkan total exposure, bukan hanya selisih.
-                    </p>
-                    <p class="footnote">
-                        Saldo belum final. Pengembalian belum diterima dan
-                        tambahan belum disetujui/dicairkan.
-                    </p>
+                <section aria-label="Estimasi settlement">
+                    <Card>
+                        <h3 class="ui-section">Estimasi settlement</h3>
+                        <dl class="exp-dl">
+                            <dt>Uang muka fiktif</dt>
+                            <dd>{money(Number(advance.amount))}</dd>
+                            <dt>Total realisasi</dt>
+                            <dd>{money(preview.total)}</dd>
+                            <dt>Perlu pengembalian</dt>
+                            <dd>{money(preview.refund)}</dd>
+                            <dt>Perlu tambahan / variance</dt>
+                            <dd>{money(preview.variance)}</dd>
+                        </dl>
+                        <p class="ev__note">
+                            Routing review contoh:{" "}
+                            {approvers(preview.approvals)}. Berdasarkan total
+                            exposure, bukan hanya selisih. Saldo belum final.
+                            Pengembalian belum diterima dan tambahan belum
+                            disetujui/dicairkan.
+                        </p>
+                    </Card>
                 </section>
             )}
             {error && (
-                <p role="alert" class="form-error">
+                <Callout tone="bad" alert>
                     {error}
-                </p>
+                </Callout>
             )}
             {!locked && (
                 <>
-                    <p role="status" class="footnote">
+                    <p role="status" class="ev__note">
                         {saved}
                     </p>
-                    <button
-                        class="primary full"
-                        disabled={!loaded || busy}
+                    <Button
                         type="submit"
+                        icon="check"
+                        disabled={!loaded || busy}
                     >
                         {busy ? "Menyimpan…" : "Simpan realisasi ke antrean"}
-                    </button>
+                    </Button>
                 </>
             )}
         </form>

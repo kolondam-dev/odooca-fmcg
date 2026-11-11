@@ -85,18 +85,15 @@ test("mandatory photo draft restores offline, binds both visit actions and remai
     await history.locator(":scope > summary").click();
     await expect(history.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await expect(history.getByLabel("Foto bukti")).toHaveCount(0);
-    const close = page.getByRole("button", {
-        name: "Tutup kunjungan",
-        exact: true,
-    });
+    const close = page
+        .getByRole("button", { name: "Selesai kunjungan", exact: true })
+        .first();
     await page
         .getByRole("button", { name: "Selesai kunjungan", exact: true })
         .click();
     await expect(close).toBeDisabled();
     await saveVisitPhoto(page, "check-out");
-    await page
-        .getByLabel("Catatan kunjungan")
-        .fill("Selesai tanpa order pada simulasi");
+    await page.getByLabel(/^Catatan/).fill("Selesai tanpa order pada simulasi");
     await close.click();
     await expect(
         page.getByText("Kunjungan ditutup lokal", { exact: false }),
@@ -154,11 +151,10 @@ test("tampered persisted parent media blocks restore and both queued actions aft
         page.getByText("Kunjungan lokal aktif", { exact: true }),
     ).toBeVisible();
     await saveVisitPhoto(page, "check-out");
+    await page.getByLabel(/^Catatan/).fill("Selesai kunjungan offline");
     await page
-        .getByLabel("Catatan kunjungan")
-        .fill("Selesai kunjungan offline");
-    await page
-        .getByRole("button", { name: "Tutup kunjungan", exact: true })
+        .getByRole("button", { name: "Selesai kunjungan", exact: true })
+        .first()
         .click();
     await expect(
         page.getByText("Kunjungan ditutup lokal", { exact: false }),

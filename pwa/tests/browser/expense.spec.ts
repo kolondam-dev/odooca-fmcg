@@ -29,21 +29,20 @@ async function requestAdvance(page: Page, category = "meal") {
     await page.clock.install({ time: new Date("2026-10-27T00:00:00Z") });
     await page.goto("./");
     await checkIn(page);
-    await page
-        .getByRole("button", { name: "Uang lapangan", exact: false })
+    await openExpenseList(page);
+    await page.getByRole("button", { name: /^Ajukan/ }).click();
+    const form = page.getByRole("region", { name: "Ajukan uang lapangan" });
+    await form
+        .getByRole("button", {
+            name: category.startsWith("fuel") ? "BBM" : "Makan",
+            exact: true,
+        })
         .click();
-    await page.getByLabel("Kategori", { exact: true }).selectOption(category);
-    await page
-        .getByLabel("Referensi trip / perjalanan")
-        .selectOption("TRIP-01");
-    await page.getByLabel("Tanggal perjalanan").fill("2026-10-28");
-    await page.getByLabel("Nominal pengajuan (Rp)").fill("200000");
-    if (category.startsWith("fuel"))
-        await page.getByLabel("KM / odometer awal").fill("1000");
-    await page
-        .getByLabel("Tujuan / alasan")
+    await form.getByLabel("Nominal").fill("200000");
+    await form
+        .getByLabel("Keterangan")
         .fill("Uang lapangan simulasi luar kota");
-    await page.getByRole("button", { name: "Simpan ke antrean" }).click();
+    await form.getByRole("button", { name: "Kirim pengajuan" }).click();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await openActivity(page);
     await expect(
@@ -58,9 +57,42 @@ async function requestAdvance(page: Page, category = "meal") {
         page.getByText("Uang muka fiktif Rp", { exact: false }),
     ).toBeVisible();
 }
+async function openExpenseList(page: Page) {
+    const saldo = page.getByText("Saldo", { exact: true });
+    const detail = page.getByRole("heading", {
+        name: "Realisasi uang lapangan",
+    });
+    const more = page.getByRole("heading", { name: "Lainnya", exact: true });
+    const nav = page.getByRole("button", { name: "Lainnya", exact: true });
+    await nav.waitFor();
+    if (!(await saldo.isVisible()) && !(await detail.isVisible()))
+        await page.waitForTimeout(300);
+    if (await saldo.isVisible()) return;
+    if (await detail.isVisible())
+        await page
+            .getByRole("button", { name: "Kembali", exact: true })
+            .first()
+            .click();
+    else {
+        if (!(await more.isVisible())) await nav.click();
+        await page.getByRole("button", { name: /^Uang lapangan/ }).click();
+    }
+    await saldo.waitFor();
+}
+async function backToMore(page: Page) {
+    const more = page.getByRole("heading", { name: "Lainnya", exact: true });
+    for (let i = 0; i < 3 && !(await more.isVisible()); i++)
+        await page
+            .getByRole("button", { name: "Kembali", exact: true })
+            .first()
+            .click();
+}
 async function openExpenses(page: Page) {
-    await page.getByRole("button", { name: /^Uang lapangan/ }).click();
-    await page.getByRole("button", { name: /Petty cash/ }).click();
+    await openExpenseList(page);
+    await page
+        .getByRole("button", { name: /^(Makan|BBM|Nginap|Darurat)/ })
+        .first()
+        .click();
 }
 async function details(page: Page, n: number, amount: string, receipt: string) {
     await page
@@ -112,7 +144,6 @@ test("component draft restores offline and queues realization separately from ap
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
     await page.reload();
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await openExpenses(page);
     await expect(
         page.getByLabel("Nominal realisasi 2 (Rp)", { exact: true }),
@@ -126,19 +157,19 @@ test("component draft restores offline and queues realization separately from ap
     await page
         .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
-    await expect(
-        page.locator(".realization-form > .notice[role=status]"),
-    ).toContainText("Menunggu koneksi");
+    await expect(page.locator(".exp-form > div[role=status]")).toContainText(
+        "Menunggu koneksi",
+    );
     await page.reload();
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await openExpenses(page);
     await expect(
         page.getByLabel("Nominal realisasi 1 (Rp)", { exact: true }),
     ).toBeDisabled();
     await context.setOffline(false);
-    await expect(
-        page.locator(".realization-form > .notice[role=status]"),
-    ).toContainText("Menunggu approval", { timeout: 20000 });
+    await expect(page.locator(".exp-form > div[role=status]")).toContainText(
+        "Menunggu approval",
+        { timeout: 20000 },
+    );
     await expect(
         page.getByText("Saldo belum final.", { exact: false }),
     ).toBeVisible();
@@ -146,7 +177,7 @@ test("component draft restores offline and queues realization separately from ap
         path: `test-results/expense-${test.info().project.name}.png`,
         fullPage: true,
     });
-    await page.getByRole("button", { name: "Kembali ke akun" }).click();
+    await backToMore(page);
     await switchPersona(page, "delivery");
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await page.getByRole("button", { name: /^Uang lapangan/ }).click();
@@ -181,13 +212,13 @@ test("fuel validates paired local evidence, liter-price arithmetic and nondecrea
     await page.getByLabel("KM setelah pengisian", { exact: true }).fill("1000");
     await expect(
         page.getByRole("region", { name: "Estimasi settlement" }),
-    ).toContainText("Supervisor + Branch Manager");
+    ).toContainText("Supervisor");
     await page
         .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
-    await expect(
-        page.locator(".realization-form > .notice[role=status]"),
-    ).toContainText("Menunggu approval");
+    await expect(page.locator(".exp-form > div[role=status]")).toContainText(
+        "Menunggu approval",
+    );
     expect(
         await page.evaluate(async () => {
             const db = await new Promise<IDBDatabase>((resolve) => {
@@ -299,7 +330,6 @@ test("missing persisted photo clears the preview and blocks realization without 
         db.close();
     });
     await page.reload();
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await openExpenses(page);
     const group = page.getByRole("group", {
         name: "Foto struk 1",
@@ -328,7 +358,7 @@ test("business rejection opens an auditable correction with a new UUID, leaving 
     await requestAdvance(page);
     await details(page, 1, "150000", "REVISION-001");
     await photo(page, context, "Foto struk 1");
-    await page.getByRole("button", { name: "Kembali ke akun" }).click();
+    await backToMore(page);
     await page.getByLabel("Mode respons").selectOption("rejected");
     await openExpenses(page);
     await page
@@ -365,7 +395,7 @@ test("business rejection opens an auditable correction with a new UUID, leaving 
     await page
         .getByLabel("Alasan koreksi", { exact: true })
         .fill("Perbaikan nominal sesuai struk");
-    await page.getByRole("button", { name: "Kembali ke akun" }).click();
+    await backToMore(page);
     await page.getByLabel("Mode respons").selectOption("normal");
     await openExpenses(page);
     await expect(
@@ -374,9 +404,9 @@ test("business rejection opens an auditable correction with a new UUID, leaving 
     await page
         .getByRole("button", { name: "Simpan realisasi ke antrean" })
         .click();
-    await expect(
-        page.locator(".realization-form > .notice[role=status]"),
-    ).toContainText("Menunggu approval");
+    await expect(page.locator(".exp-form > div[role=status]")).toContainText(
+        "Menunggu approval",
+    );
     await expect(
         page.getByRole("region", { name: "Riwayat realisasi" }),
     ).toContainText("koreksi");
@@ -492,12 +522,10 @@ test("visual evidence package restores offline and rejects changed photo bytes",
     await group.screenshot({
         path: `test-results/evidence-package-${test.info().project.name}.png`,
     });
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
     await page.reload();
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await openExpenses(page);
     await expect(group.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
     await expect(
@@ -521,9 +549,7 @@ test("visual evidence package restores offline and rejects changed photo bytes",
         });
         db.close();
     }, meta.key);
-    await page
-        .getByRole("button", { name: "Kembali ke akun", exact: true })
-        .click();
+    await backToMore(page);
     await openExpenses(page);
     await expect(group.getByAltText("Pratinjau foto bukti lokal")).toHaveCount(
         0,

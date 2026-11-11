@@ -5,6 +5,29 @@
 **Catatan:** [F] Entri log 2026-11-11T13:30 memuat salah ketik `FINANCE_I2C_SCHEULDES`; nilai sebenarnya `FINANCE_I2C_SCHEDULES` (log append-only, tidak diedit).
 **Berikutnya:** push hasil merge, pantau CI exact-SHA, lalu minta re-review; tidak merge tanpa persetujuan pemilik.
 
+## 2026-11-11T09:00:00+07:00 — claude-design — PR #114: ringkasan revisi order + sinkron main
+
+**Berubah:** `orderSummary` (Selesai kunjungan) kini mengikuti rantai `sales.order.revise` (root_uuid/supersedes_uuid) dan memakai revisi terbaru: root ditolak Rp100 → revisi diterima Rp150 tampil Rp150 / Diposting. Tes unit baru. Merge `origin/main` (konflik hanya HANDOFF).
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 474; e2e close-visit/visits/order 8 lulus. **Belum diuji:** [BU] CI pada HEAD hasil integrasi.
+
+## 2026-11-11T08:20:00+07:00 — claude-design — PR #114: perbaikan review (HOLD d95d13c)
+
+**Berubah:** P1 gate `features.field_expense_v2` (kontrak + openapi): Ajukan uang lapangan terkunci (callout + tombol nonaktif + guard submit) bila server belum menyatakan dukungan; mock demo true, LIVE tidak. P2 geofence: foto check-in/check-out kunjungan menerima fence outlet (`EvidenceCapture fence`), fallback "Buka Kamera Perangkat" dinonaktifkan saat di luar radius. P2 ringkasan Selesai kunjungan memakai `visitOrders(queue, visit_uuid)` (bukan filter outlet); piutang tak tersedia tampil "Tidak tersedia", bukan "Lunas". Merge `origin/main`. Tes unit baru `phase3b-review.test.ts`.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 473; e2e penuh 182/186 sebelum perbaikan peta ganda, lalu checkin-map/visit-evidence/visits hijau. **Belum diuji:** [BU] CI GitHub, e2e penuh ulang, tes e2e gate LIVE.
+**Utang backend:** enforcement `field_expense_v2` (kategori baru, trip fallback, odometer null, approval Darurat SPV+BM) harus dibuktikan di backend sebelum flag ON di LIVE.
+
+## 2026-11-11T07:15:00+07:00 — claude-design — Fase 3B-2: Kamera, Bukti, Uang lapangan, Ajukan uang
+
+**Berubah:** CameraViewfinder/Evidence/AttendanceCapture/VisitPhotoField/DisplayPhoto dipindah ke DS (`.cam`, `.ev`; kedaluwarsa >60 dtk, pagar geofence); AjukanUangScreen (Kategori BBM/Makan/Nginap/Darurat, Nominal, Keterangan, bukti) menggantikan form biaya di TaskForm; ExpenseWorkspace menjadi daftar "Uang lapangan" (Saldo + pengajuan/realisasi) + layar "Realisasi uang lapangan"; enum kategori diperluas (`fuel, meal, lodging, emergency` + legacy), `emergency` butuh Supervisor + Branch Manager; openapi.json diekspor ulang; CSS kamera/evidence lama dihapus dari style.css.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 471, e2e phone+tablet 186 lulus. Tes form biaya lama (H-1, DO, trip) diganti tes form DS. **Belum diuji:** [BU] CI GitHub.
+**Utang backend (K16):** kategori biaya baru, `trip_id` fallback `FIELD-<tanggal>`, odometer null untuk non-BBM terencana, saldo uang muka.
+**Berikutnya:** Fase 3B-3: Setor uang, Biaya toko, Closing trip, Penagihan, Delivery/POD, HRIS, status/error; lalu PR docs "plan quick action".
+
+## 2026-11-10T13:58:02+07:00 — claude-design — Fase 3B-1: Extra call dan Selesai kunjungan
+
+**Berubah:** ExtraCallScreen (menggantikan form extra di TaskForm), CloseVisitScreen (menggantikan bottom sheet; outcome otomatis order_requested/no_order), snapshot.extra_call_outlets opsional; tes e2e baru extra-call + close-visit; helper/test lama disesuaikan. Utang: DS_RECONCILIATION K15.
+**Diverifikasi:** [F] tsc, e2e phone+tablet spec terkait. **Belum diuji:** [BU] full e2e, CI.
+
 ## 2026-11-11T07:43:56+07:00 — Codex-Dashboard — D1 CI artifact inspected; negative label separation
 **Bukti:** [F] artifact13816349333/run42931603547 dariHEAD7a210ef terunduh; ZIP digest, treefcaa5f6, source/image hashes cocok, clean checkout,50native checks/34PNG/30rekonsiliasi PASS. Gambar1440/1024/768, popup/inline dan role diperiksa oleh implementer, bukan review independen.
 **Fix:** inspeksi kasus negatif menemukan labelpersentase dan nilai batang berimpitan. Assertion bounding-box native gagal sebelumfix; band label28px membuatnya PASS. Total51browserchecks lokal; backend unchanged. Exact-HEAD artifact baru/revieweracceptance masih gate. Tidak merge/deploy.
