@@ -1,3 +1,20 @@
+## 2026-11-11T22:00:00+07:00 -- antigravity -- F4: Kompatibilitas MockCursor pada Aktivasi SQL Mata Uang IDR (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- scripts/load_canonical_perpetual.py & scripts/load_fmcg_seed.py:
+  - Menambahkan guard hasattr(self.cr, 'execute') / hasattr(env.cr, 'execute') sebelum eksekusi statement SQL direct update mata uang IDR (res_currency dan res_company).
+  - Menyelesaikan AttributeError: 'MockCursor' object has no attribute 'execute' yang menggagalkan test suite di test_canonical_loader_adapter.py pada lingkungan unit mock yang tidak menyediakan method execute.
+
+**Diverifikasi:**
+- [F] python -m unittest discover -s tests -p 'test_canonical_loader_adapter.py': 63/63 tests PASS (100% dalam simulasi penuh).
+- [F] python -m pytest tests/test_period_pack_loader.py tests/test_seed_planner.py: 81/81 tests PASS (100% dalam 13.4s).
+- [F] python scripts/check_manifests.py: PASS (14 addon OK).
+- [F] python -m ruff check .: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push (memantau pemulihan konektivitas DNS mirror Ubuntu di Azure runner).
+
 ## 2026-11-11T21:05:00+07:00 — antigravity — F4: Sinkronisasi Merge origin/main ke agen/seed-f4-period-pack-loader (PR #110)
 
 **Berubah:**

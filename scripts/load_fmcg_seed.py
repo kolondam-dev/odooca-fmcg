@@ -821,7 +821,7 @@ def activate_idr_currency():
         if idr and not idr.active:
             idr.write({"active": True})
             print(" -> Mata uang IDR diaktifkan.")
-        if hasattr(env, "cr"):
+        if hasattr(env, "cr") and hasattr(env.cr, "execute"):
             env.cr.execute("UPDATE res_currency SET active = TRUE WHERE name = 'IDR';")
     if "res.company" in env:
         Company = env["res.company"].sudo().with_context(active_test=False)
@@ -830,7 +830,7 @@ def activate_idr_currency():
             comp_curr = getattr(company, "currency_id", None)
             if comp_curr and not getattr(comp_curr, "active", True):
                 comp_curr.sudo().write({"active": True})
-            if hasattr(env, "cr"):
+            if hasattr(env, "cr") and hasattr(env.cr, "execute") and getattr(company, "id", None):
                 env.cr.execute(
                     "UPDATE res_company SET currency_id = ("
                     "SELECT id FROM res_currency WHERE name = 'IDR' LIMIT 1) WHERE id = %s;",

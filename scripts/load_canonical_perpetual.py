@@ -534,13 +534,13 @@ class CanonicalPerpetualAdapter:
             idr = ResCurrency.search([("name", "=", "IDR")], limit=1)
             if idr and not idr.active:
                 idr.write({"active": True})
-            if hasattr(self, "cr"):
+            if hasattr(self, "cr") and hasattr(self.cr, "execute"):
                 self.cr.execute("UPDATE res_currency SET active = TRUE WHERE name = 'IDR';")
         if hasattr(self, "company") and self.company:
             comp_curr = getattr(self.company, "currency_id", None)
             if comp_curr and not getattr(comp_curr, "active", True):
                 comp_curr.sudo().write({"active": True})
-            if hasattr(self, "cr"):
+            if hasattr(self, "cr") and hasattr(self.cr, "execute") and getattr(self.company, "id", None):
                 self.cr.execute(
                     "UPDATE res_company SET currency_id = ("
                     "SELECT id FROM res_currency WHERE name = 'IDR' LIMIT 1) WHERE id = %s;",
