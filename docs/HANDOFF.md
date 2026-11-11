@@ -1,3 +1,15 @@
+## 2026-11-11T17:00:00+07:00 — claude-design — PR #116: perbaikan review Akhiri trip
+
+**Berubah:** ringkasan Penerimaan uang/Biaya trip dibatasi per trip (`source.delivery.trip` / `trip_id`), hari kerja aktif (WITA), status bukan `rejected`, kuitansi yang dikoreksi (`supersedes_uuid`) tidak dihitung, dan biaya hanya dengan `scheduled_date` hari kerja (ID trip yang dipakai ulang tidak tercampur) — logika di `domain/trip-summary.ts` + tes unit. Handler Odoo `delivery.trip.close` kini memvalidasi `note` (≤500) dan mencatatnya di pesan receipt; payload tetap tersimpan pada perintah.
+**Diverifikasi:** [F] format, tsc, vitest 475, ruff, next-policy e2e 16 lulus. **Belum diuji:** [BU] CI, e2e penuh ulang, tes Odoo untuk `note`.
+**Utang backend:** field closing resmi untuk `note` (saat ini hanya audit di payload + pesan), ringkasan uang trip resmi dari server.
+
+## 2026-11-11T16:30:00+07:00 — claude-design — Fase 3B-3a: Closing trip (Akhiri trip) sesuai mockup
+
+**Berubah:** kartu closing lama diganti kartu "Akhiri trip" + layar penuh "Akhiri trip · <trip>" (Pengiriman, Penerimaan uang, Biaya trip, Tiba di kantor, Catatan opsional); payload `delivery.trip.close` menerima `note` opsional; openapi diekspor ulang; tes next-policy disesuaikan. K17 dicatat di DS_RECONCILIATION.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 474, e2e phone+tablet 186 lulus. **Belum diuji:** [BU] CI GitHub.
+**Belum dikerjakan:** Setor_uang (58) dan Biaya_toko (57) butuh kontrak perintah baru (setoran kasir; biaya operasional toko per komponen + foto nota) — perlu keputusan bentuk payload bersama agen backend; Foto penutup trip butuh paket bukti di payload closing.
+
 ## 2026-11-11T09:00:00+07:00 — claude-design — PR #114: ringkasan revisi order + sinkron main
 
 **Berubah:** `orderSummary` (Selesai kunjungan) kini mengikuti rantai `sales.order.revise` (root_uuid/supersedes_uuid) dan memakai revisi terbaru: root ditolak Rp100 → revisi diterima Rp150 tampil Rp150 / Diposting. Tes unit baru. Merge `origin/main` (konflik hanya HANDOFF).
