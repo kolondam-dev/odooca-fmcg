@@ -312,8 +312,19 @@ def _split_reversal_pairs(partials):
     ``reversed_entry_id`` on the mirror move while the original move only knows
     ``reversal_move_ids``.
 
+    Pairing requires **mutual uniqueness**: two partials form a candidate pair
+    only when each is the other's single reverse link. A greedy first match made
+    the surviving exchange evidence depend on input order — with one reversal
+    and two candidates, ``[1, 2, 3]`` kept the pair ``(1, 2)`` while
+    ``[3, 2, 1]`` kept ``(3, 2)``. A component holding more than one candidate is
+    therefore returned untouched as ambiguous instead of being paired.
+
     Nothing is removed here: each pair still needs a cancellation verdict, and
-    an unproven pair must be reported rather than netted.
+    an unproven or ambiguous pair must be reported rather than netted.
+
+    Returns ``(pairs, singles, ambiguous)`` where ``ambiguous`` holds dicts with
+    the partials of one non-unique component and the candidate links that made it
+    ambiguous.
     """
     parent = {}
 
@@ -356,25 +367,65 @@ def _split_reversal_pairs(partials):
         )
 
     pairs = []
+    ambiguous = []
     matched = set()
     for _root, group in groups.items():
-        for index, first in enumerate(group):
-            if id(first) in matched:
+        candidates = {
+            id(partial): [
+                other for other in group
+                if other is not partial and reverses(partial, other)
+            ]
+            for partial in group
+        }
+        # A reverse component is unambiguous only when it is a single edge whose
+        # two ends point at each other and nowhere else. Any larger or branching
+        # component leaves several exchange evidences competing, so all of its
+        # rows must survive.
+        seen = set()
+        for partial in group:
+            key = id(partial)
+            if key in seen:
                 continue
-            match = next(
-                (
-                    second for second in group[index + 1:]
-                    if id(second) not in matched and reverses(first, second)
-                ),
-                None,
-            )
-            if match is None:
+            component = []
+            stack = [partial]
+            while stack:
+                node = stack.pop()
+                if id(node) in seen:
+                    continue
+                seen.add(id(node))
+                component.append(node)
+                stack.extend(candidates[id(node)])
+            links = {
+                (id(item), id(other))
+                for item in component
+                for other in candidates[id(item)]
+            }
+            if len(component) == 2 and len(links) == 2:
+                first, second = component
+                matched.add(id(first))
+                matched.add(id(second))
+                pairs.append((first, second))
                 continue
-            matched.add(id(first))
-            matched.add(id(match))
-            pairs.append((first, match))
+            if not links:
+                continue
+            ambiguous.append({
+                "partials": component,
+                "links": [
+                    {
+                        "partial_id": item.get("partial_id"),
+                        "candidate_ids": sorted(
+                            other.get("partial_id")
+                            for other in candidates[id(item)]
+                            if other.get("partial_id") is not None
+                        ),
+                    }
+                    for item in component
+                    if candidates[id(item)]
+                ],
+            })
+
     singles = [partial for partial in partials if id(partial) not in matched]
-    return pairs, singles
+    return pairs, singles, ambiguous
 
 
 def build_fx_revaluation(
@@ -462,8 +513,34 @@ def build_fx_revaluation(
         if partial.get("exchange_move_id")
     }
 
-    reversal_pairs, singles = _split_reversal_pairs(partials)
+    reversal_pairs, singles, ambiguous_groups = _split_reversal_pairs(partials)
     reversal_exceptions = []
+    for group in ambiguous_groups:
+        # More than one candidate: whichever pair we picked, the survivor's
+        # exchange evidence would depend on input order. Every related row is
+        # already in ``singles`` and posts as usual; this only reports the
+        # ambiguity instead of choosing a side.
+        partials_in_group = group["partials"]
+        reversal_exceptions.append({
+            "partial_ids": sorted(
+                item.get("partial_id")
+                for item in partials_in_group
+                if item.get("partial_id") is not None
+            ),
+            "reason": "multiple_reversal_candidates",
+            "candidates": sorted(
+                group["links"], key=lambda link: link["partial_id"] or 0,
+            ),
+            "amounts": [
+                round_amount(item.get("amount") or 0.0)
+                for item in sorted(
+                    partials_in_group,
+                    key=lambda item: item.get("partial_id") or 0,
+                )
+            ],
+            "currency_id": _partial_currency(partials_in_group[0]),
+        })
+
     for first, second in reversal_pairs:
         verdict = _reversal_verdict(first, second, round_amount)
         if verdict is None:

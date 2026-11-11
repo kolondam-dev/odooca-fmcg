@@ -384,6 +384,20 @@ Laporan lalu menandai `gl_tie_out.issues` berisi `ambiguous_reversal` dan
 laporan bersih. Kasus uji regresi: pasangan Rp300.000 dan Rp100.000 yang berbagi
 baris jurnal **tidak** boleh saling meniadakan.
 
+**Pasangan pembatalan harus unik, bukan hasil pilihan pertama [F].** Sebuah
+tautan reversal bisa menunjuk lebih dari satu kandidat yang sama-sama lolos cek
+nominal dan mata uang. Memasangkan kandidat pertama secara greedy membuat bukti
+jurnal exchange yang tersisa bergantung pada urutan input — dengan satu reversal
+dan dua kandidat, urutan `[1, 2, 3]` memilih pasangan `(1, 2)` sedangkan
+`[3, 2, 1]` memilih `(3, 2)`. Karena itu pembatalan hanya dilakukan bila dua
+partial itu **saling menjadi satu-satunya kandidat** (komponen ber-2 simpul,
+satu tautan dua arah). Komponen yang memiliki lebih dari satu kandidat
+diserahkan utuh: seluruh barisnya tetap dihitung, dan `reversal_exceptions`
+mendapat entri `multiple_reversal_candidates` berisi daftar kandidat per partial,
+dengan `complete = False`. Hasil (baris, total, `complete`) tidak boleh berubah
+hanya karena urutan input berbeda; hal ini dipagari oleh test yang menjalankan
+kedua urutan dan membandingkan hasilnya.
+
 **Bukti numerik dua arah** (wajib menjadi fixture test, bukan angka hard-coded):
 
 | Kasus | `realized_partial` | Residual AR setelah rekonsiliasi | Baris akun exchange di jurnal Odoo | Signed `balance` akun exchange |

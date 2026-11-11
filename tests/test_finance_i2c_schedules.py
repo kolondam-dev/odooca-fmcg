@@ -553,6 +553,64 @@ class FxRevaluationTests(unittest.TestCase):
         self.assertEqual(report["realized_rows"], [])
         self.assertEqual(report["reversal_exceptions"], [])
 
+    def test_reversal_with_two_equal_candidates_is_ambiguous_not_order_dependent(self):
+        # Review blocker: one reversal with two candidates that both pass the
+        # nominal and currency checks. Greedy matching paired (1, 2) for input
+        # [1, 2, 3] and (3, 2) for [3, 2, 1], so a different exchange evidence
+        # survived depending only on input order. Pairing now needs mutual
+        # uniqueness; anything else keeps every row and reports the ambiguity.
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        first = partial(1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0),
+                        1_500_000.0, exchange_move_id=9)
+        first.update({
+            "debit_line_id": 1, "credit_line_id": 2, "move_ids": [10, 11],
+            "move_id": 10, "reversed_entry_id": None,
+        })
+        second = partial(2, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0),
+                         1_500_000.0, exchange_move_id=10)
+        second.update({
+            "debit_line_id": 1, "credit_line_id": 3, "move_ids": [11, 12],
+            "move_id": 11, "reversed_entry_id": 10,
+        })
+        third = partial(3, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0),
+                        1_500_000.0, exchange_move_id=11)
+        third.update({
+            "debit_line_id": 1, "credit_line_id": 4, "move_ids": [20, 21],
+            "move_id": 20, "reversed_entry_id": 10,
+        })
+
+        forward = sched.build_fx_revaluation(
+            [open_line], [first, second, third], "2026-07-31", ROUND,
+            lambda *_: 16_000.0,
+        )
+        backward = sched.build_fx_revaluation(
+            [open_line], [third, second, first], "2026-07-31", ROUND,
+            lambda *_: 16_000.0,
+        )
+
+        for report in (forward, backward):
+            self.assertEqual(
+                [row["partial_id"] for row in report["realized_rows"]], [1, 2, 3],
+                "no candidate may be dropped while the pairing is ambiguous",
+            )
+            self.assertEqual(len(report["reversal_exceptions"]), 1)
+            exception = report["reversal_exceptions"][0]
+            self.assertEqual(exception["reason"], "multiple_reversal_candidates")
+            self.assertEqual(exception["partial_ids"], [1, 2, 3])
+            self.assertFalse(report["complete"])
+        self.assertEqual(
+            forward["realized_posted_total"], backward["realized_posted_total"],
+            "realized total must not depend on input order",
+        )
+        self.assertEqual(
+            forward["realized_exchange_move_ids"],
+            backward["realized_exchange_move_ids"],
+        )
+
     def test_unmatched_reversal_is_not_silently_dropped(self):
         # A reversal whose target move is absent must still post its own amount;
         # dropping it would hide realized FX without any evidence.
