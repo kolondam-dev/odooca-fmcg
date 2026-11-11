@@ -1,0 +1,803 @@
+
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-10 22:07+0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: id\n"
+"Language-Team: id <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.10.3\n"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Compare"
+msgstr "Bandingkan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Compare with"
+msgstr "Bandingkan dengan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Compare previous period"
+msgstr "Bandingkan periode sebelumnya"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Cancel"
+msgstr "Batal"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Apply"
+msgstr "Terapkan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Period"
+msgstr "Periode"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Daily"
+msgstr "Harian"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Weekly"
+msgstr "Mingguan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Monthly"
+msgstr "Bulanan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Data refreshed:"
+msgstr "Data diperbarui:"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Save view ▾"
+msgstr "Simpan tampilan ▾"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Remove filter"
+msgstr "Hapus filter"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Search…"
+msgstr "Cari…"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Search filter values"
+msgstr "Cari nilai filter"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Available dimensions"
+msgstr "Dimensi tersedia"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Access scope is enforced by the server."
+msgstr "Scope akses tetap ditentukan server."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "No values available."
+msgstr "Tidak ada nilai yang tersedia."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Not available for this source and scope"
+msgstr "Belum tersedia untuk sumber dan cakupan ini"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Anchor date"
+msgstr "Tanggal jangkar"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Custom ranges, comparable MTD and workday alignment require the new source contract."
+msgstr "Rentang kustom, MTD setara, dan kalender hari kerja memakai kontrak baru; dukungan sumber diperiksa oleh adapter."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Include"
+msgstr "Termasuk"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Exclude"
+msgstr "Kecualikan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Clear"
+msgstr "Kosongkan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Filter summary"
+msgstr "Ringkasan filter"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "AND across dimensions · OR within each dimension · changes apply after Apply"
+msgstr "AND antar dimensi · OR di dalam dimensi · perubahan berlaku setelah Terapkan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Zoom in"
+msgstr "Perbesar"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Zoom out"
+msgstr "Perkecil"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Pan tool"
+msgstr "Alat geser (hand tool)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Show all North Sulawesi"
+msgstr "Tampilkan seluruh Sulut"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Drill up, unavailable at province level"
+msgstr "Naik satu level (drill up), tidak aktif di level Provinsi"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Revenue by city in North Sulawesi"
+msgstr "Peta omset per kab/kota Sulawesi Utara"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Drill-down path"
+msgstr "Jalur drill-down"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Action required"
+msgstr "Perlu tindakan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Net revenue by principal"
+msgstr "Omset netto per principal"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Net revenue by channel"
+msgstr "Omset netto per channel"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Daily revenue trend"
+msgstr "Tren omset harian"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Monthly revenue and discount"
+msgstr "Omset dan diskon bulanan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Top 8 salespeople"
+msgstr "Top 8 salesman"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Salesperson productivity"
+msgstr "Produktivitas salesman"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Bubble size = active outlets."
+msgstr "Ukuran bubble = outlet aktif."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+#, python-format
+msgid "Bars: net revenue, IDR billion · Line: discount as % of gross revenue"
+msgstr "Batang: omset netto Rp miliar · Garis: diskon % omset kotor"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "IDR million / working day"
+msgstr "Rp juta / hari kerja"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Revenue (million) · %"
+msgstr "Omset (jt) · %"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Active % · active/registered"
+msgstr "Aktif % · aktif/terdaftar"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Active outlets by channel"
+msgstr "Komposisi outlet aktif per channel"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Active outlets (%)"
+msgstr "Outlet aktif (%)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Weekly active outlets"
+msgstr "Outlet aktif mingguan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "active outlets"
+msgstr "outlet aktif"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Focus SKU outlet penetration"
+msgstr "SKU fokus: penetrasi outlet"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Outlets at risk of churn (no order ≥ 21 days)"
+msgstr "Outlet berpotensi churn (tidak order ≥ 21 hari)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Select a row to open the outlet profile (L2 drill-down)."
+msgstr "Klik baris untuk membuka profil outlet (drill-down L2)."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Darker = higher penetration."
+msgstr "Makin gelap = penetrasi makin tinggi."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Delivery funnel (DO)"
+msgstr "Funnel pengiriman (DO)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Fleet performance"
+msgstr "Kinerja armada"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Logistics cost by category"
+msgstr "Biaya logistik per kelompok"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Daily on-time delivery"
+msgstr "On-time delivery harian"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+#, python-format
+msgid "% on-time"
+msgstr "% tepat waktu"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Monthly cost per drop and OTD"
+msgstr "Biaya per drop dan OTD bulanan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Bars: cost per drop, IDR thousand · Line: on-time delivery %"
+msgstr "Batang: biaya per drop Rp ribu · Garis: on-time delivery %"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Action required: compliance and delivery"
+msgstr "Perlu tindakan: kepatuhan dan pengiriman"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Stock by expiry horizon"
+msgstr "Komposisi stok per umur ED"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Expiry horizon by warehouse (IDR million)"
+msgstr "Umur ED per gudang (Rp juta)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Class × trend matrix (SKU count)"
+msgstr "Matriks kelas × tren (jumlah SKU)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "ABC class by value; movement trend over 3 months."
+msgstr "Kelas ABC menurut nilai; tren pergerakan 3 bulan."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Slow moving: largest exposed value"
+msgstr "Slow moving: nilai terkait terbesar"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Weekly days of inventory"
+msgstr "Days of inventory mingguan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Warehouse summary"
+msgstr "Ringkasan per gudang"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Action required: FEFO, expiry, safety stock, stock count"
+msgstr "Perlu tindakan: FEFO, ED, safety stock, opname"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "days"
+msgstr "hari"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Receivables roll-forward (IDR billion)"
+msgstr "Roll-forward piutang (Rp miliar)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "AR by principal"
+msgstr "AR per principal"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "AR aging by channel (IDR million)"
+msgstr "Aging piutang per channel (Rp juta)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Credit exposure vs limit (%)"
+msgstr "Eksposur kredit vs limit (%, 5 limit)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Daily collections"
+msgstr "Collection harian"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "IDR million / day"
+msgstr "Rp juta / hari"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Unmatched deposits and Money in Transit"
+msgstr "Setoran belum cocok dan Money in Transit"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Transfer evidence requires confirmation against the bank statement before validation."
+msgstr "Bukti transfer wajib dikonfirmasi ke admin mutasi rekening sebelum divalidasi."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Weekly actual vs forecast (IDR million)"
+msgstr "Aktual vs forecast mingguan (nilai Rp juta)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "IDR million / week"
+msgstr "Rp juta / minggu"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Forecast accuracy by principal"
+msgstr "Akurasi forecast per principal"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "4-week projected cash-in"
+msgstr "Proyeksi cash-in 4 minggu"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Bars: cash-in, IDR billion · Line: cumulative %"
+msgstr "Batang: cash-in Rp miliar · Garis: % kumulatif"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Seasonality index (Nov = 100)"
+msgstr "Indeks musiman (Nov = 100)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Darker = higher seasonal demand."
+msgstr "Makin gelap = permintaan musiman makin tinggi."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "SKUs at risk of stockout"
+msgstr "SKU berisiko stockout"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "PO recommendations by principal"
+msgstr "Rekomendasi PO per principal"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Period &amp; filters stay on the toolbar"
+msgstr "Periode &amp; filter menempel pada toolbar"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Period & comparison"
+msgstr "Periode & pembanding"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Multiple filters"
+msgstr "Filter multi-irisan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Inline panel · charts move below"
+msgstr "Panel inline · grafik bergeser ke bawah"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Anchored to the button"
+msgstr "Menempel pada tombol · tanpa menutup seluruh halaman"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Use popover"
+msgstr "Jadikan popover"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Pin inline"
+msgstr "Sematkan inline"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Close without applying"
+msgstr "Tutup tanpa menerapkan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Select range"
+msgstr "Pilih rentang"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Access scope"
+msgstr "Scope akses"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "No comparison"
+msgstr "Tanpa pembanding"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Sample data · values are static"
+msgstr "Data contoh · angka tidak dihitung ulang"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Selection follows source scope"
+msgstr "Pilihan mengikuti cakupan sumber"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Enter start and end dates."
+msgstr "Isi tanggal awal dan akhir."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "End date must follow start date."
+msgstr "Tanggal akhir harus sesudah tanggal awal."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "No working days in this range. Change the range or disable alignment."
+msgstr "Rentang ini tidak memiliki hari kerja. Ubah rentang atau matikan penyelarasan."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "End date exceeds the data boundary."
+msgstr "Tanggal akhir melebihi batas data."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Complete the comparison range."
+msgstr "Lengkapi rentang pembanding."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "This week"
+msgstr "Minggu ini"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Current week"
+msgstr "Minggu berjalan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "This month (MTD)"
+msgstr "Bulan ini (MTD)"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Through the data boundary"
+msgstr "Sampai batas data"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Last month"
+msgstr "Bulan lalu"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Full calendar month"
+msgstr "Bulan kalender penuh"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Year to date"
+msgstr "Tahun berjalan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Last 3 months"
+msgstr "3 bulan terakhir"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Three full calendar months"
+msgstr "Tiga bulan kalender penuh"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Select dates"
+msgstr "Pilih tanggal"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Previous calendar month"
+msgstr "Kalender bulan sebelumnya"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Next calendar month"
+msgstr "Kalender bulan berikutnya"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Select the end date"
+msgstr "Pilih tanggal akhir"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Select start, then end date"
+msgstr "Klik tanggal awal, lalu tanggal akhir"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Previous period"
+msgstr "Periode sebelumnya"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Same period last year"
+msgstr "Periode sama tahun lalu"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Same period last quarter"
+msgstr "Periode sama kuartal lalu"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Custom range"
+msgstr "Rentang kustom"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Comparison"
+msgstr "Pembanding"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "From"
+msgstr "Dari"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Align working days"
+msgstr "Sejajarkan jumlah hari kerja"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Alignment requires a company work calendar"
+msgstr "Penyelarasan menunggu kalender kerja perusahaan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Preview calendar: Monday–Saturday"
+msgstr "Kalender simulasi: Senin–Sabtu · Minggu libur"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Selection is not applied"
+msgstr "Pilihan belum diterapkan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Filters are not available"
+msgstr "Filter belum tersedia"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Search "
+msgstr "Cari "
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "outside selection"
+msgstr "di luar irisan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "No matching values."
+msgstr "Tidak ada pilihan yang cocok."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Clear selection"
+msgstr "Bersihkan pilihan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Draft summary"
+msgstr "Ringkasan draft"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "AND between dimensions"
+msgstr "AND antar dimensi"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "OR within a dimension"
+msgstr "OR di dalam satu dimensi"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Branches follow access scope."
+msgstr "Cabang mengikuti scope akses."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Clear filters"
+msgstr "Kosongkan filter"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Changes apply after Apply"
+msgstr "Perubahan berlaku setelah Terapkan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Principal narrows Brand and SKU choices. Child selections are retained."
+msgstr "Principal mempersempit pilihan Brand dan SKU. Pilihan anak tidak dihapus diam-diam."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Brand follows Principal and narrows SKU choices."
+msgstr "Brand mengikuti irisan Principal dan mempersempit SKU."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Select multiple values for this dimension."
+msgstr "Pilih beberapa nilai untuk dimensi ini."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Filters were not applied. Review the source error."
+msgstr "Filter belum diterapkan: cakupan belum didukung sumber."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Selection applied · values remain examples"
+msgstr "Pilihan diterapkan · angka tetap contoh"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Selection applied"
+msgstr "Pilihan diterapkan"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Limit range to"
+msgstr "Batasi rentang hingga"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid " days."
+msgstr " hari."
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid " working days"
+msgstr " hari kerja"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "calendar days"
+msgstr "hari kalender"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Mon"
+msgstr "Sen"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Tue"
+msgstr "Sel"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Wed"
+msgstr "Rab"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Thu"
+msgstr "Kam"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Fri"
+msgstr "Jum"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Sat"
+msgstr "Sab"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+msgid "Sun"
+msgstr "Min"
+
+#. module: id_dashboard_ui
+#. odoo-javascript
+#: addons/id_dashboard_ui/static/src/core/controls_controller.js
+msgid "Period & filters stay on the toolbar"
+msgstr "Periode dan filter menempel pada toolbar"

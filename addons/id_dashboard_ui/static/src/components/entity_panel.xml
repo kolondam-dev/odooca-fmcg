@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.EntityPanel">
+    <div t-attf-style="{{ v.card }}box-sizing:border-box;height:{{ v.hh }};display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <t t-if="v.showTitle">
+        <h3 style="margin:0 0 10px;font-size:13px;font-weight:600;border-left:3px solid var(--ac);padding-left:8px">
+          <t t-out="v.title"/>
+        </h3>
+      </t>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <t t-foreach="v.mini" t-as="m" t-key="m_index">
+          <div style="background:var(--tint);border-radius:4px;padding:8px">
+            <div style="font-size:10.5px;color:#52627f">
+              <t t-out="m.a"/>
+            </div>
+            <div style="font-size:16px;font-weight:700">
+              <t t-out="m.b"/>
+            </div>
+          </div>
+        </t>
+      </div>
+      <div style="margin:10px 0 4px;font-size:11px;color:#52627f">
+        <t t-out="v.sparkTitle"/>
+      </div>
+      <svg aria-hidden="true" style="width:100%;height:46px" viewBox="0 0 100 30" preserveAspectRatio="none">
+        <polyline fill="none" stroke="var(--ac)" stroke-width="2" style="vector-effect:non-scaling-stroke" t-attf-points="{{ v.pts }}"/>
+      </svg>
+      <div style="margin:10px 0 4px;font-size:12px;font-weight:600">Action required</div>
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;line-height:1.5">
+        <t t-foreach="v.ex" t-as="e" t-key="e_index">
+          <div t-attf-style="color:{{ e.c }}">
+            <t t-out="e.t"/>
+          </div>
+        </t>
+      </div>
+    </div>
+  </t>
+</templates>

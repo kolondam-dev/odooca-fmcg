@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.FilterPopup">
+    <div style="width:760px;box-shadow:0 8px 24px rgba(11,42,102,.18);border:1px solid #b8c8e4;border-radius:8px;background:#fff;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <div style="display:flex">
+        <div style="width:215px;padding:8px 10px;border-right:1px solid #d5e0f2">
+          <t t-foreach="v.dims" t-as="d" t-key="d_index">
+            <t t-if="d.head">
+              <div style="font-size:10.5px;font-weight:600;color:#52627f;margin:8px 0 2px">
+                <t t-out="d.n"/>
+              </div>
+            </t>
+            <t t-if="d.row">
+              <div t-attf-style="display:flex;justify-content:space-between;padding:5px 8px;border-radius:4px;font-size:12px;background:{{ d.bg }};font-weight:{{ d.fw }}">
+                <span>
+                  <t t-out="d.n"/>
+                </span>
+                <span style="color:#52627f">
+                  <t t-out="d.b"/>
+                </span>
+              </div>
+            </t>
+          </t>
+        </div>
+        <div style="flex:1;padding:14px;border-right:1px solid #d5e0f2">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px">
+            <t t-out="v.cur"/>
+          </div>
+          <input aria-label="Search filter values" style="width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid #b8c8e4;border-radius:4px;font:inherit;font-size:12px" t-attf-placeholder="{{ v.search }}"/>
+          <div style="display:flex;margin:10px 0">
+            <span style="font-size:12px;padding:6px 12px;border:1px solid #b8c8e4;border-radius:4px 0 0 4px;background:var(--ac);color:#fff">Include</span>
+            <span style="font-size:12px;padding:6px 12px;border:1px solid #b8c8e4;border-radius:0 4px 4px 0">Exclude</span>
+          </div>
+          <t t-foreach="v.vals" t-as="v" t-key="v_index">
+            <div style="display:flex;gap:8px;align-items:center;font-size:12px;padding:5px 0">
+              <span aria-hidden="true" t-attf-style="width:14px;height:14px;border:1px solid var(--ac);border-radius:3px;box-sizing:border-box;background:{{ v.bg }};color:#fff;font-size:10px;line-height:12px;text-align:center">
+                <t t-out="v.m"/>
+              </span>
+              <t t-out="v.a"/>
+              <span style="margin-left:auto;color:#52627f">
+                <t t-out="v.b"/>
+              </span>
+            </div>
+          </t>
+          <div style="font-size:10.5px;color:#52627f;margin-top:6px">
+            <t t-out="v.hint"/>
+          </div>
+        </div>
+        <div style="width:215px;padding:14px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px">Filter summary</div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+            <t t-foreach="v.chips" t-as="c" t-key="c_index">
+              <span t-attf-style="font-size:12px;padding:4px 9px;border-radius:12px;background:{{ c.bg }}">
+                <t t-out="c.t"/>
+              </span>
+            </t>
+          </div>
+          <div style="margin-top:14px;padding:8px;background:var(--tint);border-radius:4px;font-size:12px">
+            <t t-out="v.match"/>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #d5e0f2;padding:10px 14px;display:flex;justify-content:space-between">
+        <span style="font-size:11px;color:#52627f;align-self:center">AND across dimensions · OR within each dimension · changes apply after Apply</span>
+        <span style="display:flex;gap:8px">
+          <button style="font:inherit;font-size:12px;color:#12223f;background:#fff;border:1px solid #b8c8e4;border-radius:4px;padding:6px 10px;min-height:34px;">Clear</button>
+          <button style="font:inherit;font-size:12px;color:#12223f;background:#fff;border:1px solid #b8c8e4;border-radius:4px;padding:6px 10px;min-height:34px;">Cancel</button>
+          <button style="font:inherit;font-size:12px;color:#12223f;background:#fff;border:1px solid #b8c8e4;border-radius:4px;padding:6px 10px;min-height:34px;background:var(--ac);color:#fff;border-color:var(--ac)">Apply</button>
+        </span>
+      </div>
+    </div>
+  </t>
+</templates>

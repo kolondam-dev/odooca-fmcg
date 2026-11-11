@@ -1,0 +1,3 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve"><t t-name="id_dashboard_ui.Waterfall"><section class="id-dash-card" t-att-style="'min-height:' + height"><h3 t-out="props.title"/><small t-out="props.note || ''"/><svg viewBox="0 0 580 225" role="img" t-att-aria-label="props.title"><line x1="20" y1="175" x2="570" y2="175" stroke="var(--line)"/><t t-foreach="bars" t-as="s" t-key="s.index"><rect t-att-x="s.x" t-att-y="s.y" t-att-width="s.w" t-att-height="s.h" t-att-fill="s.color"/><text t-att-x="s.x+s.w/2" t-att-y="s.y-6" text-anchor="middle" font-size="11" t-out="s.t || num(s.v)"/><text t-att-x="s.x+s.w/2" y="205" text-anchor="middle" font-size="10" t-out="s.l"/></t></svg></section></t>
+</templates>

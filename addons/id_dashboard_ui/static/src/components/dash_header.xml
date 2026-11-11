@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.DashHeader">
+    <header style="background:#102f6b;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;font-family:Inter,system-ui,sans-serif;border-bottom:3px solid var(--hl)">
+      <div>
+        <h1 style="margin:0;font-size:20px;font-weight:600;color:#fff">
+          <t t-out="v.title"/>
+        </h1>
+        <p style="margin:3px 0 0;font-size:12px;color:#c9d9f5">
+          <t t-out="v.sub"/>
+        </p>
+      </div>
+      <div style="display:flex;gap:16px;align-items:center;font-size:12px;color:#c9d9f5">
+        <span>Data refreshed: <t t-out="v.sync"/></span>
+        <span style="font:inherit;font-size:12px;color:#fff;background:#16357a;border:1px solid #3c5da3;border-radius:4px;padding:6px 10px;min-height:34px">Role: <t t-out="v.role"/></span>
+      </div>
+    </header>
+  </t>
+</templates>

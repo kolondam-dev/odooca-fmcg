@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.Breadcrumb">
+    <nav aria-label="Drill-down path" style="display:flex;gap:8px;align-items:center;font-size:12px;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <t t-foreach="v.crumbs" t-as="c" t-key="c_index">
+        <span aria-hidden="true" style="color:#52627f">
+          <t t-out="c.s"/>
+        </span>
+        <span t-attf-style="color:{{ c.c }};font-weight:{{ c.fw }}">
+          <t t-out="c.t"/>
+        </span>
+      </t>
+      <span style="margin-left:auto">
+        <button style="font:inherit;font-size:12px;color:#12223f;background:#fff;border:1px solid #b8c8e4;border-radius:4px;padding:6px 10px;min-height:34px;">
+          <t t-out="v.back"/>
+        </button>
+      </span>
+    </nav>
+  </t>
+</templates>

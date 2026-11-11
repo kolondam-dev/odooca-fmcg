@@ -1,0 +1,21 @@
+[2026-11-10T22:28:30+07:00] [INFO] D1 native sales redesign
+- Base main 2d7c37c; branch agen/d1-dashboard-(Codex-Dashboard).
+- Native clean install/upgrade12PASS each;27browser checks;26static dashboard regressions;30official JS transpilation;Ruff/XML/14manifest PASS.
+- Only Sales action retargeted; no merge/deploy/live writes; CI and owner visual/seed acceptance pending.
+- Task Managed by Agent Codex-Dashboard
+
+[2026-11-10T22:38:36+07:00] [INFO] D1 recovery after first source failure
+- Keep filters available on initial RPC failure; disclose own PJP scope in metric labels.
+-29native browser checks and27static regressions PASS; server source unchanged from76105e3. PR #113 draft; no merge/deploy.
+- Task Managed by Agent Codex-Dashboard
+
+[2026-11-11T07:26:19+07:00] [INFO] Dedicated D1 native CI visual evidence
+- Review #5851434200: legacy browser CI was not D1 coverage; Draft status was unrelated.
+- Add representative fixture, native browser/role/negative/error cases and versioned baseline artifact. Fix reproduced unpinned footer occlusion without force-click.
+-50native browser checks,34screenshots,30native reconciliations and27regressions PASS locally. Exact-HEAD CI/artifact and independent visual acceptance pending.
+- Task Managed by Agent Codex-Dashboard
+
+[2026-11-11T07:43:56+07:00] [INFO] CI D1 artifact inspection and negative-label spacing
+- HEAD7a210ef artifact13816349333 hash/source/tree verified;50checks/34PNG/30reconciliations PASS.
+- Negative case reproduced line/bar label collision;51native checks PASS after reserved label band. New HEAD CI and independent review pending.
+- Task Managed by Agent Codex-Dashboard
