@@ -1,3 +1,8 @@
+## 2026-11-11T07:43:56+07:00 — Codex-Dashboard — D1 CI artifact inspected; negative label separation
+**Bukti:** [F] artifact13816349333/run42931603547 dariHEAD7a210ef terunduh; ZIP digest, treefcaa5f6, source/image hashes cocok, clean checkout,50native checks/34PNG/30rekonsiliasi PASS. Gambar1440/1024/768, popup/inline dan role diperiksa oleh implementer, bukan review independen.
+**Fix:** inspeksi kasus negatif menemukan labelpersentase dan nilai batang berimpitan. Assertion bounding-box native gagal sebelumfix; band label28px membuatnya PASS. Total51browserchecks lokal; backend unchanged. Exact-HEAD artifact baru/revieweracceptance masih gate. Tidak merge/deploy.
+**Signature:** Task Managed by Agent Codex-Dashboard
+
 ## 2026-11-11T07:26:19+07:00 — Codex-Dashboard — PR113 dedicated native D1 CI evidence
 **Berubah:** CI memasang D1 di `d1_ci`/filestore/port8071 sendiri, fixture224SO/8salesman/4principal-channel-kota, rekonsiliasi30assertion dan browser50checks. Artifact terpisah berisi34screenshot, referencePNG/v2, JSON/HTML index, hashes source/image dan deviasi. Role salesman login terpisah, kasus signed negative/unavailable, error/loading/retry, popup dan inline semua width1440/1024/768.
 **Fix terbukti:** footer popup sesudah unpin tertutup dashboard pada1024 karena root stacking; z-index root diperbaiki dan hit-testing+klik normal lulus. Target unavailable plain dash; nilai bulanan negatif kecil tidak dibulatkan menjadi-0; label scatter top2 dengan nama lengkap via title/aria.

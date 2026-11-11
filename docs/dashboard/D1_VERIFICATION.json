@@ -88,8 +88,8 @@
     "addons/id_dashboard_ui/static/src/components/bullet.js": "eea2ed6c067a43f5b8329df4ff5baf1610f5055f027825eba7c3d4b43fff8fae",
     "addons/id_dashboard_ui/static/src/components/bullet.xml": "8f67852205b85e3826997a598af4b342a5712b4420909d1d36f5e987793cff9a",
     "addons/id_dashboard_ui/static/src/components/charts.js": "d7490039cbeeed20e223fb7204a8ac87571a7215e2753a7e404461adfb7ea7d5",
-    "addons/id_dashboard_ui/static/src/components/combo_chart.js": "79dca858381676a3f970f3c160328f221c9093aba29c97ab1f2f7a215215de2e",
-    "addons/id_dashboard_ui/static/src/components/combo_chart.xml": "2e55d11c49bdd56a06775c04e7c58aeef542e0ea0a474ade067f8128302eeaa7",
+    "addons/id_dashboard_ui/static/src/components/combo_chart.js": "4ca34ce6eb340d943f5ce3469d0cbcddfeabf4a585199ceacf4518b53304d936",
+    "addons/id_dashboard_ui/static/src/components/combo_chart.xml": "7daca70902622b86f5bb682a3089cc5fd43549ec9a49fc5b7d81b6576c99c69c",
     "addons/id_dashboard_ui/static/src/components/coverage_panel.js": "3349fc358a2e6e2d3f86e438a3f53c739313454efa1981eab3ed5e3e583aced8",
     "addons/id_dashboard_ui/static/src/components/coverage_panel.xml": "81f07697ef77903d006edf1510ecbc30aba19e86608b90740a358a44a1c0cf5f",
     "addons/id_dashboard_ui/static/src/components/dash_header.js": "5b06399bda105dcf7c2d73522cfbb290d03299391c71195d5c3015af90d4c997",
@@ -157,5 +157,24 @@
     "fixture_reconciliation_checks": 30,
     "source_worktree_dirty": true,
     "limits": "Working-tree native evidence only; current-HEAD CI artifact is the reviewer evidence."
+  },
+  "ci_visual_verified_previous_head": {
+    "head": "7a210ef45bfa88e03acf66a9f75cde9bb2289e59",
+    "run": 42931603547,
+    "artifact": 13816349333,
+    "status": "PASS",
+    "browser_checks": 50,
+    "screenshots": 34,
+    "reconciliation_checks": 30,
+    "runtime_source_verified": true,
+    "artifact_digest": "a7c1cb8b6356126fd1bbec679ae09b36240a18876644e79843913960501a2545",
+    "limits": "Visual inspection found negative combo label overlap; corrected in follow-up, independently reviewed acceptance still pending."
+  },
+  "negative_label_fix_local": {
+    "counterexample_before_fix": "FAIL negative monthly line/bar label overlap",
+    "after_fix": "PASS",
+    "browser_checks": 51,
+    "screenshots": 34,
+    "new_head_ci": "PENDING"
   }
 }

@@ -14,3 +14,8 @@
 - Add representative fixture, native browser/role/negative/error cases and versioned baseline artifact. Fix reproduced unpinned footer occlusion without force-click.
 -50native browser checks,34screenshots,30native reconciliations and27regressions PASS locally. Exact-HEAD CI/artifact and independent visual acceptance pending.
 - Task Managed by Agent Codex-Dashboard
+
+[2026-11-11T07:43:56+07:00] [INFO] CI D1 artifact inspection and negative-label spacing
+- HEAD7a210ef artifact13816349333 hash/source/tree verified;50checks/34PNG/30reconciliations PASS.
+- Negative case reproduced line/bar label collision;51native checks PASS after reserved label band. New HEAD CI and independent review pending.
+- Task Managed by Agent Codex-Dashboard

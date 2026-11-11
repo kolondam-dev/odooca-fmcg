@@ -169,6 +169,13 @@ with sync_playwright() as playwright:
         page.locator('[data-field="to"]').fill("2026-09-30")
         page.locator('[data-action="apply"]').click()
         page.wait_for_function("document.querySelector('.id-dashboard-controls').dataset.query?.includes('2026-09-01')")
+        line_label = page.locator('[data-role="combo-line-value"]').last
+        line_label.scroll_into_view_if_needed()
+        line_box = line_label.bounding_box()
+        bar_box = page.locator('[data-role="combo-bar-value"]').last.bounding_box()
+        check(line_box["y"] + line_box["height"] + 1 <= bar_box["y"],
+              "Negative monthly line and bar labels do not overlap")
+        page.locator(".id-dash-action").evaluate("el => el.scrollTop = 0")
         capture(page, "negative-unavailable-1440")
         full_dashboard(page, "negative-1440")
         negative = native_source(page.request, {**query, "period": {"from": "2026-09-01", "to": "2026-09-30"}})

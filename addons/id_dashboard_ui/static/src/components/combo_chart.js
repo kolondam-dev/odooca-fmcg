@@ -33,7 +33,8 @@ export class ComboChart extends VisualComponent {
         const H = +(p.height || 0),
             ch = H ? H - 80 : 190,
             zt = 64,
-            bz = ch - zt - 20;
+            // Reserve the line-label band even when the percentage is at the bottom of its scale.
+            bz = Math.max(0, ch - zt - 20 - 28);
         const bm = +(p.barMax || 6.5),
             lmn = +(p.lineMin || 0),
             lmx = +(p.lineMax || 10);

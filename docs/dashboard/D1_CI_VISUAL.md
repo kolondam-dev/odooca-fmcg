@@ -25,7 +25,7 @@ Artifacts have a 30-day retention period. Source references and executable fixtu
 
 The representative filter catalogue reproduced footer occlusion after unpinning at 1024px: the isolated controls root had no stacking order above subsequent dashboard content. The root now has an explicit z-index and browser hit-testing verifies the footer before an ordinary click. No force-click or weaker assertion is used.
 
-The Top 8 unavailable achievement now uses a plain dash. Small negative monthly amounts retain sufficient decimals rather than displaying `-0`. Scatter keeps continuous labels for the top two and full names on every point via title/accessible label, avoiding label overlap for identical call rates.
+The Top 8 unavailable achievement now uses a plain dash. Small negative monthly amounts retain sufficient decimals rather than displaying `-0`. A separate 28px label band now prevents the percentage-line label from overlapping a high negative-magnitude bar label. The browser bounding-box assertion was reproduced failing before this fix and passing after it. Scatter keeps continuous labels for the top two and full names on every point via title/accessible label, avoiding label overlap for identical call rates.
 
 ## Acceptance boundary
 
