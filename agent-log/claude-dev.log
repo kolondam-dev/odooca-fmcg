@@ -398,3 +398,9 @@
 - Verifikasi lokal: 106 tes finance PASS; ruff PASS; check_manifests PASS (14 addon).
 - [BU] Native untuk kasus kandidat-ganda belum (butuh rekonsiliasi manual berganda); pin FIN37 belum; data FX non-sintetis belum. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
 - Task managed by Agent-Opencode at 2026-11-11T18:51:40+07:00
+[2026-11-11T19:20:15+07:00] [INFO] I2c/PR112: merge ke main (05bdf7a) — re-review lulus
+- FIN37 + FIN38 (id_finance_reporting) masuk main pada commit 05bdf7a setelah blocker kandidat-ganda ditutup (aturan pasangan unik + multiple_reversal_candidates + complete False).
+- Re-verifikasi reviewer pada 7c34d0d: kedua urutan [1,2,3] dan [3,2,1] mempertahankan ketiga partial + satu kelompok ambigu; pasangan unik tetap dinet. 12/12 job GitHub Actions lulus, FINANCE_I2C_SCHEDULES=PASS.
+- [BU] Kandidat-ganda baru terverifikasi unit-level; pin account_invoice_start_end_dates (angka 150 FIN37 helper/unit); FIN38 non-sintetis belum (fixture native USD saja).
+- REPORT_CATALOG.csv FIN37/FIN38 tetap BELUM_DITERIMA; tidak ada perubahan status katalog. Tidak ada deploy/mutasi DB live.
+- Task managed by Agent-Opencode at 2026-11-11T19:20:15+07:00
