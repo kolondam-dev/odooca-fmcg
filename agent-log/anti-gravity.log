@@ -2353,3 +2353,14 @@
   * scripts/load_fmcg_seed.py: Menyesuaikan pencarian akun GL 211200 dengan pengecekan adaptif serupa.
 - Verifikasi Penuh: 49/49 unit tests PASS (18.5s); ruff clean; check_manifests 14 addon OK. Zero touch live Railway.
 - Task managed by antigravity at 2026-11-11T09:50:00+07:00
+
+[2026-11-11T10:15:00+07:00] [INFO] F4: Resolusi Akun Diskon 410200 & Parameter Runner Odoo Shell CI
+- Resolusi Akun Potongan Penjualan Eksplisit 410200:
+  * Memperbaiki pencarian akun debit diskon pada disc_move di scripts/load_canonical_perpetual.py: membuat akun eksplisit 410200 ("Potongan Penjualan (Cash Discount) FMCG") saat inisialisasi adapter.
+  * Menghapus fallback akun diskon ke 610200 (Beban Gaji & Tunjangan OPEX) yang memicu polusi saldo GL OPEX sebesar Rp 165.350,16 pada verify_disposable_slice.py di init-test.
+- Resolusi Parameter CLI Odoo Shell pada CI:
+  * Di Odoo 19, perintah `odoo shell` secara ketat menolak parameter kustom setelah `--` (error: unrecognized parameters: --pack ...).
+  * Menyesuaikan scripts/ops/verify_disposable_period_pack.py agar membaca parameter via environment variables (PERIOD_PACK_DIR, PERIOD_SCENARIO, PERIOD_DB_B, PERIOD_OUT) dengan fallback default.
+  * Menyesuaikan .github/workflows/ci.yml step F4 agar mengekspor variabel lingkungan tersebut sebelum memanggil `odoo shell`.
+- Verifikasi Penuh: test_period_pack_loader (49 tests PASS); ruff clean; check_manifests 14 addon OK. Zero touch live Railway.
+- Task managed by antigravity at 2026-11-11T10:15:00+07:00

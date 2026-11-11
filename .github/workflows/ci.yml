@@ -121,9 +121,12 @@ jobs:
               --addons-path "$(/opt/deploy/addons_path.sh)" --no-http < scripts/load_canonical_perpetual.py
 
             echo "Menjalankan verify_disposable_period_pack.py pada fmcg_period_disposable dan fmcg_period_disposable_b..."
+            PERIOD_PACK_DIR="data/registers/periods/2026-08" \
+            PERIOD_SCENARIO="all" \
+            PERIOD_DB_B="fmcg_period_disposable_b" \
+            PERIOD_OUT="period_pack_runtime_report.json" \
             odoo shell -d fmcg_period_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
-              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http -- \
-              --pack data/registers/periods/2026-08 --scenario all --db-b fmcg_period_disposable_b --out period_pack_runtime_report.json \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http \
               < scripts/ops/verify_disposable_period_pack.py
 
             PGPASSWORD=odoo dropdb -h localhost -p 5432 -U odoo fmcg_period_master || true

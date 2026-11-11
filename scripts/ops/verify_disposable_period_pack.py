@@ -1512,28 +1512,28 @@ def main():
     )
     parser.add_argument(
         "--pack",
-        default="data/registers/periods/2026-08",
+        default=os.environ.get("PERIOD_PACK_DIR", "data/registers/periods/2026-08"),
         help="Path to period pack directory (default: data/registers/periods/2026-08)",
     )
     parser.add_argument(
         "--scenario",
         choices=["all", "A", "B"],
-        default="all",
+        default=os.environ.get("PERIOD_SCENARIO", "all"),
         help="Execution scenario to prove: A (continuation & replay), B (empty to August), or all",
     )
     parser.add_argument(
         "--db-b",
-        default=None,
+        default=os.environ.get("PERIOD_DB_B", None),
         help="Separate disposable database name for Scenario B empty-database verification",
     )
     parser.add_argument(
         "--expected-digest",
-        default=None,
+        default=os.environ.get("PERIOD_EXPECTED_DIGEST", None),
         help="Expected snapshot SHA-256 digest to verify cross-scenario equivalence",
     )
     parser.add_argument(
         "--out",
-        default="period_pack_runtime_report.json",
+        default=os.environ.get("PERIOD_OUT", "period_pack_runtime_report.json"),
         help="Path to save verification JSON report",
     )
     raw_args = sys.argv[1:]

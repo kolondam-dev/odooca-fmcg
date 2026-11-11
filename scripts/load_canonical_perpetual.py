@@ -595,6 +595,9 @@ class CanonicalPerpetualAdapter:
             cogs_acc = _resolve_or_create_explicit_account(
                 "510000", "Harga Pokok Penjualan (HPP) FMCG", "expense_direct_cost", "expense"
             )
+            discount_acc = _resolve_or_create_explicit_account(
+                "410200", "Potongan Penjualan (Cash Discount) FMCG", "expense", "income"
+            )
 
             # Buktikan akun-akun wajib secara fail-fast
             if not stock_valuation_acc:
@@ -610,6 +613,11 @@ class CanonicalPerpetualAdapter:
             if not cogs_acc:
                 raise RuntimeError(
                     "[canonical_loader] FATAL: Akun HPP (510000 / cogs) tidak ditemukan atau gagal dibuat!"
+                )
+            if not discount_acc:
+                raise RuntimeError(
+                    "[canonical_loader] FATAL: Akun potongan penjualan (410200 / discount) "
+                    "tidak ditemukan atau gagal dibuat!"
                 )
 
             # Resolusi akun beban OPEX eksplisit per kategori kanonikal
@@ -629,6 +637,7 @@ class CanonicalPerpetualAdapter:
         self.stock_input_acc = stock_input_acc
         self.stock_output_acc = stock_output_acc
         self.cogs_acc = cogs_acc
+        self.discount_acc = locals().get("discount_acc", None)
 
         # Resolusi partner operasional OPEX eksplisit (bukan self.company.partner_id)
         self.opex_partners = {}
@@ -2595,17 +2604,31 @@ class CanonicalPerpetualAdapter:
                             elif "company_id" in acc_fields:
                                 comp_domain = [("company_id", "in", [self.company.id, False])]
 
-                        disc_account = AccountAccount.search(
-                            comp_domain + [("code", "in", ["410200", "510200", "610200"])],
+                        disc_account = getattr(self, "discount_acc", None) or AccountAccount.search(
+                            comp_domain + [("code", "=", "410200")],
                             limit=1,
                         ) or AccountAccount.search(
                             comp_domain
-                            + [("account_type", "in", ["expense", "income_other"]), ("name", "ilike", "diskon")],
-                            limit=1,
-                        ) or AccountAccount.search(
-                            comp_domain + [("account_type", "=", "expense")],
+                            + [
+                                ("account_type", "in", ["expense", "income_other", "income"]),
+                                ("name", "ilike", "diskon"),
+                            ],
                             limit=1,
                         )
+                        if not disc_account and callable(getattr(AccountAccount, "create", None)):
+                            try:
+                                disc_vals = {
+                                    "code": "410200",
+                                    "name": "Potongan Penjualan (Cash Discount) FMCG",
+                                    "account_type": "expense",
+                                }
+                                if "company_ids" in acc_fields and hasattr(self, "company") and self.company:
+                                    disc_vals["company_ids"] = [(4, self.company.id)]
+                                elif "company_id" in acc_fields and hasattr(self, "company") and self.company:
+                                    disc_vals["company_id"] = self.company.id
+                                disc_account = AccountAccount.create(disc_vals)
+                            except Exception:
+                                pass
                         if not ar_account:
                             ar_account = AccountAccount.search(
                                 comp_domain + [("code", "=", "112000")],

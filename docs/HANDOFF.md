@@ -1,3 +1,23 @@
+## 2026-11-11T10:15:00+07:00 — antigravity — F4: Resolusi Akun Diskon 410200 & Parameter Runner Odoo Shell CI (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/load_canonical_perpetual.py`:
+  - Membuat dan meregistrasi akun eksplisit `410200` (`"Potongan Penjualan (Cash Discount) FMCG"`) pada inisialisasi adapter (`self.discount_acc`).
+  - Mengeliminasi fallback kode `610200` pada pencarian akun diskon pembayaran awal (`disc_move`), mencegah polusi saldo GL OPEX Beban Payroll (`610200`) sebesar Rp 165.350,16 pada verifikasi representatif `verify_disposable_slice.py` di `init-test`.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Mendukung pembacaan parameter runner melalui environment variables (`PERIOD_PACK_DIR`, `PERIOD_SCENARIO`, `PERIOD_DB_B`, `PERIOD_OUT`, `PERIOD_EXPECTED_DIGEST`).
+- `.github/workflows/ci.yml`:
+  - Memperbaiki pemanggilan step `F4 Generic period pack loader runtime proof` pada job `install-test` dengan menginjeksi environment variables alih-alih melempar argumen kustom ke `odoo shell` yang ditolak oleh parser CLI Odoo 19.
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 8.3s).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T09:50:00+07:00 — antigravity — F4: Resolusi Domain Odoo 19 `company_ids` pada `account.account` (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
