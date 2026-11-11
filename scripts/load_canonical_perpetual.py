@@ -2559,9 +2559,15 @@ class CanonicalPerpetualAdapter:
                     except Exception:
                         pass
 
+            # Cari invoice terlebih dahulu agar akun piutang disc_move terikat identik
+            inv = None
+            if AccountMove is not None and p_data.get("invoice_number"):
+                inv = AccountMove.search([("ref", "=", p_data["invoice_number"])], limit=1)
+
             # Diskon Pembayaran Awal (Early Cash Discount)
             disc_move = None
             if AccountMove is not None and disc_amt > 0:
+                disc_ref = f"DISC-{pay_id}"
                 existing_disc = AccountMove.search([("ref", "=", disc_ref)], limit=1)
                 if not existing_disc:
                     AccountAccount = (
@@ -2569,9 +2575,54 @@ class CanonicalPerpetualAdapter:
                     )
                     disc_account = None
                     ar_account = None
+
+                    # Utamakan akun piutang eksak dari invoice pelanggan
+                    if inv:
+                        for line in getattr(inv, "line_ids", []):
+                            if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable":
+                                ar_account = line.account_id
+                                break
+
+                    if not ar_account and getattr(cust_partner, "property_account_receivable_id", None):
+                        ar_account = cust_partner.property_account_receivable_id
+
                     if AccountAccount is not None:
-                        disc_account = AccountAccount.search([("account_type", "=", "expense")], limit=1)
-                        ar_account = AccountAccount.search([("account_type", "=", "asset_receivable")], limit=1)
+                        comp_ids = [self.company.id, False] if hasattr(self, "company") and self.company else [False]
+                        disc_account = AccountAccount.search(
+                            [
+                                ("code", "in", ["410200", "510200", "610200"]),
+                                ("company_id", "in", comp_ids),
+                            ],
+                            limit=1,
+                        ) or AccountAccount.search(
+                            [
+                                ("account_type", "in", ["expense", "income_other"]),
+                                ("name", "ilike", "diskon"),
+                                ("company_id", "in", comp_ids),
+                            ],
+                            limit=1,
+                        ) or AccountAccount.search(
+                            [
+                                ("account_type", "=", "expense"),
+                                ("company_id", "in", comp_ids),
+                            ],
+                            limit=1,
+                        )
+                        if not ar_account:
+                            ar_account = AccountAccount.search(
+                                [
+                                    ("code", "=", "112000"),
+                                    ("company_id", "in", comp_ids),
+                                ],
+                                limit=1,
+                            ) or AccountAccount.search(
+                                [
+                                    ("account_type", "=", "asset_receivable"),
+                                    ("name", "not ilike", "pos"),
+                                    ("company_id", "in", comp_ids),
+                                ],
+                                limit=1,
+                            )
 
                     disc_move = AccountMove.create({
                         "move_type": "entry",
@@ -2602,7 +2653,8 @@ class CanonicalPerpetualAdapter:
 
             # Reconcile dengan invoice jika ada
             if AccountMove is not None:
-                inv = AccountMove.search([("ref", "=", p_data["invoice_number"])], limit=1)
+                if not inv:
+                    inv = AccountMove.search([("ref", "=", p_data["invoice_number"])], limit=1)
                 if inv and inv.state == "posted":
                     pay_l = self._get_record_lines(pay)
                     inv_l = self._get_record_lines(inv)
@@ -2617,9 +2669,21 @@ class CanonicalPerpetualAdapter:
                         all_lines = (all_lines | other) if hasattr(all_lines, "__or__") else (all_lines + other)
 
                     if hasattr(all_lines, "filtered"):
+                        target_account_id = None
+                        for line in inv_l:
+                            if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable":
+                                target_account_id = line.account_id.id
+                                break
+                        if not target_account_id:
+                            for line in pay_l:
+                                if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable":
+                                    target_account_id = line.account_id.id
+                                    break
+
                         lines_to_rec = all_lines.filtered(
-                            lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
-                            == "asset_receivable"
+                            lambda line: getattr(line, "account_id", None)
+                            and (line.account_id.id == target_account_id if target_account_id else True)
+                            and getattr(line.account_id, "account_type", "") == "asset_receivable"
                             and not getattr(line, "reconciled", False)
                         )
                         # Self-healing: jika payment belum reconciled tapi invoice sudah bertanda reconciled
@@ -2630,8 +2694,9 @@ class CanonicalPerpetualAdapter:
                         )
                         if len(lines_to_rec) < 2 and has_unrec:
                             lines_to_rec = all_lines.filtered(
-                                lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
-                                == "asset_receivable"
+                                lambda line: getattr(line, "account_id", None)
+                                and (line.account_id.id == target_account_id if target_account_id else True)
+                                and getattr(line.account_id, "account_type", "") == "asset_receivable"
                             )
 
                         if len(lines_to_rec) >= 2:

@@ -1,10 +1,11 @@
-## 2026-11-11T08:55:00+07:00 — antigravity — F4: Konfigurasi Pajak Historis 11% Juli & Rekonsiliasi AR 100% (Branch: agen/seed-f4-period-pack-loader)
+## 2026-11-11T09:25:00+07:00 — antigravity — F4: Resolusi Rekonsiliasi AR Akun Piutang Identik & PPN 11% Juli (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
 - `scripts/load_fmcg_seed.py`:
   - Menambahkan konfigurasi pajak penjualan historis `"PPN Keluaran 11% (Standar Historis Juli)"` (amount=11.0, type=sale, tax-excluded, repartition GL PPN Keluaran 211200) di `load_canonical_taxes()` bersama pajak Kode 04 12%.
 - `scripts/load_canonical_perpetual.py`:
-  - Menyelaraskan line faktur penjualan Juli 2026 agar secara eksplisit mencari dan menerapkan PPN Standar 11.0% (sesuai spesifikasi register `perpetual_invoices.csv` dan pembayaran `perpetual_ar_collections.csv`), mencegah ketiadaan baris pajak yang menyebabkan invoice mismatch terhadap pelunasan AR penuh (`reconciled: 2/2`).
+  - Menyelaraskan line faktur penjualan Juli 2026 agar secara eksplisit mencari dan menerapkan PPN Standar 11.0% (sesuai spesifikasi register `perpetual_invoices.csv` dan pembayaran `perpetual_ar_collections.csv`).
+  - Resolusi Akun Piutang Identik pada Diskon Pelunasan AR: Mengikat akun piutang pada `disc_move` (Early Cash Discount) ke akun piutang eksak dari faktur pelanggan terkait (bukan sembarang `asset_receivable limit=1` yang dapat memilih `Account Receivable (PoS)`), serta memfilter baris rekonsiliasi agar strictly berakar pada `target_account_id` yang sama, memenuhi invarian rekonsiliasi Odoo 19 tanpa `UserError: Entries are not from the same account`.
 
 **Diverifikasi:**
 - [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 6.9s).
