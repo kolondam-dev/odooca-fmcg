@@ -16,6 +16,11 @@
 **Berubah:** layar Setor uang (dari layar Akhiri trip) dan Biaya toko (dari kunjungan aktif) sesuai mockup; kontrak USULAN `delivery.cash_deposit.submit` (`domain/cash-deposit.ts`), kategori `store_*` scope outlet; flag server `features.cash_deposit_v1` / `outlet_expense_v1` (mock demo ON, LIVE tidak ada = tombol kirim terkunci + callout). openapi diekspor ulang; tes unit + e2e `store-expense`. K18 di DS_RECONCILIATION memuat kontrak usulan dan syarat sebelum flag ON.
 **Diverifikasi:** [F] format, tsc, contracts:check, vitest 476, e2e phone+tablet 188 lulus. **Belum diuji:** [BU] CI, e2e Setor uang lewat UI (hanya tes unit skema), backend.
 **Utang backend:** handler kedua perintah/kategori, validasi receipt_uuids, approval biaya toko; foto nota per komponen dan Foto penutup trip.
+## 2026-11-11T19:04:48+07:00 — Codex-Dashboard — Scroll dan drill-down peta D1
+
+**Berubah:** Kontainer aksi D1 dapat digulir. Peta dan ranking mengikuti kabupaten/kota → kecamatan → kelurahan/desa, dengan tombol kembali satu tingkat. Ranking memakai periode, filter, dan akses penjualan D1.
+
+**Diverifikasi:** [F] Playwright lokal dengan Odoo 19, mode sidebar dan klasik, scroll mouse, klik poligon Manado, navigasi kecamatan dan desa, serta kembali dua kali. CI browser menambahkan pemeriksaan rekonsiliasi ranking.
 
 ## 2026-11-11T18:51:40+07:00 — Agent-Opencode — I2c/PR112: pembatalan reversal wajib pasangan unik
 **Berubah:** `addons/id_finance_reporting/models/ledger_schedules.py` (`_split_reversal_pairs` mengembalikan `(pairs, singles, ambiguous)`; pembatalan hanya bila dua partial saling menjadi satu-satunya kandidat dalam komponen hubungannya; selain itu seluruh baris tetap dihitung dan masuk `reversal_exceptions` sebagai `multiple_reversal_candidates` dengan daftar kandidat per partial); `tests/test_finance_i2c_schedules.py` (106 tes, termasuk uji independensi urutan [1,2,3] vs [3,2,1]); `docs/finance/I2C_DISCOVERY_ADR.md` (syarat keunikan pasangan).
