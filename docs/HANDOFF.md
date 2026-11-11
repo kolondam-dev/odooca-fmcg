@@ -1,3 +1,9 @@
+## 2026-11-11T16:30:00+07:00 — claude-design — Fase 3B-3a: Closing trip (Akhiri trip) sesuai mockup
+
+**Berubah:** kartu closing lama diganti kartu "Akhiri trip" + layar penuh "Akhiri trip · <trip>" (Pengiriman, Penerimaan uang, Biaya trip, Tiba di kantor, Catatan opsional); payload `delivery.trip.close` menerima `note` opsional; openapi diekspor ulang; tes next-policy disesuaikan. K17 dicatat di DS_RECONCILIATION.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 474, e2e phone+tablet 186 lulus. **Belum diuji:** [BU] CI GitHub.
+**Belum dikerjakan:** Setor_uang (58) dan Biaya_toko (57) butuh kontrak perintah baru (setoran kasir; biaya operasional toko per komponen + foto nota) — perlu keputusan bentuk payload bersama agen backend; Foto penutup trip butuh paket bukti di payload closing.
+
 ## 2026-11-11T09:00:00+07:00 — claude-design — PR #114: ringkasan revisi order + sinkron main
 
 **Berubah:** `orderSummary` (Selesai kunjungan) kini mengikuti rantai `sales.order.revise` (root_uuid/supersedes_uuid) dan memakai revisi terbaru: root ditolak Rp100 → revisi diterima Rp150 tampil Rp150 / Diposting. Tes unit baru. Merge `origin/main` (konflik hanya HANDOFF).

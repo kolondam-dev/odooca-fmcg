@@ -1,5 +1,16 @@
 import { useEffect, useState } from "preact/hooks";
 import {
+    Button,
+    Callout,
+    Card,
+    CardHead,
+    ListRow,
+    Screen,
+    ScreenHeader,
+    Textarea,
+} from "../ui";
+import { useBackLayer } from "../ui/navigation";
+import {
     TripCloseSchema,
     DEMO_OFFICE,
     tripCloseKey,
@@ -16,6 +27,7 @@ import {
 import { CommandSchema, ownerKey, type Identity } from "../domain/contracts";
 import type { FieldStore, QueueItem } from "../storage/store";
 import type { Outbox } from "../domain/outbox";
+const rupiah = (n: number) => `Rp ${Math.round(n).toLocaleString("id-ID")}`;
 export function TripClosing({
     store,
     identity,
@@ -36,7 +48,9 @@ export function TripClosing({
             ...new Set(morning?.deliveryManifest?.map((t) => t.trip) ?? []),
         ];
     const [message, setMessage] = useState(""),
-        [busy, setBusy] = useState(false);
+        [busy, setBusy] = useState(false),
+        [open, setOpen] = useState<string>(),
+        [note, setNote] = useState("");
     const [closed, setClosed] = useState<Record<string, boolean>>({});
     useEffect(() => {
         let active = true;
@@ -82,6 +96,7 @@ export function TripClosing({
         };
     }, [owner, morning, queue]);
     async function close(trip: string) {
+        const closingNote = note.trim();
         setBusy(true);
         setMessage("");
         try {
@@ -102,6 +117,7 @@ export function TripClosing({
                     office: DEMO_OFFICE,
                     fix,
                     pod_uuids: pods.map((r) => r.command.client_uuid).sort(),
+                    ...(closingNote ? { note: closingNote } : {}),
                     ...(daily
                         .deliveryManifest!.filter((t) => t.trip === trip)
                         .every((t) => t.site.demo_unrestricted)
@@ -140,37 +156,146 @@ export function TripClosing({
             setBusy(false);
         }
     }
+    const rows = queue.filter((q) => q?.owner === owner);
+    const sum = (type: string, pick: (p: Record<string, unknown>) => number) =>
+        rows
+            .filter((q) => q?.command?.type === type)
+            .reduce(
+                (a, q) =>
+                    a +
+                    pick((q.command.payload ?? {}) as Record<string, unknown>),
+                0,
+            );
+    const money = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+    const cash = sum("collection.receipt.submit", (p) =>
+        p.method === "cash" ? money(p.amount) : 0,
+    );
+    const transfer = sum("collection.receipt.submit", (p) =>
+        p.method === "transfer" ? money(p.amount) : 0,
+    );
+    const podCount = (trip: string) =>
+        morning?.deliveryManifest?.filter((t) => t.trip === trip).length ?? 0;
+    const tripCost = (trip: string) =>
+        sum("field_expense.request", (p) =>
+            p.trip_id === trip ? money(p.amount) : 0,
+        );
+    useBackLayer(!!open, () => setOpen(undefined));
     if (!trips.length) return null;
     return (
-        <section class="paper-card">
-            <h3>Closing trip · tiba di kantor</h3>
-            <p>
-                Kantor contoh radius30m + toleransi25m. Aturan geofence
-                disimpan, tidak memblokir validasi lokasi. Selesaikan semua
-                hasil DO dan tutup sesi aktif dahulu; pending approval boleh
-                tercatat, bukan dianggap disetujui.
-            </p>
-            {trips.map((trip) => (
-                <p key={trip}>
-                    {trip} ·{" "}
-                    {closed[trip] ? (
-                        "Trip closed lokal"
-                    ) : (
-                        <button
-                            class="secondary"
-                            disabled={busy}
-                            onClick={() => void close(trip)}
-                        >
-                            Tutup trip
-                        </button>
-                    )}
-                </p>
-            ))}
-            <p>
-                Serah-terima kasir di luar scope PWA. Backlog: upload resi
-                uang/cek ke kasir, faktur ke admin, retur ke SPV gudang.
-            </p>
-            {message && <p role="status">{message}</p>}
-        </section>
+        <>
+            <Card>
+                <CardHead title="Akhiri trip" />
+                {trips.map((trip) => (
+                    <ListRow
+                        key={trip}
+                        icon="truck"
+                        title={trip}
+                        sub={`${podCount(trip)} pengiriman · tutup setelah semua DO selesai`}
+                        status={
+                            closed[trip]
+                                ? { tone: "ok", label: "Closed lokal" }
+                                : { tone: "info", label: "Belum ditutup" }
+                        }
+                        onClick={() => setOpen(trip)}
+                        divider
+                    />
+                ))}
+            </Card>
+            {open ? (
+                <Screen
+                    label={`Akhiri trip · ${open}`}
+                    class="ui-screen--over ui-screen--top"
+                    header={
+                        <ScreenHeader
+                            title={`Akhiri trip · ${open}`}
+                            onBack={() => setOpen(undefined)}
+                        />
+                    }
+                    footer={
+                        closed[open] ? (
+                            <Button
+                                variant="sec"
+                                onClick={() => setOpen(undefined)}
+                            >
+                                Kembali
+                            </Button>
+                        ) : (
+                            <Button
+                                icon="check"
+                                disabled={busy}
+                                onClick={() => void close(open)}
+                            >
+                                {busy ? "Menyimpan…" : "Akhiri trip"}
+                            </Button>
+                        )
+                    }
+                >
+                    <Card tight>
+                        <ListRow
+                            icon="truck"
+                            title="Pengiriman"
+                            sub={`${podCount(open)} DO di trip ini`}
+                            status={
+                                closed[open]
+                                    ? { tone: "ok", label: "Selesai" }
+                                    : {
+                                          tone: "neu",
+                                          label: "Dicek saat akhiri",
+                                      }
+                            }
+                        />
+                        <ListRow
+                            icon="wallet"
+                            title="Penerimaan uang"
+                            sub="Tunai + transfer (lokal)"
+                            status={{
+                                tone: "info",
+                                label: rupiah(cash + transfer),
+                            }}
+                            divider
+                        />
+                        <ListRow
+                            icon="receipt"
+                            title="Biaya trip"
+                            sub="Pengajuan uang lapangan trip ini"
+                            status={{
+                                tone: "info",
+                                label: rupiah(tripCost(open)),
+                            }}
+                            divider
+                        />
+                        <ListRow
+                            icon="pin"
+                            title="Tiba di kantor"
+                            sub="Lokasi dicatat saat Akhiri trip"
+                            status={
+                                closed[open]
+                                    ? { tone: "ok", label: "OK" }
+                                    : { tone: "neu", label: "Belum" }
+                            }
+                            divider
+                        />
+                    </Card>
+                    {!closed[open] ? (
+                        <Textarea
+                            label="Catatan penutupan (opsional)"
+                            value={note}
+                            onInput={setNote}
+                            maxLength={500}
+                        />
+                    ) : null}
+                    {message ? (
+                        <Callout tone={closed[open] ? "info" : "warn"} alert>
+                            {message}
+                        </Callout>
+                    ) : null}
+                    <Callout tone="neu">
+                        Serah-terima kasir di luar scope PWA. Backlog: upload
+                        resi uang/cek ke kasir, faktur ke admin, retur ke SPV
+                        gudang.
+                    </Callout>
+                </Screen>
+            ) : null}
+        </>
     );
 }
