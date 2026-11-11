@@ -15,6 +15,7 @@ export class GeoMap extends VisualComponent {
         legend: { type: String, optional: true },
         crumbs: { type: Array, optional: true },
         onEvent: { type: Function, optional: true },
+        geographic: { type: Boolean, optional: true },
         onDrill: { type: Function, optional: true },
     };
     setup() {
@@ -40,10 +41,10 @@ export class GeoMap extends VisualComponent {
         if (command === "out") this.zoom(1.25);
         if (command === "reset") this.view.vb = [0, 0, 250, 278.1];
         const code = ev.target.closest("[data-code]")?.dataset.code;
-        if (code) this.props.onDrill?.({ dimension: "city_code", code });
+        if (code) this.props.onDrill?.({ dimension: "city_code", code, name: this.regionName(code) });
     }
     startPan(ev) {
-        if (ev.button !== 0 || ev.target.closest("button")) return;
+        if (ev.button !== 0 || ev.target.closest("button, [data-code]")) return;
         this.drag = { x: ev.clientX, y: ev.clientY, vb: [...this.view.vb] };
         ev.currentTarget.setPointerCapture?.(ev.pointerId);
     }
@@ -62,7 +63,21 @@ export class GeoMap extends VisualComponent {
         this.drag = null;
     }
     mapKey(ev) {
-        if (ev.key === "Enter" || ev.key === " ") this.mapClick(ev);
+        if (ev.target.closest("[data-code]") && (ev.key === "Enter" || ev.key === " ")) {
+            ev.preventDefault();
+            this.mapClick(ev);
+        }
+    }
+    regionName(code) {
+        const names = {
+            "71.01": "Bolaang Mongondow", "71.02": "Minahasa", "71.03": "Kepulauan Sangihe",
+            "71.04": "Kepulauan Talaud", "71.05": "Minahasa Selatan", "71.06": "Minahasa Utara",
+            "71.07": "Minahasa Tenggara", "71.08": "Bolaang Mongondow Utara",
+            "71.09": "Kepulauan Siau Tagulandang Biaro", "71.10": "Bolaang Mongondow Timur",
+            "71.11": "Bolaang Mongondow Selatan", "71.71": "Manado", "71.72": "Bitung",
+            "71.73": "Tomohon", "71.74": "Kotamobagu",
+        };
+        return names[code] || code;
     }
     static template = "id_dashboard_ui.GeoMap";
     renderVals() {

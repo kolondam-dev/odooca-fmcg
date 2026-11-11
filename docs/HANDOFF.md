@@ -1,3 +1,9 @@
+## 2026-11-11T19:04:48+07:00 — Codex-Dashboard — Scroll dan drill-down peta D1
+
+**Berubah:** Kontainer aksi D1 dapat digulir. Peta dan ranking mengikuti kabupaten/kota → kecamatan → kelurahan/desa, dengan tombol kembali satu tingkat. Ranking memakai periode, filter, dan akses penjualan D1.
+
+**Diverifikasi:** [F] Playwright lokal dengan Odoo 19, mode sidebar dan klasik, scroll mouse, klik poligon Manado, navigasi kecamatan dan desa, serta kembali dua kali. CI browser menambahkan pemeriksaan rekonsiliasi ranking.
+
 ## 2026-11-11T17:00:00+07:00 — claude-design — PR #116: perbaikan review Akhiri trip
 
 **Berubah:** ringkasan Penerimaan uang/Biaya trip dibatasi per trip (`source.delivery.trip` / `trip_id`), hari kerja aktif (WITA), status bukan `rejected`, kuitansi yang dikoreksi (`supersedes_uuid`) tidak dihitung, dan biaya hanya dengan `scheduled_date` hari kerja (ID trip yang dipakai ulang tidak tercampur) — logika di `domain/trip-summary.ts` + tes unit. Handler Odoo `delivery.trip.close` kini memvalidasi `note` (≤500) dan mencatatnya di pesan receipt; payload tetap tersimpan pada perintah.
