@@ -204,6 +204,7 @@ class DashboardBridge(models.AbstractModel):
         total = {"gross": 0., "net": 0., "discount": 0., "orders": len(orders)}
         buckets = {key: defaultdict(float) for key in ("principal", "channel", "area", "city", "salesman")}
         geo = defaultdict(lambda: defaultdict(float))
+        geo_partners = defaultdict(lambda: defaultdict(set))
         daily = defaultdict(lambda: {"net": 0., "gross": 0., "discount": 0.})
         daily_orders = defaultdict(int)
         for order in orders:
@@ -234,9 +235,11 @@ class DashboardBridge(models.AbstractModel):
                 village = partner.subdistrict_id
                 if city_code:
                     geo[city_code][district_code or ""] += net
+                    geo_partners[city_code][district_code or ""].add(partner.id)
                 if district_code:
                     village_code = village.kode_kemendagri if village.district_id == district else ""
                     geo[district_code][village_code or ""] += net
+                    geo_partners[district_code][village_code or ""].add(partner.id)
             for key in buckets:
                 path = DIMENSIONS[key][0]
                 record = line.mapped(path)
@@ -326,6 +329,10 @@ class DashboardBridge(models.AbstractModel):
             result["salesmen" if key == "salesman" else key] = rows
         # Reconcile targets only when their exact dated, independent partition covers the selected scope.
         result["geo"] = {parent: dict(amounts) for parent, amounts in geo.items()}
+        result["geo_partners"] = {
+            parent: {code: sorted(ids) for code, ids in rows.items()}
+            for parent, rows in geo_partners.items()
+        }
         result["target"] = self._target(start, end, orders, filters, total["net"])
         # Refund revenue is a separate accounting-date amount. It is not subtracted from SO net.
         result["refund"] = self._refund(start, end, line_filter)

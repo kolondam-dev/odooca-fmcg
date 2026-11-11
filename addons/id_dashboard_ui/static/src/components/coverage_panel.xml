@@ -35,7 +35,10 @@
                     <button t-if="row.code" class="btn btn-link btn-sm p-0 text-start" t-on-click="() => this.descend(row)" t-out="row.name"/>
                     <span t-else="" t-out="row.name"/>
                   </td>
-                  <td class="text-end text-nowrap"><t t-out="row.value"/> · <t t-out="row.share"/></td>
+                  <td class="text-end text-nowrap"><t t-out="row.value"/> · <t t-out="row.share"/>
+                    <button t-if="sourceIds(row.code).length" type="button" class="btn btn-link btn-sm"
+                            t-att-aria-label="'Source documents: ' + row.name" t-on-click="() => this.openSource(row.code)">Orders</button>
+                  </td>
                 </tr>
               </tbody>
             </table>

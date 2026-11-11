@@ -4,4 +4,14 @@
     <field name="name">Sales Performance &amp; Salesforce Productivity</field>
     <field name="tag">id_dashboard_redesign.d1</field>
   </record>
+  <record id="action_dashboard_default" model="ir.actions.client">
+    <field name="name">Dashboards</field>
+    <field name="tag">id_dashboard_redesign.default</field>
+  </record>
+  <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu">
+    <field name="action" eval="'ir.actions.client,%d' % ref('action_dashboard_default')"/>
+  </record>
+  <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_dashboard" model="ir.ui.menu">
+    <field name="action" eval="'ir.actions.client,%d' % ref('action_dashboard_default')"/>
+  </record>
 </odoo>

@@ -83,6 +83,16 @@ export class CoveragePanel extends Chart {
             share: total ? this.num(row.net / total * 100) + "%" : "—",
         }));
     }
+    sourceIds(code) {
+        return this.props.geoPartners?.[this.level.code]?.[code] || [];
+    }
+    openSource(code) {
+        const ids = this.sourceIds(code);
+        if (ids.length) this.props.onDrill?.({
+            model: "sale.order.line",
+            domain: [...this.props.geoDomain, ["order_id.partner_id", "in", ids]],
+        });
+    }
     fill(code) {
         if (code === this.geo.selected) return "var(--dk)";
         const amount = this.amounts[code] || 0;
