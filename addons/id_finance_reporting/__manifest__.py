@@ -1,7 +1,7 @@
 {
     "name": "FMCG Finance Reporting Boundaries",
     "summary": "Server-side role and company boundaries for OCA Trial Balance",
-    "version": "19.0.1.2.0",
+    "version": "19.0.1.3.0",
     "category": "Accounting",
     "license": "LGPL-3",
     "author": "kolondam-dev",

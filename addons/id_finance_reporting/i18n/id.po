@@ -108,3 +108,20 @@ msgstr "Tanggal posisi harus sama dengan atau setelah tanggal mulai opsional."
 #: code:addons/id_finance_reporting/models/subledger_reports.py:0
 msgid "Aging bucket edges must be positive and strictly increasing."
 msgstr "Batas interval aging harus positif dan naik secara ketat."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/schedule_reports.py:0
+msgid "Select a single as-of date for schedule reports."
+msgstr "Pilih satu tanggal posisi untuk laporan jadwal."
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/schedule_reports.py:0
+msgid "Selected partner does not exist."
+msgstr "Partner yang dipilih tidak ada."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/models/schedule_reports.py:0
+msgid "Selected partner belongs to another company."
+msgstr "Partner yang dipilih milik perusahaan lain."
