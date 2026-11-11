@@ -2669,21 +2669,9 @@ class CanonicalPerpetualAdapter:
                         all_lines = (all_lines | other) if hasattr(all_lines, "__or__") else (all_lines + other)
 
                     if hasattr(all_lines, "filtered"):
-                        target_account_id = None
-                        for line in inv_l:
-                            if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable":
-                                target_account_id = line.account_id.id
-                                break
-                        if not target_account_id:
-                            for line in pay_l:
-                                if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable":
-                                    target_account_id = line.account_id.id
-                                    break
-
                         lines_to_rec = all_lines.filtered(
-                            lambda line: getattr(line, "account_id", None)
-                            and (line.account_id.id == target_account_id if target_account_id else True)
-                            and getattr(line.account_id, "account_type", "") == "asset_receivable"
+                            lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                            == "asset_receivable"
                             and not getattr(line, "reconciled", False)
                         )
                         # Self-healing: jika payment belum reconciled tapi invoice sudah bertanda reconciled
@@ -2694,9 +2682,8 @@ class CanonicalPerpetualAdapter:
                         )
                         if len(lines_to_rec) < 2 and has_unrec:
                             lines_to_rec = all_lines.filtered(
-                                lambda line: getattr(line, "account_id", None)
-                                and (line.account_id.id == target_account_id if target_account_id else True)
-                                and getattr(line.account_id, "account_type", "") == "asset_receivable"
+                                lambda line: getattr(getattr(line, "account_id", None), "account_type", "")
+                                == "asset_receivable"
                             )
 
                         if len(lines_to_rec) >= 2:
