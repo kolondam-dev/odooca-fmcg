@@ -1,3 +1,22 @@
+## 2026-11-11T15:02:00+07:00 — antigravity — F4: Resolusi Field Odoo 19 `tax_ids` & `memo` serta Invalidation Cache Pasca-Rollback (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menyesuaikan penetapan pajak baris SO secara adaptif (`tax_id`, `tax_ids`, atau `taxes_id` pada `sale.order.line._fields`), menyelesaikan `ValueError: Invalid field 'tax_id' on model 'sale.order.line'`.
+  - Menambahkan helper `_find_payment` yang mendukung pencarian `memo` native Odoo 19 di samping `ref` legacy/mock dan `move_id.ref`, menyelesaikan `ValueError: Invalid field account.payment.ref in condition ('ref', '=', 'PAY-AP-05')`.
+  - Mengisi `memo` dan `ref` saat create payment AR dan AP.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Menambahkan `_find_payment` pada pencarian `matching_ap_pay` audit.
+  - Memanggil `env.invalidate_all()` pasca-eksekusi `ROLLBACK TO SAVEPOINT` pada `probe_batch_fault` dan `probe_ap_tamper`. Menghilangkan retensi residu utang Rp 500,00 di cache in-memory Python Odoo ORM yang sebelumnya memicu `PreflightContinuityError` pada replay lanjutan.
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 5.7s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T14:24:00+07:00 — antigravity — F4: Resolusi Adaptif Vendor Partner Unilever & Binding AP Reconciled Payment (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

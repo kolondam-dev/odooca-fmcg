@@ -100,6 +100,52 @@ def _find_unilever_partner(Partner: Any) -> Any:
     return p
 
 
+def _find_payment(AccountPayment: Any, company_id: Any, pay_refs: list[str], payment_type: str = None) -> Any:
+    """Find account.payment robustly across Odoo 19 (memo) and mock/legacy (ref) fields."""
+    p_fields = getattr(AccountPayment, "_fields", None)
+    base_domain = []
+    if company_id:
+        base_domain.append(("company_id", "=", company_id))
+    if payment_type:
+        base_domain.append(("payment_type", "=", payment_type))
+
+    # 1. Search by memo if supported (Odoo 19 native)
+    if p_fields is None or "memo" in p_fields:
+        for r in pay_refs:
+            try:
+                pay = AccountPayment.search(base_domain + [("memo", "=", r)], limit=1)
+                if pay:
+                    return pay
+            except Exception:
+                pass
+
+    # 2. Search by ref if supported (Odoo legacy / mock)
+    if p_fields is None or "ref" in p_fields:
+        for r in pay_refs:
+            try:
+                pay = AccountPayment.search(base_domain + [("ref", "=", r)], limit=1)
+                if pay:
+                    return pay
+            except Exception:
+                pass
+
+    # 3. Search via move_id.ref if linked to account.move
+    if hasattr(AccountPayment, "env") and "account.move" in AccountPayment.env:
+        try:
+            AccountMove = AccountPayment.env["account.move"].sudo()
+            for r in pay_refs:
+                move = AccountMove.search([("ref", "=", r)], limit=1)
+                if move:
+                    if p_fields is None or "move_id" in p_fields:
+                        pay = AccountPayment.search(base_domain + [("move_id", "=", move.id)], limit=1)
+                        if pay:
+                            return pay
+        except Exception:
+            pass
+
+    return None
+
+
 class ManifestVerificationError(Exception):
     """Raised when pack directory fails manifest integrity or checksum verification."""
 
@@ -500,14 +546,11 @@ class GenericPeriodPackLoader:
                 # Case 2: Replay baseline -> bill is already paid. ACCEPT ONLY IF exact reconciled August payment exists!
                 elif bill_state in ("paid", "in_payment") and bill_res <= Decimal("1.00"):
                     AccountPayment = self.env["account.payment"].sudo()
-                    reconciled_pay = AccountPayment.search(
-                        [
-                            ("company_id", "=", self.company.id),
-                            ("ref", "in", ["PAY-AP-05", "AP-202608-0001"]),
-                            ("payment_type", "=", "outbound"),
-                            ("state", "=", "posted"),
-                        ],
-                        limit=1,
+                    reconciled_pay = _find_payment(
+                        AccountPayment,
+                        self.company.id,
+                        ["PAY-AP-05", "AP-202608-0001"],
+                        payment_type="outbound",
                     )
                     if not reconciled_pay:
                         reconciled_pay = AccountPayment.search(
@@ -1041,9 +1084,7 @@ class GenericPeriodPackLoader:
         AccountPayment = self.env["account.payment"].sudo()
         for ar_row in self.reader.ar_collections:
             pay_ref = ar_row["payment_id"]
-            existing = AccountPayment.search(
-                [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
-            )
+            existing = _find_payment(AccountPayment, self.company.id, [pay_ref], payment_type="inbound")
             if existing:
                 try:
                     self._validate_existing_ar_payment(existing, ar_row)
@@ -1085,9 +1126,7 @@ class GenericPeriodPackLoader:
         unilever_bill = all_unilever_bills[0] if all_unilever_bills else None
         for ap_row in self.reader.ap_payments:
             pay_ref = ap_row["ap_payment_id"]
-            existing = AccountPayment.search(
-                [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
-            )
+            existing = _find_payment(AccountPayment, self.company.id, [pay_ref], payment_type="outbound")
             if existing:
                 try:
                     self._validate_existing_ap_payment(existing, ap_row, unilever_bill)
@@ -1384,8 +1423,16 @@ class GenericPeriodPackLoader:
                     "product_uom_qty": float(lrow["qty_cartons"]) * float(lrow["carton_qty"]),
                     "price_unit": float(lrow["unit_price_dpp"]),
                     "discount": float(lrow.get("discount_pct", 0.0)),
-                    "tax_id": [(6, 0, [canonical_tax_04.id])],
                 }
+                sol_fields = getattr(self.env.get("sale.order.line"), "_fields", None)
+                if sol_fields is None:
+                    sol_vals["tax_id"] = [(6, 0, [canonical_tax_04.id])]
+                elif "tax_id" in sol_fields:
+                    sol_vals["tax_id"] = [(6, 0, [canonical_tax_04.id])]
+                elif "tax_ids" in sol_fields:
+                    sol_vals["tax_ids"] = [(6, 0, [canonical_tax_04.id])]
+                elif "taxes_id" in sol_fields:
+                    sol_vals["taxes_id"] = [(6, 0, [canonical_tax_04.id])]
                 sol_data.append((0, 0, sol_vals))
             so_vals["order_line"] = sol_data
             so_rec = SaleOrder.create(so_vals)
@@ -1473,9 +1520,7 @@ class GenericPeriodPackLoader:
             inv_num = ar_row["invoice_number"]
             amt = float(ar_row["net_cash_collected_total"])
 
-            existing = AccountPayment.search(
-                [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
-            )
+            existing = _find_payment(AccountPayment, self.company.id, [pay_ref], payment_type="inbound")
             if existing:
                 self._validate_existing_ar_payment(existing, ar_row)
                 continue
@@ -1507,10 +1552,19 @@ class GenericPeriodPackLoader:
                     "amount": amt,
                     "date": ar_row["payment_date"],
                     "journal_id": bank_journal.id,
-                    "ref": pay_ref,
                     "company_id": self.company.id,
                 }
+                pay_fields = getattr(AccountPayment, "_fields", None)
+                if pay_fields is None or "memo" in pay_fields:
+                    pay_vals["memo"] = pay_ref
+                if pay_fields is None or "ref" in pay_fields:
+                    pay_vals["ref"] = pay_ref
                 payment = AccountPayment.create(pay_vals)
+                if hasattr(payment, "move_id") and payment.move_id and not getattr(payment.move_id, "ref", None):
+                    try:
+                        payment.move_id.write({"ref": pay_ref})
+                    except Exception:
+                        pass
                 payment.action_post()
 
                 # Reconcile lines
@@ -1603,9 +1657,7 @@ class GenericPeriodPackLoader:
                 )
             bill = all_matching_bills[0] if all_matching_bills else None
 
-            existing = AccountPayment.search(
-                [("company_id", "=", self.company.id), ("ref", "=", pay_ref)], limit=1
-            )
+            existing = _find_payment(AccountPayment, self.company.id, [pay_ref], payment_type="outbound")
             if existing:
                 self._validate_existing_ap_payment(existing, ap_row, bill)
                 continue
@@ -1631,10 +1683,19 @@ class GenericPeriodPackLoader:
                 "amount": amt,
                 "date": ap_row["payment_date"],
                 "journal_id": bank_journal.id,
-                "ref": pay_ref,
                 "company_id": self.company.id,
             }
+            pay_fields = getattr(AccountPayment, "_fields", None)
+            if pay_fields is None or "memo" in pay_fields:
+                pay_vals["memo"] = pay_ref
+            if pay_fields is None or "ref" in pay_fields:
+                pay_vals["ref"] = pay_ref
             payment = AccountPayment.create(pay_vals)
+            if hasattr(payment, "move_id") and payment.move_id and not getattr(payment.move_id, "ref", None):
+                try:
+                    payment.move_id.write({"ref": pay_ref})
+                except Exception:
+                    pass
             payment.action_post()
 
             # Reconcile lines

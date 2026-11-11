@@ -2390,3 +2390,16 @@
   * Memastikan deteksi edge rekonsiliasi dan verifikasi status lunas bill Unilever Juli PO-2026-06-05 berjalan zero-drift tanpa error.
 - Verifikasi Penuh: test_period_pack_loader (49 tests PASS in 8.1s); check_manifests 14 addon OK. Zero touch live Railway.
 - Task managed by antigravity at 2026-11-11T14:24:00+07:00
+
+[2026-11-11T15:02:00+07:00] [INFO] F4: Resolusi Field Odoo 19 tax_ids & memo serta Invalidation Cache Pasca-Rollback
+- Resolusi Field Pajak Penjualan Odoo 19 pada sale.order.line:
+  * Memperbaiki penetapan pajak pada baris SO di scripts/ops/load_period_pack.py secara adaptif (memeriksa `tax_id`, `tax_ids`, atau `taxes_id` pada `sale.order.line._fields`).
+  * Mengeliminasi error Odoo 19 `ValueError: Invalid field 'tax_id' on model 'sale.order.line'` pada saat fault-injection SO probe.
+- Resolusi Field Referensi Pembayaran Odoo 19 pada account.payment:
+  * Menambahkan helper `_find_payment` di load_period_pack.py dan verify_disposable_period_pack.py yang mencari pembayaran melalui `memo` (Odoo 19 native), `ref` (legacy/mock), dan `move_id.ref`.
+  * Mengisi `memo` dan `ref` saat create payment, mengeliminasi error `ValueError: Invalid field account.payment.ref in condition ('ref', '=', 'PAY-AP-05')`.
+- Sinkronisasi Memory Cache ORM Pasca-Rollback Savepoint:
+  * Menambahkan `env.invalidate_all()` pasca-eksekusi `ROLLBACK TO SAVEPOINT` pada `probe_batch_fault` dan `probe_ap_tamper`.
+  * Mencegah retensi nilai sisa utang yang di-tamper (Rp 500,00) di in-memory cache ORM Python saat skenario replay berlanjut, sehingga baseline vendor bill Juli kembali terbaca utuh (Rp 2.899.971.200,00).
+- Verifikasi Penuh: test_period_pack_loader (49 tests PASS in 5.7s); check_manifests 14 addon OK. Zero touch live Railway.
+- Task managed by antigravity at 2026-11-11T15:02:00+07:00

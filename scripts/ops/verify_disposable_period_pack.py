@@ -106,6 +106,52 @@ def assert_disposable_database(env: Any) -> str:
     return assert_disposable_database_name(db_name)
 
 
+def _find_payment(AccountPayment: Any, company_id: Any, pay_refs: list[str], payment_type: str = None) -> Any:
+    """Find account.payment robustly across Odoo 19 (memo) and mock/legacy (ref) fields."""
+    p_fields = getattr(AccountPayment, "_fields", None)
+    base_domain = []
+    if company_id:
+        base_domain.append(("company_id", "=", company_id))
+    if payment_type:
+        base_domain.append(("payment_type", "=", payment_type))
+
+    # 1. Search by memo if supported (Odoo 19 native)
+    if p_fields is None or "memo" in p_fields:
+        for r in pay_refs:
+            try:
+                pay = AccountPayment.search(base_domain + [("memo", "=", r)], limit=1)
+                if pay:
+                    return pay
+            except Exception:
+                pass
+
+    # 2. Search by ref if supported (Odoo legacy / mock)
+    if p_fields is None or "ref" in p_fields:
+        for r in pay_refs:
+            try:
+                pay = AccountPayment.search(base_domain + [("ref", "=", r)], limit=1)
+                if pay:
+                    return pay
+            except Exception:
+                pass
+
+    # 3. Search via move_id.ref if linked to account.move
+    if hasattr(AccountPayment, "env") and "account.move" in AccountPayment.env:
+        try:
+            AccountMove = AccountPayment.env["account.move"].sudo()
+            for r in pay_refs:
+                move = AccountMove.search([("ref", "=", r)], limit=1)
+                if move:
+                    if p_fields is None or "move_id" in p_fields:
+                        pay = AccountPayment.search(base_domain + [("move_id", "=", move.id)], limit=1)
+                        if pay:
+                            return pay
+        except Exception:
+            pass
+
+    return None
+
+
 class PeriodPackOracle:
     """Independent oracle deriving expected database states directly from pack files."""
 
@@ -613,14 +659,11 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             )
 
         AccountPayment = env["account.payment"].sudo()
-        matching_ap_pay = AccountPayment.search(
-            [
-                ("company_id", "=", company.id),
-                ("ref", "in", ["PAY-AP-05", "AP-202608-0001"]),
-                ("payment_type", "=", "outbound"),
-                ("state", "=", "posted"),
-            ],
-            limit=1,
+        matching_ap_pay = _find_payment(
+            AccountPayment,
+            company.id,
+            ["PAY-AP-05", "AP-202608-0001"],
+            payment_type="outbound",
         )
         if not matching_ap_pay:
             report["violations"].append("Reconciled AP payment (PAY-AP-05 / AP-202608-0001) for July Unilever bill not found")
@@ -1168,6 +1211,7 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
     snap_before = capture_period_state_snapshot(env)
 
     # Probe 1: Real Batch SO Mutation with Injected Corrupted SKU -> Rollback -> Clean Recovery
+    loader_probe = None
     try:
         cr.execute("SAVEPOINT probe_batch_fault")
         loader_probe = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
@@ -1244,6 +1288,8 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
 
             cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
             cr.execute("RELEASE SAVEPOINT probe_batch_fault")
+            if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+                env.invalidate_all()
 
             post_rollback_so = SaleOrder.search([("client_order_ref", "=", valid_so_num)], limit=1)
             rollback_clean = (post_rollback_so is None or not post_rollback_so.exists())
@@ -1283,6 +1329,8 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
         except Exception as e:
             cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
             cr.execute("RELEASE SAVEPOINT probe_batch_fault")
+            if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+                env.invalidate_all()
             snap_after = capture_period_state_snapshot(env)
             results["probes"]["probe_batch_interruption"] = {
                 "outcome": "FAIL",
@@ -1295,6 +1343,11 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
             "detail": f"FAILED_SETUP_ERROR: {e}",
             "digest_matched": False,
         }
+    finally:
+        if loader_probe and hasattr(loader_probe, "reader"):
+            loader_probe.reader.clear_overrides()
+        if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+            env.invalidate_all()
 
     # Probe 2: Mismatched AP Payment Target & Residual Tampering -> Rollback -> Real AP Recovery
     try:
@@ -1326,6 +1379,8 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
             except (PreflightContinuityError, StateInconsistencyError) as e:
                 cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
                 cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
+                if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+                    env.invalidate_all()
                 snap_after2 = capture_period_state_snapshot(env)
                 digest_matched2 = (snap_before["digest"] == snap_after2["digest"])
                 err_msg = str(e).lower()
@@ -1359,6 +1414,8 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
             except Exception as e:
                 cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
                 cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
+                if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+                    env.invalidate_all()
                 snap_after2 = capture_period_state_snapshot(env)
                 results["probes"]["probe_ap_bill_mismatch"] = {
                     "outcome": "FAIL",
@@ -1368,6 +1425,8 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
         else:
             cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
             cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
+            if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+                env.invalidate_all()
             results["probes"]["probe_ap_bill_mismatch"] = {
                 "outcome": "FAIL",
                 "detail": "FAILED_NO_UNILEVER_BILL_FOUND",
@@ -1379,6 +1438,9 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
             "detail": f"FAILED_SETUP_ERROR: {e}",
             "digest_matched": False,
         }
+    finally:
+        if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+            env.invalidate_all()
 
     all_probes_passed = True
     for p_name, p_res in results["probes"].items():
