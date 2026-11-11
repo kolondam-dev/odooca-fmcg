@@ -5,7 +5,11 @@ import {
     type FieldProvider,
     type Identity,
 } from "./contracts";
-import { ExpenseRequestSchema, type ExpenseRequest } from "./expense";
+import {
+    ExpenseRequestSchema,
+    needsRequestOdometer,
+    type ExpenseRequest,
+} from "./expense";
 import { fieldBusinessDate } from "./morning";
 import {
     ExpensePolicySchema,
@@ -34,7 +38,9 @@ export function approvalRoles(
         }).success
     )
         throw new Error("Policy atau nominal tidak valid.");
-    return category === "fuel_emergency" || amount > Number(limit)
+    return category === "fuel_emergency" ||
+        category === "emergency" ||
+        amount > Number(limit)
         ? ["supervisor", "branch_manager"]
         : ["supervisor"];
 }
@@ -77,7 +83,7 @@ function requestFrom(item: QueueItem, owner: string) {
     if (
         (request.expense_scope === "delivery") !== !!request.delivery_id ||
         (request.expense_scope === "outlet") !== !!request.outlet_id ||
-        (request.category.startsWith("fuel") && request.odometer === null)
+        (needsRequestOdometer(request.category) && request.odometer === null)
     )
         throw new Error("Konteks pengajuan biaya tidak valid.");
     return request;
@@ -173,7 +179,8 @@ export function validateRealization(
                 "Total struk BBM harus sesuai liter × harga per liter (dibulatkan ke rupiah).",
             );
         if (
-            fuel.odometer_before < request.odometer! ||
+            (request.odometer !== null &&
+                fuel.odometer_before < request.odometer) ||
             fuel.odometer_after < fuel.odometer_before
         )
             throw new Error(
