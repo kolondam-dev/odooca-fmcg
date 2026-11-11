@@ -18,7 +18,7 @@ def realized_partial(partial, debit_leg, credit_leg, round_amount=lambda v: roun
     rate_debit = debit_leg["balance"] / debit_leg["amount_currency"]
     rate_credit = credit_leg["balance"] / credit_leg["amount_currency"]
     functional_debit = partial["debit_amount_currency"] * rate_debit
-    functional_credit = -partial["credit_amount_currency"] * rate_credit
+    functional_credit = abs(partial["credit_amount_currency"]) * rate_credit
     return round_amount(functional_debit - functional_credit)
 
 
@@ -62,7 +62,7 @@ def exchange_difference_move(residual):
 class RealizedFxTests(unittest.TestCase):
     def test_gain_when_payment_rate_is_higher(self):
         # Invoice 100 USD @15,000 = 1,500,000; paid 100 USD @16,000 = 1,600,000.
-        partial = {"debit_amount_currency": 100.0, "credit_amount_currency": -100.0}
+        partial = {"debit_amount_currency": 100.0, "credit_amount_currency": 100.0}
         result = realized_partial(
             partial,
             {"balance": 1_500_000.0, "amount_currency": 100.0},
@@ -71,7 +71,7 @@ class RealizedFxTests(unittest.TestCase):
         self.assertEqual(result, -100_000.0, "payment at a higher rate must be a gain")
 
     def test_loss_when_payment_rate_is_lower(self):
-        partial = {"debit_amount_currency": 100.0, "credit_amount_currency": -100.0}
+        partial = {"debit_amount_currency": 100.0, "credit_amount_currency": 100.0}
         result = realized_partial(
             partial,
             {"balance": 1_600_000.0, "amount_currency": 100.0},
@@ -80,7 +80,7 @@ class RealizedFxTests(unittest.TestCase):
         self.assertEqual(result, 100_000.0, "payment at a lower rate must be a loss")
 
     def test_partial_settlement_scales_linearly(self):
-        partial = {"debit_amount_currency": 40.0, "credit_amount_currency": -40.0}
+        partial = {"debit_amount_currency": 40.0, "credit_amount_currency": 40.0}
         result = realized_partial(
             partial,
             {"balance": 1_500_000.0, "amount_currency": 100.0},
@@ -89,7 +89,7 @@ class RealizedFxTests(unittest.TestCase):
         self.assertEqual(result, -40_000.0)
 
     def test_functional_currency_has_no_exchange_difference(self):
-        partial = {"debit_amount_currency": 100_000.0, "credit_amount_currency": -100_000.0}
+        partial = {"debit_amount_currency": 100_000.0, "credit_amount_currency": 100_000.0}
         result = realized_partial(
             partial,
             {"balance": 100_000.0, "amount_currency": 100_000.0},
@@ -102,11 +102,11 @@ class RealizedFxTests(unittest.TestCase):
         credit_a = {"balance": -640_000.0, "amount_currency": -40.0}
         credit_b = {"balance": -900_000.0, "amount_currency": -60.0}
         first = realized_partial(
-            {"debit_amount_currency": 40.0, "credit_amount_currency": -40.0},
+            {"debit_amount_currency": 40.0, "credit_amount_currency": 40.0},
             debit_leg, credit_a,
         )
         second = realized_partial(
-            {"debit_amount_currency": 60.0, "credit_amount_currency": -60.0},
+            {"debit_amount_currency": 60.0, "credit_amount_currency": 60.0},
             debit_leg, credit_b,
         )
         # 40 USD at 16,000 and 60 USD at 15,000 against a 15,000 invoice.
@@ -119,7 +119,7 @@ class RealizedFxTests(unittest.TestCase):
         # reconciliation is -100,000, so Odoo credits the income exchange
         # account by 100,000 and its signed balance is -100,000.
         realized = realized_partial(
-            {"debit_amount_currency": 100.0, "credit_amount_currency": -100.0},
+            {"debit_amount_currency": 100.0, "credit_amount_currency": 100.0},
             {"balance": 1_500_000.0, "amount_currency": 100.0},
             {"balance": -1_600_000.0, "amount_currency": -100.0},
         )
@@ -137,7 +137,7 @@ class RealizedFxTests(unittest.TestCase):
         # reconciliation is +100,000, so Odoo debits the expense exchange
         # account by 100,000 and its signed balance is +100,000.
         realized = realized_partial(
-            {"debit_amount_currency": 100.0, "credit_amount_currency": -100.0},
+            {"debit_amount_currency": 100.0, "credit_amount_currency": 100.0},
             {"balance": 1_600_000.0, "amount_currency": 100.0},
             {"balance": -1_500_000.0, "amount_currency": -100.0},
         )

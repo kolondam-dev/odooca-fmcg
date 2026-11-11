@@ -339,3 +339,8 @@
 [2026-11-11T16:15:36+07:00] [INFO] PR #115: pertahankan aksi D1 saat upgrade modul
 - Fase D1 dijalankan ulang setelah upgrade modul dan marker baru memperbaiki database yang sudah memakai marker instalasi lama.
 - Task managed by codex agent at 2026-11-11T16:15:36+07:00
+
+[2026-11-11T19:04:48+07:00] [INFO] D1: scroll dan drill-down peta wilayah
+- Perbaiki overflow action D1 dan klik poligon.
+- Gunakan batas Sulut di repo untuk kabupaten/kota → kecamatan → kelurahan/desa, dengan ranking berdasarkan penjualan yang lolos scope D1.
+- Task managed by codex agent at 2026-11-11T19:04:48+07:00

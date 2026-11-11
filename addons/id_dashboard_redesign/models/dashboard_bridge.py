@@ -2,6 +2,10 @@
 
 No SQL/sudo and no change to the legacy service, posting or mobile workflows.
 """
+import json
+import re
+from functools import lru_cache
+from pathlib import Path
 from collections import defaultdict
 from datetime import date, timedelta
 from calendar import monthrange
@@ -22,6 +26,23 @@ DIMENSIONS = {
     "brand": ("product_id.brand_id", "id.brand"),
     "sku": ("product_id", "product.product"),
 }
+@lru_cache(maxsize=2)
+def _geo_boundaries(filename):
+    root = Path(__file__).resolve().parents[3]
+    for folder in (root / "data" / "geo", Path("/opt/data/geo")):
+        source = folder / filename
+        if source.is_file():
+            groups = defaultdict(list)
+            for feature in json.loads(source.read_text(encoding="utf-8"))["features"]:
+                info = feature["properties"]
+                if feature["geometry"]:
+                    groups[info["parent_code"]].append({
+                        "code": info["code"], "name": info["name"], "geometry": feature["geometry"],
+                    })
+            return groups
+    raise UserError(_("Geographic boundaries are unavailable."))
+
+
 PRODUCT_DIMENSIONS = {"principal", "brand", "sku"}
 
 
@@ -132,6 +153,14 @@ class DashboardBridge(models.AbstractModel):
         return domain
 
     @api.model
+    def get_geo_boundaries(self, dashboard, parent):
+        self._service(dashboard)
+        if isinstance(parent, str) and re.fullmatch(r"71\.\d{2}(?:\.\d{2})?", parent):
+            filename = "sulut_districts.geojson" if parent.count(".") == 1 else "sulut_villages.geojson"
+            return _geo_boundaries(filename).get(parent, [])
+        raise UserError(_("Invalid geographic region."))
+
+    @api.model
     def get_data(self, dashboard, params=None):
         service = self._service(dashboard)
         if not isinstance(params, dict) or set(params) - {"query"}:
@@ -174,6 +203,7 @@ class DashboardBridge(models.AbstractModel):
             raise UserError(_("Too many orders; narrow the period or filters."))
         total = {"gross": 0., "net": 0., "discount": 0., "orders": len(orders)}
         buckets = {key: defaultdict(float) for key in ("principal", "channel", "area", "city", "salesman")}
+        geo = defaultdict(lambda: defaultdict(float))
         daily = defaultdict(lambda: {"net": 0., "gross": 0., "discount": 0.})
         daily_orders = defaultdict(int)
         for order in orders:
@@ -193,6 +223,20 @@ class DashboardBridge(models.AbstractModel):
             daily[day]["discount"] += discount
             for key, amount in (("net", net), ("gross", net + discount), ("discount", discount)):
                 monthly[day.strftime("%Y-%m")][key] += amount
+            if details:
+                partner = order.partner_id
+                district = partner.district_id
+                city = district.city_id
+                city_code = city.kode_kemendagri or city.code
+                if city_code and len(city_code) == 4:
+                    city_code = city_code[:2] + "." + city_code[2:]
+                district_code = district.kode_kemendagri
+                village = partner.subdistrict_id
+                if city_code:
+                    geo[city_code][district_code or ""] += net
+                if district_code:
+                    village_code = village.kode_kemendagri if village.district_id == district else ""
+                    geo[district_code][village_code or ""] += net
             for key in buckets:
                 path = DIMENSIONS[key][0]
                 record = line.mapped(path)
@@ -281,6 +325,7 @@ class DashboardBridge(models.AbstractModel):
                 rows.append(row)
             result["salesmen" if key == "salesman" else key] = rows
         # Reconcile targets only when their exact dated, independent partition covers the selected scope.
+        result["geo"] = {parent: dict(amounts) for parent, amounts in geo.items()}
         result["target"] = self._target(start, end, orders, filters, total["net"])
         # Refund revenue is a separate accounting-date amount. It is not subtracted from SO net.
         result["refund"] = self._refund(start, end, line_filter)

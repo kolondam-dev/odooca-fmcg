@@ -57,6 +57,7 @@ export class RedesignAction extends Component {
             const response = await this.orm.call("id.dashboard.redesign", "get_data", ["D1"], { params: { query: request } });
             if (token !== this.generation) return false;
             const data = adaptSource("D1", response, this.state.scope);
+            data.geoLoad = parent => this.orm.call("id.dashboard.redesign", "get_geo_boundaries", ["D1", parent]);
             data.controlOptions = this.controlOptions(query);
             this.state.data = data;
             this.query = JSON.parse(JSON.stringify(query));

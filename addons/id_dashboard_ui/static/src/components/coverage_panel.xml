@@ -1,3 +1,45 @@
-<?xml version='1.0' encoding='utf-8'?>
-<templates xml:space="preserve"><t t-name="id_dashboard_ui.CoveragePanel"><section class="id-dash-card id-coverage"><h3 t-out="props.title"/><div class="id-coverage-body"><GeoMap t-props="mapProps"/><BarRows t-props="tableProps"/></div></section></t>
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.CoveragePanel">
+    <section class="id-dash-card id-coverage">
+      <h3 t-out="props.title"/>
+      <p t-if="geo.loading" role="status">Loading boundaries…</p>
+      <p t-if="geo.error" role="alert" t-out="geo.error"/>
+      <div class="id-coverage-body">
+        <t t-if="!level">
+          <GeoMap t-props="mapProps"/>
+          <BarRows t-props="tableProps"/>
+        </t>
+        <t t-else="">
+          <div class="id-geo-submap">
+            <button class="btn btn-sm btn-outline-secondary" t-on-click="up">↑ Back one level</button>
+            <span class="ms-2" t-out="geo.levels.map(item => item.name).join(' › ')"/>
+            <svg t-att-viewBox="level.viewBox" role="group" t-att-aria-label="head">
+              <path t-foreach="level.shapes" t-as="shape" t-key="shape.code"
+                    t-att-d="shape.path" t-att-fill="fill(shape.code)" fill-rule="evenodd"
+                    stroke="#fff" stroke-width="1" vector-effect="non-scaling-stroke"
+                    role="button" tabindex="0" t-att-aria-label="shape.name"
+                    t-on-click="() => this.descend(shape)" t-on-keydown="ev => this.polygonKey(ev, shape)">
+                <title t-out="shape.name"/>
+              </path>
+            </svg>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead><tr><th t-out="head"/><th class="text-end" t-out="props.headR"/></tr></thead>
+              <tbody>
+                <tr t-foreach="ranking" t-as="row" t-key="row.code" t-att-class="row.code === geo.selected ? 'table-active' : ''">
+                  <td>
+                    <button t-if="row.code" class="btn btn-link btn-sm p-0 text-start" t-on-click="() => this.descend(row)" t-out="row.name"/>
+                    <span t-else="" t-out="row.name"/>
+                  </td>
+                  <td class="text-end text-nowrap"><t t-out="row.value"/> · <t t-out="row.share"/></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </t>
+      </div>
+    </section>
+  </t>
 </templates>
