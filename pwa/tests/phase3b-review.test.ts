@@ -48,6 +48,27 @@ describe("review #114", () => {
         expect(orderSummary(q, V2).count).toBe(1);
         expect(orderSummary(q, undefined).count).toBe(0);
     });
+    it("revisi diterima menggantikan root ditolak di ringkasan", () => {
+        const root = order(V1, "100", "r");
+        root.state = "rejected";
+        const rev = {
+            ...order(V1, "150", "v"),
+            command: {
+                type: "sales.order.revise",
+                client_uuid: "v",
+                payload: {
+                    root_uuid: "r",
+                    supersedes_uuid: "r",
+                    observed_total: "150",
+                    lines: [{ product_id: "P2" }],
+                },
+            },
+        } as unknown as QueueItem;
+        const sum = orderSummary([root, rev], V1);
+        expect(sum.count).toBe(1);
+        expect(sum.total).toBe(150);
+        expect(sum.status?.label).toBe("Diposting");
+    });
     it("pengajuan uang lapangan baru terkunci tanpa kapabilitas server", () => {
         expect(fieldExpenseV2Enabled({})).toBe(false);
         expect(fieldExpenseV2Enabled({ features: {} })).toBe(false);

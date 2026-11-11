@@ -23,13 +23,34 @@ const rupiah = (n: number) =>
         maximumFractionDigits: 0,
     }).format(n);
 
-/** Ringkasan order kunjungan aktif dari antrean lokal (hanya baca); order kunjungan lain tidak dihitung. */
+/** Revisi terbaru dari rantai root → revise (supersedes_uuid); root tanpa revisi dikembalikan apa adanya. */
+function latestInChain(queue: QueueItem[], root: QueueItem) {
+    const revisions = queue.filter(
+        (q) =>
+            q?.command?.type === "sales.order.revise" &&
+            q.command.payload.root_uuid === root.command.client_uuid,
+    );
+    let tail = root;
+    const seen = new Set([root.command.client_uuid]);
+    for (;;) {
+        const next = revisions.find(
+            (q) =>
+                q.command.type === "sales.order.revise" &&
+                q.command.payload.supersedes_uuid === tail.command.client_uuid,
+        );
+        if (!next || seen.has(next.command.client_uuid)) return tail;
+        seen.add(next.command.client_uuid);
+        tail = next;
+    }
+}
+
+/** Ringkasan order kunjungan aktif dari antrean lokal (hanya baca). Memakai revisi terbaru tiap root; order kunjungan lain tidak dihitung. */
 export function orderSummary(queue: QueueItem[], visitId?: string) {
     const rows = visitId
         ? visitOrders(
               queue.filter((q) => q?.command?.type === "sales.order.submit"),
               visitId,
-          )
+          ).map((root) => latestInChain(queue, root))
         : [];
     let total = 0;
     const skus = new Set<string>();

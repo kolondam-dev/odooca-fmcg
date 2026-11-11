@@ -1,3 +1,8 @@
+## 2026-11-11T09:00:00+07:00 — claude-design — PR #114: ringkasan revisi order + sinkron main
+
+**Berubah:** `orderSummary` (Selesai kunjungan) kini mengikuti rantai `sales.order.revise` (root_uuid/supersedes_uuid) dan memakai revisi terbaru: root ditolak Rp100 → revisi diterima Rp150 tampil Rp150 / Diposting. Tes unit baru. Merge `origin/main` (konflik hanya HANDOFF).
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 474; e2e close-visit/visits/order 8 lulus. **Belum diuji:** [BU] CI pada HEAD hasil integrasi.
+
 ## 2026-11-11T08:20:00+07:00 — claude-design — PR #114: perbaikan review (HOLD d95d13c)
 
 **Berubah:** P1 gate `features.field_expense_v2` (kontrak + openapi): Ajukan uang lapangan terkunci (callout + tombol nonaktif + guard submit) bila server belum menyatakan dukungan; mock demo true, LIVE tidak. P2 geofence: foto check-in/check-out kunjungan menerima fence outlet (`EvidenceCapture fence`), fallback "Buka Kamera Perangkat" dinonaktifkan saat di luar radius. P2 ringkasan Selesai kunjungan memakai `visitOrders(queue, visit_uuid)` (bukan filter outlet); piutang tak tersedia tampil "Tidak tersedia", bukan "Lunas". Merge `origin/main`. Tes unit baru `phase3b-review.test.ts`.
