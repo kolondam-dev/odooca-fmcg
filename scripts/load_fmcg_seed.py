@@ -701,7 +701,53 @@ def load_canonical_taxes():
     if TaxGroup:
         tax_group = TaxGroup.search([("company_id", "in", [company.id, False])], limit=1)
 
-    # Cari apakah pajak Kode 04 sudah terdaftar secara kanonikal
+    # 1. Pastikan pajak historis Juli 11% terdaftar untuk transaksi kanonikal Juli 2026
+    existing_tax_11 = AccountTax.search(
+        [
+            ("company_id", "in", [company.id, False]),
+            ("type_tax_use", "=", "sale"),
+            ("amount", "=", 11.0),
+        ],
+        limit=1,
+    )
+    if not existing_tax_11:
+        tax_vals_11 = {
+            "name": "PPN Keluaran 11% (Standar Historis Juli)",
+            "description": "PPN Standar 11% UU HPP (Baseline Juli 2026)",
+            "amount_type": "percent",
+            "amount": 11.0,
+            "type_tax_use": "sale",
+            "company_id": company.id,
+        }
+        if "price_include_override" in AccountTax._fields:
+            tax_vals_11["price_include_override"] = "tax_excluded"
+        if tax_group:
+            tax_vals_11["tax_group_id"] = tax_group.id
+        if "country_id" in AccountTax._fields and getattr(company, "country_id", False):
+            tax_vals_11["country_id"] = company.country_id.id
+        if tax_out_acc and "invoice_repartition_line_ids" in AccountTax._fields:
+            tax_vals_11["invoice_repartition_line_ids"] = [
+                (0, 0, {"repartition_type": "base", "factor_percent": 100.0}),
+                (0, 0, {
+                    "repartition_type": "tax",
+                    "factor_percent": 100.0,
+                    "account_id": tax_out_acc.id,
+                }),
+            ]
+            tax_vals_11["refund_repartition_line_ids"] = [
+                (0, 0, {"repartition_type": "base", "factor_percent": 100.0}),
+                (0, 0, {
+                    "repartition_type": "tax",
+                    "factor_percent": 100.0,
+                    "account_id": tax_out_acc.id,
+                }),
+            ]
+        new_tax_11 = AccountTax.create(tax_vals_11)
+        print(f"    Pajak historis 11% dibuat: {new_tax_11.name} (ID {new_tax_11.id})")
+    else:
+        print(f"    Pajak historis 11% sudah terpasang: {existing_tax_11.name} (ID {existing_tax_11.id})")
+
+    # 2. Cari apakah pajak Kode 04 sudah terdaftar secara kanonikal
     existing_tax = AccountTax.search(
         [
             ("company_id", "in", [company.id, False]),

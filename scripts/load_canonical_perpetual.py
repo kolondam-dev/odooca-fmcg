@@ -2153,12 +2153,9 @@ class CanonicalPerpetualAdapter:
                             if isinstance(prod_accs, dict) and prod_accs.get("income"):
                                 inv_line_vals["account_id"] = prod_accs["income"].id
 
-                        taxes = getattr(pr_comp, "taxes_id", None)
-                        if taxes and hasattr(taxes, "filtered") and hasattr(self, "company") and self.company:
-                            taxes = taxes.filtered(
-                                lambda t: not getattr(t, "company_id", False) or t.company_id.id == self.company.id
-                            )
-                        if (not taxes or not getattr(taxes, "ids", None)) and "account.tax" in self.env:
+                        # Baseline Juli 2026: seluruh faktur penjualan Juli menggunakan PPN Standar 11.0%
+                        taxes = None
+                        if "account.tax" in self.env:
                             AccountTax = self.env["account.tax"].sudo()
                             tax_domain = [("type_tax_use", "=", "sale"), ("amount", "=", 11.0)]
                             if (
@@ -2166,8 +2163,15 @@ class CanonicalPerpetualAdapter:
                                 and hasattr(self, "company")
                                 and self.company
                             ):
-                                tax_domain.append(("company_id", "=", self.company.id))
+                                tax_domain.append(("company_id", "in", [self.company.id, False]))
                             taxes = AccountTax.search(tax_domain, limit=1)
+                        if not taxes or not getattr(taxes, "ids", None):
+                            pr_taxes = getattr(pr_comp, "taxes_id", None)
+                            if pr_taxes and hasattr(pr_taxes, "filtered"):
+                                taxes = pr_taxes.filtered(
+                                    lambda t: getattr(t, "amount", 0.0) == 11.0
+                                    and (not getattr(t, "company_id", False) or t.company_id.id == self.company.id)
+                                )
                         if taxes and getattr(taxes, "ids", None):
                             inv_line_vals["tax_ids"] = [(6, 0, list(taxes.ids))]
 

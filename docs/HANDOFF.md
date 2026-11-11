@@ -1,3 +1,20 @@
+## 2026-11-11T08:55:00+07:00 — antigravity — F4: Konfigurasi Pajak Historis 11% Juli & Rekonsiliasi AR 100% (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/load_fmcg_seed.py`:
+  - Menambahkan konfigurasi pajak penjualan historis `"PPN Keluaran 11% (Standar Historis Juli)"` (amount=11.0, type=sale, tax-excluded, repartition GL PPN Keluaran 211200) di `load_canonical_taxes()` bersama pajak Kode 04 12%.
+- `scripts/load_canonical_perpetual.py`:
+  - Menyelaraskan line faktur penjualan Juli 2026 agar secara eksplisit mencari dan menerapkan PPN Standar 11.0% (sesuai spesifikasi register `perpetual_invoices.csv` dan pembayaran `perpetual_ar_collections.csv`), mencegah ketiadaan baris pajak yang menyebabkan invoice mismatch terhadap pelunasan AR penuh (`reconciled: 2/2`).
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 6.9s).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T08:30:00+07:00 — antigravity — F4: Resolusi Guard COGS Move 3085 Baseline Juli & Identitas Pajak Otoritatif Kode 04 (Review #5851786779) (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
