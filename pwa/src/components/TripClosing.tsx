@@ -9,6 +9,7 @@ import {
     ScreenHeader,
     Textarea,
 } from "../ui";
+import { tripMoney } from "../domain/trip-summary";
 import { useBackLayer } from "../ui/navigation";
 import {
     TripCloseSchema,
@@ -156,29 +157,15 @@ export function TripClosing({
             setBusy(false);
         }
     }
-    const rows = queue.filter((q) => q?.owner === owner);
-    const sum = (type: string, pick: (p: Record<string, unknown>) => number) =>
-        rows
-            .filter((q) => q?.command?.type === type)
-            .reduce(
-                (a, q) =>
-                    a +
-                    pick((q.command.payload ?? {}) as Record<string, unknown>),
-                0,
-            );
-    const money = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
-    const cash = sum("collection.receipt.submit", (p) =>
-        p.method === "cash" ? money(p.amount) : 0,
-    );
-    const transfer = sum("collection.receipt.submit", (p) =>
-        p.method === "transfer" ? money(p.amount) : 0,
-    );
+    const businessDate = morning?.businessDate;
+    const cash = (trip: string) =>
+        tripMoney(queue, owner, businessDate, trip).cash;
+    const transfer = (trip: string) =>
+        tripMoney(queue, owner, businessDate, trip).transfer;
+    const tripCost = (trip: string) =>
+        tripMoney(queue, owner, businessDate, trip).cost;
     const podCount = (trip: string) =>
         morning?.deliveryManifest?.filter((t) => t.trip === trip).length ?? 0;
-    const tripCost = (trip: string) =>
-        sum("field_expense.request", (p) =>
-            p.trip_id === trip ? money(p.amount) : 0,
-        );
     useBackLayer(!!open, () => setOpen(undefined));
     if (!trips.length) return null;
     return (
@@ -247,10 +234,10 @@ export function TripClosing({
                         <ListRow
                             icon="wallet"
                             title="Penerimaan uang"
-                            sub="Tunai + transfer (lokal)"
+                            sub="Tunai + transfer trip ini (lokal, tidak ditolak)"
                             status={{
                                 tone: "info",
-                                label: rupiah(cash + transfer),
+                                label: rupiah(cash(open) + transfer(open)),
                             }}
                             divider
                         />

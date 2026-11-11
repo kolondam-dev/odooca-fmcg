@@ -1,3 +1,9 @@
+## 2026-11-11T17:00:00+07:00 — claude-design — PR #116: perbaikan review Akhiri trip
+
+**Berubah:** ringkasan Penerimaan uang/Biaya trip dibatasi per trip (`source.delivery.trip` / `trip_id`), hari kerja aktif (WITA), status bukan `rejected`, kuitansi yang dikoreksi (`supersedes_uuid`) tidak dihitung, dan biaya hanya dengan `scheduled_date` hari kerja (ID trip yang dipakai ulang tidak tercampur) — logika di `domain/trip-summary.ts` + tes unit. Handler Odoo `delivery.trip.close` kini memvalidasi `note` (≤500) dan mencatatnya di pesan receipt; payload tetap tersimpan pada perintah.
+**Diverifikasi:** [F] format, tsc, vitest 475, ruff, next-policy e2e 16 lulus. **Belum diuji:** [BU] CI, e2e penuh ulang, tes Odoo untuk `note`.
+**Utang backend:** field closing resmi untuk `note` (saat ini hanya audit di payload + pesan), ringkasan uang trip resmi dari server.
+
 ## 2026-11-11T16:30:00+07:00 — claude-design — Fase 3B-3a: Closing trip (Akhiri trip) sesuai mockup
 
 **Berubah:** kartu closing lama diganti kartu "Akhiri trip" + layar penuh "Akhiri trip · <trip>" (Pengiriman, Penerimaan uang, Biaya trip, Tiba di kantor, Catatan opsional); payload `delivery.trip.close` menerima `note` opsional; openapi diekspor ulang; tes next-policy disesuaikan. K17 dicatat di DS_RECONCILIATION.

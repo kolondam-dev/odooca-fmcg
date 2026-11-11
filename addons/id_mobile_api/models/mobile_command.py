@@ -697,8 +697,15 @@ class MobileCommand(models.Model):
                         _("POD %s bukan milik manifest trip %s pada hari ini atau belum diterima.") % (pid, trip_id)
                     )
 
+            close_note = str(payload.get("note") or "").strip()
+            if len(close_note) > 500:
+                raise UserError(_("Catatan penutupan trip maksimal 500 karakter."))
+
             ref = f"TRIP-{client_uuid[:8]}"
             msg = f"Trip pengiriman {trip_id} berhasil ditutup dengan {len(accepted_dos_in_trip)} DO terverifikasi."
+            if close_note:
+                # Catatan tersimpan pada payload perintah (audit); belum ada field closing resmi.
+                msg += " Catatan penutupan tercatat."
             return "accepted", msg, ref
 
         raise UserError(_("Unsupported delivery command: %s") % cmd_type)

@@ -4,6 +4,7 @@ import {
     fieldExpenseV2Enabled,
     needsRequestOdometer,
 } from "../src/domain/expense";
+import { tripMoney } from "../src/domain/trip-summary";
 import type { QueueItem } from "../src/storage/store";
 
 const V1 = "11111111-1111-4111-8111-111111111111";
@@ -76,5 +77,78 @@ describe("review #114", () => {
             fieldExpenseV2Enabled({ features: { field_expense_v2: true } }),
         ).toBe(true);
         expect(needsRequestOdometer("emergency")).toBe(false);
+    });
+    it("ringkasan uang trip dibatasi trip, hari kerja, dan status", () => {
+        const rc = (
+            trip: string,
+            amount: string,
+            method: string,
+            extra: Record<string, unknown> = {},
+            state = "accepted",
+            at = "2026-11-10T02:00:00.000Z",
+            id: string = crypto.randomUUID(),
+        ) =>
+            ({
+                key: id,
+                owner: "u",
+                state,
+                command: {
+                    type: "collection.receipt.submit",
+                    client_uuid: id,
+                    occurred_at: at,
+                    payload: {
+                        source: { delivery: { trip } },
+                        method,
+                        amount,
+                        ...extra,
+                    },
+                },
+            }) as unknown as QueueItem;
+        const ex = (
+            trip: string,
+            amount: string,
+            date: string,
+            state = "queued",
+        ) =>
+            ({
+                key: crypto.randomUUID(),
+                owner: "u",
+                state,
+                command: {
+                    type: "field_expense.request",
+                    client_uuid: crypto.randomUUID(),
+                    occurred_at: "2026-11-10T02:00:00.000Z",
+                    payload: { trip_id: trip, amount, scheduled_date: date },
+                },
+            }) as unknown as QueueItem;
+        const old = rc(
+            "A",
+            "100",
+            "cash",
+            {},
+            "accepted",
+            "2026-11-10T02:00:00.000Z",
+            "old",
+        );
+        const q = [
+            rc("A", "1000", "cash"),
+            rc("B", "5000", "cash"),
+            rc("A", "2000", "transfer"),
+            rc("A", "9999", "cash", {}, "rejected"),
+            rc("A", "7777", "cash", {}, "accepted", "2026-11-09T02:00:00.000Z"),
+            old,
+            rc("A", "150", "cash", { supersedes_uuid: "old" }),
+            ex("A", "70000", "2026-11-10"),
+            ex("A", "50000", "2026-11-09"),
+            ex("B", "30000", "2026-11-10"),
+            ex("A", "99999", "2026-11-10", "rejected"),
+        ];
+        expect(tripMoney(q, "u", "2026-11-10", "A")).toEqual({
+            cash: 1150,
+            transfer: 2000,
+            cost: 70000,
+        });
+        expect(tripMoney(q, "u", "2026-11-10", "B").cash).toBe(5000);
+        expect(tripMoney(q, "x", "2026-11-10", "A").cash).toBe(0);
     });
 });
