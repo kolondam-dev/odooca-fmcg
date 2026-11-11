@@ -143,9 +143,10 @@ test("sales check-in unlocks mini POS, preview submits through outbox then close
         .click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await saveVisitPhoto(page, "check-out");
-    await page.getByLabel("Catatan kunjungan").fill("Order diajukan");
+    await page.getByLabel(/^Catatan/).fill("Order diajukan");
     await page
-        .getByRole("button", { name: "Tutup kunjungan", exact: true })
+        .getByRole("button", { name: "Selesai kunjungan", exact: true })
+        .first()
         .click();
     await expect(
         page.getByRole("status").filter({ hasText: /Kunjungan ditutup lokal/ }),

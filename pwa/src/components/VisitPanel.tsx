@@ -1,4 +1,5 @@
 import { VisitPhotoField } from "./VisitPhotoField";
+import { CloseVisitScreen } from "./CloseVisitScreen";
 import { EvidenceCapture } from "./Evidence";
 import { CheckinMap } from "./CheckinMap";
 import type { FieldStore } from "../storage/store";
@@ -8,11 +9,10 @@ import type { Snapshot } from "../domain/contracts";
 import { assessVisitFix } from "../domain/visit-validation";
 import { useRunningMode } from "../domain/running-mode";
 import { captureVisitLocation, type SalesVisits } from "../domain/visits";
-import type { VisitFix, VisitCheckout } from "../domain/visit-contracts";
+import type { VisitFix } from "../domain/visit-contracts";
 import type { QueueItem } from "../storage/store";
 import {
     ActionCaption,
-    BottomSheet,
     Button,
     Callout,
     Card,
@@ -23,8 +23,6 @@ import {
     ListRow,
     Screen,
     ScreenHeader,
-    Select,
-    Textarea,
     Tracker,
 } from "../ui";
 export function VisitPanel({
@@ -99,8 +97,6 @@ export function VisitPanel({
     const [now, setNow] = useState(Date.now());
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
-    const [outcome, setOutcome] =
-        useState<VisitCheckout["outcome"]>("no_order");
     const [notes, setNotes] = useState("");
     const running = useRef(false),
         generation = useRef(0);
@@ -111,7 +107,6 @@ export function VisitPanel({
             .then((value) => {
                 if (active) {
                     setInfo(value);
-                    if (value.orders) setOutcome("order_requested");
                 }
             })
             .catch((e) => {
@@ -221,8 +216,7 @@ export function VisitPanel({
             }
         }
     }
-    async function finish(e: SubmitEvent) {
-        e.preventDefault();
+    async function finish() {
         if (running.current) return;
         running.current = true;
         setBusy(true);
@@ -238,7 +232,7 @@ export function VisitPanel({
             await service.checkOut(
                 outlet.id,
                 position,
-                outcome,
+                orders ? "order_requested" : "no_order",
                 notes,
                 outPhoto,
             );
@@ -406,6 +400,12 @@ export function VisitPanel({
                     outletId={outlet.id}
                     phase="check_in"
                     ready={setInPhoto}
+                    site={{
+                        name: outlet.name,
+                        latitude: outlet.latitude,
+                        longitude: outlet.longitude,
+                        radius: outlet.radius,
+                    }}
                     disabled={busy}
                 />
                 {errorNote}
@@ -546,88 +546,48 @@ export function VisitPanel({
             )}
             {errorNote}
             {sheet && !closed && (
-                <BottomSheet
-                    title="Selesai kunjungan"
-                    onClose={() => setSheet(false)}
-                >
-                    <Callout tone="neu">{orders} pengajuan order</Callout>
-                    <Button
-                        variant="sec"
-                        size="md"
-                        icon="bag"
-                        disabled={!canOrder}
-                        onClick={() => {
-                            setSheet(false);
-                            order();
-                        }}
-                    >
-                        + Tambah order lagi untuk outlet ini
-                    </Button>
-                    <VisitPhotoField
-                        key={`out:${info?.active?.context.visit_uuid}`}
-                        store={store}
-                        owner={owner}
-                        sessionId={sessionId}
-                        outletId={outlet.id}
-                        phase="check_out"
-                        visitId={info?.active?.context.visit_uuid}
-                        ready={setOutPhoto}
-                        disabled={busy}
-                    />
-                    {outPhoto && !fresh(outPhoto) && !isDemo && (
-                        <p role="status" class="notice">
-                            Foto check-out sudah kedaluwarsa. Ambil foto dan
-                            lokasi baru.
-                        </p>
-                    )}
-                    <form class="visit-close" onSubmit={finish}>
-                        <Select
-                            label="Hasil kunjungan"
-                            value={orders ? "order_requested" : outcome}
-                            onChange={(value) =>
-                                setOutcome(value as VisitCheckout["outcome"])
-                            }
-                            options={
-                                orders
-                                    ? [
-                                          {
-                                              value: "order_requested",
-                                              label: "Order diajukan",
-                                          },
-                                      ]
-                                    : [
-                                          {
-                                              value: "no_order",
-                                              label: "Tidak ada order",
-                                          },
-                                          {
-                                              value: "outlet_closed",
-                                              label: "Outlet tutup",
-                                          },
-                                          {
-                                              value: "unavailable",
-                                              label: "Kontak tidak tersedia",
-                                          },
-                                      ]
-                            }
+                <CloseVisitScreen
+                    outlet={outlet}
+                    queue={queue}
+                    orders={orders}
+                    visitId={info?.active?.context.visit_uuid}
+                    displayDone={displayDone}
+                    notes={notes}
+                    setNotes={setNotes}
+                    busy={busy}
+                    canSubmit={isDemo || fresh(outPhoto)}
+                    error={error}
+                    onOrder={() => {
+                        setSheet(false);
+                        order();
+                    }}
+                    onSubmit={() => void finish()}
+                    close={() => setSheet(false)}
+                    photoField={
+                        <VisitPhotoField
+                            key={`out:${info?.active?.context.visit_uuid}`}
+                            store={store}
+                            owner={owner}
+                            sessionId={sessionId}
+                            outletId={outlet.id}
+                            phase="check_out"
+                            visitId={info?.active?.context.visit_uuid}
+                            ready={setOutPhoto}
+                            site={{
+                                name: outlet.name,
+                                latitude: outlet.latitude,
+                                longitude: outlet.longitude,
+                                radius: outlet.radius,
+                            }}
+                            disabled={busy}
                         />
-                        <Textarea
-                            label="Catatan kunjungan"
-                            required={!orders}
-                            minLength={orders ? 0 : 5}
-                            maxLength={500}
-                            value={notes}
-                            onInput={setNotes}
-                        />
-                        <Button
-                            type="submit"
-                            disabled={busy || (!isDemo && !fresh(outPhoto))}
-                        >
-                            Tutup kunjungan
-                        </Button>
-                    </form>
-                    {errorNote}
-                </BottomSheet>
+                    }
+                    photoNote={
+                        outPhoto && !fresh(outPhoto) && !isDemo
+                            ? "Foto check-out sudah kedaluwarsa. Ambil foto dan lokasi baru."
+                            : undefined
+                    }
+                />
             )}
         </Screen>
     );

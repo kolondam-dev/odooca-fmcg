@@ -4815,10 +4815,12 @@
           "category": {
             "type": "string",
             "enum": [
-              "fuel_planned",
-              "fuel_emergency",
+              "fuel",
               "meal",
               "lodging",
+              "emergency",
+              "fuel_planned",
+              "fuel_emergency",
               "repair",
               "delivery_fee"
             ]
@@ -5658,9 +5660,38 @@
             "properties": {
               "order_pricing_v2": {
                 "type": "boolean"
+              },
+              "field_expense_v2": {
+                "type": "boolean"
               }
             },
             "additionalProperties": false
+          },
+          "extra_call_outlets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "address": {
+                  "default": "",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "address"
+              ],
+              "additionalProperties": false
+            }
           },
           "order_history": {
             "type": "array",

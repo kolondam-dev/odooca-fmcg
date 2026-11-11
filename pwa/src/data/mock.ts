@@ -217,7 +217,24 @@ export class MockProvider implements FieldProvider {
                     stock: 40,
                 },
             ],
-            features: { order_pricing_v2: true },
+            features: { order_pricing_v2: true, field_expense_v2: true },
+            extra_call_outlets: [
+                {
+                    id: "demo-extra-1",
+                    name: "Grosir Istiqlal Sentosa",
+                    address: "Jl. Sam Ratulangi / Calaca No. 10",
+                },
+                {
+                    id: "demo-extra-2",
+                    name: "Grosir Calaca Baru",
+                    address: "Jl. Sam Ratulangi / Calaca No. 12",
+                },
+                {
+                    id: "demo-extra-3",
+                    name: "Warung Bahu Mall",
+                    address: "Jl. Piere Tendean No. 4",
+                },
+            ],
             order_history: [
                 {
                     outlet_id: "demo-outlet-1",

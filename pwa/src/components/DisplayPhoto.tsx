@@ -163,7 +163,7 @@ export function DisplayPhoto({
             </div>
             {preview && (
                 <img
-                    class="photo-preview"
+                    class="ev__photo"
                     src={preview}
                     alt="Foto display outlet"
                 />

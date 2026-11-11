@@ -191,32 +191,24 @@ test("offline order survives reload, syncs on reconnect, stays separate across a
     await openActivity(page);
     await expect(activity(page)).toHaveCount(2);
 });
+async function openAjukan(page: Page) {
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByRole("button", { name: /^Uang lapangan/ }).click();
+    await page.getByRole("button", { name: /^Ajukan/ }).click();
+    return page.getByRole("region", { name: "Ajukan uang lapangan" });
+}
 test("expense request is an approval request, not disbursement", async ({
     page,
 }) => {
     await page.goto("./");
     await checkIn(page);
-    await page
-        .getByRole("button", { name: "Uang lapangan", exact: false })
-        .click();
-    await page
-        .getByRole("combobox", { name: "Kategori", exact: true })
-        .selectOption("fuel_emergency");
-    await expect(
-        page.getByText(
-            "BBM insidentil: Supervisor + Branch Manager, berapa pun nominalnya.",
-        ),
-    ).toBeVisible();
-    await page
-        .getByLabel("Referensi trip / perjalanan")
-        .selectOption("TRIP-01");
-    await page.getByLabel("Tanggal perjalanan").fill("2026-10-28");
-    await page.getByLabel("Nominal pengajuan (Rp)").fill("100000");
-    await page.getByLabel("KM / odometer awal").fill("15000");
-    await page
-        .getByLabel("Tujuan / alasan")
+    const form = await openAjukan(page);
+    await form.getByRole("button", { name: "BBM", exact: true }).click();
+    await form.getByLabel("Nominal").fill("100000");
+    await form
+        .getByLabel("Keterangan")
         .fill("Permohonan demo perjalanan luar kota");
-    await page.getByRole("button", { name: "Simpan ke antrean" }).click();
+    await form.getByRole("button", { name: "Kirim pengajuan" }).click();
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await openActivity(page);
     await expect(
@@ -247,41 +239,25 @@ test("live build is fail-closed with no simulation selector or data", async ({
     await expect(page.getByText("Toko Sinar Pagi")).toHaveCount(0);
 });
 
-test("expense guards keep invalid H-1 and missing DO out of outbox", async ({
+test("expense guards keep an invalid amount out of outbox", async ({
     page,
 }) => {
     await page.goto("./");
     await checkIn(page);
+    const form = await openAjukan(page);
+    await form.getByLabel("Keterangan").fill("Perjalanan demo");
+    await form.getByRole("button", { name: "Kirim pengajuan" }).click();
+    await expect(form.getByRole("alert")).toContainText("Nominal");
+    await form.getByLabel("Nominal").fill("0");
+    await form.getByRole("button", { name: "Kirim pengajuan" }).click();
+    await expect(form.getByRole("alert")).toContainText("Nominal");
+    await form.getByRole("button", { name: "Kembali", exact: true }).click();
     await page
-        .getByRole("button", { name: "Uang lapangan", exact: false })
+        .getByRole("button", { name: "Kembali", exact: true })
+        .first()
         .click();
-    await page
-        .getByLabel("Referensi trip / perjalanan")
-        .selectOption("TRIP-01");
-    await page.getByLabel("Tanggal perjalanan").fill("2000-01-01");
-    await page.getByLabel("Nominal pengajuan (Rp)").fill("100000");
-    await page.getByLabel("KM / odometer awal").fill("15000");
-    await page.getByLabel("Tujuan / alasan").fill("Perjalanan demo");
-    await page.getByRole("button", { name: "Simpan ke antrean" }).click();
-    await expect(
-        page.getByText("BBM terencana wajib diajukan H-1.", { exact: false }),
-    ).toBeVisible();
-    await page.getByLabel("Kategori", { exact: true }).selectOption("meal");
-    await page.getByLabel("Lingkup biaya").selectOption("delivery");
-    await page.getByRole("button", { name: "Simpan ke antrean" }).click();
-    expect(
-        await page
-            .getByLabel("Referensi DO (untuk biaya per pengiriman)")
-            .evaluate((el) => (el as HTMLSelectElement).validity.valueMissing),
-    ).toBe(true);
-    await page
-        .getByLabel("Referensi DO (untuk biaya per pengiriman)")
-        .selectOption("DEMO-DO-001");
-    await page.getByRole("button", { name: "Simpan ke antrean" }).click();
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await openActivity(page);
-    await expect(activity(page)).toHaveCount(1);
+    await expect(activity(page)).toHaveCount(0);
 });
 
 async function expectGateClosed(page: Page) {

@@ -171,6 +171,9 @@ test("check-in is a full page with map, bound watermark photo and clock-out", as
     await page
         .getByLabel("Buka Kamera Perangkat")
         .setInputFiles("public/icon-192.png");
+    await page
+        .getByRole("button", { name: "Gunakan foto", exact: true })
+        .click();
     await expect(
         page.getByAltText("Foto absensi dengan watermark"),
     ).toBeVisible();
@@ -290,6 +293,9 @@ for (const retake of [false, true])
             await page
                 .getByLabel("Buka Kamera Perangkat")
                 .setInputFiles("public/icon-192.png");
+            await page
+                .getByRole("button", { name: "Gunakan foto", exact: true })
+                .click();
             await expect(
                 page.getByAltText("Foto absensi dengan watermark"),
             ).toBeInViewport();

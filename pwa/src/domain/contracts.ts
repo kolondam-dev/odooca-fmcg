@@ -205,9 +205,26 @@ export const SnapshotSchema = z
             }),
         ),
         discount_programs: z.array(DiscountProgramSchema).optional(),
-        /** Kapabilitas server. `order_pricing_v2` harus eksplisit true agar PWA boleh mengirim order/revisi v2. */
+        /**
+         * Kapabilitas server. `order_pricing_v2` harus eksplisit true agar PWA boleh mengirim order/revisi v2;
+         * `field_expense_v2` agar boleh mengirim pengajuan uang lapangan kategori baru (fuel/meal/lodging/emergency,
+         * odometer null, trip fallback FIELD-<tanggal>).
+         */
         features: z
-            .object({ order_pricing_v2: z.boolean().optional() })
+            .object({
+                order_pricing_v2: z.boolean().optional(),
+                field_expense_v2: z.boolean().optional(),
+            })
+            .optional(),
+        /** Outlet di luar PJP yang boleh diajukan sebagai extra call (pencarian layar Extra call). */
+        extra_call_outlets: z
+            .array(
+                z.object({
+                    id: z.string().min(1),
+                    name: z.string().min(1),
+                    address: z.string().default(""),
+                }),
+            )
             .optional(),
         /** SKU yang pernah dipesan per outlet (daftar Display & stok). Ikut sync harian. */
         order_history: z

@@ -28,9 +28,9 @@ test("browser Back closes camera before form and returns through pages", async (
         .getByRole("button", { name: "Buka Kamera", exact: true })
         .click();
     await expect(page.locator("[role=dialog][aria-modal=true]")).toHaveCount(1);
-    const camera = page.locator(".camera-modal-backdrop");
+    const camera = page.locator(".cam");
     await expect(camera).toBeVisible();
-    await camera.getByRole("button", { name: /Batal/ }).focus();
+    await camera.getByRole("button", { name: "Tutup kamera" }).focus();
     await page.keyboard.press("Tab");
     expect(
         await camera.evaluate((el) => el.contains(document.activeElement)),
@@ -106,34 +106,25 @@ test("search Back restores list and compact POS toolbar leaves product space on 
     ).toBeLessThan(3);
 });
 
-test("expense references are contextual and dates have Indonesian selected value", async ({
+test("ajukan uang lapangan uses the DS form with category choice and no legacy trip fields", async ({
     page,
 }) => {
     await page.goto("./");
     await checkIn(page);
-    await page
-        .getByRole("button", { name: /Uang lapangan/ })
-        .first()
-        .click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog.getByLabel("Referensi trip / perjalanan")).toHaveValue(
-        "TRIP-01",
-    );
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByRole("button", { name: /^Uang lapangan/ }).click();
+    await page.getByRole("button", { name: /^Ajukan/ }).click();
+    const form = page.getByRole("region", { name: "Ajukan uang lapangan" });
+    for (const name of ["BBM", "Makan", "Nginap", "Darurat"])
+        await expect(
+            form.getByRole("button", { name, exact: true }),
+        ).toBeVisible();
+    await form.getByRole("button", { name: "Nginap", exact: true }).click();
     await expect(
-        dialog.getByLabel("Referensi DO (untuk biaya per pengiriman)"),
-    ).toHaveCount(0);
-    await dialog.getByLabel("Lingkup biaya").selectOption("delivery");
-    await expect(
-        dialog.getByLabel("Referensi DO (untuk biaya per pengiriman)"),
-    ).toHaveCount(1);
-    await dialog.getByLabel("Tanggal perjalanan").fill("2026-11-01");
-    await expect(
-        dialog.getByText("1 November 2026", { exact: true }),
-    ).toBeVisible();
-    await dialog.getByLabel("Lingkup biaya").selectOption("trip");
-    await expect(
-        dialog.getByLabel("Referensi DO (untuk biaya per pengiriman)"),
-    ).toHaveCount(0);
+        form.getByRole("button", { name: "Nginap", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(form.getByLabel("Referensi trip / perjalanan")).toHaveCount(0);
+    await expect(form.getByLabel("Nominal")).toBeVisible();
 });
 
 test("map zoom and consent survive a new GPS fix, touch affects only the map", async ({
@@ -289,6 +280,9 @@ test("camera evidence saves one bound package automatically without a second loc
     await page
         .getByLabel("Buka Kamera Perangkat")
         .setInputFiles("public/icon-192.png");
+    await page
+        .getByRole("button", { name: "Gunakan foto", exact: true })
+        .click();
     await expect(
         group.getByText("Paket foto tersimpan untuk check-in outlet ini.", {
             exact: true,
@@ -339,7 +333,7 @@ test("account handover with nested camera restores body scroll and clears both d
     await page
         .getByRole("button", { name: "Buka Kamera", exact: true })
         .click();
-    await expect(page.locator(".camera-modal-backdrop")).toBeVisible();
+    await expect(page.locator(".cam")).toBeVisible();
     await changeTestAccount(page, "delivery");
     await expect(
         page.getByRole("button", { name: "Profil dan Sesi Akun", exact: true }),

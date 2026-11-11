@@ -49,12 +49,10 @@ test("running mode toggle, demo mode geofence bypass, and preservation on switch
 
     // 5. Checkout the visit while still in DEMO mode
     await saveVisitPhoto(page, "check-out");
+    await page.getByLabel(/^Catatan/).fill("Kunjungan selesai dalam mode demo");
     await page
-        .getByLabel("Catatan kunjungan")
-        .fill("Kunjungan selesai dalam mode demo");
-    await page.getByLabel("Hasil kunjungan").selectOption("outlet_closed");
-    await page
-        .getByRole("button", { name: "Tutup kunjungan", exact: true })
+        .getByRole("button", { name: "Selesai kunjungan", exact: true })
+        .first()
         .click();
     await expect(
         page.getByText("Kunjungan ditutup lokal", { exact: false }),
@@ -132,6 +130,9 @@ for (const closed of [false, true]) {
             await page
                 .getByLabel("Buka Kamera Perangkat")
                 .setInputFiles("public/icon-192.png");
+            await page
+                .getByRole("button", { name: "Gunakan foto", exact: true })
+                .click();
             await expect(
                 page.getByAltText("Foto absensi dengan watermark"),
             ).toBeVisible();
