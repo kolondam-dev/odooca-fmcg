@@ -335,3 +335,7 @@
 - 23 finance tests Ruff12 manifests and both-parent HANDOFF preservation PASS. Old run41996730531 only push Seed jobs, not native finance/full PR evidence; integration CI pending.
 - No merge PR to main, demo write or deployment.
 - Task managed by codex agent at 2026-11-05T15:52:47+07:00
+
+[2026-11-11T16:15:36+07:00] [INFO] PR #115: pertahankan aksi D1 saat upgrade modul
+- Fase D1 dijalankan ulang setelah upgrade modul dan marker baru memperbaiki database yang sudah memakai marker instalasi lama.
+- Task managed by codex agent at 2026-11-11T16:15:36+07:00
