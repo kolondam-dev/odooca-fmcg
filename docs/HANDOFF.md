@@ -1,3 +1,23 @@
+## 2026-11-11T15:43:00+07:00 — antigravity — F4: Resolusi Native Savepoint Odoo ORM, SQL Tamper Rollback & Seed Context Bypassing Credit Limit (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menambahkan context `fmcg_seed_load=True` pada `SaleOrder = self.env["sale.order"].with_context(fmcg_seed_load=True).sudo()` dan saat pemanggilan `so_rec.with_context(fmcg_seed_load=True).action_confirm()`.
+  - Mengeliminasi `UserError: Pesanan S01393 tidak dapat dikonfirmasi! Pelanggan 'Hotel Novotel Manado Golf Resort' melebihi batas kredit...` saat memproses pesanan penjualan historis periode Agustus.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Mengimplementasikan helper `_db_savepoint()` yang menggunakan context manager native `with cr.savepoint():` Odoo ORM berdampingan dengan signal `_ProbeRollbackSignal`.
+  - Mengisolasi override batch probe SO pada `probe_batch_fault` menjadi tepat 2 baris (1 SO valid diikuti 1 SO corrupt SKU), membuktikan mutasi penulisan riil di database Odoo sebelum terjadi exception tanpa terinterupsi pesanan asli lainnya.
+  - Melakukan tampering residual AP pada `probe_ap_bill_mismatch` via SQL langsung (`UPDATE account_move SET amount_residual = 500.00 WHERE id = %s`), sehingga rollback savepoint Odoo ORM mengembalikan nilai residual secara utuh dan deterministik ke Rp 2.899.971.200,00 dengan SHA-256 digest identik sebelum == sesudah.
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 6.3s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py`: All checks passed.
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T15:02:00+07:00 — antigravity — F4: Resolusi Field Odoo 19 `tax_ids` & `memo` serta Invalidation Cache Pasca-Rollback (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
@@ -4202,103 +4222,5 @@ Main ea20ed0 diintegrasikan untuk required checks strict sebelum merge yang dimi
 3. **Pemisahan Identitas Operasi & Penanganan Collision:**
    - Setiap operasi stok menggunakan origin, lokasi sumber, dan tujuan yang berbeda secara definitif (`OPENING-20260701`, `DO-202607-0063`, `REJ-202607-001`, `PO-2026-06-05`), mengeliminasi risiko benturan identitas dokumen.
 4. **Native Historical Readback Pasca-Injeksi Seluruh Data:**
-   - Evaluasi saldo on-hand historis pada tiap cutoff dieksekusi setelah seluruh data transaksi diinjeksi, menghitung saldo net dari `stock.move.line` yang selesai dengan `date <= cutoff_dt`.
-   - Membuktikan bahwa pada Cutoff 2 (3 Juli), saldo historis yang terbaca adalah 77 karton saleable (tidak bocor dengan receipt 311 karton tanggal 4 Juli).
-5. **Replay Lengkap Run 2 & Zero Drift:**
-   - Run 2 mereplay ulang ke-4 operasi secara penuh pada database yang sama, memverifikasi bahwa 0 pergerakan baru tercipta (`delta_moves == 0`, `delta_lines == 0`).
-6. **Pembersihan Loader Utama ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
-   - Menghapus fallback write `quant.quantity = qty_units`.
-   - Menggunakan introspeksi aman `expiration_date` pada pembuatan lot opening.
-   - Menyelaraskan tanggal efektif bisnis historis pada move hasil inventory adjustment (`2026-07-01 00:00:00`).
-7. **Penyempurnaan Ekspor Diagnostik & CI Pipeline:**
-   - JSON report diekspor menggunakan `CustomJSONEncoder` bebas tuple keys di dalam blok `try...finally`.
-   - CI workflow diperbarui dengan step ekstraksi artifact report mandiri berstatus `if: always()`.
-
-**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6429533010](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6429533010)):**
-- Menindaklanjuti kegagalan Odoo shell commit `6dbc46b` saat `load_opening_stock`:
-  `odoo.exceptions.UserError: Quant's creation is restricted, you can't do this operation.`
-- Supervisor menegaskan: Jangan hanya mengganti `StockQuant.create()` agar exception hilang. Buktikan metode seeding historis yang benar pada Odoo 19 disposable sebelum memperluas loader:
-  1. Catat introspeksi Odoo 19 aktual (versi, build, module, timezone, company, costing/valuation).
-  2. Bedakan metadata audit (`create_date`, `write_date`) dengan tanggal efektif bisnis (`date`).
-  3. Siapkan eksperimen historis minimal 1 SKU/lot dengan dependency closure lengkap: Opening Stock, PO receipt, DO delivery, Retur Karantina.
-  4. Bangun pembanding independen dari register kanonikal beku (Cutoff 0 s/d 4) dan buktikan idempotensi dua run (zero drift, 0 new records created).
-  5. Eksekusi pada CI runtime dengan fail-closed gate dan upload artifact diagnostik (`historical_experiment_report.json`).
-- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
-
-**Implementasi Perbaikan:**
-1. **Analisis Introspeksi Odoo 19 & Guardrail `stock.quant`:**
-   - Di Odoo 19 CE, model `stock.quant` memiliki method guardrail `_get_inventory_fields_create()` yang membatasi field saat pemanggilan `create(vals)`.
-   - Melewatkan field `'quantity'` secara langsung memicu `UserError: Quant's creation is restricted`.
-   - Field resmi yang diizinkan untuk penyesuaian stok adalah `inventory_quantity` dan `inventory_date`, dilanjutkan pemanggilan `action_apply_inventory()`.
-   - Penyesuaian tanggal efektif historis (`date` pada `stock.move` dan `stock.move.line`) dilakukan pasca-validasi tanpa memanipulasi metadata audit database (`create_date`, `write_date`).
-2. **Desain Eksperimen Seeding Historis Minimal ([scripts/ops/verify_historical_experiment.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_historical_experiment.py)):**
-   - Dipilih SKU kanonikal tunggal dengan dependency closure lengkap: `ULV-RNS-03` (Rinso Cair Konsentrat Refill 750ml, 1 karton = 12 pouch).
-   - Menghitung tabel perbandingan independen dari register kanonikal (Cutoff 0 s/d 4):
-     * *Cutoff 0 (Pre-Opening)*: On-hand 0, Valuasi Rp 0.
-     * *Cutoff 1 (Opening Stock 2026-07-01)*: 84 karton (1.008 pcs) Lot `LOT-VER-20260615-INIT-09` @ Rp 18.500 = Rp 18.648.000.
-     * *Cutoff 2 (PO-2026-06-05 Receipt 2026-07-04)*: +311 karton (3.732 pcs) Lot `LOT-VER-20260704-09` @ Rp 18.500 = Rp 57.535.000 (Total on-hand: 395 karton / Rp 87.690.000).
-     * *Cutoff 3 (SO-202607-0063 / DO-202607-0063 Delivery 2026-07-07)*: -7 karton (84 pcs) Lot `LOT-VER-20260615-INIT-09` (COGS Rp 1.554.000, Total on-hand: 388 karton / Rp 86.136.000).
-     * *Cutoff 4 (REJ-202607-001 Retur Karantina 2026-07-10)*: +1 karton (12 pcs) Lot `LOT-VER-20260615-INIT-09` ke Karantina FMCG Maumbi (Saleable: 388 karton, Karantina: 1 karton, Total: 389 karton / Rp 86.358.000).
-   - Memvalidasi pembacaan on-hand, reserved, lot, lokasi, dan GL entry.
-   - Menguji idempotensi Run 2 pada database yang sama: memastikan 0 record pergerakan stok baru diciptakan dan saldo stok serta GL tetap identik (zero delta).
-   - Mengekspor laporan hasil terstruktur ke `historical_experiment_report.json`.
-3. **Pembaruan Loader Kanonikal ([scripts/load_canonical_perpetual.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/load_canonical_perpetual.py)):**
-   - Mengubah `load_opening_stock`: mengganti field terlarang `quantity` dengan `inventory_quantity` dan `inventory_date`, lalu memanggil native `action_apply_inventory()` Odoo 19.
-   - Memastikan rerun idempoten tidak menimpa saldo quant yang sudah bergerak di transaksi lanjutan.
-4. **Unit Tests Adapter ([tests/test_canonical_loader_adapter.py](file:///c:/Users/ACER/dev/odooca-fmcg/tests/test_canonical_loader_adapter.py)):**
-   - Menambahkan simulasi `action_apply_inventory()` pada `MockRecord`.
-   - Menambahkan 2 unit test baru:
-     * `test_opening_stock_quant_creation_uses_inventory_adjustment_mode`: memvalidasi penggunaan `inventory_quantity` dan pemanggilan `action_apply_inventory()`.
-     * `test_opening_stock_idempotency_does_not_override_existing_quant_on_rerun`: memvalidasi kuantitas quant yang sudah terpakai tidak di-reset kembali ke saldo awal saat opening di-run ulang.
-   - Seluruh 33/33 unit test adapter lulus (PASS).
-5. **Penyelarasan CI GitHub Actions ([.github/workflows/ci.yml](file:///c:/Users/ACER/dev/odooca-fmcg/.github/workflows/ci.yml)):**
-   - Menambahkan step CI eksekusi eksperimen seeding historis minimal pada Odoo 19 disposable via Odoo shell (`scripts/ops/verify_historical_experiment.py`) dengan pipeline `set -o pipefail`.
-   - Menambahkan step upload artifact diagnostik `odoo19-historical-experiment-report` (`historical_experiment_report.json`) dengan status `if: always()`.
-
-**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6429246384](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6429246384)):**
-- Menindaklanjuti kegagalan step runtime disposable pada commit `68cffec`:
-  * `exec: odoo_run: not found exit code 127`: `odoo_run` adalah fungsi Bash di dalam berkas skrip, bukan berkas executable biner di filesystem, sehingga `exec odoo_run` gagal mencari binary di `$PATH`.
-  * Akibatnya Odoo shell belum sempat mulai, dan introspeksi schema serta dua run transaksi belum dieksekusi.
-- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
-
-**Implementasi Perbaikan:**
-1. **Perbaikan Dispatch Shell di Entrypoint ([deploy/init.sh](file:///c:/Users/ACER/dev/odooca-fmcg/deploy/init.sh)):**
-   - Menghapus kata kunci `exec` saat memanggil fungsi shell internal `odoo_run`:
-     ```bash
-     if [ "${1:-}" = "shell" ]; then
-       shift
-       log "menjalankan Odoo shell dengan konfigurasi penuh"
-       odoo_run shell "$@"
-       exit $?
-     fi
-     ```
-   - Memastikan `odoo_run shell "$@"` dieksekusi sebagai fungsi Bash normal dengan konfigurasi `/tmp/odoo.conf` lengkap, membaca input stream stdin, dan meneruskan exit statusnya (`exit $?`) ke container runner.
-2. **Verifikasi Sintaks:**
-   - Sintaks Bash divalidasi via `bash -n deploy/init.sh` (exit code 0).
-   - Seluruh 31/31 unit test adapter dan linter `ruff check .` lolos bersih.
-
----
-## 2026-10-27 Ã¢â‚¬â€ antigravity agent Ã¢â‚¬â€ Perbaikan Entrypoint Shell, Konfigurasi Penuh /tmp/odoo.conf & Penanganan Tangguh Stdin __file__ pada Odoo 19 Disposable
-**Konteks & Arahan Supervisi ([Review PR #15 issuecomment-6428917098](https://github.com/kolondam-dev/odooca-fmcg/pull/15#issuecomment-6428917098)):**
-- Menindaklanjuti kegagalan CI runtime pada commit `9db41ba`:
-  1. *Runner berhenti dengan `NameError: __file__ is not defined`*: Eksekusi skrip melalui stdin di Odoo shell tidak memiliki variabel global `__file__`.
-  2. *Shell tidak meneruskan konfigurasi addons seperti proses utama*: Odoo shell dipanggil dengan `/tmp/odoo.conf` minimalis tanpa `addons_path` dan kredensial database, serta variabel environment direset saat pergantian user. Akibatnya, `id_base` dan seluruh modul OCA tidak termuat.
-  3. *Introspeksi schema serta Run 1/Run 2 belum terlaksana*: Perlu perbaikan entrypoint container dan konfigurasi shell untuk menjalankan slice disposable secara otomatis tanpa melemahkan gate.
-- Mempertahankan dataset kanonikal LF 100% utuh tanpa modifikasi generator; Railway belum diperlukan dan tidak merge ke `main`.
-
-**Implementasi Perbaikan:**
-1. **Penanganan Tangguh Stdin `__file__` & Deteksi `REG_PATH` ([scripts/ops/verify_disposable_slice.py](file:///c:/Users/ACER/dev/odooca-fmcg/scripts/ops/verify_disposable_slice.py)):**
-   - Menambahkan blok fallback `try ... except NameError` saat mendeteksi `REPO_ROOT` (menggunakan `/opt` jika di container atau `Path.cwd()` jika di workspace).
-   - Menentukan `REG_PATH` adaptif (`REPO_ROOT / 'data' / 'registers'` atau fallback `/opt/data/registers`), menjamin pencarian 15 berkas kanonikal LF selalu valid baik di host maupun container.
-2. **Konfigurasi Lengkap `/tmp/odoo.conf` & Subcommand `shell` Entrypoint ([deploy/init.sh](file:///c:/Users/ACER/dev/odooca-fmcg/deploy/init.sh)):**
-   - Menuliskan opsi lengkap ke `/tmp/odoo.conf`: `admin_passwd`, `addons_path` (mengambil dari `/opt/deploy/addons_path.sh`), `data_dir`, `without_demo = True`, `db_host`, `db_port`, `db_user`, dan `db_password`.
-   - Menambahkan handler subcommand `shell`: jika argumen pertama adalah `shell`, skrip langsung mengeksekusi `odoo_run shell "$@"` dengan seluruh environment dan addons path yang sama persis dengan Odoo server utama.
-   - Menambahkan flag `-p` pada perintah `su` (`su -p -s /bin/bash ...`) untuk menjaga environment variables saat drop privileges.
-3. **Penyelarasan CI GitHub Actions ([.github/workflows/ci.yml](file:///c:/Users/ACER/.gemini/antigravity-ide/brain/fa72665f-eaec-49b7-b9d0-00e8f9e5a9ac/.github/workflows/ci.yml)):**
-   - Mengubah pemanggilan runner disposable di step CI menjadi:
-     `docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_slice.py`
-   - Memastikan Odoo shell otomatis mewarisi konfigurasi container, memuat `id_base` dan dependensinya, lalu mengeksekusi introspeksi schema, Run 1, dan Run 2 (zero drift stock & GL).
-
----
-## 2026-10-27 Ã¢â‚¬â€ antigravity agent Ã¢â‚¬â€ Pengetatan Readback Finansial (Nominal Diskon & Faktur Pasangan), Audit Quant ID Tan
+   - Evaluasi saldo on-hand historis pada tiap cutoff dieksekusi setelah seluruh data transaksi diinjeksi, menghitung saldo net dari `stock.move.line` yang selesai dengan `date <= cutoff_dt
 ... [truncated for diff preview]

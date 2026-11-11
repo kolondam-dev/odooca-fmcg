@@ -22,6 +22,7 @@ Executed in Odoo shell:
 from __future__ import annotations
 
 import argparse
+import contextlib
 from decimal import Decimal
 import hashlib
 import json
@@ -1208,15 +1209,35 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
     results = {"status": "PASS", "probes": {}}
     cr = env.cr
 
+    has_sp = cr and hasattr(cr, "savepoint") and callable(getattr(cr, "savepoint"))
+
+    class _ProbeRollbackSignal(Exception):
+        """Internal signal to cleanly roll back savepoint after fault injection validation."""
+        def __init__(self, data=None):
+            self.data = data
+
+    @contextlib.contextmanager
+    def _db_savepoint():
+        if has_sp:
+            with cr.savepoint():
+                yield
+        else:
+            cr.execute("SAVEPOINT probe_sp")
+            try:
+                yield
+                cr.execute("RELEASE SAVEPOINT probe_sp")
+            except Exception:
+                cr.execute("ROLLBACK TO SAVEPOINT probe_sp")
+                raise
+
     snap_before = capture_period_state_snapshot(env)
 
     # Probe 1: Real Batch SO Mutation with Injected Corrupted SKU -> Rollback -> Clean Recovery
     loader_probe = None
     try:
-        cr.execute("SAVEPOINT probe_batch_fault")
         loader_probe = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
         loader_probe.verify_preflight()
-        SaleOrder = env["sale.order"].sudo()
+        SaleOrder = env["sale.order"].with_context(fmcg_seed_load=True).sudo()
 
         # Derive valid customer and valid SKU directly from pack fixtures to guarantee validity
         valid_cust = (
@@ -1235,7 +1256,7 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
         corrupt_so_num = "SO-202608-PROBE-CORRUPT-02"
 
         # Record 1 (valid) will be written first in batch; Record 2 (corrupt) will trigger exception
-        probe_sos = list(loader_probe.reader.sales_orders) + [
+        probe_sos = [
             {
                 "so_number": valid_so_num,
                 "customer": valid_cust,
@@ -1253,7 +1274,7 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
                 "net_dpp": "100000.00",
             },
         ]
-        probe_lines = list(loader_probe.reader.order_lines) + [
+        probe_lines = [
             {
                 "so_number": valid_so_num,
                 "sku_code": valid_sku,
@@ -1274,68 +1295,63 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
         loader_probe.reader.set_override("sales_orders.csv", probe_sos)
         loader_probe.reader.set_override("order_lines.csv", probe_lines)
 
+        real_write_proven = False
+        exception_caught = None
+
         try:
-            loader_probe._apply_sales_orders_and_deliveries()
+            with _db_savepoint():
+                try:
+                    loader_probe._apply_sales_orders_and_deliveries()
+                    results["probes"]["probe_batch_interruption"] = {
+                        "outcome": "FAIL",
+                        "detail": "FAILED_UNRESOLVED_SKU_NOT_REJECTED",
+                        "digest_matched": False,
+                    }
+                except StateInconsistencyError as e:
+                    pre_written = SaleOrder.search([("client_order_ref", "=", valid_so_num)], limit=1)
+                    real_write_proven = bool(pre_written and pre_written.id)
+                    exception_caught = e
+                    raise _ProbeRollbackSignal(e)
+        except _ProbeRollbackSignal:
+            pass
+
+        if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+            env.invalidate_all()
+
+        post_rollback_so = SaleOrder.search([("client_order_ref", "=", valid_so_num)], limit=1)
+        rollback_clean = (post_rollback_so is None or not post_rollback_so.exists())
+
+        snap_after = capture_period_state_snapshot(env)
+        digest_matched = (snap_before["digest"] == snap_after["digest"])
+
+        if exception_caught and "Unresolved SKU" in str(exception_caught) and real_write_proven and rollback_clean and digest_matched:
+            loader_probe.reader.clear_overrides()
+            results["probes"]["probe_batch_interruption"] = {
+                "outcome": "PASS",
+                "detail": (
+                    f"Real batch write proven before fault (SO {valid_so_num} created in Odoo DB), "
+                    f"rolled back cleanly without dirty state (digest verified), "
+                    f"and reader overrides cleared for recovery"
+                ),
+                "digest_matched": True,
+            }
+        elif not real_write_proven:
             results["probes"]["probe_batch_interruption"] = {
                 "outcome": "FAIL",
-                "detail": "FAILED_UNRESOLVED_SKU_NOT_REJECTED",
+                "detail": "FAILED_NO_REAL_WRITE_BEFORE_INJECTED_ERROR",
+                "digest_matched": digest_matched,
+            }
+        elif not rollback_clean or not digest_matched:
+            results["probes"]["probe_batch_interruption"] = {
+                "outcome": "FAIL",
+                "detail": "FAILED_STATE_DIRTY_AFTER_ROLLBACK",
                 "digest_matched": False,
             }
-        except StateInconsistencyError as e:
-            # Instrument & assert that Record 1 was genuinely written before Record 2 failed
-            pre_written = SaleOrder.search([("client_order_ref", "=", valid_so_num)], limit=1)
-            real_write_proven = bool(pre_written and pre_written.id)
-
-            cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
-            cr.execute("RELEASE SAVEPOINT probe_batch_fault")
-            if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
-                env.invalidate_all()
-
-            post_rollback_so = SaleOrder.search([("client_order_ref", "=", valid_so_num)], limit=1)
-            rollback_clean = (post_rollback_so is None or not post_rollback_so.exists())
-
-            snap_after = capture_period_state_snapshot(env)
-            digest_matched = (snap_before["digest"] == snap_after["digest"])
-
-            if "Unresolved SKU" in str(e) and real_write_proven and rollback_clean and digest_matched:
-                loader_probe.reader.clear_overrides()
-                results["probes"]["probe_batch_interruption"] = {
-                    "outcome": "PASS",
-                    "detail": (
-                        f"Real batch write proven before fault (SO {valid_so_num} created in Odoo DB), "
-                        f"rolled back cleanly without dirty state (digest verified), "
-                        f"and reader overrides cleared for recovery"
-                    ),
-                    "digest_matched": True,
-                }
-            elif not real_write_proven:
-                results["probes"]["probe_batch_interruption"] = {
-                    "outcome": "FAIL",
-                    "detail": "FAILED_NO_REAL_WRITE_BEFORE_INJECTED_ERROR",
-                    "digest_matched": digest_matched,
-                }
-            elif not rollback_clean or not digest_matched:
-                results["probes"]["probe_batch_interruption"] = {
-                    "outcome": "FAIL",
-                    "detail": "FAILED_STATE_DIRTY_AFTER_ROLLBACK",
-                    "digest_matched": False,
-                }
-            else:
-                results["probes"]["probe_batch_interruption"] = {
-                    "outcome": "FAIL",
-                    "detail": f"FAILED_WRONG_MESSAGE: {e}",
-                    "digest_matched": digest_matched,
-                }
-        except Exception as e:
-            cr.execute("ROLLBACK TO SAVEPOINT probe_batch_fault")
-            cr.execute("RELEASE SAVEPOINT probe_batch_fault")
-            if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
-                env.invalidate_all()
-            snap_after = capture_period_state_snapshot(env)
+        else:
             results["probes"]["probe_batch_interruption"] = {
                 "outcome": "FAIL",
-                "detail": f"FAILED_UNEXPECTED_EXCEPTION_TYPE: {type(e).__name__}: {e}",
-                "digest_matched": (snap_before["digest"] == snap_after["digest"]),
+                "detail": f"FAILED_WRONG_MESSAGE: {exception_caught}",
+                "digest_matched": digest_matched,
             }
     except Exception as e:
         results["probes"]["probe_batch_interruption"] = {
@@ -1351,7 +1367,6 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
 
     # Probe 2: Mismatched AP Payment Target & Residual Tampering -> Rollback -> Real AP Recovery
     try:
-        cr.execute("SAVEPOINT probe_ap_tamper")
         loader_ap = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
         loader_ap.verify_preflight()
         company = loader_ap.company
@@ -1368,65 +1383,59 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
             limit=1,
         )
         if bill:
-            bill.write({"amount_residual": 500.00})
+            exception_caught2 = None
             try:
-                loader_ap._apply_ap_payments()
-                results["probes"]["probe_ap_bill_mismatch"] = {
-                    "outcome": "FAIL",
-                    "detail": "FAILED_ACCEPTED_TAMPERED",
-                    "digest_matched": False,
-                }
-            except (PreflightContinuityError, StateInconsistencyError) as e:
-                cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
-                cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
-                if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
-                    env.invalidate_all()
-                snap_after2 = capture_period_state_snapshot(env)
-                digest_matched2 = (snap_before["digest"] == snap_after2["digest"])
-                err_msg = str(e).lower()
-                is_expected_error = (
-                    "residual" in err_msg
-                    or "not match" in err_msg
-                    or "not found" in err_msg
-                    or "mismatch" in err_msg
-                )
-                if is_expected_error and digest_matched2:
-                    results["probes"]["probe_ap_bill_mismatch"] = {
-                        "outcome": "PASS",
-                        "detail": (
-                            f"Tampered residual rejected cleanly ({e}), rollback zero drift verified, "
-                            f"and baseline residual fully restored"
-                        ),
-                        "digest_matched": True,
-                    }
-                elif not digest_matched2:
-                    results["probes"]["probe_ap_bill_mismatch"] = {
-                        "outcome": "FAIL",
-                        "detail": "FAILED_STATE_DIRTY_AFTER_ROLLBACK",
-                        "digest_matched": False,
-                    }
-                else:
-                    results["probes"]["probe_ap_bill_mismatch"] = {
-                        "outcome": "FAIL",
-                        "detail": f"FAILED_NON_SPECIFIC_ERROR: {e}",
-                        "digest_matched": digest_matched2,
-                    }
-            except Exception as e:
-                cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
-                cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
-                if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
-                    env.invalidate_all()
-                snap_after2 = capture_period_state_snapshot(env)
-                results["probes"]["probe_ap_bill_mismatch"] = {
-                    "outcome": "FAIL",
-                    "detail": f"FAILED_WRONG_EXCEPTION_TYPE: {type(e).__name__}: {e}",
-                    "digest_matched": (snap_before["digest"] == snap_after2["digest"]),
-                }
-        else:
-            cr.execute("ROLLBACK TO SAVEPOINT probe_ap_tamper")
-            cr.execute("RELEASE SAVEPOINT probe_ap_tamper")
+                with _db_savepoint():
+                    cr.execute("UPDATE account_move SET amount_residual = 500.00 WHERE id = %s", [bill.id])
+                    if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+                        env.invalidate_all()
+                    try:
+                        loader_ap._apply_ap_payments()
+                        results["probes"]["probe_ap_bill_mismatch"] = {
+                            "outcome": "FAIL",
+                            "detail": "FAILED_ACCEPTED_TAMPERED",
+                            "digest_matched": False,
+                        }
+                    except (PreflightContinuityError, StateInconsistencyError) as e:
+                        exception_caught2 = e
+                        raise _ProbeRollbackSignal(e)
+            except _ProbeRollbackSignal:
+                pass
+
             if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
                 env.invalidate_all()
+
+            snap_after2 = capture_period_state_snapshot(env)
+            digest_matched2 = (snap_before["digest"] == snap_after2["digest"])
+            err_msg = str(exception_caught2).lower() if exception_caught2 else ""
+            is_expected_error = (
+                "residual" in err_msg
+                or "not match" in err_msg
+                or "not found" in err_msg
+                or "mismatch" in err_msg
+            )
+            if is_expected_error and digest_matched2:
+                results["probes"]["probe_ap_bill_mismatch"] = {
+                    "outcome": "PASS",
+                    "detail": (
+                        f"Tampered residual rejected cleanly ({exception_caught2}), rollback zero drift verified, "
+                        f"and baseline residual fully restored"
+                    ),
+                    "digest_matched": True,
+                }
+            elif not digest_matched2:
+                results["probes"]["probe_ap_bill_mismatch"] = {
+                    "outcome": "FAIL",
+                    "detail": "FAILED_STATE_DIRTY_AFTER_ROLLBACK",
+                    "digest_matched": False,
+                }
+            else:
+                results["probes"]["probe_ap_bill_mismatch"] = {
+                    "outcome": "FAIL",
+                    "detail": f"FAILED_NON_SPECIFIC_ERROR: {exception_caught2}",
+                    "digest_matched": digest_matched2,
+                }
+        else:
             results["probes"]["probe_ap_bill_mismatch"] = {
                 "outcome": "FAIL",
                 "detail": "FAILED_NO_UNILEVER_BILL_FOUND",

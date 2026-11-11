@@ -1373,7 +1373,7 @@ class GenericPeriodPackLoader:
         if not so_rows:
             return 0, 0
 
-        SaleOrder = self.env["sale.order"].sudo()
+        SaleOrder = self.env["sale.order"].with_context(fmcg_seed_load=True).sudo()
         Partner = self.env["res.partner"].sudo()
         Product = self.env["product.product"].sudo()
 
@@ -1436,7 +1436,7 @@ class GenericPeriodPackLoader:
                 sol_data.append((0, 0, sol_vals))
             so_vals["order_line"] = sol_data
             so_rec = SaleOrder.create(so_vals)
-            so_rec.action_confirm()
+            so_rec.with_context(fmcg_seed_load=True).action_confirm()
             so_count += 1
 
             # Validate picking delivery if present
