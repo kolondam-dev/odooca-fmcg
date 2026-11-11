@@ -400,7 +400,70 @@ class FxRevaluationTests(unittest.TestCase):
         )
         self.assertEqual(report["realized_rows"], [])
         self.assertEqual(report["realized_posted_total"], 0.0)
-        self.assertEqual(report["tied_exchange_move_ids"], [])
+        # Netting removes the rows, but the scope still covers both exchange
+        # moves: the comparator must see them cancel in the GL too.
+        self.assertEqual(report["realized_exchange_move_ids"], [])
+        self.assertEqual(report["tied_exchange_move_ids"], [9, 10])
+
+    def test_reversal_that_creates_new_lines_is_still_matched(self):
+        # Review finding: a reversal creates new journal lines, so the reversed
+        # partial and the reverse partial never share the same (debit, credit)
+        # pair. Grouping on that pair never matched and both sides stayed in the
+        # totals. They do share the reconciled document line, so connectivity is
+        # the correct grouping key.
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        normal = partial(1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0),
+                         1_500_000.0, exchange_move_id=9)
+        normal.update({
+            "debit_line_id": 1, "credit_line_id": 2, "move_ids": [10, 11],
+            "move_id": 10, "reversed_entry_id": None, "is_reversal": True,
+        })
+        reversal = partial(2, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0),
+                           1_500_000.0, exchange_move_id=10)
+        reversal.update({
+            "debit_line_id": 1, "credit_line_id": 3, "move_ids": [10, 12],
+            "move_id": 12, "reversed_entry_id": 11, "is_reversal": False,
+        })
+        report = sched.build_fx_revaluation(
+            [open_line], [normal, reversal], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(
+            report["realized_rows"], [],
+            "a reversal pair that shares the document line must net to zero",
+        )
+        self.assertEqual(report["realized_posted_total"], 0.0)
+
+    def test_reversal_in_a_different_component_is_not_cancelled(self):
+        # Connectivity is the guard: a reverse link alone must not cancel a
+        # partial that reconciles an unrelated document.
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        first = partial(1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0),
+                        1_500_000.0, exchange_move_id=9)
+        first.update({
+            "debit_line_id": 1, "credit_line_id": 2, "move_ids": [10, 11],
+            "move_id": 10, "reversed_entry_id": None, "is_reversal": True,
+        })
+        separate = partial(2, leg(700_000.0, 40.0), leg(-700_000.0, -40.0),
+                           700_000.0, exchange_move_id=10)
+        separate.update({
+            "debit_line_id": 30, "credit_line_id": 31, "move_ids": [40, 41],
+            "move_id": 40, "reversed_entry_id": 11, "is_reversal": False,
+        })
+        report = sched.build_fx_revaluation(
+            [open_line], [first, separate], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(
+            len(report["realized_rows"]), 2,
+            "partials that share no reconciled line must not cancel each other",
+        )
 
     def test_unmatched_reversal_is_not_silently_dropped(self):
         # A reversal whose target move is absent must still post its own amount;
@@ -487,6 +550,98 @@ class FxRevaluationTests(unittest.TestCase):
         )
         self.assertEqual(len(report["unrealized_rows"]), 1)
         self.assertEqual(report["unrealized_rows"][0]["amount_residual_currency"], 100.0)
+
+    def test_scope_keeps_exchange_move_of_functional_counterpart(self):
+        # P1 review: the GL comparator must be derived from the *selected*
+        # partials, before classification. A partial skipped as a functional
+        # counterpart must not take its exchange move out of scope, otherwise
+        # realized and comparator can both be empty and still "balance".
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        skipped = partial(
+            1, leg(1_500_000.0, 100.0), leg(-1_500_000.0, -100.0, currency_id=1),
+            1_500_000.0, exchange_move_id=41,
+        )
+        skipped["functional_counterpart"] = True
+        report = sched.build_fx_revaluation(
+            [open_line], [skipped], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(report["functional_counterpart_rows"][0]["partial_id"], 1)
+        self.assertEqual(report["realized_rows"], [])
+        self.assertEqual(report["realized_exchange_move_ids"], [])
+        self.assertEqual(
+            report["tied_exchange_move_ids"], [41],
+            "a skipped partial must still define the GL comparator scope",
+        )
+
+    def test_scope_keeps_exchange_move_of_write_off_and_exception(self):
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        written_off = partial(
+            1, leg(750_000.0, 50.0), leg(-750_000.0, -50.0), 750_000.0,
+            exchange_move_id=51,
+        )
+        written_off["write_off"] = True
+        unclassifiable = partial(
+            2, leg(1_500_000.0, 0.0), leg(-1_600_000.0, -100.0), 1_500_000.0,
+            exchange_move_id=52,
+        )
+        report = sched.build_fx_revaluation(
+            [open_line], [written_off, unclassifiable], "2026-07-31", ROUND,
+            lambda *_: 16_000.0,
+        )
+        self.assertEqual(report["write_off_rows"][0]["partial_id"], 1)
+        self.assertEqual(report["exceptions"][0]["partial_id"], 2)
+        self.assertEqual(report["realized_exchange_move_ids"], [])
+        self.assertEqual(
+            report["tied_exchange_move_ids"], [51, 52],
+            "write-off and exception partials must still define the GL scope",
+        )
+
+    def test_scope_ignores_partials_without_exchange_move(self):
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        unposted = partial(
+            1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0), 1_500_000.0,
+        )
+        report = sched.build_fx_revaluation(
+            [open_line], [unposted], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(report["tied_exchange_move_ids"], [])
+        self.assertEqual(len(report["realized_unposted_rows"]), 1)
+
+    def test_scope_and_realized_sets_differ_for_partially_skipped_selection(self):
+        # One partial realises, one is skipped: both exchange moves stay in the
+        # comparator scope, only one is realized evidence.
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        realised = partial(
+            1, leg(1_500_000.0, 100.0), leg(-1_600_000.0, -100.0), 1_500_000.0,
+            exchange_move_id=61,
+        )
+        skipped = partial(
+            2, leg(750_000.0, 50.0), leg(-750_000.0, -50.0), 750_000.0,
+            exchange_move_id=62,
+        )
+        skipped["write_off"] = True
+        report = sched.build_fx_revaluation(
+            [open_line], [realised, skipped], "2026-07-31", ROUND,
+            lambda *_: 16_000.0,
+        )
+        self.assertEqual(report["tied_exchange_move_ids"], [61, 62])
+        self.assertEqual(report["realized_exchange_move_ids"], [61])
 
     def test_missing_counterpart_is_not_assumed_functional(self):
         # Review blocker: a USD leg whose counterpart sits outside the filter was

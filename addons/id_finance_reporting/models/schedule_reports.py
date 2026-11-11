@@ -237,9 +237,14 @@ class FinanceFxRevaluation(models.AbstractModel):
             # the report is incomplete even when the numbers tie.
             tie_out["issues"] = sorted(set(tie_out["issues"]) | {"unclassified_partials"})
             tie_out["balanced"] = False
-        if scope_limited and report["realized_posted_total"] and not gl_balance:
-            # A filtered report that realises FX but finds no exchange evidence
-            # must fail loudly instead of balancing against an empty comparator.
+        scope_has_evidence = bool(
+            report["tied_exchange_move_ids"] or report["realized_posted_total"],
+        )
+        if scope_limited and scope_has_evidence and not gl_balance:
+            # Selection found exchange moves but the comparator is empty: that is
+            # missing evidence, not a clean zero. Checked even when realized is
+            # zero, because an empty comparator balancing an empty realized total
+            # is exactly the false pass this guard exists for.
             tie_out["balanced"] = False
             tie_out["issues"] = sorted(set(tie_out["issues"]) | {"missing_exchange_evidence"})
         if report["over_reconciled_rows"]:

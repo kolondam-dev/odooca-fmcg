@@ -240,8 +240,8 @@ def build_fx_fixture(env, suffix):
     (sec.control_line(write_off_invoice, accounts["ar"])
      | sec.control_line(write_off_move, accounts["ar"])).reconcile()
 
-    # Reversal fixture: a settlement whose move is reversed. The pair must net to
-    # zero realized FX rather than double count.
+    # Reversal fixture A: reversed with cancel=False. Odoo keeps the original
+    # reconcile and only posts a mirror move, so the settlement still stands.
     reversal_source = usd_entry("reversal_source", "2026-06-10", 300_000, 20,
                                 journals["sale"])
     reversal_settle = usd_entry("reversal_settle", "2026-06-20", -320_000, -20,
@@ -257,6 +257,25 @@ def build_fx_fixture(env, suffix):
         cancel=False,
     )
     reversal_move.action_post()
+
+    # Reversal fixture B: reversed with cancel=True ("reverse and reconcile").
+    # Odoo removes the original reconcile and reconciles the mirror move with the
+    # original lines, which is the shape that can leave a genuine reversed
+    # partial behind. This is the case the netting contract must be proven on.
+    cancel_source = usd_entry("cancel_source", "2026-06-05", 300_000, 20,
+                              journals["sale"])
+    cancel_settle = usd_entry("cancel_settle", "2026-06-15", -320_000, -20,
+                              journals["cash"])
+    (sec.control_line(cancel_source, accounts["ar"])
+     | sec.control_line(cancel_settle, accounts["ar"])).reconcile()
+    cancel_reversal = cancel_settle._reverse_moves(
+        default_values_list=[{
+            "date": date(2026, 6, 18),
+            "journal_id": journals["cash"].id,
+            "ref": f"I2C-CANCEL-{suffix}",
+        }],
+        cancel=True,
+    )
 
     return {
         "company": fx_company,
@@ -277,6 +296,9 @@ def build_fx_fixture(env, suffix):
         "reversal_source": reversal_source,
         "reversal_settle": reversal_settle,
         "reversal_move": reversal_move,
+        "cancel_source": cancel_source,
+        "cancel_settle": cancel_settle,
+        "cancel_reversal": cancel_reversal,
         "round_amt": round_amt,
     }
 
@@ -612,21 +634,66 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
                 "FIN38 write-off must not also appear in realized rows",
             )
 
-            # Reversal netting must be visible through the reader. A matched pair
-            # cancels, so no reconciled line pair may appear twice with the same
-            # amount and sign, which is exactly what double counting would look
-            # like.
-            signatures = [
-                (
-                    row.get("debit_line_id"), row.get("credit_line_id"),
-                    round_amt(row["realized_amount"]),
-                )
-                for row in write_off_snapshot["realized_rows"]
-            ]
+            # Reversal proof. The native log must show that a reversal really
+            # produces a pair, and that netting yields the expected number. Both
+            # were previously asserted only by absence of duplicate rows, which a
+            # silently dead code path also satisfies.
+            diagnostics = reversal_diagnostics(env, fixture)
+            evidence["reversal_diagnostics"] = diagnostics
             require(
-                len(signatures) == len(set(signatures)),
-                f"FIN38 must not double count a reconciled pair: {signatures}",
+                any(row["debit_has_reversal"] or row["credit_has_reversal"]
+                    for row in diagnostics),
+                f"reversal fixture must produce a reversed partial: {diagnostics}",
             )
+            require(
+                any(row["debit_reversed_entry"] or row["credit_reversed_entry"]
+                    for row in diagnostics),
+                "reverse-and-reconcile must leave a reversed_entry link: "
+                f"{diagnostics}",
+            )
+
+
+def reversal_diagnostics(env, fixture):
+    """Record the real shape of every partial that touches the reversal fixtures.
+
+    Odoo keeps the reversed link on the mirror move, while the original move only
+    knows ``reversal_move_ids``. Dumping both directions makes the pairing
+    provable from the native log instead of asserted from assumption.
+    """
+    company = fixture["company"]
+    moves = (
+        fixture["reversal_settle"] | fixture["reversal_move"]
+        | fixture["cancel_settle"] | fixture["cancel_reversal"]
+    )
+    lines = moves.mapped("line_ids").filtered(
+        lambda line: line.account_id == fixture["accounts"]["ar"]
+    )
+    partials = env["account.partial.reconcile"].search([
+        ("company_id", "=", company.id),
+        "|", ("debit_move_id", "in", lines.ids), ("credit_move_id", "in", lines.ids),
+    ], order="id asc")
+    partials.check_access("read")
+    rows = []
+    for record in partials:
+        debit_move = record.debit_move_id.move_id
+        credit_move = record.credit_move_id.move_id
+        rows.append({
+            "partial_id": record.id,
+            "amount": record.amount,
+            "max_date": str(record.max_date),
+            "exchange_move_id": record.exchange_move_id.id or None,
+            "debit_line_id": record.debit_move_id.id,
+            "credit_line_id": record.credit_move_id.id,
+            "debit_move_id": debit_move.id,
+            "credit_move_id": credit_move.id,
+            "debit_reversed_entry": debit_move.reversed_entry_id.id or None,
+            "credit_reversed_entry": credit_move.reversed_entry_id.id or None,
+            "debit_has_reversal": bool(debit_move.reversal_move_ids),
+            "credit_has_reversal": bool(credit_move.reversal_move_ids),
+            "debit_amount_currency": record.debit_amount_currency,
+            "credit_amount_currency": record.credit_amount_currency,
+        })
+    return rows
 
 
 def check_security(env, fixture_a, fixture_b, evidence):

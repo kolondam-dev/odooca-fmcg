@@ -265,40 +265,74 @@ def realized_partial_amount(partial, debit_leg, credit_leg, round_amount):
 
 
 def _net_reversals(partials, round_amount):
-    """Net reversed partials per reconciled pair before totalling realized FX.
+    """Net reversed partials against the partial that created them.
 
-    A reversal is matched to the partial it undoes by comparing the reversed
-    move id against each candidate's ``move_id``. Only a matched pair cancels;
-    an unmatched reversal stays in the totals so it still offsets its own amount
-    instead of silently disappearing.
+    A reversal creates **new journal lines**, so the reversed partial and the
+    reverse partial never share the same ``(debit_line_id, credit_line_id)``
+    pair. Grouping on that exact pair, as this used to do, could therefore never
+    match anything and silently left both sides in the totals.
+
+    Grouping now follows connectivity instead: two partials belong together when
+    they share at least one reconciled line. The actual cancellation is then
+    matched on the move link, in either direction, because Odoo can store the
+    link on the reversal move (``reversed_entry_id``) while the original move
+    only knows ``reversal_move_ids``.
+
+    Only a matched pair cancels. An unmatched reverse partial stays in the
+    totals so it still posts its own amount instead of disappearing.
     """
+    parent = {}
+
+    def find(node):
+        parent.setdefault(node, node)
+        while parent[node] != node:
+            parent[node] = parent[parent[node]]
+            node = parent[node]
+        return node
+
+    def union(left, right):
+        root_left, root_right = find(left), find(right)
+        if root_left != root_right:
+            parent[root_right] = root_left
+
+    for partial in partials:
+        debit_line = partial.get("debit_line_id")
+        credit_line = partial.get("credit_line_id")
+        if debit_line:
+            find(debit_line)
+        if credit_line:
+            find(credit_line)
+        if debit_line and credit_line:
+            union(debit_line, credit_line)
+
+    groups = defaultdict(list)
+    for partial in partials:
+        anchor = partial.get("debit_line_id") or partial.get("credit_line_id")
+        groups[find(anchor)].append(partial)
+
+    def move_ids(partial):
+        return tuple(partial.get("move_ids") or (partial.get("move_id"),))
+
+    def reverses(first, second):
+        first_target = first.get("reversed_entry_id")
+        second_target = second.get("reversed_entry_id")
+        return bool(
+            (first_target and first_target in move_ids(second))
+            or (second_target and second_target in move_ids(first))
+        )
+
     surviving = []
     cancelled = set()
-    by_pair = defaultdict(list)
-    for partial in partials:
-        key = (partial.get("debit_line_id"), partial.get("credit_line_id"))
-        by_pair[key].append(partial)
-    for _key, group in by_pair.items():
-        reversals = [p for p in group if p.get("is_reversal")]
-        normals = [p for p in group if not p.get("is_reversal")]
-        for reversal in reversals:
-            target = reversal.get("reversed_entry_id")
-            if target is None:
-                continue
-            match = next(
-                (
-                    candidate for candidate in normals
-                    if target in (candidate.get("move_ids") or (candidate.get("move_id"),))
-                    and id(candidate) not in cancelled
-                ),
-                None,
-            )
-            if match is None:
-                # Unmatched reversal: keep it so its own amount still posts.
-                continue
-            cancelled.add(id(match))
-            cancelled.add(id(reversal))
-        surviving.extend(p for p in group if id(p) not in cancelled)
+    for _root, group in groups.items():
+        for index, first in enumerate(group):
+            for second in group[index + 1:]:
+                if id(first) in cancelled or id(second) in cancelled:
+                    continue
+                if not reverses(first, second):
+                    continue
+                cancelled.add(id(first))
+                cancelled.add(id(second))
+        surviving.extend(item for item in group if id(item) not in cancelled)
     return surviving
 
 
@@ -372,7 +406,20 @@ def build_fx_revaluation(
     write_off_rows = []
     realized_posted_total = 0.0
     realized_unposted_total = 0.0
-    tied_exchange_move_ids = set()
+    realized_exchange_move_ids = set()
+
+    # The GL tie-out scope is taken from every *selected* partial, before any
+    # netting or classification. Deriving it from the partials that survive into
+    # realized rows made the comparator shrink with the report: a partial skipped
+    # as functional counterpart, write-off or nominal exception took its exchange
+    # move out of scope too, so realized and comparator could both be empty while
+    # the report still said balanced. Scope is a property of the selection, not of
+    # the classification outcome.
+    scope_exchange_move_ids = {
+        partial["exchange_move_id"]
+        for partial in partials
+        if partial.get("exchange_move_id")
+    }
 
     surviving = _net_reversals(partials, round_amount)
     for partial in surviving:
@@ -428,7 +475,7 @@ def build_fx_revaluation(
             "credit_line_id": partial.get("credit_line_id"),
         }
         if partial.get("exchange_move_id"):
-            tied_exchange_move_ids.add(partial["exchange_move_id"])
+            realized_exchange_move_ids.add(partial["exchange_move_id"])
             realized_posted_total = round_amount(realized_posted_total + amount)
             realized_rows.append(payload)
         else:
@@ -456,7 +503,8 @@ def build_fx_revaluation(
         "over_reconciled_rows": over_reconciled,
         "functional_counterpart_rows": functional_counterpart_rows,
         "write_off_rows": write_off_rows,
-        "tied_exchange_move_ids": sorted(tied_exchange_move_ids),
+        "tied_exchange_move_ids": sorted(scope_exchange_move_ids),
+        "realized_exchange_move_ids": sorted(realized_exchange_move_ids),
         "posted_evidence_total": round_amount(realized_posted_total),
         "complete": not over_reconciled and not exceptions,
     }
