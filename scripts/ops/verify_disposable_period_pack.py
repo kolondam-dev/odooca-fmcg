@@ -236,10 +236,28 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     }
 
     Company = env["res.company"].sudo()
-    company = Company.search(
-        ["|", ("name", "ilike", "PT Salva Inti Mandiri"), ("name", "ilike", "Manado")], limit=1
-    )
+    company = None
+    if "ir.config_parameter" in env:
+        try:
+            param_val = env["ir.config_parameter"].sudo().get_param("fmcg.seed_company_id")
+            if param_val:
+                cand = Company.browse(int(param_val))
+                if cand.exists():
+                    company = cand
+        except Exception:
+            pass
+    if not company and hasattr(env, "ref"):
+        try:
+            cand = env.ref("id_base.fmcg_seed_company", raise_if_not_found=False)
+            if cand and cand.exists():
+                company = cand
+        except Exception:
+            pass
     if not company:
+        company = Company.search(
+            ["|", ("name", "ilike", "PT Salva Inti Mandiri"), ("name", "ilike", "Manado")], limit=1
+        ) or getattr(env, "company", None) or Company.search([], limit=1)
+    if not company or not company.exists():
         raise RuntimeError("Canonical FMCG Company not found during audit")
 
     SaleOrder = env["sale.order"].sudo()

@@ -343,10 +343,32 @@ class GenericPeriodPackLoader:
         if self.company_id:
             self.company = Company.browse(self.company_id)
         else:
-            self.company = Company.search(
-                ["|", ("name", "ilike", "PT Salva Inti Mandiri"), ("name", "ilike", "Manado")],
-                limit=1,
-            )
+            # 1. Parameter fmcg.seed_company_id
+            if "ir.config_parameter" in self.env:
+                try:
+                    param_val = self.env["ir.config_parameter"].sudo().get_param("fmcg.seed_company_id")
+                    if param_val:
+                        cand = Company.browse(int(param_val))
+                        if cand.exists():
+                            self.company = cand
+                except Exception:
+                    pass
+
+            # 2. XMLID resmi id_base.fmcg_seed_company
+            if not getattr(self, "company", None) and hasattr(self.env, "ref"):
+                try:
+                    cand = self.env.ref("id_base.fmcg_seed_company", raise_if_not_found=False)
+                    if cand and cand.exists():
+                        self.company = cand
+                except Exception:
+                    pass
+
+            # 3. Pencarian nama kanonikal atau fallback env.company
+            if not getattr(self, "company", None):
+                self.company = Company.search(
+                    ["|", ("name", "ilike", "PT Salva Inti Mandiri"), ("name", "ilike", "Manado")],
+                    limit=1,
+                ) or getattr(self.env, "company", None) or Company.search([], limit=1)
         if not self.company or not self.company.exists():
             raise PreflightContinuityError("Canonical FMCG Company not found in res.company")
 

@@ -1,3 +1,19 @@
+## 2026-11-11T13:43:00+07:00 — antigravity — F4: Resolusi Kanonikal Company Multi-Fallback pada Loader & Verifier (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py` & `scripts/ops/verify_disposable_period_pack.py`:
+  - Mengadaptasi resolusi entitas company kanonikal agar memeriksa parameter persisten `fmcg.seed_company_id`, XMLID `id_base.fmcg_seed_company`, pencarian nama kanonikal ("PT Salva Inti Mandiri" / "Manado"), dan fallback ke `env.company` atau `res.company` pertama.
+  - Mengatasi `PreflightContinuityError: Canonical FMCG Company not found in res.company` yang terjadi saat re-running pack Agustus pada database disposable CI (`ci_db`).
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 10.1s).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T10:48:00+07:00 — antigravity — F4: Resolusi Inisialisasi Registry Odoo 19 untuk Database B (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
