@@ -115,8 +115,8 @@
     "addons/id_dashboard_ui/static/src/components/period_popup.js": "dc0672477bcd928efd04b87f860938df94d9f908d75549889fca7fe703837b4a",
     "addons/id_dashboard_ui/static/src/components/period_popup.xml": "9ab55253ff30a637a65051485f7700edeefdd1426a25cf2022035c6dc8e3e0d3",
     "addons/id_dashboard_ui/static/src/components/ported.js": "eafca44a86fce6c3eeff20bd4a077c5edf4f7bc3672c78580352dc8f54c19af1",
-    "addons/id_dashboard_ui/static/src/components/scatter.js": "502bb9cfdac1d82672f10cd6273c00ed4a98f13f3dd86ae2f084efaf3508f6d3",
-    "addons/id_dashboard_ui/static/src/components/scatter.xml": "64f66b24581d55d84fb5c1be16ee20545b6ed53e976fb4d7f2ec0a44aa06e3b8",
+    "addons/id_dashboard_ui/static/src/components/scatter.js": "74a9af152ff26c9418c66e1b1daf72137cce84f294387244fdfeffd1f666a368",
+    "addons/id_dashboard_ui/static/src/components/scatter.xml": "397ad1d89cc073a7c061f8e0c65915cd038e47746fa297b315e6dcb4fdf1bb77",
     "addons/id_dashboard_ui/static/src/components/stack_bars.js": "16f171a8a9371594ac5271448538da6b48478f14bda7f05fd95c4d571a886bed",
     "addons/id_dashboard_ui/static/src/components/stack_bars.xml": "d8473b37a711b440a0a5c7ebc4b2cf6834ea0c075a69ceaaea53099bf6d29743",
     "addons/id_dashboard_ui/static/src/components/trend_chart.js": "72b4da9d55d77957fbcc9388ca5176e5ac1766c472b5f6c6cc1d07079eaecba7",
@@ -130,7 +130,7 @@
     "addons/id_dashboard_ui/static/src/pages/dashboard.js": "84153e06c1888578bb521f8edbf2e2288503b111e5afa9de57532f96979ab7a4",
     "addons/id_dashboard_ui/static/src/pages/pages.xml": "1a3343b3051c29162bf9cc0152e57c53d7ce432bd6033ae2d9455e69ed5e6eb2",
     "addons/id_dashboard_ui/static/src/pages/shell.xml": "14c4a2ed7333bc8e80f474f3c0e10723859e32deaec8aa77f353bf3f46dd2f89",
-    "addons/id_dashboard_ui/static/src/scss/approved_controls.scss": "589833d89488417f696c5e6c9d0bb2b8dbd9c66b76f8146c1b284e5190b6f2c6",
+    "addons/id_dashboard_ui/static/src/scss/approved_controls.scss": "dba4c70fb65204560f86f221137c85dcd509707fb417c1510b8820afd6ad2c90",
     "addons/id_dashboard_ui/static/src/scss/dashboard.scss": "558f84ebe576e2349bc94653dde4a60f2a8d8e835b9c8862878363ce3c2bae85",
     "addons/id_dashboard_redesign/__init__.py": "9476dc0ffdc9864d3680ac803634350627fcba49cef2a2ed4522b894934f79e4",
     "addons/id_dashboard_redesign/__manifest__.py": "91f06cc4a6d370ac6450c2b28f887ae509d4fbb0addbc314128b498fa320d3dd",
@@ -140,11 +140,22 @@
     "addons/id_dashboard_redesign/models/dashboard_bridge.py": "78420e7b73b56de2583010aa643f040f80eac1f20631882b4d4bfe14b7f756f7",
     "addons/id_dashboard_redesign/static/src/action.js": "fc75b6960ae1f1b701ecd4803dac4cc774793807419be5c3ed8d6ad14260de5e",
     "addons/id_dashboard_redesign/static/src/action.xml": "9a92d7125fd5669a6d0f9ff571aa44d16a3d74c344e6843d9f6ffecb95ce7761",
-    "addons/id_dashboard_redesign/static/src/adapters.js": "241bb7374c25621590a1fafa3076d74b33b763b379b3f1c8226b4cfcf118de10",
+    "addons/id_dashboard_redesign/static/src/adapters.js": "247edccf02ec928fe6486c2b22e6875077dd09938a5da6f9c52a9e12c5a480eb",
     "addons/id_dashboard_redesign/tests/__init__.py": "68b67bf531428a053b81ed4754f3211a2f67ede3fce9f73897685f4574cb9808",
     "addons/id_dashboard_redesign/tests/test_dashboard_bridge.py": "88e5d076e9c8c5614d3761b5ead81defcf8712da885228743f5b57dbe1db32a2",
     "addons/id_dashboard_redesign/views/dashboard_actions.xml": "4100c21ef7c1af808f34c9ba7ba5b1e6de2e9ce4e391e09b932e134ddb385631"
   },
   "native_backend_retested_in_followup": false,
-  "native_backend_unchanged_from": "76105e33bf063d79992d4877156dcda6511f9e4c"
+  "native_backend_unchanged_from": "76105e33bf063d79992d4877156dcda6511f9e4c",
+  "previous_head_ci_verified_by_supervisor": "d18a051d233729c7067d943f695b15cdcdbbcef3",
+  "dedicated_ci_visual_status": "PENDING new HEAD run",
+  "local_visual_followup": {
+    "status": "PASS",
+    "checks": 50,
+    "unique_screenshots": 34,
+    "fixture_orders": 224,
+    "fixture_reconciliation_checks": 30,
+    "source_worktree_dirty": true,
+    "limits": "Working-tree native evidence only; current-HEAD CI artifact is the reviewer evidence."
+  }
 }

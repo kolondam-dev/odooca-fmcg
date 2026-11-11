@@ -1,3 +1,10 @@
+## 2026-11-11T07:26:19+07:00 — Codex-Dashboard — PR113 dedicated native D1 CI evidence
+**Berubah:** CI memasang D1 di `d1_ci`/filestore/port8071 sendiri, fixture224SO/8salesman/4principal-channel-kota, rekonsiliasi30assertion dan browser50checks. Artifact terpisah berisi34screenshot, referencePNG/v2, JSON/HTML index, hashes source/image dan deviasi. Role salesman login terpisah, kasus signed negative/unavailable, error/loading/retry, popup dan inline semua width1440/1024/768.
+**Fix terbukti:** footer popup sesudah unpin tertutup dashboard pada1024 karena root stacking; z-index root diperbaiki dan hit-testing+klik normal lulus. Target unavailable plain dash; nilai bulanan negatif kecil tidak dibulatkan menjadi-0; label scatter top2 dengan nama lengkap via title/aria.
+**Diverifikasi:** [F]50browser native+34gambar dan30rekonsiliasi lokal PASS;27regresi dashboard/Ruff/14manifest/30transpiler/XML-YAML-shell PASS. Backend tidak diubah. [BU] artifact/CI exact HEAD baru dan review visual independen masih menunggu. Draft bukan penyebab gap bukti d18a051; PR tetap Ready sesuai instruksi pemilik. Tidak merge/deploy/live DB.
+**Berikutnya:** publish, verifikasi artifact current-HEAD dan serahkan kembali ke reviewer; bukan self-approval visual.
+**Signature:** Task Managed by Agent Codex-Dashboard
+
 ## 2026-11-10T22:38:36+07:00 — Codex-Dashboard — D1 initial-query recovery
 **Berubah:** toolbar/filter tetap tersedia saat query awal gagal; retry memakai query server yang sama. Label EC/call menyebut own scope saat service PJP membatasi ke pengguna sendiri.
 **Diverifikasi:** [F]29browser native checks termasuk injeksi RPC gagal→retry;27regresi dashboard;30transpiler resmi;Ruff/XML PASS. Backend native tidak berubah dari76105e3 (12metode install/upgrade PASS). PR #113 draft; CI diperiksa pada HEAD terbaru setelah push.

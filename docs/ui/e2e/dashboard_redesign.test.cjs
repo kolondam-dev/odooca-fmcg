@@ -50,12 +50,16 @@ test('D1 adapter uses company currency, signed values, real comparison and no fi
     const ctx={Intl,_t:s=>s};vm.createContext(ctx);vm.runInContext(source,ctx);
     const raw={total:{net:-50,gross:-60,discount:-10,orders:1,aov:-50,pjp:{}},
         period:{start:'2026-10-01',end:'2026-10-01'},currency:'USD',line_domain:[['id','in',[99]]],
-        trend:[{date:'2026-10-01',net:-50}],principal:[],channel:[],city:[],monthly:[],salesmen:[]};
+        trend:[{date:'2026-10-01',net:-50}],principal:[],channel:[],city:[],
+        monthly:[{month:'2026-10',net:-900000,discount_ratio:0}],
+        salesmen:[{name:'Unavailable target',net:-50,orders:1,outlets:1,pjp:{}}]};
     const result=ctx.adapt('D1',{source:raw,read_at:'now'},{});
     assert.equal(result.kpis[2].cur,'USD');assert.equal(result.kpis[2].num,'-50');
     assert.equal(result.kpis[1].num,'—');assert.equal(result.kpis[3].num,'—');
     assert.equal(result.config.panel6.min,-0.00005);assert.equal(result.__available['D1.7'],false);
     assert.equal(result.kpis[2].drill.domain[0][2][0],99);
+    assert.equal(result.trows[0][4],'—');
+    assert.equal(result.mBars[0].t,'-0,0009');
 });
 test('D1 controls defer translations until mounted after webclient startup',()=>{
     let source=fs.readFileSync(path.join(root,'addons/id_dashboard_ui/static/src/core/controls_controller.js'),'utf8');

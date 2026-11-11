@@ -53,6 +53,7 @@ export class Scatter extends VisualComponent {
                 d: q.r,
                 m: `${-q.r / 2}px 0 0 ${-q.r / 2}px`,
                 n: q.l || "",
+                label: q.showLabel === false ? "" : q.l || "",
                 drill: q.drill,
             })),
             xl: p.xl || "",

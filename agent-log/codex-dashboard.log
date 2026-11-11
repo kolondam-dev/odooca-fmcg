@@ -8,3 +8,9 @@
 - Keep filters available on initial RPC failure; disclose own PJP scope in metric labels.
 -29native browser checks and27static regressions PASS; server source unchanged from76105e3. PR #113 draft; no merge/deploy.
 - Task Managed by Agent Codex-Dashboard
+
+[2026-11-11T07:26:19+07:00] [INFO] Dedicated D1 native CI visual evidence
+- Review #5851434200: legacy browser CI was not D1 coverage; Draft status was unrelated.
+- Add representative fixture, native browser/role/negative/error cases and versioned baseline artifact. Fix reproduced unpinned footer occlusion without force-click.
+-50native browser checks,34screenshots,30native reconciliations and27regressions PASS locally. Exact-HEAD CI/artifact and independent visual acceptance pending.
+- Task Managed by Agent Codex-Dashboard

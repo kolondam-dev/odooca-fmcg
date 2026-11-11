@@ -1,6 +1,6 @@
 /** @odoo-module **/
 import { _t } from "@web/core/l10n/translation";
-const fmt = (n, digits = 1) => Number.isFinite(n) ? new Intl.NumberFormat("id-ID", { maximumFractionDigits: digits }).format(n) : "—";
+const fmt = (n, digits = 1) => Number.isFinite(n) ? new Intl.NumberFormat("id-ID", { maximumFractionDigits: digits }).format(n === 0 ? 0 : n) : "—";
 const formatMoney = (n, currency) => {
     if (!Number.isFinite(n)) return { num: "—", unit: "", cur: "" };
     const scale = Math.abs(n) >= 1e9 ? 1e9 : Math.abs(n) >= 1e6 ? 1e6 : 1;
@@ -83,7 +83,7 @@ export function adaptSource(dashboard, response, scope = {}) {
     value.config.panel6 = { min: low, max: high, target: undefined };
     value.trendTicks = [low, (low + high) / 2, high].map(n => Math.round(n * 10) / 10);
     value.trendX = raw.trend.map((r, i) => i % Math.ceil(raw.trend.length / 7) === 0 || i === raw.trend.length - 1 ? r.date.slice(5) : "");
-    value.mBars = raw.monthly.map(r => ({ l: r.month, v: r.net / 1e9, t: fmt(r.net / 1e9, 2), drill: r.drill }));
+    value.mBars = raw.monthly.map(r => ({ l: r.month, v: r.net / 1e9, t: fmt(r.net / 1e9, Math.abs(r.net / 1e9) < .01 ? 9 : 2), drill: r.drill }));
     value.mLine = raw.monthly.map(r => ({ v: pct(r.discount_ratio), t: fmt(pct(r.discount_ratio)) + "%" }));
     value.config.panel7 = { barMax: Math.max(.001, ...value.mBars.map(r => Math.abs(r.v))),
         lineMin: Math.min(0, ...value.mLine.map(r => r.v).filter(Number.isFinite)), lineMax: Math.max(1, ...value.mLine.map(r => r.v).filter(Number.isFinite)) };
@@ -93,9 +93,9 @@ export function adaptSource(dashboard, response, scope = {}) {
     const maxSales = Math.max(1, ...raw.salesmen.map(r => Math.abs(r.net)));
     value.trows = raw.salesmen.slice(0, 8).map((r, index) => [index + 1, { t: r.name, drill: r.drill, b: true },
         (r.teams || []).join(", ") || "—", { t: fmt(r.net / 1e6), bar: Math.abs(r.net) / maxSales * 100 },
-        fmt(pct(r.achievement)) + "%", fmt(r.pjp?.available ? pct(r.pjp.ec_ratio) : null), fmt(r.outlets, 0)]);
-    value.sp = raw.salesmen.filter(r => Number.isFinite(r.calls_per_day)).map(r => ({
-        x: r.calls_per_day, y: r.net / 1e6, r: Math.min(36, 8 + Math.sqrt(r.outlets) * 2), l: r.name, drill: r.drill,
+        Number.isFinite(r.achievement) ? fmt(pct(r.achievement)) + "%" : "—", fmt(r.pjp?.available ? pct(r.pjp.ec_ratio) : null), fmt(r.outlets, 0)]);
+    value.sp = raw.salesmen.filter(r => Number.isFinite(r.calls_per_day)).map((r, index) => ({
+        x: r.calls_per_day, y: r.net / 1e6, r: Math.min(36, 8 + Math.sqrt(r.outlets) * 2), l: r.name, showLabel: index < 2, drill: r.drill,
     }));
     value.__available["D1.7"] = value.sp.length > 0;
     value.spx = [0, Math.max(1, ...value.sp.map(r => r.x)) * 1.2];

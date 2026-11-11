@@ -20,9 +20,9 @@
           </span>
         </t>
         <t t-foreach="v.pts" t-as="b" t-key="b_index">
-          <div role="button" t-att-tabindex="b.drill ? 0 : -1" t-on-click="() => this.openPoint(b)" t-on-keydown="(ev) => this.keyPoint(ev, b)" t-att-aria-label="b.n" t-attf-style="position:absolute;left:{{ b.l }}%;top:{{ b.t }}%;width:{{ b.d }}px;height:{{ b.d }}px;margin:{{ b.m }};border-radius:50%;background:rgba(31,95,191,.7);border:1px solid var(--dk)">
-            <span style="position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:4px;font-size:10px;white-space:nowrap">
-              <t t-out="b.n"/>
+          <div role="button" t-att-tabindex="b.drill ? 0 : -1" t-on-click="() => this.openPoint(b)" t-on-keydown="(ev) => this.keyPoint(ev, b)" t-att-aria-label="b.n" t-att-title="b.n" t-attf-style="position:absolute;left:{{ b.l }}%;top:{{ b.t }}%;width:{{ b.d }}px;height:{{ b.d }}px;margin:{{ b.m }};border-radius:50%;background:rgba(31,95,191,.7);border:1px solid var(--dk)">
+            <span t-if="b.label" style="position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:4px;font-size:10px;white-space:nowrap">
+              <t t-out="b.label"/>
             </span>
           </div>
         </t>
