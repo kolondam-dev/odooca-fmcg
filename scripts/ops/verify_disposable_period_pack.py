@@ -1550,7 +1550,12 @@ def main():
         assert_disposable_database_name(args.db_b)
         try:
             import odoo
-            registry_b = odoo.registry(args.db_b)
+            from odoo.modules.registry import Registry
+
+            if hasattr(odoo, "registry") and callable(getattr(odoo, "registry")):
+                registry_b = odoo.registry(args.db_b)
+            else:
+                registry_b = Registry(args.db_b)
             cr_b = registry_b.cursor()
             env_b = odoo.api.Environment(cr_b, odoo.SUPERUSER_ID, {})
         except Exception as e:
@@ -1592,6 +1597,12 @@ def main():
         import traceback
         traceback.print_exc()
         sys.exit(1)
+    finally:
+        if env_b and getattr(env_b, "cr", None):
+            try:
+                env_b.cr.close()
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":

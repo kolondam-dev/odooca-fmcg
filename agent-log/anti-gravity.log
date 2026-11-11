@@ -2364,3 +2364,10 @@
   * Menyesuaikan .github/workflows/ci.yml step F4 agar mengekspor variabel lingkungan tersebut sebelum memanggil `odoo shell`.
 - Verifikasi Penuh: test_period_pack_loader (49 tests PASS); ruff clean; check_manifests 14 addon OK. Zero touch live Railway.
 - Task managed by antigravity at 2026-11-11T10:15:00+07:00
+
+[2026-11-11T10:48:00+07:00] [INFO] F4: Resolusi Inisialisasi Registry Odoo 19 untuk Database B
+- Resolusi Inisialisasi Registry Database B di Odoo 19:
+  * Memperbaiki pemanggilan registry pada koneksi database kedua (--db-b) di scripts/ops/verify_disposable_period_pack.py: di Odoo 19 `odoo` tidak memiliki atribut `registry` langsung (`module 'odoo' has no attribute 'registry'`), melainkan diakses melalui `from odoo.modules.registry import Registry; Registry(args.db_b)`.
+  * Menambahkan blok `finally:` untuk menutup kursor `env_b.cr.close()` secara bersih.
+- Verifikasi Penuh: test_period_pack_loader (49 tests PASS); ruff clean; check_manifests 14 addon OK. Zero touch live Railway.
+- Task managed by antigravity at 2026-11-11T10:48:00+07:00
