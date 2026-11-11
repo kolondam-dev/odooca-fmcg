@@ -1,3 +1,11 @@
+## 2026-11-11T23:52:54+07:00 — claude-design (Claude-Dev1) — PR #118: Biaya toko idempoten lintas buka-ulang/muat-ulang (review #5859275471)
+
+- Akar masalah: status retry hanya di `useRef` sehingga hilang saat formulir ditutup/dimuat ulang, dan nominal yang bisa diedit membuat submit kedua menghasilkan UUID baru -> duplikat.
+- Perbaikan: rencana batch (`batch_id` + UUID tetap per komponen + payload) disimpan ke draft lokal SEBELUM kirim; antrean outbox menjadi sumber kebenaran komponen mana yang sudah masuk; `submitPending` hanya mengirim yang belum ada di antrean; draft dihapus setelah semua komponen masuk.
+- UI: saat rencana tertunda dibuka ulang, isian read-only + callout, tombol menjadi 'Lanjutkan simpan biaya'.
+- `App.submit` menerima UUID opsional (diteruskan ke `engine.enqueue`).
+- Tes: unit retry + tes integrasi FieldStore/Outbox nyata (gagal komponen ke-2, tutup store, buka ulang, tepat satu entri per komponen). Backend tidak berubah.
+
 ## 2026-11-11T19:48:31+07:00 — claude-design (Claude-Dev1) — PR #118: perbaikan review Setor uang + Biaya toko
 
 **Berubah:** P1 Biaya toko idempoten saat retry (`domain/outlet-expense.ts` `submitPending`: komponen yang sudah masuk antrean dilewati; tes unit kegagalan di komponen kedua → satu entri per komponen). P2 `CashDepositSchema.evidence` memakai `LocalExpenseEvidenceSchema` (`true` dan objek kosong ditolak); e2e Setor uang lewat UI: bukti kosong, selisih tanpa catatan, tersimpan, dan flag mati (fixture `useLegacyServer`). Merge `origin/main` (konflik hanya HANDOFF); openapi diekspor ulang.

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { orderSummary } from "../src/components/CloseVisitScreen";
 import {
     fieldExpenseV2Enabled,
@@ -191,25 +191,112 @@ describe("setor uang", () => {
     });
 });
 
-import { submitPending } from "../src/domain/outlet-expense";
+import {
+    isStoreBatch,
+    submitPending,
+    type StoreBatchItem,
+} from "../src/domain/outlet-expense";
 describe("biaya toko retry", () => {
-    it("kegagalan pada komponen kedua lalu retry menghasilkan satu entri per komponen", async () => {
-        const queued: string[] = [];
-        const done = new Set<string>();
-        const items = [
-            { key: "parkir" },
-            { key: "kuli" },
-            { key: "retribusi" },
-        ];
+    const item = (key: string): StoreBatchItem => ({
+        key,
+        uuid: crypto.randomUUID(),
+        payload: { amount: "1000" },
+        label: key,
+    });
+    it("gagal di komponen kedua lalu buka ulang: satu entri per komponen", async () => {
+        const plan = ["parkir", "kuli", "retribusi"].map(item);
+        const queue = new Set<string>(); // antrean = sumber kebenaran, bertahan lintas buka ulang
         let failKuli = true;
-        const send = async (i: { key: string }) => {
+        const send = async (i: StoreBatchItem) => {
             if (i.key === "kuli" && failKuli) throw new Error("gagal simpan");
-            queued.push(i.key);
+            queue.add(i.uuid);
         };
-        await expect(submitPending(items, done, send)).rejects.toThrow();
-        expect(queued).toEqual(["parkir"]);
+        await expect(submitPending(plan, queue, send)).rejects.toThrow();
+        expect([...queue]).toEqual([plan[0]!.uuid]);
+        // formulir ditutup/dimuat ulang: rencana (UUID tetap) dibaca dari draft
+        const restored = JSON.parse(JSON.stringify(plan)) as StoreBatchItem[];
         failKuli = false;
-        await submitPending(items, done, send);
-        expect(queued).toEqual(["parkir", "kuli", "retribusi"]);
+        await submitPending(restored, queue, send);
+        expect(queue.size).toBe(3);
+        await submitPending(restored, queue, send); // kirim ulang lagi: tetap 3
+        expect(queue.size).toBe(3);
+    });
+    it("mengenali rencana batch yang valid", () => {
+        expect(isStoreBatch({ batch_id: "b", items: [item("a")] })).toBe(true);
+        expect(isStoreBatch({ batch_id: "b", items: [{}] })).toBe(false);
+        expect(isStoreBatch(undefined)).toBe(false);
+    });
+});
+
+describe("biaya toko: rencana batch tersimpan + outbox nyata", () => {
+    it("gagal di komponen ke-2, tutup & buka ulang: tepat satu entri per komponen", async () => {
+        const { FieldStore } = await import("../src/storage/store");
+        const { Outbox } = await import("../src/domain/outbox");
+        const { storeBatchKey } = await import("../src/domain/outlet-expense");
+        const name = `biaya-${crypto.randomUUID()}`;
+        const provider = {
+            mode: "demo",
+            bootstrap: vi.fn(),
+            snapshot: vi.fn(),
+            submit: vi.fn(),
+        } as never;
+        const plan = {
+            batch_id: crypto.randomUUID(),
+            items: ["store_parking", "store_unloading", "store_levy"].map(
+                (key) => ({
+                    key,
+                    uuid: crypto.randomUUID(),
+                    payload: { amount: "1000", category: key },
+                    label: key,
+                }),
+            ),
+        };
+        const draftKey = storeBatchKey("OUT-1", "2026-11-11");
+        // Sesi 1: rencana disimpan dulu, komponen ke-2 gagal saat enqueue.
+        const s1 = new FieldStore(name);
+        await s1.draft("u", draftKey, plan);
+        const ob1 = new Outbox(s1, "u", provider);
+        await expect(
+            submitPending(
+                plan.items,
+                new Set((await s1.list("u")).map((q) => q.command.client_uuid)),
+                async (item) => {
+                    if (item.key === "store_unloading")
+                        throw new Error("gagal simpan");
+                    await ob1.enqueue(
+                        "field_expense.request",
+                        item.payload,
+                        item.label,
+                        item.uuid as never,
+                    );
+                },
+            ),
+        ).rejects.toThrow("gagal simpan");
+        await s1.close();
+        // Sesi 2 (form dibuka ulang): rencana dibaca dari draft, antrean jadi sumber kebenaran.
+        const s2 = new FieldStore(name);
+        const restored = await s2.draft("u", draftKey);
+        expect(isStoreBatch(restored)).toBe(true);
+        const ob2 = new Outbox(s2, "u", provider);
+        const send = async (item: StoreBatchItem) => {
+            await ob2.enqueue(
+                "field_expense.request",
+                item.payload,
+                item.label,
+                item.uuid as never,
+            );
+        };
+        const items = (restored as typeof plan).items;
+        for (let i = 0; i < 2; i++)
+            await submitPending(
+                items,
+                new Set((await s2.list("u")).map((q) => q.command.client_uuid)),
+                send,
+            );
+        await s2.removeDraft("u", draftKey);
+        const uuids = (await s2.list("u")).map((q) => q.command.client_uuid);
+        expect(uuids.sort()).toEqual(plan.items.map((i) => i.uuid).sort());
+        expect(await s2.draft("u", draftKey)).toBeUndefined();
+        await s2.close();
     });
 });
