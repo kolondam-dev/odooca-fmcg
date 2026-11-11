@@ -46,6 +46,10 @@
 **Diverifikasi:** [F] format, tsc, contracts:check, vitest 474, e2e phone+tablet 186 lulus. **Belum diuji:** [BU] CI GitHub.
 **Belum dikerjakan:** Setor_uang (58) dan Biaya_toko (57) butuh kontrak perintah baru (setoran kasir; biaya operasional toko per komponen + foto nota) — perlu keputusan bentuk payload bersama agen backend; Foto penutup trip butuh paket bukti di payload closing.
 
+## 2026-11-11T16:15:36+07:00 — Codex-Dashboard — PR #115: pertahankan aksi D1 saat upgrade
+
+**Berubah:** Startup memasang atau meng-upgrade D1 setelah upgrade modul Sales agar aksi Sales Productivity tetap menunjuk ke D1. Marker D1 baru juga menerapkan ulang aksi pada database yang pernah melewati fase instalasi versi sebelumnya.
+
 ## 2026-11-11T15:43:00+07:00 — antigravity — F4: Resolusi Native Savepoint Odoo ORM, SQL Tamper Rollback & Seed Context Bypassing Credit Limit (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
