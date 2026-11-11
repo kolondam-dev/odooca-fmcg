@@ -388,3 +388,13 @@
 - Verifikasi lokal: 105 tes finance PASS; ruff PASS; check_manifests PASS (14 addon).
 - [BU] Reproduksi pasangan ambigu masih pada fungsi produksi (unit), belum pada data Odoo asli; membentuknya butuh rekonsiliasi manual. Pin account_invoice_start_end_dates (angka 150 FIN37 helper/unit); FIN38 data non-sintetis; fixture satu mata uang asing. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
 - Task managed by Agent-Opencode at 2026-11-11T18:13:08+07:00
+[2026-11-11T18:51:40+07:00] [INFO] I2c/PR112: pembatalan reversal kini mensyaratkan pasangan unik
+- Blocker supervisor: satu reversal + dua kandidat yang sama-sama lolos cek nominal/mata uang; greedy pairing [1,2,3]->(1,2) vs [3,2,1]->(3,2), jadi bukti exchange yang tersisa bergantung urutan input.
+- Perbaikan: _split_reversal_pairs mengembalikan (pairs, singles, ambiguous); pasangan sah hanya bila dua partial saling menjadi satu-satunya kandidat dalam komponen keterhubungan; komponen bercabang/komponen ber-kandidat-ganda utuh (semua baris tetap dihitung).
+- reversal_exceptions kini bisa ber-reason multiple_reversal_candidates (dengan daftar kandidat per partial); existing partial_reversal / reversal_currency_mismatch tetap.
+- Model: reverse_exceptions memicu ambiguous_reversal + balanced False (sudah ada); complete False bila ada reversal_exceptions (sudah ada).
+- Uji: reproduksi supervisor dijalankan kedua arah urutan; baris, total, dan exchange evidence identik; complete False.
+- Akar lain yang diperbaiki di audit: duplikasi baris ambigu (singles sempat menerima partial ambigu dua kali).
+- Verifikasi lokal: 106 tes finance PASS; ruff PASS; check_manifests PASS (14 addon).
+- [BU] Native untuk kasus kandidat-ganda belum (butuh rekonsiliasi manual berganda); pin FIN37 belum; data FX non-sintetis belum. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
+- Task managed by Agent-Opencode at 2026-11-11T18:51:40+07:00
