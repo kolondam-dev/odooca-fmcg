@@ -147,8 +147,40 @@ describe("review #114", () => {
             cash: 1150,
             transfer: 2000,
             cost: 70000,
+            cashReceiptUuids: expect.any(Array),
         });
         expect(tripMoney(q, "u", "2026-11-10", "B").cash).toBe(5000);
         expect(tripMoney(q, "x", "2026-11-10", "A").cash).toBe(0);
+    });
+});
+
+import { CashDepositSchema } from "../src/domain/cash-deposit";
+describe("setor uang", () => {
+    const base = {
+        deposit_version: 1,
+        trip_id: "DO-001",
+        business_date: "2026-11-10",
+        cash_expected: "5700000",
+        cash_deposited: "5700000",
+        receipt_uuids: [],
+        evidence: { id: "x" },
+    };
+    it("selisih wajib catatan dan foto bukti wajib", () => {
+        expect(CashDepositSchema.safeParse(base).success).toBe(true);
+        expect(
+            CashDepositSchema.safeParse({ ...base, cash_deposited: "5600000" })
+                .success,
+        ).toBe(false);
+        expect(
+            CashDepositSchema.safeParse({
+                ...base,
+                cash_deposited: "5600000",
+                difference_note: "Kurang Rp100.000 untuk BBM",
+            }).success,
+        ).toBe(true);
+        expect(
+            CashDepositSchema.safeParse({ ...base, evidence: undefined })
+                .success,
+        ).toBe(false);
     });
 });

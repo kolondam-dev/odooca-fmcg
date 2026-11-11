@@ -3,6 +3,7 @@ import {
     SnapshotScopeSchema,
     UnitLabelSchema,
 } from "./product-units.ts";
+import { CashDepositSchema } from "./cash-deposit.ts";
 import { TripCloseSchema } from "./trip-close-contracts.ts";
 import { OrderRevisionSchema } from "./order-revision-contracts.ts";
 import {
@@ -33,6 +34,7 @@ export const CommandType = z.enum([
     "sales.order.submit",
     "sales.order.revise",
     "delivery.trip.close",
+    "delivery.cash_deposit.submit",
     "sales.visit.check_in",
     "sales.visit.check_out",
     "sales.extra_call.request",
@@ -81,6 +83,13 @@ export const CommandSchema = z.discriminatedUnion("type", [
     z
         .object({
             ...CommandEnvelope,
+            type: z.literal("delivery.cash_deposit.submit"),
+            payload: CashDepositSchema,
+        })
+        .strict(),
+    z
+        .object({
+            ...CommandEnvelope,
             type: z.literal("sales.visit.check_in"),
             payload: VisitCheckInSchema,
         })
@@ -96,6 +105,7 @@ export const CommandSchema = z.discriminatedUnion("type", [
         ...CommandEnvelope,
         type: CommandType.exclude([
             "delivery.trip.close",
+            "delivery.cash_deposit.submit",
             "sales.order.revise",
             "delivery.pod.submit",
             "collection.receipt.submit",
@@ -214,6 +224,10 @@ export const SnapshotSchema = z
             .object({
                 order_pricing_v2: z.boolean().optional(),
                 field_expense_v2: z.boolean().optional(),
+                /** Setor uang ke kasir (`delivery.cash_deposit.submit`). */
+                cash_deposit_v1: z.boolean().optional(),
+                /** Biaya operasional toko (kategori `store_*`, scope outlet). */
+                outlet_expense_v1: z.boolean().optional(),
             })
             .optional(),
         /** Outlet di luar PJP yang boleh diajukan sebagai extra call (pencarian layar Extra call). */

@@ -697,6 +697,8 @@ function Workspace({
                                                 if (navigator.onLine)
                                                     void engine.flush();
                                             }}
+                                            snapshot={snapshot}
+                                            submit={submit}
                                             order={() => openOrder(visitOutlet)}
                                             display={() =>
                                                 setDialog({
@@ -755,6 +757,8 @@ function Workspace({
                                     queue={queue}
                                     engine={engine}
                                     changed={() => void refresh()}
+                                    snapshot={snapshot}
+                                    submit={submit}
                                 />
                                 <CollectionWorkspace
                                     key={owner}

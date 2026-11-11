@@ -3425,6 +3425,88 @@
               },
               "type": {
                 "type": "string",
+                "const": "delivery.cash_deposit.submit"
+              },
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "deposit_version": {
+                    "type": "number",
+                    "const": 1
+                  },
+                  "trip_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "business_date": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "cash_expected": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9]\\d{0,11})$"
+                  },
+                  "cash_deposited": {
+                    "type": "string",
+                    "pattern": "^[1-9]\\d{0,11}$"
+                  },
+                  "difference_note": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "receipt_uuids": {
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  },
+                  "evidence": {}
+                },
+                "required": [
+                  "deposit_version",
+                  "trip_id",
+                  "business_date",
+                  "cash_expected",
+                  "cash_deposited",
+                  "receipt_uuids",
+                  "evidence"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "schema_version",
+              "client_uuid",
+              "occurred_at",
+              "type",
+              "payload"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "type": "number",
+                "const": 1
+              },
+              "client_uuid": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "occurred_at": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              },
+              "type": {
+                "type": "string",
                 "const": "sales.visit.check_in"
               },
               "payload": {
@@ -4827,6 +4909,10 @@
               "meal",
               "lodging",
               "emergency",
+              "store_parking",
+              "store_unloading",
+              "store_levy",
+              "store_other",
               "fuel_planned",
               "fuel_emergency",
               "repair",
@@ -5670,6 +5756,12 @@
                 "type": "boolean"
               },
               "field_expense_v2": {
+                "type": "boolean"
+              },
+              "cash_deposit_v1": {
+                "type": "boolean"
+              },
+              "outlet_expense_v1": {
                 "type": "boolean"
               }
             },

@@ -9,6 +9,7 @@ import {
     ScreenHeader,
     Textarea,
 } from "../ui";
+import { SetorUangScreen } from "./SetorUangScreen";
 import { tripMoney } from "../domain/trip-summary";
 import { useBackLayer } from "../ui/navigation";
 import {
@@ -25,7 +26,12 @@ import {
     morningReady,
     type MorningRecord,
 } from "../domain/morning";
-import { CommandSchema, ownerKey, type Identity } from "../domain/contracts";
+import {
+    CommandSchema,
+    ownerKey,
+    type Identity,
+    type Snapshot,
+} from "../domain/contracts";
 import type { FieldStore, QueueItem } from "../storage/store";
 import type { Outbox } from "../domain/outbox";
 const rupiah = (n: number) => `Rp ${Math.round(n).toLocaleString("id-ID")}`;
@@ -36,6 +42,8 @@ export function TripClosing({
     queue,
     engine,
     changed,
+    snapshot,
+    submit,
 }: {
     store: FieldStore;
     identity: Identity;
@@ -43,6 +51,13 @@ export function TripClosing({
     queue: QueueItem[];
     engine: Outbox;
     changed: () => void;
+    snapshot: Snapshot;
+    submit: (
+        type: "delivery.cash_deposit.submit",
+        payload: Record<string, unknown>,
+        label: string,
+        keepOpen?: boolean,
+    ) => Promise<unknown>;
 }) {
     const owner = ownerKey(identity),
         trips = [
@@ -51,6 +66,7 @@ export function TripClosing({
     const [message, setMessage] = useState(""),
         [busy, setBusy] = useState(false),
         [open, setOpen] = useState<string>(),
+        [deposit, setDeposit] = useState(false),
         [note, setNote] = useState("");
     const [closed, setClosed] = useState<Record<string, boolean>>({});
     useEffect(() => {
@@ -263,6 +279,14 @@ export function TripClosing({
                             divider
                         />
                     </Card>
+                    <Card tight>
+                        <ListRow
+                            icon="wallet"
+                            title="Setor uang ke kasir"
+                            sub={`Tunai ${rupiah(cash(open))} · wajib foto bukti setor`}
+                            onClick={() => setDeposit(true)}
+                        />
+                    </Card>
                     {!closed[open] ? (
                         <Textarea
                             label="Catatan penutupan (opsional)"
@@ -282,6 +306,23 @@ export function TripClosing({
                         gudang.
                     </Callout>
                 </Screen>
+            ) : null}
+            {open && deposit ? (
+                <SetorUangScreen
+                    snapshot={snapshot}
+                    trip={open}
+                    businessDate={businessDate ?? ""}
+                    owner={owner}
+                    store={store}
+                    cash={cash(open)}
+                    transfer={transfer(open)}
+                    receiptUuids={
+                        tripMoney(queue, owner, businessDate, open)
+                            .cashReceiptUuids
+                    }
+                    submit={submit}
+                    close={() => setDeposit(false)}
+                />
             ) : null}
         </>
     );

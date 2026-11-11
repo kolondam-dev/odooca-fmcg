@@ -1,3 +1,9 @@
+## 2026-11-11T19:09:55+07:00 — claude-design (Claude-Dev1) — Fase 3B-4: Setor uang + Biaya toko (terkunci flag)
+
+**Berubah:** layar Setor uang (dari layar Akhiri trip) dan Biaya toko (dari kunjungan aktif) sesuai mockup; kontrak USULAN `delivery.cash_deposit.submit` (`domain/cash-deposit.ts`), kategori `store_*` scope outlet; flag server `features.cash_deposit_v1` / `outlet_expense_v1` (mock demo ON, LIVE tidak ada = tombol kirim terkunci + callout). openapi diekspor ulang; tes unit + e2e `store-expense`. K18 di DS_RECONCILIATION memuat kontrak usulan dan syarat sebelum flag ON.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 476, e2e phone+tablet 188 lulus. **Belum diuji:** [BU] CI, e2e Setor uang lewat UI (hanya tes unit skema), backend.
+**Utang backend:** handler kedua perintah/kategori, validasi receipt_uuids, approval biaya toko; foto nota per komponen dan Foto penutup trip.
+
 ## 2026-11-11T17:00:00+07:00 — claude-design — PR #116: perbaikan review Akhiri trip
 
 **Berubah:** ringkasan Penerimaan uang/Biaya trip dibatasi per trip (`source.delivery.trip` / `trip_id`), hari kerja aktif (WITA), status bukan `rejected`, kuitansi yang dikoreksi (`supersedes_uuid`) tidak dihitung, dan biaya hanya dengan `scheduled_date` hari kerja (ID trip yang dipakai ulang tidak tercampur) — logika di `domain/trip-summary.ts` + tes unit. Handler Odoo `delivery.trip.close` kini memvalidasi `note` (≤500) dan mencatatnya di pesan receipt; payload tetap tersimpan pada perintah.
