@@ -25,6 +25,8 @@ export const TripCloseSchema = z
         fix: VisitFixSchema,
         pod_uuids: z.array(z.string().uuid()).min(1),
         demo_unrestricted: z.literal(true).optional(),
+        /** Catatan penutupan (opsional, DS: Closing_trip). */
+        note: z.string().trim().max(500).optional(),
     })
     .strict();
 export const tripCloseKey = (trip: string, date: string) =>
