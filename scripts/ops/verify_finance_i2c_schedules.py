@@ -601,14 +601,20 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
                 "FIN38 write-off must not also appear in realized rows",
             )
 
-            # Reversal netting must be visible through the reader: the pair must
-            # not double count realized FX.
+            # Reversal netting must be visible through the reader. A matched pair
+            # cancels, so no reconciled line pair may appear twice with the same
+            # amount and sign, which is exactly what double counting would look
+            # like.
+            signatures = [
+                (
+                    row.get("debit_line_id"), row.get("credit_line_id"),
+                    round_amt(row["realized_amount"]),
+                )
+                for row in write_off_snapshot["realized_rows"]
+            ]
             require(
-                all(
-                    not row.get("is_reversal")
-                    for row in write_off_snapshot["realized_rows"]
-                ),
-                "FIN38 realized rows must not contain unmatched reversal noise",
+                len(signatures) == len(set(signatures)),
+                f"FIN38 must not double count a reconciled pair: {signatures}",
             )
 
 

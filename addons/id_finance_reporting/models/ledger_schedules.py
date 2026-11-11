@@ -424,6 +424,8 @@ def build_fx_revaluation(
             "realized_amount": amount,
             "exchange_move_id": partial.get("exchange_move_id"),
             "is_reversal": bool(partial.get("is_reversal")),
+            "debit_line_id": partial.get("debit_line_id"),
+            "credit_line_id": partial.get("credit_line_id"),
         }
         if partial.get("exchange_move_id"):
             tied_exchange_move_ids.add(partial["exchange_move_id"])
