@@ -1,5 +1,6 @@
 /** @odoo-module **/
 import { Component, onWillStart, onWillDestroy, useState } from "@odoo/owl";
+import { Dialog } from "@web/core/dialog/dialog";
 import { Domain } from "@web/core/domain";
 import { user } from "@web/core/user";
 import { registry } from "@web/core/registry";
@@ -9,6 +10,17 @@ import { ApprovedControls } from "@id_dashboard_ui/components/approved_controls"
 import { DashboardShell } from "@id_dashboard_ui/pages/dashboard";
 import { adaptSource } from "@id_dashboard_redesign/adapters";
 
+class SalesSourceDialog extends Component {
+    static template = "id_dashboard_redesign.SalesSourceDialog";
+    static components = { Dialog };
+    static props = { close: Function, open: Function };
+    get title() { return _t("Sales source documents"); }
+    select(lines) {
+        this.props.close();
+        return this.props.open(lines);
+    }
+}
+
 export class RedesignAction extends Component {
     static template = "id_dashboard_redesign.Action";
     static components = { DashboardShell, ApprovedControls };
@@ -16,6 +28,7 @@ export class RedesignAction extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
+        this.dialog = useService("dialog");
         const release = this.env.services.id_shell?.enterDashboard?.();
         this.generation = 0;
         this.state = useState({ loading: true, error: null, data: null, filters: {}, scope: {} });
@@ -77,6 +90,28 @@ export class RedesignAction extends Component {
         if (this.state.loading || !drill) return;
         if (drill.dimension === "city_code") drill = this.state.data.cityDrills[drill.code];
         if (!drill || !["sale.order", "sale.order.line", "account.move.line"].includes(drill.model) || !Array.isArray(drill.domain)) return;
+        if (drill.model === "sale.order.line") {
+            const generation = this.generation;
+            this.dialog.add(SalesSourceDialog, {
+                open: lines => {
+                    if (generation !== this.generation) return;
+                    return lines ? this.openSalesLines(drill.domain) : this.openNativeDocument(drill);
+                },
+            });
+            return;
+        }
+        return this.openNativeDocument(drill);
+    }
+    openSalesLines(domain) {
+        return this.action.doAction({
+            type: "ir.actions.act_window",
+            name: _t("Matching sales order lines"),
+            res_model: "sale.order.line",
+            views: [[false, "list"], [false, "form"]],
+            domain,
+        });
+    }
+    async openNativeDocument(drill) {
         const isJournal = drill.model === "account.move.line";
         const actionId = isJournal ? "account.action_account_moves_all" : "sale.action_orders";
         const generation = this.generation;

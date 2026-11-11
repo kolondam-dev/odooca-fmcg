@@ -4,17 +4,19 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const root=path.join(__dirname,'../../..');
-function action() {
+function action(isSales = true) {
     let source=fs.readFileSync(path.join(root,'addons/id_dashboard_redesign/static/src/action.js'),'utf8');
     source=source.replace(/^import .*;\s*$/mg,'').replace('export class RedesignAction','class RedesignAction')
-        .replace(/^registry\.category.*$/mg,'')+'\nglobalThis.Action=RedesignAction;';
-    const ctx={Component:class{}, DashboardShell:class{}, ApprovedControls:class{}, Intl, _t:s=>s, adaptSource:(_id,response)=>({source:response.source})};
+        +'\nglobalThis.Action=RedesignAction;';
+    const actions = new Map();
+    const ctx={registry:{category:()=>({add:(key, value)=>actions.set(key, value)})}, user:{hasGroup:async()=>isSales},
+        Domain:{and:domains=>({toList:()=>domains.flat()})}, Dialog:class{}, Component:class{}, DashboardShell:class{}, ApprovedControls:class{}, Intl, _t:s=>s, adaptSource:(_id,response)=>({source:response.source})};
     vm.createContext(ctx);vm.runInContext(source,ctx);
     const d=Object.create(ctx.Action.prototype);
     d.generation=0; d.state={loading:false,error:null,data:{old:true},filters:{dimensions:{}},scope:{company_names:[]}};
     const pending=[];
     d.orm={call:(_model,_method,_args,params)=>new Promise((resolve,reject)=>pending.push({resolve,reject,params}))};
-    return {d,pending};
+    return {d,pending,actions};
 }
 const query=(day='01')=>({period:{from:`2026-10-${day}`,to:'2026-10-31'},filters:{sku:{mode:'out',ids:['9']}}});
 test('D1 late responses cannot replace the current data/query',async()=>{
@@ -35,14 +37,34 @@ test('D1 source failure retains the applied scope/data and reports failure',asyn
     assert.equal(d.query.period.from,'2026-10-01');
     assert.equal(d.state.loading,false);assert.equal(d.state.error,'Source denied');
 });
-test('D1 scoped map drill resolves server domains and prevents stale clicks',()=>{
+test('D1 map drill offers both exact lines and containing native orders',async()=>{
     const {d}=action(), calls=[];
-    d.action={doAction:v=>calls.push(v)};
-    d.state.data={cityDrills:{'71.71':{model:'sale.order.line',domain:[['company_id','in',[8]],['product_id','in',[9]]]}}};
-    d.openDocument({dimension:'city_code',code:'71.71'});
-    assert.equal(calls.length,1);assert.equal(calls[0].res_model,'sale.order.line');
-    assert.equal(calls[0].domain[1][2][0],9);
-    d.state.loading=true;d.openDocument({dimension:'city_code',code:'71.71'});assert.equal(calls.length,1);
+    let choice;
+    d.dialog={add:(_component, props)=>{choice=props.open;}};
+    d.action={loadAction:async id=>{
+        assert.equal(id,'sale.action_orders');
+        return {res_model:'sale.order',domain:[['state','=','sale']]};
+    },doAction:v=>calls.push(v)};
+    const domain=[['company_id','in',[8]],['product_id','in',[9]]];
+    d.state.data={cityDrills:{'71.71':{model:'sale.order.line',domain}}};
+    await d.openDocument({dimension:'city_code',code:'71.71'});
+    await choice(true);
+    assert.equal(calls[0].res_model,'sale.order.line');
+    assert.equal(calls[0].domain,domain);
+    await choice(false);
+    assert.equal(calls[1].res_model,'sale.order');
+    assert.equal(calls[1].domain[1][0],'order_line');
+    assert.equal(calls[1].domain[1][1],'any');
+    assert.equal(calls[1].domain[1][2],domain);
+    d.generation++;
+    await choice(true);
+    assert.equal(calls.length,2);
+});
+test('Dashboards entry dispatches by Sales group',async()=>{
+    assert.equal(await action().actions.get('id_dashboard_redesign.default')(),
+        'id_dashboard_sales.action_sales_productivity');
+    assert.equal(await action(false).actions.get('id_dashboard_redesign.default')(),
+        'spreadsheet_dashboard.ir_actions_dashboard_action');
 });
 test('D1 adapter uses company currency, signed values, real comparison and no fixture fallback',()=>{
     let source=fs.readFileSync(path.join(root,'addons/id_dashboard_redesign/static/src/adapters.js'),'utf8');

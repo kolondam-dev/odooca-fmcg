@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from odoo.fields import Domain
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase, new_test_user
 from odoo.exceptions import AccessError, UserError
@@ -51,7 +52,14 @@ class TestDashboardBridge(TransactionCase):
         self.assertEqual(data["total"]["aov"], 180)
         self.assertFalse(data["total"]["pjp"].get("available"))
         # Drill source ties to the same line amount, never the entire mixed-SKU order.
-        self.assertEqual(sum(self.env["sale.order.line"].search(data["line_domain"]).mapped("price_subtotal")), 180)
+        lines = self.env["sale.order.line"].search(data["line_domain"])
+        self.assertEqual(lines.product_id, self.product)
+        self.assertEqual(sum(lines.mapped("price_subtotal")), 180)
+        native = self.env.ref("sale.action_orders")
+        scope = Domain("order_line", "any", Domain(data["line_domain"]))
+        orders = self.env[native.res_model].search(scope)
+        self.assertEqual(orders, self.sale)
+        self.assertEqual(sum(orders.order_line.mapped("price_subtotal")), 230)
         self.assertEqual(sum(r["net"] for r in data["principal"]), 180)
 
     def test_exclusion_empty_and_scope(self):

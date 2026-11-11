@@ -8,4 +8,14 @@
    <DashboardShell t-if="state.data" dashboard="dashboard" data="state.data" onApply.bind="apply" onDrill.bind="openDocument"/>
   </div>
  </t>
+ <t t-name="id_dashboard_redesign.SalesSourceDialog">
+  <Dialog title="title" size="'md'">
+   <p>Matching lines show the products included in the dashboard calculation. Sales Orders shows the complete orders containing those lines.</p>
+   <t t-set-slot="footer">
+    <button type="button" class="btn btn-primary" t-on-click="() => this.select(true)">Matching sales order lines</button>
+    <button type="button" class="btn btn-secondary" t-on-click="() => this.select(false)">Sales Orders</button>
+    <button type="button" class="btn btn-link" t-on-click="props.close">Cancel</button>
+   </t>
+  </Dialog>
+ </t>
 </templates>

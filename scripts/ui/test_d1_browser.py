@@ -25,6 +25,13 @@ def check(ok, name):
     checks.append(name)
 
 
+def click_dashboards_menu(page):
+    menu = page.locator('[data-menu-xmlid="spreadsheet_dashboard.spreadsheet_dashboard_menu_root"]:visible')
+    if not menu.count():
+        page.locator('button[title="Home Menu"]').click()
+    menu.first.click()
+
+
 with sync_playwright() as playwright:
     browser = playwright.chromium.launch(executable_path=os.environ.get("D1_BROWSER"),
                                          headless=True, args=["--no-sandbox", "--single-process"])
@@ -180,6 +187,7 @@ with sync_playwright() as playwright:
     check(not page.locator(".alert-danger").count(), "SKU filter reaches server")
     # Period and SKU slice must survive the native document action.
     page.locator(".id-dash-row").first.locator('[role="button"]').first.click()
+    page.get_by_role("button", name="Matching sales order lines", exact=True).click()
     page.locator(".o_list_view").wait_for()
     page.locator(".o_data_row").first.wait_for()
     check("D1 QA" in page.locator("body").inner_text(), "Scoped drill opens native order lines")
@@ -235,13 +243,23 @@ with sync_playwright() as playwright:
         own_page.locator("input[name=password]").fill(os.environ["D1_TEST_PASSWORD"])
         own_page.locator("button[type=submit]").click()
         own_page.wait_for_url(lambda url: "/odoo" in url and "/web/login" not in url)
-        own_page.goto(base + "/odoo/action-id_dashboard_sales.action_sales_productivity")
+        click_dashboards_menu(own_page)
         own_page.locator(".id-dash-kpis").wait_for()
         own = native_source(own_page.request, query)
         check(abs(own["total"]["net"] - wanted["first_user_net"]) < .001, "Salesperson browser respects own sales")
         check(own["total"]["orders"] == 28, "Salesperson browser cannot see other users' orders")
         capture(own_page, "own-sales-role-1440")
         full_dashboard(own_page, "own-sales-role-1440")
+        check(own_page.locator(".id-d1-scroll").is_visible(), "Dashboards menu opens D1 for Sales")
+        no_sales_page = own_browser.new_page(viewport={"width": 1440, "height": 1000})
+        no_sales_page.goto(base + "/web/login?db=" + database)
+        no_sales_page.locator("input[name=login]").fill("d1-visual-no-sales")
+        no_sales_page.locator("input[name=password]").fill(os.environ["D1_TEST_PASSWORD"])
+        no_sales_page.locator("button[type=submit]").click()
+        no_sales_page.wait_for_url(lambda url: "/odoo" in url and "/web/login" not in url)
+        click_dashboards_menu(no_sales_page)
+        no_sales_page.locator(".o_spreadsheet_dashboard_action").wait_for()
+        check(not no_sales_page.locator(".id-d1-scroll").count(), "Dashboards menu keeps Odoo for non-Sales")
         own_browser.close()
         set_page(page)
     check(not errors, "No browser JS errors")
