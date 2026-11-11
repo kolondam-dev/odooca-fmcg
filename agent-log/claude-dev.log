@@ -377,3 +377,14 @@
 - Verifikasi lokal: 102 tes finance PASS; ruff PASS; check_manifests PASS (14 addon).
 - [BU] Pin account_invoice_start_end_dates (angka 150 FIN37 masih helper/unit); FIN38 pada data exchange non-sintetis; fixture native satu mata uang asing. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
 - Task managed by Agent-Opencode at 2026-11-11T14:38:56+07:00
+[2026-11-11T18:13:08+07:00] [INFO] I2c/PR112: netting reversal tidak boleh menghapus FX tanpa bukti nominal
+- Blocker supervisor direproduksi: dua partial yang berbagi baris jurnal dan punya tautan reversal, nominal Rp300.000 vs Rp100.000, dihapus seluruhnya dari realized. FX yang terposting hilang tanpa bukti.
+- Akar: tautan reversal hanya menyatakan keterkaitan, bukan bahwa nominalnya cermin. _net_reversals membatalkan berdasar tautan saja.
+- Perbaikan: _split_reversal_pairs mengembalikan kandidat pasangan dan partial tunggal tanpa memutuskan apa pun; _reversal_verdict mensyaratkan mata uang sama, nominal mata uang asing sama besar, dan amount fungsional sama besar.
+- Bila syarat tidak terpenuhi: pasangan tidak dibatalkan, kedua sisi tetap dihitung, muncul di reversal_exceptions dengan alasan partial_reversal atau reversal_currency_mismatch. Model menambah issue ambiguous_reversal, balanced false, complete false.
+- Pembatalan sah tetap bekerja untuk cermin penuh, termasuk tautan pada arah mana pun. Audit tepi: tautan ke move salah tidak membatalkan; kurs berbeda (nominal fungsional beda) tidak membatalkan.
+- Native: alur standar (cancel=False dan cancel=True) wajib menghasilkan reversal_exceptions kosong.
+- main bergerak tiga kali selama pengerjaan (PR #114, #116, #115); konflik selalu hanya docs/HANDOFF.md.
+- Verifikasi lokal: 105 tes finance PASS; ruff PASS; check_manifests PASS (14 addon).
+- [BU] Reproduksi pasangan ambigu masih pada fungsi produksi (unit), belum pada data Odoo asli; membentuknya butuh rekonsiliasi manual. Pin account_invoice_start_end_dates (angka 150 FIN37 helper/unit); FIN38 data non-sintetis; fixture satu mata uang asing. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
+- Task managed by Agent-Opencode at 2026-11-11T18:13:08+07:00
