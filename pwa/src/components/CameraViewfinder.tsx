@@ -440,7 +440,7 @@ export function CameraViewfinder({
 
     // Direct device camera input fallback handler
     async function handleFallbackFile(file?: File) {
-        if (!file) return;
+        if (!file || outside > 0) return;
         setCapturing(true);
         try {
             const bitmap = await createImageBitmap(file);
@@ -496,10 +496,15 @@ export function CameraViewfinder({
                     <div class="cam__error">
                         <Icon name="warning" size={40} />
                         <p>{cameraError}</p>
-                        <label class="ui-btn ui-btn--sec ui-btn--md">
+                        <label
+                            class="ui-btn ui-btn--sec ui-btn--md"
+                            aria-disabled={outside > 0}
+                            style={outside > 0 ? { opacity: 0.5 } : undefined}
+                        >
                             <Icon name="camera" size={20} />
                             Buka Kamera Perangkat
                             <input
+                                disabled={outside > 0}
                                 type="file"
                                 accept="image/*"
                                 capture="environment"

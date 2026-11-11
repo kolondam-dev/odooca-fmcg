@@ -1,6 +1,10 @@
 import { useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
-import { validateExpense } from "../domain/expense";
+import {
+    FIELD_EXPENSE_V2_UNSUPPORTED,
+    fieldExpenseV2Enabled,
+    validateExpense,
+} from "../domain/expense";
 import { money } from "../domain/format";
 import type { FieldStore } from "../storage/store";
 import {
@@ -56,9 +60,14 @@ export function AjukanUangScreen({
     const [error, setError] = useState("");
     const tripId =
         trip ?? snapshot.deliveries[0]?.trip ?? `FIELD-${businessDate}`;
+    const supported = fieldExpenseV2Enabled(snapshot);
     async function send() {
         if (busy) return;
         setError("");
+        if (!supported) {
+            setError(FIELD_EXPENSE_V2_UNSUPPORTED);
+            return;
+        }
         const n = Number(amount);
         if (!Number.isInteger(n) || n < 1) {
             setError("Nominal harus bilangan bulat rupiah lebih dari nol.");
@@ -102,7 +111,7 @@ export function AjukanUangScreen({
             footer={
                 <Button
                     icon="check"
-                    disabled={busy}
+                    disabled={busy || !supported}
                     onClick={() => void send()}
                 >
                     {busy ? "Menyimpan…" : "Kirim pengajuan"}
@@ -142,6 +151,11 @@ export function AjukanUangScreen({
                     onChange={setEvidence}
                 />
             </Card>
+            {!supported && (
+                <Callout tone="warn" alert>
+                    {FIELD_EXPENSE_V2_UNSUPPORTED}
+                </Callout>
+            )}
             <Callout tone="info">
                 Foto nota opsional. Pengajuan menunggu approval supervisor; di
                 atas limit kewenangan diteruskan ke Branch Manager.

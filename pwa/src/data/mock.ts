@@ -217,7 +217,7 @@ export class MockProvider implements FieldProvider {
                     stock: 40,
                 },
             ],
-            features: { order_pricing_v2: true },
+            features: { order_pricing_v2: true, field_expense_v2: true },
             extra_call_outlets: [
                 {
                     id: "demo-extra-1",

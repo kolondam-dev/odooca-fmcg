@@ -1,6 +1,7 @@
 import { useMemo, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
 import type { QueueItem } from "../storage/store";
+import { visitOrders } from "../domain/visit-validation";
 import {
     Button,
     Callout,
@@ -22,14 +23,14 @@ const rupiah = (n: number) =>
         maximumFractionDigits: 0,
     }).format(n);
 
-/** Ringkasan order outlet dari antrean lokal (hanya baca). */
-export function orderSummary(queue: QueueItem[], outletId: string) {
-    const rows = queue.filter(
-        (q) =>
-            q?.command?.type === "sales.order.submit" &&
-            (q.command.payload as { outlet_id?: string }).outlet_id ===
-                outletId,
-    );
+/** Ringkasan order kunjungan aktif dari antrean lokal (hanya baca); order kunjungan lain tidak dihitung. */
+export function orderSummary(queue: QueueItem[], visitId?: string) {
+    const rows = visitId
+        ? visitOrders(
+              queue.filter((q) => q?.command?.type === "sales.order.submit"),
+              visitId,
+          )
+        : [];
     let total = 0;
     const skus = new Set<string>();
     for (const q of rows) {
@@ -69,6 +70,7 @@ export function CloseVisitScreen({
     outlet,
     queue,
     orders,
+    visitId,
     displayDone,
     notes,
     setNotes,
@@ -84,6 +86,8 @@ export function CloseVisitScreen({
     outlet: Snapshot["outlets"][number];
     queue: QueueItem[];
     orders: number;
+    /** UUID kunjungan aktif: ringkasan order hanya untuk kunjungan ini. */
+    visitId?: string;
     displayDone: boolean;
     notes: string;
     setNotes: (v: string) => void;
@@ -101,10 +105,7 @@ export function CloseVisitScreen({
     const hasOrder = orders > 0;
     const mode: "order" | "none" = hasOrder ? "order" : "none";
     const [hint, setHint] = useState("");
-    const sum = useMemo(
-        () => orderSummary(queue, outlet.id),
-        [queue, outlet.id],
-    );
+    const sum = useMemo(() => orderSummary(queue, visitId), [queue, visitId]);
     const ar = outlet.commercial?.ar_outstanding;
     const noteShort = !hasOrder && notes.trim().length < 5;
     return (
@@ -161,14 +162,18 @@ export function CloseVisitScreen({
                     icon="wallet"
                     title="Tagihan"
                     sub={
-                        typeof ar === "number" && ar > 0
-                            ? `Sisa ${rupiah(ar)}`
-                            : "Tidak ada piutang berjalan"
+                        typeof ar !== "number"
+                            ? "Data piutang belum tersedia"
+                            : ar > 0
+                              ? `Sisa ${rupiah(ar)}`
+                              : "Tidak ada piutang berjalan"
                     }
                     status={
-                        typeof ar === "number" && ar > 0
-                            ? { tone: "warn", label: "Ada sisa" }
-                            : { tone: "ok", label: "Lunas" }
+                        typeof ar !== "number"
+                            ? { tone: "neu", label: "Tidak tersedia" }
+                            : ar > 0
+                              ? { tone: "warn", label: "Ada sisa" }
+                              : { tone: "ok", label: "Lunas" }
                     }
                 />
                 <ListRow

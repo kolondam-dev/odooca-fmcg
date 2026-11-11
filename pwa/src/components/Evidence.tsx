@@ -34,6 +34,7 @@ export function EvidenceCapture({
     existingRef,
     readOnly = false,
     mapSite,
+    fence: fenceProp,
 }: {
     store: FieldStore;
     owner: string;
@@ -41,6 +42,8 @@ export function EvidenceCapture({
     existingRef?: EvidenceRef;
     readOnly?: boolean;
     mapSite?: MapSite;
+    /** Geofence tanpa peta: foto di luar radius ditolak kamera. */
+    fence?: { latitude: number; longitude: number; radius: number };
 }) {
     const identity = useContext(EvidenceIdentityContext);
     const caption = identity
@@ -410,13 +413,14 @@ export function EvidenceCapture({
                             rawCapture
                             outletName={mapSite?.name}
                             fence={
-                                mapSite && !mapSite.simulated
+                                fenceProp ??
+                                (mapSite && !mapSite.simulated
                                     ? {
                                           latitude: mapSite.latitude,
                                           longitude: mapSite.longitude,
                                           radius: mapSite.radius,
                                       }
-                                    : undefined
+                                    : undefined)
                             }
                             defaultCoordinates={
                                 mapSite

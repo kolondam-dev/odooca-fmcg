@@ -5660,6 +5660,9 @@
             "properties": {
               "order_pricing_v2": {
                 "type": "boolean"
+              },
+              "field_expense_v2": {
+                "type": "boolean"
               }
             },
             "additionalProperties": false

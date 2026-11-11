@@ -1,3 +1,9 @@
+## 2026-11-11T08:20:00+07:00 — claude-design — PR #114: perbaikan review (HOLD d95d13c)
+
+**Berubah:** P1 gate `features.field_expense_v2` (kontrak + openapi): Ajukan uang lapangan terkunci (callout + tombol nonaktif + guard submit) bila server belum menyatakan dukungan; mock demo true, LIVE tidak. P2 geofence: foto check-in/check-out kunjungan menerima fence outlet (`EvidenceCapture fence`), fallback "Buka Kamera Perangkat" dinonaktifkan saat di luar radius. P2 ringkasan Selesai kunjungan memakai `visitOrders(queue, visit_uuid)` (bukan filter outlet); piutang tak tersedia tampil "Tidak tersedia", bukan "Lunas". Merge `origin/main`. Tes unit baru `phase3b-review.test.ts`.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 473; e2e penuh 182/186 sebelum perbaikan peta ganda, lalu checkin-map/visit-evidence/visits hijau. **Belum diuji:** [BU] CI GitHub, e2e penuh ulang, tes e2e gate LIVE.
+**Utang backend:** enforcement `field_expense_v2` (kategori baru, trip fallback, odometer null, approval Darurat SPV+BM) harus dibuktikan di backend sebelum flag ON di LIVE.
+
 ## 2026-11-11T07:15:00+07:00 — claude-design — Fase 3B-2: Kamera, Bukti, Uang lapangan, Ajukan uang
 
 **Berubah:** CameraViewfinder/Evidence/AttendanceCapture/VisitPhotoField/DisplayPhoto dipindah ke DS (`.cam`, `.ev`; kedaluwarsa >60 dtk, pagar geofence); AjukanUangScreen (Kategori BBM/Makan/Nginap/Darurat, Nominal, Keterangan, bukti) menggantikan form biaya di TaskForm; ExpenseWorkspace menjadi daftar "Uang lapangan" (Saldo + pengajuan/realisasi) + layar "Realisasi uang lapangan"; enum kategori diperluas (`fuel, meal, lodging, emergency` + legacy), `emergency` butuh Supervisor + Branch Manager; openapi.json diekspor ulang; CSS kamera/evidence lama dihapus dari style.css.

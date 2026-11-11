@@ -27,6 +27,7 @@ export function VisitPhotoField({
     visitId,
     ready,
     disabled = false,
+    site,
 }: {
     store: FieldStore;
     owner: string;
@@ -36,6 +37,13 @@ export function VisitPhotoField({
     visitId?: string;
     ready: (ref?: VisitEvidence) => void;
     disabled?: boolean;
+    /** Anchor & radius outlet: foto di luar geofence tidak boleh diambil. */
+    site?: {
+        name: string;
+        latitude: number;
+        longitude: number;
+        radius: number;
+    };
 }) {
     const key = `visit-photo-v1:${JSON.stringify([sessionId, outletId, phase, visitId ?? null])}`;
     const binding = {
@@ -146,6 +154,7 @@ export function VisitPhotoField({
                     owner={owner}
                     existingRef={ref}
                     readOnly={disabled}
+                    fence={site}
                     onChange={(value) => void changed(value)}
                 />
             )}

@@ -400,6 +400,12 @@ export function VisitPanel({
                     outletId={outlet.id}
                     phase="check_in"
                     ready={setInPhoto}
+                    site={{
+                        name: outlet.name,
+                        latitude: outlet.latitude,
+                        longitude: outlet.longitude,
+                        radius: outlet.radius,
+                    }}
                     disabled={busy}
                 />
                 {errorNote}
@@ -544,6 +550,7 @@ export function VisitPanel({
                     outlet={outlet}
                     queue={queue}
                     orders={orders}
+                    visitId={info?.active?.context.visit_uuid}
                     displayDone={displayDone}
                     notes={notes}
                     setNotes={setNotes}
@@ -566,6 +573,12 @@ export function VisitPanel({
                             phase="check_out"
                             visitId={info?.active?.context.visit_uuid}
                             ready={setOutPhoto}
+                            site={{
+                                name: outlet.name,
+                                latitude: outlet.latitude,
+                                longitude: outlet.longitude,
+                                radius: outlet.radius,
+                            }}
                             disabled={busy}
                         />
                     }

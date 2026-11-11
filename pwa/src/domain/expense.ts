@@ -71,3 +71,12 @@ export function validateExpense(
     }
     return request;
 }
+
+/** Gerbang kontrak: backend belum menyatakan dukungan kategori/payload baru -> pengajuan dikunci. */
+export const FIELD_EXPENSE_V2_UNSUPPORTED =
+    "Server belum mendukung pengajuan uang lapangan format baru. Pengajuan belum dapat dikirim.";
+export function fieldExpenseV2Enabled(snapshot: {
+    features?: { field_expense_v2?: boolean };
+}) {
+    return snapshot.features?.field_expense_v2 === true;
+}
