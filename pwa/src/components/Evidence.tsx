@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { FieldStore } from "../storage/store";
 import { isDemoMode } from "../domain/running-mode";
 import { Icon } from "./Icon";
+import { Button, Callout } from "../ui";
 import { CheckinMap } from "./CheckinMap";
 import type { MapSite } from "../domain/checkin-map";
 import { CameraViewfinder, type CameraCaptureResult } from "./CameraViewfinder";
@@ -329,19 +330,22 @@ export function EvidenceCapture({
             if (generation.current === ticket) setBusy(false);
         }
     }
+    const fix = location
+        ? `${location.coords.latitude.toFixed(6)}, ${location.coords.longitude.toFixed(6)} · ±${Math.round(location.coords.accuracy)} m`
+        : existingRef
+          ? `${existingRef.latitude.toFixed(6)}, ${existingRef.longitude.toFixed(6)} · ±${Math.round(existingRef.accuracy)} m · ${new Date(
+                existingRef.capturedAt,
+            ).toLocaleString("id-ID", {
+                timeZone: "Asia/Makassar",
+            })} WITA`
+          : "";
     return (
-        <div class="evidence">
-            <strong>Bukti foto & lokasi</strong>
-            <details>
-                <summary>Tentang bukti</summary>
-                <p>
-                    Foto dan lokasi disimpan sebagai bukti perangkat; validasi
-                    resmi dilakukan server.
-                </p>
-            </details>
+        <div class="ev">
+            <p class="ev__title">Bukti foto & lokasi</p>
             {!readOnly && __QA_TOOLS__ && (
-                <button
-                    class="secondary"
+                <Button
+                    variant="sec"
+                    size="sm"
                     disabled={busy}
                     onClick={() => {
                         ++generation.current;
@@ -367,23 +371,22 @@ export function EvidenceCapture({
                     }}
                 >
                     Gunakan lokasi acuan
-                </button>
+                </Button>
             )}
             {!readOnly && (
                 <>
                     <button
                         type="button"
-                        class="camera-open-btn"
+                        class="ev__slot"
                         onClick={() => setShowCamera(true)}
                         disabled={busy}
                     >
-                        <Icon name="camera" size={20} />
+                        <Icon name="camera" size={24} />
                         <span>Buka Kamera Bukti</span>
                     </button>
                     <button
                         type="button"
-                        class="secondary file-upload-btn"
-                        style={{ width: "100%", marginTop: "6px" }}
+                        class="ev__file"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={busy}
                     >
@@ -402,10 +405,19 @@ export function EvidenceCapture({
                     />
                     {showCamera && (
                         <CameraViewfinder
-                            title="Ambil Foto Bukti Lapangan"
+                            title="Foto bukti"
                             salespersonName={identity?.employee}
                             rawCapture
                             outletName={mapSite?.name}
+                            fence={
+                                mapSite && !mapSite.simulated
+                                    ? {
+                                          latitude: mapSite.latitude,
+                                          longitude: mapSite.longitude,
+                                          radius: mapSite.radius,
+                                      }
+                                    : undefined
+                            }
                             defaultCoordinates={
                                 mapSite
                                     ? {
@@ -425,13 +437,13 @@ export function EvidenceCapture({
             )}
             {preview && (
                 <img
-                    class="photo-preview"
+                    class="ev__photo"
                     src={preview}
                     alt="Pratinjau foto bukti lokal"
                 />
             )}
             {mapPreview && (
-                <figure class="evidence-map">
+                <figure class="ev__map">
                     <img src={mapPreview} alt="Pinpoint tanpa basemap" />
                     <figcaption>
                         Grid koordinat · bukan peta jalan. Area biru menunjukkan
@@ -440,34 +452,17 @@ export function EvidenceCapture({
                 </figure>
             )}
             {!readOnly && !existingRef && file && (
-                <button
-                    class="secondary"
-                    type="button"
+                <Button
+                    variant="sec"
+                    size="md"
+                    icon="pin"
                     onClick={locate}
                     disabled={busy}
                 >
-                    <Icon name="pin" size={18} />
                     {busy ? "Memproses bukti…" : "Ambil lokasi sekarang"}
-                </button>
+                </Button>
             )}
-            {!location && existingRef && (
-                <p class="coordinates">
-                    Lokasi bukti tersimpan: {existingRef.latitude.toFixed(6)},{" "}
-                    {existingRef.longitude.toFixed(6)} · ±
-                    {Math.round(existingRef.accuracy)} m ·{" "}
-                    {new Date(existingRef.capturedAt).toLocaleString("id-ID", {
-                        timeZone: "Asia/Makassar",
-                    })}{" "}
-                    WITA
-                </p>
-            )}
-            {location && (
-                <p class="coordinates">
-                    {location.coords.latitude.toFixed(6)},{" "}
-                    {location.coords.longitude.toFixed(6)} · ±
-                    {Math.round(location.coords.accuracy)} m
-                </p>
-            )}
+            {fix && <p class="ev__fix">{fix}</p>}
             {mapSite && (
                 <CheckinMap
                     site={mapSite}
@@ -491,27 +486,28 @@ export function EvidenceCapture({
                 />
             )}
             {!readOnly && !existingRef && file && (
-                <button
-                    type="button"
-                    class="secondary"
+                <Button
+                    variant="pri"
+                    size="md"
+                    icon="check"
                     disabled={!file || !location || !selectedAt || busy}
                     onClick={() => void save()}
                 >
                     Simpan bukti lokal
-                </button>
+                </Button>
             )}
             {error && (
-                <p role="status" class="notice">
-                    {error}
-                </p>
+                <div role="status">
+                    <Callout tone="warn">{error}</Callout>
+                </div>
             )}
             {existingRef && !existingRef.packageHash && (
-                <small>
+                <p class="ev__note">
                     Bukti lama belum memiliki paket watermark/hash/pinpoint.
                     Pilih foto baru untuk membuat paket baru.
-                </small>
+                </p>
             )}
-            <small>Bukti lokal · belum divalidasi server.</small>
+            <p class="ev__note">Bukti lokal · belum divalidasi server.</p>
         </div>
     );
 }

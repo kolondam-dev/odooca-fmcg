@@ -1,3 +1,10 @@
+## 2026-11-11T07:15:00+07:00 — claude-design — Fase 3B-2: Kamera, Bukti, Uang lapangan, Ajukan uang
+
+**Berubah:** CameraViewfinder/Evidence/AttendanceCapture/VisitPhotoField/DisplayPhoto dipindah ke DS (`.cam`, `.ev`; kedaluwarsa >60 dtk, pagar geofence); AjukanUangScreen (Kategori BBM/Makan/Nginap/Darurat, Nominal, Keterangan, bukti) menggantikan form biaya di TaskForm; ExpenseWorkspace menjadi daftar "Uang lapangan" (Saldo + pengajuan/realisasi) + layar "Realisasi uang lapangan"; enum kategori diperluas (`fuel, meal, lodging, emergency` + legacy), `emergency` butuh Supervisor + Branch Manager; openapi.json diekspor ulang; CSS kamera/evidence lama dihapus dari style.css.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 471, e2e phone+tablet 186 lulus. Tes form biaya lama (H-1, DO, trip) diganti tes form DS. **Belum diuji:** [BU] CI GitHub.
+**Utang backend (K16):** kategori biaya baru, `trip_id` fallback `FIELD-<tanggal>`, odometer null untuk non-BBM terencana, saldo uang muka.
+**Berikutnya:** Fase 3B-3: Setor uang, Biaya toko, Closing trip, Penagihan, Delivery/POD, HRIS, status/error; lalu PR docs "plan quick action".
+
 ## 2026-11-10T13:58:02+07:00 — claude-design — Fase 3B-1: Extra call dan Selesai kunjungan
 
 **Berubah:** ExtraCallScreen (menggantikan form extra di TaskForm), CloseVisitScreen (menggantikan bottom sheet; outcome otomatis order_requested/no_order), snapshot.extra_call_outlets opsional; tes e2e baru extra-call + close-visit; helper/test lama disesuaikan. Utang: DS_RECONCILIATION K15.

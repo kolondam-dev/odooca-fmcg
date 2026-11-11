@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { z } from "zod";
+import { Callout } from "../ui";
 import { EvidenceCapture, type EvidenceRef } from "./Evidence";
 import { assertLocalEvidence } from "../domain/evidence-package";
 import {
@@ -132,9 +133,13 @@ export function VisitPhotoField({
                     ? "Foto check-in kunjungan"
                     : "Foto check-out kunjungan"}
             </legend>
-            <small>Foto baru · lokasi outlet · maksimal 60 detik</small>
+            <p class="ev__note">
+                Foto baru · lokasi outlet · maksimal 60 detik
+            </p>
             {loading ? (
-                <p role="status">Memulihkan draft foto…</p>
+                <p role="status" class="ev__note">
+                    Memulihkan draft foto…
+                </p>
             ) : (
                 <EvidenceCapture
                     store={store}
@@ -145,16 +150,18 @@ export function VisitPhotoField({
                 />
             )}
             {ref && durable && !error && (
-                <p role="status">
-                    Paket foto tersimpan untuk{" "}
-                    {phase === "check_in" ? "check-in" : "check-out"} outlet
-                    ini.
-                </p>
+                <div role="status">
+                    <Callout tone="info">
+                        Paket foto tersimpan untuk{" "}
+                        {phase === "check_in" ? "check-in" : "check-out"} outlet
+                        ini.
+                    </Callout>
+                </div>
             )}
             {error && (
-                <p role="alert" class="form-error">
+                <Callout tone="bad" alert>
                     {error}
-                </p>
+                </Callout>
             )}
         </fieldset>
     );

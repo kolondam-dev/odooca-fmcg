@@ -2,7 +2,6 @@ import { useState } from "preact/hooks";
 import type { Dialog } from "../ui/navigation";
 import { SheetHeader } from "../ui";
 import { useDialog } from "../ui/useDialog";
-import { ExpenseContextFields } from "./ExpenseContextFields";
 import { LocalDateInput } from "./LocalDateInput";
 import { AttendanceCapture } from "./AttendanceCapture";
 import { Icon } from "./Icon";
@@ -12,8 +11,6 @@ import {
     type Identity,
     type Snapshot,
 } from "../domain/contracts";
-import { validateExpense } from "../domain/expense";
-import { money } from "../domain/format";
 import type { FieldStore, QueueItem } from "../storage/store";
 export function TaskForm({
     dialog,
@@ -28,7 +25,10 @@ export function TaskForm({
 }: {
     workStatus: string;
     store: FieldStore;
-    dialog: Exclude<Dialog, { type: "order" | "display" | "extra" }>;
+    dialog: Exclude<
+        Dialog,
+        { type: "order" | "display" | "extra" | "expense" }
+    >;
     identity: Identity;
     snapshot: Snapshot;
     owner: string;
@@ -49,10 +49,8 @@ export function TaskForm({
         if (!busy) close();
     });
     const [evidence, setEvidence] = useState<EvidenceRef>();
-    const [category, setCategory] = useState("fuel_planned");
     const title = {
         proof: "Bukti pengiriman",
-        expense: "Uang lapangan",
         attendance: "Absensi foto & lokasi",
         leave: "Pengajuan cuti",
         profile: "Profil & Sesi Akun",
@@ -67,34 +65,7 @@ export function TaskForm({
             let type: Command["type"];
             let payload: Record<string, unknown>;
             let label: string;
-            if (dialog.type === "expense") {
-                const amount = Number(f.get("amount"));
-                if (!Number.isFinite(amount) || amount < 1)
-                    throw new Error("Nominal harus lebih dari nol.");
-                type = "field_expense.request";
-                payload = validateExpense(
-                    {
-                        category,
-                        amount: String(amount),
-                        trip_id: String(f.get("trip") ?? ""),
-                        delivery_id:
-                            f.get("scope") === "delivery"
-                                ? String(f.get("delivery") ?? "").trim() || null
-                                : null,
-                        expense_scope: f.get("scope"),
-                        scheduled_date: f.get("date"),
-                        odometer:
-                            f.get("odometer") === null ||
-                            f.get("odometer") === ""
-                                ? null
-                                : Number(f.get("odometer")),
-                        reason: f.get("reason"),
-                        evidence: evidence ?? null,
-                    },
-                    identity.businessDate,
-                );
-                label = `Petty cash • ${money(amount)}`;
-            } else if (dialog.type === "leave") {
+            if (dialog.type === "leave") {
                 const from = String(f.get("from")),
                     to = String(f.get("to"));
                 if (to < from)
@@ -168,93 +139,6 @@ export function TaskForm({
                 />
                 <form onSubmit={(e) => void send(e)}>
                     <div class="sheet-body">
-                        {dialog.type === "expense" && (
-                            <>
-                                <label>
-                                    Kategori
-                                    <select
-                                        aria-label="Kategori"
-                                        value={category}
-                                        onChange={(e) =>
-                                            setCategory(e.currentTarget.value)
-                                        }
-                                    >
-                                        <option value="fuel_planned">
-                                            BBM terencana (H-1)
-                                        </option>
-                                        <option value="fuel_emergency">
-                                            BBM insidentil
-                                        </option>
-                                        <option value="meal">
-                                            Uang makan luar kota
-                                        </option>
-                                        <option value="lodging">
-                                            Penginapan luar kota
-                                        </option>
-                                        <option value="repair">
-                                            Perbaikan darurat / derek
-                                        </option>
-                                    </select>
-                                </label>
-                                <ExpenseContextFields
-                                    deliveries={snapshot.deliveries}
-                                    trip={dialog.trip}
-                                />
-                                <p class="notice">
-                                    {category === "fuel_emergency"
-                                        ? "BBM insidentil: Supervisor + Branch Manager, berapa pun nominalnya."
-                                        : "Wajib approval supervisor. Di atas limit kewenangan diteruskan ke Branch Manager."}
-                                </p>
-                                <LocalDateInput
-                                    name="date"
-                                    label="Tanggal perjalanan"
-                                />
-                                <label>
-                                    Nominal pengajuan (Rp)
-                                    <input
-                                        name="amount"
-                                        type="number"
-                                        min="1"
-                                        max="100000000"
-                                        inputMode="numeric"
-                                        required
-                                    />
-                                </label>
-                                {category.startsWith("fuel") && (
-                                    <>
-                                        <label>
-                                            KM / odometer awal
-                                            <input
-                                                name="odometer"
-                                                type="number"
-                                                min="0"
-                                                required
-                                            />
-                                        </label>
-                                        <p class="footnote">
-                                            Tanggal bisnis:{" "}
-                                            {identity.businessDate}. Pengajuan
-                                            BBM H-1 memerlukan foto odometer;
-                                            realisasi memerlukan struk dan foto
-                                            odometer setelah isi.
-                                        </p>
-                                    </>
-                                )}
-                                <label>
-                                    Tujuan / alasan
-                                    <textarea
-                                        name="reason"
-                                        required
-                                        maxLength={500}
-                                    />
-                                </label>
-                                <EvidenceCapture
-                                    store={store}
-                                    owner={owner}
-                                    onChange={setEvidence}
-                                />
-                            </>
-                        )}
                         {dialog.type === "attendance" && (
                             <>
                                 <label>

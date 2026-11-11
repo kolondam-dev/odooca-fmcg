@@ -4815,10 +4815,12 @@
           "category": {
             "type": "string",
             "enum": [
-              "fuel_planned",
-              "fuel_emergency",
+              "fuel",
               "meal",
               "lodging",
+              "emergency",
+              "fuel_planned",
+              "fuel_emergency",
               "repair",
               "delivery_fee"
             ]

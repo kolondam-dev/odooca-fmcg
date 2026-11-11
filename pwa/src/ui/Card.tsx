@@ -42,20 +42,25 @@ export function ListRow({
     sub,
     status,
     onClick,
+    disabled,
     divider,
 }: {
-    icon: IconName;
+    /** Tanpa ikon: baris teks (DS: Uang_lapangan, Riwayat). */
+    icon?: IconName;
     title: string;
     sub?: string;
     status?: { tone: Tone; label: string };
     onClick?: () => void;
+    disabled?: boolean;
     divider?: boolean;
 }) {
     const inner = (
         <>
-            <span class="ui-row__tile">
-                <Icon name={icon} size={22} />
-            </span>
+            {icon ? (
+                <span class="ui-row__tile">
+                    <Icon name={icon} size={22} />
+                </span>
+            ) : null}
             <span class="ui-row__body">
                 <span class="ui-row__title">{title}</span>
                 {sub ? <span class="ui-row__sub">{sub}</span> : null}
@@ -66,7 +71,7 @@ export function ListRow({
     );
     const c = cx("ui-row", divider && "ui-row--div");
     return onClick ? (
-        <button type="button" class={c} onClick={onClick}>
+        <button type="button" class={c} onClick={onClick} disabled={disabled}>
             {inner}
         </button>
     ) : (

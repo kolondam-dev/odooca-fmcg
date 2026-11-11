@@ -2,6 +2,7 @@ import { useDialog } from "../ui/useDialog";
 import { useBackLayer } from "../ui/navigation";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Icon } from "./Icon";
+import { distanceMeters } from "../domain/format";
 
 export interface CameraCaptureResult {
     blob: Blob;
@@ -19,6 +20,8 @@ interface CameraViewfinderProps {
     salespersonName?: string;
     defaultCoordinates?: { latitude: number; longitude: number };
     rawCapture?: boolean;
+    /** Area yang diizinkan: di luar radius, shutter dikunci (DS: Kamera_luar). */
+    fence?: { latitude: number; longitude: number; radius: number };
     onCapture: (result: CameraCaptureResult) => void;
     onClose: () => void;
 }
@@ -77,6 +80,7 @@ export function CameraViewfinder({
     onCapture,
     onClose,
     rawCapture = false,
+    fence,
 }: CameraViewfinderProps) {
     const dialogRef = useDialog<HTMLDivElement>(onClose);
     useBackLayer(true, onClose);
@@ -87,8 +91,15 @@ export function CameraViewfinder({
     const [facingMode, setFacingMode] = useState<"environment" | "user">(
         "environment",
     );
+    const [restart, setRestart] = useState(0);
     const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
     const [capturing, setCapturing] = useState(false);
+    // Pratinjau (DS: Kamera_pratinjau): foto belum dipakai sampai "Gunakan foto".
+    const [shot, setShot] = useState<{
+        result: CameraCaptureResult;
+        url: string;
+        elapsed: number;
+    }>();
 
     // Geolocation state
     const [coords, setCoords] = useState<{
@@ -273,9 +284,25 @@ export function CameraViewfinder({
                 streamRef.current = null;
             }
         };
-    }, [facingMode]);
+    }, [facingMode, restart]);
 
+    const outside =
+        fence && !coords.simulated
+            ? Math.max(
+                  0,
+                  Math.round(
+                      distanceMeters(
+                          coords.latitude,
+                          coords.longitude,
+                          fence.latitude,
+                          fence.longitude,
+                      ) - fence.radius,
+                  ),
+              )
+            : 0;
+    const expired = !!shot && !shot.result.simulated && shot.elapsed > 60;
     function stopAndClose() {
+        if (shot) URL.revokeObjectURL(shot.url);
         if (streamRef.current) {
             streamRef.current.getTracks().forEach((track) => track.stop());
             streamRef.current = null;
@@ -363,6 +390,29 @@ export function CameraViewfinder({
         });
     }
 
+    function stage(blob: Blob) {
+        const now = Date.now();
+        setShot({
+            url: URL.createObjectURL(blob),
+            elapsed: Math.round((now - coords.timestamp) / 1000),
+            result: {
+                blob,
+                timestamp: now,
+                fixTimestamp: coords.timestamp,
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                accuracy: coords.accuracy,
+                simulated: coords.simulated,
+            },
+        });
+        setCapturing(false);
+    }
+    function retake() {
+        if (shot) URL.revokeObjectURL(shot.url);
+        setShot(undefined);
+        setFacingMode((m) => m); // mulai ulang stream
+        setRestart((n) => n + 1);
+    }
     async function handleCapture() {
         if (!videoRef.current || capturing) return;
         setCapturing(true);
@@ -379,15 +429,7 @@ export function CameraViewfinder({
                 streamRef.current = null;
             }
 
-            onCapture({
-                blob,
-                timestamp: Date.now(),
-                fixTimestamp: coords.timestamp,
-                latitude: coords.latitude,
-                longitude: coords.longitude,
-                accuracy: coords.accuracy,
-                simulated: coords.simulated,
-            });
+            stage(blob);
         } catch (err) {
             setCameraError(
                 err instanceof Error ? err.message : "Gagal mengambil foto.",
@@ -414,15 +456,7 @@ export function CameraViewfinder({
                 streamRef.current = null;
             }
 
-            onCapture({
-                blob,
-                timestamp: Date.now(),
-                fixTimestamp: coords.timestamp,
-                latitude: coords.latitude,
-                longitude: coords.longitude,
-                accuracy: coords.accuracy,
-                simulated: coords.simulated,
-            });
+            stage(blob);
         } catch (err) {
             setCameraError(
                 err instanceof Error ? err.message : "Gagal memproses foto.",
@@ -431,135 +465,163 @@ export function CameraViewfinder({
         }
     }
 
+    const stamp = shot ? new Date(shot.result.timestamp) : undefined;
     return (
         <div
-            class="camera-modal-backdrop"
+            class="cam"
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label={title}
         >
-            <div class="camera-modal-content">
-                {/* Header bar */}
-                <header class="camera-header">
-                    <div>
-                        <h3>{title}</h3>
-                        <p class="camera-subtitle">
-                            {outletName || "Bukti kunjungan lapangan"}
-                        </p>
+            <header class="cam__bar">
+                <button
+                    type="button"
+                    class="cam__close"
+                    onClick={stopAndClose}
+                    aria-label="Tutup kamera"
+                >
+                    <Icon name="close" size={24} />
+                </button>
+                <h2 class="cam__title">{title}</h2>
+            </header>
+            <div class="cam__view">
+                {shot ? (
+                    <img
+                        class="cam__video"
+                        src={shot.url}
+                        alt="Pratinjau foto kamera"
+                    />
+                ) : cameraError ? (
+                    <div class="cam__error">
+                        <Icon name="warning" size={40} />
+                        <p>{cameraError}</p>
+                        <label class="ui-btn ui-btn--sec ui-btn--md">
+                            <Icon name="camera" size={20} />
+                            Buka Kamera Perangkat
+                            <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                style={{ display: "none" }}
+                                onChange={(e) =>
+                                    void handleFallbackFile(
+                                        e.currentTarget.files?.[0],
+                                    )
+                                }
+                            />
+                        </label>
                     </div>
-                    <button
-                        type="button"
-                        class="camera-close-button"
-                        onClick={stopAndClose}
-                        aria-label="Tutup kamera"
-                    >
-                        <Icon name="close" size={24} />
-                    </button>
-                </header>
-
-                {/* Video Viewfinder Area */}
-                <div class="camera-viewfinder-container">
-                    {cameraError ? (
-                        <div class="camera-error-container">
-                            <Icon name="warning" size={40} />
-                            <p class="camera-error-message">{cameraError}</p>
-                            <label class="camera-fallback-btn">
+                ) : (
+                    <video
+                        ref={videoRef}
+                        class="cam__video"
+                        playsinline
+                        autoplay
+                        muted
+                    />
+                )}
+            </div>
+            <div class="cam__panel">
+                <div class="cam__stamp" role="status">
+                    <strong>
+                        {outside && !shot
+                            ? `Di luar area · ${outside} m dari batas`
+                            : `${shot ? stamp!.toLocaleString("id-ID", { timeZone: "Asia/Makassar" }) : currentTime} · ±${Math.round(
+                                  (shot ? shot.result : coords).accuracy,
+                              )} m`}
+                    </strong>
+                    <span>
+                        {gpsStatus === "acquiring" && !shot
+                            ? "Mencari GPS…"
+                            : `${(shot ? shot.result : coords).latitude.toFixed(4)}, ${(shot ? shot.result : coords).longitude.toFixed(4)}${outletName ? ` · ${outletName}` : ""}`}
+                        {gpsStatus === "fallback" && !shot
+                            ? " · titik simulasi"
+                            : ""}
+                    </span>
+                    <small>Bukti lokal · hash dihitung saat disimpan</small>
+                </div>
+                {shot ? (
+                    <>
+                        {expired ? (
+                            <div class="cam__note cam__note--warn" role="alert">
+                                <Icon name="clock" size={22} />
+                                <span>
+                                    Foto diambil lebih dari 60 detik setelah
+                                    lokasi dikunci (kini {shot.elapsed} detik).
+                                    Ambil ulang agar lokasi dan foto cocok.
+                                </span>
+                            </div>
+                        ) : null}
+                        <div class="cam__actions">
+                            <button
+                                type="button"
+                                class={`ui-btn ui-btn--md ${expired ? "ui-btn--pri" : "ui-btn--sec"}`}
+                                onClick={retake}
+                            >
                                 <Icon name="camera" size={20} />
-                                Buka Kamera Perangkat
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    capture="environment"
-                                    style={{ display: "none" }}
-                                    onChange={(e) =>
-                                        void handleFallbackFile(
-                                            e.currentTarget.files?.[0],
+                                {expired ? "Ambil ulang" : "Ulangi"}
+                            </button>
+                            <button
+                                type="button"
+                                class="ui-btn ui-btn--md ui-btn--pri"
+                                disabled={expired}
+                                onClick={() => onCapture(shot.result)}
+                            >
+                                <Icon name="check" size={20} />
+                                Gunakan foto
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {outside ? (
+                            <p class="cam__hint cam__hint--warn" role="status">
+                                Di luar area: foto tidak bisa diambil
+                            </p>
+                        ) : cameraActive && !cameraError ? (
+                            <p class="cam__hint">
+                                {facingMode === "environment"
+                                    ? "Kamera belakang"
+                                    : "Kamera depan"}
+                                {hasMultipleCameras
+                                    ? " · ketuk ikon untuk ganti"
+                                    : ""}
+                            </p>
+                        ) : null}
+                        <div class="cam__shutter-row">
+                            {cameraActive && !cameraError ? (
+                                <button
+                                    type="button"
+                                    class="cam__shutter"
+                                    onClick={() => void handleCapture()}
+                                    disabled={capturing || !!outside}
+                                    aria-label="Ambil foto bukti"
+                                >
+                                    <span />
+                                </button>
+                            ) : null}
+                            {hasMultipleCameras &&
+                            cameraActive &&
+                            !cameraError ? (
+                                <button
+                                    type="button"
+                                    class="cam__flip"
+                                    onClick={() =>
+                                        setFacingMode((m) =>
+                                            m === "environment"
+                                                ? "user"
+                                                : "environment",
                                         )
                                     }
-                                />
-                            </label>
-                        </div>
-                    ) : (
-                        <>
-                            <video
-                                ref={videoRef}
-                                class="camera-video"
-                                playsinline
-                                autoplay
-                                muted
-                            />
-
-                            {/* Framing reticle */}
-                            <div class="camera-reticle" aria-hidden="true">
-                                <div class="reticle-corner top-left" />
-                                <div class="reticle-corner top-right" />
-                                <div class="reticle-corner bottom-left" />
-                                <div class="reticle-corner bottom-right" />
-                            </div>
-
-                            {/* Live Metadata Badges */}
-                            <div class="camera-live-overlay">
-                                <div class="camera-badge time-badge">
-                                    <Icon name="clock" size={14} />
-                                    <span>{currentTime}</span>
-                                </div>
-                                <div
-                                    class={`camera-badge gps-badge ${gpsStatus === "locked" ? "gps-locked" : "gps-searching"}`}
+                                    aria-label="Balik kamera"
                                 >
-                                    <Icon name="pin" size={14} />
-                                    <span>
-                                        {gpsStatus === "locked"
-                                            ? `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)} (±${Math.round(coords.accuracy)}m)`
-                                            : gpsStatus === "fallback"
-                                              ? "GPS belum tersedia · titik simulasi"
-                                              : "Mencari GPS…"}
-                                    </span>
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </div>
-
-                {/* Camera Controls Bar */}
-                <footer class="camera-controls">
-                    {hasMultipleCameras && cameraActive && !cameraError && (
-                        <button
-                            type="button"
-                            class="camera-tool-button"
-                            onClick={() =>
-                                setFacingMode((m) =>
-                                    m === "environment"
-                                        ? "user"
-                                        : "environment",
-                                )
-                            }
-                            title="Balik kamera"
-                        >
-                            <Icon name="sync" size={22} />
-                        </button>
-                    )}
-
-                    {cameraActive && !cameraError && (
-                        <button
-                            type="button"
-                            class="camera-shutter-button"
-                            onClick={() => void handleCapture()}
-                            disabled={capturing}
-                            aria-label="Ambil foto bukti"
-                        >
-                            <div class="shutter-inner" />
-                        </button>
-                    )}
-
-                    <button
-                        type="button"
-                        class="camera-cancel-button"
-                        onClick={stopAndClose}
-                    >
-                        Batal
-                    </button>
-                </footer>
+                                    <Icon name="sync" size={22} />
+                                </button>
+                            ) : null}
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );

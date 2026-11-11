@@ -2,6 +2,7 @@ import { EvidenceIdentityContext } from "./ui/evidenceIdentity";
 import { ViewMemoryContext, useRememberedScroll } from "./ui/viewMemory";
 import { TaskForm } from "./components/TaskForm";
 import { ExtraCallScreen } from "./components/ExtraCallScreen";
+import { AjukanUangScreen } from "./components/AjukanUangScreen";
 import { LiveClock } from "./components/LiveClock";
 import { useNavigation, type Page, type Dialog } from "./ui/navigation";
 import { AppHeader, BottomNav } from "./ui";
@@ -1030,9 +1031,21 @@ function Workspace({
                             close={() => setDialog(undefined)}
                         />
                     )}
+                    {dialog?.type === "expense" && (
+                        <AjukanUangScreen
+                            snapshot={snapshot}
+                            businessDate={identity.businessDate}
+                            owner={owner}
+                            store={store}
+                            trip={dialog.trip}
+                            submit={submit as never}
+                            close={() => setDialog(undefined)}
+                        />
+                    )}
                     {dialog &&
                         dialog.type !== "attendance" &&
                         dialog.type !== "extra" &&
+                        dialog.type !== "expense" &&
                         dialog.type !== "order" &&
                         dialog.type !== "display" && (
                             <TaskForm

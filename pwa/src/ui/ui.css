@@ -1240,6 +1240,10 @@ select.ui-select {
 .ui-screen.ui-screen--over {
     z-index: 40;
 }
+/* Layar yang dibuka di atas layar overlay lain (Ajukan uang di atas Uang lapangan). */
+.ui-screen.ui-screen--top {
+    z-index: 50;
+}
 
 /* Diskon bertingkat / footer (Diskon_baris, Diskon_footer) */
 .pos-disc {
@@ -1316,4 +1320,287 @@ select.ui-select {
 .pos-dl dd {
     margin: 0;
     word-break: break-all;
+}
+
+/* ── Kamera (DS: Kamera_viewfinder / pratinjau / kedaluwarsa / luar) ── */
+.cam {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    background: var(--c-cam);
+    color: #fff;
+}
+.cam__bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--hdr-h);
+    padding: var(--sp-2) var(--sp-4);
+    position: relative;
+}
+.cam__title {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: #fff;
+}
+.cam__close {
+    position: absolute;
+    left: var(--sp-3);
+    top: 50%;
+    transform: translateY(-50%);
+    min-width: var(--touch);
+    min-height: var(--touch);
+    display: grid;
+    place-items: center;
+    background: transparent;
+    border: 0;
+    color: #fff;
+}
+.cam__view {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+}
+.cam__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--c-cam);
+}
+.cam__error {
+    display: grid;
+    gap: var(--sp-3);
+    justify-items: center;
+    text-align: center;
+    padding: var(--sp-6);
+    color: #c7d2ea;
+}
+.cam__panel {
+    display: grid;
+    gap: var(--sp-3);
+    padding: var(--sp-4);
+    padding-bottom: max(var(--sp-4), env(safe-area-inset-bottom));
+}
+.cam__stamp {
+    display: grid;
+    gap: 2px;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-lg);
+    background: var(--c-cam-box);
+    font-size: 0.9375rem;
+}
+.cam__stamp strong {
+    font-size: 1rem;
+}
+.cam__stamp span,
+.cam__stamp small {
+    color: #aab6d3;
+}
+.cam__hint {
+    justify-self: center;
+    margin: 0;
+    padding: var(--sp-2) var(--sp-4);
+    border-radius: var(--r-pill);
+    background: var(--c-neu-bg);
+    color: var(--c-ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+.cam__hint--warn {
+    background: var(--c-warn-bg);
+    color: var(--c-warn);
+}
+.cam__note {
+    display: flex;
+    gap: var(--sp-3);
+    align-items: flex-start;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-lg);
+    font-size: 0.9375rem;
+}
+.cam__note--warn {
+    background: var(--c-warn-bg);
+    color: var(--c-warn);
+}
+.cam__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-3);
+}
+.cam__shutter-row {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 76px;
+}
+.cam__shutter {
+    width: 76px;
+    height: 76px;
+    padding: 0;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: transparent;
+    display: grid;
+    place-items: center;
+}
+.cam__shutter span {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #fff;
+}
+.cam__shutter:disabled {
+    border-color: #5a6c99;
+}
+.cam__shutter:disabled span {
+    background: #5a6c99;
+}
+.cam__flip {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: grid;
+    place-items: center;
+}
+
+/* ── Bukti foto & lokasi (DS: slot foto putus-putus) ── */
+.ev {
+    display: grid;
+    gap: var(--sp-3);
+}
+.ev__title {
+    margin: 0;
+    font-weight: 700;
+    color: var(--c-ink);
+}
+.ev__slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    min-height: 88px;
+    border: 2px dashed var(--c-pri);
+    border-radius: var(--r-lg);
+    background: transparent;
+    color: var(--c-pri);
+    font-weight: 700;
+}
+.ev__slot:disabled {
+    opacity: 0.6;
+}
+.ev__file {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    min-height: var(--btn-sm);
+    border: 0;
+    background: transparent;
+    color: var(--c-pri);
+    font-weight: 600;
+}
+.ev__photo,
+.ev__map img {
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    border-radius: var(--r-lg);
+    background: var(--c-neu-bg);
+}
+.ev__map {
+    margin: 0;
+    display: grid;
+    gap: var(--sp-2);
+}
+.ev__map figcaption,
+.ev__note,
+.ev__fix {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--c-mute);
+}
+.ev__fix {
+    font-variant-numeric: tabular-nums;
+}
+.evidence-group {
+    display: grid;
+    gap: var(--sp-3);
+    min-width: 0;
+    margin: 0;
+    padding: var(--sp-4);
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+    background: var(--c-surface);
+}
+.evidence-group > legend {
+    padding: 0 var(--sp-2);
+    font-weight: 700;
+    color: var(--c-ink);
+}
+
+/* ── Uang lapangan (DS: Uang_lapangan) ── */
+.exp-saldo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+}
+.exp-saldo .ui-btn {
+    width: auto;
+    flex: none;
+}
+.exp-saldo__label {
+    display: block;
+    color: var(--c-mute);
+    font-size: 0.9375rem;
+}
+.exp-saldo__amt {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--c-ink);
+    font-variant-numeric: tabular-nums;
+}
+.exp-form {
+    display: grid;
+    gap: var(--sp-3);
+}
+.exp-line {
+    display: grid;
+    gap: var(--sp-3);
+    min-width: 0;
+    margin: 0;
+    padding: var(--sp-4);
+    border: 1px solid var(--c-line);
+    border-radius: var(--r-lg);
+    background: var(--c-surface);
+}
+.exp-line > legend {
+    padding: 0 var(--sp-2);
+    font-weight: 700;
+    color: var(--c-ink);
+}
+.exp-dl {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--sp-2) var(--sp-4);
+    margin: 0;
+}
+.exp-dl dd {
+    margin: 0;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }

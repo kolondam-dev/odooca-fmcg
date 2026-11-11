@@ -218,3 +218,9 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-10T13:58:02+07:00] [INFO] Fase 3B-1: Extra call + Selesai kunjungan
 - ExtraCallScreen, CloseVisitScreen, K15
 - Task managed by claude-design agent at 2026-11-10T13:58:02+07:00
+
+[2026-11-11T07:11:46+07:00] [INFO] Fase 3B-2: Kamera, Bukti, Uang lapangan, Ajukan uang
+- Kamera/Evidence/Uang lapangan/Ajukan uang dipindah ke DS
+- Kategori biaya baru + openapi diekspor ulang; e2e phone+tablet 186 lulus
+- Utang backend dicatat di DS_RECONCILIATION K16
+- Task managed by claude-design agent at 2026-11-11T07:11:46+07:00

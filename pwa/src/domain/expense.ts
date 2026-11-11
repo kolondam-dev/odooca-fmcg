@@ -4,10 +4,14 @@ import { z } from "zod";
 export const ExpenseRequestSchema = z
     .object({
         category: z.enum([
-            "fuel_planned",
-            "fuel_emergency",
+            // Kategori mockup (Ajukan_uang): BBM, Makan, Nginap, Darurat.
+            "fuel",
             "meal",
             "lodging",
+            "emergency",
+            // Legacy (antrean/riwayat lama + biaya toko/DO).
+            "fuel_planned",
+            "fuel_emergency",
             "repair",
             "delivery_fee",
         ]),
@@ -25,6 +29,9 @@ export const ExpenseRequestSchema = z
         evidence: z.unknown().nullable(),
     })
     .strict();
+/** BBM v2 mencatat KM saat realisasi (bukan saat pengajuan). */
+export const needsRequestOdometer = (category: string) =>
+    category.startsWith("fuel_");
 export type ExpenseRequest = z.infer<typeof ExpenseRequestSchema>;
 
 export function validateExpense(
@@ -48,7 +55,7 @@ export function validateExpense(
         throw new Error(
             "Biaya toko wajib referensi outlet dan tidak boleh sekaligus menjadi biaya DO.",
         );
-    if (request.category.startsWith("fuel") && request.odometer === null)
+    if (needsRequestOdometer(request.category) && request.odometer === null)
         throw new Error("BBM wajib mencatat KM awal.");
     if (request.category === "fuel_planned") {
         if (!z.iso.date().safeParse(businessDate).success)
