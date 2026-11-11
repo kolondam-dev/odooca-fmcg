@@ -409,6 +409,17 @@ def assert_fx(snapshot, oracle, round_amt):
         snapshot["gl_tie_out"]["balanced"],
         f"FIN38 FX does not tie out: {snapshot['gl_tie_out']}",
     )
+    # A report with over-reconciled lines or unclassified partials must never
+    # present itself as complete, even when the totals happen to balance.
+    require(
+        snapshot["complete"] is True,
+        f"FIN38 report must be complete: over_reconciled="
+        f"{len(snapshot['over_reconciled_rows'])}, exceptions={len(snapshot['exceptions'])}",
+    )
+    require(
+        snapshot["over_reconciled_rows"] == [],
+        f"FIN38 must not report over-reconciled lines: {snapshot['over_reconciled_rows']}",
+    )
     # Independent per-currency comparison: no netting across currencies, and GL
     # currencies without realized rows still have to match.
     currencies = set(oracle["realized_by_currency"]) | set(oracle["gl_totals"])

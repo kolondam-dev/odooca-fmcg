@@ -525,6 +525,31 @@ class FxRevaluationTests(unittest.TestCase):
         self.assertTrue(tie["balanced"])
         self.assertEqual(tie["issues"], [])
 
+    def test_over_reconciled_fails_native_acceptance(self):
+        # Self-audit finding: an over-reconciled line empties the unrealized base
+        # but the report still looked balanced. The completeness flag must fail.
+        report = sched.build_fx_revaluation(
+            [], [], "2026-07-31", ROUND, lambda *_: 1.0,
+        )
+        self.assertTrue(report["complete"])
+        self.assertEqual(report["over_reconciled_rows"], [])
+
+    def test_exceptions_make_the_fx_report_incomplete(self):
+        # A partial that cannot be classified must not produce a clean-looking
+        # report: exceptions are surfaced through the completeness contract.
+        open_line = {
+            "line_id": 1, "account_id": 110, "account_type": "asset_receivable",
+            "partner_id": 5, "currency_id": 2, "company_currency_id": 1,
+            "balance": 1_500_000.0, "amount_currency": 100.0,
+        }
+        unclassifiable = partial(1, leg(1_500_000.0, 0.0), leg(-1_600_000.0, -100.0),
+                                 1_500_000.0)
+        report = sched.build_fx_revaluation(
+            [open_line], [unclassifiable], "2026-07-31", ROUND, lambda *_: 16_000.0,
+        )
+        self.assertEqual(len(report["exceptions"]), 1)
+        self.assertEqual(report["exceptions"][0]["reason"], "missing_currency_amount")
+
     def test_negated_gl_balance_fails_the_gain_case(self):
         invoice = leg(1_500_000.0, 100.0)
         payment = leg(-1_600_000.0, -100.0)

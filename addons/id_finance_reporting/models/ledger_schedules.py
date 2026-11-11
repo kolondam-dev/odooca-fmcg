@@ -458,6 +458,7 @@ def build_fx_revaluation(
         "write_off_rows": write_off_rows,
         "tied_exchange_move_ids": sorted(tied_exchange_move_ids),
         "posted_evidence_total": round_amount(realized_posted_total),
+        "complete": not over_reconciled and not exceptions,
     }
 
 

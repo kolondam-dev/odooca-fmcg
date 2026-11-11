@@ -232,11 +232,21 @@ class FinanceFxRevaluation(models.AbstractModel):
             "in-scope partials" if scope_limited
             else "company-wide: every posted exchange line is compared"
         )
+        if report["exceptions"]:
+            # Nominal exceptions mean some partials could not be classified, so
+            # the report is incomplete even when the numbers tie.
+            tie_out["issues"] = sorted(set(tie_out["issues"]) | {"unclassified_partials"})
+            tie_out["balanced"] = False
         if scope_limited and report["realized_posted_total"] and not gl_balance:
             # A filtered report that realises FX but finds no exchange evidence
             # must fail loudly instead of balancing against an empty comparator.
             tie_out["balanced"] = False
             tie_out["issues"] = sorted(set(tie_out["issues"]) | {"missing_exchange_evidence"})
+        if report["over_reconciled_rows"]:
+            # A line reconciled beyond its own balance means the reconstruction
+            # is unreliable; the report must not look clean.
+            tie_out["balanced"] = False
+            tie_out["issues"] = sorted(set(tie_out["issues"]) | {"over_reconciled_lines"})
         return {
             "report_id": "FIN38",
             "report_ids": ["FIN38"],
