@@ -78,6 +78,49 @@ with sync_playwright() as playwright:
     check(compiled == 11, "All D1 templates compile in native OWL, including unavailable scatter")
     check(page.locator(".id-dash-kpis > div").count() == 8, "Eight native KPI cards")
     check(not page.locator(".alert-danger").count(), "Initial native RPC succeeds")
+    action_scroll = page.locator(".id-d1-scroll")
+    page.mouse.move(800, 650)
+    page.mouse.wheel(0, 440)
+    page.wait_for_function("document.querySelector('.id-d1-scroll').scrollTop > 0")
+    check(action_scroll.evaluate("el => getComputedStyle(el).overflowY") == "auto",
+          "D1 action scrolls with the mouse wheel")
+    coverage = page.locator(".id-coverage")
+    city = coverage.locator('path[data-code="71.71"]')
+    city.scroll_into_view_if_needed()
+    # Use a point inside the actual filled polygon, including on irregular coastline shapes.
+    point = city.evaluate("""el => {
+        const bounds = el.getBBox();
+        const transform = el.getScreenCTM();
+        for (let y = 1; y < 20; y++) for (let x = 1; x < 20; x++) {
+            const p = new DOMPoint(bounds.x + bounds.width * x / 20, bounds.y + bounds.height * y / 20);
+            if (!el.isPointInFill(p)) continue;
+            const screen = p.matrixTransform(transform);
+            if (document.elementFromPoint(screen.x, screen.y) === el) return [screen.x, screen.y];
+        }
+        return null;
+    }""")
+    check(bool(point), "Manado polygon is a reachable pointer target")
+    page.mouse.click(*point)
+    district_map = coverage.locator('svg[aria-label="District"]')
+    district_map.wait_for()
+    check(coverage.get_by_role("columnheader", name="District").is_visible(),
+          "City click updates map and district ranking")
+    district = district_map.locator('path[aria-label="Wenang"]')
+    district_value = coverage.get_by_role("row", name="Wenang").locator("td").last.inner_text()
+    check("100%" in district_value, "District ranking includes all selected Manado sales")
+    district.press("Enter")
+    coverage.locator('svg[aria-label="Village / ward"]').wait_for()
+    check(coverage.get_by_role("columnheader", name="Village / ward").is_visible(),
+          "District keyboard activation updates map and village ranking")
+    village_value = coverage.get_by_role("row", name="Calaca").locator("td").last.inner_text()
+    check(village_value == district_value, "Village ranking reconciles to its parent district")
+    up = coverage.get_by_role("button", name="Back one level")
+    up.click()
+    district_map.wait_for()
+    up.click()
+    city.wait_for()
+    check(not up.count(), "Two drill-up actions restore the city level")
+    action_scroll.evaluate("el => el.scrollTop = 0")
     for width in (1440, 1024, 768):
         page.set_viewport_size({"width": width, "height": 1000})
         page.wait_for_timeout(150)

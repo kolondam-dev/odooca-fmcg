@@ -33,3 +33,26 @@
 .o_action.id-dash-action{height:100%;overflow:auto;min-height:0;}
 
 .id-dash--d1 [data-slot="D1.7"]{min-height:330px;}
+
+// Odoo sets overflow:hidden on the action itself at desktop widths.
+.o_web_client > .o_action_manager > .o_action.id-d1-scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: auto;
+    &::-webkit-scrollbar { display: initial; }
+    > .id-dash-host { flex: 0 0 auto; }
+}
+.id-dash-host .id-coverage path[data-code],
+.id-dash-host .id-coverage path[role="button"] { cursor: pointer; }
+.id-dash-host .id-coverage path[role="button"]:is(:hover, :focus-visible) {
+    stroke: var(--dk);
+    stroke-width: 2px;
+}
+.id-dash-host .id-geo-submap {
+    position: relative;
+    background: #f3f7fd;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 8px;
+    svg { display: block; width: 100%; height: 285px; }
+}
