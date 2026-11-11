@@ -151,6 +151,13 @@ if ! has_mark upgrade_modules_v3 || [ "${FORCE_UPGRADE:-0}" = "1" ]; then
   set_mark upgrade_modules_v3
 fi
 
+# Install D1 on existing and fresh databases after the dashboard dependencies.
+if ! has_mark install_dashboard_d1_v1; then
+  log "install_dashboard_d1_v1: memasang id_dashboard_redesign..."
+  odoo_run -i id_dashboard_redesign --stop-after-init
+  set_mark install_dashboard_d1_v1
+fi
+
 # 5. Postinit (v1): URL dasar, kata sandi admin, bahasa. TODO M1: aktifkan id_ID, grup bisnis admin.
 if ! has_mark postinit_v1; then
   log "postinit_v1"
