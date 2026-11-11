@@ -435,20 +435,35 @@ test("Cancel Delivery has the required subreason and SPV rejection keeps origina
         approval.getByText(/Cancel Toko tidak dapat diakses/),
     ).toBeVisible();
 });
+const closingScreen = (page: Page) =>
+    page.getByRole("region", { name: /^Akhiri trip · / });
+async function openClosing(page: Page) {
+    if (await closingScreen(page).isVisible()) return;
+    await page
+        .getByRole("heading", { name: "Akhiri trip", exact: true })
+        .locator("../..")
+        .getByRole("button")
+        .first()
+        .click();
+    await closingScreen(page).waitFor();
+}
+async function runClose(page: Page) {
+    await openClosing(page);
+    await closingScreen(page)
+        .getByRole("button", { name: "Akhiri trip", exact: true })
+        .click();
+}
 test("closing trip at office uses recorded location, accepts demo outside office, and does not settle cashier", async ({
     page,
 }) => {
     await delivery(page);
-    const closing = page
-        .getByRole("heading", {
-            name: "Closing trip · tiba di kantor",
-            exact: true,
-        })
-        .locator("..");
+    const closing = closingScreen(page);
+    await runClose(page);
+    await expect(closing.getByRole("alert")).toContainText(/hilang|lengkap/);
     await closing
-        .getByRole("button", { name: "Tutup trip", exact: true })
+        .getByRole("button", { name: "Kembali", exact: true })
+        .first()
         .click();
-    await expect(closing.getByRole("status")).toContainText(/hilang|lengkap/);
     for (const id of ["DEMO-DO-001", "DEMO-DO-002"]) {
         const task = await openDo(page, id);
         await saveDeliveryPhoto(task);
@@ -463,17 +478,13 @@ test("closing trip at office uses recorded location, accepts demo outside office
             .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
             .click();
     }
-    await closing
-        .getByRole("button", { name: "Tutup trip", exact: true })
-        .click();
-    await expect(closing.getByRole("status")).toContainText(
-        "Trip closed lokal",
-    );
-    await expect(closing.getByRole("status")).toContainText(
+    await runClose(page);
+    await expect(closing.getByRole("alert")).toContainText("Trip closed lokal");
+    await expect(closing.getByRole("alert")).toContainText(
         "Belum settlement kasir/Odoo",
     );
     await expect(
-        closing.getByRole("button", { name: "Tutup trip", exact: true }),
+        closing.getByRole("button", { name: "Akhiri trip", exact: true }),
     ).toHaveCount(0);
 });
 
@@ -496,18 +507,9 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
             .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
             .click();
     }
-    const closing = page
-        .getByRole("heading", {
-            name: "Closing trip · tiba di kantor",
-            exact: true,
-        })
-        .locator("..");
-    await closing
-        .getByRole("button", { name: "Tutup trip", exact: true })
-        .click();
-    await expect(closing.getByRole("status")).toContainText(
-        "Trip closed lokal",
-    );
+    const closing = closingScreen(page);
+    await runClose(page);
+    await expect(closing.getByRole("alert")).toContainText("Trip closed lokal");
     const readLocal = () =>
         page.evaluate(async () => {
             const db = await new Promise<IDBDatabase>((resolve) => {
@@ -551,10 +553,8 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
             .click();
         await expect(task.getByText(/Session closed/)).toHaveCount(0);
     }
-    await closing
-        .getByRole("button", { name: "Tutup trip", exact: true })
-        .click();
-    await expect(closing.getByRole("status")).toContainText(
+    await runClose(page);
+    await expect(closing.getByRole("alert")).toContainText(
         "POD berbeda sumber manifest",
     );
     expect(await readLocal()).toEqual(before);
@@ -563,10 +563,8 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
     await switchPersona(page, "delivery");
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    await closing
-        .getByRole("button", { name: "Tutup trip", exact: true })
-        .click();
-    await expect(closing.getByRole("status")).toContainText(
+    await runClose(page);
+    await expect(closing.getByRole("alert")).toContainText(
         "POD berbeda sumber manifest",
     );
     expect(await readLocal()).toEqual(before);
@@ -625,11 +623,12 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
     await switchPersona(page, "delivery");
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    await expect(closing.getByRole("status")).toContainText(
+    await openClosing(page);
+    await expect(closing.getByRole("alert")).toContainText(
         "Status closing tidak valid",
     );
     await expect(
-        closing.getByRole("button", { name: "Tutup trip", exact: true }),
+        closing.getByRole("button", { name: "Akhiri trip", exact: true }),
     ).toBeVisible();
     expect(await readLocal()).toEqual(restored);
 });
