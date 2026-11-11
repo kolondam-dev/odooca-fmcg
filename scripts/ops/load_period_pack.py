@@ -462,6 +462,11 @@ class GenericPeriodPackLoader:
 
         report["checks"].append(f"company_resolved: {self.company.name} (id={self.company.id})")
 
+        # Resolve & pastikan konfigurasi otoritatif Pajak Kode 04 (12% DPP Nilai Lain) aktif
+        if "account.tax" in self.env:
+            canonical_tax = self._resolve_canonical_tax_code_04()
+            report["checks"].append(f"canonical_tax_04_resolved: {canonical_tax.name} (id={canonical_tax.id})")
+
         # B. Resolve Warehouse & Internal Stock Location
         Location = self.env["stock.location"].sudo()
         self.wh_location = Location.search(
@@ -1414,6 +1419,9 @@ class GenericPeriodPackLoader:
                 if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - factor_nl) > 0.01:
                     rep.sudo().write({"factor_percent": factor_nl})
 
+        if hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
+            self.env.invalidate_all()
+
         return tax_rec
 
     def _apply_sales_orders_and_deliveries(self) -> Tuple[int, int]:
@@ -1573,6 +1581,9 @@ class GenericPeriodPackLoader:
         SaleOrder = self.env["sale.order"].sudo()
         processed = 0
 
+        # Pastikan konfigurasi pajak Kode 04 aktif dan presisi sebelum membuat faktur
+        self._resolve_canonical_tax_code_04()
+
         for inv_row in invoices:
             inv_num = inv_row["invoice_number"]
             so_num = inv_row["so_number"]
@@ -1606,59 +1617,10 @@ class GenericPeriodPackLoader:
                     inv_vals["l10n_id_tax_transaction_code"] = "04"
                 inv.write(inv_vals)
 
-                # Sesuaikan baris PPN (Kode 04 DPP Nilai Lain 11/12) dan Piutang (AR) agar nilai faktur presisi tanpa drift
-                exp_total = float(_dec(inv_row.get("total_invoice_with_ppn", 0)))
-                exp_ppn = float(_dec(inv_row.get("ppn_amount", 0)))
-                exp_dpp_nl = float(_dec(inv_row.get("dpp_amount", 0)))
-
-                for line in getattr(inv, "line_ids", []):
-                    if getattr(line, "tax_line_id", None) or getattr(getattr(line, "account_id", None), "code", "") == "211200":
-                        line_vals = {
-                            "credit": exp_ppn,
-                            "debit": 0.0,
-                            "balance": -exp_ppn,
-                            "amount_currency": -exp_ppn,
-                        }
-                        if hasattr(line, "tax_base_amount"):
-                            line_vals["tax_base_amount"] = exp_dpp_nl
-                        if hasattr(line, "write"):
-                            line.with_context(check_move_validity=False).write(line_vals)
-                    elif (
-                        getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
-                        or getattr(getattr(line, "account_id", None), "code", "") == "112000"
-                    ):
-                        line_vals = {
-                            "debit": exp_total,
-                            "credit": 0.0,
-                            "balance": exp_total,
-                            "amount_currency": exp_total,
-                        }
-                        if hasattr(line, "write"):
-                            line.with_context(check_move_validity=False).write(line_vals)
-
                 inv.action_post()
 
-                # Enforce exact statutory values on posted invoice & journal lines without drift
-                if abs(float(getattr(inv, "amount_total", 0)) - exp_total) > 0.01 or abs(float(getattr(inv, "amount_tax", 0)) - exp_ppn) > 0.01:
-                    if hasattr(self.env, "cr") and hasattr(self.env.cr, "execute") and getattr(inv, "id", None):
-                        self.env.cr.execute(
-                            "UPDATE account_move SET amount_tax = %s, amount_total = %s, amount_residual = %s WHERE id = %s",
-                            (exp_ppn, exp_total, exp_total, inv.id),
-                        )
-                        self.env.cr.execute(
-                            "UPDATE account_move_line SET credit = %s, debit = 0, balance = -%s, amount_currency = -%s, tax_base_amount = %s "
-                            "WHERE move_id = %s AND (tax_line_id IS NOT NULL OR account_id IN (SELECT id FROM account_account WHERE code = '211200'))",
-                            (exp_ppn, exp_ppn, exp_ppn, exp_dpp_nl, inv.id),
-                        )
-                        self.env.cr.execute(
-                            "UPDATE account_move_line SET debit = %s, credit = 0, balance = %s, amount_currency = %s, amount_residual = %s, amount_residual_currency = %s "
-                            "WHERE move_id = %s AND (display_type = 'payment_term' OR account_id IN (SELECT id FROM account_account WHERE code = '112000'))",
-                            (exp_total, exp_total, exp_total, exp_total, exp_total, inv.id),
-                        )
-                    if hasattr(inv, "invalidate_recordset") and callable(inv.invalidate_recordset):
-                        inv.invalidate_recordset(["amount_tax", "amount_total", "amount_residual", "line_ids"])
-                    elif hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
-                        self.env.invalidate_all()
+                # Verifikasi bahwa Odoo ORM secara native menghasilkan angka yang tepat sesuai register tanpa drift
+                self._validate_existing_invoice(inv, inv_row)
                 processed += 1
 
         return processed

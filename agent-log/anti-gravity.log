@@ -2472,3 +2472,12 @@
   * Mengeliminasi AttributeError: 'MockCursor' object has no attribute 'execute' pada 49 test di test_canonical_loader_adapter.py, memastikan mock harness unit testing lulus 100%.
 - Verifikasi Penuh: 63/63 test_canonical_loader_adapter PASS; 81/81 pytest PASS; ruff check PASS; check_manifests 14 addon OK. Zero touch live Railway.
 - Task managed by antigravity at 2026-11-11T22:00:00+07:00
+
+[2026-11-11T23:20:00+07:00] [INFO] F4: Eliminasi Koreksi SQL Pascaposting, Penegakan Pajak Native & Pemulihan Penuh Histori HANDOFF (Review #5860849497)
+- Tindak Lanjut Blocker Supervisor Review #5860849497:
+  * Eliminasi Koreksi SQL Pascaposting & Write Manual: Menghapus 51 baris manipulasi SQL dan penulisan paksa baris jurnal pada _apply_invoices() di load_period_pack.py. Faktur kini diposting murni secara native oleh Odoo ORM (inv.action_post()).
+  * Konfigurasi Otoritatif Pajak Kode 04: Memastikan _resolve_canonical_tax_code_04() dieksekusi di erify_preflight dan sebelum pembuatan faktur dari SO, menjamin formula repartition DPP Nilai Lain 11/12 aktif secara native di Odoo sebelum posting.
+  * Fail-Closed Native Verification: Hasil posting native Odoo langsung diverifikasi terhadap CSV register (invoices.csv) melalui _validate_existing_invoice(), menolak keras transaksi jika terjadi drift.
+  * Pemulihan Histori HANDOFF: Mengintegrasikan seluruh 209 entri dan memulihkan 1.272 baris upstream tanpa kehilangan tanggal historis (0 substantive deletions).
+- Verifikasi Penuh: 81/81 pytest PASS; ruff check clean; check_manifests 14 addon OK. Zero touch live Railway.
+- Task managed by antigravity at 2026-11-11T23:20:00+07:00
