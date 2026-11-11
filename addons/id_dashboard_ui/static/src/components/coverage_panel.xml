@@ -14,7 +14,9 @@
           <div class="id-geo-submap">
             <button class="btn btn-sm btn-outline-secondary" t-on-click="up">↑ Back one level</button>
             <span class="ms-2" t-out="geo.levels.map(item => item.name).join(' › ')"/>
-            <svg t-att-viewBox="level.viewBox" role="group" t-att-aria-label="head">
+            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" aria-label="Zoom in" t-on-click="() => this.zoomChild(1.25)">+</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" aria-label="Zoom out" t-on-click="() => this.zoomChild(0.8)">−</button>
+            <svg t-att-viewBox="childViewBox" t-on-wheel="wheelChild" role="group" t-att-aria-label="head">
               <path t-foreach="level.shapes" t-as="shape" t-key="shape.code"
                     t-att-d="shape.path" t-att-fill="fill(shape.code)" fill-rule="evenodd"
                     stroke="#fff" stroke-width="1" vector-effect="non-scaling-stroke"

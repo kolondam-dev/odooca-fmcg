@@ -54,8 +54,8 @@ export class CoveragePanel extends Chart {
             const [left, top, right, bottom] = bounds;
             const width = right - left, height = bottom - top;
             const pad = Math.max(width, height) * 0.05;
-            const viewBox = [left - pad, top - pad, width + 2 * pad, height + 2 * pad].join(" ");
-            this.geo.levels.push({ code, name, shapes, viewBox });
+            const viewBox = [left - pad, top - pad, width + 2 * pad, height + 2 * pad];
+            this.geo.levels.push({ code, name, shapes, viewBox, zoom: 1 });
         } catch {
             if (request === this.geoRequest) this.geo.error = _t("Could not load geographic boundaries. Try again.");
         } finally {
@@ -90,7 +90,22 @@ export class CoveragePanel extends Chart {
         if (amount >= 300e6) return "var(--dk)";
         if (amount >= 120e6) return "var(--ac)";
         if (amount >= 60e6) return "var(--ac2)";
-        return amount ? "var(--ac3)" : "var(--tint2)";
+        return amount ? "var(--ac3)" : "rgba(255,255,255,.65)";
+    }
+    get childViewBox() {
+        const [x, y, width, height] = this.level.viewBox;
+        const zoom = this.level.zoom;
+        return [x + (width - width / zoom) / 2, y + (height - height / zoom) / 2,
+            width / zoom, height / zoom].join(" ");
+    }
+    zoomChild(factor) {
+        this.level.zoom = Math.min(8, Math.max(1, this.level.zoom * factor));
+    }
+    wheelChild(event) {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.deltaY) this.zoomChild(event.deltaY < 0 ? 1.25 : 0.8);
     }
     polygonKey(event, shape) {
         if (event.key === "Enter" || event.key === " ") {
