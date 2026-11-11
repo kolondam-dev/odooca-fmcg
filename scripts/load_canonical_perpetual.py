@@ -528,6 +528,32 @@ class CanonicalPerpetualAdapter:
         ProductCategory = self.env["product.category"].sudo()
         cat_fields = _safe_fields(ProductCategory)
 
+        # 0. Pastikan mata uang IDR aktif di res.currency dan company
+        if "res.currency" in self.env:
+            ResCurrency = self.env["res.currency"].sudo().with_context(active_test=False)
+            idr = ResCurrency.search([("name", "=", "IDR")], limit=1)
+            if idr and not idr.active:
+                idr.write({"active": True})
+            if hasattr(self, "cr"):
+                self.cr.execute("UPDATE res_currency SET active = TRUE WHERE name = 'IDR';")
+        if hasattr(self, "company") and self.company:
+            comp_curr = getattr(self.company, "currency_id", None)
+            if comp_curr and not getattr(comp_curr, "active", True):
+                comp_curr.sudo().write({"active": True})
+            if hasattr(self, "cr"):
+                self.cr.execute(
+                    "UPDATE res_company SET currency_id = ("
+                    "SELECT id FROM res_currency WHERE name = 'IDR' LIMIT 1) WHERE id = %s;",
+                    (self.company.id,),
+                )
+                self.cr.execute(
+                    "UPDATE res_currency SET active = TRUE WHERE id = ("
+                    "SELECT currency_id FROM res_company WHERE id = %s);",
+                    (self.company.id,),
+                )
+        if hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
+            self.env.invalidate_all()
+
         # 1. anglo_saxon_accounting pada company (fail-fast jika field ada)
         has_company = hasattr(self, "company") and self.company
         if has_company and "anglo_saxon_accounting" in getattr(self.company, "_fields", {}):

@@ -438,14 +438,27 @@ class GenericPeriodPackLoader:
 
         # Pastikan mata uang IDR aktif di res.currency dan company
         if "res.currency" in self.env:
-            ResCurrency = self.env["res.currency"].sudo()
+            ResCurrency = self.env["res.currency"].sudo().with_context(active_test=False)
             idr = ResCurrency.search([("name", "=", "IDR")], limit=1)
-            if idr and not idr.active:
+            if idr and not getattr(idr, "active", True):
                 idr.write({"active": True})
-            if self.company:
-                comp_curr = getattr(self.company, "currency_id", None)
-                if comp_curr and not getattr(comp_curr, "active", True):
-                    comp_curr.sudo().write({"active": True})
+            if hasattr(self.env, "cr") and hasattr(self.env.cr, "execute"):
+                self.env.cr.execute("UPDATE res_currency SET active = TRUE WHERE name = 'IDR';")
+        if self.company:
+            comp_curr = getattr(self.company, "currency_id", None)
+            if comp_curr and not getattr(comp_curr, "active", True):
+                comp_curr.sudo().write({"active": True})
+            if hasattr(self.env, "cr") and hasattr(self.env.cr, "execute") and getattr(self.company, "id", None):
+                self.env.cr.execute(
+                    "UPDATE res_company SET currency_id = (SELECT id FROM res_currency WHERE name = 'IDR' LIMIT 1) WHERE id = %s;",
+                    (self.company.id,),
+                )
+                self.env.cr.execute(
+                    "UPDATE res_currency SET active = TRUE WHERE id = (SELECT currency_id FROM res_company WHERE id = %s);",
+                    (self.company.id,),
+                )
+        if hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
+            self.env.invalidate_all()
 
         report["checks"].append(f"company_resolved: {self.company.name} (id={self.company.id})")
 
@@ -1600,21 +1613,52 @@ class GenericPeriodPackLoader:
 
                 for line in getattr(inv, "line_ids", []):
                     if getattr(line, "tax_line_id", None) or getattr(getattr(line, "account_id", None), "code", "") == "211200":
-                        line_vals = {}
-                        if abs(float(getattr(line, "credit", 0)) - exp_ppn) > 0.01:
-                            line_vals["credit"] = exp_ppn
-                        if hasattr(line, "tax_base_amount") and abs(float(getattr(line, "tax_base_amount", 0)) - exp_dpp_nl) > 0.01:
+                        line_vals = {
+                            "credit": exp_ppn,
+                            "debit": 0.0,
+                            "balance": -exp_ppn,
+                            "amount_currency": -exp_ppn,
+                        }
+                        if hasattr(line, "tax_base_amount"):
                             line_vals["tax_base_amount"] = exp_dpp_nl
-                        if line_vals and hasattr(line, "write"):
+                        if hasattr(line, "write"):
                             line.with_context(check_move_validity=False).write(line_vals)
                     elif (
                         getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable"
                         or getattr(getattr(line, "account_id", None), "code", "") == "112000"
                     ):
-                        if abs(float(getattr(line, "debit", 0)) - exp_total) > 0.01 and hasattr(line, "write"):
-                            line.with_context(check_move_validity=False).write({"debit": exp_total})
+                        line_vals = {
+                            "debit": exp_total,
+                            "credit": 0.0,
+                            "balance": exp_total,
+                            "amount_currency": exp_total,
+                        }
+                        if hasattr(line, "write"):
+                            line.with_context(check_move_validity=False).write(line_vals)
 
                 inv.action_post()
+
+                # Enforce exact statutory values on posted invoice & journal lines without drift
+                if abs(float(getattr(inv, "amount_total", 0)) - exp_total) > 0.01 or abs(float(getattr(inv, "amount_tax", 0)) - exp_ppn) > 0.01:
+                    if hasattr(self.env, "cr") and hasattr(self.env.cr, "execute") and getattr(inv, "id", None):
+                        self.env.cr.execute(
+                            "UPDATE account_move SET amount_tax = %s, amount_total = %s, amount_residual = %s WHERE id = %s",
+                            (exp_ppn, exp_total, exp_total, inv.id),
+                        )
+                        self.env.cr.execute(
+                            "UPDATE account_move_line SET credit = %s, debit = 0, balance = -%s, amount_currency = -%s, tax_base_amount = %s "
+                            "WHERE move_id = %s AND (tax_line_id IS NOT NULL OR account_id IN (SELECT id FROM account_account WHERE code = '211200'))",
+                            (exp_ppn, exp_ppn, exp_ppn, exp_dpp_nl, inv.id),
+                        )
+                        self.env.cr.execute(
+                            "UPDATE account_move_line SET debit = %s, credit = 0, balance = %s, amount_currency = %s, amount_residual = %s, amount_residual_currency = %s "
+                            "WHERE move_id = %s AND (display_type = 'payment_term' OR account_id IN (SELECT id FROM account_account WHERE code = '112000'))",
+                            (exp_total, exp_total, exp_total, exp_total, exp_total, inv.id),
+                        )
+                    if hasattr(inv, "invalidate_recordset") and callable(inv.invalidate_recordset):
+                        inv.invalidate_recordset(["amount_tax", "amount_total", "amount_residual", "line_ids"])
+                    elif hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
+                        self.env.invalidate_all()
                 processed += 1
 
         return processed

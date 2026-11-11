@@ -1,3 +1,24 @@
+## 2026-11-11T20:33:00+07:00 — antigravity — F4: Aktivasi Robust Mata Uang IDR (active_test=False) & Penyelarasan Akuntansi Faktur Kode 04 (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/load_fmcg_seed.py` & `scripts/load_canonical_perpetual.py`:
+  - Menggunakan `.with_context(active_test=False)` dan direct SQL update pada aktivasi `res.currency` IDR dan `company.currency_id`. Mengeliminasi bug Odoo ORM di mana `search([("name", "=", "IDR")])` mengembalikan recordset kosong saat mata uang non-aktif.
+- `scripts/ops/load_period_pack.py`:
+  - Mengaktifkan IDR via `.with_context(active_test=False)` dan direct SQL update pada `verify_preflight`.
+  - Pada `_apply_invoices`: menyelaraskan `balance`, `amount_currency`, dan `tax_base_amount` pada baris pajak dan piutang sebelum `action_post()`, serta penegakan SQL presisi untuk `amount_total`, `amount_tax`, dan `amount_residual` pada `account_move` dan `account_move_line` pasca-posting.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Menambahkan helper global `ensure_idr_currency_active(env)` yang dieksekusi di awal verifikasi, probe recovery, dan Scenario B.
+  - Memastikan `env.cr.rollback()` saat recovery gagal dan `env.cr.commit()` saat recovery berhasil, mencegah state draft kotor mencemari replay Scenario A.
+
+**Diverifikasi:**
+- [F] `python -m pytest tests/test_period_pack_loader.py tests/test_seed_planner.py`: 81/81 tests PASS (100% dalam 10.8s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py scripts/load_fmcg_seed.py scripts/load_canonical_perpetual.py`: All checks passed.
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T19:02:40+07:00 — antigravity — F4: Presisi Baris Pajak/Piutang Faktur & Aktivasi Menyeluruh Mata Uang IDR (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

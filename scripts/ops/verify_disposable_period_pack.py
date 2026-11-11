@@ -1188,6 +1188,40 @@ def capture_period_state_snapshot(env: Any) -> Dict[str, Any]:
     }
 
 
+def ensure_idr_currency_active(env: Any) -> None:
+    """Ensure IDR currency and company currency are active and synchronized."""
+    if not env or not (hasattr(env, "get") or hasattr(env, "__getitem__")):
+        return
+    try:
+        if "res.currency" in env:
+            ResCurrency = env["res.currency"].sudo().with_context(active_test=False)
+            idr = ResCurrency.search([("name", "=", "IDR")], limit=1)
+            if idr and not getattr(idr, "active", True):
+                idr.write({"active": True})
+            if hasattr(env, "cr") and hasattr(env.cr, "execute"):
+                env.cr.execute("UPDATE res_currency SET active = TRUE WHERE name = 'IDR';")
+        if "res.company" in env:
+            Company = env["res.company"].sudo().with_context(active_test=False)
+            company = getattr(env, "company", None) or Company.search([], limit=1)
+            if company:
+                comp_curr = getattr(company, "currency_id", None)
+                if comp_curr and not getattr(comp_curr, "active", True):
+                    comp_curr.sudo().write({"active": True})
+                if hasattr(env, "cr") and hasattr(env.cr, "execute") and getattr(company, "id", None):
+                    env.cr.execute(
+                        "UPDATE res_company SET currency_id = (SELECT id FROM res_currency WHERE name = 'IDR' LIMIT 1) WHERE id = %s;",
+                        (company.id,),
+                    )
+                    env.cr.execute(
+                        "UPDATE res_currency SET active = TRUE WHERE id = (SELECT currency_id FROM res_company WHERE id = %s);",
+                        (company.id,),
+                    )
+        if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+            env.invalidate_all()
+    except Exception as e:
+        _logger.warning(f"ensure_idr_currency_active non-fatal exception: {e}")
+
+
 def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str, Any]:
     """Execute in-database savepoint probes simulating partial transactional failures.
 
@@ -1460,15 +1494,16 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
     if all_probes_passed:
         _logger.info("--- Executing Real Loader Apply Recovery To Target State ---")
         try:
-            if "res.currency" in env:
-                idr = env["res.currency"].sudo().search([("name", "=", "IDR")], limit=1)
-                if idr and not idr.active:
-                    idr.write({"active": True})
+            ensure_idr_currency_active(env)
             loader_recovery = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
             rec_summary = loader_recovery.execute_apply()
+            if hasattr(env, "cr") and hasattr(env.cr, "commit"):
+                env.cr.commit()
             results["recovery_summary"] = rec_summary
             results["recovery_status"] = "PASS"
         except Exception as rec_err:
+            if hasattr(env, "cr") and hasattr(env.cr, "rollback"):
+                env.cr.rollback()
             results["recovery_summary"] = None
             results["recovery_status"] = f"FAIL: {rec_err}"
             all_probes_passed = False
@@ -1485,10 +1520,7 @@ def run_scenario_b_from_empty_database(
     """Execute Scenario B: Prove deterministic initialization from empty DB -> July -> August."""
     assert_disposable_database(env)
     _logger.info("=== Executing Scenario B: Empty DB -> July -> August ===")
-    if "res.currency" in env:
-        idr = env["res.currency"].sudo().search([("name", "=", "IDR")], limit=1)
-        if idr and not idr.active:
-            idr.write({"active": True})
+    ensure_idr_currency_active(env)
     res = {
         "scenario": "B",
         "july_status": "PENDING",
@@ -1584,10 +1616,7 @@ def run_full_disposable_period_verification(
     # 1. Fault-Injection Recovery Probes on Baseline July (Batch write, tamper, rollback, real apply recovery)
     if scenario in ("all", "A"):
         _logger.info("Executing Fault-Injection Recovery Probes on Baseline July...")
-        if "res.currency" in env:
-            idr = env["res.currency"].sudo().search([("name", "=", "IDR")], limit=1)
-            if idr and not idr.active:
-                idr.write({"active": True})
+        ensure_idr_currency_active(env)
         report["fault_injection"] = run_period_pack_fault_injection_probes(env, pack_dir)
         snap1 = capture_period_state_snapshot(env)
         report["scenario_a_digest"] = snap1["digest"]

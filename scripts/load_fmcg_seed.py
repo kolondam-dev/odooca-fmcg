@@ -816,17 +816,33 @@ def load_canonical_taxes():
 def activate_idr_currency():
     """Memastikan mata uang IDR aktif di res.currency dan company."""
     if "res.currency" in env:
-        idr = env["res.currency"].sudo().search([("name", "=", "IDR")], limit=1)
+        ResCurrency = env["res.currency"].sudo().with_context(active_test=False)
+        idr = ResCurrency.search([("name", "=", "IDR")], limit=1)
         if idr and not idr.active:
             idr.write({"active": True})
             print(" -> Mata uang IDR diaktifkan.")
+        if hasattr(env, "cr"):
+            env.cr.execute("UPDATE res_currency SET active = TRUE WHERE name = 'IDR';")
     if "res.company" in env:
-        Company = env["res.company"].sudo()
+        Company = env["res.company"].sudo().with_context(active_test=False)
         company = env.company or Company.search([], limit=1)
         if company:
             comp_curr = getattr(company, "currency_id", None)
             if comp_curr and not getattr(comp_curr, "active", True):
                 comp_curr.sudo().write({"active": True})
+            if hasattr(env, "cr"):
+                env.cr.execute(
+                    "UPDATE res_company SET currency_id = ("
+                    "SELECT id FROM res_currency WHERE name = 'IDR' LIMIT 1) WHERE id = %s;",
+                    (company.id,),
+                )
+                env.cr.execute(
+                    "UPDATE res_currency SET active = TRUE WHERE id = ("
+                    "SELECT currency_id FROM res_company WHERE id = %s);",
+                    (company.id,),
+                )
+    if hasattr(env, "invalidate_all") and callable(env.invalidate_all):
+        env.invalidate_all()
 
 
 def load_all():
