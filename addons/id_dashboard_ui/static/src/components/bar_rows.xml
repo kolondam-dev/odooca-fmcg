@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.BarRows">
+    <div t-attf-style="{{ v.card }}box-sizing:border-box;height:{{ v.hh }};display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <t t-if="v.showTitle">
+        <h3 style="margin:0 0 10px;font-size:13px;font-weight:600;border-left:3px solid var(--ac);padding-left:8px">
+          <t t-out="v.title"/>
+        </h3>
+      </t>
+      <t t-if="v.showHead">
+        <div t-attf-style="display:grid;grid-template-columns:{{ v.gtc }};column-gap:14px;font-size:10px;font-weight:600;color:#52627f;padding:0 8px 3px">
+          <t t-foreach="v.heads" t-as="h" t-key="h_index">
+            <div style="display:flex;justify-content:space-between">
+              <span>
+                <t t-out="h.l"/>
+              </span>
+              <span>
+                <t t-out="h.r"/>
+              </span>
+            </div>
+          </t>
+        </div>
+      </t>
+      <div t-attf-style="flex:1;min-height:0;display:grid;grid-auto-flow:column;overflow:auto;min-height:0;align-content:start;grid-template-columns:{{ v.gtc }};grid-template-rows:{{ v.gtr }};gap:4px 14px">
+        <t t-foreach="v.items" t-as="r" t-key="r_index">
+          <div t-attf-title="{{ r.tip }}" t-attf-style="position:relative;overflow:hidden;border-radius:{{ r.rad }};background:{{ r.bg }};border-top:{{ r.bt }}" t-on-click="() =&gt; this.openRow(r)" t-on-keydown="(ev) =&gt; this.rowKey(ev,r)" t-att-tabindex="r.drill ? 0 : -1" t-att-role="r.drill ? 'button' : undefined">
+            <div t-attf-style="position:absolute;left:0;top:0;bottom:0;width:{{ r.w }}%;background:{{ r.fill }}"/>
+            <div style="position:relative;height:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;font-size:12px;line-height:1.1">
+              <span t-attf-style="font-weight:{{ r.fw }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                <t t-out="r.n"/>
+              </span>
+              <span style="font-variant-numeric:tabular-nums;white-space:nowrap">
+                <t t-out="r.t"/>
+              </span>
+            </div>
+          </div>
+        </t>
+      </div>
+      <t t-if="v.showFoot">
+        <div style="font-size:10px;color:#52627f;margin-top:4px">
+          <t t-out="v.foot"/>
+        </div>
+      </t>
+    </div>
+  </t>
+</templates>

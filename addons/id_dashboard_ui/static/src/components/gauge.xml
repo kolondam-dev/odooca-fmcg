@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve"><t t-name="id_dashboard_ui.Gauge"><section class="id-dash-card id-gauge"><h3 t-out="cfg.title"/><svg viewBox="0 0 220 118" role="img" t-att-aria-label="cfg.title + ': ' + num(cfg.value) + '%'">
+<path d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke="var(--ac3)" stroke-width="28"/>
+<path t-att-d="arc" fill="none" stroke="var(--ac)" stroke-width="28"/>
+<path t-if="cfg.target !== undefined and cfg.target !== null" t-att-d="targetLine" fill="none" stroke="var(--hl)" stroke-width="3"/>
+<text x="110" y="103" text-anchor="middle" class="id-gauge-value"><t t-out="num(cfg.value)"/>%</text></svg>
+<p t-out="cfg.sub"/><footer><span t-att-class="cfg.good ? 'is-good' : 'is-bad'" t-out="cfg.delta"/> <span t-out="cfg.targetText"/></footer></section></t>
+</templates>

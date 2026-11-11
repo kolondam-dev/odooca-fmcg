@@ -1,8 +1,32 @@
+## 2026-11-11T07:43:56+07:00 — Codex-Dashboard — D1 CI artifact inspected; negative label separation
+**Bukti:** [F] artifact13816349333/run42931603547 dariHEAD7a210ef terunduh; ZIP digest, treefcaa5f6, source/image hashes cocok, clean checkout,50native checks/34PNG/30rekonsiliasi PASS. Gambar1440/1024/768, popup/inline dan role diperiksa oleh implementer, bukan review independen.
+**Fix:** inspeksi kasus negatif menemukan labelpersentase dan nilai batang berimpitan. Assertion bounding-box native gagal sebelumfix; band label28px membuatnya PASS. Total51browserchecks lokal; backend unchanged. Exact-HEAD artifact baru/revieweracceptance masih gate. Tidak merge/deploy.
+**Signature:** Task Managed by Agent Codex-Dashboard
+
+## 2026-11-11T07:26:19+07:00 — Codex-Dashboard — PR113 dedicated native D1 CI evidence
+**Berubah:** CI memasang D1 di `d1_ci`/filestore/port8071 sendiri, fixture224SO/8salesman/4principal-channel-kota, rekonsiliasi30assertion dan browser50checks. Artifact terpisah berisi34screenshot, referencePNG/v2, JSON/HTML index, hashes source/image dan deviasi. Role salesman login terpisah, kasus signed negative/unavailable, error/loading/retry, popup dan inline semua width1440/1024/768.
+**Fix terbukti:** footer popup sesudah unpin tertutup dashboard pada1024 karena root stacking; z-index root diperbaiki dan hit-testing+klik normal lulus. Target unavailable plain dash; nilai bulanan negatif kecil tidak dibulatkan menjadi-0; label scatter top2 dengan nama lengkap via title/aria.
+**Diverifikasi:** [F]50browser native+34gambar dan30rekonsiliasi lokal PASS;27regresi dashboard/Ruff/14manifest/30transpiler/XML-YAML-shell PASS. Backend tidak diubah. [BU] artifact/CI exact HEAD baru dan review visual independen masih menunggu. Draft bukan penyebab gap bukti d18a051; PR tetap Ready sesuai instruksi pemilik. Tidak merge/deploy/live DB.
+**Berikutnya:** publish, verifikasi artifact current-HEAD dan serahkan kembali ke reviewer; bukan self-approval visual.
+**Signature:** Task Managed by Agent Codex-Dashboard
+
 ## 2026-11-10T23:30:00+07:00 — Agent VSCode — I2c: implementasi FIN37 accrual schedules dan FIN38 FX revaluation
 **Berubah:** `addons/id_finance_reporting/models/ledger_schedules.py` (aritmetika murni FIN37/FIN38); `models/schedule_reports.py` (`id.finance.accrual.schedule`, `id.finance.fx.revaluation`); `models/__init__.py`; `tests/test_finance_i2c_schedules.py` (20 tes); `scripts/ops/verify_finance_i2c_schedules.py` (runner native + fixture FX); `.github/workflows/finance-i0-spike.yml` (langkah `FINANCE_I2C_SCHEDULES=PASS` + path filter); `docs/finance/I2C_FIN37_FIN38.md`; manifest `19.0.1.3.0`; `i18n/id.po`.
 **Diverifikasi:** [F] FIN37 menolak alokasi tanpa metadata: baris tanpa `start_date`/`end_date` menjadi exception bernominal `missing_schedule_metadata`, dan `accounted_total = recognized + remaining + exception` wajib sama dengan `control_total`. [F] FIN38 memakai formula ADR: `realized = debit_amount_currency × (balance/amount_currency) − (−credit_amount_currency × (balance/amount_currency))`; positif = loss, negatif = gain. [F] Tie-out memakai **signed** balance akun exchange dan hanya atas partial ber-`exchange_move_id`; partial tanpa bukti posting masuk `realized_unposted_rows` di luar tie-out. [F] Test menemukan satu cacat nyata saat pengembangan: alokasi bulanan awal tidak menjumlah tepat ke saldo (1199,99 vs 1200); diperbaiki dengan periode terakhir menyerap selisih pembulatan, dan ekspektasi test diselaraskan ke pro-rata hari sesuai ADR (181/365 = 595,07), bukan 12 bagian sama. [F] `ruff` PASS; `check_manifests.py` PASS (12 addon); 77 tes finance PASS; YAML workflow ter-parse.
 **Belum diuji:** [BU] CI native exact-SHA untuk `FINANCE_I2C_SCHEDULES`; pin `account_invoice_start_end_dates` (tanpa pin, FIN37 benar tetapi seluruh baris menjadi exception); verifikasi FIN38 pada data exchange non-sintetis. Tidak ada deploy/mutasi DB live. `REPORT_CATALOG.csv` FIN37/FIN38 tetap `BELUM_DITERIMA`.
 **Berikutnya:** push, pantau CI exact-SHA, lalu serahkan review.
+## 2026-11-10T22:38:36+07:00 — Codex-Dashboard — D1 initial-query recovery
+**Berubah:** toolbar/filter tetap tersedia saat query awal gagal; retry memakai query server yang sama. Label EC/call menyebut own scope saat service PJP membatasi ke pengguna sendiri.
+**Diverifikasi:** [F]29browser native checks termasuk injeksi RPC gagal→retry;27regresi dashboard;30transpiler resmi;Ruff/XML PASS. Backend native tidak berubah dari76105e3 (12metode install/upgrade PASS). PR #113 draft; CI diperiksa pada HEAD terbaru setelah push.
+**Batas/berikutnya:** exact-HEAD CI dan review pixel/data seed tetap gate sebelum aktivasi. Tidak merge/deploy/live DB.
+**Signature:** Task Managed by Agent Codex-Dashboard
+
+## 2026-11-10T22:28:30+07:00 — Codex-Dashboard — D1 native sales redesign
+**Berubah:** addon reusable `id_dashboard_ui` dan integrasi D1 `id_dashboard_redesign`; hanya action Sales yang diretarget. Periode/custom comparison, Include/Exclude tujuh dimensi, agregasi SKU line, principal/channel/kota, tren dan konteks lima bulan, ranking/scatter, scoped native drill, approved popover/inline dan shell lease.
+**Diverifikasi:** [F] install DB bersih dan upgrade Odoo19 masing-masing12metode,0failed/0error;27browser acceptance termasuk11template OWL native dan1440/1024/768;26regresi dashboard;30modul transpiler resmi;Ruff/14manifest/XML PASS. Dokumen `docs/dashboard/D1_IMPLEMENTATION.md` dan `D1_VERIFICATION.json`.
+**Batas:** [BU] CI exact HEAD dan penerimaan pixel/data seed representatif. Working-day alignment dinonaktifkan; target wajib exact scope/periode; call metrics mempertahankan ACL/scope PJP. Refund invoice-date/gross SO bukan cohort return rate. Tidak merge/deploy/Railway/live DB.
+**Berikutnya:** PR D1 untuk review/CI, lalu penerimaan native bersama pemilik sebelum D2 dan aktivasi staging/live.
+**Signature:** Task Managed by Agent Codex-Dashboard
 
 ## 2026-11-10T21:00:00+07:00 — Agent VSCode — I2c/PR111: koreksi klaim scope non-dokumentasi pada ADR
 **Berubah:** `docs/finance/I2C_DISCOVERY_ADR.md` (menghapus klaim "satu-satunya perubahan non-docs pada PR ini" yang tidak akurat untuk PR #111, diganti pernyataan scope eksplisit); `docs/HANDOFF.md`, `agent-log/claude-dev.log`.

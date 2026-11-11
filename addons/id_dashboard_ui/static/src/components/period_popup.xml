@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.PeriodPopup">
+    <div style="width:620px;box-shadow:0 8px 24px rgba(11,42,102,.18);border:1px solid #b8c8e4;border-radius:8px;background:#fff;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <div style="display:flex">
+        <div style="width:190px;padding:10px;border-right:1px solid #d5e0f2">
+          <t t-foreach="v.presets" t-as="p" t-key="p_index">
+            <div t-attf-style="padding:7px 10px;border-radius:4px;font-size:12px;background:{{ p.bg }};color:{{ p.c }}">
+              <b>
+                <t t-out="p.a"/>
+              </b>
+              <div t-attf-style="font-size:10.5px;color:{{ p.c2 }}">
+                <t t-out="p.b"/>
+              </div>
+            </div>
+          </t>
+        </div>
+        <div style="flex:1;padding:14px">
+          <div style="display:flex;gap:24px">
+            <div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:4px">
+                <t t-out="v.m1"/>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,28px)">
+                <t t-foreach="v.cal1" t-as="d" t-key="d_index">
+                  <div t-attf-style="text-align:center;font-size:11px;height:26px;line-height:26px;background:{{ d.bg }};color:{{ d.c }}">
+                    <t t-out="d.t"/>
+                  </div>
+                </t>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:4px">
+                <t t-out="v.m2"/>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,28px)">
+                <t t-foreach="v.cal2" t-as="d" t-key="d_index">
+                  <div t-attf-style="text-align:center;font-size:11px;height:26px;line-height:26px;background:{{ d.bg }};color:{{ d.c }}">
+                    <t t-out="d.t"/>
+                  </div>
+                </t>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:10.5px;color:#52627f;margin:8px 0">
+            <t t-out="v.legend"/>
+          </div>
+          <div style="display:flex">
+            <t t-foreach="v.gran" t-as="g" t-key="g_index">
+              <span t-attf-style="font-size:12px;padding:6px 12px;border:1px solid #b8c8e4;background:{{ g.bg }};color:{{ g.c }}">
+                <t t-out="g.t"/>
+              </span>
+            </t>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #d5e0f2;padding:12px 14px">
+        <label style="display:flex;gap:6px;font-size:12px;font-weight:600"><input type="checkbox" checked="checked"/>Compare with</label>
+        <div style="margin:4px 0 6px 22px">
+          <t t-foreach="v.cmp" t-as="o" t-key="o_index">
+            <div style="display:flex;gap:8px;align-items:center;font-size:12px;margin:5px 0"><span aria-hidden="true" t-attf-style="width:13px;height:13px;border-radius:50%;border:2px solid var(--ac);box-sizing:border-box;background:{{ o.bg }}"/><t t-out="o.a"/> <span style="color:#52627f"><t t-out="o.b"/></span></div>
+          </t>
+        </div>
+        <label style="display:flex;gap:6px;font-size:12px;margin-left:22px">
+          <input type="checkbox" checked="checked"/>
+          <t t-out="v.align"/>
+        </label>
+      </div>
+      <div style="border-top:1px solid #d5e0f2;padding:10px 14px;display:flex;justify-content:flex-end;gap:8px">
+        <button style="font:inherit;font-size:12px;color:#12223f;background:#fff;border:1px solid #b8c8e4;border-radius:4px;padding:6px 10px;min-height:34px;">Cancel</button>
+        <button style="font:inherit;font-size:12px;color:#12223f;background:#fff;border:1px solid #b8c8e4;border-radius:4px;padding:6px 10px;min-height:34px;background:var(--ac);color:#fff;border-color:var(--ac)">Apply</button>
+      </div>
+    </div>
+  </t>
+</templates>
