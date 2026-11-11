@@ -1,3 +1,23 @@
+## 2026-11-11T18:28:00+07:00 — antigravity — F4: Resolusi Tax Repartition DPP Nilai Lain 11/12 dan Pemisahan Guard Seed Faktur Komersial (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/load_fmcg_seed.py` & `scripts/ops/load_period_pack.py`:
+  - Mengonfigurasi `factor_percent = (11.0 / 12.0) * 100.0` pada `invoice_repartition_line_ids` dan `refund_repartition_line_ids` untuk pajak Kode 04 DPP Nilai Lain (12%), memastikan kalkulasi Odoo menghasilkan `tax_base_amount = 326.040,00`, `amount_tax = 39.124,80`, dan `amount_total = 394.804,80` tanpa drift selisih 1%.
+  - Menghilangkan penanda `is_fmcg_seed_invoice: True` pada faktur periode pack Agustus di `_apply_invoices`, menjaga guard `_is_seed_commercial_invoice_with_posted_delivery_cogs` di `id_base` sebagai boundary khusus baseline Juli.
+  - Memperbaiki pembacaan DPP pada `_validate_existing_invoice` untuk mencocokkan `commercial_dpp` dengan `amount_untaxed`.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Memperbaiki `PeriodPackOracle.expected_inv_dpp` untuk menjumlahkan `commercial_dpp`.
+  - Menghilangkan audit `seed_flag_count` pada faktur Agustus.
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 6.7s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py scripts/load_fmcg_seed.py`: All checks passed.
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T17:33:00+07:00 — antigravity — F4: Resolusi Lot Assignment Delivery dan Validasi Multi-Lot Baris SO Replay (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

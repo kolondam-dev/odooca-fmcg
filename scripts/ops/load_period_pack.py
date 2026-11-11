@@ -768,7 +768,7 @@ class GenericPeriodPackLoader:
             raise StateInconsistencyError(
                 f"Drift detected on Invoice {inv_num}: expected total {exp_total}, found {act_total}"
             )
-        exp_dpp = _dec(inv_row.get("dpp_amount", 0))
+        exp_dpp = _dec(inv_row.get("commercial_dpp") or inv_row.get("dpp_amount", 0))
         act_dpp = _dec(getattr(existing, "amount_untaxed", 0))
         if abs(exp_dpp - act_dpp) > CENT:
             raise StateInconsistencyError(
@@ -779,10 +779,6 @@ class GenericPeriodPackLoader:
         if abs(exp_ppn - act_ppn) > CENT:
             raise StateInconsistencyError(
                 f"Drift detected on Invoice {inv_num}: expected PPN {exp_ppn}, found {act_ppn}"
-            )
-        if not getattr(existing, "is_fmcg_seed_invoice", False):
-            raise StateInconsistencyError(
-                f"Drift detected on Invoice {inv_num}: is_fmcg_seed_invoice flag is False"
             )
         act_state = getattr(existing, "state", None)
         if act_state and act_state != "posted":
@@ -1370,17 +1366,31 @@ class GenericPeriodPackLoader:
             t for t in matching_04 if getattr(t, "company_id", False) and getattr(t.company_id, "id", None) == self.company.id
         ]
         if len(comp_matching) == 1:
-            return comp_matching[0]
-        if len(comp_matching) > 1:
+            tax_rec = comp_matching[0]
+        elif len(comp_matching) > 1:
             raise PreflightContinuityError(
                 f"Ambiguous Tax Code 04 configuration: Multiple company-specific taxes matched: {[getattr(t, 'name', '') for t in comp_matching]}"
             )
-        if len(matching_04) == 1:
-            return matching_04[0]
+        elif len(matching_04) == 1:
+            tax_rec = matching_04[0]
+        else:
+            raise PreflightContinuityError(
+                f"Ambiguous Tax Code 04 configuration: Multiple global taxes matched: {[getattr(t, 'name', '') for t in matching_04]}"
+            )
 
-        raise PreflightContinuityError(
-            f"Ambiguous Tax Code 04 configuration: Multiple global taxes matched: {[getattr(t, 'name', '') for t in matching_04]}"
-        )
+        factor_nl = (11.0 / 12.0) * 100.0
+        inv_reps = getattr(tax_rec, "invoice_repartition_line_ids", None)
+        if inv_reps:
+            for rep in inv_reps:
+                if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - factor_nl) > 0.01:
+                    rep.sudo().write({"factor_percent": factor_nl})
+        ref_reps = getattr(tax_rec, "refund_repartition_line_ids", None)
+        if ref_reps:
+            for rep in ref_reps:
+                if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - factor_nl) > 0.01:
+                    rep.sudo().write({"factor_percent": factor_nl})
+
+        return tax_rec
 
     def _apply_sales_orders_and_deliveries(self) -> Tuple[int, int]:
         """Create and validate Sales Orders and Outbound Deliveries."""
@@ -1567,7 +1577,6 @@ class GenericPeriodPackLoader:
                     "payment_reference": inv_num,
                     "invoice_date": inv_row["date_invoice"],
                     "invoice_date_due": inv_row["due_date"],
-                    "is_fmcg_seed_invoice": True,
                 }
                 if "l10n_id_tax_transaction_code" in inv._fields:
                     inv_vals["l10n_id_tax_transaction_code"] = "04"

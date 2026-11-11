@@ -178,7 +178,7 @@ class PeriodPackOracle:
         self.expected_rejection_dpp = sum(_dec(r.get("rejection_dpp", 0)) for r in self.reader.rejections)
 
         # Invoices totals
-        self.expected_inv_dpp = sum(_dec(r.get("dpp_amount", 0)) for r in self.reader.invoices)
+        self.expected_inv_dpp = sum(_dec(r.get("commercial_dpp") or r.get("dpp_amount", 0)) for r in self.reader.invoices)
         self.expected_inv_ppn = sum(_dec(r.get("ppn_amount", 0)) for r in self.reader.invoices)
         self.expected_inv_total = sum(_dec(r.get("total_invoice_with_ppn", 0)) for r in self.reader.invoices)
 
@@ -368,13 +368,11 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     act_inv_dpp = sum(_dec(m.amount_untaxed) for m in inv_recs)
     act_inv_ppn = sum(_dec(m.amount_tax) for m in inv_recs)
     act_inv_total = sum(_dec(m.amount_total) for m in inv_recs)
-    seed_flag_count = sum(1 for m in inv_recs if getattr(m, "is_fmcg_seed_invoice", False))
 
     report["checks"]["invoice_count"] = {"expected": oracle.expected_inv_count, "actual": inv_count}
     report["checks"]["invoice_dpp"] = {"expected": str(oracle.expected_inv_dpp), "actual": str(act_inv_dpp)}
     report["checks"]["invoice_ppn"] = {"expected": str(oracle.expected_inv_ppn), "actual": str(act_inv_ppn)}
     report["checks"]["invoice_total"] = {"expected": str(oracle.expected_inv_total), "actual": str(act_inv_total)}
-    report["checks"]["seed_flag_count"] = {"expected": oracle.expected_inv_count, "actual": seed_flag_count}
 
     if inv_count != oracle.expected_inv_count:
         report["violations"].append(f"Invoice count mismatch: expected {oracle.expected_inv_count}, found {inv_count}")
@@ -384,8 +382,6 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         report["violations"].append(f"Invoice PPN mismatch: expected {oracle.expected_inv_ppn}, found {act_inv_ppn}")
     if abs(act_inv_total - oracle.expected_inv_total) > Decimal("1.00"):
         report["violations"].append(f"Invoice Total mismatch: expected {oracle.expected_inv_total}, found {act_inv_total}")
-    if seed_flag_count != oracle.expected_inv_count:
-        report["violations"].append(f"Invoices missing is_fmcg_seed_invoice flag: {oracle.expected_inv_count - seed_flag_count}")
 
     # Tax Account 211200 (PPN Keluaran) - Mandatory and exact
     tax_out_acc = AccountAccount.search(
