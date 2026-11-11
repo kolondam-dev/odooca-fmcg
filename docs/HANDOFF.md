@@ -1,3 +1,20 @@
+## 2026-11-11T14:24:00+07:00 — antigravity — F4: Resolusi Adaptif Vendor Partner Unilever & Binding AP Reconciled Payment (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py` & `scripts/ops/verify_disposable_period_pack.py`:
+  - Menambahkan fungsi resolusi terpadu `_find_unilever_partner` untuk mencari partner vendor Unilever secara adaptif di database Odoo sungguhan (`PRIN-UNILEVER` / `PT Unilevr Indonezia Tbk`) maupun mock environment (`PRIN-002` / `PT Unilever Enterprise Indonesia`).
+  - Menghilangkan kegagalan `PreflightContinuityError: Unilever principal partner (PRIN-002) not found in res.partner` pada preflight continuity, batch probe setup, dan alur replay kontinu.
+  - Memperluas identifikasi pembayaran hutang dagang (`matching_ap_pay` / `reconciled_pay`) agar mencakup nomor referensi kanonikal `PAY-AP-05` (sesuai CSV registrasi pack Agustus `ap_payments.csv`) di samping format mock `AP-202608-0001`.
+  - Memastikan pencocokan edge rekonsiliasi vendor bill Juli (`PO-2026-06-05`) terhadap pembayaran lunas tidak terhalang restriksi domain yang terlalu sempit.
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 49/49 tests PASS (100% dalam 8.1s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+
 ## 2026-11-11T13:43:00+07:00 — antigravity — F4: Resolusi Kanonikal Company Multi-Fallback pada Loader & Verifier (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

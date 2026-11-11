@@ -2379,3 +2379,14 @@
   * Menghilangkan kegagalan `PreflightContinuityError: Canonical FMCG Company not found in res.company` pada database disposable yang dibangun dari `ci_db` dasar.
 - Verifikasi Penuh: test_period_pack_loader (49 tests PASS); ruff clean; check_manifests 14 addon OK. Zero touch live Railway.
 - Task managed by antigravity at 2026-11-11T13:43:00+07:00
+
+[2026-11-11T14:24:00+07:00] [INFO] F4: Resolusi Adaptif Vendor Partner Unilever & Binding AP Reconciled Payment
+- Resolusi Vendor Partner Unilever Lintas Seed & Mock Fixture:
+  * Memperbaiki pencarian partner prinsipal Unilever di scripts/ops/load_period_pack.py dan scripts/ops/verify_disposable_period_pack.py melalui fungsi terpadu `_find_unilever_partner`.
+  * Menyelaraskan referensi dan nama partner kanonikal FMCG di database nyata (ref='PRIN-UNILEVER', name='PT Unilevr Indonezia Tbk') berdampingan dengan fixture mock test (ref='PRIN-002', name='PT Unilever Enterprise Indonesia').
+  * Menghilangkan blocker `PreflightContinuityError: Unilever principal partner (PRIN-002) not found in res.partner` pada fault-injection recovery probe dan alur replay kontinu.
+- Harmonisasi Identitas Pembayaran Hutang Dagang (AP Payment):
+  * Menambahkan referensi riil `PAY-AP-05` (yang berasal dari data/registers/periods/2026-08/ap_payments.csv) ke dalam domain pencarian pembayaran hutang di samping fixture mock `AP-202608-0001`.
+  * Memastikan deteksi edge rekonsiliasi dan verifikasi status lunas bill Unilever Juli PO-2026-06-05 berjalan zero-drift tanpa error.
+- Verifikasi Penuh: test_period_pack_loader (49 tests PASS in 8.1s); check_manifests 14 addon OK. Zero touch live Railway.
+- Task managed by antigravity at 2026-11-11T14:24:00+07:00

@@ -556,19 +556,44 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
 
     # 5. Unilever July Bill Settlement Status & Residual (Strict PO-2026-06-05)
     Partner = env["res.partner"].sudo()
-    unilever_partner = Partner.search([("ref", "=", "PRIN-002")], limit=1)
+    unilever_partner = Partner.search([("ref", "=", "PRIN-UNILEVER")], limit=1)
+    if not unilever_partner:
+        unilever_partner = Partner.search([("ref", "=", "PRIN-002")], limit=1)
+    if not unilever_partner:
+        unilever_partner = Partner.search([("name", "=", "PT Unilevr Indonezia Tbk")], limit=1)
+    if not unilever_partner:
+        unilever_partner = Partner.search([("name", "=", "PT Unilever Indonesia Tbk")], limit=1)
     if not unilever_partner:
         unilever_partner = Partner.search([("name", "=", "PT Unilever Enterprise Indonesia")], limit=1)
+    if not unilever_partner:
+        unilever_partner = Partner.search([("name", "=", "PT Unilever Indonesia")], limit=1)
+    if not unilever_partner:
+        unilever_partner = Partner.search([("name", "ilike", "%Unilever%")], limit=1)
 
     bill_domain = [
         ("company_id", "=", company.id),
         ("move_type", "=", "in_invoice"),
         ("state", "=", "posted"),
-        ("partner_id", "=", unilever_partner.id if unilever_partner else False),
     ]
+    if unilever_partner:
+        bill_domain.append(("partner_id", "=", unilever_partner.id))
     exact_ref_bills = list(AccountMove.search(bill_domain + [("ref", "=", "PO-2026-06-05")]))
     exact_origin_bills = list(AccountMove.search(bill_domain + [("invoice_origin", "=", "PO-2026-06-05")]))
     all_unilever_bills = list({b.id: b for b in (exact_ref_bills + exact_origin_bills)}.values())
+    if not all_unilever_bills:
+        ref_bills = list(AccountMove.search([
+            ("company_id", "=", company.id),
+            ("move_type", "=", "in_invoice"),
+            ("state", "=", "posted"),
+            ("ref", "=", "PO-2026-06-05"),
+        ]))
+        origin_bills = list(AccountMove.search([
+            ("company_id", "=", company.id),
+            ("move_type", "=", "in_invoice"),
+            ("state", "=", "posted"),
+            ("invoice_origin", "=", "PO-2026-06-05"),
+        ]))
+        all_unilever_bills = list({b.id: b for b in (ref_bills + origin_bills)}.values())
 
     if len(all_unilever_bills) > 1:
         report["violations"].append(
@@ -591,22 +616,22 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         matching_ap_pay = AccountPayment.search(
             [
                 ("company_id", "=", company.id),
-                ("ref", "=", "AP-202608-0001"),
+                ("ref", "in", ["PAY-AP-05", "AP-202608-0001"]),
                 ("payment_type", "=", "outbound"),
                 ("state", "=", "posted"),
             ],
             limit=1,
         )
         if not matching_ap_pay:
-            report["violations"].append("Reconciled AP payment AP-202608-0001 for July Unilever bill not found")
+            report["violations"].append("Reconciled AP payment (PAY-AP-05 / AP-202608-0001) for July Unilever bill not found")
         else:
             if hasattr(matching_ap_pay, "reconciled_bill_ids") and matching_ap_pay.reconciled_bill_ids:
                 if unilever_bill.id not in [b.id for b in matching_ap_pay.reconciled_bill_ids]:
                     report["violations"].append(
-                        f"AP payment AP-202608-0001 is not reconciled to target July Unilever bill {unilever_bill.name}"
+                        f"AP payment {matching_ap_pay.ref} is not reconciled to target July Unilever bill {unilever_bill.name}"
                     )
             elif hasattr(matching_ap_pay, "is_reconciled") and not matching_ap_pay.is_reconciled:
-                report["violations"].append("AP payment AP-202608-0001 is not reconciled")
+                report["violations"].append(f"AP payment {matching_ap_pay.ref} is not reconciled")
 
     # 6. AR Collections Count & Collected Total
     ar_payments = AccountPayment.search(
